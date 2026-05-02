@@ -6,37 +6,38 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateWarpWS(base *WarpWS, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), identifier func() (string, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateWarpWSMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateWarpWSMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateWarpWSPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if phaseVoltages != nil {
-		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateWarpWSPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
+		caps[reflect.TypeFor[api.PhaseVoltages]()] = implement.PhaseVoltages(phaseVoltages)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decorateWarpWSIdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateWarpWSPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateWarpWSPhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if len(caps) == 0 {
@@ -57,60 +58,4 @@ func (d *decorateWarpWSCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateWarpWSIdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decorateWarpWSIdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decorateWarpWSMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateWarpWSMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateWarpWSMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateWarpWSMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateWarpWSPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateWarpWSPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decorateWarpWSPhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateWarpWSPhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateWarpWSPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateWarpWSPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
-}
-
-type decorateWarpWSPhaseVoltagesImpl struct {
-	phaseVoltages func() (float64, float64, float64, error)
-}
-
-func (impl *decorateWarpWSPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
-	return impl.phaseVoltages()
 }

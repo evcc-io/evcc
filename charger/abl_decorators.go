@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateABLeMHMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateABLeMHPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateABLeMHCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateABLeMHMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateABLeMHMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateABLeMHPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateABLeMHPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
 }

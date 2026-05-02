@@ -6,25 +6,26 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateCfosMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateCfosMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateCfosPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateCfosPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if len(caps) == 0 {
@@ -45,36 +46,4 @@ func (d *decorateCfosCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateCfosMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateCfosMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateCfosMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateCfosMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateCfosPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateCfosPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decorateCfosPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateCfosPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

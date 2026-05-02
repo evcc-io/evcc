@@ -6,21 +6,22 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargeRater func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateEEBusMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateEEBusPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if chargeRater != nil {
-		caps[reflect.TypeFor[api.ChargeRater]()] = &decorateEEBusChargeRaterImpl{chargeRater: chargeRater}
+		caps[reflect.TypeFor[api.ChargeRater]()] = implement.ChargeRater(chargeRater)
 	}
 
 	if len(caps) == 0 {
@@ -41,28 +42,4 @@ func (d *decorateEEBusCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateEEBusChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateEEBusChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
-}
-
-type decorateEEBusMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateEEBusMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateEEBusPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateEEBusPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
 }

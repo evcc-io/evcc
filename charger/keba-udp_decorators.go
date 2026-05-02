@@ -6,21 +6,22 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateKebaUdpMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateKebaUdpMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateKebaUdpPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if len(caps) == 0 {
@@ -41,28 +42,4 @@ func (d *decorateKebaUdpCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateKebaUdpMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateKebaUdpMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateKebaUdpMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateKebaUdpMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateKebaUdpPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateKebaUdpPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
 }

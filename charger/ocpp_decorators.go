@@ -6,37 +6,38 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), currentGetter func() (float64, error), phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateOCPPMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateOCPPMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateOCPPPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if phaseVoltages != nil {
-		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateOCPPPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
+		caps[reflect.TypeFor[api.PhaseVoltages]()] = implement.PhaseVoltages(phaseVoltages)
 	}
 
 	if currentGetter != nil {
-		caps[reflect.TypeFor[api.CurrentGetter]()] = &decorateOCPPCurrentGetterImpl{currentGetter: currentGetter}
+		caps[reflect.TypeFor[api.CurrentGetter]()] = implement.CurrentGetter(currentGetter)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateOCPPPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateOCPPBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if len(caps) == 0 {
@@ -57,60 +58,4 @@ func (d *decorateOCPPCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateOCPPBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateOCPPBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateOCPPCurrentGetterImpl struct {
-	currentGetter func() (float64, error)
-}
-
-func (impl *decorateOCPPCurrentGetterImpl) GetMaxCurrent() (float64, error) {
-	return impl.currentGetter()
-}
-
-type decorateOCPPMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateOCPPMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateOCPPMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateOCPPMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateOCPPPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateOCPPPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decorateOCPPPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateOCPPPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
-}
-
-type decorateOCPPPhaseVoltagesImpl struct {
-	phaseVoltages func() (float64, float64, float64, error)
-}
-
-func (impl *decorateOCPPPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
-	return impl.phaseVoltages()
 }

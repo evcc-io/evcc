@@ -6,21 +6,22 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateVestel(base *Vestel, phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateVestelPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateVestelPhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decorateVestelIdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if len(caps) == 0 {
@@ -41,28 +42,4 @@ func (d *decorateVestelCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateVestelIdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decorateVestelIdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decorateVestelPhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateVestelPhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateVestelPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateVestelPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

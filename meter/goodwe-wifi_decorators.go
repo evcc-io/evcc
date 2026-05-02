@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	caps := make(map[reflect.Type]any)
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateGoodWeWifiBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if batteryCapacity != nil {
-		caps[reflect.TypeFor[api.BatteryCapacity]()] = &decorateGoodWeWifiBatteryCapacityImpl{batteryCapacity: batteryCapacity}
+		caps[reflect.TypeFor[api.BatteryCapacity]()] = implement.BatteryCapacity(batteryCapacity)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateGoodWeWifiCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateGoodWeWifiBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateGoodWeWifiBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateGoodWeWifiBatteryCapacityImpl struct {
-	batteryCapacity func() float64
-}
-
-func (impl *decorateGoodWeWifiBatteryCapacityImpl) Capacity() float64 {
-	return impl.batteryCapacity()
 }

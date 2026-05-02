@@ -6,21 +6,22 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateKSE(base *KSE, phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateKSEPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateKSEPhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decorateKSEIdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if len(caps) == 0 {
@@ -41,28 +42,4 @@ func (d *decorateKSECapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateKSEIdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decorateKSEIdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decorateKSEPhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateKSEPhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateKSEPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateKSEPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

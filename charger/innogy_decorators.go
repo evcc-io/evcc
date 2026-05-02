@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateInnogyMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseVoltages != nil {
-		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateInnogyPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
+		caps[reflect.TypeFor[api.PhaseVoltages]()] = implement.PhaseVoltages(phaseVoltages)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateInnogyCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateInnogyMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateInnogyMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateInnogyPhaseVoltagesImpl struct {
-	phaseVoltages func() (float64, float64, float64, error)
-}
-
-func (impl *decorateInnogyPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
-	return impl.phaseVoltages()
 }

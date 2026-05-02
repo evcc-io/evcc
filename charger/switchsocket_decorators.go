@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error), battery func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateSwitchSocketMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateSwitchSocketBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateSwitchSocketCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateSwitchSocketBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateSwitchSocketBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateSwitchSocketMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateSwitchSocketMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }

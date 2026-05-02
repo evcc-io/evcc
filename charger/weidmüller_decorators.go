@@ -6,13 +6,14 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateWeidmüller(base *Weidmüller, meterEnergy func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateWeidmüllerMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if len(caps) == 0 {
@@ -33,12 +34,4 @@ func (d *decorateWeidmüllerCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateWeidmüllerMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateWeidmüllerMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }

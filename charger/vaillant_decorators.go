@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateVaillant(base *Vaillant, meter func() (float64, error), battery func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateVaillantMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateVaillantBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateVaillantCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateVaillantBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateVaillantBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateVaillantMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateVaillantMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
 }

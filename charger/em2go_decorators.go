@@ -6,21 +6,22 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateEm2Go(base *Em2Go, chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {
-		caps[reflect.TypeFor[api.ChargerEx]()] = &decorateEm2GoChargerExImpl{chargerEx: chargerEx}
+		caps[reflect.TypeFor[api.ChargerEx]()] = implement.ChargerEx(chargerEx)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateEm2GoPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateEm2GoPhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if len(caps) == 0 {
@@ -41,28 +42,4 @@ func (d *decorateEm2GoCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateEm2GoChargerExImpl struct {
-	chargerEx func(float64) error
-}
-
-func (impl *decorateEm2GoChargerExImpl) MaxCurrentMillis(p0 float64) error {
-	return impl.chargerEx(p0)
-}
-
-type decorateEm2GoPhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateEm2GoPhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateEm2GoPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateEm2GoPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateEVECUBE(base *EVECUBE, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateEVECUBEPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decorateEVECUBEIdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateEVECUBECapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateEVECUBEIdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decorateEVECUBEIdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decorateEVECUBEPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateEVECUBEPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

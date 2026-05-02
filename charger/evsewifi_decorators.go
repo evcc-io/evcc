@@ -6,33 +6,34 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateEVSEMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateEVSEMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateEVSEPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if phaseVoltages != nil {
-		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateEVSEPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
+		caps[reflect.TypeFor[api.PhaseVoltages]()] = implement.PhaseVoltages(phaseVoltages)
 	}
 
 	if chargerEx != nil {
-		caps[reflect.TypeFor[api.ChargerEx]()] = &decorateEVSEChargerExImpl{chargerEx: chargerEx}
+		caps[reflect.TypeFor[api.ChargerEx]()] = implement.ChargerEx(chargerEx)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decorateEVSEIdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if len(caps) == 0 {
@@ -53,52 +54,4 @@ func (d *decorateEVSECapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateEVSEChargerExImpl struct {
-	chargerEx func(float64) error
-}
-
-func (impl *decorateEVSEChargerExImpl) MaxCurrentMillis(p0 float64) error {
-	return impl.chargerEx(p0)
-}
-
-type decorateEVSEIdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decorateEVSEIdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decorateEVSEMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateEVSEMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateEVSEMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateEVSEMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateEVSEPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateEVSEPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decorateEVSEPhaseVoltagesImpl struct {
-	phaseVoltages func() (float64, float64, float64, error)
-}
-
-func (impl *decorateEVSEPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
-	return impl.phaseVoltages()
 }

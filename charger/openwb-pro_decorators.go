@@ -6,13 +6,14 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateOpenWBPro(base *OpenWBPro, resurrector func() error) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if resurrector != nil {
-		caps[reflect.TypeFor[api.Resurrector]()] = &decorateOpenWBProResurrectorImpl{resurrector: resurrector}
+		caps[reflect.TypeFor[api.Resurrector]()] = implement.Resurrector(resurrector)
 	}
 
 	if len(caps) == 0 {
@@ -33,12 +34,4 @@ func (d *decorateOpenWBProCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateOpenWBProResurrectorImpl struct {
-	resurrector func() error
-}
-
-func (impl *decorateOpenWBProResurrectorImpl) WakeUp() error {
-	return impl.resurrector()
 }

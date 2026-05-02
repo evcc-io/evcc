@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateVictron(base *Victron, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateVictronPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateVictronPhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateVictronCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateVictronPhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateVictronPhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateVictronPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateVictronPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateOpenWB(base *OpenWB, phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateOpenWBPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateOpenWBBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateOpenWBCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateOpenWBBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateOpenWBBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateOpenWBPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateOpenWBPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

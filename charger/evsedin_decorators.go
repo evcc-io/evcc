@@ -6,13 +6,14 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateEvseDIN(base *EvseDIN, chargerEx func(float64) error) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {
-		caps[reflect.TypeFor[api.ChargerEx]()] = &decorateEvseDINChargerExImpl{chargerEx: chargerEx}
+		caps[reflect.TypeFor[api.ChargerEx]()] = implement.ChargerEx(chargerEx)
 	}
 
 	if len(caps) == 0 {
@@ -33,12 +34,4 @@ func (d *decorateEvseDINCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateEvseDINChargerExImpl struct {
-	chargerEx func(float64) error
-}
-
-func (impl *decorateEvseDINChargerExImpl) MaxCurrentMillis(p0 float64) error {
-	return impl.chargerEx(p0)
 }

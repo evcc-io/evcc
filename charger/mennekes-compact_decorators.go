@@ -6,13 +6,14 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateMennekesCompact(base *MennekesCompact, phaseSwitcher func(int) error) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateMennekesCompactPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if len(caps) == 0 {
@@ -33,12 +34,4 @@ func (d *decorateMennekesCompactCapable) Capability(typ reflect.Type) (any, bool
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateMennekesCompactPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateMennekesCompactPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

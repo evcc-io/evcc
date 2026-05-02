@@ -6,33 +6,34 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decoratePowerWallMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decoratePowerWallBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if batteryCapacity != nil {
-		caps[reflect.TypeFor[api.BatteryCapacity]()] = &decoratePowerWallBatteryCapacityImpl{batteryCapacity: batteryCapacity}
+		caps[reflect.TypeFor[api.BatteryCapacity]()] = implement.BatteryCapacity(batteryCapacity)
 	}
 
 	if batterySocLimiter != nil {
-		caps[reflect.TypeFor[api.BatterySocLimiter]()] = &decoratePowerWallBatterySocLimiterImpl{batterySocLimiter: batterySocLimiter}
+		caps[reflect.TypeFor[api.BatterySocLimiter]()] = implement.BatterySocLimiter(batterySocLimiter)
 	}
 
 	if batteryPowerLimiter != nil {
-		caps[reflect.TypeFor[api.BatteryPowerLimiter]()] = &decoratePowerWallBatteryPowerLimiterImpl{batteryPowerLimiter: batteryPowerLimiter}
+		caps[reflect.TypeFor[api.BatteryPowerLimiter]()] = implement.BatteryPowerLimiter(batteryPowerLimiter)
 	}
 
 	if batteryController != nil {
-		caps[reflect.TypeFor[api.BatteryController]()] = &decoratePowerWallBatteryControllerImpl{batteryController: batteryController}
+		caps[reflect.TypeFor[api.BatteryController]()] = implement.BatteryController(batteryController)
 	}
 
 	if len(caps) == 0 {
@@ -53,52 +54,4 @@ func (d *decoratePowerWallCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decoratePowerWallBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decoratePowerWallBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decoratePowerWallBatteryCapacityImpl struct {
-	batteryCapacity func() float64
-}
-
-func (impl *decoratePowerWallBatteryCapacityImpl) Capacity() float64 {
-	return impl.batteryCapacity()
-}
-
-type decoratePowerWallBatteryControllerImpl struct {
-	batteryController func(api.BatteryMode) error
-}
-
-func (impl *decoratePowerWallBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
-	return impl.batteryController(p0)
-}
-
-type decoratePowerWallBatteryPowerLimiterImpl struct {
-	batteryPowerLimiter func() (float64, float64)
-}
-
-func (impl *decoratePowerWallBatteryPowerLimiterImpl) GetPowerLimits() (float64, float64) {
-	return impl.batteryPowerLimiter()
-}
-
-type decoratePowerWallBatterySocLimiterImpl struct {
-	batterySocLimiter func() (float64, float64)
-}
-
-func (impl *decoratePowerWallBatterySocLimiterImpl) GetSocLimits() (float64, float64) {
-	return impl.batterySocLimiter()
-}
-
-type decoratePowerWallMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decoratePowerWallMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }

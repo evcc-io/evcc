@@ -6,33 +6,34 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decoratePhoenixEVEthMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decoratePhoenixEVEthMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decoratePhoenixEVEthPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if phaseVoltages != nil {
-		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decoratePhoenixEVEthPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
+		caps[reflect.TypeFor[api.PhaseVoltages]()] = implement.PhaseVoltages(phaseVoltages)
 	}
 
 	if chargerEx != nil {
-		caps[reflect.TypeFor[api.ChargerEx]()] = &decoratePhoenixEVEthChargerExImpl{chargerEx: chargerEx}
+		caps[reflect.TypeFor[api.ChargerEx]()] = implement.ChargerEx(chargerEx)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decoratePhoenixEVEthIdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if len(caps) == 0 {
@@ -53,52 +54,4 @@ func (d *decoratePhoenixEVEthCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decoratePhoenixEVEthChargerExImpl struct {
-	chargerEx func(float64) error
-}
-
-func (impl *decoratePhoenixEVEthChargerExImpl) MaxCurrentMillis(p0 float64) error {
-	return impl.chargerEx(p0)
-}
-
-type decoratePhoenixEVEthIdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decoratePhoenixEVEthIdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decoratePhoenixEVEthMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decoratePhoenixEVEthMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decoratePhoenixEVEthMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decoratePhoenixEVEthMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decoratePhoenixEVEthPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decoratePhoenixEVEthPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decoratePhoenixEVEthPhaseVoltagesImpl struct {
-	phaseVoltages func() (float64, float64, float64, error)
-}
-
-func (impl *decoratePhoenixEVEthPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
-	return impl.phaseVoltages()
 }

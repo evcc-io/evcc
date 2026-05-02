@@ -6,49 +6,50 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), socLimiter func() (int64, error), meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {
-		caps[reflect.TypeFor[api.ChargerEx]()] = &decorateCustomChargerExImpl{chargerEx: chargerEx}
+		caps[reflect.TypeFor[api.ChargerEx]()] = implement.ChargerEx(chargerEx)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decorateCustomIdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateCustomPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if resurrector != nil {
-		caps[reflect.TypeFor[api.Resurrector]()] = &decorateCustomResurrectorImpl{resurrector: resurrector}
+		caps[reflect.TypeFor[api.Resurrector]()] = implement.Resurrector(resurrector)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateCustomBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if socLimiter != nil {
-		caps[reflect.TypeFor[api.SocLimiter]()] = &decorateCustomSocLimiterImpl{socLimiter: socLimiter}
+		caps[reflect.TypeFor[api.SocLimiter]()] = implement.SocLimiter(socLimiter)
 	}
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateCustomMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateCustomMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateCustomPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if phaseVoltages != nil {
-		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateCustomPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
+		caps[reflect.TypeFor[api.PhaseVoltages]()] = implement.PhaseVoltages(phaseVoltages)
 	}
 
 	if len(caps) == 0 {
@@ -69,84 +70,4 @@ func (d *decorateCustomCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateCustomBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateCustomBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateCustomChargerExImpl struct {
-	chargerEx func(float64) error
-}
-
-func (impl *decorateCustomChargerExImpl) MaxCurrentMillis(p0 float64) error {
-	return impl.chargerEx(p0)
-}
-
-type decorateCustomIdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decorateCustomIdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decorateCustomMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateCustomMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateCustomMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateCustomMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateCustomPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateCustomPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decorateCustomPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateCustomPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
-}
-
-type decorateCustomPhaseVoltagesImpl struct {
-	phaseVoltages func() (float64, float64, float64, error)
-}
-
-func (impl *decorateCustomPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
-	return impl.phaseVoltages()
-}
-
-type decorateCustomResurrectorImpl struct {
-	resurrector func() error
-}
-
-func (impl *decorateCustomResurrectorImpl) WakeUp() error {
-	return impl.resurrector()
-}
-
-type decorateCustomSocLimiterImpl struct {
-	socLimiter func() (int64, error)
-}
-
-func (impl *decorateCustomSocLimiterImpl) GetLimitSoc() (int64, error) {
-	return impl.socLimiter()
 }

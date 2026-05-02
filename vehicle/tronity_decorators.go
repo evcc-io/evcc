@@ -6,21 +6,22 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error), vehicleOdometer func() (float64, error), chargeController func(bool) error) api.Vehicle {
 	caps := make(map[reflect.Type]any)
 
 	if chargeState != nil {
-		caps[reflect.TypeFor[api.ChargeState]()] = &decorateTronityChargeStateImpl{chargeState: chargeState}
+		caps[reflect.TypeFor[api.ChargeState]()] = implement.ChargeState(chargeState)
 	}
 
 	if vehicleOdometer != nil {
-		caps[reflect.TypeFor[api.VehicleOdometer]()] = &decorateTronityVehicleOdometerImpl{vehicleOdometer: vehicleOdometer}
+		caps[reflect.TypeFor[api.VehicleOdometer]()] = implement.VehicleOdometer(vehicleOdometer)
 	}
 
 	if chargeController != nil {
-		caps[reflect.TypeFor[api.ChargeController]()] = &decorateTronityChargeControllerImpl{chargeController: chargeController}
+		caps[reflect.TypeFor[api.ChargeController]()] = implement.ChargeController(chargeController)
 	}
 
 	if len(caps) == 0 {
@@ -41,28 +42,4 @@ func (d *decorateTronityCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateTronityChargeControllerImpl struct {
-	chargeController func(bool) error
-}
-
-func (impl *decorateTronityChargeControllerImpl) ChargeEnable(p0 bool) error {
-	return impl.chargeController(p0)
-}
-
-type decorateTronityChargeStateImpl struct {
-	chargeState func() (api.ChargeStatus, error)
-}
-
-func (impl *decorateTronityChargeStateImpl) Status() (api.ChargeStatus, error) {
-	return impl.chargeState()
-}
-
-type decorateTronityVehicleOdometerImpl struct {
-	vehicleOdometer func() (float64, error)
-}
-
-func (impl *decorateTronityVehicleOdometerImpl) Odometer() (float64, error) {
-	return impl.vehicleOdometer()
 }

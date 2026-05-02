@@ -6,25 +6,26 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateSgReadyMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateSgReadyMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateSgReadyBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if socLimiter != nil {
-		caps[reflect.TypeFor[api.SocLimiter]()] = &decorateSgReadySocLimiterImpl{socLimiter: socLimiter}
+		caps[reflect.TypeFor[api.SocLimiter]()] = implement.SocLimiter(socLimiter)
 	}
 
 	if len(caps) == 0 {
@@ -45,36 +46,4 @@ func (d *decorateSgReadyCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateSgReadyBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateSgReadyBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateSgReadyMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateSgReadyMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateSgReadyMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateSgReadyMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateSgReadySocLimiterImpl struct {
-	socLimiter func() (int64, error)
-}
-
-func (impl *decorateSgReadySocLimiterImpl) GetLimitSoc() (int64, error) {
-	return impl.socLimiter()
 }

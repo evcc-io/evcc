@@ -6,21 +6,22 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateSEMP(base *SEMP, phaseSwitcher func(int) error, phaseGetter func() (int, error), chargeRater func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateSEMPPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateSEMPPhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if chargeRater != nil {
-		caps[reflect.TypeFor[api.ChargeRater]()] = &decorateSEMPChargeRaterImpl{chargeRater: chargeRater}
+		caps[reflect.TypeFor[api.ChargeRater]()] = implement.ChargeRater(chargeRater)
 	}
 
 	if len(caps) == 0 {
@@ -41,28 +42,4 @@ func (d *decorateSEMPCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateSEMPChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateSEMPChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
-}
-
-type decorateSEMPPhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateSEMPPhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateSEMPPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateSEMPPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

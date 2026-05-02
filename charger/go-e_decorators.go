@@ -6,17 +6,18 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateGoE(base *GoE, chargeRater func() (float64, error), phaseSwitcher func(int) error) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if chargeRater != nil {
-		caps[reflect.TypeFor[api.ChargeRater]()] = &decorateGoEChargeRaterImpl{chargeRater: chargeRater}
+		caps[reflect.TypeFor[api.ChargeRater]()] = implement.ChargeRater(chargeRater)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateGoEPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if len(caps) == 0 {
@@ -37,20 +38,4 @@ func (d *decorateGoECapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateGoEChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateGoEChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
-}
-
-type decorateGoEPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateGoEPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

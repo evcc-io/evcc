@@ -7,57 +7,58 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error), currentController func(int64) error, currentGetter func() (float64, error), vehicleFinishTimer func() (time.Time, error), resurrector func() error, chargeController func(bool) error, chargeRater func() (float64, error), vehiclePosition func() (float64, float64, error)) api.Vehicle {
 	caps := make(map[reflect.Type]any)
 
 	if socLimiter != nil {
-		caps[reflect.TypeFor[api.SocLimiter]()] = &decorateVehicleSocLimiterImpl{socLimiter: socLimiter}
+		caps[reflect.TypeFor[api.SocLimiter]()] = implement.SocLimiter(socLimiter)
 	}
 
 	if chargeState != nil {
-		caps[reflect.TypeFor[api.ChargeState]()] = &decorateVehicleChargeStateImpl{chargeState: chargeState}
+		caps[reflect.TypeFor[api.ChargeState]()] = implement.ChargeState(chargeState)
 	}
 
 	if vehicleRange != nil {
-		caps[reflect.TypeFor[api.VehicleRange]()] = &decorateVehicleVehicleRangeImpl{vehicleRange: vehicleRange}
+		caps[reflect.TypeFor[api.VehicleRange]()] = implement.VehicleRange(vehicleRange)
 	}
 
 	if vehicleOdometer != nil {
-		caps[reflect.TypeFor[api.VehicleOdometer]()] = &decorateVehicleVehicleOdometerImpl{vehicleOdometer: vehicleOdometer}
+		caps[reflect.TypeFor[api.VehicleOdometer]()] = implement.VehicleOdometer(vehicleOdometer)
 	}
 
 	if vehicleClimater != nil {
-		caps[reflect.TypeFor[api.VehicleClimater]()] = &decorateVehicleVehicleClimaterImpl{vehicleClimater: vehicleClimater}
+		caps[reflect.TypeFor[api.VehicleClimater]()] = implement.VehicleClimater(vehicleClimater)
 	}
 
 	if currentController != nil {
-		caps[reflect.TypeFor[api.CurrentController]()] = &decorateVehicleCurrentControllerImpl{currentController: currentController}
+		caps[reflect.TypeFor[api.CurrentController]()] = implement.CurrentController(currentController)
 	}
 
 	if currentGetter != nil {
-		caps[reflect.TypeFor[api.CurrentGetter]()] = &decorateVehicleCurrentGetterImpl{currentGetter: currentGetter}
+		caps[reflect.TypeFor[api.CurrentGetter]()] = implement.CurrentGetter(currentGetter)
 	}
 
 	if vehicleFinishTimer != nil {
-		caps[reflect.TypeFor[api.VehicleFinishTimer]()] = &decorateVehicleVehicleFinishTimerImpl{vehicleFinishTimer: vehicleFinishTimer}
+		caps[reflect.TypeFor[api.VehicleFinishTimer]()] = implement.VehicleFinishTimer(vehicleFinishTimer)
 	}
 
 	if resurrector != nil {
-		caps[reflect.TypeFor[api.Resurrector]()] = &decorateVehicleResurrectorImpl{resurrector: resurrector}
+		caps[reflect.TypeFor[api.Resurrector]()] = implement.Resurrector(resurrector)
 	}
 
 	if chargeController != nil {
-		caps[reflect.TypeFor[api.ChargeController]()] = &decorateVehicleChargeControllerImpl{chargeController: chargeController}
+		caps[reflect.TypeFor[api.ChargeController]()] = implement.ChargeController(chargeController)
 	}
 
 	if chargeRater != nil {
-		caps[reflect.TypeFor[api.ChargeRater]()] = &decorateVehicleChargeRaterImpl{chargeRater: chargeRater}
+		caps[reflect.TypeFor[api.ChargeRater]()] = implement.ChargeRater(chargeRater)
 	}
 
 	if vehiclePosition != nil {
-		caps[reflect.TypeFor[api.VehiclePosition]()] = &decorateVehicleVehiclePositionImpl{vehiclePosition: vehiclePosition}
+		caps[reflect.TypeFor[api.VehiclePosition]()] = implement.VehiclePosition(vehiclePosition)
 	}
 
 	if len(caps) == 0 {
@@ -78,100 +79,4 @@ func (d *decorateVehicleCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateVehicleChargeControllerImpl struct {
-	chargeController func(bool) error
-}
-
-func (impl *decorateVehicleChargeControllerImpl) ChargeEnable(p0 bool) error {
-	return impl.chargeController(p0)
-}
-
-type decorateVehicleChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateVehicleChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
-}
-
-type decorateVehicleChargeStateImpl struct {
-	chargeState func() (api.ChargeStatus, error)
-}
-
-func (impl *decorateVehicleChargeStateImpl) Status() (api.ChargeStatus, error) {
-	return impl.chargeState()
-}
-
-type decorateVehicleCurrentControllerImpl struct {
-	currentController func(int64) error
-}
-
-func (impl *decorateVehicleCurrentControllerImpl) MaxCurrent(p0 int64) error {
-	return impl.currentController(p0)
-}
-
-type decorateVehicleCurrentGetterImpl struct {
-	currentGetter func() (float64, error)
-}
-
-func (impl *decorateVehicleCurrentGetterImpl) GetMaxCurrent() (float64, error) {
-	return impl.currentGetter()
-}
-
-type decorateVehicleResurrectorImpl struct {
-	resurrector func() error
-}
-
-func (impl *decorateVehicleResurrectorImpl) WakeUp() error {
-	return impl.resurrector()
-}
-
-type decorateVehicleSocLimiterImpl struct {
-	socLimiter func() (int64, error)
-}
-
-func (impl *decorateVehicleSocLimiterImpl) GetLimitSoc() (int64, error) {
-	return impl.socLimiter()
-}
-
-type decorateVehicleVehicleClimaterImpl struct {
-	vehicleClimater func() (bool, error)
-}
-
-func (impl *decorateVehicleVehicleClimaterImpl) Climater() (bool, error) {
-	return impl.vehicleClimater()
-}
-
-type decorateVehicleVehicleFinishTimerImpl struct {
-	vehicleFinishTimer func() (time.Time, error)
-}
-
-func (impl *decorateVehicleVehicleFinishTimerImpl) FinishTime() (time.Time, error) {
-	return impl.vehicleFinishTimer()
-}
-
-type decorateVehicleVehicleOdometerImpl struct {
-	vehicleOdometer func() (float64, error)
-}
-
-func (impl *decorateVehicleVehicleOdometerImpl) Odometer() (float64, error) {
-	return impl.vehicleOdometer()
-}
-
-type decorateVehicleVehiclePositionImpl struct {
-	vehiclePosition func() (float64, float64, error)
-}
-
-func (impl *decorateVehicleVehiclePositionImpl) Position() (float64, float64, error) {
-	return impl.vehiclePosition()
-}
-
-type decorateVehicleVehicleRangeImpl struct {
-	vehicleRange func() (int64, error)
-}
-
-func (impl *decorateVehicleVehicleRangeImpl) Range() (int64, error) {
-	return impl.vehicleRange()
 }

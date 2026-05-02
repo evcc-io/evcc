@@ -301,6 +301,18 @@ func (i *iVehicleFinishTimer) FinishTime() (time.Time, error) {
 	return i.vehicleFinishTimer0()
 }
 
+func VehiclePosition(vehiclePosition0 func() (float64, float64, error)) api.VehiclePosition {
+	return &iVehiclePosition{vehiclePosition0}
+}
+
+type iVehiclePosition struct {
+	vehiclePosition0 func() (float64, float64, error)
+}
+
+func (i *iVehiclePosition) Position() (float64, float64, error) {
+	return i.vehiclePosition0()
+}
+
 func Identifier(identifier0 func() (string, error)) api.Identifier {
 	return &iIdentifier{identifier0}
 }

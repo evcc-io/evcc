@@ -6,37 +6,38 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateSmartEVSE3(base *SmartEVSE3, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error), statusReasoner func() (api.Reason, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateSmartEVSE3MeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateSmartEVSE3MeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateSmartEVSE3PhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateSmartEVSE3PhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateSmartEVSE3PhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if identifier != nil {
-		caps[reflect.TypeFor[api.Identifier]()] = &decorateSmartEVSE3IdentifierImpl{identifier: identifier}
+		caps[reflect.TypeFor[api.Identifier]()] = implement.Identifier(identifier)
 	}
 
 	if statusReasoner != nil {
-		caps[reflect.TypeFor[api.StatusReasoner]()] = &decorateSmartEVSE3StatusReasonerImpl{statusReasoner: statusReasoner}
+		caps[reflect.TypeFor[api.StatusReasoner]()] = implement.StatusReasoner(statusReasoner)
 	}
 
 	if len(caps) == 0 {
@@ -57,60 +58,4 @@ func (d *decorateSmartEVSE3Capable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateSmartEVSE3IdentifierImpl struct {
-	identifier func() (string, error)
-}
-
-func (impl *decorateSmartEVSE3IdentifierImpl) Identify() (string, error) {
-	return impl.identifier()
-}
-
-type decorateSmartEVSE3MeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateSmartEVSE3MeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateSmartEVSE3MeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateSmartEVSE3MeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
-}
-
-type decorateSmartEVSE3PhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateSmartEVSE3PhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decorateSmartEVSE3PhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateSmartEVSE3PhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateSmartEVSE3PhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateSmartEVSE3PhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
-}
-
-type decorateSmartEVSE3StatusReasonerImpl struct {
-	statusReasoner func() (api.Reason, error)
-}
-
-func (impl *decorateSmartEVSE3StatusReasonerImpl) StatusReason() (api.Reason, error) {
-	return impl.statusReasoner()
 }
