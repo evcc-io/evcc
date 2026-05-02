@@ -40,8 +40,8 @@ type measurements interface {
 	eebusapi.UseCaseBaseInterface
 	Power(entity spineapi.EntityRemoteInterface) (float64, error)
 	EnergyConsumed(entity spineapi.EntityRemoteInterface) (float64, error)
-	CurrentPerPhase(entity spineapi.EntityRemoteInterface) ([]float64, error)
-	VoltagePerPhase(entity spineapi.EntityRemoteInterface) ([]float64, error)
+	CurrentPerPhase(entity spineapi.EntityRemoteInterface) (map[model.ElectricalConnectionPhaseNameType]float64, error)
+	VoltagePerPhase(entity spineapi.EntityRemoteInterface) (map[model.ElectricalConnectionPhaseNameType]float64, error)
 }
 
 func init() {
@@ -153,44 +153,42 @@ func (c *EEBus) TotalEnergy() (float64, error) {
 	return c.readValue(2, c.mm.EnergyConsumed)
 }
 
-func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
+var _ api.PhaseCurrents = (*EEBus)(nil)
+
+func (c *EEBus) Currents() (float64, float64, float64, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	res, err := eebusReadValue(c.mm, c.maEntity, scenario, update)
+	res, err := eebusReadValue(c.mm, c.maEntity, 3, c.mm.CurrentPerPhase)
 	if err != nil {
-		// announced but not provided
 		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
 			err = api.ErrNotAvailable
 		}
 		return 0, 0, 0, err
 	}
 
-	if len(res) == 0 {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
-	if len(res) > 3 {
-		return 0, 0, 0, fmt.Errorf("invalid phases: %v", res)
-	}
-
-	for len(res) < 3 {
-		res = append(res, 0)
-	}
-
-	return res[0], res[1], res[2], nil
-}
-
-var _ api.PhaseCurrents = (*EEBus)(nil)
-
-func (c *EEBus) Currents() (float64, float64, float64, error) {
-	return c.readPhases(3, c.mm.CurrentPerPhase)
+	return res[model.ElectricalConnectionPhaseNameTypeA],
+		res[model.ElectricalConnectionPhaseNameTypeB],
+		res[model.ElectricalConnectionPhaseNameTypeC], nil
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
 
 func (c *EEBus) Voltages() (float64, float64, float64, error) {
-	return c.readPhases(4, c.mm.VoltagePerPhase)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	res, err := eebusReadValue(c.mm, c.maEntity, 4, c.mm.VoltagePerPhase)
+	if err != nil {
+		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
+			err = api.ErrNotAvailable
+		}
+		return 0, 0, 0, err
+	}
+
+	return res[model.ElectricalConnectionPhaseNameTypeA],
+		res[model.ElectricalConnectionPhaseNameTypeB],
+		res[model.ElectricalConnectionPhaseNameTypeC], nil
 }
 
 var _ api.Dimmer = (*EEBus)(nil)
