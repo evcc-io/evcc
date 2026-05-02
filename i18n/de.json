@@ -1156,6 +1156,7 @@
       "batteryDischarge": "Batterie entladen",
       "batteryForecastEmpty": "leer {time}",
       "batteryForecastFull": "voll {time}",
+      "batteryForecastSoc": "{soc} {time}",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryHold": "Batterie (gesperrt)",

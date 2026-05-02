@@ -1156,6 +1156,7 @@
       "batteryDischarge": "Battery discharging",
       "batteryForecastEmpty": "empty {time}",
       "batteryForecastFull": "full {time}",
+      "batteryForecastSoc": "{soc} {time}",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryHold": "Battery (locked)",
