@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util/request"
@@ -21,6 +22,7 @@ type Settings struct {
 	URI, AIN, User, Password string
 	Firmware82               bool // use new REST API (FritzOS 8.2+)
 
+	mu      sync.Mutex
 	sid     string
 	updated time.Time
 }
@@ -30,6 +32,9 @@ type Settings struct {
 // GetSessionID returns a valid Fritzbox session ID, refreshing it when the
 // previously fetched session has timed out.
 func (s *Settings) GetSessionID(c *request.Helper) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if time.Since(s.updated) < SessionTimeout {
 		return s.sid, nil
 	}
@@ -71,7 +76,7 @@ func (s *Settings) GetSessionID(c *request.Helper) (string, error) {
 }
 
 // createChallengeResponse creates the Fritzbox challenge response string
-func (s Settings) createChallengeResponse(challenge string) (string, error) {
+func (s *Settings) createChallengeResponse(challenge string) (string, error) {
 	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
 	utf16le, err := encoder.String(challenge + "-" + s.Password)
 	if err != nil {
