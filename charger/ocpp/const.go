@@ -17,4 +17,7 @@ const (
 
 	// Alfen specific keys
 	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
+
+	// EVBox specific keys
+	KeyEVBoxUnlockCableOnEVSideDisconnect = "UnlockCableOnEVSideDisconnect"
 )

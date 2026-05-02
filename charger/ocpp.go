@@ -53,6 +53,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		BootNotification *bool
 		GetConfiguration *bool
 		ChargingRateUnit string
+		UnlockCable      *bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
@@ -74,6 +75,12 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
+	}
+
+	if cc.UnlockCable != nil {
+		if err := c.configure(ocpp.KeyEVBoxUnlockCableOnEVSideDisconnect, strconv.FormatBool(*cc.UnlockCable)); err != nil {
+			return nil, err
+		}
 	}
 
 	var powerG func() (float64, error)

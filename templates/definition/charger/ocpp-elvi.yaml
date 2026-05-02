@@ -21,9 +21,18 @@ params:
       de: Zählerwerte im Intervall anfordern
       en: Interval for requesting metering values
     default: 4s
+  - name: unlockcable
+    advanced: true
+    type: bool
+    description:
+      de: Kabel bei fahrzeugseitiger Trennung entriegeln (UnlockCableOnEVSideDisconnect)
+      en: Unlock cable on EV-side disconnect (UnlockCableOnEVSideDisconnect)
 render: |
   {{ include "ocpp" . }}
   {{- if ne .meter "false" }}
   metervalues: Current.Import.L1,Current.Import.L2,Current.Import.L3,Energy.Active.Import.Register,Power.Active.Import,Voltage.L1,Voltage.L2,Voltage.L3
   meterinterval: {{ .meterinterval }}
+  {{- end }}
+  {{- if .unlockcable }}
+  unlockcable: {{ .unlockcable }}
   {{- end }}
