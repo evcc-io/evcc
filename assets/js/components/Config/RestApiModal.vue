@@ -83,12 +83,31 @@ import GenericModal from "../Helper/GenericModal.vue";
 import CopyLink from "../Helper/CopyLink.vue";
 import store from "@/store";
 import { docsPrefix } from "@/i18n";
+import { getApiEndpoints } from "@/api";
+
+const fallbackPublicEndpoints = [
+	"/api/state",
+	"/api/loadpoints/{id}/mode",
+	"/api/loadpoints/{id}/limitsoc",
+	"/api/vehicles/{name}/minsoc",
+	"/api/sessions",
+	"/api/tariff/{type}",
+	"/api/auth/status",
+];
+
+const fallbackProtectedEndpoints = ["/api/config/…", "/api/system/…"];
 
 export default defineComponent({
 	name: "RestApiModal",
 	components: {
 		GenericModal,
 		CopyLink,
+	},
+	data() {
+		return {
+			publicEndpoints: [...fallbackPublicEndpoints] as string[],
+			protectedEndpoints: [...fallbackProtectedEndpoints] as string[],
+		};
 	},
 	computed: {
 		apiUrl(): string {
@@ -100,19 +119,23 @@ export default defineComponent({
 		docsUrl(): string {
 			return `${docsPrefix()}/docs/reference/api`;
 		},
-		publicEndpoints(): string[] {
-			return [
-				"/api/state",
-				"/api/loadpoints/{id}/mode",
-				"/api/loadpoints/{id}/limitsoc",
-				"/api/vehicles/{name}/minsoc",
-				"/api/sessions",
-				"/api/tariff/{type}",
-				"/api/auth/status",
-			];
-		},
-		protectedEndpoints(): string[] {
-			return ["/api/config/…", "/api/system/…"];
+	},
+	async mounted() {
+		await this.fetchEndpoints();
+	},
+	methods: {
+		async fetchEndpoints() {
+			try {
+				const endpointManifest = await getApiEndpoints();
+				if (endpointManifest.public.length) {
+					this.publicEndpoints = endpointManifest.public;
+				}
+				if (endpointManifest.protected.length) {
+					this.protectedEndpoints = endpointManifest.protected;
+				}
+			} catch {
+				// Fallback keeps modal functional against older backends without /api/endpoints.
+			}
 		},
 	},
 });

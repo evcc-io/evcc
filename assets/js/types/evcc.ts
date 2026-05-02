@@ -24,6 +24,11 @@ declare global {
 
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
+export interface ApiEndpointManifest {
+  public: string[];
+  protected: string[];
+}
+
 export interface MqttConfig {
   broker: string;
   topic: string;

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
+	"sort"
+	"strings"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -34,11 +37,81 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
+type apiEndpointManifest struct {
+	Public    []string `json:"public"`
+	Protected []string `json:"protected"`
+}
+
+var pathPatternRegex = regexp.MustCompile(`\{([a-zA-Z0-9_]+):[^}]+\}`)
+var loadpointPathRegex = regexp.MustCompile(`^/api/loadpoints/[0-9]+`)
+
 func (r route) Methods() []string {
 	if r.Method == http.MethodGet {
 		return []string{r.Method}
 	}
 	return []string{r.Method, http.MethodOptions}
+}
+
+func normalizeEndpointPath(path string) string {
+	path = pathPatternRegex.ReplaceAllString(path, "{$1}")
+	path = loadpointPathRegex.ReplaceAllString(path, "/api/loadpoints/{id}")
+
+	return path
+}
+
+func isProtectedAPIPath(path string) bool {
+	return strings.HasPrefix(path, "/api/config") || strings.HasPrefix(path, "/api/system")
+}
+
+func listAPIEndpoints(router *mux.Router) (apiEndpointManifest, error) {
+	public := make(map[string]struct{})
+	protected := make(map[string]struct{})
+
+	err := router.Walk(func(route *mux.Route, _ *mux.Router, _ []*mux.Route) error {
+		path, err := route.GetPathTemplate()
+		if err != nil || !strings.HasPrefix(path, "/api") {
+			return nil
+		}
+
+		endpoint := normalizeEndpointPath(path)
+		if isProtectedAPIPath(endpoint) {
+			protected[endpoint] = struct{}{}
+		} else {
+			public[endpoint] = struct{}{}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return apiEndpointManifest{}, err
+	}
+
+	toSortedList := func(m map[string]struct{}) []string {
+		res := make([]string, 0, len(m))
+		for endpoint := range m {
+			res = append(res, endpoint)
+		}
+		sort.Strings(res)
+		return res
+	}
+
+	return apiEndpointManifest{
+		Public:    toSortedList(public),
+		Protected: toSortedList(protected),
+	}, nil
+}
+
+func apiEndpointsHandler(router *mux.Router) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		manifest, err := listAPIEndpoints(router)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		jsonWrite(w, manifest)
+	}
 }
 
 // HTTPd wraps an http.Server and adds the root router
@@ -252,7 +325,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // /api
 		routes := map[string]route{
-			"state": {"GET", "/state", stateHandler(cache)},
+			"state":     {"GET", "/state", stateHandler(cache)},
+			"endpoints": {"GET", "/endpoints", apiEndpointsHandler(router)},
 		}
 
 		for _, r := range routes {

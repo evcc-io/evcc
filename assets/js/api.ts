@@ -1,5 +1,6 @@
 import axios, { type AxiosResponse } from "axios";
 import { openLoginModal } from "./components/Auth/auth";
+import type { ApiEndpointManifest } from "./types/evcc";
 
 const { protocol, hostname, port, pathname } = window.location;
 
@@ -91,3 +92,8 @@ export function downloadFile(res: AxiosResponse) {
     window.URL.revokeObjectURL(url);
   }
 }
+
+export const getApiEndpoints = async (): Promise<ApiEndpointManifest> => {
+  const response = await api.get<ApiEndpointManifest>("endpoints");
+  return response.data;
+};
