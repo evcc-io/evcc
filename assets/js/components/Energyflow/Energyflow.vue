@@ -350,6 +350,7 @@ import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
 	type Battery,
+	type BatteryForecastPoint,
 	type Meter,
 	type CURRENCY,
 	type Forecast,
@@ -688,7 +689,7 @@ export default defineComponent({
 			return `${this.$t("config.devices.consumer")} #${index + 1}`;
 		},
 		fmtForecastPoint(
-			point: { soc: number; time: string; limit?: boolean } | undefined,
+			point: BatteryForecastPoint | undefined,
 			high: boolean
 		): string | undefined {
 			if (!point) return undefined;
