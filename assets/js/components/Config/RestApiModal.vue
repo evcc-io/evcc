@@ -30,6 +30,20 @@
 			/>
 			<CopyLink :text="apiUrl" />
 
+			<!-- Security alert -->
+			<div
+				class="alert mt-3 mb-0"
+				:class="authDisabled ? 'alert-warning' : 'alert-info'"
+				role="alert"
+			>
+				<strong>{{ $t("config.restapi.securityTitle") }}:</strong>
+				{{
+					authDisabled
+						? $t("config.restapi.securityNoPassword")
+						: $t("config.restapi.securityWithPassword")
+				}}
+			</div>
+
 			<!-- Public endpoints -->
 			<div class="mt-4">
 				<label class="label-sm">{{ $t("config.restapi.publicTitle") }}</label>
@@ -60,19 +74,6 @@
 				</ul>
 			</div>
 
-			<!-- Security alert -->
-			<div
-				class="alert mt-4 mb-0"
-				:class="authDisabled ? 'alert-warning' : 'alert-info'"
-				role="alert"
-			>
-				<strong>{{ $t("config.restapi.securityTitle") }}:</strong>
-				{{
-					authDisabled
-						? $t("config.restapi.securityNoPassword")
-						: $t("config.restapi.securityWithPassword")
-				}}
-			</div>
 		</div>
 	</GenericModal>
 </template>
