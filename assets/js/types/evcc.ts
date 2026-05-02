@@ -592,7 +592,7 @@ export interface BatteryForecast {
 export interface BatteryForecastPoint {
   soc: number; // percent
   time: string; // ISO 8601 datetime
-  limit?: boolean; // true when SMax (highest) or SMin (lowest) boundary reached
+  limit?: "full" | "empty"; // SMax/SMin boundary reached
 }
 
 export interface Battery {

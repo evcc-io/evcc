@@ -100,7 +100,7 @@ BatteryForecastDischarging.args = {
   ...batteryBase,
   gridPower: 500,
   homePower: 1800,
-  battery: bat(1300, 62, { lowest: { soc: 0, time: hoursFromNow(0.4), limit: true } }),
+  battery: bat(1300, 62, { lowest: { soc: 0, time: hoursFromNow(0.4), limit: "empty" } }),
 } as any;
 
 export const BatteryForecastCharging = Template.bind({});
@@ -108,7 +108,7 @@ BatteryForecastCharging.args = {
   ...batteryBase,
   pvPower: 6000,
   gridPower: -1000,
-  battery: bat(-4200, 45, { highest: { soc: 100, time: hoursFromNow(2.5), limit: true } }),
+  battery: bat(-4200, 45, { highest: { soc: 100, time: hoursFromNow(2.5), limit: "full" } }),
 } as any;
 
 export const BatteryForecastBoth = Template.bind({});
@@ -117,8 +117,8 @@ BatteryForecastBoth.args = {
   pvPower: 3000,
   gridPower: -500,
   battery: bat(-1700, 70, {
-    highest: { soc: 100, time: hoursFromNow(2), limit: true },
-    lowest: { soc: 0, time: hoursFromNow(36), limit: true },
+    highest: { soc: 100, time: hoursFromNow(2), limit: "full" },
+    lowest: { soc: 0, time: hoursFromNow(36), limit: "empty" },
   }),
 } as any;
 
@@ -128,8 +128,8 @@ BatteryForecastSocExtremes.args = {
   gridPower: 200,
   homePower: 1500,
   battery: bat(1300, 95, {
-    highest: { soc: 100, time: hoursFromNow(20), limit: true },
-    lowest: { soc: 34, time: hoursFromNow(8), limit: false },
+    highest: { soc: 100, time: hoursFromNow(20), limit: "full" },
+    lowest: { soc: 34, time: hoursFromNow(8) },
   }),
 } as any;
 
@@ -139,7 +139,7 @@ BatteryForecastMulti.args = {
   pvPower: 8000,
   gridPower: -1000,
   homePower: 1000,
-  battery: bat(-6000, 40, { highest: { soc: 100, time: hoursFromNow(26), limit: true } }, [
+  battery: bat(-6000, 40, { highest: { soc: 100, time: hoursFromNow(26), limit: "full" } }, [
     dev("Powerwall", -3500, 35),
     dev("BYD", -2500, 47),
   ]),
@@ -153,7 +153,7 @@ BatteryForecastGridChargeLimit.args = {
   batteryGridChargeLimit: 0.15,
   smartCostType: "price",
   currency: CURRENCY.EUR,
-  battery: bat(-3700, 50, { highest: { soc: 100, time: hoursFromNow(1.5), limit: true } }),
+  battery: bat(-3700, 50, { highest: { soc: 100, time: hoursFromNow(1.5), limit: "full" } }),
 } as any;
 
 export const BatteryAndGrid = Template.bind({});
