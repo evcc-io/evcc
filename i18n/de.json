@@ -430,10 +430,11 @@
       "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
     },
     "mcp": {
-      "description": "Stellt evcc als Model Context Protocol Server bereit. Damit können KI-Assistenten wie Claude deine evcc-Installation auslesen und steuern. Standardmäßig deaktiviert. Die Schnittstelle ist aktuell nicht authentifiziert, daher nur in vertrauenswürdigen Netzwerken aktivieren.",
-      "enable": "MCP-Server aktivieren",
-      "restartHint": "evcc neu starten, um die Änderung zu übernehmen.",
-      "title": "MCP Server"
+      "description": "Stellt einen Model Context Protocol Server bereit. Damit können KI-Assistenten wie Claude den Zustand deines Systems auslesen und das Laden steuern.",
+      "exampleLabel": "Beispiel: Claude CLI",
+      "restartHint": "Wird nach Neustart verfügbar.",
+      "title": "MCP Server",
+      "url": "MCP-Endpunkt"
     },
     "messaging": {
       "addMessenger": "Dienst hinzufügen",

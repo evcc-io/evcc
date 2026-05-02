@@ -379,9 +379,9 @@
 						<template #icon><EebusIcon /></template>
 					</DeviceCard>
 					<DeviceCard
+						v-if="experimental"
 						:title="`${$t('config.mcp.title')} 🧪`"
 						editable
-						:configured="!!mcp"
 						data-testid="mcp"
 						@edit="openModal('mcp')"
 					>
@@ -835,9 +835,6 @@ export default defineComponent({
 		},
 		experimental() {
 			return store.state?.experimental;
-		},
-		mcp() {
-			return store.state?.mcp;
 		},
 		eebus() {
 			return store.state?.eebus;

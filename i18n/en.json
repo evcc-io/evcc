@@ -430,10 +430,11 @@
       "welcomeBannerTitle": "Let's configure your system!"
     },
     "mcp": {
-      "description": "Exposes evcc as a Model Context Protocol server, allowing AI assistants like Claude to read and control your evcc setup. Disabled by default. The endpoint is currently unauthenticated, only enable in trusted networks.",
-      "enable": "Enable MCP server",
-      "restartHint": "Restart evcc to apply the change.",
-      "title": "MCP Server"
+      "description": "Exposes a Model Context Protocol server, allowing AI assistants like Claude to read the state of your system and control charging.",
+      "exampleLabel": "Example: Claude CLI",
+      "restartHint": "Will be available after restart.",
+      "title": "MCP Server",
+      "url": "MCP endpoint"
     },
     "messaging": {
       "addMessenger": "Add service",

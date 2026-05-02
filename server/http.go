@@ -300,7 +300,6 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
-			"mcp":                {"POST", "/mcp/{value:[01truefalse]+}", boolHandler(setMcp(pub), getMcp)},
 		}
 
 		if remoteAccess != nil {

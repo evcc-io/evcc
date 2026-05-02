@@ -5,64 +5,67 @@
 		config-modal-name="mcp"
 		data-testid="mcp-modal"
 	>
+		<div v-if="!mcpActive" class="alert alert-warning mb-4" role="alert">
+			{{ $t("config.mcp.restartHint") }}
+		</div>
 		<p>
 			{{ $t("config.mcp.description") }}
+			<a :href="docsLink" target="_blank">{{ $t("config.general.docsLink") }}</a>
 		</p>
-		<ErrorMessage :error="error" />
-		<div class="form-check form-switch my-3">
+		<FormRow id="mcpModalServerUrl" :label="$t('config.mcp.url')">
 			<input
-				id="mcpEnabled"
-				:checked="enabled"
-				class="form-check-input"
-				type="checkbox"
-				role="switch"
-				@change="change"
+				id="mcpModalServerUrl"
+				type="text"
+				class="form-control border"
+				:value="mcpUrl"
+				readonly
 			/>
-			<div class="form-check-label">
-				<label for="mcpEnabled">
-					{{ $t("config.mcp.enable") }}
-				</label>
-			</div>
-		</div>
-		<p v-if="changed" class="text-muted small mt-2">
-			{{ $t("config.mcp.restartHint") }}
-		</p>
+			<CopyLink :text="mcpUrl" />
+		</FormRow>
+		<FormRow id="mcpModalExample" :label="$t('config.mcp.exampleLabel')">
+			<pre
+				id="mcpModalExample"
+				class="form-control border font-monospace small mb-2 mcp-example"
+				>{{ claudeExample }}</pre
+			>
+			<CopyLink :text="claudeExample" />
+		</FormRow>
 	</GenericModal>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import ErrorMessage from "../Helper/ErrorMessage.vue";
-import api from "@/api";
+import CopyLink from "../Helper/CopyLink.vue";
+import FormRow from "./FormRow.vue";
 import store from "@/store";
-import type { AxiosError } from "axios";
+import { docsPrefix } from "@/i18n";
 
 export default defineComponent({
 	name: "McpModal",
-	components: { GenericModal, ErrorMessage },
-	data() {
-		return {
-			error: null as string | null,
-			changed: false,
-		};
-	},
+	components: { GenericModal, CopyLink, FormRow },
 	computed: {
-		enabled(): boolean {
+		mcpActive(): boolean {
 			return !!store.state?.mcp;
 		},
-	},
-	methods: {
-		async change(e: Event) {
-			try {
-				this.error = null;
-				await api.post(`config/mcp/${(e.target as HTMLInputElement).checked}`);
-				this.changed = true;
-			} catch (err) {
-				const e = err as AxiosError<{ error: string }>;
-				this.error = e.response?.data?.error || e.message;
-			}
+		mcpUrl(): string {
+			return `${window.location.origin}/mcp`;
+		},
+		claudeExample(): string {
+			return `claude mcp add --transport http evcc ${this.mcpUrl}`;
+		},
+		docsLink(): string {
+			return `${docsPrefix()}/docs/integrations/mcp`;
 		},
 	},
 });
 </script>
+
+<style scoped>
+.mcp-example {
+	white-space: pre;
+	overflow-x: scroll;
+	width: 100%;
+	box-sizing: border-box;
+}
+</style>

@@ -1392,6 +1392,5 @@ func isOptimizer() bool {
 
 // isMcp returns if MCP service is enabled
 func isMcp() bool {
-	b, _ := settings.Bool(keys.Mcp)
-	return b
+	return isExperimental()
 }
