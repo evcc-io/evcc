@@ -100,4 +100,3 @@ func endpointOccurrences(endpoints []string, value string) int {
 	}
 	return count
 }
-
