@@ -22,7 +22,7 @@ type Connection struct {
 	*request.Helper
 	*fritz.Settings
 	SID     string
-	UID     string // device UID (AIN with space)
+	UID     string // unitUid resolved from /devices
 	updated time.Time
 	unitG   util.Cacheable[Unit]
 }
@@ -47,18 +47,22 @@ func NewConnection(uri, ain, user, password string, unit int) (*Connection, erro
 
 	log := util.NewLogger("fritzsmarthome").Redact(password)
 
-	uid := ainToUID(ain)
-	if unit > 0 {
-		uid = fmt.Sprintf("%s-%d", uid, unit)
-	}
-
 	conn := &Connection{
 		Helper:   request.NewHelper(log),
 		Settings: settings,
-		UID:      uid,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
+
+	if err := conn.refreshSession(); err != nil {
+		return nil, err
+	}
+
+	uid, err := conn.resolveUnitUID(unit)
+	if err != nil {
+		return nil, err
+	}
+	conn.UID = uid
 
 	// cache unit data for 2 seconds to avoid excessive API calls
 	conn.unitG = util.ResettableCached(func() (Unit, error) {
@@ -68,15 +72,33 @@ func NewConnection(uri, ain, user, password string, unit int) (*Connection, erro
 	return conn, nil
 }
 
-// ainToUID converts AIN format to UID format by adding space
-// AIN: "116300015376" -> UID: "11630 0015376"
-func ainToUID(ain string) string {
-	// Remove any existing spaces first
-	ain = strings.ReplaceAll(ain, " ", "")
-	if len(ain) >= 5 {
-		return ain[:5] + " " + ain[5:]
+// resolveUnitUID looks up the device by AIN and returns its unitUid at the given index
+func (c *Connection) resolveUnitUID(unit int) (string, error) {
+	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/devices", c.URI)
+
+	req, _ := request.New("GET", uri, nil, map[string]string{
+		"Authorization": "AVM-SID " + c.SID,
+	}, request.AcceptJSON)
+
+	var devices []Device
+	if err := c.DoJSON(req, &devices); err != nil {
+		return "", err
 	}
-	return ain
+
+	for _, d := range devices {
+		if d.AIN != c.AIN {
+			continue
+		}
+		if len(d.UnitUids) == 0 {
+			return "", fmt.Errorf("device %s has no units", c.AIN)
+		}
+		if unit < 0 || unit >= len(d.UnitUids) {
+			return "", fmt.Errorf("unit %d out of range (device has %d unit(s))", unit, len(d.UnitUids))
+		}
+		return d.UnitUids[unit], nil
+	}
+
+	return "", fmt.Errorf("device not found: %s", c.AIN)
 }
 
 // getUnit fetches unit data from REST API
@@ -85,7 +107,6 @@ func (c *Connection) getUnit() (Unit, error) {
 		return Unit{}, err
 	}
 
-	// Try to get the specific unit first
 	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units/%s", c.URI, url.PathEscape(c.UID))
 
 	req, _ := request.New("GET", uri, nil, map[string]string{
@@ -94,8 +115,7 @@ func (c *Connection) getUnit() (Unit, error) {
 
 	var unit Unit
 	if err := c.DoJSON(req, &unit); err != nil {
-		// Fall back to getting all units and finding ours
-		return c.findUnit()
+		return Unit{}, err
 	}
 
 	if !unit.IsConnected {
@@ -103,36 +123,6 @@ func (c *Connection) getUnit() (Unit, error) {
 	}
 
 	return unit, nil
-}
-
-// findUnit searches for our unit in the list of all units
-func (c *Connection) findUnit() (Unit, error) {
-	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units", c.URI)
-
-	req, err := request.New("GET", uri, nil, map[string]string{
-		"Authorization": "AVM-SID " + c.SID,
-	}, request.AcceptJSON)
-	if err != nil {
-		return Unit{}, err
-	}
-
-	var units []Unit
-	if err := c.DoJSON(req, &units); err != nil {
-		return Unit{}, err
-	}
-
-	// Search for matching unit by UID or AIN
-	for _, unit := range units {
-		unitAIN := strings.ReplaceAll(unit.UID, " ", "")
-		if unit.UID == c.UID || unitAIN == c.AIN {
-			if !unit.IsConnected {
-				return unit, api.ErrNotAvailable
-			}
-			return unit, nil
-		}
-	}
-
-	return Unit{}, fmt.Errorf("unit not found: %s", c.AIN)
 }
 
 // CurrentPower implements the api.Meter interface
