@@ -85,18 +85,6 @@ import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import { getApiEndpoints } from "@/api";
 
-const fallbackPublicEndpoints = [
-	"/api/state",
-	"/api/loadpoints/{id}/mode",
-	"/api/loadpoints/{id}/limitsoc",
-	"/api/vehicles/{name}/minsoc",
-	"/api/sessions",
-	"/api/tariff/{type}",
-	"/api/auth/status",
-];
-
-const fallbackProtectedEndpoints = ["/api/config/…", "/api/system/…"];
-
 export default defineComponent({
 	name: "RestApiModal",
 	components: {
@@ -105,8 +93,8 @@ export default defineComponent({
 	},
 	data() {
 		return {
-			publicEndpoints: [...fallbackPublicEndpoints] as string[],
-			protectedEndpoints: [...fallbackProtectedEndpoints] as string[],
+			publicEndpoints: [] as string[],
+			protectedEndpoints: [] as string[],
 		};
 	},
 	computed: {
@@ -127,14 +115,11 @@ export default defineComponent({
 		async fetchEndpoints() {
 			try {
 				const endpointManifest = await getApiEndpoints();
-				if (endpointManifest.public.length) {
-					this.publicEndpoints = endpointManifest.public;
-				}
-				if (endpointManifest.protected.length) {
-					this.protectedEndpoints = endpointManifest.protected;
-				}
+				this.publicEndpoints = endpointManifest.public;
+				this.protectedEndpoints = endpointManifest.protected;
 			} catch {
-				// Fallback keeps modal functional against older backends without /api/endpoints.
+				this.publicEndpoints = [];
+				this.protectedEndpoints = [];
 			}
 		},
 	},
