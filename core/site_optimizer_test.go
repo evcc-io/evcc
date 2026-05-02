@@ -114,18 +114,11 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
 		},
 		{
-			"within 1% of SMax counts as full",
+			"near SMax is not full",
 			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
-			[][]float32{{500, 991, 800}},
-			&batteryForecastSlot{slot: 1, soc: 99.1, limit: true},
+			[][]float32{{500, 999, 800}},
+			&batteryForecastSlot{slot: 1, soc: 99.9, limit: false},
 			&batteryForecastSlot{slot: 0, soc: 50, limit: false},
-		},
-		{
-			"within 1% of SMin counts as empty",
-			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 900, SMin: 100}},
-			[][]float32{{500, 109, 800}},
-			&batteryForecastSlot{slot: 2, soc: 80, limit: false},
-			&batteryForecastSlot{slot: 1, soc: 10.9, limit: true},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
