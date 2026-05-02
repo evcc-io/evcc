@@ -63,29 +63,8 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	})
 }
 
-// TokenSourceWithInitial creates a token source, using initialToken if non-nil,
-// or performing a fresh login otherwise. Unlike TokenSource, this does not cache.
-func (c *tokenSource) TokenSourceWithInitial(initialToken *oauth2.Token) (oauth2.TokenSource, error) {
-	if initialToken == nil {
-		token, err := c.Authenticate()
-		if err != nil {
-			return nil, err
-		}
-		initialToken = token
-	}
-	return oauth.RefreshTokenSource(initialToken, c.RefreshToken), nil
-}
-
 // Authenticate performs the initial username/password login and returns an oauth2.Token.
 func (c *tokenSource) Authenticate() (*oauth2.Token, error) {
-	token, err := c.login()
-	if err != nil {
-		return nil, err
-	}
-	return token.AsOAuth2Token(), nil
-}
-
-func (c *tokenSource) login() (*Token, error) {
 	data := struct {
 		Username string `json:"userName"`
 		Password string `json:"password"`
@@ -101,9 +80,11 @@ func (c *tokenSource) login() (*Token, error) {
 	}
 
 	var token Token
-	err = c.DoJSON(req, &token)
+	if err := c.DoJSON(req, &token); err != nil {
+		return nil, err
+	}
 
-	return &token, err
+	return token.AsOAuth2Token(), nil
 }
 
 // RefreshToken refreshes an existing oauth2 token using the Easee refresh endpoint.
@@ -126,9 +107,7 @@ func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, err
 	var token *Token
 	if err := c.DoJSON(req, &token); err != nil {
 		// re-login on refresh failure
-		if token, err = c.login(); err != nil {
-			return nil, err
-		}
+		return c.Authenticate()
 	}
 
 	return token.AsOAuth2Token(), nil

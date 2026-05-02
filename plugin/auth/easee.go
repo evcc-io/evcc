@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"sync"
 
-	//"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -38,10 +37,36 @@ func newEaseeFromConfig(_ context.Context, other map[string]any) (oauth2.TokenSo
 	return NewEaseeTokenSource(cc.User, cc.Password)
 }
 
-// easeeSubject derives a stable settings DB key from the user email.
-func easeeSubject(user string) string {
-	h := sha256.Sum256([]byte(user))
+// easeeSubject derives a stable settings DB key from the user email and password.
+// Including the password ensures that a password change triggers reauthentication
+// when no valid refresh token is available.
+func easeeSubject(user, password string) string {
+	h := sha256.Sum256([]byte(user + ":" + password))
 	return "easee-" + hex.EncodeToString(h[:])[:8]
+}
+
+// loadEaseeToken restores a persisted token from the DB to avoid an unnecessary login.
+func loadEaseeToken(subject string) *oauth2.Token {
+	if !settings.Exists(subject) {
+		return nil
+	}
+
+	var storedToken oauth2.Token
+	if err := settings.Json(subject, &storedToken); err != nil {
+		return nil
+	}
+	if storedToken.RefreshToken == "" {
+		return nil
+	}
+
+	return &storedToken
+}
+
+// persistEaseeToken saves the token to the DB so it can be reused across restarts without a fresh login.
+func persistEaseeToken(log *util.Logger, subject string, token *oauth2.Token) {
+	if err := settings.SetJson(subject, token); err != nil {
+		log.WARN.Printf("failed to persist Easee token: %v", err)
+	}
 }
 
 // NewEaseeTokenSource returns a shared, persistent oauth2.TokenSource for the
@@ -53,7 +78,7 @@ func NewEaseeTokenSource(user, password string) (oauth2.TokenSource, error) {
 	easeeInstancesMu.Lock()
 	defer easeeInstancesMu.Unlock()
 
-	subject := easeeSubject(user)
+	subject := easeeSubject(user, password)
 	if ts, ok := easeeInstances[subject]; ok {
 		return ts, nil
 	}
@@ -61,23 +86,13 @@ func NewEaseeTokenSource(user, password string) (oauth2.TokenSource, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 	id := easee.NewIdentity(log, user, password)
 
-	// Restore a persisted token from the DB to avoid an unnecessary login.
-	var initialToken *oauth2.Token
-	var storedToken oauth2.Token
-	if settings.Exists(subject) {
-		if err := settings.Json(subject, &storedToken); err == nil && storedToken.RefreshToken != "" {
-			initialToken = &storedToken
-		}
-	}
-
+	initialToken := loadEaseeToken(subject)
 	if initialToken == nil {
 		token, err := id.Authenticate()
 		if err != nil {
 			return nil, err
 		}
-		if err := settings.SetJson(subject, token); err != nil {
-			log.WARN.Printf("failed to persist Easee token: %v", err)
-		}
+		persistEaseeToken(log, subject, token)
 		initialToken = token
 	}
 
@@ -86,9 +101,7 @@ func NewEaseeTokenSource(user, password string) (oauth2.TokenSource, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := settings.SetJson(subject, newToken); err != nil {
-			log.WARN.Printf("failed to persist refreshed Easee token: %v", err)
-		}
+		persistEaseeToken(log, subject, newToken)
 		return newToken, nil
 	}
 
