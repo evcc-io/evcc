@@ -49,29 +49,38 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 }
 
 type loadpointFullConfig struct {
-	ID   int    `json:"id,omitempty"` // db row id
-	Name string `json:"name"`         // either slice index (yaml) or db:<row id>
+	ID      int    `json:"id,omitempty"` // db row id
+	Name    string `json:"name"`         // either slice index (yaml) or db:<row id>
+	Disable bool   `json:"disable,omitempty"`
 
 	// static config
 	loadpoint.StaticConfig
 	loadpoint.DynamicConfig
 }
 
-func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any, error) {
+func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any, bool, error) {
 	var payload map[string]any
 
 	if err := jsonDecoder(r).Decode(&payload); err != nil {
-		return loadpoint.DynamicConfig{}, nil, err
+		return loadpoint.DynamicConfig{}, nil, false, err
 	}
 
-	return loadpoint.SplitConfig(payload)
+	disable, _ := payload["disable"].(bool)
+	delete(payload, "disable")
+
+	dynamic, static, err := loadpoint.SplitConfig(payload)
+	return dynamic, static, disable, err
 }
 
 // loadpointConfig returns a single loadpoint's configuration
 func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
-	var id int
+	var (
+		id      int
+		disable bool
+	)
 	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
 		id = configurable.ID()
+		disable = configurable.Properties().Disable
 	}
 
 	lp := dev.Instance()
@@ -98,6 +107,7 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 	res := loadpointFullConfig{
 		ID:            id,
 		Name:          dev.Config().Name,
+		Disable:       disable,
 		StaticConfig:  getLoadpointStaticConfig(lp),
 		DynamicConfig: getLoadpointDynamicConfig(lp),
 	}
@@ -148,7 +158,7 @@ func newLoadpointHandler() http.HandlerFunc {
 	// TODO revert charger, meter etc
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		dynamic, static, err := loadpointSplitConfig(r.Body)
+		dynamic, static, disable, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -158,7 +168,7 @@ func newLoadpointHandler() http.HandlerFunc {
 		name := "lp-" + strconv.Itoa(id+1)
 		log := util.NewLoggerWithLoadpoint(name, id+1)
 
-		conf, err := config.AddConfig(templates.Loadpoint, static)
+		conf, err := config.AddConfig(templates.Loadpoint, static, config.WithProperties(config.Properties{Disable: disable}))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -216,7 +226,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		dynamic, static, err := loadpointSplitConfig(r.Body)
+		dynamic, static, disable, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -233,7 +243,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 
 		instance := dev.Instance()
 
-		if err := configurable.Update(other, instance); err != nil {
+		if err := configurable.Update(other, instance, config.WithProperties(config.Properties{Disable: disable})); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

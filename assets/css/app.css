@@ -297,6 +297,23 @@ a:hover {
 	--bs-btn-line-height: 2;
 }
 
+.btn-pill {
+	--bs-btn-bg: var(--bs-body-bg);
+	--bs-btn-color: var(--evcc-default-text);
+	--bs-btn-border-color: var(--evcc-gray-50);
+	--bs-btn-hover-bg: var(--bs-body-bg);
+	--bs-btn-hover-color: var(--evcc-default-text);
+	--bs-btn-hover-border-color: var(--evcc-default-text);
+	--bs-btn-active-bg: var(--bs-body-bg);
+	--bs-btn-active-color: var(--evcc-default-text);
+	--bs-btn-active-border-color: var(--evcc-default-text);
+	white-space: nowrap;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 0.75rem;
+	border-radius: 50rem;
+}
+
 .btn-outline-secondary {
 	--bs-btn-color: var(--evcc-default-text);
 	--bs-btn-border-color: var(--evcc-default-text);

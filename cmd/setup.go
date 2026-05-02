@@ -51,7 +51,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
-	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -333,7 +332,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	}
 
 	var instance T
-	if err == nil {
+	if err == nil && !conf.Disable {
 		instance, err = newFromConf(ctx, typ, other)
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
@@ -1232,9 +1231,12 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
-	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		return dev.Instance().(*core.Loadpoint)
-	})
+	var loadpoints []*core.Loadpoint
+	for _, dev := range config.Loadpoints().Devices() {
+		if inst, _ := dev.Instance().(*core.Loadpoint); inst != nil {
+			loadpoints = append(loadpoints, inst)
+		}
+	}
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
@@ -1338,9 +1340,12 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
-		if err != nil {
-			err = &DeviceError{cc.Name, err}
+		var instance *core.Loadpoint
+		if !conf.Disable {
+			instance, err = core.NewLoadpointFromConfig(log, settings, static)
+			if err != nil {
+				err = &DeviceError{cc.Name, err}
+			}
 		}
 
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)

@@ -127,6 +127,23 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	return site, nil
 }
 
+func activeMeters(refs []string) ([]config.Device[api.Meter], error) {
+	var res []config.Device[api.Meter]
+	for _, ref := range refs {
+		dev, err := config.Meters().ByName(ref)
+		if err != nil {
+			return nil, err
+		}
+		if dev.Instance() == nil {
+			continue
+		}
+
+		res = append(res, dev)
+	}
+
+	return res, nil
+}
+
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
@@ -203,6 +220,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
+		if dev.Instance() == nil {
+			continue
+		}
+
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// accumulator
@@ -210,31 +231,25 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// multiple batteries
-	for _, ref := range site.Meters.BatteryMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.batteryMeters = append(site.batteryMeters, dev)
+	mm, err := activeMeters(site.Meters.BatteryMetersRef)
+	if err != nil {
+		return err
 	}
+	site.batteryMeters = mm
 
 	// meters used only for monitoring
-	for _, ref := range site.Meters.ExtMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.extMeters = append(site.extMeters, dev)
+	mm, err = activeMeters(site.Meters.ExtMetersRef)
+	if err != nil {
+		return err
 	}
+	site.extMeters = mm
 
 	// auxiliary meters
-	for _, ref := range site.Meters.AuxMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.auxMeters = append(site.auxMeters, dev)
+	mm, err = activeMeters(site.Meters.AuxMetersRef)
+	if err != nil {
+		return err
 	}
+	site.auxMeters = mm
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {

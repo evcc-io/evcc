@@ -156,6 +156,7 @@
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
+					:is-disabled="isDisabled"
 					:test-state="test"
 					:is-saving="saving"
 					:is-succeeded="succeeded"
@@ -165,6 +166,7 @@
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
+					@disable="handleDisable"
 				/>
 			</template>
 		</form>
@@ -277,6 +279,7 @@ export default defineComponent({
 		"added",
 		"updated",
 		"removed",
+		"disable",
 		"close",
 		"template-changed",
 		"update:externalTemplate",
@@ -400,6 +403,9 @@ export default defineComponent({
 		},
 		isDeletable() {
 			return !this.isNew;
+		},
+		isDisabled() {
+			return Boolean(this.values.deviceDisable);
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -561,6 +567,9 @@ export default defineComponent({
 				if (device.deviceIcon !== undefined) {
 					this.values.deviceIcon = device.deviceIcon;
 				}
+				if (device.deviceDisable !== undefined) {
+					this.values.deviceDisable = device.deviceDisable;
+				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
 
@@ -716,6 +725,11 @@ export default defineComponent({
 			} catch (e) {
 				handleError(e, "remove failed");
 			}
+		},
+		async handleDisable(disable: boolean) {
+			if (this.id === undefined) return;
+			this.$emit("disable", { id: this.id, disable });
+			await closeModal();
 		},
 		handleOpen() {
 			this.isModalVisible = true;

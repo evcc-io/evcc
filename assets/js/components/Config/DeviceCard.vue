@@ -26,7 +26,21 @@
 				@edit="$emit('edit')"
 			/>
 		</div>
-		<div v-if="$slots.tags" ref="tagsContainer" :style="tagsStyle">
+		<template v-if="disabled">
+			<hr class="mt-3 mb-0 divide" />
+			<div class="disabled-region">
+				<button
+					type="button"
+					class="btn btn-sm btn-pill px-3"
+					:aria-label="$t('config.general.enable')"
+					data-testid="device-disabled"
+					@click.stop="$emit('enable')"
+				>
+					{{ $t("config.general.disabled") }}
+				</button>
+			</div>
+		</template>
+		<div v-else-if="$slots.tags" ref="tagsContainer" :style="tagsStyle">
 			<hr class="my-3 divide" />
 			<div ref="tagsContent">
 				<slot name="tags" />
@@ -52,8 +66,9 @@ export default {
 		warning: Boolean,
 		noEditButton: Boolean,
 		badge: Boolean,
+		disabled: Boolean,
 	},
-	emits: ["edit"],
+	emits: ["edit", "enable"],
 	data() {
 		return {
 			tagsMinHeight: null,
@@ -99,7 +114,8 @@ export default {
 
 <style scoped>
 .root {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	list-style-type: none;
 	border-radius: 1rem;
 	padding: 1rem 1.5rem;
@@ -120,6 +136,23 @@ export default {
 .root--unconfigured :deep(.label) {
 	color: var(--evcc-gray) !important;
 	font-weight: normal !important;
+}
+.disabled-region {
+	flex: 1;
+	margin: 0 -1.5rem -1rem;
+	padding: 1.25rem 1.5rem;
+	min-height: 5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0 0 1rem 1rem;
+	background-image: repeating-linear-gradient(
+		-45deg,
+		transparent 0,
+		transparent 10px,
+		var(--evcc-gray-25) 10px,
+		var(--evcc-gray-25) 20px
+	);
 }
 .icon:empty {
 	display: none;

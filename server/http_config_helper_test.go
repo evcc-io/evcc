@@ -33,18 +33,33 @@ func TestConfigReqUnmarshal(t *testing.T) {
 }
 
 func TestConfigReqMarshalToMap(t *testing.T) {
-	props := config.Properties{
+	res, err := propsToMap(config.Properties{
 		Type:    "type",
 		Title:   "title",
 		Product: "product",
-	}
-
-	res, err := propsToMap(props)
+	})
 	require.NoError(t, err)
-
 	assert.Equal(t, map[string]any{
 		"deviceTitle":   "title",
 		"deviceProduct": "product",
+	}, res)
+
+	// Disable=false is omitted (zero value)
+	res, err = propsToMap(config.Properties{
+		Type:  "type",
+		Title: "title",
+	})
+	require.NoError(t, err)
+	assert.NotContains(t, res, "deviceDisable")
+
+	// Disable=true is included
+	res, err = propsToMap(config.Properties{
+		Type:    "type",
+		Disable: true,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{
+		"deviceDisable": true,
 	}, res)
 }
 

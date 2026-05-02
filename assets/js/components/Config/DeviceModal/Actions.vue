@@ -8,25 +8,36 @@
 			@test="$emit('test')"
 		/>
 
-		<div class="mt-4 d-flex justify-content-between">
-			<button
-				v-if="isDeletable"
-				type="button"
-				class="btn btn-link text-danger"
-				tabindex="0"
-				@click.prevent="$emit('remove')"
-			>
-				{{ $t("config.general.delete") }}
-			</button>
-			<button
-				v-else
-				type="button"
-				class="btn btn-link text-muted"
-				data-bs-dismiss="modal"
-				tabindex="0"
-			>
-				{{ $t("config.general.cancel") }}
-			</button>
+		<div class="mt-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+			<div class="d-flex flex-wrap align-items-center gap-1">
+				<button
+					v-if="isDeletable"
+					type="button"
+					class="btn btn-link text-danger"
+					tabindex="0"
+					@click.prevent="$emit('remove')"
+				>
+					{{ $t("config.general.delete") }}
+				</button>
+				<button
+					v-else
+					type="button"
+					class="btn btn-link text-muted"
+					data-bs-dismiss="modal"
+					tabindex="0"
+				>
+					{{ $t("config.general.cancel") }}
+				</button>
+				<button
+					v-if="isDeletable"
+					type="button"
+					class="btn btn-link text-muted"
+					tabindex="0"
+					@click.prevent="$emit('disable', !isDisabled)"
+				>
+					{{ isDisabled ? $t("config.general.enable") : $t("config.general.disable") }}
+				</button>
+			</div>
 			<button
 				type="submit"
 				:class="buttonClass"
@@ -61,6 +72,7 @@ export default defineComponent({
 	},
 	props: {
 		isDeletable: Boolean as PropType<boolean>,
+		isDisabled: Boolean as PropType<boolean>,
 		testState: {
 			type: Object as PropType<TestState>,
 			default: () => {},
@@ -71,7 +83,7 @@ export default defineComponent({
 		sponsorTokenRequired: Boolean as PropType<boolean>,
 		currency: String as PropType<CURRENCY>,
 	},
-	emits: ["save", "remove", "test"],
+	emits: ["save", "remove", "test", "disable"],
 	computed: {
 		saveButtonLabel(): string {
 			const { isError, isUnknown, isRunning } = this.testState;

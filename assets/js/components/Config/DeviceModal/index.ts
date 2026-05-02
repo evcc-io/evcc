@@ -56,6 +56,7 @@ export type DeviceValues = {
   template: string | null;
   deviceTitle?: string;
   deviceIcon?: string;
+  deviceDisable?: boolean;
   usage?: MeterTemplateUsage;
   heating?: boolean;
   integrateddevice?: boolean;
@@ -106,6 +107,39 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
     return `${prefix}custom${suffix}`;
   }
   return `${prefix}${type}`;
+}
+
+// flattenDeviceConfig converts a GET /config/devices/:class/:id response
+// into the flat shape expected by POST/PUT/test (id and name are dropped).
+//
+// GET (config = device-specfic):
+//   {
+//     id: 26,
+//     name: "db:26",
+//     type: "template",
+//     deviceTitle: "Espresso",
+//     device__: "..",
+//     config: {
+//       template: "tasmota",
+//       host: "192.168.1.2"
+//     }
+//   }
+//
+// PUT|POST|test (flat):
+//   {
+//     type: "template",
+//     deviceTitle: "Espresso",
+//     device__: "..",
+//     template: "tasmota",
+//     host: "192.168.1.2"
+//   }
+//
+// TODO: align GET and PUT shapes — always nest device-specific values under
+// `config` and drop the artificial `device` prefix (deviceTitle → title, ...)
+// matching db structure. Once the API is symmetric this helper goes away.
+export function flattenDeviceConfig(dev: any): Record<string, any> {
+  const { id, name, config, ...rest } = dev;
+  return { ...config, ...rest };
 }
 
 export async function loadServiceValues(path: string) {
@@ -203,6 +237,14 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return api.delete(`config/devices/${deviceType}/${id}`);
   }
 
+  // disable flips the disable flag by re-PUTing the existing config.
+  // force=true so a broken device can still be toggled.
+  async function disable(id: number, disable: boolean) {
+    const dev = (await api.get(`config/devices/${deviceType}/${id}`)).data;
+    const body = { ...flattenDeviceConfig(dev), deviceDisable: disable };
+    return api.put(`config/devices/${deviceType}/${id}`, body, { params: { force: true } });
+  }
+
   async function load(id: number) {
     const response = await api.get(`config/devices/${deviceType}/${id}`);
     return response.data;
@@ -268,6 +310,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
     test,
     update,
     remove,
+    disable,
     load,
     create,
     loadProducts,
