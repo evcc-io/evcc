@@ -38,17 +38,17 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewFritzDECT(cc.embed, cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower, cc.Firmware82)
+	return NewFritzDECT(cc.embed, cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower, cc.Firmware82, cc.Unit)
 }
 
 // NewFritzDECT creates a new connection with standbypower for charger
-func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower float64, firmware82 bool) (*FritzDECT, error) {
+func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower float64, firmware82 bool, unit int) (*FritzDECT, error) {
 	var conn fritz.Switch
 	var err error
 
 	// Use new REST API if firmware82 is set, otherwise use legacy LUA API
 	if firmware82 {
-		conn, err = smarthome.NewConnection(uri, ain, user, password)
+		conn, err = smarthome.NewConnection(uri, ain, user, password, unit)
 	} else {
 		conn, err = aha.NewConnection(uri, ain, user, password)
 	}

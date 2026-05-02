@@ -20,6 +20,7 @@ const SessionTimeout = 15 * time.Minute
 type Settings struct {
 	URI, AIN, User, Password string
 	Firmware82               bool // use new REST API (FritzOS 8.2+)
+	Unit                     int  // unit index for multi-unit devices (REST API only)
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)

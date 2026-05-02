@@ -28,7 +28,7 @@ type Connection struct {
 }
 
 // NewConnection creates a new REST API connection
-func NewConnection(uri, ain, user, password string) (*Connection, error) {
+func NewConnection(uri, ain, user, password string, unit int) (*Connection, error) {
 	if uri == "" {
 		uri = "https://fritz.box"
 	}
@@ -42,14 +42,20 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 		AIN:      ain,
 		User:     user,
 		Password: password,
+		Unit:     unit,
 	}
 
 	log := util.NewLogger("fritzsmarthome").Redact(password)
 
+	uid := ainToUID(ain)
+	if unit > 0 {
+		uid = fmt.Sprintf("%s-%d", uid, unit)
+	}
+
 	conn := &Connection{
 		Helper:   request.NewHelper(log),
 		Settings: settings,
-		UID:      ainToUID(ain),
+		UID:      uid,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
