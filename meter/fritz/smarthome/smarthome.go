@@ -98,7 +98,7 @@ func (c *Connection) resolveUnitUID(unit int) (string, error) {
 		return d.UnitUids[unit], nil
 	}
 
-	return "", fmt.Errorf("device not found: %s", c.AIN)
+	return "", fmt.Errorf("ain not found: %s", c.AIN)
 }
 
 // getUnit fetches unit data from REST API
