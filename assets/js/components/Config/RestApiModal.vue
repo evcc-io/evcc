@@ -15,6 +15,7 @@
 						</a>
 					</template>
 				</i18n-t>
+
 			</p>
 
 			<!-- API base URL with copy -->
