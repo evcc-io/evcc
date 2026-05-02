@@ -21,10 +21,8 @@ import (
 type Connection struct {
 	*request.Helper
 	*fritz.Settings
-	SID     string
-	UID     string // unitUid resolved from /devices
-	updated time.Time
-	unitG   util.Cacheable[Unit]
+	UID   string // unitUid resolved from /devices
+	unitG util.Cacheable[Unit]
 }
 
 // NewConnection creates a new REST API connection
@@ -54,10 +52,6 @@ func NewConnection(uri, ain, user, password string, unit int) (*Connection, erro
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
 
-	if err := conn.refreshSession(); err != nil {
-		return nil, err
-	}
-
 	uid, err := conn.resolveUnitUID(unit)
 	if err != nil {
 		return nil, err
@@ -74,10 +68,15 @@ func NewConnection(uri, ain, user, password string, unit int) (*Connection, erro
 
 // resolveUnitUID looks up the device by AIN and returns its unitUid at the given index
 func (c *Connection) resolveUnitUID(unit int) (string, error) {
+	sid, err := c.GetSessionID(c.Helper)
+	if err != nil {
+		return "", err
+	}
+
 	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/devices", c.URI)
 
 	req, _ := request.New("GET", uri, nil, map[string]string{
-		"Authorization": "AVM-SID " + c.SID,
+		"Authorization": "AVM-SID " + sid,
 	}, request.AcceptJSON)
 
 	var devices []Device
@@ -100,14 +99,15 @@ func (c *Connection) resolveUnitUID(unit int) (string, error) {
 
 // getUnit fetches unit data from REST API
 func (c *Connection) getUnit() (Unit, error) {
-	if err := c.refreshSession(); err != nil {
+	sid, err := c.GetSessionID(c.Helper)
+	if err != nil {
 		return Unit{}, err
 	}
 
 	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units/%s", c.URI, url.PathEscape(c.UID))
 
 	req, _ := request.New("GET", uri, nil, map[string]string{
-		"Authorization": "AVM-SID " + c.SID,
+		"Authorization": "AVM-SID " + sid,
 	}, request.AcceptJSON)
 
 	var unit Unit
@@ -194,7 +194,8 @@ func (c *Connection) SwitchOff() error {
 
 // setSwitch sets the switch state via REST API
 func (c *Connection) setSwitch(on bool) error {
-	if err := c.refreshSession(); err != nil {
+	sid, err := c.GetSessionID(c.Helper)
+	if err != nil {
 		return err
 	}
 
@@ -212,7 +213,7 @@ func (c *Connection) setSwitch(on bool) error {
 	}
 
 	req, _ := request.New("PUT", uri, request.MarshalJSON(data), map[string]string{
-		"Authorization": "AVM-SID " + c.SID,
+		"Authorization": "AVM-SID " + sid,
 	}, request.JSONEncoding)
 
 	var unit Unit
@@ -229,22 +230,6 @@ func (c *Connection) setSwitch(on bool) error {
 		if actualState != on {
 			return errors.New("switch state change failed")
 		}
-	}
-
-	return nil
-}
-
-// refreshSession ensures we have a valid session ID
-func (c *Connection) refreshSession() error {
-	// refresh Fritzbox session id
-	if time.Since(c.updated) >= fritz.SessionTimeout {
-		sid, err := c.GetSessionID(c.Helper)
-		if err != nil {
-			return err
-		}
-		// update session timestamp
-		c.SID = sid
-		c.updated = time.Now()
 	}
 
 	return nil
