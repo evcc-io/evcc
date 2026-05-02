@@ -245,4 +245,3 @@ func (c *Connection) setSwitch(on bool) error {
 
 	return nil
 }
-
