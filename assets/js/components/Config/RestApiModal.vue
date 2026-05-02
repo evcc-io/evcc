@@ -35,11 +35,7 @@
 				<label class="label-sm">{{ $t("config.restapi.publicTitle") }}</label>
 				<p class="text-muted small mb-2">{{ $t("config.restapi.publicDescription") }}</p>
 				<ul class="list-unstyled endpoint-list">
-					<li
-						v-for="endpoint in publicEndpoints"
-						:key="endpoint"
-						class="endpoint-row"
-					>
+					<li v-for="endpoint in publicEndpoints" :key="endpoint" class="endpoint-row">
 						<span class="badge bg-success badge-endpoint">{{
 							$t("config.restapi.public")
 						}}</span>
@@ -55,11 +51,7 @@
 					{{ $t("config.restapi.protectedDescription") }}
 				</p>
 				<ul class="list-unstyled endpoint-list">
-					<li
-						v-for="endpoint in protectedEndpoints"
-						:key="endpoint"
-						class="endpoint-row"
-					>
+					<li v-for="endpoint in protectedEndpoints" :key="endpoint" class="endpoint-row">
 						<span class="badge bg-warning text-dark badge-endpoint">{{
 							$t("config.restapi.protected")
 						}}</span>
