@@ -73,7 +73,7 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 	var phasesG func() (int, error)
 
 	if ip != "" && user != "" && password != "" {
-		ts, err := ghostone.TokenSource(log, wb.uri, user, password)
+		ts, err := ghostone.TokenSource(ctx, log, wb.uri, user, password)
 		if err != nil {
 			return nil, err
 		}
@@ -85,13 +85,13 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 
 		// warn if PV optimization is active
 		var pvMode ghostone.PvOptimizationMode
-		if err := wb.GetJSON(wb.uri+"/charging/pvoptimization/mode", &pvMode); err == nil && pvMode.Value != ghostone.PvModeNone {
+		if err := wb.getJSONCtx(ctx, wb.uri+"/charging/pvoptimization/mode", &pvMode); err == nil && pvMode.Value != ghostone.PvModeNone {
 			log.WARN.Printf("wallbox PV optimization is active (%s), should be disabled when using evcc", pvMode.Value)
 		}
 
 		// warn if phase switching is disabled
 		var relaisEnabled ghostone.Enabled
-		if err := wb.GetJSON(wb.uri+"/system/relais-switch/enabled", &relaisEnabled); err == nil && !relaisEnabled.Enabled {
+		if err := wb.getJSONCtx(ctx, wb.uri+"/system/relais-switch/enabled", &relaisEnabled); err == nil && !relaisEnabled.Enabled {
 			log.WARN.Println("phase switching is disabled, enable it in the wallbox settings to use 1p3p switching")
 		}
 
@@ -128,6 +128,15 @@ func (wb *GhostEEBus) Identify() (string, error) {
 		}
 	}
 	return wb.EEBus.Identify()
+}
+
+// getJSONCtx executes a context-aware GET request and decodes the JSON response.
+func (wb *GhostEEBus) getJSONCtx(ctx context.Context, url string, res any) error {
+	req, err := request.New(http.MethodGet, url, nil, request.AcceptJSON)
+	if err != nil {
+		return err
+	}
+	return wb.DoJSON(req.WithContext(ctx), res)
 }
 
 // putJSON sends a PUT request with JSON body to the REST API.

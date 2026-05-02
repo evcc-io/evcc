@@ -14,7 +14,6 @@ import {
 } from "./components/Auth/auth";
 import { initConfigModal } from "./configModal";
 import { hapticFeedback } from "./utils/haptic";
-import store from "./store";
 import type { VueI18nInstance } from "vue-i18n";
 
 function hideAllModals() {
@@ -121,6 +120,11 @@ export default function setupRouter(i18n: VueI18nInstance) {
         props: true,
       },
       {
+        path: "/history",
+        component: () => import("./views/History.vue"),
+        props: true,
+      },
+      {
         path: "/optimize",
         component: () => import("./views/Optimize.vue"),
         props: true,
@@ -153,9 +157,7 @@ export default function setupRouter(i18n: VueI18nInstance) {
     // Only hide modals when the actual route path changes, not query parameters
     if (to.path !== from.path) {
       hideAllModals();
-      if (store.state.experimental) {
-        hapticFeedback();
-      }
+      hapticFeedback();
     }
   });
   initConfigModal(router);

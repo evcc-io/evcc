@@ -1,6 +1,7 @@
 package ghostone
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
@@ -24,7 +25,7 @@ type tokenSource struct {
 }
 
 // TokenSource creates a JWT token source for the ghost REST API
-func TokenSource(log *util.Logger, uri, user, password string) (oauth2.TokenSource, error) {
+func TokenSource(ctx context.Context, log *util.Logger, uri, user, password string) (oauth2.TokenSource, error) {
 	c := &tokenSource{
 		Helper:   request.NewHelper(log),
 		uri:      uri + "/jwt/login",
@@ -34,7 +35,7 @@ func TokenSource(log *util.Logger, uri, user, password string) (oauth2.TokenSour
 
 	c.Client.Transport = transport.Insecure()
 
-	token, err := c.login()
+	token, err := c.login(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func TokenSource(log *util.Logger, uri, user, password string) (oauth2.TokenSour
 	return c, nil
 }
 
-func (c *tokenSource) login() (*oauth2.Token, error) {
+func (c *tokenSource) login(ctx context.Context) (*oauth2.Token, error) {
 	data := url.Values{
 		"user": {c.user},
 		"pass": {c.password},
@@ -55,7 +56,7 @@ func (c *tokenSource) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	resp, err := c.Do(req)
+	resp, err := c.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +89,6 @@ func (c *tokenSource) login() (*oauth2.Token, error) {
 }
 
 func (c *tokenSource) refresh(_ *oauth2.Token) (*oauth2.Token, error) {
-	// re-login to get new token
-	return c.login()
+	// re-login to get new token (no context needed- refresh runs in steady-state, not during init)
+	return c.login(context.Background())
 }

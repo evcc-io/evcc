@@ -1,6 +1,7 @@
 .forecast-chart-scroll {
 	overflow-x: auto;
 	padding-bottom: 4px;
+	margin-bottom: 0.5rem;
 	user-select: none;
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;

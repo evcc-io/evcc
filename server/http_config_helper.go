@@ -107,6 +107,7 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 	return templates.ByName(class, typ)
 }
 
+// filterValidTemplateParams removes all configuration properties that are not part of the template definition
 func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
@@ -169,6 +170,32 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	})
 }
 
+// deviceOther looks up a stored device's `Other` config by class and id.
+func deviceOther(class templates.Class, id int) (map[string]any, error) {
+	name := config.NameForID(id)
+	switch class {
+	case templates.Charger:
+		return deviceOtherFromHandler(name, config.Chargers())
+	case templates.Meter:
+		return deviceOtherFromHandler(name, config.Meters())
+	case templates.Vehicle:
+		return deviceOtherFromHandler(name, config.Vehicles())
+	case templates.Tariff:
+		return deviceOtherFromHandler(name, config.Tariffs())
+	case templates.Messenger:
+		return deviceOtherFromHandler(name, config.Messengers())
+	}
+	return nil, errors.New("unsupported class: " + class.String())
+}
+
+func deviceOtherFromHandler[T any](name string, h config.Handler[T]) (map[string]any, error) {
+	dev, err := h.ByName(name)
+	if err != nil {
+		return nil, err
+	}
+	return dev.Config().Other, nil
+}
+
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -198,7 +225,11 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	// TODO merge custom config
 	if req.Yaml != "" {
-		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		typ, other, err := config.CustomDevice(conf.Type, req.Other)
+		if err != nil {
+			return nil, zero, nil, err
+		}
+		instance, err := newFromConf(ctx, typ, other)
 		return dev, instance, req.Serialise(), err
 	}
 
@@ -413,6 +444,7 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 	}
 }
 
+// decodeDeviceConfig extracts device configuration and yaml details
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
 
@@ -434,9 +466,13 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
+	// validate yaml syntax
+	var tmp map[string]any
+	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && err != io.EOF {
 		return configReq{}, err
 	}
+
+	res.Other = map[string]any{"yaml": res.Yaml}
 
 	return res, nil
 }

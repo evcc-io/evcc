@@ -20,7 +20,7 @@ params:
   - name: region
     example: DE
     type: choice
-    choice: ["DE", "AT", "NL", "BE", "SE_1", "SE_2", "SE_3", "SE_4", "DK_1", "DK_2"]
+    choice: ["DE", "AT", "NL", "BE", "SE1", "SE2", "SE3", "SE4", "DK1", "DK2"]
     required: true
   - preset: tariff-base
   - preset: tariff-features
