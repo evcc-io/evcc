@@ -49,6 +49,9 @@ func parseFloat(payload string) (float64, error) {
 //   - RFC3339 timestamp (e.g. "2026-05-03T14:00:00Z") → interpreted as absolute time
 //   - Go duration string (e.g. "1h30m") → interpreted as remaining duration, added to time.Now()
 //   - Numeric string (e.g. "5400" or "5400.5") → interpreted as remaining seconds, added to time.Now()
+//
+// For relative formats, time.Now() is evaluated at the time of each call, providing a
+// fresh estimate. This matches the behavior of hardcoded charger/vehicle implementations.
 func ParseFinishTime(s string) (time.Time, error) {
 	// Try RFC3339 timestamp first (absolute time)
 	if t, err := time.Parse(time.RFC3339, s); err == nil {
