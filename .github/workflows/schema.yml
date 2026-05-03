@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: nwisbeta/validate-yaml-schema@v2.0.0
+      - uses: nwisbeta/validate-yaml-schema@c3734e647d2a3beb98b9132330067e900fdbd1a2 # v2.0.0
         with:
           yamlSchemasJson: |
             {
