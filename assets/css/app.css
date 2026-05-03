@@ -214,7 +214,7 @@ a:hover {
 }
 
 .btn {
-	--bs-btn-border-width: 2px;
+	--bs-btn-border-width: 1px;
 }
 
 .btn-reset {

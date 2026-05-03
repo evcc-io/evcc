@@ -317,21 +317,14 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, log)
 }
 
-// adminPasswordValid validates the admin password and returns true if valid
-func adminPasswordValid(authObject auth.Auth, password string) bool {
-	return authObject.GetAuthMode() == auth.Disabled || authObject.IsAdminPasswordValid(password)
-}
-
 func getBackup(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
+		if !requireAdminPasswordOrApiKey(w, r, authObject, req.Password) {
 			return
 		}
 
@@ -393,8 +386,7 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		if !adminPasswordValid(authObject, r.FormValue("password")) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
+		if !requireAdminPasswordOrApiKey(w, r, authObject, r.FormValue("password")) {
 			return
 		}
 
@@ -444,14 +436,11 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			Sessions bool   `json:"sessions"`
 			Settings bool   `json:"settings"`
 		}
-
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
+		if !requireAdminPasswordOrApiKey(w, r, authObject, req.Password) {
 			return
 		}
 
