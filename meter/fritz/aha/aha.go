@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/fritz"
@@ -23,8 +22,6 @@ import (
 type Connection struct {
 	*request.Helper
 	*fritz.Settings
-	SID     string
-	updated time.Time
 }
 
 // NewConnection creates FritzDECT connection
@@ -58,19 +55,13 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 
 // ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
 func (c *Connection) ExecCmd(function string) (string, error) {
-	// refresh Fritzbox session id
-	if time.Since(c.updated) >= fritz.SessionTimeout {
-		sid, err := c.GetSessionID(c.Helper)
-		if err != nil {
-			return "", err
-		}
-		// update session timestamp
-		c.SID = sid
-		c.updated = time.Now()
+	sid, err := c.GetSessionID(c.Helper)
+	if err != nil {
+		return "", err
 	}
 
 	parameters := url.Values{
-		"sid":       {c.SID},
+		"sid":       {sid},
 		"ain":       {c.AIN},
 		"switchcmd": {function},
 	}
