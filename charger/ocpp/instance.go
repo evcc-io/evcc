@@ -50,8 +50,7 @@ func ExternalUrl() string {
 		return ""
 	}
 
-	// Replace protocol: http -> ws, https -> wss
-	u.Scheme = strings.Replace(u.Scheme, "http", "ws", 1)
+	u.Scheme = "ws"
 	u.Host = fmt.Sprintf("%s:%d", strings.Split(u.Host, ":")[0], 8887) // deliberately fixed, port configurability only for testing
 
 	return u.String()
