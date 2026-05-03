@@ -21,8 +21,17 @@ type Measurement struct {
 }
 
 type BatteryForecast struct {
-	Full  *time.Time `json:"full"`
-	Empty *time.Time `json:"empty"`
+	Highest *BatteryForecastPoint `json:"highest,omitempty"`
+	Lowest  *BatteryForecastPoint `json:"lowest,omitempty"`
+}
+
+// BatteryForecastPoint describes an extreme SOC point in the battery forecast.
+// Limit indicates whether the configured SMax (for Highest) or SMin (for Lowest)
+// boundary was reached, i.e. the battery becomes fully charged or empty.
+type BatteryForecastPoint struct {
+	Soc   float64   `json:"soc"`
+	Time  time.Time `json:"time"`
+	Limit bool      `json:"limit,omitempty"`
 }
 
 var _ api.TitleDescriber = (*Measurement)(nil)

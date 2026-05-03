@@ -292,51 +292,76 @@ func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp [
 		return nil
 	}
 
-	now := time.Now().Round(tariff.SlotDuration)
-	fullSlot, emptySlot := site.batteryForecastFullAndEmptySlots(req, resp)
-
-	const zero = -1
-	if fullSlot == zero && emptySlot == zero {
+	high, low := batteryForecastSocExtremes(req, resp)
+	if high == nil && low == nil {
 		return nil
 	}
 
-	var res types.BatteryForecast
-	if fullSlot != zero {
-		if ts := now.Add(time.Duration(fullSlot) * tariff.SlotDuration); ts.After(time.Now()) {
-			res.Full = new(ts)
+	cutoff := time.Now()
+	now := cutoff.Round(tariff.SlotDuration)
+	point := func(p *batteryForecastSlot) *types.BatteryForecastPoint {
+		if p == nil {
+			return nil
 		}
-	}
-	if emptySlot != zero {
-		if ts := now.Add(time.Duration(emptySlot) * tariff.SlotDuration); ts.After(time.Now()) {
-			res.Empty = new(ts)
+		ts := now.Add(time.Duration(p.slot) * tariff.SlotDuration)
+		if !ts.After(cutoff) {
+			return nil
 		}
+		return &types.BatteryForecastPoint{Soc: p.soc, Time: ts, Limit: p.limit}
 	}
 
+	res := types.BatteryForecast{
+		Highest: point(high),
+		Lowest:  point(low),
+	}
+	if res.Highest == nil && res.Lowest == nil {
+		return nil
+	}
 	return &res
 }
 
-func (site *Site) batteryForecastFullAndEmptySlots(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (int, int) {
-	matchSlot := func(fun func(soc float32, bat optimizer.BatteryConfig) bool) int {
-	NEXT:
-		for i := range resp[0].StateOfCharge {
-			for batIdx := range req {
-				if !fun(resp[batIdx].StateOfCharge[i], req[batIdx]) {
-					continue NEXT
-				}
-			}
-			return i
-		}
-		return -1
+type batteryForecastSlot struct {
+	slot  int
+	soc   float64 // percent
+	limit bool    // true when SMax (highest) or SMin (lowest) boundary reached
+}
+
+// batteryForecastSocExtremes returns the highest and lowest aggregate SOC
+// points across home batteries (SCapacity > 0) over the forecast horizon.
+// The Limit flag indicates whether the SOC reached the configured SMax (for
+// the highest point) or SMin (for the lowest point) boundary - in which case
+// the battery is forecasted to become fully charged or empty.
+// Returns nil for either point when no home battery is present.
+func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (*batteryForecastSlot, *batteryForecastSlot) {
+	homeIndices := lo.FilterMap(req, func(b optimizer.BatteryConfig, i int) (int, bool) {
+		return i, b.SCapacity > 0
+	})
+	if len(homeIndices) == 0 || len(resp) == 0 {
+		return nil, nil
 	}
 
-	fullSlot := matchSlot(func(soc float32, bat optimizer.BatteryConfig) bool {
-		return soc >= bat.SMax
-	})
-	emptySlot := matchSlot(func(soc float32, bat optimizer.BatteryConfig) bool {
-		return soc <= bat.SMin
-	})
+	totalCapacity := lo.SumBy(homeIndices, func(i int) float32 { return req[i].SCapacity })
+	totalSMax := lo.SumBy(homeIndices, func(i int) float32 { return req[i].SMax })
+	totalSMin := lo.SumBy(homeIndices, func(i int) float32 { return req[i].SMin })
 
-	return fullSlot, emptySlot
+	var high, low *batteryForecastSlot
+	for i := range resp[homeIndices[0]].StateOfCharge {
+		sum := lo.SumBy(homeIndices, func(idx int) float32 { return resp[idx].StateOfCharge[i] })
+		soc := float64(sum/totalCapacity) * 100
+		fullReached := totalSMax > 0 && sum >= totalSMax
+		emptyReached := sum <= totalSMin
+
+		// first slot at SMax wins for highest
+		if high == nil || (!high.limit && (soc > high.soc || fullReached)) {
+			high = &batteryForecastSlot{slot: i, soc: soc, limit: fullReached}
+		}
+		// first slot at SMin wins for lowest
+		if low == nil || (!low.limit && (soc < low.soc || emptyReached)) {
+			low = &batteryForecastSlot{slot: i, soc: soc, limit: emptyReached}
+		}
+	}
+
+	return high, low
 }
 
 func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (optimizer.BatteryConfig, batteryDetail) {

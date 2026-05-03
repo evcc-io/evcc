@@ -586,8 +586,14 @@ export interface Meter {
 }
 
 export interface BatteryForecast {
-  full: string | null; // ISO 8601 datetime
-  empty: string | null; // ISO 8601 datetime
+  highest?: BatteryForecastPoint;
+  lowest?: BatteryForecastPoint;
+}
+
+export interface BatteryForecastPoint {
+  soc: number; // percent
+  time: string; // ISO 8601 datetime
+  limit?: boolean; // true when SMax (highest) or SMin (lowest) boundary reached
 }
 
 export interface Battery {
