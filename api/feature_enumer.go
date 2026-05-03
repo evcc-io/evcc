@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingContinuousAverageCacheableOfflineRetryableStreamingWelcomeCharge"
+const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingOutdoorTemperatureSensitiveContinuousAverageCacheableOfflineRetryableStreamingWelcomeCharge"
 
-var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 58, 65, 74, 81, 90, 99, 112}
+var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 75, 85, 92, 101, 108, 117, 126, 139}
 
-const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingcontinuousaveragecacheableofflineretryablestreamingwelcomecharge"
+const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingoutdoortemperaturesensitivecontinuousaveragecacheableofflineretryablestreamingwelcomecharge"
 
 func (i Feature) String() string {
 	i -= 1
@@ -29,40 +29,43 @@ func _FeatureNoOp() {
 	_ = x[IntegratedDevice-(2)]
 	_ = x[SwitchDevice-(3)]
 	_ = x[Heating-(4)]
-	_ = x[Continuous-(5)]
-	_ = x[Average-(6)]
-	_ = x[Cacheable-(7)]
-	_ = x[Offline-(8)]
-	_ = x[Retryable-(9)]
-	_ = x[Streaming-(10)]
-	_ = x[WelcomeCharge-(11)]
+	_ = x[OutdoorTemperatureSensitive-(5)]
+	_ = x[Continuous-(6)]
+	_ = x[Average-(7)]
+	_ = x[Cacheable-(8)]
+	_ = x[Offline-(9)]
+	_ = x[Retryable-(10)]
+	_ = x[Streaming-(11)]
+	_ = x[WelcomeCharge-(12)]
 }
 
-var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge}
+var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, OutdoorTemperatureSensitive, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge}
 
 var _FeatureNameToValueMap = map[string]Feature{
-	_FeatureName[0:13]:        CoarseCurrent,
-	_FeatureLowerName[0:13]:   CoarseCurrent,
-	_FeatureName[13:29]:       IntegratedDevice,
-	_FeatureLowerName[13:29]:  IntegratedDevice,
-	_FeatureName[29:41]:       SwitchDevice,
-	_FeatureLowerName[29:41]:  SwitchDevice,
-	_FeatureName[41:48]:       Heating,
-	_FeatureLowerName[41:48]:  Heating,
-	_FeatureName[48:58]:       Continuous,
-	_FeatureLowerName[48:58]:  Continuous,
-	_FeatureName[58:65]:       Average,
-	_FeatureLowerName[58:65]:  Average,
-	_FeatureName[65:74]:       Cacheable,
-	_FeatureLowerName[65:74]:  Cacheable,
-	_FeatureName[74:81]:       Offline,
-	_FeatureLowerName[74:81]:  Offline,
-	_FeatureName[81:90]:       Retryable,
-	_FeatureLowerName[81:90]:  Retryable,
-	_FeatureName[90:99]:       Streaming,
-	_FeatureLowerName[90:99]:  Streaming,
-	_FeatureName[99:112]:      WelcomeCharge,
-	_FeatureLowerName[99:112]: WelcomeCharge,
+	_FeatureName[0:13]:         CoarseCurrent,
+	_FeatureLowerName[0:13]:    CoarseCurrent,
+	_FeatureName[13:29]:        IntegratedDevice,
+	_FeatureLowerName[13:29]:   IntegratedDevice,
+	_FeatureName[29:41]:        SwitchDevice,
+	_FeatureLowerName[29:41]:   SwitchDevice,
+	_FeatureName[41:48]:        Heating,
+	_FeatureLowerName[41:48]:   Heating,
+	_FeatureName[48:75]:        OutdoorTemperatureSensitive,
+	_FeatureLowerName[48:75]:   OutdoorTemperatureSensitive,
+	_FeatureName[75:85]:        Continuous,
+	_FeatureLowerName[75:85]:   Continuous,
+	_FeatureName[85:92]:        Average,
+	_FeatureLowerName[85:92]:   Average,
+	_FeatureName[92:101]:       Cacheable,
+	_FeatureLowerName[92:101]:  Cacheable,
+	_FeatureName[101:108]:      Offline,
+	_FeatureLowerName[101:108]: Offline,
+	_FeatureName[108:117]:      Retryable,
+	_FeatureLowerName[108:117]: Retryable,
+	_FeatureName[117:126]:      Streaming,
+	_FeatureLowerName[117:126]: Streaming,
+	_FeatureName[126:139]:      WelcomeCharge,
+	_FeatureLowerName[126:139]: WelcomeCharge,
 }
 
 var _FeatureNames = []string{
@@ -70,13 +73,14 @@ var _FeatureNames = []string{
 	_FeatureName[13:29],
 	_FeatureName[29:41],
 	_FeatureName[41:48],
-	_FeatureName[48:58],
-	_FeatureName[58:65],
-	_FeatureName[65:74],
-	_FeatureName[74:81],
-	_FeatureName[81:90],
-	_FeatureName[90:99],
-	_FeatureName[99:112],
+	_FeatureName[48:75],
+	_FeatureName[75:85],
+	_FeatureName[85:92],
+	_FeatureName[92:101],
+	_FeatureName[101:108],
+	_FeatureName[108:117],
+	_FeatureName[117:126],
+	_FeatureName[126:139],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.

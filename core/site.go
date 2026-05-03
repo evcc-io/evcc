@@ -89,6 +89,9 @@ type Site struct {
 
 	homeEnergy, gridEnergy *metrics.Collector
 
+	// per-loadpoint energy tracking for heating devices
+	loadpointEnergy map[int]*metrics.Collector
+
 	// cached state
 	gridPower                float64            // Grid power
 	pvPower                  float64            // PV power
@@ -143,6 +146,17 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		return err
 	}
 	site.homeEnergy = me
+
+	// initialize per-loadpoint energy tracking for heating devices
+	for i, lp := range loadpoints {
+		if hasFeature(lp.charger, api.Heating) {
+			collector, err := metrics.NewCollector("loadpoint", fmt.Sprintf("loadpoint-%d", i))
+			if err != nil {
+				return err
+			}
+			site.loadpointEnergy[i] = collector
+		}
+	}
 
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
@@ -251,10 +265,11 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
-		Voltage:    230, // V
-		pvEnergy:   make(map[string]*metrics.Accumulator),
-		fcstEnergy: metrics.NewAccumulator(),
+		log:             util.NewLogger("site"),
+		Voltage:         230, // V
+		pvEnergy:        make(map[string]*metrics.Accumulator),
+		fcstEnergy:      metrics.NewAccumulator(),
+		loadpointEnergy: make(map[int]*metrics.Collector),
 	}
 
 	return site
@@ -880,10 +895,17 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	for _, lp := range site.loadpoints {
+	for i, lp := range site.loadpoints {
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
+
+			// track heating loadpoint energy
+			if collector, ok := site.loadpointEnergy[i]; ok {
+				if err := collector.AddEnergy(nil, nil, power); err != nil {
+					site.log.ERROR.Printf("persist loadpoint %d consumption: %v", i, err)
+				}
+			}
 
 			mu.Lock()
 			sum += power

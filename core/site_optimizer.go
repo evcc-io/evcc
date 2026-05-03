@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"slices"
@@ -15,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
@@ -524,16 +526,30 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	// kWh over last 30 days
-	profile, err := site.homeEnergy.ImportProfile(now.BeginningOfDay().AddDate(0, 0, -30))
+	from := now.BeginningOfDay().AddDate(0, 0, -7)
+
+	// base load (excludes loadpoints) - kWh over last 30 days
+	gt_base, err := site.homeEnergy.ImportProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
+	}
+
+	gt_heater_temp_sensitive, gt_heater_non_sensitive := site.extractHeaterProfile(from, time.Now())
+
+	hasHeaterData := false
+	if gt_heater_temp_sensitive != nil && len(gt_heater_temp_sensitive) > 0 {
+		site.log.DEBUG.Printf("home profile: extracted temperature-sensitive heater profile with %d slots", len(gt_heater_temp_sensitive))
+		hasHeaterData = true
+	}
+	if gt_heater_non_sensitive != nil && len(gt_heater_non_sensitive) > 0 {
+		site.log.DEBUG.Printf("home profile: extracted non-temperature-sensitive heater profile with %d slots", len(gt_heater_non_sensitive))
+		hasHeaterData = true
 	}
 
 	// max 4 days
 	slots := make([]float64, 0, minLen+1)
 	for len(slots) <= minLen+24*4 { // allow for prorating first day
-		slots = append(slots, profile[:]...)
+		slots = append(slots, gt_base[:]...)
 	}
 
 	res := profileSlotsFromNow(slots)
@@ -544,10 +560,225 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
+	if !hasHeaterData {
+		site.log.DEBUG.Println("home profile: no heating devices, returning base load only")
+		return lo.Map(res, func(v float64, i int) float64 {
+			return v * 1e3
+		}), nil
+	}
+
+	gt_final := make([]float64, len(res))
+	copy(gt_final, res)
+
+	if gt_heater_temp_sensitive != nil && len(gt_heater_temp_sensitive) > 0 {
+		tempSensitiveSlots := make([]float64, 0, minLen+1)
+		for len(tempSensitiveSlots) <= minLen+24*4 {
+			tempSensitiveSlots = append(tempSensitiveSlots, gt_heater_temp_sensitive[:]...)
+		}
+		gt_temp_sensitive := profileSlotsFromNow(tempSensitiveSlots)
+		if len(gt_temp_sensitive) > len(res) {
+			gt_temp_sensitive = gt_temp_sensitive[:len(res)]
+		}
+
+		site.log.DEBUG.Println("home profile: applying temperature correction")
+		gt_temp_sensitive_corrected := site.applyTemperatureCorrection(gt_temp_sensitive)
+
+		for i := range gt_final {
+			if i < len(gt_temp_sensitive_corrected) {
+				gt_final[i] += gt_temp_sensitive_corrected[i]
+			}
+		}
+	}
+
+	if gt_heater_non_sensitive != nil && len(gt_heater_non_sensitive) > 0 {
+		nonSensitiveSlots := make([]float64, 0, minLen+1)
+		for len(nonSensitiveSlots) <= minLen+24*4 {
+			nonSensitiveSlots = append(nonSensitiveSlots, gt_heater_non_sensitive[:]...)
+		}
+		gt_non_sensitive := profileSlotsFromNow(nonSensitiveSlots)
+		if len(gt_non_sensitive) > len(res) {
+			gt_non_sensitive = gt_non_sensitive[:len(res)]
+		}
+
+		for i := range gt_final {
+			if i < len(gt_non_sensitive) {
+				gt_final[i] += gt_non_sensitive[i]
+			}
+		}
+	}
+
 	// convert to Wh
-	return lo.Map(res, func(v float64, i int) float64 {
+	return lo.Map(gt_final, func(v float64, i int) float64 {
 		return v * 1e3
 	}), nil
+}
+
+// getHeatingLoadpoints returns indices of loadpoints with Heating feature
+func (site *Site) getHeatingLoadpoints() []int {
+	var heatingLPs []int
+	for i, lp := range site.loadpoints {
+		if hasFeature(lp.charger, api.Heating) {
+			heatingLPs = append(heatingLPs, i)
+		}
+	}
+	return heatingLPs
+}
+
+// extractHeaterProfile returns temperature-sensitive and non-sensitive heating profiles
+func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSensitive []float64) {
+	heatingLPs := site.getHeatingLoadpoints()
+	if len(heatingLPs) == 0 {
+		site.log.DEBUG.Println("heater profile: no heating loadpoints configured")
+		return nil, nil
+	}
+
+	site.log.DEBUG.Printf("heater profile: querying %d heating loadpoint(s)", len(heatingLPs))
+
+	tempSensitiveProfiles := make([][]float64, 0)
+	nonSensitiveProfiles := make([][]float64, 0)
+
+	for _, lpID := range heatingLPs {
+		if collector, ok := site.loadpointEnergy[lpID]; ok {
+			profile, err := collector.ImportProfile(from)
+			if err == nil && profile != nil {
+				lp := site.loadpoints[lpID]
+				isTempSensitive := hasFeature(lp.charger, api.OutdoorTemperatureSensitive)
+
+				site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data (temperature-sensitive: %v)",
+					lpID, len(profile), isTempSensitive)
+
+				if isTempSensitive {
+					tempSensitiveProfiles = append(tempSensitiveProfiles, profile[:])
+				} else {
+					nonSensitiveProfiles = append(nonSensitiveProfiles, profile[:])
+				}
+			} else {
+				if errors.Is(err, metrics.ErrIncomplete) {
+					site.log.DEBUG.Printf("heater profile: loadpoint %d insufficient data", lpID)
+				} else if err != nil {
+					site.log.DEBUG.Printf("heater profile: loadpoint %d no data (%v)", lpID, err)
+				}
+			}
+		}
+	}
+
+	var tempSensitiveResult, nonSensitiveResult []float64
+
+	if len(tempSensitiveProfiles) > 0 {
+		tempSensitiveResult = sumProfiles(tempSensitiveProfiles)
+		site.log.DEBUG.Printf("heater profile: aggregated %d temperature-sensitive heating loadpoint(s) into %d slots",
+			len(tempSensitiveProfiles), len(tempSensitiveResult))
+	}
+
+	if len(nonSensitiveProfiles) > 0 {
+		nonSensitiveResult = sumProfiles(nonSensitiveProfiles)
+		site.log.DEBUG.Printf("heater profile: aggregated %d non-temperature-sensitive heating loadpoint(s) into %d slots",
+			len(nonSensitiveProfiles), len(nonSensitiveResult))
+	}
+
+	return tempSensitiveResult, nonSensitiveResult
+}
+
+func sumProfiles(profiles [][]float64) []float64 {
+	if len(profiles) == 0 {
+		return nil
+	}
+
+	result := make([]float64, len(profiles[0]))
+	for _, profile := range profiles {
+		for i := 0; i < len(result) && i < len(profile); i++ {
+			result[i] += profile[i]
+		}
+	}
+	return result
+}
+
+// applyTemperatureCorrection adjusts heating load based on temperature forecast.
+// Uses formula: load[i] = load_avg[i] × ((T_room − T_forecast[i]) / (T_room − T_past_avg[h]))
+func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
+	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
+	if weatherTariff == nil {
+		return profile
+	}
+
+	rates, err := weatherTariff.Rates()
+	if err != nil || len(rates) == 0 {
+		return profile
+	}
+
+	const tRoom = 21.0
+
+	currentTime := time.Now()
+
+	// compute average historical temperature per hour-of-day
+	pastTempSum := make([]float64, 24)
+	pastTempCount := make([]int, 24)
+	for _, r := range rates {
+		if r.Start.Before(currentTime) {
+			h := r.Start.UTC().Hour()
+			pastTempSum[h] += r.Value
+			pastTempCount[h]++
+		}
+	}
+	pastTempAvg := make([]float64, 24)
+	for h := range 24 {
+		if pastTempCount[h] > 0 {
+			pastTempAvg[h] = pastTempSum[h] / float64(pastTempCount[h])
+		}
+	}
+
+	ratesByTime := make(map[time.Time]float64, len(rates))
+	for _, r := range rates {
+		ratesByTime[r.Start] = r.Value
+	}
+
+	result := make([]float64, len(profile))
+	copy(result, profile)
+
+	slotStart := currentTime.Truncate(tariff.SlotDuration)
+	for i := range profile {
+		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
+
+		tFuture, found := ratesByTime[ts]
+		if !found {
+			continue
+		}
+
+		h := ts.UTC().Hour()
+
+		if pastTempCount[h] == 0 {
+			site.log.DEBUG.Printf("temperature correction: no historical data for hour %d, skipping slot %s", h, ts.Format("15:04"))
+			continue
+		}
+
+		tPastAvg := pastTempAvg[h]
+
+		denominator := tRoom - tPastAvg
+		numerator := tRoom - tFuture
+
+		if math.Abs(denominator) < 0.5 {
+			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): historical temp %.1f°C too close to room temp %.1f°C, skipping",
+				ts.Format("15:04"), h, tPastAvg, tRoom)
+			continue
+		}
+
+		correctionFactor := numerator / denominator
+
+		// Clamp to reasonable range to prevent extreme corrections from bad data
+		const minCorrectionFactor = 0.5 // -50% (warmer than expected)
+		const maxCorrectionFactor = 2.0 // +100% (colder than expected)
+		correctionFactor = math.Max(minCorrectionFactor, math.Min(maxCorrectionFactor, correctionFactor))
+
+		oldValue := profile[i]
+		result[i] = oldValue * correctionFactor
+
+		if i < 3 && oldValue != 0 {
+			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): forecast=%.1f°C, hist_avg=%.1f°C, factor=%.3f, load: %.0fWh -> %.0fWh (%.1f%%)",
+				ts.Format("15:04"), h, tFuture, tPastAvg, correctionFactor, oldValue*1e3, result[i]*1e3, ((result[i]/oldValue)-1)*100)
+		}
+	}
+
+	return result
 }
 
 // profileSlotsFromNow strips away any slots before "now".
