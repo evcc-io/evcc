@@ -150,6 +150,13 @@ func (site *Site) GetBatterySoc() float64 {
 	return site.battery.Soc
 }
 
+// GetBatteryMaxDischargePower returns the current battery max discharge power
+func (site *Site) GetBatteryMaxDischargePower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.battery.MaxDischargePower
+}
+
 // Loadpoints returns the loadpoints as api interfaces
 func (site *Site) Loadpoints() []loadpoint.API {
 	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })

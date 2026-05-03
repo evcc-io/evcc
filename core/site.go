@@ -637,8 +637,23 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
+		if m, ok := meter.(api.BatteryPowerLimiter); ok {
+			_, discharge := m.GetPowerLimits()
+			mm[i].MaxDischargePower = &discharge
+		}
+
 		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
+	}
+
+	var maxDischargePower float64
+	for _, m := range mm {
+		// only consider max discharge power if all battery meters provide it, otherwise ignore
+		if m.MaxDischargePower == nil {
+			maxDischargePower = 0
+			break
+		}
+		maxDischargePower += *m.MaxDischargePower
 	}
 
 	var batterySocAcc float64
@@ -656,6 +671,7 @@ func (site *Site) updateBatteryMeters() {
 
 	site.battery.Soc = math.Min(100, batterySocAcc/totalCapacity)
 	site.battery.Capacity = totalCapacity
+	site.battery.MaxDischargePower = maxDischargePower
 
 	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Power
