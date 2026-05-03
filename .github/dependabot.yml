@@ -6,3 +6,9 @@ updates:
       interval: "monthly"
     labels:
       - "infrastructure"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "infrastructure"
