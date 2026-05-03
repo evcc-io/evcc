@@ -299,7 +299,7 @@ func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp [
 
 	cutoff := time.Now()
 	now := cutoff.Round(tariff.SlotDuration)
-	point := func(p *batteryForecastSlot, label string) *types.BatteryForecastPoint {
+	point := func(p *batteryForecastSlot) *types.BatteryForecastPoint {
 		if p == nil {
 			return nil
 		}
@@ -307,16 +307,12 @@ func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp [
 		if !ts.After(cutoff) {
 			return nil
 		}
-		pt := &types.BatteryForecastPoint{Soc: p.soc, Time: ts}
-		if p.limit {
-			pt.Limit = label
-		}
-		return pt
+		return &types.BatteryForecastPoint{Soc: p.soc, Time: ts, Limit: p.limit}
 	}
 
 	res := types.BatteryForecast{
-		Highest: point(high, types.BatteryForecastLimitFull),
-		Lowest:  point(low, types.BatteryForecastLimitEmpty),
+		Highest: point(high),
+		Lowest:  point(low),
 	}
 	if res.Highest == nil && res.Lowest == nil {
 		return nil

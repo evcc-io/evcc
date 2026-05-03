@@ -585,10 +585,10 @@ export default defineComponent({
 			return [...this.aux, ...this.ext];
 		},
 		batteryForecastHighest(): string | undefined {
-			return this.fmtForecastPoint(this.battery?.forecast?.highest);
+			return this.fmtForecastPoint(this.battery?.forecast?.highest, true);
 		},
 		batteryForecastLowest(): string | undefined {
-			return this.fmtForecastPoint(this.battery?.forecast?.lowest);
+			return this.fmtForecastPoint(this.battery?.forecast?.lowest, false);
 		},
 		batteryForecastExists(): boolean {
 			return !!(this.batteryForecastHighest || this.batteryForecastLowest);
@@ -688,13 +688,18 @@ export default defineComponent({
 		genericConsumerTitle(index: number) {
 			return `${this.$t("config.devices.consumer")} #${index + 1}`;
 		},
-		fmtForecastPoint(point: BatteryForecastPoint | undefined): string | undefined {
+		fmtForecastPoint(
+			point: BatteryForecastPoint | undefined,
+			high: boolean
+		): string | undefined {
 			if (!point) return undefined;
 			const time = this.fmtAbsoluteDate(new Date(point.time));
-			if (point.limit === "full")
-				return this.$t("main.energyflow.batteryForecastFull", { time });
-			if (point.limit === "empty")
-				return this.$t("main.energyflow.batteryForecastEmpty", { time });
+			if (point.limit) {
+				const key = high
+					? "main.energyflow.batteryForecastFull"
+					: "main.energyflow.batteryForecastEmpty";
+				return this.$t(key, { time });
+			}
 			const soc = `${Math.round(point.soc)}%`;
 			return this.$t("main.energyflow.batteryForecastSoc", { soc, time });
 		},
