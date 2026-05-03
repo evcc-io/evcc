@@ -123,7 +123,7 @@ func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 	return t, nil
 }
 
-func (t *Octopus) run(done chan error) {
+func (t *Octopus) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
@@ -159,7 +159,12 @@ func (t *Octopus) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		data := make(api.Rates, 0, len(res.Results))

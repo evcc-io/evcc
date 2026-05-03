@@ -1,0 +1,183 @@
+# Design: Easee Expected-Orphan CommandResponse Handling
+
+**Date:** 2026-03-04
+**Branch:** feat/easee-log-rogue-commandresponse
+
+---
+
+## Problem
+
+The Easee charger communicates command confirmations asynchronously via SignalR
+`CommandResponse` messages. Each response carries a `Ticks` value that evcc
+uses to correlate it with the originating REST API call.
+
+However, some REST endpoints return `HTTP 200` (synchronous) rather than
+`HTTP 202` (asynchronous with ticks in the body). The charger still executes
+these commands and fires a `CommandResponse` — but evcc never registered ticks
+for these calls, so the response is incorrectly flagged as a rogue warning:
+
+```
+WARN rogue CommandResponse: charger EHWHL6VE sent Ticks=639082368062611660
+     (accepted=true, resultCode=0) which was not triggered by evcc —
+     another system may be controlling this charger
+```
+
+Observed in practice for `POST /api/sites/{siteId}/circuits/{circuitId}/settings`
+(called from `Phases1p3p`), which returns `200 OK` with an empty body.
+The resulting `CommandResponse` carries `ID=22` (`CIRCUIT_MAX_CURRENT_P1`).
+
+Additionally, the existing rogue warning only logs the raw `Ticks` integer,
+making it hard to understand what kind of command was received.
+
+---
+
+## Goals
+
+1. Suppress false-positive rogue warnings for CommandResponses that evcc itself
+   triggered via 200-returning endpoints.
+2. Preserve genuine rogue detection: external systems sending the same
+   ObservationID when evcc has no pending call should still produce a WARN.
+3. Improve the rogue warning to include the human-readable ObservationID name.
+
+---
+
+## Non-Goals
+
+- Tracking ticks from 200-returning endpoints (the API does not provide them).
+- Handling the case where the charger sends CommandResponses for P2/P3 circuit
+  phases separately — only P1 (`CIRCUIT_MAX_CURRENT_P1 = 22`) has been observed.
+  This can be extended later if needed.
+
+---
+
+## Design
+
+### Approach: Expected-Orphan Counter (per ObservationID)
+
+Before issuing a POST to a known 200-returning endpoint, register the
+ObservationID(s) expected to arrive as CommandResponses. When a CommandResponse
+arrives with no matching tick, check the counter:
+
+- Counter > 0 → expected orphan from evcc's own sync call; consume silently.
+- Counter = 0 → truly rogue; log WARN.
+
+This is precise: an external system triggering the same ObservationID while
+evcc has no pending call is still flagged.
+
+---
+
+## Data Structures
+
+Add one field to the `Easee` struct, protected by the existing `cmdMu` mutex:
+
+```go
+expectedOrphans map[easee.ObservationID]int
+```
+
+Initialised alongside `pendingTicks` in `NewEasee`:
+
+```go
+pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
+expectedOrphans: make(map[easee.ObservationID]int),
+```
+
+---
+
+## Helpers
+
+```go
+func (c *Easee) registerExpectedOrphan(ids ...easee.ObservationID) {
+    c.cmdMu.Lock()
+    defer c.cmdMu.Unlock()
+    for _, id := range ids {
+        c.expectedOrphans[id]++
+    }
+}
+
+func (c *Easee) consumeExpectedOrphan(id easee.ObservationID) bool {
+    c.cmdMu.Lock()
+    defer c.cmdMu.Unlock()
+    if c.expectedOrphans[id] > 0 {
+        c.expectedOrphans[id]--
+        return true
+    }
+    return false
+}
+```
+
+Mirrors the existing `registerPendingTick` / `unregisterPendingTick` pattern.
+
+No cleanup/deregister on the call site: the counter is consumed by the
+`CommandResponse` handler when the charger responds. If the charger never
+responds (e.g. network drop), the counter stays > 0, meaning one future
+external call with the same ObservationID would be silently consumed — an
+acceptable trade-off given the low probability.
+
+---
+
+## Call Site: `Phases1p3p` (circuit level)
+
+```go
+if c.circuit != 0 {
+    // ... existing GET + build data ...
+
+    c.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+    _, err = c.postJSONAndWait(uri, data)
+}
+```
+
+`registerExpectedOrphan` is called **before** the POST so that the counter is
+in place before any CommandResponse can arrive. No defer needed on the call
+site — the counter is consumed by `CommandResponse`.
+
+---
+
+## `CommandResponse` Handler
+
+```go
+func (c *Easee) CommandResponse(i json.RawMessage) {
+    var res easee.SignalRCommandResponse
+    if err := json.Unmarshal(i, &res); err != nil {
+        c.log.ERROR.Printf("invalid message: %s %v", i, err)
+        return
+    }
+
+    obsID := easee.ObservationID(res.ID)
+    c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
+
+    c.cmdMu.Lock()
+    ch, ok := c.pendingTicks[res.Ticks]
+    c.cmdMu.Unlock()
+
+    if ok {
+        ch <- res
+        return
+    }
+
+    if c.consumeExpectedOrphan(obsID) {
+        return
+    }
+
+    c.log.WARN.Printf("rogue CommandResponse: charger %s ObservationID=%s Ticks=%d "+
+        "(accepted=%v, resultCode=%d) which was not triggered by evcc — "+
+        "another system may be controlling this charger",
+        res.SerialNumber, obsID, res.Ticks, res.WasAccepted, res.ResultCode)
+}
+```
+
+`easee.ObservationID(res.ID).String()` (generated by enumer) provides the
+human-readable name for known IDs and falls back to the integer representation
+for unknown ones — no extra handling needed.
+
+---
+
+## Changes Summary
+
+| What | Location |
+|---|---|
+| Add `expectedOrphans map[easee.ObservationID]int` field | `Easee` struct |
+| Initialise `expectedOrphans` | `NewEasee` |
+| Add `registerExpectedOrphan` helper | `easee.go` |
+| Add `consumeExpectedOrphan` helper | `easee.go` |
+| Call `registerExpectedOrphan(CIRCUIT_MAX_CURRENT_P1)` before POST | `Phases1p3p` (circuit branch) |
+| Check orphan counter; add ObservationID name to rogue WARN | `CommandResponse` |
