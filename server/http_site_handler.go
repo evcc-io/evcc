@@ -1,9 +1,9 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -340,20 +340,26 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		f, err := os.Open(db.FilePath)
-		if err != nil {
-			http.Error(w, "Could not open DB file: "+err.Error(), http.StatusInternalServerError)
+		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
+
+		tmpFilename := os.TempDir() + string(os.PathSeparator) + filename
+		if err := db.Backup(context.TODO(), tmpFilename); err != nil {
+			http.Error(w, "Backup failed", http.StatusInternalServerError)
 			return
 		}
-		defer f.Close()
 
-		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
+		f, err := os.Open(tmpFilename)
+		if err != nil {
+			http.Error(w, "Opening backup failed", http.StatusInternalServerError)
+			return
+		}
+		defer os.Remove(tmpFilename)
 
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
 		if _, err := io.Copy(w, f); err != nil {
-			http.Error(w, "Error streaming DB file: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Streaming backup failed", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -361,34 +367,13 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 
 // createLocalDatabaseBackup creates a local backup in case of catastrophic error in reset or restore
 func createLocalDatabaseBackup() error {
-	backupPath := db.FilePath + ".bak"
-
-	src, err := os.Open(db.FilePath)
-	if err != nil {
-		return fmt.Errorf("failed to open database file: %w", err)
-	}
-	defer src.Close()
-
-	dst, err := os.Create(backupPath)
-	if err != nil {
-		return fmt.Errorf("failed to create backup file: %w", err)
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, src); err != nil {
-		// clean up partial backup on error
-		os.Remove(backupPath)
-		return fmt.Errorf("failed to copy database: %w", err)
-	}
-
-	return nil
+	return db.Backup(context.TODO(), db.FilePath()+".bak")
 }
 
 func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Parse multipart form
-		err := r.ParseMultipartForm(32 << 20) // 32MB max memory
-		if err != nil {
+		// Parse multipart form and spill to disk
+		if err := r.ParseMultipartForm(0); err != nil {
 			http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -400,35 +385,35 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
-			http.Error(w, "Failed to get uploaded file: "+err.Error(), http.StatusBadRequest)
+			http.Error(w, "Upload failed", http.StatusBadRequest)
 			return
 		}
-		defer file.Close()
+
+		osFile, ok := file.(*os.File)
+		if err := file.Close(); !ok || err != nil {
+			http.Error(w, "Upload failed", http.StatusInternalServerError)
+			return
+		}
+
+		defer os.Remove(osFile.Name())
 
 		settings.Persist()
 
-		// close db connection to avoid corruption
-		if err := db.Close(); err != nil {
-			jsonError(w, http.StatusInternalServerError, err)
-			return
-		}
-
 		// create local backup before overwriting
 		if err := createLocalDatabaseBackup(); err != nil {
-			http.Error(w, "Failed to create local backup: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Backup failed", http.StatusInternalServerError)
 			return
 		}
 
-		// overwrite DB file
-		f, err := os.Create(db.FilePath)
-		if err != nil {
-			http.Error(w, "Could not open DB file for writing: "+err.Error(), http.StatusInternalServerError)
+		if err := db.Restore(context.TODO(), osFile.Name()); err != nil {
+			http.Error(w, "Restore failed", http.StatusInternalServerError)
 			return
 		}
-		defer f.Close()
 
-		if _, err := io.Copy(f, file); err != nil {
-			http.Error(w, "Failed to write DB file: "+err.Error(), http.StatusInternalServerError)
+		// close DB so the WAL is checkpointed into the main file before shutdown
+		// hooks (e.g. settings.Persist) can overwrite the restored content
+		if err := db.Close(); err != nil {
+			http.Error(w, "DB close failed", http.StatusInternalServerError)
 			return
 		}
 
@@ -480,6 +465,8 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 				}
 			}
 		}
+
+		// TODO why do we need this? Looks hacky?
 
 		// close db connection to avoid on-shutdown writes
 		if err := db.Close(); err != nil {

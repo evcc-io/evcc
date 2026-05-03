@@ -399,7 +399,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
-	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath()}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
