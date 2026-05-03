@@ -162,6 +162,28 @@ func awaitShutdown(cmd *cobra.Command, args []string) {
 	<-shutdownDoneC()
 }
 
+// localIANATimezone returns the local timezone as an IANA name (e.g. "Europe/Berlin").
+// Go's time.Local.String() returns "Local" on many systems; this function resolves
+// the real name via the TZ env var or the /etc/localtime symlink as fallbacks.
+func localIANATimezone() string {
+	name := time.Now().Location().String()
+	if name != "Local" {
+		return name
+	}
+	if tz := os.Getenv("TZ"); tz != "" {
+		return tz
+	}
+	if link, err := os.Readlink("/etc/localtime"); err == nil {
+		const prefix = "zoneinfo/"
+		if i := strings.LastIndex(link, prefix); i >= 0 {
+			return link[i+len(prefix):]
+		}
+	}
+	// Cannot determine a real IANA name; fall back to UTC so the frontend
+	// always receives a valid timezone identifier.
+	return "UTC"
+}
+
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
@@ -401,7 +423,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
-	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
+	valueChan <- util.Param{Key: keys.Timezone, Val: localIANATimezone()}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
 	valueChan <- util.Param{Key: keys.Mcp, Val: isMcp()}

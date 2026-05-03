@@ -1,6 +1,24 @@
 import { defineComponent } from "vue";
-import { is12hFormat } from "@/units";
+import { is12hFormat, resolveTimezone } from "@/units";
 import { CURRENCY } from "../types/evcc";
+import store from "@/store";
+import settings from "@/settings";
+
+// Returns a getter function for a specific part type from formatToParts output.
+function formatPartsInTz(date: Date, timeZone: string, options: Intl.DateTimeFormatOptions) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, ...options }).formatToParts(date);
+  return (type: string, fallback = "00") => parts.find((p) => p.type === type)?.value ?? fallback;
+}
+
+// Formats a date with the given locale, timezone, and options.
+function formatInTz(
+  locale: string | undefined,
+  timeZone: string,
+  options: Intl.DateTimeFormatOptions,
+  date: Date
+) {
+  return new Intl.DateTimeFormat(locale, { ...options, timeZone }).format(date);
+}
 
 const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   AUD: "$",
@@ -55,6 +73,11 @@ export default defineComponent({
       fmtLimit: 100,
       fmtDigits: 1,
     };
+  },
+  computed: {
+    timezone(): string {
+      return resolveTimezone(settings.timezone, store.state.timezone);
+    },
   },
   methods: {
     energyPriceSubunit(currency: CURRENCY): string | undefined {
@@ -185,81 +208,90 @@ export default defineComponent({
       return new Intl.DurationFormat(this.$i18n?.locale, { style: "long" }).format(parts);
     },
     fmtDayString(date: Date) {
-      const YY = `${date.getFullYear()}`;
-      const MM = `${date.getMonth() + 1}`.padStart(2, "0");
-      const DD = `${date.getDate()}`.padStart(2, "0");
-      return `${YY}-${MM}-${DD}`;
+      const get = formatPartsInTz(date, this.timezone, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      return `${get("year")}-${get("month")}-${get("day")}`;
     },
     fmtTimeString(date: Date) {
-      const HH = `${date.getHours()}`.padStart(2, "0");
-      const mm = `${date.getMinutes()}`.padStart(2, "0");
-      return `${HH}:${mm}`;
+      const get = formatPartsInTz(date, this.timezone, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      return `${get("hour").replace("24", "00")}:${get("minute")}`;
     },
     isToday(date: Date) {
-      const today = new Date();
-      return today.toDateString() === date.toDateString();
+      const fmt = (d: Date) =>
+        formatInTz(
+          "en-CA",
+          this.timezone,
+          { year: "numeric", month: "2-digit", day: "2-digit" },
+          d
+        );
+      return fmt(date) === fmt(new Date());
     },
     weekdayPrefix(date: Date) {
-      if (this.isToday(date)) {
-        return "";
-      }
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: "short",
-      }).format(date);
+      if (this.isToday(date)) return "";
+      return formatInTz(this.$i18n?.locale, this.timezone, { weekday: "short" }, date);
     },
     hourShort(date: Date) {
       const locale = this.$i18n?.locale;
-      // special: use shorter german format
-      if (locale === "de") return date.getHours();
-      return new Intl.DateTimeFormat(locale, {
-        hour: "numeric",
-        hour12: is12hFormat(),
-      }).format(date);
+      const tz = this.timezone;
+      // special: use shorter german format (numeric hour without AM/PM)
+      if (locale === "de") {
+        return Number(formatPartsInTz(date, tz, { hour: "numeric", hour12: false })("hour", "0"));
+      }
+      return formatInTz(locale, tz, { hour: "numeric", hour12: is12hFormat() }, date);
     },
     weekdayShort(date: Date) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: "short",
-      }).format(date);
+      return formatInTz(this.$i18n?.locale, this.timezone, { weekday: "short" }, date);
     },
     weekdayLong(date: Date) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: "long",
-      }).format(date);
+      return formatInTz(this.$i18n?.locale, this.timezone, { weekday: "long" }, date);
     },
     fmtAbsoluteDate(date: Date) {
       const weekday = this.weekdayPrefix(date);
-      const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: is12hFormat(),
-      }).format(date);
-
+      const hour = formatInTz(
+        this.$i18n?.locale,
+        this.timezone,
+        { hour: "numeric", minute: "numeric", hour12: is12hFormat() },
+        date
+      );
       return `${weekday} ${hour}`.trim();
     },
     fmtHourMinute(date: Date) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: is12hFormat(),
-      }).format(date);
+      return formatInTz(
+        this.$i18n?.locale,
+        this.timezone,
+        { hour: "numeric", minute: "numeric", hour12: is12hFormat() },
+        date
+      );
     },
     fmtFullDateTime(date: Date, short: boolean) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: short ? undefined : "short",
-        month: short ? "numeric" : "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: is12hFormat(),
-      }).format(date);
+      return formatInTz(
+        this.$i18n?.locale,
+        this.timezone,
+        {
+          weekday: short ? undefined : "short",
+          month: short ? "numeric" : "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: is12hFormat(),
+        },
+        date
+      );
     },
     fmtWeekdayTime(date: Date) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: "short",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: is12hFormat(),
-      }).format(date);
+      return formatInTz(
+        this.$i18n?.locale,
+        this.timezone,
+        { weekday: "short", hour: "numeric", minute: "numeric", hour12: is12hFormat() },
+        date
+      );
     },
     fmtMonthYear(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -323,9 +355,6 @@ export default defineComponent({
         return `${price} ${this.pricePerKWhUnit(currency, short)}`;
       }
       return price;
-    },
-    timezone() {
-      return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
     },
     pricePerKWhUnit(currency = CURRENCY.EUR, short = false) {
       const unit = this.energyPriceSubunit(currency) || CURRENCY_SYMBOLS[currency] || currency;

@@ -124,6 +124,9 @@ export default defineComponent({
 				this.updateTargetTimeLabel();
 			},
 		},
+		timezone(): void {
+			this.updateTargetTimeLabel();
+		},
 	},
 	mounted(): void {
 		this.updateTargetTimeLabel();

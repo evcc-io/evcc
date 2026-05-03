@@ -148,7 +148,7 @@
 </template>
 
 <script lang="ts">
-import { distanceUnit } from "@/units";
+import { distanceUnit, parseLocalTimeInTz } from "@/units";
 
 import formatter from "@/mixins/formatter";
 import { energyOptions } from "@/utils/energyOptions.ts";
@@ -183,7 +183,13 @@ export default defineComponent({
 	},
 	computed: {
 		selectedDate() {
-			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
+			const dateTimeStr = `${this.selectedDay}T${this.selectedTime || "00:00"}`;
+			const tz = this.timezone;
+			const browserTz = Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
+			if (tz === browserTz) {
+				return new Date(dateTimeStr);
+			}
+			return parseLocalTimeInTz(dateTimeStr, tz);
 		},
 		socOptions() {
 			// a list of entries from 5 to 100 with a step of 5
@@ -298,13 +304,16 @@ export default defineComponent({
 				this.$t("main.targetCharge.today"),
 				this.$t("main.targetCharge.tomorrow"),
 			];
+			const tz = this.timezone;
 			for (let i = 0; i < 7; i++) {
 				const dayNumber = date.toLocaleDateString(this.$i18n?.locale, {
 					day: "numeric",
 					month: "short",
+					timeZone: tz,
 				});
 				const dayName =
-					labels[i] || date.toLocaleDateString(this.$i18n?.locale, { weekday: "short" });
+					labels[i] ||
+					date.toLocaleDateString(this.$i18n?.locale, { weekday: "short", timeZone: tz });
 				options.push({
 					value: this.fmtDayString(date),
 					name: `${dayNumber} (${dayName})`,

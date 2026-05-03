@@ -59,6 +59,23 @@
 				equal-width
 			/>
 		</FormRow>
+		<FormRow id="settingsTimezone" :label="$t('settings.timezone.label')">
+			<select
+				id="settingsTimezone"
+				v-model="timezone"
+				class="form-select form-select-sm w-75"
+			>
+				<option value="">
+					{{ browserTimezone }} ({{ $t("settings.timezone.browser") }})
+				</option>
+				<option value="server">
+					{{ serverTimezone }} ({{ $t("settings.timezone.server") }})
+				</option>
+				<optgroup :label="$t('settings.timezone.custom')">
+					<option v-for="tz in allTimezones" :key="tz" :value="tz">{{ tz }}</option>
+				</optgroup>
+			</select>
+		</FormRow>
 		<FormRow v-if="loadpoints.length" :label="$t('settings.loadpoints.label')">
 			<LoadpointOrderSettings :loadpoints="loadpoints" />
 		</FormRow>
@@ -91,7 +108,8 @@ import {
 	removeLocalePreference,
 } from "@/i18n.ts";
 import { getThemePreference, setThemePreference } from "@/theme.ts";
-import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
+import { getUnits, setUnits, is12hFormat, set12hFormat, getTimezone, setTimezone } from "@/units";
+import store from "@/store";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
 import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
@@ -111,6 +129,7 @@ export default defineComponent({
 			language: getLocalePreference() || "",
 			unit: getUnits(),
 			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
+			timezone: getTimezone(),
 			fullscreenActive: false,
 			THEMES: Object.values(THEME),
 			UNITS: Object.values(LENGTH_UNIT),
@@ -118,6 +137,19 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		browserTimezone(): string {
+			return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
+		},
+		serverTimezone(): string {
+			return store.state.timezone || "UTC";
+		},
+		allTimezones(): string[] {
+			try {
+				return Intl.supportedValuesOf("timeZone");
+			} catch {
+				return [];
+			}
+		},
 		languageOptions: () => {
 			const locales = Object.entries(LOCALES).map(([key, value]) => {
 				return { value: key, name: value[1] };
@@ -140,6 +172,9 @@ export default defineComponent({
 		},
 		timeFormat(value) {
 			set12hFormat(value === TIME_12H);
+		},
+		timezone(value: string) {
+			setTimezone(value);
 		},
 		theme(value) {
 			setThemePreference(value);

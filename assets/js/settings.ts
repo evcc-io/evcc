@@ -23,6 +23,7 @@ const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
+const SETTINGS_TIMEZONE = "settings_timezone";
 const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
@@ -112,6 +113,7 @@ export interface Settings {
   theme: THEME | null;
   unit: string;
   is12hFormat: boolean;
+  timezone: string; // "" = browser, "server" = server IANA, or explicit IANA name
   energyflowDetails: boolean;
   energyflowCo2: boolean;
   energyflowPv: boolean;
@@ -141,6 +143,7 @@ const settings: Settings = reactive({
   theme: read(SETTINGS_THEME),
   unit: read(SETTINGS_UNIT),
   is12hFormat: readBool(SETTINGS_12H_FORMAT),
+  timezone: read(SETTINGS_TIMEZONE) || "",
   energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
   energyflowCo2: readBool(SETTINGS_ENERGYFLOW_CO2),
   energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
@@ -169,6 +172,7 @@ watch(() => settings.locale, save(SETTINGS_LOCALE));
 watch(() => settings.theme, save(SETTINGS_THEME));
 watch(() => settings.unit, save(SETTINGS_UNIT));
 watch(() => settings.is12hFormat, saveBool(SETTINGS_12H_FORMAT));
+watch(() => settings.timezone, save(SETTINGS_TIMEZONE));
 watch(() => settings.energyflowDetails, saveBool(SETTINGS_ENERGYFLOW_DETAILS));
 watch(() => settings.energyflowCo2, saveBool(SETTINGS_ENERGYFLOW_CO2));
 watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));

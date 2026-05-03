@@ -1519,6 +1519,12 @@
       "24h": "24h",
       "label": "Time format"
     },
+    "timezone": {
+      "browser": "Browser",
+      "custom": "Custom",
+      "label": "Timezone",
+      "server": "Server"
+    },
     "title": "User Interface",
     "unit": {
       "km": "km",
