@@ -1,0 +1,39 @@
+template: hoymiles-dtu-mb
+products:
+  - brand: Hoymiles
+    description:
+      de: "HMT/HMS-Serie mit DTU PRO S / MODBUS TCP"
+      en: "HMT/HMS-Series with DTU PRO S / MODBUS TCP"
+requirements:
+  description:
+    de: |
+      Benötigt wird ein Hoymiles Wechselrichter der HMT/HMS Serie mit DTU PRO S datalogger mit Modbus TCP aktiviert (verbunden mit LAN)
+    en: |
+      Requires a Hoymiles Inverter of the HMT/HMS Series with DTU PRO S datalogger with Modbus TCP enabled (connected with LAN)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+    help:
+      de: "IP-Adresse des DTU PRO S"
+      en: "IP address of the DTU PRO S"
+  - name: port
+    advanced: true
+    default: "502"
+    help:
+      de: "Port des Modbus TCP Servers (Standard: 502)"
+      en: "Port of the Modbus TCP Server (default: 502)"
+  - name: maxacpower
+    advanced: true
+    default: "0"
+    description:
+      de: "Gesamtleistung der Wechselrichter"
+      en: "Total maximum power of the inverters"
+    help:
+      de: "Gesamtleistung der Wechselrichter in Watt (z.B. 3000)"
+      en: "Total maximum power of the inverters in watt (e.g. 3000)"
+render: |
+  type: hoymiles-dtu-mb
+  host: {{ .host }}
+  port: {{ .port }}
+  maxacpower: {{ .maxacpower }}
