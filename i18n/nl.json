@@ -607,7 +607,7 @@
       "urlHelp": "Kopieer deze URL naar de configuratie van uw lader. Raadpleeg de handleiding van de fabrikant voor meer informatie. De lader voegt naar verwachting automatisch zijn unieke identificatiecode (station-ID) toe aan de URL. In zeldzame gevallen moet u de identificatiecode mogelijk handmatig ingeven. Voorbeeld: `{url}`"
     },
     "optimizer": {
-      "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking.",
+      "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking. Momenteel worden alleen berekeningen en visualisaties gemaakt, maar nog geen apparaten aangestuurd.",
       "enable": "Activeer optimizer",
       "info": "Het duurt enkele minuten eer het optimizer menu item zichtbaar wordt. Voor nieuwe installaties kan het tot 24 uur duren tot dat evcc voldoende data verzameld heeft.",
       "title": "Optimizer"
@@ -696,11 +696,13 @@
     },
     "sponsor": {
       "activationKey": "Licentiesleutel",
+      "activationKeyHint": "Verzonden via email. Deze kan hier gevonden worden: {url}.",
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
       "description": "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten.",
       "descriptionToken": "Als GitHub-sponsor vind je jouw token op {url}. Om aan de slag te kunnen, bieden we een {trialToken}.",
       "email": "E-mail",
+      "emailHint": "Email adres dat u gebruikte voor {url}",
       "enterYourToken": "Jouw sponsortoken",
       "error": "De sponsortoken is ongeldig.",
       "invalid": "ongeldig",
@@ -802,7 +804,7 @@
       "type": {
         "co2": "CO₂ intensiteit",
         "feedIn": "Terugleververgoeding",
-        "grid": "Grid consumptie prijs",
+        "grid": "Grid import prijs",
         "planner": "Planner",
         "solar": "PV"
       },
