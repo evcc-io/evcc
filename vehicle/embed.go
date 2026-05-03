@@ -6,13 +6,14 @@ import (
 
 // TODO align phases with OnIdentify
 type embed struct {
-	Title_       string           `mapstructure:"title"`
-	Icon_        string           `mapstructure:"icon"`
-	Capacity_    float64          `mapstructure:"capacity"`
-	Phases_      int              `mapstructure:"phases"`
-	Identifiers_ []string         `mapstructure:"identifiers"`
-	Features_    []api.Feature    `mapstructure:"features"`
-	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
+	Title_                     string           `mapstructure:"title"`
+	Icon_                      string           `mapstructure:"icon"`
+	Capacity_                  float64          `mapstructure:"capacity"`
+	Phases_                    int              `mapstructure:"phases"`
+	Identifiers_               []string         `mapstructure:"identifiers"`
+	Features_                  []api.Feature    `mapstructure:"features"`
+	OnIdentify                 api.ActionConfig `mapstructure:"onIdentify"`
+	ExcludedFromAutoDiscovery_ bool             `mapstructure:"ExcludedFromAutoDiscovery"`
 }
 
 // Title implements the api.Vehicle interface
@@ -69,4 +70,9 @@ var _ api.FeatureDescriber = (*embed)(nil)
 // Features implements the api.FeatureDescriber interface
 func (v *embed) Features() []api.Feature {
 	return v.Features_
+}
+
+// ExcludedFromAutoDiscovery implements the api.ExcludedFromAutoDiscovery interface
+func (v *embed) ExcludedFromAutoDiscovery() bool {
+	return v.ExcludedFromAutoDiscovery_
 }
