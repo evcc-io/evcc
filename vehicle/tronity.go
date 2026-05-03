@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -37,6 +38,7 @@ import (
 type Tronity struct {
 	*embed
 	*request.Helper
+	implement.Capabilities
 	log   *util.Logger
 	oc    *oauth2.Config
 	vid   string
@@ -46,8 +48,6 @@ type Tronity struct {
 func init() {
 	registry.Add("tronity", NewTronityFromConfig)
 }
-
-//go:generate go tool decorate -f decorateTronity -b *Tronity -r api.Vehicle -t api.ChargeState,api.VehicleOdometer,api.ChargeController
 
 // NewTronityFromConfig creates a new vehicle
 func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
@@ -82,10 +82,11 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	v := &Tronity{
-		log:    log,
-		embed:  &cc.embed,
-		Helper: request.NewHelper(log),
-		oc:     oc,
+		log:          log,
+		embed:        &cc.embed,
+		Helper:       request.NewHelper(log),
+		Capabilities: implement.Caps(),
+		oc:           oc,
 	}
 
 	var ts oauth2.TokenSource
@@ -120,22 +121,19 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	v.vid = vehicle.ID
 	v.bulkG = util.Cached(v.bulk, cc.Cache)
 
-	var status func() (api.ChargeStatus, error)
 	if slices.Contains(vehicle.Scopes, tronity.ReadCharge) {
-		status = v.status
+		implement.Implements(v, implement.ChargeState(v.status))
 	}
 
-	var odometer func() (float64, error)
 	if slices.Contains(vehicle.Scopes, tronity.ReadOdometer) {
-		odometer = v.odometer
+		implement.Implements(v, implement.VehicleOdometer(v.odometer))
 	}
 
-	var chargeEnable func(bool) error
 	if slices.Contains(vehicle.Scopes, tronity.WriteChargeStartStop) {
-		chargeEnable = v.chargeEnable
+		implement.Implements(v, implement.ChargeController(v.chargeEnable))
 	}
 
-	return decorateTronity(v, status, odometer, chargeEnable), nil
+	return v, nil
 }
 
 // vehicles implements the vehicles api

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -34,6 +35,7 @@ import (
 // SmartEVSE3 charger implementation
 type SmartEVSE3 struct {
 	*request.Helper
+	implement.Capabilities
 	uri  string
 	curr int64
 	mode int
@@ -106,8 +108,6 @@ func init() {
 	registry.Add("smart-evse", NewSmartEVSE3FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSmartEVSE3 -b *SmartEVSE3 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter,api.Identifier,api.StatusReasoner
-
 // NewSmartEVSE3FromConfig creates a SmartEVSE-3.5 REST charger from generic config
 func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -140,10 +140,11 @@ func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, erro
 	log := util.NewLogger("smart-evse")
 
 	wb := &SmartEVSE3{
-		Helper: request.NewHelper(log),
-		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
-		curr:   60, // 6 A in 1/10 A
-		mode:   mode,
+		Helper:       request.NewHelper(log),
+		Capabilities: implement.Caps(),
+		uri:          strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
+		curr:         60, // 6 A in 1/10 A
+		mode:         mode,
 	}
 
 	wb.Helper.Client.Transport = &http.Transport{
@@ -163,31 +164,25 @@ func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, erro
 	}
 
 	// decorate optional EV meter if configured in SmartEVSE
-	var currentPower, totalEnergy func() (float64, error)
-	var currents func() (float64, float64, float64, error)
 	if res.EvMeter.Description != "" && res.EvMeter.Description != "Disabled" {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
-		currents = wb.currents
+		implement.Implements(wb, implement.Meter(wb.currentPower))
+		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	// decorate optional 1P/3P phase switching via C2 contactor
-	var phases1p3p func(int) error
-	var getPhases func() (int, error)
 	if res.Settings.EnableC2 != "" && res.Settings.EnableC2 != "Not present" {
-		phases1p3p = wb.phases1p3p
-		getPhases = wb.getPhases
+		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	// decorate optional RFID identification and status reason
-	var identify func() (string, error)
-	var statusReason func() (api.Reason, error)
 	if res.Evse.RFIDReader != "" && res.Evse.RFIDReader != "Disabled" {
-		identify = wb.identify
-		statusReason = wb.statusReason
+		implement.Implements(wb, implement.Identifier(wb.identify))
+		implement.Implements(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
-	return decorateSmartEVSE3(wb, currentPower, totalEnergy, currents, phases1p3p, getPhases, identify, statusReason), nil
+	return wb, nil
 }
 
 // post issues a POST request to the SmartEVSE with given query parameters.

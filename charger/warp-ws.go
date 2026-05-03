@@ -16,6 +16,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -23,6 +24,7 @@ import (
 
 type WarpWS struct {
 	*warp.Connection
+	implement.Capabilities
 	pm *warp.Connection // separate Energy Manager
 
 	// config
@@ -79,34 +81,29 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	// Feature: Meter -> Meter is legacy API, Meters is the new API
-	var currentPower, totalEnergy func() (float64, error)
 	if w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
-		currentPower = w.currentPower
-		totalEnergy = w.totalEnergy
+		implement.Implements(w, implement.Meter(w.currentPower))
+		implement.Implements(w, implement.MeterEnergy(w.totalEnergy))
 	}
 
 	// Feature: Meters | MeterAllValues
-	var currents, voltages func() (float64, float64, float64, error)
 	if w.hasFeature(warp.FeatureMeters) || w.hasFeature(warp.FeatureMeterAllValues) {
-		currents = w.currents
-		voltages = w.voltages
+		implement.Implements(w, implement.PhaseCurrents(w.currents))
+		implement.Implements(w, implement.PhaseVoltages(w.voltages))
 	}
 
 	// Feature: NFC
-	var identify func() (string, error)
 	if w.hasFeature(warp.FeatureNfc) {
-		identify = w.identify
+		implement.Implements(w, implement.Identifier(w.identify))
 	}
 
 	// Feature: Phase Switching
 	// only setup phase switching methods if power manager endpoint is set
-	var phases func(int) error
-	var getPhases func() (int, error)
 	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
 		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			w.pmState = &res
-			phases = w.phases1p3p
-			getPhases = w.getPhases
+			implement.Implements(w, implement.PhaseSwitcher(w.phases1p3p))
+			implement.Implements(w, implement.PhaseGetter(w.getPhases))
 		}
 	}
 
@@ -123,17 +120,18 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		w.log.TRACE.Println("disabled phase auto switching")
 	}
 
-	return decorateWarpWS(w, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
+	return w, nil
 }
 
 func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
 	w := &WarpWS{
-		Connection: warp.NewConnection(log, uri, user, pass),
-		log:        log,
-		meterIndex: meterIndex,
-		meterMap:   map[int]int{},
+		Connection:   warp.NewConnection(log, uri, user, pass),
+		Capabilities: implement.Caps(),
+		log:          log,
+		meterIndex:   meterIndex,
+		meterMap:     map[int]int{},
 	}
 
 	if err := w.GetJSON(fmt.Sprintf("%s/info/features", w.URI), &w.features); err != nil {

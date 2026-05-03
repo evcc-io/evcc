@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -14,12 +15,11 @@ func init() {
 }
 
 type SwitchSocket struct {
+	implement.Capabilities
 	enable  func(bool) error
 	enabled func() (bool, error)
 	*switchSocket
 }
-
-//go:generate go tool decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t api.MeterEnergy,api.Battery
 
 func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
@@ -62,12 +62,20 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 
 	c := &SwitchSocket{
+		Capabilities: implement.Caps(),
 		enabled:      enabled,
 		enable:       enable,
 		switchSocket: NewSwitchSocket(&cc.embed, enabled, power, cc.StandbyPower),
 	}
 
-	return decorateSwitchSocket(c, energy, soc), nil
+	if energy != nil {
+		implement.Implements(c, implement.MeterEnergy(energy))
+	}
+	if soc != nil {
+		implement.Implements(c, implement.Battery(soc))
+	}
+
+	return c, nil
 }
 
 func (c *SwitchSocket) Enabled() (bool, error) {

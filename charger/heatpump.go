@@ -21,6 +21,7 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
@@ -30,6 +31,7 @@ import (
 // Heatpump charger implementation
 type Heatpump struct {
 	*embed
+	implement.Capabilities
 	lp        loadpoint.API
 	power     int64
 	maxPowerG func() (int64, error)
@@ -39,8 +41,6 @@ type Heatpump struct {
 func init() {
 	registry.AddCtx("heatpump", NewHeatpumpFromConfig)
 }
-
-//go:generate go tool decorate -f decorateHeatpump -b *Heatpump -r api.Charger -t api.Meter,api.MeterEnergy,api.Battery,api.SocLimiter
 
 // NewHeatpumpFromConfig creates heatpump configurable charger from generic config
 func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -90,15 +90,29 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	return decorateHeatpump(res, powerG, energyG, tempG, limitTempG), nil
+	if powerG != nil {
+		implement.Implements(res, implement.Meter(powerG))
+	}
+	if energyG != nil {
+		implement.Implements(res, implement.MeterEnergy(energyG))
+	}
+	if tempG != nil {
+		implement.Implements(res, implement.Battery(tempG))
+	}
+	if limitTempG != nil {
+		implement.Implements(res, implement.SocLimiter(limitTempG))
+	}
+
+	return res, nil
 }
 
 // NewHeatpump creates heatpump charger
 func NewHeatpump(ctx context.Context, embed *embed, maxPowerS func(int64) error, maxPowerG func() (int64, error)) (*Heatpump, error) {
 	res := &Heatpump{
-		embed:     embed,
-		maxPowerG: maxPowerG,
-		maxPowerS: maxPowerS,
+		embed:        embed,
+		Capabilities: implement.Caps(),
+		maxPowerG:    maxPowerG,
+		maxPowerS:    maxPowerS,
 	}
 
 	return res, nil

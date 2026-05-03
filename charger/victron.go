@@ -24,6 +24,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/spf13/cast"
@@ -31,6 +32,7 @@ import (
 
 // Victron charger implementation
 type Victron struct {
+	implement.Capabilities
 	conn *modbus.Connection
 	regs victronRegs
 }
@@ -76,8 +78,6 @@ func init() {
 	registry.AddCtx("victron-evcs", NewVictronEVCSFromConfig)
 }
 
-//go:generate go tool decorate -f decorateVictron -b *Victron -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
-
 // NewVictronGXFromConfig creates a Victron charger from generic config
 func NewVictronGXFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewVictronFromConfig(ctx, other, victronGX)
@@ -112,8 +112,9 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 	conn.Logger(log.TRACE)
 
 	wb := &Victron{
-		conn: conn,
-		regs: regs,
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		regs:         regs,
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Mode, 1)
@@ -125,10 +126,6 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, errors.New("charger must be in manual mode")
 	}
 
-	// phase switching (EVCS only, requires hardware modification with second contactor)
-	var phasesS func(int) error
-	var phasesG func() (int, error)
-
 	if !regs.isGX {
 		b, err := wb.conn.ReadHoldingRegisters(wb.regs.ThreePhaseEnabled, 1)
 		if err != nil {
@@ -136,12 +133,12 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		}
 
 		if binary.BigEndian.Uint16(b) == 1 {
-			phasesS = wb.phases1p3p
-			phasesG = wb.getPhases
+			implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
 
-	return decorateVictron(wb, phasesS, phasesG), nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

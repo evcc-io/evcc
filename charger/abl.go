@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -31,6 +32,7 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
+	implement.Capabilities
 	conn *modbus.Connection
 	curr uint16
 }
@@ -96,8 +98,6 @@ func NewABLeMHFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return NewABLeMH(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
 
-//go:generate go tool decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t api.Meter,api.PhaseCurrents
-
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, modbus.Ascii, slaveID)
@@ -117,15 +117,17 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 	conn.Logger(log.TRACE)
 
 	wb := &ABLeMH{
-		conn: conn,
-		curr: uint16(6 / 0.06),
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		curr:         uint16(6 / 0.06),
 	}
 
 	b, err := wb.get(ablRegFirmware, 2)
 
 	// check presence of current sensor
 	if err == nil && (b[3]&ablSensorPresent != 0) {
-		return decorateABLeMH(wb, wb.currentPower, wb.currents), nil
+		implement.Implements(wb, implement.Meter(wb.currentPower))
+		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	return wb, nil

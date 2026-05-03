@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/lgpcs"
 	"github.com/evcc-io/evcc/util"
 )
 
 // LgEss implements the api.Meter interface
 type LgEss struct {
+	implement.Capabilities
 	usage string     // grid, pv, battery
 	conn  *lgpcs.Com // communication with the lgpcs device
 }
@@ -21,8 +23,6 @@ func init() {
 	registry.Add("lgess8", NewLgEss8FromConfig)
 	registry.Add("lgess15", NewLgEss15FromConfig)
 }
-
-//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t api.MeterEnergy,api.BatteryCapacity,api.Battery,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
 
 func NewLgEss8FromConfig(other map[string]any) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss8)
@@ -57,41 +57,45 @@ func NewLgEssFromConfig(other map[string]any, essType lgpcs.Model) (api.Meter, e
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits, essType)
+	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.batteryCapacity, cc.batterySocLimits, cc.batteryPowerLimits, essType)
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, essType lgpcs.Model) (api.Meter, error) {
+func NewLgEss(uri, usage, registration, password string, cache time.Duration, batteryCapacity batteryCapacity, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, essType lgpcs.Model) (api.Meter, error) {
 	conn, err := lgpcs.GetInstance(uri, registration, password, cache, essType)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &LgEss{
-		usage: strings.ToLower(usage),
-		conn:  conn,
+		Capabilities: implement.Caps(),
+		usage:        strings.ToLower(usage),
+		conn:         conn,
 	}
 
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
+	if capacity := batteryCapacity.Decorator(); capacity != nil {
+		implement.Implements(m, implement.BatteryCapacity(capacity))
+	}
+	if powerLimiter := batteryPowerLimits.Decorator(); powerLimiter != nil {
+		implement.Implements(m, implement.BatteryPowerLimiter(powerLimiter))
+	}
+
 	if m.usage == "grid" && essType != lgpcs.LgEss15 {
-		totalEnergy = m.totalEnergy
+		implement.Implements(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
-	// decorate battery
-	var batterySoc func() (float64, error)
-	var batterySocLimiter func() (float64, float64)
-	var setBatteryMode func(api.BatteryMode) error
 	if usage == "battery" {
-		batterySoc = m.batterySoc
-		batterySocLimiter = batterySocLimits.Decorator()
+		implement.Implements(m, implement.Battery(m.batterySoc))
+		if socLimiter := batterySocLimits.Decorator(); socLimiter != nil {
+			implement.Implements(m, implement.BatterySocLimiter(socLimiter))
+		}
 
 		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7430 {
-			setBatteryMode = m.batteryMode(batterySocLimits)
+			implement.Implements(m, implement.BatteryController(m.batteryMode(batterySocLimits)))
 		}
 	}
 
-	return decorateLgEss(m, totalEnergy, capacity, batterySoc, batterySocLimiter, batteryPowerLimits.Decorator(), setBatteryMode), nil
+	return m, nil
 }
 
 // CurrentPower implements the api.Meter interface

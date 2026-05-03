@@ -6,12 +6,14 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // OpenWB20 charger implementation
 type OpenWB20 struct {
+	implement.Capabilities
 	conn    *modbus.Connection
 	enabled bool
 	curr    uint16
@@ -41,8 +43,6 @@ func init() {
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
 
-//go:generate go tool decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t api.PhaseSwitcher,api.Identifier
-
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
 func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -66,17 +66,15 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	var phases1p3p func(int) error
 	if cc.Phases1p3p {
-		phases1p3p = wb.phases1p3p
+		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
-	var identify func() (string, error)
 	if cc.Identify {
-		identify = wb.identify
+		implement.Implements(wb, implement.Identifier(wb.identify))
 	}
 
-	return decorateOpenWB20(wb, phases1p3p, identify), nil
+	return wb, nil
 }
 
 // NewOpenWB20 creates OpenWB20 charger
@@ -92,9 +90,10 @@ func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint1
 	conn.Logger(log.TRACE)
 
 	wb := &OpenWB20{
-		conn: conn,
-		curr: 6 * 100,
-		base: (connector - 1) * 100,
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		curr:         6 * 100,
+		base:         (connector - 1) * 100,
 	}
 
 	return wb, nil

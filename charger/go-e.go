@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	goe "github.com/evcc-io/evcc/charger/go-e"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -34,6 +35,7 @@ import (
 
 // GoE charger implementation
 type GoE struct {
+	implement.Capabilities
 	api goe.API
 }
 
@@ -45,8 +47,6 @@ func init() {
 		return newGoEFromConfig(false, other)
 	})
 }
-
-//go:generate go tool decorate -f decorateGoE -b *GoE -r api.Charger -t api.ChargeRater,api.PhaseSwitcher
 
 // newGoEFromConfig creates a go-e charger from generic config
 func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
@@ -71,22 +71,22 @@ func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	var chargedEnergy func() (float64, error)
 	if v2 {
-		chargedEnergy = c.chargedEnergy
+		implement.Implements(c, implement.ChargeRater(c.chargedEnergy))
 	}
 
-	var phases1p3p func(int) error
 	if c.api.IsV2() {
-		phases1p3p = c.phases1p3p
+		implement.Implements(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
-	return decorateGoE(c, chargedEnergy, phases1p3p), nil
+	return c, nil
 }
 
 // NewGoE creates GoE charger
 func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
-	c := &GoE{}
+	c := &GoE{
+		Capabilities: implement.Caps(),
+	}
 
 	log := util.NewLogger("go-e").Redact(token)
 

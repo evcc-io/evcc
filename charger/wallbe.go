@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -33,6 +34,7 @@ var wbRegCurrents = []uint16{114, 116, 118} // current readings
 // Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Wallbe struct {
+	implement.Capabilities
 	conn   *modbus.Connection
 	factor int64
 }
@@ -40,8 +42,6 @@ type Wallbe struct {
 func init() {
 	registry.AddCtx("wallbe", NewWallbeFromConfig)
 }
-
-//go:generate go tool decorate -f decorateWallbe -b *Wallbe -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.ChargerEx
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -68,30 +68,23 @@ func NewWallbeFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		wb.factor = 1
 	}
 
-	// decorate meter
-	var (
-		power, energy func() (float64, error)
-		currents      func() (float64, float64, float64, error)
-	)
-
 	if cc.Meter.Power {
-		power = wb.currentPower
+		implement.Implements(wb, implement.Meter(wb.currentPower))
 	}
 
 	if cc.Meter.Energy {
-		energy = wb.totalEnergy
+		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
 	if cc.Meter.Currents {
-		currents = wb.currents
+		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
 	}
 
-	var maxCurrentMillis func(float64) error
 	if !cc.Legacy {
-		maxCurrentMillis = wb.maxCurrentMillis
+		implement.Implements(wb, implement.ChargerEx(wb.maxCurrentMillis))
 	}
 
-	return decorateWallbe(wb, power, energy, currents, maxCurrentMillis), nil
+	return wb, nil
 }
 
 // NewWallbe creates a Wallbe charger
@@ -105,8 +98,9 @@ func NewWallbe(ctx context.Context, uri string) (*Wallbe, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Wallbe{
-		conn:   conn,
-		factor: 10,
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		factor:       10,
 	}
 
 	return wb, nil

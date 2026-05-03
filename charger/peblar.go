@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -33,6 +34,7 @@ import (
 
 // Peblar charger implementation
 type Peblar struct {
+	implement.Capabilities
 	conn    *modbus.Connection
 	curr    uint32
 	enabled bool
@@ -70,8 +72,6 @@ func init() {
 	registry.AddCtx("peblar", NewPeblarFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
-
 // NewPeblarFromConfig creates a Peblar charger from generic config
 func NewPeblarFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
@@ -103,9 +103,10 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 
 	wb := &Peblar{
-		conn:   conn,
-		curr:   6000,                       // assume min current
-		phases: binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		curr:         6000,                       // assume min current
+		phases:       binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
 	}
 
 	b, err = conn.ReadInputRegisters(peblarRegIndepRelay, 1)
@@ -113,15 +114,12 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		return nil, err
 	}
 
-	var phasesS func(int) error
-	var phasesG func() (int, error)
-
 	if binary.BigEndian.Uint16(b) == 1 {
-		phasesS = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
-	return decoratePeblar(wb, phasesS, phasesG), nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface
