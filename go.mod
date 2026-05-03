@@ -106,7 +106,7 @@ require (
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
 	go.uber.org/mock v0.6.0
-	go.yaml.in/yaml/v4 v4.0.0-rc.4
+	go.yaml.in/yaml/v4 v4.0.0-rc.4.0.20260501150951-4c3ab16456f2
 	golang.org/x/crypto v0.50.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20260409153322-03ca0dcccbd3
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
@@ -268,5 +268,3 @@ tool (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
-
-replace go.yaml.in/yaml/v4 => go.yaml.in/yaml/v4 v4.0.0-rc.3
