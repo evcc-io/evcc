@@ -15,6 +15,8 @@ params:
     choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
+  - name: curtaillimit
+  - name: feedinlimit
   - name: timeout
 render: |
   type: custom
@@ -120,4 +122,20 @@ render: |
       value:
         - 101:AphC
         - 103:AphC
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xF001 # Active Power Limit (0-100 %)
+      type: writesingle
+      encoding: uint16
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xF001 # Active Power Limit (0-100 %)
+      type: holding
+      decode: uint16
+  curtaillimit: {{ .curtaillimit }} # % power limit when curtailed (0 = full shutdown)
+  feedinlimit: {{ .feedinlimit }} # % max power limit when not curtailed (e.g. 60 for 60 % of kWp)
   {{- end }}
