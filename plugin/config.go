@@ -182,6 +182,6 @@ func (c *Config) TimeGetter(ctx context.Context) (func() (time.Time, error), err
 		if err != nil {
 			return time.Time{}, err
 		}
-		return ParseFinishTime(s)
+		return parseRelativeTime(s)
 	}, nil
 }
