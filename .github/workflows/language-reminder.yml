@@ -26,7 +26,7 @@ jobs:
 
       - name: Check language
         id: language_check
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9.0.0
         env:
           COMMENT_BODY: ${{ github.event.comment.body }}
           GITHUB_TOKEN: ${{ github.token }}
@@ -84,7 +84,7 @@ jobs:
 
       - name: Post reminder if non-English
         if: steps.language_check.outputs.analysis != ''
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9.0.0
         with:
           script: |
             const analysis = JSON.parse('${{ steps.language_check.outputs.analysis }}');

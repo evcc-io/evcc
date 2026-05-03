@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Check for 'needs documentation' label
         id: check-label
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9.0.0
         with:
           github-token: ${{ secrets.DOCS_ISSUE_TOKEN }}
           script: |
@@ -30,7 +30,7 @@ jobs:
 
       - name: Create Docs Issue
         if: steps.check-label.outputs.result == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9.0.0
         with:
           github-token: ${{ secrets.DOCS_ISSUE_TOKEN }}
           script: |

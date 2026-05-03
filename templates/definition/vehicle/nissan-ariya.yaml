@@ -3,6 +3,9 @@ products:
   - brand: Nissan
     description:
       generic: Ariya
+  - brand: Nissan
+    description:
+      generic: Micra
 params:
   - preset: vehicle-base
 render: |
