@@ -114,6 +114,8 @@ export interface State {
   config?: string;
   database?: string;
   ocpp?: Ocpp;
+  ocppforwarder?: OcppForwarderRule[];
+  ocppforwarderstatus?: OcppForwarderSession[];
   optimizer?: boolean;
 }
 
@@ -127,6 +129,22 @@ export type YamlSource = "file" | "db" | undefined;
 
 export interface OcppConfig {
   port: number;
+}
+
+export interface OcppForwarderRule {
+  stationId: string;
+  upstreamUrl: string;
+  password?: string;
+  upstreamStationId?: string;
+  insecure?: boolean;
+  caCert?: string;
+  readOnly?: boolean;
+}
+
+export interface OcppForwarderSession {
+  chargerId: string;
+  upstreamUrl: string;
+  upstreamConnected: boolean;
 }
 
 export interface OcppStatus {

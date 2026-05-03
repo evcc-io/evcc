@@ -98,11 +98,8 @@ export default defineComponent({
 		},
 	},
 	computed: {
-		status() {
-			return this.ocpp.status;
-		},
-		stations() {
-			return this.status.stations;
+		stations(): OcppStationStatus[] {
+			return this.ocpp.status.stations;
 		},
 		ocppUrl(): string {
 			return getOcppUrl(this.ocpp);
