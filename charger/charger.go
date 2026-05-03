@@ -165,7 +165,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 			if err != nil {
 				return time.Time{}, err
 			}
-			return time.Parse(time.RFC3339, s)
+			t, err := time.Parse(time.RFC3339, s)
+			if err != nil {
+				return time.Time{}, fmt.Errorf("parse finish time: %w", err)
+			}
+			return t, nil
 		}
 	}
 
