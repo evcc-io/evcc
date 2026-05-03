@@ -410,6 +410,13 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
+		// close DB so the WAL is checkpointed into the main file before shutdown
+		// hooks (e.g. settings.Persist) can overwrite the restored content
+		if err := db.Close(); err != nil {
+			http.Error(w, "DB close failed", http.StatusInternalServerError)
+			return
+		}
+
 		shutdown()
 		w.WriteHeader(http.StatusNoContent)
 	}
