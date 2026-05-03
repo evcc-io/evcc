@@ -700,7 +700,7 @@ export default defineComponent({
 					: "main.energyflow.batteryForecastEmpty";
 				return this.$t(key, { time });
 			}
-			const soc = `${Math.round(point.soc)}%`;
+			const soc = this.fmtPercentage(point.soc);
 			return this.$t("main.energyflow.batteryForecastSoc", { soc, time });
 		},
 	},
