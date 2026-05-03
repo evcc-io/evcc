@@ -165,9 +165,9 @@ func (c *Config) BytesSetter(ctx context.Context, param string) (func([]byte) er
 	return prov.BytesSetter(param)
 }
 
-// FinishTimeGetter returns a getter that parses the plugin value as an estimated finish time.
+// TimeGetter returns a getter that parses the plugin value as an estimated finish time.
 // The value may be an RFC3339 timestamp, a Go duration string, or a numeric number of seconds.
-func (c *Config) FinishTimeGetter(ctx context.Context) (func() (time.Time, error), error) {
+func (c *Config) TimeGetter(ctx context.Context) (func() (time.Time, error), error) {
 	if c == nil {
 		return nil, nil
 	}

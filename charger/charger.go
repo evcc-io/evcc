@@ -156,7 +156,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	// decorate finishtime
 	var finishTime func() (time.Time, error)
 	if cc.FinishTime != nil {
-		finishTime, err = cc.FinishTime.FinishTimeGetter(ctx)
+		finishTime, err = cc.FinishTime.TimeGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("finishTime: %w", err)
 		}
