@@ -228,6 +228,7 @@
       "authPerformHint": "Åbnes i en ny fane. Kom tilbage hertil for at fortsætte.",
       "authPrepare": "Forbereder forbindelse",
       "cancel": "Afbryd",
+      "change": "Ændre",
       "clear": "Slet",
       "close": "Luk",
       "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
@@ -696,11 +697,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licensnøgle",
+      "activationKeyHint": "Er sendt via email. Findes i {url}.",
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
       "description": "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne.",
-      "descriptionToken": "Sponsorer finder deres token på {url}. For at komme i gang tilbyder vi en{trialToken}.",
-      "enterYourToken": "Indtast din token",
+      "descriptionToken": "Som GitHub sponsor finder du din token på {url}. For at komme i gang tilbyder vi en {trialToken}.",
+      "email": "Email",
+      "emailHint": "Den email adresse du benyttede for {url}",
+      "enterYourToken": "Din Sponsor token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
       "invalid": "ugyldig",
       "labelToken": "Sponsor token",
@@ -711,7 +716,7 @@
       "tokenRequiredShort": "Der er ingen sponsor token konfiguret.",
       "trialToken": "afprøvningstoken",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Dit token"
+      "yourToken": "Sponsor token"
     },
     "system": {
       "backupRestore": {
@@ -1461,6 +1466,7 @@
     },
     "loadpoint": "Ladepunkt",
     "noData": "Ingen opladninger i denne måned.",
+    "odometer": "Kilometerstand",
     "overview": "Overblik",
     "period": {
       "month": "Måned",

@@ -228,6 +228,7 @@
       "authPerformHint": "Wordt in een nieuw tabblad geopend. Ga terug naar deze pagina om verder te gaan.",
       "authPrepare": "Verbinding voorbereiden",
       "cancel": "Annuleren",
+      "change": "Wijzigen",
       "clear": "Leegmaken",
       "close": "Sluiten",
       "confirmSave": "Er zijn niet-opgeslagen wijzigingen. Nu opslaan?",
@@ -606,7 +607,7 @@
       "urlHelp": "Kopieer deze URL naar de configuratie van uw lader. Raadpleeg de handleiding van de fabrikant voor meer informatie. De lader voegt naar verwachting automatisch zijn unieke identificatiecode (station-ID) toe aan de URL. In zeldzame gevallen moet u de identificatiecode mogelijk handmatig ingeven. Voorbeeld: `{url}`"
     },
     "optimizer": {
-      "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking.",
+      "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking. Momenteel worden alleen berekeningen en visualisaties gemaakt, maar nog geen apparaten aangestuurd.",
       "enable": "Activeer optimizer",
       "info": "Het duurt enkele minuten eer het optimizer menu item zichtbaar wordt. Voor nieuwe installaties kan het tot 24 uur duren tot dat evcc voldoende data verzameld heeft.",
       "title": "Optimizer"
@@ -658,7 +659,14 @@
       "lastActive": "actief {time}",
       "loginBlocked": "Inloggen op afstand is voor een minuut geblokkeerd, omdat er te veel mislukte inlogpogingen waren.",
       "manualLogin": "Of log handmatig in via uw browser op {url}, met de volgende credentials:",
+      "noClients": "Er zijn nog geen clients. Niemand kan nog verbinden.",
       "password": "Wachtwoord",
+      "passwordOnce": "Het wachtwoord wordt eenmalig getoond. Scan of kopieer de QR-code. Je kunt hem niet nogmaals bekijken.",
+      "qrInstall": "Installeer de evcc app voor {ios} of {android}.",
+      "qrScan": "Scan de code met de camera van je telefoon om te verbinden. Klik er op als je al je telefoon aan het gebruiken bent.",
+      "removeClient": "Verwijder client",
+      "title": "Toegang op afstand",
+      "url": "Publieke URL",
       "username": "Gebruikersnaam"
     },
     "section": {
@@ -687,11 +695,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licentiesleutel",
+      "activationKeyHint": "Verzonden via email. Deze kan hier gevonden worden: {url}.",
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
       "description": "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten.",
-      "descriptionToken": "Sponsors vinden hun token op {url}. Om te starten, bieden we een {trialToken}.",
-      "enterYourToken": "Typ hier je token",
+      "descriptionToken": "Als GitHub-sponsor vind je jouw token op {url}. Om aan de slag te kunnen, bieden we een {trialToken}.",
+      "email": "E-mail",
+      "emailHint": "Email adres dat u gebruikte voor {url}",
+      "enterYourToken": "Jouw sponsortoken",
       "error": "De sponsortoken is ongeldig.",
       "invalid": "ongeldig",
       "labelToken": "Sponsortoken",
@@ -702,7 +714,7 @@
       "tokenRequiredShort": "Geen sponsortoken geconfigureerd.",
       "trialToken": "proeftoken",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Uw token"
+      "yourToken": "Sponsortoken"
     },
     "system": {
       "backupRestore": {
@@ -792,7 +804,7 @@
       "type": {
         "co2": "CO₂ intensiteit",
         "feedIn": "Terugleververgoeding",
-        "grid": "Grid consumptie prijs",
+        "grid": "Grid import prijs",
         "planner": "Planner",
         "solar": "PV"
       },
@@ -1450,6 +1462,7 @@
     },
     "loadpoint": "Oplaadpunt",
     "noData": "Geen oplaadsessies deze maand.",
+    "odometer": "Kilometerstand",
     "overview": "Overzicht",
     "period": {
       "month": "Maand",

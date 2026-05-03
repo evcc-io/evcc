@@ -228,6 +228,7 @@
       "authPerformHint": "Bus atidaryta naujame skirtuke. Pratęsimui grįžkite čia.",
       "authPrepare": "Paruošti ryšį",
       "cancel": "Atšaukti",
+      "change": "Pakeisti",
       "clear": "Išvalyti",
       "close": "Uždaryti",
       "confirmSave": "Yra neišsaugotų pakeitimų. Išsaugoti dabar ?",
@@ -696,11 +697,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licencijos Raktas",
+      "activationKeyHint": "Išsiųstas jums el. paštu. Galima rasti adresu {url}.",
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs galite valdyti įkroviklius, kurių naudojimui reikia rėmimo.",
-      "descriptionToken": "Rėmėjai ras savo žetoną (token) {url}. Pradžiai siūlome {trialToken}.",
-      "enterYourToken": "Įrašykite savo žetoną",
+      "descriptionToken": "GitHub rėmėjai gali matyti savo žetoną (token) {url}. Pradžiai - pasibandymui siūlome {trialToken}.",
+      "email": "El. paštas",
+      "emailHint": "El. pašto adresas, kurį naudojote {url}",
+      "enterYourToken": "Jūsų rėmėjo žetonas",
       "error": "Rėmėjo žetonas (token) negalioja.",
       "invalid": "negalioja",
       "labelToken": "Rėmėjo žetonas",
@@ -711,7 +716,7 @@
       "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
       "trialToken": "bandomasis žetonas (token)",
       "viaYaml": "per evcc.yaml",
-      "yourToken": "Jūsų žetonas"
+      "yourToken": "Rėmėjo Žetonas"
     },
     "system": {
       "backupRestore": {
@@ -1461,6 +1466,7 @@
     },
     "loadpoint": "Įkroviklis",
     "noData": "Šį mėnesį įkrovimų nebuvo.",
+    "odometer": "Rida",
     "overview": "Apžvalga",
     "period": {
       "month": "Mėnesis",
