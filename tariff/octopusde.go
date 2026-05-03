@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,6 +28,9 @@ type planningHorizon struct {
 }
 
 var _ api.Tariff = (*OctopusDe)(nil)
+
+// ErrAuthFailed is a sentinel error for authentication failures
+var ErrAuthFailed = errors.New("octopus-de authentication failed")
 
 func init() {
 	registry.Add("octopus-de", NewOctopusDeFromConfig)
@@ -93,12 +97,22 @@ func (t *OctopusDe) run(done chan error) {
 		if err := backoff.Retry(func() error {
 			agr, err := t.gqlClient.ActiveAgreement()
 			if err != nil {
+				// Wrap authentication errors with a sentinel to identify them clearly
+				if strings.Contains(err.Error(), "authentication failed") {
+					return backoff.Permanent(err)
+				}
 				return backoffPermanentError(err)
 			}
 			rates, err = ratesForAgreement(agr, time.Now())
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
+
+			// Exit immediately on authentication errors instead of retrying
+			if errors.Is(err, ErrAuthFailed) {
+				t.log.ERROR.Printf("authentication failed - configuration error: %v", err)
+				return
+			}
 
 			t.log.ERROR.Printf("failed to fetch unit rate forecast: %v", err)
 			continue
@@ -119,6 +133,17 @@ func (t *OctopusDe) run(done chan error) {
 		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
+}
+
+// isAuthError checks if an error indicates an authentication failure.
+// It inspects error messages from the GraphQL client which typically contain
+// "authentication failed" when credentials are invalid or missing.
+func isAuthError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "authentication failed")
 }
 
 // Rates implements the api.Tariff interface
