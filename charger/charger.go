@@ -156,20 +156,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	// decorate finishtime
 	var finishTime func() (time.Time, error)
 	if cc.FinishTime != nil {
-		stringG, err := cc.FinishTime.StringGetter(ctx)
+		finishTime, err = cc.FinishTime.FinishTimeGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("finishTime: %w", err)
-		}
-		finishTime = func() (time.Time, error) {
-			s, err := stringG()
-			if err != nil {
-				return time.Time{}, err
-			}
-			t, err := time.Parse(time.RFC3339, s)
-			if err != nil {
-				return time.Time{}, fmt.Errorf("parse finish time: %w", err)
-			}
-			return t, nil
 		}
 	}
 
