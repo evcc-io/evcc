@@ -165,7 +165,8 @@ func newLoadpointHandler() http.HandlerFunc {
 		}
 
 		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+
+		instance, err := core.NewLoadpointFromConfig(log, settings, nil, static)
 		if err != nil {
 			conf.Delete()
 			jsonError(w, http.StatusBadRequest, err)

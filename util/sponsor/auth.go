@@ -27,15 +27,20 @@ import (
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
+	"github.com/evcc-io/evcc/util/machine"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 var (
-	mu             sync.RWMutex
-	Subject, Token string
-	ExpiresAt      time.Time
+	mu                            sync.RWMutex
+	Subject, Token, ActivationKey string
+	ExpiresAt                     time.Time
 )
+
+func machineID() string {
+	return machine.ProtectedID("evcc-sponsor")
+}
 
 const unavailable = "sponsorship unavailable"
 
@@ -49,6 +54,35 @@ func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()
 	return IsAuthorized() && Subject != unavailable && Token != ""
+}
+
+// ActivateSponsorship activates a license key with email and returns the JWT token
+func ActivateSponsorship(licenseKey, email string) (string, error) {
+	conn, err := cloud.Connection()
+	if err != nil {
+		return "", fmt.Errorf("connection failed: %w", err)
+	}
+
+	client := pb.NewAuthClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	res, err := client.Activate(ctx, &pb.ActivateRequest{
+		Key:       licenseKey,
+		Email:     email,
+		MachineId: machineID(),
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("activation failed: %w", err)
+	}
+
+	if res.Error != "" {
+		return "", fmt.Errorf("%s", res.Error)
+	}
+
+	return res.Token, nil
 }
 
 // check and set sponsorship token
@@ -90,6 +124,7 @@ func ConfigureSponsorship(token string) error {
 	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
+		ActivationKey = res.ActivationKey
 		ExpiresAt = res.ExpiresAt.AsTime()
 	}
 
@@ -117,11 +152,20 @@ func redactToken(token string) string {
 	return token[:6] + "......." + token[len(token)-6:]
 }
 
+// redactKey returns a redacted version of the activation key showing only the first segment
+func redactKey(key string) string {
+	if idx := strings.Index(key, "-"); idx > 0 {
+		return key[:idx] + "-XXXXX-XXXXX-XXXXX-XXXXX"
+	}
+	return ""
+}
+
 type Status struct {
-	Name        string    `json:"name"`
-	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
-	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
-	Token       string    `json:"token,omitempty"`
+	Name          string    `json:"name"`
+	ExpiresAt     time.Time `json:"expiresAt,omitempty"`
+	ExpiresSoon   bool      `json:"expiresSoon,omitempty"`
+	Token         string    `json:"token,omitempty"`
+	ActivationKey string    `json:"activationKey,omitempty"`
 }
 
 // RedactedStatus returns the sponsorship status
@@ -135,9 +179,10 @@ func RedactedStatus() Status {
 	}
 
 	return Status{
-		Name:        Subject,
-		ExpiresAt:   ExpiresAt,
-		ExpiresSoon: expiresSoon,
-		Token:       redactToken(Token),
+		Name:          Subject,
+		ExpiresAt:     ExpiresAt,
+		ExpiresSoon:   expiresSoon,
+		Token:         redactToken(Token),
+		ActivationKey: redactKey(ActivationKey),
 	}
 }

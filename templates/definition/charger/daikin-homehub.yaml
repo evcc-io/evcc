@@ -3,6 +3,9 @@ products:
   - brand: Daikin
     description:
       generic: HomeHub (SG Ready)
+  - brand: Daikin
+    description:
+      generic: Altherma 4 (SG Ready)
 group: heating
 requirements:
   description:

@@ -11,7 +11,7 @@ CREATE UNIQUE INDEX `entities_group_name` ON `entities`(`group`, `name`);
 
 CREATE TABLE `meters` (
   `meter` integer,
-  `ts` datetime,
+  `ts` integer,
   `import` real,
   `export` real
 );
@@ -26,17 +26,17 @@ INSERT INTO `entities` VALUES (2, 'grid', 'grid');
 -- 2026-03-25: 00:00, 00:15 (2 slots)
 
 -- home (id=1): import=0.1, export=0 per slot
-INSERT INTO `meters` VALUES (1, '2026-03-24 22:00:00+01:00', 0.1, 0);
-INSERT INTO `meters` VALUES (1, '2026-03-24 22:15:00+01:00', 0.1, 0);
-INSERT INTO `meters` VALUES (1, '2026-03-24 22:30:00+01:00', 0.1, 0);
-INSERT INTO `meters` VALUES (1, '2026-03-24 22:45:00+01:00', 0.1, 0);
-INSERT INTO `meters` VALUES (1, '2026-03-25 00:00:00+01:00', 0.1, 0);
-INSERT INTO `meters` VALUES (1, '2026-03-25 00:15:00+01:00', 0.1, 0);
+INSERT INTO `meters` VALUES (1, 1774386000, 0.1, 0);
+INSERT INTO `meters` VALUES (1, 1774386900, 0.1, 0);
+INSERT INTO `meters` VALUES (1, 1774387800, 0.1, 0);
+INSERT INTO `meters` VALUES (1, 1774388700, 0.1, 0);
+INSERT INTO `meters` VALUES (1, 1774393200, 0.1, 0);
+INSERT INTO `meters` VALUES (1, 1774394100, 0.1, 0);
 
 -- grid (id=2): import=0.5, export=0.1 per slot
-INSERT INTO `meters` VALUES (2, '2026-03-24 22:00:00+01:00', 0.5, 0.1);
-INSERT INTO `meters` VALUES (2, '2026-03-24 22:15:00+01:00', 0.5, 0.1);
-INSERT INTO `meters` VALUES (2, '2026-03-24 22:30:00+01:00', 0.5, 0.1);
-INSERT INTO `meters` VALUES (2, '2026-03-24 22:45:00+01:00', 0.5, 0.1);
-INSERT INTO `meters` VALUES (2, '2026-03-25 00:00:00+01:00', 0.5, 0.1);
-INSERT INTO `meters` VALUES (2, '2026-03-25 00:15:00+01:00', 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1774386000, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1774386900, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1774387800, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1774388700, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1774393200, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1774394100, 0.5, 0.1);

@@ -27,6 +27,7 @@ params:
     required: true
   - name: ain
     required: true
+    service: fritz/devices?uri={uri}&user={user}&password={password}
   - name: firmware82
     advanced: true
     type: bool
@@ -36,6 +37,15 @@ params:
     help:
       de: Verwende die neue REST-API für FritzOS ab Version 8.2
       en: Use the new REST API for FritzOS version 8.2 and later
+  - name: unit
+    advanced: true
+    type: int
+    description:
+      de: Einheit
+      en: Unit
+    help:
+      de: Index der Einheit für Geräte mit mehreren Einheiten (nur REST-API)
+      en: Unit index for multi-unit devices (REST API only)
 render: |
   type: fritzdect
   uri: {{ .uri }}
@@ -43,3 +53,4 @@ render: |
   password: {{ .password }}
   ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
   firmware82: {{ .firmware82 }}
+  unit: {{ .unit }}
