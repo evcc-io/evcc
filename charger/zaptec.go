@@ -45,11 +45,11 @@ type Zaptec struct {
 	log        *util.Logger
 	statusG    util.Cacheable[zaptec.StateResponse]
 	instance   zaptec.Charger
-	maxCurrent float64
 	version    int
 	enabled    bool
 	priority   bool
 	passive    bool
+	lastStatus int
 }
 
 func init() {
@@ -144,9 +144,8 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	}
 
 	var phases1p3p func(int) error
-	if maxCurrent, err := c.getInstallationMaxCurrent(); err == nil {
+	if err := c.testInstallationPermission(); err == nil || c.version == zaptec.ZaptecGo1_Pro {
 		phases1p3p = c.phases1p3p
-		c.maxCurrent = maxCurrent
 	}
 
 	return decorateZaptec(c, phases1p3p), nil
@@ -189,8 +188,13 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusA, err
 	}
+	currentStatus, err := res.ObservationByID(zaptec.ChargerOperationMode).Int()
+	if err == nil && currentStatus == zaptec.OpModeDisconnected && currentStatus != c.lastStatus {
+		err = c.MaxCurrentMillis(0)
+	}
+	c.lastStatus = currentStatus
 
-	switch i, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); i {
+	switch currentStatus {
 	case zaptec.OpModeDisconnected:
 		return api.StatusA, err
 	case zaptec.OpModeConnectedRequesting, zaptec.OpModeConnectedFinished:
@@ -199,7 +203,7 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 		return api.StatusC, err
 	default:
 		if err == nil {
-			err = fmt.Errorf("unknown status: %d", i)
+			err = fmt.Errorf("unknown status: %d", currentStatus)
 		}
 		return api.StatusNone, err
 	}
@@ -249,7 +253,6 @@ func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 	if err == nil {
 		c.statusG.Reset()
 	}
-
 	return err
 }
 
@@ -336,19 +339,21 @@ func (c *Zaptec) phases1p3p(phases int) error {
 		return err
 	}
 
-	// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
-	current, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
-	if err != nil {
-		return err
-	}
+	if c.version == zaptec.ZaptecGo1_Pro {
+		// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
+		current, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
+		if err != nil {
+			return err
+		}
 
-	current -= 0.1
-	if current < 6 {
-		current += 0.2
-	}
+		current -= 0.1
+		if current < 6 {
+			current += 0.2
+		}
 
-	if err := c.MaxCurrentMillis(current); err != nil {
-		return err
+		if err := c.MaxCurrentMillis(current); err != nil {
+			return err
+		}
 	}
 
 	if !c.priority {
@@ -368,7 +373,7 @@ func (c *Zaptec) phases1p3p(phases int) error {
 }
 
 func (c *Zaptec) switchPhases(phases int) error {
-	if c.version != zaptec.ZaptecGo2 {
+	if c.version == zaptec.ZaptecGo1_Pro {
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}
@@ -376,20 +381,17 @@ func (c *Zaptec) switchPhases(phases int) error {
 		return c.chargerUpdate(data)
 	}
 
-	var zero float64
-	data := zaptec.UpdateInstallation{
-		AvailableCurrentPhase1: &c.maxCurrent,
-		AvailableCurrentPhase2: &zero,
-		AvailableCurrentPhase3: &zero,
-	}
-	if phases == 3 {
-		data = zaptec.UpdateInstallation{
-			AvailableCurrentPhase1: &c.maxCurrent,
-			AvailableCurrentPhase2: &c.maxCurrent,
-			AvailableCurrentPhase3: &c.maxCurrent,
-		}
+	var phaseSwitchCurrent float64
+
+	if phases == 1 {
+		phaseSwitchCurrent = 32 // threshold which Go2 switches to single-phase
+	} else {
+		phaseSwitchCurrent = 0
 	}
 
+	data := zaptec.UpdateInstallation{
+		ThreeToOnePhaseSwitchCurrent: &phaseSwitchCurrent,
+	}
 	return c.installationUpdate(data)
 }
 
@@ -409,15 +411,11 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) getInstallationMaxCurrent() (float64, error) {
+func (c *Zaptec) testInstallationPermission() error {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
-	if err := c.GetJSON(uri, &res); err != nil {
-		return 0, err
-	}
-
-	return res.MaxCurrent, nil
+	return c.GetJSON(uri, &res)
 }
 
 func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
