@@ -598,7 +598,6 @@
         "connected": "Connecté",
         "unknown": "Inconnu"
       },
-
       "title": "Serveur OCPP",
       "url": "URL du Serveur",
       "urlHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur devrait ajouter automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier manuellement l'identifiant. Exemple : `{url}`"
