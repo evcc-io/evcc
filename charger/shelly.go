@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/shelly"
 	"github.com/evcc-io/evcc/util"
 )
 
 // Shelly charger implementation
 type Shelly struct {
+	implement.Capabilities
 	conn *shelly.Connection
 	*switchSocket
 }
@@ -44,14 +46,13 @@ func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	var vol, cur, pow func() (float64, float64, float64, error)
 	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
-		vol = phases.Voltages
-		cur = phases.Currents
-		pow = phases.Powers
+		implement.Implements(c, implement.PhaseVoltages(phases.Voltages))
+		implement.Implements(c, implement.PhaseCurrents(phases.Currents))
+		implement.Implements(c, implement.PhasePowers(phases.Powers))
 	}
 
-	return decorateShelly(c, vol, cur, pow), nil
+	return c, nil
 }
 
 // NewShelly creates Shelly charger
@@ -62,7 +63,8 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 	}
 
 	c := &Shelly{
-		conn: conn,
+		Capabilities: implement.Caps(),
+		conn:         conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)

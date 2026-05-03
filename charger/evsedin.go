@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -14,6 +15,7 @@ import (
 
 // EvseDIN charger implementation
 type EvseDIN struct {
+	implement.Capabilities
 	conn    *modbus.Connection
 	current uint16
 }
@@ -46,8 +48,6 @@ func NewEvseDINFromConfig(ctx context.Context, other map[string]any) (api.Charge
 	return NewEvseDIN(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
-//go:generate go tool decorate -f decorateEvseDIN -b *EvseDIN -r api.Charger -t api.ChargerEx
-
 // NewEvseDIN creates EVSE DIN charger
 func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
 	log := util.NewLogger("evse")
@@ -61,11 +61,10 @@ func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, p
 	conn.Delay(200 * time.Millisecond)
 
 	evse := &EvseDIN{
-		conn:    conn,
-		current: 6, // assume min current
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		current:      6, // assume min current
 	}
-
-	var maxCurrentMillis func(float64) error
 
 	// check firmware
 	bFirmware, err := evse.conn.ReadHoldingRegisters(evseRegFirmware, 1)
@@ -94,7 +93,7 @@ func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, p
 		}
 
 		if config&0x0080 != 0 {
-			maxCurrentMillis = evse.maxCurrentMillis
+			implement.Implements(evse, implement.ChargerEx(evse.maxCurrentMillis))
 			evse.current = 600 // assume min current
 		}
 	}
@@ -107,7 +106,7 @@ func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, p
 		evse.current = current
 	}
 
-	return decorateEvseDIN(evse, maxCurrentMillis), nil
+	return evse, nil
 }
 
 // Status implements the api.Charger interface

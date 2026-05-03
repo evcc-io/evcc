@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -32,6 +33,7 @@ import (
 
 // Amperfied charger implementation
 type Amperfied struct {
+	implement.Capabilities
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
@@ -58,8 +60,6 @@ const (
 func init() {
 	registry.AddCtx("amperfied", NewAmperfiedFromConfig)
 }
-
-//go:generate go tool decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -94,9 +94,10 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 	conn.Logger(log.TRACE)
 
 	wb := &Amperfied{
-		log:     log,
-		conn:    conn,
-		current: 60, // assume min current
+		Capabilities: implement.Caps(),
+		log:          log,
+		conn:         conn,
+		current:      60, // assume min current
 	}
 
 	// get failsafe timeout from charger
@@ -108,14 +109,12 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond/2)
 	}
 
-	var phases1p3p func(int) error
-	var phasesG func() (int, error)
 	if phases {
-		phases1p3p = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
-	return decorateAmperfied(wb, phases1p3p, phasesG), nil
+	return wb, nil
 }
 
 func (wb *Amperfied) heartbeat(ctx context.Context, timeout time.Duration) {

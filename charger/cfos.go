@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -31,14 +32,13 @@ const (
 // It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
 // https://www.cfos-emobility.de/en-gb/cfos-power-brain/modbus-registers.htm
 type CfosPowerBrain struct {
+	implement.Capabilities
 	conn *modbus.Connection
 }
 
 func init() {
 	registry.AddCtx("cfos", NewCfosPowerBrainFromConfig)
 }
-
-//go:generate go tool decorate -f decorateCfos -b *CfosPowerBrain -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -70,30 +70,26 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 	conn.Logger(log.TRACE)
 
 	wb := &CfosPowerBrain{
-		conn: conn,
+		Capabilities: implement.Caps(),
+		conn:         conn,
 	}
 
 	// decorate meter
-	var (
-		power, energy func() (float64, error)
-		currents      func() (float64, float64, float64, error)
-	)
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
-		power = wb.currentPower
-		energy = wb.totalEnergy
+		implement.Implements(wb, implement.Meter(wb.currentPower))
+		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
 
 		if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeterFlags, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
-			currents = wb.currents
+			implement.Implements(wb, implement.PhaseCurrents(wb.currents))
 		}
 	}
 
 	// decorate phases
-	var phases1p3p func(int) error
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegSolarEnabled, 1); err == nil && binary.BigEndian.Uint16(b)&(1<<8) != 0 {
-		phases1p3p = wb.phases1p3p
+		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
-	return decorateCfos(wb, power, energy, currents, phases1p3p), nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

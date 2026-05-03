@@ -40,6 +40,11 @@ type typeStruct struct {
 	Functions       []funcStruct
 }
 
+type groupedParam struct {
+	BaseType, ShortType string
+	VarNames            []string
+}
+
 var interfaces = make(map[string]reflect.Type)
 
 func init() {
@@ -91,6 +96,28 @@ func getTemplate(dtypes []reflect.Type, types map[string]typeStruct) *template.T
 				}
 			}
 			return orderedParams
+		},
+		// groupedParams returns one entry per decorated interface, with the
+		// per-method var names collected. Lets the template emit a single
+		// implement.<ShortType>(varName...) call per interface.
+		"groupedParams": func() []groupedParam {
+			groups := make([]groupedParam, 0, len(dtypes))
+			for _, t := range dtypes {
+				funcs := types[getTypeImport(t)].Functions
+				if len(funcs) == 0 {
+					continue
+				}
+				varNames := make([]string, 0, len(funcs))
+				for _, f := range funcs {
+					varNames = append(varNames, f.VarName)
+				}
+				groups = append(groups, groupedParam{
+					BaseType:  funcs[0].BaseType,
+					ShortType: funcs[0].ShortType,
+					VarNames:  varNames,
+				})
+			}
+			return groups
 		},
 	}).Parse(srcTmpl)
 

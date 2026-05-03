@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/keba"
 	"github.com/evcc-io/evcc/util"
 )
@@ -20,6 +21,7 @@ const (
 
 // KebaUdp is an api.Charger implementation
 type KebaUdp struct {
+	implement.Capabilities
 	log     *util.Logger
 	conn    string
 	rfid    keba.RFID
@@ -31,8 +33,6 @@ type KebaUdp struct {
 func init() {
 	registry.Add("keba-udp", NewKebaUdpFromConfig)
 }
-
-//go:generate go tool decorate -f decorateKebaUdp -b *KebaUdp -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents
 
 // NewKebaUdpFromConfig creates a new Keba UDP charger
 func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
@@ -60,7 +60,9 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	if energy > 0 {
-		return decorateKebaUdp(k, k.currentPower, k.totalEnergy, k.currents), nil
+		implement.Implements(k, implement.Meter(k.currentPower))
+		implement.Implements(k, implement.MeterEnergy(k.totalEnergy))
+		implement.Implements(k, implement.PhaseCurrents(k.currents))
 	}
 
 	return k, err
@@ -80,12 +82,13 @@ func NewKebaUdp(uri, serial string, rfid keba.RFID, timeout time.Duration) (*Keb
 	sender, err := keba.NewSender(log, conn)
 
 	c := &KebaUdp{
-		log:     log,
-		conn:    conn,
-		rfid:    rfid,
-		timeout: timeout,
-		recv:    make(chan keba.UDPMsg),
-		sender:  sender,
+		Capabilities: implement.Caps(),
+		log:          log,
+		conn:         conn,
+		rfid:         rfid,
+		timeout:      timeout,
+		recv:         make(chan keba.UDPMsg),
+		sender:       sender,
 	}
 
 	// use serial to subscribe if defined for docker scenarios

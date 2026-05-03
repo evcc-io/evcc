@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/measurement"
 	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
@@ -15,6 +16,7 @@ import (
 // Charger is an api.Charger implementation with configurable getters and setters.
 type Charger struct {
 	*embed
+	implement.Capabilities
 	statusG     func() (string, error)
 	enabledG    func() (bool, error)
 	enableS     func(bool) error
@@ -24,8 +26,6 @@ type Charger struct {
 func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
-
-//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t api.ChargerEx,api.Identifier,api.PhaseSwitcher,api.Resurrector,api.Battery,api.SocLimiter,api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
 
 // NewConfigurableFromConfig creates a new charger from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

@@ -6,41 +6,38 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer0 func(bool) error, curtailer1 func() (bool, error), battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateRCTMeterEnergyImpl{meterEnergy: meterEnergy}
+		caps[reflect.TypeFor[api.MeterEnergy]()] = implement.MeterEnergy(meterEnergy)
 	}
 
 	if curtailer0 != nil {
-		caps[reflect.TypeFor[api.Curtailer]()] = &decorateRCTCurtailerImpl{curtailer0: curtailer0}
-	}
-
-	if curtailer1 != nil {
-		caps[reflect.TypeFor[api.Curtailer]()] = &decorateRCTCurtailerImpl{curtailer1: curtailer1}
+		caps[reflect.TypeFor[api.Curtailer]()] = implement.Curtailer(curtailer0, curtailer1)
 	}
 
 	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateRCTBatteryImpl{battery: battery}
+		caps[reflect.TypeFor[api.Battery]()] = implement.Battery(battery)
 	}
 
 	if batterySocLimiter != nil {
-		caps[reflect.TypeFor[api.BatterySocLimiter]()] = &decorateRCTBatterySocLimiterImpl{batterySocLimiter: batterySocLimiter}
+		caps[reflect.TypeFor[api.BatterySocLimiter]()] = implement.BatterySocLimiter(batterySocLimiter)
 	}
 
 	if batteryPowerLimiter != nil {
-		caps[reflect.TypeFor[api.BatteryPowerLimiter]()] = &decorateRCTBatteryPowerLimiterImpl{batteryPowerLimiter: batteryPowerLimiter}
+		caps[reflect.TypeFor[api.BatteryPowerLimiter]()] = implement.BatteryPowerLimiter(batteryPowerLimiter)
 	}
 
 	if batteryController != nil {
-		caps[reflect.TypeFor[api.BatteryController]()] = &decorateRCTBatteryControllerImpl{batteryController: batteryController}
+		caps[reflect.TypeFor[api.BatteryController]()] = implement.BatteryController(batteryController)
 	}
 
 	if batteryCapacity != nil {
-		caps[reflect.TypeFor[api.BatteryCapacity]()] = &decorateRCTBatteryCapacityImpl{batteryCapacity: batteryCapacity}
+		caps[reflect.TypeFor[api.BatteryCapacity]()] = implement.BatteryCapacity(batteryCapacity)
 	}
 
 	if len(caps) == 0 {
@@ -61,65 +58,4 @@ func (d *decorateRCTCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateRCTBatteryImpl struct {
-	battery func() (float64, error)
-}
-
-func (impl *decorateRCTBatteryImpl) Soc() (float64, error) {
-	return impl.battery()
-}
-
-type decorateRCTBatteryCapacityImpl struct {
-	batteryCapacity func() float64
-}
-
-func (impl *decorateRCTBatteryCapacityImpl) Capacity() float64 {
-	return impl.batteryCapacity()
-}
-
-type decorateRCTBatteryControllerImpl struct {
-	batteryController func(api.BatteryMode) error
-}
-
-func (impl *decorateRCTBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
-	return impl.batteryController(p0)
-}
-
-type decorateRCTBatteryPowerLimiterImpl struct {
-	batteryPowerLimiter func() (float64, float64)
-}
-
-func (impl *decorateRCTBatteryPowerLimiterImpl) GetPowerLimits() (float64, float64) {
-	return impl.batteryPowerLimiter()
-}
-
-type decorateRCTBatterySocLimiterImpl struct {
-	batterySocLimiter func() (float64, float64)
-}
-
-func (impl *decorateRCTBatterySocLimiterImpl) GetSocLimits() (float64, float64) {
-	return impl.batterySocLimiter()
-}
-
-type decorateRCTCurtailerImpl struct {
-	curtailer0 func(bool) error
-	curtailer1 func() (bool, error)
-}
-
-func (impl *decorateRCTCurtailerImpl) Curtail(p0 bool) error {
-	return impl.curtailer0(p0)
-}
-
-func (impl *decorateRCTCurtailerImpl) Curtailed() (bool, error) {
-	return impl.curtailer1()
-}
-
-type decorateRCTMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateRCTMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }

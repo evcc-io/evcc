@@ -24,12 +24,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // Pulsares charger implementation
 type Pulsares struct {
+	implement.Capabilities
 	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
@@ -51,8 +53,6 @@ func init() {
 	registry.AddCtx("pulsares", NewPulsaresFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePulsares -b *Pulsares -r api.Charger -t api.PhaseSwitcher
-
 // NewPulsaresFromConfig creates a Pulsares charger from generic config
 func NewPulsaresFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
@@ -68,12 +68,11 @@ func NewPulsaresFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	var phases1p3p func(int) error
 	if wb.has1p3p() {
-		phases1p3p = wb.phases1p3p
+		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
-	return decoratePulsares(wb, phases1p3p), nil
+	return wb, nil
 }
 
 // NewPulsares creates Pulsares charger
@@ -87,8 +86,9 @@ func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, 
 	conn.Logger(log.TRACE)
 
 	wb := &Pulsares{
-		conn: conn,
-		curr: 6000,
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		curr:         6000,
 	}
 
 	// get initial state from charger

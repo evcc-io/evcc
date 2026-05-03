@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t api.SocLimiter,api.ChargeState,api.VehicleRange,api.VehicleOdometer,api.VehicleClimater,api.CurrentController,api.CurrentGetter,api.VehicleFinishTimer,api.Resurrector,api.ChargeController,api.ChargeRater,api.VehiclePosition
-
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
+	implement.Capabilities
 	socG func() (float64, error)
 }
 
@@ -55,8 +55,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	}
 
 	v := &Vehicle{
-		embed: &cc.embed,
-		socG:  socG,
+		embed:        &cc.embed,
+		Capabilities: implement.Caps(),
+		socG:         socG,
 	}
 
 	// decorate range
@@ -192,7 +193,44 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		return nil, errors.New("cannot have charge control without status")
 	}
 
-	return decorateVehicle(v, limitSoc, status, rng, odo, climater, maxCurrent, getMaxCurrent, finishTime, wakeup, chargeEnable, chargedEnergy, position), nil
+	if limitSoc != nil {
+		implement.Implements(v, implement.SocLimiter(limitSoc))
+	}
+	if status != nil {
+		implement.Implements(v, implement.ChargeState(status))
+	}
+	if rng != nil {
+		implement.Implements(v, implement.VehicleRange(rng))
+	}
+	if odo != nil {
+		implement.Implements(v, implement.VehicleOdometer(odo))
+	}
+	if climater != nil {
+		implement.Implements(v, implement.VehicleClimater(climater))
+	}
+	if maxCurrent != nil {
+		implement.Implements(v, implement.CurrentController(maxCurrent))
+	}
+	if getMaxCurrent != nil {
+		implement.Implements(v, implement.CurrentGetter(getMaxCurrent))
+	}
+	if finishTime != nil {
+		implement.Implements(v, implement.VehicleFinishTimer(finishTime))
+	}
+	if wakeup != nil {
+		implement.Implements(v, implement.Resurrector(wakeup))
+	}
+	if chargeEnable != nil {
+		implement.Implements(v, implement.ChargeController(chargeEnable))
+	}
+	if chargedEnergy != nil {
+		implement.Implements(v, implement.ChargeRater(chargedEnergy))
+	}
+	if position != nil {
+		implement.Implements(v, implement.VehiclePosition(position))
+	}
+
+	return v, nil
 }
 
 // Soc implements the api.Vehicle interface

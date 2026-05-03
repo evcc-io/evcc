@@ -6,29 +6,30 @@ import (
 	"reflect"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 )
 
 func decorateGhostEEBus(base *GhostEEBus, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargeRater func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
-		caps[reflect.TypeFor[api.Meter]()] = &decorateGhostEEBusMeterImpl{meter: meter}
+		caps[reflect.TypeFor[api.Meter]()] = implement.Meter(meter)
 	}
 
 	if phaseCurrents != nil {
-		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateGhostEEBusPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
+		caps[reflect.TypeFor[api.PhaseCurrents]()] = implement.PhaseCurrents(phaseCurrents)
 	}
 
 	if chargeRater != nil {
-		caps[reflect.TypeFor[api.ChargeRater]()] = &decorateGhostEEBusChargeRaterImpl{chargeRater: chargeRater}
+		caps[reflect.TypeFor[api.ChargeRater]()] = implement.ChargeRater(chargeRater)
 	}
 
 	if phaseSwitcher != nil {
-		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateGhostEEBusPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = implement.PhaseSwitcher(phaseSwitcher)
 	}
 
 	if phaseGetter != nil {
-		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateGhostEEBusPhaseGetterImpl{phaseGetter: phaseGetter}
+		caps[reflect.TypeFor[api.PhaseGetter]()] = implement.PhaseGetter(phaseGetter)
 	}
 
 	if len(caps) == 0 {
@@ -49,44 +50,4 @@ func (d *decorateGhostEEBusCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
-}
-
-type decorateGhostEEBusChargeRaterImpl struct {
-	chargeRater func() (float64, error)
-}
-
-func (impl *decorateGhostEEBusChargeRaterImpl) ChargedEnergy() (float64, error) {
-	return impl.chargeRater()
-}
-
-type decorateGhostEEBusMeterImpl struct {
-	meter func() (float64, error)
-}
-
-func (impl *decorateGhostEEBusMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateGhostEEBusPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateGhostEEBusPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
-}
-
-type decorateGhostEEBusPhaseGetterImpl struct {
-	phaseGetter func() (int, error)
-}
-
-func (impl *decorateGhostEEBusPhaseGetterImpl) GetPhases() (int, error) {
-	return impl.phaseGetter()
-}
-
-type decorateGhostEEBusPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
-}
-
-func (impl *decorateGhostEEBusPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
 }

@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -18,6 +19,7 @@ import (
 
 // NRGKickGen2 charger implementation
 type NRGKickGen2 struct {
+	implement.Capabilities
 	conn *modbus.Connection
 }
 
@@ -49,8 +51,6 @@ func init() {
 	registry.AddCtx("nrggen2", NewNRGKickGen2FromConfig)
 }
 
-//go:generate go tool decorate -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t api.PhaseSwitcher
-
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
 func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -72,17 +72,16 @@ func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	var phasesS func(int) error
 	if cc.Phases1p3p {
 		// user could have an adapter plug which doesn't support 3 phases
 		if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2MaxPhases, 1); err == nil {
 			if maxPhases := encoding.Uint16(b); maxPhases > 1 {
-				phasesS = nrg.phases1p3p
+				implement.Implements(nrg, implement.PhaseSwitcher(nrg.phases1p3p))
 			}
 		}
 	}
 
-	return decorateNRGKickGen2(nrg, phasesS), nil
+	return nrg, nil
 }
 
 // NewNRGKickGen2 creates NRGKickGen2 charger
@@ -100,7 +99,8 @@ func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen
 	conn.Logger(log.TRACE)
 
 	nrg := &NRGKickGen2{
-		conn: conn,
+		Capabilities: implement.Caps(),
+		conn:         conn,
 	}
 
 	return nrg, nil

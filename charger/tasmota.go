@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/tasmota"
 	"github.com/evcc-io/evcc/util"
 )
@@ -15,6 +16,7 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
+	implement.Capabilities
 	conn *tasmota.Connection
 	*switchSocket
 }
@@ -22,8 +24,6 @@ type Tasmota struct {
 func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
-
-//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Charger -t api.PhaseVoltages,api.PhaseCurrents
 
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
 func NewTasmotaFromConfig(other map[string]any) (api.Charger, error) {
@@ -60,7 +60,8 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	}
 
 	c := &Tasmota{
-		conn: conn,
+		Capabilities: implement.Caps(),
+		conn:         conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
@@ -74,7 +75,8 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	}
 
 	if hasPhases || len(channels) == 3 {
-		return decorateTasmota(c, c.voltages, c.currents), nil
+		implement.Implements(c, implement.PhaseVoltages(c.voltages))
+		implement.Implements(c, implement.PhaseCurrents(c.currents))
 	}
 
 	return c, nil

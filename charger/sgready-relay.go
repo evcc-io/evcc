@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -70,7 +71,20 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return decorateSgReady(res, powerG, energyG, tempG, limitTempG), nil
+	if powerG != nil {
+		implement.Implements(res, implement.Meter(powerG))
+	}
+	if energyG != nil {
+		implement.Implements(res, implement.MeterEnergy(energyG))
+	}
+	if tempG != nil {
+		implement.Implements(res, implement.Battery(tempG))
+	}
+	if limitTempG != nil {
+		implement.Implements(res, implement.SocLimiter(limitTempG))
+	}
+
+	return res, nil
 }
 
 // NewSgReadyRelay creates SG Ready charger with boost relay
