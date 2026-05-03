@@ -59,6 +59,18 @@
 				equal-width
 			/>
 		</FormRow>
+		<FormRow id="settingsDateFormat" :label="$t('settings.dateFormat.label')">
+			<select
+				id="settingsDateFormat"
+				v-model="dateFormat"
+				class="form-select form-select-sm w-75"
+			>
+				<option value="">{{ $t("settings.dateFormat.auto") }}</option>
+				<option value="dmy">{{ $t("settings.dateFormat.dmy") }}</option>
+				<option value="mdy">{{ $t("settings.dateFormat.mdy") }}</option>
+				<option value="ymd">{{ $t("settings.dateFormat.ymd") }}</option>
+			</select>
+		</FormRow>
 		<FormRow v-if="loadpoints.length" :label="$t('settings.loadpoints.label')">
 			<LoadpointOrderSettings :loadpoints="loadpoints" />
 		</FormRow>
@@ -91,7 +103,14 @@ import {
 	removeLocalePreference,
 } from "@/i18n.ts";
 import { getThemePreference, setThemePreference } from "@/theme.ts";
-import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
+import {
+	getUnits,
+	setUnits,
+	is12hFormat,
+	set12hFormat,
+	getDateFormat,
+	setDateFormat,
+} from "@/units";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
 import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
@@ -111,6 +130,7 @@ export default defineComponent({
 			language: getLocalePreference() || "",
 			unit: getUnits(),
 			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
+			dateFormat: getDateFormat(),
 			fullscreenActive: false,
 			THEMES: Object.values(THEME),
 			UNITS: Object.values(LENGTH_UNIT),
@@ -140,6 +160,9 @@ export default defineComponent({
 		},
 		timeFormat(value) {
 			set12hFormat(value === TIME_12H);
+		},
+		dateFormat(value) {
+			setDateFormat(value);
 		},
 		theme(value) {
 			setThemePreference(value);
