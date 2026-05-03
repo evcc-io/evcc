@@ -31,6 +31,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -91,6 +92,12 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		Charger   string
 		Timeout   time.Duration
 		Authorize bool
+		// Auth allows referencing a shared Easee account instead of embedding
+		// credentials directly. Example: auth: {source: easee, user: x, password: y}
+		Auth struct {
+			Source string
+			Other  map[string]any `mapstructure:",remain"`
+		}
 	}{
 		Timeout: request.Timeout,
 	}
@@ -99,16 +106,34 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
+	var (
+		ts  oauth2.TokenSource
+		err error
+	)
+
+	if cc.Auth.Source != "" {
+		params := cc.Auth.Other
+		if params == nil {
+			params = make(map[string]any)
+		}
+		ts, err = auth.NewFromConfig(ctx, cc.Auth.Source, params)
+	} else {
+		if cc.User == "" || cc.Password == "" {
+			return nil, api.ErrMissingCredentials
+		}
+		log := util.NewLogger("easee").Redact(cc.User, cc.Password)
+		ts, err = easee.TokenSource(log, cc.User, cc.Password)
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return NewEasee(ctx, cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
+	return NewEasee(ctx, ts, cc.Charger, cc.Timeout, cc.Authorize)
 }
 
-// NewEasee creates Easee charger
-func NewEasee(ctx context.Context, user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
-	log := util.NewLogger("easee").Redact(user, password)
+// NewEasee creates an Easee charger using the provided token source.
+func NewEasee(ctx context.Context, ts oauth2.TokenSource, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
+	log := util.NewLogger("easee")
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
@@ -130,11 +155,6 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	c.Client.Timeout = timeout
 
 	c.dispatcher = easee.NewCommandDispatcher(c.Helper, log, timeout)
-
-	ts, err := easee.TokenSource(log, user, password)
-	if err != nil {
-		return nil, err
-	}
 
 	// replace client transport with authenticated transport
 	c.Client.Transport = &oauth2.Transport{

@@ -33,10 +33,19 @@ func (t *Token) AsOAuth2Token() *oauth2.Token {
 	}
 }
 
-// tokenSource is an oauth2.TokenSource
+// tokenSource is an oauth2.TokenSource and holds Easee account credentials and performs authentication.
 type tokenSource struct {
 	*request.Helper
 	user, password string
+}
+
+// NewIdentity creates an Identity for the given credentials.
+func NewIdentity(log *util.Logger, user, password string) *tokenSource {
+	return &tokenSource{
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
+	}
 }
 
 // tokenSourceCache stores per-user token sources
@@ -45,22 +54,17 @@ var tokenSourceCache = cache.New[oauth2.TokenSource]()
 // TokenSource returns a shared oauth2.TokenSource for the given user.
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
-		c := &tokenSource{
-			Helper:   request.NewHelper(log),
-			user:     user,
-			password: password,
-		}
-
-		token, err := c.authenticate()
+		id := NewIdentity(log, user, password)
+		token, err := id.Authenticate()
 		if err != nil {
 			return nil, err
 		}
-
-		return oauth.RefreshTokenSource(token.AsOAuth2Token(), c.refreshToken), nil
+		return oauth.RefreshTokenSource(token, id.RefreshToken), nil
 	})
 }
 
-func (c *tokenSource) authenticate() (*Token, error) {
+// Authenticate performs the initial username/password login and returns an oauth2.Token.
+func (c *tokenSource) Authenticate() (*oauth2.Token, error) {
 	data := struct {
 		Username string `json:"userName"`
 		Password string `json:"password"`
@@ -76,12 +80,16 @@ func (c *tokenSource) authenticate() (*Token, error) {
 	}
 
 	var token Token
-	err = c.DoJSON(req, &token)
+	if err := c.DoJSON(req, &token); err != nil {
+		return nil, err
+	}
 
-	return &token, err
+	return token.AsOAuth2Token(), nil
 }
 
-func (c *tokenSource) refreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
+// RefreshToken refreshes an existing oauth2 token using the Easee refresh endpoint.
+// Falls back to a full re-login when the refresh endpoint rejects the token.
+func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
 	data := struct {
 		AccessToken  string `json:"accessToken"`
 		RefreshToken string `json:"refreshToken"`
@@ -98,10 +106,8 @@ func (c *tokenSource) refreshToken(oauthToken *oauth2.Token) (*oauth2.Token, err
 
 	var token *Token
 	if err := c.DoJSON(req, &token); err != nil {
-		// re-login
-		if token, err = c.authenticate(); err != nil {
-			return nil, err
-		}
+		// re-login on refresh failure
+		return c.Authenticate()
 	}
 
 	return token.AsOAuth2Token(), nil
