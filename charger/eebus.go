@@ -8,10 +8,12 @@ import (
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
+	"github.com/enbility/eebus-go/features/client"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/evcc"
 	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -295,89 +297,223 @@ func (c *EEBus) Enable(enable bool) error {
 	return err
 }
 
-// send current charging power limits to the EV
+// opevFilter matches the OpEV obligation-max overload-protection limit descriptions.
+// Must stay in sync with eebus-go usecases/cem/opev/public.go WriteLoadControlLimits.
+var opevFilter = model.LoadControlLimitDescriptionDataType{
+	LimitType:     lo.ToPtr(model.LoadControlLimitTypeTypeMaxValueLimit),
+	LimitCategory: lo.ToPtr(model.LoadControlCategoryTypeObligation),
+	Unit:          lo.ToPtr(model.UnitOfMeasurementTypeA),
+	ScopeType:     lo.ToPtr(model.ScopeTypeTypeOverloadProtection),
+}
+
+// oscevFilter matches the OSCEV recommendation-max self-consumption limit descriptions.
+// Must stay in sync with eebus-go usecases/cem/oscev/public.go WriteLoadControlLimits.
+var oscevFilter = model.LoadControlLimitDescriptionDataType{
+	LimitType:     lo.ToPtr(model.LoadControlLimitTypeTypeMaxValueLimit),
+	LimitCategory: lo.ToPtr(model.LoadControlCategoryTypeRecommendation),
+	Unit:          lo.ToPtr(model.UnitOfMeasurementTypeA),
+	ScopeType:     lo.ToPtr(model.ScopeTypeTypeSelfConsumption),
+}
+
+// writeCurrentLimitData writes OpEV obligation and (if available) OSCEV
+// recommendation limits to the EV in a single atomic spine-level write.
+//
+// Background: the currently pinned eebus-go version does not send SPINE
+// partial writes — every LoadControl update has to ship the full limit list.
+// If we write OpEV and OSCEV separately (as the CemOPEV/CemOSCEV use-case
+// wrappers do), the second write effectively deletes the OpEV obligation
+// limits the first write just installed, because both writes build their
+// "full list" from the same stale feature cache. The symptom on a Porsche
+// Taycan disable cycle is a persistent "charger out of sync: expected
+// disabled, got enabled" warning (see log.txt on the feature/eebus-fixes
+// branch for a captured trace).
+//
+// We cannot simply drop OSCEV: some wallbox + EV combinations will not
+// charge at all unless a self-consumption recommendation is active. The fix
+// is therefore to bypass the use-case wrappers and dispatch both categories
+// through a single loadControl.WriteLimitData call — one merge against the
+// cache, one wire message, no clobbering between categories.
 func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, current float64) error {
-	// check if the EVSE supports overload protection limits
+	// OpEV obligation-max is the required baseline for any write
 	if !c.cem.OpEV.IsScenarioAvailableAtEntity(evEntity, 1) {
 		return api.ErrNotAvailable
 	}
 
-	_, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
+	loadControl, err := client.NewLoadControl(c.cem.LocalEntity, evEntity)
 	if err != nil {
-		c.log.DEBUG.Println("no limits from the EVSE are provided:", err)
+		return api.ErrNotAvailable
+	}
+	elConn, err := client.NewElectricalConnection(c.cem.LocalEntity, evEntity)
+	if err != nil {
+		return api.ErrNotAvailable
 	}
 
-	// setup the obligation limit data structure
-	var limits []ucapi.LoadLimitsPhase
+	var data []model.LoadControlLimitDataType
+
+	// OpEV: obligation max — active unless the requested current meets or
+	// exceeds the phase max (in which case "no obligation" = unlimited).
+	_, maxLimits, _, cerr := c.cem.OpEV.CurrentLimits(evEntity)
+	if cerr != nil {
+		c.log.DEBUG.Println("no limits from the EVSE are provided:", cerr)
+	}
+	if entries := buildPhaseLimitData(loadControl, elConn, opevFilter, computeOpevLimits(current, maxLimits)); entries != nil {
+		data = append(data, entries...)
+	}
+
+	// OSCEV: recommendation max — optional. Active only when the requested
+	// current is at least the phase min (a recommendation below min cannot
+	// drive charging and is equivalent to no recommendation).
+	if minLimits, ok := oscevMinLimits(c.cem.OscEV, evEntity); ok {
+		if entries := buildPhaseLimitData(loadControl, elConn, oscevFilter, computeOscevLimits(current, minLimits)); entries != nil {
+			data = append(data, entries...)
+		}
+	}
+
+	if len(data) == 0 {
+		return api.ErrNotAvailable
+	}
+
+	if _, err := loadControl.WriteLimitData(data, nil, nil); err != nil {
+		return err
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.limitUpdated = time.Now()
+	return nil
+}
+
+// computeOpevLimits returns the per-phase OpEV obligation-max tuples for the
+// given current. IsActive is false when the current equals or exceeds the
+// phase max (no obligation = unlimited per EEBus semantics).
+func computeOpevLimits(current float64, maxLimits []float64) []ucapi.LoadLimitsPhase {
+	limits := make([]ucapi.LoadLimitsPhase, 0, len(ucapi.PhaseNameMapping))
 	for phase := range len(ucapi.PhaseNameMapping) {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: true,
 			Value:    current,
 		}
-
-		// if the limit equals to the max allowed, then the obligation limit is actually inactive
 		if phase < len(maxLimits) && current >= maxLimits[phase] {
 			limit.IsActive = false
 		}
-
 		limits = append(limits, limit)
 	}
-
-	// always set overload protection limits (obligation)
-	if _, err := c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
-		return err
-	}
-
-	// additionally set self-consumption recommendation limits if available
-	c.writeOscevLimits(evEntity, current)
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	c.limitUpdated = time.Now()
-
-	return nil
+	return limits
 }
 
-// writeOscevLimits writes OSCEV recommendation limits if the use case is available.
-// An active recommendation triggers the EV to charge with surplus energy.
-// An inactive recommendation is equivalent to no recommendation existing.
-func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, current float64) {
-	if !c.cem.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
-		return
-	}
-
-	// OSCEV requires recommendation limits to be available
-	if _, err := c.cem.OscEV.LoadControlLimits(evEntity); err != nil {
-		return
-	}
-
-	minLimits, _, _, err := c.cem.OscEV.CurrentLimits(evEntity)
-	if err != nil {
-		return
-	}
-
-	var limits []ucapi.LoadLimitsPhase
+// computeOscevLimits returns the per-phase OSCEV recommendation-max tuples for
+// the given current. Unlike OpEV, the recommendation is active only when the
+// current is at least the phase min — below min there is nothing useful to
+// recommend and the limit must be inactive to be ignored by the EV.
+func computeOscevLimits(current float64, minLimits []float64) []ucapi.LoadLimitsPhase {
+	limits := make([]ucapi.LoadLimitsPhase, 0, len(ucapi.PhaseNameMapping))
 	for phase := range len(ucapi.PhaseNameMapping) {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: false,
 			Value:    current,
 		}
-
-		// below min charging current there is nothing to recommend
-		// in contrast to OPEV the max value has to be active to trigger the recommendation to have any effect
 		if phase < len(minLimits) {
 			limit.IsActive = current >= minLimits[phase]
 		}
-
 		limits = append(limits, limit)
 	}
+	return limits
+}
 
-	if _, err := c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
-		c.log.DEBUG.Println("failed to write OSCEV limits:", err)
+// oscevMinLimits fetches the OSCEV recommendation-min per-phase limits from
+// the remote EV. It returns (nil, false) if the OSCEV scenario is not
+// available, the load-control limits are missing, or the current limits
+// cannot be read — these are the three skip conditions of the OSCEV branch
+// in writeCurrentLimitData.
+func oscevMinLimits(
+	oscEV ucapi.CemOSCEVInterface,
+	evEntity spineapi.EntityRemoteInterface,
+) ([]float64, bool) {
+	if !oscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return nil, false
 	}
+	if _, err := oscEV.LoadControlLimits(evEntity); err != nil {
+		return nil, false
+	}
+	minLimits, _, _, err := oscEV.CurrentLimits(evEntity)
+	if err != nil {
+		return nil, false
+	}
+	return minLimits, true
+}
+
+// findLimitDescriptionByMeasurementID returns a pointer to the first limit
+// description in the slice whose MeasurementId matches the target, or nil
+// if none match. Descriptions with a nil MeasurementId are skipped. The
+// returned pointer aliases the caller's slice element.
+func findLimitDescriptionByMeasurementID(
+	descs []model.LoadControlLimitDescriptionDataType,
+	measurementID model.MeasurementIdType,
+) *model.LoadControlLimitDescriptionDataType {
+	for i := range descs {
+		if descs[i].MeasurementId != nil && *descs[i].MeasurementId == measurementID {
+			return &descs[i]
+		}
+	}
+	return nil
+}
+
+// buildPhaseLimitData converts per-phase LoadLimitsPhase tuples into spine
+// LoadControlLimitDataType entries for a given description filter. It mirrors
+// the per-phase mapping inside eebus-go usecases/internal/loadcontrol.go
+// WriteLoadControlPhaseLimits but does not dispatch a write — callers may
+// accumulate entries across multiple filters and issue a single
+// loadControl.WriteLimitData for atomicity.
+//
+// Returns nil if the filter does not match any limit description on the
+// remote (e.g. the use case is not supported); individual phases are skipped
+// if their specific description or parameter data is missing.
+func buildPhaseLimitData(
+	loadControl eebusapi.LoadControlCommonInterface,
+	elConn eebusapi.ElectricalConnectionCommonInterface,
+	filter model.LoadControlLimitDescriptionDataType,
+	limits []ucapi.LoadLimitsPhase,
+) []model.LoadControlLimitDataType {
+	limitDescriptions, err := loadControl.GetLimitDescriptionsForFilter(filter)
+	if err != nil || len(limitDescriptions) == 0 {
+		return nil
+	}
+
+	var data []model.LoadControlLimitDataType
+	for _, phaseLimit := range limits {
+		paramFilter := model.ElectricalConnectionParameterDescriptionDataType{
+			AcMeasuredPhases: lo.ToPtr(phaseLimit.Phase),
+		}
+		elParamDesc, err := elConn.GetParameterDescriptionsForFilter(paramFilter)
+		if err != nil || len(elParamDesc) == 0 || elParamDesc[0].MeasurementId == nil || elParamDesc[0].ParameterId == nil {
+			continue
+		}
+
+		limitDesc := findLimitDescriptionByMeasurementID(limitDescriptions, *elParamDesc[0].MeasurementId)
+		if limitDesc == nil || limitDesc.LimitId == nil {
+			continue
+		}
+
+		limitIdData, err := loadControl.GetLimitDataForId(*limitDesc.LimitId)
+		if err != nil {
+			continue
+		}
+		if limitIdData.IsLimitChangeable != nil && !*limitIdData.IsLimitChangeable {
+			continue
+		}
+
+		value := elConn.AdjustValueToBeWithinPermittedValuesForParameterId(
+			phaseLimit.Value, *elParamDesc[0].ParameterId)
+
+		data = append(data, model.LoadControlLimitDataType{
+			LimitId:       limitDesc.LimitId,
+			IsLimitActive: lo.ToPtr(phaseLimit.IsActive),
+			Value:         model.NewScaledNumberType(value),
+		})
+	}
+	return data
 }
 
 // MaxCurrent implements the api.Charger interface
