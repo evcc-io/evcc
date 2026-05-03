@@ -1,0 +1,145 @@
+template: anker-solix-x1
+products:
+  - brand: Anker
+    description:
+      generic: SOLIX X1 Hybrid Inverter
+requirements:
+  description:
+    de: |
+      Die Modbus-TCP-Schnittstelle muss in der Anker-App freigeschaltet werden.
+    en: |
+      The Modbus TCP interface must be enabled in the Anker app.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - name: maxacpower
+  - preset: battery-params
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10644 # Meter Total Active Power (W, positive = import, negative = export)
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10656 # Meter Total Forward Active Energy (kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  powers:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10638 # Meter Phase A Active Power
+        type: input
+        decode: int32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10640 # Meter Phase B Active Power
+        type: input
+        decode: int32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10642 # Meter Phase C Active Power
+        type: input
+        decode: int32
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10635 # Meter Phase A Current
+        type: input
+        decode: uint16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10636 # Meter Phase B Current
+        type: input
+        decode: uint16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10637 # Meter Phase C Current
+        type: input
+        decode: uint16
+      scale: 0.01
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10632 # Meter Phase A Voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10633 # Meter Phase B Voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10634 # Meter Phase C Voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10183 # Total PV Power (W)
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10026 # Total PV Generation (kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10006 # Battery Power (W, positive = discharging, negative = charging)
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10264 # Battery Total Discharge Energy (kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10010 # SOC (%)
+      type: input
+      decode: uint16
+  {{- include "battery-params" . }}
+  {{- end }}

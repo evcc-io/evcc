@@ -223,7 +223,7 @@ NEXT:
 			}
 		}
 
-		typ, other, err := customDevice(cc.Type, cc.Other)
+		typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
@@ -328,7 +328,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	cc := conf.Named()
 	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf))) //nolint:govet
 
-	typ, other, err := customDevice(cc.Type, cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
 	}
@@ -444,7 +444,7 @@ func configureChargers(static []config.Named, names ...string) error {
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-	typ, other, err := customDevice(cc.Type, cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 
 	var instance api.Vehicle
 	if err == nil {
@@ -792,7 +792,7 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 		return nil, nil
 	}
 
-	typ, other, err := customDevice(conf.Type, conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
@@ -969,7 +969,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
 
-	typ, other, err := customDevice(conf.Type, conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}

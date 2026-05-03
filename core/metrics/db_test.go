@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -24,26 +25,22 @@ func TestSqliteTimestamp(t *testing.T) {
 	db, err := db.Instance.DB()
 	require.NoError(t, err)
 
-	var (
-		ts  SqlTime
-		val float64
-	)
+	var ts SqlTime
 
 	for _, sql := range []string{
-		`SELECT ts, import FROM meters`,
-		`SELECT min(ts), import FROM meters`,
-		`SELECT unixepoch(ts), import FROM meters`,
-		`SELECT unixepoch(min(ts)), import FROM meters`,
-		`SELECT min(ts) AS ts, avg(import) AS import
-			FROM meters
+		`SELECT ts FROM meters`,
+		`SELECT min(ts) FROM meters`,
+		// `SELECT unixepoch(ts) FROM meters`,
+		// `SELECT unixepoch(min(ts)) FROM meters`,
+		`SELECT min(ts) AS ts FROM meters
 			GROUP BY strftime("%H:%M", ts)
 			ORDER BY ts`,
 	} {
-		require.NoError(t, db.QueryRow(sql).Scan(&ts, &val))
-		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
+		require.NoError(t, db.QueryRow(sql).Scan(&ts))
+		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v (%s)", clock.Now().Local(), time.Time(ts).Local(), sql)
 	}
 
-	require.NoError(t, db.QueryRow(`SELECT ts, import FROM meters WHERE ts >= ?`, clock.Now()).Scan(&ts, &val))
+	require.NoError(t, db.QueryRow(`SELECT ts FROM meters WHERE ts >= ?`, clock.Now().Unix()).Scan(&ts))
 	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
 }
 
@@ -138,6 +135,11 @@ func TestUpdateProfile(t *testing.T) {
 		clock.Add(15 * time.Minute)
 	}
 
+	// validate records written
+	var count int64
+	require.NoError(t, db.Instance.Model(new(meter)).Count(&count).Error)
+	require.Equal(t, int64(24*2*4), count)
+
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
@@ -168,5 +170,41 @@ func TestUpdateProfile(t *testing.T) {
 		}
 
 		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
+	}
+}
+
+func TestTimeMigration(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	mig := db.Instance.Migrator()
+
+	require.NoError(t, db.Instance.AutoMigrate(new(entity)))
+
+	type v1 struct {
+		Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:idx_meter_ts"`
+		Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:idx_meter_ts"`
+		Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	}
+
+	require.NoError(t, db.Instance.AutoMigrate(new(v1)))
+	{
+		tables, err := mig.GetTables()
+		require.NoError(t, err)
+		require.True(t, slices.Contains(tables, "v1"))
+	}
+
+	require.NoError(t, mig.RenameTable("v1", "v2"))
+
+	type v2 struct {
+		Meter     int    `json:"meter" gorm:"column:meter;uniqueIndex:idx_meter_ts"`
+		Timestamp int64  `json:"ts" gorm:"column:ts;uniqueIndex:idx_meter_ts"`
+		Entity    entity `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	}
+
+	require.NoError(t, db.Instance.AutoMigrate(new(v2)))
+	{
+		tables, err := mig.GetTables()
+		require.NoError(t, err)
+		require.False(t, slices.Contains(tables, "v1"))
+		require.True(t, slices.Contains(tables, "v2"))
 	}
 }

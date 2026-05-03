@@ -552,6 +552,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
 
+	// re-read energy from charger and re-persist session if values improved
+	lp.finalizeSessionEnergy()
+
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
 

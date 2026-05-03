@@ -110,12 +110,14 @@ render: |
   power:
     source: calc
     mul:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        type: input
-        address: 33149 # Battery power
-        decode: uint32
+    - source: calc
+      abs:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: input
+          address: 33149 # Battery power
+          decode: int32
     - source: calc
       add:
       - source: modbus

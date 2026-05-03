@@ -207,9 +207,10 @@ test.describe("ext meter order", async () => {
 
     // Verify order in main UI consumer dropdown
     await page.goto("/#/");
+    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await page.getByTestId("energyflow").click();
     await page.getByRole("button", { name: "Consumption" }).click();
-    const consumers = await page.getByTestId("energyflow-entry-consumer");
+    const consumers = page.getByTestId("energyflow-entry-consumer");
     await expect(consumers.nth(0)).toContainText("Meter 1");
     await expect(consumers.nth(1)).toContainText("Meter 2");
     await expect(consumers.nth(2)).toContainText("Meter 3");
