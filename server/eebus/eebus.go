@@ -39,6 +39,22 @@ type Device interface {
 	UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType)
 }
 
+// StatefulDevice is optionally implemented by devices that track entity state
+// (e.g. connected EV, discovered meter entities). When a new device registers
+// on an already-connected SKI, its entity state is transferred from existing
+// clients so the new device can operate immediately without waiting for
+// discovery events to be re-sent.
+type StatefulDevice interface {
+	DeviceEntities() []DeviceEntity
+}
+
+// DeviceEntity represents an active entity association on a device.
+type DeviceEntity struct {
+	Device spineapi.DeviceRemoteInterface
+	Entity spineapi.EntityRemoteInterface
+	Event  eebusapi.EventType
+}
+
 // Customer Energy Management
 type CustomerEnergyManagement struct {
 	EvseCC ucapi.CemEVSECCInterface
@@ -81,7 +97,8 @@ type EEBus struct {
 
 	ski string
 
-	clients map[string][]Device
+	clients   map[string][]Device
+	connected map[string]bool // tracks SHIP connection state per SKI
 }
 
 var Instance *EEBus
@@ -137,9 +154,10 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	c := &EEBus{
-		log:     util.NewLogger("eebus"),
-		ski:     ski,
-		clients: make(map[string][]Device),
+		log:       util.NewLogger("eebus"),
+		ski:       ski,
+		clients:   make(map[string][]Device),
+		connected: make(map[string]bool),
 	}
 
 	c.service = service.NewService(configuration, c)
@@ -225,11 +243,31 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	}
 	c.service.RegisterRemoteSKI(ski)
 
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	c.clients[ski] = append(c.clients[ski], device)
+	c.registerDevice(ski, device)
 
 	return nil
+}
+
+// registerDevice adds a device to the client list and, if the SKI is already
+// connected, brings it up to speed by signaling Connect and transferring
+// entity state from existing clients.
+func (c *EEBus) registerDevice(ski string, device Device) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	// transfer entity state from existing clients before appending
+	if c.connected[ski] {
+		for _, existing := range c.clients[ski] {
+			if stateful, ok := existing.(StatefulDevice); ok {
+				for _, de := range stateful.DeviceEntities() {
+					device.UseCaseEvent(de.Device, de.Entity, de.Event)
+				}
+			}
+		}
+		device.Connect(true)
+	}
+
+	c.clients[ski] = append(c.clients[ski], device)
 }
 
 func (c *EEBus) UnregisterDevice(ski string, device Device) {
@@ -306,6 +344,12 @@ func (c *EEBus) connect(ski string, connected bool) {
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
+
+	if connected {
+		c.connected[ski] = true
+	} else {
+		delete(c.connected, ski)
+	}
 
 	if clients, ok := c.clients[ski]; ok {
 		for _, client := range clients {

@@ -435,3 +435,19 @@ func TestEEBusCurrentPower_Elli(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 4002.0, power)
 }
+
+func TestEEBus_DeviceEntities(t *testing.T) {
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+
+	t.Run("with_ev", func(t *testing.T) {
+		eb := &EEBus{log: util.NewLogger("test"), ev: evEntity}
+		entities := eb.DeviceEntities()
+		require.Len(t, entities, 1)
+		assert.Equal(t, evEntity, entities[0].Entity)
+	})
+
+	t.Run("without_ev", func(t *testing.T) {
+		eb := &EEBus{log: util.NewLogger("test")}
+		assert.Nil(t, eb.DeviceEntities())
+	})
+}
