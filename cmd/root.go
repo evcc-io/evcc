@@ -99,9 +99,6 @@ func init() {
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
 
-	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
-	bind(rootCmd, "mcp")
-
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
@@ -343,7 +340,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup MCP
-	if viper.GetBool("mcp") {
+	if isMcp() {
 		router := httpd.Router()
 
 		var handler http.Handler
@@ -351,7 +348,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			router.PathPrefix("/mcp").Handler(handler)
 		}
 	}
-
+	if conf.Mcp {
+		log.WARN.Println("mcp: yaml config is deprecated")
+	}
 	// setup messaging
 	var pushChan chan messenger.Event
 	if err == nil {
@@ -405,6 +404,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
+	valueChan <- util.Param{Key: keys.Mcp, Val: isMcp()}
 
 	// run shutdown functions on stop
 	var once sync.Once
