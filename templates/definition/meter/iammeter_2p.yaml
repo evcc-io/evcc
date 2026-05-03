@@ -1,0 +1,79 @@
+template: iammeter_2p
+products:
+  - brand: IAMMETER
+    description:
+      generic: WEM2067
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+  - name: phase
+    type: choice
+    choice: ["L1", "L2"]
+    default: L1
+    required: true
+    description:
+      en: Phase selection
+      de: Phasenauswahl
+render: |
+  type: custom
+  {{- if eq .phase "L1" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[0][2]
+    cache: 2s
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[0][3]
+    cache: 2s
+  voltages:
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[0][0]
+    cache: 2s
+  - source: const
+    value: 0
+  - source: const
+    value: 0
+  currents:
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[0][1]
+    cache: 2s
+  - source: const
+    value: 0
+  - source: const
+    value: 0
+  {{- end }}
+  {{- if eq .phase "L2" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[1][2]
+    cache: 2s
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[1][3]
+    cache: 2s
+  voltages:
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[1][0]
+    cache: 2s
+  - source: const
+    value: 0
+  - source: const
+    value: 0
+  currents:
+  - source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[1][1]
+    cache: 2s
+  - source: const
+    value: 0
+  - source: const
+    value: 0
+  {{- end }}
