@@ -1,0 +1,93 @@
+template: ocpp20
+products:
+  - description:
+      de: OCPP 2.0.1 kompatibel
+      en: OCPP 2.0.1 compatible
+group: generic
+capabilities: ["mA", "rfid", "1p3p"]
+requirements:
+  description:
+    de: |
+      Bei OCPP 2.0.1 verbindet sich die Ladestation (Client) zu evcc (Server).
+      Die Ladestation muss daher evcc via Hostname (funktionierende DNS-Aufloesung erforderlich!) oder ueber die IP-Adresse auf Port 8886 erreichen koennen.
+      Standardmaessig wird die erste eingehende Verbindung mit einer beliebigen Stationskennung verwendet.
+      Um mehrere Ladestationen eindeutig zuordnen zu koennen muessen die jeweilige Stationskennung (`stationid: `) und EVSE-Nummer (`evse: `) hinterlegt werden.
+      Viele Ladestationen fuegen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies manuell geschehen `ws://<evcc-host>:8886/<stationid>`.
+
+      Voraussetzungen:
+      * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Ladestationskonfiguration entfernen
+      * Backend-URL (CSMS) in der Ladestationskonfiguration: `ws://<evcc-host>:8886/` (eventuell noch um `stationid` erweitern)
+      * Protokoll: OCPP 2.0.1, ocpp201, JSON, Websocket, ws:// o.ae.
+      * Keine Verschluesselung, keine Authentifizierung, kein Passwort
+      * Verbindung ueber das lokale Netzwerk
+
+      Die konkrete Konfiguration und der tatsaechlich nutzbare Funktionsumfang haengen vom Ladestationsmodell und dessen Software ab.
+    en: |
+      With OCPP 2.0.1 the connection will be established from charging station (client) to evcc (server).
+      The charging station needs to be able to reach evcc via the host name (functioning DNS resolution required!) or via the IP address on port 8886.
+      By default, the first incoming connection with any station identifier is used.
+      In order to be able to clearly assign several charging stations, the respective station identifier (`stationid: `) and EVSE number (`evse: `) must be configured.
+      Many charging stations automatically add the `station id` to the backend URL, some have to do this manually `ws://<evcc-host>:8886/<stationid>`.
+
+      Requirements:
+      * If necessary, remove previously configured OCPP profiles (e.g. used for a different backend connection) in the charging station configuration
+      * Backend URL (CSMS) in the charging station configuration: `ws://<evcc-host>:8886/` (possibly add `stationid`)
+      * Protocol: OCPP 2.0.1, ocpp201, JSON, Websocket, ws:// or similar
+      * No encryption, no authentication, no password
+      * Local network connection
+
+      The specific configuration and the actual usable functionality depend on the charging station model and its software.
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - name: stationid
+    description:
+      de: Stations-ID
+      en: Station ID
+    help:
+      de: Nur fuer mehrere Ladestationen noetig.
+      en: Only needed for multiple charging stations.
+  - name: evse
+    description:
+      de: EVSE
+      en: EVSE
+    default: 1
+    help:
+      de: Nummer des EVSE (Electric Vehicle Supply Equipment)
+      en: Number of the EVSE (Electric Vehicle Supply Equipment)
+  - name: idtag
+    description:
+      de: ID-Tag
+      en: ID tag
+    help:
+      de: Token-ID zur Identifikation der Ladesession
+      en: Token ID for session identification
+    advanced: true
+  - name: remotestart
+    description:
+      de: Remote-Start
+      en: Remote start
+    type: bool
+    help:
+      de: Automatischer Transaktionsstart beim Anschliessen eines Fahrzeugs
+      en: Automatic transaction start when a vehicle is connected
+    advanced: true
+  - name: meterinterval
+    description:
+      de: Zaehlerintervall
+      en: Meter interval
+    default: 10s
+    help:
+      de: Interval fuer Zaehleraktualisierung
+      en: Interval for meter updates
+    advanced: true
+  - name: connecttimeout
+    description:
+      de: Verbindungs-Timeout
+      en: Connect timeout
+    default: 5m
+    help:
+      de: Zeit die auf die initiale Verbindung gewartet wird
+      en: Time to wait for initial connection
+    advanced: true
+render: |
+  {{ include "ocpp20" . }}
