@@ -90,9 +90,10 @@ type Installation struct {
 }
 
 type UpdateInstallation struct {
-	AvailableCurrentPhase1 *float64 `json:"availableCurrentPhase1,omitempty"`
-	AvailableCurrentPhase2 *float64 `json:"availableCurrentPhase2,omitempty"`
-	AvailableCurrentPhase3 *float64 `json:"availableCurrentPhase3,omitempty"`
+	AvailableCurrentPhase1       *float64 `json:"availableCurrentPhase1,omitempty"`
+	AvailableCurrentPhase2       *float64 `json:"availableCurrentPhase2,omitempty"`
+	AvailableCurrentPhase3       *float64 `json:"availableCurrentPhase3,omitempty"`
+	ThreeToOnePhaseSwitchCurrent *float64 `json:"threeToOnePhaseSwitchCurrent,omitempty"`
 }
 
 type CapabilitiesResponse struct {
