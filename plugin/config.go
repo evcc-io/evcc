@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	reg "github.com/evcc-io/evcc/util/registry"
 )
@@ -162,4 +163,25 @@ func (c *Config) BytesSetter(ctx context.Context, param string) (func([]byte) er
 	}
 
 	return prov.BytesSetter(param)
+}
+
+// TimeGetter returns a getter that parses the plugin value as an estimated finish time.
+// The value may be an RFC3339 timestamp, a Go duration string, or a numeric number of seconds.
+func (c *Config) TimeGetter(ctx context.Context) (func() (time.Time, error), error) {
+	if c == nil {
+		return nil, nil
+	}
+
+	stringG, err := c.StringGetter(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (time.Time, error) {
+		s, err := stringG()
+		if err != nil {
+			return time.Time{}, err
+		}
+		return parseRelativeTime(s)
+	}, nil
 }
