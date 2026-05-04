@@ -151,7 +151,7 @@ func (d VehicleStatus) Range() (int64, error) {
 }
 
 func (d VehicleStatus) Climater() (bool, error) {
-	return d.AirCtrlOn || d.Defrost, nil
+	return d.Defrost, nil
 }
 
 func (d VehicleStatus) GetLimitSoc() (int64, error) {
