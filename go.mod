@@ -33,7 +33,7 @@ require (
 	github.com/enbility/eebus-go v0.7.0
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
-	github.com/evcc-io/openapi-mcp v0.6.0
+	github.com/evcc-io/openapi-mcp v0.6.1-0.20260503092507-6199c7ad3baf
 	github.com/evcc-io/optimizer v0.0.0-20260411145738-bf13a64d411c
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae

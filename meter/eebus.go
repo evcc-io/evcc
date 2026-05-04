@@ -25,10 +25,10 @@ import (
 type EEBus struct {
 	log *util.Logger
 
-	*eebus.Connector
-	ma *eebus.MonitoringAppliance
-	eg *eebus.EnergyGuard
-	mm measurements
+	connector *eebus.Connector
+	ma        *eebus.MonitoringAppliance
+	eg        *eebus.EnergyGuard
+	mm        measurements
 
 	mu          sync.Mutex
 	maEntity    spineapi.EntityRemoteInterface
@@ -87,14 +87,14 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		ma:        ma,
 		eg:        eebus.Instance.EnergyGuard(),
 		mm:        mm,
-		Connector: eebus.NewConnector(),
+		connector: eebus.NewConnector(),
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
-	if err := c.Wait(ctx); err != nil {
+	if err := c.connector.Wait(ctx); err != nil {
 		eebus.Instance.UnregisterDevice(ski, c)
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/measurement"
@@ -25,7 +26,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t api.ChargerEx,api.Identifier,api.PhaseSwitcher,api.Resurrector,api.Battery,api.SocLimiter,api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
+//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t api.ChargerEx,api.Identifier,api.PhaseSwitcher,api.Resurrector,api.Battery,api.SocLimiter,api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.VehicleFinishTimer
 
 // NewConfigurableFromConfig creates a new charger from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -37,6 +38,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		Wakeup                              *plugin.Config
 		Soc                                 *plugin.Config
 		LimitSoc                            *plugin.Config
+		FinishTime                          *plugin.Config
 		Tos                                 bool
 		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
 		measurement.Energy                  `mapstructure:",squash"` // optional
@@ -151,7 +153,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, limitsoc, powerG, energyG, currentsG, voltagesG), nil
+	// decorate finishtime
+	var finishTime func() (time.Time, error)
+	if cc.FinishTime != nil {
+		finishTime, err = cc.FinishTime.TimeGetter(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("finishTime: %w", err)
+		}
+	}
+
+	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, limitsoc, powerG, energyG, currentsG, voltagesG, finishTime), nil
 }
 
 // NewConfigurable creates a new charger

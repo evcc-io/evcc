@@ -13,7 +13,7 @@ import (
 // https://developer.groupe-psa.io/webapi/b2c/api-reference/specification
 
 // BaseURL is the API base url
-const BaseURL = "https://api-cert.groupe-psa.com/connectedcar/v4"
+const BaseURL = "https://api.groupe-psa.com/connectedcar/v4"
 
 // API is an api.Vehicle implementation for PSA cars
 type API struct {

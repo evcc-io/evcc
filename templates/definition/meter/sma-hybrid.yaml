@@ -23,6 +23,8 @@ params:
   - preset: battery-params
   - name: maxchargepower
     default: 4200
+  - name: maxdischargepower
+    default: 4200
   - name: watchdog
     type: duration
     default: 60s
@@ -233,7 +235,7 @@ render: |
                 type: writemultiple
                 decode: uint32
           - source: const
-            value: {{ .maxchargepower }}
+            value: {{ .maxdischargepower }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
