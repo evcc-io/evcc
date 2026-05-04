@@ -45,24 +45,11 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	sm, err := NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
-	if err != nil {
-		return nil, err
-	}
-
-	if cc.Usage == "battery" {
-		implement.May(sm, implement.MeterEnergy(sm.TotalEnergy))
-		implement.Has(sm, implement.Battery(sm.soc))
-		implement.May(sm, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
-		implement.May(sm, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
-		implement.May(sm, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
-	}
-
-	return sm, nil
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.Usage, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64) (*SMA, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
 	sm := &SMA{
 		Capabilities: implement.Caps(),
 		uri:          uri,
@@ -98,6 +85,14 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (*SMA, er
 
 	// start update loop manually to get values as fast as possible
 	go sm.device.Run()
+
+	if usage == "battery" {
+		implement.May(sm, implement.MeterEnergy(sm.TotalEnergy))
+		implement.Has(sm, implement.Battery(sm.soc))
+		implement.May(sm, implement.BatteryCapacity(capacity))
+		implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
+		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
+	}
 
 	return sm, nil
 }

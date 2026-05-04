@@ -94,19 +94,13 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		chargeState:  api.StatusNone,
 	}
 
-	var (
-		phases1p3p       func(int) error
-		identify         func() (string, error)
-		maxCurrentMillis func(float64) error
-	)
-
 	if ex, ok := api.Cap[api.ChargerEx](evse); ok {
-		maxCurrentMillis = ex.MaxCurrentMillis
+		implement.May(wb, implement.ChargerEx(ex.MaxCurrentMillis))
 	}
 
 	// configure special external hardware features
 	if hasPhases1p3p {
-		phases1p3p = wb.phases1p3p
+		implement.May(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	if rfIdVidPid != "" {
@@ -114,8 +108,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		if err != nil {
 			return nil, err
 		}
-
-		identify = wb.identify
+		implement.May(wb, implement.Identifier(wb.identify))
 	}
 
 	// initialize GPIO lines and set pins to output
@@ -141,10 +134,6 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		wb.gpio.ph1.Close()
 		wb.gpio.ph3.Close()
 	}()
-
-	implement.May(wb, implement.ChargerEx(maxCurrentMillis))
-	implement.May(wb, implement.PhaseSwitcher(phases1p3p))
-	implement.May(wb, implement.Identifier(identify))
 
 	return wb, nil
 }

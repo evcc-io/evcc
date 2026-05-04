@@ -61,39 +61,26 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	var currentPower, totalEnergy func() (float64, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureMeter, cc.Timeout) {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		implement.May(wb, implement.Meter(wb.currentPower))
+		implement.May(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
-	var currents, voltages func() (float64, float64, float64, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureMeterPhases, cc.Timeout) {
-		currents = wb.currents
-		voltages = wb.voltages
+		implement.May(wb, implement.PhaseCurrents(wb.currents))
+		implement.May(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
-	var identity func() (string, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureNfc, cc.Timeout) {
-		identity = wb.identify
+		implement.May(wb, implement.Identifier(wb.identify))
 	}
 
-	var phases func(int) error
-	var getPhases func() (int, error)
 	if cc.EnergyManager != "" {
 		if res, err := wb.emState(); err == nil && res.ExternalControl != 1 {
-			phases = wb.phases1p3p
-			getPhases = wb.getPhases
+			implement.May(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.May(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
-
-	implement.May(wb, implement.Meter(currentPower))
-	implement.May(wb, implement.MeterEnergy(totalEnergy))
-	implement.May(wb, implement.PhaseCurrents(currents))
-	implement.May(wb, implement.PhaseVoltages(voltages))
-	implement.May(wb, implement.Identifier(identity))
-	implement.May(wb, implement.PhaseSwitcher(phases))
-	implement.May(wb, implement.PhaseGetter(getPhases))
 
 	return wb, nil
 }

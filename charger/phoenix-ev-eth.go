@@ -96,40 +96,24 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 		conn:         conn,
 	}
 
-	var (
-		currentPower     func() (float64, error)
-		totalEnergy      func() (float64, error)
-		currents         func() (float64, float64, float64, error)
-		voltages         func() (float64, float64, float64, error)
-		maxCurrentMillis func(float64) error
-		identify         func() (string, error)
-	)
-
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
-		currents = wb.currents
-		voltages = wb.voltages
+		implement.May(wb, implement.Meter(wb.currentPower))
+		implement.May(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.May(wb, implement.PhaseCurrents(wb.currents))
+		implement.May(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
 	// check card reader enabled
 	if b, err := wb.conn.ReadCoils(phxRegCardEnabled, 1); err == nil && b[0] == 1 {
-		identify = wb.identify
+		implement.May(wb, implement.Identifier(wb.identify))
 	}
 
 	// check presence of extended Wallbe firmware
 	if b, err := wb.conn.ReadHoldingRegisters(phxRegMaxCurrent, 1); err == nil && encoding.Uint16(b) >= 60 {
 		wb.isWallbe = true
-		maxCurrentMillis = wb.maxCurrentMillis
+		implement.May(wb, implement.ChargerEx(wb.maxCurrentMillis))
 	}
-
-	implement.May(wb, implement.Meter(currentPower))
-	implement.May(wb, implement.MeterEnergy(totalEnergy))
-	implement.May(wb, implement.PhaseCurrents(currents))
-	implement.May(wb, implement.PhaseVoltages(voltages))
-	implement.May(wb, implement.ChargerEx(maxCurrentMillis))
-	implement.May(wb, implement.Identifier(identify))
 
 	return wb, nil
 }

@@ -81,9 +81,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, fmt.Errorf("maxcurrentmillis: %w", err)
 	}
+	implement.May(c, implement.ChargerEx(maxcurrentmillis))
 
 	// decorate phases
-	var phases1p3p func(int) error
 	if cc.Phases1p3p != nil {
 		if !cc.Tos {
 			return nil, errors.New("1p3p does no longer handle disable/enable. Use tos: true to confirm you understand the consequences")
@@ -94,9 +94,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 			return nil, fmt.Errorf("phases: %w", err)
 		}
 
-		phases1p3p = func(phases int) error {
+		implement.Has(c, implement.PhaseSwitcher(func(phases int) error {
 			return phases1p3pS(int64(phases))
-		}
+		}))
 	}
 
 	// decorate identifier
@@ -104,18 +104,18 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, fmt.Errorf("identify: %w", err)
 	}
+	implement.May(c, implement.Identifier(identify))
 
 	// decorate wakeup
-	var wakeup func() error
 	if cc.Wakeup != nil {
-		set, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
+		wakeup, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
 
-		wakeup = func() error {
-			return set(true)
-		}
+		implement.Has(c, implement.Resurrector(func() error {
+			return wakeup(true)
+		}))
 	}
 
 	// decorate soc; for heating devices (api.Heating feature), the soc slot holds
@@ -124,6 +124,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, fmt.Errorf("soc: %w", err)
 	}
+	implement.May(c, implement.Battery(soc))
 
 	// decorate limitsoc; similarly, fall back to limittemp getter when no limitsoc is configured.
 	limitsoc, err := cc.LimitSoc.IntGetter(ctx)
@@ -142,17 +143,22 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	if limitsoc == nil && limitTemp != nil {
 		limitsoc = limitTemp
 	}
+	implement.May(c, implement.SocLimiter(limitsoc))
 
 	// decorate measurements
 	powerG, energyG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
+	implement.May(c, implement.Meter(powerG))
+	implement.May(c, implement.MeterEnergy(energyG))
 
 	currentsG, voltagesG, _, err := cc.Phases.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
+	implement.May(c, implement.PhaseCurrents(currentsG))
+	implement.May(c, implement.PhaseVoltages(voltagesG))
 
 	// decorate finishtime
 	var finishTime func() (time.Time, error)
@@ -162,17 +168,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 			return nil, fmt.Errorf("finishTime: %w", err)
 		}
 	}
-
-	implement.May(c, implement.ChargerEx(maxcurrentmillis))
-	implement.May(c, implement.Identifier(identify))
-	implement.May(c, implement.PhaseSwitcher(phases1p3p))
-	implement.May(c, implement.Resurrector(wakeup))
-	implement.May(c, implement.Battery(soc))
-	implement.May(c, implement.SocLimiter(limitsoc))
-	implement.May(c, implement.Meter(powerG))
-	implement.May(c, implement.MeterEnergy(energyG))
-	implement.May(c, implement.PhaseCurrents(currentsG))
-	implement.May(c, implement.PhaseVoltages(voltagesG))
 	implement.May(c, implement.VehicleFinishTimer(finishTime))
 
 	return c, nil
