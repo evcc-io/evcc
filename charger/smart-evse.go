@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SmartEVSE-3.5 REST API charger implementation
@@ -37,6 +36,7 @@ type SmartEVSE3 struct {
 	*request.Helper
 	uri  string
 	curr int64
+	mode int
 	apiG util.Cacheable[smartEvseRestSettings]
 }
 
@@ -111,10 +111,12 @@ func init() {
 // NewSmartEVSE3FromConfig creates a SmartEVSE-3.5 REST charger from generic config
 func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		Cache time.Duration
+		URI        string
+		Cache      time.Duration
+		ChargeMode string
 	}{
-		Cache: time.Second,
+		Cache:      time.Second,
+		ChargeMode: "normal",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -125,21 +127,27 @@ func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("missing uri")
 	}
 
-	return NewSmartEVSE3(cc.URI, cc.Cache)
+	mode := smartEvse3ModeNormal
+	if cc.ChargeMode == "smart" {
+		mode = smartEvse3ModeSmart
+	}
+
+	return NewSmartEVSE3(cc.URI, cc.Cache, mode)
 }
 
 // NewSmartEVSE3 creates a new SmartEVSE-3.5 REST charger
-func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
+func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, error) {
 	log := util.NewLogger("smart-evse")
 
 	wb := &SmartEVSE3{
 		Helper: request.NewHelper(log),
 		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
 		curr:   60, // 6 A in 1/10 A
+		mode:   mode,
 	}
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
+	wb.Helper.Client.Transport = &http.Transport{
+		DisableKeepAlives: true,
 	}
 
 	wb.apiG = util.ResettableCached(func() (smartEvseRestSettings, error) {
@@ -152,13 +160,6 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return nil, err
-	}
-
-	// force NORMAL mode so override_current takes effect
-	if res.ModeID != smartEvse3ModeNormal {
-		if err := wb.setMode(smartEvse3ModeNormal); err != nil {
-			return nil, err
-		}
 	}
 
 	// decorate optional EV meter if configured in SmartEVSE
@@ -226,17 +227,11 @@ func (wb *SmartEVSE3) Status() (api.ChargeStatus, error) {
 
 	// state IDs from SmartEVSE firmware (main_c.h)
 	switch res.Evse.StateID {
-	case 0: // STATE_A
-		return api.StatusA, nil
-	case 1, 4, 5, 8, 9, 11, 12, 13, 14:
-		// STATE_B, STATE_COMM_B, STATE_COMM_B_OK, STATE_ACTSTART, STATE_B1,
-		// STATE_MODEM_REQUEST, STATE_MODEM_WAIT, STATE_MODEM_DONE, STATE_MODEM_DENIED
-		return api.StatusB, nil
 	case 2, 3, 6, 7, 10:
 		// STATE_C, STATE_D, STATE_COMM_C, STATE_COMM_C_OK, STATE_C1
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %d (%s)", res.Evse.StateID, res.Evse.State)
+		return api.StatusB, nil
 	}
 }
 
@@ -267,8 +262,8 @@ func (wb *SmartEVSE3) Enable(enable bool) error {
 	}
 
 	if enable {
-		if res.ModeID != smartEvse3ModeNormal {
-			return wb.setMode(smartEvse3ModeNormal)
+		if res.ModeID != wb.mode {
+			return wb.setMode(wb.mode)
 		}
 		return nil
 	}

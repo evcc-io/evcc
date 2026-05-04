@@ -78,9 +78,11 @@ func FuncMap(tmpl *template.Template) *template.Template {
 			}
 			return res
 		},
-		"urlEncode": url.QueryEscape,
-		"unquote":   unquote,
-		"quote":     yamlQuote,
+		"urlEncode":       url.QueryEscape,
+		"unquote":         unquote,
+		"quote":           yamlQuote,
+		"asDuration":      asDuration,
+		"durationSeconds": durationSeconds,
 	}
 
 	return tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap)

@@ -1,0 +1,40 @@
+template: evsemaster-udp
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+  description:
+    de: >
+      Die Ladestation und evcc müssen sich im selben Netzwerksegment (VLAN) befinden,
+      da die Erkennung über UDP-Broadcast erfolgt. Broadcasts werden von den meisten
+      Routern nicht zwischen VLANs weitergeleitet.
+    en: >
+      The charger and evcc must be on the same network segment (VLAN).
+      Discovery relies on UDP broadcast, which most routers do not forward across VLANs.
+products:
+  - brand: EVSE Master
+params:
+  - name: serial
+    required: true
+    description:
+      de: Seriennummer (16-stellige Hex-Zeichenkette)
+      en: Serial number (16-character hex string)
+    example: "0906252400004617"
+    help:
+      de: Die Seriennummer steht auf dem Typenschild der Ladestation (8 Byte als Hex).
+      en: Found on the device label. Enter as a 16-character hex string (8 bytes).
+  - name: password
+    required: true
+    mask: true
+    description:
+      de: Passwort (wie in der EVSE Master App gesetzt)
+      en: Password (set in the EVSE Master app)
+    help:
+      de: >
+        Das Passwort wird in der EVSE Master App unter Geräteeinstellungen
+        konfiguriert. App und evcc dürfen nicht gleichzeitig verbunden sein.
+      en: >
+        Set in the EVSE Master app under device settings.
+        The app and evcc must not be connected at the same time.
+render: |
+  type: evsemaster-udp
+  serial: {{ .serial }}
+  password: {{ .password }}

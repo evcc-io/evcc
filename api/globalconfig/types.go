@@ -41,7 +41,7 @@ type All struct {
 	SponsorToken    string
 	Plant           string // telemetry plant id
 	Telemetry       bool
-	Mcp             bool
+	Mcp             bool // TODO deprecated
 	Metrics         bool
 	Profile         bool
 	Levels          map[string]string

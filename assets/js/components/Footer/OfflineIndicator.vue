@@ -7,7 +7,7 @@
 				visible: visible,
 				'alert-danger': showError,
 				'alert-secondary': !showError,
-				'alert--bottomtabs': experimental && !blocking,
+				'alert--bottomtabs': !blocking,
 			}"
 			role="alert"
 			data-testid="bottom-banner"
@@ -81,7 +81,6 @@ export default defineComponent({
 		offline: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		startupCompleted: Boolean,
-		experimental: Boolean,
 	},
 	data() {
 		return { dismissed: false };

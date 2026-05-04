@@ -48,6 +48,7 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 	cc := struct {
 		Connector          uint16
 		Phases1p3p         bool
+		Identify           bool
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		Connector: 1,
@@ -71,7 +72,7 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	var identify func() (string, error)
-	if _, err := wb.identify(); err == nil {
+	if cc.Identify {
 		identify = wb.identify
 	}
 

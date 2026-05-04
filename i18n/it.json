@@ -40,6 +40,7 @@
     "legendTopName": "Ricarica del veicolo assistita dalla batteria",
     "legendTopSubline": "quando la batteria supera il {soc}.",
     "modalTitle": "Batteria di casa",
+    "noBattery": "Nessuna batteria configurata.",
     "usageTab": "Uso della batteria"
   },
   "config": {
@@ -601,6 +602,11 @@
       "url": "URL del server",
       "urlHelp": "Copia questo URL nella configurazione del caricabatterie. Per ulteriori dettagli, consulta il manuale del produttore. Il caricabatterie dovrebbe aggiungere automaticamente il proprio identificativo univoco (ID stazione) all'URL. In rari casi, potrebbe essere necessario specificare manualmente l'identificativo. Esempio: `{url}`"
     },
+    "optimizer": {
+      "description": "Analizza le previsioni solari, i prezzi dell'elettricità e i tuoi pattern di consumo per ottimizzare l'uso della batteria e la strategia di carica. I dati sono inviati al servizio di ottimizzazione di evcc per l'elaborazione.",
+      "enable": "Abilita Ottimizzatore",
+      "title": "Ottimizzatore"
+    },
     "options": {
       "boolean": {
         "no": "no",
@@ -853,6 +859,14 @@
       "configurePriceCo2": "Scopri come configurare i dati su prezzi e CO₂.",
       "footerLong": "{percent} di energia solare",
       "footerShort": "{percent} solare",
+      "indicator": {
+        "co2": "Emissioni CO₂",
+        "co2saved": "CO₂ risparmiata",
+        "none": "nessuno",
+        "price": "prezzo elettricità",
+        "savings": "risparmi",
+        "solar": "energia solare"
+      },
       "modalTitle": "Riepilogo energia caricata",
       "moneySaved": "{value} di risparmio",
       "percentGrid": "{grid} kWh rete",
@@ -868,6 +882,7 @@
       "priceTitle": "Prezzo energia",
       "referenceGrid": "rete",
       "referenceLabel": "Dati di riferimento:",
+      "sessionInfo": "In base alle sessioni di ricarica completate.",
       "tabTitle": "I miei dati"
     },
     "sponsor": {
@@ -893,15 +908,25 @@
     },
     "version": {
       "availableLong": "aggiornamento disponibile",
+      "community": "community di evcc",
+      "labelRelease": "Release",
+      "labelVersion": "Versione",
+      "labelWebsite": "Sito web",
+      "latestVersion": "ultima versione",
+      "madeByCommunity": "Creato da {0}.",
       "modalCancel": "Annulla",
       "modalDownload": "Download",
       "modalInstalledVersion": "Versione correntemente installata",
+      "modalLatest": "Stai utilizzando la versione più recente.",
+      "modalNextRelease": "Cosa c'è nella prossima release",
       "modalNoReleaseNotes": "Non ci sono note di rilascio disponibili. Altre informazioni circa la nuova versione si trovano qui:",
       "modalTitle": "Aggiornamento disponibile",
       "modalUpdate": "Installare",
       "modalUpdateNow": "Installa ora",
       "modalUpdateStarted": "Evcc ripartirà dopo l'aggiornamento…",
-      "modalUpdateStatusStart": "Installazione avviata:"
+      "modalUpdateStatusStart": "Installazione avviata:",
+      "modalViewOnGitHub": "Vedi su GitHub",
+      "openSource": "open source"
     }
   },
   "forecast": {
@@ -911,6 +936,12 @@
       "lowestHour": "Ora più ecologica",
       "range": "Intervallo"
     },
+    "empty": {
+      "co2": "Controlla quando l'energia della rete nella tua regione è prodotta da fonti pulite. I piani di ricarica saranno ottimizzati per ridurre le emissioni e terranno conto del risparmio di CO₂.",
+      "price": "Configura la tua tariffa dinamica dell'elettricità in modo da ottimizzare i piani di ricarica e calcolare il risparmio economico.",
+      "setup": "Imposta le tariffe e le previsioni",
+      "solar": "Visualizza la produzione solare attesa per oggi e per i giorni seguenti. Sarà utilizzato anche per l'ottimizzazione automatica della ricarica futura."
+    },
     "modalTitle": "Previsioni",
     "price": {
       "average": "Media",
@@ -918,6 +949,7 @@
       "lowestHour": "Ora più economica",
       "range": "Intervallo"
     },
+    "priceZoom": "ingrandisci",
     "solar": {
       "dayAfterTomorrow": "Dopodomani",
       "partly": "parzialmente",
@@ -926,6 +958,7 @@
       "tomorrow": "Domani"
     },
     "solarAdjust": "Modifica la previsione sulla base dei dati reali{percent}.",
+    "solarAdjustShort": "correzione con dati reali",
     "type": {
       "co2": "CO₂",
       "price": "Prezzo",
@@ -1137,6 +1170,7 @@
         "once": "Boost attivo per questa sessione di ricarica.",
         "stateActive": "Boost da batteria attivo",
         "stateBelowLimit": "Batteria troppo scarica per il boost",
+        "stateHold": "Batteria bloccata",
         "stateReady": "Battery boost pronto"
       },
       "batteryUsage": "Batteria di casa",
@@ -1246,6 +1280,7 @@
       "batteryBoostBelowLimit": "Batteria troppo scarica per il boost",
       "batteryBoostDisabled": "Battery boost disabilitato.",
       "batteryBoostEnabled": "Boost fino al {limit}.",
+      "batteryBoostHold": "Batteria bloccata. Boost non disponibile.",
       "charging": "In carica…",
       "cheapEnergyCharging": "Corrente economica disponibile.",
       "cheapEnergyNextStart": "Corrente economica in {duration}.",
@@ -1485,5 +1520,13 @@
     "lineErrorLink": "linea {0}",
     "restartButton": "Ricomincia",
     "title": "Errore di avvio"
+  },
+  "tabBar": {
+    "battery": "Batteria",
+    "charge": "Carica",
+    "comingSoon": "Questa pagina è in costruzione.",
+    "forecast": "Previsione",
+    "more": "Di più",
+    "sessions": "Sessioni"
   }
 }

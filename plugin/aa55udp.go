@@ -92,11 +92,12 @@ func buildReadConfig(id int, pdu string, register uint16, count uint16, offset i
 // Block read mode (whole block, extract value at offset):
 //
 //	source:   aa55udp
-//	host:     192.168.1.26
-//	pdu:      "f703891c007d"  # 6-byte PDU hex including inverter address byte
-//	offset:   78              # byte offset into the response payload
-//	decode:   int32be
-//	scale:    1.0
+//	host:     192.168.1.26   # inverter IP; port 8899 is always used
+//	id:       0x7F           # inverter address byte: 0x7F for DT/DNS/ES/EM, 0xF7 for ET/EH/BT/BH
+//	register: 30127          # Modbus register address (0-based, uint16)
+//	count:    2              # number of registers to read (1=U16, 2=S32/U32)
+//	decode:   int32be        # int32be | uint32be | int16be | uint16be | float32be
+//	scale:    1.0            # optional multiplier (default 1.0)
 func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
@@ -112,6 +113,7 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, erro
 		Count: 2,
 		Scale: 1.0,
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

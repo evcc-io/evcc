@@ -25,10 +25,10 @@ import (
 type EEBus struct {
 	log *util.Logger
 
-	*eebus.Connector
-	ma *eebus.MonitoringAppliance
-	eg *eebus.EnergyGuard
-	mm measurements
+	connector *eebus.Connector
+	ma        *eebus.MonitoringAppliance
+	eg        *eebus.EnergyGuard
+	mm        measurements
 
 	mu          sync.Mutex
 	maEntity    spineapi.EntityRemoteInterface
@@ -87,14 +87,14 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		ma:        ma,
 		eg:        eebus.Instance.EnergyGuard(),
 		mm:        mm,
-		Connector: eebus.NewConnector(),
+		connector: eebus.NewConnector(),
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
-	if err := c.Wait(ctx); err != nil {
+	if err := c.connector.Wait(ctx); err != nil {
 		eebus.Instance.UnregisterDevice(ski, c)
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	return c, nil
 }
 
-func eebusReadValue[T any](scenario uint, uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	var zero T
 
 	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
@@ -138,7 +138,7 @@ func eebusReadValue[T any](scenario uint, uc eebusapi.UseCaseBaseInterface, enti
 func (c *EEBus) readValue(scenario uint, update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return eebusReadValue(scenario, c.mm, c.maEntity, update)
+	return eebusReadValue(c.mm, c.maEntity, scenario, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
@@ -157,7 +157,7 @@ func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemo
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	res, err := eebusReadValue(scenario, c.mm, c.maEntity, update)
+	res, err := eebusReadValue(c.mm, c.maEntity, scenario, update)
 	if err != nil {
 		// announced but not provided
 		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
@@ -200,7 +200,7 @@ func (c *EEBus) Dimmed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(1, c.eg.EgLPCInterface, c.egLpcEntity, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := eebusReadValue(c.eg.EgLPCInterface, c.egLpcEntity, 1, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -244,7 +244,7 @@ func (c *EEBus) Curtailed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(1, c.eg.EgLPPInterface, c.egLppEntity, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := eebusReadValue(c.eg.EgLPPInterface, c.egLppEntity, 1, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return false, err
 	}

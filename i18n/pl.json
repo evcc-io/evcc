@@ -40,6 +40,7 @@
     "legendTopName": "Ładowanie pojazdu z wykorzystaniem domowego magazynu energii",
     "legendTopSubline": "gdy poziom naładowania domowego magazynu energii jest wyższy niż {soc}.",
     "modalTitle": "Domowy magazyn energii",
+    "noBattery": "Brak skonfigurowanego magazynu energii.",
     "usageTab": "Użycie magazynu"
   },
   "config": {
@@ -446,7 +447,7 @@
         "guest": {
           "messageDefault": "Nieznany pojazd, połączony gość?",
           "title": "Kiedy podłączy się nieznany samochód",
-          "titleDefault": "Nieznany samochód"
+          "titleDefault": "Nieznany pojazd"
         },
         "planoverrun": {
           "messageDefault": "{vehicleTitle}: Plan zostanie przekroczony.",
@@ -598,6 +599,12 @@
       "title": "Serwer OCPP",
       "url": "Adres URL serwera",
       "urlHelp": "Skopiuj ten adres URL do konfiguracji ładowarki. Szczegółowe informacje znajdziesz w instrukcji producenta. Ładowarka powinna automatycznie dodać swój unikalny identyfikator (station ID) do adresu URL. W rzadkich przypadkach może być konieczne ręczne podanie identyfikatora. Przykład: `{url}`"
+    },
+    "optimizer": {
+      "description": "Analizuje prognozy dotyczące energii słonecznej, cen energii elektrycznej i wzorce zużycia, aby zoptymalizować strategię ładowania akumulatorów. Dane są przesyłane do usługi optymalizacji evcc w celu przetworzenia. Obecnie wykonuje tylko obliczenia i wizualizacje. Nie kontroluje jeszcze urządzeń.",
+      "enable": "Włącz optymalizator",
+      "info": "Wyświetlenie pozycji menu optymalizatora może potrwać kilka minut. W przypadku nowych instalacji zebranie wystarczającej ilości danych przez evcc może potrwać do 24 godzin.",
+      "title": "Optymalizator"
     },
     "options": {
       "boolean": {
@@ -861,6 +868,7 @@
       "priceTitle": "Cena energii",
       "referenceGrid": "sieć",
       "referenceLabel": "Dane referencyjne:",
+      "sessionInfo": "Oparte na zakończonych sesjach ładowania.",
       "tabTitle": "Moje dane"
     },
     "sponsor": {

@@ -59,8 +59,8 @@ params:
       de: Passwort
       en: Password
     help:
-      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
-      en: Use single quotes in case of leading zeros
+      de: Zugangspasswort des Dienstes
+      en: Service account password
     mask: true
   - name: capacity
     unit: kWh
@@ -292,8 +292,8 @@ params:
       en: Actor Identification Number (AIN)
       de: Aktoridentifikationsnummer (AIN)
     help:
-      en: Printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: Printed on the type label on the back of the device.
+      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
   - name: coarsecurrent
     type: bool
     description:

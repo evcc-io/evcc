@@ -9,13 +9,27 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Grid und Batterie erfordern den PowerSensor.
-      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
-      Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
+
+      ##### WARNUNG!
+      Die folgendenden Gegebenheiten können zu Unterbrechungen in der Modbus-Kommunikation führen:
+      - veraltete Firmware
+      - Änderung von Wechselrichter/Speicher-Einstellungen über das Huawei FusionSolar-Portal
+      - weitere Anwendungen (z.B. Home Assistant) greifen über einen Modbus Proxy auf die Anlage zu (auch abhängig von der Anlagenkomplexität, z.B. Anzahl kaskadierter Wechselrichter)
     en: |
-      Grid and Battery require the PowerSensor.
-      Modbus/TCP requires activation using "maintenance access" within the communication settings of the inverter.
-      See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
+
+      ##### WARNING!
+      Please beware that the following circumstances may lead to Modbus communication interruptions:
+      - outdated firmware
+      - altering inverter/battery configuration settings via Huawei FusionSolar portal
+      - other applications (e.g. Home Assistant) accessing the inverter via Modbus proxy (also depending on plant complexity, e.g. number of cascaded inverters)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -24,7 +38,7 @@ params:
   - name: timeout
     default: 15s
   - name: maxacpower
-    service: modbus/read?address=30073&type=holding&encoding=uint32&{modbus}
+    service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
   - name: storageunit
   - name: forceaccharging
     default: false
@@ -35,8 +49,8 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
+      en: Keep AC charging active to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
+      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
@@ -45,6 +59,7 @@ params:
     required: true
   - name: maxdischargepower
     service: modbus/read?address=37048&type=holding&encoding=uint32&{modbus}
+    required: true
   - name: minsoc
     service: modbus/read?address=47082&type=holding&encoding=uint16&scale=0.1&{modbus}
   - name: maxsoc
@@ -163,124 +178,142 @@ render: |
       decode: uint16nan
     scale: 0.1
   batterymode:
-    source: watchdog
-    timeout: 30s
-    reset: 1 # reset watchdog on normal
+    source: sequence
     set:
-      source: switch
-      switch:
-      - case: 1 # normal
+      - source: switch
+        switch:
+          - case: 1 # normal
+            set:
+              source: sequence
+              set:
+              - source: const
+                value: 0 # stop
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .maxdischargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47077 # Max. Discharge Power
+                    type: writemultiple
+                    encoding: uint32
+              {{- if eq .forceaccharging "false" }}
+              - source: const
+                value: 0 # Disable
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47087 # Charge from grid
+                    type: writesingle
+                    encoding: uint16
+              {{- end }}
+          - case: 2 # hold
+            set:
+              source: sequence
+              set:
+              - source: const
+                value: 0 # stop
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0 # W Discharge Power
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47077 # Max. Discharge Power
+                    type: writemultiple
+                    encoding: uint32
+              {{- if eq .forceaccharging "false" }}
+              - source: const
+                value: 0 # Disable
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47087 # Charge from grid
+                    type: writesingle
+                    encoding: uint16
+              {{- end }}
+          - case: 3 # charge
+            set:
+              source: sequence
+              set:
+              - source: const
+                value: 1 # Enable
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47087 # Charge from grid
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .maxchargepower }} # W
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47247 # Forcible charge power
+                    type: writemultiple
+                    encoding: uint32
+              - source: const
+                value: 1 # Minute
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47083 # Forced charging and discharging period
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0 # duration
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47246 # Forcible charge/discharge setting mode
+                    type: writesingle
+                    encoding: uint16
+      - source: watchdog
+        timeout: 30s
+        reset: 1
         set:
-          source: sequence
-          set:
-          - source: const
-            value: 0 # stop
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47100 # Forcible charge/discharge
-                type: writesingle
-                encoding: uint16
-          {{- if eq .forceaccharging "false" }}
-          - source: const
-            value: 0 # Disable
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47087 # Charge from grid
-                type: writesingle
-                encoding: uint16
-          {{- end }}
-      - case: 2 # hold
-        set:
-          source: sequence
-          set:
-          - source: const
-            value: 2 # discharge
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47100 # Forcible charge/discharge
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # duration
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47246 # Forcible charge/discharge setting mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Minute
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47083 # Forced charging and discharging period
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # W
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47249 # Forcible discharge power
-                type: writemultiple
-                encoding: uint32
-      - case: 3 # charge
-        set:
-          source: sequence
-          set:
-          - source: const
-            value: 1 # charge
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47100 # Forcible charge/discharge
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # duration
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47246 # Forcible charge/discharge setting mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Minute
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47083 # Forced charging and discharging period
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: {{ .maxchargepower }} # W
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47247 # Forcible charge power
-                type: writemultiple
-                encoding: uint32
-          - source: const
-            value: 1 # Enable
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47087 # Charge from grid
-                type: writesingle
-                encoding: uint16
+          source: switch
+          switch:
+            - case: 1 # normal
+              set:
+                source: sleep
+                duration: 0s
+            - case: 2 # hold
+              set:
+                source: sleep
+                duration: 0s
+            # only charging requires repeated requests
+            - case: 3 # charge
+              set:
+                source: const
+                value: 1 # charge
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+
   {{- include "battery-params" . }}
   {{- end }}

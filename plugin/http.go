@@ -101,37 +101,39 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		method: method,
 	}
 
-	// override the transport to accept self-signed certificates
+	// build the cache stack without logging so the logging tripper
+	// can sit outside the cache and see cached responses too
+	var base http.RoundTripper = transport.Default()
 	if insecure {
-		p.Client.Transport = request.NewTripper(log, transport.Insecure())
+		base = transport.Insecure()
 	}
 
 	if cache > 0 {
 		// remove no-cache response headers
-		p.Client.Transport = &transport.Modifier{
+		base = &transport.Modifier{
 			Modifier: func(resp *http.Response) error {
 				dropNoCache(resp, "Cache-Control")
 				dropNoCache(resp, "Pragma")
 				return nil
 			},
-			Base: p.Client.Transport,
+			Base: base,
 		}
 	}
 
 	// http cache
-	p.Client.Transport = &httpcache.Transport{
+	base = &httpcache.Transport{
 		Cache:               mc,
 		MarkCachedResponses: true,
-		Transport:           p.Client.Transport,
+		Transport:           base,
 	}
 
 	if cache > 0 {
 		cacheHeader := fmt.Sprintf("max-age=%d, must-revalidate", int(cache.Seconds()))
-		p.Client.Transport = &transport.Decorator{
+		base = &transport.Decorator{
 			Decorator: transport.DecorateHeaders(map[string]string{
 				"Cache-Control": cacheHeader,
 			}),
-			Base: p.Client.Transport,
+			Base: base,
 		}
 
 		// for cached requests enforce single inflight GET
@@ -139,6 +141,9 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 			p.mu = muForKey(p.url)
 		}
 	}
+
+	// logging is outermost so cache hits are visible in the trace log
+	p.Client.Transport = request.NewTripper(log, base)
 
 	return p
 }

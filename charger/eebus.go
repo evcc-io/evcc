@@ -43,7 +43,7 @@ type EEBus struct {
 	reconnect bool
 	current   float64
 
-	*eebus.Connector
+	connector *eebus.Connector
 }
 
 func init() {
@@ -84,14 +84,14 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 		cem:     eebus.Instance.CustomerEnergyManagement(),
 	}
 
-	c.Connector = eebus.NewConnector()
+	c.connector = eebus.NewConnector()
 	c.minMaxG = util.Cached(c.minMax, time.Second)
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
-	if err := c.Wait(ctx); err != nil {
+	if err := c.connector.Wait(ctx); err != nil {
 		eebus.Instance.UnregisterDevice(ski, c)
 		return nil, err
 	}
@@ -124,6 +124,24 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bo
 }
 
 var _ eebus.Device = (*EEBus)(nil)
+
+// Connect implements the eebus.Device interface.
+// On SHIP/SPINE disconnect we drop the cached EV entity reference. EvDisconnected
+// only fires on a SPINE EntityChange/Remove, not on SHIP-level disconnect, so
+// without this we could keep querying an orphan entity until the next reconnect
+// re-fires EvConnected.
+func (c *EEBus) Connect(connected bool) {
+	c.connector.Connect(connected)
+
+	if connected {
+		return
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.ev = nil
+}
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {

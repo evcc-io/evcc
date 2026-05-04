@@ -378,12 +378,21 @@
 					>
 						<template #icon><EebusIcon /></template>
 					</DeviceCard>
+					<DeviceCard
+						v-if="experimental"
+						:title="`${$t('config.mcp.title')} 🧪`"
+						editable
+						data-testid="mcp"
+						@edit="openModal('mcp')"
+					>
+						<template #icon><McpIcon /></template>
+					</DeviceCard>
 				</div>
 
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4 flex-wrap">
+				<div data-testid="config-system" class="round-box p-4 d-flex gap-4 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
@@ -427,8 +436,9 @@
 				<MessengerModal @changed="messengerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal :currency="currency" @changed="tariffChanged" />
-				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
-				<OptimizerModal />
+				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
+				<OptimizerModal :is-sponsor="isSponsor" />
+				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
 				<TitleModal @changed="loadDirty" />
@@ -494,6 +504,8 @@ import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
 import OptimizerModal from "../components/Config/OptimizerModal.vue";
+import McpIcon from "../components/MaterialIcon/Mcp.vue";
+import McpModal from "../components/Config/McpModal.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -579,6 +591,8 @@ export default defineComponent({
 		NotificationIcon,
 		OptimizerIcon,
 		OptimizerModal,
+		McpIcon,
+		McpModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
