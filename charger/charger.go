@@ -123,7 +123,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, fmt.Errorf("soc: %w", err)
 	}
-	implement.May(c, implement.Battery(soc))
 
 	// decorate limitsoc; similarly, fall back to limittemp getter when no limitsoc is configured.
 	limitsoc, err := cc.LimitSoc.IntGetter(ctx)
@@ -142,6 +141,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	if limitsoc == nil && limitTemp != nil {
 		limitsoc = limitTemp
 	}
+	implement.May(c, implement.Battery(soc))
 	implement.May(c, implement.SocLimiter(limitsoc))
 
 	// decorate measurements
