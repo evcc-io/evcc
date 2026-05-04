@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -161,12 +160,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	implement.May(c, implement.PhaseVoltages(voltagesG))
 
 	// decorate finishtime
-	var finishTime func() (time.Time, error)
-	if cc.FinishTime != nil {
-		finishTime, err = cc.FinishTime.TimeGetter(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("finishTime: %w", err)
-		}
+	finishTime, err := cc.FinishTime.TimeGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("finishTime: %w", err)
 	}
 	implement.May(c, implement.VehicleFinishTimer(finishTime))
 

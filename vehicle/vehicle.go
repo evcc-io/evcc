@@ -71,13 +71,15 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	if err != nil {
 		return nil, fmt.Errorf("status: %w", err)
 	}
-	implement.May(v, implement.ChargeState(func() (api.ChargeStatus, error) {
-		s, err := status()
-		if err != nil {
-			return api.StatusNone, err
-		}
-		return api.ChargeStatusString(s)
-	}))
+	if status != nil {
+		implement.Has(v, implement.ChargeState(func() (api.ChargeStatus, error) {
+			s, err := status()
+			if err != nil {
+				return api.StatusNone, err
+			}
+			return api.ChargeStatusString(s)
+		}))
+	}
 
 	// decorate range
 	rng, err := cc.Range.IntGetter(ctx)
@@ -153,9 +155,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	if err != nil {
 		return nil, fmt.Errorf("wakeup: %w", err)
 	}
-	implement.May(v, implement.Resurrector(func() error {
-		return wakeup(true)
-	}))
+	if wakeup != nil {
+		implement.Has(v, implement.Resurrector(func() error {
+			return wakeup(true)
+		}))
+	}
 
 	// decorate chargeEnable
 	chargeEnable, err := cc.ChargeEnable.BoolSetter(ctx, "chargeenable")
