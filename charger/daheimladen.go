@@ -24,12 +24,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // DaheimLaden charger implementation
 type DaheimLaden struct {
+	implement.Capabilities
 	log    *util.Logger
 	conn   *modbus.Connection
 	curr   uint16
@@ -65,8 +67,6 @@ func init() {
 	registry.AddCtx("daheimladen", NewDaheimLadenFromConfig)
 }
 
-//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLaden -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
-
 // NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
 func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -96,10 +96,11 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLaden{
-		log:    log,
-		conn:   conn,
-		curr:   60, // assume min current
-		phases: 3,  // assume 3p
+		Capabilities: implement.Caps(),
+		log:          log,
+		conn:         conn,
+		curr:         60, // assume min current
+		phases:       3,  // assume 3p
 	}
 
 	// get initial state from charger
@@ -120,14 +121,12 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
-	var phases1p3p func(int) error
-	var phasesG func() (int, error)
 	if phases {
-		phases1p3p = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
-	return decorateDaheimLaden(wb, phases1p3p, phasesG), nil
+	return wb, nil
 }
 
 func (wb *DaheimLaden) heartbeat(ctx context.Context, timeout time.Duration) {

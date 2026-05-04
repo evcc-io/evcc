@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb/pro"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -16,12 +17,11 @@ func init() {
 	registry.AddCtx("openwbpro", NewOpenWBProFromConfig)
 }
 
-//go:generate go tool decorate -f decorateOpenWBPro -b *OpenWBPro -r api.Charger -t api.Resurrector
-
 // https://openwb.de/main/?page_id=771
 
 // OpenWBPro charger implementation
 type OpenWBPro struct {
+	implement.Capabilities
 	*request.Helper
 	uri     string
 	current float64
@@ -51,12 +51,11 @@ func NewOpenWBProFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	var wakeup func() error
 	if status.Version >= 9 {
-		wakeup = wb.wakeup
+		implement.Implements(wb, implement.Resurrector(wb.wakeup))
 	}
 
-	return decorateOpenWBPro(wb, wakeup), nil
+	return wb, nil
 }
 
 // NewOpenWBPro creates OpenWBPro charger
@@ -64,9 +63,10 @@ func NewOpenWBPro(ctx context.Context, uri string, cache time.Duration) (*OpenWB
 	log := util.NewLogger("owbpro")
 
 	wb := &OpenWBPro{
-		Helper:  request.NewHelper(log),
-		uri:     strings.TrimRight(uri, "/"),
-		current: 6, // 6A defined value
+		Capabilities: implement.Caps(),
+		Helper:       request.NewHelper(log),
+		uri:          strings.TrimRight(uri, "/"),
+		current:      6, // 6A defined value
 	}
 
 	wb.statusG = util.ResettableCached(func() (pro.Status, error) {

@@ -21,8 +21,6 @@ func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
 
-//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Charger -t api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
-
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
