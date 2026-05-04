@@ -67,21 +67,17 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	implement.May(v, implement.SocLimiter(limitSoc))
 
 	// decorate status
-	var status func() (api.ChargeStatus, error)
-	if cc.Status != nil {
-		get, err := cc.Status.StringGetter(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("status: %w", err)
-		}
-		status = func() (api.ChargeStatus, error) {
-			s, err := get()
-			if err != nil {
-				return api.StatusNone, err
-			}
-			return api.ChargeStatusString(s)
-		}
-		implement.Has(v, implement.ChargeState(status))
+	status, err := cc.Status.StringGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("status: %w", err)
 	}
+	implement.May(v, implement.ChargeState(func() (api.ChargeStatus, error) {
+		s, err := status()
+		if err != nil {
+			return api.StatusNone, err
+		}
+		return api.ChargeStatusString(s)
+	}))
 
 	// decorate range
 	rng, err := cc.Range.IntGetter(ctx)
@@ -128,7 +124,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		if err != nil {
 			return nil, fmt.Errorf("longitude: %w", err)
 		}
-		position := func() (float64, float64, error) {
+		implement.Has(v, implement.VehiclePosition(func() (float64, float64, error) {
 			lat, err := latG()
 			if err != nil {
 				return 0, 0, err
@@ -142,29 +138,24 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 				return 0, 0, api.ErrNotAvailable
 			}
 			return lat, lon, nil
-		}
-		implement.Has(v, implement.VehiclePosition(position))
+		}))
 	}
 
 	// decorate finishtime
-	if cc.FinishTime != nil {
-		finishTime, err := cc.FinishTime.TimeGetter(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("finishTime: %w", err)
-		}
-		implement.Has(v, implement.VehicleFinishTimer(finishTime))
+	finishTime, err := cc.FinishTime.TimeGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("finishTime: %w", err)
 	}
+	implement.May(v, implement.VehicleFinishTimer(finishTime))
 
 	// decorate wakeup
-	if cc.Wakeup != nil {
-		set, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
-		if err != nil {
-			return nil, fmt.Errorf("wakeup: %w", err)
-		}
-		implement.Has(v, implement.Resurrector(func() error {
-			return set(true)
-		}))
+	wakeup, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
+	if err != nil {
+		return nil, fmt.Errorf("wakeup: %w", err)
 	}
+	implement.May(v, implement.Resurrector(func() error {
+		return wakeup(true)
+	}))
 
 	// decorate chargeEnable
 	chargeEnable, err := cc.ChargeEnable.BoolSetter(ctx, "chargeenable")
@@ -174,13 +165,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	implement.May(v, implement.ChargeController(chargeEnable))
 
 	// decorate chargedenergy
-	if cc.ChargedEnergy != nil {
-		chargedEnergy, err := cc.ChargedEnergy.FloatGetter(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("charged energy: %w", err)
-		}
-		implement.Has(v, implement.ChargeRater(chargedEnergy))
+	chargedEnergy, err := cc.ChargedEnergy.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("charged energy: %w", err)
 	}
+	implement.May(v, implement.ChargeRater(chargedEnergy))
 
 	switch {
 	case maxCurrent == nil && getMaxCurrent != nil:
