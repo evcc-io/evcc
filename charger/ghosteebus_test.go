@@ -12,6 +12,7 @@ import (
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ghostone"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -26,8 +27,9 @@ func newTestGhostEEBusREST(t *testing.T) *GhostEEBus {
 	t.Helper()
 	return &GhostEEBus{
 		EEBus: &EEBus{
-			log: util.NewLogger("test"),
-			cem: &eebus.CustomerEnergyManagement{},
+			Capabilities: implement.Caps(),
+			log:          util.NewLogger("test"),
+			cem:          &eebus.CustomerEnergyManagement{},
 		},
 		Helper: request.NewHelper(util.NewLogger("test")),
 		uri:    "https://wallbox.local/api/v2",
@@ -42,6 +44,7 @@ func newTestGhostEEBusWithEEBus(t *testing.T) (*GhostEEBus, *mocks.CemEVCCInterf
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 
 	eb := &EEBus{
+		Capabilities: implement.Caps(),
 		cem: &eebus.CustomerEnergyManagement{
 			EvCC: evccMock,
 		},
