@@ -6,8 +6,32 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func Implements[T any](c Capabilities, impl T) {
+// Has registers impl as a capability on c. It panics if impl is nil.
+func Has[T any](c Capabilities, impl T) {
+	typ := reflect.TypeFor[T]()
+	if isNil(impl) {
+		panic("implement: nil " + typ.String())
+	}
+	c.add(typ, impl)
+}
+
+// May registers impl as a capability on c. If impl is nil, it is silently ignored.
+func May[T any](c Capabilities, impl T) {
+	if isNil(impl) {
+		return
+	}
 	c.add(reflect.TypeFor[T](), impl)
+}
+
+func isNil(v any) bool {
+	if v == nil {
+		return true
+	}
+	switch rv := reflect.ValueOf(v); rv.Kind() {
+	case reflect.Pointer, reflect.Interface, reflect.Map, reflect.Slice, reflect.Chan, reflect.Func:
+		return rv.IsNil()
+	}
+	return false
 }
 
 type Capabilities interface {

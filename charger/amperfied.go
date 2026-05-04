@@ -110,8 +110,8 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 	}
 
 	if phases {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	return wb, nil

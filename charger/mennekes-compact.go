@@ -115,7 +115,7 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 
 	// check phase switching support
 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegPhaseOptionsHW, 1); err == nil && encoding.Uint16(b) == 2 {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	// failsafe

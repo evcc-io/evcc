@@ -125,13 +125,13 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 
 	// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
 	if wb.minPower > 0 && wb.minPower < 4140 && wb.maxPower > 4600 {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	// Check if device supports charged energy reporting via Parameters endpoint
 	if _, err := wb.getParameter("Measurement.ChaSess.WhIn"); err == nil {
-		implement.Implements(wb, implement.ChargeRater(wb.chargedEnergy))
+		implement.Has(wb, implement.ChargeRater(wb.chargedEnergy))
 	}
 
 	// Check if device supports status reporting via Parameters endpoint

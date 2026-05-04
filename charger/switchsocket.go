@@ -51,16 +51,6 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	energy, err := cc.Energy.FloatGetter(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	soc, err := cc.Soc.FloatGetter(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	c := &SwitchSocket{
 		Capabilities: implement.Caps(),
 		enabled:      enabled,
@@ -68,12 +58,17 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 		switchSocket: NewSwitchSocket(&cc.embed, enabled, power, cc.StandbyPower),
 	}
 
-	if energy != nil {
-		implement.Implements(c, implement.MeterEnergy(energy))
+	energy, err := cc.Energy.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
-	if soc != nil {
-		implement.Implements(c, implement.Battery(soc))
+	implement.May(c, implement.MeterEnergy(energy))
+
+	soc, err := cc.Soc.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
 	}
+	implement.May(c, implement.Battery(soc))
 
 	return c, nil
 }

@@ -76,10 +76,10 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 
 	if meter > 0 && meter != 65535 {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
-		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
-		implement.Implements(wb, implement.PhaseVoltages(wb.voltages))
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
 	return wb, nil

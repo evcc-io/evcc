@@ -69,7 +69,7 @@ func NewPulsaresFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if wb.has1p3p() {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	return wb, nil

@@ -73,25 +73,19 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ba
 		conn:         conn,
 	}
 
-	if capacity := batteryCapacity.Decorator(); capacity != nil {
-		implement.Implements(m, implement.BatteryCapacity(capacity))
-	}
-	if powerLimiter := batteryPowerLimits.Decorator(); powerLimiter != nil {
-		implement.Implements(m, implement.BatteryPowerLimiter(powerLimiter))
-	}
+	implement.May(m, implement.BatteryCapacity(batteryCapacity.Decorator()))
+	implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
 	if m.usage == "grid" && essType != lgpcs.LgEss15 {
-		implement.Implements(m, implement.MeterEnergy(m.totalEnergy))
+		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
 	if usage == "battery" {
-		implement.Implements(m, implement.Battery(m.batterySoc))
-		if socLimiter := batterySocLimits.Decorator(); socLimiter != nil {
-			implement.Implements(m, implement.BatterySocLimiter(socLimiter))
-		}
+		implement.Has(m, implement.Battery(m.batterySoc))
+		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
 
 		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7430 {
-			implement.Implements(m, implement.BatteryController(m.batteryMode(batterySocLimits)))
+			implement.Has(m, implement.BatteryController(m.batteryMode(batterySocLimits)))
 		}
 	}
 

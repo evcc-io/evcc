@@ -132,7 +132,7 @@ func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if res.Obis31_4_0 != nil {
-		implement.Implements(m, implement.PhaseCurrents(m.currents))
+		implement.Has(m, implement.PhaseCurrents(m.currents))
 	}
 
 	return m, nil

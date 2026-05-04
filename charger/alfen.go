@@ -100,8 +100,8 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 
 	if v2 != 0 && v3 != 0 {
 		wb.log.DEBUG.Println("detected 3p alfen")
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	} else {
 		wb.log.DEBUG.Println("detected 1p alfen")
 	}

@@ -11,12 +11,12 @@ type isCapable struct {
 	Capabilities
 }
 
-func TestImplement(t *testing.T) {
+func TestHas(t *testing.T) {
 	s := &isCapable{
 		Capabilities: Caps(),
 	}
 
-	Implements(s, Meter(func() (float64, error) {
+	Has(s, Meter(func() (float64, error) {
 		return 0, nil
 	}))
 
@@ -26,4 +26,56 @@ func TestImplement(t *testing.T) {
 	v, err := mm.CurrentPower()
 	assert.NoError(t, err)
 	assert.Equal(t, 0.0, v)
+}
+
+func TestHasPanicsOnNil(t *testing.T) {
+	s := &isCapable{
+		Capabilities: Caps(),
+	}
+
+	assert.Panics(t, func() {
+		Has[api.Meter](s, nil)
+	})
+}
+
+func TestMayIgnoresNil(t *testing.T) {
+	s := &isCapable{
+		Capabilities: Caps(),
+	}
+
+	assert.NotPanics(t, func() {
+		May[api.Meter](s, nil)
+	})
+
+	_, ok := api.Cap[api.Meter](s)
+	assert.False(t, ok)
+}
+
+func TestMayRegistersNonNil(t *testing.T) {
+	s := &isCapable{
+		Capabilities: Caps(),
+	}
+
+	May(s, Meter(func() (float64, error) {
+		return 1.0, nil
+	}))
+
+	mm, ok := api.Cap[api.Meter](s)
+	assert.True(t, ok)
+
+	v, err := mm.CurrentPower()
+	assert.NoError(t, err)
+	assert.Equal(t, 1.0, v)
+}
+
+func TestMayIgnoresNilFuncConstructor(t *testing.T) {
+	s := &isCapable{
+		Capabilities: Caps(),
+	}
+
+	var fn func() (float64, error)
+	May(s, Meter(fn))
+
+	_, ok := api.Cap[api.Meter](s)
+	assert.False(t, ok)
 }

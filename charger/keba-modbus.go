@@ -130,21 +130,21 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	}
 
 	if hasEnergyMeter {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
-		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	if hasRFID {
-		implement.Implements(wb, implement.Identifier(wb.identify))
-		implement.Implements(wb, implement.StatusReasoner(wb.statusReason))
+		implement.Has(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
 	// phases
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2); err == nil {
 		if source := binary.BigEndian.Uint32(b); source == 3 {
-			implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-			implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
 

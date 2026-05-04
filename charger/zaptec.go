@@ -145,7 +145,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	}
 
 	if maxCurrent, err := c.getInstallationMaxCurrent(); err == nil {
-		implement.Implements(c, implement.PhaseSwitcher(c.phases1p3p))
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 		c.maxCurrent = maxCurrent
 	}
 

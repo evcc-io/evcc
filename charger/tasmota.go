@@ -75,8 +75,8 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	}
 
 	if hasPhases || len(channels) == 3 {
-		implement.Implements(c, implement.PhaseVoltages(c.voltages))
-		implement.Implements(c, implement.PhaseCurrents(c.currents))
+		implement.Has(c, implement.PhaseVoltages(c.voltages))
+		implement.Has(c, implement.PhaseCurrents(c.currents))
 	}
 
 	return c, nil

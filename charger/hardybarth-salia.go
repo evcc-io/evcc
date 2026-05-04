@@ -140,14 +140,14 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 	wb.pause(false)
 
 	if res.Secc.Port0.Metering.Meter.Available > 0 {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
-		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	if res.Secc.Port0.Salia.PhaseSwitching.Actual > 0 {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	return wb, nil

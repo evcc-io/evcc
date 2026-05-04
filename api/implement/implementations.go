@@ -9,6 +9,9 @@ import (
 )
 
 func Meter(meter0 func() (float64, error)) api.Meter {
+	if meter0 == nil {
+		return nil
+	}
 	return &iMeter{meter0}
 }
 
@@ -21,6 +24,9 @@ func (i *iMeter) CurrentPower() (float64, error) {
 }
 
 func BatteryCapacity(batteryCapacity0 func() float64) api.BatteryCapacity {
+	if batteryCapacity0 == nil {
+		return nil
+	}
 	return &iBatteryCapacity{batteryCapacity0}
 }
 
@@ -33,6 +39,9 @@ func (i *iBatteryCapacity) Capacity() float64 {
 }
 
 func SocLimiter(socLimiter0 func() (int64, error)) api.SocLimiter {
+	if socLimiter0 == nil {
+		return nil
+	}
 	return &iSocLimiter{socLimiter0}
 }
 
@@ -45,6 +54,9 @@ func (i *iSocLimiter) GetLimitSoc() (int64, error) {
 }
 
 func BatteryController(batteryController0 func(api.BatteryMode) error) api.BatteryController {
+	if batteryController0 == nil {
+		return nil
+	}
 	return &iBatteryController{batteryController0}
 }
 
@@ -57,6 +69,9 @@ func (i *iBatteryController) SetBatteryMode(p0 api.BatteryMode) error {
 }
 
 func BatterySocLimiter(batterySocLimiter0 func() (float64, float64)) api.BatterySocLimiter {
+	if batterySocLimiter0 == nil {
+		return nil
+	}
 	return &iBatterySocLimiter{batterySocLimiter0}
 }
 
@@ -69,6 +84,9 @@ func (i *iBatterySocLimiter) GetSocLimits() (float64, float64) {
 }
 
 func BatteryPowerLimiter(batteryPowerLimiter0 func() (float64, float64)) api.BatteryPowerLimiter {
+	if batteryPowerLimiter0 == nil {
+		return nil
+	}
 	return &iBatteryPowerLimiter{batteryPowerLimiter0}
 }
 
@@ -81,6 +99,9 @@ func (i *iBatteryPowerLimiter) GetPowerLimits() (float64, float64) {
 }
 
 func PhasePowers(phasePowers0 func() (float64, float64, float64, error)) api.PhasePowers {
+	if phasePowers0 == nil {
+		return nil
+	}
 	return &iPhasePowers{phasePowers0}
 }
 
@@ -93,6 +114,9 @@ func (i *iPhasePowers) Powers() (float64, float64, float64, error) {
 }
 
 func PhaseGetter(phaseGetter0 func() (int, error)) api.PhaseGetter {
+	if phaseGetter0 == nil {
+		return nil
+	}
 	return &iPhaseGetter{phaseGetter0}
 }
 
@@ -105,6 +129,9 @@ func (i *iPhaseGetter) GetPhases() (int, error) {
 }
 
 func ChargeController(chargeController0 func(bool) error) api.ChargeController {
+	if chargeController0 == nil {
+		return nil
+	}
 	return &iChargeController{chargeController0}
 }
 
@@ -117,6 +144,9 @@ func (i *iChargeController) ChargeEnable(p0 bool) error {
 }
 
 func CurrentController(currentController0 func(int64) error) api.CurrentController {
+	if currentController0 == nil {
+		return nil
+	}
 	return &iCurrentController{currentController0}
 }
 
@@ -129,6 +159,9 @@ func (i *iCurrentController) MaxCurrent(p0 int64) error {
 }
 
 func PhaseSwitcher(phaseSwitcher0 func(int) error) api.PhaseSwitcher {
+	if phaseSwitcher0 == nil {
+		return nil
+	}
 	return &iPhaseSwitcher{phaseSwitcher0}
 }
 
@@ -141,6 +174,9 @@ func (i *iPhaseSwitcher) Phases1p3p(p0 int) error {
 }
 
 func Battery(battery0 func() (float64, error)) api.Battery {
+	if battery0 == nil {
+		return nil
+	}
 	return &iBattery{battery0}
 }
 
@@ -153,6 +189,9 @@ func (i *iBattery) Soc() (float64, error) {
 }
 
 func ChargeState(chargeState0 func() (api.ChargeStatus, error)) api.ChargeState {
+	if chargeState0 == nil {
+		return nil
+	}
 	return &iChargeState{chargeState0}
 }
 
@@ -165,6 +204,9 @@ func (i *iChargeState) Status() (api.ChargeStatus, error) {
 }
 
 func MeterEnergy(meterEnergy0 func() (float64, error)) api.MeterEnergy {
+	if meterEnergy0 == nil {
+		return nil
+	}
 	return &iMeterEnergy{meterEnergy0}
 }
 
@@ -177,6 +219,9 @@ func (i *iMeterEnergy) TotalEnergy() (float64, error) {
 }
 
 func PhaseCurrents(phaseCurrents0 func() (float64, float64, float64, error)) api.PhaseCurrents {
+	if phaseCurrents0 == nil {
+		return nil
+	}
 	return &iPhaseCurrents{phaseCurrents0}
 }
 
@@ -189,6 +234,9 @@ func (i *iPhaseCurrents) Currents() (float64, float64, float64, error) {
 }
 
 func PhaseVoltages(phaseVoltages0 func() (float64, float64, float64, error)) api.PhaseVoltages {
+	if phaseVoltages0 == nil {
+		return nil
+	}
 	return &iPhaseVoltages{phaseVoltages0}
 }
 
@@ -201,6 +249,9 @@ func (i *iPhaseVoltages) Voltages() (float64, float64, float64, error) {
 }
 
 func MaxACPowerGetter(maxACPowerGetter0 func() float64) api.MaxACPowerGetter {
+	if maxACPowerGetter0 == nil {
+		return nil
+	}
 	return &iMaxACPowerGetter{maxACPowerGetter0}
 }
 
@@ -213,6 +264,9 @@ func (i *iMaxACPowerGetter) MaxACPower() float64 {
 }
 
 func CurrentGetter(currentGetter0 func() (float64, error)) api.CurrentGetter {
+	if currentGetter0 == nil {
+		return nil
+	}
 	return &iCurrentGetter{currentGetter0}
 }
 
@@ -225,6 +279,9 @@ func (i *iCurrentGetter) GetMaxCurrent() (float64, error) {
 }
 
 func Curtailer(curtailer0 func(bool) error, curtailer1 func() (bool, error)) api.Curtailer {
+	if curtailer0 == nil || curtailer1 == nil {
+		return nil
+	}
 	return &iCurtailer{curtailer0, curtailer1}
 }
 
@@ -242,6 +299,9 @@ func (i *iCurtailer) Curtailed() (bool, error) {
 }
 
 func Resurrector(resurrector0 func() error) api.Resurrector {
+	if resurrector0 == nil {
+		return nil
+	}
 	return &iResurrector{resurrector0}
 }
 
@@ -254,6 +314,9 @@ func (i *iResurrector) WakeUp() error {
 }
 
 func VehicleOdometer(vehicleOdometer0 func() (float64, error)) api.VehicleOdometer {
+	if vehicleOdometer0 == nil {
+		return nil
+	}
 	return &iVehicleOdometer{vehicleOdometer0}
 }
 
@@ -266,6 +329,9 @@ func (i *iVehicleOdometer) Odometer() (float64, error) {
 }
 
 func VehicleRange(vehicleRange0 func() (int64, error)) api.VehicleRange {
+	if vehicleRange0 == nil {
+		return nil
+	}
 	return &iVehicleRange{vehicleRange0}
 }
 
@@ -278,6 +344,9 @@ func (i *iVehicleRange) Range() (int64, error) {
 }
 
 func VehicleClimater(vehicleClimater0 func() (bool, error)) api.VehicleClimater {
+	if vehicleClimater0 == nil {
+		return nil
+	}
 	return &iVehicleClimater{vehicleClimater0}
 }
 
@@ -290,6 +359,9 @@ func (i *iVehicleClimater) Climater() (bool, error) {
 }
 
 func VehicleFinishTimer(vehicleFinishTimer0 func() (time.Time, error)) api.VehicleFinishTimer {
+	if vehicleFinishTimer0 == nil {
+		return nil
+	}
 	return &iVehicleFinishTimer{vehicleFinishTimer0}
 }
 
@@ -302,6 +374,9 @@ func (i *iVehicleFinishTimer) FinishTime() (time.Time, error) {
 }
 
 func VehiclePosition(vehiclePosition0 func() (float64, float64, error)) api.VehiclePosition {
+	if vehiclePosition0 == nil {
+		return nil
+	}
 	return &iVehiclePosition{vehiclePosition0}
 }
 
@@ -314,6 +389,9 @@ func (i *iVehiclePosition) Position() (float64, float64, error) {
 }
 
 func Identifier(identifier0 func() (string, error)) api.Identifier {
+	if identifier0 == nil {
+		return nil
+	}
 	return &iIdentifier{identifier0}
 }
 
@@ -326,6 +404,9 @@ func (i *iIdentifier) Identify() (string, error) {
 }
 
 func ChargerEx(chargerEx0 func(float64) error) api.ChargerEx {
+	if chargerEx0 == nil {
+		return nil
+	}
 	return &iChargerEx{chargerEx0}
 }
 
@@ -338,6 +419,9 @@ func (i *iChargerEx) MaxCurrentMillis(p0 float64) error {
 }
 
 func ChargeRater(chargeRater0 func() (float64, error)) api.ChargeRater {
+	if chargeRater0 == nil {
+		return nil
+	}
 	return &iChargeRater{chargeRater0}
 }
 
@@ -350,6 +434,9 @@ func (i *iChargeRater) ChargedEnergy() (float64, error) {
 }
 
 func StatusReasoner(statusReasoner0 func() (api.Reason, error)) api.StatusReasoner {
+	if statusReasoner0 == nil {
+		return nil
+	}
 	return &iStatusReasoner{statusReasoner0}
 }
 

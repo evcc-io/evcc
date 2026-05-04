@@ -155,7 +155,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
-		implement.Implements(res, implement.Meter(util.Cached(func() (float64, error) {
+		implement.Has(res, implement.Meter(util.Cached(func() (float64, error) {
 			res, err := conn.GetMpcData(systemId)
 			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
 				return d.CurrentPower
@@ -180,7 +180,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if !heating || heatingTempSensor {
-		implement.Implements(res, implement.Battery(util.Cached(func() (float64, error) {
+		implement.Has(res, implement.Battery(util.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err

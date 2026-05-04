@@ -164,12 +164,12 @@ func (wb *Em2Go) initialize() (api.Charger, error) {
 	if chargerCurrent == 6 {
 		wb.workaround = true
 	} else {
-		implement.Implements(wb, implement.ChargerEx(wb.maxCurrentMillis))
+		implement.Has(wb, implement.ChargerEx(wb.maxCurrentMillis))
 	}
 
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	return wb, nil

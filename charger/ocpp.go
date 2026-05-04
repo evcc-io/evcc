@@ -105,31 +105,31 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandPowerActiveImport) {
-		implement.Implements(c, implement.Meter(c.conn.CurrentPower))
+		implement.Has(c, implement.Meter(c.conn.CurrentPower))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		implement.Implements(c, implement.MeterEnergy(c.conn.TotalEnergy))
+		implement.Has(c, implement.MeterEnergy(c.conn.TotalEnergy))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandCurrentImport) {
-		implement.Implements(c, implement.PhaseCurrents(c.conn.Currents))
+		implement.Has(c, implement.PhaseCurrents(c.conn.Currents))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandVoltage) {
-		implement.Implements(c, implement.PhaseVoltages(c.conn.Voltages))
+		implement.Has(c, implement.PhaseVoltages(c.conn.Voltages))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandSoC) {
-		implement.Implements(c, implement.Battery(c.conn.Soc))
+		implement.Has(c, implement.Battery(c.conn.Soc))
 	}
 
 	if c.cp.PhaseSwitching {
-		implement.Implements(c, implement.PhaseSwitcher(c.phases1p3p))
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
-		implement.Implements(c, implement.CurrentGetter(c.conn.GetMaxCurrent))
+		implement.Has(c, implement.CurrentGetter(c.conn.GetMaxCurrent))
 	}
 
 	return c, nil

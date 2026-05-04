@@ -165,21 +165,21 @@ func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, erro
 
 	// decorate optional EV meter if configured in SmartEVSE
 	if res.EvMeter.Description != "" && res.EvMeter.Description != "Disabled" {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
-		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	// decorate optional 1P/3P phase switching via C2 contactor
 	if res.Settings.EnableC2 != "" && res.Settings.EnableC2 != "Not present" {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	// decorate optional RFID identification and status reason
 	if res.Evse.RFIDReader != "" && res.Evse.RFIDReader != "Disabled" {
-		implement.Implements(wb, implement.Identifier(wb.identify))
-		implement.Implements(wb, implement.StatusReasoner(wb.statusReason))
+		implement.Has(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
 	return wb, nil

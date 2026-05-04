@@ -50,9 +50,9 @@ func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
 	if err == nil && wb.slaveIndex == 0 { // Nur Master hat den Zähler...leider
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
-			implement.Implements(wb, implement.Meter(wb.currentPower))
-			implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
-			implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+			implement.Has(wb, implement.Meter(wb.currentPower))
+			implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+			implement.Has(wb, implement.PhaseCurrents(wb.currents))
 			return wb, nil
 		}
 

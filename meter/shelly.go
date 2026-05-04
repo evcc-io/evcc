@@ -46,9 +46,9 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if phases, ok := c.Connection.Generation.(shelly.Phases); ok {
-		implement.Implements(c, implement.PhaseVoltages(phases.Voltages))
-		implement.Implements(c, implement.PhaseCurrents(phases.Currents))
-		implement.Implements(c, implement.PhasePowers(phases.Powers))
+		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
+		implement.Has(c, implement.PhaseCurrents(phases.Currents))
+		implement.Has(c, implement.PhasePowers(phases.Powers))
 	}
 
 	return c, nil

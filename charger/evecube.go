@@ -136,8 +136,8 @@ func NewEVECUBEFromConfig(other map[string]any) (api.Charger, error) {
 	// Phases1p3p and Identify APIs affect the entire charger, not individual connectors
 	// Only enable these APIs if the charger has a single connector
 	if config.NumberOfConnectors == 1 {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
 	return wb, nil

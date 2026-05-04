@@ -184,7 +184,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 			return nil, err
 		}
 
-		implement.Implements(c, implement.PhaseSwitcher(func(phases int) error {
+		implement.Has(c, implement.PhaseSwitcher(func(phases int) error {
 			return phasesS(int64(phases))
 		}))
 	}
@@ -194,7 +194,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		if err != nil {
 			return nil, err
 		}
-		implement.Implements(c, implement.Battery(soc))
+		implement.Has(c, implement.Battery(soc))
 	}
 
 	return c, nil

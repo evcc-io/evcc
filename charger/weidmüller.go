@@ -107,7 +107,7 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 
 	// check presence of energy meter
 	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
 	return wb, nil

@@ -82,19 +82,19 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 
 	// Feature: Meter -> Meter is legacy API, Meters is the new API
 	if w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
-		implement.Implements(w, implement.Meter(w.currentPower))
-		implement.Implements(w, implement.MeterEnergy(w.totalEnergy))
+		implement.Has(w, implement.Meter(w.currentPower))
+		implement.Has(w, implement.MeterEnergy(w.totalEnergy))
 	}
 
 	// Feature: Meters | MeterAllValues
 	if w.hasFeature(warp.FeatureMeters) || w.hasFeature(warp.FeatureMeterAllValues) {
-		implement.Implements(w, implement.PhaseCurrents(w.currents))
-		implement.Implements(w, implement.PhaseVoltages(w.voltages))
+		implement.Has(w, implement.PhaseCurrents(w.currents))
+		implement.Has(w, implement.PhaseVoltages(w.voltages))
 	}
 
 	// Feature: NFC
 	if w.hasFeature(warp.FeatureNfc) {
-		implement.Implements(w, implement.Identifier(w.identify))
+		implement.Has(w, implement.Identifier(w.identify))
 	}
 
 	// Feature: Phase Switching
@@ -102,8 +102,8 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
 		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			w.pmState = &res
-			implement.Implements(w, implement.PhaseSwitcher(w.phases1p3p))
-			implement.Implements(w, implement.PhaseGetter(w.getPhases))
+			implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
+			implement.Has(w, implement.PhaseGetter(w.getPhases))
 		}
 	}
 

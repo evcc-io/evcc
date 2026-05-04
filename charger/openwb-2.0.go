@@ -67,11 +67,11 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if cc.Phases1p3p {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	if cc.Identify {
-		implement.Implements(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
 	return wb, nil

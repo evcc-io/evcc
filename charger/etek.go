@@ -88,14 +88,14 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	// Check power register (94)
 	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterPowerAddr, 1); err == nil {
 		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-			implement.Implements(wb, implement.Meter(wb.currentPower))
+			implement.Has(wb, implement.Meter(wb.currentPower))
 		}
 	}
 
 	// Check energy register (95)
 	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterEnergyAddr, 1); err == nil {
 		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-			implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
+			implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 		}
 	}
 
@@ -105,7 +105,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		l2 := binary.BigEndian.Uint16(b[2:4])
 		l3 := binary.BigEndian.Uint16(b[4:6])
 		if l1 != etekRegInvalidMeterAddr && l2 != etekRegInvalidMeterAddr && l3 != etekRegInvalidMeterAddr {
-			implement.Implements(wb, implement.PhaseVoltages(wb.voltages))
+			implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 		}
 	}
 

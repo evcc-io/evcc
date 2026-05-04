@@ -76,7 +76,7 @@ func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Ch
 		// user could have an adapter plug which doesn't support 3 phases
 		if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2MaxPhases, 1); err == nil {
 			if maxPhases := encoding.Uint16(b); maxPhases > 1 {
-				implement.Implements(nrg, implement.PhaseSwitcher(nrg.phases1p3p))
+				implement.Has(nrg, implement.PhaseSwitcher(nrg.phases1p3p))
 			}
 		}
 	}

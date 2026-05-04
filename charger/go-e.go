@@ -72,11 +72,11 @@ func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
 	}
 
 	if v2 {
-		implement.Implements(c, implement.ChargeRater(c.chargedEnergy))
+		implement.Has(c, implement.ChargeRater(c.chargedEnergy))
 	}
 
 	if c.api.IsV2() {
-		implement.Implements(c, implement.PhaseSwitcher(c.phases1p3p))
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
 	return c, nil

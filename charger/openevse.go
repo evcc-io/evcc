@@ -77,7 +77,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 	}, cache)
 
 	if err := c.hasPhaseSwitchCapabilities(); err == nil {
-		implement.Implements(c, implement.PhaseSwitcher(c.phases1p3p))
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 
 		// disable EVSE's own 1/3-phase auto-switching
 		if err := c.rapiCommand("$S8 0"); err != nil {

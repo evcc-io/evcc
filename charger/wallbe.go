@@ -69,19 +69,19 @@ func NewWallbeFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	if cc.Meter.Power {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.Meter(wb.currentPower))
 	}
 
 	if cc.Meter.Energy {
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
 	if cc.Meter.Currents {
-		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	if !cc.Legacy {
-		implement.Implements(wb, implement.ChargerEx(wb.maxCurrentMillis))
+		implement.Has(wb, implement.ChargerEx(wb.maxCurrentMillis))
 	}
 
 	return wb, nil

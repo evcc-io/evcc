@@ -93,7 +93,7 @@ func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, p
 		}
 
 		if config&0x0080 != 0 {
-			implement.Implements(evse, implement.ChargerEx(evse.maxCurrentMillis))
+			implement.Has(evse, implement.ChargerEx(evse.maxCurrentMillis))
 			evse.current = 600 // assume min current
 		}
 	}

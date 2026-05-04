@@ -126,8 +126,8 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 
 	// check presence of current sensor
 	if err == nil && (b[3]&ablSensorPresent != 0) {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
-		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	return wb, nil

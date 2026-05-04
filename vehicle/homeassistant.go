@@ -70,28 +70,28 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	if cc.Sensors.LimitSoc != "" {
-		implement.Implements(res, implement.SocLimiter(func() (int64, error) {
+		implement.Has(res, implement.SocLimiter(func() (int64, error) {
 			f, err := conn.GetFloatState(cc.Sensors.LimitSoc)
 			return int64(f), err
 		}))
 	}
 	if cc.Sensors.Status != "" {
-		implement.Implements(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }))
+		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }))
 	}
 	if cc.Sensors.Range != "" {
-		implement.Implements(res, implement.VehicleRange(func() (int64, error) {
+		implement.Has(res, implement.VehicleRange(func() (int64, error) {
 			f, err := conn.GetFloatState(cc.Sensors.Range)
 			return int64(f), err
 		}))
 	}
 	if cc.Sensors.Odometer != "" {
-		implement.Implements(res, implement.VehicleOdometer(func() (float64, error) { return conn.GetFloatState(cc.Sensors.Odometer) }))
+		implement.Has(res, implement.VehicleOdometer(func() (float64, error) { return conn.GetFloatState(cc.Sensors.Odometer) }))
 	}
 	if cc.Sensors.Climater != "" {
-		implement.Implements(res, implement.VehicleClimater(func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }))
+		implement.Has(res, implement.VehicleClimater(func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }))
 	}
 	if cc.Sensors.FinishTime != "" {
-		implement.Implements(res, implement.VehicleFinishTimer(func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }))
+		implement.Has(res, implement.VehicleFinishTimer(func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }))
 	}
 
 	var enable func(bool) error
@@ -105,15 +105,13 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	} else if strings.HasPrefix(cc.Services.Start, "switch") {
 		enable = func(enable bool) error { return conn.CallSwitchService(cc.Services.Start, enable) }
 	}
-	if enable != nil {
-		implement.Implements(res, implement.ChargeController(enable))
-	}
+	implement.May(res, implement.ChargeController(enable))
 
 	if cc.Services.Wakeup != "" {
-		implement.Implements(res, implement.Resurrector(func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }))
+		implement.Has(res, implement.Resurrector(func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }))
 	}
 	if cc.Services.SetMaxCurrent != "" {
-		implement.Implements(res, implement.CurrentController(func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }))
+		implement.Has(res, implement.CurrentController(func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }))
 	}
 
 	return res, nil

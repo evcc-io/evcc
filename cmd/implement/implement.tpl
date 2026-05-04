@@ -11,6 +11,9 @@ import (
 {{- $t := .Type}}
 
 func {{$t}}( {{range .Functions}} {{.VarName}} {{.Signature}}, {{end}} ) api.{{$t}} {
+	if {{range $i, $f := .Functions}}{{if $i}} || {{end}}{{$f.VarName}} == nil{{end}} {
+		return nil
+	}
 	return &i{{$t}}{ {{range .Functions}} {{.VarName}}, {{end}} }
 }
 

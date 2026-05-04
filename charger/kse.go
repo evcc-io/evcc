@@ -97,14 +97,14 @@ func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slave
 	// check presence of 1p3p switching
 	if b, err := wb.conn.ReadInputRegisters(kseRegFirmwareVersion, 1); err == nil && b[0] >= 0x52 { // >= HW Rev „R”
 		wb.has1p3p = true
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	// check presence of rfid
 	if b, err := wb.conn.ReadDiscreteInputs(kseRegRFIDinstalled, 1); err == nil && b[0] != 0 {
 		wb.hasRfid = true
-		implement.Implements(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
 	return wb, nil

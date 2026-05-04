@@ -122,8 +122,8 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	}
 
 	if phases {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	return wb, nil

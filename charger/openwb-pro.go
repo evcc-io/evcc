@@ -52,7 +52,7 @@ func NewOpenWBProFromConfig(ctx context.Context, other map[string]any) (api.Char
 	}
 
 	if status.Version >= 9 {
-		implement.Implements(wb, implement.Resurrector(wb.wakeup))
+		implement.Has(wb, implement.Resurrector(wb.wakeup))
 	}
 
 	return wb, nil

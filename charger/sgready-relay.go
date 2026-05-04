@@ -56,11 +56,6 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 		}
 	}
 
-	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	res, err := NewSgReadyRelay(ctx, &cc.embed, boost, dim)
 	if err != nil {
 		return nil, err
@@ -70,19 +65,15 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, err
 	}
+	implement.May(res, implement.Meter(powerG))
+	implement.May(res, implement.MeterEnergy(energyG))
 
-	if powerG != nil {
-		implement.Implements(res, implement.Meter(powerG))
+	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
+	if err != nil {
+		return nil, err
 	}
-	if energyG != nil {
-		implement.Implements(res, implement.MeterEnergy(energyG))
-	}
-	if tempG != nil {
-		implement.Implements(res, implement.Battery(tempG))
-	}
-	if limitTempG != nil {
-		implement.Implements(res, implement.SocLimiter(limitTempG))
-	}
+	implement.May(res, implement.Battery(tempG))
+	implement.May(res, implement.SocLimiter(limitTempG))
 
 	return res, nil
 }

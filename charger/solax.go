@@ -122,8 +122,8 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
 		v := encoding.Uint16(b)
 		if !wb.isLegacyHw && v >= solaxFirmwarePhaseSwitching {
-			implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-			implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
 

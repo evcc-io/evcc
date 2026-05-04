@@ -60,9 +60,9 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	if energy > 0 {
-		implement.Implements(k, implement.Meter(k.currentPower))
-		implement.Implements(k, implement.MeterEnergy(k.totalEnergy))
-		implement.Implements(k, implement.PhaseCurrents(k.currents))
+		implement.Has(k, implement.Meter(k.currentPower))
+		implement.Has(k, implement.MeterEnergy(k.totalEnergy))
+		implement.Has(k, implement.PhaseCurrents(k.currents))
 	}
 
 	return k, err

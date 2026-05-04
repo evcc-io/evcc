@@ -115,8 +115,8 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 
 	if binary.BigEndian.Uint16(b) == 1 {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	return wb, nil

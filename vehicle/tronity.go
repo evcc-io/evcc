@@ -122,15 +122,15 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	v.bulkG = util.Cached(v.bulk, cc.Cache)
 
 	if slices.Contains(vehicle.Scopes, tronity.ReadCharge) {
-		implement.Implements(v, implement.ChargeState(v.status))
+		implement.Has(v, implement.ChargeState(v.status))
 	}
 
 	if slices.Contains(vehicle.Scopes, tronity.ReadOdometer) {
-		implement.Implements(v, implement.VehicleOdometer(v.odometer))
+		implement.Has(v, implement.VehicleOdometer(v.odometer))
 	}
 
 	if slices.Contains(vehicle.Scopes, tronity.WriteChargeStartStop) {
-		implement.Implements(v, implement.ChargeController(v.chargeEnable))
+		implement.Has(v, implement.ChargeController(v.chargeEnable))
 	}
 
 	return v, nil

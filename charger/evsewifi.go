@@ -72,28 +72,28 @@ func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	if cc.Meter.Power {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.Meter(wb.currentPower))
 	}
 
 	if cc.Meter.Energy {
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
 	if cc.Meter.Currents {
-		implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	if cc.Meter.Voltages {
-		implement.Implements(wb, implement.PhaseVoltages(wb.voltages))
+		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
 	if wb.hires {
-		implement.Implements(wb, implement.ChargerEx(wb.maxCurrentMillis))
+		implement.Has(wb, implement.ChargerEx(wb.maxCurrentMillis))
 		wb.current = 100 * wb.current
 	}
 
 	if params.RFIDUID != nil {
-		implement.Implements(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
 	return wb, nil

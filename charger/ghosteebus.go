@@ -93,17 +93,17 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 
 		// always wire up phase switching and RFID - the wallbox will reject
 		// operations at runtime if the feature is disabled or not possible
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Implements(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		wb.hasRFID = true
 	}
 
 	// EEBus meter capabilities
 	if hasMeter {
-		implement.Implements(wb, implement.Meter(eb.currentPower))
-		implement.Implements(wb, implement.PhaseCurrents(eb.currents))
+		implement.Has(wb, implement.Meter(eb.currentPower))
+		implement.Has(wb, implement.PhaseCurrents(eb.currents))
 		if hasChargedEnergy {
-			implement.Implements(wb, implement.ChargeRater(eb.chargedEnergy))
+			implement.Has(wb, implement.ChargeRater(eb.chargedEnergy))
 		}
 	}
 

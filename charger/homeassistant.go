@@ -76,33 +76,33 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	if cc.Power != "" {
-		implement.Implements(c, implement.Meter(func() (float64, error) { return conn.GetFloatState(cc.Power) }))
+		implement.Has(c, implement.Meter(func() (float64, error) { return conn.GetFloatState(cc.Power) }))
 	}
 	if cc.Energy != "" {
-		implement.Implements(c, implement.MeterEnergy(func() (float64, error) { return conn.GetFloatState(cc.Energy) }))
+		implement.Has(c, implement.MeterEnergy(func() (float64, error) { return conn.GetFloatState(cc.Energy) }))
 	}
 
 	// phase currents (optional)
 	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); len(phases) > 0 {
-		implement.Implements(c, implement.PhaseCurrents(func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }))
+		implement.Has(c, implement.PhaseCurrents(func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }))
 	} else if err != nil {
 		return nil, fmt.Errorf("currents: %w", err)
 	}
 
 	// phase voltages (optional)
 	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); len(phases) > 0 {
-		implement.Implements(c, implement.PhaseVoltages(func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }))
+		implement.Has(c, implement.PhaseVoltages(func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }))
 	} else if err != nil {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
 	// phase switching (optional)
 	if cc.Phases != "" {
-		implement.Implements(c, implement.PhaseSwitcher(func(phases int) error {
+		implement.Has(c, implement.PhaseSwitcher(func(phases int) error {
 			return conn.CallSelectService(cc.Phases, strconv.Itoa(phases))
 		}))
 
-		implement.Implements(c, implement.PhaseGetter(func() (int, error) {
+		implement.Has(c, implement.PhaseGetter(func() (int, error) {
 			val, err := conn.GetIntState(cc.Phases)
 			if err != nil {
 				return 0, err

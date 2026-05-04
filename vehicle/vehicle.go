@@ -60,11 +60,12 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		socG:         socG,
 	}
 
-	// decorate range
+	// decorate limitSoc
 	limitSoc, err := cc.LimitSoc.IntGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("limitSoc: %w", err)
 	}
+	implement.May(v, implement.SocLimiter(limitSoc))
 
 	// decorate status
 	var status func() (api.ChargeStatus, error)
@@ -81,36 +82,42 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			return api.ChargeStatusString(s)
 		}
 	}
+	implement.May(v, implement.ChargeState(status))
 
 	// decorate range
 	rng, err := cc.Range.IntGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("range: %w", err)
 	}
+	implement.May(v, implement.VehicleRange(rng))
 
 	// decorate odometer
 	odo, err := cc.Odometer.FloatGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("odometer: %w", err)
 	}
+	implement.May(v, implement.VehicleOdometer(odo))
 
 	// decorate climater
 	climater, err := cc.Climater.BoolGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("climater: %w", err)
 	}
+	implement.May(v, implement.VehicleClimater(climater))
 
 	// decorate maxCurrent
 	maxCurrent, err := cc.MaxCurrent.IntSetter(ctx, "maxcurrent")
 	if err != nil {
 		return nil, fmt.Errorf("maxCurrent: %w", err)
 	}
+	implement.May(v, implement.CurrentController(maxCurrent))
 
 	// decorate getMaxCurrent
 	getMaxCurrent, err := cc.GetMaxCurrent.FloatGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("getMaxCurrent: %w", err)
 	}
+	implement.May(v, implement.CurrentGetter(getMaxCurrent))
 
 	// decorate position
 	var position func() (float64, float64, error)
@@ -139,6 +146,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			return lat, lon, nil
 		}
 	}
+	implement.May(v, implement.VehiclePosition(position))
 
 	// decorate finishtime
 	var finishTime func() (time.Time, error)
@@ -148,6 +156,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			return nil, fmt.Errorf("finishTime: %w", err)
 		}
 	}
+	implement.May(v, implement.VehicleFinishTimer(finishTime))
 
 	// decorate wakeup
 	var wakeup func() error
@@ -160,12 +169,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			return set(true)
 		}
 	}
+	implement.May(v, implement.Resurrector(wakeup))
 
 	// decorate chargeEnable
 	chargeEnable, err := cc.ChargeEnable.BoolSetter(ctx, "chargeenable")
 	if err != nil {
 		return nil, fmt.Errorf("chargeEnable: %w", err)
 	}
+	implement.May(v, implement.ChargeController(chargeEnable))
 
 	// decorate chargedenergy
 	var chargedEnergy func() (float64, error)
@@ -176,6 +187,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			return nil, fmt.Errorf("charged energy: %w", err)
 		}
 	}
+	implement.May(v, implement.ChargeRater(chargedEnergy))
 
 	switch {
 	case maxCurrent == nil && getMaxCurrent != nil:
@@ -184,43 +196,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		return nil, errors.New("cannot have current control without status")
 	case status == nil && chargeEnable != nil:
 		return nil, errors.New("cannot have charge control without status")
-	}
-
-	if limitSoc != nil {
-		implement.Implements(v, implement.SocLimiter(limitSoc))
-	}
-	if status != nil {
-		implement.Implements(v, implement.ChargeState(status))
-	}
-	if rng != nil {
-		implement.Implements(v, implement.VehicleRange(rng))
-	}
-	if odo != nil {
-		implement.Implements(v, implement.VehicleOdometer(odo))
-	}
-	if climater != nil {
-		implement.Implements(v, implement.VehicleClimater(climater))
-	}
-	if maxCurrent != nil {
-		implement.Implements(v, implement.CurrentController(maxCurrent))
-	}
-	if getMaxCurrent != nil {
-		implement.Implements(v, implement.CurrentGetter(getMaxCurrent))
-	}
-	if finishTime != nil {
-		implement.Implements(v, implement.VehicleFinishTimer(finishTime))
-	}
-	if wakeup != nil {
-		implement.Implements(v, implement.Resurrector(wakeup))
-	}
-	if chargeEnable != nil {
-		implement.Implements(v, implement.ChargeController(chargeEnable))
-	}
-	if chargedEnergy != nil {
-		implement.Implements(v, implement.ChargeRater(chargedEnergy))
-	}
-	if position != nil {
-		implement.Implements(v, implement.VehiclePosition(position))
 	}
 
 	return v, nil

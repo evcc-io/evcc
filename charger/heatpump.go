@@ -84,24 +84,15 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	if err != nil {
 		return nil, err
 	}
+	implement.May(res, implement.Meter(powerG))
+	implement.May(res, implement.MeterEnergy(energyG))
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	if powerG != nil {
-		implement.Implements(res, implement.Meter(powerG))
-	}
-	if energyG != nil {
-		implement.Implements(res, implement.MeterEnergy(energyG))
-	}
-	if tempG != nil {
-		implement.Implements(res, implement.Battery(tempG))
-	}
-	if limitTempG != nil {
-		implement.Implements(res, implement.SocLimiter(limitTempG))
-	}
+	implement.May(res, implement.Battery(tempG))
+	implement.May(res, implement.SocLimiter(limitTempG))
 
 	return res, nil
 }

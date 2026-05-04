@@ -114,10 +114,10 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bo
 	}
 
 	if hasMeter {
-		implement.Implements(c, implement.Meter(c.currentPower))
-		implement.Implements(c, implement.PhaseCurrents(c.currents))
+		implement.Has(c, implement.Meter(c.currentPower))
+		implement.Has(c, implement.PhaseCurrents(c.currents))
 		if hasChargedEnergy {
-			implement.Implements(c, implement.ChargeRater(c.chargedEnergy))
+			implement.Has(c, implement.ChargeRater(c.chargedEnergy))
 		}
 	}
 

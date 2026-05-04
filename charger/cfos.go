@@ -76,17 +76,17 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 
 	// decorate meter
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
-		implement.Implements(wb, implement.Meter(wb.currentPower))
-		implement.Implements(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 
 		if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeterFlags, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
-			implement.Implements(wb, implement.PhaseCurrents(wb.currents))
+			implement.Has(wb, implement.PhaseCurrents(wb.currents))
 		}
 	}
 
 	// decorate phases
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegSolarEnabled, 1); err == nil && binary.BigEndian.Uint16(b)&(1<<8) != 0 {
-		implement.Implements(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	return wb, nil
