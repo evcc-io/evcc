@@ -106,11 +106,6 @@ func (t *OctopusDe) run(done chan error) {
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
-			// stop the goroutine on auth failure to avoid account lockouts
-			if errors.AsType[*backoff.PermanentError](err) {
-				return
-			}
-
 			t.log.ERROR.Printf("failed to fetch unit rate forecast: %v", err)
 			continue
 		}
