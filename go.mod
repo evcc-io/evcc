@@ -95,7 +95,6 @@ require (
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/jwalterweatherman v1.1.0
-	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teslamotors/vehicle-command v0.4.1
@@ -232,6 +231,7 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
@@ -257,7 +257,6 @@ require (
 
 tool (
 	github.com/dmarkham/enumer
-	github.com/evcc-io/evcc/cmd/decorate
 	github.com/evcc-io/evcc/cmd/implement
 	github.com/evcc-io/evcc/cmd/openapi
 	github.com/evcc-io/openapi-mcp/cmd/openapi-mcp
