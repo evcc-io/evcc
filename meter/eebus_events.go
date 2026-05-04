@@ -18,7 +18,7 @@ var _ eebus.Device = (*EEBus)(nil)
 // Without this, Power/Currents/Voltages would keep serving the last value of
 // an orphaned entity (see https://github.com/evcc-io/evcc/issues/28518).
 func (c *EEBus) Connect(connected bool) {
-	c.Connector.Connect(connected)
+	c.connector.Connect(connected)
 
 	if connected {
 		return
