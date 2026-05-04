@@ -115,6 +115,7 @@ export interface State {
   database?: string;
   ocpp?: Ocpp;
   optimizer?: boolean;
+  mcp?: boolean;
 }
 
 export interface ConfigStatus<C, S> {

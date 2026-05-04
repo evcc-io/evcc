@@ -429,6 +429,13 @@
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
       "welcomeBannerTitle": "Let's configure your system!"
     },
+    "mcp": {
+      "description": "Exposes a Model Context Protocol server, allowing AI assistants like Claude to read the state of your system and control charging.",
+      "exampleLabel": "Example: Claude CLI",
+      "restartHint": "Will be available after restart.",
+      "title": "MCP Server",
+      "url": "MCP endpoint"
+    },
     "messaging": {
       "addMessenger": "Add service",
       "description": "Receive notifications about your charging sessions.",

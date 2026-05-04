@@ -429,6 +429,13 @@
       "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **Solar**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
       "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
     },
+    "mcp": {
+      "description": "Stellt einen Model Context Protocol Server bereit. Damit können KI-Assistenten wie Claude den Zustand deines Systems auslesen und das Laden steuern.",
+      "exampleLabel": "Beispiel: Claude CLI",
+      "restartHint": "Wird nach Neustart verfügbar.",
+      "title": "MCP Server",
+      "url": "MCP-Endpunkt"
+    },
     "messaging": {
       "addMessenger": "Dienst hinzufügen",
       "description": "Benachrichtigungen über Ladevorgänge erhalten.",

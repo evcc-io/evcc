@@ -4,12 +4,13 @@ package charger
 
 import (
 	"reflect"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 )
 
-func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), socLimiter func() (int64, error), meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), socLimiter func() (int64, error), meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), vehicleFinishTimer func() (time.Time, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {
@@ -50,6 +51,10 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 
 	if phaseVoltages != nil {
 		caps[reflect.TypeFor[api.PhaseVoltages]()] = implement.PhaseVoltages(phaseVoltages)
+	}
+
+	if vehicleFinishTimer != nil {
+		caps[reflect.TypeFor[api.VehicleFinishTimer]()] = implement.VehicleFinishTimer(vehicleFinishTimer)
 	}
 
 	if len(caps) == 0 {
