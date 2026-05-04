@@ -107,8 +107,7 @@ func (t *OctopusDe) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			// stop the goroutine on auth failure to avoid account lockouts
-			if errors.Is(err, octoDeGql.ErrAuthFailed) {
-				t.log.ERROR.Printf("authentication failed, stopping retries: %v", err)
+			if errors.AsType[*backoff.PermanentError](err) {
 				return
 			}
 
