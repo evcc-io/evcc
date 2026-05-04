@@ -318,6 +318,22 @@ params:
     help:
       en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
       de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
+  - name: heating
+    type: bool
+    description:
+      en: Heating device
+      de: Wärmeerzeuger
+    help:
+      en: Shows °C instead of %
+      de: Zeigt °C anstatt % an
+  - name: integrateddevice
+    type: bool
+    description:
+      en: Integrated device
+      de: Integriertes Gerät
+    help:
+      en: Integrated device. No charging sessions
+      de: Fest angeschlossenes Gerät. Keine Ladevorgänge
   - name: defaultmode
     type: int
     usages: ["battery"]
@@ -545,6 +561,11 @@ presets:
       advanced: true
     - name: welcomecharge
       advanced: true
+  charger-features:
+    - name: heating
+      advanced: true
+    - name: integrateddevice
+      advanced: true
   vehicle-language:
     - name: language
   tariff-base:
@@ -624,23 +645,9 @@ presets:
     - name: standbypower
       default: 15
     - name: integrateddevice
-      type: bool
       advanced: true
-      description:
-        en: Integrated device
-        de: Integriertes Gerät
-      help:
-        de: Fest angeschlossenes Gerät. Keine Ladevorgänge
-        en: Integrated device. No charging sessions
     - name: heating
-      type: bool
       advanced: true
-      description:
-        en: Heating device
-        de: Wärmeerzeuger
-      help:
-        de: Zeigt °C anstatt % an
-        en: Shows °C instead of %
     - name: icon
       advanced: true
 
