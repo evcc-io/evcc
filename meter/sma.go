@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/plugin/sma"
 	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
@@ -15,6 +16,7 @@ import (
 
 // SMA supporting SMA Home Manager 2.0, SMA Energy Meter 30 and SMA inverter
 type SMA struct {
+	implement.Capabilities
 	uri    string
 	scale  float64
 	device *sma.Device
@@ -49,11 +51,11 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if cc.Usage == "battery" {
-		return decorateMeterBattery(
-			sm, sm.TotalEnergy,
-			sm.soc, cc.batteryCapacity.Decorator(),
-			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
-		), nil
+		implement.May(sm, implement.MeterEnergy(sm.TotalEnergy))
+		implement.Has(sm, implement.Battery(sm.soc))
+		implement.May(sm, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(sm, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(sm, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 	}
 
 	return sm, nil
@@ -62,8 +64,9 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 // NewSMA creates an SMA meter
 func NewSMA(uri, password, iface string, serial uint32, scale float64) (*SMA, error) {
 	sm := &SMA{
-		uri:   uri,
-		scale: scale,
+		Capabilities: implement.Caps(),
+		uri:          uri,
+		scale:        scale,
 	}
 
 	discoverer, err := sma.GetDiscoverer(iface)

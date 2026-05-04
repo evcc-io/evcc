@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb/native"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -24,6 +25,7 @@ type openWbGpioLines struct {
 // OpenWbNative charger implementation
 type OpenWbNative struct {
 	api.Charger
+	implement.Capabilities
 	log         *util.Logger
 	rfId        native.RfIdContainer
 	cpWait      time.Duration
@@ -41,8 +43,6 @@ type gpioAction struct {
 func init() {
 	registry.AddCtx("openwb-native", NewOpenWbNativeFromConfig)
 }
-
-//go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t api.ChargerEx,api.PhaseSwitcher,api.Identifier
 
 // NewOpenWbNativeFromConfig creates an OpenWbNative charger from generic config
 func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -86,11 +86,12 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	}
 
 	wb := &OpenWbNative{
-		Charger:     evse,
-		log:         log,
-		cpWait:      cpWait,
-		connector:   connector,
-		chargeState: api.StatusNone,
+		Charger:      evse,
+		Capabilities: implement.Caps(),
+		log:          log,
+		cpWait:       cpWait,
+		connector:    connector,
+		chargeState:  api.StatusNone,
 	}
 
 	var (
@@ -141,7 +142,11 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		wb.gpio.ph3.Close()
 	}()
 
-	return decorateOpenWbNative(wb, maxCurrentMillis, phases1p3p, identify), nil
+	implement.May(wb, implement.ChargerEx(maxCurrentMillis))
+	implement.May(wb, implement.PhaseSwitcher(phases1p3p))
+	implement.May(wb, implement.Identifier(identify))
+
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

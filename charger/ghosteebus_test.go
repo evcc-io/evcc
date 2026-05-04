@@ -288,13 +288,14 @@ func TestGhostEEBus_Decorator(t *testing.T) {
 	wb := newTestGhostEEBusREST(t)
 
 	// with phase switching
-	decorated := decorateGhostEEBus(wb, nil, nil, nil, wb.phases1p3p, wb.getPhases)
-	assert.True(t, api.HasCap[api.PhaseSwitcher](decorated), "expected PhaseSwitcher")
-	assert.True(t, api.HasCap[api.PhaseGetter](decorated), "expected PhaseGetter")
+	implement.May(wb, implement.PhaseSwitcher(wb.phases1p3p))
+	implement.May(wb, implement.PhaseGetter(wb.getPhases))
+	assert.True(t, api.HasCap[api.PhaseSwitcher](wb), "expected PhaseSwitcher")
+	assert.True(t, api.HasCap[api.PhaseGetter](wb), "expected PhaseGetter")
 
-	// without phase switching
-	decorated = decorateGhostEEBus(wb, nil, nil, nil, nil, nil)
-	assert.False(t, api.HasCap[api.PhaseSwitcher](decorated), "unexpected PhaseSwitcher")
+	// without phase switching — capabilities not registered, so expect false
+	wb2 := newTestGhostEEBusREST(t)
+	assert.False(t, api.HasCap[api.PhaseSwitcher](wb2), "unexpected PhaseSwitcher")
 }
 
 func TestGhostEEBus_Config(t *testing.T) {

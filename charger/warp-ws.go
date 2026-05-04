@@ -56,8 +56,6 @@ func init() {
 	registry.AddCtx("warp-ws", NewWarpWSFromConfig)
 }
 
-//go:generate go tool decorate -f decorateWarpWS -b *WarpWS -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
-
 func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		URI                   string

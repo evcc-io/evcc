@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -13,16 +14,6 @@ import (
 func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
-
-//go:generate go tool decorate
-
-//evcc:function decorateMeter
-//evcc:basetype api.Meter
-//evcc:types api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.PhasePowers,api.MaxACPowerGetter
-
-//evcc:function decorateMeterBattery
-//evcc:basetype api.Meter
-//evcc:types api.MeterEnergy,api.Battery,api.BatteryCapacity,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
 
 // NewConfigurableFromConfig creates a new meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -108,6 +99,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 // NewConfigurable creates a new meter
 func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 	m := &Meter{
+		Capabilities:  implement.Caps(),
 		currentPowerG: currentPowerG,
 	}
 	return m, nil
@@ -115,6 +107,7 @@ func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 
 // Meter is an api.Meter implementation with configurable getters and setters.
 type Meter struct {
+	implement.Capabilities
 	currentPowerG func() (float64, error)
 }
 
@@ -124,10 +117,12 @@ func (m *Meter) Decorate(
 	currents, voltages, powers func() (float64, float64, float64, error),
 	maxACPower func() float64,
 ) api.Meter {
-	return decorateMeter(m,
-		totalEnergy, currents, voltages, powers,
-		maxACPower,
-	)
+	implement.May(m, implement.MeterEnergy(totalEnergy))
+	implement.May(m, implement.PhaseCurrents(currents))
+	implement.May(m, implement.PhaseVoltages(voltages))
+	implement.May(m, implement.PhasePowers(powers))
+	implement.May(m, implement.MaxACPowerGetter(maxACPower))
+	return m
 }
 
 func (m *Meter) DecorateBattery(
@@ -136,12 +131,13 @@ func (m *Meter) DecorateBattery(
 	socLimits, powerLimits func() (float64, float64),
 	setMode func(api.BatteryMode) error,
 ) api.Meter {
-	return decorateMeterBattery(m,
-		totalEnergy,
-		soc, capacity,
-		socLimits, powerLimits,
-		setMode,
-	)
+	implement.May(m, implement.MeterEnergy(totalEnergy))
+	implement.Has(m, implement.Battery(soc))
+	implement.May(m, implement.BatteryCapacity(capacity))
+	implement.May(m, implement.BatterySocLimiter(socLimits))
+	implement.May(m, implement.BatteryPowerLimiter(powerLimits))
+	implement.May(m, implement.BatteryController(setMode))
+	return m
 }
 
 // CurrentPower implements the api.Meter interface

@@ -28,6 +28,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -35,6 +36,7 @@ import (
 )
 
 type PhoenixEVEth struct {
+	implement.Capabilities
 	conn     *modbus.Connection
 	isWallbe bool
 }
@@ -61,8 +63,6 @@ const (
 func init() {
 	registry.AddCtx("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
-
-//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -92,7 +92,8 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixEVEth{
-		conn: conn,
+		Capabilities: implement.Caps(),
+		conn:         conn,
 	}
 
 	var (
@@ -123,7 +124,14 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
-	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), nil
+	implement.May(wb, implement.Meter(currentPower))
+	implement.May(wb, implement.MeterEnergy(totalEnergy))
+	implement.May(wb, implement.PhaseCurrents(currents))
+	implement.May(wb, implement.PhaseVoltages(voltages))
+	implement.May(wb, implement.ChargerEx(maxCurrentMillis))
+	implement.May(wb, implement.Identifier(identify))
+
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

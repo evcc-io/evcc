@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cast"
@@ -15,6 +16,7 @@ import (
 
 // EcoFlow represents the EcoFlow  meter
 type EcoFlow struct {
+	implement.Capabilities
 	usage  string
 	serial string
 	cache  time.Duration
@@ -76,10 +78,10 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if cc.Usage == "battery" {
-		return decorateMeterBattery(
-			m, nil, m.soc, cc.batteryCapacity.Decorator(),
-			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
-		), nil
+		implement.Has(m, implement.Battery(m.soc))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 	}
 
 	return m, nil
@@ -91,9 +93,10 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
 
 	m := &EcoFlow{
-		serial: serial,
-		usage:  usage,
-		cache:  cache,
+		Capabilities: implement.Caps(),
+		serial:       serial,
+		usage:        usage,
+		cache:        cache,
 		client: ecoflow.NewEcoflowClient(accessKey, secretKey,
 			ecoflow.WithBaseUrl(uri),
 			ecoflow.WithHttpClient(request.NewClient(log)),

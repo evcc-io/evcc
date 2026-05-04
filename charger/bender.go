@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -47,6 +48,7 @@ type sempHandler struct {
 
 // BenderCC charger implementation
 type BenderCC struct {
+	implement.Capabilities
 	conn    *modbus.Connection
 	current uint16
 	regCurr uint16
@@ -111,8 +113,6 @@ func NewBenderCCFromConfig(ctx context.Context, other map[string]any) (api.Charg
 }
 
 // NewBenderCC creates BenderCC charger
-//
-//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t api.Meter,api.PhaseCurrents,api.PhaseVoltages,api.MeterEnergy,api.Battery,api.Identifier,api.ChargerEx,api.PhaseSwitcher,api.PhaseGetter
 func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
@@ -127,10 +127,11 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	conn.Logger(log.TRACE)
 
 	wb := &BenderCC{
-		conn:    conn,
-		current: 6, // assume min current
-		regCurr: bendRegHemsCurrentLimit,
-		log:     log,
+		Capabilities: implement.Caps(),
+		conn:         conn,
+		current:      6, // assume min current
+		regCurr:      bendRegHemsCurrentLimit,
+		log:          log,
 	}
 
 	// check legacy register set
@@ -205,7 +206,17 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		identify = wb.identify
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
+	implement.May(wb, implement.Meter(currentPower))
+	implement.May(wb, implement.PhaseCurrents(currents))
+	implement.May(wb, implement.PhaseVoltages(voltages))
+	implement.May(wb, implement.MeterEnergy(totalEnergy))
+	implement.May(wb, implement.Battery(soc))
+	implement.May(wb, implement.Identifier(identify))
+	implement.May(wb, implement.ChargerEx(maxCurrentMillis))
+	implement.May(wb, implement.PhaseSwitcher(phases1p3p))
+	implement.May(wb, implement.PhaseGetter(getPhases))
+
+	return wb, nil
 }
 
 // heartbeat ensures that SEMP device control updates are sent about once per minute

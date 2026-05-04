@@ -75,6 +75,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 
 	c.embed = &cc.embed
+	c.Capabilities = implement.Caps()
 
 	maxcurrentmillis, err := cc.MaxCurrentMillis.FloatSetter(ctx, "maxcurrentmillis")
 	if err != nil {
@@ -162,7 +163,19 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		}
 	}
 
-	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, limitsoc, powerG, energyG, currentsG, voltagesG, finishTime), nil
+	implement.May(c, implement.ChargerEx(maxcurrentmillis))
+	implement.May(c, implement.Identifier(identify))
+	implement.May(c, implement.PhaseSwitcher(phases1p3p))
+	implement.May(c, implement.Resurrector(wakeup))
+	implement.May(c, implement.Battery(soc))
+	implement.May(c, implement.SocLimiter(limitsoc))
+	implement.May(c, implement.Meter(powerG))
+	implement.May(c, implement.MeterEnergy(energyG))
+	implement.May(c, implement.PhaseCurrents(currentsG))
+	implement.May(c, implement.PhaseVoltages(voltagesG))
+	implement.May(c, implement.VehicleFinishTimer(finishTime))
+
+	return c, nil
 }
 
 // NewConfigurable creates a new charger

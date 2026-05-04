@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/plugin/mqtt"
@@ -18,6 +19,7 @@ import (
 
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
+	implement.Capabilities
 	log           *util.Logger
 	client        *mqtt.Client
 	features      []string
@@ -37,8 +39,6 @@ func init() {
 	registry.Add("warp2", NewWarp2FromConfig)
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
-
-//go:generate go tool decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
@@ -87,7 +87,15 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), nil
+	implement.May(wb, implement.Meter(currentPower))
+	implement.May(wb, implement.MeterEnergy(totalEnergy))
+	implement.May(wb, implement.PhaseCurrents(currents))
+	implement.May(wb, implement.PhaseVoltages(voltages))
+	implement.May(wb, implement.Identifier(identity))
+	implement.May(wb, implement.PhaseSwitcher(phases))
+	implement.May(wb, implement.PhaseGetter(getPhases))
+
+	return wb, nil
 }
 
 // NewWarp2 creates a new configurable charger
@@ -100,9 +108,10 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	}
 
 	wb := &Warp2{
-		log:     log,
-		client:  client,
-		current: 6000, // mA
+		Capabilities: implement.Caps(),
+		log:          log,
+		client:       client,
+		current:      6000, // mA
 	}
 
 	// timeout handler

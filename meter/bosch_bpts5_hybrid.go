@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/bosch"
 	"github.com/evcc-io/evcc/util"
 )
 
 type BoschBpts5Hybrid struct {
+	implement.Capabilities
 	api   *bosch.API
 	usage string
 }
@@ -44,10 +46,10 @@ func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if cc.Usage == "battery" {
-		return decorateMeterBattery(
-			m, nil, m.soc, cc.batteryCapacity.Decorator(),
-			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
-		), nil
+		implement.Has(m, implement.Battery(m.soc))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 	}
 
 	return m, nil
@@ -65,8 +67,9 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (*BoschBpts5Hyb
 	}
 
 	m := &BoschBpts5Hybrid{
-		api:   instance.(*bosch.API),
-		usage: strings.ToLower(usage),
+		Capabilities: implement.Caps(),
+		api:          instance.(*bosch.API),
+		usage:        strings.ToLower(usage),
 	}
 
 	return m, nil
