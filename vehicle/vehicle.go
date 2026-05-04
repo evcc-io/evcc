@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -81,8 +80,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			}
 			return api.ChargeStatusString(s)
 		}
+		implement.Has(v, implement.ChargeState(status))
 	}
-	implement.May(v, implement.ChargeState(status))
 
 	// decorate range
 	rng, err := cc.Range.IntGetter(ctx)
@@ -120,7 +119,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	implement.May(v, implement.CurrentGetter(getMaxCurrent))
 
 	// decorate position
-	var position func() (float64, float64, error)
 	if cc.Position != nil {
 		latG, err := cc.Position.Latitude.FloatGetter(ctx)
 		if err != nil {
@@ -130,7 +128,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		if err != nil {
 			return nil, fmt.Errorf("longitude: %w", err)
 		}
-		position = func() (float64, float64, error) {
+		position := func() (float64, float64, error) {
 			lat, err := latG()
 			if err != nil {
 				return 0, 0, err
@@ -145,31 +143,28 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			}
 			return lat, lon, nil
 		}
+		implement.Has(v, implement.VehiclePosition(position))
 	}
-	implement.May(v, implement.VehiclePosition(position))
 
 	// decorate finishtime
-	var finishTime func() (time.Time, error)
 	if cc.FinishTime != nil {
-		finishTime, err = cc.FinishTime.TimeGetter(ctx)
+		finishTime, err := cc.FinishTime.TimeGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("finishTime: %w", err)
 		}
+		implement.Has(v, implement.VehicleFinishTimer(finishTime))
 	}
-	implement.May(v, implement.VehicleFinishTimer(finishTime))
 
 	// decorate wakeup
-	var wakeup func() error
 	if cc.Wakeup != nil {
 		set, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
-		wakeup = func() error {
+		implement.Has(v, implement.Resurrector(func() error {
 			return set(true)
-		}
+		}))
 	}
-	implement.May(v, implement.Resurrector(wakeup))
 
 	// decorate chargeEnable
 	chargeEnable, err := cc.ChargeEnable.BoolSetter(ctx, "chargeenable")
@@ -179,15 +174,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	implement.May(v, implement.ChargeController(chargeEnable))
 
 	// decorate chargedenergy
-	var chargedEnergy func() (float64, error)
 	if cc.ChargedEnergy != nil {
-		var err error
-		chargedEnergy, err = cc.ChargedEnergy.FloatGetter(ctx)
+		chargedEnergy, err := cc.ChargedEnergy.FloatGetter(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("charged energy: %w", err)
 		}
+		implement.Has(v, implement.ChargeRater(chargedEnergy))
 	}
-	implement.May(v, implement.ChargeRater(chargedEnergy))
 
 	switch {
 	case maxCurrent == nil && getMaxCurrent != nil:
