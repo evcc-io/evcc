@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
 type registration struct {
@@ -29,6 +30,13 @@ type CS struct {
 	regs        map[string]*registration // guarded by mu mutex
 	txnId       atomic.Int64
 	publishFunc func()
+	server      ws.Server // raw WebSocket server, used by the forwarder to write frames
+}
+
+// Write sends a raw OCPP frame to the charger with the given station ID.
+// Used by the forwarder to inject upstream-initiated commands.
+func (cs *CS) Write(id string, data []byte) error {
+	return cs.server.Write(id, data)
 }
 
 type stationStatus struct {

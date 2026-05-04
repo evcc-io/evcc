@@ -48,6 +48,51 @@ var (
 	externalUrl string
 )
 
+// Forwarder hooks installed by the forwarder feature in init().  Hooks are
+// optional; when nil the wrapped ws.Server behaves like a plain ws.NewServer().
+// Read-only access is goroutine-safe because hooks are assigned exactly once
+// at package init() time, before any charger connects.
+var (
+	chargerConnectHook    func(ws.Channel)
+	chargerDisconnectHook func(ws.Channel)
+	chargerMessageHook    func(ws.Channel, []byte) bool
+)
+
+// interceptingServer wraps ws.Server and routes connect / disconnect / raw-frame
+// events through the package-level forwarder hooks.  msgHook returns true to
+// bypass the OCPP message handler (used when upstream is the authoritative
+// responder).
+type interceptingServer struct {
+	ws.Server
+}
+
+func (s *interceptingServer) SetMessageHandler(handler ws.MessageHandler) {
+	s.Server.SetMessageHandler(func(ch ws.Channel, data []byte) error {
+		if chargerMessageHook != nil && chargerMessageHook(ch, data) {
+			return nil
+		}
+		return handler(ch, data)
+	})
+}
+
+func (s *interceptingServer) SetNewClientHandler(handler ws.ConnectedHandler) {
+	s.Server.SetNewClientHandler(func(ch ws.Channel) {
+		if chargerConnectHook != nil {
+			chargerConnectHook(ch)
+		}
+		handler(ch)
+	})
+}
+
+func (s *interceptingServer) SetDisconnectedClientHandler(handler func(ws.Channel)) {
+	s.Server.SetDisconnectedClientHandler(func(ch ws.Channel) {
+		if chargerDisconnectHook != nil {
+			chargerDisconnectHook(ch)
+		}
+		handler(ch)
+	})
+}
+
 // GetStatus returns the OCPP runtime status
 func GetStatus() Status {
 	if instance == nil {
@@ -89,7 +134,7 @@ func Instance() *CS {
 	once.Do(func() {
 		log := util.NewLogger("ocpp")
 
-		server := newInterceptingServer()
+		server := &interceptingServer{Server: ws.NewServer()}
 		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
@@ -107,6 +152,7 @@ func Instance() *CS {
 			log:           log,
 			regs:          make(map[string]*registration),
 			CentralSystem: cs,
+			server:        server,
 		}
 
 		instance.txnId.Store(time.Now().UTC().Unix())

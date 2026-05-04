@@ -102,70 +102,13 @@ var actionsRelayedToUpstream = map[string]bool{
 
 var forwarderLog = util.NewLogger("ocpp-forwarder")
 
-// ── interceptingServer ────────────────────────────────────────────────────────
-
-// interceptingServer wraps ws.Server and adds hooks that fire on every new
-// connection, every disconnection, and every incoming raw OCPP frame.
-// msgHook returns true to bypass evcc's own OCPP message handler (used for
-// messages relayed exclusively to upstream).
-type interceptingServer struct {
-	ws.Server
-	mu             sync.RWMutex
-	msgHook        func(ws.Channel, []byte) bool
-	connectHook    func(ws.Channel)
-	disconnectHook func(ws.Channel)
-}
-
-// SetMessageHandler wraps the upstream handler to invoke msgHook first.
-// If msgHook returns true the evcc OCPP handler is skipped.
-func (s *interceptingServer) SetMessageHandler(handler ws.MessageHandler) {
-	s.Server.SetMessageHandler(func(ch ws.Channel, data []byte) error {
-		s.mu.RLock()
-		h := s.msgHook
-		s.mu.RUnlock()
-		if h != nil {
-			if bypass := h(ch, data); bypass {
-				return nil // upstream handles this message; evcc must not respond
-			}
-		}
-		return handler(ch, data)
-	})
-}
-
-// SetNewClientHandler wraps the upstream handler to invoke connectHook first.
-func (s *interceptingServer) SetNewClientHandler(handler ws.ConnectedHandler) {
-	s.Server.SetNewClientHandler(func(ch ws.Channel) {
-		s.mu.RLock()
-		h := s.connectHook
-		s.mu.RUnlock()
-		if h != nil {
-			h(ch)
-		}
-		handler(ch)
-	})
-}
-
-// SetDisconnectedClientHandler wraps the upstream handler to invoke
-// disconnectHook first.
-func (s *interceptingServer) SetDisconnectedClientHandler(handler func(ws.Channel)) {
-	s.Server.SetDisconnectedClientHandler(func(ch ws.Channel) {
-		s.mu.RLock()
-		h := s.disconnectHook
-		s.mu.RUnlock()
-		if h != nil {
-			h(ch)
-		}
-		handler(ch)
-	})
-}
-
-// newInterceptingServer creates the intercepting ws.Server used by Instance().
-func newInterceptingServer() ws.Server {
-	s := &interceptingServer{Server: ws.NewServer()}
-	s.connectHook = func(ch ws.Channel) { onChargerConnect(s, ch) }
-	s.disconnectHook = onChargerDisconnect
-	s.msgHook = onChargerMessage
-	return s
+// init wires the package-level forwarder hooks declared in instance.go.  The
+// hooks are no-ops until a rule matches a connecting charger, so it is always
+// safe to register them.
+func init() {
+	chargerConnectHook = onChargerConnect
+	chargerDisconnectHook = onChargerDisconnect
+	chargerMessageHook = onChargerMessage
 }
 
 // ── sidecar management ────────────────────────────────────────────────────────
@@ -175,11 +118,10 @@ type sidecar struct {
 	chargerID   string
 	upstreamURL string
 	conn        *websocket.Conn
-	srv         *interceptingServer
 
 	// pendingUpstreamCalls tracks message IDs of Calls sent by upstream to the
-	// charger (injected via srv.Write).  When the charger replies, onChargerMessage
-	// forwards that reply back to upstream.
+	// charger (injected via Instance().Write).  When the charger replies,
+	// onChargerMessage forwards that reply back to upstream.
 	pendingUpstreamCallsMu sync.Mutex
 	pendingUpstreamCalls   map[string]struct{}
 
@@ -233,7 +175,7 @@ func resolveRule(chargerID string) (ForwarderRule, bool) {
 // onChargerConnect fires when a charger establishes a WebSocket connection to
 // evcc.  If a matching rule exists, a pending-message buffer is opened and a
 // sidecar connection to upstream is dialled in a goroutine.
-func onChargerConnect(srv *interceptingServer, ch ws.Channel) {
+func onChargerConnect(ch ws.Channel) {
 	id := ch.ID()
 	rule, ok := resolveRule(id)
 	if !ok {
@@ -246,10 +188,10 @@ func onChargerConnect(srv *interceptingServer, ch ws.Channel) {
 	pendingMsgs[id] = nil
 	pendingMu.Unlock()
 
-	go dialUpstreamSidecar(srv, id, rule)
+	go dialUpstreamSidecar(id, rule)
 }
 
-func dialUpstreamSidecar(srv *interceptingServer, id string, rule ForwarderRule) {
+func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
 	upstreamPath := "/" + strings.TrimLeft(id, "/")
 	if rule.UpstreamStationID != "" {
@@ -267,7 +209,7 @@ func dialUpstreamSidecar(srv *interceptingServer, id string, rule ForwarderRule)
 		caCertPool := x509.NewCertPool()
 		if ok := caCertPool.AppendCertsFromPEM([]byte(rule.CaCert)); !ok {
 			forwarderLog.WARN.Printf("forwarder: failed to parse CA cert for %s — forwarding disabled", id)
-			drainPendingWithErrors(srv, id, nil)
+			drainPendingWithErrors(id, nil)
 			return
 		}
 		tlsConfig.RootCAs = caCertPool
@@ -282,7 +224,7 @@ func dialUpstreamSidecar(srv *interceptingServer, id string, rule ForwarderRule)
 	cancel()
 	if err != nil {
 		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v — forwarding disabled", id, err)
-		drainPendingWithErrors(srv, id, nil)
+		drainPendingWithErrors(id, nil)
 		return
 	}
 	conn.SetReadLimit(-1) // no limit; OCPP frames can be large
@@ -291,7 +233,6 @@ func dialUpstreamSidecar(srv *interceptingServer, id string, rule ForwarderRule)
 		chargerID:            id,
 		upstreamURL:          upstreamBase,
 		conn:                 conn,
-		srv:                  srv,
 		pendingUpstreamCalls: make(map[string]struct{}),
 		pendingChargerCalls:  make(map[string]struct{}),
 	}
@@ -344,11 +285,13 @@ func dialUpstreamSidecar(srv *interceptingServer, id string, rule ForwarderRule)
 // For any buffered Call with an action in actionsRelayedToUpstream, a
 // CallError is sent back to the charger so it is not left hanging.
 // sc may be nil (used when the sidecar dial itself failed).
-func drainPendingWithErrors(srv *interceptingServer, id string, sc *sidecar) {
+func drainPendingWithErrors(id string, sc *sidecar) {
 	pendingMu.Lock()
 	buffered := pendingMsgs[id]
 	delete(pendingMsgs, id)
 	pendingMu.Unlock()
+
+	cs := Instance()
 
 	for _, frame := range buffered {
 		msgType, msgID, action, err := parseOCPPFrame(frame)
@@ -361,7 +304,7 @@ func drainPendingWithErrors(srv *interceptingServer, id string, sc *sidecar) {
 			ErrorCode:        ocppj.GenericError,
 			ErrorDescription: "Upstream OCPP server unavailable",
 		}).MarshalJSON()
-		if writeErr := srv.Write(id, errFrame); writeErr != nil {
+		if writeErr := cs.Write(id, errFrame); writeErr != nil {
 			forwarderLog.WARN.Printf("forwarder: send error for pending call %s to %s: %v", msgID, id, writeErr)
 		}
 	}
@@ -376,7 +319,7 @@ func drainPendingWithErrors(srv *interceptingServer, id string, sc *sidecar) {
 				ErrorCode:        ocppj.GenericError,
 				ErrorDescription: "Upstream OCPP server disconnected",
 			}).MarshalJSON()
-			if writeErr := srv.Write(sc.chargerID, errFrame); writeErr != nil {
+			if writeErr := cs.Write(sc.chargerID, errFrame); writeErr != nil {
 				forwarderLog.WARN.Printf("forwarder: send disconnect error for %s to %s: %v", msgID, sc.chargerID, writeErr)
 			}
 		}
@@ -515,7 +458,7 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 		sidecarsMu.Unlock()
 		// Send errors to charger for any pending relayed calls that will never
 		// receive a response now that upstream has disconnected.
-		drainPendingWithErrors(sc.srv, sc.chargerID, sc)
+		drainPendingWithErrors(sc.chargerID, sc)
 		sc.conn.CloseNow()
 		notifyUpdated()
 	}()
@@ -573,10 +516,8 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 			sc.pendingUpstreamCallsMu.Unlock()
 
 			// Inject upstream command into the charger.
-			if sc.srv != nil {
-				if err := sc.srv.Write(sc.chargerID, msg); err != nil {
-					forwarderLog.ERROR.Printf("forwarder: inject upstream call into charger %s: %v", sc.chargerID, err)
-				}
+			if err := Instance().Write(sc.chargerID, msg); err != nil {
+				forwarderLog.ERROR.Printf("forwarder: inject upstream call into charger %s: %v", sc.chargerID, err)
 			}
 
 		case ocppj.CALL_RESULT, ocppj.CALL_ERROR:
@@ -593,10 +534,8 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 				// Relay upstream's response directly to the charger.
 				// evcc's handler was already bypassed for this Call, so the
 				// charger is waiting for exactly this response.
-				if sc.srv != nil {
-					if err := sc.srv.Write(sc.chargerID, msg); err != nil {
-						forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
-					}
+				if err := Instance().Write(sc.chargerID, msg); err != nil {
+					forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
 				}
 				continue
 			}
