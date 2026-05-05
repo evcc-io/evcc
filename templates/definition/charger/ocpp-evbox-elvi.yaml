@@ -12,13 +12,13 @@ requirements:
 
 params:
   - preset: ocpp
+  - name: metervalues
+    default: -Current.Offered,Power.Offered,SoC
   - name: meter
     type: bool
     default: true
+    deprecated: true
   - name: meterinterval
     deprecated: true
 render: |
   {{ include "ocpp" . }}
-  {{- if eq .meter "false" }}
-  metervalues: Current.Offered
-  {{- end }}
