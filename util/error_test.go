@@ -13,6 +13,21 @@ func TestYamlFloat(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal([]byte(b), &res))
 }
 
+func TestYamlEmpty(t *testing.T) {
+	var res map[string]any
+	err := yaml.Unmarshal([]byte(""), &res)
+	require.ErrorContains(t, err, "no documents in stream")
+}
+
+func TestYamlCommentsOnly(t *testing.T) {
+	b := `# just a comment
+# another comment
+`
+	var res map[string]any
+	err := yaml.Unmarshal([]byte(b), &res)
+	require.ErrorContains(t, err, "no documents in stream")
+}
+
 func TestYamlError(t *testing.T) {
 	b := `block:
   data: foo
