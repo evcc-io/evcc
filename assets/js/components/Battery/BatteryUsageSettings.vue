@@ -98,12 +98,7 @@
 				></shopicon-regular-lightning>
 				<span class="d-block">
 					{{ $t("batterySettings.legendTopName") }}
-					<i18n-t
-						:keypath="topSublineKeypath"
-						tag="small"
-						class="d-block"
-						scope="global"
-					>
+					<i18n-t :keypath="topSublineKeypath" tag="small" class="d-block" scope="global">
 						<template #soc>
 							<CustomSelect
 								id="batterySettingsBufferTop"
