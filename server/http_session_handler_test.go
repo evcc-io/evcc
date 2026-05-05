@@ -13,11 +13,9 @@ import (
 )
 
 func TestSessionHandlerTimezoneFilter(t *testing.T) {
+	t.Setenv("TZ", "Europe/Berlin")
 	loc, err := time.LoadLocation("Europe/Berlin")
 	require.NoError(t, err)
-	prev := time.Local
-	time.Local = loc
-	t.Cleanup(func() { time.Local = prev })
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, db.Instance.AutoMigrate(new(session.Session)))
