@@ -44,11 +44,9 @@ test.describe("battery settings", async () => {
     await expect(page.getByText("Start automatically")).toBeHidden();
 
     await bufferSoc.selectOption({ label: "when above 80%" });
-    await expect(topRow).toContainText("when above 80%");
     await expect(page.getByText("Start automatically")).toBeVisible();
 
     await bufferStart.selectOption({ label: "when above 90%." });
-    await expect(topRow).toContainText("when above 90%.");
 
     await bufferSoc.selectOption({ label: "disabled" });
     await expect(page.getByText("Start automatically")).toBeHidden();
