@@ -34,7 +34,7 @@ import (
 
 // MennekesCompact is an api.Charger implementation
 type MennekesCompact struct {
-	implement.Capabilities
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -108,9 +108,9 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	conn.Logger(log.TRACE)
 
 	wb := &MennekesCompact{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
+		Caps: implement.New(),
+		log:  log,
+		conn: conn,
 	}
 
 	// check phase switching support

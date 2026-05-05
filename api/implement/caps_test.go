@@ -8,12 +8,12 @@ import (
 )
 
 type isCapable struct {
-	Capabilities
+	Caps
 }
 
 func TestHas(t *testing.T) {
 	s := &isCapable{
-		Capabilities: Caps(),
+		Caps: New(),
 	}
 
 	Has(s, Meter(func() (float64, error) {
@@ -30,7 +30,7 @@ func TestHas(t *testing.T) {
 
 func TestHasPanicsOnNil(t *testing.T) {
 	s := &isCapable{
-		Capabilities: Caps(),
+		Caps: New(),
 	}
 
 	assert.Panics(t, func() {
@@ -40,7 +40,7 @@ func TestHasPanicsOnNil(t *testing.T) {
 
 func TestMayIgnoresNil(t *testing.T) {
 	s := &isCapable{
-		Capabilities: Caps(),
+		Caps: New(),
 	}
 
 	assert.NotPanics(t, func() {
@@ -53,7 +53,7 @@ func TestMayIgnoresNil(t *testing.T) {
 
 func TestMayRegistersNonNil(t *testing.T) {
 	s := &isCapable{
-		Capabilities: Caps(),
+		Caps: New(),
 	}
 
 	May(s, Meter(func() (float64, error) {
@@ -70,7 +70,7 @@ func TestMayRegistersNonNil(t *testing.T) {
 
 func TestMayIgnoresNilFuncConstructor(t *testing.T) {
 	s := &isCapable{
-		Capabilities: Caps(),
+		Caps: New(),
 	}
 
 	var fn func() (float64, error)

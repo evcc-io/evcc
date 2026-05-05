@@ -16,7 +16,7 @@ import (
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*request.Helper
-	implement.Capabilities
+	implement.Caps
 	uri          string
 	alwaysActive bool
 	current      int64 // current will always be the physical value sent to the API
@@ -104,10 +104,10 @@ func NewEVSEWifi(uri string, cache time.Duration) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
 	wb := &EVSEWifi{
-		Helper:       request.NewHelper(log),
-		Capabilities: implement.Caps(),
-		uri:          strings.TrimRight(uri, "/"),
-		current:      6, // 6A defined value
+		Helper:  request.NewHelper(log),
+		Caps:    implement.New(),
+		uri:     strings.TrimRight(uri, "/"),
+		current: 6, // 6A defined value
 	}
 
 	wb.paramG = util.ResettableCached(func() (evse.ListEntry, error) {

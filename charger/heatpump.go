@@ -31,7 +31,7 @@ import (
 // Heatpump charger implementation
 type Heatpump struct {
 	*embed
-	implement.Capabilities
+	implement.Caps
 	lp        loadpoint.API
 	power     int64
 	maxPowerG func() (int64, error)
@@ -100,10 +100,10 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 // NewHeatpump creates heatpump charger
 func NewHeatpump(ctx context.Context, embed *embed, maxPowerS func(int64) error, maxPowerG func() (int64, error)) (*Heatpump, error) {
 	res := &Heatpump{
-		embed:        embed,
-		Capabilities: implement.Caps(),
-		maxPowerG:    maxPowerG,
-		maxPowerS:    maxPowerS,
+		embed:     embed,
+		Caps:      implement.New(),
+		maxPowerG: maxPowerG,
+		maxPowerS: maxPowerS,
 	}
 
 	return res, nil

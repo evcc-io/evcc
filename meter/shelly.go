@@ -13,7 +13,7 @@ import (
 
 // Shelly meter considering usage
 type Shelly struct {
-	implement.Capabilities
+	implement.Caps
 	shelly.Connection
 	usage string
 }
@@ -61,9 +61,9 @@ func NewShelly(uri, user, password, usage string, channel int, cache time.Durati
 		return nil, err
 	}
 	c := &Shelly{
-		Capabilities: implement.Caps(),
-		Connection:   *conn,
-		usage:        usage,
+		Caps:       implement.New(),
+		Connection: *conn,
+		usage:      usage,
 	}
 	return c, nil
 }

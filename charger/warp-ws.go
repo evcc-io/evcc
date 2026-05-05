@@ -24,7 +24,7 @@ import (
 
 type WarpWS struct {
 	*warp.Connection
-	implement.Capabilities
+	implement.Caps
 	pm *warp.Connection // separate Energy Manager
 
 	// config
@@ -125,11 +125,11 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	log := util.NewLogger("warp-ws")
 
 	w := &WarpWS{
-		Connection:   warp.NewConnection(log, uri, user, pass),
-		Capabilities: implement.Caps(),
-		log:          log,
-		meterIndex:   meterIndex,
-		meterMap:     map[int]int{},
+		Connection: warp.NewConnection(log, uri, user, pass),
+		Caps:       implement.New(),
+		log:        log,
+		meterIndex: meterIndex,
+		meterMap:   map[int]int{},
 	}
 
 	if err := w.GetJSON(fmt.Sprintf("%s/info/features", w.URI), &w.features); err != nil {

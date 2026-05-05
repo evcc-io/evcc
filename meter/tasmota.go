@@ -13,7 +13,7 @@ import (
 
 // Tasmota meter implementation
 type Tasmota struct {
-	implement.Capabilities
+	implement.Caps
 	conn  *tasmota.Connection
 	usage string
 }
@@ -52,9 +52,9 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 	}
 
 	c := &Tasmota{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		usage:        usage,
+		Caps:  implement.New(),
+		conn:  conn,
+		usage: usage,
 	}
 
 	// check for SML readings

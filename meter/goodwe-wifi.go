@@ -11,7 +11,7 @@ import (
 )
 
 type goodWeWiFi struct {
-	implement.Capabilities
+	implement.Caps
 	usage    string
 	inverter *util.Monitor[goodwe.Inverter]
 }
@@ -50,9 +50,9 @@ func NewGoodWeWiFi(uri, usage string, capacity func() float64, timeout time.Dura
 	}
 
 	res := &goodWeWiFi{
-		Capabilities: implement.Caps(),
-		usage:        usage,
-		inverter:     inverter,
+		Caps:     implement.New(),
+		usage:    usage,
+		inverter: inverter,
 	}
 
 	if usage == "battery" {

@@ -34,7 +34,7 @@ import (
 
 // EVECUBE charger implementation
 type EVECUBE struct {
-	implement.Capabilities
+	implement.Caps
 	*request.Helper
 	uri          string
 	connector    int
@@ -148,7 +148,7 @@ func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) 
 	log := util.NewLogger("evecube")
 
 	wb := &EVECUBE{
-		Capabilities: implement.Caps(),
+		Caps:         implement.New(),
 		Helper:       request.NewHelper(log),
 		uri:          strings.TrimRight(uri, "/"),
 		connector:    connector,

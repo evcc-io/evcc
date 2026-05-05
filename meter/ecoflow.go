@@ -16,7 +16,7 @@ import (
 
 // EcoFlow represents the EcoFlow  meter
 type EcoFlow struct {
-	implement.Capabilities
+	implement.Caps
 	usage  string
 	serial string
 	cache  time.Duration
@@ -81,10 +81,10 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
 
 	m := &EcoFlow{
-		Capabilities: implement.Caps(),
-		serial:       serial,
-		usage:        usage,
-		cache:        cache,
+		Caps:   implement.New(),
+		serial: serial,
+		usage:  usage,
+		cache:  cache,
 		client: ecoflow.NewEcoflowClient(accessKey, secretKey,
 			ecoflow.WithBaseUrl(uri),
 			ecoflow.WithHttpClient(request.NewClient(log)),

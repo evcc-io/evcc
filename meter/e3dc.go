@@ -18,7 +18,7 @@ import (
 )
 
 type E3dc struct {
-	implement.Capabilities
+	implement.Caps
 	mu             sync.Mutex
 	dischargeLimit uint32
 	externalPower  bool            // whether to include power of external sources
@@ -89,7 +89,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 	}
 
 	m := &E3dc{
-		Capabilities:   implement.Caps(),
+		Caps:           implement.New(),
 		usage:          usage,
 		conn:           conn,
 		externalPower:  externalPower,

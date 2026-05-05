@@ -15,7 +15,7 @@ import (
 
 // EvseDIN charger implementation
 type EvseDIN struct {
-	implement.Capabilities
+	implement.Caps
 	conn    *modbus.Connection
 	current uint16
 }
@@ -61,9 +61,9 @@ func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, p
 	conn.Delay(200 * time.Millisecond)
 
 	evse := &EvseDIN{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		current:      6, // assume min current
+		Caps:    implement.New(),
+		conn:    conn,
+		current: 6, // assume min current
 	}
 
 	// check firmware

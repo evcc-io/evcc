@@ -21,7 +21,7 @@ const (
 
 // KebaUdp is an api.Charger implementation
 type KebaUdp struct {
-	implement.Capabilities
+	implement.Caps
 	log     *util.Logger
 	conn    string
 	rfid    keba.RFID
@@ -82,13 +82,13 @@ func NewKebaUdp(uri, serial string, rfid keba.RFID, timeout time.Duration) (*Keb
 	sender, err := keba.NewSender(log, conn)
 
 	c := &KebaUdp{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		rfid:         rfid,
-		timeout:      timeout,
-		recv:         make(chan keba.UDPMsg),
-		sender:       sender,
+		Caps:    implement.New(),
+		log:     log,
+		conn:    conn,
+		rfid:    rfid,
+		timeout: timeout,
+		recv:    make(chan keba.UDPMsg),
+		sender:  sender,
 	}
 
 	// use serial to subscribe if defined for docker scenarios

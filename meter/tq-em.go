@@ -52,7 +52,7 @@ type tqemData struct {
 }
 
 type TqEm struct {
-	implement.Capabilities
+	implement.Caps
 	dataG func() (tqemData, error)
 }
 
@@ -122,8 +122,8 @@ func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
 	}, cc.Cache)
 
 	m := &TqEm{
-		Capabilities: implement.Caps(),
-		dataG:        dataG,
+		Caps:  implement.New(),
+		dataG: dataG,
 	}
 
 	res, err := dataG()

@@ -19,7 +19,7 @@ import (
 
 // NRGKickGen2 charger implementation
 type NRGKickGen2 struct {
-	implement.Capabilities
+	implement.Caps
 	conn *modbus.Connection
 }
 
@@ -99,8 +99,8 @@ func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen
 	conn.Logger(log.TRACE)
 
 	nrg := &NRGKickGen2{
-		Capabilities: implement.Caps(),
-		conn:         conn,
+		Caps: implement.New(),
+		conn: conn,
 	}
 
 	return nrg, nil

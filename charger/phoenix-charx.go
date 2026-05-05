@@ -39,7 +39,7 @@ const (
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
 type PhoenixCharx struct {
-	implement.Capabilities
+	implement.Caps
 	conn      *modbus.Connection
 	connector uint16
 	current   uint16
@@ -96,10 +96,10 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixCharx{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		connector:    connector,
-		current:      6, // assume min current
+		Caps:      implement.New(),
+		conn:      conn,
+		connector: connector,
+		current:   6, // assume min current
 	}
 
 	controllers, err := wb.controllers()

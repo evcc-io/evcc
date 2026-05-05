@@ -19,7 +19,7 @@ import (
 
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
-	implement.Capabilities
+	implement.Caps
 	log           *util.Logger
 	client        *mqtt.Client
 	features      []string
@@ -95,10 +95,10 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	}
 
 	wb := &Warp2{
-		Capabilities: implement.Caps(),
-		log:          log,
-		client:       client,
-		current:      6000, // mA
+		Caps:    implement.New(),
+		log:     log,
+		client:  client,
+		current: 6000, // mA
 	}
 
 	// timeout handler

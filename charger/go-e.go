@@ -35,7 +35,7 @@ import (
 
 // GoE charger implementation
 type GoE struct {
-	implement.Capabilities
+	implement.Caps
 	api goe.API
 }
 
@@ -85,7 +85,7 @@ func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
 // NewGoE creates GoE charger
 func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{
-		Capabilities: implement.Caps(),
+		Caps: implement.New(),
 	}
 
 	log := util.NewLogger("go-e").Redact(token)

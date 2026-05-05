@@ -99,7 +99,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 // NewConfigurable creates a new meter
 func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 	m := &Meter{
-		Capabilities:  implement.Caps(),
+		Caps:          implement.New(),
 		currentPowerG: currentPowerG,
 	}
 	return m, nil
@@ -107,7 +107,7 @@ func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 
 // Meter is an api.Meter implementation with configurable getters and setters.
 type Meter struct {
-	implement.Capabilities
+	implement.Caps
 	currentPowerG func() (float64, error)
 }
 

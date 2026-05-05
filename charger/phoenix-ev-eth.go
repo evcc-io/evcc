@@ -36,7 +36,7 @@ import (
 )
 
 type PhoenixEVEth struct {
-	implement.Capabilities
+	implement.Caps
 	conn     *modbus.Connection
 	isWallbe bool
 }
@@ -92,8 +92,8 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixEVEth{
-		Capabilities: implement.Caps(),
-		conn:         conn,
+		Caps: implement.New(),
+		conn: conn,
 	}
 
 	// check presence of meter by voltage on l1

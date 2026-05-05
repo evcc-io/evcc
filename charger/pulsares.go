@@ -31,7 +31,7 @@ import (
 
 // Pulsares charger implementation
 type Pulsares struct {
-	implement.Capabilities
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
@@ -86,9 +86,9 @@ func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, 
 	conn.Logger(log.TRACE)
 
 	wb := &Pulsares{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		curr:         6000,
+		Caps: implement.New(),
+		conn: conn,
+		curr: 6000,
 	}
 
 	// get initial state from charger

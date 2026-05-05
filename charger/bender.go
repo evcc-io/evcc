@@ -48,7 +48,7 @@ type sempHandler struct {
 
 // BenderCC charger implementation
 type BenderCC struct {
-	implement.Capabilities
+	implement.Caps
 	conn    *modbus.Connection
 	current uint16
 	regCurr uint16
@@ -127,11 +127,11 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	conn.Logger(log.TRACE)
 
 	wb := &BenderCC{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		current:      6, // assume min current
-		regCurr:      bendRegHemsCurrentLimit,
-		log:          log,
+		Caps:    implement.New(),
+		conn:    conn,
+		current: 6, // assume min current
+		regCurr: bendRegHemsCurrentLimit,
+		log:     log,
 	}
 
 	// check legacy register set

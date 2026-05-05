@@ -14,7 +14,7 @@ import (
 
 // DanfossTLX is a PV meter for Danfoss TripleLynx TLX inverters via ComLynx RS485.
 type DanfossTLX struct {
-	implement.Capabilities
+	implement.Caps
 	conn          *comlynx.Client
 	powerFallback bool // some TLX variants don't support aggregate power; sum per-phase instead
 }
@@ -82,8 +82,8 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 	}
 
 	m := &DanfossTLX{
-		Capabilities: implement.Caps(),
-		conn:         conn,
+		Caps: implement.New(),
+		conn: conn,
 	}
 
 	// probe capabilities

@@ -32,7 +32,7 @@ import (
 
 // Victron charger implementation
 type Victron struct {
-	implement.Capabilities
+	implement.Caps
 	conn *modbus.Connection
 	regs victronRegs
 }
@@ -112,9 +112,9 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 	conn.Logger(log.TRACE)
 
 	wb := &Victron{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		regs:         regs,
+		Caps: implement.New(),
+		conn: conn,
+		regs: regs,
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Mode, 1)

@@ -7,7 +7,7 @@ import (
 )
 
 // Has registers impl as a capability on c. It panics if impl is nil.
-func Has[T any](c Capabilities, impl T) {
+func Has[T any](c Caps, impl T) {
 	typ := reflect.TypeFor[T]()
 	if isNil(impl) {
 		panic("implement: nil " + typ.String())
@@ -16,7 +16,7 @@ func Has[T any](c Capabilities, impl T) {
 }
 
 // May registers impl as a capability on c. If impl is nil, it is silently ignored.
-func May[T any](c Capabilities, impl T) {
+func May[T any](c Caps, impl T) {
 	if isNil(impl) {
 		return
 	}
@@ -34,13 +34,13 @@ func isNil(v any) bool {
 	return false
 }
 
-type Capabilities interface {
+type Caps interface {
 	api.Capable
 	add(typ reflect.Type, impl any)
 }
 
-// Caps creates a capabilities store exposing the api.Capable interface
-func Caps() Capabilities {
+// New creates a capabilities store exposing the api.Capable interface
+func New() Caps {
 	return make(caps)
 }
 

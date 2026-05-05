@@ -20,7 +20,7 @@ func init() {
 
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
-	implement.Capabilities
+	implement.Caps
 	current       int64
 	enabled       bool
 	statusG       func() (string, error)
@@ -145,7 +145,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	c := &OpenWB{
-		Capabilities:  implement.Caps(),
+		Caps:          implement.New(),
 		currentS:      currentS,
 		statusG:       statusG,
 		currentPowerG: currentPowerG,

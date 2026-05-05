@@ -31,7 +31,7 @@ import (
 // SgReady charger implementation
 type SgReady struct {
 	*embed
-	implement.Capabilities
+	implement.Caps
 	mode  int64
 	modeS func(int64) error
 	modeG func() (int64, error)
@@ -127,12 +127,12 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 // NewSgReady creates SG Ready charger
 func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error), maxPowerS func(int64) error) (*SgReady, error) {
 	res := &SgReady{
-		embed:        embed,
-		Capabilities: implement.Caps(),
-		mode:         Normal,
-		modeS:        modeS,
-		modeG:        modeG,
-		maxPowerS:    maxPowerS,
+		embed:     embed,
+		Caps:      implement.New(),
+		mode:      Normal,
+		modeS:     modeS,
+		modeG:     modeG,
+		maxPowerS: maxPowerS,
 	}
 
 	return res, nil

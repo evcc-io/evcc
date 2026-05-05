@@ -33,7 +33,7 @@ import (
 
 // ETEK EKEPC2 charger implementation
 type Etek struct {
-	implement.Capabilities
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -123,9 +123,9 @@ func NewEtek(ctx context.Context, uri, device, comset string, baudrate int, prot
 	conn.Logger(log.TRACE)
 
 	wb := &Etek{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
+		Caps: implement.New(),
+		log:  log,
+		conn: conn,
 	}
 
 	return wb, nil

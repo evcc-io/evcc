@@ -35,7 +35,7 @@ import (
 
 // Em2Go charger implementation
 type Em2Go struct {
-	implement.Capabilities
+	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
 	current    uint16
@@ -104,10 +104,10 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		current:      60,
+		Caps:    implement.New(),
+		log:     log,
+		conn:    conn,
+		current: 60,
 	}
 
 	bo := backoff.WithContext(

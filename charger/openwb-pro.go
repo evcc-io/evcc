@@ -21,7 +21,7 @@ func init() {
 
 // OpenWBPro charger implementation
 type OpenWBPro struct {
-	implement.Capabilities
+	implement.Caps
 	*request.Helper
 	uri     string
 	current float64
@@ -63,10 +63,10 @@ func NewOpenWBPro(ctx context.Context, uri string, cache time.Duration) (*OpenWB
 	log := util.NewLogger("owbpro")
 
 	wb := &OpenWBPro{
-		Capabilities: implement.Caps(),
-		Helper:       request.NewHelper(log),
-		uri:          strings.TrimRight(uri, "/"),
-		current:      6, // 6A defined value
+		Caps:    implement.New(),
+		Helper:  request.NewHelper(log),
+		uri:     strings.TrimRight(uri, "/"),
+		current: 6, // 6A defined value
 	}
 
 	wb.statusG = util.ResettableCached(func() (pro.Status, error) {

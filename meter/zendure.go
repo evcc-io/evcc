@@ -16,7 +16,7 @@ func init() {
 }
 
 type Zendure struct {
-	implement.Capabilities
+	implement.Caps
 	usage string
 	conn  *zendure.Connection
 }
@@ -44,9 +44,9 @@ func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	m := &Zendure{
-		Capabilities: implement.Caps(),
-		usage:        cc.Usage,
-		conn:         conn,
+		Caps:  implement.New(),
+		usage: cc.Usage,
+		conn:  conn,
 	}
 
 	// decorate battery

@@ -14,7 +14,7 @@ import (
 
 // LgEss implements the api.Meter interface
 type LgEss struct {
-	implement.Capabilities
+	implement.Caps
 	usage string     // grid, pv, battery
 	conn  *lgpcs.Com // communication with the lgpcs device
 }
@@ -68,9 +68,9 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ba
 	}
 
 	m := &LgEss{
-		Capabilities: implement.Caps(),
-		usage:        strings.ToLower(usage),
-		conn:         conn,
+		Caps:  implement.New(),
+		usage: strings.ToLower(usage),
+		conn:  conn,
 	}
 
 	implement.May(m, implement.BatteryCapacity(batteryCapacity.Decorator()))

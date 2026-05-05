@@ -16,7 +16,7 @@ import (
 // Charger is an api.Charger implementation with configurable getters and setters.
 type Charger struct {
 	*embed
-	implement.Capabilities
+	implement.Caps
 	statusG     func() (string, error)
 	enabledG    func() (bool, error)
 	enableS     func(bool) error
@@ -74,7 +74,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 
 	c.embed = &cc.embed
-	c.Capabilities = implement.Caps()
+	c.Caps = implement.New()
 
 	maxcurrentmillis, err := cc.MaxCurrentMillis.FloatSetter(ctx, "maxcurrentmillis")
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
-	implement.Capabilities
+	implement.Caps
 	socG func() (float64, error)
 }
 
@@ -54,9 +54,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	}
 
 	v := &Vehicle{
-		embed:        &cc.embed,
-		Capabilities: implement.Caps(),
-		socG:         socG,
+		embed: &cc.embed,
+		Caps:  implement.New(),
+		socG:  socG,
 	}
 
 	// decorate limitSoc

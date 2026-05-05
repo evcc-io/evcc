@@ -30,7 +30,7 @@ type minMax struct {
 }
 
 type EEBus struct {
-	implement.Capabilities
+	implement.Caps
 	cem *eebus.CustomerEnergyManagement
 	ev  spineapi.EntityRemoteInterface
 
@@ -79,10 +79,10 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 	}
 
 	c := &EEBus{
-		Capabilities: implement.Caps(),
-		log:          util.NewLogger("eebus"),
-		current:      6,
-		cem:          eebus.Instance.CustomerEnergyManagement(),
+		Caps:    implement.New(),
+		log:     util.NewLogger("eebus"),
+		current: 6,
+		cem:     eebus.Instance.CustomerEnergyManagement(),
 	}
 
 	c.connector = eebus.NewConnector()

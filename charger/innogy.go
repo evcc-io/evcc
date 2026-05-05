@@ -47,7 +47,7 @@ var igyRegMaxCurrents = []uint16{1012, 1014, 1016} // max current per phase
 
 // Innogy is an api.Charger implementation for Innogy eBox wallboxes.
 type Innogy struct {
-	implement.Capabilities
+	implement.Caps
 	conn        *modbus.Connection
 	curr        float64
 	hasVoltages bool
@@ -97,9 +97,9 @@ func NewInnogy(ctx context.Context, uri string, id uint8) (*Innogy, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Innogy{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		curr:         6,
+		Caps: implement.New(),
+		conn: conn,
+		curr: 6,
 	}
 
 	return wb, nil

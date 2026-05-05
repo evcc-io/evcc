@@ -31,7 +31,7 @@ import (
 
 // DaheimLaden charger implementation
 type DaheimLaden struct {
-	implement.Capabilities
+	implement.Caps
 	log    *util.Logger
 	conn   *modbus.Connection
 	curr   uint16
@@ -96,11 +96,11 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLaden{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		curr:         60, // assume min current
-		phases:       3,  // assume 3p
+		Caps:   implement.New(),
+		log:    log,
+		conn:   conn,
+		curr:   60, // assume min current
+		phases: 3,  // assume 3p
 	}
 
 	// get initial state from charger

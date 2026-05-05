@@ -43,7 +43,7 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
-	implement.Capabilities
+	implement.Caps
 	log        *util.Logger
 	statusG    util.Cacheable[zaptec.StateResponse]
 	instance   zaptec.Charger
@@ -90,11 +90,11 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	}
 
 	c := &Zaptec{
-		Helper:       request.NewHelper(log),
-		Capabilities: implement.Caps(),
-		log:          log,
-		priority:     priority,
-		passive:      passive,
+		Helper:   request.NewHelper(log),
+		Caps:     implement.New(),
+		log:      log,
+		priority: priority,
+		passive:  passive,
 	}
 
 	// Add User-Agent header for Zaptec API compliance

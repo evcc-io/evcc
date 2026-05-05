@@ -34,7 +34,7 @@ var wbRegCurrents = []uint16{114, 116, 118} // current readings
 // Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Wallbe struct {
-	implement.Capabilities
+	implement.Caps
 	conn   *modbus.Connection
 	factor int64
 }
@@ -98,9 +98,9 @@ func NewWallbe(ctx context.Context, uri string) (*Wallbe, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Wallbe{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		factor:       10,
+		Caps:   implement.New(),
+		conn:   conn,
+		factor: 10,
 	}
 
 	return wb, nil

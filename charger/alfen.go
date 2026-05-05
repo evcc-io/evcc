@@ -36,7 +36,7 @@ import (
 
 // Alfen charger implementation
 type Alfen struct {
-	implement.Capabilities
+	implement.Caps
 	log     *util.Logger
 	conn    *modbus.Connection
 	mu      sync.Mutex
@@ -86,9 +86,9 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Logger(log.TRACE)
 
 	wb := &Alfen{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
+		Caps: implement.New(),
+		log:  log,
+		conn: conn,
 	}
 
 	go wb.heartbeat(ctx)

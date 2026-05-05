@@ -19,7 +19,7 @@ import (
 // OpenEVSE charger implementation
 type OpenEVSE struct {
 	*request.Helper
-	implement.Capabilities
+	implement.Caps
 	uri     string
 	statusG util.Cacheable[openevse.Status]
 	current int
@@ -58,9 +58,9 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 	log := util.NewLogger("openevse").Redact(user, password, basicAuth)
 
 	c := &OpenEVSE{
-		Helper:       request.NewHelper(log),
-		Capabilities: implement.Caps(),
-		uri:          util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		Helper: request.NewHelper(log),
+		Caps:   implement.New(),
+		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 
 	if user != "" && password != "" {

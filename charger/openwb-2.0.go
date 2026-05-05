@@ -13,7 +13,7 @@ import (
 
 // OpenWB20 charger implementation
 type OpenWB20 struct {
-	implement.Capabilities
+	implement.Caps
 	conn    *modbus.Connection
 	enabled bool
 	curr    uint16
@@ -90,10 +90,10 @@ func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint1
 	conn.Logger(log.TRACE)
 
 	wb := &OpenWB20{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		curr:         6 * 100,
-		base:         (connector - 1) * 100,
+		Caps: implement.New(),
+		conn: conn,
+		curr: 6 * 100,
+		base: (connector - 1) * 100,
 	}
 
 	return wb, nil

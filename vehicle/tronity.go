@@ -38,7 +38,7 @@ import (
 type Tronity struct {
 	*embed
 	*request.Helper
-	implement.Capabilities
+	implement.Caps
 	log   *util.Logger
 	oc    *oauth2.Config
 	vid   string
@@ -82,11 +82,11 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	v := &Tronity{
-		log:          log,
-		embed:        &cc.embed,
-		Helper:       request.NewHelper(log),
-		Capabilities: implement.Caps(),
-		oc:           oc,
+		log:    log,
+		embed:  &cc.embed,
+		Helper: request.NewHelper(log),
+		Caps:   implement.New(),
+		oc:     oc,
 	}
 
 	var ts oauth2.TokenSource

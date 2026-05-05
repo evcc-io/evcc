@@ -13,7 +13,7 @@ import (
 
 type HomeAssistant struct {
 	*embed
-	implement.Capabilities
+	implement.Caps
 	conn *homeassistant.Connection
 	soc  string
 }
@@ -63,10 +63,10 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	res := &HomeAssistant{
-		embed:        &cc.embed,
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		soc:          cc.Sensors.Soc,
+		embed: &cc.embed,
+		Caps:  implement.New(),
+		conn:  conn,
+		soc:   cc.Sensors.Soc,
 	}
 
 	if cc.Sensors.LimitSoc != "" {

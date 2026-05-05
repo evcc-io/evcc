@@ -35,7 +35,7 @@ import (
 // SmartEVSE3 charger implementation
 type SmartEVSE3 struct {
 	*request.Helper
-	implement.Capabilities
+	implement.Caps
 	uri  string
 	curr int64
 	mode int
@@ -140,11 +140,11 @@ func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, erro
 	log := util.NewLogger("smart-evse")
 
 	wb := &SmartEVSE3{
-		Helper:       request.NewHelper(log),
-		Capabilities: implement.Caps(),
-		uri:          strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
-		curr:         60, // 6 A in 1/10 A
-		mode:         mode,
+		Helper: request.NewHelper(log),
+		Caps:   implement.New(),
+		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
+		curr:   60, // 6 A in 1/10 A
+		mode:   mode,
 	}
 
 	wb.Helper.Client.Transport = &http.Transport{

@@ -38,7 +38,7 @@ import (
 
 // OCPP charger implementation
 type OCPP struct {
-	implement.Capabilities
+	implement.Caps
 	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
@@ -180,7 +180,7 @@ func NewOCPP(ctx context.Context,
 	}
 
 	c := &OCPP{
-		Capabilities:        implement.Caps(),
+		Caps:                implement.New(),
 		log:                 log,
 		cp:                  cp,
 		conn:                conn,

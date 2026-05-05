@@ -31,7 +31,7 @@ import (
 
 // SEMP charger implementation
 type SEMP struct {
-	implement.Capabilities
+	implement.Caps
 	log            *util.Logger
 	conn           *semp.Connection
 	cache          time.Duration
@@ -76,13 +76,13 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	log := util.NewLogger("semp")
 
 	wb := &SEMP{
-		Capabilities: implement.Caps(),
-		log:          log,
-		cache:        cache,
-		phases:       3,
-		current:      6,
-		enabled:      true,
-		deviceID:     deviceID,
+		Caps:     implement.New(),
+		log:      log,
+		cache:    cache,
+		phases:   3,
+		current:  6,
+		enabled:  true,
+		deviceID: deviceID,
 	}
 
 	// Initialize SEMP connection

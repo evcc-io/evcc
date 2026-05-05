@@ -16,7 +16,7 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	implement.Capabilities
+	implement.Caps
 	conn *tasmota.Connection
 	*switchSocket
 }
@@ -60,8 +60,8 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	}
 
 	c := &Tasmota{
-		Capabilities: implement.Caps(),
-		conn:         conn,
+		Caps: implement.New(),
+		conn: conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)

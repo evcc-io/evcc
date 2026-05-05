@@ -15,7 +15,7 @@ func init() {
 }
 
 type SwitchSocket struct {
-	implement.Capabilities
+	implement.Caps
 	enable  func(bool) error
 	enabled func() (bool, error)
 	*switchSocket
@@ -52,7 +52,7 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 
 	c := &SwitchSocket{
-		Capabilities: implement.Caps(),
+		Caps:         implement.New(),
 		enabled:      enabled,
 		enable:       enable,
 		switchSocket: NewSwitchSocket(&cc.embed, enabled, power, cc.StandbyPower),

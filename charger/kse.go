@@ -31,7 +31,7 @@ import (
 
 // KSE charger implementation
 type KSE struct {
-	implement.Capabilities
+	implement.Caps
 	log     *util.Logger
 	conn    *modbus.Connection
 	curr    uint16
@@ -88,10 +88,10 @@ func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slave
 	conn.Logger(log.TRACE)
 
 	wb := &KSE{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		curr:         6, // assume min current
+		Caps: implement.New(),
+		log:  log,
+		conn: conn,
+		curr: 6, // assume min current
 	}
 
 	// check presence of 1p3p switching

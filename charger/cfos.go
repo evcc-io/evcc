@@ -32,7 +32,7 @@ const (
 // It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
 // https://www.cfos-emobility.de/en-gb/cfos-power-brain/modbus-registers.htm
 type CfosPowerBrain struct {
-	implement.Capabilities
+	implement.Caps
 	conn *modbus.Connection
 }
 
@@ -70,8 +70,8 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 	conn.Logger(log.TRACE)
 
 	wb := &CfosPowerBrain{
-		Capabilities: implement.Caps(),
-		conn:         conn,
+		Caps: implement.New(),
+		conn: conn,
 	}
 
 	// decorate meter

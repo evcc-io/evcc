@@ -34,7 +34,7 @@ import (
 
 // Peblar charger implementation
 type Peblar struct {
-	implement.Capabilities
+	implement.Caps
 	conn    *modbus.Connection
 	curr    uint32
 	enabled bool
@@ -103,10 +103,10 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 
 	wb := &Peblar{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		curr:         6000,                       // assume min current
-		phases:       binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
+		Caps:   implement.New(),
+		conn:   conn,
+		curr:   6000,                       // assume min current
+		phases: binary.BigEndian.Uint16(b), // required for retrieving the right amount of voltage/current registers
 	}
 
 	b, err = conn.ReadInputRegisters(peblarRegIndepRelay, 1)

@@ -40,7 +40,7 @@ import (
 // Keba is an api.Charger implementation
 type Keba struct {
 	*embed
-	implement.Capabilities
+	implement.Caps
 	log          *util.Logger
 	conn         *modbus.Connection
 	current      uint16
@@ -177,7 +177,7 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 
 	wb := &Keba{
 		embed:        &embed,
-		Capabilities: implement.Caps(),
+		Caps:         implement.New(),
 		log:          log,
 		conn:         conn,
 		regEnable:    kebaRegEnable,

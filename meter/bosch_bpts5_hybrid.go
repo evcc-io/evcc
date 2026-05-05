@@ -12,7 +12,7 @@ import (
 )
 
 type BoschBpts5Hybrid struct {
-	implement.Capabilities
+	implement.Caps
 	api   *bosch.API
 	usage string
 }
@@ -55,9 +55,9 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration, capacity func()
 	}
 
 	m := &BoschBpts5Hybrid{
-		Capabilities: implement.Caps(),
-		api:          instance.(*bosch.API),
-		usage:        strings.ToLower(usage),
+		Caps:  implement.New(),
+		api:   instance.(*bosch.API),
+		usage: strings.ToLower(usage),
 	}
 
 	if usage == "battery" {

@@ -55,7 +55,7 @@ import (
 
 // Dsmr meter implementation
 type Dsmr struct {
-	implement.Capabilities
+	implement.Caps
 	mu      sync.Mutex
 	addr    string
 	energy  string
@@ -93,10 +93,10 @@ func NewDsmrFromConfig(other map[string]any) (api.Meter, error) {
 // NewDsmr creates DSMR meter
 func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	m := &Dsmr{
-		Capabilities: implement.Caps(),
-		addr:         uri,
-		energy:       energy,
-		timeout:      timeout,
+		Caps:    implement.New(),
+		addr:    uri,
+		energy:  energy,
+		timeout: timeout,
 	}
 
 	done := make(chan struct{}, 1)

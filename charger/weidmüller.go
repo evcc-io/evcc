@@ -33,7 +33,7 @@ import (
 
 // Weidmüller charger implementation
 type Weidmüller struct {
-	implement.Capabilities
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
@@ -87,10 +87,10 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 	conn.Logger(log.TRACE)
 
 	wb := &Weidmüller{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		curr:         6, // assume min current
+		Caps: implement.New(),
+		log:  log,
+		conn: conn,
+		curr: 6, // assume min current
 	}
 
 	// get initial state from charger

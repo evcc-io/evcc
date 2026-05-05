@@ -28,7 +28,7 @@ const (
 // PhoenixEMEth is an api.Charger implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
 type PhoenixEMEth struct {
-	implement.Capabilities
+	implement.Caps
 	conn *modbus.Connection
 }
 
@@ -73,8 +73,8 @@ func NewPhoenixEMEth(ctx context.Context, uri string, slaveID uint8) (*PhoenixEM
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixEMEth{
-		Capabilities: implement.Caps(),
-		conn:         conn,
+		Caps: implement.New(),
+		conn: conn,
 	}
 
 	return wb, nil

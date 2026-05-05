@@ -33,7 +33,7 @@ import (
 
 // Amperfied charger implementation
 type Amperfied struct {
-	implement.Capabilities
+	implement.Caps
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
@@ -94,10 +94,10 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 	conn.Logger(log.TRACE)
 
 	wb := &Amperfied{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		current:      60, // assume min current
+		Caps:    implement.New(),
+		log:     log,
+		conn:    conn,
+		current: 60, // assume min current
 	}
 
 	// get failsafe timeout from charger

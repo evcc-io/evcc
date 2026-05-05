@@ -60,7 +60,7 @@ var (
 // Vestel is an api.Charger implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Vestel struct {
-	implement.Capabilities
+	implement.Caps
 	log     *util.Logger
 	conn    *modbus.Connection
 	enabled bool
@@ -99,10 +99,10 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Vestel{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		current:      6,
+		Caps:    implement.New(),
+		log:     log,
+		conn:    conn,
+		current: 6,
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(vestelRegNumberPhases, 1); err == nil && binary.BigEndian.Uint16(b) == 1 {

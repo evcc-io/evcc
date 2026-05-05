@@ -20,7 +20,7 @@ import (
 
 // RCT implements the api.Meter interface
 type RCT struct {
-	implement.Capabilities
+	implement.Caps
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
@@ -93,7 +93,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	rctMu.Unlock()
 
 	m := &RCT{
-		Capabilities:  implement.Caps(),
+		Caps:          implement.New(),
 		usage:         strings.ToLower(usage),
 		conn:          conn,
 		externalPower: externalPower,

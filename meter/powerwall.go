@@ -21,7 +21,7 @@ import (
 
 // PowerWall is the tesla powerwall meter
 type PowerWall struct {
-	implement.Capabilities
+	implement.Caps
 	usage      string
 	client     *powerwall.Client
 	meterG     func() (map[string]powerwall.MeterAggregatesData, error)
@@ -92,10 +92,10 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	m := &PowerWall{
-		Capabilities: implement.Caps(),
-		client:       client,
-		usage:        strings.ToLower(usage),
-		meterG:       util.Cached(client.GetMetersAggregates, cache),
+		Caps:   implement.New(),
+		client: client,
+		usage:  strings.ToLower(usage),
+		meterG: util.Cached(client.GetMetersAggregates, cache),
 	}
 
 	var batteryControl bool

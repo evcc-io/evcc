@@ -25,7 +25,7 @@ type openWbGpioLines struct {
 // OpenWbNative charger implementation
 type OpenWbNative struct {
 	api.Charger
-	implement.Capabilities
+	implement.Caps
 	log         *util.Logger
 	rfId        native.RfIdContainer
 	cpWait      time.Duration
@@ -86,12 +86,12 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	}
 
 	wb := &OpenWbNative{
-		Charger:      evse,
-		Capabilities: implement.Caps(),
-		log:          log,
-		cpWait:       cpWait,
-		connector:    connector,
-		chargeState:  api.StatusNone,
+		Charger:     evse,
+		Caps:        implement.New(),
+		log:         log,
+		cpWait:      cpWait,
+		connector:   connector,
+		chargeState: api.StatusNone,
 	}
 
 	if ex, ok := api.Cap[api.ChargerEx](evse); ok {

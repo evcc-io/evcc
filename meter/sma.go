@@ -16,7 +16,7 @@ import (
 
 // SMA supporting SMA Home Manager 2.0, SMA Energy Meter 30 and SMA inverter
 type SMA struct {
-	implement.Capabilities
+	implement.Caps
 	uri    string
 	scale  float64
 	device *sma.Device
@@ -51,9 +51,9 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 // NewSMA creates an SMA meter
 func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
 	sm := &SMA{
-		Capabilities: implement.Caps(),
-		uri:          uri,
-		scale:        scale,
+		Caps:  implement.New(),
+		uri:   uri,
+		scale: scale,
 	}
 
 	discoverer, err := sma.GetDiscoverer(iface)

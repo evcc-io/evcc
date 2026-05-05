@@ -43,7 +43,7 @@ import (
 // Salia charger implementation
 type Salia struct {
 	*request.Helper
-	implement.Capabilities
+	implement.Caps
 	log     *util.Logger
 	uri     string
 	current int64
@@ -81,11 +81,11 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 	uri = strings.TrimSuffix(uri, "/") + "/api"
 
 	wb := &Salia{
-		log:          log,
-		Helper:       request.NewHelper(log),
-		Capabilities: implement.Caps(),
-		uri:          util.DefaultScheme(uri, "http"),
-		current:      6,
+		log:     log,
+		Helper:  request.NewHelper(log),
+		Caps:    implement.New(),
+		uri:     util.DefaultScheme(uri, "http"),
+		current: 6,
 	}
 
 	if user != "" && password != "" {

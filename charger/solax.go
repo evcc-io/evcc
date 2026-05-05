@@ -33,7 +33,7 @@ import (
 
 // Solax charger implementation
 type Solax struct {
-	implement.Capabilities
+	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
 	isLegacyHw bool
@@ -113,10 +113,10 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	conn.Logger(log.TRACE)
 
 	wb := &Solax{
-		Capabilities: implement.Caps(),
-		log:          log,
-		conn:         conn,
-		isLegacyHw:   isLegacyHw,
+		Caps:       implement.New(),
+		log:        log,
+		conn:       conn,
+		isLegacyHw: isLegacyHw,
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {

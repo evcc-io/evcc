@@ -32,7 +32,7 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
-	implement.Capabilities
+	implement.Caps
 	conn *modbus.Connection
 	curr uint16
 }
@@ -117,9 +117,9 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 	conn.Logger(log.TRACE)
 
 	wb := &ABLeMH{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		curr:         uint16(6 / 0.06),
+		Caps: implement.New(),
+		conn: conn,
+		curr: uint16(6 / 0.06),
 	}
 
 	b, err := wb.get(ablRegFirmware, 2)

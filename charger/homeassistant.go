@@ -13,7 +13,7 @@ import (
 
 // HomeAssistant charger implementation
 type HomeAssistant struct {
-	implement.Capabilities
+	implement.Caps
 	conn       *homeassistant.Connection
 	status     string
 	enabled    string
@@ -67,12 +67,12 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	c := &HomeAssistant{
-		Capabilities: implement.Caps(),
-		conn:         conn,
-		status:       cc.Status,
-		enabled:      cc.Enabled,
-		enable:       cc.Enable,
-		maxcurrent:   cc.MaxCurrent,
+		Caps:       implement.New(),
+		conn:       conn,
+		status:     cc.Status,
+		enabled:    cc.Enabled,
+		enable:     cc.Enable,
+		maxcurrent: cc.MaxCurrent,
 	}
 
 	if cc.Power != "" {

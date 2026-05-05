@@ -15,7 +15,7 @@ import (
 
 // PCElectric charger implementation
 type PCElectric struct {
-	implement.Capabilities
+	implement.Caps
 	*request.Helper
 	log *util.Logger
 
@@ -72,12 +72,12 @@ func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error
 	}
 
 	wb := &PCElectric{
-		Capabilities: implement.Caps(),
-		Helper:       request.NewHelper(log),
-		log:          log,
-		uri:          uri,
-		slaveIndex:   slaveIndex,
-		meter:        strings.ToUpper(meter),
+		Caps:       implement.New(),
+		Helper:     request.NewHelper(log),
+		log:        log,
+		uri:        uri,
+		slaveIndex: slaveIndex,
+		meter:      strings.ToUpper(meter),
 	}
 
 	// Nur Master: lb Config auslesen.
