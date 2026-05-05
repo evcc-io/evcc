@@ -25,10 +25,7 @@ import (
 	"golang.org/x/crypto/pkcs12"
 )
 
-// ---------------------------------------------------------------------------
-// SM4 cipher (ECB, fixed round keys extracted from Leapmotor APK)
-// Used only for PKCS#12 password derivation.
-// ---------------------------------------------------------------------------
+// SM4 cipher (ECB, fixed round keys from APK) — used only for PKCS#12 password derivation.
 
 var sm4SBox = [256]byte{
 	0xD6, 0x90, 0xE9, 0xFE, 0xCC, 0xE1, 0x3D, 0xB7, 0x16, 0xB6, 0x14, 0xC2, 0x28, 0xFB, 0x2C, 0x05,
@@ -103,13 +100,11 @@ func p12MemoryEncode(data []byte) []byte {
 // deriveP12Password derives the PKCS#12 certificate password from login response fields.
 func deriveP12Password(accountID, uid string) string {
 	h := md5.Sum([]byte(accountID))
-	cn := fmt.Sprintf("%x", h) // 32 hex chars
-	// cn[::2]: every other char starting at index 0
+	cn := fmt.Sprintf("%x", h)
 	cnEven := make([]byte, 0, len(cn)/2)
 	for i := 0; i < len(cn); i += 2 {
 		cnEven = append(cnEven, cn[i])
 	}
-	// uid[1::2]: every other char starting at index 1
 	uidOdd := make([]byte, 0, len(uid)/2)
 	for i := 1; i < len(uid); i += 2 {
 		uidOdd = append(uidOdd, uid[i])
@@ -231,11 +226,10 @@ func buildSignedHeaders(signKey []byte, deviceID, vin, lang string, bodyParams m
 }
 
 // addAuthHeaders merges Content-Type, userId and token into the provided header map.
-func addAuthHeaders(headers map[string]string, userID, token string) map[string]string {
+func addAuthHeaders(headers map[string]string, userID, token string) {
 	headers["Content-Type"] = "application/x-www-form-urlencoded"
 	headers["userId"] = userID
 	headers["token"] = token
-	return headers
 }
 
 // newMTLSClient creates an http.Client with optional client cert and TLS verification disabled.
@@ -382,17 +376,6 @@ func (id *Identity) Refresh() error {
 	}
 	id.token = d.Token
 	id.refreshTok = d.RefreshToken
-	return nil
-}
-
-// EnsureAuth logs in if no token is present.
-func (id *Identity) EnsureAuth() error {
-	id.mu.Lock()
-	hasToken := id.token != ""
-	id.mu.Unlock()
-	if !hasToken {
-		return id.Login()
-	}
 	return nil
 }
 
