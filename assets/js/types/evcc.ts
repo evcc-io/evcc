@@ -262,8 +262,10 @@ export interface Loadpoint {
   chargeTotalImport?: number;
   chargeVoltages?: number[];
   chargedEnergy: number;
+  chargerFeatureContinuous: boolean;
   chargerFeatureHeating: boolean;
   chargerFeatureIntegratedDevice: boolean;
+  chargerFeatureSwitchDevice: boolean;
   chargerIcon: string | null;
   chargerPhases1p3p: boolean;
   chargerSinglePhase: boolean;

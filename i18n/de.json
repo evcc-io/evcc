@@ -1160,6 +1160,11 @@
       "update": "Anwenden",
       "weekdays": "Tage"
     },
+    "continuousStatus": {
+      "charging": "Boost aktiv.",
+      "connected": "Normalbetrieb.",
+      "waitForVehicle": "Boost angefordert …"
+    },
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie laden",
@@ -1186,7 +1191,7 @@
       "charging": "Heize …",
       "connected": "Standby.",
       "vehicleLimit": "Heizungslimit",
-      "waitForVehicle": "Bereit. Warte auf Heizung …"
+      "waitForVehicle": "Bereit zum Heizen …"
     },
     "hemsWarning": {
       "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
