@@ -694,7 +694,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
 	// charger features
-	for _, f := range []api.Feature{api.IntegratedDevice, api.Heating} {
+	for _, f := range api.FeatureValues() {
 		lp.publishChargerFeature(f)
 	}
 

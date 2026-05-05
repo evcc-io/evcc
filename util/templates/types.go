@@ -64,9 +64,10 @@ const (
 	CapabilityRFID           = "rfid"            // RFID support
 	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
 	CapabilityBatteryControl = "battery-control" // Battery control support
+	CapabilityMeter          = "meter"           // Built-in energy meter support
 )
 
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl}
+var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter}
 
 const (
 	RequirementSponsorship = "sponsorship" // Sponsorship is required

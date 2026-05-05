@@ -7,7 +7,7 @@ products:
   - brand: SMA
     description:
       generic: eCharger (HTTP)
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
   description:

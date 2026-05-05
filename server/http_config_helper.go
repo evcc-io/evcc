@@ -466,9 +466,9 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	// validate yaml syntax
+	// validate yaml syntax; tolerate whitespace/comment-only input
 	var tmp map[string]any
-	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && err != io.EOF {
+	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && !strings.Contains(err.Error(), "no documents in stream") {
 		return configReq{}, err
 	}
 

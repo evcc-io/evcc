@@ -3,6 +3,7 @@ products:
   - brand: openWB
     description:
       generic: series2
+capabilities: ["meter"]
 requirements:
   description:
     en: The wallbox has to be configured as loadpoint.

@@ -4,6 +4,7 @@ products:
   - brand: NRGkick
     description:
       generic: Bluetooth
+capabilities: ["meter"]
 requirements:
   description:
     de: NRGkick Ladeeinheit via Bluetooth (älter als 2022/2023)

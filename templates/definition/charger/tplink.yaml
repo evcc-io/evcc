@@ -3,6 +3,7 @@ products:
   - brand: TP-Link
     description:
       generic: H-Series Smart Plug
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host
