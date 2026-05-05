@@ -269,11 +269,11 @@ func loadAccountCert(p12Data []byte, password string) (tls.Certificate, error) {
 
 // Identity manages Leapmotor session state (tokens, signing key, account mTLS cert).
 type Identity struct {
-	mu         sync.Mutex
-	log        *util.Logger
-	appCert    tls.Certificate
-	username   string
-	password   string
+	mu       sync.Mutex
+	log      *util.Logger
+	appCert  tls.Certificate
+	username string
+	password string
 	// mutable session state (protected by mu)
 	deviceID   string
 	token      string

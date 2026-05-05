@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	BaseURL       = "https://appgateway.leapmotor-international.de"
-	appVersion    = "1.12.3"
-	source        = "leapmotor"
-	channel       = "1"
-	deviceType    = "1"
-	p12EncAlg     = "1"
-	policyID      = "20260204"
-	defaultLang   = "en"
+	BaseURL     = "https://appgateway.leapmotor-international.de"
+	appVersion  = "1.12.3"
+	source      = "leapmotor"
+	channel     = "1"
+	deviceType  = "1"
+	p12EncAlg   = "1"
+	policyID    = "20260204"
+	defaultLang = "en"
 )
 
 type apiEnvelope[T any] struct {
