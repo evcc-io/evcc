@@ -379,7 +379,9 @@ export default defineComponent({
 		},
 		async changeBufferSoc($event: Event) {
 			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
-			if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+			if (soc === 100) {
+				await this.setBufferStartSoc(0);
+			} else if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
 				await this.setBufferStartSoc(soc);
 			}
 			await this.saveBufferSoc(soc);
