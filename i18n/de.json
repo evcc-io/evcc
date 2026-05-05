@@ -39,6 +39,9 @@
     "legendTopAutostart": "Starte automatisch",
     "legendTopName": "Batterieunterstütztes Fahrzeugladen",
     "legendTopSubline": "wenn Hausbatterie über {soc} ist.",
+    "legendTopSublineAbove": "wenn über {soc}",
+    "legendTopSublineDisabled": "ist {soc}.",
+    "legendTopSublineDisabledState": "deaktiviert",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keine Batterien konfiguriert.",
     "usageTab": "Batterienutzung"

@@ -99,7 +99,7 @@
 				<span class="d-block">
 					{{ $t("batterySettings.legendTopName") }}
 					<i18n-t
-						keypath="batterySettings.legendTopSubline"
+						:keypath="topSublineKeypath"
 						tag="small"
 						class="d-block"
 						scope="global"
@@ -108,18 +108,18 @@
 							<CustomSelect
 								id="batterySettingsBufferTop"
 								class="custom-select-inline"
-								:options="bufferOptions"
+								:options="legendBufferOptions"
 								:selected="selectedBufferSoc"
 								@change="changeBufferSoc"
 							>
 								<span class="text-decoration-underline">
-									{{ fmtSoc(selectedBufferSoc) }}
+									{{ topSublineValue }}
 								</span>
 							</CustomSelect>
 						</template>
 					</i18n-t>
 
-					<small class="d-block">
+					<small v-if="selectedBufferSoc < 100" class="d-block">
 						{{ $t("batterySettings.legendTopAutostart") }}
 						<CustomSelect
 							id="batterySettingsBufferStart"
@@ -265,6 +265,17 @@ export default defineComponent({
 			}
 			return options;
 		},
+		legendBufferOptions() {
+			return this.bufferOptions.map((option) => ({
+				...option,
+				name:
+					option.value === 100
+						? this.$t("batterySettings.legendTopSublineDisabledState")
+						: this.$t("batterySettings.legendTopSublineAbove", {
+								soc: this.fmtSoc(option.value),
+							}),
+			}));
+		},
 		bufferStartTop() {
 			if (!this.selectedBufferStartSoc) return 0;
 			return 100 - this.selectedBufferStartSoc;
@@ -285,6 +296,16 @@ export default defineComponent({
 		},
 		selectedBufferStartName() {
 			return this.getBufferStartName(this.selectedBufferStartSoc);
+		},
+		topSublineKeypath() {
+			return this.selectedBufferSoc < 100
+				? "batterySettings.legendTopSubline"
+				: "batterySettings.legendTopSublineDisabled";
+		},
+		topSublineValue() {
+			return this.selectedBufferSoc < 100
+				? this.fmtSoc(this.selectedBufferSoc)
+				: this.$t("batterySettings.legendTopSublineDisabledState");
 		},
 		topHeight() {
 			return 100 - (this.bufferSoc || 100);
