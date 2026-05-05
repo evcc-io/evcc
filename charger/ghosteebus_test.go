@@ -27,9 +27,9 @@ func newTestGhostEEBusREST(t *testing.T) *GhostEEBus {
 	t.Helper()
 	return &GhostEEBus{
 		EEBus: &EEBus{
-			Capabilities: implement.Caps(),
-			log:          util.NewLogger("test"),
-			cem:          &eebus.CustomerEnergyManagement{},
+			Caps: implement.New(),
+			log:  util.NewLogger("test"),
+			cem:  &eebus.CustomerEnergyManagement{},
 		},
 		Helper: request.NewHelper(util.NewLogger("test")),
 		uri:    "https://wallbox.local/api/v2",
@@ -44,7 +44,7 @@ func newTestGhostEEBusWithEEBus(t *testing.T) (*GhostEEBus, *mocks.CemEVCCInterf
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 
 	eb := &EEBus{
-		Capabilities: implement.Caps(),
+		Caps: implement.New(),
 		cem: &eebus.CustomerEnergyManagement{
 			EvCC: evccMock,
 		},
