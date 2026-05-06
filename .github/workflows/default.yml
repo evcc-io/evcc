@@ -238,10 +238,13 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      - name: Build UI
+      - name: Install make
         run: |
-          npm ci
-          npm run build
+          apt-get update
+          apt-get install -y make
+
+      - name: Build UI
+        run: make install-ui ui
 
       - name: Build Go
         run: make build
