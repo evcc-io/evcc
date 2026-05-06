@@ -217,6 +217,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Fix git safe.directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
