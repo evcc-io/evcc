@@ -41,6 +41,11 @@ type Device interface {
 
 // Customer Energy Management
 type CustomerEnergyManagement struct {
+	// LocalEntity is the CEM entity that hosts the EV-facing use cases. It is
+	// exposed so downstream code can build spine-level clients (e.g. for atomic
+	// multi-category LoadControl writes that bypass the per-use-case wrappers).
+	LocalEntity spineapi.EntityLocalInterface
+
 	EvseCC ucapi.CemEVSECCInterface
 	EvCC   ucapi.CemEVCCInterface
 	EvCem  ucapi.CemEVCEMInterface
@@ -156,12 +161,13 @@ func NewServer(other Config) (*EEBus, error) {
 
 		// customer energy management to EVSE
 		c.cem = CustomerEnergyManagement{
-			EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
-			EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
-			EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
-			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
-			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
-			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+			LocalEntity: localEntity,
+			EvseCC:      evsecc.NewEVSECC(localEntity, c.ucCallback),
+			EvCC:        evcc.NewEVCC(c.service, localEntity, c.ucCallback),
+			EvCem:       evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
+			OpEV:        opev.NewOPEV(localEntity, c.ucCallback),
+			OscEV:       oscev.NewOSCEV(localEntity, c.ucCallback),
+			EvSoc:       evsoc.NewEVSOC(localEntity, c.ucCallback),
 		}
 
 		// monitoring appliance to meters

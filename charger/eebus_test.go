@@ -106,140 +106,175 @@ func TestEEBusNoCurrents(t *testing.T) {
 	assert.Equal(t, 10.4, l3)
 }
 
-// newTestEEBus creates an EEBus instance with all mocks wired up for limit writing tests.
-func newTestEEBus(t *testing.T) (*EEBus, *mocks.CemOPEVInterface, *mocks.CemOSCEVInterface, *spinemocks.EntityRemoteInterface) {
-	t.Helper()
+// 3-phase limits helper
+func limits3p(v float64) []float64 {
+	return []float64{v, v, v}
+}
 
+// TestComputeOpevLimits verifies the per-phase OpEV obligation-max tuples that
+// writeCurrentLimitData ships through the combined-write path. OpEV is active
+// for the given current unless it meets/exceeds the phase max (in which case
+// the obligation becomes inactive, meaning "no cap").
+func TestComputeOpevLimits(t *testing.T) {
+	tests := []struct {
+		name       string
+		current    float64
+		maxLimits  []float64
+		wantActive bool
+		wantValue  float64
+	}{
+		{"mid-range", 10, limits3p(16), true, 10},
+		{"at max", 16, limits3p(16), false, 16},
+		{"above max", 20, limits3p(16), false, 20},
+		{"disable", 0, limits3p(16), true, 0},
+		{"no max limits", 10, nil, true, 10},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := computeOpevLimits(tc.current, tc.maxLimits)
+			require.Len(t, got, 3)
+			for i, limit := range got {
+				assert.Equalf(t, tc.wantActive, limit.IsActive, "phase %d IsActive", i)
+				assert.Equalf(t, tc.wantValue, limit.Value, "phase %d Value", i)
+			}
+		})
+	}
+}
+
+// TestComputeOscevLimits verifies the per-phase OSCEV recommendation tuples.
+// Unlike OpEV, OSCEV is only active when the current is at least the phase
+// min — a recommendation below min cannot drive charging and must be inactive.
+func TestComputeOscevLimits(t *testing.T) {
+	tests := []struct {
+		name       string
+		current    float64
+		minLimits  []float64
+		wantActive bool
+		wantValue  float64
+	}{
+		{"at min", 6, limits3p(6), true, 6},
+		{"above min", 10, limits3p(6), true, 10},
+		{"below min", 4, limits3p(6), false, 4},
+		{"disable", 0, limits3p(6), false, 0},
+		{"no min limits", 10, nil, false, 10},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := computeOscevLimits(tc.current, tc.minLimits)
+			require.Len(t, got, 3)
+			for i, limit := range got {
+				assert.Equalf(t, tc.wantActive, limit.IsActive, "phase %d IsActive", i)
+				assert.Equalf(t, tc.wantValue, limit.Value, "phase %d Value", i)
+			}
+		})
+	}
+}
+
+// TestFindLimitDescriptionByMeasurementID pins the per-phase description
+// lookup that buildPhaseLimitData uses to map a parameter's MeasurementId to
+// the matching LoadControl limit description. Descriptions with a nil
+// MeasurementId must be skipped; first match wins; no match returns nil.
+func TestFindLimitDescriptionByMeasurementID(t *testing.T) {
+	id := func(v model.MeasurementIdType) *model.MeasurementIdType { return &v }
+	limitID := func(v model.LoadControlLimitIdType) *model.LoadControlLimitIdType { return &v }
+
+	descs := []model.LoadControlLimitDescriptionDataType{
+		{MeasurementId: nil, LimitId: limitID(1)},
+		{MeasurementId: id(7), LimitId: limitID(2)},
+		{MeasurementId: id(9), LimitId: limitID(3)},
+		{MeasurementId: id(9), LimitId: limitID(4)},
+	}
+
+	t.Run("empty slice returns nil", func(t *testing.T) {
+		assert.Nil(t, findLimitDescriptionByMeasurementID(nil, 9))
+	})
+
+	t.Run("no match returns nil", func(t *testing.T) {
+		assert.Nil(t, findLimitDescriptionByMeasurementID(descs, 42))
+	})
+
+	t.Run("skips nil MeasurementId and returns first match", func(t *testing.T) {
+		got := findLimitDescriptionByMeasurementID(descs, 7)
+		require.NotNil(t, got)
+		require.NotNil(t, got.LimitId)
+		assert.Equal(t, model.LoadControlLimitIdType(2), *got.LimitId)
+	})
+
+	t.Run("first-match wins on duplicates", func(t *testing.T) {
+		got := findLimitDescriptionByMeasurementID(descs, 9)
+		require.NotNil(t, got)
+		require.NotNil(t, got.LimitId)
+		assert.Equal(t, model.LoadControlLimitIdType(3), *got.LimitId)
+	})
+}
+
+// TestOscevMinLimits pins the three skip conditions and the happy path of
+// the OSCEV data-availability check that writeCurrentLimitData performs
+// before including recommendation limits in the combined write.
+func TestOscevMinLimits(t *testing.T) {
+	t.Run("scenario not available returns false", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.False(t, ok)
+		assert.Nil(t, limits)
+	})
+
+	t.Run("LoadControlLimits error returns false", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+		oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, errors.New("no data"))
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.False(t, ok)
+		assert.Nil(t, limits)
+	})
+
+	t.Run("CurrentLimits error returns false", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+		oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, nil)
+		oscev.EXPECT().CurrentLimits(evEntity).Return(nil, nil, nil, errors.New("no limits"))
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.False(t, ok)
+		assert.Nil(t, limits)
+	})
+
+	t.Run("happy path returns min limits", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		want := limits3p(6)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+		oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, nil)
+		oscev.EXPECT().CurrentLimits(evEntity).Return(want, limits3p(16), limits3p(10), nil)
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.True(t, ok)
+		assert.Equal(t, want, limits)
+	})
+}
+
+// TestWriteCurrentLimitData_OpevNotAvailable verifies that writeCurrentLimitData
+// returns ErrNotAvailable without touching any clients when OpEV scenario 1 is
+// not supported on the target entity.
+func TestWriteCurrentLimitData_OpevNotAvailable(t *testing.T) {
 	opev := mocks.NewCemOPEVInterface(t)
-	oscev := mocks.NewCemOSCEVInterface(t)
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 
 	eebus := &EEBus{
 		cem: &eebus.CustomerEnergyManagement{
-			OpEV:  opev,
-			OscEV: oscev,
+			OpEV: opev,
 		},
 		ev:  evEntity,
 		log: util.NewLogger("test"),
 	}
-
-	return eebus, opev, oscev, evEntity
-}
-
-// 3-phase limits helper
-func opevLimits3p(min, max, def float64) ([]float64, []float64, []float64, error) {
-	return []float64{min, min, min}, []float64{max, max, max}, []float64{def, def, def}, nil
-}
-
-func TestWriteCurrentLimitData_OpevOnly(t *testing.T) {
-	eebus, opev, oscev, evEntity := newTestEEBus(t)
-	_ = eebus
-
-	// OPEV available, OSCEV not available
-	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
-	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 10
-	}), mock.Anything).Return(nil, nil)
-
-	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
-
-	err := eebus.writeCurrentLimitData(evEntity, 10)
-	require.NoError(t, err)
-}
-
-func TestWriteCurrentLimitData_OpevAndOscev(t *testing.T) {
-	eebus, opev, oscev, evEntity := newTestEEBus(t)
-	_ = eebus
-
-	// Both available, current = 10A (between min and max)
-	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
-	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		// OPEV: active at 10A (below max of 16)
-		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 10
-	}), mock.Anything).Return(nil, nil)
-
-	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	oscev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{}, nil)
-	oscev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(2, 16, 0))
-	oscev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		// OSCEV: active at 10A (>= min of 2, recommendation to charge)
-		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 10
-	}), mock.Anything).Return(nil, nil)
-
-	err := eebus.writeCurrentLimitData(evEntity, 10)
-	require.NoError(t, err)
-}
-
-func TestWriteCurrentLimitData_AtMax(t *testing.T) {
-	eebus, opev, oscev, evEntity := newTestEEBus(t)
-	_ = eebus
-
-	// Current equals max limit
-	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
-	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		// OPEV: inactive at max (no restriction needed)
-		return len(limits) == 3 && !limits[0].IsActive && limits[0].Value == 16
-	}), mock.Anything).Return(nil, nil)
-
-	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	oscev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{}, nil)
-	oscev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(2, 16, 0))
-	oscev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		// OSCEV: active at 16A (>= min, recommend charging)
-		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 16
-	}), mock.Anything).Return(nil, nil)
-
-	err := eebus.writeCurrentLimitData(evEntity, 16)
-	require.NoError(t, err)
-}
-
-func TestWriteCurrentLimitData_Disable(t *testing.T) {
-	eebus, opev, oscev, evEntity := newTestEEBus(t)
-	_ = eebus
-
-	// Current = 0 (disable charging)
-	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
-	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		// OPEV: active at 0A (hard stop)
-		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 0
-	}), mock.Anything).Return(nil, nil)
-
-	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	oscev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{}, nil)
-	oscev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(2, 16, 0))
-	oscev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
-		// OSCEV: inactive at 0A (no recommendation, < min)
-		return len(limits) == 3 && !limits[0].IsActive && limits[0].Value == 0
-	}), mock.Anything).Return(nil, nil)
-
-	err := eebus.writeCurrentLimitData(evEntity, 0)
-	require.NoError(t, err)
-}
-
-func TestWriteCurrentLimitData_OscevNoLimitData(t *testing.T) {
-	eebus, opev, oscev, evEntity := newTestEEBus(t)
-	_ = eebus
-
-	// OSCEV scenario available but no limit data (e.g. PCMP wallbox)
-	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
-	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.Anything, mock.Anything).Return(nil, nil)
-
-	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
-	oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, errors.New("data not available"))
-	// no WriteLoadControlLimits call expected for OSCEV
-
-	err := eebus.writeCurrentLimitData(evEntity, 10)
-	require.NoError(t, err)
-}
-
-func TestWriteCurrentLimitData_OpevNotAvailable(t *testing.T) {
-	eebus, opev, _, evEntity := newTestEEBus(t)
-	_ = eebus
 
 	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
 
