@@ -205,6 +205,9 @@ jobs:
     name: Integration
     runs-on: depot-ubuntu-24.04-arm-32
 
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+
     permissions:
       contents: read
       actions: write
@@ -240,25 +243,6 @@ jobs:
 
       - name: Build Go
         run: make build
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v5
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-
-      - name: Install Playwright (browsers + deps)
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
-      - name: Install Playwright (deps only)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
 
       - name: Run tests
         run: npx playwright test
