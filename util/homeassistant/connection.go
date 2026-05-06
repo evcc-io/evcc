@@ -247,7 +247,7 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	case "button", "input_button":
 		// Buttons are stateless — they only have a press action.
 		if !turnOn {
-			return fmt.Errorf("entity %s (domain %s) has no off action", entity, domain)
+			return fmt.Errorf("entity %s has no off action", entity)
 		}
 		service = "press"
 	default:

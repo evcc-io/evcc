@@ -35,8 +35,8 @@ func TestCallSwitchService_DomainDispatch(t *testing.T) {
 		{"switch turn_off", "switch.foo", false, "/api/services/switch/turn_off", ""},
 		{"button press", "button.tesla_model_x_wake_up", true, "/api/services/button/press", ""},
 		{"input_button press", "input_button.bar", true, "/api/services/input_button/press", ""},
-		{"button no off", "button.foo", false, "", "entity button.foo (domain button) has no off action"},
-		{"input_button no off", "input_button.bar", false, "", "entity input_button.bar (domain input_button) has no off action"},
+		{"button no off", "button.foo", false, "", "entity button.foo has no off action"},
+		{"input_button no off", "input_button.bar", false, "", "entity input_button.bar has no off action"},
 	}
 
 	for _, tc := range tests {
