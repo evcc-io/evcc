@@ -49,16 +49,16 @@ type maScenarios struct {
 
 var (
 	mpcScenarios = maScenarios{
-		power:    eebus.MPCScenarioPower,
-		energy:   eebus.MPCScenarioEnergyConsumed,
-		currents: eebus.MPCScenarioCurrentPerPhase,
-		voltages: eebus.MPCScenarioVoltagePerPhase,
+		power:    eebus.MPCPower,
+		energy:   eebus.MPCEnergyConsumed,
+		currents: eebus.MPCCurrentPerPhase,
+		voltages: eebus.MPCVoltagePerPhase,
 	}
 	mgcpScenarios = maScenarios{
-		power:    eebus.MGCPScenarioPower,
-		energy:   eebus.MGCPScenarioEnergyConsumed,
-		currents: eebus.MGCPScenarioCurrentPerPhase,
-		voltages: eebus.MGCPScenarioVoltagePerPhase,
+		power:    eebus.MGCPPower,
+		energy:   eebus.MGCPEnergyConsumed,
+		currents: eebus.MGCPCurrentPerPhase,
+		voltages: eebus.MGCPVoltagePerPhase,
 	}
 )
 
@@ -229,7 +229,7 @@ func (c *EEBus) Dimmed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(c.eg.EgLPCInterface, c.egLpcEntity, eebus.LPCScenarioLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := eebusReadValue(c.eg.EgLPCInterface, c.egLpcEntity, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -254,7 +254,7 @@ func (c *EEBus) Dim(dim bool) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.egLpcEntity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCScenarioLimit) {
+	if c.egLpcEntity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCLimit) {
 		return api.ErrNotAvailable
 	}
 
@@ -273,7 +273,7 @@ func (c *EEBus) Curtailed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(c.eg.EgLPPInterface, c.egLppEntity, eebus.LPPScenarioLimit, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := eebusReadValue(c.eg.EgLPPInterface, c.egLppEntity, eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -298,7 +298,7 @@ func (c *EEBus) Curtail(curtail bool) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.egLppEntity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(c.egLppEntity, eebus.LPPScenarioLimit) {
+	if c.egLppEntity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(c.egLppEntity, eebus.LPPLimit) {
 		return api.ErrNotAvailable
 	}
 
