@@ -430,6 +430,13 @@
       "welcomeBannerText": "Begin met het aanmaken van minstens één **oplader**, **verwarmer**, **netstroom**, **zonnepanelen**, **thuisbatterij** of **extra meter**. Als je gewoon wilt testen, kies dan een **demo-apparaat**.",
       "welcomeBannerTitle": "Start met het configureren van uw systeem!"
     },
+    "mcp": {
+      "description": "onthult een Model Context Protocol server, zodat AI assistenten zoals Claude de toestand van jouw systeem kunnen uitlezen en het laadproces controleren.",
+      "exampleLabel": "voorbeeld: Claude CLI",
+      "restartHint": "beschikbaar na herstart.",
+      "title": "MCP server",
+      "url": "MCP eindpunt"
+    },
     "messaging": {
       "addMessenger": "Diensten toevoegen",
       "description": "Ontvang meldingen over je oplaadsessies.",
