@@ -241,10 +241,10 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      - name: Install make
+      - name: Install system dependencies
         run: |
           apt-get update
-          apt-get install -y make
+          apt-get install -y make sqlite3
 
       - name: Build UI
         run: make install-ui ui
