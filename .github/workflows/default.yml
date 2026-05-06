@@ -239,7 +239,9 @@ jobs:
           cache: "npm"
 
       - name: Build UI
-        run: make install-ui ui
+        run: |
+          npm ci
+          npm run build
 
       - name: Build Go
         run: make build
