@@ -39,6 +39,9 @@
     "legendTopAutostart": "Démarrer automatiquement",
     "legendTopName": "Charge véhicule par la batterie",
     "legendTopSubline": "lorsque la batterie domestique est au-dessus de {soc}.",
+    "legendTopSublineAbove": "quand supérieur à {soc}",
+    "legendTopSublineDisabled": "est à {soc}.",
+    "legendTopSublineDisabledState": "désactivé",
     "modalTitle": "Batterie domestique",
     "noBattery": "Aucune batterie n'est configurée.",
     "usageTab": "Utilisation batterie"
@@ -113,6 +116,7 @@
       "title": "Devise"
     },
     "deviceValue": {
+      "activeClients": "Clients actifs",
       "amount": "Montant",
       "broker": "Courtier",
       "bucket": "Seau",
@@ -126,6 +130,7 @@
       "chargedEnergy": "Chargé",
       "co2": "CO₂ du réseau",
       "configured": "Configuré",
+      "connected": "Connecté",
       "connections": "Connexions",
       "controllable": "Contrôlable",
       "currency": "Devise",
@@ -144,6 +149,7 @@
       "hemsActiveLimit": "Limite active",
       "hemsType": "Communication",
       "identifier": "Identifiant RFID",
+      "loginBlocked": "Limit de login atteinte",
       "max": "max",
       "messengers": "Services",
       "no": "non",
@@ -225,6 +231,7 @@
       "authPerformHint": "Va s’ouvrir dans un nouvel onglet. Revenez ici pour continuer.",
       "authPrepare": "Préparer la connexion",
       "cancel": "Annuler",
+      "change": "Changer",
       "clear": "Effacer",
       "close": "Fermer",
       "confirmSave": "Il y a des modifications. Enregistrer maintenant ?",
@@ -233,6 +240,7 @@
       "customHelp": "Créer un appareil personnalisé en utilisant le système de greffons d’evcc.",
       "customOption": "Appareil personnalisé",
       "delete": "Supprimer",
+      "dismiss": "Ignorer",
       "docsLink": "Se référer à la documentation.",
       "dragHandle": "Poignée de déplacement",
       "dragItem": "Déplaçable : {title}",
@@ -412,7 +420,7 @@
     "main": {
       "addAdditional": "Ajouter un compteur supplémentaire",
       "addGrid": "Ajouter un compteur pour le réseau",
-      "addLoadpoint": "­Ajouter chargeur ou chauffage",
+      "addLoadpoint": "Ajouter chargeur ou chauffage",
       "addPvBattery": "Ajouter du solaire ou une batterie",
       "addTariffs": "Ajouter les tarifs",
       "addVehicle": "Ajouter un véhicule",
@@ -425,6 +433,13 @@
       "vehicles": "Mes véhicules",
       "welcomeBannerText": "Commencez par créer au moins un **chargeur**, un **chauffage**, un **réseau**, un **système solaire**, une **batterie** ou un **compteur supplémentaire**. Si vous souhaitez simplement tester, choisissez un **appareil de démonstration**.",
       "welcomeBannerTitle": "Configurons votre système !"
+    },
+    "mcp": {
+      "description": "Expose un serveur MCP (Model Context Protocol), permettant aux assistants IA comme Claude de lire l’état de votre système et contrôler la charge.",
+      "exampleLabel": "Exemple : Claude CLI",
+      "restartHint": "Sera disponible après un redémarrage.",
+      "title": "Serveur MCP",
+      "url": "Point d’accès MCP"
     },
     "messaging": {
       "addMessenger": "Ajouter un service",
@@ -603,8 +618,9 @@
       "urlHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur devrait ajouter automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier manuellement l'identifiant. Exemple : `{url}`"
     },
     "optimizer": {
-      "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées.",
+      "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
       "enable": "Activer l'optimiseur",
+      "info": "Cela peut prendre quelques minutes avant que le menu apparaisse. Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
       "title": "Optimiseur"
     },
     "options": {
@@ -634,6 +650,38 @@
       "titleAdd": "Ajouter un compteur de production solaire",
       "titleEdit": "Modifier le compteur de production solaire"
     },
+    "remote": {
+      "active": "Actif",
+      "addClient": "Ajouter un client",
+      "addClientDescription": "Les données de connexion sont enregistrées et vérifiées uniquement de manière locale sur votre instance d’evcc.",
+      "addClientTitle": "Ajouter un client distant",
+      "clientCreated": "Client créé",
+      "clients": "Clients",
+      "confirmDelete": "Supprimer le client ?",
+      "connected": "Connecté",
+      "createClient": "Créer le client",
+      "description": "Accéder à votre evcc depuis n’importe où en utilisant l’app mobile evcc. Aucune redirection de port ou VNP nécessaires.",
+      "deviceName": "Nom de l’appareil",
+      "disconnected": "Déconnecté",
+      "done": "Effectué",
+      "enableLabel": "Activer l’accès à distance",
+      "expiration": "Expiration",
+      "expirationNone": "Jamais",
+      "expired": "expiré",
+      "expiresIn": "expire dans {time}",
+      "lastActive": "actif {time}",
+      "loginBlocked": "Les logins distants sont bloqués pendant une minute en raison d’un trop grand nombre d’essais erronés.",
+      "manualLogin": "Ou authentifiez-vous manuellement sur {url} dans votre navigateur en utilisant ces données de connexion :",
+      "noClients": "Aucun client pour l’instant. Personne ne peut encore se connecter.",
+      "password": "Mot de passe",
+      "passwordOnce": "Ce mot de passe n’est affiché qu’une seule fois. Scannez le code QR ou copiez-le maintenant dans votre gestionnaire de mots de passe. Vous ne pourrez plus le ré-afficher.",
+      "qrInstall": "Installer l’app evcc pour {ios} ou {android}.",
+      "qrScan": "Scannez le code avec l’appareil photo de votre téléphone pour vous connecter. Si vous êtes déjà sur votre téléphone, cliquez sur le code pour ouvrir l’application.",
+      "removeClient": "Supprimer le client",
+      "title": "Accès à distance",
+      "url": "URL publique",
+      "username": "Nom d’utilisateur"
+    },
     "section": {
       "additionalMeter": "Compteurs supplémentaires",
       "general": "Général",
@@ -660,11 +708,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Clé de licence",
+      "activationKeyHint": "Vous a été envoyé par email. Peut être trouvé via {url}.",
       "addToken": "Entrer le jeton",
       "changeToken": "Modifier le jeton",
       "description": "Le modèle de parrainage nous aide à maintenir le projet et à construire de manière durable de nouvelles fonctionnalités passionnantes. En tant que parrain, vous avez accès à toutes les implémentations de chargeurs.",
-      "descriptionToken": "Les parrains obtiennent leur jeton sur {url}. Pour démarrer, nous offrons également un jeton d’essai pour les tests {trialToken}.",
-      "enterYourToken": "Entrer votre jeton",
+      "descriptionToken": "En tant que sponsor GitHub, vous pouvez obtenir un jeton sur {url}. Pour démarrer, nous offrons également un jeton d’essai pour les tests {trialToken}.",
+      "email": "Email",
+      "emailHint": "L’adresse email que vous avez utilisé pour {url}",
+      "enterYourToken": "Votre jeton de sponsor",
       "error": "Le jeton de parrain n’est pas valide.",
       "invalid": "invalide",
       "labelToken": "Jeton de parrain",
@@ -675,7 +727,7 @@
       "tokenRequiredShort": "Aucun jeton de parrainage n'est configuré.",
       "trialToken": "jeton d’essai",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Votre jeton"
+      "yourToken": "Jeton de sponsor"
     },
     "system": {
       "backupRestore": {
@@ -764,8 +816,8 @@
       "titleChoice": "Que voulez-vous rajouter ?",
       "type": {
         "co2": "Intensité de CO₂",
-        "feedIn": "Prix de rachat",
-        "grid": "Prix de consommation du réseau",
+        "feedIn": "Prix de rachat par le réseau",
+        "grid": "Prix d’import du réseau",
         "planner": "Planificateur",
         "solar": "Solaire"
       },
@@ -944,6 +996,7 @@
       "setup": "Définir les tarifs et les prévisions",
       "solar": "Consultez les prévisions de production solaire pour aujourd'hui et les prochains jours. Ces données serviront également, à l'avenir, à optimiser automatiquement la recharge."
     },
+    "hideLine": "cacher la ligne",
     "modalTitle": "Prévisions",
     "price": {
       "average": "Moyenne",
@@ -952,6 +1005,7 @@
       "range": "Amplitude"
     },
     "priceZoom": "zoomer",
+    "showLine": "afficher la ligne",
     "solar": {
       "dayAfterTomorrow": "Après-demain",
       "partly": "partiellement",
@@ -960,7 +1014,8 @@
       "tomorrow": "Demain"
     },
     "solarAdjust": "Ajuster la prévision solaire se basant sur la production réelle{percent}.",
-    "solarAdjustShort": "ajuster les données réelles",
+    "solarAdjustMedium": "ajustement des données réelles",
+    "solarAdjustShort": "ajuster",
     "type": {
       "co2": "Émissions de CO₂",
       "price": "Prix du réseau",
@@ -1121,6 +1176,11 @@
       "update": "Appliquer",
       "weekdays": "Jours"
     },
+    "continuousStatus": {
+      "charging": "Boost activé.",
+      "connected": "Opération normale.",
+      "waitForVehicle": "Boost demandé…"
+    },
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie en charge",
@@ -1133,7 +1193,7 @@
       "batteryTooltip": "{energy} sur {total} ({soc})",
       "forecast": "Prévisions : ",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
-      "gridImport": "Utilisation du réseau",
+      "gridImport": "Import depuis le réseau",
       "homePower": "Consommation",
       "loadpoints": "Chargeur| Chargeur | {count} chargeurs",
       "loadpointsLimit": "limite à {limit}",
@@ -1147,7 +1207,7 @@
       "charging": "Chauffage…",
       "connected": "En attente.",
       "vehicleLimit": "Limite de chauffage",
-      "waitForVehicle": "Prêt. En attente du chauffage…"
+      "waitForVehicle": "Prêt à chauffer…"
     },
     "hemsWarning": {
       "description": "Réduire la charge pour ne pas dépasser {limit}.",
@@ -1321,7 +1381,7 @@
     "welcome": "Bienvenue à bord !"
   },
   "notifications": {
-    "dismissAll": "Supprimer tout",
+    "dismissAll": "Ignorer tout",
     "logs": "Voir les journaux complets",
     "modalTitle": "Notifications"
   },
@@ -1421,6 +1481,7 @@
     },
     "loadpoint": "Point de charge",
     "noData": "Pas de session de charge ce mois-ci.",
+    "odometer": "Kilométrage",
     "overview": "Aperçu",
     "period": {
       "month": "Mois",
