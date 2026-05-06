@@ -39,6 +39,9 @@
     "legendTopAutostart": "Startuoti automatiškai",
     "legendTopName": "Automobilio įkrovimas su kaupiklio pagalba",
     "legendTopSubline": "kai kaupiklis yra virš {soc}.",
+    "legendTopSublineAbove": "kai virš {soc}",
+    "legendTopSublineDisabled": "yra {soc}.",
+    "legendTopSublineDisabledState": "išjungta",
     "modalTitle": "Namų kaupiklis",
     "noBattery": "Nėra sukonfigūruotų kaupiklių.",
     "usageTab": "Kaupiklio naudojimas"
@@ -228,6 +231,7 @@
       "authPerformHint": "Bus atidaryta naujame skirtuke. Pratęsimui grįžkite čia.",
       "authPrepare": "Paruošti ryšį",
       "cancel": "Atšaukti",
+      "change": "Pakeisti",
       "clear": "Išvalyti",
       "close": "Uždaryti",
       "confirmSave": "Yra neišsaugotų pakeitimų. Išsaugoti dabar ?",
@@ -236,6 +240,7 @@
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
+      "dismiss": "Atmesti",
       "docsLink": "Žiūrėkite dokumentaciją.",
       "dragHandle": "Vilkti",
       "dragItem": "Galima vilkti: {title}",
@@ -428,6 +433,13 @@
       "vehicles": "Mano automobiliai",
       "welcomeBannerText": "Pradžiai sukonfigūruokite bent vieną **įkroviklį**, **šildytuvą**, **tinklo skaitiklį**, **saulės jėgainę** ar **papildomą skaitiklį**. Jei norite tik pasibandyti, pasirinkite **demonstracinį įrenginį**.",
       "welcomeBannerTitle": "Sukonfigūruokime jūsų sistemą!"
+    },
+    "mcp": {
+      "description": "Atskleidžia Model Context Protocol serverį, leidžiantį dirbtinio intelekto asistentams, tokiems kaip Claude, nuskaityti jūsų sistemos būseną ir valdyti įkrovimą.",
+      "exampleLabel": "Pavyzdžiui: Claude CLI",
+      "restartHint": "Bus pasiekiama po perkrovimo.",
+      "title": "MCP Serveris",
+      "url": "MCP galinis taškas"
     },
     "messaging": {
       "addMessenger": "Pridėti paslaugą",
@@ -696,11 +708,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licencijos Raktas",
+      "activationKeyHint": "Išsiųstas jums el. paštu. Galima rasti adresu {url}.",
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs galite valdyti įkroviklius, kurių naudojimui reikia rėmimo.",
-      "descriptionToken": "Rėmėjai ras savo žetoną (token) {url}. Pradžiai siūlome {trialToken}.",
-      "enterYourToken": "Įrašykite savo žetoną",
+      "descriptionToken": "GitHub rėmėjai gali matyti savo žetoną (token) {url}. Pradžiai - pasibandymui siūlome {trialToken}.",
+      "email": "El. paštas",
+      "emailHint": "El. pašto adresas, kurį naudojote {url}",
+      "enterYourToken": "Jūsų rėmėjo žetonas",
       "error": "Rėmėjo žetonas (token) negalioja.",
       "invalid": "negalioja",
       "labelToken": "Rėmėjo žetonas",
@@ -711,7 +727,7 @@
       "tokenRequiredShort": "Trūksta rėmėjo žetono (token).",
       "trialToken": "bandomasis žetonas (token)",
       "viaYaml": "per evcc.yaml",
-      "yourToken": "Jūsų žetonas"
+      "yourToken": "Rėmėjo Žetonas"
     },
     "system": {
       "backupRestore": {
@@ -1161,6 +1177,11 @@
       "update": "Patvirtinti",
       "weekdays": "Dienos"
     },
+    "continuousStatus": {
+      "charging": "Pastiprinimas aktyvuotas.",
+      "connected": "Normalus veikimas.",
+      "waitForVehicle": "Užprašytas pastiprinimas…"
+    },
     "energyflow": {
       "battery": "Kaupiklis",
       "batteryCharge": "Kaupiklis įkraunamas",
@@ -1187,7 +1208,7 @@
       "charging": "Šildoma…",
       "connected": "Budėjimo režimas.",
       "vehicleLimit": "Šildymo limitas",
-      "waitForVehicle": "Paruošta. Laukiame šildytuvo…"
+      "waitForVehicle": "Paruošta šildyti…"
     },
     "hemsWarning": {
       "description": "Įkrovimas apribotas, kad neviršyti {limit}.",
@@ -1461,6 +1482,7 @@
     },
     "loadpoint": "Įkroviklis",
     "noData": "Šį mėnesį įkrovimų nebuvo.",
+    "odometer": "Rida",
     "overview": "Apžvalga",
     "period": {
       "month": "Mėnesis",
