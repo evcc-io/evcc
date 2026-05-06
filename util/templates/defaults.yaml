@@ -414,6 +414,7 @@ params:
     description:
       de: Intervall
       en: Interval
+    type: duration
   - name: mac
     private: true
     description:
