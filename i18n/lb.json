@@ -113,6 +113,7 @@
       "title": "Wärung"
     },
     "deviceValue": {
+      "activeClients": "Aktiv Clienten",
       "amount": "Unzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Opgelueden",
       "co2": "Netz CO₂",
       "configured": "Konfiguréiert",
+      "connected": "Verbonnen",
       "connections": "Verbindungen",
       "controllable": "Kontrolléierbar",
       "currency": "Wärung",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Aktiivt Limit",
       "hemsType": "Communicatioun",
       "identifier": "RFID-Identifikatioun",
+      "loginBlocked": "Login-Limit erreecht",
       "max": "max",
       "messengers": "Servicer",
       "no": "nee",
@@ -225,6 +228,7 @@
       "authPerformHint": "Mécht een neien Tab op. Duerno hei weidermaachen.",
       "authPrepare": "Verbindung virbereeden",
       "cancel": "Ofbriechen",
+      "change": "Änneren",
       "clear": "Läschen",
       "close": "Zoumaachen",
       "confirmSave": "Et ginn net gespäichert Ännerungen. Elo späicheren?",
@@ -426,6 +430,13 @@
       "welcomeBannerText": "Fänkt un mat der Erstelle vun op d'mannst engem **Ladegerät**, **Heizer**, **Netz**, **Solarpanel**, **Batterie** oder **zousätzlechen Zähler**. Wann Dir just testen wëllt, wielt e **Demonstratiounsapparat**.",
       "welcomeBannerTitle": "Loosst eis de System konfiguréieren!"
     },
+    "mcp": {
+      "description": "Stellt e Model Context Protocol-Server bereet. Dëst erlaabt KI-Assistenten wéi Claude, den Zoustand vun Ärem System ze liesen an de Luedprozess ze kontrolléieren.",
+      "exampleLabel": "Beispill: Claude CLI",
+      "restartHint": "Wäert no engem Neistart verfügbar sinn.",
+      "title": "MCP Server",
+      "url": "MCP-Endpunkt"
+    },
     "messaging": {
       "addMessenger": "Service derbäisetzen",
       "description": "Notifikatiounen iwwer Är Opluedsessioune kréien.",
@@ -603,8 +614,9 @@
       "urlHelp": "Kopéier dës URL fir d'Konfiguratioun vun denger Wallbox. Kuck am Handbuch vum Hiersteller no Detailer. Et gëtt erwaart, datt d'Wallbox automatesch säin eenzegaartegen Identifikator (Statiouns-ID) un d'URL bäifügt. A rare Fäll musst Dir den Identifikator eventuell manuell spezifizéieren. Beispill: `{url}`"
     },
     "optimizer": {
-      "description": "Analyséiert d'Solarprognos, d'Stroumpräisser an Är Verbrauchssmuster, fir d'Batterie- a Luedstrategie ze optiméieren. D'Donnéeë ginn un den evcc-Optimiséierungsservice fir d'Berechnen geschéckt.",
+      "description": "Analyséiert d'Solarprognos, d'Stroumpräisser an Är Verbrauchssmuster, fir d'Batterie- a Luedstrategie ze optiméieren. D'Donnéeë ginn un den evcc-Optimiséierungsservice fir d'Berechnen geschéckt. Momentan berechent a visualiséiert et nëmmen. Et steiert nach keng Apparater.",
       "enable": "Optimizer aktivéieren",
+      "info": "Et kann e puer Minutten daueren, bis den Optimizer-Menüpunkt sichtbar gëtt. Bei neien Installatiounen kann et bis zu 24 Stonnen daueren, bis evcc genuch Donnéeë gesammelt huet.",
       "title": "Optimizer"
     },
     "options": {
@@ -634,6 +646,38 @@
       "titleAdd": "Zieler (PV) derbäi fügen",
       "titleEdit": "Zieler (PV) beaarbechten"
     },
+    "remote": {
+      "active": "Aktiv",
+      "addClient": "Client derbäifügen",
+      "addClientDescription": "Zougangsberechtegungen ginn nëmmen lokal op Ärer evcc-Instanz gespäichert a verifizéiert.",
+      "addClientTitle": "Remote-Client derbäifügen",
+      "clientCreated": "Client erstellt",
+      "clients": "Clienten",
+      "confirmDelete": "Client läschen?",
+      "connected": "Verbonnen",
+      "createClient": "Client erstellen",
+      "description": "Zougang zu Ärer evcc-Installatioun vun iwwerall aus mat der evcc-Mobilapp. Kee Port-Forwarding oder VPN néideg.",
+      "deviceName": "Numm vum Apparat",
+      "disconnected": "Net verbonnen",
+      "done": "Fäerdeg",
+      "enableLabel": "Erlaabt den Zougank op Distanz",
+      "expiration": "Oflaaf",
+      "expirationNone": "Ni",
+      "expired": "ofgelaf",
+      "expiresIn": "gëllt bis {time}",
+      "lastActive": "aktiv {time}",
+      "loginBlocked": "Zougäng op Distanz si fir eng Minutt wéinst ze ville gescheiterten Login-Versich gespaart.",
+      "manualLogin": "Oder mellt Iech manuell op {url} an Ärem Browser mat dësen Zougangsdaten un:",
+      "noClients": "Nach keng Clienten. Nach ka sech kee verbannen.",
+      "password": "Passwuert",
+      "passwordOnce": "Dëst Passwuert gëtt nëmmen eemol ugewisen. Scannt de QR-Code oder kopéiert en elo. E gëtt net nach eng Kéier ugewisen.",
+      "qrInstall": "Installéiert d'evcc-App fir {ios} oder {android}.",
+      "qrScan": "Scannt de Code mat der Kamera vun ärem Smartphone, fir Iech ze verbannen. Klickt drop, wann Dir schonns Äre Smartphone benotzt.",
+      "removeClient": "Client ewechhuelen",
+      "title": "Zougank op Distanz",
+      "url": "Ëffentlech URL",
+      "username": "Benotzernumm"
+    },
     "section": {
       "additionalMeter": "Zousätzlech Zieler",
       "general": "Allgemeng",
@@ -660,11 +704,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Lizenzschlëssel",
+      "activationKeyHint": "Per E-Mail un Iech geschéckt. Op der {url} ze fannen.",
       "addToken": "Token aginn",
       "changeToken": "Token änneren",
       "description": "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg nei a spannend Fonctiounen z'entwéckelen. Als Sponsor kriss du Zougank zu all Wallbox-Implementatiounen.",
-      "descriptionToken": "Du kriss den Token vun {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
-      "enterYourToken": "Token aginn",
+      "descriptionToken": "Als GitHub-Sponsor fannt Dir Ären Token op {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
+      "email": "E-Mail",
+      "emailHint": "E-Mail-Adress, déi Dir fir {url} benotzt hutt",
+      "enterYourToken": "Äre Sponsor-Token",
       "error": "De Sponsortoken ass ongülteg.",
       "invalid": "ongülteg",
       "labelToken": "Sponsor-Token",
@@ -675,7 +723,7 @@
       "tokenRequiredShort": "Kee Sponsortoken konfiguréiert.",
       "trialToken": "Testtoken",
       "viaYaml": "iwwer evcc.yaml",
-      "yourToken": "Däin Token"
+      "yourToken": "Sponsor Token"
     },
     "system": {
       "backupRestore": {
@@ -764,8 +812,8 @@
       "titleChoice": "Wat wëlls du derbäisetzen?",
       "type": {
         "co2": "CO₂-Intensitéit",
-        "feedIn": "Verkafspräis",
-        "grid": "Netzverbrauchspräis",
+        "feedIn": "Verkafspräis un d'Netz",
+        "grid": "Netzimportspräis",
         "planner": "Planner",
         "solar": "Solar"
       },
@@ -944,6 +992,7 @@
       "setup": "Tariffer a Prognosen opstellen",
       "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt."
     },
+    "hideLine": "Linn ausblennen",
     "modalTitle": "Prognose",
     "price": {
       "average": "Duerchschnitt",
@@ -952,6 +1001,7 @@
       "range": "Beräich"
     },
     "priceZoom": "erazoomen",
+    "showLine": "Linn uweisen",
     "solar": {
       "dayAfterTomorrow": "Iwwermuer",
       "partly": "deelweis",
@@ -960,7 +1010,8 @@
       "tomorrow": "Muer"
     },
     "solarAdjust": "Solarprognose unhand vun de reale Produktionsdaten upassen{percent}.",
-    "solarAdjustShort": "u reell Daten upassen",
+    "solarAdjustMedium": "unpassen un déi reell Produktiounsdaten",
+    "solarAdjustShort": "upassen",
     "type": {
       "co2": "CO₂-Emissiounen",
       "price": "Netzpräis",
@@ -1132,7 +1183,7 @@
       "batteryTooltip": "{energy} vun {total} ({soc})",
       "forecast": "Viraussoen: ",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
-      "gridImport": "Verbrauch vum Stroumnetz",
+      "gridImport": "Import vum Netz",
       "homePower": "Verbrauch",
       "loadpoints": "Wallbox | Wallbox | {count} Wallboxen",
       "loadpointsLimit": "{limit} Limitt",
@@ -1420,6 +1471,7 @@
     },
     "loadpoint": "Luedstatioun",
     "noData": "Nach keng Opluedsessiounen fir dëse Mount.",
+    "odometer": "Kilometerstand",
     "overview": "Iwwersiicht",
     "period": {
       "month": "Mount",
