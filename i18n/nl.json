@@ -228,6 +228,7 @@
       "authPerformHint": "Wordt in een nieuw tabblad geopend. Ga terug naar deze pagina om verder te gaan.",
       "authPrepare": "Verbinding voorbereiden",
       "cancel": "Annuleren",
+      "change": "Wijzigen",
       "clear": "Leegmaken",
       "close": "Sluiten",
       "confirmSave": "Er zijn niet-opgeslagen wijzigingen. Nu opslaan?",
@@ -658,7 +659,14 @@
       "lastActive": "actief {time}",
       "loginBlocked": "Inloggen op afstand is voor een minuut geblokkeerd, omdat er te veel mislukte inlogpogingen waren.",
       "manualLogin": "Of log handmatig in via uw browser op {url}, met de volgende credentials:",
+      "noClients": "Er zijn nog geen clients. Niemand kan nog verbinden.",
       "password": "Wachtwoord",
+      "passwordOnce": "Het wachtwoord wordt eenmalig getoond. Scan of kopieer de QR-code. Je kunt hem niet nogmaals bekijken.",
+      "qrInstall": "Installeer de evcc app voor {ios} of {android}.",
+      "qrScan": "Scan de code met de camera van je telefoon om te verbinden. Klik er op als je al je telefoon aan het gebruiken bent.",
+      "removeClient": "Verwijder client",
+      "title": "Toegang op afstand",
+      "url": "Publieke URL",
       "username": "Gebruikersnaam"
     },
     "section": {
@@ -687,11 +695,13 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licentiesleutel",
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
       "description": "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten.",
-      "descriptionToken": "Sponsors vinden hun token op {url}. Om te starten, bieden we een {trialToken}.",
-      "enterYourToken": "Typ hier je token",
+      "descriptionToken": "Als GitHub-sponsor vind je jouw token op {url}. Om aan de slag te kunnen, bieden we een {trialToken}.",
+      "email": "E-mail",
+      "enterYourToken": "Jouw sponsortoken",
       "error": "De sponsortoken is ongeldig.",
       "invalid": "ongeldig",
       "labelToken": "Sponsortoken",
@@ -702,7 +712,7 @@
       "tokenRequiredShort": "Geen sponsortoken geconfigureerd.",
       "trialToken": "proeftoken",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Uw token"
+      "yourToken": "Sponsortoken"
     },
     "system": {
       "backupRestore": {
@@ -1450,6 +1460,7 @@
     },
     "loadpoint": "Oplaadpunt",
     "noData": "Geen oplaadsessies deze maand.",
+    "odometer": "Kilometerstand",
     "overview": "Overzicht",
     "period": {
       "month": "Maand",
