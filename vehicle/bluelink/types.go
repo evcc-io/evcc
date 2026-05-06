@@ -87,7 +87,7 @@ const (
 type DrivingDistance struct {
 	RangeByFuel struct {
 		EvModeRange struct {
-			Value int
+			Value float64
 		}
 	}
 }
