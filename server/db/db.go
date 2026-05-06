@@ -62,7 +62,8 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			params += typ + "=" + param
 		}
 
-		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "synchronous(NORMAL)"} {
+		// TODO "foreign_keys(1)" is only set in metrics migrator to ensure home entity exists
+		for _, pragma := range []string{"busy_timeout(5000)", "synchronous(NORMAL)"} {
 			addParam("_pragma", pragma)
 		}
 
