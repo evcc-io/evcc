@@ -36,7 +36,7 @@ export default defineComponent({
 		},
 		lastLimit: Number,
 		currency: String as PropType<CURRENCY>,
-		loadpointId: { type: String, required: true },
+		loadpointId: String,
 		multipleLoadpoints: Boolean,
 		possible: Boolean,
 		tariff: Array,
@@ -75,7 +75,9 @@ export default defineComponent({
 			await api.post(`${url}/${encodeURIComponent(limit)}`);
 		},
 		saveLastLimit(limit: number) {
-			setLoadpointLastSmartFeedInPriorityLimit(this.loadpointId, limit);
+			if (this.loadpointId) {
+				setLoadpointLastSmartFeedInPriorityLimit(this.loadpointId, limit);
+			}
 		},
 		async deleteLimit() {
 			// save last selected value to be suggest again when reactivating limit

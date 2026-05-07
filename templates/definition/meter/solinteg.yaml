@@ -1,0 +1,59 @@
+template: solinteg
+products:
+  - brand: Solinteg
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 255
+  - preset: battery-params
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power: # power (W)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 11000  # Total Power on Meter
+      type: holding
+      decode: int32
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power: # power (W)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 11028    # PV Input Total Power
+      type: holding
+      decode: uint32
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power: # power (W)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30258    # Battery power
+      type: holding
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    scale: 0.01
+    register:
+      address: 33000    # SOC
+      type: holding
+      decode: uint16
+  limitsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 52503 # min soc
+      type: writeholding
+      encoding: uint16
+    scale: 10
+  {{- include "battery-params" . }}
+  {{- end }}

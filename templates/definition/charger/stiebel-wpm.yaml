@@ -4,6 +4,7 @@ products:
     description:
       generic: WPM (SG Ready)
 group: heating
+capabilities: ["meter"]
 # requirements:
 #   evcc: ["sponsorship"]
 params:
@@ -14,6 +15,14 @@ params:
     choice: ["warmwater", "buffer"]
 render: |
   type: sgready
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3679
+      type: input
+      encoding: int16
+    scale: 0.1
   getmode:
     source: map
     values:

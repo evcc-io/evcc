@@ -17,7 +17,6 @@ products:
       generic: Wallbox plus
 capabilities: ["mA"]
 requirements:
-  evcc: ["eebus"]
   description:
     de: |
       Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).

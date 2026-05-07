@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
-	"go.yaml.in/yaml/v4"
+	"github.com/evcc-io/evcc/util/yaml"
 )
 
 func yamlQuote(value string) string {
@@ -78,9 +78,11 @@ func FuncMap(tmpl *template.Template) *template.Template {
 			}
 			return res
 		},
-		"urlEncode": url.QueryEscape,
-		"unquote":   unquote,
-		"quote":     yamlQuote,
+		"urlEncode":       url.QueryEscape,
+		"unquote":         unquote,
+		"quote":           yamlQuote,
+		"asDuration":      asDuration,
+		"durationSeconds": durationSeconds,
 	}
 
 	return tmpl.Funcs(sprig.FuncMap()).Funcs(funcMap)

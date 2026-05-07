@@ -34,7 +34,7 @@
 										true
 									)
 								}}
-								saved
+								net cost
 							</small>
 						</h3>
 						<ChargeChart

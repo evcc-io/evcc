@@ -296,8 +296,8 @@ paths:
   /loadpoints/{id}/limitsoc/{soc}:
     post:
       operationId: setLoadpointSocLimit
-      summary: Update limit SoC
-      description: "Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions."
+      summary: Update session SoC limit
+      description: "Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again."
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/limit
       tags:

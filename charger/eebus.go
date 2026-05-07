@@ -43,7 +43,7 @@ type EEBus struct {
 	reconnect bool
 	current   float64
 
-	*eebus.Connector
+	connector *eebus.Connector
 }
 
 func init() {
@@ -84,14 +84,14 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 		cem:     eebus.Instance.CustomerEnergyManagement(),
 	}
 
-	c.Connector = eebus.NewConnector()
+	c.connector = eebus.NewConnector()
 	c.minMaxG = util.Cached(c.minMax, time.Second)
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
-	if err := c.Wait(ctx); err != nil {
+	if err := c.connector.Wait(ctx); err != nil {
 		eebus.Instance.UnregisterDevice(ski, c)
 		return nil, err
 	}
@@ -124,6 +124,24 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bo
 }
 
 var _ eebus.Device = (*EEBus)(nil)
+
+// Connect implements the eebus.Device interface.
+// On SHIP/SPINE disconnect we drop the cached EV entity reference. EvDisconnected
+// only fires on a SPINE EntityChange/Remove, not on SHIP-level disconnect, so
+// without this we could keep querying an orphan entity until the next reconnect
+// re-fires EvConnected.
+func (c *EEBus) Connect(connected bool) {
+	c.connector.Connect(connected)
+
+	if connected {
+		return
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.ev = nil
+}
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
@@ -298,7 +316,7 @@ func (c *EEBus) Enable(enable bool) error {
 // send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, current float64) error {
 	// check if the EVSE supports overload protection limits
-	if !c.cem.OpEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.OpEV.IsScenarioAvailableAtEntity(evEntity, eebus.OPEVObligationLimit) {
 		return api.ErrNotAvailable
 	}
 
@@ -344,7 +362,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 // An active recommendation triggers the EV to charge with surplus energy.
 // An inactive recommendation is equivalent to no recommendation existing.
 func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, current float64) {
-	if !c.cem.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.OscEV.IsScenarioAvailableAtEntity(evEntity, eebus.OSCEVRecommendationLimit) {
 		return
 	}
 
@@ -412,7 +430,7 @@ func (c *EEBus) currentPower() (float64, error) {
 
 	// does the EVSE provide power data?
 	var powers []float64
-	if c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 2) {
+	if c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMPowerTotal) {
 		// is power data available for real? Elli Gen1 says it supports it, but doesn't provide any data
 		if powerData, err := c.cem.EvCem.PowerPerPhase(evEntity); err == nil {
 			powers = powerData
@@ -420,7 +438,7 @@ func (c *EEBus) currentPower() (float64, error) {
 	}
 
 	// if no power data is available, and currents are reported to be supported, use currents
-	if len(powers) == 0 && c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if len(powers) == 0 && c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMPowerPerPhase) {
 		// no power provided, calculate from current
 		if currents, err := c.cem.EvCem.CurrentPerPhase(evEntity); err == nil {
 			for _, current := range currents {
@@ -444,7 +462,7 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 		return 0, nil
 	}
 
-	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 3) {
+	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMEnergy) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -464,7 +482,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	}
 
 	// check if the EVSE supports currents
-	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMPowerPerPhase) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
@@ -520,7 +538,7 @@ func (c *EEBus) Soc() (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	if !c.cem.EvSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.EvSoc.IsScenarioAvailableAtEntity(evEntity, eebus.EVSOCStateOfCharge) {
 		return 0, api.ErrNotAvailable
 	}
 

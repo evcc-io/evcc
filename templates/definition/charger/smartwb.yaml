@@ -2,6 +2,7 @@ template: smartwb
 products:
   - description:
       generic: smartWB
+capabilities: ["meter"]
 params:
   - name: host
 render: |

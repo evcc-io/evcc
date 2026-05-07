@@ -3,6 +3,7 @@ products:
   - brand: INRO
     description:
       generic: Pantabox
+capabilities: ["meter"]
 params:
   - name: host
 render: |

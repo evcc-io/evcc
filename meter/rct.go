@@ -274,7 +274,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 func (m *RCT) totalEnergy() (float64, error) {
 	switch m.usage {
 	case "grid":
-		res, err := m.queryFloat(rct.TotalEnergyGridWh)
+		res, err := m.queryFloat(rct.TotalEnergyGridLoadWh)
 		return res / 1000, err
 
 	case "pv":
