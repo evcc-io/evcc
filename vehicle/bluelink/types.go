@@ -82,12 +82,15 @@ const (
 	timeOffset = " +0100"
 
 	plugTypeAC = 1
+	unitMiles  = 3
+	kmPerMile  = 1.60934
 )
 
 type DrivingDistance struct {
 	RangeByFuel struct {
 		EvModeRange struct {
 			Value float64
+			Unit  int
 		}
 	}
 }
@@ -144,7 +147,11 @@ func (d VehicleStatus) FinishTime() (time.Time, error) {
 func (d VehicleStatus) Range() (int64, error) {
 	if d.EvStatus != nil {
 		if dist := d.EvStatus.DrvDistance; len(dist) == 1 {
-			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
+			value := dist[0].RangeByFuel.EvModeRange.Value
+			if dist[0].RangeByFuel.EvModeRange.Unit == unitMiles {
+				return int64(value*kmPerMile + 0.5), nil
+			}
+			return int64(value), nil
 		}
 	}
 	return 0, api.ErrNotAvailable
