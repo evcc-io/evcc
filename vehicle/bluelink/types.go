@@ -152,7 +152,7 @@ func (d VehicleStatus) Range() (int64, error) {
 			if evRange.Unit == unitMiles {
 				value *= kmPerMile
 			}
-			return int64(value + 0.5), nil
+			return int64(value), nil
 		}
 	}
 	return 0, api.ErrNotAvailable
