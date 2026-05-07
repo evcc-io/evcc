@@ -35,7 +35,7 @@ func TestVehicleStatusRangeHonorsUnit(t *testing.T) {
 							Value float64
 							Unit  int
 						}{
-							Value: 168.38834951456312,
+							Value: 168.4, // 168.4 miles ≈ 271 km
 							Unit:  unitMiles,
 						},
 					},

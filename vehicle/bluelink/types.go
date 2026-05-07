@@ -1,6 +1,7 @@
 package bluelink
 
 import (
+	"math"
 	"strconv"
 	"time"
 
@@ -149,7 +150,7 @@ func (d VehicleStatus) Range() (int64, error) {
 		if dist := d.EvStatus.DrvDistance; len(dist) == 1 {
 			value := dist[0].RangeByFuel.EvModeRange.Value
 			if dist[0].RangeByFuel.EvModeRange.Unit == unitMiles {
-				return int64(value*kmPerMile + 0.5), nil
+				return int64(math.Round(value * kmPerMile)), nil
 			}
 			return int64(value), nil
 		}
