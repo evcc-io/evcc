@@ -83,7 +83,7 @@ grid:
     // restart done
     await expect(restartButton).not.toBeVisible();
 
-    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency CHF");
+    await expect(page.getByTestId("generalconfig-site")).toContainText("Currency CHF");
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       ["Grid price", "12.3 ct."].join("")
     );
@@ -93,7 +93,7 @@ grid:
     await start(CONFIG_WITH_TARIFFS);
     await page.goto("/#/config");
 
-    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency SEK");
+    await expect(page.getByTestId("generalconfig-site")).toContainText("Currency SEK");
     await expect(page.getByTestId("tariffs-legacy")).toBeVisible();
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       [
@@ -255,7 +255,7 @@ grid:
     await expect(tariffGrid).toContainText(["Price", "32.1 ct"].join(""));
 
     // change currency to NOK
-    await page.getByTestId("generalconfig-currency").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("generalconfig-site").getByRole("button", { name: "edit" }).click();
     const currencyModal = page.getByTestId("site-modal");
     await expectModalVisible(currencyModal);
     await currencyModal.getByLabel("Currency").selectOption("NOK");
