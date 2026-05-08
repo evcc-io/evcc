@@ -78,6 +78,17 @@ type Easee struct {
 	obsTime         map[easee.ObservationID]time.Time
 	lastObsReceived time.Time
 	startDone       func()
+
+	// templateCleanup, when set, is called by NewFromTemplateConfig with the outer
+	// template-level config map so deprecated credential params can be removed.
+	templateCleanup func(map[string]any)
+}
+
+// cleanTemplateConfig implements templateConfigCleaner.
+func (c *Easee) cleanTemplateConfig(m map[string]any) {
+	if c.templateCleanup != nil {
+		c.templateCleanup(m)
+	}
 }
 
 func init() {
@@ -139,7 +150,42 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, err
 	}
 
-	return NewEasee(ctx, ts, cc.Charger, cc.Timeout, cc.Authorize)
+	c, err := NewEasee(ctx, ts, cc.Charger, cc.Timeout, cc.Authorize)
+	if err != nil {
+		return nil, err
+	}
+
+	// If credentials are now persisted, remove them from the stored config so
+	// secrets are not kept unnecessarily. Only the account identifier is retained.
+	//
+	// Effective account: prefer explicit account param, fall back to user email.
+	var effectiveAccount string
+	if a, _ := params["account"].(string); a != "" {
+		effectiveAccount = a
+	} else if u, _ := params["user"].(string); u != "" {
+		effectiveAccount = u
+	}
+
+	if source == "easee" && effectiveAccount != "" && easee.HasPersistedAuth(effectiveAccount) {
+		account := effectiveAccount
+		cleanup := func(m map[string]any) {
+			delete(m, "user")
+			delete(m, "password")
+			if _, exists := m["account"]; !exists {
+				m["account"] = account
+			}
+		}
+		if cc.Auth.Source == "" {
+			// Non-template path: `other` is the map that will be stored in the DB.
+			cleanup(other)
+		} else {
+			// Template path: `other` is the rendered inner map; the outer DB map is
+			// passed to cleanTemplateConfig by NewFromTemplateConfig.
+			c.templateCleanup = cleanup
+		}
+	}
+
+	return c, nil
 }
 
 // NewEasee creates an Easee charger using the provided token source.
