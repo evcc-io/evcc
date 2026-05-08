@@ -2,7 +2,6 @@ package tapo
 
 import (
 	"fmt"
-	"net/netip"
 	"net/url"
 	"strings"
 
@@ -28,18 +27,16 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		return nil, fmt.Errorf("invalid url: %s", uri)
 	}
 
-	addr, err := netip.ParseAddr(url.Hostname())
-	if err != nil {
-		return nil, fmt.Errorf("invalid ip address: %s", uri)
-	}
-
 	if user == "" || password == "" {
 		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("tapo").Redact(user, password)
 
-	plug := tapo.NewPlug(addr, nil)
+	plug, err := tapo.NewPlugFromString(url.Hostname(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tapo device for %q: %w", url.Hostname(), err)
+	}
 	if err := plug.Handshake(user, password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}

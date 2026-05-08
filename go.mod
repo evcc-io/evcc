@@ -58,7 +58,7 @@ require (
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
-	github.com/insomniacslk/tapo v1.0.2
+	github.com/insomniacslk/tapo v1.0.3
 	github.com/itchyny/gojq v0.12.19
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/jeremywohl/flatten v1.0.1
@@ -184,7 +184,7 @@ require (
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
-	github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 // indirect
+	github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808 // indirect
 	github.com/itchyny/timefmt-go v0.1.8 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
