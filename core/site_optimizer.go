@@ -230,7 +230,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	httpClient := request.NewClient(site.log)
-	httpClient.Timeout = 30 * time.Second
+	httpClient.Timeout = 90 * time.Second
 
 	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {

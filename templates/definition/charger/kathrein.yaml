@@ -18,7 +18,7 @@ products:
   - brand: Kathrein
     description:
       generic: KWB-AC60 E
-capabilities: ["1p3p", "mA", "rfid"]
+capabilities: ["mA", "rfid", "1p3p", "meter"]
 requirements:
   description:
     de: Der Modbus-Server (TCP-Port 502) muss über die Weboberfläche der Wallbox aktiviert werden. Getestet mit Firmware-Version v2.7.0

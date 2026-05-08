@@ -3,7 +3,7 @@ products:
   - brand: Edgetech
     description:
       generic: Smart EVSE
-capabilities: ["1p3p"]
+capabilities: ["1p3p", "meter"]
 params:
   - name: modbus
     choice: ["rs485"]

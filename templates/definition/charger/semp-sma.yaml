@@ -6,7 +6,7 @@ products:
   - brand: SMA
     description:
       generic: eCharger (SEMP)
-capabilities: ["mA", "1p3p"]
+capabilities: ["mA", "1p3p", "meter"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
   description:

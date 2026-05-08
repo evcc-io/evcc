@@ -40,7 +40,7 @@ func init() {
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
-func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewNRGKickBLEFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct{ Device, Mac, PIN string }{
 		Device: "hci0",
 	}
@@ -115,7 +115,7 @@ func (wb *NRGKickBLE) close() {
 	}
 }
 
-func (wb *NRGKickBLE) read(service string, res interface{}) error {
+func (wb *NRGKickBLE) read(service string, res any) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
@@ -135,7 +135,7 @@ func (wb *NRGKickBLE) read(service string, res interface{}) error {
 		return err
 	}
 
-	b, err := char.ReadValue(map[string]interface{}{})
+	b, err := char.ReadValue(map[string]any{})
 	if err != nil {
 		wb.close()
 		return err
@@ -145,7 +145,7 @@ func (wb *NRGKickBLE) read(service string, res interface{}) error {
 	return struc.Unpack(bytes.NewReader(b), res)
 }
 
-func (wb *NRGKickBLE) write(service string, val interface{}) error {
+func (wb *NRGKickBLE) write(service string, val any) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
@@ -171,7 +171,7 @@ func (wb *NRGKickBLE) write(service string, val interface{}) error {
 		return err
 	}
 
-	if err := char.WriteValue(out.Bytes(), map[string]interface{}{}); err != nil {
+	if err := char.WriteValue(out.Bytes(), map[string]any{}); err != nil {
 		wb.close()
 		return err
 	}

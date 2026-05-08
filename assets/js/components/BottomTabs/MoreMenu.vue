@@ -20,7 +20,13 @@
 				class="ms-2 text-gray-light gift-icon"
 			></shopicon-regular-gift>
 		</button>
-		<button v-if="isApp" type="button" class="dropdown-item" @click="openNativeSettings">
+		<button
+			v-if="isApp"
+			data-testid="tab-more-app"
+			type="button"
+			class="dropdown-item"
+			@click="openNativeSettings"
+		>
 			{{ $t("header.nativeSettings") }}
 		</button>
 		<button v-if="showLogout" type="button" class="dropdown-item" @click="doLogout">

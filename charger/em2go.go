@@ -47,7 +47,7 @@ const (
 	em2GoRegErrorCode       = 4   // Uint16 RO ENUM
 	em2GoRegCurrents        = 6   // Uint16 RO 0.1A
 	em2GoRegPower           = 12  // Uint32 RO 1W
-	em2GoRegEnergy          = 28  // Uint16 RO 0.1KWh
+	em2GoRegEnergy          = 28  // Uint32 RO 0.1KWh
 	em2GoRegMaxCurrent      = 32  // Uint16 RO 0.1A
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
 	em2GoRegCableMaxCurrent = 36  // Uint16 RO 0.1A

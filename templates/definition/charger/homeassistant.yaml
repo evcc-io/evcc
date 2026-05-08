@@ -157,6 +157,7 @@ params:
     help:
       en: Entity ID for 1p/3p phase switching (select entity with options "1" and "3")
       de: Entitäts-ID für 1p/3p Phasenumschaltung (Select-Entität mit Optionen "1" und "3")
+  - preset: charger-features
 render: |
   type: homeassistant
   uri: {{ .uri }}
@@ -179,3 +180,4 @@ render: |
     - {{ .voltageL3 }}
   {{- end }}
   phases: {{ .phaseswitch }}
+  {{ include "charger-features" . }}

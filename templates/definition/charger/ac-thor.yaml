@@ -6,6 +6,7 @@ products:
   - brand: my-PV
     description:
       generic: AC•THOR 9s
+capabilities: ["meter"]
 group: heating
 requirements:
   description:
@@ -18,10 +19,10 @@ requirements:
       Last am Relais = Nennleistung des Heizstabs am Relais * Skalierungsfaktor
     en: |
       Use the local web interface of AC•THOR to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
-      If the heating element at the controlled output has <9kW, the scaling factor has to be calculated as follows: `scale = 9000 / nominal power` of the connected heater.
+      If the heating element at the controlled output has < 9 kW, the scaling factor has to be calculated as follows: `scale = 9000 / nominal power` of the connected heater.
 
       Operation mode M3: 9 + 9 kW with an additional heater connected to the relay output is supported. Without load measurement using my-PV meter, the "Load at relay" setting in the local web interface of the AC•THOR must be set to match the nominal power of the heating element at the relay.
-      If the heater at the controlled output has <9kW, AC•THOR firmware a0022200 or higher is required and the value for "Load at relay" must be converted using the scaling factor as follows:
+      If the heater at the controlled output has < 9 kW, AC•THOR firmware a0022200 or higher is required and the value for "Load at relay" must be converted using the scaling factor as follows:
       Load at relay = nominal power of the heater at the relay * scale factor
   evcc: ["sponsorship"]
 params:
