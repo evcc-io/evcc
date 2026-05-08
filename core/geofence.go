@@ -1,25 +1,21 @@
 package core
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/types"
 )
 
+const geoLocationRadius = 100 // Maximum vehicle distance from site (m)
+
 // isVehicleAtHome checks whether vehicle is at home (geofencing)
-// false: if vehicle position is available and outside the defined radius
+// false: if vehicle position is available and outside geoLocationRadius
 // true: in all other cases, even in cases of error or if position is not available
 func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
-	geofence := lp.GetGeofenceConfig()
+	geoLocation := lp.site.GetGeoLocation()
 
-	if !geofence.Enabled || vehicle == nil {
-		return true
-	}
-
-	if err := validateGeofenceConfig(geofence); err != nil { // validate again (e.g. for yaml config)
-		lp.log.ERROR.Println(err)
+	if !geoLocation.Enabled || vehicle == nil {
 		return true
 	}
 
@@ -44,35 +40,22 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 
 	lp.log.DEBUG.Printf("vehicle position: lat %.4f, lon %.4f", lat, lon)
 
-	atHome := isAtHome(geofence, lat, lon)
+	atHome := isAtHome(geoLocation, lat, lon)
 
 	lp.log.DEBUG.Printf(
-		"vehicle distance from loadpoint: %.1fm (radius: %vm, atHome=%v)",
-		distance(geofence.Lat, geofence.Lon, lat, lon)*1e3,
-		geofence.Radius,
+		"vehicle distance from site: %.1fm (radius: %vm, atHome=%v)",
+		distance(geoLocation.Lat, geoLocation.Lon, lat, lon)*1e3,
+		geoLocationRadius,
 		atHome,
 	)
 
 	return atHome
 }
 
-// validate geofence settings
-func validateGeofenceConfig(geofence loadpoint.GeofenceConfig) error {
-	if geofence.Enabled {
-		if (geofence.Lat == 0 && geofence.Lon == 0) || // enable geofencing without setting coordinates
-			geofence.Radius < 1 ||
-			math.Abs(geofence.Lat) > 90 ||
-			math.Abs(geofence.Lon) > 180 {
-			return fmt.Errorf("invalid geofence settings: %+v", geofence)
-		}
-	}
-	return nil
-}
-
-// given a valid geofence and vehicle coords, is it at home?
-func isAtHome(geofence loadpoint.GeofenceConfig, lat, lon float64) bool {
-	d := distance(geofence.Lat, geofence.Lon, lat, lon) * 1e3
-	return d <= geofence.Radius
+// given a valid geolocation and vehicle coords, is it at home?
+func isAtHome(geoLocation types.GeoLocation, lat, lon float64) bool {
+	d := distance(geoLocation.Lat, geoLocation.Lon, lat, lon) * 1e3
+	return d <= geoLocationRadius
 }
 
 // calculate the distance between two points on a globe

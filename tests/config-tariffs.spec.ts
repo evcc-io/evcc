@@ -256,7 +256,7 @@ grid:
 
     // change currency to NOK
     await page.getByTestId("generalconfig-currency").getByRole("button", { name: "edit" }).click();
-    const currencyModal = page.getByTestId("currency-modal");
+    const currencyModal = page.getByTestId("site-modal");
     await expectModalVisible(currencyModal);
     await currencyModal.getByLabel("Currency").selectOption("NOK");
     await expect(

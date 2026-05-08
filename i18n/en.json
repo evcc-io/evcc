@@ -109,12 +109,6 @@
       "labelResidualPower": "Residual power",
       "title": "Control behavior"
     },
-    "currency": {
-      "description": "Used to format energy prices, costs and savings based on your tariff.",
-      "example": "Your charging price was {price}. You saved {amount}.",
-      "label": "Currency",
-      "title": "Currency"
-    },
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
@@ -351,16 +345,6 @@
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
       "energyMeterLabel": "Energy meter",
       "estimateLabel": "Interpolate charge level between API updates",
-      "geofenceDescription1": "If a vehicle supports both automatic vehicle detection based on charging status and position tracking, this feature checks whether the vehicle is within the defined radius around the configured loadpoint location in addition to the charging status.",
-      "geofenceDescription2": "If a vehicle does not support position tracking, geofencing will not affect the detection of that vehicle.",
-      "geofenceEnableLabel": "Enable geofencing",
-      "geofenceLatHelp": "Range: -90 to 90 (e.g. 49.1234)",
-      "geofenceLatLabel": "Latitude",
-      "geofenceLonHelp": "Range: -180 to 180 (e.g. 8.1234)",
-      "geofenceLonLabel": "Longitude",
-      "geofenceRadiusHelp": "Maximum allowed distance of the vehicle from loadpoint (> 1m)",
-      "geofenceRadiusLabel": "Radius",
-      "geofenceTitle": "Geofencing",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
       "minCurrentHelp": "Only go below 6 A if you know what you're doing.",
@@ -714,6 +698,35 @@
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "currency": {
+        "description": "Used to format energy prices, costs and savings based on your tariff.",
+        "example": "Your charging price was {price}. You saved {amount}.",
+        "label": "Currency"
+      },
+      "geolocation": {
+        "description": "Site coordinates are used for geolocation services (e.g. geofencing to optimise vehicle detection).",
+        "enabled": {
+          "label": "Enable geolocation services"
+        },
+        "latitude": {
+          "description": "Value range: -90 to 90",
+          "example": "49.1234",
+          "label": "Latitude"
+        },
+        "longitude": {
+          "description": "Value range: -180 to 180",
+          "example": "8.1234",
+          "label": "Longitude"
+        },
+        "title": "Coordinates"
+      },
+      "sitetitle": {
+        "description": "Displayed on main screen and browser tab.",
+        "label": "Site title"
+      },
+      "title": "Edit site settings"
+    },
     "sponsor": {
       "activationKey": "License Key",
       "activationKeyHint": "Sent to you via email. Can be found in the {url}.",
@@ -852,11 +865,6 @@
     "telemetry": {
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
       "title": "Telemetry"
-    },
-    "title": {
-      "description": "Displayed on main screen and browser tab.",
-      "label": "Title",
-      "title": "Edit Title"
     },
     "validation": {
       "failed": "failed",

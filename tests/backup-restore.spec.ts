@@ -58,7 +58,7 @@ test.describe("reset", async () => {
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(meterModal);
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
-    const titleModal = page.getByTestId("title-modal");
+    const titleModal = page.getByTestId("site-modal");
     await expectModalVisible(titleModal);
     await titleModal.getByLabel("Title").fill(title);
     await titleModal.getByRole("button", { name: "Save" }).click();
@@ -115,7 +115,7 @@ test.describe("backup and restore", async () => {
 
     // set initial title
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
-    const titleModal = page.getByTestId("title-modal");
+    const titleModal = page.getByTestId("site-modal");
     await expectModalVisible(titleModal);
     await titleModal.getByLabel("Title").fill(initialTitle);
     await titleModal.getByRole("button", { name: "Save" }).click();

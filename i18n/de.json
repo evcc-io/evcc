@@ -109,12 +109,6 @@
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
     },
-    "currency": {
-      "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
-      "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
-      "label": "Währung",
-      "title": "Währung"
-    },
     "deviceValue": {
       "activeClients": "Aktive Clients",
       "amount": "Anzahl",
@@ -265,6 +259,7 @@
       "saving": "Speichere …",
       "selectFile": "Durchsuchen",
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
+      "site": "Standort",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
       "title": "Titel",
@@ -351,16 +346,6 @@
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
-      "geofenceDescription1": "Sofern ein Fahrzeug sowohl die automatische Fahrzeugerkennung auf Basis des Ladestatus als auch die Positionsverfolgung unterstützt, wird zusätzlich zum Ladestatus geprüft, ob sich das Fahrzeug innerhalb des angegebenen Radius um den Ladepunkt befindet.",
-      "geofenceDescription2": "Falls ein Fahrzeug die Positionsverfolgung nicht unterstützt, wird die Erkennung dieses Fahrzeugs nicht von Geofencing beeinflusst.",
-      "geofenceEnableLabel": "Geofencing aktivieren",
-      "geofenceLatHelp": "Bereich: -90 bis 90 (z.B. 49.1234)",
-      "geofenceLatLabel": "Breitengrad",
-      "geofenceLonHelp": "Bereich: -180 bis 180 (z.B. 8.1234)",
-      "geofenceLonLabel": "Längengrad",
-      "geofenceRadiusHelp": "Maximal zulässiger Abstand des Fahrzeugs vom Ladepunkt (> 1m)",
-      "geofenceRadiusLabel": "Radius",
-      "geofenceTitle": "Geofencing",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
@@ -714,6 +699,35 @@
       "labelVendorId": "Hersteller-ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "currency": {
+        "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
+        "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
+        "label": "Währung"
+      },
+      "geolocation": {
+        "description": "Die Koordinaten des Ladestandorts werden für Geolokationsdienste (z.B. Geofencing zur Optimierung der Fahrzeugerkennung) verwendet.",
+        "enabled": {
+          "label": "Geolokationsdienste aktivieren"
+        },
+        "latitude": {
+          "description": "Wertebereich: -90 bis 90",
+          "example": "49.1234",
+          "label": "Breitengrad"
+        },
+        "longitude": {
+          "description": "Wertebereich: -180 bis 180",
+          "example": "8.1234",
+          "label": "Längengrad"
+        },
+        "title": "Koordinaten"
+      },
+      "sitetitle": {
+        "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
+        "label": "Titel des Standorts"
+      },
+      "title": "Standortdaten bearbeiten"
+    },
     "sponsor": {
       "activationKey": "Lizenzschlüssel",
       "activationKeyHint": "Per E-Mail zugesandt. Kann im {url} gefunden werden.",
@@ -852,11 +866,6 @@
     "telemetry": {
       "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
       "title": "Telemetrie"
-    },
-    "title": {
-      "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
-      "label": "Titel",
-      "title": "Titel bearbeiten"
     },
     "validation": {
       "failed": "fehlgeschlagen",

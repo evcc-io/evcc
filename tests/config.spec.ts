@@ -35,7 +35,7 @@ test.describe("general", async () => {
 
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
-    const modal = page.getByTestId("title-modal");
+    const modal = page.getByTestId("site-modal");
     await expectModalVisible(modal);
     await modal.getByLabel("Title").fill("Whoops World");
 
