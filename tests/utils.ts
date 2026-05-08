@@ -109,11 +109,8 @@ export async function dragElement(
   sourceElement: Locator,
   targetElement: Locator
 ): Promise<void> {
-  // hover() runs Playwright's actionability checks — including the "stable"
-  // check that waits for animations to finish — before positioning the mouse.
-  // This avoids races with the Bootstrap modal slide-in: reading boundingBox()
-  // mid-animation would otherwise return stale coordinates and the subsequent
-  // mouse.down() would miss the draggable source.
+  // hover() waits for animations to settle before grabbing the source —
+  // avoids stale coordinates during the modal slide-in.
   await sourceElement.hover();
   await page.mouse.down();
 
