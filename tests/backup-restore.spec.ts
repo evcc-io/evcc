@@ -57,7 +57,7 @@ test.describe("reset", async () => {
     await meterModal.getByLabel("Power").fill("2000");
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(meterModal);
-    await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("generalconfig-site").getByRole("button", { name: "edit" }).click();
     const titleModal = page.getByTestId("site-modal");
     await expectModalVisible(titleModal);
     await titleModal.getByLabel("Title").fill(title);
@@ -70,7 +70,7 @@ test.describe("reset", async () => {
     // verify changes are present
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "true");
     await expect(page.getByTestId("grid")).toBeVisible();
-    await expect(page.getByTestId("generalconfig-title")).toContainText(title);
+    await expect(page.getByTestId("generalconfig-site")).toContainText(title);
 
     // reset settings only
     await page.getByRole("button", { name: "Backup & Restore" }).click();
@@ -100,7 +100,7 @@ test.describe("reset", async () => {
     // verify deleted config and settings
     await page.goto("/#/config");
     await expect(page.getByTestId("grid")).not.toBeVisible();
-    await expect(page.getByTestId("generalconfig-title")).not.toContainText(title);
+    await expect(page.getByTestId("generalconfig-site")).not.toContainText(title);
     await stop();
   });
 });
@@ -114,7 +114,7 @@ test.describe("backup and restore", async () => {
     await page.goto("/#/config");
 
     // set initial title
-    await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("generalconfig-site").getByRole("button", { name: "edit" }).click();
     const titleModal = page.getByTestId("site-modal");
     await expectModalVisible(titleModal);
     await titleModal.getByLabel("Title").fill(initialTitle);
@@ -132,7 +132,7 @@ test.describe("backup and restore", async () => {
 
     // verify initial state
     await expect(page.getByTestId("grid")).toBeVisible();
-    await expect(page.getByTestId("generalconfig-title")).toContainText(initialTitle);
+    await expect(page.getByTestId("generalconfig-site")).toContainText(initialTitle);
 
     // open backup & restore modal
     await page.getByRole("button", { name: "Backup & Restore" }).click();
@@ -154,7 +154,7 @@ test.describe("backup and restore", async () => {
     await expectModalHidden(backupModal);
 
     // change title and delete meter
-    await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("generalconfig-site").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(titleModal);
     await titleModal.getByLabel("Title").fill(changedTitle);
     await titleModal.getByRole("button", { name: "Save" }).click();
@@ -167,7 +167,7 @@ test.describe("backup and restore", async () => {
 
     // verify changes
     await expect(page.getByTestId("grid")).not.toBeVisible();
-    await expect(page.getByTestId("generalconfig-title")).toContainText(changedTitle);
+    await expect(page.getByTestId("generalconfig-site")).toContainText(changedTitle);
 
     // restore
     await page.getByRole("button", { name: "Backup & Restore" }).click();
@@ -205,7 +205,7 @@ test.describe("backup and restore", async () => {
     // verify initial state in config ui
     await page.goto("/#/config");
     await expect(page.getByTestId("grid")).toBeVisible();
-    await expect(page.getByTestId("generalconfig-title")).toContainText(initialTitle);
+    await expect(page.getByTestId("generalconfig-site")).toContainText(initialTitle);
     await stop();
   });
 
