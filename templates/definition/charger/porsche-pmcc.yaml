@@ -3,7 +3,7 @@ products:
   - brand: Porsche
     description:
       generic: Mobile Charger Connect
-capabilities: ["iso151182", "mA"]
+capabilities: ["iso151182", "mA", "meter"]
 params:
   - preset: eebus
 render: |

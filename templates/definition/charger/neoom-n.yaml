@@ -3,7 +3,7 @@ products:
   - brand: Neoom
     description:
       generic: N
-capabilities: ["mA", "1p3p"]
+capabilities: ["mA", "1p3p", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

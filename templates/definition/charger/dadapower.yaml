@@ -3,7 +3,7 @@ products:
   - brand: Dadapower
     description:
       generic: Premium Wallbox
-capabilities: ["1p3p", "mA", "rfid"]
+capabilities: ["mA", "rfid", "1p3p", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

@@ -228,6 +228,7 @@
       "authPerformHint": "Bude otevřeno v novém okně. Pro pokračování se vraťte na tuto stránku.",
       "authPrepare": "Připravit propojení",
       "cancel": "Zrušit",
+      "change": "Změnit",
       "clear": "Jasné",
       "close": "Zavřít",
       "confirmSave": "Máte neuložené změny. Chcete pokračovat?",
@@ -428,6 +429,13 @@
       "vehicles": "Má vozidla",
       "welcomeBannerText": "Začněte vytvořením alespoň jednoho **nabíječe**, **ohřívače**, **sítě**, **solárního panelu**, **baterie** nebo **dalšího měřiče**. Pokud chcete pouze otestovat, vyberte **demo zařízení**.",
       "welcomeBannerTitle": "Pojďme nakonfigurovat váš systém!"
+    },
+    "mcp": {
+      "description": "Zpřístupňuje server Model Context Protocol, který umožňuje AI asistentům, jako je Claude, číst stav vašeho systému a řídit nabíjení.",
+      "exampleLabel": "Příklad: Claude CLI",
+      "restartHint": "Bude dostupné po restartu.",
+      "title": "MCP Server",
+      "url": "MCP koncový bod"
     },
     "messaging": {
       "addMessenger": "Přidat službu",
@@ -696,11 +704,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licenční klíč",
+      "activationKeyHint": "Odesláno e-mailem. Najdete na adrese {url}.",
       "addToken": "Zadejte token",
       "changeToken": "Změnit token",
       "description": "Sponzorský model nám pomáhá udržovat projekt a udržitelně vyvíjet nové a vzrušující funkce. Jako sponzor získáte přístup ke všem implementacím nabíječek.",
       "descriptionToken": "Sponzorský token získáte na {url}. Pro začátek nabízíme také zkušební token {trialToken}.",
-      "enterYourToken": "Vložte svůj sponzorský token",
+      "email": "E-mail",
+      "emailHint": "E-mailová adresa, kterou jste použili pro {url}",
+      "enterYourToken": "Váš sponzorský token",
       "error": "Sponzorský token není platný.",
       "invalid": "Neplatný sponzorský token",
       "labelToken": "Sponzorský token",
@@ -711,7 +723,7 @@
       "tokenRequiredShort": "Nebyl přidán sponzorský token.",
       "trialToken": "zkušební token",
       "viaYaml": "skrze evcc.yaml",
-      "yourToken": "Váš sponzorský token"
+      "yourToken": "Sponzorský token"
     },
     "system": {
       "backupRestore": {
@@ -1459,6 +1471,7 @@
     },
     "loadpoint": "Nabíjecí bod",
     "noData": "Tento měsíc neproběhlo žádné nabíjení.",
+    "odometer": "Kilometry",
     "overview": "Přehled",
     "period": {
       "month": "Měsíc",

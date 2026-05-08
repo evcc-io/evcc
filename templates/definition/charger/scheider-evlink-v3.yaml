@@ -1,4 +1,5 @@
 template: schneider-evlink-v3
+capabilities: ["meter"]
 covers: ["schneider-evlink"]
 products:
   - brand: Schneider

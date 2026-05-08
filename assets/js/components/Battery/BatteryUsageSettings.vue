@@ -98,28 +98,23 @@
 				></shopicon-regular-lightning>
 				<span class="d-block">
 					{{ $t("batterySettings.legendTopName") }}
-					<i18n-t
-						keypath="batterySettings.legendTopSubline"
-						tag="small"
-						class="d-block"
-						scope="global"
-					>
+					<i18n-t :keypath="topSublineKeypath" tag="small" class="d-block" scope="global">
 						<template #soc>
 							<CustomSelect
 								id="batterySettingsBufferTop"
 								class="custom-select-inline"
-								:options="bufferOptions"
+								:options="legendBufferOptions"
 								:selected="selectedBufferSoc"
 								@change="changeBufferSoc"
 							>
 								<span class="text-decoration-underline">
-									{{ fmtSoc(selectedBufferSoc) }}
+									{{ topSublineValue }}
 								</span>
 							</CustomSelect>
 						</template>
 					</i18n-t>
 
-					<small class="d-block">
+					<small v-if="selectedBufferSoc < 100" class="d-block">
 						{{ $t("batterySettings.legendTopAutostart") }}
 						<CustomSelect
 							id="batterySettingsBufferStart"
@@ -265,6 +260,17 @@ export default defineComponent({
 			}
 			return options;
 		},
+		legendBufferOptions() {
+			return this.bufferOptions.map((option) => ({
+				...option,
+				name:
+					option.value === 100
+						? this.$t("batterySettings.legendTopSublineDisabledState")
+						: this.$t("batterySettings.legendTopSublineAbove", {
+								soc: this.fmtSoc(option.value),
+							}),
+			}));
+		},
 		bufferStartTop() {
 			if (!this.selectedBufferStartSoc) return 0;
 			return 100 - this.selectedBufferStartSoc;
@@ -285,6 +291,16 @@ export default defineComponent({
 		},
 		selectedBufferStartName() {
 			return this.getBufferStartName(this.selectedBufferStartSoc);
+		},
+		topSublineKeypath() {
+			return this.selectedBufferSoc < 100
+				? "batterySettings.legendTopSubline"
+				: "batterySettings.legendTopSublineDisabled";
+		},
+		topSublineValue() {
+			return this.selectedBufferSoc < 100
+				? this.fmtSoc(this.selectedBufferSoc)
+				: this.$t("batterySettings.legendTopSublineDisabledState");
 		},
 		topHeight() {
 			return 100 - (this.bufferSoc || 100);
@@ -363,7 +379,9 @@ export default defineComponent({
 		},
 		async changeBufferSoc($event: Event) {
 			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
-			if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+			if (soc === 100) {
+				await this.setBufferStartSoc(0);
+			} else if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
 				await this.setBufferStartSoc(soc);
 			}
 			await this.saveBufferSoc(soc);
