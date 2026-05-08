@@ -39,6 +39,9 @@
     "legendTopAutostart": "Starte automatisch",
     "legendTopName": "Batterieunterstütztes Fahrzeugladen",
     "legendTopSubline": "wenn Hausbatterie über {soc} ist.",
+    "legendTopSublineAbove": "wenn über {soc}",
+    "legendTopSublineDisabled": "ist {soc}.",
+    "legendTopSublineDisabledState": "deaktiviert",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keine Batterien konfiguriert.",
     "usageTab": "Batterienutzung"
@@ -228,6 +231,7 @@
       "authPerformHint": "Öffnet ein neues Tab. Anschließend hier weiter machen.",
       "authPrepare": "Verbindung vorbereiten",
       "cancel": "Abbrechen",
+      "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
@@ -236,6 +240,7 @@
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
+      "dismiss": "Ausblenden",
       "docsLink": "Siehe Dokumentation.",
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
@@ -437,6 +442,13 @@
       "vehicles": "Meine Fahrzeuge",
       "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **Solar**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
       "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
+    },
+    "mcp": {
+      "description": "Stellt einen Model Context Protocol Server bereit. Damit können KI-Assistenten wie Claude den Zustand deines Systems auslesen und das Laden steuern.",
+      "exampleLabel": "Beispiel: Claude CLI",
+      "restartHint": "Wird nach Neustart verfügbar.",
+      "title": "MCP Server",
+      "url": "MCP-Endpunkt"
     },
     "messaging": {
       "addMessenger": "Dienst hinzufügen",
@@ -703,11 +715,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Lizenzschlüssel",
+      "activationKeyHint": "Per E-Mail zugesandt. Kann im {url} gefunden werden.",
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
-      "descriptionToken": "Als Sponsor erhältst du dein Token auf {url}. Zum Ausprobieren gibts ein {trialToken}.",
-      "enterYourToken": "Token eingeben",
+      "descriptionToken": "Als GitHub-Sponsor findest du dein Token auf {url}. Zum Ausprobieren gibt's ein {trialToken}.",
+      "email": "E-Mail",
+      "emailHint": "E-Mail-Adresse, die du für {url} verwendet hast",
+      "enterYourToken": "Dein Sponsor Token",
       "error": "Das Sponsortoken ist ungültig.",
       "invalid": "ungültig",
       "labelToken": "Sponsortoken",
@@ -718,7 +734,7 @@
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken",
       "viaYaml": "über evcc.yaml",
-      "yourToken": "Dein Token"
+      "yourToken": "Sponsor Token"
     },
     "system": {
       "backupRestore": {
@@ -1155,6 +1171,11 @@
       "update": "Anwenden",
       "weekdays": "Tage"
     },
+    "continuousStatus": {
+      "charging": "Boost aktiv.",
+      "connected": "Normalbetrieb.",
+      "waitForVehicle": "Boost angefordert …"
+    },
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie laden",
@@ -1181,7 +1202,7 @@
       "charging": "Heize …",
       "connected": "Standby.",
       "vehicleLimit": "Heizungslimit",
-      "waitForVehicle": "Bereit. Warte auf Heizung …"
+      "waitForVehicle": "Bereit zum Heizen …"
     },
     "hemsWarning": {
       "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
@@ -1455,6 +1476,7 @@
     },
     "loadpoint": "Ladepunkt",
     "noData": "Noch keine Ladevorgänge in diesem Monat.",
+    "odometer": "Kilometerstand",
     "overview": "Übersicht",
     "period": {
       "month": "Monat",

@@ -15,9 +15,8 @@ products:
   - brand: Audi
     description:
       generic: Wallbox pro
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
-  evcc: ["eebus"]
   description:
     de: |
       Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).

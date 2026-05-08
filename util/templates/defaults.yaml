@@ -59,8 +59,8 @@ params:
       de: Passwort
       en: Password
     help:
-      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
-      en: Use single quotes in case of leading zeros
+      de: Zugangspasswort des Dienstes
+      en: Service account password
     mask: true
   - name: capacity
     unit: kWh
@@ -292,8 +292,8 @@ params:
       en: Actor Identification Number (AIN)
       de: Aktoridentifikationsnummer (AIN)
     help:
-      en: Printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: Printed on the type label on the back of the device.
+      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
   - name: coarsecurrent
     type: bool
     description:
@@ -318,6 +318,22 @@ params:
     help:
       en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
       de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
+  - name: heating
+    type: bool
+    description:
+      en: Heating device
+      de: Wärmeerzeuger
+    help:
+      en: Shows °C instead of %
+      de: Zeigt °C anstatt % an
+  - name: integrateddevice
+    type: bool
+    description:
+      en: Integrated device
+      de: Integriertes Gerät
+    help:
+      en: Integrated device. No charging sessions
+      de: Fest angeschlossenes Gerät. Keine Ladevorgänge
   - name: defaultmode
     type: int
     usages: ["battery"]
@@ -545,6 +561,11 @@ presets:
       advanced: true
     - name: welcomecharge
       advanced: true
+  charger-features:
+    - name: heating
+      advanced: true
+    - name: integrateddevice
+      advanced: true
   vehicle-language:
     - name: language
   tariff-base:
@@ -624,23 +645,9 @@ presets:
     - name: standbypower
       default: 15
     - name: integrateddevice
-      type: bool
       advanced: true
-      description:
-        en: Integrated device
-        de: Integriertes Gerät
-      help:
-        de: Fest angeschlossenes Gerät. Keine Ladevorgänge
-        en: Integrated device. No charging sessions
     - name: heating
-      type: bool
       advanced: true
-      description:
-        en: Heating device
-        de: Wärmeerzeuger
-      help:
-        de: Zeigt °C anstatt % an
-        en: Shows °C instead of %
     - name: icon
       advanced: true
 

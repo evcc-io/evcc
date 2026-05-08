@@ -3,7 +3,7 @@ products:
   - brand: Shelly
     description:
       generic: Top AC Portable EV Charger
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   description:
     de: "'auto_charge' muss auf false gesetzt werden."

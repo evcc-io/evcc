@@ -3,7 +3,7 @@ products:
   - brand: Voltie
     description:
       generic: Charger
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

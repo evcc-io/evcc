@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
@@ -37,6 +38,7 @@ import (
 
 // OCPP charger implementation
 type OCPP struct {
+	implement.Caps
 	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
@@ -102,45 +104,36 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		return nil, api.ErrSponsorRequired
 	}
 
-	var (
-		powerG, totalEnergyG, socG func() (float64, error)
-		currentsG, voltagesG       func() (float64, float64, float64, error)
-	)
-
 	if c.cp.HasMeasurement(types.MeasurandPowerActiveImport) {
-		powerG = c.conn.CurrentPower
+		implement.Has(c, implement.Meter(c.conn.CurrentPower))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		totalEnergyG = c.conn.TotalEnergy
+		implement.Has(c, implement.MeterEnergy(c.conn.TotalEnergy))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandCurrentImport) {
-		currentsG = c.conn.Currents
+		implement.Has(c, implement.PhaseCurrents(c.conn.Currents))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandVoltage) {
-		voltagesG = c.conn.Voltages
+		implement.Has(c, implement.PhaseVoltages(c.conn.Voltages))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandSoC) {
-		socG = c.conn.Soc
+		implement.Has(c, implement.Battery(c.conn.Soc))
 	}
 
-	var phasesS func(int) error
 	if c.cp.PhaseSwitching {
-		phasesS = c.phases1p3p
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
-	var currentG func() (float64, error)
 	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
-		currentG = c.conn.GetMaxCurrent
+		implement.Has(c, implement.CurrentGetter(c.conn.GetMaxCurrent))
 	}
 
-	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, currentG, phasesS, socG), nil
+	return c, nil
 }
-
-//go:generate go tool decorate -f decorateOCPP -b *OCPP -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.CurrentGetter,api.PhaseSwitcher,api.Battery
 
 // NewOCPP creates OCPP charger
 func NewOCPP(ctx context.Context,
@@ -187,6 +180,7 @@ func NewOCPP(ctx context.Context,
 	}
 
 	c := &OCPP{
+		Caps:                implement.New(),
 		log:                 log,
 		cp:                  cp,
 		conn:                conn,

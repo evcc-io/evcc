@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
-import { openTopNavigation, expectModalVisible, expectModalHidden } from "./utils";
+import { openMoreMenu, expectModalVisible, expectModalHidden } from "./utils";
 import fs from "fs";
 import path from "path";
 
@@ -15,7 +15,7 @@ test.describe("reset", async () => {
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
     // open backup & restore modal
-    await openTopNavigation(page);
+    await openMoreMenu(page);
     await page.getByRole("link", { name: "Configuration" }).click();
     await page.getByRole("button", { name: "Backup & Restore" }).click();
     const modal = page.getByTestId("backup-restore-modal");

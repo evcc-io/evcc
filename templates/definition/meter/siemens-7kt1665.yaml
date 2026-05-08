@@ -53,3 +53,28 @@ render: |
       decode: uint32
     scale: 0.0001
     timeout: 5s
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1
+      type: input
+      decode: uint32
+    scale: 0.01
+    timeout: 5s
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3
+      type: input
+      decode: uint32
+    scale: 0.01
+    timeout: 5s
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5
+      type: input
+      decode: uint32
+    scale: 0.01
+    timeout: 5s

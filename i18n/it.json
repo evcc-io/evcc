@@ -113,6 +113,7 @@
       "title": "Valuta"
     },
     "deviceValue": {
+      "activeClients": "Client attivi",
       "amount": "Quantità",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Carico",
       "co2": "CO₂ rete elettrica",
       "configured": "Configurato",
+      "connected": "Connesso",
       "connections": "Connessioni",
       "controllable": "Controllabile",
       "currency": "Valuta",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Limite attivo",
       "hemsType": "Comunicazione",
       "identifier": "Identificatore RFID",
+      "loginBlocked": "Limite login raggiunto",
       "max": "max",
       "messengers": "Servizi",
       "no": "no",
@@ -221,18 +224,19 @@
     },
     "general": {
       "applyAndClose": "Applica e chiudi",
-      "authPerform": "Connettiti con {provider}",
+      "authPerform": "Connetti con {provider}",
       "authPerformHint": "Si aprirà in una nuova scheda. Torna qui per continuare.",
-      "authPrepare": "Preparare la connessione",
+      "authPrepare": "Prepara la connessione",
       "cancel": "Annulla",
-      "clear": "Chiaro",
+      "change": "Cambia",
+      "clear": "Cancella",
       "close": "Chiudi",
       "confirmSave": "Sono presenti modifiche non salvate. Salvare ora?",
       "copied": "Copiato!",
       "copy": "Copia",
       "customHelp": "Crea un dispositivo definito dall'utente utilizzando il sistema di plugin di evcc.",
       "customOption": "Dispositivo definito dall'utente",
-      "delete": "Cancella",
+      "delete": "Elimina",
       "docsLink": "Vedi la documentazione.",
       "dragHandle": "Maniglia di trascinamento",
       "dragItem": "Trascinabile: {title}",
@@ -278,12 +282,12 @@
       },
       "description": "Limitazione della potenza da parte di sistemi esterni (ad es. §14a EnWG, interfaccia §9 EEG o sistema di gestione dell'energia di livello superiore). Funziona in combinazione con la funzione di gestione del carico.",
       "downloadCsv": "Scarica CSV",
-      "eventsRecorded": "Registrati {count} eventi di limitazione della griglia.",
+      "eventsRecorded": "Registrati {count} eventi di limitazione di prelievo dalla rete.",
       "lastEvent": "Più recente {timeAgo}.",
-      "title": "HEMSLimite esterno"
+      "title": "Limite prelievo da rete"
     },
     "icon": {
-      "change": "cambiamento",
+      "change": "cambia",
       "label": "Icona"
     },
     "influx": {
@@ -337,7 +341,7 @@
       "defaultModeLabel": "Modalità predefinita",
       "defaultsHint": "Modalità predefinita, comportamento solare e dettagli elettrici utilizzano valori predefiniti ragionevoli.",
       "defaultsHintLink": "Regola le impostazioni",
-      "delete": "Cancella",
+      "delete": "Elimina",
       "electricalSubtitle": "Se non sei sicuro, chiedi al tuo elettricista.",
       "electricalTitle": "Elettricità",
       "energyMeterHelp": "Contatore supplementare se il caricabatterie non ne possiede uno integrato.",
@@ -603,8 +607,9 @@
       "urlHelp": "Copia questo URL nella configurazione del caricabatterie. Per ulteriori dettagli, consulta il manuale del produttore. Il caricabatterie dovrebbe aggiungere automaticamente il proprio identificativo univoco (ID stazione) all'URL. In rari casi, potrebbe essere necessario specificare manualmente l'identificativo. Esempio: `{url}`"
     },
     "optimizer": {
-      "description": "Analizza le previsioni solari, i prezzi dell'elettricità e i tuoi pattern di consumo per ottimizzare l'uso della batteria e la strategia di carica. I dati sono inviati al servizio di ottimizzazione di evcc per l'elaborazione.",
+      "description": "Analizza le previsioni solari, i prezzi dell'elettricità e i tuoi pattern di consumo per ottimizzare l'uso della batteria e la strategia di carica. I dati sono inviati al servizio di ottimizzazione di evcc per l'elaborazione. Attualmente calcola e visualizza soltanto, senza controllare i dispositivi.",
       "enable": "Abilita Ottimizzatore",
+      "info": "Possono volerci alcuni minuti prima che l'ottimizzatore sia accessibile. Per le nuove installazioni, potrebbero essere necessarie fino a 24 ore perché evcc abbia dati sufficienti.",
       "title": "Ottimizzatore"
     },
     "options": {
@@ -634,6 +639,38 @@
       "titleAdd": "Aggiungi Contatore Fotovoltaico",
       "titleEdit": "Modifica Contatore Fotovoltaico"
     },
+    "remote": {
+      "active": "Attivo",
+      "addClient": "Aggiungi client",
+      "addClientDescription": "Le credenziali sono memorizzate e verificate solo localmente nella tua istanza evcc.",
+      "addClientTitle": "Aggiungi client remoto",
+      "clientCreated": "Client creato",
+      "clients": "Client",
+      "confirmDelete": "Eliminare il client?",
+      "connected": "Connesso",
+      "createClient": "Crea client",
+      "description": "Accedi al tuo evcc dovunque ti trovi usando l'app mobile senza port forwarding o VPN.",
+      "deviceName": "Nome dispositivo",
+      "disconnected": "Disconnesso",
+      "done": "Fatto",
+      "enableLabel": "Abilita accesso remoto",
+      "expiration": "Scadenza",
+      "expirationNone": "Mai",
+      "expired": "scaduto",
+      "expiresIn": "scade {time}",
+      "lastActive": "attivo {time}",
+      "loginBlocked": "Gli accessi remoti sono bloccati per un minuto a causa dei troppi tentativi di login falliti.",
+      "manualLogin": "O accedi manualmente a {url} nel tuo browser usando queste credenziali:",
+      "noClients": "Nessun client finora. Nessuno può ancora connettersi.",
+      "password": "Password",
+      "passwordOnce": "Questa password viene mostrata solo una volta. Scansiona il QR code o copiala adesso. Non la vedrai di nuovo.",
+      "qrInstall": "Installa l'app di evcc per {ios} o {android}.",
+      "qrScan": "Scansiona il codice con la fotocamera del tuo telefono per connetterti. Clickaci sopra, se stai già usando il tuo telefono.",
+      "removeClient": "Rimuovi client",
+      "title": "Accesso remoto",
+      "url": "URL pubblico",
+      "username": "Nome utente"
+    },
     "section": {
       "additionalMeter": "Contatori aggiuntivi",
       "general": "Generali",
@@ -660,11 +697,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Chiave di licenza",
+      "activationKeyHint": "Inviata via mail. Puoi trovarla in{url}.",
       "addToken": "Inserisci il token",
       "changeToken": "Modifica il token",
       "description": "Il modello di sponsorizzazione ci aiuta a mantenere il progetto e a introdurre in modo sostenibile nuove ed entusiasmanti funzionalità. Come sponsor hai accesso a tutte le implementazioni del caricabatterie.",
-      "descriptionToken": "Ricevi il token da {url}. Offriamo anche un token di prova per i test {trialToken}.",
-      "enterYourToken": "Inserisci il tuo token",
+      "descriptionToken": "In qualità di sponsor su GitGub, trovi il tuo token in {url}. Offriamo anche un token di prova per i test {trialToken}.",
+      "email": "Email",
+      "emailHint": "Email usata per {url}",
+      "enterYourToken": "Il tuo token Sponsor",
       "error": "Il token sponsor non è valido.",
       "invalid": "non valido",
       "labelToken": "Token sponsor",
@@ -675,7 +716,7 @@
       "tokenRequiredShort": "Nessun token sponsor configurato.",
       "trialToken": "token di prova",
       "viaYaml": "tramite evcc.yaml",
-      "yourToken": "Il tuo gettone"
+      "yourToken": "Token Sponsor"
     },
     "system": {
       "backupRestore": {
@@ -764,8 +805,8 @@
       "titleChoice": "Cosa vuoi aggiungere?",
       "type": {
         "co2": "Intensità di CO2",
-        "feedIn": "Prezzo di immissione",
-        "grid": "Prezzo consumo della rete",
+        "feedIn": "Prezzo immissione in rete",
+        "grid": "Prezzo consumo dalla rete",
         "planner": "Pianificatore",
         "solar": "Solare"
       },
@@ -867,6 +908,7 @@
         "savings": "risparmi",
         "solar": "energia solare"
       },
+      "indicatorLabel": "Info header",
       "modalTitle": "Riepilogo energia caricata",
       "moneySaved": "{value} di risparmio",
       "percentGrid": "{grid} kWh rete",
@@ -878,10 +920,10 @@
         "thisYear": "quest'anno",
         "total": "tutto il tempo"
       },
-      "periodLabel": "Periodo:",
+      "periodLabel": "Periodo",
       "priceTitle": "Prezzo energia",
       "referenceGrid": "rete",
-      "referenceLabel": "Dati di riferimento:",
+      "referenceLabel": "Dati di riferimento",
       "sessionInfo": "In base alle sessioni di ricarica completate.",
       "tabTitle": "I miei dati"
     },
@@ -926,7 +968,8 @@
       "modalUpdateStarted": "Evcc ripartirà dopo l'aggiornamento…",
       "modalUpdateStatusStart": "Installazione avviata:",
       "modalViewOnGitHub": "Vedi su GitHub",
-      "openSource": "open source"
+      "openSource": "open source",
+      "poweredByOpenSource": "Powered by {0}."
     }
   },
   "forecast": {
@@ -942,6 +985,7 @@
       "setup": "Imposta le tariffe e le previsioni",
       "solar": "Visualizza la produzione solare attesa per oggi e per i giorni seguenti. Sarà utilizzato anche per l'ottimizzazione automatica della ricarica futura."
     },
+    "hideLine": "nascondi",
     "modalTitle": "Previsioni",
     "price": {
       "average": "Media",
@@ -950,19 +994,21 @@
       "range": "Intervallo"
     },
     "priceZoom": "ingrandisci",
+    "showLine": "mostra",
     "solar": {
       "dayAfterTomorrow": "Dopodomani",
-      "partly": "parzialmente",
+      "partly": "dato parziale",
       "remaining": "rimanenti",
       "today": "Oggi",
       "tomorrow": "Domani"
     },
     "solarAdjust": "Modifica la previsione sulla base dei dati reali{percent}.",
-    "solarAdjustShort": "correzione con dati reali",
+    "solarAdjustMedium": "dati reali",
+    "solarAdjustShort": "regola",
     "type": {
-      "co2": "CO₂",
-      "price": "Prezzo",
-      "solar": "Solare"
+      "co2": "Emissioni CO₂",
+      "price": "Prezzo da rete",
+      "solar": "Produzione solare"
     }
   },
   "general": {
@@ -1277,7 +1323,7 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Aspettando l'autorizzazione.",
       "batteryBoost": "Boost da batteria attivo.",
-      "batteryBoostBelowLimit": "Batteria troppo scarica per il boost",
+      "batteryBoostBelowLimit": "Batteria troppo scarica per il boost.",
       "batteryBoostDisabled": "Battery boost disabilitato.",
       "batteryBoostEnabled": "Boost fino al {limit}.",
       "batteryBoostHold": "Batteria bloccata. Boost non disponibile.",
@@ -1305,7 +1351,7 @@
       "targetChargeWaitForVehicle": "Piano di ricarica pronto. In attesa del veicolo…",
       "vehicleLimit": "Limite del veicolo",
       "vehicleLimitReached": "Limite del veicolo raggiunto.",
-      "waitForAuthorization": "Collegato. Aspettando l'autorizzazione..",
+      "waitForAuthorization": "Collegato. In attesa di autorizzazione…",
       "waitForVehicle": "Pronto. In attesa del veicolo…",
       "welcome": "Piccola carica iniziale per confermare la connessione."
     },
@@ -1413,6 +1459,7 @@
     },
     "loadpoint": "Punto di ricarica",
     "noData": "Nessuna sessione di ricarica questo mese.",
+    "odometer": "Percorrenza",
     "overview": "Riepilogo",
     "period": {
       "month": "Mese",

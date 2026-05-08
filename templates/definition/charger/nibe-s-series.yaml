@@ -7,16 +7,21 @@ group: heating
 requirements:
   description:
     de: |
-      Modbus Verbindung zur NIBE S Wärmepumpe. Firmware 4.7.5 oder neuer benötigt.
-      In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
-      Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein.
-      Es muss einmalig im Holding Register 3032 der Wert `1` (uint8) geschrieben werden.
+      Modbus Verbindung zur NIBE S Wärmepumpe.
+      Firmware 4.7.5 oder neuer benötigt.
+      Benötigte Einstellungen in der Steuereinheit:
+      - In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
+      - Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein. In den Ladepunkteinstellungen muss eine minimale Leistung von 1,2kW (1-phasig) eingestellt werden. Sollte der Normalverbrauch höher sein, muss dieser als minimale Leistung eingestellt werden.
+      - Im Menü 7.4 dürfen die Optionen SG-Ready A und SG-Ready B nicht vergeben sein.
+      - Es muss einmalig im Holding Register 3032 der Wert `1` (uint8) geschrieben werden.
     en: |
       Modbus connection to the NIBE S heat pump.
       Firmware version 4.7.5 or newer is required.
-      In the indoor unit, Modbus must be enabled in menu 7.5.9
-      To use the power control function, external power limitation must be selected under Menu 7.4, item AUX from modbus.
-      The value `1` (uint8) must be written once to holding register 3032.
+      Required settings in the control unit:
+      - In the indoor unit, Modbus must be enabled in menu 7.5.9
+      - To use power control, “external power limitation via Modbus” must be selected under AUX in menu 7.4. In the charging point settings, a minimum power of 1.2 kW (single-phase) must be configured. If the base load is higher, it must be set as the minimum power.
+      - In menu 7.4, the options “SG-Ready A” and “SG-Ready B” must not be assigned.
+      - The value `1` (uint8) must be written once to holding register 3032.
 params:
   - name: modbus
     choice: ["tcpip"]

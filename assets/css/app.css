@@ -94,7 +94,7 @@
 	--safe-area-inset-right: env(safe-area-inset-right, 0px);
 
 	--tab-bar-height: 3rem;
-	--bottom-space: 1.5px;
+	--bottom-space: calc(var(--tab-bar-height) + 1.5rem);
 	--tab-bar-background: var(--evcc-background);
 	--evcc-backdrop-blur: blur(20px);
 }
@@ -830,6 +830,6 @@ input::-webkit-date-and-time-value {
 	transition: opacity var(--evcc-transition-fast) ease 0.2s;
 }
 
-.app--bottomtabs .sticky-bottom {
+.sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
 }
