@@ -87,13 +87,14 @@ func init() {
 // NewEaseeFromConfig creates a Easee charger from generic config
 func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		User      string
-		Password  string
+		Account   string
+		User_     string `mapstructure:"user"`     // TODO deprecated
+		Password_ string `mapstructure:"password"` // TODO deprecated
 		Charger   string
 		Timeout   time.Duration
 		Authorize bool
 		// Auth allows referencing a shared Easee account instead of embedding
-		// credentials directly. Example: auth: {source: easee, user: x, password: y}
+		// credentials directly. Example: auth: {source: easee, account: x, user: y, password: z}
 		Auth struct {
 			Source string
 			Other  map[string]any `mapstructure:",remain"`
@@ -111,19 +112,29 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		err error
 	)
 
-	if cc.Auth.Source != "" {
-		params := cc.Auth.Other
-		if params == nil {
-			params = make(map[string]any)
-		}
-		ts, err = auth.NewFromConfig(ctx, cc.Auth.Source, params)
-	} else {
-		if cc.User == "" || cc.Password == "" {
-			return nil, api.ErrMissingCredentials
-		}
-		log := util.NewLogger("easee").Redact(cc.User, cc.Password)
-		ts, err = easee.TokenSource(log, cc.User, cc.Password)
+	source := cc.Auth.Source
+	params := cc.Auth.Other
+	if source == "" {
+		source = "easee"
 	}
+
+	if params == nil {
+		params = make(map[string]any)
+	}
+
+	if _, exists := params["account"]; !exists && cc.Account != "" {
+		params["account"] = cc.Account
+	}
+
+	if _, exists := params["user"]; !exists && cc.User_ != "" {
+		params["user"] = cc.User_
+	}
+
+	if _, exists := params["password"]; !exists && cc.Password_ != "" {
+		params["password"] = cc.Password_
+	}
+
+	ts, err = auth.NewFromConfig(ctx, source, params)
 	if err != nil {
 		return nil, err
 	}

@@ -16,13 +16,20 @@ capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:
+  - name: account
+    description:
+      de: Account Kennung
+      en: Account identifier
+    help:
+      de: Eindeutiger Name des gespeicherten Easee Accounts (für geteilte Nutzung über mehrere Charger).
+      en: Unique name of the persisted Easee account (for sharing across multiple chargers).
   - name: user
-    required: true
+    deprecated: true
     help:
       de: Emailadresse
       en: Email address
   - name: password
-    required: true
+    deprecated: true
     help:
       de: wie Login für Easee App oder Web Portal ([easee.cloud](https://easee.cloud))
       en: same as Easee app or the web portal ([easee.cloud](https://easee.cloud))
@@ -44,16 +51,23 @@ params:
       en: Authentication enabled
     help:
       de: Steuert ob evcc die Authentifizierung am Charger vornimmt. Vorteil ist ein kontrollierter Ladestart. Nicht kompatibel mit RFID Identifikation von Fahrzeugen.
-      en: Controls wether evcc shall perform authentication against charger. Benefit is a contolled start of charging. Not compatible with RFID identification of vehicles.
+      en: Controls whether evcc shall perform authentication against charger. Benefit is a controlled start of charging. Not compatible with RFID identification of vehicles.
 auth:
   type: easee
-  params: [user, password]
+  params: [account, user, password]
 render: |
   type: easee
   auth:
     source: easee
+    {{- if .account }}
+    account: {{ .account }}
+    {{- end }}
+    {{- if .user }}
     user: {{ .user }}
+    {{- end }}
+    {{- if .password }}
     password: {{ .password }}
+    {{- end }}
   charger: {{ .charger }}
   timeout: {{ .timeout }}
   authorize: {{ .authorize }}
