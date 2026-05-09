@@ -6,12 +6,14 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // OpenWB20 charger implementation
 type OpenWB20 struct {
+	implement.Caps
 	conn    *modbus.Connection
 	enabled bool
 	curr    uint16
@@ -41,13 +43,12 @@ func init() {
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
 
-//go:generate go tool decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t api.PhaseSwitcher,api.Identifier
-
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
 func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
 		Phases1p3p         bool
+		Identify           bool
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		Connector: 1,
@@ -65,17 +66,15 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	var phases1p3p func(int) error
 	if cc.Phases1p3p {
-		phases1p3p = wb.phases1p3p
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
-	var identify func() (string, error)
-	if _, err := wb.identify(); err == nil {
-		identify = wb.identify
+	if cc.Identify {
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
-	return decorateOpenWB20(wb, phases1p3p, identify), nil
+	return wb, nil
 }
 
 // NewOpenWB20 creates OpenWB20 charger
@@ -91,6 +90,7 @@ func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint1
 	conn.Logger(log.TRACE)
 
 	wb := &OpenWB20{
+		Caps: implement.New(),
 		conn: conn,
 		curr: 6 * 100,
 		base: (connector - 1) * 100,
@@ -168,10 +168,10 @@ func (wb *OpenWB20) CurrentPower() (float64, error) {
 	return float64(int32(binary.BigEndian.Uint32(b))), nil
 }
 
-var _ api.MeterEnergy = (*OpenWB20)(nil)
+var _ api.MeterImport = (*OpenWB20)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *OpenWB20) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *OpenWB20) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegImport, 2)
 	if err != nil {
 		return 0, err

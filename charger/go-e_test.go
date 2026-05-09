@@ -78,8 +78,8 @@ func TestGoEV2(t *testing.T) {
 		t.Error("missing Identifier api")
 	}
 
-	if _, ok := api.Cap[api.MeterEnergy](wb); !ok {
-		t.Error("missing MeterEnergy api")
+	if _, ok := api.Cap[api.MeterImport](wb); !ok {
+		t.Error("missing MeterImport api")
 	}
 
 	if _, ok := api.Cap[api.PhaseSwitcher](wb); !ok {

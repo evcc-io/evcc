@@ -1,8 +1,8 @@
 package config
 
 import (
+	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/spf13/cast"
-	"go.yaml.in/yaml/v4"
 )
 
 // CustomDevice promotes an embedded yaml type to the top-level type

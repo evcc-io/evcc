@@ -28,9 +28,31 @@ test.describe("battery settings", async () => {
     await page.locator("#batterySettingsPriority").selectOption({ label: "50%" });
     await expect(page.locator("label[for=batterySettingsPriorityMiddle] span")).toHaveText("50%");
     await expect(page.locator("label[for=batterySettingsPriorityBottom] span")).toHaveText("50%");
-    await page.locator("#batterySettingsBufferTop").selectOption({ label: "80%" });
+    await page.locator("#batterySettingsBufferTop").selectOption({ label: "when above 80%" });
     await page.locator("#batterySettingsBufferStart").selectOption({ label: "when above 90%." });
     await expect(page.locator("label[for=batterySettingsBuffer] span")).toHaveText("80%");
+  });
+
+  test("buffer 100% disables battery-supported charging", async ({ page }) => {
+    await page.goto("/#/battery");
+
+    const topRow = page.getByText("Battery-supported vehicle charging");
+    const bufferSoc = topRow.getByRole("combobox").filter({ hasText: "disabled" });
+    const bufferStart = page.locator("#batterySettingsBufferStart");
+
+    await expect(bufferSoc).toHaveValue("100");
+    await expect(page.getByText("Start automatically")).toBeHidden();
+
+    await bufferSoc.selectOption({ label: "when above 80%" });
+    await expect(page.getByText("Start automatically")).toBeVisible();
+
+    await bufferStart.selectOption({ label: "when above 90%." });
+
+    await bufferSoc.selectOption({ label: "disabled" });
+    await expect(page.getByText("Start automatically")).toBeHidden();
+
+    await bufferSoc.selectOption({ label: "when above 80%" });
+    await expect(topRow).toContainText("only with enough surplus.");
   });
 
   test("grid charging", async ({ page }) => {

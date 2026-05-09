@@ -115,6 +115,7 @@ export interface State {
   database?: string;
   ocpp?: Ocpp;
   optimizer?: boolean;
+  mcp?: boolean;
 }
 
 export interface ConfigStatus<C, S> {
@@ -261,8 +262,10 @@ export interface Loadpoint {
   chargeTotalImport?: number;
   chargeVoltages?: number[];
   chargedEnergy: number;
+  chargerFeatureContinuous: boolean;
   chargerFeatureHeating: boolean;
   chargerFeatureIntegratedDevice: boolean;
+  chargerFeatureSwitchDevice: boolean;
   chargerIcon: string | null;
   chargerPhases1p3p: boolean;
   chargerSinglePhase: boolean;
@@ -377,6 +380,7 @@ export enum CURRENCY {
   USD = "USD",
   DKK = "DKK",
   SEK = "SEK",
+  ZAR = "ZAR",
 }
 
 export enum ICON_SIZE {

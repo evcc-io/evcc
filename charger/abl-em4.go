@@ -197,10 +197,10 @@ func (wb *AblEm4) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-var _ api.MeterEnergy = (*AblEm4)(nil)
+var _ api.MeterImport = (*AblEm4)(nil)
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *AblEm4) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterImport interface
+func (wb *AblEm4) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.base+abl4RegEnergy, 2)
 	if err != nil {
 		return 0, err

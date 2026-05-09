@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -51,10 +52,9 @@ type tqemData struct {
 }
 
 type TqEm struct {
+	implement.Caps
 	dataG func() (tqemData, error)
 }
-
-//go:generate go tool decorate -f decorateTqEm -b api.Meter -t api.PhaseCurrents
 
 // NewTqEmFromConfig creates a new configurable meter
 func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
@@ -122,6 +122,7 @@ func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
 	}, cc.Cache)
 
 	m := &TqEm{
+		Caps:  implement.New(),
 		dataG: dataG,
 	}
 
@@ -131,7 +132,7 @@ func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if res.Obis31_4_0 != nil {
-		return decorateTqEm(m, m.currents), nil
+		implement.Has(m, implement.PhaseCurrents(m.currents))
 	}
 
 	return m, nil
@@ -142,9 +143,9 @@ func (m *TqEm) CurrentPower() (float64, error) {
 	return res.Obis1_4_0 - res.Obis2_4_0, err
 }
 
-var _ api.MeterEnergy = (*TqEm)(nil)
+var _ api.MeterImport = (*TqEm)(nil)
 
-func (m *TqEm) TotalEnergy() (float64, error) {
+func (m *TqEm) ImportEnergy() (float64, error) {
 	res, err := m.dataG()
 	return res.Obis1_8_0 / 1e3, err
 }

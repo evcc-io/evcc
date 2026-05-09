@@ -174,10 +174,10 @@ func (wb *smartEVSE) CurrentPower() (float64, error) {
 	return v1*i1 + v2*i2 + v3*i3, nil
 }
 
-var _ api.MeterEnergy = (*smartEVSE)(nil)
+var _ api.MeterImport = (*smartEVSE)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *smartEVSE) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *smartEVSE) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(smartEVSERegEnergy, 2)
 	if err != nil {
 		return 0, err

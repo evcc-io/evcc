@@ -262,7 +262,7 @@ func init() {
 	// 	ID:      taskTPLink,
 	// 	Type:    tasks.Http,
 	// 	Depends: TaskHttp,
-	// 	Config: map[string]interface{}{
+	// 	Config: map[string]any{
 	// 		"ResponseHeader": map[string]string{
 	// 			"Server": "TP-LINK Smart Plug",
 	// 		},

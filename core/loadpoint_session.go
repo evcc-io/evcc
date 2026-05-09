@@ -13,12 +13,12 @@ import (
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
-	m, ok := api.Cap[api.MeterEnergy](lp.chargeMeter)
+	m, ok := api.Cap[api.MeterImport](lp.chargeMeter)
 	if !ok {
 		return 0
 	}
 
-	f, err := m.TotalEnergy()
+	f, err := m.ImportEnergy()
 	if err != nil {
 		if !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge total import: %v", err)

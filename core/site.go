@@ -88,6 +88,7 @@ type Site struct {
 	pvEnergy    map[string]*metrics.Accumulator
 
 	homeEnergy, gridEnergy *metrics.Collector
+	batteryEnergy          map[string]*metrics.Collector // per-battery, keyed by meter ref
 
 	// cached state
 	gridPower                float64            // Grid power
@@ -216,6 +217,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.batteryMeters = append(site.batteryMeters, dev)
+
+		me, err := metrics.NewCollector(metrics.Battery, ref)
+		if err != nil {
+			return err
+		}
+		site.batteryEnergy[ref] = me
 	}
 
 	// meters used only for monitoring
@@ -251,10 +258,11 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
-		Voltage:    230, // V
-		pvEnergy:   make(map[string]*metrics.Accumulator),
-		fcstEnergy: metrics.NewAccumulator(),
+		log:           util.NewLogger("site"),
+		Voltage:       230, // V
+		pvEnergy:      make(map[string]*metrics.Accumulator),
+		batteryEnergy: make(map[string]*metrics.Collector),
+		fcstEnergy:    metrics.NewAccumulator(),
 	}
 
 	return site
@@ -362,7 +370,7 @@ func meterCapabilities(name string, meter any) string {
 		panic("not a meter: " + name)
 	}
 
-	energy := api.HasCap[api.MeterEnergy](meter)
+	energy := api.HasCap[api.MeterImport](meter) || api.HasCap[api.MeterExport](meter)
 	currents := api.HasCap[api.PhaseCurrents](meter)
 
 	name += ":"
@@ -447,7 +455,7 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
 		_, power := api.Cap[api.Meter](lp.charger)
-		_, energy := api.Cap[api.MeterEnergy](lp.charger)
+		_, energy := api.Cap[api.MeterImport](lp.charger)
 		_, currents := api.Cap[api.PhaseCurrents](lp.charger)
 		_, phases := api.Cap[api.PhaseSwitcher](lp.charger)
 		_, wakeup := api.Cap[api.Resurrector](lp.charger)
@@ -508,10 +516,19 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			site.log.ERROR.Printf("%s %d power: %v", key, i+1, err)
 		}
 
-		// energy (production)
+		// energy (production for pv/battery, consumption for aux/ext)
 		var energy float64
-		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
-			energy, err = m.TotalEnergy()
+		if err == nil {
+			switch key {
+			case "pv", "battery":
+				if m, ok := api.Cap[api.MeterExport](meter); ok {
+					energy, err = m.ExportEnergy()
+				}
+			default:
+				if m, ok := api.Cap[api.MeterImport](meter); ok {
+					energy, err = m.ImportEnergy()
+				}
+			}
 			if err != nil {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
@@ -671,6 +688,22 @@ func (site *Site) updateBatteryMeters() {
 
 	site.battery.Devices = mm
 
+	// accumulate per-battery energy (charging = import, discharging = export — from battery POV toward grid root)
+	for i, dev := range site.batteryMeters {
+		ref := dev.Config().Name
+		c, ok := site.batteryEnergy[ref]
+		if !ok {
+			continue
+		}
+		var exportEnergy *float64
+		if mm[i].Energy > 0 {
+			exportEnergy = &mm[i].Energy
+		}
+		if err := c.AddEnergy(nil, exportEnergy, -mm[i].Power); err != nil {
+			site.log.ERROR.Printf("persist battery %d energy: %v", i+1, err)
+		}
+	}
+
 	site.publish(keys.Battery, site.battery)
 }
 
@@ -762,8 +795,8 @@ func (site *Site) updateGridMeter() error {
 
 	// grid energy (import)
 	var importEnergy *float64
-	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
-		if f, err := energyMeter.TotalEnergy(); err == nil {
+	if energyMeter, ok := api.Cap[api.MeterImport](site.gridMeter); ok {
+		if f, err := energyMeter.ImportEnergy(); err == nil {
 			mm.Energy = f
 			importEnergy = &f
 		} else {

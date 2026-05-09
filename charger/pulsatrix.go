@@ -429,10 +429,10 @@ func (c *Pulsatrix) CurrentPower() (float64, error) {
 	return res.LastActivePower, err
 }
 
-var _ api.MeterEnergy = (*Pulsatrix)(nil)
+var _ api.MeterImport = (*Pulsatrix)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Pulsatrix) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (c *Pulsatrix) ImportEnergy() (float64, error) {
 	res, err := c.data.Get()
 	return res.EnergyImported, err
 }

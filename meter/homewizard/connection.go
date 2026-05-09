@@ -107,8 +107,8 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return res.ActivePowerW, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Connection) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (c *Connection) ImportEnergy() (float64, error) {
 	res, err := c.dataG.Get()
 	if c.usage == "pv" {
 		return res.TotalPowerExportT1kWh + res.TotalPowerExportT2kWh + res.TotalPowerExportT3kWh + res.TotalPowerExportT4kWh, err

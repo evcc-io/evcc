@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/fritz"
@@ -23,8 +22,6 @@ import (
 type Connection struct {
 	*request.Helper
 	*fritz.Settings
-	SID     string
-	updated time.Time
 }
 
 // NewConnection creates FritzDECT connection
@@ -58,19 +55,13 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 
 // ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
 func (c *Connection) ExecCmd(function string) (string, error) {
-	// refresh Fritzbox session id
-	if time.Since(c.updated) >= fritz.SessionTimeout {
-		sid, err := c.GetSessionID(c.Helper)
-		if err != nil {
-			return "", err
-		}
-		// update session timestamp
-		c.SID = sid
-		c.updated = time.Now()
+	sid, err := c.GetSessionID(c.Helper)
+	if err != nil {
+		return "", err
 	}
 
 	parameters := url.Values{
-		"sid":       {c.SID},
+		"sid":       {sid},
 		"ain":       {c.AIN},
 		"switchcmd": {function},
 	}
@@ -100,10 +91,10 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return power / 1000, err // mW ==> W
 }
 
-var _ api.MeterEnergy = (*Connection)(nil)
+var _ api.MeterImport = (*Connection)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Connection) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (c *Connection) ImportEnergy() (float64, error) {
 	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getswitchenergy")
 	if err != nil {

@@ -36,14 +36,14 @@ func TestSession(t *testing.T) {
 	defer ctrl.Finish()
 
 	mm := api.NewMockMeter(ctrl)
-	me := api.NewMockMeterEnergy(ctrl)
+	me := api.NewMockMeterImport(ctrl)
 
 	type EnergyDecorator struct {
 		api.Meter
-		api.MeterEnergy
+		api.MeterImport
 	}
 
-	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
+	cm := &EnergyDecorator{Meter: mm, MeterImport: me}
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
@@ -53,7 +53,7 @@ func TestSession(t *testing.T) {
 	}
 
 	// create session
-	me.EXPECT().TotalEnergy().Return(1.0, nil)
+	me.EXPECT().ImportEnergy().Return(1.0, nil)
 	lp.createSession()
 	assert.NotNil(t, lp.session)
 
@@ -64,7 +64,7 @@ func TestSession(t *testing.T) {
 	// stop charging
 	clock.Add(time.Hour)
 	lp.energyMetrics.Update(1.23)
-	me.EXPECT().TotalEnergy().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
+	me.EXPECT().ImportEnergy().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
@@ -79,7 +79,7 @@ func TestSession(t *testing.T) {
 	// stop charging - 2nd leg
 	clock.Add(time.Hour)
 	lp.energyMetrics.Update(lp.getChargedEnergy() * 2)
-	me.EXPECT().TotalEnergy().Return(3.0, nil) // doesn't match chargedEnergy
+	me.EXPECT().ImportEnergy().Return(3.0, nil) // doesn't match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
@@ -213,14 +213,14 @@ func TestResetHeatingSession(t *testing.T) {
 	})
 
 	mm := api.NewMockMeter(ctrl)
-	me := api.NewMockMeterEnergy(ctrl)
+	me := api.NewMockMeterImport(ctrl)
 
 	type EnergyDecorator struct {
 		api.Meter
-		api.MeterEnergy
+		api.MeterImport
 	}
 
-	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
+	cm := &EnergyDecorator{Meter: mm, MeterImport: me}
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
@@ -231,7 +231,7 @@ func TestResetHeatingSession(t *testing.T) {
 	}
 
 	// create session
-	me.EXPECT().TotalEnergy().Return(1.0, nil)
+	me.EXPECT().ImportEnergy().Return(1.0, nil)
 	lp.createSession()
 	require.NotNil(t, lp.session)
 	assert.True(t, lp.session.Created.IsZero())
@@ -241,7 +241,7 @@ func TestResetHeatingSession(t *testing.T) {
 	assert.Equal(t, clock.Now(), lp.session.Created)
 
 	clock.Add(36 * time.Hour)
-	me.EXPECT().TotalEnergy().Return(1.0, nil).MaxTimes(2)
+	me.EXPECT().ImportEnergy().Return(1.0, nil).MaxTimes(2)
 
 	lp.resetHeatingSession()
 	require.NotNil(t, lp.session)
@@ -250,7 +250,7 @@ func TestResetHeatingSession(t *testing.T) {
 	lp.updateSession(sessionStart(lp))
 	assert.Equal(t, clock.Now(), lp.session.Created)
 
-	me.EXPECT().TotalEnergy().Return(3.0, nil)
+	me.EXPECT().ImportEnergy().Return(3.0, nil)
 	lp.stopSession()
 
 	assert.NotNil(t, lp.session)
@@ -260,7 +260,7 @@ func TestResetHeatingSession(t *testing.T) {
 }
 
 func TestFinalizeSessionEnergy(t *testing.T) {
-	setup := func(t *testing.T) (*Loadpoint, *api.MockMeterEnergy, *api.MockChargeRater) {
+	setup := func(t *testing.T) (*Loadpoint, *api.MockMeterImport, *api.MockChargeRater) {
 		t.Helper()
 		var err error
 		serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
@@ -270,17 +270,17 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mm := api.NewMockMeter(ctrl)
-		me := api.NewMockMeterEnergy(ctrl)
+		me := api.NewMockMeterImport(ctrl)
 		rater := api.NewMockChargeRater(ctrl)
 
 		type EnergyDecorator struct {
 			api.Meter
-			api.MeterEnergy
+			api.MeterImport
 		}
 
 		cm := &EnergyDecorator{
 			Meter:       mm,
-			MeterEnergy: me,
+			MeterImport: me,
 		}
 
 		lp := &Loadpoint{
@@ -296,17 +296,17 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 	t.Run("corrects session when ChargedEnergy increased", func(t *testing.T) {
 		lp, me, rater := setup(t)
 
-		me.EXPECT().TotalEnergy().Return(9157.3, nil)
+		me.EXPECT().ImportEnergy().Return(9157.3, nil)
 		lp.createSession()
 		lp.session.Created = lp.clock.Now()
 
 		lp.energyMetrics.Update(15.3)
-		me.EXPECT().TotalEnergy().Return(9164.0, nil)
+		me.EXPECT().ImportEnergy().Return(9164.0, nil)
 		lp.stopSession()
 		require.Equal(t, 15.3, lp.session.ChargedEnergy)
 
 		rater.EXPECT().ChargedEnergy().Return(16.2, nil)
-		me.EXPECT().TotalEnergy().Return(9173.5, nil)
+		me.EXPECT().ImportEnergy().Return(9173.5, nil)
 		lp.finalizeSessionEnergy()
 
 		assert.Equal(t, 16.2, lp.session.ChargedEnergy)
@@ -317,12 +317,12 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 	t.Run("no-op when ChargedEnergy unchanged", func(t *testing.T) {
 		lp, me, rater := setup(t)
 
-		me.EXPECT().TotalEnergy().Return(9154.4, nil)
+		me.EXPECT().ImportEnergy().Return(9154.4, nil)
 		lp.createSession()
 		lp.session.Created = lp.clock.Now()
 
 		lp.energyMetrics.Update(15.3)
-		me.EXPECT().TotalEnergy().Return(9164.0, nil)
+		me.EXPECT().ImportEnergy().Return(9164.0, nil)
 		lp.stopSession()
 		require.Equal(t, 15.3, lp.session.ChargedEnergy)
 

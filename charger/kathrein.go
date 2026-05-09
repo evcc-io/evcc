@@ -314,10 +314,10 @@ func (wb *Kathrein) Voltages() (float64, float64, float64, error) {
 // removed since broken, see https://github.com/evcc-io/evcc/pull/25427
 // var _ api.ChargeRater = (*Kathrein)(nil)
 
-var _ api.MeterEnergy = (*Kathrein)(nil)
+var _ api.MeterImport = (*Kathrein)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Kathrein) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Kathrein) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

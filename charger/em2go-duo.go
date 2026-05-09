@@ -216,10 +216,10 @@ func (wb *Em2GoDuo) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-var _ api.MeterEnergy = (*Em2GoDuo)(nil)
+var _ api.MeterImport = (*Em2GoDuo)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Em2GoDuo) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Em2GoDuo) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.base+em2GoDuoRegConEnergy, 2)
 	if err != nil {
 		return 0, err

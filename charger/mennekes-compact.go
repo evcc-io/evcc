@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -33,6 +34,7 @@ import (
 
 // MennekesCompact is an api.Charger implementation
 type MennekesCompact struct {
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -87,8 +89,6 @@ func NewMennekesCompactFromConfig(ctx context.Context, other map[string]any) (ap
 	return NewMennekesCompact(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
 }
 
-//go:generate go tool decorate -f decorateMennekesCompact -b *MennekesCompact -r api.Charger -t api.PhaseSwitcher
-
 // NewMennekesCompact creates Mennekes charger
 func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
@@ -108,20 +108,20 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	conn.Logger(log.TRACE)
 
 	wb := &MennekesCompact{
+		Caps: implement.New(),
 		log:  log,
 		conn: conn,
 	}
 
 	// check phase switching support
-	var phasesS func(int) error
 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegPhaseOptionsHW, 1); err == nil && encoding.Uint16(b) == 2 {
-		phasesS = wb.phases1p3p
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	// failsafe
 	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
 
-	return decorateMennekesCompact(wb, phasesS), nil
+	return wb, nil
 }
 
 func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -212,10 +212,10 @@ func (wb *MennekesCompact) CurrentPower() (float64, error) {
 	return float64(encoding.Float32(b)), nil
 }
 
-var _ api.MeterEnergy = (*MennekesCompact)(nil)
+var _ api.MeterImport = (*MennekesCompact)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *MennekesCompact) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *MennekesCompact) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegChargedEnergyTotal, 2)
 	if err != nil {
 		return 0, err
@@ -256,7 +256,7 @@ func (wb *MennekesCompact) getPhaseValues(reg uint16) (float64, float64, float64
 /*
 var _ api.ChargeRater = (*MennekesCompact)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.MeterImport interface
 func (wb *MennekesCompact) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegChargedEnergySession, 2)
 	if err != nil {

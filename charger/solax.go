@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -32,6 +33,7 @@ import (
 
 // Solax charger implementation
 type Solax struct {
+	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
 	isLegacyHw bool
@@ -75,8 +77,6 @@ func init() {
 	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSolax -b *Solax -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
-
 func NewSolaxG1FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, true)
 }
@@ -113,23 +113,21 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	conn.Logger(log.TRACE)
 
 	wb := &Solax{
+		Caps:       implement.New(),
 		log:        log,
 		conn:       conn,
 		isLegacyHw: isLegacyHw,
 	}
 
-	var phases1p3p func(int) error
-	var phasesG func() (int, error)
-
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
 		v := encoding.Uint16(b)
 		if !wb.isLegacyHw && v >= solaxFirmwarePhaseSwitching {
-			phases1p3p = wb.phases1p3p
-			phasesG = wb.getPhases
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
 
-	return decorateSolax(wb, phases1p3p, phasesG), nil
+	return wb, nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -227,10 +225,10 @@ func (wb *Solax) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), err
 }
 
-var _ api.MeterEnergy = (*Solax)(nil)
+var _ api.MeterImport = (*Solax)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Solax) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Solax) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(solaxRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

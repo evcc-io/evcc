@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -40,10 +41,16 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 
 	meter, _ := NewConfigurable(mav.CurrentPower)
 
-	// decorate energy reading
-	var totalEnergy func() (float64, error)
-	if m, ok := api.Cap[api.MeterEnergy](m); ok {
-		totalEnergy = m.TotalEnergy
+	// decorate import reading
+	var importEnergy func() (float64, error)
+	if m, ok := api.Cap[api.MeterImport](m); ok {
+		importEnergy = m.ImportEnergy
+	}
+
+	// decorate export reading
+	var exportEnergy func() (float64, error)
+	if m, ok := api.Cap[api.MeterExport](m); ok {
+		exportEnergy = m.ExportEnergy
 	}
 
 	// decorate battery reading
@@ -70,11 +77,20 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 		powers = m.Powers
 	}
 
+	implement.May(meter, implement.MeterImport(importEnergy))
+	implement.May(meter, implement.MeterExport(exportEnergy))
+
 	if batterySoc != nil {
-		return meter.DecorateBattery(totalEnergy, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil, nil), nil
+		implement.Has(meter, implement.Battery(batterySoc))
+		implement.May(meter, implement.BatteryCapacity(cc.Meter.batteryCapacity.Decorator()))
+		return meter, nil
 	}
 
-	return meter.Decorate(totalEnergy, currents, voltages, powers, nil), nil
+	implement.May(meter, implement.PhaseCurrents(currents))
+	implement.May(meter, implement.PhaseVoltages(voltages))
+	implement.May(meter, implement.PhasePowers(powers))
+
+	return meter, nil
 }
 
 type MovingAverage struct {
