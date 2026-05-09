@@ -64,6 +64,7 @@ type All struct {
 	Site            map[string]any
 	Loadpoints      []config.Named
 	Circuits        []config.Named
+	Iobroker        []Iobroker
 }
 
 type Javascript struct {
@@ -244,4 +245,27 @@ func (c Network) MarshalJSON() ([]byte, error) {
 		networkAlias: networkAlias(c),
 		InternalUrl:  c.InternalURL(),
 	})
+}
+
+// Config is the public configuration
+type IobConfig struct {
+	Name     string `json:"name"`
+	Uri      string `json:"uri"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
+type Iobroker struct {
+	IobConfig `mapstructure:",squash"`
+}
+
+// Redacted implements the redactor interface used by the tee publisher
+func (i Iobroker) Redacted() any {
+	return Iobroker{
+		IobConfig: IobConfig{
+			Uri:      i.Uri,
+			User:     i.User,
+			Password: util.Masked(i.Password),
+		},
+	}
 }

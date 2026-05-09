@@ -32,4 +32,5 @@ const (
 	DemoMode           = "demoMode"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
+	Iobroker           = "iobroker"
 )

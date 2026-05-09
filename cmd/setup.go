@@ -41,6 +41,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/iobroker"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
@@ -881,7 +882,6 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	}
 
 	messageHub, err := messenger.NewHub(events, vehicles, cache)
-
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
@@ -1320,4 +1320,33 @@ func isExperimental() bool {
 func isOptimizer() bool {
 	b, _ := settings.Bool(keys.Optimizer)
 	return b
+}
+
+// setup iobroker
+func configureIobroker(conf *[]globalconfig.Iobroker) error {
+	var log *util.Logger = nil
+	// prevent panic
+	if conf == nil {
+		return nil
+	}
+
+	if settings.Exists(keys.Iobroker) {
+		if err := migrateYamlToJson(keys.Iobroker, conf); err != nil {
+			return err
+		}
+		log = util.NewLogger("iobroker")
+	}
+
+	for _, cfg := range *conf {
+		if cfg.Uri == "" {
+			continue
+		}
+
+		err := iobroker.NewConnection(log, cfg.Name, cfg.Uri, cfg.User, cfg.Password)
+		if err != nil {
+			return fmt.Errorf("failed configuring iobroker: %w", err)
+		}
+	}
+
+	return nil
 }
