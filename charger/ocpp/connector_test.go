@@ -69,8 +69,8 @@ func (suite *connTestSuite) TestConnectorNoMeasurements() {
 	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
 
 	// api.ErrNotAvailable
-	_, err = suite.conn.TotalEnergy()
-	suite.Equal(api.ErrNotAvailable, err, "TotalEnergy")
+	_, err = suite.conn.ImportEnergy()
+	suite.Equal(api.ErrNotAvailable, err, "ImportEnergy")
 	_, err = suite.conn.Soc()
 	suite.Equal(api.ErrNotAvailable, err, "Soc")
 	_, _, _, err = suite.conn.Voltages()
@@ -98,9 +98,9 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
 
 	// keep old values
-	res, err = suite.conn.TotalEnergy()
-	suite.NoError(err, "TotalEnergy")
-	suite.Equal(res, 0.001, "TotalEnergy")
+	res, err = suite.conn.ImportEnergy()
+	suite.NoError(err, "ImportEnergy")
+	suite.Equal(res, 0.001, "ImportEnergy")
 	res, err = suite.conn.Soc()
 	suite.NoError(err, "Soc")
 	suite.Equal(res, 1.0, "Soc")
@@ -119,8 +119,8 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxnOutdated() {
 
 	_, err := suite.conn.CurrentPower()
 	suite.Equal(api.ErrTimeout, err, "CurrentPower")
-	_, err = suite.conn.TotalEnergy()
-	suite.Equal(api.ErrTimeout, err, "TotalEnergy")
+	_, err = suite.conn.ImportEnergy()
+	suite.Equal(api.ErrTimeout, err, "ImportEnergy")
 	_, err = suite.conn.GetMaxCurrent()
 	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
 	_, err = suite.conn.Soc()
@@ -140,8 +140,8 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 
 	_, err := suite.conn.CurrentPower()
 	suite.NoError(err, "CurrentPower")
-	_, err = suite.conn.TotalEnergy()
-	suite.NoError(err, "TotalEnergy")
+	_, err = suite.conn.ImportEnergy()
+	suite.NoError(err, "ImportEnergy")
 	_, err = suite.conn.GetMaxCurrent()
 	suite.NoError(err, "GetMaxCurrent")
 	_, err = suite.conn.Soc()

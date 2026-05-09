@@ -99,7 +99,7 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
 		implement.May(wb, implement.Meter(wb.currentPower))
-		implement.May(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.May(wb, implement.MeterImport(wb.totalEnergy))
 		implement.May(wb, implement.PhaseCurrents(wb.currents))
 		implement.May(wb, implement.PhaseVoltages(wb.voltages))
 	}
@@ -184,7 +184,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 	if wb.isWallbe {
 		b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWallbe, 4)

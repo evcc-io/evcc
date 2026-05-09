@@ -251,10 +251,10 @@ func (wb *Lektrico) CurrentPower() (float64, error) {
 	return res.InstantPower, err
 }
 
-var _ api.MeterEnergy = (*Lektrico)(nil)
+var _ api.MeterImport = (*Lektrico)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Lektrico) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Lektrico) ImportEnergy() (float64, error) {
 	res, err := wb.statusG.Get()
 	return res.TotalChargedEnergy, err
 }

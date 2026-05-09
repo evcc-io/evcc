@@ -186,10 +186,10 @@ func (wb *EProWallbox) CurrentPower() (float64, error) {
 	return l1 + l2 + l3, err
 }
 
-var _ api.MeterEnergy = (*EProWallbox)(nil)
+var _ api.MeterImport = (*EProWallbox)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *EProWallbox) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *EProWallbox) ImportEnergy() (float64, error) {
 	l1, l2, l3, err := wb.getPhaseValues(eproRegActiveEnergies, 1000)
 	return -(l1 + l2 + l3), err
 }

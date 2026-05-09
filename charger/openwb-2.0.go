@@ -168,10 +168,10 @@ func (wb *OpenWB20) CurrentPower() (float64, error) {
 	return float64(int32(binary.BigEndian.Uint32(b))), nil
 }
 
-var _ api.MeterEnergy = (*OpenWB20)(nil)
+var _ api.MeterImport = (*OpenWB20)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *OpenWB20) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *OpenWB20) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegImport, 2)
 	if err != nil {
 		return 0, err

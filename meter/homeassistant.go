@@ -89,7 +89,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		powersG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
 	}
 
-	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterImport(energyG))
 
 	if cc.Soc != "" {
 		socG := func() (float64, error) { return conn.GetFloatState(cc.Soc) }

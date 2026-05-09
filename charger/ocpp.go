@@ -109,7 +109,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		implement.Has(c, implement.MeterEnergy(c.conn.TotalEnergy))
+		implement.Has(c, implement.MeterImport(c.conn.ImportEnergy))
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandCurrentImport) {

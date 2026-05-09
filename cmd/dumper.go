@@ -85,9 +85,16 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := api.Cap[api.MeterEnergy](v); ok {
-		d.measureTime(w, "Energy", func() (string, error) {
-			energy, err := v.TotalEnergy()
+	if v, ok := api.Cap[api.MeterImport](v); ok {
+		d.measureTime(w, "Import", func() (string, error) {
+			energy, err := v.ImportEnergy()
+			return fmt.Sprintf("%.1fkWh", energy), err
+		})
+	}
+
+	if v, ok := api.Cap[api.MeterExport](v); ok {
+		d.measureTime(w, "Export", func() (string, error) {
+			energy, err := v.ExportEnergy()
 			return fmt.Sprintf("%.1fkWh", energy), err
 		})
 	}

@@ -283,10 +283,10 @@ func (wb *NRGKickBLE) CurrentPower() (float64, error) {
 	return float64(res.TotalPower) * 10, nil
 }
 
-var _ api.MeterEnergy = (*NRGKickBLE)(nil)
+var _ api.MeterImport = (*NRGKickBLE)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *NRGKickBLE) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *NRGKickBLE) ImportEnergy() (float64, error) {
 	var res ble.Energy
 	if err := wb.read(ble.EnergyService, &res); err != nil {
 		return 0, err

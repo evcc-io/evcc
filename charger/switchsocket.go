@@ -62,7 +62,7 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, err
 	}
-	implement.May(c, implement.MeterEnergy(energy))
+	implement.May(c, implement.MeterImport(energy))
 
 	soc, err := cc.Soc.FloatGetter(ctx)
 	if err != nil {

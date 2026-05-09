@@ -240,10 +240,10 @@ func (wb *Sungrow) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(sgRegVoltages, 10)
 }
 
-var _ api.MeterEnergy = (*Sungrow)(nil)
+var _ api.MeterImport = (*Sungrow)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Sungrow) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Sungrow) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(sgRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

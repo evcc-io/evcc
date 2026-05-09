@@ -95,7 +95,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	// Check energy register (95)
 	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterEnergyAddr, 1); err == nil {
 		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-			implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+			implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 		}
 	}
 
@@ -246,7 +246,7 @@ func (wb *Etek) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *Etek) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(etekRegEnergy, 2)
 	if err != nil {

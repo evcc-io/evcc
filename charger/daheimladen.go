@@ -250,10 +250,10 @@ func (wb *DaheimLaden) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*DaheimLaden)(nil)
+var _ api.MeterImport = (*DaheimLaden)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *DaheimLaden) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *DaheimLaden) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(dlRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

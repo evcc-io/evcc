@@ -81,7 +81,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	// Feature: Meter -> Meter is legacy API, Meters is the new API
 	if w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
 		implement.Has(w, implement.Meter(w.currentPower))
-		implement.Has(w, implement.MeterEnergy(w.totalEnergy))
+		implement.Has(w, implement.MeterImport(w.totalEnergy))
 	}
 
 	// Feature: Meters | MeterAllValues

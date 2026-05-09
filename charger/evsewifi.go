@@ -76,7 +76,7 @@ func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	if cc.Meter.Energy {
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 	}
 
 	if cc.Meter.Currents {
@@ -210,7 +210,7 @@ func (wb *EVSEWifi) currentPower() (float64, error) {
 	return 1000 * params.ActualPower, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
+// ImportEnergy implements the api.MeterImport interface
 func (wb *EVSEWifi) totalEnergy() (float64, error) {
 	params, err := wb.paramG.Get()
 	return params.MeterReading, err

@@ -228,10 +228,10 @@ func (nrg *NRGKickGen2) CurrentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)) * 1e-3, nil
 }
 
-var _ api.MeterEnergy = (*NRGKickGen2)(nil)
+var _ api.MeterImport = (*NRGKickGen2)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (nrg *NRGKickGen2) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (nrg *NRGKickGen2) ImportEnergy() (float64, error) {
 	b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2TotalChargedEnergy, 4)
 	if err != nil {
 		return 0, err

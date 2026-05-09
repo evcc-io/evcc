@@ -9,23 +9,39 @@ import (
 
 type Energy struct {
 	Power  *plugin.Config // optional
-	Energy *plugin.Config // optional
+	Import *plugin.Config // optional
+	Export *plugin.Config // optional
+	// Energy is a legacy alias for Import. Chargers always import energy, so
+	// the alias only feeds the Import getter (unlike meters, which alias to both).
+	Energy *plugin.Config
 }
 
 func (cc *Energy) Configure(ctx context.Context) (
+	func() (float64, error),
 	func() (float64, error),
 	func() (float64, error),
 	error,
 ) {
 	powerG, err := cc.Power.FloatGetter(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("power: %w", err)
+		return nil, nil, nil, fmt.Errorf("power: %w", err)
 	}
 
-	energyG, err := cc.Energy.FloatGetter(ctx)
+	// legacy: chargers always import, so 'energy' aliases to import only.
+	importCfg := cc.Import
+	if cc.Energy != nil && importCfg == nil {
+		importCfg = cc.Energy
+	}
+
+	importG, err := importCfg.FloatGetter(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("energy: %w", err)
+		return nil, nil, nil, fmt.Errorf("import: %w", err)
 	}
 
-	return powerG, energyG, nil
+	exportG, err := cc.Export.FloatGetter(ctx)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("export: %w", err)
+	}
+
+	return powerG, importG, exportG, nil
 }

@@ -362,9 +362,9 @@ func (wb *E3dc) CurrentPower() (float64, error) {
 	return p1 + p2 + p3, nil
 }
 
-var _ api.MeterEnergy = (*E3dc)(nil)
+var _ api.MeterImport = (*E3dc)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
+// ImportEnergy implements the api.MeterImport interface
 //
 // E3DC stores wallbox energy in two separate counters that must be added:
 //   - DB_TEC_WALLBOX_ENERGYALL: Historical energy stored in the database (persisted)
@@ -372,7 +372,7 @@ var _ api.MeterEnergy = (*E3dc)(nil)
 //
 // The sum of both values matches the total energy shown in the E3DC portal.
 // Testing showed: DB_TEC (8319 kWh) + WB_ENERGY (699 kWh) = 9018 kWh ≈ Portal (9019 kWh)
-func (wb *E3dc) TotalEnergy() (float64, error) {
+func (wb *E3dc) ImportEnergy() (float64, error) {
 	// Query both energy sources sequentially
 	res, err := wb.conn.Send(*rscp.NewMessage(rscp.DB_REQ_TEC_WALLBOX_VALUES, nil))
 	if err != nil {

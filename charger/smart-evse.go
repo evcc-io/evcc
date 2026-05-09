@@ -166,7 +166,7 @@ func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, erro
 	// decorate optional EV meter if configured in SmartEVSE
 	if res.EvMeter.Description != "" && res.EvMeter.Description != "Disabled" {
 		implement.Has(wb, implement.Meter(wb.currentPower))
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
@@ -315,7 +315,7 @@ func (wb *SmartEVSE3) currentPower() (float64, error) {
 	return res.EvMeter.ImportActivePower, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *SmartEVSE3) totalEnergy() (float64, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {

@@ -51,7 +51,7 @@ func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
 			implement.Has(wb, implement.Meter(wb.currentPower))
-			implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+			implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 			implement.Has(wb, implement.PhaseCurrents(wb.currents))
 			return wb, nil
 		}
@@ -248,7 +248,7 @@ func (wb *PCElectric) currentPower() (float64, error) {
 	return 230 * (l1 + l2 + l3), err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface kwh
+// ImportEnergy implements the api.MeterImport interface kwh
 func (wb *PCElectric) totalEnergy() (float64, error) {
 	var res pcelectric.MeterInfo
 	uri := fmt.Sprintf("%s/meterinfo/%s", wb.uri, wb.meter)

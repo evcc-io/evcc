@@ -176,9 +176,9 @@ func (c *EEBus) CurrentPower() (float64, error) {
 	return c.readValue(c.scenarios.power, c.mm.Power)
 }
 
-var _ api.MeterEnergy = (*EEBus)(nil)
+var _ api.MeterImport = (*EEBus)(nil)
 
-func (c *EEBus) TotalEnergy() (float64, error) {
+func (c *EEBus) ImportEnergy() (float64, error) {
 	return c.readValue(c.scenarios.energy, c.mm.EnergyConsumed)
 }
 

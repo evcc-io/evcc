@@ -142,8 +142,12 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		m.energySite = energySite
 	}
 
-	if m.usage == "load" || m.usage == "solar" {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+	if m.usage == "load" {
+		implement.Has(m, implement.MeterImport(m.totalEnergy))
+	}
+
+	if m.usage == "solar" {
+		implement.Has(m, implement.MeterExport(m.totalEnergy))
 	}
 
 	if usage == "battery" {
@@ -193,7 +197,7 @@ func (m *PowerWall) CurrentPower() (float64, error) {
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy returns import (load) or export (solar) energy depending on usage
 func (m *PowerWall) totalEnergy() (float64, error) {
 	res, err := m.meterG()
 	if err != nil {
