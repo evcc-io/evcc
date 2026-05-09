@@ -40,6 +40,7 @@
     "legendTopName": "Batarya destekli araç doldurma",
     "legendTopSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
     "modalTitle": "Ev Bataryası",
+    "noBattery": "Batarya yapılandırılmamış.",
     "usageTab": "Batarya kullanımı"
   },
   "config": {
@@ -601,6 +602,11 @@
       "url": "Sunucu URL'si",
       "urlHelp": "Bu URL'yi doldrma cihazının yapılandırmasına kopyala. Ayrıntılar için üreticinin kılavuzuna bak. Doldurma cihazının, URL'ye benzersiz tanımlayıcısını (istasyon kimliği) otomatik olarak eklemesi beklenir. Nadir durumlarda, tanımlayıcıyı elle belirtmen gerekebilir. Örnek: `{url}`"
     },
+    "optimizer": {
+      "description": "Güneş enerjisi tahminlerini, elektrik fiyatlarını ve tüketim alışkanlıklarınızı analiz ederek batarya ve doldurma stratejisini iyileştirir. Veriler, işlenmek üzere evcc iyileştirme hizmetine gönderilir.",
+      "enable": "İyileştiriciyi Etkinleştir",
+      "title": "İyileştirici"
+    },
     "options": {
       "boolean": {
         "no": "“hayır”",
@@ -853,6 +859,15 @@
       "configurePriceCo2": "Fiyat ve CO₂ emisyonlarını yapılandır.",
       "footerLong": "{percent} güneş enerjisi",
       "footerShort": "{percent} güneş",
+      "indicator": {
+        "co2": "CO₂ emisyonları",
+        "co2saved": "Azaltılan CO₂ miktarı",
+        "none": "yok",
+        "price": "enerji fiyatı",
+        "savings": "tasarruf",
+        "solar": "güneş enerjisi"
+      },
+      "indicatorLabel": "Başlık bilgisi",
       "modalTitle": "Doldurma Enerjisi Genel Bakışı",
       "moneySaved": "{value} tasarruf edildi",
       "percentGrid": "{grid} kWh şebekeden",
@@ -864,10 +879,11 @@
         "thisYear": "“bu yıl”",
         "total": "tüm zaman"
       },
-      "periodLabel": "Zaman aralığı:",
+      "periodLabel": "Zaman aralığı",
       "priceTitle": "Enerji fiyatı",
       "referenceGrid": "şebeke",
-      "referenceLabel": "Referans verileri:",
+      "referenceLabel": "Kaynak verileri",
+      "sessionInfo": "Tamamlanmış doldurma işlemlerine göre.",
       "tabTitle": "Verilerim"
     },
     "sponsor": {
@@ -893,15 +909,26 @@
     },
     "version": {
       "availableLong": "yeni sürüm mevcut",
+      "community": "evcc topluluğu",
+      "labelRelease": "Yayın",
+      "labelVersion": "Sürüm",
+      "labelWebsite": "Web sitesi",
+      "latestVersion": "en son sürüm",
+      "madeByCommunity": "{0} tarafından hazırlandı.",
       "modalCancel": "İptal",
       "modalDownload": "İndir",
       "modalInstalledVersion": "Kurulu sürüm",
+      "modalLatest": "En son sürümü kullanıyorsun.",
+      "modalNextRelease": "Bir sonraki yayında neler var",
       "modalNoReleaseNotes": "Sürüm bilgileri mevcut değil. Yeni sürüm hakkında bilgiler:",
       "modalTitle": "Yeni sürüm mevcut",
       "modalUpdate": "Kur",
       "modalUpdateNow": "Şimdi kur",
       "modalUpdateStarted": "evcc'nin yeni sürümü başlatılıyor…",
-      "modalUpdateStatusStart": "Kurulum başladı:"
+      "modalUpdateStatusStart": "Kurulum başladı:",
+      "modalViewOnGitHub": "GitHub'da görüntüle",
+      "openSource": "açık kaynak",
+      "poweredByOpenSource": "{0} tarafından desteklenmekte."
     }
   },
   "forecast": {
@@ -911,6 +938,12 @@
       "lowestHour": "“En temiz saat”",
       "range": "“Aralık”"
     },
+    "empty": {
+      "co2": "Bölgendeki şebeke enerjisinin ne zaman temiz olduğunu gör. Doldurma planları, düşük emisyonlara göre iyileştirilecek ve CO₂ tasarrufu hesaplanacak.",
+      "price": "Dinamik elektrik tarifeni yapılandırarak doldurma planlarını otomatik olarak iyileştir ve tasarrufları hesapla.",
+      "setup": "Fiyatlar ve tahminler oluştur",
+      "solar": "Bugün ve önümüzdeki günler için beklenen güneş enerjisi üretimini gör. Bu veriler gelecekte otomatik doldurma iyileştirmesi için de kullanılacak."
+    },
     "modalTitle": "“Öngörü”",
     "price": {
       "average": "“Ortalama”",
@@ -918,6 +951,7 @@
       "lowestHour": "“En ucuz saat”",
       "range": "“Aralık”"
     },
+    "priceZoom": "büyüt",
     "solar": {
       "dayAfterTomorrow": "“Yarından sonra”",
       "partly": "“kısmen”",
@@ -926,10 +960,11 @@
       "tomorrow": "“Yarın”"
     },
     "solarAdjust": "Güneş enerjisi tahminlerini gerçek üretim verilerine göre ayarla{percent}.",
+    "solarAdjustShort": "gerçek verilere göre ayarlama",
     "type": {
-      "co2": "CO₂",
-      "price": "“Fiyat”",
-      "solar": "“Güneş”"
+      "co2": "CO₂ salımları",
+      "price": "Şebeke Fiyatı",
+      "solar": "Güneş Enerjisi Üretimi"
     }
   },
   "general": {
@@ -1142,6 +1177,7 @@
         "once": "Bu doldurma oturumu için takviye etkin.",
         "stateActive": "Batarya desteği etkin",
         "stateBelowLimit": "Desdek için batarya çok düşük",
+        "stateHold": "Batarya kilitli",
         "stateReady": "Batarya desteği hazır"
       },
       "batteryUsage": "“Ev Bataryası”",
@@ -1251,6 +1287,7 @@
       "batteryBoostBelowLimit": "Desdek için batarya çok düşük.",
       "batteryBoostDisabled": "Batarya desteği devre dışı bırakıldı.",
       "batteryBoostEnabled": "Batarya {limit} seviyesine kadar destek.",
+      "batteryBoostHold": "Batarya kilitli. Hızlandırma kullanılamıyor.",
       "charging": "doluyor…",
       "cheapEnergyCharging": "Ucuz enerji mevcut.",
       "cheapEnergyNextStart": "{duration} içinde ucuz enerji.",
@@ -1490,5 +1527,13 @@
     "lineErrorLink": "{0}. satır",
     "restartButton": "Yeniden Başlat",
     "title": "Başlama Hatası"
+  },
+  "tabBar": {
+    "battery": "Batarya",
+    "charge": "Doldurma",
+    "comingSoon": "Bu sayfa yapım aşamasında.",
+    "forecast": "Tahmin",
+    "more": "Daha fazla",
+    "sessions": "Oturumlar"
   }
 }

@@ -21,18 +21,20 @@ const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
+const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
 const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
 const CONFIG_CARD_HEIGHTS = "config_card_heights";
+const LAST_ACKNOWLEDGED_VERSION = "last_acknowledged_version";
 
 function read(key: string) {
   return window.localStorage[key];
 }
 
 function save(key: string) {
-  return (value: string | null) => {
+  return (value: string | null | undefined) => {
     try {
       if (value) {
         window.localStorage[key] = value;
@@ -124,12 +126,14 @@ export interface Settings {
   sessionsType: string;
   solarAdjusted: boolean;
   priceZoom: boolean;
+  hideFeedin: boolean;
   loadpoints: Record<string, LoadpointSettings>;
   lastBatterySmartCostLimit: number | undefined;
   lastTargetTime: string | null;
   lastSocGoal: number | undefined;
   lastEnergyGoal: number | undefined;
   cardHeights: Record<string, number>;
+  lastAcknowledgedVersion: string | undefined;
 }
 
 const settings: Settings = reactive({
@@ -149,14 +153,16 @@ const settings: Settings = reactive({
   savingsIndicator: read(SAVINGS_INDICATOR),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
-  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
+  solarAdjusted: false, //readBool(SETTINGS_SOLAR_ADJUSTED), # temporarily disable, https://github.com/evcc-io/evcc/issues/29165
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
+  hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
   loadpoints: readJSON(LOADPOINTS),
   lastBatterySmartCostLimit: readNumber(LAST_BATTERY_SMART_COST_LIMIT),
   lastTargetTime: read(LAST_TARGET_TIME),
   lastSocGoal: readNumber(LAST_SOC_GOAL),
   lastEnergyGoal: readNumber(LAST_ENERGY_GOAL),
   cardHeights: readJSON(CONFIG_CARD_HEIGHTS),
+  lastAcknowledgedVersion: read(LAST_ACKNOWLEDGED_VERSION),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
@@ -177,12 +183,14 @@ watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
+watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });
 watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_COST_LIMIT));
 watch(() => settings.lastTargetTime, save(LAST_TARGET_TIME));
 watch(() => settings.lastSocGoal, saveNumber(LAST_SOC_GOAL));
 watch(() => settings.lastEnergyGoal, saveNumber(LAST_ENERGY_GOAL));
 watch(() => settings.cardHeights, saveJSON(CONFIG_CARD_HEIGHTS), { deep: true });
+watch(() => settings.lastAcknowledgedVersion, save(LAST_ACKNOWLEDGED_VERSION));
 
 export default settings;
 

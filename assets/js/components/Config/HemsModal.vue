@@ -3,7 +3,7 @@
 		name="hems"
 		:title="$t('config.hems.title')"
 		:description="$t('config.hems.description')"
-		docs="/docs/features/14a-enwg-steuve"
+		docs="/docs/features/external-control"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/hems"
 		removeKey="hems"

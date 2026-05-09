@@ -1,30 +1,31 @@
 <template>
 	<GenericModal
 		:id="`loadpointSettingsModal_${id}`"
-		:title="$t('main.loadpointSettings.title', [title])"
+		ref="modal"
+		:title="$t('main.loadpointSettings.title', [loadpoint?.title])"
 		size="xl"
 		data-testid="loadpoint-settings-modal"
-		@opened="modalVisible"
+		@open="modalVisible"
 		@closed="modalInvisible"
 	>
 		<div class="container">
 			<SmartCostLimit
-				:current-limit="smartCostLimit"
-				:last-limit="lastSmartCostLimit"
+				:current-limit="loadpoint?.smartCostLimit || null"
+				:last-limit="loadpoint?.lastSmartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
 				is-loadpoint
-				:loadpoint-id="loadpointId"
+				:loadpoint-id="id"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
 				:tariff="forecast?.planner"
 				class="mt-2 mb-4"
 			/>
 			<SmartFeedInPriority
-				:current-limit="smartFeedInPriorityLimit"
-				:last-limit="lastSmartFeedInPriorityLimit"
+				:current-limit="loadpoint?.smartFeedInPriorityLimit || null"
+				:last-limit="loadpoint?.lastSmartFeedInPriorityLimit"
 				:currency="currency"
-				:loadpoint-id="loadpointId"
+				:loadpoint-id="id"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
@@ -34,7 +35,7 @@
 				v-if="batteryBoostAvailable"
 				v-bind="batteryBoostProps"
 				class="mt-2"
-				@batteryboostlimit-updated="changeBatteryBoostLimit"
+				@batteryboostlimit-updated="setBatteryBoostLimit"
 			/>
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
@@ -47,7 +48,7 @@
 					{{ $t("main.loadpointSettings.phasesConfigured.label") }}
 				</label>
 				<div class="col-sm-8 pe-0">
-					<p v-if="!chargerPhases1p3p" class="mt-0 mb-2">
+					<p v-if="!loadpoint?.chargerPhases1p3p" class="mt-0 mb-2">
 						<small>
 							{{ $t("main.loadpointSettings.phasesConfigured.no1p3pSupport") }}</small
 						>
@@ -60,7 +61,7 @@
 							type="radio"
 							:name="formId('phases')"
 							:value="phases"
-							@change="changePhasesConfigured"
+							@change="setPhasesConfigured"
 						/>
 						<label class="form-check-label" :for="formId(`phases_${phases}`)">
 							{{ $t(`main.loadpointSettings.phasesConfigured.phases_${phases}`) }}
@@ -89,7 +90,7 @@
 						:id="formId('maxcurrent')"
 						v-model.number="selectedMaxCurrent"
 						class="form-select form-select-sm"
-						@change="changeMaxCurrent"
+						@change="setMaxCurrent"
 					>
 						<option
 							v-for="{ value, name } in maxCurrentOptions"
@@ -111,7 +112,7 @@
 						:id="formId('mincurrent')"
 						v-model.number="selectedMinCurrent"
 						class="form-select form-select-sm"
-						@change="changeMinCurrent"
+						@change="setMinCurrent"
 					>
 						<option
 							v-for="{ value, name } in minCurrentOptions"
@@ -135,7 +136,8 @@ import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast } from "@/types/evcc";
+import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast, type UiLoadpoint } from "@/types/evcc";
+import api from "@/api";
 
 const V = 230;
 
@@ -163,49 +165,46 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: { type: String, required: true },
-		phasesConfigured: { type: Number, default: 0 },
-		chargerPhases1p3p: Boolean,
-		chargerSinglePhase: Boolean,
-		batteryBoostLimit: { type: Number, default: 100 },
-		batteryBoostAvailable: Boolean,
-		mode: String,
-		minSoc: Number,
-		maxCurrent: { type: Number, default: 0 },
-		minCurrent: { type: Number, default: 0 },
-		title: String,
-		smartCostLimit: { type: Number as PropType<number | null>, default: null },
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
+		batteryConfigured: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
-		smartFeedInPriorityLimit: { type: Number as PropType<number | null>, default: null },
 		smartFeedInPriorityAvailable: Boolean,
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<Forecast>,
-		lastSmartCostLimit: Number,
-		lastSmartFeedInPriorityLimit: Number,
 	},
-	emits: [
-		"phasesconfigured-updated",
-		"maxcurrent-updated",
-		"mincurrent-updated",
-		"batteryboostlimit-updated",
-	],
 	data() {
 		return {
-			selectedMaxCurrent: this.maxCurrent,
-			selectedMinCurrent: this.minCurrent,
-			selectedPhases: this.phasesConfigured,
+			id: undefined as string | undefined,
+			selectedMaxCurrent: undefined as number | undefined,
+			selectedMinCurrent: undefined as number | undefined,
+			selectedPhases: undefined as number | undefined,
 			isModalVisible: false,
 		};
 	},
 	computed: {
+		loadpoint() {
+			return this.loadpoints.find((loadpoint) => loadpoint.id === this.id);
+		},
+		maxCurrent() {
+			return this.loadpoint?.maxCurrent;
+		},
+		minCurrent() {
+			return this.loadpoint?.minCurrent;
+		},
+		batteryBoostLimit() {
+			return this.loadpoint?.batteryBoostLimit;
+		},
+		phasesConfigured() {
+			return this.loadpoint?.phasesConfigured;
+		},
 		phasesOptions() {
-			if (this.chargerSinglePhase) {
+			if (this.loadpoint?.chargerSinglePhase) {
 				return [];
 			}
-			if (this.chargerPhases1p3p) {
+			if (this.loadpoint?.chargerPhases1p3p) {
 				// automatic switching
 				return [AUTO, THREE_PHASES, ONE_PHASE];
 			}
@@ -215,33 +214,32 @@ export default defineComponent({
 		batteryBoostProps() {
 			return this.collectProps(SettingsBatteryBoost);
 		},
-		maxPhases(): number {
-			if (this.chargerPhases1p3p && this.phasesConfigured === AUTO) {
+		maxPhases() {
+			if (this.loadpoint?.chargerPhases1p3p && this.phasesConfigured === AUTO) {
 				return THREE_PHASES;
 			}
 			return this.phasesConfigured;
 		},
-		minPhases(): number {
-			if (this.chargerPhases1p3p && this.phasesConfigured === AUTO) {
+		minPhases() {
+			if (this.loadpoint?.chargerPhases1p3p && this.phasesConfigured === AUTO) {
 				return ONE_PHASE;
 			}
 			return this.phasesConfigured;
 		},
 		minCurrentOptions() {
-			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
+			const opt1 = [...range(Math.floor(this.maxCurrent ?? 0), 1), 0.5, 0.25, 0.125];
 			// ensure that current value is always included
-			const opt2 = insertSorted(opt1, this.minCurrent);
+			const opt2 = insertSorted(opt1, this.minCurrent ?? 0);
 			return opt2.map((value) => this.currentOption(value, value === 6, this.minPhases));
 		},
 		maxCurrentOptions() {
-			const opt1 = range(MAX_CURRENT, Math.ceil(this.minCurrent));
+			const opt1 = range(MAX_CURRENT, Math.ceil(this.minCurrent ?? 0));
 			// ensure that current value is always included
-			const opt2 = insertSorted(opt1, this.maxCurrent);
+			const opt2 = insertSorted(opt1, this.maxCurrent ?? 0);
 			return opt2.map((value) => this.currentOption(value, value === 16, this.maxPhases));
 		},
-
-		loadpointId() {
-			return this.id;
+		batteryBoostAvailable() {
+			return this.batteryConfigured;
 		},
 	},
 	watch: {
@@ -256,22 +254,36 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		fmtPhasePower(current: number, phases: PHASES) {
-			return this.fmtW(V * current * phases);
+		open(loadpointId: string) {
+			this.id = loadpointId;
+			this.selectedPhases = this.phasesConfigured;
+			this.selectedMaxCurrent = this.maxCurrent;
+			this.selectedMinCurrent = this.minCurrent;
+			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
+			modalRef?.open();
+		},
+		apiPath(func: string) {
+			return "loadpoints/" + this.id + "/" + func;
+		},
+		fmtPhasePower(current?: number, phases?: PHASES) {
+			return this.fmtW(V * (current || 0) * (phases || 0));
 		},
 		formId(name: string) {
 			return `loadpoint_${this.id}_${name}`;
 		},
-		changeMaxCurrent() {
-			this.$emit("maxcurrent-updated", this.selectedMaxCurrent);
+		setMaxCurrent() {
+			api.post(this.apiPath("maxcurrent") + "/" + this.selectedMaxCurrent);
 		},
-		changeMinCurrent() {
-			this.$emit("mincurrent-updated", this.selectedMinCurrent);
+		setMinCurrent() {
+			api.post(this.apiPath("mincurrent") + "/" + this.selectedMinCurrent);
 		},
-		changePhasesConfigured() {
-			this.$emit("phasesconfigured-updated", this.selectedPhases);
+		setPhasesConfigured() {
+			api.post(this.apiPath("phases") + "/" + this.selectedPhases);
 		},
-		currentOption(current: number, isDefault: boolean, phases: number) {
+		setBatteryBoostLimit(limit: number) {
+			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
+		},
+		currentOption(current: number, isDefault: boolean, phases?: number) {
 			const kw = this.fmtPhasePower(current, phases);
 			let name = `${this.fmtNumber(current, undefined)} A (${kw})`;
 			if (isDefault) {
@@ -284,9 +296,6 @@ export default defineComponent({
 		},
 		modalInvisible() {
 			this.isModalVisible = false;
-		},
-		changeBatteryBoostLimit(limit: number) {
-			this.$emit("batteryboostlimit-updated", limit);
 		},
 	},
 });

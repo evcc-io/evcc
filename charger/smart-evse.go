@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SmartEVSE-3.5 REST API charger implementation
@@ -35,8 +35,10 @@ import (
 // SmartEVSE3 charger implementation
 type SmartEVSE3 struct {
 	*request.Helper
+	implement.Caps
 	uri  string
 	curr int64
+	mode int
 	apiG util.Cacheable[smartEvseRestSettings]
 }
 
@@ -46,7 +48,7 @@ type smartEvseRestSettings struct {
 	ModeID       int    `json:"mode_id"`
 	CarConnected bool   `json:"car_connected"`
 	Evse         struct {
-		Connected    int    `json:"connected"`
+		Connected    bool   `json:"connected"`
 		Access       int    `json:"access"`
 		Mode         int    `json:"mode"`
 		ChargeTimer  int    `json:"charge_timer"`
@@ -106,15 +108,15 @@ func init() {
 	registry.Add("smart-evse", NewSmartEVSE3FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSmartEVSE3 -b *SmartEVSE3 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter,api.Identifier,api.StatusReasoner
-
 // NewSmartEVSE3FromConfig creates a SmartEVSE-3.5 REST charger from generic config
 func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		Cache time.Duration
+		URI        string
+		Cache      time.Duration
+		ChargeMode string
 	}{
-		Cache: time.Second,
+		Cache:      time.Second,
+		ChargeMode: "normal",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -125,21 +127,28 @@ func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("missing uri")
 	}
 
-	return NewSmartEVSE3(cc.URI, cc.Cache)
+	mode := smartEvse3ModeNormal
+	if cc.ChargeMode == "smart" {
+		mode = smartEvse3ModeSmart
+	}
+
+	return NewSmartEVSE3(cc.URI, cc.Cache, mode)
 }
 
 // NewSmartEVSE3 creates a new SmartEVSE-3.5 REST charger
-func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
+func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, error) {
 	log := util.NewLogger("smart-evse")
 
 	wb := &SmartEVSE3{
 		Helper: request.NewHelper(log),
+		Caps:   implement.New(),
 		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
 		curr:   60, // 6 A in 1/10 A
+		mode:   mode,
 	}
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
+	wb.Helper.Client.Transport = &http.Transport{
+		DisableKeepAlives: true,
 	}
 
 	wb.apiG = util.ResettableCached(func() (smartEvseRestSettings, error) {
@@ -154,39 +163,26 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 		return nil, err
 	}
 
-	// force NORMAL mode so override_current takes effect
-	if res.ModeID != smartEvse3ModeNormal {
-		if err := wb.setMode(smartEvse3ModeNormal); err != nil {
-			return nil, err
-		}
-	}
-
 	// decorate optional EV meter if configured in SmartEVSE
-	var currentPower, totalEnergy func() (float64, error)
-	var currents func() (float64, float64, float64, error)
 	if res.EvMeter.Description != "" && res.EvMeter.Description != "Disabled" {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
-		currents = wb.currents
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	// decorate optional 1P/3P phase switching via C2 contactor
-	var phases1p3p func(int) error
-	var getPhases func() (int, error)
 	if res.Settings.EnableC2 != "" && res.Settings.EnableC2 != "Not present" {
-		phases1p3p = wb.phases1p3p
-		getPhases = wb.getPhases
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	// decorate optional RFID identification and status reason
-	var identify func() (string, error)
-	var statusReason func() (api.Reason, error)
 	if res.Evse.RFIDReader != "" && res.Evse.RFIDReader != "Disabled" {
-		identify = wb.identify
-		statusReason = wb.statusReason
+		implement.Has(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
-	return decorateSmartEVSE3(wb, currentPower, totalEnergy, currents, phases1p3p, getPhases, identify, statusReason), nil
+	return wb, nil
 }
 
 // post issues a POST request to the SmartEVSE with given query parameters.
@@ -226,17 +222,11 @@ func (wb *SmartEVSE3) Status() (api.ChargeStatus, error) {
 
 	// state IDs from SmartEVSE firmware (main_c.h)
 	switch res.Evse.StateID {
-	case 0: // STATE_A
-		return api.StatusA, nil
-	case 1, 4, 5, 8, 9, 11, 12, 13, 14:
-		// STATE_B, STATE_COMM_B, STATE_COMM_B_OK, STATE_ACTSTART, STATE_B1,
-		// STATE_MODEM_REQUEST, STATE_MODEM_WAIT, STATE_MODEM_DONE, STATE_MODEM_DENIED
-		return api.StatusB, nil
 	case 2, 3, 6, 7, 10:
 		// STATE_C, STATE_D, STATE_COMM_C, STATE_COMM_C_OK, STATE_C1
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %d (%s)", res.Evse.StateID, res.Evse.State)
+		return api.StatusB, nil
 	}
 }
 
@@ -267,8 +257,8 @@ func (wb *SmartEVSE3) Enable(enable bool) error {
 	}
 
 	if enable {
-		if res.ModeID != smartEvse3ModeNormal {
-			return wb.setMode(smartEvse3ModeNormal)
+		if res.ModeID != wb.mode {
+			return wb.setMode(wb.mode)
 		}
 		return nil
 	}
@@ -413,7 +403,7 @@ func (wb *SmartEVSE3) Diagnose() {
 	fmt.Printf("\tMode: %s (%d)\n", res.Mode, res.ModeID)
 	fmt.Printf("\tCar connected: %t\n", res.CarConnected)
 
-	fmt.Printf("\tEVSE connected: %d\n", res.Evse.Connected)
+	fmt.Printf("\tEVSE connected: %t\n", res.Evse.Connected)
 	fmt.Printf("\tEVSE access: %d\n", res.Evse.Access)
 	fmt.Printf("\tEVSE mode: %d\n", res.Evse.Mode)
 	fmt.Printf("\tEVSE charge timer: %d\n", res.Evse.ChargeTimer)

@@ -40,6 +40,7 @@
     "legendTopName": "Batterie-ënnerstëtzt Opluede vum Gefier",
     "legendTopSubline": "wann d'Hausbatterie iwwer {soc} ass.",
     "modalTitle": "Hausbatterie",
+    "noBattery": "Keng Batterien konfiguréiert.",
     "usageTab": "Batterieverbrauch"
   },
   "config": {
@@ -112,6 +113,7 @@
       "title": "Wärung"
     },
     "deviceValue": {
+      "activeClients": "Aktiv Clienten",
       "amount": "Unzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -125,13 +127,15 @@
       "chargedEnergy": "Opgelueden",
       "co2": "Netz CO₂",
       "configured": "Konfiguréiert",
+      "connected": "Verbonnen",
       "connections": "Verbindungen",
       "controllable": "Kontrolléierbar",
       "currency": "Wärung",
       "current": "Stroum",
       "currentRange": "Stroum",
+      "curtailed": "Einspeisung limitéiert",
       "detected": "Erkannt",
-      "dimmed": "Gedimmt",
+      "dimmed": "Verbrauch limitéiert",
       "enabled": "Ageschalt",
       "energy": "Energie",
       "events": "Evenementer",
@@ -142,6 +146,7 @@
       "hemsActiveLimit": "Aktiivt Limit",
       "hemsType": "Communicatioun",
       "identifier": "RFID-Identifikatioun",
+      "loginBlocked": "Login-Limit erreecht",
       "max": "max",
       "messengers": "Servicer",
       "no": "nee",
@@ -223,6 +228,7 @@
       "authPerformHint": "Mécht een neien Tab op. Duerno hei weidermaachen.",
       "authPrepare": "Verbindung virbereeden",
       "cancel": "Ofbriechen",
+      "change": "Änneren",
       "clear": "Läschen",
       "close": "Zoumaachen",
       "confirmSave": "Et ginn net gespäichert Ännerungen. Elo späicheren?",
@@ -424,6 +430,13 @@
       "welcomeBannerText": "Fänkt un mat der Erstelle vun op d'mannst engem **Ladegerät**, **Heizer**, **Netz**, **Solarpanel**, **Batterie** oder **zousätzlechen Zähler**. Wann Dir just testen wëllt, wielt e **Demonstratiounsapparat**.",
       "welcomeBannerTitle": "Loosst eis de System konfiguréieren!"
     },
+    "mcp": {
+      "description": "Stellt e Model Context Protocol-Server bereet. Dëst erlaabt KI-Assistenten wéi Claude, den Zoustand vun Ärem System ze liesen an de Luedprozess ze kontrolléieren.",
+      "exampleLabel": "Beispill: Claude CLI",
+      "restartHint": "Wäert no engem Neistart verfügbar sinn.",
+      "title": "MCP Server",
+      "url": "MCP-Endpunkt"
+    },
     "messaging": {
       "addMessenger": "Service derbäisetzen",
       "description": "Notifikatiounen iwwer Är Opluedsessioune kréien.",
@@ -600,6 +613,12 @@
       "url": "Server-URL",
       "urlHelp": "Kopéier dës URL fir d'Konfiguratioun vun denger Wallbox. Kuck am Handbuch vum Hiersteller no Detailer. Et gëtt erwaart, datt d'Wallbox automatesch säin eenzegaartegen Identifikator (Statiouns-ID) un d'URL bäifügt. A rare Fäll musst Dir den Identifikator eventuell manuell spezifizéieren. Beispill: `{url}`"
     },
+    "optimizer": {
+      "description": "Analyséiert d'Solarprognos, d'Stroumpräisser an Är Verbrauchssmuster, fir d'Batterie- a Luedstrategie ze optiméieren. D'Donnéeë ginn un den evcc-Optimiséierungsservice fir d'Berechnen geschéckt. Momentan berechent a visualiséiert et nëmmen. Et steiert nach keng Apparater.",
+      "enable": "Optimizer aktivéieren",
+      "info": "Et kann e puer Minutten daueren, bis den Optimizer-Menüpunkt sichtbar gëtt. Bei neien Installatiounen kann et bis zu 24 Stonnen daueren, bis evcc genuch Donnéeë gesammelt huet.",
+      "title": "Optimizer"
+    },
     "options": {
       "boolean": {
         "no": "nee",
@@ -627,6 +646,38 @@
       "titleAdd": "Zieler (PV) derbäi fügen",
       "titleEdit": "Zieler (PV) beaarbechten"
     },
+    "remote": {
+      "active": "Aktiv",
+      "addClient": "Client derbäifügen",
+      "addClientDescription": "Zougangsberechtegungen ginn nëmmen lokal op Ärer evcc-Instanz gespäichert a verifizéiert.",
+      "addClientTitle": "Remote-Client derbäifügen",
+      "clientCreated": "Client erstellt",
+      "clients": "Clienten",
+      "confirmDelete": "Client läschen?",
+      "connected": "Verbonnen",
+      "createClient": "Client erstellen",
+      "description": "Zougang zu Ärer evcc-Installatioun vun iwwerall aus mat der evcc-Mobilapp. Kee Port-Forwarding oder VPN néideg.",
+      "deviceName": "Numm vum Apparat",
+      "disconnected": "Net verbonnen",
+      "done": "Fäerdeg",
+      "enableLabel": "Erlaabt den Zougank op Distanz",
+      "expiration": "Oflaaf",
+      "expirationNone": "Ni",
+      "expired": "ofgelaf",
+      "expiresIn": "gëllt bis {time}",
+      "lastActive": "aktiv {time}",
+      "loginBlocked": "Zougäng op Distanz si fir eng Minutt wéinst ze ville gescheiterten Login-Versich gespaart.",
+      "manualLogin": "Oder mellt Iech manuell op {url} an Ärem Browser mat dësen Zougangsdaten un:",
+      "noClients": "Nach keng Clienten. Nach ka sech kee verbannen.",
+      "password": "Passwuert",
+      "passwordOnce": "Dëst Passwuert gëtt nëmmen eemol ugewisen. Scannt de QR-Code oder kopéiert en elo. E gëtt net nach eng Kéier ugewisen.",
+      "qrInstall": "Installéiert d'evcc-App fir {ios} oder {android}.",
+      "qrScan": "Scannt de Code mat der Kamera vun ärem Smartphone, fir Iech ze verbannen. Klickt drop, wann Dir schonns Äre Smartphone benotzt.",
+      "removeClient": "Client ewechhuelen",
+      "title": "Zougank op Distanz",
+      "url": "Ëffentlech URL",
+      "username": "Benotzernumm"
+    },
     "section": {
       "additionalMeter": "Zousätzlech Zieler",
       "general": "Allgemeng",
@@ -642,20 +693,26 @@
       "cardTitle": "Sunny Home Manager",
       "description": "Den evcc ass mat enger Integratioun fir den SMA Sunny Home Manager (SHM) iwwert den SEMP-Protokoll ausgestatt. Wann den SHM am selwechte Netzwierk leeft, sollt Dir no der Aschreiwung an Ärem Sunny Portal-Kont automatesch d'Méiglechkeet kréien, all an evcc konfiguréiert Luedpunkten als nei detektéiert Laaschten derbäizesetzen. Alles sollt direkt gebrauchsfäeg sinn, ouni weider Upassungen.",
       "descriptionDeviceId": "12-stellegen HEX-String. Präfix fir all Geräter (Luedpunkt, ..).",
+      "descriptionDeviceSerial": "HEX-String mat 12-Zeechen. Basis-Seriennummer fir all Apparater (Luedpunkt, ...). Standardméisseg kritt den evcc dës aus der MAC-Adress vum Host.",
       "descriptionIdPattern": "Identifikatiounsmuster",
       "descriptionIds": "Am Sunny Portal brauch all Ladung (Luedpunkt, etc.) eng eenzegaarteg Identifikatioun. evcc generéiert eng eenzegaarteg Identifikatioun, déi op Ärer Hardware baséiert. Wann Dir evcc op aner Hardware migréiert, kann dësen Identifikator sech änneren. Fir den Historique ze späicheren, kënnt Dir déi generéiert Identifikatoren hei iwwerschreiwen. Maacht d'SEMP URL op (/semp) fir Är aktuell Identifikatoren ze kontrolléieren.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stellegen HEX-String. Allgemenge Präfix fir all Entiéiten. Standardméisseg verwennt evcc seng eegen intern Hiersteller-ID.",
       "labelDeviceId": "Geräter-ID",
+      "labelDeviceSerial": "Apparat-Seriennummer",
       "labelVendorId": "Hiersteller-ID",
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Lizenzschlëssel",
+      "activationKeyHint": "Per E-Mail un Iech geschéckt. Op der {url} ze fannen.",
       "addToken": "Token aginn",
       "changeToken": "Token änneren",
       "description": "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg nei a spannend Fonctiounen z'entwéckelen. Als Sponsor kriss du Zougank zu all Wallbox-Implementatiounen.",
-      "descriptionToken": "Du kriss den Token vun {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
-      "enterYourToken": "Token aginn",
+      "descriptionToken": "Als GitHub-Sponsor fannt Dir Ären Token op {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
+      "email": "E-Mail",
+      "emailHint": "E-Mail-Adress, déi Dir fir {url} benotzt hutt",
+      "enterYourToken": "Äre Sponsor-Token",
       "error": "De Sponsortoken ass ongülteg.",
       "invalid": "ongülteg",
       "labelToken": "Sponsor-Token",
@@ -666,7 +723,7 @@
       "tokenRequiredShort": "Kee Sponsortoken konfiguréiert.",
       "trialToken": "Testtoken",
       "viaYaml": "iwwer evcc.yaml",
-      "yourToken": "Däin Token"
+      "yourToken": "Sponsor Token"
     },
     "system": {
       "backupRestore": {
@@ -755,8 +812,8 @@
       "titleChoice": "Wat wëlls du derbäisetzen?",
       "type": {
         "co2": "CO₂-Intensitéit",
-        "feedIn": "Verkafspräis",
-        "grid": "Netzverbrauchspräis",
+        "feedIn": "Verkafspräis un d'Netz",
+        "grid": "Netzimportspräis",
         "planner": "Planner",
         "solar": "Solar"
       },
@@ -833,7 +890,7 @@
   },
   "footer": {
     "community": {
-      "greenEnergy": "Solarenergie",
+      "greenEnergy": "Solar",
       "greenEnergySub1": "opgelueden mat evcc",
       "greenEnergySub2": "zënter Oktober 2022",
       "greenShare": "Sonnenundeel",
@@ -850,6 +907,15 @@
       "configurePriceCo2": "Léiert wéi een de Präis an d'CO₂-Daten konfiguréiert.",
       "footerLong": "{percent} Solarenergie",
       "footerShort": "{percent} Solar",
+      "indicator": {
+        "co2": "CO₂-Emissiounen",
+        "co2saved": "CO₂ agespuert",
+        "none": "keng",
+        "price": "Energiepräis",
+        "savings": "Erspuernesser",
+        "solar": "Solarenergie"
+      },
+      "indicatorLabel": "Header-Info",
       "modalTitle": "Iwwersiicht vum opgeluedene Stroum",
       "moneySaved": "{value} gespuert",
       "percentGrid": "{grid} kWh Stroumnetz",
@@ -861,10 +927,11 @@
         "thisYear": "dëst Joer",
         "total": "gesamt"
       },
-      "periodLabel": "Zäitraum:",
+      "periodLabel": "Zäitraum",
       "priceTitle": "Energiepräis",
       "referenceGrid": "Netz",
-      "referenceLabel": "Referenzdaten:",
+      "referenceLabel": "Referenzdaten",
+      "sessionInfo": "Baséiert op ofgeschlossen Opluedsessiounen.",
       "tabTitle": "Meng Daten"
     },
     "sponsor": {
@@ -890,15 +957,26 @@
     },
     "version": {
       "availableLong": "nei Versioun verfügbar",
+      "community": "evcc Communautéit",
+      "labelRelease": "Verëffentlechung",
+      "labelVersion": "Versioun",
+      "labelWebsite": "Websäit",
+      "latestVersion": "lescht Versioun",
+      "madeByCommunity": "Entwéckelt vun der {0}.",
       "modalCancel": "Ofbriechen",
       "modalDownload": "Download",
       "modalInstalledVersion": "Aktuell installéiert Versioun",
+      "modalLatest": "Dir benotzt déi lescht Versioun.",
+      "modalNextRelease": "Wat gëtt et an der nächster Versioun",
       "modalNoReleaseNotes": "Keng Versiounshiweiser verfügbar. Méi Informatioun iwwert déi nei Versioun:",
       "modalTitle": "Aktualiséierung verfügbar",
       "modalUpdate": "Installéieren",
       "modalUpdateNow": "Elo installéieren",
       "modalUpdateStarted": "Déi nei Versioun vun evcc starten…",
-      "modalUpdateStatusStart": "Installatioun ugefaang:"
+      "modalUpdateStatusStart": "Installatioun ugefaang:",
+      "modalViewOnGitHub": "Op GitHub kucken",
+      "openSource": "Open Source",
+      "poweredByOpenSource": "Bedriwwen vun {0}."
     }
   },
   "forecast": {
@@ -908,6 +986,13 @@
       "lowestHour": "Déi properst Stonn",
       "range": "Beräich"
     },
+    "empty": {
+      "co2": "Iwwerpréiwt, wéini d'Netzenergie an Ärer Regioun propper ass. Luedpläng ginn optimiséiert fir d'Emissiounen ze reduzéieren an CO₂ anzespueren.",
+      "price": "Konfiguréiert Ären dynameschen Stromtarif, fir d'Luedpläng automatesch ze optiméieren an d'Erspuernësser ze berechnen.",
+      "setup": "Tariffer a Prognosen opstellen",
+      "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt."
+    },
+    "hideLine": "Linn ausblennen",
     "modalTitle": "Prognose",
     "price": {
       "average": "Duerchschnitt",
@@ -915,6 +1000,8 @@
       "lowestHour": "Bëllegst Stonn",
       "range": "Beräich"
     },
+    "priceZoom": "erazoomen",
+    "showLine": "Linn uweisen",
     "solar": {
       "dayAfterTomorrow": "Iwwermuer",
       "partly": "deelweis",
@@ -923,10 +1010,12 @@
       "tomorrow": "Muer"
     },
     "solarAdjust": "Solarprognose unhand vun de reale Produktionsdaten upassen{percent}.",
+    "solarAdjustMedium": "unpassen un déi reell Produktiounsdaten",
+    "solarAdjustShort": "upassen",
     "type": {
-      "co2": "CO₂",
-      "price": "Präis",
-      "solar": "Solar"
+      "co2": "CO₂-Emissiounen",
+      "price": "Netzpräis",
+      "solar": "Solar-Productioun"
     }
   },
   "general": {
@@ -1094,7 +1183,7 @@
       "batteryTooltip": "{energy} vun {total} ({soc})",
       "forecast": "Viraussoen: ",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
-      "gridImport": "Verbrauch vum Stroumnetz",
+      "gridImport": "Import vum Netz",
       "homePower": "Verbrauch",
       "loadpoints": "Wallbox | Wallbox | {count} Wallboxen",
       "loadpointsLimit": "{limit} Limitt",
@@ -1139,6 +1228,7 @@
         "once": "Boost ass dir dës Luedsessioun aktivéiert.",
         "stateActive": "Batterieboost aktiv",
         "stateBelowLimit": "Batterie ze niddereg fir de Boost",
+        "stateHold": "Batterie gespaart",
         "stateReady": "Batterieboost bereet"
       },
       "batteryUsage": "Hausbatterie",
@@ -1248,6 +1338,7 @@
       "batteryBoostBelowLimit": "Batterie ze niddereg fir de Boost.",
       "batteryBoostDisabled": "Batterieboost deaktivéiert.",
       "batteryBoostEnabled": "Boost bis d'Batterie bei {limit} ass.",
+      "batteryBoostHold": "Batterie gespaart. Boost net verfügbar.",
       "charging": "Luet…",
       "cheapEnergyCharging": "Gënschteg Energie verfügbar.",
       "cheapEnergyNextStart": "Gënschteg Energie an {duration}.",
@@ -1380,6 +1471,7 @@
     },
     "loadpoint": "Luedstatioun",
     "noData": "Nach keng Opluedsessiounen fir dëse Mount.",
+    "odometer": "Kilometerstand",
     "overview": "Iwwersiicht",
     "period": {
       "month": "Mount",
@@ -1487,5 +1579,13 @@
     "lineErrorLink": "Linn {0}",
     "restartButton": "Neistart",
     "title": "Startup Feeler"
+  },
+  "tabBar": {
+    "battery": "Batterie",
+    "charge": "Lueden",
+    "comingSoon": "Dës Säit ass amgaang gebaut ze ginn.",
+    "forecast": "Viraussoen",
+    "more": "Méi",
+    "sessions": "Sessiounen"
   }
 }

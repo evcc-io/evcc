@@ -1,6 +1,6 @@
 # build vars
-TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
-SHA := $(shell test -d .git && git rev-parse --short HEAD)
+TAG_NAME ?= $(shell test -d .git && git describe --abbrev=0 --tags)
+SHA ?= $(shell test -d .git && git rev-parse --short HEAD)
 COMMIT := $(SHA)
 # hide commit for releases
 ifeq ($(RELEASE),1)
@@ -161,5 +161,4 @@ patch-asn1::
 
 upgrade::
 	$(shell go list -u -f '{{if (and (not (or .Main .Indirect)) .Update)}}{{.Path}}{{end}}' -m all | xargs go get)
-	go get modernc.org/sqlite@latest
 	go mod tidy

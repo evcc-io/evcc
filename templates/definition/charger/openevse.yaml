@@ -1,6 +1,7 @@
 template: openevse
 products:
   - brand: OpenEVSE
+capabilities: ["meter"]
 requirements:
   description:
     en: Requires firmware 7.0 or later.

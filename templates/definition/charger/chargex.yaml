@@ -6,7 +6,7 @@ products:
   - brand: ChargeX
     description:
       generic: Connect
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
   description:
