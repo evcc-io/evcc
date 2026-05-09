@@ -77,12 +77,21 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-  energy:
+  import:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 37121 # Active energy import from the grid
+      address: 37121 # Active energy imported from the grid
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  export:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37119 # Active energy exported to the grid
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -149,7 +158,7 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-  energy:
+  export:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -159,6 +168,20 @@ render: |
       {{- end }}
       {{- if eq .storageunit "2" }}
       address: 37755 # [Energy storage unit 2] Total discharge
+      {{- end }}
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  import:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37066 # [Energy storage unit 1] Total charge
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37753 # [Energy storage unit 2] Total charge
       {{- end }}
       type: holding
       decode: uint32nan
