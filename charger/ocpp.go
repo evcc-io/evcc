@@ -20,6 +20,7 @@ package charger
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -128,9 +129,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
-	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
-		implement.Has(c, implement.CurrentGetter(c.conn.GetMaxCurrent))
-	}
+	implement.Has(c, implement.CurrentGetter(c.getMaxCurrent))
 
 	return c, nil
 }
@@ -349,6 +348,22 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	}
 
 	return res
+}
+
+// getMaxCurrent returns the current the charge point is set to offer.
+// Prefers the Current.Offered measurand, falls back to the last confirmed charging profile limit.
+func (c *OCPP) getMaxCurrent() (float64, error) {
+	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
+		if v, err := c.conn.GetMaxCurrent(); err == nil || !errors.Is(err, api.ErrNotAvailable) {
+			return v, err
+		}
+	}
+
+	if c.current > 0 {
+		return c.current, nil
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 // MaxCurrent implements the api.Charger interface
