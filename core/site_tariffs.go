@@ -146,17 +146,21 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	// accumulate forecasted energy since last update via the forecast collector
-	since := site.lastFcstUpdate
-	if since.IsZero() {
-		since = time.Now()
-	}
-	if energy := solarEnergy(solar, since, time.Now()) / 1e3; energy > 0 {
-		if err := site.fcstEnergy.AddImportEnergy(energy); err != nil {
-			site.log.ERROR.Printf("solar forecast collector: %v", err)
+	// collector buckets per slot anyway — feed it once per completed slot.
+	// Cursor lives in DB via LatestSlot() so a restart resumes naturally.
+	since, err := site.fcstEnergy.LatestSlot()
+	if err != nil {
+		site.log.ERROR.Printf("solar forecast collector: %v", err)
+	} else if slot := time.Now().Truncate(tariff.SlotDuration); since.Before(slot) {
+		if since.IsZero() {
+			since = slot
+		}
+		if energy := solarEnergy(solar, since, slot) / 1e3; energy > 0 {
+			if err := site.fcstEnergy.AddImportEnergy(energy); err != nil {
+				site.log.ERROR.Printf("solar forecast collector: %v", err)
+			}
 		}
 	}
-	site.lastFcstUpdate = time.Now()
 
 	if scale, ok := site.solarScale(); ok {
 		res.Scale = &scale

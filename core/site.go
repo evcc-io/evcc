@@ -35,7 +35,6 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
@@ -90,8 +89,6 @@ type Site struct {
 	fcstEnergy             *metrics.Collector
 	pvEnergy               map[string]*metrics.Collector
 	homeEnergy, gridEnergy *metrics.Collector
-	// lastFcstUpdate is read/written only from the site update loop
-	lastFcstUpdate time.Time
 
 	// cached state
 	gridPower                float64            // Grid power
@@ -223,14 +220,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		return err
 	}
 	site.fcstEnergy = fc
-
-	// resume forecast accumulation from the last persisted slot so a restart
-	// doesn't drop today's already-seen forecast (which would bias solarScale)
-	if last, err := fc.LatestSlot(); err != nil {
-		return err
-	} else if !last.Before(now.BeginningOfDay()) {
-		site.lastFcstUpdate = last
-	}
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
