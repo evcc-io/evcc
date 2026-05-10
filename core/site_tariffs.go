@@ -146,11 +146,8 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	// collector buckets per slot anyway — feed it once per completed slot.
-	// Cursor lives in DB via LatestSlot() so a restart resumes naturally.
-	if latest, err := site.fcstEnergy.LatestSlot(); err != nil {
-		site.log.ERROR.Printf("solar forecast collector: %v", err)
-	} else {
+	// collector buckets per slot — feed it once slot is completed
+	if latest, err := site.fcstEnergy.LatestSlot(); err == nil {
 		slot := time.Now().Truncate(tariff.SlotDuration)
 		since := slot
 		if !latest.IsZero() {
@@ -163,6 +160,8 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 				}
 			}
 		}
+	} else {
+		site.log.ERROR.Printf("solar forecast collector: %v", err)
 	}
 
 	if scale := site.solarScale(); scale != 1 {
