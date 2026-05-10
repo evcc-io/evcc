@@ -31,7 +31,8 @@ type Connector struct {
 	txnId int
 	idTag string
 
-	remoteIdTag string
+	remoteIdTag     string
+	remoteStartSent bool // guards against duplicate RemoteStartTransaction during a single Preparing phase
 
 	meterInterval time.Duration
 }

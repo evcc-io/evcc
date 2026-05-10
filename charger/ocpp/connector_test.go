@@ -167,16 +167,15 @@ func (suite *connTestSuite) TestStatusNotificationPreparingNonBlocking() {
 
 	// OnStatusNotification must return immediately (non-blocking), even though
 	// RemoteStartTransactionRequest would block if called synchronously
-	done := make(chan struct{})
+	errC := make(chan error, 1)
 	go func() {
 		_, err := suite.conn.OnStatusNotification(req)
-		suite.NoError(err)
-		close(done)
+		errC <- err
 	}()
 
 	select {
-	case <-done:
-		// handler returned promptly
+	case err := <-errC:
+		suite.NoError(err)
 	case <-time.After(time.Second):
 		suite.Fail("OnStatusNotification blocked for too long")
 	}

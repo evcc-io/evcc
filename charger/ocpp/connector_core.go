@@ -37,13 +37,21 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
+	// reset guard once we leave the Preparing phase so the next plug-in cycle can trigger again
+	if conn.status == nil || conn.status.Status != core.ChargePointStatusPreparing {
+		conn.remoteStartSent = false
+	}
+
 	if conn.isWaitingForAuth() {
 		if idTag := conn.remoteIdTag; idTag != "" {
-			go func() {
-				if err := conn.RemoteStartTransactionRequest(idTag); err != nil {
-					conn.log.ERROR.Printf("RemoteStartTransaction: %v", err)
-				}
-			}()
+			if !conn.remoteStartSent {
+				conn.remoteStartSent = true
+				go func() {
+					if err := conn.RemoteStartTransactionRequest(idTag); err != nil {
+						conn.log.ERROR.Printf("RemoteStartTransaction: %v", err)
+					}
+				}()
+			}
 		} else {
 			conn.log.DEBUG.Printf("waiting for local authentication")
 		}
@@ -98,6 +106,7 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 
 	conn.txnId = int(instance.txnId.Add(1))
 	conn.idTag = request.IdTag
+	conn.remoteStartSent = false
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
@@ -148,6 +157,7 @@ func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (
 
 	conn.txnId = 0
 	conn.idTag = ""
+	conn.remoteStartSent = false
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
