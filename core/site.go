@@ -571,11 +571,14 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 
 	// persist per-meter PV energy slots (used for history and forecast scaling)
-	for i := range site.pvMeters {
+	for i, dev := range site.pvMeters {
+		c := site.pvEnergy[dev.Config().Name]
+
 		var importEnergy *float64
 		if mm[i].Energy > 0 {
 			importEnergy = &mm[i].Energy
 		}
+
 		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist pv %d energy: %v", i+1, err)
 		}
