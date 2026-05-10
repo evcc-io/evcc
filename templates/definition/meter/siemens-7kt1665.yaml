@@ -21,7 +21,6 @@ render: |
       type: input
       decode: int32
     scale: 0.01
-    timeout: 5s
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -30,7 +29,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.001
-    timeout: 5s
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -39,7 +37,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.0001
-    timeout: 5s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -47,7 +44,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.0001
-    timeout: 5s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -55,7 +51,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.0001
-    timeout: 5s
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -64,7 +59,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.01
-    timeout: 5s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -72,7 +66,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.01
-    timeout: 5s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -80,4 +73,3 @@ render: |
       type: input
       decode: uint32
     scale: 0.01
-    timeout: 5s
