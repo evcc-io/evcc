@@ -54,7 +54,7 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.C
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxEMEthRegVoltages, 2); err == nil && encoding.Int32LswFirst(b) > 0 {
 		implement.Has(wb, implement.Meter(wb.currentPower))
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
@@ -145,7 +145,7 @@ func (wb *PhoenixEMEth) currentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)*1e3) * phxEMEthSF, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegEnergy, 2)
 	if err != nil {

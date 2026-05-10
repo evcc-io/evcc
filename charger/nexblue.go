@@ -254,10 +254,10 @@ func (wb *Nexblue) ChargedEnergy() (float64, error) {
 	return res.Energy, err
 }
 
-var _ api.MeterEnergy = (*Nexblue)(nil)
+var _ api.MeterImport = (*Nexblue)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Nexblue) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Nexblue) ImportEnergy() (float64, error) {
 	res, err := wb.statusG.Get()
 	return res.LifetimeEnergy, err
 }

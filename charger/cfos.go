@@ -77,7 +77,7 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 	// decorate meter
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
 		implement.Has(wb, implement.Meter(wb.currentPower))
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 
 		if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeterFlags, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
 			implement.Has(wb, implement.PhaseCurrents(wb.currents))
@@ -156,7 +156,7 @@ func (wb *CfosPowerBrain) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegEnergy, 4)
 	if err != nil {

@@ -314,10 +314,10 @@ func (wb *EVECUBE) CurrentPower() (float64, error) {
 	return status.Voltage * status.Current, nil
 }
 
-var _ api.MeterEnergy = (*EVECUBE)(nil)
+var _ api.MeterImport = (*EVECUBE)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *EVECUBE) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *EVECUBE) ImportEnergy() (float64, error) {
 	status, err := wb.getStatus()
 	if err != nil {
 		return 0, err

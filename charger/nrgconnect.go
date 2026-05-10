@@ -184,10 +184,10 @@ func (nrg *NRGKickConnect) CurrentPower() (float64, error) {
 	return res.ChargingPower * 1e3, err
 }
 
-var _ api.MeterEnergy = (*NRGKickConnect)(nil)
+var _ api.MeterImport = (*NRGKickConnect)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (nrg *NRGKickConnect) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (nrg *NRGKickConnect) ImportEnergy() (float64, error) {
 	res, err := nrg.measurementsG.Get()
 	if err != nil {
 		return 0, err

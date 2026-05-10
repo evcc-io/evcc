@@ -89,11 +89,11 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	return power, nil
 }
 
-var _ api.MeterEnergy = (*Tasmota)(nil)
+var _ api.MeterImport = (*Tasmota)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Tasmota) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+// ImportEnergy implements the api.MeterImport interface
+func (c *Tasmota) ImportEnergy() (float64, error) {
+	return c.conn.ImportEnergy()
 }
 
 // powers implements the api.PhasePowers interface

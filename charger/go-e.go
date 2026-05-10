@@ -207,10 +207,10 @@ func (c *GoE) Identify() (string, error) {
 	return resp.Identify(), nil
 }
 
-var _ api.MeterEnergy = (*GoE)(nil)
+var _ api.MeterImport = (*GoE)(nil)
 
-// totalEnergy implements the api.MeterEnergy interface - v2 only
-func (c *GoE) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterImport interface - v2 only
+func (c *GoE) ImportEnergy() (float64, error) {
 	resp, err := c.api.Status()
 	if err != nil {
 		return 0, err

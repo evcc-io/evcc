@@ -107,7 +107,7 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 
 	// check presence of energy meter
 	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 	}
 
 	return wb, nil
@@ -218,7 +218,7 @@ func (wb *Weidmüller) CurrentPower() (float64, error) {
 	return float64(encoding.Uint32LswFirst(b)) / 1e3, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
+// ImportEnergy implements the api.MeterImport interface
 func (wb *Weidmüller) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2)
 	if err != nil {

@@ -63,7 +63,7 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 
 	if wb.hasFeature(cc.Topic, warp.FeatureMeter, cc.Timeout) {
 		implement.May(wb, implement.Meter(wb.currentPower))
-		implement.May(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.May(wb, implement.MeterImport(wb.totalEnergy))
 	}
 
 	if wb.hasFeature(cc.Topic, warp.FeatureMeterPhases, cc.Timeout) {
@@ -244,7 +244,7 @@ func (wb *Warp2) currentPower() (float64, error) {
 	return res.Power, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
+// ImportEnergy implements the api.MeterImport interface
 func (wb *Warp2) totalEnergy() (float64, error) {
 	var res warp.MeterValues
 	err := wb.meterG(&res)

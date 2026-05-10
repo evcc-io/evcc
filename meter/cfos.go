@@ -67,10 +67,10 @@ func (wb *CfosPowerBrain) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*CfosPowerBrain)(nil)
+var _ api.MeterImport = (*CfosPowerBrain)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *CfosPowerBrain) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *CfosPowerBrain) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegEnergy, 4)
 	if err != nil {
 		return 0, err

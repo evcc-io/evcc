@@ -61,7 +61,7 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 
 	if energy > 0 {
 		implement.Has(k, implement.Meter(k.currentPower))
-		implement.Has(k, implement.MeterEnergy(k.totalEnergy))
+		implement.Has(k, implement.MeterImport(k.totalEnergy))
 		implement.Has(k, implement.PhaseCurrents(k.currents))
 	}
 
@@ -284,7 +284,7 @@ func (c *KebaUdp) currentPower() (float64, error) {
 	return float64(kr.P) / 1e3, err
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (c *KebaUdp) totalEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)

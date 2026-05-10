@@ -167,10 +167,10 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 	return sum, nil
 }
 
-var _ api.MeterEnergy = (*Versicharge)(nil)
+var _ api.MeterImport = (*Versicharge)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Versicharge) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Versicharge) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(versiRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

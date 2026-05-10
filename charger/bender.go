@@ -148,7 +148,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
 		implement.Has(wb, implement.Meter(wb.currentPower))
 		implement.Has(wb, implement.PhaseCurrents(wb.currents))
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 
 		// check presence of "ocpp meter"
 		if b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
@@ -374,7 +374,7 @@ func (wb *BenderCC) currentPower() (float64, error) {
 // removed: https://github.com/evcc-io/evcc/issues/13726
 // var _ api.ChargeRater = (*BenderCC)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
+// ImportEnergy implements the api.MeterImport interface
 func (wb *BenderCC) totalEnergy() (float64, error) {
 	if wb.legacy {
 		b, err := wb.conn.ReadHoldingRegisters(bendRegPhaseEnergy, 6)

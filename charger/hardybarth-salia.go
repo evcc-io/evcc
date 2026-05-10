@@ -141,7 +141,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 
 	if res.Secc.Port0.Metering.Meter.Available > 0 {
 		implement.Has(wb, implement.Meter(wb.currentPower))
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
@@ -266,7 +266,7 @@ func (wb *Salia) currentPower() (float64, error) {
 	return res.Secc.Port0.Metering.Power.ActiveTotal.Actual / 10, err
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *Salia) totalEnergy() (float64, error) {
 	res, err := wb.apiG.Get()
 	return res.Secc.Port0.Metering.Energy.ActiveImport.Actual / 1e3, err

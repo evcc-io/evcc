@@ -100,7 +100,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	}
 
 	if usage == "grid" {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+		implement.Has(m, implement.MeterImport(m.totalEnergy))
 	}
 
 	if usage == "pv" {
@@ -264,7 +264,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 	}
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (m *RCT) totalEnergy() (float64, error) {
 	switch m.usage {
 	case "grid":

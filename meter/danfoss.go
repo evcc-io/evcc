@@ -103,7 +103,7 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 	}
 
 	if hasEnergy == nil {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+		implement.Has(m, implement.MeterImport(m.totalEnergy))
 	}
 	if hasVoltages == nil {
 		implement.Has(m, implement.PhaseVoltages(m.phaseVoltages))

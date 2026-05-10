@@ -3,7 +3,7 @@ package fritz
 // Meter defines the interface for Fritz connections (both legacy LUA and REST)
 type Meter interface {
 	CurrentPower() (float64, error)
-	TotalEnergy() (float64, error)
+	ImportEnergy() (float64, error)
 }
 
 // Switch extends Meter with switch control capabilities

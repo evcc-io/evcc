@@ -74,7 +74,7 @@ func NewInnogyFromConfig(ctx context.Context, other map[string]any) (api.Charger
 
 	// check presence of energy meter & voltages registers
 	if b, err := wb.conn.ReadInputRegisters(igyRegModbusTableVersion, 1); err == nil && binary.BigEndian.Uint16(b) >= 6 {
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 		wb.hasVoltages = true
 	}
@@ -226,7 +226,7 @@ func (wb *Innogy) voltages() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *Innogy) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(igyRegEnergy, 2)
 	if err != nil {

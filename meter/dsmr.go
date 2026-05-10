@@ -116,7 +116,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 
 	// decorate energy reading
 	if energy != "" {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+		implement.Has(m, implement.MeterImport(m.totalEnergy))
 	}
 
 	// decorate currents
@@ -284,7 +284,7 @@ func (m *Dsmr) CurrentPower() (float64, error) {
 	return (bezug - lief) * 1e3, errors.Join(err1, err2)
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (m *Dsmr) totalEnergy() (float64, error) {
 	return m.get(m.energy)
 }

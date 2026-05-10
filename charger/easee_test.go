@@ -563,7 +563,7 @@ func TestChargeSessionStart_SetsFields(t *testing.T) {
 
 	assert.Equal(t, 801, e.currentSessionID)
 
-	total, err := e.TotalEnergy()
+	total, err := e.ImportEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 9141.414622, total)
 }
@@ -581,7 +581,7 @@ func TestChargingSession_UpdatesBothWhenIdMatches(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 16.2, charged)
 
-	total, err := e.TotalEnergy()
+	total, err := e.ImportEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 9173.5, total)
 }
@@ -600,7 +600,7 @@ func TestChargingSession_MismatchedId_ProtectsSessionEnergy(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 5.0, charged) // sessionEnergy unchanged
 
-	total, err := e.TotalEnergy()
+	total, err := e.ImportEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 9173.5, total) // totalEnergy updated
 }
@@ -619,18 +619,18 @@ func TestChargingSession_AtStartup_ProtectsSessionEnergy(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0.0, charged) // sessionEnergy protected (Id 803 != 0)
 
-	total, err := e.TotalEnergy()
+	total, err := e.ImportEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 9173.5, total) // totalEnergy updated
 }
 
-func TestLifetimeEnergy_DoesNotDecreaseTotalEnergy(t *testing.T) {
+func TestLifetimeEnergy_DoesNotDecreaseImportEnergy(t *testing.T) {
 	e := newEasee()
 	e.totalEnergy = 9173.5
 
 	e.ProductUpdate(createPayload(easee.LIFETIME_ENERGY, time.Now(), easee.Double, "9170.0"))
 
-	total, err := e.TotalEnergy()
+	total, err := e.ImportEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 9173.5, total)
 }

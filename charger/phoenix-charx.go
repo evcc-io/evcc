@@ -77,7 +77,7 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 
 	if meter > 0 && meter != 65535 {
 		implement.Has(wb, implement.Meter(wb.currentPower))
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
@@ -229,7 +229,7 @@ func (wb *PhoenixCharx) currentPower() (float64, error) {
 	return float64(encoding.Int32(b)) / 1e3, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *PhoenixCharx) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEnergy), 4)
 	if err != nil {

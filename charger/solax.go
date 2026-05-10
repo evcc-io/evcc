@@ -225,10 +225,10 @@ func (wb *Solax) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), err
 }
 
-var _ api.MeterEnergy = (*Solax)(nil)
+var _ api.MeterImport = (*Solax)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Solax) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *Solax) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(solaxRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err

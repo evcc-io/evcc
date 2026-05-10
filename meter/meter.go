@@ -42,13 +42,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		return nil, err
 	}
 
-	powerG, energyG, err := cc.Energy.Configure(ctx)
+	powerG, importG, exportG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	m, _ := NewConfigurable(powerG)
-	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterImport(importG))
+	implement.May(m, implement.MeterExport(exportG))
 
 	// decorate soc
 	socG, err := cc.Soc.FloatGetter(ctx)

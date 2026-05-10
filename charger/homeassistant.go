@@ -79,7 +79,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		implement.Has(c, implement.Meter(func() (float64, error) { return conn.GetFloatState(cc.Power) }))
 	}
 	if cc.Energy != "" {
-		implement.Has(c, implement.MeterEnergy(func() (float64, error) { return conn.GetFloatState(cc.Energy) }))
+		implement.Has(c, implement.MeterImport(func() (float64, error) { return conn.GetFloatState(cc.Energy) }))
 	}
 
 	// phase currents (optional)

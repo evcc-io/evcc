@@ -131,7 +131,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	if hasEnergyMeter {
 		implement.Has(wb, implement.Meter(wb.currentPower))
-		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.MeterImport(wb.totalEnergy))
 		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
@@ -329,7 +329,7 @@ func (wb *Keba) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
+// totalEnergy implements the api.MeterImport interface
 func (wb *Keba) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegEnergy, 2)
 	if err != nil {

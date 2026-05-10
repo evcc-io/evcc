@@ -212,10 +212,10 @@ func (wb *MennekesCompact) CurrentPower() (float64, error) {
 	return float64(encoding.Float32(b)), nil
 }
 
-var _ api.MeterEnergy = (*MennekesCompact)(nil)
+var _ api.MeterImport = (*MennekesCompact)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *MennekesCompact) TotalEnergy() (float64, error) {
+// ImportEnergy implements the api.MeterImport interface
+func (wb *MennekesCompact) ImportEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegChargedEnergyTotal, 2)
 	if err != nil {
 		return 0, err
@@ -256,7 +256,7 @@ func (wb *MennekesCompact) getPhaseValues(reg uint16) (float64, float64, float64
 /*
 var _ api.ChargeRater = (*MennekesCompact)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.MeterImport interface
 func (wb *MennekesCompact) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegChargedEnergySession, 2)
 	if err != nil {
