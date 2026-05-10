@@ -12,8 +12,8 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/redact"
+	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/gorilla/mux"
-	"go.yaml.in/yaml/v4"
 )
 
 func settingsGetStringHandler(key string) http.HandlerFunc {

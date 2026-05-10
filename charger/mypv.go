@@ -46,13 +46,18 @@ type MyPv struct {
 }
 
 const (
-	elwaRegSetPower        = 1000
-	elwaRegTempLimit       = 1002
-	elwaRegStatus          = 1003
-	elwaRegLoadState       = 1059
-	elwaRegPower           = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
-	elwaRegOperationState  = 1077
-	elwaERegOperationState = elwaRegStatus // same register for elwa-e operation state
+	elwaRegSetPower           = 1000
+	elwaRegTempLimit          = 1002
+	elwaRegStatus             = 1003
+	elwaRegLoadState          = 1059
+	elwaRegPower              = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
+	elwaRegOperationState     = 1077
+	elwaERegOperationState    = elwaRegStatus // same register for elwa-e operation state
+	elwaRegRelayState         = 1058
+	elwaRegVoltage            = 1061
+	elwaRegOperationMode      = 1065 // https://github.com/evcc-io/evcc/discussions/23708
+	elwaRegMaxControlledPower = 1014 // max. power for linear controlled output
+	elwaRegMaxCombinedPower   = 1071 // (max. power for linear controlled output + configured relais power) * 1.10
 )
 
 var elwaTemp = []uint16{1001, 1030, 1031}
@@ -266,6 +271,7 @@ func (wb *MyPv) MaxCurrentMillis(current float64) error {
 			phases = p
 		}
 	}
+
 	power := uint16(voltage * current * float64(phases))
 
 	err := wb.setPower(power)
@@ -285,7 +291,52 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint16(b)), nil
+	res := float64(binary.BigEndian.Uint16(b))
+	if wb.name != "ac-thor" {
+		return res, nil
+	}
+
+	c, err := wb.conn.ReadHoldingRegisters(elwaRegOperationMode, 1)
+	if err != nil {
+		return 0, err
+	}
+	wb.log.TRACE.Printf("operation mode %d", binary.BigEndian.Uint16(c))
+
+	// AC Thor operation mode != 3
+	if binary.BigEndian.Uint16(c) != 3 {
+		return res, nil
+	}
+
+	// AC Thor operation mode == 3 "Warm water 9 + 9kW"
+	// with extra heater on internal relay
+	// see https://github.com/evcc-io/evcc/discussions/23708
+	f, err := wb.conn.ReadHoldingRegisters(elwaRegRelayState, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	// relay inactive
+	if binary.BigEndian.Uint16(f) != 1 {
+		return res, nil
+	}
+
+	// get power of heater on relay as set in web interface
+	// (scale factor must be used for correct setting in web interface)
+	d, err := wb.conn.ReadHoldingRegisters(elwaRegMaxControlledPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	e, err := wb.conn.ReadHoldingRegisters(elwaRegMaxCombinedPower, 1)
+	if err != nil {
+		return 0, err
+	}
+	wb.log.TRACE.Printf("max. power: controlled %.0f W / combined %.0f W", float64(binary.BigEndian.Uint16(d)), float64(binary.BigEndian.Uint16(e)))
+
+	// relay power = combined power - controlled power, finally corrected with 110% factor
+	res += float64(int(binary.BigEndian.Uint16(e))-int(binary.BigEndian.Uint16(d))) / wb.scale / 1.1
+
+	return res, nil
 }
 
 var _ api.Battery = (*MyPv)(nil)

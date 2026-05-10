@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -108,7 +107,6 @@ test.describe("statistics values", async () => {
 
 test.describe("header savings", async () => {
   test("savings info in header and indicator persistence", async ({ page }) => {
-    await enableExperimental(page);
     await page.goto("/");
 
     // savings button visible in header
