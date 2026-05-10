@@ -21,4 +21,6 @@ render: |
   {{ include "ocpp" . }}
   {{- if eq .meter "false" }}
   metervalues: Current.Offered
+  {{- else }}
+  metervalues: -Current.Offered,Power.Offered,SoC
   {{- end }}
