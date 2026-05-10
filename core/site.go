@@ -571,14 +571,7 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 
 	// persist per-meter PV energy slots (used for history and forecast scaling)
-	for i, dev := range site.pvMeters {
-		// use stored devices, not ui-updated instances!
-		name := dev.Config().Name
-		c, ok := site.pvEnergy[name]
-		if !ok {
-			continue
-		}
-
+	for i := range site.pvMeters {
 		var importEnergy *float64
 		if mm[i].Energy > 0 {
 			importEnergy = &mm[i].Energy
