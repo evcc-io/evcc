@@ -131,7 +131,7 @@ render: |
       address: 32064 # Input power DC
       type: holding
       decode: int32nan
-  energy:
+  export:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
