@@ -7,8 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/charger/heating"
-	"github.com/evcc-io/evcc/meter/measurement"
+	"github.com/evcc-io/evcc/charger/measurement"
 	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -40,7 +39,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		LimitSoc                            *plugin.Config
 		FinishTime                          *plugin.Config
 		Tos                                 bool
-		heating.Temperature                 `mapstructure:",squash"` // optional, for heating devices
+		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
 		measurement.Energy                  `mapstructure:",squash"` // optional
 		meter.Phases                        `mapstructure:",squash"` // optional
 		LegacyEnergy                        *plugin.Config           `mapstructure:"energy"` // TODO deprecated

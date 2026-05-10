@@ -1,4 +1,4 @@
-package heating
+package measurement
 
 import (
 	"context"

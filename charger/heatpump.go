@@ -22,9 +22,8 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/charger/heating"
+	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -46,12 +45,12 @@ func init() {
 // NewHeatpumpFromConfig creates heatpump configurable charger from generic config
 func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		SetMaxPower         plugin.Config
-		GetMaxPower         *plugin.Config // optional
-		heating.Temperature `mapstructure:",squash"`
-		measurement.Energy  `mapstructure:",squash"`
-		LegacyEnergy        *plugin.Config `mapstructure:"energy"` // TODO deprecated
+		embed                   `mapstructure:",squash"`
+		SetMaxPower             plugin.Config
+		GetMaxPower             *plugin.Config // optional
+		measurement.Temperature `mapstructure:",squash"`
+		measurement.Energy      `mapstructure:",squash"`
+		LegacyEnergy            *plugin.Config `mapstructure:"energy"` // TODO deprecated
 
 	}{
 		embed: embed{
