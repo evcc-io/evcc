@@ -24,6 +24,7 @@ params:
     help:
       en: " " # overwrite default
       de: " " # overwrite default
+    required: true
   - name: status
     description:
       de: Ladestatus-Sensor
