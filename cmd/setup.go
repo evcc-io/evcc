@@ -644,6 +644,13 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassGo, configureGo(conf.Go))
 	}
 
+	// setup go VMs
+	if err == nil {
+		err = wrapErrorWithClass(ClassIobroker, configureIobroker(&conf.Iobroker))
+	}
+
+	
+
 	return err
 }
 
@@ -1415,9 +1422,10 @@ func configureIobroker(conf *[]globalconfig.Iobroker) error {
 	if settings.Exists(keys.Iobroker) {
 		if err := migrateYamlToJson(keys.Iobroker, conf); err != nil {
 			return err
-		}
-		log = util.NewLogger("iobroker")
+		}		
 	}
+
+	log = util.NewLogger("iobroker")
 
 	for _, cfg := range *conf {
 		if cfg.Uri == "" {

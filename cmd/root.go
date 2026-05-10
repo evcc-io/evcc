@@ -359,11 +359,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 
-	// setup iobroker
-	if err == nil {
-		err = configureIobroker(&conf.Iobroker)
-	}
-
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
 		Config:     conf.EEBus.Redacted(),

@@ -1,0 +1,38 @@
+template: iobroker-switch
+products:
+  - brand: Iobroker
+    description:
+      generic: Switch
+group: switchsockets
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: iobroker entities can be adressed. You need a valid iobroker configuration
+    de: Iobroker Geräte können hier angesprocvhen werden. Es wird eine iobroker Instanz benötigt.
+params:
+  - name: iobroker
+    description:
+      de: Name der zu benutzenden iobroker instanz
+      en: Name of the iobroker instance to be used
+    example: My-Iobroker
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default    
+  - name: switch
+    description:
+      de: Entity ID des schaltbaren Geräts
+      en: Entity ID of the switch device    
+    example: shelly.0.shellyplugmg3#08154711#1.Relay0.Switch
+    required: true
+  - name: power
+    description:
+      de: Entity ID für Leistungsmessung
+      en: Entity ID for power measurement
+    example: shelly.0.shellyplugmg3#08154711#1.Relay0.Power
+  - preset: switchsocket
+render: |
+  type: iobroker-switch
+  iobroker: {{ .iobroker }}
+  enable: {{ .switch }}
+  power: {{ .power }}
+  {{ include "switchsocket" . }}

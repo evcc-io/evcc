@@ -1,0 +1,168 @@
+template: iobroker
+products:
+  - brand: Iobroker
+    description:
+      generic: Charger
+group: generic
+requirements:
+  description:
+    en: |
+      In order to create an object of this type, an instance of Iobroker has to be defined 
+      The iobroker instance has to have the rest-api adapter installed (not "simple-api")
+      The oauth authentication method has to be enabled. If embedded into the web adapter, it has to be enabled there.
+    de: |
+      Um ein Objekt dieses Typs anzulegen, bedarf es einer konfigurierten Iobroker Instanz.
+      Auf dieser muss der "rest-api" Adapter (nicht "simple-api") installiert sein.
+      Es muss Oauth als Authentifizierungsmethode aktiviert sein. 
+      Falls der rest-api Adapter im web-adapter eingebettet ist, muss die Methode bei letzerem aktiviert sein.
+params:
+  - name: iobroker
+    description:
+      de: Name der zu verwendenden Iobroker Instanz
+      en: Name of the Iobroker instance to use
+    example: my-iobroker
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default
+  - name: status
+    description:
+      de: Ladestatus-Sensor
+      en: Charging status sensor    
+    example: "alias.0.Sensors.Charging.MyWallbox.Status"
+    required: true
+    help:
+      en: Entity ID for charging status (A=ready, B=connected, C=charging)
+      de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden)
+  - name: enabled
+    description:
+      de: Aktivierungsstatus-Sensor
+      en: Enabled status sensor
+    example: "alias.0.Sensors.Charging.MyWallbox.Enabled"
+    required: true
+    help:
+      en: Entity ID for enabled state (a boolean state is expected)
+      de: Entitäts-ID für Aktivierungsstatus (ein boolean state wird erwartet)
+  - name: enable
+    description:
+      de: Aktivierungsschalter
+      en: Enable switch
+    example: "alias.0.Sensors.Charging.MyWallbox.Enabled"
+    required: true
+    help:
+      en: Entity ID for enable/disable control. Can be the same state as for "Enabled". (`boolean`)
+      de: Entitäts-ID für Aktivierungs-/Deaktivierungs-Steuerung. Kann derselbe State sein, wie für "Enabled". (`boolean`)
+  - name: setMaxCurrent
+    description:
+      de: Maximale Stromstärke-Entität [A]
+      en: Maximum current entity [A]
+    example: "alias.0.Sensors.Charging.MyWallbox.max_current"
+    required: true
+    help:
+      en: Entity ID for setting maximum current in amperes (`number`)
+      de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (`number`)
+  - name: power
+    description:
+      de: Leistungsentität
+      en: Power entity    
+    example: "alias.0.Sensors.Charging.MyWallbox.power"
+    advanced: true
+    help:
+      en: Entity ID for instantaneous power measurement in watts
+      de: Entitäts-ID für momentane Leistungsmessung in Watt
+  - name: energy
+    description:
+      de: Energieentität
+      en: Energy entity
+    example: "alias.0.Sensors.Charging.MyWallbox.energy"
+    advanced: true
+    help:
+      en: Entity ID for cumulative energy measurement in kWh
+      de: Entitäts-ID für kumulative Energiemessung in kWh
+  - name: currentL1
+    description:
+      de: L1 Stromentität
+      en: L1 current entity
+    example: "alias.0.Sensors.Charging.MyWallbox.charger_current_l1"
+    advanced: true
+    help:
+      en: Entity ID for L1 current measurement in amperes
+      de: Entitäts-ID für L1 Strommessung in Ampere
+  - name: currentL2
+    description:
+      de: L2 Stromentität
+      en: L2 current entity
+    example: "alias.0.Sensors.Charging.MyWallbox.current_l2"
+    advanced: true
+    help:
+      en: Entity ID for L2 current measurement in amperes
+      de: Entitäts-ID für L2 Strommessung in Ampere
+  - name: currentL3
+    description:
+      de: L3 Stromentität
+      en: L3 current entity
+    example: "alias.0.Sensors.Charging.MyWallbox.current_l3"
+    advanced: true
+    help:
+      en: Entity ID for L3 current measurement in amperes
+      de: Entitäts-ID für L3 Strommessung in Ampere
+  - name: voltageL1
+    description:
+      de: L1 Spannungsentität
+      en: L1 voltage entity
+    example: "alias.0.Sensors.Charging.MyWallbox.voltage_l1"
+    advanced: true
+    help:
+      en: Entity ID for L1 voltage measurement in volts
+      de: Entitäts-ID für L1 Spannungsmessung in Volt
+  - name: voltageL2
+    description:
+      de: L2 Spannungsentität
+      en: L2 voltage entity
+    example: "alias.0.Sensors.Charging.MyWallbox.voltage_l2"
+    advanced: true
+    help:
+      en: Entity ID for L2 voltage measurement in volts
+      de: Entitäts-ID für L2 Spannungsmessung in Volt
+  - name: voltageL3
+    description:
+      de: L3 Spannungsentität
+      en: L3 voltage entity
+    example: "alias.0.Sensors.Charging.MyWallbox.voltage_l3"
+    advanced: true
+    help:
+      en: Entity ID for L3 voltage measurement in volts
+      de: Entitäts-ID für L3 Spannungsmessung in Volt
+
+  - name: phaseswitch
+    description:
+      de: Phasenumschaltungs-Entität
+      en: Phase switching entity
+    example: "alias.0.Sensors.Charging.MyWallbox.charger_phases"
+    advanced: true
+    help:
+      en: Entity ID for 1p/3p phase switching (integer entity)
+      de: Entitäts-ID für 1p/3p Phasenumschaltung (integer entity)
+  - preset: charger-features
+render: |
+  type: iobroker
+  iobroker: {{ .iobroker }}
+  status: {{ .status }}
+  enabled: {{ .enabled }}
+  enable: {{ .enable }}
+  maxcurrent: {{ .setMaxCurrent }}
+  power: {{ .power }}
+  energy: {{ .energy }}
+  {{- if and .currentL1 .currentL2 .currentL3 }}
+  currents:
+    - {{ .currentL1 }}
+    - {{ .currentL2 }}
+    - {{ .currentL3 }}
+  {{- end }}
+  {{- if and .voltageL1 .voltageL2 .voltageL3 }}
+  voltages:
+    - {{ .voltageL1 }}
+    - {{ .voltageL2 }}
+    - {{ .voltageL3 }}
+  {{- end }}
+  phases: {{ .phaseswitch }}
+  {{ include "charger-features" . }}

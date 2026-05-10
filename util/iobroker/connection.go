@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -12,15 +13,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
 // Connection represents a Iobroker API connection
 type Connection struct {
 	*request.Helper
-	user     string
-	password string
-	instance *proxyInstance
+	Log      *util.Logger
+	Identity *Identity
 }
 
 var connections map[string]*Connection
@@ -33,54 +34,51 @@ func GetConnection(name string) *Connection {
 	return connections[name]
 }
 
-// NewConnection creates a new Iobroker connection
 func NewConnection(log *util.Logger, name, uri, username, password string) error {
-	if uri == "" {
-		return errors.New("missing uri")
-	}
-
-	if username == "" || password == "" {
-		return errors.New("invalid username or password")
-	}
-
 	if connections[name] != nil {
 		return errors.New("duplicate name")
 	}
 
+	identity, err := NewIdentity(
+		log,
+		util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		username,
+		password)
+	if err != nil {
+		return err
+	}
 	c := &Connection{
 		Helper:   request.NewHelper(log),
-		user:     username,
-		password: password,
-		instance: &proxyInstance{
-			uri: util.DefaultScheme(util.DefaultPort(strings.TrimSuffix(uri, "/"), 8082), "http"),
-		},
+		Log:      log,
+		Identity: identity,
 	}
 
 	// Set up authentication headers
 	c.Client.Transport = &oauth2.Transport{
 		Base:   c.Client.Transport,
-		Source: c.instance,
+		Source: c.Identity,
 	}
 
 	connections[name] = c
+	log.DEBUG.Println("Created connection " + name)
 
 	return nil
 }
 
-// URI returns the base URI of the Home Assistant instance
+// URI returns the base URI of the iobroker instance
 func (c *Connection) URI() string {
-	return c.instance.URI()
+	return c.Identity.uri
 }
 
 // GetState retrieves the state of an entity
 func (c *Connection) GetState(entity string) (StateResponse, error) {
 	var res StateResponse
-	uri := fmt.Sprintf("%s/rest-api/v1/state/%s", c.instance.URI(), url.PathEscape(entity))
+	uri := fmt.Sprintf("%s/rest-api/v1/state/%s", c.URI(), url.PathEscape(entity))
 
 	if err := c.GetJSON(uri, &res); err != nil {
+		c.Log.DEBUG.Printf("Cannot read %s: %s ", entity, err.Error())
 		return res, err
 	}
-
 	return res, nil
 }
 
@@ -268,11 +266,21 @@ func domain(entity string) (string, error) {
 
 func (c *Connection) SetState(entity string, value string) (SetStateResponse, error) {
 	var res SetStateResponse
-	state := fmt.Sprintf("{val=%s,ack=true}", value)
-	uri := fmt.Sprintf("%s/rest-api/command/setState/%s&state=%s", c.instance.URI(), url.PathEscape(entity), url.PathEscape(state))
 
-	if err := c.GetJSON(uri, &res); err != nil {
-		return res, err
+	state := fmt.Sprintf("{\"val\":%s,\"ack\":true}", value)
+	uri := fmt.Sprintf("%s/rest-api/v1/command/setState", c.URI())
+
+	params := url.Values{}
+	params.Add("id", entity)
+	params.Add("state", state)
+
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(params.Encode()), map[string]string{
+		"Content-Type": request.FormContent,
+		"Accept":       "application/json, text/plain",
+	})
+
+	if err == nil {
+		err = c.DoJSON(req, &res)
 	}
 
 	return res, nil
@@ -296,4 +304,56 @@ func (c *Connection) SetFloatState(entity string, value float64) error {
 	sVal = fmt.Sprintf("%g", value)
 	_, err := c.SetState(entity, sVal)
 	return err
+}
+
+// CallNumberService is a convenience method for setting number entity values
+func (c *Connection) SetIntState(entity string, value int64) error {
+	var sVal string
+	sVal = fmt.Sprintf("%d", value)
+	_, err := c.SetState(entity, sVal)
+	return err
+}
+
+// CallNumberService is a convenience method for setting number entity values
+func (c *Connection) SetStringState(entity string, value float64) error {
+	var sVal string
+	sVal = fmt.Sprintf("\"%s\"", value)
+	_, err := c.SetState(entity, sVal)
+	return err
+}
+
+// GetPhaseFloatStates retrieves three phase values (currents, voltages, etc.)
+func (c *Connection) GetPhaseFloatStates(entities []string) (float64, float64, float64, error) {
+	if len(entities) != 3 {
+		return 0, 0, 0, errors.New("invalid phase entities")
+	}
+
+	var res [3]float64
+
+	for i := range res {
+		f, err := c.GetFloatState(entities[i])
+		if err != nil {
+			return 0, 0, 0, fmt.Errorf("phase L%d: %w", i+1, err)
+		}
+		res[i] = f
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
+// ValidatePhaseEntities validates that phase entity arrays contain 1 or 3 entities
+func ValidatePhaseEntities(phases []string) ([]string, error) {
+	entities := lo.FilterMap(phases, func(s string, _ int) (string, bool) {
+		t := strings.TrimSpace(s)
+		return t, t != ""
+	})
+
+	switch len(entities) {
+	case 0:
+		return nil, nil
+	case 3:
+		return entities, nil
+	default:
+		return nil, errors.New("invalid phase entities")
+	}
 }
