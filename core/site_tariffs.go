@@ -165,7 +165,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		}
 	}
 
-	if scale, ok := site.solarScale(); ok {
+	if scale := site.solarScale(); scale != 1 {
 		res.Scale = &scale
 	}
 
@@ -175,13 +175,13 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 // solarScale returns the ratio of produced solar energy to forecasted solar
 // energy for the current day, queried from the metrics database. Used to
 // adjust forecasts when PV is consistently under-/over-producing relative
-// to the forecast. The second return value indicates whether enough data
-// exists to make the ratio meaningful.
-func (site *Site) solarScale() (float64, bool) {
+// to the forecast. Returns 1.0 when not enough data is available to make
+// the ratio meaningful.
+func (site *Site) solarScale() float64 {
 	series, err := metrics.QueryImportEnergy(now.BeginningOfDay(), time.Now(), "day", true)
 	if err != nil {
 		site.log.ERROR.Printf("solar forecast scale: %v", err)
-		return 0, false
+		return 1
 	}
 
 	var pv, fcst float64
@@ -197,18 +197,14 @@ func (site *Site) solarScale() (float64, bool) {
 		}
 	}
 
-	if fcst <= 0 {
-		return 0, false
-	}
-
 	const minEnergy = 0.5 // kWh
-	if pv+fcst <= minEnergy {
-		return 0, false
+	if fcst <= 0 || pv+fcst <= minEnergy {
+		return 1
 	}
 
 	scale := pv / fcst
 	site.log.DEBUG.Printf("solar forecast: produced %.3fkWh, forecasted %.3fkWh, scale %.3f", pv, fcst, scale)
-	return scale, true
+	return scale
 }
 
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
