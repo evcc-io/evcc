@@ -13,7 +13,6 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/jinzhu/now"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/coordinator"
@@ -36,6 +35,7 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
@@ -87,8 +87,9 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	// metrics
-	pvEnergy                           map[string]*metrics.Collector
-	homeEnergy, gridEnergy, fcstEnergy *metrics.Collector
+	fcstEnergy             *metrics.Collector
+	pvEnergy               map[string]*metrics.Collector
+	homeEnergy, gridEnergy *metrics.Collector
 	// lastFcstUpdate is read/written only from the site update loop
 	lastFcstUpdate time.Time
 
