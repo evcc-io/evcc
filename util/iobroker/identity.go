@@ -103,7 +103,6 @@ func (c *Identity) Login() (*oauth2.Token, error) {
 func (c *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := map[string]string{
 		"grant_type":    "refresh_token",
-		"client_id":     "iobroker",
 		"refresh_token": token.RefreshToken,
 	}
 

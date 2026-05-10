@@ -649,8 +649,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassIobroker, configureIobroker(&conf.Iobroker))
 	}
 
-	
-
 	return err
 }
 
@@ -1413,7 +1411,7 @@ func isMcp() bool {
 
 // setup iobroker
 func configureIobroker(conf *[]globalconfig.Iobroker) error {
-	var log *util.Logger = nil
+	var log *util.Logger
 	// prevent panic
 	if conf == nil {
 		return nil
@@ -1422,7 +1420,7 @@ func configureIobroker(conf *[]globalconfig.Iobroker) error {
 	if settings.Exists(keys.Iobroker) {
 		if err := migrateYamlToJson(keys.Iobroker, conf); err != nil {
 			return err
-		}		
+		}
 	}
 
 	log = util.NewLogger("iobroker")

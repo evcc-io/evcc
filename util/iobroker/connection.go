@@ -149,7 +149,7 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 		case "off", "false", "0", "inactive", "no":
 			value = false
 		default:
-			return false, fmt.Errorf("invalid boolean state '%s' for entity %s", state, entity)
+			return false, fmt.Errorf("invalid boolean state '%s' for entity %s", v, entity)
 		}
 	case float64:
 		value = math.Abs(v) > 0.01
@@ -204,7 +204,7 @@ func (c *Connection) GetTimeState(entity string) (time.Time, error) {
 	}
 }
 
-// chargeStatusMap maps Home Assistant states to EVCC charge status
+// chargeStatusMap maps Iobroker states to EVCC charge status
 var chargeStatusMap = map[string]api.ChargeStatus{
 	// Status C - Charging
 	"c":        api.StatusC,
@@ -241,7 +241,7 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"0":                   api.StatusA,
 }
 
-// GetChargeStatus maps Home Assistant states to api.ChargeStatus
+// GetChargeStatus maps Iobroker states to api.ChargeStatus
 func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 	value, err := c.GetStringState(entity)
 	if err != nil {
@@ -253,15 +253,6 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 	}
 
 	return api.StatusNone, fmt.Errorf("unknown charge status: %s", value)
-}
-
-func domain(entity string) (string, error) {
-	domain, _, ok := strings.Cut(entity, ".")
-	if !ok {
-		return "", fmt.Errorf("invalid entity format: %s", entity)
-	}
-
-	return domain, nil
 }
 
 func (c *Connection) SetState(entity string, value string) (SetStateResponse, error) {
@@ -283,10 +274,10 @@ func (c *Connection) SetState(entity string, value string) (SetStateResponse, er
 		err = c.DoJSON(req, &res)
 	}
 
-	return res, nil
+	return res, err
 }
 
-// CallSwitchService is a convenience method for switch services
+// SetBoolState is a convenience method for boolean objects
 func (c *Connection) SetBoolState(entity string, turnOn bool) error {
 	var state string
 	if turnOn {
@@ -298,7 +289,7 @@ func (c *Connection) SetBoolState(entity string, turnOn bool) error {
 	return err
 }
 
-// CallNumberService is a convenience method for setting number entity values
+// SetFloatState is a convenience method for setting number entity values
 func (c *Connection) SetFloatState(entity string, value float64) error {
 	var sVal string
 	sVal = fmt.Sprintf("%g", value)
@@ -306,7 +297,7 @@ func (c *Connection) SetFloatState(entity string, value float64) error {
 	return err
 }
 
-// CallNumberService is a convenience method for setting number entity values
+// SetIntState is a convenience method for setting number entity values
 func (c *Connection) SetIntState(entity string, value int64) error {
 	var sVal string
 	sVal = fmt.Sprintf("%d", value)
@@ -314,8 +305,8 @@ func (c *Connection) SetIntState(entity string, value int64) error {
 	return err
 }
 
-// CallNumberService is a convenience method for setting number entity values
-func (c *Connection) SetStringState(entity string, value float64) error {
+// SetStringState is a convenience method for setting string entity values
+func (c *Connection) SetStringState(entity string, value string) error {
 	var sVal string
 	sVal = fmt.Sprintf("\"%s\"", value)
 	_, err := c.SetState(entity, sVal)

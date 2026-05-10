@@ -6,7 +6,7 @@ type StateResponse struct {
 	Q      int      `json:"q"`
 	Ts     int      `json:"ts"`
 	Lc     int      `json:"lc"`
-	Ack    bool     `json:"Ack"`
+	Ack    bool     `json:"ack"`
 	From   string   `json:"from"`
 	Expire int      `json:"expire"`
 	Type   string   `json:"type"`

@@ -10,7 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util/iobroker"
 )
 
-// HomeAssistant charger implementation
+// Iobroker charger implementation
 type Iobroker struct {
 	implement.Caps
 	conn       *iobroker.Connection
@@ -109,7 +109,7 @@ func NewIobrokerFromConfig(other map[string]any) (api.Charger, error) {
 	return c, nil
 }
 
-var _ api.Charger = (*HomeAssistant)(nil)
+var _ api.Charger = (*Iobroker)(nil)
 
 // Status implements the api.ChargeState interface
 func (c *Iobroker) Status() (api.ChargeStatus, error) {
@@ -131,7 +131,7 @@ func (c *Iobroker) MaxCurrent(current int64) error {
 	return c.MaxCurrentMillis(float64(current))
 }
 
-var _ api.ChargerEx = (*HomeAssistant)(nil)
+var _ api.ChargerEx = (*Iobroker)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Iobroker) MaxCurrentMillis(current float64) error {

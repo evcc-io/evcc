@@ -8,7 +8,7 @@ requirements:
   evcc: ["skiptest"]
   description:
     en: iobroker entities can be adressed. You need a valid iobroker configuration
-    de: Iobroker Geräte können hier angesprocvhen werden. Es wird eine iobroker Instanz benötigt.
+    de: Iobroker Geräte können hier angesprochen werden. Es wird eine iobroker Instanz benötigt.
 params:
   - name: iobroker
     description:
