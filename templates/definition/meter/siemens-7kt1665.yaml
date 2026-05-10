@@ -3,6 +3,9 @@ products:
   - brand: Siemens
     description:
       generic: 7KT1665
+  - brand: Siemens
+    description:
+      generic: 7KT1666 (MID)
 params:
   - name: usage
     choice: ["grid", "charge"]
