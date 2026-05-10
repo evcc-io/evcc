@@ -213,10 +213,10 @@ func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
 	return time.Duration(res.Elapsed) * time.Second, err
 }
 
-var _ api.MeterImport = (*OpenEVSE)(nil)
+var _ api.MeterEnergy = (*OpenEVSE)(nil)
 
-// ImportEnergy implements the api.MeterImport interface
-func (c *OpenEVSE) ImportEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *OpenEVSE) TotalEnergy() (float64, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
 		return 0, err

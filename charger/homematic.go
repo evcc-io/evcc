@@ -67,9 +67,9 @@ func (c *CCU) Enable(enable bool) error {
 	return c.conn.Enable(enable)
 }
 
-var _ api.MeterImport = (*CCU)(nil)
+var _ api.MeterEnergy = (*CCU)(nil)
 
-// ImportEnergy implements the api.MeterImport interface
-func (c *CCU) ImportEnergy() (float64, error) {
-	return c.conn.ImportEnergy()
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *CCU) TotalEnergy() (float64, error) {
+	return c.conn.TotalEnergy()
 }

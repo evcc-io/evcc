@@ -45,7 +45,7 @@ const (
 	evsemasterConnectTimeout = 15 * time.Second
 )
 
-// EVSEMaster implements api.Charger (and api.Meter / api.MeterImport /
+// EVSEMaster implements api.Charger (and api.Meter / api.MeterEnergy /
 // api.PhaseCurrents / api.PhaseVoltages) for charging stations that use the
 // EVSE Master UDP protocol – e.g. Sync EV and generic Chinese EVSE devices.
 //
@@ -288,10 +288,10 @@ func (wb *EVSEMaster) CurrentPower() (float64, error) {
 	return res.Power, nil
 }
 
-var _ api.MeterImport = (*EVSEMaster)(nil)
+var _ api.MeterEnergy = (*EVSEMaster)(nil)
 
-// ImportEnergy implements the api.MeterImport interface.
-func (wb *EVSEMaster) ImportEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface.
+func (wb *EVSEMaster) TotalEnergy() (float64, error) {
 	res, err := wb.data.Get()
 	if err != nil {
 		return 0, err
