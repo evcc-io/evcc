@@ -100,7 +100,7 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
-		implement.Has(m, implement.MeterImport(totalEnergy))
+		implement.Has(m, implement.MeterEnergy(totalEnergy))
 	}
 
 	// decorate soc

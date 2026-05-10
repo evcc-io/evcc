@@ -93,9 +93,9 @@ func (c *Shelly) Enable(enable bool) error {
 	}
 }
 
-var _ api.MeterImport = (*Shelly)(nil)
+var _ api.MeterEnergy = (*Shelly)(nil)
 
-// ImportEnergy implements the api.MeterImport interface
-func (c *Shelly) ImportEnergy() (float64, error) {
-	return c.conn.ImportEnergy()
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Shelly) TotalEnergy() (float64, error) {
+	return c.conn.TotalEnergy()
 }

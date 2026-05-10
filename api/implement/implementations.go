@@ -203,34 +203,19 @@ func (i *iChargeState) Status() (api.ChargeStatus, error) {
 	return i.chargeState0()
 }
 
-func MeterImport(meterImport0 func() (float64, error)) api.MeterImport {
-	if meterImport0 == nil {
+func MeterEnergy(meterEnergy0 func() (float64, error)) api.MeterEnergy {
+	if meterEnergy0 == nil {
 		return nil
 	}
-	return &iMeterImport{meterImport0}
+	return &iMeterEnergy{meterEnergy0}
 }
 
-type iMeterImport struct {
-	meterImport0 func() (float64, error)
+type iMeterEnergy struct {
+	meterEnergy0 func() (float64, error)
 }
 
-func (i *iMeterImport) ImportEnergy() (float64, error) {
-	return i.meterImport0()
-}
-
-func MeterExport(meterExport0 func() (float64, error)) api.MeterExport {
-	if meterExport0 == nil {
-		return nil
-	}
-	return &iMeterExport{meterExport0}
-}
-
-type iMeterExport struct {
-	meterExport0 func() (float64, error)
-}
-
-func (i *iMeterExport) ExportEnergy() (float64, error) {
-	return i.meterExport0()
+func (i *iMeterEnergy) TotalEnergy() (float64, error) {
+	return i.meterEnergy0()
 }
 
 func PhaseCurrents(phaseCurrents0 func() (float64, float64, float64, error)) api.PhaseCurrents {

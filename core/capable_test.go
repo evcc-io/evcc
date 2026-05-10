@@ -34,9 +34,9 @@ func (c *charger) Capacity() float64 {
 	return 0
 }
 
-var _ api.MeterImport = (*charger)(nil)
+var _ api.MeterEnergy = (*charger)(nil)
 
-func (c *charger) ImportEnergy() (float64, error) {
+func (c *charger) TotalEnergy() (float64, error) {
 	return 0, nil
 }
 
@@ -69,7 +69,7 @@ func TestCapsWrapping(t *testing.T) {
 		assert.True(t, ok)
 	}
 	{
-		_, ok := c.(api.MeterImport)
+		_, ok := c.(api.MeterEnergy)
 		assert.True(t, ok)
 	}
 	{
@@ -89,14 +89,14 @@ func TestCapsWrapping(t *testing.T) {
 	}
 
 	{
-		_, ok := m.(api.MeterImport)
+		_, ok := m.(api.MeterEnergy)
 		assert.False(t, ok, "unexpected promoted energy")
-		assert.True(t, api.HasCap[api.MeterImport](m), "missing promoted energy cap")
+		assert.True(t, api.HasCap[api.MeterEnergy](m), "missing promoted energy cap")
 
 		var mm any = m.(*capableMeter).Meter
-		_, ok = mm.(api.MeterImport)
+		_, ok = mm.(api.MeterEnergy)
 		assert.True(t, ok, "missing embedded energy")
-		assert.True(t, api.HasCap[api.MeterImport](mm), "missing embedded energy cap")
+		assert.True(t, api.HasCap[api.MeterEnergy](mm), "missing embedded energy cap")
 	}
 	{
 		_, ok := m.(api.Battery)
