@@ -20,6 +20,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	cc := struct {
 		measurement.Energy `mapstructure:",squash"` // energy optional
 		measurement.Phases `mapstructure:",squash"` // optional
+		LegacyEnergy       *plugin.Config           `mapstructure:"energy"` // TODO deprecated
 
 		// pv
 		pvMaxACPower `mapstructure:",squash"`
@@ -39,6 +40,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	// TODO deprecated
+	if err := cc.Energy.AliasImport(cc.LegacyEnergy); err != nil {
 		return nil, err
 	}
 

@@ -7,7 +7,8 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/charger/measurement"
+	"github.com/evcc-io/evcc/charger/heating"
+	"github.com/evcc-io/evcc/meter/measurement"
 	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -39,9 +40,10 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		LimitSoc                            *plugin.Config
 		FinishTime                          *plugin.Config
 		Tos                                 bool
-		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
+		heating.Temperature                 `mapstructure:",squash"` // optional, for heating devices
 		measurement.Energy                  `mapstructure:",squash"` // optional
 		meter.Phases                        `mapstructure:",squash"` // optional
+		LegacyEnergy                        *plugin.Config           `mapstructure:"energy"` // TODO deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -144,7 +146,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	implement.May(c, implement.Battery(soc))
 	implement.May(c, implement.SocLimiter(limitsoc))
 
-	// decorate measurements
+	// TODO deprecated
+	if err := cc.Energy.AliasImport(cc.LegacyEnergy); err != nil {
+		return nil, err
+	}
+
 	powerG, importG, _, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err

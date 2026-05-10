@@ -22,8 +22,9 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/charger/measurement"
+	"github.com/evcc-io/evcc/charger/heating"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -56,12 +57,13 @@ const (
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
 func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed                   `mapstructure:",squash"`
-		SetMode                 plugin.Config
-		GetMode                 *plugin.Config // optional
-		SetMaxPower             *plugin.Config // optional
-		measurement.Temperature `mapstructure:",squash"`
-		measurement.Energy      `mapstructure:",squash"`
+		embed               `mapstructure:",squash"`
+		SetMode             plugin.Config
+		GetMode             *plugin.Config // optional
+		SetMaxPower         *plugin.Config // optional
+		heating.Temperature `mapstructure:",squash"`
+		measurement.Energy  `mapstructure:",squash"`
+		LegacyEnergy        *plugin.Config `mapstructure:"energy"` // TODO deprecated
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -104,6 +106,11 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 
 	res, err := NewSgReady(ctx, &cc.embed, modeS, modeG, maxPowerS)
 	if err != nil {
+		return nil, err
+	}
+
+	// TODO deprecated
+	if err := cc.Energy.AliasImport(cc.LegacyEnergy); err != nil {
 		return nil, err
 	}
 

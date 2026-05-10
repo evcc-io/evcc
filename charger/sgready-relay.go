@@ -6,7 +6,9 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/charger/measurement"
+	"github.com/evcc-io/evcc/charger/heating"
+	"github.com/evcc-io/evcc/meter/measurement"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -27,11 +29,12 @@ func init() {
 // NewSgReadyRelayFromConfig creates an SG Ready charger with boost/dim relays from generic config
 func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed                   `mapstructure:",squash"`
-		Boost                   config.Typed
-		Dim                     *config.Typed
-		measurement.Temperature `mapstructure:",squash"`
-		measurement.Energy      `mapstructure:",squash"`
+		embed               `mapstructure:",squash"`
+		Boost               config.Typed
+		Dim                 *config.Typed
+		heating.Temperature `mapstructure:",squash"`
+		measurement.Energy  `mapstructure:",squash"`
+		LegacyEnergy        *plugin.Config `mapstructure:"energy"` // TODO deprecated
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -58,6 +61,11 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 
 	res, err := NewSgReadyRelay(ctx, &cc.embed, boost, dim)
 	if err != nil {
+		return nil, err
+	}
+
+	// TODO deprecated
+	if err := cc.Energy.AliasImport(cc.LegacyEnergy); err != nil {
 		return nil, err
 	}
 
