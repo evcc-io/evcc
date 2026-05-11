@@ -644,7 +644,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassGo, configureGo(conf.Go))
 	}
 
-	// setup go VMs
+	// setup Iobroker
 	if err == nil {
 		err = wrapErrorWithClass(ClassIobroker, configureIobroker(&conf.Iobroker))
 	}
