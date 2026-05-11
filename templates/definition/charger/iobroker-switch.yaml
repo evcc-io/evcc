@@ -17,11 +17,11 @@ params:
     example: My-Iobroker
     help:
       en: " " # overwrite default
-      de: " " # overwrite default    
+      de: " " # overwrite default
   - name: switch
     description:
       de: Entity ID des schaltbaren Geräts
-      en: Entity ID of the switch device    
+      en: Entity ID of the switch device
     example: shelly.0.shellyplugmg3#08154711#1.Relay0.Switch
     required: true
   - name: power

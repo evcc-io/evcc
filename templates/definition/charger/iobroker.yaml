@@ -8,13 +8,13 @@ requirements:
   evcc: ["skiptest"]
   description:
     en: |
-      In order to create an object of this type, an instance of Iobroker has to be defined 
+      In order to create an object of this type, an instance of Iobroker has to be defined
       The iobroker instance has to have the rest-api adapter installed (not "simple-api")
       The oauth authentication method has to be enabled. If embedded into the web adapter, it has to be enabled there.
     de: |
       Um ein Objekt dieses Typs anzulegen, bedarf es einer konfigurierten Iobroker Instanz.
       Auf dieser muss der "rest-api" Adapter (nicht "simple-api") installiert sein.
-      Es muss Oauth als Authentifizierungsmethode aktiviert sein. 
+      Es muss Oauth als Authentifizierungsmethode aktiviert sein.
       Falls der rest-api Adapter im web-adapter eingebettet ist, muss die Methode bei letzerem aktiviert sein.
 params:
   - name: iobroker
@@ -29,7 +29,7 @@ params:
   - name: status
     description:
       de: Ladestatus-Sensor
-      en: Charging status sensor    
+      en: Charging status sensor
     example: "alias.0.Sensors.Charging.MyWallbox.Status"
     required: true
     help:
@@ -65,7 +65,7 @@ params:
   - name: power
     description:
       de: Leistungsentität
-      en: Power entity    
+      en: Power entity
     example: "alias.0.Sensors.Charging.MyWallbox.power"
     advanced: true
     help:
@@ -134,7 +134,6 @@ params:
     help:
       en: Entity ID for L3 voltage measurement in volts
       de: Entitäts-ID für L3 Spannungsmessung in Volt
-
   - name: phaseswitch
     description:
       de: Phasenumschaltungs-Entität
