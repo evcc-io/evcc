@@ -91,7 +91,7 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 	case string:
 		value, err = strconv.ParseInt(v, 10, 64)
 		if err != nil {
-			return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", v, entity, err)
+			return 0, fmt.Errorf("invalid numeric state '%s' for entity %s", v, entity)
 		}
 	case float64:
 		value = int64(math.Round(v))
@@ -100,7 +100,7 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 	case int64:
 		value = v
 	default:
-		return 0, fmt.Errorf("unknown type for entity %s: %w", entity, err)
+		return 0, fmt.Errorf("unknown type for entity %s", entity)
 	}
 	return value, nil
 }
@@ -125,7 +125,7 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 	case int64:
 		value = float64(v)
 	default:
-		return 0, fmt.Errorf("unknown type for entity %s: %w", entity, err)
+		return 0, fmt.Errorf("unknown type for entity %s", entity)
 	}
 	return value, nil
 }
@@ -156,7 +156,7 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 	case bool:
 		value = v
 	default:
-		return false, fmt.Errorf("unknown type for entity %s: %w", entity, err)
+		return false, fmt.Errorf("unknown type for entity %s", entity)
 	}
 	return value, nil
 }
@@ -198,7 +198,7 @@ func (c *Connection) GetTimeState(entity string) (time.Time, error) {
 	case float64:
 		return time.Unix(int64(v), 0), nil
 	default:
-		return time.Unix(0, 0), fmt.Errorf("unknown type for entity %s: %w", entity, err)
+		return time.Unix(0, 0), fmt.Errorf("unknown type for entity %s", entity)
 	}
 }
 
