@@ -7,13 +7,13 @@ group: switchsockets
 requirements:
   evcc: ["skiptest"]
   description:
-    en: iobroker entities can be adressed. You need a valid iobroker configuration
-    de: Iobroker Geräte können hier angesprochen werden. Es wird eine iobroker Instanz benötigt.
+    en: Iobroker entities can be addressed. You need a valid Iobroker configuration
+    de: Iobroker Geräte können hier angesprochen werden. Es wird eine Iobroker Instanz benötigt.
 params:
   - name: iobroker
     description:
-      de: Name der zu benutzenden iobroker instanz
-      en: Name of the iobroker instance to be used
+      de: Name der zu benutzenden Iobroker Instanz
+      en: Name of the Iobroker instance to be used
     example: My-Iobroker
     help:
       en: " " # overwrite default

@@ -75,10 +75,8 @@ func (c *Connection) GetState(entity string) (StateResponse, error) {
 	var res StateResponse
 	uri := fmt.Sprintf("%s/rest-api/v1/state/%s", c.URI(), url.PathEscape(entity))
 
-	if err := c.GetJSON(uri, &res); err != nil {
-		return res, err
-	}
-	return res, nil
+	err := c.GetJSON(uri, &res)
+	return res, err
 }
 
 // GetIntState retrieves the state of an entity as int64
