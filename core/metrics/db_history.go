@@ -29,13 +29,6 @@ var aggregateFormats = map[string]string{
 	"month": "%Y-%m",
 }
 
-var aggregateGoFormats = map[string]string{
-	"15m":   "2006-01-02 15:04",
-	"hour":  "2006-01-02 15:00",
-	"day":   "2006-01-02",
-	"month": "2006-01",
-}
-
 var aggregateDurations = map[string]func(time.Time) time.Time{
 	"15m":   func(t time.Time) time.Time { return t.Add(15 * time.Minute) },
 	"hour":  func(t time.Time) time.Time { return t.Add(time.Hour) },
@@ -61,7 +54,7 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 		Name   string
 		Group  string
 		Bucket string
-		Start  int64
+		Start  SqlTime
 		Import float64
 		Export float64
 	}
@@ -100,12 +93,10 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 			res = append(res, Series{Name: name, Group: r.Group})
 		}
 
-		start := time.Unix(r.Start, 0)
-
 		s := &res[len(res)-1]
 		s.Data = append(s.Data, Slot{
-			Start:  start,
-			End:    addDuration(start),
+			Start:  time.Time(r.Start),
+			End:    addDuration(time.Time(r.Start)),
 			Import: r.Import,
 			Export: r.Export,
 		})
