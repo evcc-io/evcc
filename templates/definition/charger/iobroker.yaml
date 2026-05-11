@@ -5,6 +5,7 @@ products:
       generic: Charger
 group: generic
 requirements:
+  evcc: ["skiptest"]
   description:
     en: |
       In order to create an object of this type, an instance of Iobroker has to be defined 
