@@ -79,11 +79,11 @@ func (c *Identity) login(params url.Values) (*oauth2.Token, error) {
 
 // Login authenticates with username/password
 func (c *Identity) Login() (*oauth2.Token, error) {
-	data := url.Values{}
-	data.Add("grant_type", "password")
-	data.Add("username", c.user)
-	data.Add("password", c.password)
-
+	data := url.Values{
+		"grant_type": {"password"},
+		"username":   {c.user},
+		"password":   {c.password},
+	}
 	token, err := c.login(data)
 	if err == nil {
 		c.TokenSource = oauth.RefreshTokenSource(token, c.refreshToken)
@@ -94,9 +94,10 @@ func (c *Identity) Login() (*oauth2.Token, error) {
 
 // refreshToken renews the token
 func (c *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{}
-	data.Add("grant_type", "refresh_token")
-	data.Add("refresh_token", token.RefreshToken)
+	data := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
+	}
 
 	token, err := c.login(data)
 

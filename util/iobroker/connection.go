@@ -76,7 +76,6 @@ func (c *Connection) GetState(entity string) (StateResponse, error) {
 	uri := fmt.Sprintf("%s/rest-api/v1/state/%s", c.URI(), url.PathEscape(entity))
 
 	if err := c.GetJSON(uri, &res); err != nil {
-		c.Log.DEBUG.Printf("Cannot read %s: %s ", entity, err.Error())
 		return res, err
 	}
 	return res, nil
