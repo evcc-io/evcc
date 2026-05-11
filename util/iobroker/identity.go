@@ -58,19 +58,13 @@ func (c *Identity) Token() (*oauth2.Token, error) {
 }
 
 // Login authenticates with given payload
-func (c *Identity) login(data map[string]string) (*oauth2.Token, error) {
+func (c *Identity) login(params url.Values) (*oauth2.Token, error) {
 	uri := fmt.Sprintf("%s/oauth/token", c.uri)
 
-	params := url.Values{}
-	for key, value := range data {
-		params.Add(key, value)
-	}
-	// prams.Add("client_id", "ioBroker")
 	params.Add("stayloggedin", "true")
-
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(params.Encode()), map[string]string{
 		"Content-Type": request.FormContent,
-		"Accept":       "application/json, text/plain",
+		"Accept":       "application/json",
 	})
 
 	req.SetBasicAuth("ioBroker", "ioBroker")
@@ -85,11 +79,10 @@ func (c *Identity) login(data map[string]string) (*oauth2.Token, error) {
 
 // Login authenticates with username/password
 func (c *Identity) Login() (*oauth2.Token, error) {
-	data := map[string]string{
-		"grant_type": "password",
-		"username":   c.user,
-		"password":   c.password,
-	}
+	data := url.Values{}
+	data.Add("grant_type", "password")
+	data.Add("username", c.user)
+	data.Add("password", c.password)
 
 	token, err := c.login(data)
 	if err == nil {
@@ -101,10 +94,9 @@ func (c *Identity) Login() (*oauth2.Token, error) {
 
 // refreshToken renews the token
 func (c *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := map[string]string{
-		"grant_type":    "refresh_token",
-		"refresh_token": token.RefreshToken,
-	}
+	data := url.Values{}
+	data.Add("grant_type", "refresh_token")
+	data.Add("refresh_token", token.RefreshToken)
 
 	token, err := c.login(data)
 
