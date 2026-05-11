@@ -123,17 +123,3 @@ func persist(entity entity, ts time.Time, imp, exp float64) error {
 		Export:    exp,
 	}).Error
 }
-
-// latestSlot returns the start timestamp of the most recent persisted slot
-// for an entity, or zero time if none exist.
-func latestSlot(entity entity) (time.Time, error) {
-	var ts int64
-	row := db.Instance.Table("meters").Select("MAX(ts)").Where("meter = ?", entity.Id).Row()
-	if err := row.Err(); err != nil {
-		return time.Time{}, err
-	}
-	if err := row.Scan(&ts); err != nil || ts == 0 {
-		return time.Time{}, nil
-	}
-	return time.Unix(ts, 0), nil
-}

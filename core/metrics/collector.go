@@ -79,12 +79,6 @@ func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {
 	return importProfile(c.entity, from)
 }
 
-// LatestSlot returns the start timestamp of the most recent persisted slot
-// for this collector, or the zero time if no slot has been persisted yet.
-func (c *Collector) LatestSlot() (time.Time, error) {
-	return latestSlot(c.entity)
-}
-
 func (c *Collector) AddImportEnergy(v float64) error {
 	return c.process(func() {
 		c.accu.AddImportEnergy(v)

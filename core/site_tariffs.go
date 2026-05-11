@@ -118,19 +118,6 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
 }
 
-// fcstEnergyToAdd returns the kWh for the most recently completed forecast
-// slot to feed into the collector, or 0 when that slot has already been
-// persisted. On cold start (latest is zero) it always writes that slot;
-// after a long downtime it skips intermediate slots and writes only the
-// latest completed one.
-func fcstEnergyToAdd(solar api.Rates, latest, now time.Time) float64 {
-	target := now.Truncate(tariff.SlotDuration).Add(-tariff.SlotDuration)
-	if !latest.Before(target) {
-		return 0
-	}
-	return solarEnergy(solar, target, target.Add(tariff.SlotDuration)) / 1e3
-}
-
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
 		Timeseries: solarTimeseries(solar),
@@ -159,15 +146,10 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	// collector buckets per slot — feed it once slot is completed
-	if latest, err := site.fcstEnergy.LatestSlot(); err == nil {
-		if energy := fcstEnergyToAdd(solar, latest, time.Now()); energy > 0 {
-			if err := site.fcstEnergy.AddImportEnergy(energy); err != nil {
-				site.log.ERROR.Printf("solar forecast collector: %v", err)
-			}
+	if r, err := solar.At(time.Now()); err == nil {
+		if err := site.fcstEnergy.AddEnergy(nil, nil, r.Value); err != nil {
+			site.log.ERROR.Printf("solar forecast collector: %v", err)
 		}
-	} else {
-		site.log.ERROR.Printf("solar forecast collector: %v", err)
 	}
 
 	if scale := site.solarScale(); scale != 1 {
