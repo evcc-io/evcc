@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
@@ -38,34 +39,31 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 
 // QueryImportEnergy returns aggregated energy data, per entity or per group.
 func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+	addDuration := aggregateDurations[aggregate]
+
 	format, ok := aggregateFormats[aggregate]
 	if !ok {
 		return nil, errors.New("invalid aggregate value")
 	}
 
-	addDuration := aggregateDurations[aggregate]
-
-	groupCols := `e.name, e."group", bucket`
-	if grouped {
-		groupCols = `e."group", bucket`
+	groupCols := `e."group", ` + fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
+	if !grouped {
+		groupCols = "e.name, " + groupCols
 	}
 
 	type row struct {
 		Name   string
 		Group  string
-		Bucket string
 		Start  SqlTime
 		Import float64
 		Export float64
 	}
 
 	tx := db.Instance.Table("meters m").
-		Select(`e.name, e."group", 
-			strftime(?, m.ts, 'unixepoch', 'localtime') AS bucket,
+		Select(`e.name, e."group",
 			MIN(m.ts) AS start,
 			COALESCE(SUM(m."import"), 0) AS import,
-			COALESCE(SUM(m.export), 0) AS export`,
-			format).
+			COALESCE(SUM(m.export), 0) AS export`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
