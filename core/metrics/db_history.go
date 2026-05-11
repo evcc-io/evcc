@@ -61,13 +61,18 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 		Name   string
 		Group  string
 		Bucket string
+		Start  int64
 		Import float64
 		Export float64
 	}
 
 	tx := db.Instance.Table("meters m").
-		Select(`e.name, e."group", strftime(?, m.ts, 'unixepoch', 'localtime') AS bucket,
-			COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`, format).
+		Select(`e.name, e."group", 
+			strftime(?, m.ts, 'unixepoch', 'localtime') AS bucket,
+			min(m.ts) AS start,
+			COALESCE(SUM(m."import"), 0) AS import,
+			COALESCE(SUM(m.export), 0) AS export`,
+			format).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
@@ -86,11 +91,6 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 
 	var res []Series
 	for _, r := range rows {
-		start, err := time.ParseInLocation(aggregateGoFormats[aggregate], r.Bucket, from.Location())
-		if err != nil {
-			return nil, err
-		}
-
 		name := r.Name
 		if grouped {
 			name = ""
@@ -99,6 +99,8 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 		if n := len(res); n == 0 || res[n-1].Name != name || res[n-1].Group != r.Group {
 			res = append(res, Series{Name: name, Group: r.Group})
 		}
+
+		start := time.Unix(r.Start, 0)
 
 		s := &res[len(res)-1]
 		s.Data = append(s.Data, Slot{
