@@ -30,63 +30,52 @@ render: |
       decode: int64
     scale: 0.01
   currents:
-  - source: calc
-    mul:
-      - source: modbus
-        id: 0
-        uri: {{ joinHostPort .host .port }}
-        register:
-          address: 31651 # Huawei phase A grid current
-          type: holding
-          decode: int32
-        scale: 0.1
-      - source: calc
-        sign:
-          - source: modbus
-            id: 0
-            uri: {{ joinHostPort .host .port }}
-            register:
-              address: 31665 # Huawei phase A grid power
-              type: holding
-              decode: int32
-  - source: calc
-    mul:
-      - source: modbus
-        id: 0
-        uri: {{ joinHostPort .host .port }}
-        register:
-          address: 31653 # Huawei phase B grid current
-          type: holding
-          decode: int32
-        scale: 0.1
-      - source: calc
-        sign:
-          - source: modbus
-            id: 0
-            uri: {{ joinHostPort .host .port }}
-            register:
-              address: 31667 # Huawei phase B grid power
-              type: holding
-              decode: int32
-  - source: calc
-    mul:
-      - source: modbus
-        id: 0
-        uri: {{ joinHostPort .host .port }}
-        register:
-          address: 31655 # Huawei phase C grid current
-          type: holding
-          decode: int32
-        scale: 0.1
-      - source: calc
-        sign:
-          - source: modbus
-            id: 0
-            uri: {{ joinHostPort .host .port }}
-            register:
-              address: 31669 # Huawei phase C grid power
-              type: holding
-              decode: int32
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31651 # Huawei phase A grid current
+      type: holding
+      decode: int32
+    scale: 0.1
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31653 # Huawei phase B grid current
+      type: holding
+      decode: int32
+    scale: 0.1
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31655 # Huawei phase C grid current
+      type: holding
+      decode: int32
+    scale: 0.1
+  powers:
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31665 # Huawei phase A grid power
+      type: holding
+      decode: int32
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31667 # Huawei phase B grid power
+      type: holding
+      decode: int32
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31669 # Huawei phase C grid power
+      type: holding
+      decode: int32
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
