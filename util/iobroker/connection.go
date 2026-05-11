@@ -1,6 +1,7 @@
 package iobroker
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -252,15 +253,19 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 	return api.StatusNone, fmt.Errorf("unknown charge status: %s", value)
 }
 
-func (c *Connection) SetState(entity string, value string) (SetStateResponse, error) {
+func (c *Connection) SetState(entity string, value any) (SetStateResponse, error) {
 	var res SetStateResponse
 
-	state := fmt.Sprintf("{\"val\":%s,\"ack\":true}", value)
+	state, err := json.Marshal(SetValueRequest{Value: value, Ack: false})
 	uri := fmt.Sprintf("%s/rest-api/v1/command/setState", c.URI())
+
+	if err != nil {
+		return res, err
+	}
 
 	params := url.Values{}
 	params.Add("id", entity)
-	params.Add("state", state)
+	params.Add("state", string(state))
 
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(params.Encode()), map[string]string{
 		"Content-Type": request.FormContent,
@@ -276,37 +281,25 @@ func (c *Connection) SetState(entity string, value string) (SetStateResponse, er
 
 // SetBoolState is a convenience method for boolean objects
 func (c *Connection) SetBoolState(entity string, turnOn bool) error {
-	var state string
-	if turnOn {
-		state = "true"
-	} else {
-		state = "false"
-	}
-	_, err := c.SetState(entity, state)
+	_, err := c.SetState(entity, turnOn)
 	return err
 }
 
 // SetFloatState is a convenience method for setting number entity values
 func (c *Connection) SetFloatState(entity string, value float64) error {
-	var sVal string
-	sVal = fmt.Sprintf("%g", value)
-	_, err := c.SetState(entity, sVal)
+	_, err := c.SetState(entity, value)
 	return err
 }
 
 // SetIntState is a convenience method for setting number entity values
 func (c *Connection) SetIntState(entity string, value int64) error {
-	var sVal string
-	sVal = fmt.Sprintf("%d", value)
-	_, err := c.SetState(entity, sVal)
+	_, err := c.SetState(entity, value)
 	return err
 }
 
 // SetStringState is a convenience method for setting string entity values
 func (c *Connection) SetStringState(entity string, value string) error {
-	var sVal string
-	sVal = fmt.Sprintf("\"%s\"", value)
-	_, err := c.SetState(entity, sVal)
+	_, err := c.SetState(entity, value)
 	return err
 }
 

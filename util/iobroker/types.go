@@ -16,3 +16,8 @@ type SetStateResponse struct {
 	Error  string `json:"error"`
 	Result string `json:"result"`
 }
+
+type SetValueRequest struct {
+	Value any  `json':"value"`
+	Ack   bool `json':"ack"`
+}

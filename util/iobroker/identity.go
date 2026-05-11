@@ -67,9 +67,9 @@ func (c *Identity) login(params url.Values) (*oauth2.Token, error) {
 		"Accept":       "application/json",
 	})
 
-	req.SetBasicAuth("ioBroker", "ioBroker")
 	var token oauth2.Token
 	if err == nil {
+		req.SetBasicAuth("ioBroker", "ioBroker")
 		err = c.DoJSON(req, &token)
 		token.Expiry = time.Now().Add(time.Duration(token.ExpiresIn) * time.Second)
 	}
