@@ -69,7 +69,7 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 	tx := db.Instance.Table("meters m").
 		Select(`e.name, e."group", 
 			strftime(?, m.ts, 'unixepoch', 'localtime') AS bucket,
-			min(m.ts) AS start,
+			MIN(m.ts) AS start,
 			COALESCE(SUM(m."import"), 0) AS import,
 			COALESCE(SUM(m.export), 0) AS export`,
 			format).
