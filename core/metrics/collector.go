@@ -9,7 +9,9 @@ import (
 
 const (
 	// groups
+	Aux       = "aux"
 	Battery   = "battery"
+	Ext       = "ext"
 	Grid      = "grid"
 	PV        = "pv"
 	Home      = "home" // meter and group (virtual measurement)

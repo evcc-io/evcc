@@ -89,6 +89,8 @@ type Site struct {
 
 	homeEnergy, gridEnergy *metrics.Collector
 	batteryEnergy          map[string]*metrics.Collector // per-battery, keyed by meter ref
+	extEnergy              map[string]*metrics.Collector // per-ext meter, keyed by meter ref
+	auxEnergy              map[string]*metrics.Collector // per-aux meter, keyed by meter ref
 
 	// cached state
 	gridPower                float64            // Grid power
@@ -232,6 +234,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.extMeters = append(site.extMeters, dev)
+
+		me, err := metrics.NewCollector(metrics.Ext, ref)
+		if err != nil {
+			return err
+		}
+		site.extEnergy[ref] = me
 	}
 
 	// auxiliary meters
@@ -241,6 +249,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev)
+
+		me, err := metrics.NewCollector(metrics.Aux, ref)
+		if err != nil {
+			return err
+		}
+		site.auxEnergy[ref] = me
 	}
 
 	// revert battery mode on shutdown
@@ -262,6 +276,8 @@ func NewSite() *Site {
 		Voltage:       230, // V
 		pvEnergy:      make(map[string]*metrics.Accumulator),
 		batteryEnergy: make(map[string]*metrics.Collector),
+		extEnergy:     make(map[string]*metrics.Collector),
+		auxEnergy:     make(map[string]*metrics.Collector),
 		fcstEnergy:    metrics.NewAccumulator(),
 	}
 
@@ -717,6 +733,23 @@ func weightedSumOfSocs(mm []types.Measurement) float64 {
 	})
 }
 
+// addMeterEnergy persists per-meter energy (positive power = import).
+func (site *Site) addMeterEnergy(key string, meters []config.Device[api.Meter], collectors map[string]*metrics.Collector, mm []types.Measurement) {
+	for i, dev := range meters {
+		c, ok := collectors[dev.Config().Name]
+		if !ok {
+			continue
+		}
+		var importEnergy *float64
+		if mm[i].Energy > 0 {
+			importEnergy = &mm[i].Energy
+		}
+		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
+			site.log.ERROR.Printf("persist %s %d energy: %v", key, i+1, err)
+		}
+	}
+}
+
 // updateAuxMeters updates aux meters
 func (site *Site) updateAuxMeters() {
 	if len(site.auxMeters) == 0 {
@@ -732,6 +765,8 @@ func (site *Site) updateAuxMeters() {
 		site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
 	}
 
+	site.addMeterEnergy("aux", site.auxMeters, site.auxEnergy, mm)
+
 	site.publish(keys.AuxPower, site.auxPower)
 	site.publish(keys.Aux, mm)
 }
@@ -743,6 +778,9 @@ func (site *Site) updateExtMeters() {
 	}
 
 	mm := site.collectMeters("ext", site.extMeters)
+
+	site.addMeterEnergy("ext", site.extMeters, site.extEnergy, mm)
+
 	site.publish(keys.Ext, mm)
 }
 
