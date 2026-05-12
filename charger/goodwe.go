@@ -180,17 +180,6 @@ func (wb *GoodWe) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)) * 100, nil
 }
 
-var _ api.ChargeRater = (*GoodWe)(nil)
-
-// ChargedEnergy implements api.ChargeRater
-func (wb *GoodWe) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(goodweRegSessionEnergy, 1)
-	if err != nil {
-		return 0, err
-	}
-	return float64(binary.BigEndian.Uint16(b)) / 10, nil
-}
-
 var _ api.MeterEnergy = (*GoodWe)(nil)
 
 // TotalEnergy implements api.MeterEnergy
