@@ -1,0 +1,71 @@
+template: melcloud
+products:
+  - brand: Mitsubishi Electric
+    description:
+      generic: MELCloud (API)
+group: heating
+requirements:
+  description:
+    de: |
+      Steuert Mitsubishi Electric Wärmepumpen (Luft/Wasser) und Klimageräte (Luft/Luft) über den MELCloud Cloud-Dienst.
+      Im "Normal"-Modus wird der konfigurierte Setpoint angefahren, im "Boost"-Modus der Boost-Setpoint.
+      Im "Dim"-Modus wird das Gerät ausgeschaltet.
+    en: |
+      Controls Mitsubishi Electric heat pumps (Air-to-Water) and air conditioners (Air-to-Air) via the MELCloud service.
+      In "Normal" mode the configured setpoint is used, in "Boost" mode the boost setpoint is used.
+      In "Dim" mode the device is switched off.
+params:
+  - name: user
+    required: true
+    description:
+      de: MELCloud E-Mail
+      en: MELCloud email
+  - name: password
+    required: true
+  - name: device
+    description:
+      de: Gerätename oder Geräte-ID
+      en: Device name or device ID
+    help:
+      de: Notwendig falls mehrere Geräte im Account vorhanden sind
+      en: Required if multiple devices are present in the account
+  - name: tank
+    type: bool
+    default: true
+    description:
+      de: Warmwasserspeicher steuern
+      en: Control hot water tank
+    help:
+      de: Nur Luft/Wasser-Wärmepumpe — bei true wird die Speichertemperatur gesetzt, sonst die Vorlauftemperatur (Zone 1)
+      en: Air-to-Water only — if true sets the tank temperature, otherwise the flow temperature (zone 1)
+  - name: normaltemp
+    type: float
+    unit: °C
+    default: 45
+    description:
+      de: Normale Solltemperatur
+      en: Normal setpoint
+  - name: boosttemp
+    type: float
+    unit: °C
+    default: 60
+    description:
+      de: Boost Solltemperatur
+      en: Boost setpoint
+  - name: cache
+    type: duration
+    default: 1m
+    advanced: true
+  - name: phases
+    deprecated: true
+render: |
+  type: melcloud
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if .device }}
+  device: {{ .device }}
+  {{- end }}
+  tank: {{ .tank }}
+  normaltemp: {{ .normaltemp }}
+  boosttemp: {{ .boosttemp }}
+  cache: {{ .cache }}
