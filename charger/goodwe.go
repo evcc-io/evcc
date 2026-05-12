@@ -112,8 +112,6 @@ func (wb *GoodWe) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3: // charging
 		return api.StatusC, nil
-	case 5, 7, 8, 9: // alarm, maintenance, start_failed, upgrading
-		return api.StatusNone, fmt.Errorf("wallbox in error state %d", s)
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
