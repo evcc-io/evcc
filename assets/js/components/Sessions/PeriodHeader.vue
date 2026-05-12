@@ -5,7 +5,7 @@
 				<div class="col-lg-5 d-flex mb-lg-0">
 					<slot name="period" />
 				</div>
-				<div v-if="$slots.navigator" class="col-lg-6 offset-lg-1">
+				<div v-if="$slots['navigator']" class="col-lg-6 offset-lg-1">
 					<slot name="navigator" />
 				</div>
 			</div>

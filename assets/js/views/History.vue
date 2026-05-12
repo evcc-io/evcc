@@ -91,7 +91,7 @@
 							:title="$t('main.history.viewSource')"
 							@click="toggleSource(group)"
 						>
-							<SourceDataIcon size="xs" />
+							<SourceDataIcon />
 						</button>
 					</div>
 					<GroupChart
@@ -157,6 +157,7 @@ import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
 import GroupChart, {
 	type HistorySeries,
+	type HistorySlot,
 	alphaColor,
 	stepAlpha,
 } from "../components/History/GroupChart.vue";

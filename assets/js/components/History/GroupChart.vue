@@ -442,9 +442,9 @@ export default defineComponent({
 				// per stable key.
 				this.chart?.setOption({
 					animation: !(focusChanged || periodChanged),
-					xAxis: opt.xAxis,
-					yAxis: opt.yAxis,
-					series: opt.series,
+					xAxis: opt["xAxis"],
+					yAxis: opt["yAxis"],
+					series: opt["series"],
 				});
 				this.previousFocusedEntity = this.focusedEntity as number | null;
 				this.previousPeriod = this.period as PERIODS;
