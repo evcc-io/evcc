@@ -1,0 +1,14 @@
+template: leapmotor
+products:
+  - brand: Leapmotor
+requirements:
+  description:
+    en: |
+      App certificates are automatically downloaded from the community repository on first use.
+    de: |
+      App-Zertifikate werden beim ersten Start automatisch aus dem Community-Repository heruntergeladen.
+params:
+  - preset: vehicle-base
+render: |
+  type: leapmotor
+  {{ include "vehicle-base" . }}

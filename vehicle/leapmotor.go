@@ -6,7 +6,14 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/leapmotor"
+	"golang.org/x/sync/errgroup"
+)
+
+const (
+	leapmotorCertURL = "https://raw.githubusercontent.com/markoceri/leapmotor-certs/main/app.crt"
+	leapmotorKeyURL  = "https://raw.githubusercontent.com/markoceri/leapmotor-certs/main/app.key"
 )
 
 // Leapmotor is an api.Vehicle implementation for Leapmotor cars.
@@ -24,7 +31,6 @@ func NewLeapmotorFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
-		AppCert, AppKey     string
 		Cache               time.Duration
 	}{
 		Cache: interval,
@@ -37,13 +43,27 @@ func NewLeapmotorFromConfig(other map[string]any) (api.Vehicle, error) {
 	if cc.User == "" || cc.Password == "" {
 		return nil, api.ErrMissingCredentials
 	}
-	if cc.AppCert == "" || cc.AppKey == "" {
-		return nil, fmt.Errorf("leapmotor: app_cert and app_key are required (extract from Leapmotor APK)")
-	}
 
 	log := util.NewLogger("leapmotor").Redact(cc.User, cc.Password, cc.VIN)
 
-	identity, err := leapmotor.NewIdentity(log, cc.AppCert, cc.AppKey, cc.User, cc.Password)
+	client := request.NewHelper(log)
+	var certPEM, keyPEM []byte
+	eg := new(errgroup.Group)
+	eg.Go(func() error {
+		var err error
+		certPEM, err = client.GetBody(leapmotorCertURL)
+		return err
+	})
+	eg.Go(func() error {
+		var err error
+		keyPEM, err = client.GetBody(leapmotorKeyURL)
+		return err
+	})
+	if err := eg.Wait(); err != nil {
+		return nil, fmt.Errorf("leapmotor: fetch app certs: %w", err)
+	}
+
+	identity, err := leapmotor.NewIdentity(log, certPEM, keyPEM, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

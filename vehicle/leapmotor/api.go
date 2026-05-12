@@ -3,9 +3,10 @@ package leapmotor
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
+
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const (
@@ -53,6 +54,10 @@ type StatusData struct {
 	ExpectedMileage  *int     `json:"expectedMileage"`
 	Speed            *int     `json:"speed"`
 	TotalMileage     *int     `json:"totalMileage"`
+	ChargeSocSetting *int     `json:"chargesocSetting"`
+	AcSwitch         *bool    `json:"acSwitch"`
+	Latitude         *float64 `json:"latitude"`
+	Longitude        *float64 `json:"longitude"`
 }
 
 // apiPost sends a POST to fullURL with the given headers and body, returns the response body.
@@ -64,12 +69,7 @@ func apiPost(client *http.Client, fullURL string, headers map[string]string, bod
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
+	return (&request.Helper{Client: client}).DoBody(req)
 }
 
 // parseEnvelope decodes the API envelope, returning Data or an error for non-zero codes.
@@ -83,4 +83,14 @@ func parseEnvelope[T any](body []byte) (T, error) {
 		return zero, fmt.Errorf("api %d: %s", res.Code, res.Message)
 	}
 	return res.Data, nil
+}
+
+// postAndParse sends a POST and decodes the API envelope in one step.
+func postAndParse[T any](client *http.Client, fullURL string, headers map[string]string, body string) (T, error) {
+	b, err := apiPost(client, fullURL, headers, body)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	return parseEnvelope[T](b)
 }

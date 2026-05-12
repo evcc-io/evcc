@@ -181,3 +181,45 @@ func (p *Provider) FinishTime() (time.Time, error) {
 	}
 	return time.Now().Add(time.Duration(*res.ChargeRemainTime) * time.Minute), nil
 }
+
+var _ api.VehicleClimater = (*Provider)(nil)
+
+// Climater implements api.VehicleClimater.
+func (p *Provider) Climater() (bool, error) {
+	res, err := p.status.Get()
+	if err != nil {
+		return false, err
+	}
+	if res.AcSwitch == nil {
+		return false, api.ErrMustRetry
+	}
+	return *res.AcSwitch, nil
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements api.VehiclePosition.
+func (p *Provider) Position() (float64, float64, error) {
+	res, err := p.status.Get()
+	if err != nil {
+		return 0, 0, err
+	}
+	if res.Latitude == nil || res.Longitude == nil {
+		return 0, 0, api.ErrMustRetry
+	}
+	return *res.Latitude, *res.Longitude, nil
+}
+
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements api.SocLimiter.
+func (p *Provider) GetLimitSoc() (int64, error) {
+	res, err := p.status.Get()
+	if err != nil {
+		return 0, err
+	}
+	if res.ChargeSocSetting == nil {
+		return 0, api.ErrMustRetry
+	}
+	return int64(*res.ChargeSocSetting), nil
+}
