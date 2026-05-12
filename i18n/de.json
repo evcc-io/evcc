@@ -1198,6 +1198,35 @@
       "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
       "title": "Externe Begrenzung:"
     },
+    "history": {
+      "direction": {
+        "battery": {
+          "export": "entladen",
+          "import": "geladen"
+        },
+        "grid": {
+          "export": "eingespeist",
+          "import": "bezogen"
+        }
+      },
+      "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
+      "group": {
+        "battery": "Batterie",
+        "forecast": "Vorhersage",
+        "grid": "Netz",
+        "loadpoint": "Laden & Heizen",
+        "meter": "Verbrauch",
+        "pv": "Erzeugung"
+      },
+      "loading": "Lade Verlauf …",
+      "otherConsumers": "Andere",
+      "sourceTitle": "Quelldaten",
+      "table": {
+        "diff": "Differenz",
+        "time": "Zeitfenster"
+      },
+      "viewSource": "Quelldaten anzeigen"
+    },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
       "charged": "Geladen",
@@ -1469,6 +1498,7 @@
     "odometer": "Kilometerstand",
     "overview": "Übersicht",
     "period": {
+      "day": "Tag",
       "month": "Monat",
       "total": "Gesamt",
       "year": "Jahr"

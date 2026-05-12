@@ -3,6 +3,7 @@ package metrics
 import (
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
@@ -14,6 +15,15 @@ type Slot struct {
 	End    time.Time `json:"end"`
 	Import float64   `json:"import"`
 	Export float64   `json:"export"`
+}
+
+// roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
+func roundEnergy(v float64) float64 {
+	r := math.Round(v*1000) / 1000
+	if r < 0 {
+		return 0
+	}
+	return r
 }
 
 // Series represents a named series of energy slots
@@ -95,8 +105,8 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 		s.Data = append(s.Data, Slot{
 			Start:  time.Time(r.Start),
 			End:    addDuration(time.Time(r.Start)),
-			Import: r.Import,
-			Export: r.Export,
+			Import: roundEnergy(r.Import),
+			Export: roundEnergy(r.Export),
 		})
 	}
 

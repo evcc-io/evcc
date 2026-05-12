@@ -1198,6 +1198,35 @@
       "description": "Reduced charging to not exceed {limit}.",
       "title": "External limit:"
     },
+    "history": {
+      "direction": {
+        "battery": {
+          "export": "discharged",
+          "import": "charged"
+        },
+        "grid": {
+          "export": "exported",
+          "import": "imported"
+        }
+      },
+      "empty": "No history data available for this time range.",
+      "group": {
+        "battery": "Battery",
+        "forecast": "Forecast",
+        "grid": "Grid",
+        "loadpoint": "Charging & Heating",
+        "meter": "Consumption",
+        "pv": "Production"
+      },
+      "loading": "Loading history…",
+      "otherConsumers": "Others",
+      "sourceTitle": "Source data",
+      "table": {
+        "diff": "Diff",
+        "time": "Timeslot"
+      },
+      "viewSource": "View source data"
+    },
     "loadpoint": {
       "avgPrice": "⌀ Price",
       "charged": "Charged",
@@ -1469,6 +1498,7 @@
     "odometer": "Mileage",
     "overview": "Overview",
     "period": {
+      "day": "Day",
       "month": "Month",
       "total": "Total",
       "year": "Year"
