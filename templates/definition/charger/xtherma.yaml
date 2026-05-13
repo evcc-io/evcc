@@ -1,3 +1,4 @@
+# https://github.com/Xtherma/xtherma_tcp
 template: xtherma
 products:
   - brand: Xtherma
@@ -13,16 +14,17 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 72
+      address: 71
       type: holding
-      encoding: uint32
+      encoding: uint16
   getmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 72
+      address: 177
       type: holding
-      encoding: uint32
+      encoding: uint16
+    scale: 10
   temp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
