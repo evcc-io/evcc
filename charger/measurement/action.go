@@ -2,6 +2,7 @@ package measurement
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/plugin"
@@ -25,6 +26,10 @@ func (cc *Dimmer) Configure(ctx context.Context) (
 	dimmedG, err := cc.Dimmed.BoolGetter(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("dimmed: %w", err)
+	}
+
+	if (dimS == nil) != (dimmedG == nil) {
+		return nil, nil, errors.New("must have dim and dimmed or none of both")
 	}
 
 	return dimS, dimmedG, nil

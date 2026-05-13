@@ -35,7 +35,7 @@ render: |
     register:
       address: 124
       type: input
-      encoding: int32
+      encoding: int16
     scale: 10
   limittemp:
     source: modbus
@@ -43,4 +43,18 @@ render: |
     register:
       address: 51
       type: input
-      encoding: int32
+      encoding: int16
+  dim:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 65
+      type: holding
+      encoding: uint16
+  dimmed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 103
+      type: input
+      encoding: uint16

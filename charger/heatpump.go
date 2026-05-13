@@ -174,13 +174,6 @@ func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 	return wb.setMaxPower(int64(230 * current * float64(phases)))
 }
 
-func (wb *Heatpump) dimmed() (bool, error) {
-
-}
-func (wb *Heatpump) dim(bool) error {
-
-}
-
 var _ loadpoint.Controller = (*Heatpump)(nil)
 
 // LoadpointControl implements loadpoint.Controller
