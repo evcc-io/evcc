@@ -256,9 +256,6 @@ func (c *OCPP) Enabled() (bool, error) {
 	if s, err := c.conn.Status(); err == nil {
 		switch s {
 		case
-			core.ChargePointStatusSuspendedEVSE:
-			return false, nil
-		case
 			core.ChargePointStatusCharging,
 			core.ChargePointStatusSuspendedEV:
 			return true, nil
