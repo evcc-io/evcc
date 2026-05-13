@@ -1,15 +1,18 @@
 package db
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/glebarez/sqlite"
+	"github.com/libtnb/sqlite"
 	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
+	sqlite3 "modernc.org/sqlite"
 )
 
 var (
@@ -30,7 +33,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// ":memory:"
 
 		// Split database path and connection parameters
-		dbPath, connectionParams, _ := strings.Cut(dsn, "?")
+		dbPath, params, _ := strings.Cut(dsn, "?")
 
 		file, err := homedir.Expand(dbPath)
 		if err != nil {
@@ -44,18 +47,30 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// Store the expanded file path for later use
 		FilePath = file
 
-		// Add busy_timeout pragma if not already present
-		if !strings.Contains(connectionParams, "_pragma=busy_timeout") {
+		addParam := func(typ, param string) {
+			// Add busy_timeout pragma if not already present
+			if short, _, _ := strings.Cut(param, "("); strings.Contains(params, typ+"="+short) {
+				return
+			}
+
 			// Append '&' if there are existing connection parameters
-			if len(connectionParams) > 0 {
-				connectionParams += "&"
+			if len(params) > 0 {
+				params += "&"
 			}
 
 			// Add busy_timeout pragma to connection parameters
-			connectionParams += "_pragma=busy_timeout(5000)"
+			params += typ + "=" + param
 		}
 
-		connectionStr := file + "?" + connectionParams
+		// TODO "foreign_keys(1)" is only set in metrics migrator to ensure home entity exists
+		for _, pragma := range []string{"busy_timeout(5000)", "synchronous(NORMAL)"} {
+			addParam("_pragma", pragma)
+		}
+
+		// https://github.com/libtnb/sqlite/issues/15
+		addParam("_time_format", "sqlite")
+
+		connectionStr := file + "?" + params
 
 		util.NewLogger("main").INFO.Println("using sqlite database:", connectionStr)
 
@@ -99,4 +114,40 @@ func Close() error {
 		return err
 	}
 	return db.Close()
+}
+
+func Backup(ctx context.Context, target string) error {
+	live, err := Instance.DB()
+	if err != nil {
+		return err
+	}
+
+	conn, err := live.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	return conn.Raw(func(driverConn any) error {
+		type backuper interface {
+			NewBackup(string) (*sqlite3.Backup, error)
+			NewRestore(string) (*sqlite3.Backup, error)
+		}
+
+		conn, ok := driverConn.(backuper)
+		if !ok {
+			return errors.New("invalid db type")
+		}
+
+		bck, err := conn.NewBackup(target)
+		if err != nil {
+			return err
+		}
+
+		if _, err := bck.Step(-1); err != nil {
+			return err
+		}
+
+		return bck.Finish()
+	})
 }

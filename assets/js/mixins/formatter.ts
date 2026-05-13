@@ -22,6 +22,7 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   USD: "$",
   DKK: "kr",
   SEK: "kr",
+  ZAR: "R",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -39,6 +40,7 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   USD: "¢", // US cent
   DKK: "øre", // Danish øre
   SEK: "öre", // Swedish öre
+  ZAR: "c", // South African cent
 };
 
 export enum POWER_UNIT {

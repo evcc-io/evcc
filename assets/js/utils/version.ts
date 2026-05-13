@@ -19,5 +19,17 @@ export function shortCommit(commit?: string): string {
 export function getShortVersion(version: string, commit?: string): string {
   if (isDevelopment(version)) return "dev build";
   if (isNightly(version, commit)) return `v${version} (${shortCommit(commit)})`;
-  return version;
+  return `v${version}`;
+}
+
+export function isNewVersionAvailable(installed?: string, available?: string): boolean {
+  return !!available && !isDevelopment(installed || "") && available !== installed;
+}
+
+export function isNewVersionUnacknowledged(
+  installed?: string,
+  available?: string,
+  acknowledged?: string
+): boolean {
+  return isNewVersionAvailable(installed, available) && available !== acknowledged;
 }

@@ -8,7 +8,7 @@ requirements:
   description:
     de: Erfordert Firmware "3.21" (Smart) bzw. "1.24" (Touch). In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein.
     en: Requires firmware "3.21" for Smart and "1.24" for Touch. "Nachladen" (Smart) or "RSDA" (Touch) must be activated in settings.
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 params:
   - name: host
   - name: port
