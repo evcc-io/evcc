@@ -50,6 +50,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		GetMaxPower             *plugin.Config // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
+		measurement.Dimmer      `mapstructure:",squash"`
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -93,6 +94,12 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 	implement.May(res, implement.Battery(tempG))
 	implement.May(res, implement.SocLimiter(limitTempG))
+
+	dimS, dimmedG, err := cc.Dimmer.Configure(ctx)
+	if err != nil {
+		return nil, err
+	}
+	implement.May(res, implement.Dimmer(dimS, dimmedG))
 
 	return res, nil
 }
@@ -165,6 +172,13 @@ func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 		phases = wb.lp.GetPhases()
 	}
 	return wb.setMaxPower(int64(230 * current * float64(phases)))
+}
+
+func (wb *Heatpump) dimmed() (bool, error) {
+
+}
+func (wb *Heatpump) dim(bool) error {
+
 }
 
 var _ loadpoint.Controller = (*Heatpump)(nil)
