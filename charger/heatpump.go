@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -50,7 +51,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		GetMaxPower             *plugin.Config // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
-		measurement.Dimmer      `mapstructure:",squash"`
+		meter.Dimmer            `mapstructure:",squash"`
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
