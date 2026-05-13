@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/plugin"
 )
 
@@ -35,6 +36,17 @@ func (cc *Dimmer) Configure(ctx context.Context) (
 	return dimS, dimmedG, nil
 }
 
+func (cc *Dimmer) Implement(ctx context.Context, i implement.Caps) error {
+	dimS, dimmedG, err := cc.Configure(ctx)
+	if err != nil {
+		return err
+	}
+
+	implement.May(i, implement.Dimmer(dimS, dimmedG))
+
+	return nil
+}
+
 type Curtailer struct {
 	Curtail   *plugin.Config // optional
 	Curtailed *plugin.Config // optional
@@ -60,4 +72,15 @@ func (cc *Curtailer) Configure(ctx context.Context) (
 	}
 
 	return curtailS, curtailedG, nil
+}
+
+func (cc *Curtailer) Implement(ctx context.Context, i implement.Caps) error {
+	curtailS, curtailedG, err := cc.Configure(ctx)
+	if err != nil {
+		return err
+	}
+
+	implement.May(i, implement.Curtailer(curtailS, curtailedG))
+
+	return nil
 }

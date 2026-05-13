@@ -48,10 +48,10 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMaxPower             plugin.Config
-		GetMaxPower             *plugin.Config // optional
-		measurement.Temperature `mapstructure:",squash"`
-		measurement.Energy      `mapstructure:",squash"`
-		meter.Dimmer            `mapstructure:",squash"`
+		GetMaxPower             *plugin.Config           // optional
+		measurement.Temperature `mapstructure:",squash"` // optional
+		measurement.Energy      `mapstructure:",squash"` // optional
+		meter.Dimmer            `mapstructure:",squash"` // optional
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -96,11 +96,9 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	implement.May(res, implement.Battery(tempG))
 	implement.May(res, implement.SocLimiter(limitTempG))
 
-	dimS, dimmedG, err := cc.Dimmer.Configure(ctx)
-	if err != nil {
+	if err := cc.Dimmer.Implement(ctx, res); err != nil {
 		return nil, err
 	}
-	implement.May(res, implement.Dimmer(dimS, dimmedG))
 
 	return res, nil
 }
