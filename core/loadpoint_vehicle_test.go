@@ -246,7 +246,7 @@ func TestVehicleDetectByID(t *testing.T) {
 			log: util.NewLogger("foo"),
 		}
 
-		lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{v1, v2}))
+		lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{v1, v2}, nil))
 
 		if tc.prepare != nil {
 			tc.prepare(tc)
@@ -366,7 +366,7 @@ func TestReconnectVehicle(t *testing.T) {
 				mode:        api.ModeNow,
 			}
 
-			lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
+			lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}, nil))
 
 			attachListeners(t, lp)
 

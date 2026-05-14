@@ -135,7 +135,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.tariffs = tariffs
 
 	handler := config.Vehicles()
-	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()))
+	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()), site)
 	handler.Subscribe(site.updateVehicles)
 
 	site.prioritizer = prioritizer.New(log)

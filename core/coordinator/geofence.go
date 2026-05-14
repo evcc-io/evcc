@@ -1,4 +1,4 @@
-package core
+package coordinator
 
 import (
 	"math"
@@ -12,8 +12,13 @@ const geoLocationRadius = 100 // Maximum vehicle distance from site (m)
 // isVehicleAtHome checks whether vehicle is at home (geofencing)
 // false: if vehicle position is available and outside geoLocationRadius
 // true: in all other cases, even in cases of error or if position is not available
-func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
-	geoLocation := lp.site.GetGeoLocation()
+func (c *Coordinator) isVehicleAtHome(vehicle api.Vehicle) bool {
+	if c.site == nil {
+		c.log.DEBUG.Println("site unavailable for geolocation")
+		return true
+	}
+
+	geoLocation := c.site.GetGeoLocation()
 
 	if !geoLocation.Enabled || vehicle == nil {
 		return true
@@ -21,28 +26,28 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 
 	vp, ok := api.Cap[api.VehiclePosition](vehicle)
 	if !ok {
-		lp.log.DEBUG.Println("vehicle does not support position tracking")
+		c.log.DEBUG.Println("vehicle does not support position tracking")
 		return true
 	}
 
 	lat, lon, err := vp.Position()
 	if err != nil {
-		lp.log.INFO.Printf("vehicle position: %v", err)
+		c.log.INFO.Printf("vehicle position: %v", err)
 		return true
 	}
 
 	// {lat: 0, lon: 0} is a point in the atlantic ocean, not accessible by car
 	// zero values indicate that the vehicle is not sending any valid position data
 	if lat == 0 && lon == 0 {
-		lp.log.INFO.Println("vehicle position: not available")
+		c.log.INFO.Println("vehicle position: not available")
 		return true
 	}
 
-	lp.log.DEBUG.Printf("vehicle position: lat %.4f, lon %.4f", lat, lon)
+	c.log.DEBUG.Printf("vehicle position: lat %.4f, lon %.4f", lat, lon)
 
 	atHome := isAtHome(geoLocation, lat, lon)
 
-	lp.log.DEBUG.Printf(
+	c.log.DEBUG.Printf(
 		"vehicle distance from site: %.1fm (radius: %vm, atHome=%v)",
 		distance(geoLocation.Lat, geoLocation.Lon, lat, lon)*1e3,
 		geoLocationRadius,

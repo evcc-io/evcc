@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -14,14 +15,16 @@ type Coordinator struct {
 	log      *util.Logger
 	vehicles []api.Vehicle
 	tracked  map[api.Vehicle]loadpoint.API
+	site     site.API
 }
 
 // New creates a coordinator for a set of vehicles
-func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
+func New(log *util.Logger, vehicles []api.Vehicle, site site.API) *Coordinator {
 	return &Coordinator{
 		log:      log,
 		vehicles: vehicles,
 		tracked:  make(map[api.Vehicle]loadpoint.API),
+		site:     site,
 	}
 }
 
@@ -146,14 +149,16 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 
 			c.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.GetTitle())
 
-			// vehicle is plugged or charging, so it should be the right one
+			// vehicle is plugged or charging and at site location, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
-				if res != nil {
-					c.log.WARN.Println("vehicle status: >1 matches, giving up")
-					return nil
-				}
+				if c.isVehicleAtHome(vehicle) {
+					if res != nil {
+						c.log.WARN.Println("vehicle status & position: >1 matches, giving up")
+						return nil
+					}
 
 				res = vehicle
+				}
 			}
 		}
 	}
