@@ -91,6 +91,10 @@ func (c *Fnn3) Run() {
 	}
 }
 
+func (c *Fnn3) Update() error {
+	return c.run()
+}
+
 func (c *Fnn3) run() error {
 	w3, err := c.w3()
 	if err != nil {
@@ -138,7 +142,8 @@ func (c *Fnn3) curtail(frac float64) error {
 
 	c.limit = nil
 	if active {
-		c.limit = new(c.maxPower * frac)
+		limit := c.maxPower * frac
+		c.limit = &limit
 	}
 
 	c.root.Curtail(active)
