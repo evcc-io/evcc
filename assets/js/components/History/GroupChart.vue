@@ -235,10 +235,12 @@ export default defineComponent({
 				this.group === "meter" ||
 				this.group === "pv" ||
 				this.group === "battery";
-			const lastIdx = this.series.length - 1;
+			// Build value arrays per entity first so we can determine, per slot,
+			// which entity is the *visible* top/bottom of the stack — that one
+			// gets the rounded cap even if higher-index entities are zero/null.
+			const importByEntity: (number | null)[][] = [];
+			const exportByEntity: (number | null)[][] = [];
 			this.series.forEach((s, i) => {
-				const c = this.entryColors[i] || this.color;
-				const exportColor = groupExportColor(s.group) || lighterColor(c) || c;
 				const importValues: (number | null)[] = new Array(cats.length).fill(null);
 				const exportValues: (number | null)[] = new Array(cats.length).fill(null);
 				const hidden = this.focusedEntity !== null && this.focusedEntity !== i;
@@ -250,6 +252,25 @@ export default defineComponent({
 						if (slot.export > 0) exportValues[idx] = -slot.export * factor;
 					}
 				}
+				importByEntity.push(importValues);
+				exportByEntity.push(exportValues);
+			});
+			// Per slot: index of the topmost (largest i) entity with a non-zero
+			// value. -1 = no entity has data at that slot.
+			const topImportPerSlot: number[] = new Array(cats.length).fill(-1);
+			const topExportPerSlot: number[] = new Array(cats.length).fill(-1);
+			for (let i = 0; i < this.series.length; i++) {
+				for (let idx = 0; idx < cats.length; idx++) {
+					if ((importByEntity[i]![idx] ?? 0) > 0) topImportPerSlot[idx] = i;
+					if ((exportByEntity[i]![idx] ?? 0) < 0) topExportPerSlot[idx] = i;
+				}
+			}
+
+			this.series.forEach((s, i) => {
+				const c = this.entryColors[i] || this.color;
+				const exportColor = groupExportColor(s.group) || lighterColor(c) || c;
+				const importValues = importByEntity[i]!;
+				const exportValues = exportByEntity[i]!;
 				const importName =
 					this.series.length > 1 || this.isBidirectional
 						? this.directionLabel(s, "import")
@@ -258,22 +279,37 @@ export default defineComponent({
 				// Same stack name for import and export means they share one x slot
 				// (positive values stack up, negative stack down, no width penalty).
 				const stackName = stackEntities ? `group-${this.group}` : `entity-${i}`;
-				const importStack = stackName;
-				const exportStack = stackName;
-				// In stacked groups only the outermost entity caps the bar — top for
-				// import, bottom for export — so we get one rounded edge per column.
-				// A focused entity is rendered solo, so it always caps regardless of
-				// its position in the original stack.
-				const caps = !stackEntities || i === lastIdx || this.focusedEntity === i;
-				const importRadius = caps ? [radius, radius, 0, 0] : [0, 0, 0, 0];
-				const exportRadius = caps ? [0, 0, radius, radius] : [0, 0, 0, 0];
+				// For non-stacked groups every bar is its own cap. For stacked groups
+				// the cap moves to the topmost non-zero entity per slot, so when the
+				// last entity is empty at a given slot the next-lower one still gets
+				// the rounded top. A focused entity is rendered solo → always caps.
+				const importData: (number | null | { value: number; itemStyle: { borderRadius: number[] } })[] =
+					importValues.map((v, idx) => {
+						if (v == null) return v;
+						const isTop =
+							!stackEntities ||
+							topImportPerSlot[idx] === i ||
+							this.focusedEntity === i;
+						if (!isTop) return v;
+						return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
+					});
+				const exportData: (number | null | { value: number; itemStyle: { borderRadius: number[] } })[] =
+					exportValues.map((v, idx) => {
+						if (v == null) return v;
+						const isBottom =
+							!stackEntities ||
+							topExportPerSlot[idx] === i ||
+							this.focusedEntity === i;
+						if (!isBottom) return v;
+						return { value: v, itemStyle: { borderRadius: [0, 0, radius, radius] } };
+					});
 				result.push({
 					id: `entity-${i}-import`,
 					name: importName,
 					type: "bar",
-					stack: importStack,
-					data: importValues,
-					itemStyle: { color: c, borderRadius: importRadius },
+					stack: stackName,
+					data: importData,
+					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
 				});
@@ -281,9 +317,9 @@ export default defineComponent({
 					id: `entity-${i}-export`,
 					name: exportName,
 					type: "bar",
-					stack: exportStack,
-					data: exportValues,
-					itemStyle: { color: exportColor, borderRadius: exportRadius },
+					stack: stackName,
+					data: exportData,
+					itemStyle: { color: exportColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
 				});
@@ -415,26 +451,28 @@ export default defineComponent({
 								: this.fmtWh(watts, POWER_UNIT.KW, true, 1);
 						};
 
+						// Collect import/export values per entity from this slot's params.
+						const totals = new Map<number, { imp: number; exp: number }>();
+						for (const p of params) {
+							const m = /^entity-(\d+)-(import|export)$/.exec(p.seriesId || "");
+							if (!m) continue;
+							const i = parseInt(m[1] || "", 10);
+							const t = totals.get(i) ?? { imp: 0, exp: 0 };
+							const v = Math.abs(p.value ?? 0);
+							if (m[2] === "import") t.imp = v;
+							else t.exp = v;
+							totals.set(i, t);
+						}
+						// Always list every visible entity, even when its values for
+						// this slot are zero or missing — keeps the tooltip layout
+						// stable across slots.
+						const indices =
+							this.focusedEntity !== null
+								? [this.focusedEntity]
+								: this.series.map((_, i) => i);
+						const showName = this.series.length > 1 && this.focusedEntity === null;
+
 						if (this.isBidirectional) {
-							// Bidirectional groups (grid, battery): one row per entity with
-							// "import / export". List every visible entity even when its
-							// values for this slot are zero or missing.
-							const totals = new Map<number, { imp: number; exp: number }>();
-							for (const p of params) {
-								const m = /^entity-(\d+)-(import|export)$/.exec(p.seriesId || "");
-								if (!m) continue;
-								const i = parseInt(m[1] || "", 10);
-								const t = totals.get(i) ?? { imp: 0, exp: 0 };
-								const v = Math.abs(p.value ?? 0);
-								if (m[2] === "import") t.imp = v;
-								else t.exp = v;
-								totals.set(i, t);
-							}
-							const indices =
-								this.focusedEntity !== null
-									? [this.focusedEntity]
-									: this.series.map((_, i) => i);
-							const showName = this.series.length > 1 && this.focusedEntity === null;
 							const rows = indices
 								.map((i) => {
 									const t = totals.get(i) ?? { imp: 0, exp: 0 };
@@ -448,16 +486,14 @@ export default defineComponent({
 							return head + rows;
 						}
 
-						const visible = params.filter((p) => p.value != null);
-						if (!visible.length) return "";
-						const rows = visible
-							.map((p) => {
-								const val = formatValue(p.value ?? 0);
-								const showName = visible.length > 1;
-								if (showName) {
-									return `<div>${p.seriesName}: <strong>${val}</strong></div>`;
-								}
-								return `<div><strong>${val}</strong></div>`;
+						const rows = indices
+							.map((i) => {
+								const t = totals.get(i) ?? { imp: 0, exp: 0 };
+								const val = `<strong>${formatValue(t.imp + t.exp)}</strong>`;
+								const name = this.series[i]?.name ?? "";
+								return showName
+									? `<div>${name}: ${val}</div>`
+									: `<div>${val}</div>`;
 							})
 							.join("");
 						return head + rows;
