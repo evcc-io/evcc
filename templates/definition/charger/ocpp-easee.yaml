@@ -42,8 +42,9 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
+  - name: metervalues
+    default: Energy.Active.Import.Register,Power.Active.Import,Current.Import
 render: |
   {{ include "ocpp" . }}
   remotestart: true
   meterinterval: 30s
-  metervalues: Energy.Active.Import.Register,Power.Active.Import,Current.Import
