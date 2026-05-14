@@ -43,7 +43,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	v2.MockVehicle.EXPECT().Identifiers().Return([]string{"it's me"}).AnyTimes()
 
 	var lp loadpoint.API
-	c := New(log, vehicles)
+	c := New(log, vehicles, nil)
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)

@@ -157,7 +157,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 						return nil
 					}
 
-				res = vehicle
+					res = vehicle
 				}
 			}
 		}
