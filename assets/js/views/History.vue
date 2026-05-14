@@ -1,6 +1,6 @@
 <template>
 	<div class="container px-4 safe-area-inset">
-		<TopHeader title="History" />
+		<TopHeader :title="$t('main.history.title')" />
 		<div class="row">
 			<main class="col-12">
 				<PeriodHeader>
@@ -83,16 +83,6 @@
 								{{ $t("main.history.group.forecast") }}
 							</label>
 						</div>
-						<button
-							type="button"
-							class="btn btn-sm p-0 border-0 source-toggle"
-							:aria-expanded="!!expandedSource[group]"
-							:aria-label="$t('main.history.viewSource')"
-							:title="$t('main.history.viewSource')"
-							@click="toggleSource(group)"
-						>
-							<SourceDataIcon />
-						</button>
 					</div>
 					<GroupChart
 						v-if="displayFrom && displayTo && displayPeriod"
@@ -137,13 +127,17 @@
 							<span class="text-muted text-nowrap">{{ legend.value }}</span>
 						</li>
 					</ul>
-					<SourceTable
-						v-if="expandedSource[group]"
-						:data-testid="`history-source-${group}`"
-						:headers="sourceTable(group).headers"
-						:rows="sourceTable(group).rows"
-					/>
 				</section>
+				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
+					<a
+						:href="csvLink"
+						download
+						class="text-muted small history-csv-link"
+						data-testid="history-csv-download"
+					>
+						{{ $t("main.history.downloadCsv") }}
+					</a>
+				</p>
 			</main>
 		</div>
 	</div>
@@ -157,12 +151,9 @@ import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
 import GroupChart, {
 	type HistorySeries,
-	type HistorySlot,
 	alphaColor,
 	stepAlpha,
 } from "../components/History/GroupChart.vue";
-import SourceDataIcon from "../components/MaterialIcon/SourceData.vue";
-import SourceTable from "../components/History/SourceTable.vue";
 import type { Legend } from "../components/Sessions/types";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor } from "../components/History/groups";
@@ -184,8 +175,6 @@ export default defineComponent({
 		DateNavigator,
 		PeriodHeader,
 		GroupChart,
-		SourceDataIcon,
-		SourceTable,
 	},
 	mixins: [formatter],
 	props: {
@@ -205,11 +194,10 @@ export default defineComponent({
 			startDate: new Date(2020, 0, 1),
 			showForecast: true,
 			focusedEntity: {} as Record<string, number | null>,
-			expandedSource: {} as Record<string, boolean>,
 		};
 	},
 	head() {
-		return { title: "History" };
+		return { title: this.$t("main.history.title") };
 	},
 	computed: {
 		effectivePeriod(): PERIODS {
@@ -347,6 +335,16 @@ export default defineComponent({
 			if (!list?.length) return false;
 			return list.some((s) => s.data.some((slot) => slot.import !== 0 || slot.export !== 0));
 		},
+		csvLink(): string {
+			const params = new URLSearchParams({
+				format: "csv",
+				lang: this.$i18n?.locale,
+				from: this.from.toISOString(),
+				to: this.to.toISOString(),
+				aggregate: this.aggregate,
+			});
+			return `./api/history/energy?${params.toString()}`;
+		},
 	},
 	watch: {
 		fetchKey() {
@@ -396,108 +394,6 @@ export default defineComponent({
 						value: this.fmtWh(watts, POWER_UNIT.AUTO),
 					};
 				});
-		},
-		toggleSource(group: string) {
-			this.expandedSource = {
-				...this.expandedSource,
-				[group]: !this.expandedSource[group],
-			};
-		},
-		sourceTable(group: string): {
-			headers: string[];
-			rows: { text: string; class?: string }[][];
-		} {
-			// Source view shows raw data only. For consumption we prepend `home`
-			// (overall consumption) so the user can verify it against the meters.
-			// For production we append the `forecast` group plus a derived
-			// "diff" column = forecast − actual production.
-			const baseEntities = this.seriesByGroup[group] || [];
-			let entities = baseEntities;
-			let firstForecastIdx = -1;
-			const period = this.displayPeriod ?? this.effectivePeriod;
-			if (group === "meter") {
-				entities = [...(this.seriesByGroup["home"] || []), ...baseEntities];
-			} else if (group === "pv" && period === PERIODS.DAY) {
-				const forecast = this.seriesByGroup["forecast"] || [];
-				firstForecastIdx = forecast.length ? baseEntities.length : -1;
-				entities = [...baseEntities, ...forecast];
-			}
-			const showDiff =
-				group === "pv" &&
-				period === PERIODS.DAY &&
-				firstForecastIdx >= 0 &&
-				baseEntities.length > 0;
-			const bidirectional = group === "grid" || group === "battery";
-			const bucketSet = new Set<string>();
-			for (const s of entities) {
-				for (const slot of s.data) bucketSet.add(slot.start);
-			}
-			const buckets = [...bucketSet].sort();
-			const headers: string[] = [this.$t("main.history.table.time") as string];
-			const importLabel = this.$t(`main.history.direction.${group}.import`) as string;
-			const exportLabel = this.$t(`main.history.direction.${group}.export`) as string;
-			for (const s of entities) {
-				if (bidirectional) {
-					headers.push(`${s.name} · ${importLabel}`);
-					headers.push(`${s.name} · ${exportLabel}`);
-				} else {
-					headers.push(s.name);
-				}
-			}
-			if (showDiff) {
-				headers.push(this.$t("main.history.table.diff") as string);
-			}
-			const slotMaps = entities.map((s) => {
-				const m = new Map<string, HistorySlot>();
-				for (const slot of s.data) m.set(slot.start, slot);
-				return m;
-			});
-			const fmt = (kwh: number) =>
-				kwh === 0 ? "" : this.fmtWh(Math.abs(kwh) * 1000, POWER_UNIT.AUTO);
-			const fmtDiff = (kwh: number) => {
-				if (kwh === 0) return { text: "" };
-				const sign = kwh > 0 ? "+" : "−";
-				return {
-					text: `${sign}${this.fmtWh(Math.abs(kwh) * 1000, POWER_UNIT.AUTO)}`,
-					class: kwh > 0 ? "text-success" : "text-danger",
-				};
-			};
-			type Cell = { text: string; class?: string };
-			const rows: Cell[][] = buckets.map((bucket) => {
-				const row: Cell[] = [{ text: this.formatBucket(bucket) }];
-				let pvActual = 0;
-				let pvForecast = 0;
-				for (let i = 0; i < entities.length; i++) {
-					const slot = slotMaps[i]?.get(bucket);
-					if (bidirectional) {
-						row.push({ text: slot?.import ? fmt(slot.import) : "" });
-						row.push({ text: slot?.export ? fmt(slot.export) : "" });
-					} else {
-						const v = slot ? slot.import - slot.export : 0;
-						row.push({ text: v === 0 ? "" : fmt(v) });
-					}
-					if (group === "pv" && slot) {
-						const v = slot.import - slot.export;
-						if (i >= firstForecastIdx && firstForecastIdx >= 0) {
-							pvForecast += v;
-						} else {
-							pvActual += v;
-						}
-					}
-				}
-				if (showDiff) {
-					row.push(fmtDiff(pvActual - pvForecast));
-				}
-				return row;
-			});
-			return { headers, rows };
-		},
-		formatBucket(iso: string): string {
-			const d = new Date(iso);
-			const period = this.displayPeriod ?? this.effectivePeriod;
-			if (period === PERIODS.DAY) return this.fmtTimeSlot(d, 15 * 60 * 1000);
-			if (period === PERIODS.MONTH) return this.fmtDayMonthShort(d);
-			return this.fmtMonth(d, false);
 		},
 		toggleFocus(group: string, i: number) {
 			const current = this.focusedEntity[group] ?? null;
@@ -629,15 +525,13 @@ export default defineComponent({
 	border-radius: 50%;
 	flex-shrink: 0;
 }
-.source-toggle {
-	line-height: 0;
-	color: var(--bs-gray-medium);
-	background: transparent;
+.history-csv-link {
+	text-decoration: none;
 }
-.source-toggle:hover,
-.source-toggle:focus {
+.history-csv-link:hover,
+.history-csv-link:focus {
 	color: var(--evcc-default-text);
-	background: transparent;
+	text-decoration: underline;
 }
 .forecast-toggle .form-check-input:checked {
 	background-color: var(--forecast-color);

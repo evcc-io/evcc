@@ -1218,14 +1218,10 @@
         "meter": "Verbrauch",
         "pv": "Erzeugung"
       },
+      "downloadCsv": "CSV herunterladen",
       "loading": "Lade Verlauf …",
       "otherConsumers": "Andere",
-      "sourceTitle": "Quelldaten",
-      "table": {
-        "diff": "Differenz",
-        "time": "Zeitfenster"
-      },
-      "viewSource": "Quelldaten anzeigen"
+      "title": "Historie"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
