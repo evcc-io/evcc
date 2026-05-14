@@ -1,0 +1,189 @@
+template: sunspec-controls
+products:
+  - description:
+      de: SunSpec Wechselrichtersteuerung (Model 123)
+      en: SunSpec inverter controls (model 123)
+group: generic
+requirements:
+  description:
+    de: |
+      Der Wechselrichter muss SunSpec Model 123 (Immediate Controls) unterstuetzen.
+    en: |
+      The inverter must support SunSpec model 123 (Immediate Controls).
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    default: 0
+    advanced: true
+    help:
+      de: "Zielwert fuer WMaxLimPct. 0 = Nulleinspeisung, 100 = volle Freigabe."
+      en: "Target value for WMaxLimPct. 0 = zero feed-in, 100 = full release."
+  - name: curtailwintms
+    description:
+      de: Zeitfenster der Begrenzung
+      en: Curtailment window time
+    unit: s
+    type: int
+    default: 0
+    advanced: true
+  - name: curtailrvrttms
+    description:
+      de: Rueckfallzeit der Begrenzung
+      en: Curtailment revert time
+    unit: s
+    type: int
+    default: 0
+    advanced: true
+  - name: curtailrmptms
+    description:
+      de: Rampenzeit der Begrenzung
+      en: Curtailment ramp time
+    unit: s
+    type: int
+    default: 0
+    advanced: true
+  - name: maxacpower
+render: |
+  type: custom
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 101:W
+      - 111:W
+      - 102:W
+      - 112:W
+      - 103:W
+      - 113:W
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 101:WH
+      - 111:WH
+      - 102:WH
+      - 112:WH
+      - 103:WH
+      - 113:WH
+    scale: 0.001
+  curtail:
+    source: sequence
+    set:
+      - source: go
+        script: |
+          res := int64(100)
+          if curtail {
+            res = limit
+          }
+          res
+        in:
+          - name: limit
+            type: int
+            config:
+              source: const
+              value: {{ .curtailpercent }}
+        out:
+          - name: wMaxLimPct
+            type: int
+            config:
+              source: sunspec
+              {{- include "modbus" . | indent 14 }}
+              value: 123:WMaxLimPct
+      - source: go
+        script: |
+          res := int64(0)
+          if curtail {
+            res = wintms
+          }
+          res
+        in:
+          - name: wintms
+            type: int
+            config:
+              source: const
+              value: {{ .curtailwintms }}
+        out:
+          - name: wMaxLimPctWinTms
+            type: int
+            config:
+              source: sunspec
+              {{- include "modbus" . | indent 14 }}
+              value: 123:WMaxLimPct_WinTms
+      - source: go
+        script: |
+          res := int64(0)
+          if curtail {
+            res = rvrttms
+          }
+          res
+        in:
+          - name: rvrttms
+            type: int
+            config:
+              source: const
+              value: {{ .curtailrvrttms }}
+        out:
+          - name: wMaxLimPctRvrtTms
+            type: int
+            config:
+              source: sunspec
+              {{- include "modbus" . | indent 14 }}
+              value: 123:WMaxLimPct_RvrtTms
+      - source: go
+        script: |
+          res := int64(0)
+          if curtail {
+            res = rmptms
+          }
+          res
+        in:
+          - name: rmptms
+            type: int
+            config:
+              source: const
+              value: {{ .curtailrmptms }}
+        out:
+          - name: wMaxLimPctRmpTms
+            type: int
+            config:
+              source: sunspec
+              {{- include "modbus" . | indent 14 }}
+              value: 123:WMaxLimPct_RmpTms
+      - source: go
+        script: |
+          res := int64(0)
+          if curtail {
+            res = 1
+          }
+          res
+        out:
+          - name: wMaxLimEna
+            type: int
+            config:
+              source: sunspec
+              {{- include "modbus" . | indent 14 }}
+              value: 123:WMaxLim_Ena
+  curtailed:
+    source: go
+    script: |
+      enabled != 0 && limit < 100
+    in:
+      - name: enabled
+        type: int
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 10 }}
+          value: 123:WMaxLim_Ena
+      - name: limit
+        type: int
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 10 }}
+          value: 123:WMaxLimPct
+  maxacpower: {{ .maxacpower }} # W
