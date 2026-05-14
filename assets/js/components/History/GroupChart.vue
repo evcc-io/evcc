@@ -283,26 +283,28 @@ export default defineComponent({
 				// the cap moves to the topmost non-zero entity per slot, so when the
 				// last entity is empty at a given slot the next-lower one still gets
 				// the rounded top. A focused entity is rendered solo → always caps.
-				const importData: (number | null | { value: number; itemStyle: { borderRadius: number[] } })[] =
-					importValues.map((v, idx) => {
-						if (v == null) return v;
-						const isTop =
-							!stackEntities ||
-							topImportPerSlot[idx] === i ||
-							this.focusedEntity === i;
-						if (!isTop) return v;
-						return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
-					});
-				const exportData: (number | null | { value: number; itemStyle: { borderRadius: number[] } })[] =
-					exportValues.map((v, idx) => {
-						if (v == null) return v;
-						const isBottom =
-							!stackEntities ||
-							topExportPerSlot[idx] === i ||
-							this.focusedEntity === i;
-						if (!isBottom) return v;
-						return { value: v, itemStyle: { borderRadius: [0, 0, radius, radius] } };
-					});
+				const importData: (
+					| number
+					| null
+					| { value: number; itemStyle: { borderRadius: number[] } }
+				)[] = importValues.map((v, idx) => {
+					if (v == null) return v;
+					const isTop =
+						!stackEntities || topImportPerSlot[idx] === i || this.focusedEntity === i;
+					if (!isTop) return v;
+					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
+				});
+				const exportData: (
+					| number
+					| null
+					| { value: number; itemStyle: { borderRadius: number[] } }
+				)[] = exportValues.map((v, idx) => {
+					if (v == null) return v;
+					const isBottom =
+						!stackEntities || topExportPerSlot[idx] === i || this.focusedEntity === i;
+					if (!isBottom) return v;
+					return { value: v, itemStyle: { borderRadius: [0, 0, radius, radius] } };
+				});
 				result.push({
 					id: `entity-${i}-import`,
 					name: importName,
