@@ -1,0 +1,78 @@
+template: homeassistant-solarprognose-de-community
+products:
+  - brand: Home Assistant
+    description:
+      generic: Solarprognose.de Community Integration
+requirements:
+  description:
+    en: |
+      Uses forecast data from the Home Assistant custom integration
+      [Solarprognose.de Community](https://github.com/matkoeout/Solarprognose_de_Community).
+
+      This template is useful when the Solarprognose.de API is already queried by
+      Home Assistant. Solarprognose.de limits API usage to 20 requests per day;
+      by reusing the Home Assistant integration's prepared `evcc_data` attribute,
+      evcc does not need to query Solarprognose.de directly. This keeps the API
+      access centralized in Home Assistant and benefits from the integration's
+      update scheduling and caching pipeline.
+
+      This is different from evcc's native Solarprognose.de integration.
+      The Home Assistant entity must expose evcc-compatible forecast data in the
+      `evcc_data` attribute.
+    de: |
+      Nutzt Prognosedaten aus der Home Assistant Custom Integration
+      [Solarprognose.de Community](https://github.com/matkoeout/Solarprognose_de_Community).
+
+      Dieses Template ist sinnvoll, wenn die Solarprognose.de API bereits durch
+      Home Assistant abgefragt wird. Solarprognose.de begrenzt die API-Nutzung auf
+      20 Anfragen pro Tag; durch die Wiederverwendung des vorbereiteten Attributs
+      `evcc_data` muss evcc Solarprognose.de nicht selbst direkt abfragen. Der
+      API-Zugriff bleibt damit zentral in Home Assistant und nutzt dessen
+      Aktualisierungsplanung und Cache-Pipeline mit.
+
+      Dies ist nicht die native Solarprognose.de Integration von evcc.
+      Die Home Assistant Entitaet muss evcc-kompatible Prognosedaten im Attribut
+      `evcc_data` bereitstellen.
+  evcc: ["skiptest"]
+group: solar
+auth:
+  type: homeassistant
+  params: [uri]
+params:
+  - name: uri
+    description:
+      de: Home Assistant URI
+      en: Home Assistant URI
+    example: http://homeassistant.local:8123
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default
+    service: homeassistant/instances
+    required: true
+  - name: entity
+    description:
+      de: Prognose-Entitaet
+      en: Forecast entity
+    help:
+      de: Entitaet der Solarprognose.de Community Integration mit dem Attribut `evcc_data`.
+      en: Entity of the Solarprognose.de Community integration with the `evcc_data` attribute.
+    example: sensor.solarprognose_prognose
+    service: homeassistant/entities?uri={uri}&domain=sensor
+    default: sensor.solarprognose_prognose
+    required: true
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  tariff: solar
+  features: ["cacheable"]
+  forecast:
+    source: http
+    uri: {{ trimSuffix "/" .uri }}/api/states/{{ .entity }}
+    auth:
+      source: homeassistant
+      uri: {{ .uri }}
+    jq: .attributes.evcc_data
+    cache: {{ .interval }}
+  interval: {{ .interval }}
