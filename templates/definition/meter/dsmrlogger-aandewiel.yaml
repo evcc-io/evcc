@@ -22,8 +22,8 @@ params:
         de: API Version
         en: API version
     help:
-        de: "API v1 für DSMR-logger API v1, API v2 für DSMR-logger API v2 (smarstuff P1 Dongle mit DSMR-logger API v2)"
-        en: "Use API v1 for DSMR-logger API v1, use API v2 for DSMR-logger API v2 (smarstuff P1 Dongle with DSMR-logger API v2)"
+        de: "API v1 für DSMR-logger API v1, API v2 für DSMR-logger API v2 (Smartstuff P1 Dongle mit DSMR-logger API v2)"
+        en: "Use API v1 for DSMR-logger API v1, use API v2 for DSMR-logger API v2 (Smartstuff P1 Dongle with DSMR-logger API v2)"
 render: |
   {{- define "uri" -}}
   http://{{ .host }}/api/{{ .apiversion }}/sm/actual
