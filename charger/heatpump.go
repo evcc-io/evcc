@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	meter "github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -47,9 +48,10 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMaxPower             plugin.Config
-		GetMaxPower             *plugin.Config // optional
-		measurement.Temperature `mapstructure:",squash"`
-		measurement.Energy      `mapstructure:",squash"`
+		GetMaxPower             *plugin.Config           // optional
+		measurement.Temperature `mapstructure:",squash"` // optional
+		measurement.Energy      `mapstructure:",squash"` // optional
+		meter.Dimmer            `mapstructure:",squash"` // optional
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -93,6 +95,10 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 	implement.May(res, implement.Battery(tempG))
 	implement.May(res, implement.SocLimiter(limitTempG))
+
+	if err := cc.Dimmer.Implement(ctx, res); err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
