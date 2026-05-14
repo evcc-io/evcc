@@ -1,0 +1,49 @@
+template: victron-vrm
+products:
+  - brand: Victron
+    description:
+      generic: Energy
+  - brand: Azimut Energy
+    description:
+      generic: Azimut Energy
+  - description:
+      de: Victron VRM-Instanz für Batterienutzung, z.B. für Azimut Energy.
+      en: Victron VRM instance for battery use, e.g. for Azimut Energy.
+capabilities: ["battery-control"]
+group: generic
+params:
+  - name: vrm-token
+    description:
+      de: VRM Token
+      en: VRM token
+    type: string
+  - name: site-id
+    description:
+      de: Standort-ID
+      en: Site ID
+    type: int
+  - name: battery-instance-id
+    description:
+      de: Batterie-Instanz-ID
+      en: Battery instance ID
+    type: int
+  - preset: battery-params
+render: |
+  type: custom
+  power:
+    source: http
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .site-id }}/widgets/BatterySummary?instance={{ .battery-instance-id }}
+    headers:
+    - content-type: application/json
+    - Authorization: Token {{ .vrm-token }}
+    jq: .records.data.47.value * .records.data.49.value
+    scale: -1 # Power is negative when battery is charging, so invert the sign
+  soc:
+    source: http
+    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .site-id }}/widgets/BatterySummary?instance={{ .battery-instance-id }}
+    headers:
+    - content-type: application/json
+    - Authorization: Token {{ .vrm-token }}
+    jq: .records.data.51.value
+
+
