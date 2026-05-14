@@ -19,11 +19,7 @@ type Slot struct {
 
 // roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
 func roundEnergy(v float64) float64 {
-	r := math.Round(v*1000) / 1000
-	if r < 0 {
-		return 0
-	}
-	return r
+	return max(0, math.Round(v*1000)/1000)
 }
 
 // Series represents a named series of energy slots

@@ -195,7 +195,7 @@ export default defineComponent({
 			const index = new Map<string, number>();
 			cats.forEach((k, i) => index.set(k, i));
 			const slotKey = (start: string) => this.timestampKey(new Date(start).getTime());
-			const radius = this.period === PERIODS.DAY ? 2 : 6;
+			const radius = 4;
 			const factor = this.valueFactor;
 
 			const result: Record<string, unknown>[] = [];
@@ -260,11 +260,13 @@ export default defineComponent({
 				const stackName = stackEntities ? `group-${this.group}` : `entity-${i}`;
 				const importStack = stackName;
 				const exportStack = stackName;
-				// In stacked consumer groups only the topmost entity caps the bar;
-				// other segments stay flat so we get one rounded top per column.
-				const importRadius =
-					stackEntities && i !== lastIdx ? [0, 0, 0, 0] : [radius, radius, 0, 0];
-				const exportRadius = [0, 0, radius, radius];
+				// In stacked groups only the outermost entity caps the bar — top for
+				// import, bottom for export — so we get one rounded edge per column.
+				// A focused entity is rendered solo, so it always caps regardless of
+				// its position in the original stack.
+				const caps = !stackEntities || i === lastIdx || this.focusedEntity === i;
+				const importRadius = caps ? [radius, radius, 0, 0] : [0, 0, 0, 0];
+				const exportRadius = caps ? [0, 0, radius, radius] : [0, 0, 0, 0];
 				result.push({
 					id: `entity-${i}-import`,
 					name: importName,
@@ -341,32 +343,114 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: { type: "shadow", shadowStyle: { color: "transparent" } },
 					...tooltipStyle(this.tooltipColor),
+					// Allow the tooltip to float above the 180px chart container instead
+					// of being clamped by `confine: true` — otherwise tall bars push the
+					// tooltip onto the bar.
+					confine: false,
 					position: (
 						point: [number, number],
-						_params: unknown,
+						params:
+							| { value: number | null; seriesId: string }[]
+							| { value: number | null; seriesId: string },
 						el: HTMLElement
 					): [number, number] => {
 						const w = el?.offsetWidth || 0;
 						const h = el?.offsetHeight || 0;
-						return [point[0] - w / 2, point[1] - h - 12];
+						const margin = 8;
+						// Anchor the tooltip just above the top edge of the bar at this
+						// slot. Top edge = sum of positive imports; for export-only slots
+						// (bidirectional groups with discharge) that's 0 (the zero line),
+						// which still sits above the visible bar.
+						const arr = Array.isArray(params) ? params : [params];
+						let sum = 0;
+						let hasBar = false;
+						for (const p of arr) {
+							if (!/^entity-\d+-(import|export)$/.test(p.seriesId || "")) continue;
+							if (p.value == null) continue;
+							hasBar = true;
+							if (typeof p.value === "number" && p.value > 0) {
+								if (/-import$/.test(p.seriesId)) sum += p.value;
+							}
+						}
+						let x = point[0] - w / 2;
+						let y = point[1] - h - margin;
+						if (hasBar && this.chart) {
+							const pixelY = this.chart.convertToPixel({ yAxisIndex: 0 }, sum);
+							if (typeof pixelY === "number" && isFinite(pixelY)) {
+								y = pixelY - h - margin;
+							}
+						}
+						// Clamp X to the viewport so the tooltip never escapes the browser
+						// edges. The chart container is in CSS-pixel coordinates relative
+						// to the chart's bounding box, so map via getBoundingClientRect.
+						const dom = this.chart?.getDom();
+						const rect = dom?.getBoundingClientRect();
+						if (rect) {
+							const minX = -rect.left + margin;
+							const maxX = window.innerWidth - rect.left - w - margin;
+							if (x < minX) x = minX;
+							if (x > maxX) x = maxX;
+						}
+						return [x, y];
 					},
 					formatter: (
-						params: { value: number | null; seriesName: string; dataIndex: number }[]
+						params: {
+							value: number | null;
+							seriesName: string;
+							seriesId: string;
+							dataIndex: number;
+						}[]
 					) => {
 						if (!params?.length) return "";
-						const visible = params.filter((p) => p.value != null);
-						if (!visible.length) return "";
-						const first = visible[0];
+						const hasData = params.some((p) => p.value != null);
+						if (!hasData) return "";
+						const first = params.find((p) => p.dataIndex != null);
 						if (!first) return "";
 						const ts = cats[first.dataIndex];
 						const head = `<div>${ts != null ? tooltipDate(ts) : ""}</div>`;
+						const formatValue = (v: number) => {
+							const watts = Math.abs(v) * 1000;
+							return this.period === PERIODS.DAY
+								? this.fmtW(watts, POWER_UNIT.KW, true, 1)
+								: this.fmtWh(watts, POWER_UNIT.KW, true, 1);
+						};
+
+						if (this.isBidirectional) {
+							// Bidirectional groups (grid, battery): one row per entity with
+							// "import / export". List every visible entity even when its
+							// values for this slot are zero or missing.
+							const totals = new Map<number, { imp: number; exp: number }>();
+							for (const p of params) {
+								const m = /^entity-(\d+)-(import|export)$/.exec(p.seriesId || "");
+								if (!m) continue;
+								const i = parseInt(m[1] || "", 10);
+								const t = totals.get(i) ?? { imp: 0, exp: 0 };
+								const v = Math.abs(p.value ?? 0);
+								if (m[2] === "import") t.imp = v;
+								else t.exp = v;
+								totals.set(i, t);
+							}
+							const indices =
+								this.focusedEntity !== null
+									? [this.focusedEntity]
+									: this.series.map((_, i) => i);
+							const showName = this.series.length > 1 && this.focusedEntity === null;
+							const rows = indices
+								.map((i) => {
+									const t = totals.get(i) ?? { imp: 0, exp: 0 };
+									const val = `<strong>${formatValue(t.imp)} / ${formatValue(t.exp)}</strong>`;
+									const name = this.series[i]?.name ?? "";
+									return showName ? `<div>${name}: ${val}</div>` : `<div>${val}</div>`;
+								})
+								.join("");
+							return head + rows;
+						}
+
+						const visible = params.filter((p) => p.value != null);
+						if (!visible.length) return "";
 						const rows = visible
 							.map((p) => {
-								const watts = Math.abs(p.value || 0) * 1000;
-								const val =
-									this.period === PERIODS.DAY
-										? this.fmtW(watts, POWER_UNIT.KW, true, 1)
-										: this.fmtWh(watts, POWER_UNIT.KW, true, 1);
+								const val = formatValue(p.value ?? 0);
 								const showName = visible.length > 1;
 								if (showName) {
 									return `<div>${p.seriesName}: <strong>${val}</strong></div>`;
@@ -417,6 +501,20 @@ export default defineComponent({
 						showMinLine: true,
 						showMaxLine: true,
 						lineStyle: { color: colors.border || "" },
+					},
+					name: this.unit,
+					nameLocation: "end",
+					nameGap: 18,
+					nameTextStyle: {
+						color: colors.muted || "",
+						fontFamily: FONT_FAMILY,
+						fontSize: 10,
+						opacity: 0.75,
+						align: "left",
+						// Axis name anchors at the axis line; axis labels have a default
+						// 8px margin, so shift the name right by the same amount to land
+						// flush with the value labels' left edge.
+						padding: [0, 0, 0, 8],
 					},
 					axisLabel: {
 						color: colors.muted || "",
