@@ -1209,6 +1209,7 @@
           "import": "bezogen"
         }
       },
+      "downloadCsv": "CSV herunterladen",
       "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
       "group": {
         "battery": "Batterie",
@@ -1218,7 +1219,6 @@
         "meter": "Verbrauch",
         "pv": "Erzeugung"
       },
-      "downloadCsv": "CSV herunterladen",
       "loading": "Lade Verlauf …",
       "otherConsumers": "Andere",
       "title": "Historie"

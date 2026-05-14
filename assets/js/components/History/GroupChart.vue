@@ -440,7 +440,9 @@ export default defineComponent({
 									const t = totals.get(i) ?? { imp: 0, exp: 0 };
 									const val = `<strong>${formatValue(t.imp)} / ${formatValue(t.exp)}</strong>`;
 									const name = this.series[i]?.name ?? "";
-									return showName ? `<div>${name}: ${val}</div>` : `<div>${val}</div>`;
+									return showName
+										? `<div>${name}: ${val}</div>`
+										: `<div>${val}</div>`;
 								})
 								.join("");
 							return head + rows;

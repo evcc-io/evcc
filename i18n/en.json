@@ -1209,6 +1209,7 @@
           "import": "imported"
         }
       },
+      "downloadCsv": "Download CSV",
       "empty": "No history data available for this time range.",
       "group": {
         "battery": "Battery",
@@ -1218,7 +1219,6 @@
         "meter": "Consumption",
         "pv": "Production"
       },
-      "downloadCsv": "Download CSV",
       "loading": "Loading history…",
       "otherConsumers": "Others",
       "title": "History"

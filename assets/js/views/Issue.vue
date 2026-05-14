@@ -355,9 +355,6 @@ export default defineComponent({
 		IssueAdditionalItem,
 		SummaryModal,
 	},
-	head() {
-		return { title: this.$t("issue.title") };
-	},
 	data() {
 		return {
 			// Help type selection
@@ -385,6 +382,9 @@ export default defineComponent({
 			logAreas: [] as string[],
 			logAvailableAreas: [] as string[],
 		};
+	},
+	head() {
+		return { title: this.$t("issue.title") };
 	},
 	computed: {
 		versionString(): string {
