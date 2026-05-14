@@ -93,7 +93,15 @@ render: |
             type: int
             config:
               source: sunspec
-              {{- include "modbus" . | indent 14 }}
+              id: {{ .id }}
+              {{- if eq .modbus "tcpip" }}
+              uri: {{ joinHostPort .host .port }}
+              rtu: false
+              {{- else }}
+              device: {{ .device }}
+              baudrate: {{ .baudrate }}
+              comset: {{ .comset }}
+              {{- end }}
               value: 123:WMaxLimPct
       - source: go
         script: |
@@ -113,7 +121,15 @@ render: |
             type: int
             config:
               source: sunspec
-              {{- include "modbus" . | indent 14 }}
+              id: {{ .id }}
+              {{- if eq .modbus "tcpip" }}
+              uri: {{ joinHostPort .host .port }}
+              rtu: false
+              {{- else }}
+              device: {{ .device }}
+              baudrate: {{ .baudrate }}
+              comset: {{ .comset }}
+              {{- end }}
               value: 123:WMaxLimPct_WinTms
       - source: go
         script: |
@@ -133,7 +149,15 @@ render: |
             type: int
             config:
               source: sunspec
-              {{- include "modbus" . | indent 14 }}
+              id: {{ .id }}
+              {{- if eq .modbus "tcpip" }}
+              uri: {{ joinHostPort .host .port }}
+              rtu: false
+              {{- else }}
+              device: {{ .device }}
+              baudrate: {{ .baudrate }}
+              comset: {{ .comset }}
+              {{- end }}
               value: 123:WMaxLimPct_RvrtTms
       - source: go
         script: |
@@ -153,7 +177,15 @@ render: |
             type: int
             config:
               source: sunspec
-              {{- include "modbus" . | indent 14 }}
+              id: {{ .id }}
+              {{- if eq .modbus "tcpip" }}
+              uri: {{ joinHostPort .host .port }}
+              rtu: false
+              {{- else }}
+              device: {{ .device }}
+              baudrate: {{ .baudrate }}
+              comset: {{ .comset }}
+              {{- end }}
               value: 123:WMaxLimPct_RmpTms
       - source: go
         script: |
@@ -167,7 +199,15 @@ render: |
             type: int
             config:
               source: sunspec
-              {{- include "modbus" . | indent 14 }}
+              id: {{ .id }}
+              {{- if eq .modbus "tcpip" }}
+              uri: {{ joinHostPort .host .port }}
+              rtu: false
+              {{- else }}
+              device: {{ .device }}
+              baudrate: {{ .baudrate }}
+              comset: {{ .comset }}
+              {{- end }}
               value: 123:WMaxLim_Ena
   curtailed:
     source: go
@@ -178,12 +218,28 @@ render: |
         type: int
         config:
           source: sunspec
-          {{- include "modbus" . | indent 10 }}
+          id: {{ .id }}
+          {{- if eq .modbus "tcpip" }}
+          uri: {{ joinHostPort .host .port }}
+          rtu: false
+          {{- else }}
+          device: {{ .device }}
+          baudrate: {{ .baudrate }}
+          comset: {{ .comset }}
+          {{- end }}
           value: 123:WMaxLim_Ena
       - name: limit
         type: int
         config:
           source: sunspec
-          {{- include "modbus" . | indent 10 }}
+          id: {{ .id }}
+          {{- if eq .modbus "tcpip" }}
+          uri: {{ joinHostPort .host .port }}
+          rtu: false
+          {{- else }}
+          device: {{ .device }}
+          baudrate: {{ .baudrate }}
+          comset: {{ .comset }}
+          {{- end }}
           value: 123:WMaxLimPct
   maxacpower: {{ .maxacpower }} # W
