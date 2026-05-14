@@ -5,7 +5,7 @@ products:
       generic: "FRITZ!Smart Energy 250"
 params:
   - name: usage
-    choice: ["grid"]
+    choice: ["grid", "pv"]
   - name: uri
     default: https://fritz.box
   - name: user

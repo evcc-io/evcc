@@ -42,6 +42,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
 		measurement.Energy                  `mapstructure:",squash"` // optional
 		meter.Phases                        `mapstructure:",squash"` // optional
+		meter.Dimmer                        `mapstructure:",squash"` // optional
+		meter.Curtailer                     `mapstructure:",squash"` // optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -165,6 +167,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, fmt.Errorf("finishTime: %w", err)
 	}
 	implement.May(c, implement.VehicleFinishTimer(finishTime))
+
+	// dim/curtail
+	if err := cc.Dimmer.Implement(ctx, c); err != nil {
+		return nil, err
+	}
+	if err := cc.Curtailer.Implement(ctx, c); err != nil {
+		return nil, err
+	}
 
 	return c, nil
 }
