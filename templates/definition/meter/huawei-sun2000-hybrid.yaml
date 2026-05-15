@@ -73,11 +73,11 @@ render: |
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
-      address: 37113 # Grid import export power
+      address: 37113 # Grid import/export power
       type: holding
       decode: int32nan
     scale: -1
-  import:
+  energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -86,7 +86,7 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
-  export:
+  returnenergery:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -131,7 +131,7 @@ render: |
       address: 32064 # Input power DC
       type: holding
       decode: int32nan
-  export:
+  energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -158,7 +158,7 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-  export:
+  returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -172,7 +172,7 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
-  import:
+  energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
