@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -35,22 +36,28 @@ import (
 // Default device ID is 247 (0xF7); TCP Modbus must be enabled in SolarGo.
 
 type GoodWe struct {
-	lp   loadpoint.API
-	conn *modbus.Connection
+	implement.Caps
+	lp       loadpoint.API
+	conn     *modbus.Connection
+	current  float64
+	phases   int
+	maxPower int
 }
 
 const (
-	goodweRegVoltages      = 10009 // U16 ×0.1 V, 3 regs (L1/L2/L3)
-	goodweRegCurrents      = 10012 // U16 ×0.1 A, 3 regs (L1/L2/L3)
-	goodweRegActualPower   = 10015 // U16 ×0.1 kW
-	goodweRegSessionEnergy = 10016 // U16 ×0.1 kWh
-	goodweRegStatus        = 10017 // U16 enum (see status mapping)
-	goodweRegPhaseSwitch   = 10023 // U16 (1=single-phase, 0=three-phase)
-	goodweRegMaxPower      = 10029 // U16 ×0.1 kW, raw range [14,220]
-	goodweRegChargeMode    = 10032 // U16 (0=fast, 1=PV, 2=PV+battery)
-	goodweRegSerial        = 10040 // 8 regs ASCII (16 bytes)
-	goodweRegChargeCommand = 10060 // U16 (1=stop, 2=start)
-	goodweRegTotalEnergy   = 10065 // U32 ×0.1 kWh, 2 regs
+	goodweRegVoltages       = 10009 // U16 ×0.1 V, 3 regs (L1/L2/L3)
+	goodweRegCurrents       = 10012 // U16 ×0.1 A, 3 regs (L1/L2/L3)
+	goodweRegActualPower    = 10015 // U16 ×0.1 kW
+	goodweRegSessionEnergy  = 10016 // U16 ×0.1 kWh
+	goodweRegStatus         = 10017 // U16 enum (see status mapping)
+	goodweRegPhaseSwEnabled = 10023 // U16 (0=Off, 1=On)
+	goodweRegMaxPower       = 10029 // U16 ×0.1 kW, raw range [14,220]
+	goodweRegChargeMode     = 10032 // U16 (0=fast, 1=PV, 2=PV+battery)
+	goodweRegSerial         = 10040 // 8 regs ASCII (16 bytes)
+	goodweRegPowerSpec      = 10058 // U16 (0=7kW, 1=11kW, 2=22kW)
+	goodweRegPhaseSpec      = 10059 // U16 (0=1p, 1=3p)
+	goodweRegChargeCommand  = 10060 // U16 (1=stop, 2=start)
+	goodweRegTotalEnergy    = 10065 // U32 ×0.1 kWh, 2 regs
 
 	goodweChargeStop     = 1
 	goodweChargeStart    = 2
@@ -88,7 +95,45 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 	log := util.NewLogger("goodwe")
 	conn.Logger(log.TRACE)
 
-	wb := &GoodWe{conn: conn}
+	wb := &GoodWe{
+		Caps: implement.New(),
+		conn: conn,
+	}
+
+	// read hardware power spec (0=7kW, 1=11kW, 2=22kW)
+	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPowerSpec, 1); err == nil {
+		switch binary.BigEndian.Uint16(b) {
+		case 0:
+			wb.maxPower = 7000
+		case 1:
+			wb.maxPower = 11000
+		case 2:
+			wb.maxPower = 22000
+		}
+	} else {
+		return nil, fmt.Errorf("read power capability: %w", err)
+	}
+
+	// read hardware phase spec (0=1-phase, 1=3-phase)
+	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSpec, 1); err == nil {
+		if binary.BigEndian.Uint16(b) == 1 {
+			wb.phases = 3
+		} else {
+			wb.phases = 1
+		}
+	} else {
+		return nil, fmt.Errorf("read hw phase count: %w", err)
+	}
+
+	// conditionally register phase switching based on hardware capability
+	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
+		if binary.BigEndian.Uint16(b) == 1 {
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+		}
+	} else {
+		return nil, fmt.Errorf("read phase switch config: %w", err)
+	}
 
 	// force "fast" charging mode so evcc fully controls power setpoint
 	if _, err := wb.conn.WriteSingleRegister(goodweRegChargeMode, goodweChargeModeFast); err != nil {
@@ -96,6 +141,10 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 	}
 
 	return wb, nil
+}
+
+func (wb *GoodWe) calcPower(current float64, phases int) uint16 {
+	return uint16(min(max(230*float64(phases)*current, 1400), float64(wb.maxPower)) / 100) // 0.1 kW
 }
 
 // Status implements api.ChargeState
@@ -149,23 +198,7 @@ func (wb *GoodWe) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	phases := 3
-	if wb.lp != nil {
-		if p := wb.lp.ActivePhases(); p != 0 {
-			phases = p
-		}
-	}
-
-	// raw register unit is 0.1 kW; clamp to documented [14,220] range
-	raw := uint16(voltage * current * float64(phases) / 100)
-	switch {
-	case raw < 14:
-		raw = 14
-	case raw > 220:
-		raw = 220
-	}
-
-	_, err := wb.conn.WriteSingleRegister(goodweRegMaxPower, raw)
+	_, err := wb.conn.WriteSingleRegister(goodweRegMaxPower, wb.calcPower(current, wb.phases))
 	return err
 }
 
@@ -218,22 +251,13 @@ func (wb *GoodWe) Voltages() (float64, float64, float64, error) {
 	return wb.phaseValues(goodweRegVoltages, 10)
 }
 
-var _ api.PhaseSwitcher = (*GoodWe)(nil)
+func (wb *GoodWe) phases1p3p(phases int) error {
+	wb.phases = phases
+	return nil
+}
 
-// Phases1p3p implements api.PhaseSwitcher. Only meaningful on 3-phase models
-// (11/22 kW): single-phase mode allows charging down to 1.4 kW instead of 4.2 kW.
-func (wb *GoodWe) Phases1p3p(phases int) error {
-	var v uint16
-	switch phases {
-	case 1:
-		v = 1
-	case 3:
-		v = 0
-	default:
-		return fmt.Errorf("invalid phase count: %d", phases)
-	}
-	_, err := wb.conn.WriteSingleRegister(goodweRegPhaseSwitch, v)
-	return err
+func (wb *GoodWe) getPhases() (int, error) {
+	return wb.phases, nil
 }
 
 var _ api.Identifier = (*GoodWe)(nil)
