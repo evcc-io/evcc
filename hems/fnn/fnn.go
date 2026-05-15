@@ -103,6 +103,11 @@ type Fnn struct {
 	interval    time.Duration
 }
 
+type curtailRule struct {
+	getter   func() (bool, error)
+	fraction float64
+}
+
 // Run starts the FNN control loop.
 func (c *Fnn) Run() {
 	ticker := time.NewTicker(c.interval)
@@ -121,28 +126,21 @@ func (c *Fnn) Run() {
 
 // Update evaluates curtailment rules and applies the appropriate limit.
 func (c *Fnn) Update() error {
-	active, err := c.w3()
-	if err != nil {
-		return err
-	}
-	if active {
-		return c.curtail(0)
+	rules := []curtailRule{
+		{getter: c.w3, fraction: 0.0},
+		{getter: c.s2, fraction: 0.3},
+		{getter: c.s1, fraction: 0.6},
 	}
 
-	active, err = c.s2()
-	if err != nil {
-		return err
-	}
-	if active {
-		return c.curtail(0.3)
-	}
+	for _, rule := range rules {
+		active, err := rule.getter()
+		if err != nil {
+			return err
+		}
 
-	active, err = c.s1()
-	if err != nil {
-		return err
-	}
-	if active {
-		return c.curtail(0.6)
+		if active {
+			return c.curtail(rule.fraction)
+		}
 	}
 
 	// 100%
@@ -160,12 +158,20 @@ func (c *Fnn) runDim() error {
 		return err
 	}
 
-	var frac float64
+	limit := 0.0
 	if active {
-		frac = c.maxPowerDim
+		limit = c.maxPowerDim
 	}
 
-	return c.setDim(frac)
+	return c.setDim(limit)
+}
+
+func (c *Fnn) applyMode(id *uint, typ smartgrid.Type, active bool, limit float64, applyRoot func()) {
+	applyRoot()
+
+	if err := smartgrid.UpdateSession(id, typ, c.root.GetChargePower(), limit, active); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
+	}
 }
 
 // curtail applies the curtailment limit to the circuit.
@@ -176,13 +182,11 @@ func (c *Fnn) curtail(frac float64) error {
 	active := frac < 1.0
 	limit := c.maxPower * frac
 
-	c.root.Curtail(active)
-	// TODO make ProductionNominalMax configurable (Site kWp)
-	// c.root.SetMaxPower(c.maxPower*frac)
-
-	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
-		c.log.ERROR.Printf("smartgrid session: %v", err)
-	}
+	c.applyMode(&c.smartgridProductionId, smartgrid.Curtail, active, limit, func() {
+		c.root.Curtail(active)
+		// TODO make ProductionNominalMax configurable (Site kWp)
+		// c.root.SetMaxPower(c.maxPower*frac)
+	})
 
 	return nil
 }
@@ -193,13 +197,10 @@ func (c *Fnn) setDim(limit float64) error {
 	defer c.mu.Unlock()
 
 	active := limit > 0
-
-	c.root.Dim(active)
-	c.root.SetMaxPower(limit)
-
-	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
-		c.log.ERROR.Printf("smartgrid session: %v", err)
-	}
+	c.applyMode(&c.smartgridConsumptionId, smartgrid.Dim, active, limit, func() {
+		c.root.Dim(active)
+		c.root.SetMaxPower(limit)
+	})
 
 	return nil
 }
