@@ -10,7 +10,7 @@
 	>
 		<div class="container">
 			<SmartCostLimit
-				:current-limit="loadpoint?.smartCostLimit || null"
+				:current-limit="loadpoint?.smartCostLimit ?? null"
 				:last-limit="loadpoint?.lastSmartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
@@ -22,7 +22,7 @@
 				class="mt-2 mb-4"
 			/>
 			<SmartFeedInPriority
-				:current-limit="loadpoint?.smartFeedInPriorityLimit || null"
+				:current-limit="loadpoint?.smartFeedInPriorityLimit ?? null"
 				:last-limit="loadpoint?.lastSmartFeedInPriorityLimit"
 				:currency="currency"
 				:loadpoint-id="id"

@@ -10,7 +10,7 @@ products:
   - brand: go-e
     description:
       generic: Charger V3
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p"]
 requirements:
   description:
     de: |

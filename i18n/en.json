@@ -39,6 +39,9 @@
     "legendTopAutostart": "Start automatically",
     "legendTopName": "Battery-supported vehicle charging",
     "legendTopSubline": "when home battery is above {soc}.",
+    "legendTopSublineAbove": "when above {soc}",
+    "legendTopSublineDisabled": "is {soc}.",
+    "legendTopSublineDisabledState": "disabled",
     "modalTitle": "Home Battery",
     "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"
@@ -237,6 +240,7 @@
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
+      "dismiss": "Dismiss",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
@@ -1157,6 +1161,11 @@
       "update": "Apply",
       "weekdays": "Days"
     },
+    "continuousStatus": {
+      "charging": "Boost active.",
+      "connected": "Normal operation.",
+      "waitForVehicle": "Boost requested…"
+    },
     "energyflow": {
       "battery": "Battery",
       "batteryCharge": "Battery charging",
@@ -1183,7 +1192,7 @@
       "charging": "Heating…",
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
-      "waitForVehicle": "Ready. Waiting for heater…"
+      "waitForVehicle": "Ready to heat…"
     },
     "hemsWarning": {
       "description": "Reduced charging to not exceed {limit}.",

@@ -88,6 +88,7 @@ type Site struct {
 	pvEnergy    map[string]*metrics.Accumulator
 
 	homeEnergy, gridEnergy *metrics.Collector
+	batteryEnergy          map[string]*metrics.Collector // per-battery, keyed by meter ref
 
 	// per-loadpoint energy tracking for heating devices
 	loadpointEnergy map[int]*metrics.Collector
@@ -230,6 +231,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.batteryMeters = append(site.batteryMeters, dev)
+
+		me, err := metrics.NewCollector(metrics.Battery, ref)
+		if err != nil {
+			return err
+		}
+		site.batteryEnergy[ref] = me
 	}
 
 	// meters used only for monitoring
@@ -268,6 +275,7 @@ func NewSite() *Site {
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
 		pvEnergy:        make(map[string]*metrics.Accumulator),
+    batteryEnergy:   make(map[string]*metrics.Collector),
 		fcstEnergy:      metrics.NewAccumulator(),
 		loadpointEnergy: make(map[int]*metrics.Collector),
 	}
@@ -685,6 +693,22 @@ func (site *Site) updateBatteryMeters() {
 	}
 
 	site.battery.Devices = mm
+
+	// accumulate per-battery energy (charging = import, discharging = export — from battery POV toward grid root)
+	for i, dev := range site.batteryMeters {
+		ref := dev.Config().Name
+		c, ok := site.batteryEnergy[ref]
+		if !ok {
+			continue
+		}
+		var exportEnergy *float64
+		if mm[i].Energy > 0 {
+			exportEnergy = &mm[i].Energy
+		}
+		if err := c.AddEnergy(nil, exportEnergy, -mm[i].Power); err != nil {
+			site.log.ERROR.Printf("persist battery %d energy: %v", i+1, err)
+		}
+	}
 
 	site.publish(keys.Battery, site.battery)
 }

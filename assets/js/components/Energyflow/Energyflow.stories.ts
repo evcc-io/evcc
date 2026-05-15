@@ -26,7 +26,7 @@ GridAndPV.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 1000,
       connected: true,
       vehicleName: "",
@@ -36,7 +36,7 @@ GridAndPV.args = {
     {
       icon: "bike",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 1000,
       connected: true,
       vehicleName: "",
@@ -46,7 +46,7 @@ GridAndPV.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 2200,
       connected: true,
       vehicleName: "",
@@ -66,6 +66,54 @@ GridAndPV.args = {
       dayAfterTomorrow: { energy: 1000, complete: false },
     },
   },
+} as any;
+
+export const LoadpointCharging = Template.bind({});
+LoadpointCharging.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  pvPower: 0,
+  gridPower: 4200,
+  homePower: 800,
+  loadpoints: [
+    {
+      icon: "heatpump",
+      displayTitle: "Heizung",
+      charging: false,
+      enabled: false,
+      connected: true,
+      chargePower: 600,
+      vehicleName: "",
+      vehicleSoc: 61.4,
+      chargerIcon: "heatpump",
+      chargerFeatureHeating: true,
+    },
+    {
+      icon: "car",
+      displayTitle: "blue Honda",
+      charging: true,
+      enabled: true,
+      connected: true,
+      chargePower: 2800,
+      vehicleName: "honda",
+      vehicleSoc: 42,
+      chargerFeatureHeating: false,
+    },
+    {
+      icon: "car",
+      displayTitle: "white Lotus",
+      charging: false,
+      enabled: false,
+      connected: false,
+      chargePower: 0,
+      vehicleName: "lotus",
+      vehicleSoc: 0,
+      chargerFeatureHeating: false,
+    },
+  ],
+  tariffGrid: 0.25,
+  currency: CURRENCY.EUR,
+  pv: [],
 } as any;
 
 function hoursFromNow(h: number): string {
@@ -173,7 +221,7 @@ BatteryCharging.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 1400,
       connected: true,
       vehicleName: "",
@@ -208,7 +256,7 @@ BatteryThresholds.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 5000,
       connected: true,
       vehicleName: "",
@@ -218,7 +266,7 @@ BatteryThresholds.args = {
     {
       icon: "bus",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 2500,
       connected: true,
       vehicleName: "",
@@ -242,7 +290,7 @@ PVThresholds.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 5000,
       connected: true,
       vehicleName: "",
@@ -252,7 +300,7 @@ PVThresholds.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 1600,
       connected: true,
       vehicleName: "",
@@ -276,7 +324,7 @@ GridOnly.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 5500,
       connected: true,
       vehicleName: "",
@@ -286,7 +334,7 @@ GridOnly.args = {
     {
       icon: "car",
       charging: false,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 0,
       connected: false,
       vehicleName: "",
@@ -296,7 +344,7 @@ GridOnly.args = {
     {
       icon: "car",
       charging: false,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 0,
       connected: false,
       vehicleName: "",
@@ -306,7 +354,7 @@ GridOnly.args = {
     {
       icon: "car",
       charging: false,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 0,
       connected: false,
       vehicleName: "",
@@ -344,7 +392,7 @@ CO2.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 1000,
       connected: true,
       vehicleName: "",
@@ -354,7 +402,7 @@ CO2.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 1000,
       connected: true,
       vehicleName: "",
@@ -364,7 +412,7 @@ CO2.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 2200,
       connected: true,
       vehicleName: "",
@@ -390,7 +438,7 @@ UnknownInput.args = {
     {
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       chargePower: 1000,
       connected: true,
       vehicleName: "",
@@ -422,7 +470,7 @@ UnknownOutput.args = {
       chargePower: 1700,
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       connected: true,
       vehicleName: "",
       vehicleSoc: 50,
@@ -442,7 +490,7 @@ UnknownOutputLessThan10Percent.args = {
       chargePower: 1800,
       icon: "car",
       charging: true,
-      title: "Garage",
+      displayTitle: "Garage",
       connected: true,
       vehicleName: "",
       vehicleSoc: 50,

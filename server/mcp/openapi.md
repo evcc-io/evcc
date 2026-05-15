@@ -836,7 +836,7 @@ call setLoadpointSmartFeedInPriorityLimit {
 
 ## setLoadpointSocLimit
 
-Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions.
+Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again.
 
 **Tags:** loadpoints
 

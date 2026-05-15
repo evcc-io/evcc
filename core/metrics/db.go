@@ -45,6 +45,11 @@ func SetupSchema() error {
 		return err
 	}
 
+	// enable FK constraints only here to make sure entity for metric exists
+	if err := db.Instance.Exec("pragma foreign_keys(1)").Error; err != nil {
+		return err
+	}
+
 	// drop obsolete indexes
 	for _, idx := range []struct {
 		name string

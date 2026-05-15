@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/zaptec"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -42,6 +43,7 @@ import (
 // Zaptec charger implementation
 type Zaptec struct {
 	*request.Helper
+	implement.Caps
 	log        *util.Logger
 	statusG    util.Cacheable[zaptec.StateResponse]
 	instance   zaptec.Charger
@@ -55,8 +57,6 @@ type Zaptec struct {
 func init() {
 	registry.AddCtx("zaptec", NewZaptecFromConfig)
 }
-
-//go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t api.PhaseSwitcher
 
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
 func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -91,6 +91,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 
 	c := &Zaptec{
 		Helper:   request.NewHelper(log),
+		Caps:     implement.New(),
 		log:      log,
 		priority: priority,
 		passive:  passive,
@@ -143,13 +144,12 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		return nil, err
 	}
 
-	var phases1p3p func(int) error
 	if maxCurrent, err := c.getInstallationMaxCurrent(); err == nil {
-		phases1p3p = c.phases1p3p
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 		c.maxCurrent = maxCurrent
 	}
 
-	return decorateZaptec(c, phases1p3p), nil
+	return c, nil
 }
 
 func (c *Zaptec) detectVersion() (int, error) {

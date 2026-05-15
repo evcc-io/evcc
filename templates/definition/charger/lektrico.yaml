@@ -3,6 +3,7 @@ products:
   - brand: Lektrico
     description:
       generic: 1P7K / 3P22K Charging Station
+capabilities: ["meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

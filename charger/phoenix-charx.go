@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -38,6 +39,7 @@ const (
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
 type PhoenixCharx struct {
+	implement.Caps
 	conn      *modbus.Connection
 	connector uint16
 	current   uint16
@@ -46,8 +48,6 @@ type PhoenixCharx struct {
 func init() {
 	registry.AddCtx("phoenix-charx", NewPhoenixCharxFromConfig)
 }
-
-//go:generate go tool decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
 func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -76,7 +76,10 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 
 	if meter > 0 && meter != 65535 {
-		return decoratePhoenixCharx(wb, wb.currentPower, wb.totalEnergy, wb.currents, wb.voltages), nil
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
 	return wb, nil
@@ -93,6 +96,7 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixCharx{
+		Caps:      implement.New(),
 		conn:      conn,
 		connector: connector,
 		current:   6, // assume min current

@@ -6,6 +6,7 @@ products:
   - brand: my-PV
     description:
       generic: AC•THOR 9s
+capabilities: ["meter"]
 group: heating
 requirements:
   description:
