@@ -1130,7 +1130,7 @@
       "batteryGridChargeLimit": "Şebekeden doldurma: şayet",
       "batteryHold": "Batarya (kilitli)",
       "batteryTooltip": "{total} ({soc})'ın {energy}'ı",
-      "forecast": "Tahmin: ",
+      "forecast": "Tahmin",
       "forecastTooltip": "“öngörü: bugün kalan güneşden üreti̇m”",
       "gridImport": "Şebeke kullanımı",
       "homePower": "Tüketim",

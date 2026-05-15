@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
@@ -9,10 +10,10 @@ import (
 
 // Slot represents an aggregated energy time slot
 type Slot struct {
-	Start  time.Time `json:"start"`
-	End    time.Time `json:"end"`
-	Import float64   `json:"import"`
-	Export float64   `json:"export"`
+	Start        time.Time `json:"start"`
+	End          time.Time `json:"end"`
+	Energy       float64   `json:"energy"`
+	ReturnEnergy float64   `json:"returnEnergy"`
 }
 
 // Series represents a named series of energy slots
@@ -29,13 +30,6 @@ var aggregateFormats = map[string]string{
 	"month": "%Y-%m",
 }
 
-var aggregateGoFormats = map[string]string{
-	"15m":   "2006-01-02 15:04",
-	"hour":  "2006-01-02 15:00",
-	"day":   "2006-01-02",
-	"month": "2006-01",
-}
-
 var aggregateDurations = map[string]func(time.Time) time.Time{
 	"15m":   func(t time.Time) time.Time { return t.Add(15 * time.Minute) },
 	"hour":  func(t time.Time) time.Time { return t.Add(time.Hour) },
@@ -43,31 +37,33 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryImportEnergy returns aggregated energy data, per entity or per group.
-func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+// QueryEnergy returns aggregated energy data, per entity or per group.
+func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+	addDuration := aggregateDurations[aggregate]
+
 	format, ok := aggregateFormats[aggregate]
 	if !ok {
 		return nil, errors.New("invalid aggregate value")
 	}
 
-	addDuration := aggregateDurations[aggregate]
-
-	groupCols := `e.name, e."group", bucket`
-	if grouped {
-		groupCols = `e."group", bucket`
+	groupCols := `e."group", ` + fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
+	if !grouped {
+		groupCols = "e.name, " + groupCols
 	}
 
 	type row struct {
-		Name   string
-		Group  string
-		Bucket string
-		Import float64
-		Export float64
+		Name         string
+		Group        string
+		Start        SqlTime
+		Energy       float64
+		ReturnEnergy float64
 	}
 
 	tx := db.Instance.Table("meters m").
-		Select(`e.name, e."group", strftime(?, m.ts, 'unixepoch', 'localtime') AS bucket,
-			COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`, format).
+		Select(`e.name, e."group",
+			MIN(m.ts) AS start,
+			COALESCE(SUM(m.energy), 0) AS energy,
+			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
@@ -86,11 +82,6 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 
 	var res []Series
 	for _, r := range rows {
-		start, err := time.ParseInLocation(aggregateGoFormats[aggregate], r.Bucket, from.Location())
-		if err != nil {
-			return nil, err
-		}
-
 		name := r.Name
 		if grouped {
 			name = ""
@@ -102,10 +93,10 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 
 		s := &res[len(res)-1]
 		s.Data = append(s.Data, Slot{
-			Start:  start,
-			End:    addDuration(start),
-			Import: r.Import,
-			Export: r.Export,
+			Start:        time.Time(r.Start),
+			End:          addDuration(time.Time(r.Start)),
+			Energy:       r.Energy,
+			ReturnEnergy: r.ReturnEnergy,
 		})
 	}
 

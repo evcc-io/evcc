@@ -18,7 +18,12 @@ params:
   - name: meterinterval
     deprecated: true
 render: |
-  {{ include "ocpp" . }}
+  {{- $ocpp := . }}
+  {{- if not .metervalues }}
+  {{- $metervalues := "-Current.Offered,Power.Offered,SoC" }}
   {{- if eq .meter "false" }}
-  metervalues: Current.Offered
+  {{- $metervalues = "Current.Offered" }}
   {{- end }}
+  {{- $ocpp = merge . (dict "metervalues" $metervalues) }}
+  {{- end }}
+  {{ include "ocpp" $ocpp }}

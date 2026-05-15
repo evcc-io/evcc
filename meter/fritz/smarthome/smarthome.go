@@ -138,10 +138,10 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.MeterImport = (*Connection)(nil)
+var _ api.MeterEnergy = (*Connection)(nil)
 
-// ImportEnergy implements the api.MeterImport interface
-func (c *Connection) ImportEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Connection) TotalEnergy() (float64, error) {
 	unit, err := c.unitG.Get()
 	if err != nil {
 		return 0, err

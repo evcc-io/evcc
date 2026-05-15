@@ -1002,7 +1002,7 @@
       "batteryGridChargeLimit": "கிரிட் சார்சிங்: எப்போது",
       "batteryHold": "மின்கலம் (பூட்டபட்டது)",
       "batteryTooltip": "{energy} ({total}) இன் {soc}",
-      "forecast": "முன்னறிவிப்பு: ",
+      "forecast": "முன்னறிவிப்பு",
       "forecastTooltip": "முன்னறிவிப்பு: இன்று சூரிய விளைவாக்கம்",
       "gridImport": "கட்டம் பயன்பாடு",
       "homePower": "நுகர்வு",
