@@ -107,12 +107,10 @@ type Fnn struct {
 	failsafeProductionLimit  *float64
 
 	// legacy fields
-	smartgridID    uint
-	smartgridDimID uint
-	limit          *float64
-	maxPower       float64
-	maxPowerDim    float64
-	interval       time.Duration
+	limit       *float64
+	maxPower    float64
+	maxPowerDim float64
+	interval    time.Duration
 }
 
 type curtailRule struct {
@@ -185,17 +183,22 @@ func (c *Fnn) curtail(frac float64) error {
 
 	active := frac < 1.0
 	limit := c.maxPower * frac
+	c.productionLimit = ucapi.LoadLimit{}
+	c.productionLimitActivated = time.Now()
 
 	c.limit = nil
 	if active {
 		c.limit = &limit
+		c.failsafeProductionLimit = &limit
+	} else {
+		c.failsafeProductionLimit = nil
 	}
 
 	c.root.Curtail(active)
 	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxPower(c.maxPower*frac)
 
-	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
@@ -208,11 +211,14 @@ func (c *Fnn) setDim(limit float64) error {
 	defer c.mu.Unlock()
 
 	active := limit > 0
+	c.consumptionLimit = ucapi.LoadLimit{}
+	c.consumptionLimitActivated = time.Now()
+	c.failsafeConsumptionLimit = limit
 
 	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
 
-	if err := smartgrid.UpdateSession(&c.smartgridDimID, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
