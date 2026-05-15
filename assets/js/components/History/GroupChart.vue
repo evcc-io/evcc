@@ -587,6 +587,7 @@ export default defineComponent({
 					xAxis: opt["xAxis"],
 					yAxis: opt["yAxis"],
 					series: opt["series"],
+					...(periodChanged ? { tooltip: opt["tooltip"] } : {}),
 				});
 				this.previousFocusedEntity = this.focusedEntity as number | null;
 				this.previousPeriod = this.period as PERIODS;
