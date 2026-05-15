@@ -381,6 +381,7 @@ export enum CURRENCY {
   DKK = "DKK",
   SEK = "SEK",
   ZAR = "ZAR",
+  TRY = "TRY",
 }
 
 export enum ICON_SIZE {

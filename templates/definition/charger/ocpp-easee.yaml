@@ -1,0 +1,50 @@
+template: ocpp-easee
+products:
+  - brand: Easee
+    description:
+      generic: Home (OCPP)
+  - brand: Easee
+    description:
+      generic: Charge (OCPP)
+  - brand: Easee
+    description:
+      generic: Charge Lite (OCPP)
+  - brand: Easee
+    description:
+      generic: Charge Core (OCPP)
+capabilities: ["rfid"]
+requirements:
+  description:
+    de: |
+      Voraussetzungen:
+      * Firmware Version >= 328 mit aktiviertem nativem OCPP
+      * Für Stromsteuerung über OCPP ist Beta-Firmware erforderlich (getestet mit v9012)
+      * OCPP muss über die Easee API aktiviert werden:
+        * `evcc easee-ocpp --user <email> --password <passwort> --charger <seriennummer> enable --url ws://<evcc-host>:8887/`
+      * Zum Deaktivieren: `evcc easee-ocpp ... disable`
+      * Status prüfen: `evcc easee-ocpp ... status`
+      * Die Seriennummer des Chargers wird automatisch als Station-ID verwendet
+      * Protokoll: OCPP-J v1.6, Websocket, ws://
+      * Verbindung über das lokale Netzwerk
+      * Minimales Meter-Intervall: 30s
+    en: |
+      Requirements:
+      * Firmware version >= 328 with native OCPP enabled
+      * Beta firmware required for current control via OCPP (tested with v9012)
+      * OCPP must be enabled via the Easee API:
+        * `evcc easee-ocpp --user <email> --password <password> --charger <serial> enable --url ws://<evcc-host>:8887/`
+      * To disable: `evcc easee-ocpp ... disable`
+      * Check status: `evcc easee-ocpp ... status`
+      * The charger serial number is automatically used as station ID
+      * Protocol: OCPP-J v1.6, Websocket, ws://
+      * Local network connection
+      * Minimum meter interval: 30s
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+  - name: metervalues
+    default: Energy.Active.Import.Register,Power.Active.Import,Current.Import
+render: |
+  {{ include "ocpp" . }}
+  remotestart: true
+  meterinterval: 30s
