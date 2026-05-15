@@ -65,9 +65,11 @@ const (
 	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
 	CapabilityBatteryControl = "battery-control" // Battery control support
 	CapabilityMeter          = "meter"           // Built-in energy meter support
+	CapabilityDim            = "dim"             // EnWG §14a dimming support
+	CapabilityCurtail        = "curtail"         // EEG §9 curtailment support
 )
 
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter}
+var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter, CapabilityDim, CapabilityCurtail}
 
 const (
 	RequirementSponsorship = "sponsorship" // Sponsorship is required
