@@ -86,7 +86,7 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
-  returnenergery:
+  returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
