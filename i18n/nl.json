@@ -1175,6 +1175,11 @@
       "update": "Toepassen",
       "weekdays": "Dagen"
     },
+    "continuousStatus": {
+      "charging": "Boost actief.",
+      "connected": "Normale modus.",
+      "waitForVehicle": "Boost aangevraagd…"
+    },
     "energyflow": {
       "battery": "Batterij",
       "batteryCharge": "Batterij opladen",
