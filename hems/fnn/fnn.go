@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type Fnn4 struct {
+type Fnn struct {
 	mu  sync.Mutex
 	log *util.Logger
 
@@ -29,7 +29,7 @@ type Fnn4 struct {
 }
 
 // NewFromConfig creates an nn4 HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn4, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
 		MaxPower    float64
 		MaxPowerDim float64
@@ -74,13 +74,13 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	return NewFnn4(gridcontrol, s1G, s2G, w3G, w4G, cc.MaxPower, cc.MaxPowerDim, cc.Interval)
+	return NewFnn(gridcontrol, s1G, s2G, w3G, w4G, cc.MaxPower, cc.MaxPowerDim, cc.Interval)
 }
 
-// NewFnn4 creates Fnn4 HEMS
-func NewFnn4(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, maxPowerDim float64, interval time.Duration) (*Fnn4, error) {
-	c := &Fnn4{
-		log:         util.NewLogger("Fnn4"),
+// NewFnn creates Fnn HEMS
+func NewFnn(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, maxPowerDim float64, interval time.Duration) (*Fnn, error) {
+	c := &Fnn{
+		log:         util.NewLogger("Fnn"),
 		root:        root,
 		maxPower:    maxPower,
 		maxPowerDim: maxPowerDim,
@@ -102,7 +102,7 @@ func boolGetter(ctx context.Context, cfg *plugin.Config) (func() (bool, error), 
 	return cfg.BoolGetter(ctx)
 }
 
-func (c *Fnn4) Run() {
+func (c *Fnn) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.Update(); err != nil {
 			c.log.ERROR.Println(err)
@@ -114,7 +114,7 @@ func (c *Fnn4) Run() {
 	}
 }
 
-func (c *Fnn4) Update() error {
+func (c *Fnn) Update() error {
 	if c.w3 != nil {
 		w3, err := c.w3()
 		if err != nil {
@@ -155,7 +155,7 @@ func (c *Fnn4) Update() error {
 	return c.curtail(1.0)
 }
 
-func (c *Fnn4) runDim() error {
+func (c *Fnn) runDim() error {
 	if c.maxPowerDim <= 0 || c.w4 == nil {
 		return nil
 	}
@@ -173,7 +173,7 @@ func (c *Fnn4) runDim() error {
 	return c.setDim(frac)
 }
 
-func (c *Fnn4) curtail(frac float64) error {
+func (c *Fnn) curtail(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -195,7 +195,7 @@ func (c *Fnn4) curtail(frac float64) error {
 	return nil
 }
 
-func (c *Fnn4) setDim(limit float64) error {
+func (c *Fnn) setDim(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
