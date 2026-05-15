@@ -161,7 +161,7 @@ func (wb *MennekesHcc3) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*MennekesHcc3)(nil)
 
-// ChargedEnergy implements the api.MeterImport interface
+// ChargedEnergy implements the api.MeterEnergy interface
 func (wb *MennekesHcc3) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegEnergy, 2)
 	if err != nil {

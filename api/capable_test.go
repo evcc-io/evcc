@@ -19,9 +19,9 @@ func (d *decoratedMeter) Capability(typ reflect.Type) (any, bool) {
 	return c, ok
 }
 
-type testMeterImportImpl struct{}
+type testMeterEnergyImpl struct{}
 
-func (t *testMeterImportImpl) ImportEnergy() (float64, error) {
+func (t *testMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return 99.0, nil
 }
 
@@ -32,13 +32,13 @@ func (t *testMeterImpl) CurrentPower() (float64, error) {
 }
 
 func TestCap_DirectTypeAssertion(t *testing.T) {
-	// concrete type that directly implements MeterImport
-	impl := &testMeterImportImpl{}
+	// concrete type that directly implements MeterEnergy
+	impl := &testMeterEnergyImpl{}
 
-	me, ok := Cap[MeterImport](impl)
+	me, ok := Cap[MeterEnergy](impl)
 	require.True(t, ok)
 
-	energy, err := me.ImportEnergy()
+	energy, err := me.TotalEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 99.0, energy)
 }
@@ -49,15 +49,15 @@ func TestCap_CapableRegistryLookup(t *testing.T) {
 	decorated := &decoratedMeter{
 		Meter: base,
 		caps: map[reflect.Type]any{
-			reflect.TypeFor[MeterImport](): &testMeterImportImpl{},
+			reflect.TypeFor[MeterEnergy](): &testMeterEnergyImpl{},
 		},
 	}
 
-	// should find MeterImport via registry
-	me, ok := Cap[MeterImport](decorated)
+	// should find MeterEnergy via registry
+	me, ok := Cap[MeterEnergy](decorated)
 	require.True(t, ok)
 
-	energy, err := me.ImportEnergy()
+	energy, err := me.TotalEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 99.0, energy)
 
@@ -81,11 +81,11 @@ func TestCap_ExtractedCapabilityLosesRegistry(t *testing.T) {
 	// Reproduces https://github.com/evcc-io/evcc/issues/28915
 	// When a Meter is extracted from a decorated charger via Cap[Meter],
 	// the extracted impl does NOT carry the Capable interface, so
-	// subsequent Cap[MeterImport] on the extracted value fails.
+	// subsequent Cap[MeterEnergy] on the extracted value fails.
 	decorated := &decoratedCharger{
 		caps: map[reflect.Type]any{
 			reflect.TypeFor[Meter]():       &testMeterImpl{},
-			reflect.TypeFor[MeterImport](): &testMeterImportImpl{},
+			reflect.TypeFor[MeterEnergy](): &testMeterEnergyImpl{},
 		},
 	}
 
@@ -93,9 +93,9 @@ func TestCap_ExtractedCapabilityLosesRegistry(t *testing.T) {
 	mt, ok := Cap[Meter](decorated)
 	require.True(t, ok)
 
-	// Bug: extracted meter cannot find MeterImport because it's a standalone impl
-	_, ok = Cap[MeterImport](mt)
-	assert.False(t, ok, "extracted meter should NOT have MeterImport capability")
+	// Bug: extracted meter cannot find MeterEnergy because it's a standalone impl
+	_, ok = Cap[MeterEnergy](mt)
+	assert.False(t, ok, "extracted meter should NOT have MeterEnergy capability")
 
 	// Fix: wrapping extracted meter with source's Capable preserves registry
 	type capableMeter struct {
@@ -104,32 +104,32 @@ func TestCap_ExtractedCapabilityLosesRegistry(t *testing.T) {
 	}
 	wrapped := &capableMeter{Meter: mt, Capable: decorated}
 
-	me, ok := Cap[MeterImport](wrapped)
-	require.True(t, ok, "wrapped meter should find MeterImport via Capable")
+	me, ok := Cap[MeterEnergy](wrapped)
+	require.True(t, ok, "wrapped meter should find MeterEnergy via Capable")
 
-	energy, err := me.ImportEnergy()
+	energy, err := me.TotalEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 99.0, energy)
 }
 
 func TestCap_NilValue(t *testing.T) {
-	_, ok := Cap[MeterImport](nil)
+	_, ok := Cap[MeterEnergy](nil)
 	assert.False(t, ok)
 }
 
 func TestCap_DirectTakesPrecedence(t *testing.T) {
 	// type that both directly implements AND has registry
 	type directAndCapable struct {
-		testMeterImportImpl
+		testMeterEnergyImpl
 		caps map[reflect.Type]any //nolint:unused
 	}
 
 	v := &directAndCapable{}
 
-	me, ok := Cap[MeterImport](v)
+	me, ok := Cap[MeterEnergy](v)
 	require.True(t, ok)
 
-	energy, err := me.ImportEnergy()
+	energy, err := me.TotalEnergy()
 	assert.NoError(t, err)
 	assert.Equal(t, 99.0, energy)
 }

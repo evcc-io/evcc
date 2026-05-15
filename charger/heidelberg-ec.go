@@ -251,10 +251,10 @@ func (wb *HeidelbergEC) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
-var _ api.MeterImport = (*HeidelbergEC)(nil)
+var _ api.MeterEnergy = (*HeidelbergEC)(nil)
 
-// ImportEnergy implements the api.MeterImport interface
-func (wb *HeidelbergEC) ImportEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *HeidelbergEC) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(hecRegEnergy, 2)
 	if err != nil {
 		return 0, err

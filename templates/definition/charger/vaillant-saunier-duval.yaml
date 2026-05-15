@@ -1,0 +1,64 @@
+template: vaillant-saunier-duval
+products:
+  - brand: Saunier Duval
+    description:
+      generic: MiGo Link (API)
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+  description:
+    de: Die Boost Funktion erwärmt Warmwasser oder eine Boostzone. Die Boostzone wird durch die ID identifiziert. Die Boost Temperatur wird in Grad Celsius angegeben. Ist eine Boost Temperatur angegeben, wird die Boostzone aktiviert, anderenfalls Warmwasser.
+    en: The boost function heats hot water or a boost zone. The boost zone is identified by the ID. The boost temperature is specified in degrees Celsius. If boost temperature is specified, the boost zone is activated, otherwise hot water.
+params:
+  - name: user
+  - name: password
+  - name: realm
+    type: choice
+    choice:
+      [
+        "austria",
+        "czechrepublic",
+        "finland",
+        "france",
+        "greece",
+        "hungary",
+        "italy",
+        "lithuania",
+        "luxembourg",
+        "poland",
+        "portugal",
+        "romania",
+        "slovakia",
+        "spain",
+      ]
+    default: france
+    description:
+      de: Region
+      en: Region
+  - name: zone
+    type: int
+    description:
+      de: ID der Boostzone
+      en: Boost zone ID
+  - name: setpoint
+    type: float
+    description:
+      de: Boost Temperatur
+      en: Boost temperature
+  - name: system
+    description:
+      de: Name der Anlage
+      en: Name of the system
+    help:
+      de: Notwendig falls mehrere Anlagen im Account vorhanden sind
+      en: Required if multiple systems are present in the account
+render: |
+  type: vaillant
+  user: {{ .user }}
+  password: {{ .password }}
+  realm: sdbg-{{ .realm }}-b2c
+  {{- if .system }}
+  system: {{ .system }}
+  {{- end }}
+  heatingzone: {{ .zone }}
+  heatingsetpoint: {{ .setpoint }}

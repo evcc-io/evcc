@@ -63,12 +63,12 @@ func (c *CCU) CurrentPower() (float64, error) {
 	return c.conn.CurrentPower()
 }
 
-var _ api.MeterImport = (*CCU)(nil)
+var _ api.MeterEnergy = (*CCU)(nil)
 
-// ImportEnergy implements the api.MeterImport interface
-func (c *CCU) ImportEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *CCU) TotalEnergy() (float64, error) {
 	if c.usage == "grid" {
-		return c.conn.GridImportEnergy()
+		return c.conn.GridTotalEnergy()
 	}
-	return c.conn.ImportEnergy()
+	return c.conn.TotalEnergy()
 }

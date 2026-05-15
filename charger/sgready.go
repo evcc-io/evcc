@@ -107,12 +107,12 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	powerG, importG, _, err := cc.Energy.Configure(ctx)
+	powerG, energyG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 	implement.May(res, implement.Meter(powerG))
-	implement.May(res, implement.MeterImport(importG))
+	implement.May(res, implement.MeterEnergy(energyG))
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {

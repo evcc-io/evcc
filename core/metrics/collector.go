@@ -14,6 +14,7 @@ const (
 	PV        = "pv"
 	Home      = "home" // meter and group (virtual measurement)
 	Loadpoint = "loadpoint"
+	Forecast  = "forecast"
 )
 
 type Collector struct {
@@ -63,8 +64,8 @@ func (c *Collector) process(fun func()) error {
 		}
 
 		c.started = slotStart
-		c.accu.Import = 0
-		c.accu.Export = 0
+		c.accu.Energy = 0
+		c.accu.ReturnEnergy = 0
 	}
 
 	return nil
