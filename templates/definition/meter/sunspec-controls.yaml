@@ -28,25 +28,22 @@ params:
     description:
       de: Zeitfenster der Begrenzung
       en: Curtailment window time
-    unit: s
-    type: int
-    default: 0
+    type: duration
+    default: 0s
     advanced: true
   - name: curtailrvrttms
     description:
       de: Rueckfallzeit der Begrenzung
       en: Curtailment revert time
-    unit: s
-    type: int
-    default: 0
+    type: duration
+    default: 0s
     advanced: true
   - name: curtailrmptms
     description:
       de: Rampenzeit der Begrenzung
       en: Curtailment ramp time
-    unit: s
-    type: int
-    default: 0
+    type: duration
+    default: 0s
     advanced: true
   - name: maxacpower
 render: |
@@ -79,15 +76,9 @@ render: |
         script: |
           res := int64(100)
           if curtail {
-            res = limit
+            res = int64({{ .curtailpercent }})
           }
           res
-        in:
-          - name: limit
-            type: int
-            config:
-              source: const
-              value: {{ .curtailpercent }}
         out:
           - name: wMaxLimPct
             type: int
@@ -107,15 +98,9 @@ render: |
         script: |
           res := int64(0)
           if curtail {
-            res = wintms
+            res = int64({{ durationSeconds .curtailwintms | int }})
           }
           res
-        in:
-          - name: wintms
-            type: int
-            config:
-              source: const
-              value: {{ .curtailwintms }}
         out:
           - name: wMaxLimPctWinTms
             type: int
@@ -135,15 +120,9 @@ render: |
         script: |
           res := int64(0)
           if curtail {
-            res = rvrttms
+            res = int64({{ durationSeconds .curtailrvrttms | int }})
           }
           res
-        in:
-          - name: rvrttms
-            type: int
-            config:
-              source: const
-              value: {{ .curtailrvrttms }}
         out:
           - name: wMaxLimPctRvrtTms
             type: int
@@ -163,15 +142,9 @@ render: |
         script: |
           res := int64(0)
           if curtail {
-            res = rmptms
+            res = int64({{ durationSeconds .curtailrmptms | int }})
           }
           res
-        in:
-          - name: rmptms
-            type: int
-            config:
-              source: const
-              value: {{ .curtailrmptms }}
         out:
           - name: wMaxLimPctRmpTms
             type: int
