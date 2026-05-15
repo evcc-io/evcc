@@ -39,6 +39,9 @@
     "legendTopAutostart": "starter automatisk",
     "legendTopName": "batteriassistert lading",
     "legendTopSubline": "når hjemmebatteriet er over {soc}.",
+    "legendTopSublineAbove": "hvis over {soc}",
+    "legendTopSublineDisabled": "er {soc}.",
+    "legendTopSublineDisabledState": "deaktivert",
     "modalTitle": "Batteriinnstillinger",
     "noBattery": "Ingen konfigurerte batterier.",
     "usageTab": "Batteribruk"
@@ -107,6 +110,7 @@
       "title": "Kontrollatferd"
     },
     "currency": {
+      "description": "Brukes til å formatere energipriser, kostnader og besparelser basert på din tariff.",
       "example": "Ladeprisen din var {price}. Du sparte {amount}.",
       "label": "Valuta",
       "title": "Valuta"
@@ -125,6 +129,7 @@
       "chargedEnergy": "Ladet",
       "co2": "Nett CO₂",
       "configured": "Konfigurert",
+      "connected": "Tilkoblet",
       "connections": "Tilkoblinger",
       "controllable": "Kontrollerbar",
       "currency": "Valuta",
@@ -136,6 +141,7 @@
       "energy": "Energi",
       "events": "Hendelser",
       "feedinPrice": "Innmatingspris",
+      "forecast": "Varsel",
       "gridPrice": "Nettpris",
       "heaterTempLimit": "Varmebegrensning",
       "hemsActiveLimit": "Aktiv grense",
@@ -222,6 +228,7 @@
       "authPerformHint": "Åpnes i en ny fane. Gå tilbake hit for å fortsette.",
       "authPrepare": "Forbered tilkobling",
       "cancel": "Avbryt",
+      "change": "Endring",
       "clear": "Tydelig",
       "close": "Lukk",
       "confirmSave": "Du har ulagrede endringer. Lagre nå?",
@@ -230,6 +237,7 @@
       "customHelp": "Opprett en brukerdefinert enhet ved hjelp av evccs plugin-system.",
       "customOption": "Brukerdefinert enhet",
       "delete": "Slett",
+      "dismiss": "Avvise",
       "docsLink": "Se documentasjonen.",
       "dragHandle": "Dra i håndtaket",
       "dragItem": "Draggable: {title}",
