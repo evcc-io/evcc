@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func mkSlot(t time.Time, imp, exp float64) Slot {
-	return Slot{Start: t, End: t.Add(15 * time.Minute), Import: imp, Export: exp}
+func mkSlot(t time.Time, energy, returnEnergy float64) Slot {
+	return Slot{Start: t, End: t.Add(15 * time.Minute), Energy: energy, ReturnEnergy: returnEnergy}
 }
 
 func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
@@ -42,29 +42,27 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	header := rows[0]
 	expected := []string{
 		"time.start", "time.end",
-		"pv.pv.import.Wh", "pv.pv.export.Wh",
-		"battery.battery-garage.import.Wh", "battery.battery-garage.export.Wh",
-		"battery.battery-home.import.Wh", "battery.battery-home.export.Wh",
-		"grid.grid.import.Wh", "grid.grid.export.Wh",
-		"home.home.import.Wh", "home.home.export.Wh",
+		"pv.pv.energy.Wh",
+		"battery.battery-garage.energy.Wh", "battery.battery-garage.returnEnergy.Wh",
+		"battery.battery-home.energy.Wh", "battery.battery-home.returnEnergy.Wh",
+		"grid.grid.energy.Wh", "grid.grid.returnEnergy.Wh",
+		"home.home.energy.Wh",
 	}
-	require.Equal(t, expected, header, "header order: GROUP_ORDER, alphabetical entities, import then export")
+	require.Equal(t, expected, header, "header order: GROUP_ORDER, alphabetical entities; returnEnergy only for grid/battery")
 
 	// time.end = time.start + slot length (15 min in mkSlot)
 	require.Equal(t, t0.Local().Format("2006-01-02 15:04:05"), rows[1][0])
 	require.Equal(t, t0.Add(15*time.Minute).Local().Format("2006-01-02 15:04:05"), rows[1][1])
 
 	// First data row values (t0) — plain Wh integers. Cols start at index 2.
-	require.Equal(t, "2500", rows[1][2])
-	require.Equal(t, "0", rows[1][3])
-	require.Equal(t, "0", rows[1][4])    // battery-garage import
-	require.Equal(t, "1250", rows[1][5]) // battery-garage export
-	require.Equal(t, "0", rows[1][6])
-	require.Equal(t, "780", rows[1][7])
-	require.Equal(t, "0", rows[1][8])
-	require.Equal(t, "412", rows[1][9])
-	require.Equal(t, "366", rows[1][10])
-	require.Equal(t, "0", rows[1][11])
+	require.Equal(t, "2500", rows[1][2])  // pv.pv energy
+	require.Equal(t, "0", rows[1][3])     // battery-garage energy
+	require.Equal(t, "1250", rows[1][4])  // battery-garage returnEnergy
+	require.Equal(t, "0", rows[1][5])     // battery-home energy
+	require.Equal(t, "780", rows[1][6])   // battery-home returnEnergy
+	require.Equal(t, "0", rows[1][7])     // grid energy
+	require.Equal(t, "412", rows[1][8])   // grid returnEnergy
+	require.Equal(t, "366", rows[1][9])   // home energy
 }
 
 func TestSeriesCSV_GermanLocale(t *testing.T) {
@@ -105,14 +103,32 @@ func TestSeriesCSV_MissingSlotIsEmpty(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, rows, 3)
 
-	require.Equal(t, []string{"time.start", "time.end", "pv.a.import.Wh", "pv.a.export.Wh", "pv.b.import.Wh", "pv.b.export.Wh"}, rows[0])
+	require.Equal(t, []string{"time.start", "time.end", "pv.a.energy.Wh", "pv.b.energy.Wh"}, rows[0])
 
 	// row 1: t0 has both entities (Wh integers); cols start at index 2.
 	require.Equal(t, "1000", rows[1][2])
-	require.Equal(t, "3000", rows[1][4])
+	require.Equal(t, "3000", rows[1][3])
 
 	// row 2: t1 has only entity a
 	require.Equal(t, "2000", rows[2][2])
-	require.Equal(t, "", rows[2][4], "missing slot must be empty, not zero")
-	require.Equal(t, "", rows[2][5])
+	require.Equal(t, "", rows[2][3], "missing slot must be empty, not zero")
+}
+
+func TestSeriesCSV_BatteryHasReturnEnergyColumn(t *testing.T) {
+	// Battery is bidirectional, so even a series with zero discharge keeps the
+	// returnEnergy column.
+	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
+	series := SeriesCSV{
+		{Group: Battery, Name: "bat", Data: []Slot{mkSlot(t0, 0.5, 0)}},
+	}
+
+	var buf bytes.Buffer
+	require.NoError(t, series.WriteCsv(context.Background(), &buf))
+
+	r := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(buf.Bytes(), []byte{0xEF, 0xBB, 0xBF})))
+	rows, err := r.ReadAll()
+	require.NoError(t, err)
+	require.Equal(t, []string{"time.start", "time.end", "battery.bat.energy.Wh", "battery.bat.returnEnergy.Wh"}, rows[0])
+	require.Equal(t, "500", rows[1][2])
+	require.Equal(t, "0", rows[1][3])
 }

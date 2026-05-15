@@ -17,13 +17,12 @@ import colors, { lighterColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
-import { groupExportColor } from "./groups";
 
 export interface HistorySlot {
 	start: string;
 	end: string;
-	import: number;
-	export: number;
+	energy: number;
+	returnEnergy: number;
 }
 
 export interface HistorySeries {
@@ -110,13 +109,13 @@ export default defineComponent({
 		},
 		isBidirectional(): boolean {
 			for (const s of this.visibleSeries) {
-				let imp = 0;
-				let exp = 0;
+				let energy = 0;
+				let returnEnergy = 0;
 				for (const slot of s.data) {
-					imp += slot.import;
-					exp += slot.export;
+					energy += slot.energy;
+					returnEnergy += slot.returnEnergy;
 				}
-				if (imp > 0 && exp > 0) return true;
+				if (energy > 0 && returnEnergy > 0) return true;
 			}
 			return false;
 		},
@@ -127,8 +126,8 @@ export default defineComponent({
 			const factor = this.valueFactor;
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
-					const a = Math.abs(slot.import * factor);
-					const b = Math.abs(slot.export * factor);
+					const a = Math.abs(slot.energy * factor);
+					const b = Math.abs(slot.returnEnergy * factor);
 					if (a > m) m = a;
 					if (b > m) m = b;
 				}
@@ -208,7 +207,7 @@ export default defineComponent({
 					for (const slot of s.data) {
 						const idx = index.get(slotKey(slot.start));
 						if (idx === undefined) continue;
-						const v = (slot.import - slot.export) * factor;
+						const v = (slot.energy - slot.returnEnergy) * factor;
 						overlayValues[idx] = (overlayValues[idx] || 0) + v;
 					}
 				}
@@ -238,44 +237,46 @@ export default defineComponent({
 			// Build value arrays per entity first so we can determine, per slot,
 			// which entity is the *visible* top/bottom of the stack — that one
 			// gets the rounded cap even if higher-index entities are zero/null.
-			const importByEntity: (number | null)[][] = [];
-			const exportByEntity: (number | null)[][] = [];
+			const energyByEntity: (number | null)[][] = [];
+			const returnEnergyByEntity: (number | null)[][] = [];
 			this.series.forEach((s, i) => {
-				const importValues: (number | null)[] = new Array(cats.length).fill(null);
-				const exportValues: (number | null)[] = new Array(cats.length).fill(null);
+				const energyValues: (number | null)[] = new Array(cats.length).fill(null);
+				const returnEnergyValues: (number | null)[] = new Array(cats.length).fill(null);
 				const hidden = this.focusedEntity !== null && this.focusedEntity !== i;
 				if (!hidden) {
 					for (const slot of s.data) {
 						const idx = index.get(slotKey(slot.start));
 						if (idx === undefined) continue;
-						if (slot.import > 0) importValues[idx] = slot.import * factor;
-						if (slot.export > 0) exportValues[idx] = -slot.export * factor;
+						if (slot.energy > 0) energyValues[idx] = slot.energy * factor;
+						if (slot.returnEnergy > 0)
+							returnEnergyValues[idx] = -slot.returnEnergy * factor;
 					}
 				}
-				importByEntity.push(importValues);
-				exportByEntity.push(exportValues);
+				energyByEntity.push(energyValues);
+				returnEnergyByEntity.push(returnEnergyValues);
 			});
 			// Per slot: index of the topmost (largest i) entity with a non-zero
 			// value. -1 = no entity has data at that slot.
-			const topImportPerSlot: number[] = new Array(cats.length).fill(-1);
-			const topExportPerSlot: number[] = new Array(cats.length).fill(-1);
+			const topEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
+			const topReturnEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
 			for (let i = 0; i < this.series.length; i++) {
 				for (let idx = 0; idx < cats.length; idx++) {
-					if ((importByEntity[i]![idx] ?? 0) > 0) topImportPerSlot[idx] = i;
-					if ((exportByEntity[i]![idx] ?? 0) < 0) topExportPerSlot[idx] = i;
+					if ((energyByEntity[i]![idx] ?? 0) > 0) topEnergyPerSlot[idx] = i;
+					if ((returnEnergyByEntity[i]![idx] ?? 0) < 0) topReturnEnergyPerSlot[idx] = i;
 				}
 			}
 
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
-				const exportColor = groupExportColor(s.group) || lighterColor(c) || c;
-				const importValues = importByEntity[i]!;
-				const exportValues = exportByEntity[i]!;
-				const importName =
+				const returnEnergyColor =
+					(s.group === "grid" && colors.export) || lighterColor(c) || c;
+				const energyValues = energyByEntity[i]!;
+				const returnEnergyValues = returnEnergyByEntity[i]!;
+				const energyName =
 					this.series.length > 1 || this.isBidirectional
-						? this.directionLabel(s, "import")
+						? this.directionLabel(s, "energy")
 						: this.singleEntityName(s);
-				const exportName = this.directionLabel(s, "export");
+				const returnEnergyName = this.directionLabel(s, "returnEnergy");
 				// Same stack name for import and export means they share one x slot
 				// (positive values stack up, negative stack down, no width penalty).
 				const stackName = stackEntities ? `group-${this.group}` : `entity-${i}`;
@@ -283,45 +284,47 @@ export default defineComponent({
 				// the cap moves to the topmost non-zero entity per slot, so when the
 				// last entity is empty at a given slot the next-lower one still gets
 				// the rounded top. A focused entity is rendered solo → always caps.
-				const importData: (
+				const energyData: (
 					| number
 					| null
 					| { value: number; itemStyle: { borderRadius: number[] } }
-				)[] = importValues.map((v, idx) => {
+				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
-						!stackEntities || topImportPerSlot[idx] === i || this.focusedEntity === i;
+						!stackEntities || topEnergyPerSlot[idx] === i || this.focusedEntity === i;
 					if (!isTop) return v;
 					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
 				});
-				const exportData: (
+				const returnEnergyData: (
 					| number
 					| null
 					| { value: number; itemStyle: { borderRadius: number[] } }
-				)[] = exportValues.map((v, idx) => {
+				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
-						!stackEntities || topExportPerSlot[idx] === i || this.focusedEntity === i;
+						!stackEntities ||
+						topReturnEnergyPerSlot[idx] === i ||
+						this.focusedEntity === i;
 					if (!isBottom) return v;
 					return { value: v, itemStyle: { borderRadius: [0, 0, radius, radius] } };
 				});
 				result.push({
-					id: `entity-${i}-import`,
-					name: importName,
+					id: `entity-${i}-energy`,
+					name: energyName,
 					type: "bar",
 					stack: stackName,
-					data: importData,
+					data: energyData,
 					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
 				});
 				result.push({
-					id: `entity-${i}-export`,
-					name: exportName,
+					id: `entity-${i}-returnEnergy`,
+					name: returnEnergyName,
 					type: "bar",
 					stack: stackName,
-					data: exportData,
-					itemStyle: { color: exportColor, borderRadius: [0, 0, 0, 0] },
+					data: returnEnergyData,
+					itemStyle: { color: returnEnergyColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
 				});
@@ -403,11 +406,11 @@ export default defineComponent({
 						let sum = 0;
 						let hasBar = false;
 						for (const p of arr) {
-							if (!/^entity-\d+-(import|export)$/.test(p.seriesId || "")) continue;
+							if (!/^entity-\d+-(energy|returnEnergy)$/.test(p.seriesId || "")) continue;
 							if (p.value == null) continue;
 							hasBar = true;
 							if (typeof p.value === "number" && p.value > 0) {
-								if (/-import$/.test(p.seriesId)) sum += p.value;
+								if (/-energy$/.test(p.seriesId)) sum += p.value;
 							}
 						}
 						let x = point[0] - w / 2;
@@ -453,16 +456,16 @@ export default defineComponent({
 								: this.fmtWh(watts, POWER_UNIT.KW, true, 1);
 						};
 
-						// Collect import/export values per entity from this slot's params.
-						const totals = new Map<number, { imp: number; exp: number }>();
+						// Collect energy/returnEnergy values per entity from this slot's params.
+						const totals = new Map<number, { energy: number; returnEnergy: number }>();
 						for (const p of params) {
-							const m = /^entity-(\d+)-(import|export)$/.exec(p.seriesId || "");
+							const m = /^entity-(\d+)-(energy|returnEnergy)$/.exec(p.seriesId || "");
 							if (!m) continue;
 							const i = parseInt(m[1] || "", 10);
-							const t = totals.get(i) ?? { imp: 0, exp: 0 };
+							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
 							const v = Math.abs(p.value ?? 0);
-							if (m[2] === "import") t.imp = v;
-							else t.exp = v;
+							if (m[2] === "energy") t.energy = v;
+							else t.returnEnergy = v;
 							totals.set(i, t);
 						}
 						// Always list every visible entity, even when its values for
@@ -477,8 +480,8 @@ export default defineComponent({
 						if (this.isBidirectional) {
 							const rows = indices
 								.map((i) => {
-									const t = totals.get(i) ?? { imp: 0, exp: 0 };
-									const val = `<strong>${formatValue(t.imp)} / ${formatValue(t.exp)}</strong>`;
+									const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+									const val = `<strong>${formatValue(t.energy)} / ${formatValue(t.returnEnergy)}</strong>`;
 									const name = this.series[i]?.name ?? "";
 									return showName
 										? `<div>${name}: ${val}</div>`
@@ -490,8 +493,8 @@ export default defineComponent({
 
 						const rows = indices
 							.map((i) => {
-								const t = totals.get(i) ?? { imp: 0, exp: 0 };
-								const val = `<strong>${formatValue(t.imp + t.exp)}</strong>`;
+								const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+								const val = `<strong>${formatValue(t.energy + t.returnEnergy)}</strong>`;
 								const name = this.series[i]?.name ?? "";
 								return showName
 									? `<div>${name}: ${val}</div>`
@@ -629,7 +632,7 @@ export default defineComponent({
 			else n = 10;
 			return n * mag;
 		},
-		directionLabel(s: HistorySeries, dir: "import" | "export"): string {
+		directionLabel(s: HistorySeries, dir: "energy" | "returnEnergy"): string {
 			const key = `main.history.direction.${s.group}.${dir}`;
 			const label = this.$t(key);
 			if (label === key) return s.name;

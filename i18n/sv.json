@@ -1193,7 +1193,7 @@
       "batteryGridChargeLimit": "Nätladdning: när",
       "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} av {total} ({soc})",
-      "forecast": "Prognos: ",
+      "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",

@@ -1,8 +1,11 @@
 <template>
-	<div class="container px-4 safe-area-inset">
+	<div
+		class="container px-4 safe-area-inset d-flex flex-column"
+		:class="{ 'empty-container': !visibleGroups.length }"
+	>
 		<TopHeader :title="$t('main.history.title')" />
-		<div class="row">
-			<main class="col-12">
+		<div class="row flex-grow-1 d-flex">
+			<main class="col-12 d-flex flex-column">
 				<PeriodHeader>
 					<template #period>
 						<PeriodSelector
@@ -30,20 +33,17 @@
 					that the data is correct. Please report anything implausible.
 				</p>
 
-				<div v-if="!visibleGroups.length" class="d-flex justify-content-center my-4">
+				<div v-if="loading && !visibleGroups.length" class="skeleton-stack">
+					<div
+						v-for="i in 3"
+						:key="i"
+						class="history-tile history-tile-skeleton mb-4"
+						aria-hidden="true"
+					></div>
+				</div>
+				<div v-else-if="!visibleGroups.length" class="flex-grow-1 d-flex">
 					<div class="empty-box p-5 text-center">
-						<div
-							v-if="loading"
-							class="d-flex align-items-center justify-content-center gap-3 text-muted"
-						>
-							<div
-								class="spinner-border spinner-border-sm"
-								role="status"
-								aria-hidden="true"
-							></div>
-							<span>{{ $t("main.history.loading") }}</span>
-						</div>
-						<span v-else class="text-muted">{{ $t("main.history.empty") }}</span>
+						<span class="text-muted">{{ $t("main.history.empty") }}</span>
 					</div>
 				</div>
 
@@ -287,7 +287,7 @@ export default defineComponent({
 					const home = this.seriesByGroup["home"];
 					if (
 						home?.some((s) =>
-							s.data.some((slot) => slot.import !== 0 || slot.export !== 0)
+							s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
 						)
 					) {
 						return true;
@@ -296,7 +296,7 @@ export default defineComponent({
 				const list = this.seriesByGroup[g];
 				if (!list?.length) return false;
 				return list.some((s) =>
-					s.data.some((slot) => slot.import !== 0 || slot.export !== 0)
+					s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
 				);
 			});
 		},
@@ -311,7 +311,7 @@ export default defineComponent({
 				const meterTotals = new Map<string, number>();
 				for (const s of meters) {
 					for (const slot of s.data) {
-						const net = slot.import - slot.export;
+						const net = slot.energy - slot.returnEnergy;
 						meterTotals.set(slot.start, (meterTotals.get(slot.start) || 0) + net);
 					}
 				}
@@ -320,9 +320,9 @@ export default defineComponent({
 					group: "meter",
 					virtual: true,
 					data: home.data.map((slot) => {
-						const homeNet = slot.import - slot.export;
+						const homeNet = slot.energy - slot.returnEnergy;
 						const v = Math.max(0, homeNet - (meterTotals.get(slot.start) || 0));
-						return { start: slot.start, end: slot.end, import: v, export: 0 };
+						return { start: slot.start, end: slot.end, energy: v, returnEnergy: 0 };
 					}),
 				};
 				// First entry in the array = bottom of the stack, so "Other consumers"
@@ -333,7 +333,9 @@ export default defineComponent({
 		hasForecast(): boolean {
 			const list = this.seriesByGroup["forecast"];
 			if (!list?.length) return false;
-			return list.some((s) => s.data.some((slot) => slot.import !== 0 || slot.export !== 0));
+			return list.some((s) =>
+				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
+			);
 		},
 		csvLink(): string {
 			const params = new URLSearchParams({
@@ -381,7 +383,7 @@ export default defineComponent({
 			return list
 				.map((s, i) => {
 					let sum = 0;
-					for (const slot of s.data) sum += slot.import - slot.export;
+					for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
 					return { s, i, sum };
 				})
 				.filter(({ sum }) => group !== "meter" || sum !== 0)
@@ -413,25 +415,26 @@ export default defineComponent({
 				group === "meter"
 					? this.seriesByGroup["home"] || []
 					: this.seriesByGroup[group] || [];
-			let sumImport = 0;
-			let sumExport = 0;
+			let sumEnergy = 0;
+			let sumReturnEnergy = 0;
 			for (const s of list) {
 				for (const slot of s.data) {
-					sumImport += slot.import;
-					sumExport += slot.export;
+					sumEnergy += slot.energy;
+					sumReturnEnergy += slot.returnEnergy;
 				}
 			}
 			const fmt = (v: number) => this.fmtWh(v * 1000, POWER_UNIT.KW);
 			const directionKey = `main.history.direction.${group}`;
-			const importKey = `${directionKey}.import`;
-			const exportKey = `${directionKey}.export`;
-			const importLabel = this.$t(importKey);
-			const exportLabel = this.$t(exportKey);
-			const hasDirectionLabels = importLabel !== importKey && exportLabel !== exportKey;
-			if (sumImport > 0 && sumExport > 0 && hasDirectionLabels) {
-				return `${fmt(sumImport)} ${importLabel} · ${fmt(sumExport)} ${exportLabel}`;
+			const energyKey = `${directionKey}.energy`;
+			const returnEnergyKey = `${directionKey}.returnEnergy`;
+			const energyLabel = this.$t(energyKey);
+			const returnEnergyLabel = this.$t(returnEnergyKey);
+			const hasDirectionLabels =
+				energyLabel !== energyKey && returnEnergyLabel !== returnEnergyKey;
+			if (sumEnergy > 0 && sumReturnEnergy > 0 && hasDirectionLabels) {
+				return `${fmt(sumEnergy)} ${energyLabel} · ${fmt(sumReturnEnergy)} ${returnEnergyLabel}`;
 			}
-			return fmt(Math.abs(sumImport - sumExport) || sumImport + sumExport);
+			return fmt(Math.abs(sumEnergy - sumReturnEnergy) || sumEnergy + sumReturnEnergy);
 		},
 		async fetchData() {
 			this.loading = true;
@@ -502,10 +505,33 @@ export default defineComponent({
 	background: var(--evcc-box);
 	padding: 1.25rem 1rem 1.75rem;
 }
+.empty-container {
+	min-height: calc(100dvh - var(--bottom-space));
+}
 .empty-box {
 	background-color: var(--evcc-box);
+	margin: auto;
 	border-radius: 2rem;
 	max-width: 480px;
+}
+.history-tile-skeleton {
+	min-height: 270px;
+	animation: history-skeleton-pulse 1.6s ease-in-out infinite;
+}
+@keyframes history-skeleton-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.history-tile-skeleton {
+		animation: none;
+		opacity: 0.8;
+	}
 }
 .entity-legend {
 	list-style: none;

@@ -16,10 +16,10 @@ import (
 
 // Slot represents an aggregated energy time slot
 type Slot struct {
-	Start  time.Time `json:"start"`
-	End    time.Time `json:"end"`
-	Import float64   `json:"import"`
-	Export float64   `json:"export"`
+	Start        time.Time `json:"start"`
+	End          time.Time `json:"end"`
+	Energy       float64   `json:"energy"`
+	ReturnEnergy float64   `json:"returnEnergy"`
 }
 
 // roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
@@ -54,8 +54,8 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryImportEnergy returns aggregated energy data, per entity or per group.
-func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+// QueryEnergy returns aggregated energy data, per entity or per group.
+func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
 
 	format, ok := aggregateFormats[aggregate]
@@ -69,18 +69,18 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 	}
 
 	type row struct {
-		Name   string
-		Group  string
-		Start  SqlTime
-		Import float64
-		Export float64
+		Name         string
+		Group        string
+		Start        SqlTime
+		Energy       float64
+		ReturnEnergy float64
 	}
 
 	tx := db.Instance.Table("meters m").
 		Select(`e.name, e."group",
 			MIN(m.ts) AS start,
-			COALESCE(SUM(m."import"), 0) AS import,
-			COALESCE(SUM(m.export), 0) AS export`).
+			COALESCE(SUM(m.energy), 0) AS energy,
+			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
@@ -110,20 +110,28 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 
 		s := &res[len(res)-1]
 		s.Data = append(s.Data, Slot{
-			Start:  time.Time(r.Start),
-			End:    addDuration(time.Time(r.Start)),
-			Import: roundEnergy(r.Import),
-			Export: roundEnergy(r.Export),
+			Start:        time.Time(r.Start),
+			End:          addDuration(time.Time(r.Start)),
+			Energy:       roundEnergy(r.Energy),
+			ReturnEnergy: roundEnergy(r.ReturnEnergy),
 		})
 	}
 
 	return res, nil
 }
 
+// hasReturnEnergy reports whether a group's CSV export includes a returnEnergy
+// column. Only the bidirectional groups (grid, battery) do; the rest emit a
+// single energy column.
+func hasReturnEnergy(group string) bool {
+	return group == Grid || group == Battery
+}
+
 // WriteCsv emits a wide-table CSV with columns
 //
-//	time.start, time.end, <group>.<entity>.import.Wh, <group>.<entity>.export.Wh, …
+//	time.start, time.end, <group>.<entity>.energy.Wh[, <group>.<entity>.returnEnergy.Wh], …
 //
+// Only grid and battery contribute a second returnEnergy column.
 // Values are plain Wh integers (the DB is already rounded to milli-kWh) — no
 // decimal point, no thousands separator, so they survive locale-mismatched
 // spreadsheet importers unambiguously.
@@ -164,8 +172,8 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 
 	header := []string{"time.start", "time.end"}
 	type col struct {
-		series *Series
-		export bool
+		series       *Series
+		returnEnergy bool
 	}
 	cols := []col{{}, {}}
 	tsSet := make(map[int64]time.Time)
@@ -180,8 +188,12 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 			if name == "" {
 				name = g
 			}
-			header = append(header, g+"."+name+".import.Wh", g+"."+name+".export.Wh")
-			cols = append(cols, col{series: e, export: false}, col{series: e, export: true})
+			header = append(header, g+"."+name+".energy.Wh")
+			cols = append(cols, col{series: e, returnEnergy: false})
+			if hasReturnEnergy(g) {
+				header = append(header, g+"."+name+".returnEnergy.Wh")
+				cols = append(cols, col{series: e, returnEnergy: true})
+			}
 			for _, slot := range e.Data {
 				tsSet[slot.Start.UnixNano()] = slot.Start
 				endByStart[slot.Start.UnixNano()] = slot.End
@@ -230,9 +242,9 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 				row[i] = ""
 				continue
 			}
-			v := slot.Import
-			if c.export {
-				v = slot.Export
+			v := slot.Energy
+			if c.returnEnergy {
+				v = slot.ReturnEnergy
 			}
 			row[i] = strconv.FormatInt(int64(math.Round(v*1000)), 10)
 		}
