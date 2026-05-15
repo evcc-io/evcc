@@ -18,21 +18,26 @@ type Fnn3 struct {
 
 	root       api.Circuit
 	s1, s2, w3 func() (bool, error)
+	w4         func() (bool, error)
 
-	smartgridID uint
-	limit       *float64
-	maxPower    float64
-	interval    time.Duration
+	smartgridID    uint
+	smartgridDimID uint
+	limit          *float64
+	maxPower       float64
+	maxPowerDim    float64
+	interval       time.Duration
 }
 
 // NewFromConfig creates an Fnn3 HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn3, error) {
 	cc := struct {
-		MaxPower float64
-		W3       plugin.Config
-		S1       *plugin.Config
-		S2       *plugin.Config
-		Interval time.Duration
+		MaxPower    float64
+		MaxPowerDim float64
+		W3          *plugin.Config
+		W4          *plugin.Config
+		S1          *plugin.Config
+		S2          *plugin.Config
+		Interval    time.Duration
 	}{
 		Interval: 10 * time.Second,
 	}
@@ -49,61 +54,77 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 
 	site.SetCircuit(gridcontrol)
 
-	// s1 getter
-	s1G, err := cc.S1.BoolGetter(ctx)
+	s1G, err := boolGetter(ctx, cc.S1)
 	if err != nil {
 		return nil, err
 	}
 
-	s2G, err := cc.S2.BoolGetter(ctx)
+	s2G, err := boolGetter(ctx, cc.S2)
 	if err != nil {
 		return nil, err
 	}
 
-	w3G, err := cc.W3.BoolGetter(ctx)
+	w3G, err := boolGetter(ctx, cc.W3)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnn3(gridcontrol, s1G, s2G, w3G, cc.MaxPower, cc.Interval)
+	w4G, err := boolGetter(ctx, cc.W4)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFnn3(gridcontrol, s1G, s2G, w3G, w4G, cc.MaxPower, cc.MaxPowerDim, cc.Interval)
 }
 
 // NewFnn3 creates Fnn3 HEMS
-func NewFnn3(root api.Circuit, s1, s2, w3 func() (bool, error), maxPower float64, interval time.Duration) (*Fnn3, error) {
+func NewFnn3(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, maxPowerDim float64, interval time.Duration) (*Fnn3, error) {
 	c := &Fnn3{
-		log:      util.NewLogger("fnn3"),
-		root:     root,
-		maxPower: maxPower,
-		s1:       s1,
-		s2:       s2,
-		w3:       w3,
-		interval: interval,
+		log:         util.NewLogger("fnn3"),
+		root:        root,
+		maxPower:    maxPower,
+		maxPowerDim: maxPowerDim,
+		s1:          s1,
+		s2:          s2,
+		w3:          w3,
+		w4:          w4,
+		interval:    interval,
 	}
 
 	return c, nil
 }
 
+func boolGetter(ctx context.Context, cfg *plugin.Config) (func() (bool, error), error) {
+	if cfg == nil {
+		return nil, nil
+	}
+
+	return cfg.BoolGetter(ctx)
+}
+
 func (c *Fnn3) Run() {
 	for range time.Tick(c.interval) {
-		if err := c.run(); err != nil {
+		if err := c.Update(); err != nil {
+			c.log.ERROR.Println(err)
+		}
+
+		if err := c.runDim(); err != nil {
 			c.log.ERROR.Println(err)
 		}
 	}
 }
 
 func (c *Fnn3) Update() error {
-	return c.run()
-}
+	if c.w3 != nil {
+		w3, err := c.w3()
+		if err != nil {
+			return err
+		}
 
-func (c *Fnn3) run() error {
-	w3, err := c.w3()
-	if err != nil {
-		return err
-	}
-
-	if w3 {
-		// 0%
-		return c.curtail(0.0)
+		if w3 {
+			// 0%
+			return c.curtail(0.0)
+		}
 	}
 
 	if c.s2 != nil {
@@ -134,6 +155,24 @@ func (c *Fnn3) run() error {
 	return c.curtail(1.0)
 }
 
+func (c *Fnn3) runDim() error {
+	if c.maxPowerDim <= 0 || c.w4 == nil {
+		return nil
+	}
+
+	active, err := c.w4()
+	if err != nil {
+		return err
+	}
+
+	var frac float64
+	if active {
+		frac = c.maxPowerDim
+	}
+
+	return c.setDim(frac)
+}
+
 func (c *Fnn3) curtail(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -142,8 +181,7 @@ func (c *Fnn3) curtail(frac float64) error {
 
 	c.limit = nil
 	if active {
-		limit := c.maxPower * frac
-		c.limit = &limit
+		c.limit = new(c.maxPower * frac)
 	}
 
 	c.root.Curtail(active)
@@ -151,6 +189,22 @@ func (c *Fnn3) curtail(frac float64) error {
 	// c.root.SetMaxPower(c.maxPower*frac)
 
 	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.root.GetChargePower(), c.maxPower*frac, active); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
+	}
+
+	return nil
+}
+
+func (c *Fnn3) setDim(limit float64) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	active := limit > 0
+
+	c.root.Dim(active)
+	c.root.SetMaxPower(limit)
+
+	if err := smartgrid.UpdateSession(&c.smartgridDimID, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 

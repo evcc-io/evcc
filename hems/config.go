@@ -21,8 +21,6 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any, site s
 		return eebus.NewFromConfig(ctx, other, site)
 	case "fnn-3":
 		return fnn.NewFromConfig(ctx, other, site)
-	case "fnn-4":
-		return fnn.NewFnn4FromConfig(ctx, other, site)
 	case "relay":
 		return relay.NewFromConfig(ctx, other, site)
 	default:
