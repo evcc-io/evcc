@@ -275,7 +275,7 @@ func NewSite() *Site {
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
 		pvEnergy:        make(map[string]*metrics.Accumulator),
-    batteryEnergy:   make(map[string]*metrics.Collector),
+		batteryEnergy:   make(map[string]*metrics.Collector),
 		fcstEnergy:      metrics.NewAccumulator(),
 		loadpointEnergy: make(map[int]*metrics.Collector),
 	}
