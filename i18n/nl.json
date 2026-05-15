@@ -1206,7 +1206,7 @@
       "charging": "Bezig met verwarmen…",
       "connected": "Stand-by.",
       "vehicleLimit": "Verwarming limiet",
-      "waitForVehicle": "Klaar. Wachten op verwarming…"
+      "waitForVehicle": "Klaar om te verwarmen…"
     },
     "hemsWarning": {
       "description": "Gereduceerd laden niet hoger dan {limit}.",
