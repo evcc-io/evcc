@@ -86,8 +86,7 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	// metrics
-	fcstEnergy             *metrics.Collector
-	pvEnergy               map[string]*metrics.Collector
+	collectors             map[string]*metrics.Collector
 	homeEnergy, gridEnergy *metrics.Collector
 	batteryEnergy          map[string]*metrics.Collector // per-battery, keyed by meter ref
 
@@ -212,7 +211,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.pvEnergy[ref] = me
+		site.collectors[collectorKey(metrics.PV, ref)] = me
 	}
 
 	// solar forecast collector (mirrors PV history shape, used for scale lookup)
@@ -220,7 +219,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if err != nil {
 		return err
 	}
-	site.fcstEnergy = fc
+	site.collectors[collectorKey(metrics.Forecast, metrics.Forecast)] = fc
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
@@ -272,11 +271,15 @@ func NewSite() *Site {
 	site := &Site{
 		log:           util.NewLogger("site"),
 		Voltage:       230, // V
-		pvEnergy:      make(map[string]*metrics.Collector),
+		collectors:    make(map[string]*metrics.Collector),
 		batteryEnergy: make(map[string]*metrics.Collector),
 	}
 
 	return site
+}
+
+func collectorKey(group, name string) string {
+	return group + ":" + name
 }
 
 // restoreMetersAndTitle restores site meter configuration
@@ -580,7 +583,11 @@ func (site *Site) updatePvMeters() {
 
 	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
-		c := site.pvEnergy[dev.Config().Name]
+		c := site.collectors[collectorKey(metrics.PV, dev.Config().Name)]
+		if c == nil {
+			site.log.ERROR.Printf("persist pv %d energy: missing collector for %q", i+1, dev.Config().Name)
+			continue
+		}
 
 		var importEnergy *float64
 		if mm[i].Energy > 0 {
