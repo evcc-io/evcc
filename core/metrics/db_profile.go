@@ -18,7 +18,7 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 		return nil, err
 	}
 
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
+	rows, err := db.Query(`SELECT min(ts) AS ts, avg(energy) AS energy
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')

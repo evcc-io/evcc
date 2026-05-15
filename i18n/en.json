@@ -1170,13 +1170,15 @@
       "battery": "Battery",
       "batteryCharge": "Battery charging",
       "batteryDischarge": "Battery discharging",
-      "batteryForecastEmpty": "empty {time}",
-      "batteryForecastFull": "full {time}",
+      "batteryForecastEmpty": "Empty from {time}",
+      "batteryForecastFull": "Full from {time}",
+      "batteryForecastNextHigh": "Next high",
+      "batteryForecastNextLow": "Next low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryHold": "Battery (locked)",
       "batteryTooltip": "{energy} of {total} ({soc})",
-      "forecast": "Forecast: ",
+      "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",
       "gridImport": "Grid import",
       "homePower": "Consumption",
@@ -1197,6 +1199,30 @@
     "hemsWarning": {
       "description": "Reduced charging to not exceed {limit}.",
       "title": "External limit:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "charged",
+          "returnEnergy": "discharged"
+        },
+        "grid": {
+          "energy": "imported",
+          "returnEnergy": "exported"
+        }
+      },
+      "downloadCsv": "Download CSV",
+      "empty": "No history data available for this time range.",
+      "group": {
+        "battery": "Battery",
+        "forecast": "Forecast",
+        "grid": "Grid",
+        "loadpoint": "Charging & Heating",
+        "meter": "Consumption",
+        "pv": "Production"
+      },
+      "otherConsumers": "Others",
+      "title": "History"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -1469,6 +1495,7 @@
     "odometer": "Mileage",
     "overview": "Overview",
     "period": {
+      "day": "Day",
       "month": "Month",
       "total": "Total",
       "year": "Year"

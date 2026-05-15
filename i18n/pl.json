@@ -1090,7 +1090,7 @@
       "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
       "batteryHold": "Magazyn energii (chroniony)",
       "batteryTooltip": "{energy} z {total} ({soc})",
-      "forecast": "Prognoza: ",
+      "forecast": "Prognoza",
       "forecastTooltip": "prognoza: pozostała na dziś produkcja energii słonecznej",
       "gridImport": "Z sieci",
       "homePower": "Konsumpcja",

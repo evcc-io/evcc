@@ -24,8 +24,8 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 
 	// Past 7 days - create slots for ALL hours to ensure historical data exists
 	for day := -7; day < 0; day++ {
-		for hour := 0; hour < 24; hour++ {
-			for slot := 0; slot < 4; slot++ {
+		for hour := range 24 {
+			for slot := range 4 {
 				baseTime := now.AddDate(0, 0, day).Truncate(24 * time.Hour)
 				rates = append(rates, api.Rate{
 					Start: baseTime.Add(time.Duration(hour)*time.Hour + time.Duration(slot)*15*time.Minute),
@@ -38,7 +38,7 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 
 	// Future forecast: 8 slots (2 hours)
 	// First hour: 5°C, Second hour: 15°C
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		temp := 5.0
 		if i >= 4 {
 			temp = 15.0
