@@ -304,13 +304,28 @@ export default defineComponent({
 		},
 		// Series shown in the chart. For the consumption (`meter`) group we append
 		// a virtual "Other consumers" series = home.net − sum(meter entities).
+		// Inactive loadpoints / meters (all-zero data in the selected period) are
+		// dropped from the displayed list; `paletteIndex` carries each entity's
+		// original position so its color stays stable when navigating periods.
 		displaySeries(): (group: string) => HistorySeries[] {
+			const hasEnergy = (s: HistorySeries) =>
+				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0);
 			return (group: string): HistorySeries[] => {
+				if (group === "loadpoint") {
+					const list = this.seriesByGroup["loadpoint"] || [];
+					return list.map((s, i) => ({ ...s, paletteIndex: i })).filter(hasEnergy);
+				}
 				if (group !== "meter") return this.seriesByGroup[group] || [];
 				const meters = this.seriesByGroup["meter"] || [];
 				const home = (this.seriesByGroup["home"] || [])[0];
-				if (!home) return meters;
+				const activeMeters = meters
+					.map((s, i) => ({ ...s, paletteIndex: i }))
+					.filter(hasEnergy);
+				if (!home) return activeMeters;
 				const meterTotals = new Map<string, number>();
+				// Net per slot is computed from all meters (incl. inactive ones), so
+				// dropping inactive entries from the display doesn't shift the
+				// "Other consumers" delta.
 				for (const s of meters) {
 					for (const slot of s.data) {
 						const net = slot.energy - slot.returnEnergy;
@@ -321,15 +336,19 @@ export default defineComponent({
 					name: this.$t("main.history.otherConsumers") as string,
 					group: "meter",
 					virtual: true,
+					// Use meters.length as a stable paletteIndex that can never
+					// collide with real meters (0..meters.length-1).
+					paletteIndex: meters.length,
 					data: home.data.map((slot) => {
 						const homeNet = slot.energy - slot.returnEnergy;
 						const v = Math.max(0, homeNet - (meterTotals.get(slot.start) || 0));
 						return { start: slot.start, end: slot.end, energy: v, returnEnergy: 0 };
 					}),
 				};
+				if (!hasEnergy(other)) return activeMeters;
 				// First entry in the array = bottom of the stack, so "Other consumers"
 				// always sits underneath the explicit meters.
-				return [other, ...meters];
+				return [other, ...activeMeters];
 			};
 		},
 		hasForecast(): boolean {
@@ -353,6 +372,19 @@ export default defineComponent({
 	watch: {
 		fetchKey() {
 			this.fetchData();
+		},
+		rawSeries() {
+			// Drop focused entries whose paletteIndex no longer matches any entity
+			// in the new data (e.g. a loadpoint was filtered out after a period
+			// switch).
+			const next: Record<string, number | null> = {};
+			for (const [group, focused] of Object.entries(this.focusedEntity)) {
+				if (focused == null) continue;
+				const list = this.displaySeries(group);
+				const stillPresent = list.some((s, i) => (s.paletteIndex ?? i) === focused);
+				if (stillPresent) next[group] = focused;
+			}
+			this.focusedEntity = next;
 		},
 	},
 	mounted() {
@@ -378,26 +410,24 @@ export default defineComponent({
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
 				if (group === "loadpoint" || group === "meter") {
-					return colors.palette[i % colors.palette.length] || baseColor;
+					const idx = s.paletteIndex ?? i;
+					return colors.palette[idx % colors.palette.length] || baseColor;
 				}
 				return alphaColor(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
-			return list
-				.map((s, i) => {
-					let sum = 0;
-					for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
-					return { s, i, sum };
-				})
-				.filter(({ sum }) => group !== "meter" || sum !== 0)
-				.map(({ s, i, sum }) => {
-					const watts = Math.abs(sum) * 1000;
-					return {
-						entityIndex: i,
-						label: s.name,
-						color: colorFor(i, s),
-						value: this.fmtWh(watts, POWER_UNIT.AUTO),
-					};
-				});
+			return list.map((s, i) => {
+				let sum = 0;
+				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
+				const watts = Math.abs(sum) * 1000;
+				return {
+					// Use stable paletteIndex as the focus identifier so that the
+					// selected entity keeps its identity across period navigations.
+					entityIndex: s.paletteIndex ?? i,
+					label: s.name,
+					color: colorFor(i, s),
+					value: this.fmtWh(watts, POWER_UNIT.AUTO),
+				};
+			});
 		},
 		toggleFocus(group: string, i: number) {
 			const current = this.focusedEntity[group] ?? null;

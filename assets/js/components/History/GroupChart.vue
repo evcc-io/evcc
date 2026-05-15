@@ -32,6 +32,10 @@ export interface HistorySeries {
 	// Marks a synthetic / derived series (e.g. "other consumers"). Gets a neutral
 	// color and is excluded from the source-data table.
 	virtual?: boolean;
+	// Stable index into the palette, preserved across navigations even when the
+	// displayed list is filtered (e.g. inactive loadpoints dropped) so an
+	// entity keeps its color when navigating between periods.
+	paletteIndex?: number;
 }
 
 type WithChartOption = { chartOption: Record<string, unknown> };
@@ -76,6 +80,7 @@ export default defineComponent({
 		mediaQuery: MediaQueryList | null;
 		previousFocusedEntity: number | null;
 		previousPeriod: PERIODS;
+		previousSeriesKey: string;
 	} {
 		return {
 			chart: null,
@@ -83,6 +88,7 @@ export default defineComponent({
 			mediaQuery: null,
 			previousFocusedEntity: this.focusedEntity as number | null,
 			previousPeriod: this.period as PERIODS,
+			previousSeriesKey: "",
 		};
 	},
 	computed: {
@@ -91,8 +97,29 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		unit(): "kW" | "kWh" {
-			return this.period === PERIODS.DAY ? "kW" : "kWh";
+		// Peak stacked power across all visible series in kW (day view only).
+		// Sums all positive entity contributions per time slot and returns the max.
+		maxVisibleKw(): number {
+			if (this.period !== PERIODS.DAY) return Infinity;
+			const factor = this.valueFactor;
+			const slotSums = new Map<string, number>();
+			for (const s of this.visibleSeries) {
+				for (const slot of s.data) {
+					const v = (slot.energy - slot.returnEnergy) * factor;
+					if (v > 0) slotSums.set(slot.start, (slotSums.get(slot.start) || 0) + v);
+				}
+			}
+			let max = 0;
+			for (const v of slotSums.values()) if (v > max) max = v;
+			return max;
+		},
+		// Switch to watts when the peak is below 1 kW so small values stay readable.
+		useWatts(): boolean {
+			return this.period === PERIODS.DAY && this.maxVisibleKw < 1;
+		},
+		unit(): string {
+			if (this.period !== PERIODS.DAY) return "kWh";
+			return this.useWatts ? "W" : "kW";
 		},
 		// Consumer groups have many palette colours per entity — a single neutral
 		// tooltip background reads better than picking one entity's colour.
@@ -105,7 +132,7 @@ export default defineComponent({
 		visibleSeries(): HistorySeries[] {
 			if (this.focusedEntity === null) return this.series;
 			const idx = this.focusedEntity;
-			return this.series.filter((_, i) => i === idx);
+			return this.series.filter((s, i) => (s.paletteIndex ?? i) === idx);
 		},
 		isBidirectional(): boolean {
 			for (const s of this.visibleSeries) {
@@ -178,11 +205,13 @@ export default defineComponent({
 			// stacked segments stay visually distinguishable.
 			if (this.group === "loadpoint" || this.group === "meter") {
 				const mutedColor = colors.muted || this.color;
-				return this.series.map((s, i) =>
+				return this.series.map((s, i) => {
 					// Virtual "other consumers" entity renders in a neutral gray to set
 					// it apart from explicit meter entities.
-					s.virtual ? mutedColor : colors.palette[i % colors.palette.length] || this.color
-				);
+					if (s.virtual) return mutedColor;
+					const idx = s.paletteIndex ?? i;
+					return colors.palette[idx % colors.palette.length] || this.color;
+				});
 			}
 			if (this.series.length <= 1) return [this.color];
 			return this.series.map((_, i) =>
@@ -242,7 +271,8 @@ export default defineComponent({
 			this.series.forEach((s, i) => {
 				const energyValues: (number | null)[] = new Array(cats.length).fill(null);
 				const returnEnergyValues: (number | null)[] = new Array(cats.length).fill(null);
-				const hidden = this.focusedEntity !== null && this.focusedEntity !== i;
+				const hidden =
+					this.focusedEntity !== null && this.focusedEntity !== (s.paletteIndex ?? i);
 				if (!hidden) {
 					for (const slot of s.data) {
 						const idx = index.get(slotKey(slot.start));
@@ -284,6 +314,9 @@ export default defineComponent({
 				// the cap moves to the topmost non-zero entity per slot, so when the
 				// last entity is empty at a given slot the next-lower one still gets
 				// the rounded top. A focused entity is rendered solo → always caps.
+				// Stable identity for focus comparison: paletteIndex when set
+				// (filtered groups), otherwise plain array index.
+				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
 					| number
 					| null
@@ -291,7 +324,9 @@ export default defineComponent({
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
-						!stackEntities || topEnergyPerSlot[idx] === i || this.focusedEntity === i;
+						!stackEntities ||
+						topEnergyPerSlot[idx] === i ||
+						this.focusedEntity === stableIdx;
 					if (!isTop) return v;
 					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
 				});
@@ -304,12 +339,12 @@ export default defineComponent({
 					const isBottom =
 						!stackEntities ||
 						topReturnEnergyPerSlot[idx] === i ||
-						this.focusedEntity === i;
+						this.focusedEntity === stableIdx;
 					if (!isBottom) return v;
 					return { value: v, itemStyle: { borderRadius: [0, 0, radius, radius] } };
 				});
 				result.push({
-					id: `entity-${i}-energy`,
+					id: `entity-${stableIdx}-energy`,
 					name: energyName,
 					type: "bar",
 					stack: stackName,
@@ -319,7 +354,7 @@ export default defineComponent({
 					barGap: "10%",
 				});
 				result.push({
-					id: `entity-${i}-returnEnergy`,
+					id: `entity-${stableIdx}-returnEnergy`,
 					name: returnEnergyName,
 					type: "bar",
 					stack: stackName,
@@ -453,8 +488,8 @@ export default defineComponent({
 						const formatValue = (v: number) => {
 							const watts = Math.abs(v) * 1000;
 							return this.period === PERIODS.DAY
-								? this.fmtW(watts, POWER_UNIT.KW, true, 1)
-								: this.fmtWh(watts, POWER_UNIT.KW, true, 1);
+								? this.fmtW(watts, POWER_UNIT.AUTO)
+								: this.fmtWh(watts, POWER_UNIT.AUTO);
 						};
 
 						// Collect energy/returnEnergy values per entity from this slot's params.
@@ -475,7 +510,10 @@ export default defineComponent({
 						const indices =
 							this.focusedEntity !== null
 								? [this.focusedEntity]
-								: this.series.map((_, i) => i);
+								: this.series.map((s, i) => s.paletteIndex ?? i);
+						const nameByIdx = new Map(
+							this.series.map((s, i) => [s.paletteIndex ?? i, s.name])
+						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
 						if (this.isBidirectional) {
@@ -483,7 +521,7 @@ export default defineComponent({
 								.map((i) => {
 									const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
 									const val = `<strong>${formatValue(t.energy)} / ${formatValue(t.returnEnergy)}</strong>`;
-									const name = this.series[i]?.name ?? "";
+									const name = nameByIdx.get(i) ?? "";
 									return showName
 										? `<div>${name}: ${val}</div>`
 										: `<div>${val}</div>`;
@@ -496,7 +534,7 @@ export default defineComponent({
 							.map((i) => {
 								const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
 								const val = `<strong>${formatValue(t.energy + t.returnEnergy)}</strong>`;
-								const name = this.series[i]?.name ?? "";
+								const name = nameByIdx.get(i) ?? "";
 								return showName
 									? `<div>${name}: ${val}</div>`
 									: `<div>${val}</div>`;
@@ -565,7 +603,12 @@ export default defineComponent({
 						hideOverlap: true,
 						formatter: (v: number) =>
 							this.period === PERIODS.DAY
-								? this.fmtW(v * 1000, POWER_UNIT.KW, false, 0)
+								? this.fmtW(
+										v * 1000,
+										this.useWatts ? POWER_UNIT.W : POWER_UNIT.KW,
+										false,
+										0
+									)
 								: this.fmtWh(v * 1000, POWER_UNIT.KW, false, 0),
 					},
 				}),
@@ -579,18 +622,35 @@ export default defineComponent({
 				const opt = (this as unknown as WithChartOption).chartOption;
 				const focusChanged = this.previousFocusedEntity !== this.focusedEntity;
 				const periodChanged = this.previousPeriod !== this.period;
-				// Snap (no animation) on period switches and on legend focus toggles.
-				// Other updates use the default merge so bars animate value transitions
-				// per stable key.
-				this.chart?.setOption({
-					animation: !(focusChanged || periodChanged),
-					xAxis: opt["xAxis"],
-					yAxis: opt["yAxis"],
-					series: opt["series"],
-					...(periodChanged ? { tooltip: opt["tooltip"] } : {}),
-				});
+				// Fingerprint the set of series IDs in their render order so we can
+				// detect when entities are added or removed (e.g. a filtered loadpoint
+				// re-appears after navigating to a new day).
+				const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
+					.map((s) => s.id ?? "")
+					.join(",");
+				const compositionChanged = newSeriesKey !== this.previousSeriesKey;
+				if (compositionChanged || periodChanged) {
+					// Full reset: re-establishes the correct series render order so
+					// stacking and rounded caps are always assigned correctly.
+					// replaceMerge alone re-appends re-introduced series at the end,
+					// which flips the stack order and misattributes the rounded cap.
+					this.chart?.setOption(opt, { notMerge: true });
+				} else {
+					// Partial update with stable IDs — lets echarts animate bar
+					// value transitions while removing any IDs that disappeared.
+					this.chart?.setOption(
+						{
+							animation: !focusChanged,
+							xAxis: opt["xAxis"],
+							yAxis: opt["yAxis"],
+							series: opt["series"],
+						},
+						{ replaceMerge: ["series"] }
+					);
+				}
 				this.previousFocusedEntity = this.focusedEntity as number | null;
 				this.previousPeriod = this.period as PERIODS;
+				this.previousSeriesKey = newSeriesKey;
 			},
 			deep: true,
 		},
