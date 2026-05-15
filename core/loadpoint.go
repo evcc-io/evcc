@@ -407,7 +407,24 @@ func (lp *Loadpoint) requestUpdate() {
 // the meter was extracted from a decorated charger's capability registry.
 type capableMeter struct {
 	api.Meter
-	api.Capable
+	source any
+}
+
+// Capability implements the api.Capable interface. It first consults the
+// source's capability registry (for decorated capabilities), then falls back
+// to a direct type assertion on the source so statically-implemented
+// interfaces (e.g. PhaseCurrents on the DaheimLaden charger) remain
+// discoverable through the wrapper (https://github.com/evcc-io/evcc/issues/29877).
+func (m *capableMeter) Capability(typ reflect.Type) (any, bool) {
+	if c, ok := m.source.(api.Capable); ok {
+		if impl, ok := c.Capability(typ); ok {
+			return impl, true
+		}
+	}
+	if v := reflect.ValueOf(m.source); v.IsValid() && v.Type().Implements(typ) {
+		return m.source, true
+	}
+	return nil, false
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -419,14 +436,13 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 		integrated = true
 
 		if mt, ok := api.Cap[api.Meter](charger); ok {
-			// preserve charger's capability registry so that subsequent
-			// capability checks on chargeMeter (e.g. MeterEnergy, PhaseCurrents)
-			// still work for decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
-			if c, ok := charger.(api.Capable); ok {
-				lp.chargeMeter = &capableMeter{Meter: mt, Capable: c}
-			} else {
-				lp.chargeMeter = mt
-			}
+			// preserve charger's capability registry and static interface
+			// implementations so that subsequent capability checks on
+			// chargeMeter (e.g. MeterEnergy, PhaseCurrents) still work for
+			// decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
+			// and for chargers that statically implement these interfaces
+			// (https://github.com/evcc-io/evcc/issues/29877).
+			lp.chargeMeter = &capableMeter{Meter: mt, source: charger}
 		} else {
 			mt := new(wrapper.ChargeMeter)
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
