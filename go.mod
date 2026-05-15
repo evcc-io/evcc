@@ -268,3 +268,5 @@ tool (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
+
+replace github.com/insomniacslk/tapo => github.com/andig/tapo v1.0.3-0.20260515151617-f00be8fe9112

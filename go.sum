@@ -41,6 +41,8 @@ github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrR
 github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
+github.com/andig/tapo v1.0.3-0.20260515151617-f00be8fe9112 h1:tMkjiXMxh1Z12+hdObIo73vmFuHNbCxMJFCxSVzOX4I=
+github.com/andig/tapo v1.0.3-0.20260515151617-f00be8fe9112/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=
 github.com/andybalholm/cascadia v1.3.3/go.mod h1:xNd9bqTn98Ln4DwST8/nG+H0yuB8Hmgu1YHNnWw0GeA=
 github.com/antihax/optional v1.0.0 h1:xK2lYat7ZLaVVcIuj82J8kIro4V6kDe0AUDFboUCwcg=
@@ -409,8 +411,6 @@ github.com/influxdata/influxdb-client-go/v2 v2.14.0/go.mod h1:Ahpm3QXKMJslpXl3If
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf h1:7JTmneyiNEwVBOHSjoMxiWAqB992atOeepeFYegn5RU=
 github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf/go.mod h1:xaLFMmpvUxqXtVkUJfg9QmT88cDaCJ3ZKgdZ78oO8Qo=
-github.com/insomniacslk/tapo v1.0.2 h1:o2Bz941/Kp3LEjO5kvBbAE9Z4z9BcQMXRols3QkTnI0=
-github.com/insomniacslk/tapo v1.0.2/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
 github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 h1:bVGPuMhjgFtxVdQGfYnFq+EnCqArOAjLNciow/nArwE=
 github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131/go.mod h1:Z4EVr4bVv9LZbbje9xyZEyOLpdCOmCvr5S9BJtrdTfw=
 github.com/itchyny/gojq v0.12.19 h1:ttXA0XCLEMoaLOz5lSeFOZ6u6Q3QxmG46vfgI4O0DEs=
