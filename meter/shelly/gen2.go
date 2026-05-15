@@ -239,6 +239,26 @@ func (c *gen2) ImportEnergy() (float64, error) {
 	}
 }
 
+// ExportEnergy implements the api.MeterImport interface
+func (c *gen2) ExportEnergy() (float64, error) {
+	switch {
+	case c.hasEM1Endpoint():
+		res, err := c.em1data()
+		return res.TotalActRetEnergy / 1000, err
+
+	case c.hasEMEndpoint():
+		res, err := c.emdata()
+		return res.TotalActRet / 1000, err
+
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return res.Ret_Aenergy.Total / 1000, err
+
+	default:
+		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
+	}
+}
+
 // Currents implements the api.PhaseCurrents interface
 func (c *gen2) Currents() (float64, float64, float64, error) {
 	switch {
