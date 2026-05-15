@@ -28,7 +28,12 @@ type Fnn struct {
 	interval       time.Duration
 }
 
- // NewFromConfig creates an FNN HEMS from generic config
+type curtailRule struct {
+	getter   func() (bool, error)
+	fraction float64
+}
+
+// NewFromConfig creates an FNN HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
 		MaxPower    float64
@@ -96,14 +101,17 @@ func NewFnn(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, max
 
 func boolGetter(ctx context.Context, cfg *plugin.Config) (func() (bool, error), error) {
 	if cfg == nil {
-		return nil, nil
+		return func() (bool, error) { return false, nil }, nil
 	}
 
 	return cfg.BoolGetter(ctx)
 }
 
 func (c *Fnn) Run() {
-	for range time.Tick(c.interval) {
+	ticker := time.NewTicker(c.interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
 		if err := c.Update(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -115,39 +123,20 @@ func (c *Fnn) Run() {
 }
 
 func (c *Fnn) Update() error {
-	if c.w3 != nil {
-		w3, err := c.w3()
-		if err != nil {
-			return err
-		}
-
-		if w3 {
-			// 0%
-			return c.curtail(0.0)
-		}
+	rules := []curtailRule{
+		{getter: c.w3, fraction: 0.0},
+		{getter: c.s2, fraction: 0.3},
+		{getter: c.s1, fraction: 0.6},
 	}
 
-	if c.s2 != nil {
-		s2, err := c.s2()
+	for _, rule := range rules {
+		active, err := rule.getter()
 		if err != nil {
 			return err
 		}
 
-		if s2 {
-			// 30%
-			return c.curtail(0.3)
-		}
-	}
-
-	if c.s1 != nil {
-		s1, err := c.s1()
-		if err != nil {
-			return err
-		}
-
-		if s1 {
-			// 60%
-			return c.curtail(0.6)
+		if active {
+			return c.curtail(rule.fraction)
 		}
 	}
 
@@ -156,7 +145,7 @@ func (c *Fnn) Update() error {
 }
 
 func (c *Fnn) runDim() error {
-	if c.maxPowerDim <= 0 || c.w4 == nil {
+	if c.maxPowerDim <= 0 {
 		return nil
 	}
 
@@ -178,17 +167,18 @@ func (c *Fnn) curtail(frac float64) error {
 	defer c.mu.Unlock()
 
 	active := frac < 1.0
+	limit := c.maxPower * frac
 
 	c.limit = nil
 	if active {
-		c.limit = new(c.maxPower * frac)
+		c.limit = &limit
 	}
 
 	c.root.Curtail(active)
 	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxPower(c.maxPower*frac)
 
-	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.root.GetChargePower(), c.maxPower*frac, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
