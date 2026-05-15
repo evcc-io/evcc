@@ -2,7 +2,6 @@ package tapo
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,10 +20,9 @@ type Connection struct {
 // NewConnection creates a new Tapo device connection.
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
-func NewConnection(uri, user, password string) (*Connection, error) {
-	u, err := url.Parse(uri)
-	if err != nil || u.Host == "" {
-		return nil, fmt.Errorf("invalid uri: %s", uri)
+func NewConnection(host, user, password string) (*Connection, error) {
+	if host == "" {
+		return nil, fmt.Errorf("missing host")
 	}
 
 	if user == "" || password == "" {
@@ -33,7 +31,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 
 	log := util.NewLogger("tapo").Redact(user, password)
 
-	plug := tapo.NewPlug(u.Host, nil)
+	plug := tapo.NewPlug(host, nil)
 	if err := plug.Handshake(user, password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}

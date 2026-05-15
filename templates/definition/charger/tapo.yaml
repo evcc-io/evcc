@@ -18,7 +18,7 @@ params:
   - preset: switchsocket
 render: |
   type: tapo
-  uri: http://{{ .host }}
+  host: {{ .host }}
   user: {{ .user }}
   password: {{ .password }}
   {{ include "switchsocket" . }}

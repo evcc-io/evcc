@@ -18,6 +18,6 @@ params:
     required: true
 render: |
   type: tapo
-  uri: http://{{ .host }}
+  host: {{ .host }}
   user: {{ .user }}
   password: {{ .password }}
