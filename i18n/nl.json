@@ -39,6 +39,9 @@
     "legendTopAutostart": "Start automatisch",
     "legendTopName": "Voertuig opladen met energie uit de thuisbatterij",
     "legendTopSubline": "zodra de thuisbatterij {soc} bereikt heeft.",
+    "legendTopSublineAbove": "wanneer {soc} bereikt is",
+    "legendTopSublineDisabled": "is {soc}.",
+    "legendTopSublineDisabledState": "Uitgeschakeld",
     "modalTitle": "Thuisbatterij",
     "noBattery": "Geen accu geconfigureerd.",
     "usageTab": "Batterijgebruik"
@@ -237,6 +240,7 @@
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
       "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
+      "dismiss": "Negeren",
       "docsLink": "Zie documentatie.",
       "dragHandle": "Schuifknop",
       "dragItem": "Verschuifbaar:{title}",
