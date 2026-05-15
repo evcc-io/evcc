@@ -28,7 +28,7 @@ type Fnn struct {
 	interval       time.Duration
 }
 
-// NewFromConfig creates an nn4 HEMS from generic config
+ // NewFromConfig creates an FNN HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
 		MaxPower    float64
