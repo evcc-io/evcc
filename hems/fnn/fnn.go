@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/smartgrid"
@@ -96,26 +95,12 @@ type Fnn struct {
 	s1, s2, w3 func() (bool, error)
 	w4         func() (bool, error)
 
-	smartgridConsumptionId    uint
-	consumptionLimit          ucapi.LoadLimit // LPC-041
-	consumptionLimitActivated time.Time
-	failsafeConsumptionLimit  float64
+	smartgridConsumptionId uint
+	smartgridProductionId  uint
 
-	smartgridProductionId    uint
-	productionLimit          ucapi.LoadLimit
-	productionLimitActivated time.Time
-	failsafeProductionLimit  *float64
-
-	// legacy fields
-	limit       *float64
 	maxPower    float64
 	maxPowerDim float64
 	interval    time.Duration
-}
-
-type curtailRule struct {
-	getter   func() (bool, error)
-	fraction float64
 }
 
 // Run starts the FNN control loop.
@@ -136,21 +121,28 @@ func (c *Fnn) Run() {
 
 // Update evaluates curtailment rules and applies the appropriate limit.
 func (c *Fnn) Update() error {
-	rules := []curtailRule{
-		{getter: c.w3, fraction: 0.0},
-		{getter: c.s2, fraction: 0.3},
-		{getter: c.s1, fraction: 0.6},
+	active, err := c.w3()
+	if err != nil {
+		return err
+	}
+	if active {
+		return c.curtail(0)
 	}
 
-	for _, rule := range rules {
-		active, err := rule.getter()
-		if err != nil {
-			return err
-		}
+	active, err = c.s2()
+	if err != nil {
+		return err
+	}
+	if active {
+		return c.curtail(0.3)
+	}
 
-		if active {
-			return c.curtail(rule.fraction)
-		}
+	active, err = c.s1()
+	if err != nil {
+		return err
+	}
+	if active {
+		return c.curtail(0.6)
 	}
 
 	// 100%
@@ -183,16 +175,6 @@ func (c *Fnn) curtail(frac float64) error {
 
 	active := frac < 1.0
 	limit := c.maxPower * frac
-	c.productionLimit = ucapi.LoadLimit{}
-	c.productionLimitActivated = time.Now()
-
-	c.limit = nil
-	if active {
-		c.limit = &limit
-		c.failsafeProductionLimit = &limit
-	} else {
-		c.failsafeProductionLimit = nil
-	}
 
 	c.root.Curtail(active)
 	// TODO make ProductionNominalMax configurable (Site kWp)
@@ -211,9 +193,6 @@ func (c *Fnn) setDim(limit float64) error {
 	defer c.mu.Unlock()
 
 	active := limit > 0
-	c.consumptionLimit = ucapi.LoadLimit{}
-	c.consumptionLimitActivated = time.Now()
-	c.failsafeConsumptionLimit = limit
 
 	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
