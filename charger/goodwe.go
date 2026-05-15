@@ -39,7 +39,6 @@ type GoodWe struct {
 	implement.Caps
 	lp       loadpoint.API
 	conn     *modbus.Connection
-	current  float64
 	phases   int
 	maxPower int
 }
