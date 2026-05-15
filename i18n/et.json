@@ -1,7 +1,92 @@
 {
+  "authProviders": {
+    "authCode": "Autentimiskood",
+    "authCodeHelp": "Kopeeri see kood ja kasuta teda järgmises sammus. Kehtivus {duration}.",
+    "authorizationFailed": "Autoriseerimine ei õnnestunud",
+    "authorizationRequired": "Autoriseerimine on vajalik",
+    "authorizationSuccessful": "Autoriseerimine õnnestus"
+  },
   "batterySettings": {
     "batteryLevel": "Akutase",
+    "bufferStart": {
+      "above": "kui on üle {soc}.",
+      "full": "kui on alla {soc}.",
+      "never": "vaid piisava ülejäägi puhul."
+    },
     "capacity": "{energy} / {total}",
     "control": "Akuhaldus"
+  },
+  "config": {
+    "battery": {
+      "titleAdd": "Lisa aku",
+      "titleEdit": "Muuda aku"
+    },
+    "charger": {
+      "template": "Tootja",
+      "titleAdd": {
+        "charging": "Lisa laadija",
+        "heating": "Lisa soojendus"
+      },
+      "titleEdit": {
+        "charging": "Muuda laadijat",
+        "heating": "Muuda soojendust"
+      },
+      "type": {
+        "custom": {
+          "charging": "Kasutaja poolt määratletud laadijat",
+          "heating": "Kasutaja poolt määratletud soojendus"
+        },
+        "heatpump": "Kasutaja poolt määratletud soojuspump"
+      }
+    },
+    "circuits": {
+      "title": "Koormushaldus"
+    },
+    "control": {
+      "labelInterval": "Uuenduse välp",
+      "labelResidualPower": "Jääkvõimsus"
+    },
+    "currency": {
+      "example": "Sinu laadimishind oli {price}. Sa säästsid {amount}.",
+      "label": "Valuuta",
+      "title": "Valuuta"
+    },
+    "deviceValue": {
+      "activeClients": "Aktiivsed kliendid",
+      "amount": "Kogus",
+      "capacity": "Mahtuvus",
+      "chargeStatus": "Olek",
+      "chargeStatusA": "pole ühendatud",
+      "chargeStatusB": "ühendatud",
+      "chargeStatusC": "laadimas",
+      "chargeStatusE": "toide puudub",
+      "chargeStatusF": "viga",
+      "chargedEnergy": "Laetud",
+      "co2": "Võrgu CO₂",
+      "configured": "Seadistatud",
+      "connected": "Ühendatud",
+      "connections": "Ühendused",
+      "controllable": "Juhitav",
+      "currency": "Valuuta",
+      "curtailed": "Piiratud siend",
+      "detected": "Tuvastatud",
+      "dimmed": "Piiratud tarbimine",
+      "enabled": "Kasutusel",
+      "energy": "Energia",
+      "events": "Sündmused",
+      "feedinPrice": "Sisendhind",
+      "forecast": "Ennustus",
+      "gridPrice": "Võrguhind",
+      "heaterTempLimit": "Soojenduse piir",
+      "hemsActiveLimit": "Aktiivne piir",
+      "hemsType": "Suhtlusviis",
+      "identifier": "RFID-tunnus",
+      "loginBlocked": "Sisselogimiste piir on käes",
+      "max": "enim",
+      "messengers": "Teenused",
+      "no": "ei",
+      "odometer": "Odomeeter",
+      "org": "Organisatsioon"
+    }
   }
 }
