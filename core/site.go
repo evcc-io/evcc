@@ -86,8 +86,6 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	collectors map[string]*metrics.Collector // keyed by meter ref
-	fcstEnergy *metrics.Collector
-	pvEnergy   map[string]*metrics.Collector
 
 	// cached state
 	gridPower                float64            // Grid power
@@ -210,7 +208,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.pvEnergy[ref] = me
+		site.collectors[ref] = me
 	}
 
 	// solar forecast collector (mirrors PV history shape, used for scale lookup)
@@ -218,7 +216,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if err != nil {
 		return err
 	}
-	site.fcstEnergy = fc
+	site.collectors[metrics.Forecast] = fc
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
@@ -280,10 +278,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:           util.NewLogger("site"),
-		Voltage:       230, // V
-		pvEnergy:      make(map[string]*metrics.Collector),
-		collectors:    make(map[string]*metrics.Collector),
+		log:        util.NewLogger("site"),
+		Voltage:    230, // V
+		collectors: make(map[string]*metrics.Collector),
 	}
 
 	return site
@@ -590,7 +587,7 @@ func (site *Site) updatePvMeters() {
 
 	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
-		c := site.pvEnergy[dev.Config().Name]
+		c := site.collectors[dev.Config().Name]
 
 		var importEnergy *float64
 		if mm[i].Energy > 0 {
