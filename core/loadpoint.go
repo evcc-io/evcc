@@ -402,14 +402,6 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
-// capableMeter wraps a meter with capability lookup from its source.
-// This preserves capability checks (like MeterEnergy, PhaseCurrents, PhaseVoltages) when
-// the meter was extracted from a decorated charger's capability registry.
-type capableMeter struct {
-	api.Meter
-	api.Capable
-}
-
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
@@ -419,14 +411,13 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 		integrated = true
 
 		if mt, ok := api.Cap[api.Meter](charger); ok {
-			// preserve charger's capability registry so that subsequent
-			// capability checks on chargeMeter (e.g. MeterEnergy, PhaseCurrents)
-			// still work for decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
-			if c, ok := charger.(api.Capable); ok {
-				lp.chargeMeter = &capableMeter{Meter: mt, Capable: c}
-			} else {
-				lp.chargeMeter = mt
-			}
+			// preserve charger's capability registry and static interface
+			// implementations so that subsequent capability checks on
+			// chargeMeter (e.g. MeterEnergy, PhaseCurrents) still work for
+			// decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
+			// and for chargers that statically implement these interfaces
+			// (https://github.com/evcc-io/evcc/issues/29877).
+			lp.chargeMeter = &capableMeter{Meter: mt, source: charger}
 		} else {
 			mt := new(wrapper.ChargeMeter)
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
@@ -1509,8 +1500,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
-		// kick off disable sequence
-		if projectedSitePower >= lp.Disable.Threshold {
+		// kick off disable sequence, unless climater keep-alive is holding
+		// charging at minCurrent — otherwise the "pausing soon" badge would
+		// flash on/off forever while climater is active (issue #29834).
+		if projectedSitePower >= lp.Disable.Threshold && !lp.vehicleClimateActive() {
 			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {

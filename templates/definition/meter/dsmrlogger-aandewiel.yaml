@@ -3,6 +3,9 @@ products:
   - brand: Aandewiel
     description:
       generic: DSMR-logger API
+  - brand: Smartstuff DSMR-logger API
+    description:
+      generic: P1 Dongle with DSMR-logger API
 requirements:
   description:
     generic: "[DSMR-logger](https://github.com/mrWheel/DSMRloggerAPI) by Willem Aandewiel, REST-API version"
@@ -10,9 +13,20 @@ params:
   - name: usage
     choice: ["grid"]
   - name: host
+  - name: apiversion
+    choice: ["v1", "v2"]
+    default: "v1"
+    required: true
+    advanced: true
+    description:
+      de: API Version
+      en: API version
+    help:
+      de: "API v1 für DSMR-logger API v1, API v2 für DSMR-logger API v2 (Smartstuff P1 Dongle mit DSMR-logger API v2)"
+      en: "Use API v1 for DSMR-logger API v1, use API v2 for DSMR-logger API v2 (Smartstuff P1 Dongle with DSMR-logger API v2)"
 render: |
   {{- define "uri" -}}
-  http://{{ .host }}/api/v1/sm/actual
+  http://{{ .host }}/api/{{ .apiversion }}/sm/actual
   {{- end }}
   type: custom
   power:

@@ -10,10 +10,10 @@ import (
 
 // Slot represents an aggregated energy time slot
 type Slot struct {
-	Start  time.Time `json:"start"`
-	End    time.Time `json:"end"`
-	Import float64   `json:"import"`
-	Export float64   `json:"export"`
+	Start        time.Time `json:"start"`
+	End          time.Time `json:"end"`
+	Energy       float64   `json:"energy"`
+	ReturnEnergy float64   `json:"returnEnergy"`
 }
 
 // Series represents a named series of energy slots
@@ -37,8 +37,8 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryImportEnergy returns aggregated energy data, per entity or per group.
-func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+// QueryEnergy returns aggregated energy data, per entity or per group.
+func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
 
 	format, ok := aggregateFormats[aggregate]
@@ -52,18 +52,18 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 	}
 
 	type row struct {
-		Name   string
-		Group  string
-		Start  SqlTime
-		Import float64
-		Export float64
+		Name         string
+		Group        string
+		Start        SqlTime
+		Energy       float64
+		ReturnEnergy float64
 	}
 
 	tx := db.Instance.Table("meters m").
 		Select(`e.name, e."group",
 			MIN(m.ts) AS start,
-			COALESCE(SUM(m."import"), 0) AS import,
-			COALESCE(SUM(m.export), 0) AS export`).
+			COALESCE(SUM(m.energy), 0) AS energy,
+			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
@@ -93,10 +93,10 @@ func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Se
 
 		s := &res[len(res)-1]
 		s.Data = append(s.Data, Slot{
-			Start:  time.Time(r.Start),
-			End:    addDuration(time.Time(r.Start)),
-			Import: r.Import,
-			Export: r.Export,
+			Start:        time.Time(r.Start),
+			End:          addDuration(time.Time(r.Start)),
+			Energy:       r.Energy,
+			ReturnEnergy: r.ReturnEnergy,
 		})
 	}
 
