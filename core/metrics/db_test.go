@@ -44,7 +44,7 @@ func TestSqliteTimestamp(t *testing.T) {
 	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
 }
 
-func TestQueryImportEnergyUTCFilter(t *testing.T) {
+func TestQueryEnergyUTCFilter(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
@@ -62,15 +62,15 @@ func TestQueryImportEnergyUTCFilter(t *testing.T) {
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(3 * time.Hour).UTC()
 
-	res, err := QueryImportEnergy(from, to, "hour", false)
+	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Len(t, res[0].Data, 2)
-	require.InDelta(t, 1, res[0].Data[0].Export, 0.001)
-	require.InDelta(t, 2, res[0].Data[1].Export, 0.001)
+	require.InDelta(t, 1, res[0].Data[0].ReturnEnergy, 0.001)
+	require.InDelta(t, 2, res[0].Data[1].ReturnEnergy, 0.001)
 }
 
-func TestQueryImportEnergyGrouped(t *testing.T) {
+func TestQueryEnergyGrouped(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
@@ -92,22 +92,22 @@ func TestQueryImportEnergyGrouped(t *testing.T) {
 	to := base.Add(3 * time.Hour).UTC()
 
 	// ungrouped: 2 series
-	res, err := QueryImportEnergy(from, to, "hour", false)
+	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 
 	// grouped: 1 series, values summed per bucket
-	res, err = QueryImportEnergy(from, to, "hour", true)
+	res, err = QueryEnergy(from, to, "hour", true)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Equal(t, Grid, res[0].Group)
 	require.Empty(t, res[0].Name)
 	require.Len(t, res[0].Data, 2)
-	require.InDelta(t, 1+2, res[0].Data[0].Import, 0.001)
-	require.InDelta(t, 3+4, res[0].Data[1].Import, 0.001)
+	require.InDelta(t, 1+2, res[0].Data[0].Energy, 0.001)
+	require.InDelta(t, 3+4, res[0].Data[1].Energy, 0.001)
 }
 
-func TestQueryImportEnergyMultipleSeries(t *testing.T) {
+func TestQueryEnergyMultipleSeries(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
@@ -134,7 +134,7 @@ func TestQueryImportEnergyMultipleSeries(t *testing.T) {
 	to := base.Add(3 * time.Hour).UTC()
 
 	// ungrouped: 3 series, each with 2 slots
-	res, err := QueryImportEnergy(from, to, "hour", false)
+	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 3)
 
@@ -147,13 +147,13 @@ func TestQueryImportEnergyMultipleSeries(t *testing.T) {
 	require.Equal(t, PV, byName["pv1"].Group)
 	require.Equal(t, PV, byName["pv2"].Group)
 
-	require.InDelta(t, 1, byName[Grid].Data[0].Import, 0.001)
-	require.InDelta(t, 2, byName[Grid].Data[1].Import, 0.001)
-	require.InDelta(t, 10, byName["pv1"].Data[0].Export, 0.001)
-	require.InDelta(t, 21, byName["pv2"].Data[1].Export, 0.001)
+	require.InDelta(t, 1, byName[Grid].Data[0].Energy, 0.001)
+	require.InDelta(t, 2, byName[Grid].Data[1].Energy, 0.001)
+	require.InDelta(t, 10, byName["pv1"].Data[0].ReturnEnergy, 0.001)
+	require.InDelta(t, 21, byName["pv2"].Data[1].ReturnEnergy, 0.001)
 
 	// grouped: 2 series, pv summed per bucket
-	res, err = QueryImportEnergy(from, to, "hour", true)
+	res, err = QueryEnergy(from, to, "hour", true)
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 
@@ -166,10 +166,10 @@ func TestQueryImportEnergyMultipleSeries(t *testing.T) {
 	require.Contains(t, byGroup, Grid)
 	require.Contains(t, byGroup, PV)
 
-	require.InDelta(t, 1, byGroup[Grid].Data[0].Import, 0.001)
-	require.InDelta(t, 2, byGroup[Grid].Data[1].Import, 0.001)
-	require.InDelta(t, 10+20, byGroup[PV].Data[0].Export, 0.001)
-	require.InDelta(t, 11+21, byGroup[PV].Data[1].Export, 0.001)
+	require.InDelta(t, 1, byGroup[Grid].Data[0].Energy, 0.001)
+	require.InDelta(t, 2, byGroup[Grid].Data[1].Energy, 0.001)
+	require.InDelta(t, 10+20, byGroup[PV].Data[0].ReturnEnergy, 0.001)
+	require.InDelta(t, 11+21, byGroup[PV].Data[1].ReturnEnergy, 0.001)
 }
 
 func TestUpdateProfile(t *testing.T) {

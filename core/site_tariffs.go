@@ -165,7 +165,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 // to the forecast. Returns 1.0 when not enough data is available to make
 // the ratio meaningful.
 func (site *Site) solarScale() float64 {
-	series, err := metrics.QueryImportEnergy(now.BeginningOfDay(), time.Now(), "day", true)
+	series, err := metrics.QueryEnergy(now.BeginningOfDay(), time.Now(), "day", true)
 	if err != nil {
 		site.log.ERROR.Printf("solar forecast scale: %v", err)
 		return 1
@@ -178,9 +178,9 @@ func (site *Site) solarScale() float64 {
 		}
 		switch s.Group {
 		case metrics.PV:
-			pv = s.Data[0].Import
+			pv = s.Data[0].Energy
 		case metrics.Forecast:
-			fcst = s.Data[0].Import
+			fcst = s.Data[0].Energy
 		}
 	}
 
