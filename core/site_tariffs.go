@@ -149,7 +149,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	if r, err := solar.At(time.Now()); err == nil {
 		collector := site.collectors[collectorKey(metrics.Forecast, metrics.Forecast)]
 		if collector == nil {
-			site.log.ERROR.Printf("solar forecast collector: missing collector")
+			site.log.ERROR.Printf("solar forecast collector: missing collector for %s", metrics.Forecast)
 		} else if err := collector.AddEnergy(nil, nil, r.Value); err != nil {
 			site.log.ERROR.Printf("solar forecast collector: %v", err)
 		}

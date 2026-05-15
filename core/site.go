@@ -585,7 +585,7 @@ func (site *Site) updatePvMeters() {
 	for i, dev := range site.pvMeters {
 		c := site.collectors[collectorKey(metrics.PV, dev.Config().Name)]
 		if c == nil {
-			site.log.ERROR.Printf("persist pv %d energy: missing collector for %q", i+1, dev.Config().Name)
+			site.log.ERROR.Printf("pv collector: missing collector for %s", dev.Config().Name)
 			continue
 		}
 
