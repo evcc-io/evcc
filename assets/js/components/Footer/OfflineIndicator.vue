@@ -38,26 +38,41 @@
 			</div>
 			<div
 				v-else-if="showError"
-				class="d-flex align-items-center container px-0 px-sm-4 justify-content-center flex-wrap gap-2"
+				class="d-flex align-items-center container px-0 px-sm-4 flex-wrap gap-2"
 				data-testid="fatal-error"
 			>
-				<shopicon-regular-car1
-					size="m"
-					class="fatal-icon flex-grow-0 flex-shrink-0 d-none d-sm-block"
-				></shopicon-regular-car1>
-				<div class="mx-3 mt-1">
-					<div>
-						<strong>
-							{{ $t("offline.configurationError") }}
-						</strong>
-					</div>
-					<div class="d-flex flex-column gap-1">
-						<div v-for="fatalText in fatalTexts" :key="fatalText" class="text-break">
-							{{ fatalText }}
+				<div class="d-flex align-items-center gap-4">
+					<shopicon-regular-car1
+						size="m"
+						class="fatal-icon flex-shrink-0 d-none d-sm-block"
+					></shopicon-regular-car1>
+					<div class="mt-1">
+						<div>
+							<strong>
+								{{ $t("offline.configurationError") }}
+							</strong>
+						</div>
+						<div class="d-flex flex-column gap-1">
+							<div
+								v-for="fatalText in fatalTexts"
+								:key="fatalText"
+								class="text-break"
+							>
+								{{ fatalText }}
+							</div>
 						</div>
 					</div>
 				</div>
-				<RestartButton class="ms-auto" error @restart="restart" />
+				<div class="ms-auto d-flex align-items-center gap-3">
+					<button
+						type="button"
+						class="btn btn-link btn-sm text-reset p-0"
+						@click="dismiss"
+					>
+						{{ $t("config.general.dismiss") }}
+					</button>
+					<RestartButton error @restart="restart" />
+				</div>
 			</div>
 		</div>
 	</div>
@@ -69,6 +84,7 @@ import "@h2d2/shopicons/es/regular/car1";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import RestartButton from "./RestartButton.vue";
 import restart, { performRestart, restartComplete } from "@/restart";
+import deepEqual from "@/utils/deepEqual";
 import type { FatalError } from "@/types/evcc";
 
 export default defineComponent({
@@ -129,10 +145,18 @@ export default defineComponent({
 				this.dismissed = false;
 			}
 		},
+		fatal(next, prev) {
+			if (!deepEqual(next, prev)) {
+				this.dismissed = false;
+			}
+		},
 	},
 	methods: {
 		restart() {
 			performRestart();
+		},
+		dismiss() {
+			this.dismissed = true;
 		},
 	},
 });

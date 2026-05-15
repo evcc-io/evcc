@@ -13,6 +13,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -29,6 +30,7 @@ type minMax struct {
 }
 
 type EEBus struct {
+	implement.Caps
 	cem *eebus.CustomerEnergyManagement
 	ev  spineapi.EntityRemoteInterface
 
@@ -69,8 +71,6 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy)
 }
 
-//go:generate go tool decorate -f decorateEEBus -b *EEBus -r api.Charger -t api.Meter,api.PhaseCurrents,api.ChargeRater
-
 // newEEBus creates and initializes a raw *EEBus charger.
 // It registers the device with the EEBus instance and waits for the connection.
 func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
@@ -79,6 +79,7 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 	}
 
 	c := &EEBus{
+		Caps:    implement.New(),
 		log:     util.NewLogger("eebus"),
 		current: 6,
 		cem:     eebus.Instance.CustomerEnergyManagement(),
@@ -113,11 +114,11 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bo
 	}
 
 	if hasMeter {
-		var energyG func() (float64, error)
+		implement.Has(c, implement.Meter(c.currentPower))
+		implement.Has(c, implement.PhaseCurrents(c.currents))
 		if hasChargedEnergy {
-			energyG = c.chargedEnergy
+			implement.Has(c, implement.ChargeRater(c.chargedEnergy))
 		}
-		return decorateEEBus(c, c.currentPower, c.currents, energyG), nil
 	}
 
 	return c, nil
@@ -316,7 +317,7 @@ func (c *EEBus) Enable(enable bool) error {
 // send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, current float64) error {
 	// check if the EVSE supports overload protection limits
-	if !c.cem.OpEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.OpEV.IsScenarioAvailableAtEntity(evEntity, eebus.OPEVObligationLimit) {
 		return api.ErrNotAvailable
 	}
 
@@ -362,7 +363,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 // An active recommendation triggers the EV to charge with surplus energy.
 // An inactive recommendation is equivalent to no recommendation existing.
 func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, current float64) {
-	if !c.cem.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.OscEV.IsScenarioAvailableAtEntity(evEntity, eebus.OSCEVRecommendationLimit) {
 		return
 	}
 
@@ -430,7 +431,7 @@ func (c *EEBus) currentPower() (float64, error) {
 
 	// does the EVSE provide power data?
 	var powers []float64
-	if c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 2) {
+	if c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMPowerTotal) {
 		// is power data available for real? Elli Gen1 says it supports it, but doesn't provide any data
 		if powerData, err := c.cem.EvCem.PowerPerPhase(evEntity); err == nil {
 			powers = powerData
@@ -438,7 +439,7 @@ func (c *EEBus) currentPower() (float64, error) {
 	}
 
 	// if no power data is available, and currents are reported to be supported, use currents
-	if len(powers) == 0 && c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if len(powers) == 0 && c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMPowerPerPhase) {
 		// no power provided, calculate from current
 		if currents, err := c.cem.EvCem.CurrentPerPhase(evEntity); err == nil {
 			for _, current := range currents {
@@ -462,7 +463,7 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 		return 0, nil
 	}
 
-	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 3) {
+	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMEnergy) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -482,7 +483,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	}
 
 	// check if the EVSE supports currents
-	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.EvCem.IsScenarioAvailableAtEntity(evEntity, eebus.EVCEMPowerPerPhase) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
@@ -538,7 +539,7 @@ func (c *EEBus) Soc() (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	if !c.cem.EvSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.cem.EvSoc.IsScenarioAvailableAtEntity(evEntity, eebus.EVSOCStateOfCharge) {
 		return 0, api.ErrNotAvailable
 	}
 

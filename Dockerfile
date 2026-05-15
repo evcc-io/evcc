@@ -44,7 +44,7 @@ RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 
 # install tools
 COPY Makefile .
-COPY cmd/decorate/ cmd/decorate/
+COPY cmd/implement/ cmd/implement/
 COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
 RUN --mount=type=cache,target=${GOMODCACHE} make install

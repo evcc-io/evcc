@@ -694,7 +694,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publishTimer(pvTimer, 0, timerInactive)
 
 	// charger features
-	for _, f := range []api.Feature{api.IntegratedDevice, api.Heating} {
+	for _, f := range api.FeatureValues() {
 		lp.publishChargerFeature(f)
 	}
 
@@ -1509,8 +1509,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
-		// kick off disable sequence
-		if projectedSitePower >= lp.Disable.Threshold {
+		// kick off disable sequence, unless climater keep-alive is holding
+		// charging at minCurrent — otherwise the "pausing soon" badge would
+		// flash on/off forever while climater is active (issue #29834).
+		if projectedSitePower >= lp.Disable.Threshold && !lp.vehicleClimateActive() {
 			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {

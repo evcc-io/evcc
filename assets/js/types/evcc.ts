@@ -262,8 +262,10 @@ export interface Loadpoint {
   chargeTotalImport?: number;
   chargeVoltages?: number[];
   chargedEnergy: number;
+  chargerFeatureContinuous: boolean;
   chargerFeatureHeating: boolean;
   chargerFeatureIntegratedDevice: boolean;
+  chargerFeatureSwitchDevice: boolean;
   chargerIcon: string | null;
   chargerPhases1p3p: boolean;
   chargerSinglePhase: boolean;
@@ -378,6 +380,8 @@ export enum CURRENCY {
   USD = "USD",
   DKK = "DKK",
   SEK = "SEK",
+  ZAR = "ZAR",
+  TRY = "TRY",
 }
 
 export enum ICON_SIZE {

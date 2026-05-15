@@ -38,16 +38,21 @@ test.describe("battery settings", async () => {
 
     const topRow = page.getByText("Battery-supported vehicle charging");
     const bufferSoc = topRow.getByRole("combobox").filter({ hasText: "disabled" });
+    const bufferStart = page.locator("#batterySettingsBufferStart");
 
     await expect(bufferSoc).toHaveValue("100");
     await expect(page.getByText("Start automatically")).toBeHidden();
 
     await bufferSoc.selectOption({ label: "when above 80%" });
-    await expect(bufferSoc).toHaveValue("80");
     await expect(page.getByText("Start automatically")).toBeVisible();
+
+    await bufferStart.selectOption({ label: "when above 90%." });
 
     await bufferSoc.selectOption({ label: "disabled" });
     await expect(page.getByText("Start automatically")).toBeHidden();
+
+    await bufferSoc.selectOption({ label: "when above 80%" });
+    await expect(topRow).toContainText("only with enough surplus.");
   });
 
   test("grid charging", async ({ page }) => {

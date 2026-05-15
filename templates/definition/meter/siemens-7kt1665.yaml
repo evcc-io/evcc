@@ -3,6 +3,9 @@ products:
   - brand: Siemens
     description:
       generic: 7KT1665
+  - brand: Siemens
+    description:
+      generic: 7KT1666 (MID)
 params:
   - name: usage
     choice: ["grid", "charge"]
@@ -18,7 +21,6 @@ render: |
       type: input
       decode: int32
     scale: 0.01
-    timeout: 5s
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -27,7 +29,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.001
-    timeout: 5s
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -36,7 +37,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.0001
-    timeout: 5s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -44,7 +44,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.0001
-    timeout: 5s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -52,4 +51,25 @@ render: |
       type: input
       decode: uint32
     scale: 0.0001
-    timeout: 5s
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1
+      type: input
+      decode: uint32
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3
+      type: input
+      decode: uint32
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5
+      type: input
+      decode: uint32
+    scale: 0.01
