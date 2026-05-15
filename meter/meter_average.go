@@ -43,14 +43,14 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 
 	// decorate import reading
 	var importEnergy func() (float64, error)
-	if m, ok := api.Cap[api.MeterImport](m); ok {
-		importEnergy = m.ImportEnergy
+	if m, ok := api.Cap[api.MeterEnergy](m); ok {
+		importEnergy = m.TotalEnergy
 	}
 
 	// decorate export reading
 	var exportEnergy func() (float64, error)
-	if m, ok := api.Cap[api.MeterExport](m); ok {
-		exportEnergy = m.ExportEnergy
+	if m, ok := api.Cap[api.MeterReturnEnergy](m); ok {
+		exportEnergy = m.ReturnEnergy
 	}
 
 	// decorate battery reading
@@ -77,8 +77,8 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 		powers = m.Powers
 	}
 
-	implement.May(meter, implement.MeterImport(importEnergy))
-	implement.May(meter, implement.MeterExport(exportEnergy))
+	implement.May(meter, implement.MeterEnergy(importEnergy))
+	implement.May(meter, implement.MeterReturnEnergy(exportEnergy))
 
 	if batterySoc != nil {
 		implement.Has(meter, implement.Battery(batterySoc))

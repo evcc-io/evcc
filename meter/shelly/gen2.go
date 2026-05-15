@@ -219,8 +219,8 @@ func (c *gen2) Enable(enable bool) error {
 	return c.execEnableCmd(c.switchchannel, "Switch.Set", enable, &res)
 }
 
-// ImportEnergy implements the api.MeterImport interface
-func (c *gen2) ImportEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *gen2) TotalEnergy() (float64, error) {
 	switch {
 	case c.hasEM1Endpoint():
 		res, err := c.em1data()
@@ -239,8 +239,8 @@ func (c *gen2) ImportEnergy() (float64, error) {
 	}
 }
 
-// ExportEnergy implements the api.MeterImport interface
-func (c *gen2) ExportEnergy() (float64, error) {
+// ReturnEnergy implements the api.MeterEnergy interface
+func (c *gen2) ReturnEnergy() (float64, error) {
 	switch {
 	case c.hasEM1Endpoint():
 		res, err := c.em1data()

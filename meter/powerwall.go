@@ -143,11 +143,11 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	if m.usage == "load" {
-		implement.Has(m, implement.MeterImport(m.totalEnergy))
+		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
 	if m.usage == "solar" {
-		implement.Has(m, implement.MeterExport(m.totalEnergy))
+		implement.Has(m, implement.MeterReturnEnergy(m.totalEnergy))
 	}
 
 	if usage == "battery" {

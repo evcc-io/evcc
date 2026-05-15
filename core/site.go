@@ -370,7 +370,7 @@ func meterCapabilities(name string, meter any) string {
 		panic("not a meter: " + name)
 	}
 
-	energy := api.HasCap[api.MeterImport](meter) || api.HasCap[api.MeterExport](meter)
+	energy := api.HasCap[api.MeterEnergy](meter) || api.HasCap[api.MeterReturnEnergy](meter)
 	currents := api.HasCap[api.PhaseCurrents](meter)
 
 	name += ":"
@@ -455,7 +455,7 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
 		_, power := api.Cap[api.Meter](lp.charger)
-		_, energy := api.Cap[api.MeterImport](lp.charger)
+		_, energy := api.Cap[api.MeterEnergy](lp.charger)
 		_, currents := api.Cap[api.PhaseCurrents](lp.charger)
 		_, phases := api.Cap[api.PhaseSwitcher](lp.charger)
 		_, wakeup := api.Cap[api.Resurrector](lp.charger)
@@ -521,12 +521,12 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		if err == nil {
 			switch key {
 			case "pv", "battery":
-				if m, ok := api.Cap[api.MeterExport](meter); ok {
-					energy, err = m.ExportEnergy()
+				if m, ok := api.Cap[api.MeterReturnEnergy](meter); ok {
+					energy, err = m.ReturnEnergy()
 				}
 			default:
-				if m, ok := api.Cap[api.MeterImport](meter); ok {
-					energy, err = m.ImportEnergy()
+				if m, ok := api.Cap[api.MeterEnergy](meter); ok {
+					energy, err = m.TotalEnergy()
 				}
 			}
 			if err != nil {
@@ -795,8 +795,8 @@ func (site *Site) updateGridMeter() error {
 
 	// grid energy (import)
 	var importEnergy *float64
-	if energyMeter, ok := api.Cap[api.MeterImport](site.gridMeter); ok {
-		if f, err := energyMeter.ImportEnergy(); err == nil {
+	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
+		if f, err := energyMeter.TotalEnergy(); err == nil {
 			mm.Energy = f
 			importEnergy = &f
 		} else {

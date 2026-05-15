@@ -52,7 +52,6 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		measurement.Temperature `mapstructure:",squash"` // optional
 		measurement.Energy      `mapstructure:",squash"` // optional
 		meter.Dimmer            `mapstructure:",squash"` // optional
-		LegacyEnergy            *plugin.Config           `mapstructure:"energy"` // TODO deprecated
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -83,17 +82,13 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	// TODO deprecated
-	if err := cc.Energy.AliasImport(cc.LegacyEnergy); err != nil {
-		return nil, err
-	}
-
-	powerG, importG, _, err := cc.Energy.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 	implement.May(res, implement.Meter(powerG))
-	implement.May(res, implement.MeterImport(importG))
+	implement.May(res, implement.MeterEnergy(energyG))
+	implement.May(res, implement.MeterReturnEnergy(returnG))
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {

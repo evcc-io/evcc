@@ -274,11 +274,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("power", val, err)
 	}
 
-	if dev, ok := api.Cap[api.MeterImport](instance); ok {
-		val, err := dev.ImportEnergy()
+	if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
+		val, err := dev.TotalEnergy()
 		makeResult("energy", val, err)
-	} else if dev, ok := api.Cap[api.MeterExport](instance); ok {
-		val, err := dev.ExportEnergy()
+	} else if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
+		val, err := dev.ReturnEnergy()
 		makeResult("energy", val, err)
 	}
 

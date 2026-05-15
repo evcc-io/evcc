@@ -62,7 +62,6 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		SetMaxPower             *plugin.Config // optional
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
-		LegacyEnergy            *plugin.Config `mapstructure:"energy"` // TODO deprecated
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -108,17 +107,13 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	// TODO deprecated
-	if err := cc.Energy.AliasImport(cc.LegacyEnergy); err != nil {
-		return nil, err
-	}
-
-	powerG, importG, _, err := cc.Energy.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 	implement.May(res, implement.Meter(powerG))
-	implement.May(res, implement.MeterImport(importG))
+	implement.May(res, implement.MeterEnergy(energyG))
+	implement.May(res, implement.MeterReturnEnergy(returnG))
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {

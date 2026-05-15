@@ -22,7 +22,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		measurement.Phases    `mapstructure:",squash"` // optional
 		measurement.Dimmer    `mapstructure:",squash"` // optional
 		measurement.Curtailer `mapstructure:",squash"` // optional
-		LegacyEnergy          *plugin.Config           `mapstructure:"energy"` // TODO deprecated
 
 		// pv
 		pvMaxACPower `mapstructure:",squash"`
@@ -45,19 +44,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		return nil, err
 	}
 
-	// TODO deprecated
-	if err := cc.Energy.AliasImport(cc.LegacyEnergy); err != nil {
-		return nil, err
-	}
-
-	powerG, importG, exportG, err := cc.Energy.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	m, _ := NewConfigurable(powerG)
-	implement.May(m, implement.MeterImport(importG))
-	implement.May(m, implement.MeterExport(exportG))
+	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterReturnEnergy(returnG))
 
 	// decorate soc
 	socG, err := cc.Soc.FloatGetter(ctx)
