@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/smartgrid"
@@ -12,28 +13,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type Fnn struct {
-	mu  sync.Mutex
-	log *util.Logger
-
-	root       api.Circuit
-	s1, s2, w3 func() (bool, error)
-	w4         func() (bool, error)
-
-	smartgridID    uint
-	smartgridDimID uint
-	limit          *float64
-	maxPower       float64
-	maxPowerDim    float64
-	interval       time.Duration
-}
-
-type curtailRule struct {
-	getter   func() (bool, error)
-	fraction float64
-}
-
-// NewFromConfig creates an FNN HEMS from generic config
+// NewFromConfig creates an FNN HEMS from generic config.
+// The config struct fields align with EEBUS HEMS naming.
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
 		MaxPower    float64
@@ -82,7 +63,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 	return NewFnn(gridcontrol, s1G, s2G, w3G, w4G, cc.MaxPower, cc.MaxPowerDim, cc.Interval)
 }
 
-// NewFnn creates Fnn HEMS
+// NewFnn creates a new Fnn HEMS instance.
 func NewFnn(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, maxPowerDim float64, interval time.Duration) (*Fnn, error) {
 	c := &Fnn{
 		log:         util.NewLogger("Fnn"),
@@ -95,18 +76,51 @@ func NewFnn(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, max
 		w4:          w4,
 		interval:    interval,
 	}
-
 	return c, nil
 }
 
+// boolGetter returns a boolean getter function for the given plugin config.
 func boolGetter(ctx context.Context, cfg *plugin.Config) (func() (bool, error), error) {
 	if cfg == nil {
 		return func() (bool, error) { return false, nil }, nil
 	}
-
 	return cfg.BoolGetter(ctx)
 }
 
+// Fnn implements the FNN HEMS logic for curtailment and dimming.
+type Fnn struct {
+	mu  sync.Mutex
+	log *util.Logger
+
+	root       api.Circuit
+	s1, s2, w3 func() (bool, error)
+	w4         func() (bool, error)
+
+	smartgridConsumptionId    uint
+	consumptionLimit          ucapi.LoadLimit // LPC-041
+	consumptionLimitActivated time.Time
+	failsafeConsumptionLimit  float64
+
+	smartgridProductionId    uint
+	productionLimit          ucapi.LoadLimit
+	productionLimitActivated time.Time
+	failsafeProductionLimit  *float64
+
+	// legacy fields
+	smartgridID    uint
+	smartgridDimID uint
+	limit          *float64
+	maxPower       float64
+	maxPowerDim    float64
+	interval       time.Duration
+}
+
+type curtailRule struct {
+	getter   func() (bool, error)
+	fraction float64
+}
+
+// Run starts the FNN control loop.
 func (c *Fnn) Run() {
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
@@ -122,6 +136,7 @@ func (c *Fnn) Run() {
 	}
 }
 
+// Update evaluates curtailment rules and applies the appropriate limit.
 func (c *Fnn) Update() error {
 	rules := []curtailRule{
 		{getter: c.w3, fraction: 0.0},
@@ -144,6 +159,7 @@ func (c *Fnn) Update() error {
 	return c.curtail(1.0)
 }
 
+// runDim evaluates the dimming rule and applies the dim limit.
 func (c *Fnn) runDim() error {
 	if c.maxPowerDim <= 0 {
 		return nil
@@ -162,6 +178,7 @@ func (c *Fnn) runDim() error {
 	return c.setDim(frac)
 }
 
+// curtail applies the curtailment limit to the circuit.
 func (c *Fnn) curtail(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -185,6 +202,7 @@ func (c *Fnn) curtail(frac float64) error {
 	return nil
 }
 
+// setDim applies the dimming limit to the circuit.
 func (c *Fnn) setDim(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
