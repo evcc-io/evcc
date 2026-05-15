@@ -160,6 +160,7 @@ import { GROUP_ORDER, groupColor } from "../components/History/groups";
 import colors from "../colors";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
+import store from "../store";
 
 const HISTORY_PERIODS = [PERIODS.DAY, PERIODS.MONTH, PERIODS.YEAR];
 
@@ -271,11 +272,12 @@ export default defineComponent({
 			return `${this.aggregate}|${this.from.getTime()}|${this.to.getTime()}`;
 		},
 		seriesByGroup(): Record<string, HistorySeries[]> {
+			const titles = store.deviceTitles.value;
 			const map: Record<string, HistorySeries[]> = {};
 			for (const s of this.rawSeries) {
 				if (!s.group) continue;
 				if (!map[s.group]) map[s.group] = [];
-				map[s.group]!.push(s);
+				map[s.group]!.push({ ...s, name: titles[s.name] || s.name });
 			}
 			return map;
 		},

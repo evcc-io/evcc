@@ -8,10 +8,12 @@ import (
 
 // Measurement is the device measurements struct
 type Measurement struct {
+	Name          string    `json:"name,omitempty"`
 	Title         string    `json:"title,omitempty"`
 	Icon          string    `json:"icon,omitempty"`
 	Power         float64   `json:"power"`
 	Energy        float64   `json:"energy,omitempty"`
+	ReturnEnergy  float64   `json:"returnEnergy,omitempty"`
 	Powers        []float64 `json:"powers,omitempty"`
 	Currents      []float64 `json:"currents,omitempty"`
 	ExcessDCPower float64   `json:"excessdcpower,omitempty"`

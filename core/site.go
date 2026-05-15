@@ -512,6 +512,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		props := deviceProperties(dev)
 		mm[i] = types.Measurement{
+			Name:   dev.Config().Name,
 			Title:  props.Title,
 			Icon:   props.Icon,
 			Power:  power,
@@ -727,7 +728,7 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	var mm types.Measurement
+	mm := types.Measurement{Name: site.Meters.GridMeterRef}
 
 	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, modbus.Backoff()); err == nil {
 		mm.Power = res
@@ -1057,6 +1058,8 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 
 	site.prepare()
 
+	lpDevices := config.Loadpoints().Devices()
+
 	for id, lp := range site.loadpoints {
 		lpUIChan := make(chan util.Param)
 		lpPushChan := make(chan messenger.Event)
@@ -1074,6 +1077,11 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 				}
 			}
 		}(id)
+
+		// publish name on the loadpoint's behalf — it doesn't know its own
+		if id < len(lpDevices) {
+			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
+		}
 
 		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}

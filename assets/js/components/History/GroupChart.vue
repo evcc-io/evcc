@@ -406,7 +406,8 @@ export default defineComponent({
 						let sum = 0;
 						let hasBar = false;
 						for (const p of arr) {
-							if (!/^entity-\d+-(energy|returnEnergy)$/.test(p.seriesId || "")) continue;
+							if (!/^entity-\d+-(energy|returnEnergy)$/.test(p.seriesId || ""))
+								continue;
 							if (p.value == null) continue;
 							hasBar = true;
 							if (typeof p.value === "number" && p.value > 0) {

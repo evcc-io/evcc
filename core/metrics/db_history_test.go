@@ -55,14 +55,14 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	require.Equal(t, t0.Add(15*time.Minute).Local().Format("2006-01-02 15:04:05"), rows[1][1])
 
 	// First data row values (t0) — plain Wh integers. Cols start at index 2.
-	require.Equal(t, "2500", rows[1][2])  // pv.pv energy
-	require.Equal(t, "0", rows[1][3])     // battery-garage energy
-	require.Equal(t, "1250", rows[1][4])  // battery-garage returnEnergy
-	require.Equal(t, "0", rows[1][5])     // battery-home energy
-	require.Equal(t, "780", rows[1][6])   // battery-home returnEnergy
-	require.Equal(t, "0", rows[1][7])     // grid energy
-	require.Equal(t, "412", rows[1][8])   // grid returnEnergy
-	require.Equal(t, "366", rows[1][9])   // home energy
+	require.Equal(t, "2500", rows[1][2]) // pv.pv energy
+	require.Equal(t, "0", rows[1][3])    // battery-garage energy
+	require.Equal(t, "1250", rows[1][4]) // battery-garage returnEnergy
+	require.Equal(t, "0", rows[1][5])    // battery-home energy
+	require.Equal(t, "780", rows[1][6])  // battery-home returnEnergy
+	require.Equal(t, "0", rows[1][7])    // grid energy
+	require.Equal(t, "412", rows[1][8])  // grid returnEnergy
+	require.Equal(t, "366", rows[1][9])  // home energy
 }
 
 func TestSeriesCSV_GermanLocale(t *testing.T) {
