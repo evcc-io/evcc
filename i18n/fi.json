@@ -39,6 +39,9 @@
     "legendTopAutostart": "Aloita automaattisesti",
     "legendTopName": "Akulla tuettu ajoneuvon lataus",
     "legendTopSubline": "kun kodin akku on yli {soc}.",
+    "legendTopSublineAbove": "kun yli {soc}",
+    "legendTopSublineDisabled": "on {soc}.",
+    "legendTopSublineDisabledState": "ei käytössä",
     "modalTitle": "Kodin akku",
     "noBattery": "Akkuja ei ole määritelty.",
     "usageTab": "Akun käyttö"
@@ -228,6 +231,7 @@
       "authPerformHint": "Avaa uuden välilehden. Palaa tänne jatkaaksesi.",
       "authPrepare": "Valmistele yhteys",
       "cancel": "Peruuta",
+      "change": "Muuta",
       "clear": "Tyhjennä",
       "close": "Sulje",
       "confirmSave": "Asetuksien muutoksia on tallentamatta. Tallennetaanko nyt heti?",
@@ -236,6 +240,7 @@
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",
       "customOption": "Itsemääritelty laite",
       "delete": "Poista",
+      "dismiss": "Ohita",
       "docsLink": "Katso dokumentaatio.",
       "dragHandle": "Kahva",
       "dragItem": "Raahattavissa: {title}",
@@ -428,6 +433,13 @@
       "vehicles": "Minun ajoneuvot",
       "welcomeBannerText": "Aloita luomalla vähintään yksi **laturi**, **lämmitin**, **sähköverkko**, **aurinkopaneeli**, **akku** tai **lisämittari**. Jos haluat vain testata, valitse **esittelylaite**.",
       "welcomeBannerTitle": "Määritetään järjestelmäsi!"
+    },
+    "mcp": {
+      "description": "Järjestelmä Model Context Protocol -palvelimen alaisuudessa, sallii AI-avustimien kuten Clauden lukea järjestelmän tilasi ja hallinnoida latausta.",
+      "exampleLabel": "Esimerkiksi: Claude CLI",
+      "restartHint": "Saatavilla uudelleenkäynnistyksen jälkeen.",
+      "title": "MCP-palvelin",
+      "url": "MCP-osoite"
     },
     "messaging": {
       "addMessenger": "Lisää palvelu",
@@ -696,11 +708,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Lisenssiavain",
+      "activationKeyHint": "Lähetetty sähköpostitse. Löytyy osoitteesta {url}.",
       "addToken": "Anna tunnus",
       "changeToken": "Vaihda tunnus",
       "description": "Sponsorointi auttaa meitä ylläpitämään projektia ja rakentamaan kestävästi uusia ja jännittäviä ominaisuuksia. Sponsorina saat käyttöösi kaikki latureiden toteutukset.",
-      "descriptionToken": "Sponsorit saavat sponsorointitunnuksensa osoitteesta {url}. Päästäksesi alkuun tarjoamme {trialToken}.",
-      "enterYourToken": "Syötä sponsorointitunnuksesi",
+      "descriptionToken": "GitHub-sponsorina löydät sponsorointitunnuksesi osoitteesta {url}. Päästäksesi alkuun tarjoamme {trialToken}.",
+      "email": "Sähköposti",
+      "emailHint": "Sähköpostiosoite, jota käytit {url}:een",
+      "enterYourToken": "Sponsorointitunnuksesi",
       "error": "Sponsoritunnus ei kelpaa.",
       "invalid": "epäkelpo",
       "labelToken": "Sponsoritunnus",
@@ -711,7 +727,7 @@
       "tokenRequiredShort": "Sponsorointi-tokenia ei ole määritelty.",
       "trialToken": "kokeilutunnus",
       "viaYaml": "evcc.yaml-tiedoston mukaisesti",
-      "yourToken": "Sponsorointitunnuksesi"
+      "yourToken": "Sponsorointitunnus"
     },
     "system": {
       "backupRestore": {
@@ -1160,6 +1176,11 @@
       "update": "Aseta",
       "weekdays": "Päivät"
     },
+    "continuousStatus": {
+      "charging": "Tehostus aktiivisena.",
+      "connected": "Normaalitoiminta.",
+      "waitForVehicle": "Tehostusta pyydetään…"
+    },
     "energyflow": {
       "battery": "Akku",
       "batteryCharge": "Akunlataus",
@@ -1186,7 +1207,7 @@
       "charging": "Lämmitys…",
       "connected": "Valmiustila.",
       "vehicleLimit": "Lämmittimen rajoitin",
-      "waitForVehicle": "Valmiina. Odottaa lämmitintä…"
+      "waitForVehicle": "Lämmitystä aloitetaan…"
     },
     "hemsWarning": {
       "description": "Rajoitettu latausta, jotta rajaa {limit} ei ylitettäisi.",
@@ -1460,6 +1481,7 @@
     },
     "loadpoint": "Latauspiste",
     "noData": "Ei lataustapahtumia tässä kuussa.",
+    "odometer": "Kilometrilukema",
     "overview": "Yleiskatsaus",
     "period": {
       "month": "Kuukausi",
