@@ -1,4 +1,5 @@
 template: v2c
+capabilities: ["meter"]
 covers: ["trydan"]
 products:
   - brand: V2C

@@ -39,6 +39,9 @@
     "legendTopAutostart": "Starter automatisk",
     "legendTopName": "Batteri-understøttet opladning af køretøj",
     "legendTopSubline": "når husbatteriet er over {soc}.",
+    "legendTopSublineAbove": "når over {soc}",
+    "legendTopSublineDisabled": "er {soc}.",
+    "legendTopSublineDisabledState": "deaktiveret",
     "modalTitle": "Hus batteri",
     "noBattery": "Ingen batterier er konfigurerede.",
     "usageTab": "Batteri anvendelse"
@@ -228,6 +231,7 @@
       "authPerformHint": "Åbnes i en ny fane. Kom tilbage hertil for at fortsætte.",
       "authPrepare": "Forbereder forbindelse",
       "cancel": "Afbryd",
+      "change": "Ændre",
       "clear": "Slet",
       "close": "Luk",
       "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
@@ -236,6 +240,7 @@
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
+      "dismiss": "Afvis",
       "docsLink": "Se dokumentation.",
       "dragHandle": "Træk-håndtag",
       "dragItem": "Kan trækkes: {title}",
@@ -428,6 +433,13 @@
       "vehicles": "Mine køretøjer",
       "welcomeBannerText": "Start med at oprette mindst én **lader**, **varmer**, **elnet**, **sol**, **batteri** eller **ekstra måler**. Hvis du blot vil teste, kan du vælge en **demoenhed**.",
       "welcomeBannerTitle": "Lad os konfigurere dit system!"
+    },
+    "mcp": {
+      "description": "Eksponerer en Model Context Protocol-server, som gør det muligt for AI-assistenter som Claude at læse systemets tilstand og styre opladningen.",
+      "exampleLabel": "Eksempel: Claude CLI",
+      "restartHint": "Er tilgængelig efter genstart.",
+      "title": "MCP Server",
+      "url": "MCP endepunkt"
     },
     "messaging": {
       "addMessenger": "Tilføj tjeneste",
@@ -696,11 +708,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licensnøgle",
+      "activationKeyHint": "Er sendt via email. Findes i {url}.",
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
       "description": "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne.",
-      "descriptionToken": "Sponsorer finder deres token på {url}. For at komme i gang tilbyder vi en{trialToken}.",
-      "enterYourToken": "Indtast din token",
+      "descriptionToken": "Som GitHub sponsor finder du din token på {url}. For at komme i gang tilbyder vi en {trialToken}.",
+      "email": "Email",
+      "emailHint": "Den email adresse du benyttede for {url}",
+      "enterYourToken": "Din Sponsor token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
       "invalid": "ugyldig",
       "labelToken": "Sponsor token",
@@ -711,7 +727,7 @@
       "tokenRequiredShort": "Der er ingen sponsor token konfiguret.",
       "trialToken": "afprøvningstoken",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Dit token"
+      "yourToken": "Sponsor token"
     },
     "system": {
       "backupRestore": {
@@ -1161,6 +1177,11 @@
       "update": "Anvend",
       "weekdays": "Dage"
     },
+    "continuousStatus": {
+      "charging": "Boost er aktiveret.",
+      "connected": "Normal operation.",
+      "waitForVehicle": "Boost anmodning sendt…"
+    },
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
@@ -1187,7 +1208,7 @@
       "charging": "Opvarmer…",
       "connected": "Standby.",
       "vehicleLimit": "Opvarmning begrænsning",
-      "waitForVehicle": "Klar. Venter på varmelegeme…"
+      "waitForVehicle": "Klar til at varme…"
     },
     "hemsWarning": {
       "description": "Opladningen reduceres for ikke at overskride {limit}.",
@@ -1461,6 +1482,7 @@
     },
     "loadpoint": "Ladepunkt",
     "noData": "Ingen opladninger i denne måned.",
+    "odometer": "Kilometerstand",
     "overview": "Overblik",
     "period": {
       "month": "Måned",

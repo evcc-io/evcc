@@ -157,7 +157,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			return err
 		}
 
-		ft = prorate(scaleAndPrune(solarEnergy, 1, minLen), firstSlotDuration)
+		ft = prorate(scaleAndPrune(solarEnergy, site.solarScale(), minLen), firstSlotDuration)
 	}
 
 	req := optimizer.OptimizationInput{
@@ -171,8 +171,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			Dt: dt,
 			Gt: prorate(gt, firstSlotDuration),
 			Ft: ft,
-			PN: scaleAndPrune(grid, 1e3, minLen),
-			PE: scaleAndPrune(feedIn, 1e3, minLen),
+			PN: scaleAndPrune(grid, 0.001, minLen),
+			PE: scaleAndPrune(feedIn, 0.001, minLen),
 		},
 	}
 
@@ -635,11 +635,11 @@ func asTimestamps(dt []int, now time.Time) []time.Time {
 	return res
 }
 
-func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
+func scaleAndPrune(rates api.Rates, scale float64, maxLen int) []float32 {
 	res := make([]float32, 0, maxLen)
 
 	for _, slot := range rates {
-		res = append(res, float32(slot.Value/div))
+		res = append(res, float32(slot.Value*scale))
 		if len(res) >= maxLen {
 			break
 		}

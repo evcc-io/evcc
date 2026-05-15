@@ -39,6 +39,9 @@
     "legendTopAutostart": "Startar automatiskt",
     "legendTopName": "Fordonsladdning med batteristöd",
     "legendTopSubline": "när hemmabatteriet är över {soc}.",
+    "legendTopSublineAbove": "när över {soc}",
+    "legendTopSublineDisabled": "är {soc}.",
+    "legendTopSublineDisabledState": "avaktiverad",
     "modalTitle": "Hemmabatteri",
     "noBattery": "Inga batterier konfigurerade.",
     "usageTab": "Batterianvändning"
@@ -228,6 +231,7 @@
       "authPerformHint": "Kommer att öppnas i en ny flik. Kom tillbaka hit för att fortsätta.",
       "authPrepare": "Förbered anslutning",
       "cancel": "Avbryt",
+      "change": "Ändra",
       "clear": "Rensa",
       "close": "Stäng",
       "confirmSave": "Det finns ej sparade ändringar. Spara nu?",
@@ -236,6 +240,7 @@
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
+      "dismiss": "Avvisa",
       "docsLink": "Se dokumentation.",
       "dragHandle": "Senarelägga",
       "dragItem": "Går att senarelägga: {title}",
@@ -428,6 +433,13 @@
       "vehicles": "Mina fordon",
       "welcomeBannerText": "Börja med att skapa minst en **laddare**, **värmare**, **nät**, **solcell**, **batteri** eller **extra mätare**. Om du bara vill testa, välj en **demoenhet**.",
       "welcomeBannerTitle": "Låt oss konfigurera ditt system!"
+    },
+    "mcp": {
+      "description": "Exponerar en Model Context Protocol-server, vilket gör det möjligt för AI-assistenter som Claude att läsa status på ditt system och styra laddning.",
+      "exampleLabel": "Exempelvis: Claude CLI",
+      "restartHint": "Blir tillgänglig efter omstart.",
+      "title": "MCP server",
+      "url": "MCP slutpunkt"
     },
     "messaging": {
       "addMessenger": "Lägg till tjänst",
@@ -696,10 +708,14 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licensnyckel",
+      "activationKeyHint": "Skickas med epost. Finns här {url}.",
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
       "descriptionToken": "Sponsorer hittar sin token på {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "email": "Epost",
+      "emailHint": "Epost du använt för {url}",
       "enterYourToken": "Ange sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
@@ -1162,6 +1178,11 @@
       "update": "Verkställ",
       "weekdays": "Dagar"
     },
+    "continuousStatus": {
+      "charging": "Boost aktiverad.",
+      "connected": "Normal drift.",
+      "waitForVehicle": "Boost önskad…"
+    },
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteri laddas",
@@ -1462,6 +1483,7 @@
     },
     "loadpoint": "Laddplats",
     "noData": "Inga laddningar denna månad.",
+    "odometer": "Mätarställning",
     "overview": "Överblick",
     "period": {
       "month": "Månad",

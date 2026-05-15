@@ -340,7 +340,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup MCP
-	if isMcp() {
+	if err == nil && isMcp() {
 		router := httpd.Router()
 
 		var handler http.Handler
@@ -351,6 +351,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if conf.Mcp {
 		log.WARN.Println("mcp: yaml config is deprecated")
 	}
+
 	// setup messaging
 	var pushChan chan messenger.Event
 	if err == nil {

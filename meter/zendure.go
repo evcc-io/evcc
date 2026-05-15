@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/zendure"
 	"github.com/evcc-io/evcc/util"
 )
@@ -15,6 +16,7 @@ func init() {
 }
 
 type Zendure struct {
+	implement.Caps
 	usage string
 	conn  *zendure.Connection
 }
@@ -42,16 +44,17 @@ func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	m := &Zendure{
+		Caps:  implement.New(),
 		usage: cc.Usage,
 		conn:  conn,
 	}
 
 	// decorate battery
 	if cc.Usage == "battery" {
-		return decorateMeterBattery(
-			m, nil, m.soc, cc.batteryCapacity.Decorator(),
-			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
-		), nil
+		implement.Has(m, implement.Battery(m.soc))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 	}
 
 	return m, nil

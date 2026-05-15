@@ -113,6 +113,7 @@
       "title": "Câmbio"
     },
     "deviceValue": {
+      "activeClients": "Clientes ativos",
       "amount": "Quantidade",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Carregado",
       "co2": "Rede CO₂",
       "configured": "Configurado",
+      "connected": "Conectado",
       "connections": "Conexões",
       "controllable": "Controlável",
       "currency": "Moeda",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Limite ativo",
       "hemsType": "Comunicação",
       "identifier": "Identificador RFID",
+      "loginBlocked": "Limite de login atingido",
       "max": "max",
       "messengers": "Serviços",
       "no": "não",
@@ -225,6 +228,7 @@
       "authPerformHint": "Será aberto numa nova janela. Volte aqui para continuar.",
       "authPrepare": "Preparar a ligação",
       "cancel": "Cancelar",
+      "change": "Alterar",
       "clear": "Apagar",
       "close": "Fechar",
       "confirmSave": "Existem modificações não guardadas. Guardar agora?",
@@ -339,7 +343,7 @@
       "defaultsHintLink": "Personalizar configurações",
       "delete": "Apagar",
       "electricalSubtitle": "Em caso de dúvida, pergunte ao seu eletricista.",
-      "electricalTitle": "Elétrico",
+      "electricalTitle": "Sistema elétrico",
       "energyMeterHelp": "Contador adicional se o Carregador não tiver um integrado.",
       "energyMeterLabel": "Contador de energia",
       "estimateLabel": "Interpolar o nível de carga entre actualizações da API",
@@ -425,6 +429,13 @@
       "vehicles": "Os meus Veículos",
       "welcomeBannerText": "Comece por criar pelo menos um **carregador**, **aquecedor**, **rede**, **solar**, **bateria** ou **medidor adicional**. Se quiser apenas testar, escolha um **dispositivo de demonstração**.",
       "welcomeBannerTitle": "Configuremos agora o seu sistema!"
+    },
+    "mcp": {
+      "description": "Exibe um servidor do Protocolo de Contexto de Modelo, permitindo que assistentes de IA como o Claude leiam o estado do seu sistema e controlem o carregamento.",
+      "exampleLabel": "Exemplo: Claude CLI",
+      "restartHint": "Estará disponível após o reinício.",
+      "title": "Servidor MCP",
+      "url": "Ponto terminal MCP"
     },
     "messaging": {
       "addMessenger": "Adicionar serviço",
@@ -603,8 +614,9 @@
       "urlHelp": "Copie este URL para a configuração do seu carregador. Consulte o manual do fabricante para obter mais detalhes. O carregador deve anexar automaticamente o seu identificador único (ID da estação) ao URL. Em casos raros, pode ser necessário especificar manualmente o identificador. Exemplo: `{url}`"
     },
     "optimizer": {
-      "description": "Analisa as previsões de energia solar, os preços da eletricidade e os seus padrões de consumo para otimizar a estratégia de utilização da bateria e de carregamento. Os dados são enviados para o serviço de otimização evcc para serem processados.",
+      "description": "Analisa as previsões de energia solar, os preços da eletricidade e os seus padrões de consumo para otimizar a estratégia de utilização da bateria e de carregamento. Os dados são enviados para o serviço de otimização evcc para serem processados. Atualmente, apenas calcula e apresenta os dados. Ainda não controla dispositivos.",
       "enable": "Ativar o Otimizador",
+      "info": "Pode demorar alguns minutos até que a opção do otimizador no menu fique visível. Em instalações novas, pode demorar até 24 horas até que o evcc tenha recolhido dados suficientes.",
       "title": "Otimizador"
     },
     "options": {
@@ -634,6 +646,38 @@
       "titleAdd": "Adicionar Contador Solar",
       "titleEdit": "Editar Contador Solar"
     },
+    "remote": {
+      "active": "Ativo",
+      "addClient": "Adicionar cliente",
+      "addClientDescription": "As credenciais são armazenadas e verificadas apenas localmente na sua instância do evcc.",
+      "addClientTitle": "Adicionar cliente remoto",
+      "clientCreated": "Cliente criado",
+      "clients": "Clientes",
+      "confirmDelete": "Apagar cliente?",
+      "connected": "Conectado",
+      "createClient": "Criar cliente",
+      "description": "Aceda à sua instalação do evcc a partir de qualquer lugar através da aplicação móvel do evcc. Não é necessário redirecionamento de ports ou VPN.",
+      "deviceName": "Nome do equipamento",
+      "disconnected": "Desconectado",
+      "done": "Concluído",
+      "enableLabel": "Ativar acesso remoto",
+      "expiration": "Validade",
+      "expirationNone": "Nunca",
+      "expired": "caducado",
+      "expiresIn": "expira em {time}",
+      "lastActive": "ativo {time}",
+      "loginBlocked": "Os logins remotos estão bloqueados durante um minuto devido a um número excessivo de tentativas de login falhadas.",
+      "manualLogin": "Ou inicie sessão manualmente em {url} no seu navegador utilizando estas credenciais:",
+      "noClients": "Ainda não há clientes. Ninguém pode ligar-se ainda.",
+      "password": "Palavra-passe",
+      "passwordOnce": "Esta palavra-passe é apresentada apenas uma vez. Leia o código QR ou copie-a agora. Não poderá voltar a vê-la.",
+      "qrInstall": "Instale a aplicação evcc para {ios} ou {android}.",
+      "qrScan": "Digitalize o código com a câmara do seu smartphone para se ligar. Clique nele, se já estiver a utilizar o seu smartphone.",
+      "removeClient": "Remover cliente",
+      "title": "Acesso remoto",
+      "url": "URL pública",
+      "username": "Nome de utilizador"
+    },
     "section": {
       "additionalMeter": "Contadores adicionais",
       "general": "Geral",
@@ -660,11 +704,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Chave de licença",
+      "activationKeyHint": "Enviado por e-mail. Pode ser consultado em {url}.",
       "addToken": "Insira token",
       "changeToken": "Alterar token",
       "description": "O modelo de apoio (sponsoring) ajuda-nos a manter o projeto e a desenvolver, de forma sustentável, novas funcionalidades. Como apoiante (sponsor), terá acesso às integrações de todos os Carregadores.",
-      "descriptionToken": "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste {trialToken}.",
-      "enterYourToken": "Introduzir o seu token",
+      "descriptionToken": "Como patrocinado do GitHub, pode encontrar o seu token em {url}. Para começar, disponibilizamos um {trialToken}.",
+      "email": "E-mail",
+      "emailHint": "Endereço de e-mail que utilizou para {url}",
+      "enterYourToken": "O teu token de patrocinador",
       "error": "O token de Apoiante (Sponsor) não é válido.",
       "invalid": "inválido",
       "labelToken": "Token de Apoiante (Sponsor)",
@@ -675,7 +723,7 @@
       "tokenRequiredShort": "Nenhum token de patrocínio configurado.",
       "trialToken": "token de teste",
       "viaYaml": "através de evcc.yaml",
-      "yourToken": "O seu token"
+      "yourToken": "Token de patrocinador"
     },
     "system": {
       "backupRestore": {
@@ -764,8 +812,8 @@
       "titleChoice": "O que deseja adicionar?",
       "type": {
         "co2": "Intensidade de CO₂",
-        "feedIn": "Preço de venda",
-        "grid": "Preço de consumo da rede",
+        "feedIn": "Preço de exportação da rede",
+        "grid": "Preço de importação da rede",
         "planner": "Planeador",
         "solar": "Solar"
       },
@@ -944,6 +992,7 @@
       "setup": "Definir tarifas e previsões",
       "solar": "Veja a produção solar prevista para hoje e para os próximos dias. Esta informação será também utilizada para a otimização automática do carregamento no futuro."
     },
+    "hideLine": "ocultar linha",
     "modalTitle": "Previsões",
     "price": {
       "average": "Média",
@@ -952,6 +1001,7 @@
       "range": "Intervalo"
     },
     "priceZoom": "ampliar",
+    "showLine": "mostrar linha",
     "solar": {
       "dayAfterTomorrow": "Depois de amanhã",
       "partly": "parcialmente",
@@ -960,7 +1010,8 @@
       "tomorrow": "Amanhã"
     },
     "solarAdjust": "Ajustar a previsão solar com base em dados reais de produção{percent}.",
-    "solarAdjustShort": "ajuste com dados reais",
+    "solarAdjustMedium": "ajuste com dados reais",
+    "solarAdjustShort": "ajustar",
     "type": {
       "co2": "Emissões de CO₂",
       "price": "Preço da rede",
@@ -1132,7 +1183,7 @@
       "batteryTooltip": "{energy} de {total} ({soc})",
       "forecast": "Previsões: ",
       "forecastTooltip": "previsão: produção solar restante de hoje",
-      "gridImport": "Consumo da Rede",
+      "gridImport": "Importação da rede",
       "homePower": "Consumo",
       "loadpoints": "Carregador | Carregador | {count} Carregadores",
       "loadpointsLimit": "limite {limit}",
@@ -1420,6 +1471,7 @@
     },
     "loadpoint": "Posto de Carregamento",
     "noData": "Nenhuma sessão de carregamento este mês.",
+    "odometer": "Quilometragem",
     "overview": "Vista geral",
     "period": {
       "month": "Mês",

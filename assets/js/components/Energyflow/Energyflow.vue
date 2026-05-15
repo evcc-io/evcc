@@ -229,9 +229,9 @@
 								@details-clicked="toggleCo2"
 								@toggle="toggleLoadpoints"
 							>
-								<template v-if="activeLoadpointsCount > 0" #expanded>
+								<template v-if="loadpoints.length > 0" #expanded>
 									<EnergyflowEntry
-										v-for="lp in activeLoadpoints"
+										v-for="lp in loadpoints"
 										:key="lp.id"
 										:name="lp.displayTitle"
 										:power="lp.chargePower"
@@ -462,7 +462,7 @@ export default defineComponent({
 			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
 		activeLoadpoints() {
-			return this.loadpoints.filter((lp) => lp.charging);
+			return this.loadpoints.filter((lp) => lp.charging || lp.chargePower > 10);
 		},
 		activeLoadpointsCount() {
 			return this.activeLoadpoints.length;

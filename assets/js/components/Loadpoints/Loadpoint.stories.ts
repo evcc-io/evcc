@@ -67,6 +67,7 @@ const baseState = {
   vehicleClimaterActive: false,
   vehicleDetectionActive: false,
   vehicleWelcomeActive: false,
+  chargerFeatureContinuous: false,
   chargerFeatureHeating: false,
   chargerFeatureIntegratedDevice: false,
   chargerIcon: "",

@@ -3,7 +3,7 @@ products:
   - brand: openWB
     description:
       generic: Pro
-capabilities: ["1p3p", "mA", "iso151182"]
+capabilities: ["iso151182", "mA", "1p3p", "meter"]
 params:
   - name: host
 render: |

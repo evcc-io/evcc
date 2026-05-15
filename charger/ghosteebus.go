@@ -8,6 +8,7 @@ import (
 
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ghostone"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -49,8 +50,6 @@ func NewGhostEEBusFromConfig(ctx context.Context, other map[string]any) (api.Cha
 	return NewGhostEEBus(ctx, cc.Ski, cc.Ip, cc.User, cc.Password, cc.Meter, hasChargedEnergy)
 }
 
-//go:generate go tool decorate -f decorateGhostEEBus -b *GhostEEBus -r api.Charger -t api.Meter,api.PhaseCurrents,api.ChargeRater,api.PhaseSwitcher,api.PhaseGetter
-
 // NewGhostEEBus creates a GhostEEBus charger combining EEBus with Ghost REST API
 func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
 	eb, err := newEEBus(ctx, ski, ip)
@@ -69,9 +68,6 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 	}
 
 	// REST API features require IP and credentials
-	var phasesS func(int) error
-	var phasesG func() (int, error)
-
 	if ip != "" && user != "" && password != "" {
 		ts, err := ghostone.TokenSource(ctx, log, wb.uri, user, password)
 		if err != nil {
@@ -97,25 +93,21 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 
 		// always wire up phase switching and RFID - the wallbox will reject
 		// operations at runtime if the feature is disabled or not possible
-		phasesS = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		wb.hasRFID = true
 	}
 
 	// EEBus meter capabilities
-	var meter func() (float64, error)
-	var phaseCurrents func() (float64, float64, float64, error)
-	var chargeRater func() (float64, error)
-
 	if hasMeter {
-		meter = eb.currentPower
-		phaseCurrents = eb.currents
+		implement.Has(wb, implement.Meter(eb.currentPower))
+		implement.Has(wb, implement.PhaseCurrents(eb.currents))
 		if hasChargedEnergy {
-			chargeRater = eb.chargedEnergy
+			implement.Has(wb, implement.ChargeRater(eb.chargedEnergy))
 		}
 	}
 
-	return decorateGhostEEBus(wb, meter, phaseCurrents, chargeRater, phasesS, phasesG), nil
+	return wb, nil
 }
 
 var _ api.Identifier = (*GhostEEBus)(nil)
