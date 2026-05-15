@@ -84,9 +84,10 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
-	fcstEnergy  *metrics.Accumulator
-	pvEnergy    map[string]*metrics.Accumulator
 
+	// metrics
+	fcstEnergy             *metrics.Collector
+	pvEnergy               map[string]*metrics.Collector
 	homeEnergy, gridEnergy *metrics.Collector
 	batteryEnergy          map[string]*metrics.Collector // per-battery, keyed by meter ref
 
@@ -206,9 +207,20 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.pvMeters = append(site.pvMeters, dev)
 
-		// accumulator
-		site.pvEnergy[ref] = metrics.NewAccumulator()
+		// energy collector (for history persistence and forecast scaling)
+		me, err := metrics.NewCollector(metrics.PV, ref)
+		if err != nil {
+			return err
+		}
+		site.pvEnergy[ref] = me
 	}
+
+	// solar forecast collector (mirrors PV history shape, used for scale lookup)
+	fc, err := metrics.NewCollector(metrics.Forecast, metrics.Forecast)
+	if err != nil {
+		return err
+	}
+	site.fcstEnergy = fc
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
@@ -260,9 +272,8 @@ func NewSite() *Site {
 	site := &Site{
 		log:           util.NewLogger("site"),
 		Voltage:       230, // V
-		pvEnergy:      make(map[string]*metrics.Accumulator),
+		pvEnergy:      make(map[string]*metrics.Collector),
 		batteryEnergy: make(map[string]*metrics.Collector),
-		fcstEnergy:    metrics.NewAccumulator(),
 	}
 
 	return site
@@ -329,36 +340,10 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 
-	// restore accumulated energy
-	pvEnergy := make(map[string]metrics.Accumulator)
-	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
-
-	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
-		var nok bool
-		for _, name := range site.Meters.PVMetersRef {
-			if fcst, ok := pvEnergy[name]; ok {
-				site.pvEnergy[name].Import = fcst.Import
-			} else {
-				nok = true
-				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
-			}
-		}
-
-		if !nok {
-			site.fcstEnergy.Import = fcstEnergy
-			site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
-		} else {
-			// reset metrics
-			site.log.WARN.Printf("accumulated solar yield: metrics reset")
-
-			settings.Delete(keys.SolarAccForecast)
-			settings.Delete(keys.SolarAccYield)
-
-			for _, pe := range site.pvEnergy {
-				pe.Import = 0
-			}
-		}
-	}
+	// drop legacy accumulator-based forecast settings (now stored via metrics collector)
+	settings.Delete("solarAccForecast")
+	settings.Delete("solarAccYield")
+	settings.Delete("solarAccDay")
 
 	return nil
 }
@@ -593,27 +578,17 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
 
-	// update solar yield
+	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
-		// use stored devices, not ui-updated instances!
-		name := dev.Config().Name
+		c := site.pvEnergy[dev.Config().Name]
 
-		prev := site.pvEnergy[name].Imported()
+		var importEnergy *float64
 		if mm[i].Energy > 0 {
-			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
-			site.pvEnergy[name].SetImportMeterTotal(mm[i].Energy)
-		} else {
-			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
-			site.pvEnergy[name].AddPower(mm[i].Power)
+			importEnergy = &mm[i].Energy
 		}
-		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].Imported())
-	}
 
-	// store
-	if err := settings.SetJson(keys.SolarAccYield, site.pvEnergy); err != nil {
-		site.log.ERROR.Println("accumulated solar production:", err)
-		for k, v := range site.pvEnergy {
-			site.log.ERROR.Printf("!! %s: %+v", k, v)
+		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
+			site.log.ERROR.Printf("persist pv %d energy: %v", i+1, err)
 		}
 	}
 }

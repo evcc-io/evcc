@@ -1,19 +1,15 @@
 package core
 
 import (
-	"maps"
 	"math"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
-	"github.com/samber/lo"
 )
 
 type solarDetails struct {
@@ -150,32 +146,52 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	// accumulate forecasted energy since last update
-	fcstUpdated := site.fcstEnergy.Updated()
-	energy := solarEnergy(solar, fcstUpdated, time.Now()) / 1e3
-	site.log.DEBUG.Printf("solar forecast: accumulated %.3fWh from %v to %v",
-		energy, fcstUpdated.Truncate(time.Second), time.Now().Truncate(time.Second),
-	)
-
-	site.fcstEnergy.AddImportEnergy(energy)
-	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Imported())
-
-	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *metrics.Accumulator) float64 {
-		return v.Imported()
-	})
-	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
-
-	if fcst := site.fcstEnergy.Imported(); fcst > 0 {
-		scale := produced / fcst
-		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
-
-		const minEnergy = 0.5 // kWh
-		if produced+fcst > minEnergy {
-			res.Scale = new(scale)
+	if r, err := solar.At(time.Now()); err == nil {
+		if err := site.fcstEnergy.AddEnergy(nil, nil, r.Value); err != nil {
+			site.log.ERROR.Printf("solar forecast collector: %v", err)
 		}
 	}
 
+	if scale := site.solarScale(); scale != 1 {
+		res.Scale = &scale
+	}
+
 	return res
+}
+
+// solarScale returns the ratio of produced solar energy to forecasted solar
+// energy for the current day, queried from the metrics database. Used to
+// adjust forecasts when PV is consistently under-/over-producing relative
+// to the forecast. Returns 1.0 when not enough data is available to make
+// the ratio meaningful.
+func (site *Site) solarScale() float64 {
+	series, err := metrics.QueryImportEnergy(now.BeginningOfDay(), time.Now(), "day", true)
+	if err != nil {
+		site.log.ERROR.Printf("solar forecast scale: %v", err)
+		return 1
+	}
+
+	var pv, fcst float64
+	for _, s := range series {
+		if len(s.Data) == 0 {
+			continue
+		}
+		switch s.Group {
+		case metrics.PV:
+			pv = s.Data[0].Import
+		case metrics.Forecast:
+			fcst = s.Data[0].Import
+		}
+	}
+
+	const minEnergy = 0.5 // kWh
+	if fcst <= 0 || pv+fcst <= minEnergy {
+		return 1
+	}
+
+	scale := pv / fcst
+	site.log.DEBUG.Printf("solar forecast: produced %.3fkWh, forecasted %.3fkWh, scale %.3f", pv, fcst, scale)
+	return scale
 }
 
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
