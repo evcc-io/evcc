@@ -379,10 +379,13 @@ export default defineComponent({
 			// switch).
 			const next: Record<string, number | null> = {};
 			for (const [group, focused] of Object.entries(this.focusedEntity)) {
-				if (focused == null) continue;
+				if (focused == null) {
+					next[group] = null;
+					continue;
+				}
 				const list = this.displaySeries(group);
 				const stillPresent = list.some((s, i) => (s.paletteIndex ?? i) === focused);
-				if (stillPresent) next[group] = focused;
+				next[group] = stillPresent ? focused : null;
 			}
 			this.focusedEntity = next;
 		},

@@ -97,16 +97,16 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak stacked power across all visible series in kW (day view only).
-		// Sums all positive entity contributions per time slot and returns the max.
+		// Peak absolute net power per slot in kW (day view only). Absolute so
+		// export-dominant slots (battery discharge, grid export) count too.
 		maxVisibleKw(): number {
 			if (this.period !== PERIODS.DAY) return Infinity;
 			const factor = this.valueFactor;
 			const slotSums = new Map<string, number>();
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
-					const v = (slot.energy - slot.returnEnergy) * factor;
-					if (v > 0) slotSums.set(slot.start, (slotSums.get(slot.start) || 0) + v);
+					const v = Math.abs(slot.energy - slot.returnEnergy) * factor;
+					slotSums.set(slot.start, (slotSums.get(slot.start) || 0) + v);
 				}
 			}
 			let max = 0;
@@ -117,7 +117,7 @@ export default defineComponent({
 		useWatts(): boolean {
 			return this.period === PERIODS.DAY && this.maxVisibleKw < 1;
 		},
-		unit(): string {
+		unit(): "W" | "kW" | "kWh" {
 			if (this.period !== PERIODS.DAY) return "kWh";
 			return this.useWatts ? "W" : "kW";
 		},
@@ -628,26 +628,21 @@ export default defineComponent({
 				const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
 					.map((s) => s.id ?? "")
 					.join(",");
-				const compositionChanged = newSeriesKey !== this.previousSeriesKey;
-				if (compositionChanged || periodChanged) {
-					// Full reset: re-establishes the correct series render order so
-					// stacking and rounded caps are always assigned correctly.
-					// replaceMerge alone re-appends re-introduced series at the end,
-					// which flips the stack order and misattributes the rounded cap.
-					this.chart?.setOption(opt, { notMerge: true });
-				} else {
-					// Partial update with stable IDs — lets echarts animate bar
-					// value transitions while removing any IDs that disappeared.
-					this.chart?.setOption(
-						{
-							animation: !focusChanged,
-							xAxis: opt["xAxis"],
-							yAxis: opt["yAxis"],
-							series: opt["series"],
-						},
-						{ replaceMerge: ["series"] }
-					);
-				}
+				// Full reset on period/composition change — replaceMerge re-appends
+				// re-introduced series at the end and flips stack order. Otherwise
+				// partial update lets stable IDs animate value transitions.
+				const fullReset = periodChanged || newSeriesKey !== this.previousSeriesKey;
+				this.chart?.setOption(
+					fullReset
+						? opt
+						: {
+								animation: !focusChanged,
+								xAxis: opt["xAxis"],
+								yAxis: opt["yAxis"],
+								series: opt["series"],
+							},
+					fullReset ? { notMerge: true } : { replaceMerge: ["series"] }
+				);
 				this.previousFocusedEntity = this.focusedEntity as number | null;
 				this.previousPeriod = this.period as PERIODS;
 				this.previousSeriesKey = newSeriesKey;
