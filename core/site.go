@@ -85,11 +85,7 @@ type Site struct {
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
 
-	// metrics
-	fcstEnergy             *metrics.Collector
-	pvEnergy               map[string]*metrics.Collector
-	homeEnergy, gridEnergy *metrics.Collector
-	batteryEnergy          map[string]*metrics.Collector // per-battery, keyed by meter ref
+	collectors map[string]*metrics.Collector // keyed by meter ref
 
 	// cached state
 	gridPower                float64            // Grid power
@@ -144,7 +140,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if err != nil {
 		return err
 	}
-	site.homeEnergy = me
+	site.collectors[metrics.Home] = me
 
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
@@ -196,7 +192,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.gridEnergy = me
+		site.collectors[site.Meters.GridMeterRef] = me
 	}
 
 	// multiple pv
@@ -212,7 +208,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.pvEnergy[ref] = me
+		site.collectors[ref] = me
 	}
 
 	// solar forecast collector (mirrors PV history shape, used for scale lookup)
@@ -220,7 +216,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if err != nil {
 		return err
 	}
-	site.fcstEnergy = fc
+	site.collectors[metrics.Forecast] = fc
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
@@ -234,7 +230,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if err != nil {
 			return err
 		}
-		site.batteryEnergy[ref] = me
+		site.collectors[ref] = me
 	}
 
 	// meters used only for monitoring
@@ -244,6 +240,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.extMeters = append(site.extMeters, dev)
+
+		me, err := metrics.NewCollector(metrics.Meter, ref)
+		if err != nil {
+			return err
+		}
+		site.collectors[ref] = me
 	}
 
 	// auxiliary meters
@@ -253,6 +255,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev)
+
+		me, err := metrics.NewCollector(metrics.Meter, ref)
+		if err != nil {
+			return err
+		}
+		site.collectors[ref] = me
 	}
 
 	// revert battery mode on shutdown
@@ -270,10 +278,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:           util.NewLogger("site"),
-		Voltage:       230, // V
-		pvEnergy:      make(map[string]*metrics.Collector),
-		batteryEnergy: make(map[string]*metrics.Collector),
+		log:        util.NewLogger("site"),
+		Voltage:    230, // V
+		collectors: make(map[string]*metrics.Collector),
 	}
 
 	return site
@@ -581,7 +588,7 @@ func (site *Site) updatePvMeters() {
 
 	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
-		c := site.pvEnergy[dev.Config().Name]
+		c := site.collectors[dev.Config().Name]
 
 		var importEnergy *float64
 		if mm[i].Energy > 0 {
@@ -658,7 +665,7 @@ func (site *Site) updateBatteryMeters() {
 	// accumulate per-battery energy (charging = import, discharging = export — from battery POV toward grid root)
 	for i, dev := range site.batteryMeters {
 		ref := dev.Config().Name
-		c, ok := site.batteryEnergy[ref]
+		c, ok := site.collectors[ref]
 		if !ok {
 			continue
 		}
@@ -693,6 +700,24 @@ func weightedSumOfSocs(mm []types.Measurement) float64 {
 	})
 }
 
+// addMeterEnergy persists per-meter energy (positive power = import).
+func (site *Site) addMeterEnergy(meters []config.Device[api.Meter], mm []types.Measurement) {
+	for i, dev := range meters {
+		ref := dev.Config().Name
+		c, ok := site.collectors[ref]
+		if !ok {
+			continue
+		}
+		var importEnergy *float64
+		if mm[i].Energy > 0 {
+			importEnergy = &mm[i].Energy
+		}
+		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
+			site.log.ERROR.Printf("persist meter %s energy: %v", ref, err)
+		}
+	}
+}
+
 // updateAuxMeters updates aux meters
 func (site *Site) updateAuxMeters() {
 	if len(site.auxMeters) == 0 {
@@ -708,6 +733,8 @@ func (site *Site) updateAuxMeters() {
 		site.log.DEBUG.Printf("aux power: %.0fW", site.auxPower)
 	}
 
+	site.addMeterEnergy(site.auxMeters, mm)
+
 	site.publish(keys.AuxPower, site.auxPower)
 	site.publish(keys.Aux, mm)
 }
@@ -719,6 +746,9 @@ func (site *Site) updateExtMeters() {
 	}
 
 	mm := site.collectMeters("ext", site.extMeters)
+
+	site.addMeterEnergy(site.extMeters, mm)
+
 	site.publish(keys.Ext, mm)
 }
 
@@ -771,7 +801,7 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	site.gridEnergy.AddEnergy(importEnergy, nil, mm.Power)
+	site.collectors[site.Meters.GridMeterRef].AddEnergy(importEnergy, nil, mm.Power)
 
 	site.publish(keys.Grid, mm)
 
@@ -950,7 +980,7 @@ func (site *Site) update(lp updater) {
 		site.publish(keys.HomePower, homePower)
 
 		if homePower > 0 {
-			if err := site.homeEnergy.AddEnergy(nil, nil, homePower); err != nil {
+			if err := site.collectors[metrics.Home].AddEnergy(nil, nil, homePower); err != nil {
 				site.log.ERROR.Printf("persist home consumption: %v", err)
 			}
 		}

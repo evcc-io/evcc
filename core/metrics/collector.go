@@ -15,7 +15,7 @@ const (
 	PV        = "pv"
 	Home      = "home" // meter and group (virtual measurement)
 	Loadpoint = "loadpoint"
-	Meter     = "meter"
+	Meter     = "meter" // generic meter (ext/aux)
 )
 
 type Collector struct {
