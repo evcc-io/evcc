@@ -3,6 +3,7 @@ products:
   - brand: Pulsares
     description:
       generic: SimpleBox
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["rs485"]

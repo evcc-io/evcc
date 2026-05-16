@@ -31,7 +31,7 @@ products:
   - brand: Compleo
     description:
       generic: Pro
-capabilities: ["mA", "rfid"]
+capabilities: ["mA", "rfid", "dim"]
 requirements:
   description:
     en: DIP switch 10 at the controller needs to be set to 'ON'. A recent controller firmware is recommended.

@@ -13,6 +13,7 @@ products:
   - brand: wallbox
     description:
       generic: Copper SB (FW 5.x)
+capabilities: ["dim"]
 requirements:
   description:
     de: |
