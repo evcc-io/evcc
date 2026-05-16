@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -192,7 +193,13 @@ func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 
 // planStrategyHandler updates plan strategy for loadpoint
 func planStrategyHandler(lp loadpoint.API) http.HandlerFunc {
+	// https://github.com/evcc-io/evcc/issues/29922
+	var mu sync.Mutex
+
 	return func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		if err := planStrategyHandlerSetter(r, lp.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
