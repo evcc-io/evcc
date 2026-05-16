@@ -97,9 +97,7 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak absolute net power/energy per slot in the chart's display unit
-		// (kW for day, kWh for month/year). Absolute so export-dominant slots
-		// (battery discharge, grid export) count too.
+		// Peak per-slot stacked value in the display unit (kW for day, kWh otherwise).
 		axisPeak(): number {
 			const factor = this.valueFactor;
 			const slotSums = new Map<string, number>();
@@ -113,8 +111,6 @@ export default defineComponent({
 			for (const v of slotSums.values()) if (v > max) max = v;
 			return max;
 		},
-		// Day-only proxy used by useWatts; non-day reports Infinity so the W
-		// switch never triggers outside day view.
 		maxVisibleKw(): number {
 			return this.period === PERIODS.DAY ? this.axisPeak : Infinity;
 		},
@@ -122,10 +118,7 @@ export default defineComponent({
 		useWatts(): boolean {
 			return this.period === PERIODS.DAY && this.maxVisibleKw < 1;
 		},
-		// Use 1 decimal in the fractional zone (peak under 3 in the display
-		// unit) so echarts' 0.5-step splits don't render duplicates like
-		// "1, 1, 2, 2". Bidirectional sets an explicit integer interval and
-		// W unit means values are 0..900 W — both already render integers.
+		// 1 decimal when echarts may pick 0.5-step splits, else 0 — avoids "1, 1, 2, 2".
 		axisDigits(): number {
 			if (this.isBidirectional || this.useWatts) return 0;
 			return this.axisPeak < 3 ? 1 : 0;
