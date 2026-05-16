@@ -1,3 +1,4 @@
+# https://github.com/Xtherma/xtherma_tcp
 template: xtherma
 products:
   - brand: Xtherma
@@ -10,26 +11,31 @@ params:
 render: |
   type: heatpump
   setmaxpower:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 72
-      type: holding
-      encoding: uint32
+    source: watchdog
+    timeout: 120s
+    reset: 0
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 71
+        type: holding
+        encoding: uint16
   getmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 72
+      address: 177
       type: holding
-      encoding: uint32
+      encoding: uint16
+    scale: 10
   temp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 124
       type: input
-      encoding: int32
+      encoding: int16
     scale: 10
   limittemp:
     source: modbus
@@ -37,4 +43,18 @@ render: |
     register:
       address: 51
       type: input
-      encoding: int32
+      encoding: int16
+  dim:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 65
+      type: holding
+      encoding: uint16
+  dimmed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 103
+      type: input
+      encoding: uint16

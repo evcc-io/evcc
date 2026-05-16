@@ -80,6 +80,7 @@ export interface State {
   timezone?: string;
   battery?: Battery;
   batteryMode?: BATTERY_MODE;
+  grid?: Meter;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -253,6 +254,7 @@ export enum LENGTH_UNIT {
 }
 
 export interface Loadpoint {
+  name: string;
   batteryBoost: boolean;
   chargeCurrents?: number[];
   chargeDuration: number;
@@ -583,15 +585,23 @@ export interface Notification {
 }
 
 export interface Meter {
+  name?: string;
   power: number;
   title?: string;
   icon?: string;
   energy?: number;
+  returnEnergy?: number;
 }
 
 export interface BatteryForecast {
-  full: string | null; // ISO 8601 datetime
-  empty: string | null; // ISO 8601 datetime
+  highest?: BatteryForecastPoint;
+  lowest?: BatteryForecastPoint;
+}
+
+export interface BatteryForecastPoint {
+  soc: number; // percent
+  time: string; // ISO 8601 datetime
+  limit?: boolean; // true when SMax (highest) or SMin (lowest) boundary reached
 }
 
 export interface Battery {

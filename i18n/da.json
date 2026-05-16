@@ -1192,7 +1192,7 @@
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
       "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} af {total} ({soc})",
-      "forecast": "Prognose: ",
+      "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
       "gridImport": "Import fra elnet",
       "homePower": "Forbrug",

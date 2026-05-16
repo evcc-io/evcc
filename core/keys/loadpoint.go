@@ -2,6 +2,7 @@ package keys
 
 const (
 	// loadpoint settings
+	Name              = "name"             // loadpoint name (config identifier)
 	Title             = "title"            // loadpoint title
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode

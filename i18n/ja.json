@@ -31,18 +31,24 @@
     "discharge": "高速モードおよび計画充電での放電を防止します。",
     "disclaimerHint": "注意：",
     "disclaimerText": "これらの設定はソーラーモードにのみ影響します。充電動作はそれに応じて調整されます。",
-    "gridChargeTab": "グリッド充電",
-    "legendBottomName": "ホームバッテリー充電を優先する",
+    "gridChargeTab": "電力網充電",
+    "legendBottomName": "蓄電池の充電を優先",
     "legendBottomSubline": "{soc}に到達するまで。",
     "legendMiddleName": "車両の充電を優先",
-    "legendMiddleSubline": "ホームバッテリーが{soc}を超えたとき。",
+    "legendMiddleSubline": "蓄電池残量が{soc}を超えたとき。",
     "legendTopAutostart": "自動的に開始",
     "legendTopName": "バッテリー対応車両充電",
-    "legendTopSubline": "ホームバッテリーが{soc}を超えたとき。",
-    "modalTitle": "ホームバッテリー",
+    "legendTopSubline": "蓄電池残量が{soc}を超えたとき。",
+    "legendTopSublineDisabledState": "無効",
+    "modalTitle": "蓄電池",
+    "noBattery": "蓄電池が設定されていません。",
     "usageTab": "バッテリー使用量"
   },
   "config": {
+    "aux": {
+      "titleAdd": "自動調整機器を追加",
+      "titleEdit": "自動調整機器を編集"
+    },
     "battery": {
       "titleAdd": "バッテリーを追加",
       "titleEdit": "バッテリーを編集"
@@ -53,9 +59,11 @@
     },
     "charger": {
       "chargers": "EV充電器",
+      "generic": "汎用インテグレーション",
       "ocppConfirmContinue": "充電器はまだevccに接続されていません。続行してもよろしいですか？",
       "ocppConnected": "接続しました！",
       "ocppDescription": "evccにはOCPPサーバーがビルトインされています。以下の手順に従ってください：",
+      "ocppHelp": "このURLを充電器の設定にコピーしてください。詳細はメーカーマニュアルを確認してください。通常、充電器は固有の識別子(ステーションID)をURLに自動的に付加します。まれに、識別子を手動で指定する必要がある場合があります。 例: `{url}`",
       "ocppLabel": "OCPPサーバーURL",
       "ocppNextStep": "次のステップ",
       "ocppStep1": "evccをOCPP サーバーとして使用するように充電器を構成します。",
@@ -84,11 +92,29 @@
         "switchsocket": "ユーザー定義の切り替え可能ソケット"
       }
     },
+    "circuits": {
+      "description": "同一回路内の全充電ポイントの合計が、設定された電力および電流の上限値を超えないように保護します。回路を入れ子状に組み合わせて、階層構造を作ることもできます。",
+      "title": "負荷管理",
+      "usableMeters": "利用可能なメーター参照"
+    },
     "control": {
       "description": "通常はデフォルト値で問題ありません。何をするのか理解している場合のみ変更してください。",
-      "labelInterval": "インターバルを更新"
+      "descriptionResidualPower": "制御ループの動作点を調整します。 蓄電池を使用している場合は、値を100Wにすることをお勧めします。 これにより、蓄電池が系統電力よりもわずかに優先されます。",
+      "labelInterval": "インターバルを更新",
+      "labelResidualPower": "残留電力",
+      "title": "制御動作"
+    },
+    "currency": {
+      "description": "ご契約の料金プランに基づいて、エネルギー価格、コスト、および節約額の表示形式を設定するために使用します。",
+      "example": "請求金額は{price}でした。{amount}節約できました。",
+      "label": "通貨",
+      "title": "通貨"
     },
     "deviceValue": {
+      "activeClients": "アクティブなクライアント",
+      "amount": "数量",
+      "broker": "ブローカー",
+      "bucket": "バケット",
       "capacity": "容量",
       "chargeStatus": "ステータス",
       "chargeStatusA": "未接続",
@@ -96,16 +122,17 @@
       "chargeStatusC": "充電中",
       "chargeStatusF": "エラー",
       "chargedEnergy": "充電済み",
-      "co2": "グリッドCO₂",
+      "co2": "電力網CO₂",
       "connections": "接続",
       "controllable": "制御可能",
       "currency": "通貨",
       "current": "現在",
       "currentRange": "現在",
       "detected": "検出",
+      "dimmed": "消費制限",
       "enabled": "有効",
       "energy": "エネルギー",
-      "gridPrice": "グリッド価格",
+      "gridPrice": "電気料金",
       "heaterTempLimit": "ヒーターリミット",
       "hemsActiveLimit": "アクティブリミット",
       "hemsType": "コミュニケーション",
@@ -123,6 +150,7 @@
       "temp": "温度",
       "topic": "トピック",
       "url": "URL",
+      "vehicleLimitSoc": "充電制限",
       "yes": "はい"
     },
     "deviceValueChargeStatus": {
@@ -135,6 +163,8 @@
       "relay": "リレー経由"
     },
     "devices": {
+      "auxMeter": "スマート機器",
+      "consumer": "一般機器",
       "solarSystem": "ソーラーシステム"
     },
     "editor": {
@@ -146,6 +176,7 @@
         "public": "公開証明書",
         "title": "証明書"
       },
+      "descriptionAdvanced": "通常、変更の必要はありません。内容を十分に理解している場合のみ変更を行ってください。SHIP-idまたは証明書のいずれかを変更すると、デバイスの再ペアリングが必要になります。",
       "interfaces": "インターフェイス",
       "port": "ポート",
       "portHelp": "使用するポート。",
@@ -160,6 +191,11 @@
     "experimental": {
       "title": "実験的"
     },
+    "ext": {
+      "description": "統計目的で、制御対象外の一般機器（冷蔵庫, 洗濯機, etc.）の電力量を記録します。これらのメーターは、負荷管理（分電盤の系統別管理など）にも使用できます。",
+      "titleAdd": "一般機器メーターを追加",
+      "titleEdit": "一般機器メーターを編集"
+    },
     "form": {
       "danger": "危険",
       "deprecated": "非推奨",
@@ -172,6 +208,7 @@
       "close": "閉じる",
       "copied": "コピーしました！",
       "copy": "コピー",
+      "customHelp": "evccのプラグインシステムを使用して、ユーザー定義デバイスを作成します。",
       "customOption": "ユーザー定義デバイス",
       "delete": "削除",
       "experimental": "実験的",
@@ -189,12 +226,14 @@
       "showAdvancedSettings": "詳細設定を見る",
       "telemetry": "テレメトリ",
       "templateLoading": "ロード中...",
-      "title": "タイトル"
+      "title": "タイトル",
+      "typeDeprecated": "タイプ '{type}' は非推奨であり、将来のバージョンで削除される予定です。変更履歴を確認し、このデバイスを再作成してください。",
+      "validateSave": "検証して保存"
     },
     "grid": {
-      "title": "グリッドメーター",
-      "titleAdd": "グリッドメーターを追加",
-      "titleEdit": "グリッドメーターを編集"
+      "title": "電力網メーター",
+      "titleAdd": "電力網メーターを追加",
+      "titleEdit": "電力網メーターを編集"
     },
     "hems": {
       "csv": {
@@ -208,6 +247,10 @@
       "label": "アイコン"
     },
     "influx": {
+      "description": "充電データやその他の指標をInfluxDBに書き込みます。データの可視化にはGrafanaやその他のツールを使用してください。",
+      "descriptionToken": "作成方法については、InfluxDBのドキュメントを参照してください。 https://docs.influxdata.com/influxdb/v2/admin/",
+      "labelBucket": "バケット",
+      "labelCheckInsecure": "自己署名証明書を許可する",
       "labelDatabase": "データベース",
       "labelPassword": "パスワード",
       "labelToken": "APIトークン",
@@ -229,52 +272,169 @@
       "circuitInvalid": "サーキットが存在しません",
       "circuitLabel": "サーキット",
       "circuitUnassigned": "未割り当て",
+      "defaultModeHelp": {
+        "charging": "車両接続時の充電モード。",
+        "heating": "システム起動時に設定されます。"
+      },
+      "defaultModeHelpKeep": "最後に選択されたモードを維持します。",
       "defaultModeLabel": "デフォルトモード",
       "delete": "削除",
       "energyMeterLabel": "エネルギーメーター",
+      "option": {
+        "heating": "加熱機器を追加"
+      },
+      "phases1p": "単相",
+      "phases3p": "三相",
+      "phasesAutomatic": "自動相切り替え",
+      "phasesAutomaticHelp": "お使いの充電器は単相と三相の自動切り替えをサポートしています。メイン画面で充電中の相の挙動を調整できます。",
+      "phasesHelp": "接続されている相数。",
+      "phasesLabel": "相数",
+      "pollIntervalDanger": "車両への頻繁なアクセス要求は、車両のバッテリーを消耗させる恐れがあります。メーカーによっては、このような場合に充電を制限することがあります。非推奨です！リスクを十分に理解している場合にのみ使用してください。",
+      "pollIntervalHelp": "車両APIの更新間隔です。間隔が短いと、車両のバッテリーを消耗させる恐れがあります。",
+      "pollIntervalLabel": "更新間隔",
+      "pollModeAlways": "常時",
+      "pollModeAlwaysHelp": "常に定期的な間隔でステータスの更新を確認します。",
       "pollModeCharging": "充電中",
+      "pollModeChargingHelp": "充電中のみ、車両ステータスの更新を確認します。",
       "pollModeConnected": "接続済み",
       "priorityLabel": "優先度",
       "save": "保存",
       "showAllSettings": "すべての設定を見る",
       "solarBehaviorLabel": "ソーラー",
       "solarModeCustom": "カスタム",
-      "thresholdEnableLabel": "グリッドパワーを有効化する",
+      "thresholdDisableDelayLabel": "無効化の遅延",
+      "thresholdDisableHelpInvalid": "正の値を入力してください。",
+      "thresholdDisableHelpZero": "最低限必要な電力を{delay}の間確保できない場合に停止します。",
+      "thresholdDisableLabel": "停止のしきい値",
+      "thresholdEnableDelayLabel": "有効化の遅延",
+      "thresholdEnableHelpInvalid": "負の値を入力してください。",
+      "thresholdEnableHelpNegative": "{surplus} の余剰電力が {delay} 継続したときに開始します。",
+      "thresholdEnableHelpZero": "必要最小限の電力を確保できる状態が {delay} 継続したときに開始します。",
+      "thresholdEnableLabel": "開始のしきい値",
       "titleAdd": {
-        "charging": "充電ポイントを追加"
+        "charging": "充電ポイントを追加",
+        "heating": "ヒーターを追加",
+        "unknown": "充電器もしくはヒーターを追加"
       },
       "titleEdit": {
-        "charging": "充電ポイントを編集"
+        "charging": "充電ポイントを編集",
+        "heating": "ヒーターを編集",
+        "unknown": "充電器もしくはヒーターを編集"
+      },
+      "titleExample": {
+        "charging": "ガレージ, カーポート, etc.",
+        "heating": "ヒートポンプ, ヒーター, etc."
       },
       "titleLabel": "タイトル",
       "vehicleAutoDetection": "自動認識",
+      "vehicleHelpAutoDetection": "推定される車両を自動的に選択します。手動での変更も可能です。",
+      "vehicleHelpDefault": "常にこの車両がここで充電されていると想定します。自動認識は無効になります。手動での変更も可能です。",
       "vehicleInvalid": "車両が存在しません",
       "vehicleLabel": "デフォルトの車両",
       "vehiclesTitle": "車両"
     },
     "main": {
-      "addGrid": "グリッドメーターを追加",
+      "addAdditional": "追加メーターを追加",
+      "addGrid": "電力網メーターを追加",
       "addLoadpoint": "充電器もしくはヒーターを追加",
-      "addPvBattery": "ソーラーもしくはバッテリーを追加",
+      "addPvBattery": "ソーラーもしくは蓄電池を追加",
+      "addTariffs": "料金プランを追加",
       "addVehicle": "車両を追加",
+      "configured": "設定済み",
       "edit": "編集",
+      "loadpointRequired": "少なくとも1つの充電ポイントを設定する必要があります。",
       "name": "名前",
+      "title": "構成",
+      "unconfigured": "未構成",
+      "vehicles": "私の車両",
+      "welcomeBannerText": "まずは、少なくとも1つの **充電器**, **ヒーター**, **電力網**, **ソーラー**, **蓄電池** または **追加メーター** を作成することから始めましょう。テストだけを行いたい場合は、 **デモデバイス** を選択してください。",
       "welcomeBannerTitle": "システムを構成しましょう！"
     },
+    "mcp": {
+      "description": "Model Context Protocol サーバーを公開することで、Claude などの AI アシスタントがシステムの情報を読み取ったり、充電を制御したりできるようになります。",
+      "exampleLabel": "例: Claude CLI",
+      "restartHint": "再起動後に利用可能になります。",
+      "title": "MCP サーバー",
+      "url": "MCP エンドポイント"
+    },
     "messaging": {
+      "addMessenger": "サービスを追加",
+      "description": "充電セッションに関する通知を受け取る。",
+      "event": {
+        "asleep": {
+          "messageDefault": "充電を許可しましたが、車両 {vehicleName} が充電されていません。",
+          "title": "車両の応答待ちのとき",
+          "titleDefault": "車両スリープ中"
+        },
+        "connect": {
+          "messageDefault": "車両が接続されました (ソーラー発電: {pvPower}kW)",
+          "title": "車両が接続されたとき",
+          "titleDefault": "車両接続済み"
+        },
+        "disconnect": {
+          "messageDefault": "車両が切断されました(接続時間: {connectedDuration})",
+          "title": "車両が切断されたとき",
+          "titleDefault": "車両切断済み"
+        },
+        "guest": {
+          "messageDefault": "未登録車両を検知しました。ゲストが接続しましたか？",
+          "title": "未登録車両が接続されたとき",
+          "titleDefault": "未登録車両"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: スケジュールに間に合いません。",
+          "title": "充電スケジュールの遅延が発生したとき",
+          "titleDefault": "充電スケジュールの遅延"
+        },
+        "soc": {
+          "messageDefault": "バッテリーは {vehicleSoc}% まで充電されました。",
+          "title": "充電レベルの更新",
+          "titleDefault": "充電レベルが更新されました"
+        },
+        "start": {
+          "messageDefault": "{mode} モードで充電を開始しました。",
+          "title": "充電が始まったとき",
+          "titleDefault": "充電を開始しました"
+        },
+        "stop": {
+          "messageDefault": "{chargedEnergy}kWh の充電を {chargeDuration} で完了しました。",
+          "title": "充電が停止したとき",
+          "titleDefault": "充電完了"
+        }
+      },
+      "eventMessage": "メッセージ",
+      "eventTitle": "タイトル",
+      "events": "イベント",
+      "legacyWarning": "新しい通知設定が利用できるようになりました。現在の設定を削除して保存し直すことで、新しい設定ガイドを利用できます。",
+      "messengers": "サービス",
+      "seePlaceholders": "プレースホルダーを参照",
       "title": "通知"
+    },
+    "messenger": {
+      "custom": "ユーザー定義のサービス",
+      "generic": "汎用サービス",
+      "primary": "特定のサービス",
+      "template": "サービス",
+      "titleAdd": "サービスを追加",
+      "titleEdit": "サービスを編集"
     },
     "meter": {
       "cancel": "キャンセル",
       "delete": "削除",
+      "generic": "汎用的な統合",
       "option": {
+        "aux": "自動調整機器を追加",
+        "battery": "蓄電池メーターを追加",
+        "ext": "一般機器メーターを追加",
         "pv": "ソーラーメーターを追加"
       },
       "save": "保存",
       "titleLabel": "タイトル",
       "usage": {
+        "aux": "自動調整機器",
         "battery": "バッテリー",
-        "grid": "グリッド",
+        "charge": "一般機器 / 充電器",
+        "grid": "電力網",
         "label": "使用量"
       }
     },
@@ -350,11 +510,13 @@
       "titleEdit": "ソーラーメーターを編集"
     },
     "section": {
-      "grid": "グリッド",
+      "grid": "電力網",
       "system": "システム",
       "vehicles": "車両"
     },
     "shm": {
+      "description": "evccは、SEMPプロトコルを介したSMA Sunny Home Manager (SHM) との連携機能を備えています。SHMが同一ネットワーク内で動作している場合、Sunny Portalアカウントにログインすると、evccで構成されたすべての充電器を「新しく検出された一般機器」として追加する案内が自動的に表示されます。以下の設定を変更することなく、すぐに使用できる状態になります。",
+      "descriptionIds": "Sunny Portalでは、各一般機器に一意の識別子が必要です。evccはハードウェアに基づいて一意の識別子を生成しますが、evccを別のハードウェアに移行した場合、これらの識別子が変更される可能性があります。履歴を維持したい場合は、ここで生成された識別子を上書きできます。現在の識別子を確認するには、SEMP URL (/semp) を開いてください。",
       "labelDeviceId": "デバイスID",
       "labelVendorId": "ベンダーID"
     },
@@ -363,7 +525,8 @@
       "changeToken": "トークンを変更",
       "error": "スポンサートークンが無効です。",
       "invalid": "無効",
-      "labelToken": "スポンサートークン"
+      "labelToken": "スポンサートークン",
+      "title": "スポンサーシップ"
     },
     "system": {
       "backupRestore": {
@@ -416,16 +579,23 @@
     },
     "savings": {
       "co2Title": "CO₂排出量",
+      "indicator": {
+        "price": "エネルギー価格"
+      },
+      "modalTitle": "充電エネルギーの概要",
       "period": {
-        "thisYear": "今年"
-      }
+        "thisYear": "今年",
+        "total": "全期間"
+      },
+      "priceTitle": "エネルギー価格"
     },
     "sponsor": {
       "becomeSponsor": "スポンサーになる",
       "titleTrial": "トライアルモード"
     },
     "telemetry": {
-      "optInMoreDetailsLink": "こちら"
+      "optInMoreDetailsLink": "こちら",
+      "optInSponsorship": "スポンサーシップが必要です。"
     },
     "version": {
       "availableLong": "新バージョンが利用可能",
@@ -445,6 +615,10 @@
     "price": {
       "range": "範囲"
     },
+    "solar": {
+      "dayAfterTomorrow": "明後日",
+      "tomorrow": "明日"
+    },
     "type": {
       "price": "価格",
       "solar": "ソーラー"
@@ -458,7 +632,7 @@
   "help": {
     "documentationButton": "ドキュメント",
     "issueButton": "問題を報告",
-    "logsButton": "ログを確認",
+    "logsButton": "ログを表示",
     "restart": {
       "cancel": "キャンセル"
     },
@@ -470,7 +644,9 @@
       "showDetails": "詳細を確認",
       "source": "ソース",
       "state": "状態",
-      "title": "追加情報"
+      "title": "追加情報",
+      "uiConfig": "構成 (UI)",
+      "yamlConfig": "構成 (YAML)"
     },
     "createButtonIssue": "GitHub Issueを作成...",
     "issueTitle": "タイトル",
@@ -485,7 +661,8 @@
   },
   "log": {
     "search": "検索",
-    "selectAll": "全てを選択"
+    "selectAll": "全てを選択",
+    "title": "ログ"
   },
   "loginModal": {
     "invalid": "パスワードが無効です。",
@@ -523,6 +700,7 @@
       "login": "ログイン",
       "logout": "ログアウト"
     },
+    "startConfiguration": "構成を始めましょう",
     "targetCharge": {
       "activate": "アクティベート",
       "currentPlan": "アクティブな計画",
@@ -533,27 +711,35 @@
       "tomorrow": "明日",
       "update": "アップデート"
     },
+    "targetChargePlan": {
+      "priceLabel": "エネルギー価格"
+    },
     "vehicle": {
       "fallbackName": "車両",
       "none": "車両無し",
+      "unknown": "ゲスト車両",
       "vehicleSoc": "充電"
     },
     "vehicleStatus": {
       "charging": "充電中…",
+      "cheapEnergySet": "価格上限が設定されました。",
       "connected": "接続済み。",
       "disconnected": "切断済み。"
     },
     "vehicles": "駐車場"
   },
   "notifications": {
+    "logs": "すべてのログを表示",
     "modalTitle": "通知"
   },
   "offline": {
+    "configurationError": "起動時にエラーが発生しました。構成を確認して再起動してください。",
     "message": "サーバーに接続されていません。",
     "restart": "再起動",
     "starting": "サーバーを開始中..."
   },
   "passwordModal": {
+    "description": "構成の設定を保護するためのパスワードを設定します。ログインしなくてもメイン画面は引き続き利用可能です。",
     "labelCurrent": "現在のパスワード",
     "labelNew": "新しいパスワード",
     "noMatch": "パスワードが一致しません"
@@ -569,6 +755,11 @@
     "title": "充電セッション"
   },
   "sessions": {
+    "chartTitle": {
+      "groupedPriceByGroup": "合計コスト {byGroup}",
+      "historyCo2Sub": "{value} 合計",
+      "historyPriceSub": "{value} 合計"
+    },
     "csv": {
       "price": "価格",
       "vehicle": "車両"
@@ -582,22 +773,27 @@
     },
     "group": {
       "co2": "排出量",
-      "grid": "グリッド",
+      "grid": "電力網",
       "price": "価格",
       "self": "ソーラー"
     },
     "groupBy": {
       "loadpoint": "充電ポイント",
+      "none": "合計",
       "vehicle": "車両"
     },
     "loadpoint": "充電ポイント",
+    "noData": "今月の充電セッションはありません。",
+    "overview": "概要",
     "period": {
       "month": "月",
+      "total": "全期間",
       "year": "年"
     },
     "price": "コスト",
     "solar": "ソーラー",
     "title": "充電セッション",
+    "total": "合計",
     "type": {
       "price": "価格",
       "solar": "ソーラー"
@@ -641,6 +837,8 @@
   },
   "smartCost": {
     "activeHoursLabel": "アクティブタイム",
+    "priceLabel": "エネルギー価格",
+    "resetWarning": "動的な電気料金またはCO₂ソースが構成されていません。しかし、依然として {limit} の制限が設定されています。構成を整理しますか?",
     "saved": "保存しました。"
   },
   "startupError": {
