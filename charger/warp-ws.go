@@ -48,8 +48,16 @@ type WarpWS struct {
 	chargeTracker warp.ChargeTrackerCurrentCharge
 
 	// power manager
-	pmState         *warp.PmState
-	pmLowLevelState *warp.PmLowLevelState
+	pmState          *warp.PmState
+	pmLowLevelState  *warp.PmLowLevelState
+	lastPhasesWanted int // 0=never set; 1 or 3=last phases_wanted sent to WEM
+
+	// meter phases (from meter/phases WS events)
+	meterPhases *warpMeterPhases
+}
+
+type warpMeterPhases struct {
+	PhasesConnected [3]bool `json:"phases_connected"`
 }
 
 func init() {
@@ -98,11 +106,8 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	// Feature: Phase Switching
 	// only setup phase switching methods if power manager endpoint is set
 	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
-		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
-			w.pmState = &res
-			implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
-			implement.Has(w, implement.PhaseGetter(w.getPhases))
-		}
+		implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
+		implement.Has(w, implement.PhaseGetter(w.getPhases))
 	}
 
 	// Phase Auto Switching needs to be disabled for WARP3 and WARP2 + EM
@@ -298,6 +303,8 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 				w.meter.Voltages[p] = v
 			}
 		}
+	case "meter/phases":
+		err = json.Unmarshal(payload, &w.meterPhases)
 	case "power_manager/state":
 		err = json.Unmarshal(payload, &w.pmState)
 	case "power_manager/low_level_state":
@@ -411,28 +418,53 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
-	// ensure that phases can be switched
-	if ec, err := w.ensurePmState(); err != nil || ec.ExternalControl > warp.ExternalControlAvailable {
-		return fmt.Errorf("external control not available: %d", ec.ExternalControl)
+	// ExternalControlDeactivated is the expected idle state when no phases_wanted has been
+	// published yet — the POST below activates external control. Only block on transient
+	// states that the POST cannot resolve.
+	if ec, err := w.ensurePmState(); err != nil {
+		return err
+	} else if ec.ExternalControl == warp.ExternalControlRuntimeConditionsNotMet ||
+		ec.ExternalControl == warp.ExternalControlCurrentlySwitching {
+		return fmt.Errorf("external control not available: %s", ec.ExternalControl)
 	}
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", w.pm.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
 	_, err := w.pm.Do(req)
+	if err == nil {
+		w.lastPhasesWanted = phases
+	}
 	return err
 }
 
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
-	s, err := w.ensurePmLowLevelState()
-	if err != nil {
-		return 0, err
+	// Prefer the last phases_wanted we sent to the WEM — this is the most
+	// reliable source and survives mode switches where is_3phase may lag or
+	// report the wrong value.
+	if w.lastPhasesWanted == 1 || w.lastPhasesWanted == 3 {
+		return w.lastPhasesWanted, nil
 	}
 
-	if s.Is3phase {
-		return 3, nil
+	// Fallback: derive from meter/phases.phases_connected, which reflects
+	// physical reality as reported by the WEM's meter.
+	w.mu.RLock()
+	mp := w.meterPhases
+	w.mu.RUnlock()
+	if mp != nil {
+		n := 0
+		for _, c := range mp.PhasesConnected {
+			if c {
+				n++
+			}
+		}
+		if n == 1 || n == 3 {
+			return n, nil
+		}
 	}
-	return 1, nil
+
+	// No information yet — assume 3p (matches Tinkerforge WEM default).
+	return 3, nil
 }
 
 func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
