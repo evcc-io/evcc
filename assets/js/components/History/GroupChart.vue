@@ -97,10 +97,10 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak absolute net power per slot in kW (day view only). Absolute so
-		// export-dominant slots (battery discharge, grid export) count too.
-		maxVisibleKw(): number {
-			if (this.period !== PERIODS.DAY) return Infinity;
+		// Peak absolute net power/energy per slot in the chart's display unit
+		// (kW for day, kWh for month/year). Absolute so export-dominant slots
+		// (battery discharge, grid export) count too.
+		axisPeak(): number {
 			const factor = this.valueFactor;
 			const slotSums = new Map<string, number>();
 			for (const s of this.visibleSeries) {
@@ -113,9 +113,22 @@ export default defineComponent({
 			for (const v of slotSums.values()) if (v > max) max = v;
 			return max;
 		},
+		// Day-only proxy used by useWatts; non-day reports Infinity so the W
+		// switch never triggers outside day view.
+		maxVisibleKw(): number {
+			return this.period === PERIODS.DAY ? this.axisPeak : Infinity;
+		},
 		// Switch to watts when the peak is below 1 kW so small values stay readable.
 		useWatts(): boolean {
 			return this.period === PERIODS.DAY && this.maxVisibleKw < 1;
+		},
+		// Use 1 decimal in the fractional zone (peak under 3 in the display
+		// unit) so echarts' 0.5-step splits don't render duplicates like
+		// "1, 1, 2, 2". Bidirectional sets an explicit integer interval and
+		// W unit means values are 0..900 W — both already render integers.
+		axisDigits(): number {
+			if (this.isBidirectional || this.useWatts) return 0;
+			return this.axisPeak < 3 ? 1 : 0;
 		},
 		unit(): "W" | "kW" | "kWh" {
 			if (this.period !== PERIODS.DAY) return "kWh";
@@ -607,9 +620,9 @@ export default defineComponent({
 										v * 1000,
 										this.useWatts ? POWER_UNIT.W : POWER_UNIT.KW,
 										false,
-										0
+										this.axisDigits
 									)
-								: this.fmtWh(v * 1000, POWER_UNIT.KW, false, 0),
+								: this.fmtWh(v * 1000, POWER_UNIT.KW, false, this.axisDigits),
 					},
 				}),
 				series: this.echartsSeries,
