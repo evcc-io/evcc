@@ -1,49 +1,50 @@
 template: victron-vrm
 products:
-  - brand: Victron
-    description:
-      generic: Energy
   - brand: Azimut Energy
-    description:
-      generic: Azimut Energy
-  - description:
-      de: Victron VRM-Instanz für Batterienutzung, z.B. für Azimut Energy.
-      en: Victron VRM instance for battery use, e.g. for Azimut Energy.
+requirements:
+  description:
+    en: >-
+      Retrieve your Victron battery data via the VRM portal [vrm.victronenergy.com](https://vrm.victronenergy.com).
+      You need a free user access token.
+    de: >-
+      Abrufen der Victron-Batteriedaten über das VRM-Portal [vrm.victronenergy.com](https://vrm.victronenergy.com).
+      Es wird ein kostenloses User Access Token benötigt.
 capabilities: ["battery-control"]
-group: generic
 params:
-  - name: vrm-token
+  - name: usage
+    choice: ["battery"]
+  - name: vrmToken
     description:
       de: VRM Token
       en: VRM token
     type: string
-  - name: site-id
+  - name: siteId
     description:
       de: Standort-ID
       en: Site ID
     type: int
-  - name: battery-instance-id
+  - name: batteryInstanceId
     description:
       de: Batterie-Instanz-ID
       en: Battery instance ID
     type: int
   - preset: battery-params
 render: |
+  {{- define "uri" -}}
+  https://vrmapi.victronenergy.com/v2/installations/{{ .siteId }}/widgets/BatterySummary?instance={{ .batteryInstanceId }}
+  {{- end }}
   type: custom
   power:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .site-id }}/widgets/BatterySummary?instance={{ .battery-instance-id }}
+    uri: {{ include "uri" . }}
     headers:
     - content-type: application/json
-    - Authorization: Token {{ .vrm-token }}
-    jq: .records.data.47.value * .records.data.49.value
-    scale: -1 # Power is negative when battery is charging, so invert the sign
+    - x-authorization: Token {{ .vrmToken }}
+    jq: (.records.data["47"].valueFloat * .records.data["49"].valueFloat) | if . == 0 then 0 else . * -1 end
   soc:
     source: http
-    uri: https://vrmapi.victronenergy.com/v2/installations/{{ .site-id }}/widgets/BatterySummary?instance={{ .battery-instance-id }}
+    uri: {{ include "uri" . }}
     headers:
     - content-type: application/json
-    - Authorization: Token {{ .vrm-token }}
-    jq: .records.data.51.value
-
-
+    - x-authorization: Token {{ .vrmToken }}
+    jq: .records.data["51"].valueFloat
