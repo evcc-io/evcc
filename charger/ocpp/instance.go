@@ -21,22 +21,43 @@ import (
 )
 
 type Config struct {
-	Port int `json:"port"`
+	Port   int `json:"port"`   // OCPP 1.6 port (default 8887)
+	Port20 int `json:"port20"` // OCPP 2.0.1 port (default 8886)
 }
 
 var (
 	once        sync.Once
 	instance    *CS
 	port        = 8887
+	port20      = 8886
 	externalUrl string
+
+	// statusHook20 is set by the ocpp20 package to contribute its stations to GetStatus.
+	statusHook20 func() []StationInfo
 )
 
-// GetStatus returns the OCPP runtime status
+// Port20 returns the configured OCPP 2.0.1 listen port.
+func Port20() int { return port20 }
+
+// RegisterStatusHook20 lets the ocpp20 package register a callback that returns
+// its station list. Called once at package init; safe to leave nil otherwise.
+func RegisterStatusHook20(fn func() []StationInfo) {
+	statusHook20 = fn
+}
+
+// GetStatus returns the OCPP runtime status for both 1.6 and 2.0.1
 func GetStatus() Status {
-	if instance == nil {
-		return Status{}
+	status := Status{}
+
+	if instance != nil {
+		status = instance.status()
 	}
-	return instance.status()
+
+	if statusHook20 != nil {
+		status.Stations = append(status.Stations, statusHook20()...)
+	}
+
+	return status
 }
 
 // ExternalUrl returns the auto-generated OCPP external URL based on network external URL
@@ -59,7 +80,12 @@ func ExternalUrl() string {
 
 // Init initializes the OCPP server
 func Init(cfg Config, networkExternalUrl string) {
-	port = cfg.Port
+	if cfg.Port != 0 {
+		port = cfg.Port
+	}
+	if cfg.Port20 != 0 {
+		port20 = cfg.Port20
+	}
 	externalUrl = networkExternalUrl
 }
 

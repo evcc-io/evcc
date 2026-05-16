@@ -4,10 +4,10 @@ import "time"
 
 var Timeout = time.Minute // default request / response timeout on protocol level
 
-// triggerBootDelay defines how long to wait after WebSocket connect before
+// TriggerBootDelay defines how long to wait after WebSocket connect before
 // proactively triggering a BootNotification. This allows the connection to
 // stabilize and gives the charger a chance to send a spontaneous BootNotification.
-const triggerBootDelay = 5 * time.Second
+const TriggerBootDelay = 5 * time.Second
 
 const (
 	// Core profile keys
