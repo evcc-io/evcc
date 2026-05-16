@@ -52,17 +52,13 @@ type WarpWS struct {
 	lastPhasesWanted int // 0=never set; 1 or 3=last phases_wanted sent to WEM
 
 	// meter phases (from meter/phases WS events)
-	meterPhases *warpMeterPhases
+	meterPhaseCount int // 0=unknown; 1 or 3=derived from phases_connected
 }
 
 const (
 	warpPhases1p = 1
 	warpPhases3p = 3
 )
-
-type warpMeterPhases struct {
-	PhasesConnected [3]bool `json:"phases_connected"`
-}
 
 func init() {
 	registry.AddCtx("warp-ws", NewWarpWSFromConfig)
@@ -308,7 +304,20 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			}
 		}
 	case "meter/phases":
-		err = json.Unmarshal(payload, &w.meterPhases)
+		var mp struct {
+			PhasesConnected [3]bool `json:"phases_connected"`
+		}
+		if err = json.Unmarshal(payload, &mp); err == nil {
+			n := 0
+			for _, c := range mp.PhasesConnected {
+				if c {
+					n++
+				}
+			}
+			if n == warpPhases1p || n == warpPhases3p {
+				w.meterPhaseCount = n
+			}
+		}
 	case "power_manager/state":
 		err = json.Unmarshal(payload, &w.pmState)
 	}
@@ -431,7 +440,7 @@ func (w *WarpWS) phases1p3p(phases int) error {
 		return err
 	} else if ec.ExternalControl == warp.ExternalControlRuntimeConditionsNotMet ||
 		ec.ExternalControl == warp.ExternalControlCurrentlySwitching {
-		return fmt.Errorf("external control not available: %s", ec.ExternalControl)
+		return fmt.Errorf("external control not available: %v", ec.ExternalControl)
 	}
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", w.pm.URI)
@@ -448,32 +457,22 @@ func (w *WarpWS) phases1p3p(phases int) error {
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
 	w.mu.RLock()
-	lastPhasesWanted := w.lastPhasesWanted
-	mp := w.meterPhases
+	last := w.lastPhasesWanted
+	meter := w.meterPhaseCount
 	w.mu.RUnlock()
 
-	// Prefer the last phases_wanted we sent to the WEM — this is the most
-	// reliable source and survives mode switches where is_3phase may lag or
-	// report the wrong value.
-	if lastPhasesWanted == warpPhases1p || lastPhasesWanted == warpPhases3p {
-		return lastPhasesWanted, nil
+	// Prefer the last phases_wanted we sent to the WEM — most reliable,
+	// survives mode switches where hardware state may lag.
+	if last == warpPhases1p || last == warpPhases3p {
+		return last, nil
 	}
 
-	// Fallback: derive from meter/phases.phases_connected, which reflects
-	// physical reality as reported by the WEM's meter.
-	if mp != nil {
-		n := 0
-		for _, c := range mp.PhasesConnected {
-			if c {
-				n++
-			}
-		}
-		if n == warpPhases1p || n == warpPhases3p {
-			return n, nil
-		}
+	// Fallback: meter-derived count from meter/phases.phases_connected.
+	if meter == warpPhases1p || meter == warpPhases3p {
+		return meter, nil
 	}
 
-	// No information yet — assume 3p (matches Tinkerforge WEM default).
+	// No data yet (startup) — assume 3p (Tinkerforge WEM default).
 	return warpPhases3p, nil
 }
 
