@@ -67,6 +67,16 @@ func TokenSource(log *util.Logger, account, user, password string) (oauth2.Token
 	})
 }
 
+// TokenSourceUncached returns a short-lived oauth2.TokenSource for the given account.
+func TokenSourceUncached(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+	id := NewIdentity(log, user, password)
+	token, err := id.Authenticate()
+	if err != nil {
+		return nil, err
+	}
+	return oauth.RefreshTokenSource(token, id.RefreshToken), nil
+}
+
 // Authenticate performs the initial username/password login and returns an oauth2.Token.
 func (c *tokenSource) Authenticate() (*oauth2.Token, error) {
 	data := struct {

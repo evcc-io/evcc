@@ -80,7 +80,8 @@ func easeeOcppClient(user, password string) (*request.Helper, error) {
 	log := util.NewLogger("easee-ocpp")
 	log.Redact(user, password)
 
-	ts, err := easee.TokenSource(log, user, password)
+	// Use an uncached token source since the CLI command is short-lived.
+	ts, err := easee.TokenSourceUncached(log, user, password)
 	if err != nil {
 		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
