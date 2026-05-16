@@ -11,7 +11,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/jinzhu/now"
 )
 
 // cachingProxy wraps a tariff with caching
@@ -44,8 +43,8 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 		key:    tariffType + "-" + cacheKey(typ, other),
 	}
 
-	// check if we have cached data until end of tomorrow
-	data, err := p.cacheGet(untilEndOfTomorrow())
+	// check if we have cached data containing tomorrow rates in evcc representation
+	data, err := p.cacheGet(for24hrsAndOneSlot())
 	if err != nil {
 		// attempt to create a new instance
 		tariff, err := NewFromConfig(ctx, typ, other)
@@ -166,8 +165,8 @@ func for24hrs() time.Time {
 	return time.Now().Add(24 * time.Hour)
 }
 
-func untilEndOfTomorrow() time.Time {
-	return now.BeginningOfDay().AddDate(0, 0, 2)
+func for24hrsAndOneSlot() time.Time {
+	return for24hrs().Add(SlotDuration)
 }
 
 func ratesValid(rr api.Rates, until time.Time) bool {
