@@ -39,6 +39,9 @@
     "legendTopAutostart": "Spustí se automaticky",
     "legendTopName": "Nabíjení vozidla s využitím baterie domu",
     "legendTopSubline": "když je baterie domu nad {soc}.",
+    "legendTopSublineAbove": "když nad {soc}",
+    "legendTopSublineDisabled": "je {soc}.",
+    "legendTopSublineDisabledState": "zakázáno",
     "modalTitle": "Nastavení baterie",
     "noBattery": "Nejsou nakonfigurovány žádné baterie.",
     "usageTab": "Využití baterie"
@@ -237,6 +240,7 @@
       "customHelp": "Vytvořit zařízení definované uživatelem s použitím EVCC plugin rozhraní.",
       "customOption": "Zařízení nastavené uživatelem",
       "delete": "Smazat",
+      "dismiss": "Zahodit",
       "docsLink": "Další informace jsou uvedeny v dokumentaci.",
       "dragHandle": "Tažná rukojeť",
       "dragItem": "Přetahovatelné: {title}",

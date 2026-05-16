@@ -283,6 +283,30 @@ export default defineComponent({
         month: "short",
       }).format(date);
     },
+    fmtDayMonthYear(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+    },
+    fmtDayMonthShort(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
+    fmtMonthNarrow(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        month: "narrow",
+      }).format(date);
+    },
+    // "HH:mm – HH:mm" honoring 12h/24h preference.
+    fmtTimeSlot(start: Date, durationMs: number) {
+      const end = new Date(start.getTime() + durationMs);
+      return `${this.fmtHourMinute(start)} – ${this.fmtHourMinute(end)}`;
+    },
     fmtDurationUnit(value: number, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style: "unit",

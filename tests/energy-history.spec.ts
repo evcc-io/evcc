@@ -31,10 +31,10 @@ test.describe("energy history API", () => {
     expect(grid.data).toHaveLength(6);
     expect(home.data).toHaveLength(6);
 
-    expect(home.data[0].import).toBeCloseTo(0.1, 4);
-    expect(home.data[0].export).toBeCloseTo(0, 4);
-    expect(grid.data[0].import).toBeCloseTo(0.5, 4);
-    expect(grid.data[0].export).toBeCloseTo(0.1, 4);
+    expect(home.data[0].energy).toBeCloseTo(0.1, 4);
+    expect(home.data[0].returnEnergy).toBeCloseTo(0, 4);
+    expect(grid.data[0].energy).toBeCloseTo(0.5, 4);
+    expect(grid.data[0].returnEnergy).toBeCloseTo(0.1, 4);
   });
 
   test("day aggregation", async ({ request }) => {
@@ -58,15 +58,15 @@ test.describe("energy history API", () => {
     const [gridDay1, gridDay2] = grid.data;
 
     // day 1 (2026-03-24): 4 slots
-    expect(homeDay1.import).toBeCloseTo(0.4, 4);
-    expect(homeDay1.export).toBeCloseTo(0, 4);
-    expect(gridDay1.import).toBeCloseTo(2.0, 4);
-    expect(gridDay1.export).toBeCloseTo(0.4, 4);
+    expect(homeDay1.energy).toBeCloseTo(0.4, 4);
+    expect(homeDay1.returnEnergy).toBeCloseTo(0, 4);
+    expect(gridDay1.energy).toBeCloseTo(2.0, 4);
+    expect(gridDay1.returnEnergy).toBeCloseTo(0.4, 4);
 
     // day 2 (2026-03-25): 2 slots
-    expect(homeDay2.import).toBeCloseTo(0.2, 4);
-    expect(homeDay2.export).toBeCloseTo(0, 4);
-    expect(gridDay2.import).toBeCloseTo(1.0, 4);
-    expect(gridDay2.export).toBeCloseTo(0.2, 4);
+    expect(homeDay2.energy).toBeCloseTo(0.2, 4);
+    expect(homeDay2.returnEnergy).toBeCloseTo(0, 4);
+    expect(gridDay2.energy).toBeCloseTo(1.0, 4);
+    expect(gridDay2.returnEnergy).toBeCloseTo(0.2, 4);
   });
 });
