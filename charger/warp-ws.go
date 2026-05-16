@@ -49,7 +49,6 @@ type WarpWS struct {
 
 	// power manager
 	pmState          *warp.PmState
-	pmLowLevelState  *warp.PmLowLevelState
 	lastPhasesWanted int // 0=never set; 1 or 3=last phases_wanted sent to WEM
 
 	// meter phases (from meter/phases WS events)
@@ -312,8 +311,6 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		err = json.Unmarshal(payload, &w.meterPhases)
 	case "power_manager/state":
 		err = json.Unmarshal(payload, &w.pmState)
-	case "power_manager/low_level_state":
-		err = json.Unmarshal(payload, &w.pmLowLevelState)
 	}
 	return err
 }
@@ -478,22 +475,6 @@ func (w *WarpWS) getPhases() (int, error) {
 
 	// No information yet — assume 3p (matches Tinkerforge WEM default).
 	return warpPhases3p, nil
-}
-
-func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
-	w.mu.RLock()
-	s := w.pmLowLevelState
-	w.mu.RUnlock()
-	if s != nil {
-		return *s, nil
-	}
-
-	var ns warp.PmLowLevelState
-	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.pm.URI), &ns); err != nil {
-		return warp.PmLowLevelState{}, err
-	}
-
-	return ns, nil
 }
 
 func (w *WarpWS) ensurePmState() (warp.PmState, error) {
