@@ -19,6 +19,7 @@ import {
 	Chart as ChartJS,
 	CategoryScale,
 	LinearScale,
+	LineController,
 	LineElement,
 	PointElement,
 	Title,
@@ -40,6 +41,7 @@ const tension = 0;
 ChartJS.register(
 	CategoryScale,
 	LinearScale,
+	LineController,
 	LineElement,
 	PointElement,
 	Title,
