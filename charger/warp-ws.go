@@ -56,6 +56,11 @@ type WarpWS struct {
 	meterPhases *warpMeterPhases
 }
 
+const (
+	warpPhases1p = 1
+	warpPhases3p = 3
+)
+
 type warpMeterPhases struct {
 	PhasesConnected [3]bool `json:"phases_connected"`
 }
@@ -418,6 +423,10 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
+	if phases != warpPhases1p && phases != warpPhases3p {
+		return fmt.Errorf("invalid phase count: %d", phases)
+	}
+
 	// ExternalControlDeactivated is the expected idle state when no phases_wanted has been
 	// published yet — the POST below activates external control. Only block on transient
 	// states that the POST cannot resolve.
@@ -432,25 +441,29 @@ func (w *WarpWS) phases1p3p(phases int) error {
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
 	_, err := w.pm.Do(req)
 	if err == nil {
+		w.mu.Lock()
 		w.lastPhasesWanted = phases
+		w.mu.Unlock()
 	}
 	return err
 }
 
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
+	w.mu.RLock()
+	lastPhasesWanted := w.lastPhasesWanted
+	mp := w.meterPhases
+	w.mu.RUnlock()
+
 	// Prefer the last phases_wanted we sent to the WEM — this is the most
 	// reliable source and survives mode switches where is_3phase may lag or
 	// report the wrong value.
-	if w.lastPhasesWanted == 1 || w.lastPhasesWanted == 3 {
-		return w.lastPhasesWanted, nil
+	if lastPhasesWanted == warpPhases1p || lastPhasesWanted == warpPhases3p {
+		return lastPhasesWanted, nil
 	}
 
 	// Fallback: derive from meter/phases.phases_connected, which reflects
 	// physical reality as reported by the WEM's meter.
-	w.mu.RLock()
-	mp := w.meterPhases
-	w.mu.RUnlock()
 	if mp != nil {
 		n := 0
 		for _, c := range mp.PhasesConnected {
@@ -458,13 +471,13 @@ func (w *WarpWS) getPhases() (int, error) {
 				n++
 			}
 		}
-		if n == 1 || n == 3 {
+		if n == warpPhases1p || n == warpPhases3p {
 			return n, nil
 		}
 	}
 
 	// No information yet — assume 3p (matches Tinkerforge WEM default).
-	return 3, nil
+	return warpPhases3p, nil
 }
 
 func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
