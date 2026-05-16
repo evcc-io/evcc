@@ -26,7 +26,6 @@ func TestRatesValidTomorrowCoverage(t *testing.T) {
 
 	until := now.Add(24*time.Hour + SlotDuration)
 
-	assert.False(t, ratesValid(makeRates(96), until))  // only today
-	assert.True(t, ratesValid(makeRates(192), until)) // today + tomorrow
+	assert.False(t, ratesValid(makeRates(96), until))  // 96 * 15min = 24h (only today)
+	assert.True(t, ratesValid(makeRates(192), until)) // 192 * 15min = 48h (today + tomorrow)
 }
-
