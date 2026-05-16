@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,8 +30,7 @@ func (a *API) do(path, vin string, body string) ([]byte, error) {
 		if client == nil {
 			return nil, fmt.Errorf("not authenticated")
 		}
-		headers := buildSignedHeaders(signKey, deviceID, vin, defaultLang, nil)
-		addAuthHeaders(headers, userID, token)
+		headers := buildSignedHeaders(signKey, deviceID, vin, defaultLang, userID, token, nil)
 		return apiPost(client, BaseURL+path, headers, body)
 	}
 
@@ -68,14 +68,10 @@ func (a *API) Vehicles() ([]Vehicle, error) {
 		return nil, err
 	}
 	all := append(data.Bindcars, data.Sharedcars...)
-	// Filter out entries without VIN.
-	out := all[:0]
-	for _, v := range all {
-		if v.VIN != "" {
-			out = append(out, v)
-		}
-	}
-	return out, nil
+	valid := slices.DeleteFunc(all, func(v Vehicle) bool {
+		return v.VIN == ""
+	})
+	return valid, nil
 }
 
 // Status fetches the current status for the given VIN and car type.

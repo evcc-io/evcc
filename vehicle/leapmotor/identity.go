@@ -1,7 +1,6 @@
 package leapmotor
 
 import (
-	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha256"
@@ -10,16 +9,18 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"maps"
 	"math/rand"
 	"net/http"
 	"net/url"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/emmansun/gmsm/sm4"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/hkdf"
@@ -27,12 +28,8 @@ import (
 )
 
 // p12SM4Block is the SM4 cipher keyed with the APK-embedded key, used for PKCS#12 password derivation.
-var p12SM4Block cipher.Block
-
-func init() {
-	// key length is always 16 bytes; NewCipher only errors on wrong length
-	p12SM4Block, _ = sm4.NewCipher([]byte{0x42, 0x9c, 0xf4, 0x50, 0xef, 0x91, 0x7a, 0x98, 0x54, 0x33, 0x43, 0x0b, 0xcf, 0xed, 0x62, 0xac})
-}
+// key length is always 16 bytes; NewCipher only errors on wrong length.
+var p12SM4Block, _ = sm4.NewCipher([]byte{0x42, 0x9c, 0xf4, 0x50, 0xef, 0x91, 0x7a, 0x98, 0x54, 0x33, 0x43, 0x0b, 0xcf, 0xed, 0x62, 0xac})
 
 // p12MemoryEncode applies PKCS7 padding then SM4-ECB encryption block by block.
 func p12MemoryEncode(data []byte) []byte {
@@ -72,18 +69,22 @@ func deriveP12Password(accountID, uid string) string {
 	return b64
 }
 
-// deriveSessionDeviceID extracts the session deviceId from the JWT token payload.
-func deriveSessionDeviceID(token, fallback string) string {
-	var claims jwt.MapClaims
+type usernameClaims struct {
+	jwt.RegisteredClaims
+	Username string `json:"user_name"`
+}
+
+// extractSessionDeviceID extracts the session deviceId from the JWT token payload.
+func extractSessionDeviceID(token string) *string {
+	var claims usernameClaims
 	if _, _, err := jwt.NewParser(jwt.WithoutClaimsValidation()).ParseUnverified(token, &claims); err != nil {
-		return fallback
+		return nil
 	}
-	userName, _ := claims["user_name"].(string)
-	parts := strings.Split(userName, ",")
-	if len(parts) >= 4 && parts[2] != "" {
-		return parts[2]
+	parts := strings.Split(claims.Username, ",")
+	if len(parts) >= 3 && parts[2] != "" {
+		return &parts[2]
 	}
-	return fallback
+	return nil
 }
 
 // deriveSignKey runs HKDF-SHA256 to produce the 32-byte HMAC signing key.
@@ -118,7 +119,7 @@ func buildLoginHeaders(deviceID, username, password, lang string) map[string]str
 }
 
 // buildSignedHeaders constructs HMAC-SHA256 signed headers for authenticated requests.
-func buildSignedHeaders(signKey []byte, deviceID, vin, lang string, bodyParams map[string]string) map[string]string {
+func buildSignedHeaders(signKey []byte, deviceID, vin, lang, userID, token string, bodyParams map[string]string) map[string]string {
 	nonce := strconv.Itoa(rand.Intn(9000000) + 100000)
 	ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	fields := map[string]string{
@@ -134,22 +135,18 @@ func buildSignedHeaders(signKey []byte, deviceID, vin, lang string, bodyParams m
 	if vin != "" {
 		fields["vin"] = vin
 	}
-	for k, v := range bodyParams {
-		fields[k] = v
-	}
-	keys := make([]string, 0, len(fields))
-	for k := range fields {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	maps.Copy(fields, bodyParams)
+	keys := slices.Collect(maps.Keys(fields))
+	slices.Sort(keys)
 	var sb strings.Builder
 	for _, k := range keys {
 		sb.WriteString(fields[k])
 	}
 	mac := hmac.New(sha256.New, signKey)
 	mac.Write([]byte(sb.String()))
-	sign := fmt.Sprintf("%x", mac.Sum(nil))
+	sign := hex.EncodeToString(mac.Sum(nil))
 	return map[string]string{
+		"Content-Type":   "application/x-www-form-urlencoded",
 		"acceptLanguage": lang,
 		"channel":        channel,
 		"deviceType":     deviceType,
@@ -160,14 +157,9 @@ func buildSignedHeaders(signKey []byte, deviceID, vin, lang string, bodyParams m
 		"deviceId":       deviceID,
 		"timestamp":      ts,
 		"sign":           sign,
+		"userId":         userID,
+		"token":          token,
 	}
-}
-
-// addAuthHeaders merges Content-Type, userId and token into the provided header map.
-func addAuthHeaders(headers map[string]string, userID, token string) {
-	headers["Content-Type"] = "application/x-www-form-urlencoded"
-	headers["userId"] = userID
-	headers["token"] = token
 }
 
 // newMTLSClient creates an http.Client with optional client cert and TLS verification disabled.
@@ -258,7 +250,9 @@ func (id *Identity) login() error {
 	id.token = data.Token
 	id.refreshTok = data.RefreshToken
 	id.userID = data.ID.String()
-	id.deviceID = deriveSessionDeviceID(data.Token, id.deviceID)
+	if newDeviceID := extractSessionDeviceID(data.Token); newDeviceID != nil {
+		id.deviceID = *newDeviceID
+	}
 
 	signKey, err := deriveSignKey(data.SignIkm, data.SignSalt, data.SignInfo)
 	if err != nil {
@@ -276,6 +270,52 @@ func (id *Identity) login() error {
 		return fmt.Errorf("load account cert (derived password): %w", err)
 	}
 	id.acctClient = newMTLSClient(&acctCert)
+
+	prefix := "leapmotor." + id.deviceID + "."
+	settings.SetString(prefix+"token", id.token)
+	settings.SetString(prefix+"refresh", id.refreshTok)
+	settings.SetString(prefix+"userid", id.userID)
+	settings.SetString(prefix+"signkey", hex.EncodeToString(id.signKey))
+	settings.SetString(prefix+"p12", data.Base64Cert)
+	settings.SetString(prefix+"p12pwd", pwd)
+	return nil
+}
+
+// TryRestore loads a previously persisted session from the DB.
+// Returns an error if no valid cached session exists.
+func (id *Identity) TryRestore() error {
+	id.mu.Lock()
+	defer id.mu.Unlock()
+
+	prefix := "leapmotor." + id.deviceID + "."
+	token, err1 := settings.String(prefix + "token")
+	refreshTok, err2 := settings.String(prefix + "refresh")
+	userID, err3 := settings.String(prefix + "userid")
+	signKeyHex, err4 := settings.String(prefix + "signkey")
+	p12B64, err5 := settings.String(prefix + "p12")
+	p12Pwd, err6 := settings.String(prefix + "p12pwd")
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil || err6 != nil {
+		return fmt.Errorf("no cached session")
+	}
+
+	signKey, err := hex.DecodeString(signKeyHex)
+	if err != nil {
+		return fmt.Errorf("decode sign key: %w", err)
+	}
+	p12Bytes, err := base64.StdEncoding.DecodeString(p12B64)
+	if err != nil {
+		return fmt.Errorf("decode p12: %w", err)
+	}
+	acctCert, err := loadAccountCert(p12Bytes, p12Pwd)
+	if err != nil {
+		return fmt.Errorf("load cached account cert: %w", err)
+	}
+
+	id.token = token
+	id.refreshTok = refreshTok
+	id.userID = userID
+	id.signKey = signKey
+	id.acctClient = newMTLSClient(&acctCert)
 	return nil
 }
 
@@ -287,8 +327,7 @@ func (id *Identity) Refresh() error {
 		return id.login()
 	}
 	bodyParams := map[string]string{"refreshToken": id.refreshTok}
-	headers := buildSignedHeaders(id.signKey, id.deviceID, "", defaultLang, bodyParams)
-	addAuthHeaders(headers, id.userID, id.token)
+	headers := buildSignedHeaders(id.signKey, id.deviceID, "", defaultLang, id.userID, id.token, bodyParams)
 	body := "refreshToken=" + url.QueryEscape(id.refreshTok)
 
 	type refreshData struct {
