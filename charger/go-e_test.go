@@ -42,15 +42,15 @@ func TestGoEV1(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, ok := wb.(api.Meter); !ok {
+	if _, ok := api.Cap[api.Meter](wb); !ok {
 		t.Error("missing Meter api")
 	}
 
-	if _, ok := wb.(api.PhaseCurrents); !ok {
+	if _, ok := api.Cap[api.PhaseCurrents](wb); !ok {
 		t.Error("missing PhaseCurrents api")
 	}
 
-	if _, ok := wb.(api.Identifier); !ok {
+	if _, ok := api.Cap[api.Identifier](wb); !ok {
 		t.Error("missing Identifier api")
 	}
 }
@@ -66,23 +66,23 @@ func TestGoEV2(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, ok := wb.(api.Meter); !ok {
+	if _, ok := api.Cap[api.Meter](wb); !ok {
 		t.Error("missing Meter api")
 	}
 
-	if _, ok := wb.(api.PhaseCurrents); !ok {
+	if _, ok := api.Cap[api.PhaseCurrents](wb); !ok {
 		t.Error("missing PhaseCurrents api")
 	}
 
-	if _, ok := wb.(api.Identifier); !ok {
+	if _, ok := api.Cap[api.Identifier](wb); !ok {
 		t.Error("missing Identifier api")
 	}
 
-	if _, ok := wb.(api.MeterEnergy); !ok {
+	if _, ok := api.Cap[api.MeterEnergy](wb); !ok {
 		t.Error("missing MeterEnergy api")
 	}
 
-	if _, ok := wb.(api.PhaseSwitcher); !ok {
+	if _, ok := api.Cap[api.PhaseSwitcher](wb); !ok {
 		t.Error("missing PhaseSwitcher api")
 	}
 }

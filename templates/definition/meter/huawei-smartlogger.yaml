@@ -61,7 +61,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 40521 # Active power
       type: holding
@@ -69,7 +69,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 40560 # E-Total
       type: holding

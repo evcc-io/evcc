@@ -1,11 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  expectModalHidden,
-  expectModalVisible,
-  openTopNavigation,
-  expectTopNavigationClosed,
-} from "./utils";
+import { expectModalHidden, expectModalVisible, openMoreMenu } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const NETWORK_HOST = "somehostname.local";
@@ -23,9 +18,8 @@ test.afterAll(async () => {
 test.describe("basics", async () => {
   test("navigation to config", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
+    await openMoreMenu(page);
     await page.getByRole("link", { name: "Configuration" }).click();
-    await expectTopNavigationClosed(page);
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
 });
@@ -59,7 +53,7 @@ test.describe("general", async () => {
     await expect(page.getByTestId("generalconfig-title")).toContainText("Ahoy World");
 
     // check changed value on main ui
-    await page.getByTestId("home-link").click();
+    await page.getByRole("link", { name: "Charge" }).click();
     await expect(page.getByRole("heading", { name: "Ahoy World" })).toBeVisible();
   });
   test("enable experimental", async ({ page }) => {

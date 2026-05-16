@@ -51,9 +51,10 @@
 		v-model="value"
 		class="form-select"
 		:class="inputClasses"
+		:required="required"
 		:disabled="disabled"
 	>
-		<option v-if="!required" value="" :disabled="disabled">---</option>
+		<option v-if="!required || !modelValue" value="" :disabled="disabled">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
 			<option
 				v-if="key !== null && name !== null"
@@ -304,9 +305,8 @@ export default {
 		},
 		value: {
 			get() {
-				// use first option if no value is set
-				if (this.selectOptions.length > 0 && !this.modelValue) {
-					return this.required ? this.selectOptions[0].key : "";
+				if (this.select && this.modelValue == null) {
+					return "";
 				}
 
 				if (this.scale) {

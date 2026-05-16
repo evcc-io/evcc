@@ -3,6 +3,7 @@ package plugin
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"math"
 	"net"
 	"testing"
 
@@ -62,20 +63,27 @@ const (
 
 func TestBuildPDU_DTpower(t *testing.T) {
 	// DT power: register 0x75AF, count 2 → READ 2 @ 0x75AF
-	got := buildPDU(0x75AF, 2)
+	got := buildPDU(0x7F, 0x75AF, 2)
 	assert.Equal(t, []byte{0x7f, 0x03, 0x75, 0xaf, 0x00, 0x02}, got)
+}
+
+func TestBuildPDU_DefaultAddress(t *testing.T) {
+	// When address is omitted from config, aa55InverterAddr (0x7F) must be used.
+	// This guards existing DT/DNS and ES/EM setups that rely on the default.
+	got := buildPDU(aa55InverterAddr, 0x75AF, 2)
+	assert.Equal(t, byte(0x7F), got[0], "default address byte must be 0x7F")
 }
 
 func TestBuildPDU_ETgrid(t *testing.T) {
 	// ET grid: register 0x8943, count 2
-	got := buildPDU(0x8943, 2)
-	assert.Equal(t, []byte{0x7f, 0x03, 0x89, 0x43, 0x00, 0x02}, got)
+	got := buildPDU(0xF7, 0x8943, 2)
+	assert.Equal(t, []byte{0xf7, 0x03, 0x89, 0x43, 0x00, 0x02}, got)
 }
 
 func TestBuildPDU_SoC(t *testing.T) {
 	// ET SoC: register 0x908F, count 1 (U16)
-	got := buildPDU(0x908F, 1)
-	assert.Equal(t, []byte{0x7f, 0x03, 0x90, 0x8f, 0x00, 0x01}, got)
+	got := buildPDU(0xF7, 0x908F, 1)
+	assert.Equal(t, []byte{0xf7, 0x03, 0x90, 0x8f, 0x00, 0x01}, got)
 }
 
 // ---------------------------------------------------------------------------
@@ -153,6 +161,15 @@ func TestDecodeAt_Int16BE_Negative(t *testing.T) {
 	assert.InDelta(t, -300.0, v, 0)
 }
 
+func TestDecodeAt_Float32BE(t *testing.T) {
+	payload := make([]byte, 4)
+	bits := math.Float32bits(123.456)
+	binary.BigEndian.PutUint32(payload, bits)
+	v, err := decodeAt(payload, 0, "float32be")
+	require.NoError(t, err)
+	assert.InDelta(t, 123.456, v, 0.001)
+}
+
 func TestDecodeAt_TooShort(t *testing.T) {
 	_, err := decodeAt([]byte{0x00}, 0, "int32be")
 	require.Error(t, err)
@@ -169,7 +186,7 @@ func TestDecodeAt_UnknownType(t *testing.T) {
 
 func TestModbusCRC16_DTPdu(t *testing.T) {
 	// DT power PDU 7f 03 75 af 00 02 → CRC d1 ba
-	pdu := buildPDU(0x75AF, 2)
+	pdu := buildPDU(0x7F, 0x75AF, 2)
 	crc := modbusCRC16(pdu)
 	// Verify round-trip: CRC is 2 bytes and deterministic
 	assert.Len(t, crc, 2)
@@ -178,7 +195,7 @@ func TestModbusCRC16_DTPdu(t *testing.T) {
 
 func TestModbusCRC16_ETPdu(t *testing.T) {
 	// ET grid PDU 7f 03 89 43 00 02 → CRC is 2 bytes
-	pdu := buildPDU(0x8943, 2)
+	pdu := buildPDU(0xF7, 0x8943, 2)
 	crc := modbusCRC16(pdu)
 	assert.Len(t, crc, 2)
 	assert.Equal(t, crc, modbusCRC16(pdu))
@@ -282,7 +299,7 @@ func TestFloatGetter_DT_Power(t *testing.T) {
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
-		pdu:    buildPDU(0x75AF, 2),
+		pdu:    buildPDU(0x7F, 0x75AF, 2),
 		decode: "int32be",
 		scale:  1.0,
 	}
@@ -299,7 +316,7 @@ func TestFloatGetter_DT_Energy(t *testing.T) {
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
-		pdu:    buildPDU(0x75C1, 2),
+		pdu:    buildPDU(0x7F, 0x75C1, 2),
 		decode: "uint32be",
 		scale:  0.1,
 	}
@@ -316,7 +333,7 @@ func TestFloatGetter_ET_PV(t *testing.T) {
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
-		pdu:    buildPDU(0x8941, 2),
+		pdu:    buildPDU(0xF7, 0x8941, 2),
 		decode: "int32be",
 		scale:  1.0,
 	}
@@ -333,7 +350,7 @@ func TestFloatGetter_ET_Battery(t *testing.T) {
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
-		pdu:    buildPDU(0x896E, 2),
+		pdu:    buildPDU(0xF7, 0x896E, 2),
 		decode: "int32be",
 		scale:  1.0,
 	}
@@ -350,7 +367,7 @@ func TestFloatGetter_ET_SoC(t *testing.T) {
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
-		pdu:    buildPDU(0x908F, 1),
+		pdu:    buildPDU(0xF7, 0x908F, 1),
 		decode: "uint16be",
 		scale:  1.0,
 	}

@@ -125,15 +125,18 @@
       "current": "Jelenlegi",
       "currentRange": "Áram",
       "detected": "Észlelve",
-      "dimmed": "Elsötétítve",
+      "dimmed": "Fogyasztás korlátozva",
       "enabled": "Engedélyezve",
       "energy": "Energia",
+      "events": "Események",
       "feedinPrice": "Kötelező átvételi ár",
+      "forecast": "Előrejelzés",
       "gridPrice": "Villamosenergia ára",
       "heaterTempLimit": "Fűtés limit",
       "hemsActiveLimit": "Aktív limit",
       "hemsType": "Kommunikáció",
       "identifier": "RFID-Azonosító",
+      "messengers": "Szolgáltatások",
       "no": "nem",
       "odometer": "Óraállás",
       "org": "Szervezet",
@@ -172,7 +175,13 @@
       "loading": "YAML szerkesztő betöltése…"
     },
     "eebus": {
+      "certificate": {
+        "private": "Privát kulcs",
+        "public": "Publikus tanúsítvány",
+        "title": "Tanúsítványok"
+      },
       "description": "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel.",
+      "port": "Port",
       "title": "EEBus"
     },
     "experimental": {
@@ -207,6 +216,7 @@
       "dragHandle": "Húzógomb",
       "dragItem": "Húzható: {title}",
       "dragList": "Átrendezhető lista",
+      "error": "Hiba",
       "experimental": "Kísérleti",
       "forceSave": "Mentés mindenképpen",
       "fromYamlHint": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból.",
@@ -394,6 +404,7 @@
     },
     "messaging": {
       "description": "Értesítési üzenetek beállítása a töltési folyamatokról.",
+      "messengers": "Szolgáltatások",
       "title": "Értesítések"
     },
     "meter": {
@@ -1201,6 +1212,7 @@
     },
     "loadpoint": "Töltőpont",
     "noData": "Nincs töltési folyamat ebben a hónapban.",
+    "odometer": "Futásteljesítmény",
     "overview": "Áttekintés",
     "period": {
       "month": "Hónap",
@@ -1229,7 +1241,7 @@
     },
     "hiddenFeatures": {
       "label": "Kísérlet",
-      "value": "Kísérleti funkciók megjelenítése."
+      "value": "Kísérleti funkciók engedélyezése."
     },
     "language": {
       "auto": "Automatikus",
@@ -1308,5 +1320,13 @@
     "lineErrorLink": "sor {0}",
     "restartButton": "Újraindítás",
     "title": "Indítási hiba"
+  },
+  "tabBar": {
+    "battery": "Akkumulátor",
+    "charge": "Töltés",
+    "comingSoon": "Ez az oldal fejlesztés alatt áll.",
+    "forecast": "Előrejelzés",
+    "more": "Egyéb",
+    "sessions": "Folyamatok"
   }
 }

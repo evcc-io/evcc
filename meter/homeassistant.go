@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
 )
@@ -18,7 +19,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		Token_   string `mapstructure:"token"` // TODO deprecated
-		Home     string // TODO deprecated
+		Home_    string `mapstructure:"home"`  // TODO deprecated
 		Power    string
 		Energy   string
 		Currents []string
@@ -50,7 +51,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 
 	log := util.NewLogger("ha-meter")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home)
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
 	if err != nil {
 		return nil, err
 	}
@@ -88,18 +89,22 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		powersG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
 	}
 
+	implement.May(m, implement.MeterEnergy(energyG))
+
 	if cc.Soc != "" {
 		socG := func() (float64, error) { return conn.GetFloatState(cc.Soc) }
 
-		return m.DecorateBattery(
-			energyG,
-			socG, cc.batteryCapacity.Decorator(),
-			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(),
-			nil,
-		), nil
+		implement.Has(m, implement.Battery(socG))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
+		return m, nil
 	}
 
-	return m.Decorate(
-		energyG, currentsG, voltagesG, powersG, cc.pvMaxACPower.Decorator(),
-	), nil
+	implement.May(m, implement.PhaseCurrents(currentsG))
+	implement.May(m, implement.PhaseVoltages(voltagesG))
+	implement.May(m, implement.PhasePowers(powersG))
+	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
+
+	return m, nil
 }

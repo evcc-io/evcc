@@ -9,8 +9,7 @@ products:
 capabilities: ["1p3p"]
 requirements:
   description:
-    generic: |
-      https://www.enercab.at/index.php?controller=attachment&id_attachment=311
+    generic: "[enercab.at](https://www.enercab.at/index.php?controller=attachment&id_attachment=311)"
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp

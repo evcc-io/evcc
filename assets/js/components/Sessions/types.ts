@@ -44,6 +44,7 @@ export enum GROUPS {
 }
 
 export enum PERIODS {
+  DAY = "day",
   MONTH = "month",
   YEAR = "year",
   TOTAL = "total",

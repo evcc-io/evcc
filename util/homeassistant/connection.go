@@ -233,16 +233,28 @@ func domain(entity string) (string, error) {
 	return domain, nil
 }
 
-// CallSwitchService is a convenience method for switch services
+// CallSwitchService is a convenience method for switch-like services. The
+// service name depends on the entity domain: stateless button domains expose
+// only `press`, while switch-style domains use `turn_on` / `turn_off`.
 func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	domain, err := domain(entity)
 	if err != nil {
 		return err
 	}
 
-	service := "turn_off"
-	if turnOn {
-		service = "turn_on"
+	var service string
+	switch domain {
+	case "button", "input_button":
+		// Buttons are stateless — they only have a press action.
+		if !turnOn {
+			return fmt.Errorf("entity %s has no off action", entity)
+		}
+		service = "press"
+	default:
+		service = "turn_off"
+		if turnOn {
+			service = "turn_on"
+		}
 	}
 
 	data := map[string]any{
@@ -265,6 +277,21 @@ func (c *Connection) CallNumberService(entity string, value float64) error {
 	}
 
 	return c.CallService(domain, "set_value", data)
+}
+
+// CallSelectService is a convenience method for setting select entity options.
+func (c *Connection) CallSelectService(entity, option string) error {
+	domain, err := domain(entity)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]any{
+		"entity_id": entity,
+		"option":    option,
+	}
+
+	return c.CallService(domain, "select_option", data)
 }
 
 // GetPhaseFloatStates retrieves three phase values (currents, voltages, etc.)

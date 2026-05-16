@@ -77,20 +77,17 @@ export default {
 			const el = this.$refs.tagsContainer;
 			const content = this.$refs.tagsContent;
 			if (!el || !content) return;
-			const initialHeight = content.offsetHeight;
-			this.resizeObserver = new ResizeObserver(() => {
-				if (content.offsetHeight <= initialHeight) return;
-				const prev = el.style.minHeight;
+			const minContentHeight = 10;
+			const check = () => {
+				if (content.offsetHeight <= minContentHeight) return;
+				// measure natural height without cached min-height
 				el.style.minHeight = "";
-				const naturalHeight = Math.round(el.getBoundingClientRect().height);
-				el.style.minHeight = prev;
-				if (!this.tagsMinHeight || naturalHeight >= this.tagsMinHeight) {
-					settings.cardHeights[this.id] = naturalHeight;
-					this.tagsMinHeight = null;
-					this.resizeObserver?.disconnect();
-					this.resizeObserver = null;
-				}
-			});
+				settings.cardHeights[this.id] = Math.round(el.getBoundingClientRect().height);
+				this.tagsMinHeight = null;
+				this.resizeObserver?.disconnect();
+				this.resizeObserver = null;
+			};
+			this.resizeObserver = new ResizeObserver(check);
 			this.resizeObserver.observe(content);
 		});
 	},

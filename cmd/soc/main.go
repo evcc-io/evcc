@@ -72,16 +72,15 @@ func main() {
 
 	switch action {
 	case "wakeup":
-		switch vv := v.(type) {
-		case api.Resurrector:
+		if vv, ok := api.Cap[api.Resurrector](v); ok {
 			if err := vv.WakeUp(); err != nil {
 				log.Fatal(err)
 			}
-		case api.ChargeController:
+		} else if vv, ok := api.Cap[api.ChargeController](v); ok {
 			if err := vv.ChargeEnable(true); err != nil {
 				log.Fatal(err)
 			}
-		default:
+		} else {
 			log.Fatal("not supported:", action)
 		}
 

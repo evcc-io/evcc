@@ -29,7 +29,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 247
     register:
       address: 30005 # [Grid sensor] Active power
@@ -37,7 +37,7 @@ render: |
       decode: int32
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     register:
       address: 30562 # Accumulated import energy
@@ -46,7 +46,7 @@ render: |
     scale: 0.01
   currents:
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       register:
         address: 31017 # Phase A current
@@ -54,7 +54,7 @@ render: |
         decode: int32
       scale: 0.01
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       register:
         address: 31019 # Phase B current
@@ -62,7 +62,7 @@ render: |
         decode: int32
       scale: 0.01
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       register:
         address: 31021 # Phase C current
@@ -73,7 +73,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 247
     register:
       type: holding
@@ -84,7 +84,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 247
     register:
       type: holding
@@ -93,7 +93,7 @@ render: |
     scale: -1
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     register:
       address: 30574 # Battery accumulated discharge energy
@@ -102,7 +102,7 @@ render: |
     scale: 0.01
   soc:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 247
     register:
       address: 30014 # Energy storage system SOC
@@ -114,7 +114,7 @@ render: |
     convert: float2int
     set:
       source: modbus
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 247
       register:
         address: 40048 # Discharge Cut-Off SoC

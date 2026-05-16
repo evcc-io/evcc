@@ -16,6 +16,7 @@ import (
 	"github.com/basvdlei/gotsmart/dsmr"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -54,6 +55,7 @@ import (
 
 // Dsmr meter implementation
 type Dsmr struct {
+	implement.Caps
 	mu      sync.Mutex
 	addr    string
 	energy  string
@@ -70,8 +72,6 @@ var (
 func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
 }
-
-//go:generate go tool decorate -f decorateDsmr -b api.Meter -t api.MeterEnergy,api.PhaseCurrents
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]any) (api.Meter, error) {
@@ -93,6 +93,7 @@ func NewDsmrFromConfig(other map[string]any) (api.Meter, error) {
 // NewDsmr creates DSMR meter
 func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	m := &Dsmr{
+		Caps:    implement.New(),
 		addr:    uri,
 		energy:  energy,
 		timeout: timeout,
@@ -114,14 +115,11 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	}
 
 	// decorate energy reading
-	var totalEnergy func() (float64, error)
 	if energy != "" {
-		totalEnergy = m.totalEnergy
+		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
 	// decorate currents
-	var currents func() (float64, float64, float64, error)
-
 	for _, obis := range currentObis {
 		_, err = m.get(obis)
 		if err != nil {
@@ -130,10 +128,10 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	}
 
 	if err == nil {
-		currents = m.currents
+		implement.Has(m, implement.PhaseCurrents(m.currents))
 	}
 
-	return decorateDsmr(m, totalEnergy, currents), nil
+	return m, nil
 }
 
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go

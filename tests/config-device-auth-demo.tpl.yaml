@@ -6,7 +6,7 @@ products:
       en: Auth Demo Meter
 auth:
   type: demo
-  params: ["server", "method", "redirectUri"]
+  params: ["server", "method", "redirectUri", "secret"]
 params:
   - name: usage
     choice: ["grid"]
@@ -25,6 +25,11 @@ params:
       generic: Authentication Method
     choice: ["redirect", "device-code"]
     required: true
+  - name: secret
+    description:
+      generic: Secret
+    required: true
+    mask: true
   - name: power
     description:
       generic: Power

@@ -1084,7 +1084,7 @@
       "batteryGridChargeLimit": "Încărcare din rețea: când",
       "batteryHold": "Baterie (inchisa)",
       "batteryTooltip": "{energy} din {total} ({soc})",
-      "forecast": "Prognoză: ",
+      "forecast": "Prognoză",
       "forecastTooltip": "prognoză: producția solară rămasă astăzi",
       "gridImport": "Folosirea rețelei",
       "homePower": "Consum",

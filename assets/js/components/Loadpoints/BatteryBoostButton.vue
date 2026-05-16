@@ -2,7 +2,7 @@
 	<button
 		class="root position-relative"
 		tabindex="0"
-		:class="{ active, belowLimit, full }"
+		:class="{ active, belowLimit, batteryHold, full }"
 		:style="{ '--soc': `${adjustedSoc}%` }"
 		:disabled="disabled"
 		:aria-label="ariaLabel"
@@ -17,17 +17,17 @@
 			<div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"></div>
 		</div>
 		<div class="icon-wrapper" :style="iconStyle">
-			<BatteryBoost :active="active && !belowLimit" />
+			<BatteryBoost :active="active && available" />
 		</div>
 		<div class="icon-wrapper text-white" :style="iconActiveStyle">
-			<BatteryBoost :active="active && !belowLimit" />
+			<BatteryBoost :active="active && available" />
 		</div>
 	</button>
 </template>
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { CHARGE_MODE, type Timeout } from "@/types/evcc";
+import { BATTERY_MODE, CHARGE_MODE, type Timeout } from "@/types/evcc";
 import BatteryBoost from "../MaterialIcon/BatteryBoost.vue";
 
 export default defineComponent({
@@ -40,6 +40,7 @@ export default defineComponent({
 		batteryBoostLimit: { type: Number, default: 100 },
 		mode: String as PropType<CHARGE_MODE>,
 		batterySoc: { type: Number, default: 0 },
+		batteryMode: String as PropType<BATTERY_MODE>,
 	},
 	emits: ["updated", "status"],
 	data() {
@@ -66,6 +67,12 @@ export default defineComponent({
 		belowLimit(): boolean {
 			return this.batterySoc < this.batteryBoostLimit;
 		},
+		batteryHold(): boolean {
+			return this.batteryMode === BATTERY_MODE.HOLD;
+		},
+		available(): boolean {
+			return !this.belowLimit && !this.batteryHold;
+		},
 		iconStyle() {
 			return {
 				clipPath: this.active ? `inset(0 0 calc(var(--soc)) 0)` : undefined,
@@ -76,6 +83,7 @@ export default defineComponent({
 		},
 		ariaLabel(): string {
 			const t = (key: string) => this.$t(`main.loadpointSettings.batteryBoost.${key}`);
+			if (this.batteryHold) return t("stateHold");
 			if (this.active) return t("stateActive");
 			if (this.belowLimit) return t("stateBelowLimit");
 			return t("stateReady");
@@ -104,6 +112,12 @@ export default defineComponent({
 					type,
 				});
 			const newValue = !this.active;
+
+			// battery hold: only show message, don't toggle
+			if (newValue && this.batteryHold) {
+				status("batteryBoostHold");
+				return;
+			}
 
 			// below limit: only show message, don't toggle
 			if (newValue && this.belowLimit) {
@@ -157,7 +171,8 @@ export default defineComponent({
 	color: inherit;
 	opacity: 0.25;
 }
-.root.belowLimit:not(:disabled) {
+.root.belowLimit:not(:disabled),
+.root.batteryHold:not(:disabled) {
 	opacity: 0.5;
 }
 .root:before,

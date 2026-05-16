@@ -6,7 +6,7 @@ products:
   - brand: ABL
     description:
       generic: eM4 Twin (SBCx)
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

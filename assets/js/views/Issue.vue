@@ -383,6 +383,9 @@ export default defineComponent({
 			logAvailableAreas: [] as string[],
 		};
 	},
+	head() {
+		return { title: this.$t("issue.title") };
+	},
 	computed: {
 		versionString(): string {
 			return `v${store.state.version || ""}`;
@@ -538,14 +541,20 @@ export default defineComponent({
 				}
 
 				// read essential config data from state
-				["modbusproxy", "mqtt", "influx", "shm", "interval", "experimental"].forEach(
-					(key) => {
-						const value = store.state[key as keyof State];
-						if (value !== undefined && value !== null) {
-							configs[key] = value;
-						}
+				[
+					"modbusproxy",
+					"mqtt",
+					"influx",
+					"shm",
+					"interval",
+					"residualPower",
+					"experimental",
+				].forEach((key) => {
+					const value = store.state[key as keyof State];
+					if (value !== undefined && value !== null) {
+						configs[key] = value;
 					}
-				);
+				});
 
 				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {

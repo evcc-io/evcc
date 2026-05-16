@@ -37,6 +37,14 @@ params:
         "ZP",
       ]
     required: true
+  - name: resolution
+    description:
+      en: Price resolution
+      de: Preisauflösung
+    type: choice
+    choice: ["hourly", "quarterly"]
+    default: quarterly
+    required: true
   - preset: tariff-base
   - preset: tariff-features
   - name: interval
@@ -56,7 +64,7 @@ render: |
         type: string
         config:
           source: http
-          uri: https://enever.nl/apiv3/stroomprijs_vandaag.php?token={{ .token }}
+          uri: https://enever.nl/apiv3/stroomprijs_vandaag.php?token={{ .token }}{{ if eq .resolution "quarterly" }}&resolution=15{{ end }}
           jq: |
            [ .data.[] |
              {
@@ -64,7 +72,7 @@ render: |
                 "end": (
                   (.datum[0:19]) as $dt |
                   (.datum[19:]) as $tz |
-                  ($dt | strptime("%FT%T") | mktime + 900 | strflocaltime("%FT%T")) + $tz
+                  ($dt | strptime("%FT%T") | mktime + {{ if eq .resolution "quarterly" }}900{{ else }}3600{{ end }} | strftime("%FT%T")) + $tz
                 ),
                 "value": .prijs{{ .provider }} | tonumber
               }
@@ -73,7 +81,7 @@ render: |
         type: string
         config:
           source: http
-          uri: https://enever.nl/apiv3/stroomprijs_morgen.php?token={{ .token }}
+          uri: https://enever.nl/apiv3/stroomprijs_morgen.php?token={{ .token }}{{ if eq .resolution "quarterly" }}&resolution=15{{ end }}
           jq: |
             [ .data.[] |
               {
@@ -81,9 +89,9 @@ render: |
                 "end": (
                   (.datum[0:19]) as $dt |
                   (.datum[19:]) as $tz |
-                  ($dt | strptime("%FT%T") | mktime + 900 | strflocaltime("%FT%T")) + $tz
+                  ($dt | strptime("%FT%T") | mktime + {{ if eq .resolution "quarterly" }}900{{ else }}3600{{ end }} | strftime("%FT%T")) + $tz
                 ),
                 "value": .prijs{{ .provider }} | tonumber
-              }   
+              }
             ] | tostring
   interval: {{ .interval }}

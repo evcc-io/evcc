@@ -1,7 +1,7 @@
 <template>
 	<div class="root position-relative">
 		<div
-			class="chart position-relative"
+			class="chart scroll-overlay-fix position-relative"
 			:class="{ 'chart--with-target': targetText, inactive }"
 		>
 			<div
@@ -31,7 +31,7 @@
 					:class="{ unknown: slot.value === undefined && avgValue }"
 				></div>
 				<div class="slot-label">
-					<span v-if="slot.start.getMinutes() === 0">{{
+					<span v-if="slot.start.getMinutes() === 0 && slot.start.getHours() % 2 === 0">{{
 						formatHour(slot.start.getHours())
 					}}</span>
 					<br />
@@ -258,8 +258,8 @@ export default defineComponent({
 	line-height: 1.1;
 	position: absolute;
 	top: 100%;
-	left: -100%;
-	width: 200%;
+	left: 50%;
+	transform: translateX(-50%);
 	text-align: center;
 }
 .slot.active .slot-bar {

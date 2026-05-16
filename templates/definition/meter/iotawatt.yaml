@@ -7,12 +7,12 @@ requirements:
   description:
     en: |
       Requires an IoTaWatt device accessible on the local network.
-      Find available series names on the IoTaWatt status page (http://<device-ip>).
+      Find available series names on the IoTaWatt status page (`http://<device-host>`).
       For single-phase setups, configure only the main series (e.g. `GridNet`, `Solar`).
       For three-phase, configure one series per phase (e.g. `Grid_A`, `Grid_B`, `Grid_C`).
     de: |
       Erfordert ein IoTaWatt-Gerät im lokalen Netzwerk.
-      Verfügbare Seriennamen finden Sie auf der IoTaWatt-Statusseite (http://<device-ip>).
+      Verfügbare Seriennamen finden Sie auf der IoTaWatt-Statusseite (`http://<device-host>`).
       Für einphasige Installationen nur die Hauptserie konfigurieren (z.B. `GridNet`, `Solar`).
       Für dreiphasig je eine Serie pro Phase angeben (z.B. `Grid_A`, `Grid_B`, `Grid_C`).
 params:

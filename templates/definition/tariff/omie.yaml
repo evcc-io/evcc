@@ -1,0 +1,165 @@
+template: omie
+products:
+  - brand: OMIE
+    description:
+      en: Iberian day-ahead market prices
+      de: Iberische Day-Ahead-Marktpreise
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: "Day-ahead electricity prices from OMIE for Portugal and Spain. No API key is required."
+    de: "Day-Ahead-Strompreise von OMIE fuer Portugal und Spanien. Es ist kein API-Schluessel erforderlich."
+group: price
+countries: ["PT", "ES"]
+params:
+  - name: country
+    description:
+      en: Country
+      de: Land
+    help:
+      en: Select whether to use the Portuguese or Spanish market price published by OMIE.
+      de: Waehlt aus, ob der von OMIE veroeffentlichte portugiesische oder spanische Marktpreis verwendet werden soll.
+    type: choice
+    choice: ["PT", "ES"]
+    default: PT
+    required: true
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
+  forecast:
+    source: http
+    uri: https://www.omie.es/sites/default/files/dados/NUEVA_SECCION/INT_PBC_EV_H_ACUM.TXT
+    cache: 1h
+    regex: '(?ms)((?:^[0-9]{2}/[0-9]{2}/[0-9]{4};[^\r\n]*(?:\r?\n|$))+)'
+    default: ""
+    quote: true
+    jq: |
+      def market:
+        {{ if eq .country "PT" }}
+        { code: "PT", priceIndex: 3 }
+        {{ else }}
+        { code: "ES", priceIndex: 2 }
+        {{ end }};
+
+      def quarterHourSeconds: 900;
+      def dstStartMonth: 3;
+      def dstEndMonth: 10;
+      def standardOffsetSeconds: 3600;
+      def daylightOffsetSeconds: 7200;
+      def shortDayPeriodCount: 92;
+      def normalDayPeriodCount: 96;
+      def longDayPeriodCount: 100;
+      def minimumRequiredColumnCount: market.priceIndex + 1;
+
+      def pad2:
+        tostring | if length == 1 then "0" + . else . end;
+
+      def isoDate($y; $m; $d):
+        "\($y)-\($m | pad2)-\($d | pad2)";
+
+      def lastSunday($y; $m):
+        first([31, 30, 29, 28, 27, 26, 25][] | select(((isoDate($y; $m; .) + "T00:00:00Z") | fromdateiso8601 | gmtime | .[6]) == 0));
+
+      def daylightSavingSwitchDay($y; $m):
+        lastSunday($y; $m);
+
+      def isStandardOffsetMonth($m):
+        $m < dstStartMonth or $m > dstEndMonth;
+
+      def isDaylightOffsetMonth($m):
+        $m > dstStartMonth and $m < dstEndMonth;
+
+      def marketStartOffsetSeconds($y; $m; $d):
+        if isStandardOffsetMonth($m) then
+          standardOffsetSeconds
+        elif isDaylightOffsetMonth($m) then
+          daylightOffsetSeconds
+        elif $m == dstStartMonth then
+          if $d <= daylightSavingSwitchDay($y; dstStartMonth) then standardOffsetSeconds else daylightOffsetSeconds end
+        else
+          if $d <= daylightSavingSwitchDay($y; dstEndMonth) then daylightOffsetSeconds else standardOffsetSeconds end
+        end;
+
+      def marketStartUtc($y; $m; $d):
+        ((isoDate($y; $m; $d) + "T00:00:00Z") | fromdateiso8601) - marketStartOffsetSeconds($y; $m; $d);
+
+      def isQuarterHourDay($day):
+        ([ $day[].period ] | length) as $count
+        | select($count == shortDayPeriodCount or $count == normalDayPeriodCount or $count == longDayPeriodCount);
+
+      def parseDateParts:
+        split("/") | map(tonumber) | { d: .[0], m: .[1], y: .[2] };
+
+      def cutoffUtc:
+        ((now / quarterHourSeconds) | floor) * quarterHourSeconds;
+
+      split("\n")
+      | map(gsub("\r"; ""))
+      | map(select(length > 0)) as $lines
+      | if ($lines | length) == 0 then
+          error("OMIE data rows not found")
+        elif (($lines[0] | split(";") | length) < minimumRequiredColumnCount) then
+          error("unexpected OMIE row layout")
+        else
+          ($lines
+            | map(split(";"))
+            | map({
+                date: .[0],
+                dateParts: (.[0] | parseDateParts),
+                period: (.[1] | tonumber),
+                value: (.[(market.priceIndex)] | gsub(","; ".") | tonumber / 1000)
+              }
+              | . + .dateParts
+              | del(.dateParts)
+            )
+          ) as $entries
+          | if ($entries | length) == 0 then
+              error("no OMIE rows parsed")
+            else
+              $entries
+            end
+          | ($entries
+              | sort_by(.date, .period)
+              | group_by(.date)
+              | map(isQuarterHourDay(.))
+            ) as $quarterHourDays
+          | if ($quarterHourDays | length) == 0 then
+              error("no OMIE quarter-hour days parsed")
+            else
+              $quarterHourDays
+            end
+          | ($quarterHourDays
+              | all(
+                  ([.[].period] | sort) as $periods
+                  | ($periods | length) as $count
+                  | ($periods == [range(1; $count + 1)])
+                )
+            ) as $validPeriods
+          | if ($validPeriods | not) then
+              error("unexpected OMIE period sequence")
+            else
+              ($quarterHourDays
+                | add
+                | sort_by(.y, .m, .d, .period)
+                | map(
+                    (marketStartUtc(.y; .m; .d) + ((.period - 1) * quarterHourSeconds)) as $start
+                    | ($start + quarterHourSeconds) as $end
+                    | select($end > cutoffUtc)
+                    | {
+                        start: ($start | todateiso8601),
+                        end: ($end | todateiso8601),
+                        value: .value
+                      }
+                  )
+              )
+            end
+          | if length == 0 then
+              error("no OMIE \(market.code) rates parsed")
+            else
+              .
+            end
+          | tostring
+        end

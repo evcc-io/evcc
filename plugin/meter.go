@@ -55,11 +55,11 @@ func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
 
 	switch o.method {
 	case Energy:
-		if _, ok := o.meter.(api.MeterEnergy); !ok {
+		if !api.HasCap[api.MeterEnergy](o.meter) {
 			return nil, err
 		}
 	case Soc:
-		if _, ok := o.meter.(api.Battery); !ok {
+		if !api.HasCap[api.Battery](o.meter) {
 			return nil, err
 		}
 	}
@@ -67,10 +67,12 @@ func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
 	return func() (float64, error) {
 		switch o.method {
 		case Energy:
-			f, err := o.meter.(api.MeterEnergy).TotalEnergy()
+			m, _ := api.Cap[api.MeterEnergy](o.meter)
+			f, err := m.TotalEnergy()
 			return f * o.scale, err
 		case Soc:
-			f, err := o.meter.(api.Battery).Soc()
+			m, _ := api.Cap[api.Battery](o.meter)
+			f, err := m.Soc()
 			return f * o.scale, err
 		default:
 			f, err := o.meter.CurrentPower()

@@ -122,3 +122,4 @@ render: |
       encoding: int16
     scale: 0.1
   {{- end }}
+  {{ include "heatpumpswitch" . }}

@@ -164,6 +164,11 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if next == nil {
+				http.Error(w, "Not Found", http.StatusNotFound)
+				return
+			}
+
 			if authObject.GetAuthMode() == auth.Disabled {
 				next.ServeHTTP(w, r)
 				return

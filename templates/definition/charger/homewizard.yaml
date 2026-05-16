@@ -1,6 +1,7 @@
 template: homewizard
 products:
   - brand: HomeWizard
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host
@@ -8,3 +9,4 @@ params:
 render: |
   type: homewizard
   uri: http://{{ .host }}
+  {{ include "switchsocket" . }}

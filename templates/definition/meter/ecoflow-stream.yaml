@@ -53,15 +53,23 @@ params:
   - name: cache
     default: 30s
     advanced: true
+  - preset: battery-params
 render: |
   type: ecoflow
   accesskey: {{ .accesskey }}
   secretkey: {{ .secretkey }}
-  serial: {{ if .serial }}{{ .serial }}{{ else }}{{ .deviceid }}{{ end }}
+  serial: {{ or .serial .deviceid }}
   usage: {{ .usage }}
   cache: {{ .cache }}
   region: {{ .region }}
-  gridpower: powGetSysGrid
-  pvpower: powGetPvSum
-  batterypower: powGetBpCms
-  batterysoc: cmsBattSoc
+  {{- if eq .usage "grid" }}
+  power: powGetSysGrid
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power: powGetPvSum
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power: powGetBpCms
+  soc: cmsBattSoc
+  {{- include "battery-params" . }}
+  {{- end }}

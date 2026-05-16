@@ -15,7 +15,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 31657 # Active power of built-in electric energy sensor
       type: holding
@@ -23,7 +23,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 31679 # Total negative active energy of built-in electric energy sensor
       type: holding
@@ -32,7 +32,7 @@ render: |
   currents:
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 31651 # Huawei phase A grid current
       type: holding
@@ -40,7 +40,7 @@ render: |
     scale: 0.1
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 31653 # Huawei phase B grid current
       type: holding
@@ -48,7 +48,7 @@ render: |
     scale: 0.1
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 31655 # Huawei phase C grid current
       type: holding
@@ -59,7 +59,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 30354 # Active power
       type: holding
@@ -67,7 +67,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 30344 # E-Total
       type: holding
@@ -78,7 +78,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 30360
       type: holding
@@ -87,7 +87,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 30312 # Total discharge
       type: holding
@@ -96,7 +96,7 @@ render: |
   soc:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 30368
       type: holding

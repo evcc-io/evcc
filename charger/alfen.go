@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -35,6 +36,7 @@ import (
 
 // Alfen charger implementation
 type Alfen struct {
+	implement.Caps
 	log     *util.Logger
 	conn    *modbus.Connection
 	mu      sync.Mutex
@@ -55,8 +57,6 @@ const (
 func init() {
 	registry.AddCtx("alfen", NewAlfenFromConfig)
 }
-
-//go:generate go tool decorate -f decorateAlfen -b *Alfen -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -86,6 +86,7 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Logger(log.TRACE)
 
 	wb := &Alfen{
+		Caps: implement.New(),
 		log:  log,
 		conn: conn,
 	}
@@ -97,19 +98,15 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		return nil, err
 	}
 
-	var (
-		phasesS func(int) error
-		phasesG func() (int, error)
-	)
 	if v2 != 0 && v3 != 0 {
 		wb.log.DEBUG.Println("detected 3p alfen")
-		phasesS = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	} else {
 		wb.log.DEBUG.Println("detected 1p alfen")
 	}
 
-	return decorateAlfen(wb, phasesS, phasesG), nil
+	return wb, nil
 }
 
 func (wb *Alfen) heartbeat(ctx context.Context) {
@@ -229,18 +226,18 @@ var _ api.PhaseCurrents = (*Alfen)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
-	return wb.voltagesOrCurrents(alfenRegCurrents)
+	return wb.getPhaseValues(alfenRegCurrents)
 }
 
 var _ api.PhaseVoltages = (*Alfen)(nil)
 
 // Voltages implements the api.PhaseVoltages interface (tbc)
 func (wb *Alfen) Voltages() (float64, float64, float64, error) {
-	return wb.voltagesOrCurrents(alfenRegVoltages)
+	return wb.getPhaseValues(alfenRegVoltages)
 }
 
-// voltagesOrCurrents returns 3 sequential float registers
-func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, error) {
+// getPhaseValues returns 3 sequential float registers
+func (wb *Alfen) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err

@@ -224,7 +224,7 @@ func TestEasee_StatusReason(t *testing.T) {
 		expectedReason api.Reason
 	}{
 		{easee.ModeAwaitingAuthentication, api.ReasonWaitingForAuthorization},
-		{easee.ModeCompleted, api.ReasonDisconnectRequired},
+		{easee.ModeCompleted, api.ReasonUnknown},
 		{easee.ModeDisconnected, api.ReasonUnknown},
 		{easee.ModeAwaitingStart, api.ReasonUnknown},
 		{easee.ModeCharging, api.ReasonUnknown},
@@ -330,7 +330,7 @@ func TestEasee_CommandResponse_legitimate(t *testing.T) {
 		errCh <- nil
 	}()
 
-	err = e.dispatcher.Send(uri, nil)
+	_, err = e.dispatcher.Send(uri, nil)
 	assert.NoError(t, err)
 	<-errCh
 }
@@ -420,7 +420,7 @@ func TestEasee_CommandResponse_matchedByID(t *testing.T) {
 		errCh <- nil
 	}()
 
-	err = e.dispatcher.Send(uri, nil)
+	_, err = e.dispatcher.Send(uri, nil)
 	assert.NoError(t, err)
 	<-errCh
 }
@@ -455,6 +455,11 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, getURI,
 		httpmock.NewStringResponder(200, ""))
 
+	// Mock POST charger settings (DCC:7 sent on scale-down) — return 202 noop
+	chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+	httpmock.RegisterResponder(http.MethodPost, chargerURI,
+		httpmock.NewStringResponder(202, "[]"))
+
 	err = e.Phases1p3p(1)
 	assert.NoError(t, err)
 
@@ -463,6 +468,53 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	// CancelOrphan returns true iff a counter entry was consumed.
 	assert.True(t, e.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1),
 		"expected orphan should be registered before the POST")
+}
+
+func TestEasee_Phases1p3p_scaleDown_resetsDCC(t *testing.T) {
+	const siteID = 12345
+	const circuitID = 67890
+	const chargerID = "TESTTEST"
+
+	e := newEasee()
+	e.charger = chargerID
+	e.site = siteID
+	e.circuit = circuitID
+	e.current = 6 // simulates a prior MaxCurrent(6) call during 3p charging
+
+	httpmock.ActivateNonDefault(e.Client)
+	defer httpmock.DeactivateAndReset()
+
+	// Mock GET circuit settings
+	getURI := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, siteID, circuitID)
+	maxP1, maxP2, maxP3 := 32.0, 32.0, 32.0
+	getResp := easee.CircuitSettings{
+		MaxCircuitCurrentP1: &maxP1,
+		MaxCircuitCurrentP2: &maxP2,
+		MaxCircuitCurrentP3: &maxP3,
+	}
+	body, err := json.Marshal(getResp)
+	require.NoError(t, err)
+	httpmock.RegisterResponder(http.MethodGet, getURI,
+		httpmock.NewBytesResponder(200, body))
+
+	// Mock POST circuit settings — return 200 (sync)
+	httpmock.RegisterResponder(http.MethodPost, getURI,
+		httpmock.NewStringResponder(200, ""))
+
+	// Mock POST charger settings — return 202 with empty ticks (noop path)
+	chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+	httpmock.RegisterResponder(http.MethodPost, chargerURI,
+		httpmock.NewStringResponder(202, "[]"))
+
+	err = e.Phases1p3p(1)
+	assert.NoError(t, err)
+
+	// Verify DCC:7 was sent to force a cloud-level value change
+	info := httpmock.GetCallCountInfo()
+	assert.Equal(t, 1, info["POST "+chargerURI], "expected one POST to charger settings with DCC:7")
+
+	// Verify c.current was set to 7
+	assert.Equal(t, 7.0, e.current, "c.current should be set to 7 after scale-down")
 }
 
 func TestLivenessCheck_staleObservations(t *testing.T) {
@@ -499,6 +551,104 @@ func TestLivenessCheck_freshObservations(t *testing.T) {
 	assert.Equal(t, float64(16), l1)
 	assert.Equal(t, float64(16), l2)
 	assert.Equal(t, float64(16), l3)
+}
+
+func TestChargeSessionStart_SetsFields(t *testing.T) {
+	e := newEasee()
+	e.totalEnergy = 9100.0
+
+	data := easee.ChargingSessionStartData{ID: 801, MeterValue: 9141.414622}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGE_SESSION_START, time.Now(), easee.String, string(jsonData)))
+
+	assert.Equal(t, 801, e.currentSessionID)
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9141.414622, total)
+}
+
+func TestChargingSession_UpdatesBothWhenIdMatches(t *testing.T) {
+	e := newEasee()
+	e.currentSessionID = 801
+	e.totalEnergy = 9100.0
+
+	data := easee.ChargingSessionData{ID: 801, EnergyKwh: 16.2, MeterValueStop: 9173.5}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 16.2, charged)
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total)
+}
+
+func TestChargingSession_MismatchedId_ProtectsSessionEnergy(t *testing.T) {
+	e := newEasee()
+	e.currentSessionID = 100
+	e.sessionEnergy = 5.0
+	e.totalEnergy = 9150.0
+
+	data := easee.ChargingSessionData{ID: 99, EnergyKwh: 7.5, MeterValueStop: 9173.5}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 5.0, charged) // sessionEnergy unchanged
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total) // totalEnergy updated
+}
+
+func TestChargingSession_AtStartup_ProtectsSessionEnergy(t *testing.T) {
+	e := newEasee()
+	// currentSessionId is 0 by default
+	e.sessionEnergy = 0
+	e.totalEnergy = 9150.0
+
+	data := easee.ChargingSessionData{ID: 803, EnergyKwh: 19.08, MeterValueStop: 9173.5}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, charged) // sessionEnergy protected (Id 803 != 0)
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total) // totalEnergy updated
+}
+
+func TestLifetimeEnergy_DoesNotDecreaseTotalEnergy(t *testing.T) {
+	e := newEasee()
+	e.totalEnergy = 9173.5
+
+	e.ProductUpdate(createPayload(easee.LIFETIME_ENERGY, time.Now(), easee.Double, "9170.0"))
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total)
+}
+
+func TestChargerOpMode_ConnectResetsSessionFields(t *testing.T) {
+	e := newEasee()
+	e.opMode = easee.ModeDisconnected
+	e.currentSessionID = 803
+	e.sessionEnergy = 5.0
+
+	// Transition from disconnected to awaiting start
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, time.Now(), easee.Integer, fmt.Sprintf("%d", easee.ModeAwaitingStart)))
+
+	assert.Equal(t, 0, e.currentSessionID)
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, charged)
 }
 
 func TestIsTNGrid(t *testing.T) {

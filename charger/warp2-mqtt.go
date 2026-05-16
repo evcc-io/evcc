@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/plugin/mqtt"
@@ -18,6 +19,7 @@ import (
 
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
+	implement.Caps
 	log           *util.Logger
 	client        *mqtt.Client
 	features      []string
@@ -37,8 +39,6 @@ func init() {
 	registry.Add("warp2", NewWarp2FromConfig)
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
-
-//go:generate go tool decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
@@ -61,33 +61,28 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	var currentPower, totalEnergy func() (float64, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureMeter, cc.Timeout) {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		implement.May(wb, implement.Meter(wb.currentPower))
+		implement.May(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
-	var currents, voltages func() (float64, float64, float64, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureMeterPhases, cc.Timeout) {
-		currents = wb.currents
-		voltages = wb.voltages
+		implement.May(wb, implement.PhaseCurrents(wb.currents))
+		implement.May(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
-	var identity func() (string, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureNfc, cc.Timeout) {
-		identity = wb.identify
+		implement.May(wb, implement.Identifier(wb.identify))
 	}
 
-	var phases func(int) error
-	var getPhases func() (int, error)
 	if cc.EnergyManager != "" {
 		if res, err := wb.emState(); err == nil && res.ExternalControl != 1 {
-			phases = wb.phases1p3p
-			getPhases = wb.getPhases
+			implement.May(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.May(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), nil
+	return wb, nil
 }
 
 // NewWarp2 creates a new configurable charger
@@ -100,6 +95,7 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	}
 
 	wb := &Warp2{
+		Caps:    implement.New(),
 		log:     log,
 		client:  client,
 		current: 6000, // mA

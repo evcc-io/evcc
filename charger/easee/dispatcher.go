@@ -104,18 +104,21 @@ func (d *CommandDispatcher) CancelOrphan(id ObservationID) bool {
 // if the response is asynchronous (HTTP 202), waits for the matching SignalR
 // CommandResponse.
 //
-// Returns nil on success (both synchronous HTTP 200 and confirmed async HTTP 202,
-// including noops where Ticks == 0). Returns an error on HTTP failure, decode
-// failure, command rejection, or timeout.
-func (d *CommandDispatcher) Send(uri string, data any) error {
+// Returns noop=true when the API indicates no state change was needed (HTTP 200
+// or HTTP 202 with an empty settings array / Ticks == 0). Callers that wait for
+// a subsequent state observation (e.g. waitForDynamicChargerCurrent) must skip
+// the wait on noop to avoid a timeout.
+//
+// Returns an error on HTTP failure, decode failure, command rejection, or timeout.
+func (d *CommandDispatcher) Send(uri string, data any) (bool, error) {
 	resp, err := d.helper.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 200 {
-		return nil
+		return true, nil
 	}
 
 	// Any status other than 200 or 202 is unexpected — return an error.
@@ -123,7 +126,7 @@ func (d *CommandDispatcher) Send(uri string, data any) error {
 	// not on HTTP error responses, so this guard is the actual defense against
 	// 4xx/5xx responses from the Easee API.
 	if resp.StatusCode != 202 {
-		return fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return false, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
 	// HTTP 202: parse the response body to get the command correlation info.
@@ -131,13 +134,13 @@ func (d *CommandDispatcher) Send(uri string, data any) error {
 	if strings.Contains(uri, "/commands/") {
 		// Command endpoints return a single object.
 		if err := json.NewDecoder(resp.Body).Decode(&cmd); err != nil {
-			return err
+			return false, err
 		}
 	} else {
 		// Settings endpoints return an array; take index 0 if present.
 		var cmdArr []RestCommandResponse
 		if err := json.NewDecoder(resp.Body).Decode(&cmdArr); err != nil {
-			return err
+			return false, err
 		}
 		if len(cmdArr) != 0 {
 			cmd = cmdArr[0]
@@ -149,7 +152,7 @@ func (d *CommandDispatcher) Send(uri string, data any) error {
 
 	if cmd.Ticks == 0 {
 		// Noop: the API indicates no state change was needed.
-		return nil
+		return true, nil
 	}
 
 	// Create a buffered channel (capacity 1) so Dispatch never blocks even if
@@ -177,10 +180,10 @@ func (d *CommandDispatcher) Send(uri string, data any) error {
 	select {
 	case res := <-ch:
 		if !res.WasAccepted {
-			return fmt.Errorf("command rejected: %d", res.Ticks)
+			return false, fmt.Errorf("command rejected: %d", res.Ticks)
 		}
-		return nil
+		return false, nil
 	case <-timer.C:
-		return api.ErrTimeout
+		return false, api.ErrTimeout
 	}
 }

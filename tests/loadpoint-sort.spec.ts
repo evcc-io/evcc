@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, openTopNavigation, dragElement } from "./utils";
+import { expectModalVisible, expectModalHidden, openMoreMenu, dragElement } from "./utils";
 
 const CONFIG_LOADPOINT_SORT = "loadpoint-sort.evcc.yaml";
 
@@ -20,8 +20,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function openModal(page: Page) {
-  await openTopNavigation(page);
-  await page.getByTestId("topnavigation-settings").click();
+  const menu = await openMoreMenu(page);
+  await menu.getByRole("button", { name: "User Interface" }).click();
   const modal = page.getByTestId("global-settings-modal");
   await expectModalVisible(modal);
   return modal;

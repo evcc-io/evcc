@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
 )
 
 type HomeAssistant struct {
 	*embed
+	implement.Caps
 	conn *homeassistant.Connection
 	soc  string
 }
@@ -27,7 +29,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		embed   `mapstructure:",squash"`
 		URI     string
 		Token_  string `mapstructure:"token"` // TODO deprecated
-		Home    string // TODO deprecated
+		Home_   string `mapstructure:"home"`  // TODO deprecated
 		Sensors struct {
 			Soc        string // required
 			Range      string // optional
@@ -55,90 +57,66 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	log := util.NewLogger("ha-vehicle")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home)
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &HomeAssistant{
 		embed: &cc.embed,
+		Caps:  implement.New(),
 		conn:  conn,
 		soc:   cc.Sensors.Soc,
 	}
 
-	// optional features
-	var (
-		limitSoc   func() (int64, error)
-		status     func() (api.ChargeStatus, error)
-		rng        func() (int64, error)
-		odo        func() (float64, error)
-		climater   func() (bool, error)
-		finish     func() (time.Time, error)
-		enable     func(bool) error
-		wakeup     func() error
-		maxcurrent func(int64) error
-	)
-
 	if cc.Sensors.LimitSoc != "" {
-		limitSoc = func() (int64, error) {
+		implement.Has(res, implement.SocLimiter(func() (int64, error) {
 			f, err := conn.GetFloatState(cc.Sensors.LimitSoc)
 			return int64(f), err
-		}
+		}))
 	}
 	if cc.Sensors.Status != "" {
-		status = func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }
+		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }))
 	}
 	if cc.Sensors.Range != "" {
-		rng = func() (int64, error) {
+		implement.Has(res, implement.VehicleRange(func() (int64, error) {
 			f, err := conn.GetFloatState(cc.Sensors.Range)
 			return int64(f), err
-		}
+		}))
 	}
 	if cc.Sensors.Odometer != "" {
-		odo = func() (float64, error) { return conn.GetFloatState(cc.Sensors.Odometer) }
+		implement.Has(res, implement.VehicleOdometer(func() (float64, error) { return conn.GetFloatState(cc.Sensors.Odometer) }))
 	}
 	if cc.Sensors.Climater != "" {
-		climater = func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }
+		implement.Has(res, implement.VehicleClimater(func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }))
 	}
 	if cc.Sensors.FinishTime != "" {
-		finish = func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }
+		implement.Has(res, implement.VehicleFinishTimer(func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }))
 	}
+
+	var enable func(bool) error
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
-		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
+		enable = func(enable bool) error {
+			if enable {
+				return conn.CallSwitchService(cc.Services.Start, true)
+			}
+			return conn.CallSwitchService(cc.Services.Stop, true)
+		}
 	} else if strings.HasPrefix(cc.Services.Start, "switch") {
 		enable = func(enable bool) error { return conn.CallSwitchService(cc.Services.Start, enable) }
 	}
+	implement.May(res, implement.ChargeController(enable))
+
 	if cc.Services.Wakeup != "" {
-		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
+		implement.Has(res, implement.Resurrector(func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }))
 	}
 	if cc.Services.SetMaxCurrent != "" {
-		maxcurrent = func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }
+		implement.Has(res, implement.CurrentController(func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }))
 	}
 
-	// decorate all features
-	return decorateVehicle(
-		res,
-		limitSoc,
-		status,
-		rng,
-		odo,
-		climater,
-		maxcurrent,
-		nil,
-		finish,
-		wakeup,
-		enable,
-	), nil
+	return res, nil
 }
 
 func (v *HomeAssistant) Soc() (float64, error) {
 	return v.conn.GetFloatState(v.soc)
-}
-
-func (v *HomeAssistant) enable(on, off string, enable bool) error {
-	if enable {
-		return v.conn.CallSwitchService(on, true)
-	}
-
-	return v.conn.CallSwitchService(off, true)
 }

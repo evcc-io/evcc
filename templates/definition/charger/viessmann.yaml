@@ -205,3 +205,4 @@ render: |
         set:
           source: error
           error: ErrNotAvailable
+  {{ include "heatpumpswitch" . }}

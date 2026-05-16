@@ -104,3 +104,4 @@ render: |
       type: input
       encoding: uint16
   {{- end }}
+  {{ include "heatpumpswitch" . }}

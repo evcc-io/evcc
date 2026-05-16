@@ -41,7 +41,7 @@ params:
     default: 30s
 render: |
   type: rct
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   usage: {{ .usage }}
   cache: {{ .cache }}
   {{- include "battery-params" . }}

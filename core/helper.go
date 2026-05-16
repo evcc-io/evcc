@@ -50,7 +50,7 @@ func ptrValueEqual[T comparable](a, b *T) bool {
 
 // hasFeature returns true if features are supported and given feature present
 func hasFeature(a any, f api.Feature) bool {
-	c, ok := a.(api.FeatureDescriber)
+	c, ok := api.Cap[api.FeatureDescriber](a)
 	return ok && slices.Contains(c.Features(), f)
 }
 

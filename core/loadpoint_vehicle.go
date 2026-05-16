@@ -54,7 +54,7 @@ func (lp *Loadpoint) setVehicleIdentifier(id string) {
 
 // identifyVehicle reads vehicle identification from charger
 func (lp *Loadpoint) identifyVehicle() {
-	identifier, ok := lp.charger.(api.Identifier)
+	identifier, ok := api.Cap[api.Identifier](lp.charger)
 	if !ok {
 		return
 	}
@@ -176,8 +176,8 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 func (lp *Loadpoint) wakeUpVehicle() {
 	// wake up charger or vehicle. First wakeupAttemptsLeft will be odd.
-	charger, chargerCanWakeUp := lp.charger.(api.Resurrector)
-	vehicle, vehicleCanWakeUp := lp.GetVehicle().(api.Resurrector)
+	charger, chargerCanWakeUp := api.Cap[api.Resurrector](lp.charger)
+	vehicle, vehicleCanWakeUp := api.Cap[api.Resurrector](lp.GetVehicle())
 
 	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 {
 		if chargerCanWakeUp {
@@ -296,14 +296,14 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 	}
 
 	// remove previous vehicle if status was not confirmed
-	if _, ok := lp.GetVehicle().(api.ChargeState); ok {
+	if api.HasCap[api.ChargeState](lp.GetVehicle()) {
 		lp.setActiveVehicle(nil)
 	}
 }
 
 // vehicleOdometer updates odometer
 func (lp *Loadpoint) vehicleOdometer() {
-	if vs, ok := lp.GetVehicle().(api.VehicleOdometer); ok {
+	if vs, ok := api.Cap[api.VehicleOdometer](lp.GetVehicle()); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
 			lp.publish(keys.VehicleOdometer, odo)
@@ -361,7 +361,7 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 // vehicleClimateActive checks if vehicle has active climate request
 func (lp *Loadpoint) vehicleClimateActive() bool {
-	if cl, ok := lp.GetVehicle().(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
+	if cl, ok := api.Cap[api.VehicleClimater](lp.GetVehicle()); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {
 			if active {

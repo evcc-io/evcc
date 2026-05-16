@@ -6,10 +6,7 @@ products:
 capabilities: ["rfid"]
 requirements:
   description:
-    generic: |
-      OCPP 1.6J (Box-Level Integration)
-
-      https://docs.zaptec.com/docs/ocpp16j
+    generic: "OCPP 1.6J (Box-Level Integration) [docs.zaptec.com](https://docs.zaptec.com/docs/ocpp16j)"
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp

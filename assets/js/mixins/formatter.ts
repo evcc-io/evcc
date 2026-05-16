@@ -22,6 +22,8 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   USD: "$",
   DKK: "kr",
   SEK: "kr",
+  ZAR: "R",
+  TRY: "₺",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -39,6 +41,8 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   USD: "¢", // US cent
   DKK: "øre", // Danish øre
   SEK: "öre", // Swedish öre
+  ZAR: "c", // South African cent
+  TRY: "krş", // Türkiye kuruş
 };
 
 export enum POWER_UNIT {
@@ -180,6 +184,10 @@ export default defineComponent({
       const formatter = new Intl.DurationFormat(this.$i18n?.locale, { style });
       return formatter.format({ minutes, hours });
     },
+    fmtDurationParts(parts: Record<string, number>) {
+      // @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types
+      return new Intl.DurationFormat(this.$i18n?.locale, { style: "long" }).format(parts);
+    },
     fmtDayString(date: Date) {
       const YY = `${date.getFullYear()}`;
       const MM = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -215,6 +223,11 @@ export default defineComponent({
     weekdayShort(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
+      }).format(date);
+    },
+    weekdayLong(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "long",
       }).format(date);
     },
     fmtAbsoluteDate(date: Date) {
@@ -269,6 +282,30 @@ export default defineComponent({
         day: "numeric",
         month: "short",
       }).format(date);
+    },
+    fmtDayMonthYear(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+    },
+    fmtDayMonthShort(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
+    fmtMonthNarrow(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        month: "narrow",
+      }).format(date);
+    },
+    // "HH:mm – HH:mm" honoring 12h/24h preference.
+    fmtTimeSlot(start: Date, durationMs: number) {
+      const end = new Date(start.getTime() + durationMs);
+      return `${this.fmtHourMinute(start)} – ${this.fmtHourMinute(end)}`;
     },
     fmtDurationUnit(value: number, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {

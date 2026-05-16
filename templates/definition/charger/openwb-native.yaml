@@ -3,7 +3,7 @@ products:
   - brand: openWB
     description:
       generic: Embedded software replacement
-capabilities: ["1p3p", "rfid", "mA"]
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
     de: |

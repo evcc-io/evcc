@@ -42,7 +42,7 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 	for i := 6.0; i <= 16; {
 		var err error
 
-		if cc, ok := c.(api.ChargerEx); ok {
+		if cc, ok := api.Cap[api.ChargerEx](c); ok {
 			err = cc.MaxCurrentMillis(i)
 		} else {
 			err = c.MaxCurrent(int64(i))
@@ -51,7 +51,7 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 		time.Sleep(delay)
 
 		var p float64
-		if cc, ok := c.(api.Meter); err == nil && ok {
+		if cc, ok := api.Cap[api.Meter](c); err == nil && ok {
 			p, err = cc.CurrentPower()
 		}
 
@@ -93,7 +93,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 	chargers := config.Chargers().Devices()
 
 	for _, v := range config.Instances(chargers) {
-		if _, ok := v.(api.ChargerEx); digits > 0 && !ok {
+		if digits > 0 && !api.HasCap[api.ChargerEx](v) {
 			log.ERROR.Fatalln("charger does not support mA control")
 		}
 		ramp(v, digits, delay)

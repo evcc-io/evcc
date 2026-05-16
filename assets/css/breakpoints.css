@@ -1,9 +1,16 @@
 /* Bootstrap Breakpoints as Custom Media Queries */
+@custom-media --xs-and-up (min-width: 400px);
 @custom-media --sm-and-up (min-width: 576px);
 @custom-media --md-and-up (min-width: 768px);
 @custom-media --lg-and-up (min-width: 992px);
 @custom-media --xl-and-up (min-width: 1200px);
 @custom-media --xxl-and-up (min-width: 1400px);
+
+/* Range Breakpoints */
+@custom-media --xs-to-sm (min-width: 400px) and (max-width: 575.98px);
+@custom-media --sm-to-md (min-width: 576px) and (max-width: 767.98px);
+@custom-media --sm-to-lg (min-width: 576px) and (max-width: 991.98px);
+@custom-media --md-to-lg (min-width: 768px) and (max-width: 991.98px);
 
 @custom-media --light-mode (prefers-color-scheme: light);
 @custom-media --dark-mode (prefers-color-scheme: dark);

@@ -103,7 +103,9 @@ func TestDispatcher_Send_HTTP200Sync(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusOK, ""))
 
-	assert.NoError(t, d.Send(testURI, nil))
+	noop, err := d.Send(testURI, nil)
+	assert.NoError(t, err)
+	assert.True(t, noop)
 }
 
 func TestDispatcher_Send_Noop(t *testing.T) {
@@ -115,7 +117,9 @@ func TestDispatcher_Send_Noop(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusAccepted, "[]"))
 
-	assert.NoError(t, d.Send(testURI, nil))
+	noop, err := d.Send(testURI, nil)
+	assert.NoError(t, err)
+	assert.True(t, noop)
 }
 
 func TestDispatcher_Send_HTTP202_InvalidJSON(t *testing.T) {
@@ -125,7 +129,8 @@ func TestDispatcher_Send_HTTP202_InvalidJSON(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusAccepted, "{not-json"))
 
-	assert.Error(t, d.Send(testURI, nil))
+	_, err := d.Send(testURI, nil)
+	assert.Error(t, err)
 }
 
 func TestDispatcher_Send_HTTP202_NonNumericTicks(t *testing.T) {
@@ -135,7 +140,8 @@ func TestDispatcher_Send_HTTP202_NonNumericTicks(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusAccepted, `[{"ticks":"NaN"}]`))
 
-	assert.Error(t, d.Send(testURI, nil))
+	_, err := d.Send(testURI, nil)
+	assert.Error(t, err)
 }
 
 func TestDispatcher_Send_HTTPError(t *testing.T) {
@@ -146,7 +152,7 @@ func TestDispatcher_Send_HTTPError(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusBadRequest, ""))
 
-	err := d.Send(testURI, nil)
+	_, err := d.Send(testURI, nil)
 	assert.Error(t, err)
 }
 
@@ -166,7 +172,9 @@ func TestDispatcher_Send_TicksMatch(t *testing.T) {
 		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: true})
 	}()
 
-	assert.NoError(t, d.Send(testURI, nil))
+	noop, err := d.Send(testURI, nil)
+	assert.NoError(t, err)
+	assert.False(t, noop)
 }
 
 func TestDispatcher_Send_IDFallback(t *testing.T) {
@@ -187,7 +195,9 @@ func TestDispatcher_Send_IDFallback(t *testing.T) {
 		d.Dispatch(SignalRCommandResponse{ID: int(obsID), Ticks: ticks + 1, WasAccepted: true})
 	}()
 
-	assert.NoError(t, d.Send(testURI, nil))
+	noop, err := d.Send(testURI, nil)
+	assert.NoError(t, err)
+	assert.False(t, noop)
 }
 
 func TestDispatcher_Send_Timeout(t *testing.T) {
@@ -202,7 +212,8 @@ func TestDispatcher_Send_Timeout(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	// No Dispatch call → Send times out
-	assert.ErrorIs(t, d.Send(testURI, nil), api.ErrTimeout)
+	_, err := d.Send(testURI, nil)
+	assert.ErrorIs(t, err, api.ErrTimeout)
 }
 
 func TestDispatcher_Send_Rejected(t *testing.T) {
@@ -221,7 +232,7 @@ func TestDispatcher_Send_Rejected(t *testing.T) {
 		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: false})
 	}()
 
-	err := d.Send(testURI, nil)
+	_, err := d.Send(testURI, nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "rejected")
 }
@@ -243,5 +254,7 @@ func TestDispatcher_Send_CommandURI(t *testing.T) {
 		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: true})
 	}()
 
-	assert.NoError(t, d.Send(testCmdURI, nil))
+	noop, err := d.Send(testCmdURI, nil)
+	assert.NoError(t, err)
+	assert.False(t, noop)
 }
