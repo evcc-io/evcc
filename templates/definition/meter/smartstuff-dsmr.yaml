@@ -1,8 +1,8 @@
 template: dsmrlogger-v2
 products:
-  - brand: Smartstuff DSMR-API
+  - brand: Smartstuff
     description:
-      generic: P1 Dongle
+      generic: DSMR P1 Dongle
 requirements:
   description:
     generic: "[Smartstuff API](https://docs.smart-stuff.nl/dsmr-api/geavanceerd/api-overzicht) REST-API version"
