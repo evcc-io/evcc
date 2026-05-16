@@ -14,20 +14,24 @@ params:
   - name: usage
     choice: ["battery"]
   - name: vrmToken
+    required: true
+    mask: true
     description:
       de: VRM Token
       en: VRM token
     type: string
   - name: siteId
+    required: true
     description:
       de: Standort-ID
       en: Site ID
-    type: int
+    type: string
   - name: batteryInstanceId
+    required: true
     description:
       de: Batterie-Instanz-ID
       en: Battery instance ID
-    type: int
+    type: string
   - preset: battery-params
 render: |
   {{- define "uri" -}}
