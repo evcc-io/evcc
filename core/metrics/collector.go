@@ -60,16 +60,13 @@ func (c *Collector) process(fun func()) error {
 
 	switch {
 	case c.started.IsZero():
-		// remember when collection started - the slot is only complete if it
-		// began exactly on a slot boundary (kept un-truncated on purpose)
+		// keep started un-truncated so a mid-slot start stays distinguishable
 		c.started = now
-		c.accu.Energy = 0
-		c.accu.ReturnEnergy = 0
 
 	case slotStart.After(c.started):
-		// persist the completed slot only if it was covered from its start,
-		// i.e. c.started is the immediately preceding slot boundary. The first
-		// (mid-slot) and any post-gap slot are skipped.
+		// persist the completed slot only if started is the immediately
+		// preceding slot boundary - false for the mid-slot first slot and
+		// for a slot reached after a data gap
 		if c.started.Equal(slotStart.Add(-tariff.SlotDuration)) {
 			if err := c.persist(); err != nil {
 				return err
@@ -77,9 +74,13 @@ func (c *Collector) process(fun func()) error {
 		}
 
 		c.started = slotStart
-		c.accu.Energy = 0
-		c.accu.ReturnEnergy = 0
+
+	default:
+		return nil
 	}
+
+	c.accu.Energy = 0
+	c.accu.ReturnEnergy = 0
 
 	return nil
 }
