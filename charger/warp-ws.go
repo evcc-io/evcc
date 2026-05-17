@@ -183,6 +183,15 @@ func (w *WarpWS) run(ctx context.Context, wsURI string) {
 
 		bo.Reset()
 
+		w.mu.RLock()
+		lpw := w.lastPhasesWanted
+		w.mu.RUnlock()
+		if lpw == warpPhases1p || lpw == warpPhases3p {
+			if err := w.postPhasesWanted(lpw); err != nil {
+				w.log.WARN.Printf("resend phases_wanted on reconnect: %v", err)
+			}
+		}
+
 		if err := w.handleConnection(ctx, conn); err != nil {
 			w.log.ERROR.Println(err)
 		}
@@ -427,6 +436,13 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 	return err
 }
 
+func (w *WarpWS) postPhasesWanted(phases int) error {
+	uri := fmt.Sprintf("%s/power_manager/external_control", w.pm.URI)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
+	_, err := w.pm.Do(req)
+	return err
+}
+
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
 	if phases != warpPhases1p && phases != warpPhases3p {
@@ -443,15 +459,13 @@ func (w *WarpWS) phases1p3p(phases int) error {
 		return fmt.Errorf("external control not available: %v", ec.ExternalControl)
 	}
 
-	uri := fmt.Sprintf("%s/power_manager/external_control", w.pm.URI)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
-	_, err := w.pm.Do(req)
-	if err == nil {
-		w.mu.Lock()
-		w.lastPhasesWanted = phases
-		w.mu.Unlock()
+	if err := w.postPhasesWanted(phases); err != nil {
+		return err
 	}
-	return err
+	w.mu.Lock()
+	w.lastPhasesWanted = phases
+	w.mu.Unlock()
+	return nil
 }
 
 // getPhases implements the api.PhaseGetter interface
