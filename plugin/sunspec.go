@@ -157,7 +157,36 @@ func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
-var _ BoolGetter = (*Modbus)(nil)
+var _ BoolGetter = (*ModbusSunspec)(nil)
+
+func boolFromPointValue(v any) (bool, error) {
+	switch x := v.(type) {
+	case bool:
+		return x, nil
+	case sunspec.Enum16:
+		return x != 0, nil
+	case sunspec.Enum32:
+		return x != 0, nil
+	case sunspec.Bitfield16:
+		return x != 0, nil
+	case sunspec.Bitfield32:
+		return x != 0, nil
+	case int16:
+		return x != 0, nil
+	case int32:
+		return x != 0, nil
+	case int64:
+		return x != 0, nil
+	case uint16:
+		return x != 0, nil
+	case uint32:
+		return x != 0, nil
+	case uint64:
+		return x != 0, nil
+	default:
+		return false, fmt.Errorf("invalid point type: %T", v)
+	}
+}
 
 // BoolGetter executes configured modbus read operation and implements BoolGetter.
 func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
@@ -177,32 +206,7 @@ func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
 			return false, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
 		}
 
-		switch v := point.Value().(type) {
-		case bool:
-			return v, nil
-		case sunspec.Enum16:
-			return v != 0, nil
-		case sunspec.Enum32:
-			return v != 0, nil
-		case sunspec.Bitfield16:
-			return v != 0, nil
-		case sunspec.Bitfield32:
-			return v != 0, nil
-		case int16:
-			return v != 0, nil
-		case int32:
-			return v != 0, nil
-		case int64:
-			return v != 0, nil
-		case uint16:
-			return v != 0, nil
-		case uint32:
-			return v != 0, nil
-		case uint64:
-			return v != 0, nil
-		default:
-			return false, fmt.Errorf("invalid point type: %T", point.Value())
-		}
+		return boolFromPointValue(point.Value())
 	}, nil
 }
 
