@@ -64,13 +64,11 @@ func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password
 
 type Service struct {
 	*request.Helper
-	log *util.Logger
 }
 
 func New(log *util.Logger) *Service {
 	return &Service{
 		Helper: request.NewHelper(log),
-		log:    log,
 	}
 }
 
@@ -228,8 +226,6 @@ func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, err
 	if cb == nil {
 		return nil, false, nil
 	}
-
-	v.log.DEBUG.Println("skipping optional marketing consent page")
 
 	cbResp, err := v.Get(cb.String())
 	if err != nil {
