@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -478,6 +479,40 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 
 		ctrl.Finish()
 	}
+}
+
+// TestScalePhasesNotAvailable verifies that a charger reporting api.ErrNotAvailable
+// from Phases1p3p (e.g. an EEBus charger with an ISO 15118 vehicle, see issue #29974)
+// is treated as a failed switch: the error is api.ErrNotAvailable so callers can
+// suppress it, and the phase count is left unchanged.
+func TestScalePhasesNotAvailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+	phaseCharger.EXPECT().Phases1p3p(3).Return(api.ErrNotAvailable)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		clock:       clock.NewMock(),
+		wakeUpTimer: NewTimer(),
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			plainCharger,
+			phaseCharger,
+		},
+		phases: 1, // current phase status, switch to 3p will be attempted
+	}
+
+	err := lp.scalePhases(3)
+	require.Error(t, err)
+	require.True(t, errors.Is(err, api.ErrNotAvailable), "want api.ErrNotAvailable, got %v", err)
+
+	// switch did not complete - phase count unchanged
+	require.Equal(t, 1, lp.GetPhases())
 }
 
 func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
