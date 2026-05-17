@@ -280,7 +280,7 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 	}
 
 	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
-		return nil, fmt.Errorf("unexpected redirect URL scheme %s (expected app specific url e.g. 'weconnect://...'): %s", redirectURL.Scheme, redirectURL.Redacted())
+		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
 	}
 
 	return parseAuthLocation(redirectURL)
