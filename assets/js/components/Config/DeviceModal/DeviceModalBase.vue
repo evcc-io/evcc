@@ -512,6 +512,11 @@ export default defineComponent({
 		},
 		values: {
 			handler() {
+				// a prior test result no longer matches the edited config:
+				// revert "Save anyway" back to "Validate & save"
+				if (this.test.isError || this.test.isSuccess) {
+					this.test = initialTestState();
+				}
 				this.updateServiceValues();
 			},
 			deep: true,
@@ -647,12 +652,13 @@ export default defineComponent({
 			await prepareAuthLogin(this.auth, authId);
 		},
 		async create(force = false) {
+			const form = this.$refs["form"] as HTMLFormElement | undefined;
+			// always enforce required fields, even when forcing past a failed test
+			if (form && !reportValidityInModal(form)) {
+				return;
+			}
 			if (this.test.isUnknown && !force) {
-				const success = await performTest(
-					this.test,
-					this.testDevice,
-					this.$refs["form"] as HTMLFormElement
-				);
+				const success = await performTest(this.test, this.testDevice, form);
 				if (!success) {
 					return;
 				}
@@ -683,13 +689,13 @@ export default defineComponent({
 			return this.device.test(this.id, this.apiData);
 		},
 		async update(force = false) {
+			const form = this.$refs["form"] as HTMLFormElement | undefined;
+			// always enforce required fields, even when forcing past a failed test
+			if (form && !reportValidityInModal(form)) {
+				return;
+			}
 			if (this.test.isUnknown && !force) {
-				const success = await performTest(
-					this.test,
-					this.testDevice,
-					this.$refs["form"] as HTMLFormElement
-				);
-				console.log("test result", success);
+				const success = await performTest(this.test, this.testDevice, form);
 				if (!success) {
 					return;
 				}
