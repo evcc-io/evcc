@@ -351,6 +351,23 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 
+	// smart charging cost / feed-in limits require a dynamic tariff; drop
+	// stale loadpoint limits left over from a previous dynamic tariff (#29961)
+	if !site.isDynamicTariff(api.TariffUsagePlanner) {
+		for _, lp := range site.loadpoints {
+			if lp.GetSmartCostLimit() != nil {
+				lp.SetSmartCostLimit(nil)
+			}
+		}
+	}
+	if !site.isDynamicTariff(api.TariffUsageFeedIn) {
+		for _, lp := range site.loadpoints {
+			if lp.GetSmartFeedInPriorityLimit() != nil {
+				lp.SetSmartFeedInPriorityLimit(nil)
+			}
+		}
+	}
+
 	// drop legacy accumulator-based forecast settings (now stored via metrics collector)
 	settings.Delete("solarAccForecast")
 	settings.Delete("solarAccYield")
