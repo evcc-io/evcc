@@ -56,9 +56,21 @@ func (c *Collector) process(fun func()) error {
 
 	fun()
 
-	if slotStart := now.Truncate(tariff.SlotDuration); slotStart.After(c.started) {
-		// skip incomplete first slot
-		if !c.started.IsZero() {
+	slotStart := now.Truncate(tariff.SlotDuration)
+
+	switch {
+	case c.started.IsZero():
+		// remember when collection started - the slot is only complete if it
+		// began exactly on a slot boundary (kept un-truncated on purpose)
+		c.started = now
+		c.accu.Energy = 0
+		c.accu.ReturnEnergy = 0
+
+	case slotStart.After(c.started):
+		// persist the completed slot only if it was covered from its start,
+		// i.e. c.started is the immediately preceding slot boundary. The first
+		// (mid-slot) and any post-gap slot are skipped.
+		if c.started.Equal(slotStart.Add(-tariff.SlotDuration)) {
 			if err := c.persist(); err != nil {
 				return err
 			}
