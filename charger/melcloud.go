@@ -78,7 +78,7 @@ func NewMelcloudFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		embed          `mapstructure:",squash"`
 		User, Password string
 		Device         string
-		Tank           bool
+		TempSource     string
 		NormalTemp     float64
 		BoostTemp      float64
 		Cache          time.Duration
@@ -87,7 +87,6 @@ func NewMelcloudFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice, api.SwitchDevice},
 		},
-		Tank:       true,
 		NormalTemp: 45,
 		BoostTemp:  60,
 		Cache:      time.Minute,
@@ -112,7 +111,7 @@ func NewMelcloudFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		log:        log,
 		user:       cc.User,
 		password:   cc.Password,
-		useTank:    cc.Tank,
+		useTank:    cc.TempSource == "warmwater",
 		normalTemp: cc.NormalTemp,
 		boostTemp:  cc.BoostTemp,
 	}
@@ -128,10 +127,6 @@ func NewMelcloudFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	m.deviceID = dev.DeviceID
 	m.buildingID = dev.BuildingID
 	m.deviceType = dev.Device.DeviceType
-	if m.deviceType == melcloudATA {
-		// ATA has no tank — always use SetTemperature
-		m.useTank = false
-	}
 
 	sgr, err := NewSgReady(ctx, &cc.embed, m.setMode, nil, nil)
 	if err != nil {

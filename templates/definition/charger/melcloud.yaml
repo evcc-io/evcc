@@ -29,15 +29,10 @@ params:
     help:
       de: Notwendig falls mehrere Geräte im Account vorhanden sind
       en: Required if multiple devices are present in the account
-  - name: tank
-    type: bool
-    default: true
-    description:
-      de: Warmwasserspeicher steuern
-      en: Control hot water tank
-    help:
-      de: Nur Luft/Wasser-Wärmepumpe — bei true wird die Speichertemperatur gesetzt, sonst die Vorlauftemperatur (Zone 1)
-      en: Air-to-Water only — if true sets the tank temperature, otherwise the flow temperature (zone 1)
+  - name: tempsource
+    type: choice
+    choice: ["warmwater", "buffer"]
+    required: true
   - name: normaltemp
     type: float
     unit: °C
@@ -52,20 +47,18 @@ params:
     description:
       de: Boost Solltemperatur
       en: Boost setpoint
+  - name: tank
+    deprecated: true
   - name: cache
     type: duration
     default: 1m
     advanced: true
-  - name: phases
-    deprecated: true
 render: |
   type: melcloud
   user: {{ .user }}
   password: {{ .password }}
-  {{- if .device }}
   device: {{ .device }}
-  {{- end }}
-  tank: {{ .tank }}
+  tempsource: {{ .tempsource }}
   normaltemp: {{ .normaltemp }}
   boosttemp: {{ .boosttemp }}
   cache: {{ .cache }}
