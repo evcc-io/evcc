@@ -53,37 +53,16 @@
 					class="history-tile mb-4"
 					:data-testid="`history-section-${group}`"
 				>
-					<div class="d-flex align-items-baseline gap-3">
-						<h3
-							class="fw-normal my-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden history-tile-title flex-grow-1"
-						>
-							<span class="d-block no-wrap text-truncate">
-								{{ $t(`main.history.group.${group}`) }}
-							</span>
-							<small class="d-block no-wrap text-truncate">
-								{{ groupTotalLabel(group) }}
-							</small>
-						</h3>
-						<div
-							v-if="group === 'pv' && hasForecast && effectivePeriod === 'day'"
-							class="form-check form-switch mb-0 ms-auto forecast-toggle"
-							:style="{ '--forecast-color': groupColor('forecast') }"
-						>
-							<input
-								id="historyShowForecast"
-								v-model="showForecast"
-								class="form-check-input"
-								type="checkbox"
-								role="switch"
-							/>
-							<label
-								class="form-check-label text-muted ms-1"
-								for="historyShowForecast"
-							>
-								{{ $t("main.history.group.forecast") }}
-							</label>
-						</div>
-					</div>
+					<h3
+						class="fw-normal my-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden history-tile-title"
+					>
+						<span class="d-block no-wrap text-truncate">
+							{{ $t(`main.history.group.${group}`) }}
+						</span>
+						<small class="d-block no-wrap text-truncate">
+							{{ groupTotalLabel(group) }}
+						</small>
+					</h3>
 					<GroupChart
 						v-if="displayFrom && displayTo && displayPeriod"
 						:group="group"
@@ -96,14 +75,19 @@
 						"
 						:overlayColor="groupColor('forecast')"
 						:overlayLabel="$t('main.history.group.forecast')"
-						:showOverlay="group === 'pv' && displayPeriod === 'day' && showForecast"
+						:showOverlay="
+							group === 'pv' &&
+							displayPeriod === 'day' &&
+							hasForecast &&
+							(focusedEntity[group] ?? null) === null
+						"
 						:focusedEntity="focusedEntity[group] ?? null"
 						:period="displayPeriod"
 						:from="displayFrom"
 						:to="displayTo"
 					/>
 					<ul
-						v-if="hasEntityLegend(group)"
+						v-if="hasEntityLegend(group) || hasForecastLegend(group)"
 						class="entity-legend p-0 mt-4 mb-0 d-flex flex-wrap column-gap-4 row-gap-2"
 					>
 						<li
@@ -125,6 +109,24 @@
 							></span>
 							<span class="text-nowrap">{{ legend.label }}</span>
 							<span class="text-muted text-nowrap">{{ legend.value }}</span>
+						</li>
+						<li
+							v-if="hasForecastLegend(group)"
+							class="entity-legend-item entity-legend-item--static d-flex align-items-baseline gap-2 no-wrap"
+							:class="{
+								'entity-legend-item--dim': (focusedEntity[group] ?? null) !== null,
+							}"
+						>
+							<span
+								class="entity-legend-dot entity-legend-dot--line align-self-center"
+								:style="{ backgroundColor: groupColor('forecast') }"
+							></span>
+							<span class="text-nowrap">
+								{{ $t("main.history.group.forecast") }}
+							</span>
+							<span class="text-muted text-nowrap">
+								{{ forecastTotalLabel }}
+							</span>
 						</li>
 					</ul>
 				</section>
@@ -193,7 +195,6 @@ export default defineComponent({
 			loading: true,
 			interval: null as ReturnType<typeof setInterval> | null,
 			startDate: new Date(2020, 0, 1),
-			showForecast: true,
 			focusedEntity: {} as Record<string, number | null>,
 		};
 	},
@@ -358,6 +359,14 @@ export default defineComponent({
 				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
 			);
 		},
+		forecastTotalLabel(): string {
+			const list = this.seriesByGroup["forecast"] || [];
+			let sum = 0;
+			for (const s of list) {
+				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
+			}
+			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
+		},
 		csvLink(): string {
 			const params = new URLSearchParams({
 				format: "csv",
@@ -405,6 +414,9 @@ export default defineComponent({
 			if (group === "loadpoint" || group === "meter") return true;
 			if (group === "pv" || group === "battery") return list.length > 1;
 			return false;
+		},
+		hasForecastLegend(group: string): boolean {
+			return group === "pv" && this.hasForecast && this.effectivePeriod === PERIODS.DAY;
 		},
 		entityLegends(group: string): (Legend & { entityIndex: number })[] {
 			const list = this.displaySeries(group);
@@ -594,13 +606,12 @@ export default defineComponent({
 	color: var(--evcc-default-text);
 	text-decoration: underline;
 }
-.forecast-toggle .form-check-input:checked {
-	background-color: var(--forecast-color);
-	border-color: var(--forecast-color);
+.entity-legend-dot--line {
+	height: 2px;
+	border-radius: 1px;
 }
-.forecast-toggle .form-check-input:focus {
-	border-color: var(--forecast-color);
-	box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--forecast-color) 25%, transparent);
+.entity-legend-item--static {
+	cursor: default;
 }
 .history-tile-title {
 	margin: 0 0 0.5rem;

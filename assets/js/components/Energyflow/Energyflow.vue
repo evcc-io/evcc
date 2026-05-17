@@ -99,7 +99,7 @@
 								<EnergyflowEntry
 									v-for="(p, index) in pv"
 									:key="index"
-									:name="p.title || genericPvTitle(index)"
+									:name="p.title || p.name"
 									:power="p.power"
 									:powerUnit="powerUnit"
 									:data-testid="`energyflow-entry-production-${index}`"
@@ -150,7 +150,7 @@
 									<EnergyflowEntry
 										v-for="(b, index) in batteryDevices"
 										:key="index"
-										:name="b.title || genericBatteryTitle(index)"
+										:name="b.title || b.name"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="dischargePower(b.power)"
@@ -201,7 +201,7 @@
 									<EnergyflowEntry
 										v-for="(c, index) in consumers"
 										:key="index"
-										:name="c.title || genericConsumerTitle(index)"
+										:name="c.title || c.name"
 										:power="c.power"
 										:powerUnit="powerUnit"
 										icon="vehicle"
@@ -308,7 +308,7 @@
 									<EnergyflowEntry
 										v-for="(b, index) in batteryDevices"
 										:key="index"
-										:name="b.title || genericBatteryTitle(index)"
+										:name="b.title || b.name"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="chargePower(b.power)"
@@ -678,15 +678,6 @@ export default defineComponent({
 		toggleConsumers() {
 			settings.energyflowConsumers = !settings.energyflowConsumers;
 			this.$nextTick(this.updateHeight);
-		},
-		genericBatteryTitle(index: number) {
-			return `${this.$t("config.devices.batteryStorage")} #${index + 1}`;
-		},
-		genericPvTitle(index: number) {
-			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
-		},
-		genericConsumerTitle(index: number) {
-			return `${this.$t("config.devices.consumer")} #${index + 1}`;
 		},
 	},
 });

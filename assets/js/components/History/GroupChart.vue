@@ -97,10 +97,8 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak absolute net power per slot in kW (day view only). Absolute so
-		// export-dominant slots (battery discharge, grid export) count too.
-		maxVisibleKw(): number {
-			if (this.period !== PERIODS.DAY) return Infinity;
+		// Peak per-slot stacked value in the display unit (kW for day, kWh otherwise).
+		axisPeak(): number {
 			const factor = this.valueFactor;
 			const slotSums = new Map<string, number>();
 			for (const s of this.visibleSeries) {
@@ -113,9 +111,17 @@ export default defineComponent({
 			for (const v of slotSums.values()) if (v > max) max = v;
 			return max;
 		},
+		maxVisibleKw(): number {
+			return this.period === PERIODS.DAY ? this.axisPeak : Infinity;
+		},
 		// Switch to watts when the peak is below 1 kW so small values stay readable.
 		useWatts(): boolean {
 			return this.period === PERIODS.DAY && this.maxVisibleKw < 1;
+		},
+		// 1 decimal when echarts may pick 0.5-step splits, else 0 — avoids "1, 1, 2, 2".
+		axisDigits(): number {
+			if (this.isBidirectional || this.useWatts) return 0;
+			return this.axisPeak < 3 ? 1 : 0;
 		},
 		unit(): "W" | "kW" | "kWh" {
 			if (this.period !== PERIODS.DAY) return "kWh";
@@ -607,9 +613,9 @@ export default defineComponent({
 										v * 1000,
 										this.useWatts ? POWER_UNIT.W : POWER_UNIT.KW,
 										false,
-										0
+										this.axisDigits
 									)
-								: this.fmtWh(v * 1000, POWER_UNIT.KW, false, 0),
+								: this.fmtWh(v * 1000, POWER_UNIT.KW, false, this.axisDigits),
 					},
 				}),
 				series: this.echartsSeries,
