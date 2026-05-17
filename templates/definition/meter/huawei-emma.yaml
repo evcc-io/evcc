@@ -54,6 +54,53 @@ render: |
       type: holding
       decode: int32
     scale: 0.1
+  voltages:
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31639 # Huawei phase A grid voltage
+      type: holding
+      decode: uint32
+    scale: 0.01
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31641 # Huawei phase B grid voltage
+      type: holding
+      decode: uint32
+    scale: 0.01
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31643 # Huawei phase C grid voltage
+      type: holding
+      decode: uint32
+    scale: 0.01
+  powers:
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31665 # Huawei phase A grid power
+      type: holding
+      decode: int32
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31667 # Huawei phase B grid power
+      type: holding
+      decode: int32
+  - source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31669 # Huawei phase C grid power
+      type: holding
+      decode: int32
   {{- end }}
   {{- if eq .usage "pv" }}
   power:

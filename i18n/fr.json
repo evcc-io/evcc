@@ -1191,7 +1191,7 @@
       "batteryGridChargeLimit": "Charge réseau : quand",
       "batteryHold": "Batterie (verrouillée)",
       "batteryTooltip": "{energy} sur {total} ({soc})",
-      "forecast": "Prévisions : ",
+      "forecast": "Prévisions",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
       "gridImport": "Import depuis le réseau",
       "homePower": "Consommation",

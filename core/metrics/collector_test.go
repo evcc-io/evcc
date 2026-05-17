@@ -87,6 +87,32 @@ func TestCollectorAddEnergyWithImportMeterAndExport(t *testing.T) {
 	require.InDelta(t, 600.0*3/60/1e3, col.accu.Exported(), 1e-10) // 0.03 kWh
 }
 
+func TestCollectorAddEnergyWithExportMeterAndImport(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector("baz2", "baz2", WithClock(clock))
+	require.NoError(t, err)
+
+	// seed export meter
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, new(1000.0), 0))
+
+	// negative power: export via meter delta, no import
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, new(1000.3), -500))
+	require.InDelta(t, 0.3, col.accu.Exported(), 1e-10)
+	require.Equal(t, 0.0, col.accu.Imported())
+
+	// positive power: export via meter (no change), import via power integration
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, new(1000.3), 600))
+	require.InDelta(t, 0.3, col.accu.Exported(), 1e-10)
+	require.InDelta(t, 600.0*3/60/1e3, col.accu.Imported(), 1e-10) // 0.03 kWh
+}
+
 func TestCollectorAddEnergyWithBothMeters(t *testing.T) {
 	clock := clock.NewMock()
 

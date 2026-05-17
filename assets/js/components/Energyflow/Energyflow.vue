@@ -99,7 +99,7 @@
 								<EnergyflowEntry
 									v-for="(p, index) in pv"
 									:key="index"
-									:name="p.title || genericPvTitle(index)"
+									:name="p.title || p.name"
 									:power="p.power"
 									:powerUnit="powerUnit"
 									:data-testid="`energyflow-entry-production-${index}`"
@@ -131,13 +131,13 @@
 									#subline
 								>
 									<div
-										v-if="batteryForecastEmpty"
+										v-if="batteryForecastLowest"
 										class="d-flex align-items-center mb-2"
 									>
-										<ForecastMessage :message="batteryForecastEmpty" />
+										<ForecastMessage :point="batteryForecastLowest" />
 									</div>
 									<div
-										v-else-if="batteryForecastFull"
+										v-else-if="batteryForecastHighest"
 										class="d-none d-md-block mb-2"
 									>
 										&nbsp;
@@ -150,7 +150,7 @@
 									<EnergyflowEntry
 										v-for="(b, index) in batteryDevices"
 										:key="index"
-										:name="b.title || genericBatteryTitle(index)"
+										:name="b.title || b.name"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="dischargePower(b.power)"
@@ -201,7 +201,7 @@
 									<EnergyflowEntry
 										v-for="(c, index) in consumers"
 										:key="index"
-										:name="c.title || genericConsumerTitle(index)"
+										:name="c.title || c.name"
 										:power="c.power"
 										:powerUnit="powerUnit"
 										icon="vehicle"
@@ -272,13 +272,13 @@
 									#subline
 								>
 									<div
-										v-if="batteryForecastFull"
+										v-if="batteryForecastHighest"
 										class="d-flex align-items-center mb-2"
 									>
-										<ForecastMessage :message="batteryForecastFull" />
+										<ForecastMessage :point="batteryForecastHighest" high />
 									</div>
 									<div
-										v-else-if="batteryForecastEmpty"
+										v-else-if="batteryForecastLowest"
 										class="d-none d-md-block mb-2"
 									>
 										&nbsp;
@@ -308,7 +308,7 @@
 									<EnergyflowEntry
 										v-for="(b, index) in batteryDevices"
 										:key="index"
-										:name="b.title || genericBatteryTitle(index)"
+										:name="b.title || b.name"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="chargePower(b.power)"
@@ -350,6 +350,7 @@ import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
 	type Battery,
+	type BatteryForecastPoint,
 	type Meter,
 	type CURRENCY,
 	type Forecast,
@@ -583,14 +584,14 @@ export default defineComponent({
 		consumers() {
 			return [...this.aux, ...this.ext];
 		},
-		batteryForecastFull(): string | undefined {
-			return this.fmtForecast(this.battery?.forecast, true);
+		batteryForecastHighest(): BatteryForecastPoint | undefined {
+			return this.battery?.forecast?.highest;
 		},
-		batteryForecastEmpty(): string | undefined {
-			return this.fmtForecast(this.battery?.forecast, false);
+		batteryForecastLowest(): BatteryForecastPoint | undefined {
+			return this.battery?.forecast?.lowest;
 		},
 		batteryForecastExists(): boolean {
-			return !!(this.batteryForecastEmpty || this.batteryForecastFull);
+			return !!(this.batteryForecastHighest || this.batteryForecastLowest);
 		},
 	},
 	watch: {
@@ -677,27 +678,6 @@ export default defineComponent({
 		toggleConsumers() {
 			settings.energyflowConsumers = !settings.energyflowConsumers;
 			this.$nextTick(this.updateHeight);
-		},
-		genericBatteryTitle(index: number) {
-			return `${this.$t("config.devices.batteryStorage")} #${index + 1}`;
-		},
-		genericPvTitle(index: number) {
-			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
-		},
-		genericConsumerTitle(index: number) {
-			return `${this.$t("config.devices.consumer")} #${index + 1}`;
-		},
-		fmtForecast(
-			forecast: { full?: string | null; empty?: string | null } | undefined,
-			full: boolean
-		): string | undefined {
-			const isoString = full ? forecast?.full : forecast?.empty;
-			if (!isoString) return undefined;
-			const time = this.fmtAbsoluteDate(new Date(isoString));
-			const key = full
-				? "main.energyflow.batteryForecastFull"
-				: "main.energyflow.batteryForecastEmpty";
-			return this.$t(key, { time });
 		},
 	},
 });

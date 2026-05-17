@@ -183,6 +183,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use placeholders for dynamic content: `{soc}`, `{duration}`, `{value}`
 - Prefer context-specific keys over generic ones
 - Test with German translations (20-40% longer text)
+- Keep separators and trailing punctuation (`: `, `…`, `—`) in the template, not in the translation value.
 
 ### Testing
 

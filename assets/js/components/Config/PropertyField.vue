@@ -79,7 +79,13 @@
 		:rows="textareaRows"
 		:disabled="disabled"
 	/>
-	<PropertyZonesField v-else-if="zones" :id="id" v-model="value" :currency="currency" />
+	<PropertyZonesField
+		v-else-if="zones"
+		:id="id"
+		v-model="value"
+		:currency="currency"
+		:valueLabel="zonesValueLabel"
+	/>
 	<div v-else class="d-flex" :class="sizeClass">
 		<div class="position-relative flex-grow-1">
 			<input
@@ -275,6 +281,11 @@ export default {
 		},
 		zones() {
 			return this.type === "Zones";
+		},
+		zonesValueLabel() {
+			return this.property === "chargesZones"
+				? this.$t("config.tariff.zones.charge")
+				: this.$t("config.tariff.zones.price");
 		},
 		pricePerKWh() {
 			return this.type === "PricePerKWh";
