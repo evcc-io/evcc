@@ -342,7 +342,11 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
-		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+		// a grid charge limit requires a dynamic tariff; drop a stale limit
+		// left over from a previous dynamic tariff configuration (#29961)
+		if !site.isDynamicTariff(api.TariffUsagePlanner) {
+			settings.SetString(keys.BatteryGridChargeLimit, "")
+		} else if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
