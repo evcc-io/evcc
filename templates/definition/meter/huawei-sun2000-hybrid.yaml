@@ -64,8 +64,6 @@ params:
   - name: maxdischargepower
     service: modbus/read?address=37048&type=holding&encoding=uint32&{modbus}
     required: true
-  - name: curtaillimit
-  - name: feedinlimit
   - name: minsoc
     service: modbus/read?address=47082&type=holding&encoding=uint16&scale=0.1&{modbus}
   - name: maxsoc
@@ -154,8 +152,6 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
-  curtaillimit: {{ .curtaillimit }} # % power limit when curtailed (0 = full shutdown)
-  feedinlimit: {{ .feedinlimit }} # % max power limit when not curtailed (e.g. 60 for 60 % of kWp)
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
