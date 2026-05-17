@@ -15,6 +15,8 @@ const (
 	Capability1p3p // 1p3p
 	// battery control support
 	CapabilityBatteryControl // battery-control
+	// inverter curtailment support
+	CapabilityCurtail // curtail
 	// built-in energy meter support
 	CapabilityMeter // meter
 	// EnWG §14a dimming support

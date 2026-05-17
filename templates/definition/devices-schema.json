@@ -146,6 +146,7 @@
       "enum": [
         "1p3p",
         "battery-control",
+        "curtail",
         "iso151182",
         "rfid",
         "smahems",

@@ -75,3 +75,29 @@ func (o *mapPlugin) IntSetter(param string) (func(int64) error, error) {
 		return set(m)
 	}, err
 }
+
+var _ BoolGetter = (*mapPlugin)(nil)
+
+func (o *mapPlugin) BoolGetter() (func() (bool, error), error) {
+	get, err := o.IntGetter()
+
+	return func() (bool, error) {
+		val, err := get()
+		return val != 0, err
+	}, err
+}
+
+var _ BoolSetter = (*mapPlugin)(nil)
+
+func (o *mapPlugin) BoolSetter(param string) (func(bool) error, error) {
+	set, err := o.IntSetter(param)
+
+	return func(val bool) error {
+		var ival int64
+		if val {
+			ival = 1
+		}
+
+		return set(ival)
+	}, err
+}

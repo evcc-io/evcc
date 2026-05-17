@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _CapabilityName = "iso151182mArfid1p3pbattery-controlmeterdimcurtail"
+const _CapabilityName = "iso151182mArfid1p3pbattery-controlcurtailmeter"
 
-var _CapabilityIndex = [...]uint8{0, 9, 11, 15, 19, 34, 39, 42, 49}
+var _CapabilityIndex = [...]uint8{0, 9, 11, 15, 19, 34, 41, 46}
 
-const _CapabilityLowerName = "iso151182marfid1p3pbattery-controlmeterdimcurtail"
+const _CapabilityLowerName = "iso151182marfid1p3pbattery-controlcurtailmeter"
 
 func (i Capability) String() string {
 	i -= 1
@@ -30,12 +30,11 @@ func _CapabilityNoOp() {
 	_ = x[CapabilityRFID-(3)]
 	_ = x[Capability1p3p-(4)]
 	_ = x[CapabilityBatteryControl-(5)]
-	_ = x[CapabilityMeter-(6)]
-	_ = x[CapabilityDim-(7)]
-	_ = x[CapabilityCurtail-(8)]
+	_ = x[CapabilityCurtail-(6)]
+	_ = x[CapabilityMeter-(7)]
 }
 
-var _CapabilityValues = []Capability{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter, CapabilityDim, CapabilityCurtail}
+var _CapabilityValues = []Capability{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityCurtail, CapabilityMeter}
 
 var _CapabilityNameToValueMap = map[string]Capability{
 	_CapabilityName[0:9]:        CapabilityISO151182,
@@ -48,12 +47,10 @@ var _CapabilityNameToValueMap = map[string]Capability{
 	_CapabilityLowerName[15:19]: Capability1p3p,
 	_CapabilityName[19:34]:      CapabilityBatteryControl,
 	_CapabilityLowerName[19:34]: CapabilityBatteryControl,
-	_CapabilityName[34:39]:      CapabilityMeter,
-	_CapabilityLowerName[34:39]: CapabilityMeter,
-	_CapabilityName[39:42]:      CapabilityDim,
-	_CapabilityLowerName[39:42]: CapabilityDim,
-	_CapabilityName[42:49]:      CapabilityCurtail,
-	_CapabilityLowerName[42:49]: CapabilityCurtail,
+	_CapabilityName[34:41]:      CapabilityCurtail,
+	_CapabilityLowerName[34:41]: CapabilityCurtail,
+	_CapabilityName[41:46]:      CapabilityMeter,
+	_CapabilityLowerName[41:46]: CapabilityMeter,
 }
 
 var _CapabilityNames = []string{
@@ -62,9 +59,8 @@ var _CapabilityNames = []string{
 	_CapabilityName[11:15],
 	_CapabilityName[15:19],
 	_CapabilityName[19:34],
-	_CapabilityName[34:39],
-	_CapabilityName[39:42],
-	_CapabilityName[42:49],
+	_CapabilityName[34:41],
+	_CapabilityName[41:46],
 }
 
 // CapabilityString retrieves an enum value from the enum constants string name.

@@ -157,6 +157,55 @@ func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
+var _ BoolGetter = (*Modbus)(nil)
+
+// BoolGetter executes configured modbus read operation and implements BoolGetter.
+func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
+	block, point, err := m.blockPoint()
+	if err != nil {
+		return nil, err
+	}
+
+	return func() (b bool, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+
+		if err := block.Read(); err != nil {
+			return false, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
+		}
+
+		switch v := point.Value().(type) {
+		case bool:
+			return v, nil
+		case sunspec.Enum16:
+			return v != 0, nil
+		case sunspec.Enum32:
+			return v != 0, nil
+		case sunspec.Bitfield16:
+			return v != 0, nil
+		case sunspec.Bitfield32:
+			return v != 0, nil
+		case int16:
+			return v != 0, nil
+		case int32:
+			return v != 0, nil
+		case int64:
+			return v != 0, nil
+		case uint16:
+			return v != 0, nil
+		case uint32:
+			return v != 0, nil
+		case uint64:
+			return v != 0, nil
+		default:
+			return false, fmt.Errorf("invalid point type: %T", point.Value())
+		}
+	}, nil
+}
+
 func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
 	defer func() {
 		if r := recover(); r != nil {
