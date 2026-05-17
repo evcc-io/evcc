@@ -137,13 +137,32 @@ render: |
     scale: 0.01
   maxacpower: {{ .maxacpower }}
   curtail:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 47418 # Maximum Feed Grid Power (0-100 %)
-      type: writesingle
-      encoding: uint16
-    scale: 0.1
+    source: switch
+    switch:
+    - case: true
+      set:
+        source: const
+        value: 0
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47418 # Maximum Feed Grid Power (0-100 %)
+            type: writesingle
+            encoding: uint16
+          scale: 0.1
+    - case: false
+      set:
+        source: const
+        value: 100
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47418 # Maximum Feed Grid Power (0-100 %)
+            type: writesingle
+            encoding: uint16
+          scale: 0.1
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
