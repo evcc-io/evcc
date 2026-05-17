@@ -127,19 +127,31 @@ func (p *constPlugin) FloatSetter(param string) (func(float64) error, error) {
 var _ BoolSetter = (*constPlugin)(nil)
 
 func (p *constPlugin) BoolSetter(param string) (func(bool) error, error) {
-	set, err := p.set.BoolSetter(p.ctx, param)
-	if err != nil {
-		return nil, err
+	if val, err := strconv.ParseBool(p.str); err == nil || p.str == "" {
+		set, setErr := p.set.BoolSetter(p.ctx, param)
+		if setErr == nil {
+			return func(_ bool) error {
+				return set(val)
+			}, err
+		}
 	}
 
-	val, err := strconv.ParseBool(p.str)
-	if err != nil && p.str == "" {
-		err = nil
+	ival, ierr := strconv.ParseInt(p.str, 10, 64)
+	if ierr != nil && p.str == "" {
+		ierr = nil
+	}
+
+	iset, setErr := p.set.IntSetter(p.ctx, param)
+	if setErr != nil {
+		if ierr == nil {
+			return nil, setErr
+		}
+		return nil, ierr
 	}
 
 	return func(_ bool) error {
-		return set(val)
-	}, err
+		return iset(ival)
+	}, ierr
 }
 
 var _ BytesSetter = (*constPlugin)(nil)

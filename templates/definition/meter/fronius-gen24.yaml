@@ -6,7 +6,7 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
-capabilities: ["battery-control"]
+capabilities: ["battery-control","curtail"]
 requirements:
   description:
     de: |
@@ -30,6 +30,16 @@ params:
     description:
       generic: Integer
     deprecated: true
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    default: 0
+    advanced: true
+    help:
+      de: "Zielwert für WMaxLimPct. 0 = Nulleinspeisung, 100 = volle Freigabe."
+      en: "Target value for WMaxLimPct. 0 = zero feed-in, 100 = full release."
+    usages: ["pv"]
   - name: maxacpower
   - preset: battery-params
   - name: maxchargerate
@@ -158,6 +168,50 @@ render: |
       id: 1
       value: 160:2:DCWH # mppt 2
       scale: 0.001
+  curtail:
+    source: switch
+    switch:
+    - case: true
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .curtailpercent }} # %
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 123:WMaxLimPct
+        - source: const
+          value: true
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 123:WMaxLim_Ena
+    - case: false
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 100 # %
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 123:WMaxLimPct
+        - source: const
+          value: false
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 123:WMaxLim_Ena
+  curtailed:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    value: 123:WMaxLim_Ena
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}

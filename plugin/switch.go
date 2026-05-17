@@ -87,3 +87,40 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 		return fmt.Errorf("switch: value not found: %d", val)
 	}, nil
 }
+
+var _ BoolSetter = (*switchPlugin)(nil)
+
+func (o *switchPlugin) BoolSetter(param string) (func(bool) error, error) {
+	set := make([]func(bool) error, 0, len(o.cases))
+	for _, cc := range o.cases {
+		s, err := cc.Set.BoolSetter(o.ctx, param)
+		if err != nil {
+			return nil, err
+		}
+		set = append(set, s)
+	}
+
+	dflt, err := o.dflt.BoolSetter(o.ctx, param)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(val bool) error {
+		for i := range o.cases {
+			bval, err := strconv.ParseBool(o.cases[i].Case)
+			if err != nil {
+				return err
+			}
+
+			if bval == val {
+				return set[i](val)
+			}
+		}
+
+		if dflt != nil {
+			return dflt(val)
+		}
+
+		return fmt.Errorf("switch: value not found: %t", val)
+	}, nil
+}
