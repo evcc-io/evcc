@@ -585,3 +585,58 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		})
 	}
 }
+
+// TestUpdatePhaseSwitchNotAvailable verifies that, with a fixed phasesConfigured
+// and a charger that refuses phase switching (api.ErrNotAvailable, e.g. an EEBus
+// charger with an ISO 15118 vehicle), the configured phase count is adopted so
+// the switch is not re-attempted on every update cycle (issue #29974).
+func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	plainCharger.EXPECT().Status().Return(api.StatusC, nil).AnyTimes()
+	plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+	plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+	plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+	// charger cannot switch phases - and must only be asked once
+	phaseCharger.EXPECT().Phases1p3p(3).Return(api.ErrNotAvailable).Times(1)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		chargeMeter: &Null{},
+		chargeRater: &Null{},
+		chargeTimer: &Null{},
+		progress:    NewProgress(0, 10),
+		wakeUpTimer: NewTimer(),
+		mode:        api.ModeNow,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		status:      api.StatusC,
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			plainCharger,
+			phaseCharger,
+		},
+		phasesConfigured: 3, // fixed 3p
+		phases:           0, // unknown
+	}
+
+	attachListeners(t, lp)
+
+	// first cycle attempts the switch, gets api.ErrNotAvailable, adopts 3p
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+	require.Equal(t, 3, lp.GetPhases(), "configured phases should be adopted")
+
+	// second cycle must not attempt the switch again (Phases1p3p .Times(1))
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+	require.Equal(t, 3, lp.GetPhases())
+}
