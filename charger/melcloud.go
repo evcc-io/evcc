@@ -128,7 +128,7 @@ func NewMelcloudFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	m.buildingID = dev.BuildingID
 	m.deviceType = dev.Device.DeviceType
 
-	sgr, err := NewSgReady(ctx, &cc.embed, m.setMode, nil, nil)
+	sgr, err := NewSgReady(ctx, &cc.embed, m.setMode, util.Cached(m.getMode, cc.Cache), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +326,20 @@ func (m *Melcloud) setState(state melcloudDeviceState) error {
 	return m.apiPost(path, state, &state)
 }
 
-// setMode applies an SG Ready mode by toggling power and adjusting the temperature setpoint
+// tempParams returns the temperature state key and effective flags for the device type
+func (m *Melcloud) tempParams() (key string, powerFlag, tempFlag int64) {
+	switch {
+	case m.deviceType == melcloudATA:
+		return "SetTemperature", melcloudFlagAtaPower, melcloudFlagAtaSetTemperature
+	case m.useTank:
+		return "SetTankWaterTemperature", melcloudFlagAtwPower, melcloudFlagAtwSetTankTemperature
+	default:
+		return "SetTemperatureZone1", melcloudFlagAtwPower, melcloudFlagAtwSetTemperatureZone1
+	}
+}
+
+// setMode applies an SG Ready mode: Dim powers the device off, Normal/Boost
+// power it on and set the corresponding temperature setpoint
 func (m *Melcloud) setMode(mode int64) error {
 	state, err := m.fetchState()
 	if err != nil {
@@ -337,7 +350,6 @@ func (m *Melcloud) setMode(mode int64) error {
 	switch mode {
 	case Dim:
 		state["Power"] = false
-		setpoint = m.normalTemp
 	case Normal:
 		state["Power"] = true
 		setpoint = m.normalTemp
@@ -348,21 +360,35 @@ func (m *Melcloud) setMode(mode int64) error {
 		return api.ErrNotAvailable
 	}
 
-	var flags int64
-	switch {
-	case m.deviceType == melcloudATA:
-		state["SetTemperature"] = setpoint
-		flags = melcloudFlagAtaPower | melcloudFlagAtaSetTemperature
-	case m.useTank:
-		state["SetTankWaterTemperature"] = setpoint
-		flags = melcloudFlagAtwPower | melcloudFlagAtwSetTankTemperature
-	default:
-		state["SetTemperatureZone1"] = setpoint
-		flags = melcloudFlagAtwPower | melcloudFlagAtwSetTemperatureZone1
+	key, powerFlag, tempFlag := m.tempParams()
+
+	flags := powerFlag
+	if mode != Dim {
+		state[key] = setpoint
+		flags |= tempFlag
 	}
 	state["EffectiveFlags"] = flags
 
 	return m.setState(state)
+}
+
+// getMode reports the current SG Ready mode inferred from the device state:
+// powered off maps to Dim, otherwise the setpoint distinguishes Normal from Boost
+func (m *Melcloud) getMode() (int64, error) {
+	state, err := m.fetchState()
+	if err != nil {
+		return 0, err
+	}
+
+	if power, ok := state["Power"].(bool); ok && !power {
+		return Dim, nil
+	}
+
+	key, _, _ := m.tempParams()
+	if setpoint, ok := state[key].(float64); ok && setpoint >= m.boostTemp {
+		return Boost, nil
+	}
+	return Normal, nil
 }
 
 // temperature returns the current room or tank temperature
