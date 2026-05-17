@@ -888,6 +888,7 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(current float64) error {
+	rawCurrent := current
 	current = lp.roundedCurrent(current)
 
 	// apply circuit limits
@@ -912,6 +913,10 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	effMinCurrent := lp.effectiveMinCurrent()
 	if effMaxCurrent := lp.effectiveMaxCurrent(); effMinCurrent > effMaxCurrent {
 		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
+	}
+
+	if current < effMinCurrent && rawCurrent >= effMinCurrent {
+		lp.log.WARN.Printf("charge current %.3gA rounded to %.3gA (below %.3gA minimum), preventing enable", rawCurrent, current, effMinCurrent)
 	}
 
 	// set current
