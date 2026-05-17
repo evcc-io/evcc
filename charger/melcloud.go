@@ -296,10 +296,9 @@ func (m *Melcloud) apiCall(method, path string, body any, res any) error {
 	}
 
 	// retry once on auth failure
-	var se *request.StatusError
-	if errors.As(err, &se) && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden) {
-		if lerr := m.login(); lerr != nil {
-			return lerr
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden) {
+		if err := m.login(); err != nil {
+			return err
 		}
 		return do()
 	}
