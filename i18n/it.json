@@ -1169,7 +1169,7 @@
       "batteryGridChargeLimit": "Ricarica dalla rete: quando",
       "batteryHold": "Batteria (locked)",
       "batteryTooltip": "{energy} di {total} ({soc})",
-      "forecast": "Previsioni: ",
+      "forecast": "Previsioni",
       "forecastTooltip": "previsioni: produzione solare rimanente per oggi",
       "gridImport": "Uso della rete",
       "homePower": "Consumo",

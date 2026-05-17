@@ -18,6 +18,7 @@ import {
 	Legend,
 	Tooltip,
 	type ChartData,
+	type ScriptableContext,
 	type TooltipModel,
 	type TooltipItem,
 } from "chart.js";
@@ -26,7 +27,6 @@ import LegendList from "./LegendList.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
 import { GROUPS, PERIODS, type Session } from "./types";
-import type { Context } from "chartjs-plugin-datalabels";
 
 registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
 
@@ -128,7 +128,7 @@ export default defineComponent({
 					backgroundColor,
 					label,
 					data: Object.values(result).map((day) => day[group] || 0),
-					borderRadius: (context: Context) => {
+					borderRadius: (context: ScriptableContext<"bar">) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
 						const currentValue = context.dataset.data[dataIndex] as number;

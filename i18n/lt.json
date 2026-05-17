@@ -1192,7 +1192,7 @@
       "batteryGridChargeLimit": "Įkrauti iš tinklo: kai",
       "batteryHold": "Kaupiklis (užblokuotas)",
       "batteryTooltip": "{energy} iš {total} ({soc})",
-      "forecast": "Prognozė: ",
+      "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",
       "gridImport": "Iš tinklo",
       "homePower": "Namo suvartojimas",

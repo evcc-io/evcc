@@ -578,6 +578,15 @@ presets:
       help:
         de: Zusätzlicher fester Aufschlag pro kWh
         en: Additional fixed charge per kWh
+    - name: chargesZones
+      type: zones
+      advanced: true
+      description:
+        en: Charges zones
+        de: Aufschlagszonen
+      help:
+        de: Zeitabhängige Aufschläge, die den Standardaufschlag überschreiben.
+        en: Time-based grid fees that override the default charge.
     - name: tax
       type: float
       advanced: true

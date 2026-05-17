@@ -28,6 +28,9 @@ products:
   - brand: E3/DC
     description:
       generic: Easy Connect
+  - brand: Compleo
+    description:
+      generic: Pro
 capabilities: ["mA", "rfid"]
 requirements:
   description:
