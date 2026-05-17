@@ -13,20 +13,20 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["battery"]
-  - name: vrmToken
+  - name: token
     required: true
     mask: true
     description:
       de: VRM Token
       en: VRM token
     type: string
-  - name: siteId
+  - name: site
     required: true
     description:
       de: Standort-ID
       en: Site ID
     type: string
-  - name: batteryInstanceId
+  - name: instance
     required: true
     description:
       de: Batterie-Instanz-ID
@@ -35,7 +35,7 @@ params:
   - preset: battery-params
 render: |
   {{- define "uri" -}}
-  https://vrmapi.victronenergy.com/v2/installations/{{ .siteId }}/widgets/BatterySummary?instance={{ .batteryInstanceId }}
+  https://vrmapi.victronenergy.com/v2/installations/{{ .site }}/widgets/BatterySummary?instance={{ .instance }}
   {{- end }}
   type: custom
   power:
@@ -43,12 +43,12 @@ render: |
     uri: {{ include "uri" . }}
     headers:
     - content-type: application/json
-    - x-authorization: Token {{ .vrmToken }}
+    - x-authorization: Token {{ .token }}
     jq: (.records.data["47"].valueFloat * .records.data["49"].valueFloat) | if . == 0 then 0 else . * -1 end
   soc:
     source: http
     uri: {{ include "uri" . }}
     headers:
     - content-type: application/json
-    - x-authorization: Token {{ .vrmToken }}
+    - x-authorization: Token {{ .token }}
     jq: .records.data["51"].valueFloat
