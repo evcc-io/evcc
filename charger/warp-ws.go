@@ -25,7 +25,7 @@ import (
 type WarpWS struct {
 	*warp.Connection
 	implement.Caps
-	pm *warp.Connection // separate Energy Manager
+	pm *warp.Connection // power manager; equals Connection for integrated devices (WARP3), separate for WARP2 + Energy Manager
 
 	// config
 	log        *util.Logger
@@ -49,10 +49,8 @@ type WarpWS struct {
 
 	// power manager
 	pmState          *warp.PmState
-	lastPhasesWanted int // 0=never set; 1 or 3=last phases_wanted sent to WEM
-
-	// meter phases (from meter/phases WS events)
-	meterPhaseCount int // 0=unknown; 1 or 3=derived from phases_connected
+	pmLowLevelState  *warp.PmLowLevelState
+	lastPhasesWanted int // 0=never set; 1 or 3=last phases_wanted sent to the power manager
 }
 
 const (
@@ -103,8 +101,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		implement.Has(w, implement.Identifier(w.identify))
 	}
 
-	// Feature: Phase Switching
-	// only setup phase switching methods if power manager endpoint is set
+	// Feature: Phase Switching — available on WARP3 (feature_phase_switch) or WARP2 with external Energy Manager
 	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
 		implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
 		implement.Has(w, implement.PhaseGetter(w.getPhases))
@@ -147,17 +144,36 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		w.pm = w.Connection
 	}
 
-	wsURI, err := parseURI(w.URI)
-	if err != nil {
-		return nil, err
+	// Validate WebSocket URIs before starting goroutines so NewWarpWS fails fast.
+	if _, err := parseURI(w.URI); err != nil {
+		return nil, fmt.Errorf("invalid charger URI: %w", err)
+	}
+	if w.pm != w.Connection {
+		if _, err := parseURI(w.pm.URI); err != nil {
+			return nil, fmt.Errorf("invalid energy manager URI: %w", err)
+		}
 	}
 
-	go w.run(ctx, wsURI)
+	go w.run(ctx, w.Connection)
+
+	// Open a second WebSocket to the WEM when it is a separate device. Its
+	// power_manager/state events are not forwarded over the WARP2 WebSocket, so
+	// we connect directly. The same reconnect-resend logic in run() then handles
+	// WEM-only reboots without any extra polling.
+	if w.pm != w.Connection {
+		go w.run(ctx, w.pm)
+	}
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context, wsURI string) {
+func (w *WarpWS) run(ctx context.Context, c *warp.Connection) {
+	wsURI, err := parseURI(c.URI)
+	if err != nil {
+		w.log.ERROR.Printf("websocket: invalid URI: %v", err)
+		return
+	}
+
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithMaxElapsedTime(0),
 		backoff.WithMaxInterval(30*time.Second),
@@ -166,7 +182,7 @@ func (w *WarpWS) run(ctx context.Context, wsURI string) {
 	for ctx.Err() == nil {
 		w.log.DEBUG.Println("websocket: connecting")
 
-		conn, _, err := websocket.Dial(ctx, wsURI, &websocket.DialOptions{HTTPClient: w.Client})
+		conn, _, err := websocket.Dial(ctx, wsURI, &websocket.DialOptions{HTTPClient: c.Client})
 		if err != nil {
 			if !errors.Is(err, context.DeadlineExceeded) {
 				w.log.ERROR.Printf("websocket: %v", err)
@@ -183,16 +199,23 @@ func (w *WarpWS) run(ctx context.Context, wsURI string) {
 
 		bo.Reset()
 
-		w.mu.RLock()
-		lpw := w.lastPhasesWanted
-		w.mu.RUnlock()
-		if lpw == warpPhases1p || lpw == warpPhases3p {
-			if err := w.postPhasesWanted(lpw); err != nil {
-				w.log.WARN.Printf("resend phases_wanted on reconnect: %v", err)
+		// Only resend phases_wanted when the power-manager connection reconnects.
+		// For WARP3 this is always c == w.pm (single device); for WARP2 + Energy
+		// Manager it fires only on the WEM reconnect, not on a WARP2 reconnect.
+		if c == w.pm {
+			w.mu.RLock()
+			lpw := w.lastPhasesWanted
+			w.mu.RUnlock()
+			if lpw == warpPhases1p || lpw == warpPhases3p {
+				if err := w.postPhasesWanted(lpw); err != nil {
+					w.log.WARN.Printf("resend phases_wanted=%d on reconnect: %v", lpw, err)
+				} else {
+					w.log.DEBUG.Printf("resend phases_wanted=%d on reconnect", lpw)
+				}
 			}
 		}
 
-		if err := w.handleConnection(ctx, conn); err != nil {
+		if err := w.handleConnection(ctx, c, conn); err != nil {
 			w.log.ERROR.Println(err)
 		}
 	}
@@ -211,7 +234,11 @@ func parseURI(uri string) (string, error) {
 	return u.String(), nil
 }
 
-func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
+func isPmTopic(topic string) bool {
+	return topic == "power_manager/state" || topic == "power_manager/low_level_state"
+}
+
+func (w *WarpWS) handleConnection(ctx context.Context, c *warp.Connection, conn *websocket.Conn) error {
 	defer conn.Close(websocket.StatusInternalError, "reconnect")
 	for {
 		msgType, r, err := conn.Reader(ctx)
@@ -233,6 +260,12 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 					break //next frame
 				}
 				return err
+			}
+
+			// Only process power_manager topics from the device that owns
+			// the power manager to prevent the WARP2 from overriding WEM state.
+			if isPmTopic(event.Topic) && c != w.pm {
+				continue
 			}
 
 			w.log.TRACE.Printf("websocket: event %s: %s", event.Topic, event.Payload)
@@ -312,23 +345,10 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 				w.meter.Voltages[p] = v
 			}
 		}
-	case "meter/phases":
-		var mp struct {
-			PhasesConnected [3]bool `json:"phases_connected"`
-		}
-		if err = json.Unmarshal(payload, &mp); err == nil {
-			n := 0
-			for _, c := range mp.PhasesConnected {
-				if c {
-					n++
-				}
-			}
-			if n == warpPhases1p || n == warpPhases3p {
-				w.meterPhaseCount = n
-			}
-		}
 	case "power_manager/state":
 		err = json.Unmarshal(payload, &w.pmState)
+	case "power_manager/low_level_state":
+		err = json.Unmarshal(payload, &w.pmLowLevelState)
 	}
 	return err
 }
@@ -456,7 +476,7 @@ func (w *WarpWS) phases1p3p(phases int) error {
 		return err
 	} else if ec.ExternalControl == warp.ExternalControlRuntimeConditionsNotMet ||
 		ec.ExternalControl == warp.ExternalControlCurrentlySwitching {
-		return fmt.Errorf("external control not available: %v", ec.ExternalControl)
+		return fmt.Errorf("external control %v: %w", ec.ExternalControl, api.ErrNotAvailable)
 	}
 
 	if err := w.postPhasesWanted(phases); err != nil {
@@ -470,24 +490,42 @@ func (w *WarpWS) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
+	state, err := w.ensurePmLowLevelState()
+	if err != nil {
+		// Fall back to last requested value if low-level state is unavailable.
+		w.mu.RLock()
+		last := w.lastPhasesWanted
+		w.mu.RUnlock()
+		if last == warpPhases1p || last == warpPhases3p {
+			return last, nil
+		}
+		return warpPhases3p, nil
+	}
+	if state.Is3phase {
+		return warpPhases3p, nil
+	}
+	return warpPhases1p, nil
+}
+
+func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
-	last := w.lastPhasesWanted
-	meter := w.meterPhaseCount
+	cached := w.pmLowLevelState
 	w.mu.RUnlock()
-
-	// Prefer the last phases_wanted we sent to the WEM — most reliable,
-	// survives mode switches where hardware state may lag.
-	if last == warpPhases1p || last == warpPhases3p {
-		return last, nil
+	if cached != nil {
+		return *cached, nil
 	}
 
-	// Fallback: meter-derived count from meter/phases.phases_connected.
-	if meter == warpPhases1p || meter == warpPhases3p {
-		return meter, nil
+	// For WARP3 the power manager is integrated; for WARP2 + Energy Manager it
+	// is a separate device. w.pm points to the correct target in both cases.
+	var state warp.PmLowLevelState
+	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.pm.URI), &state); err != nil {
+		return warp.PmLowLevelState{}, err
 	}
 
-	// No data yet (startup) — assume 3p (Tinkerforge WEM default).
-	return warpPhases3p, nil
+	w.mu.Lock()
+	w.pmLowLevelState = &state
+	w.mu.Unlock()
+	return state, nil
 }
 
 func (w *WarpWS) ensurePmState() (warp.PmState, error) {
