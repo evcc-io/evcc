@@ -13,8 +13,6 @@ requirements:
 
       Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
 
-      Die Reduzierung der Einspeiseleistung durch ein Smart Meter Gateway/FNN-Steuerbox erfordert das Setzen des Wirkleistungs-Steuermodus "Netzbetrieb mit Begrenzter Leistung (%)" in den Wechselrichter-Einstellungen.
-
 
       ##### WARNUNG!
       Die folgendenden Gegebenheiten können zu Unterbrechungen in der Modbus-Kommunikation führen:
@@ -25,8 +23,6 @@ requirements:
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
       Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
-
-      The curtailment of feed-in power via Smart Meter Gateway/FNN controlbox requires setting Active Power Control to "Limited Power Grid (%)" inside the inverter settings.
 
 
       ##### WARNING!
@@ -141,36 +137,57 @@ render: |
     switch:
     - case: true
       set:
-        source: const
-        value: 0
+        source: sequence
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 47418 # Maximum Feed Grid Power (0-100 %)
-            type: writesingle
-            encoding: uint16
-          scale: 0.1
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            register:
+              address: 47418 # Maximum Feed Grid Power (0-100 %)
+              type: writesingle
+              encoding: uint16
+            scale: 0.1
+        - source: const
+          value: 7 # Power-limited grid connection (%)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            register:
+              address: 47415 # Active power control mode
+              type: writesingle
+              encoding: uint16
     - case: false
       set:
-        source: const
-        value: 100
+        source: sequence
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 47418 # Maximum Feed Grid Power (0-100 %)
-            type: writesingle
-            encoding: uint16
-          scale: 0.1
+        - source: const
+          value: 100
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            register:
+              address: 47418 # Maximum Feed Grid Power (0-100 %)
+              type: writesingle
+              encoding: uint16
+            scale: 0.1
+        - source: const
+          value: 0 # Unlimited 
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            register:
+              address: 47415 # Active power control mode
+              type: writesingle
+              encoding: uint16
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 47418 # Maximum Feed Grid Power (0-100 %)
+      address: 47415 # Active power control mode (0=no curtailment)
       type: holding
       decode: uint16
-    scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
