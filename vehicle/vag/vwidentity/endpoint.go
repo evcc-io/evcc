@@ -111,8 +111,6 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 		return nil, err
 	}
 
-	v.log.TRACE.Printf("login GET %s: status %s, %d bytes", uri, resp.Status, len(body))
-
 	// Try to extract legacy form, but don't fail if it's not found
 	if vars, err := FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
 		return v.loginLegacy(vars, user, password)
@@ -265,8 +263,6 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 	defer resp.Body.Close()
 
 	location := resp.Header.Get("Location")
-	v.log.TRACE.Printf("login POST %s: status %s, location %q", uri, resp.Status, location)
-
 	if resp.StatusCode >= http.StatusBadRequest {
 		return nil, errors.New(resp.Status)
 	}
@@ -279,8 +275,6 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 	}
 
 	if location == "" {
-		body, _ := io.ReadAll(resp.Body)
-		v.log.TRACE.Printf("login POST %s response body (%d bytes):\n%s", uri, len(body), string(body))
 		return nil, errors.New("no redirect location in new login flow")
 	}
 
@@ -288,8 +282,6 @@ func (v *Service) loginNew(body []byte, user, password string) (url.Values, erro
 	if err != nil {
 		return nil, err
 	}
-
-	v.log.TRACE.Printf("login redirect: %s", redirectURL.Redacted())
 
 	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
 		return nil, fmt.Errorf("unexpected redirect URL scheme %s (expected app specific url e.g. 'weconnect://...'): %s", redirectURL.Scheme, redirectURL.Redacted())
