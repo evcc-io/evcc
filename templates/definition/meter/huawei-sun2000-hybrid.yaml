@@ -133,54 +133,51 @@ render: |
     scale: 0.01
   maxacpower: {{ .maxacpower }}
   curtail:
-    source: switch
-    switch:
-    - case: true
+    source: ifelse
+    if:
+      source: sequence
       set:
-        source: sequence
+      - source: const
+        value: 0
         set:
-        - source: const
-          value: 0
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47418 # Maximum Feed Grid Power (0-100 %)
-              type: writesingle
-              encoding: uint16
-            scale: 0.1
-        - source: const
-          value: 7 # Power-limited grid connection (%)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47415 # Active power control mode
-              type: writesingle
-              encoding: uint16
-    - case: false
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47418 # Maximum Feed Grid Power (0-100 %)
+            type: writesingle
+            encoding: uint16
+          scale: 0.1
+      - source: const
+        value: 7 # Power-limited grid connection (%)
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47415 # Active power control mode
+            type: writesingle
+            encoding: uint16
+    else:
+      source: sequence
       set:
-        source: sequence
+      - source: const
+        value: 100
         set:
-        - source: const
-          value: 100
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47418 # Maximum Feed Grid Power (0-100 %)
-              type: writesingle
-              encoding: uint16
-            scale: 0.1
-        - source: const
-          value: 0 # Unlimited 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47415 # Active power control mode
-              type: writesingle
-              encoding: uint16
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47418 # Maximum Feed Grid Power (0-100 %)
+            type: writesingle
+            encoding: uint16
+          scale: 0.1
+      - source: const
+        value: 0 # Unlimited 
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47415 # Active power control mode
+            type: writesingle
+            encoding: uint16
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
