@@ -1,0 +1,54 @@
+template: victron-vrm
+products:
+  - brand: Azimut Energy
+requirements:
+  description:
+    en: >-
+      Retrieve your Victron battery data via the VRM portal [vrm.victronenergy.com](https://vrm.victronenergy.com).
+      You need a free user access token.
+    de: >-
+      Abrufen der Victron-Batteriedaten über das VRM-Portal [vrm.victronenergy.com](https://vrm.victronenergy.com).
+      Es wird ein kostenloses User Access Token benötigt.
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: token
+    required: true
+    mask: true
+    description:
+      de: VRM Token
+      en: VRM token
+    type: string
+  - name: site
+    required: true
+    description:
+      de: Standort-ID
+      en: Site ID
+    type: string
+  - name: instance
+    required: true
+    description:
+      de: Batterie-Instanz-ID
+      en: Battery instance ID
+    type: string
+  - preset: battery-params
+render: |
+  {{- define "uri" -}}
+  https://vrmapi.victronenergy.com/v2/installations/{{ .site }}/widgets/BatterySummary?instance={{ .instance }}
+  {{- end }}
+  type: custom
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
+    - content-type: application/json
+    - x-authorization: Token {{ .token }}
+    jq: (.records.data["47"].valueFloat * .records.data["49"].valueFloat) | if . == 0 then 0 else . * -1 end
+  soc:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
+    - content-type: application/json
+    - x-authorization: Token {{ .token }}
+    jq: .records.data["51"].valueFloat
