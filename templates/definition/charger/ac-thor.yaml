@@ -12,7 +12,7 @@ requirements:
   description:
     de: |
       Über das lokale Webinterface des AC•THOR muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
-      Ansteuerungsytp "Modbus TCP" verwenden und minimalen Strom im Ladepunkt auf 0,125A setzen.
+      Ansteuerungstyp "Modbus TCP" verwenden und minimalen Strom im Ladepunkt auf 0,125A setzen.
       Hat der Heizstab am geregelten Ausgang < 9 kW muss der Skalierungsfaktor wie folgt berechnet und gesetzt werden: `scale = 9000 / Nennleistung` des angeschlossenen Heizstabs. 
 
       Die Betriebsart M3: 9 + 9 kW mit einem zusätzlichen Heizstab am Relais-Ausgang wird unterstützt. Ohne Lastmessung mittels my-PV Meter muss "Last am Relais" im lokalen Webinterface des AC•THOR passend zur Nennleistung des Heizstabs am Relais gesetzt werden.
