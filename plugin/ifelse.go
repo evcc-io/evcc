@@ -58,9 +58,6 @@ func (o *ifElsePlugin) IntSetter(param string) (func(int64) error, error) {
 
 var _ BoolSetter = (*ifElsePlugin)(nil)
 
-// BoolSetter selects a case by a bool value. The case's set is an action chain
-// (const-based modbus writes), so it is resolved as an IntSetter: the bool only
-// selects the case, the chain's own const values determine what is written.
 func (o *ifElsePlugin) BoolSetter(param string) (func(bool) error, error) {
 	ifS, err := o.i.BoolSetter(o.ctx, param)
 	if err != nil {
