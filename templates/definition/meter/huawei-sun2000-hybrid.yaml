@@ -146,7 +146,7 @@ render: |
             address: 47418 # Maximum Feed Grid Power (0-100 %)
             type: writesingle
             encoding: uint16
-          scale: 0.1
+          scale: 10
       - source: const
         value: 7 # Power-limited grid connection (%)
         set:
@@ -168,7 +168,7 @@ render: |
             address: 47418 # Maximum Feed Grid Power (0-100 %)
             type: writesingle
             encoding: uint16
-          scale: 0.1
+          scale: 10
       - source: const
         value: 0 # Unlimited 
         set:
