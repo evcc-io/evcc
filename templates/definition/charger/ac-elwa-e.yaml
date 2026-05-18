@@ -6,7 +6,7 @@ products:
 capabilities: ["meter"]
 group: heating
 requirements:
-description:
+  description:
     de: |
       Für den Heizstab von my-PV ohne Display. Über das lokale Webinterface des AC ELWA E muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden. 
       Ansteuerungstyp "Modbus TCP" verwenden und minimalen Strom im Ladepunkt auf 0,125A setzen.
