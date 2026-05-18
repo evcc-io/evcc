@@ -652,13 +652,12 @@ export default defineComponent({
 			await prepareAuthLogin(this.auth, authId);
 		},
 		async create(force = false) {
-			const form = this.$refs["form"] as HTMLFormElement | undefined;
-			// always enforce required fields, even when forcing past a failed test
-			if (form && !reportValidityInModal(form)) {
-				return;
-			}
 			if (this.test.isUnknown && !force) {
-				const success = await performTest(this.test, this.testDevice, form);
+				const success = await performTest(
+					this.test,
+					this.testDevice,
+					this.$refs["form"] as HTMLFormElement
+				);
 				if (!success) {
 					return;
 				}
@@ -689,13 +688,12 @@ export default defineComponent({
 			return this.device.test(this.id, this.apiData);
 		},
 		async update(force = false) {
-			const form = this.$refs["form"] as HTMLFormElement | undefined;
-			// always enforce required fields, even when forcing past a failed test
-			if (form && !reportValidityInModal(form)) {
-				return;
-			}
 			if (this.test.isUnknown && !force) {
-				const success = await performTest(this.test, this.testDevice, form);
+				const success = await performTest(
+					this.test,
+					this.testDevice,
+					this.$refs["form"] as HTMLFormElement
+				);
 				if (!success) {
 					return;
 				}
