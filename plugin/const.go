@@ -13,6 +13,7 @@ import (
 type constPlugin struct {
 	ctx context.Context
 	str string
+	typ string
 	set Config
 }
 
@@ -23,7 +24,7 @@ func init() {
 // NewConstFromConfig creates const provider
 func NewConstFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
-		Value             string
+		Value, Type       string
 		pipeline.Settings `mapstructure:",squash"`
 		Set               Config
 	}
@@ -36,6 +37,7 @@ func NewConstFromConfig(ctx context.Context, other map[string]any) (Plugin, erro
 		ctx: ctx,
 		str: cc.Value,
 		set: cc.Set,
+		typ: cc.Type,
 	}
 
 	return p, nil
@@ -127,6 +129,18 @@ func (p *constPlugin) FloatSetter(param string) (func(float64) error, error) {
 var _ BoolSetter = (*constPlugin)(nil)
 
 func (p *constPlugin) BoolSetter(param string) (func(bool) error, error) {
+	// force type switch
+	if p.typ == "int" {
+		set, err := p.IntSetter(param)
+		if err != nil {
+			return nil, err
+		}
+
+		return func(bool) error {
+			return set(0)
+		}, nil
+	}
+
 	set, err := p.set.BoolSetter(p.ctx, param)
 	if err != nil {
 		return nil, err
