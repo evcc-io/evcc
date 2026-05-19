@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/colors"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
@@ -360,6 +361,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
+	valueChan <- util.Param{Key: keys.DeviceColors, Val: colors.Get()}
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
 		Config:     conf.EEBus.Redacted(),
 		Status:     eebus.GetStatus(),

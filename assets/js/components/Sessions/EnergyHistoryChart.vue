@@ -3,7 +3,7 @@
 		<div style="position: relative; height: 300px" class="my-3">
 			<Bar :data="chartData" :options="options" />
 		</div>
-		<LegendList :legends="legends" />
+		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
@@ -39,6 +39,7 @@ export default defineComponent({
 		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
 		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object, default: () => ({}) },
 	},
 	computed: {
 		firstDay() {
@@ -148,6 +149,7 @@ export default defineComponent({
 			};
 		},
 		legends() {
+			const pickable = this.groupBy !== GROUPS.NONE;
 			return this.chartData.datasets.map((dataset) => ({
 				label: dataset.label || "",
 				color: dataset.backgroundColor,
@@ -155,6 +157,7 @@ export default defineComponent({
 					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
 					POWER_UNIT.AUTO
 				),
+				id: pickable ? dataset.label || undefined : undefined,
 			}));
 		},
 		options() {

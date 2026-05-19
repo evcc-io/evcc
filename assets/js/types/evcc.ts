@@ -109,6 +109,7 @@ export interface State {
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
   siteTitle?: string;
+  deviceColors?: Record<string, string>;
   vehicles: Record<string, Vehicle>;
   statistics?: Statistics;
   authDisabled?: boolean;

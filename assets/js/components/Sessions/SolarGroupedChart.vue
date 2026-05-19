@@ -4,7 +4,7 @@
 			<PolarArea :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
-			<LegendList :legends="legends" grid />
+			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
@@ -32,6 +32,7 @@ export default defineComponent({
 			default: GROUPS.LOADPOINT,
 		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object, default: () => ({}) },
 	},
 	computed: {
 		chartData() {
@@ -82,6 +83,7 @@ export default defineComponent({
 					label: label,
 					color: dataset.borderColor[index],
 					value: this.fmtPercentage(dataValue, 1),
+					id: label || undefined,
 				};
 			});
 		},

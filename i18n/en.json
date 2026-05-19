@@ -19,6 +19,10 @@
     "successCloseTab": "You can now close this tab.",
     "title": "Authorization Status"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex color"
+  },
   "batterySettings": {
     "batteryLevel": "Battery level",
     "bufferStart": {

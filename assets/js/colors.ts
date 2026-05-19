@@ -38,22 +38,24 @@ const colors: {
   selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
   palette: [
     // Dynamic palette (vehicles, loadpoints, …): optimized for neighbor contrast, avoids overlap with system colors (solar, battery, grid, …).
-    "#06B6D4FF", // Cyan
-    "#2B7FFFFF", // Blue
-    "#6366F1FF", // Indigo
-    "#A855F7FF", // Violet
-    "#D946EFFF", // Magenta
+    "#0EA5E9FF", // Sky
     "#EC4899FF", // Pink
-    "#FB7185FF", // Coral
-    "#475569FF", // Slate
+    "#34D399FF", // Mint
+    "#F97316FF", // Orange
+    "#7C3AEDFF", // Violet
+    "#84CC16FF", // Lime
+    "#F43F5EFF", // Rose
+    "#2563EBFF", // Blue
+    "#FACC15FF", // Yellow
+    "#D946EFFF", // Magenta
+    "#10B981FF", // Emerald
     "#1E40AFFF", // Royal
-    "#6D28D9FF", // Purple
     "#BE185DFF", // Crimson
-    "#D2691EFF", // Sienna
-    "#67E8F9FF", // Glacier
-    "#C084FCFF", // Lilac
-    "#FFD580FF", // Sand
-    "#94A3B8FF", // Steel
+    "#F59E0BFF", // Marigold
+    "#6366F1FF", // Indigo
+    "#14B8A6FF", // Teal
+    "#A855F7FF", // Lavender
+    "#DC2626FF", // Red
   ],
 });
 
@@ -66,6 +68,39 @@ const setAlpha = (color: string | null, alpha: string): string | undefined => {
   if (c.length === 9) return c.slice(0, 7) + alpha;
   return c;
 };
+
+// normalize hex to uppercase 8-digit (#RRGGBBAA), appending FF when alpha missing
+const normHex = (color?: string | null): string => {
+  if (!color) return "";
+  let c = color.trim().toUpperCase();
+  if (!c.startsWith("#")) c = "#" + c;
+  if (c.length === 7) c += "FF";
+  return c.slice(0, 9);
+};
+
+// override wins; rest get next free palette entry, wrap-around when exhausted
+export function resolveColors(
+  ids: string[],
+  overrides: Record<string, string> = {}
+): Record<string, string> {
+  const taken = new Set(Object.values(overrides).map(normHex));
+  const free = colors.palette.filter((c) => !taken.has(normHex(c)));
+  const result: Record<string, string> = {};
+  let idx = 0;
+  for (const id of ids) {
+    const ov = overrides[id];
+    if (ov) {
+      result[id] = ov;
+    } else if (free.length) {
+      result[id] = free[idx % free.length];
+      idx++;
+    } else {
+      result[id] = colors.palette[idx % colors.palette.length];
+      idx++;
+    }
+  }
+  return result;
+}
 
 export const dimColor = (color: string | null) => setAlpha(color, "20");
 

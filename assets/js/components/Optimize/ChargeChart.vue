@@ -9,7 +9,7 @@
 				:height="300"
 			/>
 		</div>
-		<LegendList :legends="legends" />
+		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
@@ -79,6 +79,7 @@ export default defineComponent({
 			type: Array as PropType<string[]>,
 			default: () => [],
 		},
+		deviceColors: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
 	},
 	computed: {
 		timeLabels(): string[] {
@@ -244,6 +245,9 @@ export default defineComponent({
 			};
 		},
 		legends(): Legend[] {
+			const batteryTitles = new Set(
+				(this.evopt?.res?.batteries || []).map((_, i) => this.getBatteryTitle(i))
+			);
 			return this.chartData.datasets
 				.filter((dataset) => !dataset.hidden)
 				.map((dataset) => {
@@ -255,6 +259,7 @@ export default defineComponent({
 						color: (dataset.backgroundColor || dataset.borderColor) as string,
 						value: "", // Required by Legend type, but not used in this context
 						type: isLine ? "line" : "area",
+						id: batteryTitles.has(label) ? label : undefined,
 					};
 				});
 		},
