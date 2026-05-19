@@ -5,6 +5,7 @@ test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
 const CONFIG = "smart-cost-reset-warning.evcc.yaml";
+const PRESET_LIMITS = "smart-cost-reset-warning.sql";
 
 test.afterEach(async () => {
   await stop();
@@ -14,10 +15,7 @@ test.describe("smart cost reset warning", async () => {
   const limitWarningText = "However, there is still a limit of 12.0 ct/kWh.";
 
   test("loadpoint: stale limit can be removed without dynamic tariff", async ({ page }) => {
-    await start(CONFIG);
-
-    const setLimit = await page.request.post("/api/loadpoints/1/smartcostlimit/0.12");
-    expect(setLimit.ok()).toBeTruthy();
+    await start(CONFIG, PRESET_LIMITS);
 
     await page.goto("/");
     const loadpoint = page.getByTestId("loadpoint").first();
@@ -33,10 +31,7 @@ test.describe("smart cost reset warning", async () => {
   });
 
   test("battery: stale limit can be removed without dynamic tariff", async ({ page }) => {
-    await start(CONFIG);
-
-    const setLimit = await page.request.post("/api/batterygridchargelimit/0.12");
-    expect(setLimit.ok()).toBeTruthy();
+    await start(CONFIG, PRESET_LIMITS);
 
     await page.goto("/#/battery");
     await expect(page.getByRole("heading", { name: "Grid charging" })).toBeVisible();
