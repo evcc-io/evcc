@@ -673,32 +673,13 @@
       "validate": "bekreft"
     },
     "vehicle": {
-      "cancel": "Avbryt",
-      "chargingSettings": "Ladingsinnstillinger",
-      "defaultMode": "Standardmodus",
-      "defaultModeHelp": "Lademodus ved tilkobling av kjøretøyet.",
-      "delete": "Slett kjøretøy",
       "generic": "Andre integreringer",
-      "identifiers": "RFID-identifikatorer",
-      "identifiersHelp": "Liste over RFID-strenger for å identifisere kjøretøyet. Én oppføring per linje. Den gjeldende identifikatoren finner du på det respektive ladepunktet på oversiktssiden.",
-      "maximumCurrent": "Maksimal strøm",
-      "maximumCurrentHelp": "Må være større enn minimumsstrøm.",
-      "maximumPhases": "Maksimale faser",
-      "maximumPhasesHelp": "Hvor mange faser kan dette kjøretøyet lade med? Brukes til å beregne nødvendig minimum solenergioverskudd og planlegge varighet.",
-      "maximumPower": "Maksimal ladeeffekt",
-      "maximumPowerHelp": "Maksimal effekt kjøretøyet kan forbruke",
-      "minimumCurrent": "Minimum strøm",
-      "minimumCurrentHelp": "Gå kun under 6A hvis du vet hva du gjør.",
       "online": "Kjøretøy med nettbasert API",
       "primary": "Generiske integrasjoner",
-      "priority": "Prioritet",
-      "priorityHelp": "Høyere prioritet betyr at dette kjøretøyet får fortrinnsrett til overskuddsstrøm fra solceller.",
-      "save": "Lagre",
       "scooter": "Scooter",
       "template": "Fabrikat",
       "titleAdd": "Legg til kjøretøy",
-      "titleEdit": "Rediger kjøretøy",
-      "validateSave": "Bekreft og lagre"
+      "titleEdit": "Rediger kjøretøy"
     }
   },
   "footer": {

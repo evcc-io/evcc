@@ -864,32 +864,13 @@
       "validate": "ověřit"
     },
     "vehicle": {
-      "cancel": "Zrušit",
-      "chargingSettings": "Nastavení nabíjení",
-      "defaultMode": "Výchozí režim",
-      "defaultModeHelp": "Režim nabíjení po připojení vozidla.",
-      "delete": "Smazat",
       "generic": "Ostatní integrace",
-      "identifiers": "RFID identifikátory",
-      "identifiersHelp": "Seznam RFID řetězců pro identifikaci vozidla. Jeden záznam na řádek. Aktuální identifikátor naleznete na příslušném nabíjecím bodě na stránce přehledu.",
-      "maximumCurrent": "Maximální proud",
-      "maximumCurrentHelp": "Musí být větší než minimální proud.",
-      "maximumPhases": "Maximální počet fází",
-      "maximumPhasesHelp": "Kolik fází může toto vozidlo využít pro nabíjení? Používá se k výpočtu požadovaného minimálního solárního přebytku a doby plánování.",
-      "maximumPower": "Maximální nabíjecí výkon",
-      "maximumPowerHelp": "Maximální výkon, který může vozidlo spotřebovat",
-      "minimumCurrent": "Minimální proud",
-      "minimumCurrentHelp": "Pod 6 A jděte pouze tehdy, pokud víte, co děláte.",
       "online": "Vozidlo s online API",
       "primary": "Obecné integrace",
-      "priority": "Priorita",
-      "priorityHelp": "Vyšší priorita znamená, že toto vozidlo má přednostní přístup k solárnímu přebytku.",
-      "save": "Uložit",
       "scooter": "Skůtr",
       "template": "Výrobce",
       "titleAdd": "Přidat vozidlo",
-      "titleEdit": "Upravit vozidlo",
-      "validateSave": "Ověřit a uložit"
+      "titleEdit": "Upravit vozidlo"
     }
   },
   "footer": {
