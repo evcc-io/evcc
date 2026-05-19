@@ -17,4 +17,8 @@ const (
 	CapabilityBatteryControl // battery-control
 	// built-in energy meter support
 	CapabilityMeter // meter
+	// EnWG §14a dimming support
+	CapabilityDim // dim
+	// EEG §9 curtailment support
+	CapabilityCurtail // curtail
 )

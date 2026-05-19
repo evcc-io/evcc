@@ -3,7 +3,7 @@ products:
   - brand: Charge Amps
     description:
       generic: Halo
-capabilities: ["rfid"]
+capabilities: ["rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
