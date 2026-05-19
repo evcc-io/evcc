@@ -53,7 +53,7 @@ export default defineComponent({
 				limitLabel: t("priceLimit"),
 				activeHoursLabel: t("activeHoursLabel"),
 				currentPriceLabel: t("priceLabel"),
-				resetWarningKey: "smartFeedInPriority.resetWarning",
+				resetWarningText: t("resetWarning"),
 			};
 		},
 	},
