@@ -25,7 +25,7 @@ Each product contains:
 - `brand`: company that makes the product or offers the service. No regions, variants, or API names — those, if required for clarity, belong in `description`.
 - `description`: product, service, model, or API name. Expects `generic`, `de`, `en`.
 
-Either `brand`, or `description` need to be set. Examples by device class:
+Either `brand` or `description` needs to be set. Examples by device class:
 
 - Vehicles — `brand` is the make, `description` the connected service:
   - `brand: Hyundai`, `description.generic: Bluelink`
