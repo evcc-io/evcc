@@ -828,6 +828,7 @@
         "allMonths": "Alle måneder",
         "allTimes": "Alle tidspunkter",
         "cancel": "Fortryd",
+        "charge": "Oplader",
         "days": "Dage",
         "edit": "Juster",
         "hours": "Timer",
@@ -1167,8 +1168,10 @@
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
       "batteryDischarge": "Batteriet aflades",
-      "batteryForecastEmpty": "tom {time}",
-      "batteryForecastFull": "fyldt {time}",
+      "batteryForecastEmpty": "Tømt {time}",
+      "batteryForecastFull": "Fyldt {time}",
+      "batteryForecastNextHigh": "Næste højdepunkt",
+      "batteryForecastNextLow": "Næste lavpunkt",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
       "batteryHold": "Batteri (låst)",
@@ -1194,6 +1197,30 @@
     "hemsWarning": {
       "description": "Opladningen reduceres for ikke at overskride {limit}.",
       "title": "Ekstern begrænsning:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "opladet",
+          "returnEnergy": "afladet"
+        },
+        "grid": {
+          "energy": "importeret",
+          "returnEnergy": "eksporteret"
+        }
+      },
+      "downloadCsv": "Download CSV",
+      "empty": "Ingen historik i dette tidsinterval.",
+      "group": {
+        "battery": "Batteri",
+        "forecast": "Prognose",
+        "grid": "Elnet",
+        "loadpoint": "Opladning og opvarmning",
+        "meter": "Forbrug",
+        "pv": "Produktion"
+      },
+      "otherConsumers": "Andet",
+      "title": "Historik"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -1466,6 +1493,7 @@
     "odometer": "Kilometerstand",
     "overview": "Overblik",
     "period": {
+      "day": "Dag",
       "month": "Måned",
       "total": "Total",
       "year": "År"

@@ -1165,8 +1165,8 @@
       "battery": "Batterij",
       "batteryCharge": "Batterij opladen",
       "batteryDischarge": "Batterij ontladen",
-      "batteryForecastEmpty": "leeg {time}",
-      "batteryForecastFull": "vol {time}",
+      "batteryForecastEmpty": "Leeg om {time}",
+      "batteryForecastFull": "Vol om {time}",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryHold": "Batterij (geblokkeerd)",
@@ -1192,6 +1192,30 @@
     "hemsWarning": {
       "description": "Gereduceerd laden niet hoger dan {limit}.",
       "title": "Externe limiet:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "geladen",
+          "returnEnergy": "ontladen"
+        },
+        "grid": {
+          "energy": "geimporteerd",
+          "returnEnergy": "geexporteerd"
+        }
+      },
+      "downloadCsv": "Download CSV",
+      "empty": "Er is voor deze tijdspanne geen data beschikbaar.",
+      "group": {
+        "battery": "Batterij",
+        "forecast": "Voorspelling",
+        "grid": "Net",
+        "loadpoint": "Laden & Verwarmen",
+        "meter": "Consumptie",
+        "pv": "Productie"
+      },
+      "otherConsumers": "Overig",
+      "title": "Geschiedenis"
     },
     "loadpoint": {
       "avgPrice": "⌀ Prijs",
@@ -1464,6 +1488,7 @@
     "odometer": "Kilometerstand",
     "overview": "Overzicht",
     "period": {
+      "day": "Dag",
       "month": "Maand",
       "total": "Totaal",
       "year": "Jaar"

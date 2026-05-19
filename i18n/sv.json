@@ -828,6 +828,7 @@
         "allMonths": "Alla månader",
         "allTimes": "Alla tider",
         "cancel": "Avbryt",
+        "charge": "Ladda",
         "days": "Dagar",
         "edit": "Ändra",
         "hours": "Timmar",
@@ -1196,6 +1197,29 @@
       "description": "Reducerad laddning för att inte överskrida {limit}.",
       "title": "Extern begränsning:"
     },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "laddad",
+          "returnEnergy": "urladdad"
+        },
+        "grid": {
+          "energy": "importerad",
+          "returnEnergy": "exporterad"
+        }
+      },
+      "downloadCsv": "Ladda ner CSV",
+      "empty": "Ingen data för aktuell tidsperiod tillgänglig.",
+      "group": {
+        "battery": "Batteri",
+        "forecast": "Prognos",
+        "grid": "Nät",
+        "loadpoint": "Laddning & uppvärmning",
+        "meter": "Konsumtion",
+        "pv": "Produktion"
+      },
+      "otherConsumers": "Andra"
+    },
     "loadpoint": {
       "avgPrice": "⌀ pris",
       "charged": "Laddat",
@@ -1323,7 +1347,7 @@
       "temp": "Temp.",
       "tempLimit": "Temp-gräns",
       "unknown": "Gästfordon",
-      "vehicleSoc": "Laddning"
+      "vehicleSoc": "Laddnivå"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Väntar på godkännande.",
@@ -1467,6 +1491,7 @@
     "odometer": "Mätarställning",
     "overview": "Överblick",
     "period": {
+      "day": "Dag",
       "month": "Månad",
       "total": "Total",
       "year": "År"
