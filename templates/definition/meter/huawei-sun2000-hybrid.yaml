@@ -5,7 +5,7 @@ products:
     description:
       de: SUN2000 Hybrid-Wechselrichter
       en: SUN2000 Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: |
