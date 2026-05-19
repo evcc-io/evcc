@@ -23,7 +23,7 @@
 			<button
 				v-if="legend.color && isPickable(legend)"
 				type="button"
-				class="legend-color-btn align-self-center me-1"
+				class="legend-color-btn align-self-center me-1 bg-transparent border-0 p-0 d-inline-flex"
 				:style="{ '--badge-color': legend.color }"
 				:aria-label="legend.label"
 				@click.stop="onPick(legend, $event)"
@@ -163,11 +163,7 @@ export default defineComponent({
 }
 
 .legend-color-btn {
-	background: transparent;
-	border: none;
-	padding: 0;
 	cursor: pointer;
-	display: inline-flex;
 	border-radius: 50%;
 	transition: box-shadow 120ms ease-out;
 }

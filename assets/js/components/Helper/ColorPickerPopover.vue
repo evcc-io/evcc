@@ -3,7 +3,7 @@
 		<div
 			v-if="modelValue"
 			ref="popoverEl"
-			class="color-picker-popover shadow"
+			class="color-picker-popover shadow rounded-3 border"
 			role="dialog"
 			:aria-label="title || 'Color picker'"
 			@click.stop
@@ -11,29 +11,32 @@
 			<div class="footer-row">
 				<button
 					type="button"
-					class="auto-btn"
+					class="auto-btn text-truncate text-uppercase fw-semibold border rounded bg-body"
 					:class="{ 'is-selected': mode === 'auto' }"
 					@click="pickAuto"
 				>
 					{{ $t("colors.auto") }}
 				</button>
-				<div class="custom-input-wrap" :class="{ 'is-selected': mode === 'custom' }">
+				<div
+					class="custom-input-wrap d-flex align-items-center border rounded bg-body"
+					:class="{ 'is-selected': mode === 'custom' }"
+				>
 					<label
-						class="custom-preview"
+						class="custom-preview position-relative overflow-hidden border rounded flex-shrink-0"
 						:style="{ backgroundColor: customHex || '#00000000' }"
 					>
 						<input
 							type="color"
-							class="custom-native"
+							class="custom-native position-absolute opacity-0 p-0 border-0 bg-transparent w-100 h-100 top-0 start-0"
 							:value="nativeColorValue"
 							@input="onNativeInput"
 						/>
 					</label>
-					<span class="custom-hash">#</span>
+					<span class="custom-hash text-secondary">#</span>
 					<input
 						ref="hexInputEl"
 						type="text"
-						class="custom-input"
+						class="custom-input border-0 bg-transparent font-monospace text-uppercase flex-grow-1"
 						:value="hexInputValue"
 						:aria-label="$t('colors.hex')"
 						spellcheck="false"
@@ -45,12 +48,12 @@
 					/>
 				</div>
 			</div>
-			<div class="swatch-grid">
+			<div class="swatch-grid border-top mt-2 pt-2">
 				<button
 					v-for="hex in palette"
 					:key="hex"
 					type="button"
-					class="swatch"
+					class="swatch border-0 p-0 d-flex align-items-center justify-content-center position-relative rounded text-white"
 					:class="{ 'swatch--selected': isSwatchSelected(hex) }"
 					:style="{ backgroundColor: hex }"
 					:title="hex"
@@ -232,8 +235,6 @@ export default defineComponent({
 .color-picker-popover {
 	z-index: 1080;
 	background: var(--evcc-box);
-	border: 1px solid var(--bs-border-color-translucent);
-	border-radius: 0.75rem;
 	padding: 0.6rem;
 	width: 16rem;
 }
@@ -241,22 +242,10 @@ export default defineComponent({
 	display: grid;
 	grid-template-columns: repeat(6, 1fr);
 	gap: 0.5rem;
-	margin-top: 0.6rem;
-	padding-top: 0.55rem;
-	border-top: 1px solid var(--bs-border-color-translucent);
 }
 .swatch {
-	border: none;
-	padding: 0;
-	width: 100%;
-	aspect-ratio: 1;
-	border-radius: 0.4rem;
 	cursor: pointer;
-	position: relative;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: #fff;
+	aspect-ratio: 1;
 }
 .swatch--selected {
 	outline: 1px solid var(--evcc-default-text);
@@ -269,80 +258,41 @@ export default defineComponent({
 	display: grid;
 	grid-template-columns: repeat(6, 1fr);
 	gap: 0.35rem;
-	align-items: stretch;
 }
 .auto-btn {
 	grid-column: span 2;
+	padding: 0.2rem 0.55rem;
+	font-size: 0.7rem;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+}
+.auto-btn.is-selected {
+	border-color: var(--evcc-default-text) !important;
 }
 .custom-input-wrap {
 	grid-column: span 4;
-}
-.auto-btn {
-	border: 1px solid var(--bs-border-color-translucent);
-	background: var(--bs-body-bg);
-	color: inherit;
-	border-radius: 0.4rem;
-	padding: 0.2rem 0.55rem;
-	cursor: pointer;
-	font-size: 0.7rem;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	font-weight: 600;
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-.auto-btn.is-selected {
-	border-color: var(--evcc-default-text);
-}
-.custom-input-wrap {
-	display: flex;
-	align-items: center;
-	background: var(--bs-body-bg);
-	border: 1px solid var(--bs-border-color-translucent);
-	border-radius: 0.4rem;
 	padding: 0.15rem 0.5rem;
 	gap: 0.4rem;
 	min-width: 0;
 }
 .custom-input-wrap.is-selected {
-	border-color: var(--evcc-default-text);
+	border-color: var(--evcc-default-text) !important;
 }
 .custom-preview {
 	width: 1.2rem;
 	height: 1.2rem;
-	border-radius: 0.3rem;
-	border: 1px solid var(--bs-border-color-translucent);
-	position: relative;
 	cursor: pointer;
-	overflow: hidden;
-	flex-shrink: 0;
 }
 .custom-native {
-	position: absolute;
-	inset: 0;
-	opacity: 0;
 	cursor: pointer;
-	border: none;
-	padding: 0;
-	background: transparent;
-}
-.custom-hash {
-	color: var(--bs-gray-medium);
 }
 .custom-input {
-	flex: 1;
 	width: 7ch;
-	border: none;
-	background: transparent;
-	color: inherit;
-	font-family: var(--bs-font-monospace);
+	min-width: 0;
 	font-size: 0.8rem;
 	outline: none;
 	padding: 0.15rem 0;
-	min-width: 0;
-	text-transform: uppercase;
+	color: inherit;
 }
 .popover-arrow {
 	position: absolute;
