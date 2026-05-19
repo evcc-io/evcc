@@ -147,11 +147,11 @@ test.describe("vehicles", async () => {
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Default charging mode")).toBeVisible();
     await expect(vehicleModal.getByLabel("Maximum number of phases")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Minimum amperage")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Maximum amperage")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Minimum current")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Maximum current")).toBeVisible();
     await expect(vehicleModal.getByLabel("Maximum charging power hint")).toBeVisible();
     await expect(vehicleModal.getByLabel("Priority")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Identification")).toBeVisible();
+    await expect(vehicleModal.getByLabel("RFID identification")).toBeVisible();
 
     await page.getByRole("button", { name: "Hide advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible();
@@ -181,7 +181,7 @@ test.describe("vehicles", async () => {
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("RFID Car");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await vehicleModal.getByLabel("Identification").fill("aaa\nbbb \n ccc\n\nddd\n");
+    await vehicleModal.getByLabel("RFID identification").fill("aaa\nbbb \n ccc\n\nddd\n");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("restart-needed")).toBeVisible();
@@ -194,7 +194,7 @@ test.describe("vehicles", async () => {
     await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(vehicleModal);
     await vehicleModal.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(vehicleModal.getByLabel("Identification")).toHaveValue("aaa\nbbb\nccc\nddd");
+    await expect(vehicleModal.getByLabel("RFID identification")).toHaveValue("aaa\nbbb\nccc\nddd");
     await vehicleModal.getByLabel("Close").click();
     await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
