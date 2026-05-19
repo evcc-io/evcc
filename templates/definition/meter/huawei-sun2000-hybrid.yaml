@@ -144,7 +144,6 @@ render: |
       source: sequence
       set:
       - source: const
-        type: int
         value: {{ .curtailpercent }}
         set:
           source: modbus
@@ -155,7 +154,6 @@ render: |
             encoding: uint16
           scale: 10
       - source: const
-        type: int
         value: 7 # Power-limited grid connection (%)
         set:
           source: modbus
@@ -166,7 +164,6 @@ render: |
             encoding: uint16
     else:
       source: const
-      type: int
       value: 0 # Unlimited 
       set:
         source: modbus
