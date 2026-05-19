@@ -43,7 +43,6 @@ params:
     description:
       de: Wirkleistungsbegrenzung in Prozent
       en: Active power limit in percent
-    default: 0
     advanced: true
     usages: ["pv"]
   - name: storageunit
