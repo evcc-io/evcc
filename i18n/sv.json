@@ -849,32 +849,13 @@
       "validate": "validerar"
     },
     "vehicle": {
-      "cancel": "Avbryt",
-      "chargingSettings": "Laddinställningar",
-      "defaultMode": "Standardläge",
-      "defaultModeHelp": "Laddläge när fordonet ansluts.",
-      "delete": "Radera",
       "generic": "Andra integrationer",
-      "identifiers": "RFID-identifiering",
-      "identifiersHelp": "Lista på RFID-strängar för att identifiera fordonet. Ett inlägg per rad. Aktuell identifierare hittas på respektive laddare på översiktssidan.",
-      "maximumCurrent": "Maximal ström",
-      "maximumCurrentHelp": "Måste vara högre än minimi-ström.",
-      "maximumPhases": "Maximalt antal faser",
-      "maximumPhasesHelp": "Hur många faser kan fordonet laddas med? Används för att räkna ut minsta solöverskott och tidsåtgång.",
-      "maximumPower": "Maximal laddeffekt",
-      "maximumPowerHelp": "Maximal effekt som fordonet kan ta emot",
-      "minimumCurrent": "Minimi ström",
-      "minimumCurrentHelp": "Ställ enbart under 6A om du är medveten om konsekvenserna.",
       "online": "Fordon med online API",
       "primary": "Generisk integration",
-      "priority": "Prioritet",
-      "priorityHelp": "Högre prioritet betyder att detta fordon får förtur till solöverskott.",
-      "save": "Spara",
       "scooter": "Scooter",
       "template": "Tillverkare",
       "titleAdd": "Lägg till fordon",
-      "titleEdit": "Ändra fordon",
-      "validateSave": "Bekräfta & spara"
+      "titleEdit": "Ändra fordon"
     }
   },
   "footer": {

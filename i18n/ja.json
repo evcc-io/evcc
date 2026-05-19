@@ -397,16 +397,9 @@
       "validate": "検証"
     },
     "vehicle": {
-      "cancel": "キャンセル",
-      "chargingSettings": "充電設定",
-      "defaultMode": "デフォルトモード",
-      "delete": "削除",
-      "priority": "優先度",
-      "save": "保存",
       "scooter": "スクーター",
       "titleAdd": "車両を追加",
-      "titleEdit": "車両を編集",
-      "validateSave": "検証＆保存"
+      "titleEdit": "車両を編集"
     }
   },
   "footer": {
