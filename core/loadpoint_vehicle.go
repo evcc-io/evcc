@@ -361,10 +361,10 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 // vehicleClimateActive checks if vehicle has active climate request
 func (lp *Loadpoint) vehicleClimateActive() bool {
-	if cl, ok := api.Cap[api.VehicleClimater](lp.GetVehicle()); ok && lp.vehicleClimatePollAllowed() {
+	v := lp.GetVehicle()
+	if cl, ok := api.Cap[api.VehicleClimater](v); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {
-			v := lp.GetVehicle()
 			if v != nil && v.DisableChargingOnClimaterActive() && active {
 				lp.log.INFO.Println("climater active - charging disabled because of vehicle setting DisableChargingOnClimaterActive")
 				active = false
