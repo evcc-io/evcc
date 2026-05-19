@@ -11,7 +11,7 @@
 			<div class="footer-row">
 				<button
 					type="button"
-					class="auto-btn text-truncate text-uppercase fw-semibold border rounded bg-body"
+					class="auto-btn text-truncate text-uppercase fw-semibold text-body border rounded bg-body"
 					:class="{ 'is-selected': mode === 'auto' }"
 					@click="pickAuto"
 				>
@@ -36,7 +36,7 @@
 					<input
 						ref="hexInputEl"
 						type="text"
-						class="custom-input border-0 bg-transparent font-monospace text-uppercase flex-grow-1"
+						class="custom-input border-0 bg-transparent font-monospace text-uppercase text-body flex-grow-1"
 						:value="hexInputValue"
 						:aria-label="$t('colors.hex')"
 						spellcheck="false"
@@ -86,9 +86,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import { createPopper, type Instance as PopperInstance } from "@popperjs/core";
-import colors from "../../colors";
-
-const HEX_RE = /^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+import colors, { HEX_RE, normalizeHex } from "../../colors";
 
 export default defineComponent({
 	name: "ColorPickerPopover",
@@ -109,7 +107,7 @@ export default defineComponent({
 	},
 	computed: {
 		customHex(): string {
-			return this.normalize(this.color || "");
+			return normalizeHex(this.color);
 		},
 		nativeColorValue(): string {
 			return this.customHex.slice(0, 7) || "#000000";
@@ -117,7 +115,7 @@ export default defineComponent({
 		matchesPalette(): boolean {
 			if (!this.customHex) return false;
 			return this.palette.some(
-				(p) => this.normalize(p).slice(0, 7) === this.customHex.slice(0, 7)
+				(p) => normalizeHex(p).slice(0, 7) === this.customHex.slice(0, 7)
 			);
 		},
 		mode(): "auto" | "palette" | "custom" {
@@ -140,7 +138,7 @@ export default defineComponent({
 			}
 		},
 		color(c: string) {
-			this.hexInputValue = this.normalize(c).replace(/^#/, "");
+			this.hexInputValue = normalizeHex(c).replace(/^#/, "");
 		},
 		anchorEl() {
 			if (this.modelValue) this.$nextTick(this.initPopper);
@@ -152,13 +150,7 @@ export default defineComponent({
 	methods: {
 		isSwatchSelected(hex: string): boolean {
 			if (!this.customHex) return false;
-			return this.normalize(hex).slice(0, 7) === this.customHex.slice(0, 7);
-		},
-		normalize(s: string): string {
-			if (!s) return "";
-			let c = s.trim().toUpperCase();
-			if (!c.startsWith("#")) c = "#" + c;
-			return c;
+			return normalizeHex(hex).slice(0, 7) === this.customHex.slice(0, 7);
 		},
 		pick(hex: string) {
 			this.$emit("update:color", hex);

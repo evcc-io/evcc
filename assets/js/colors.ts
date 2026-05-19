@@ -69,8 +69,11 @@ const setAlpha = (color: string | null, alpha: string): string | undefined => {
   return c;
 };
 
-// normalize hex to uppercase 8-digit (#RRGGBBAA), appending FF when alpha missing
-const normHex = (color?: string | null): string => {
+// regex for raw hex (no leading #): 6 or 8 digits, used for input validation
+export const HEX_RE = /^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+
+// normalize hex to uppercase 8-digit #RRGGBBAA, appending FF when alpha missing
+export const normalizeHex = (color?: string | null): string => {
   if (!color) return "";
   let c = color.trim().toUpperCase();
   if (!c.startsWith("#")) c = "#" + c;
@@ -83,8 +86,8 @@ export function resolveColors(
   ids: string[],
   overrides: Record<string, string> = {}
 ): Record<string, string> {
-  const taken = new Set(Object.values(overrides).map(normHex));
-  const free = colors.palette.filter((c) => !taken.has(normHex(c)));
+  const taken = new Set(Object.values(overrides).map(normalizeHex));
+  const free = colors.palette.filter((c) => !taken.has(normalizeHex(c)));
   const result: Record<string, string> = {};
   let idx = 0;
   for (const id of ids) {

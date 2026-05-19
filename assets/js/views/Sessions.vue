@@ -78,7 +78,7 @@
 					class="mb-5"
 					:sessions="currentSessions"
 					:color-mappings="colorMappings"
-						:device-colors="deviceColors"
+					:device-colors="deviceColors"
 					:group-by="selectedGroup"
 					:period="period"
 				/>
@@ -87,7 +87,7 @@
 					class="mb-5"
 					:sessions="currentTypeSessions"
 					:color-mappings="colorMappings"
-						:device-colors="deviceColors"
+					:device-colors="deviceColors"
 					:group-by="selectedGroup"
 					:cost-type="activeType"
 					:currency="currency"
@@ -108,7 +108,7 @@
 								v-else
 								:sessions="currentSessions"
 								:color-mappings="colorMappings"
-						:device-colors="deviceColors"
+								:device-colors="deviceColors"
 								:group-by="selectedGroupWithoutNone"
 							/>
 						</div>
@@ -116,7 +116,7 @@
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
-						:device-colors="deviceColors"
+							:device-colors="deviceColors"
 							:suggested-max-price="suggestedMaxAvgCost"
 							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
@@ -129,14 +129,14 @@
 							v-if="activeType === types.SOLAR"
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
-						:device-colors="deviceColors"
+							:device-colors="deviceColors"
 							:group-by="selectedGroupWithoutNone"
 						/>
 						<CostGroupedChart
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
-						:device-colors="deviceColors"
+							:device-colors="deviceColors"
 							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
 							:currency="currency"
