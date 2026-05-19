@@ -9,7 +9,7 @@ products:
   - brand: Junkers
     description:
       generic: SG Ready
-capabilities: ["meter"]
+capabilities: ["meter", "dim"]
 group: heating
 requirements:
   description:
