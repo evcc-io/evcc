@@ -147,7 +147,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	}
 
 	if r, err := solar.At(time.Now()); err == nil {
-		if err := site.fcstEnergy.AddEnergy(nil, nil, r.Value); err != nil {
+		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
 			site.log.ERROR.Printf("solar forecast collector: %v", err)
 		}
 	}

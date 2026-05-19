@@ -13,6 +13,7 @@ import (
 )
 
 type Fixed struct {
+	*embed
 	clock   clock.Clock
 	zones   fixed.Zones
 	dynamic bool
@@ -26,55 +27,29 @@ func init() {
 
 func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
+		embed `mapstructure:",squash"`
 		Price float64
-		Zones []struct {
-			Price               float64
-			Days, Hours, Months string
-		}
+		Zones []fixed.ZoneSpec
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	t := &Fixed{
-		clock:   clock.New(),
-		dynamic: len(cc.Zones) >= 1,
+	if err := cc.embed.init(); err != nil {
+		return nil, err
 	}
 
-	for _, z := range cc.Zones {
-		days, err := fixed.ParseDays(z.Days)
-		if err != nil {
-			return nil, err
-		}
+	zones, err := fixed.ParseZones(cc.Zones)
+	if err != nil {
+		return nil, err
+	}
 
-		months, err := fixed.ParseMonths(z.Months)
-		if err != nil {
-			return nil, err
-		}
-
-		hours, err := fixed.ParseTimeRanges(z.Hours)
-		if err != nil && z.Hours != "" {
-			return nil, err
-		}
-
-		if len(hours) == 0 {
-			t.zones = append(t.zones, fixed.Zone{
-				Price:  z.Price,
-				Days:   days,
-				Months: months,
-			})
-			continue
-		}
-
-		for _, h := range hours {
-			t.zones = append(t.zones, fixed.Zone{
-				Price:  z.Price,
-				Days:   days,
-				Months: months,
-				Hours:  h,
-			})
-		}
+	t := &Fixed{
+		embed:   &cc.embed,
+		clock:   clock.New(),
+		dynamic: len(cc.Zones) >= 1 || len(cc.ChargesZones_) >= 1,
+		zones:   zones,
 	}
 
 	sort.Sort(t.zones)
@@ -128,7 +103,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			rate := api.Rate{
 				Start: ts,
 				End:   end,
-				Value: zone.Price,
+				Value: t.totalPrice(zone.Price, ts),
 			}
 
 			res = append(res, rate)

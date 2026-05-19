@@ -3,31 +3,25 @@
 		<TopHeader :title="$t('sessions.title')" :notifications="notifications" />
 		<div class="row">
 			<main class="col-12">
-				<div class="header-outer sticky-top">
-					<div class="container px-4">
-						<div
-							class="row py-3 py-sm-3 d-flex flex-column flex-sm-row gap-3 gap-lg-0 mb-lg-2"
-						>
-							<div class="col-lg-5 d-flex mb-lg-0">
-								<PeriodSelector
-									:period="period"
-									:periodOptions="periodOptions"
-									@update:period="changePeriod"
-								/>
-							</div>
-							<div v-if="showDateNavigator" class="col-lg-6 offset-lg-1">
-								<DateNavigator
-									:month="month"
-									:year="year"
-									:startDate="startDate"
-									:showMonth="showMonthNavigation"
-									:showYear="showYearNavigation"
-									@update-date="updateDate"
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
+				<PeriodHeader>
+					<template #period>
+						<PeriodSelector
+							:period="period"
+							:periodOptions="periodOptions"
+							@update:period="changePeriod"
+						/>
+					</template>
+					<template v-if="showDateNavigator" #navigator>
+						<DateNavigator
+							:month="month"
+							:year="year"
+							:startDate="startDate"
+							:showMonth="showMonthNavigation"
+							:showYear="showYearNavigation"
+							@update-date="updateDate"
+						/>
+					</template>
+				</PeriodHeader>
 
 				<div class="d-flex gap-3 mb-5 justify-content-between flex-wrap pt-1">
 					<IconSelectGroup>
@@ -209,6 +203,7 @@ import colors from "../colors";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
+import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
@@ -231,6 +226,7 @@ export default defineComponent({
 		SolarYearChart,
 		PeriodSelector,
 		DateNavigator,
+		PeriodHeader,
 		DynamicPriceIcon,
 		CostHistoryChart,
 		CostGroupedChart,
@@ -342,10 +338,12 @@ export default defineComponent({
 			});
 		},
 		periodOptions() {
-			return Object.entries(PERIODS).map(([key, value]) => ({
-				name: this.$t(`sessions.period.${key.toLowerCase()}`),
-				value,
-			}));
+			return Object.entries(PERIODS)
+				.filter(([, value]) => value !== PERIODS.DAY)
+				.map(([key, value]) => ({
+					name: this.$t(`sessions.period.${key.toLowerCase()}`),
+					value,
+				}));
 		},
 		typeOptions() {
 			const options = Object.values(TYPES).map((value) => {
@@ -741,51 +739,4 @@ export default defineComponent({
 
 <style scoped>
 @import "../../css/breakpoints.css";
-
-.header-outer {
-	--vertical-shift: 0rem;
-	left: 0;
-	right: 0;
-	top: max(0rem, env(safe-area-inset-top)) !important;
-	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
-	background-color: var(--evcc-background);
-	box-shadow: 0 1px 8px 0px var(--evcc-background);
-}
-
-@supports (backdrop-filter: blur(1px)) {
-	.header-outer {
-		background-color: #0000;
-		backdrop-filter: var(--evcc-backdrop-blur);
-	}
-}
-
-@media (--sm-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 560px) / 2);
-	}
-}
-
-@media (--md-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 740px) / 2);
-	}
-}
-
-@media (--lg-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 980px) / 2);
-	}
-}
-
-@media (--xl-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 1160px) / 2);
-	}
-}
-
-@media (--xxl-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 1340px) / 2);
-	}
-}
 </style>

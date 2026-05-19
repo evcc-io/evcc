@@ -5,6 +5,7 @@ products:
     description:
       generic: WPM (SG Ready)
 group: heating
+capabilities: ["dim"]
 requirements:
   # evcc: ["sponsorship"]
 params:

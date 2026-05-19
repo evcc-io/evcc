@@ -198,7 +198,10 @@ func (wb *GhostEEBus) getPhases() (int, error) {
 		if res.LimitationReason != "" {
 			msg += fmt.Sprintf(" (%s)", res.LimitationReason)
 		}
-		return 0, errors.New(msg)
+		// the phase state cannot be read - signal api.ErrNotAvailable so
+		// callers treat it as a benign "not available" rather than an error
+		wb.log.TRACE.Println(msg)
+		return 0, api.ErrNotAvailable
 	}
 
 	switch res.CurrentState {

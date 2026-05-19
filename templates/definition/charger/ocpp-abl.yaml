@@ -12,7 +12,7 @@ products:
   - brand: ABL
     description:
       generic: eM4 Twin (OCPP)
-capabilities: ["mA", "rfid"]
+capabilities: ["mA", "rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

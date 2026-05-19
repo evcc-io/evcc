@@ -40,6 +40,10 @@ type ocppTestSuite struct {
 func (suite *ocppTestSuite) SetupSuite() {
 	ocpp.Timeout = 5 * time.Second
 
+	// the simulated charge points never send a spontaneous BootNotification,
+	// so shorten the proactive-trigger delay to avoid waiting 5s per charge point
+	ocpp.TriggerBootDelay = 100 * time.Millisecond
+
 	// setup cs so we can overwrite logger afterwards
 	_ = ocpp.Instance()
 	suite.logger = &ocppLogger{t: suite.T()}
@@ -78,7 +82,9 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 	// Cannot close triggerC because the async senders in ocpp_test_handler.go
 	// would panic on `send on closed channel`.
 	done := make(chan struct{})
+	finished := make(chan struct{})
 	go func() {
+		defer close(finished)
 		for {
 			select {
 			case <-done:
@@ -94,6 +100,10 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 			cp.Stop()
 		}
 		close(done)
+		// wait for the drain goroutine to fully exit before the test method
+		// returns: handleTrigger logs via suite.T(), which panics if called
+		// after the test has completed.
+		<-finished
 	})
 
 	return cp, endpoint

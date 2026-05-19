@@ -512,6 +512,11 @@ export default defineComponent({
 		},
 		values: {
 			handler() {
+				// a prior test result no longer matches the edited config:
+				// revert "Save anyway" back to "Validate & save"
+				if (this.test.isError || this.test.isSuccess) {
+					this.test = initialTestState();
+				}
 				this.updateServiceValues();
 			},
 			deep: true,
@@ -689,7 +694,6 @@ export default defineComponent({
 					this.testDevice,
 					this.$refs["form"] as HTMLFormElement
 				);
-				console.log("test result", success);
 				if (!success) {
 					return;
 				}

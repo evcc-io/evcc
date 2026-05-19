@@ -20,6 +20,7 @@ import {
 	LineElement,
 	Tooltip,
 	type ChartData,
+	type ScriptableContext,
 	type TooltipItem,
 } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
@@ -28,7 +29,6 @@ import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { TYPES, GROUPS, PERIODS, type Session } from "./types";
 import { CURRENCY } from "@/types/evcc";
-import type { Context } from "chartjs-plugin-datalabels";
 
 registerChartComponents([
 	BarController,
@@ -153,7 +153,7 @@ export default defineComponent({
 					backgroundColor,
 					label,
 					data: Object.values(result).map((index) => index[group] || 0),
-					borderRadius: (context: Context) => {
+					borderRadius: (context: ScriptableContext<"bar">) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
 						const currentValue = context.dataset.data[dataIndex] as number;

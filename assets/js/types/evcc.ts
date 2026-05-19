@@ -80,6 +80,7 @@ export interface State {
   timezone?: string;
   battery?: Battery;
   batteryMode?: BATTERY_MODE;
+  grid?: Meter;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -253,6 +254,7 @@ export enum LENGTH_UNIT {
 }
 
 export interface Loadpoint {
+  name: string;
   batteryBoost: boolean;
   chargeCurrents?: number[];
   chargeDuration: number;
@@ -382,6 +384,7 @@ export enum CURRENCY {
   SEK = "SEK",
   ZAR = "ZAR",
   TRY = "TRY",
+  MYR = "MYR",
 }
 
 export enum ICON_SIZE {
@@ -583,10 +586,12 @@ export interface Notification {
 }
 
 export interface Meter {
+  name?: string;
   power: number;
   title?: string;
   icon?: string;
   energy?: number;
+  returnEnergy?: number;
 }
 
 export interface BatteryForecast {

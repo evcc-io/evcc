@@ -824,6 +824,7 @@
         "allMonths": "Alle Monate",
         "allTimes": "Alle Zeiten",
         "cancel": "Abbrechen",
+        "charge": "Aufschlag",
         "days": "Tage",
         "edit": "Bearbeiten",
         "hours": "Stunden",
@@ -857,32 +858,13 @@
       "validate": "prüfen"
     },
     "vehicle": {
-      "cancel": "Abbrechen",
-      "chargingSettings": "Ladeeinstellungen",
-      "defaultMode": "Standard-Modus",
-      "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
-      "delete": "Fahrzeug löschen",
       "generic": "Weitere Integrationen",
-      "identifiers": "RFID-Kennungen",
-      "identifiersHelp": "Liste der RFID-Kennungen, um das Fahrzeug zu identifizieren. Ein Eintrag pro Zeile. Auf der Übersichtsseite siehst du die aktuelle RFID-Kennung am jeweiligen Ladepunkt.",
-      "maximumCurrent": "Maximaler Strom",
-      "maximumCurrentHelp": "Muss größer als der minimale Strom sein.",
-      "maximumPhases": "Maximale Phasen",
-      "maximumPhasesHelp": "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet.",
-      "maximumPower": "Maximale Ladeleistung",
-      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann",
-      "minimumCurrent": "Minimaler Strom",
-      "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
       "online": "Fahrzeuge mit Schnittstelle",
       "primary": "Generische Integrationen",
-      "priority": "Priorität",
-      "priorityHelp": "Höhere Priorität bedeutet, dass dieses Fahrzeug Vorrang vor anderen Fahrzeugen hat.",
-      "save": "Speichern",
       "scooter": "Elektroroller",
       "template": "Hersteller",
       "titleAdd": "Fahrzeug hinzufügen",
-      "titleEdit": "Fahrzeug bearbeiten",
-      "validateSave": "Prüfen & speichern"
+      "titleEdit": "Fahrzeug bearbeiten"
     }
   },
   "footer": {
@@ -1200,6 +1182,30 @@
       "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
       "title": "Externe Begrenzung:"
     },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "geladen",
+          "returnEnergy": "entladen"
+        },
+        "grid": {
+          "energy": "bezogen",
+          "returnEnergy": "eingespeist"
+        }
+      },
+      "downloadCsv": "CSV herunterladen",
+      "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
+      "group": {
+        "battery": "Batterie",
+        "forecast": "Vorhersage",
+        "grid": "Netz",
+        "loadpoint": "Laden & Heizen",
+        "meter": "Verbrauch",
+        "pv": "Erzeugung"
+      },
+      "otherConsumers": "Andere",
+      "title": "Historie"
+    },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
       "charged": "Geladen",
@@ -1471,6 +1477,7 @@
     "odometer": "Kilometerstand",
     "overview": "Übersicht",
     "period": {
+      "day": "Tag",
       "month": "Monat",
       "total": "Gesamt",
       "year": "Jahr"
