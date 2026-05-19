@@ -51,10 +51,7 @@
       "unknown": "غير معروف",
       "validate": "تحقق من الصحة"
     },
-    "vehicle": {
-      "cancel": "الغاء",
-      "delete": "احذف عربة"
-    }
+    "vehicle": {}
   },
   "footer": {
     "community": {

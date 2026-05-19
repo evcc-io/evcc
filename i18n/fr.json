@@ -864,32 +864,13 @@
       "validate": "valider"
     },
     "vehicle": {
-      "cancel": "Annuler",
-      "chargingSettings": "Paramètres de charge",
-      "defaultMode": "Mode par défaut",
-      "defaultModeHelp": "Mode de charge lors du branchement du véhicule.",
-      "delete": "Supprimer",
       "generic": "Autres intégrations",
-      "identifiers": "Identifiants RFID",
-      "identifiersHelp": "Liste des chaînes RFID permettant d'identifier le véhicule. Une entrée par ligne. L'identifiant actuel peut être trouvé au point de charge correspondant sur la page d'aperçu.",
-      "maximumCurrent": "Courant maximum",
-      "maximumCurrentHelp": "Doit être supérieur au courant minimum.",
-      "maximumPhases": "Maximum de phases",
-      "maximumPhasesHelp": "Avec combien de phases ce véhicule peut-il charger ? Utilisé pour calculer le surplus solaire minimum requis et la durée du plan de charge.",
-      "maximumPower": "Puissance de charge maximale",
-      "maximumPowerHelp": "Puissance maximale que le véhicule peut consommer",
-      "minimumCurrent": "Courant minimum",
-      "minimumCurrentHelp": "Ne descendre en dessous de 6A que si vous savez ce que vous faites.",
       "online": "Véhicules avec API en ligne",
       "primary": "Intégrations génériques",
-      "priority": "Priorité",
-      "priorityHelp": "Une priorité plus élevée signifie que ce véhicule bénéficie d'un accès privilégié au surplus solaire.",
-      "save": "Enregistrer",
       "scooter": "Trottinette",
       "template": "Fabricant",
       "titleAdd": "Ajouter un véhicule",
-      "titleEdit": "Modifier le véhicule",
-      "validateSave": "Valider & enregistrer"
+      "titleEdit": "Modifier le véhicule"
     }
   },
   "footer": {
