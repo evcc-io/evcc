@@ -38,4 +38,8 @@ identifiers:
 {{- end }}
 {{- end }}
 
+{{- if .disableChargingOnClimaterActive }}
+disableChargingOnClimaterActive: {{ .disableChargingOnClimaterActive }}
+{{- end }}
+
 {{- end }}

@@ -6,13 +6,14 @@ import (
 
 // TODO align phases with OnIdentify
 type embed struct {
-	Title_       string           `mapstructure:"title"`
-	Icon_        string           `mapstructure:"icon"`
-	Capacity_    float64          `mapstructure:"capacity"`
-	Phases_      int              `mapstructure:"phases"`
-	Identifiers_ []string         `mapstructure:"identifiers"`
-	Features_    []api.Feature    `mapstructure:"features"`
-	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
+	Title_                           string           `mapstructure:"title"`
+	Icon_                            string           `mapstructure:"icon"`
+	Capacity_                        float64          `mapstructure:"capacity"`
+	Phases_                          int              `mapstructure:"phases"`
+	Identifiers_                     []string         `mapstructure:"identifiers"`
+	Features_                        []api.Feature    `mapstructure:"features"`
+	OnIdentify                       api.ActionConfig `mapstructure:"onIdentify"`
+	DisableChargingOnClimaterActive_ bool             `mapstructure:"disableChargingOnClimaterActive"`
 }
 
 // Title implements the api.Vehicle interface
@@ -69,4 +70,9 @@ var _ api.FeatureDescriber = (*embed)(nil)
 // Features implements the api.FeatureDescriber interface
 func (v *embed) Features() []api.Feature {
 	return v.Features_
+}
+
+// DisableChargingOnClimaterActive implements the api.DisableChargingOnClimaterActive interface
+func (v *embed) DisableChargingOnClimaterActive() bool {
+	return v.DisableChargingOnClimaterActive_
 }

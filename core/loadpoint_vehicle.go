@@ -364,6 +364,12 @@ func (lp *Loadpoint) vehicleClimateActive() bool {
 	if cl, ok := api.Cap[api.VehicleClimater](lp.GetVehicle()); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {
+			v := lp.GetVehicle()
+			if v != nil && v.DisableChargingOnClimaterActive() && active {
+				lp.log.INFO.Println("climater active - charging disabled because of vehicle setting DisableChargingOnClimaterActive")
+				active = false
+			}
+
 			if active {
 				lp.log.DEBUG.Println("climater active")
 			}

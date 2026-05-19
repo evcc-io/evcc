@@ -191,6 +191,14 @@ params:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/features/vehicle"
       en: "Mostly this can be added later, see: https://docs.evcc.io/en/docs/features/vehicle"
     type: list
+  - name: disableChargingOnClimaterActive
+    type: bool
+    description:
+      de: Nachladen bei aktiver Klimatisierung deaktivieren
+      en: Disable charging on climater active
+    help:
+      de: Ladevorgang bei Erreichen des SoC- oder Energielimits beenden, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
+      en: End the charge process when reaching the SoC- or energy limit, even if the vehicle signals an active climater request.
   - name: priority
     description:
       de: Priorität
@@ -529,6 +537,15 @@ presets:
       advanced: true
     - name: identifiers
       advanced: true
+    - name: disableChargingOnClimaterActive
+      advanced: true
+      type: bool
+      description:
+        de: Nachladen bei aktiver Klimatisierung deaktivieren
+        en: Disable charging on climater active
+      help:
+        de: Ladevorgang bei Erreichen des SoC- oder Energielimits beenden, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
+        en: End the charge process when reaching the SoC- or energy limit, even if the vehicle signals an active climater request.
     - name: priority
       advanced: true
     - name: cache
@@ -552,6 +569,15 @@ presets:
       advanced: true
     - name: identifiers
       advanced: true
+    - name: disableChargingOnClimaterActive
+      advanced: true
+      type: bool
+      description:
+        de: Nachladen bei aktiver Klimatisierung deaktivieren
+        en: Disable charging on climater active
+      help:
+        de: Ladevorgang bei Erreichen des SoC- oder Energielimits beenden, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
+        en: End the charge process when reaching the SoC- or energy limit, even if the vehicle signals an active climater request.
     - name: priority
       advanced: true
   vehicle-features:

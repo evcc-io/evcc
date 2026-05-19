@@ -35,6 +35,15 @@ func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 
+type mockVehicleWithClimater struct {
+	*api.MockVehicle
+	climater func() (bool, error)
+}
+
+func (v *mockVehicleWithClimater) Climater() (bool, error) {
+	return v.climater()
+}
+
 func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
 	t.Helper()
 
@@ -429,7 +438,6 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
-	ctrl.Finish()
 
 	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
@@ -438,7 +446,6 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
-	ctrl.Finish()
 
 	t.Log("deactivated charger changes status to B")
 	clock.Add(5 * time.Minute)
@@ -446,14 +453,12 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil)
-	ctrl.Finish()
 
 	t.Log("soc has risen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil)
-	ctrl.Finish()
 
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
@@ -463,6 +468,142 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	charger.EXPECT().Enable(true).Return(nil)
 	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil)
+	ctrl.Finish()
+}
+
+func TestKeepEnabledBecauseOfClimater(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	vehicleMock := api.NewMockVehicle(ctrl)
+	climater_active := true
+	vehicle := &mockVehicleWithClimater{
+		MockVehicle: vehicleMock,
+		climater: func() (bool, error) {
+			return climater_active, nil
+		},
+	}
+
+	// wrap vehicle with estimator
+	expectVehiclePublish(vehicleMock)
+
+	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		chargeMeter: &Null{},            // silence nil panics
+		chargeRater: &Null{},            // silence nil panics
+		chargeTimer: &Null{},            // silence nil panics
+		progress:    NewProgress(0, 10), // silence nil panics
+		wakeUpTimer: NewTimer(),         // silence nil panics
+		// coordinator:   coordinator.NewDummy(), // silence nil panics
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		vehicle:      vehicle,      // needed for targetSoc check
+		socEstimator: socEstimator, // instead of vehicle: vehicle,
+		mode:         api.ModeNow,
+		limitSoc:     90, // session limit
+		Soc: loadpoint.SocConfig{
+			Poll: loadpoint.PollConfig{
+				Mode:     loadpoint.PollConnected, // allow polling when connected
+				Interval: pollInterval,
+			},
+		},
+	}
+
+	attachListeners(t, lp)
+
+	lp.enabled = true
+	lp.offeredCurrent = minA
+	lp.status = api.StatusC
+
+	t.Log("charging below soc target")
+	vehicle.EXPECT().Soc().Return(75.0, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+
+	t.Log("charging above target - climater keeps charger active")
+	clock.Add(15 * time.Minute)
+	lp.energyMetrics.totalKWh += 3 // simulate energy increase to prevent division by zero in estimator
+	vehicle.EXPECT().Soc().Return(90.0, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	vehicleMock.EXPECT().DisableChargingOnClimaterActive().Return(false)
+	charger.EXPECT().MaxCurrent(int64(minA)).Return(nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+	ctrl.Finish()
+}
+
+func TestDisableDespiteClimater(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	vehicleMock := api.NewMockVehicle(ctrl)
+	climater_active := true
+	vehicle := &mockVehicleWithClimater{
+		MockVehicle: vehicleMock,
+		climater: func() (bool, error) {
+			return climater_active, nil
+		},
+	}
+
+	// wrap vehicle with estimator
+	expectVehiclePublish(vehicleMock)
+
+	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		chargeMeter: &Null{},            // silence nil panics
+		chargeRater: &Null{},            // silence nil panics
+		chargeTimer: &Null{},            // silence nil panics
+		progress:    NewProgress(0, 10), // silence nil panics
+		wakeUpTimer: NewTimer(),         // silence nil panics
+		// coordinator:   coordinator.NewDummy(), // silence nil panics
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		vehicle:      vehicle,      // needed for targetSoc check
+		socEstimator: socEstimator, // instead of vehicle: vehicle,
+		mode:         api.ModeNow,
+		limitSoc:     90, // session limit
+		Soc: loadpoint.SocConfig{
+			Poll: loadpoint.PollConfig{
+				Mode:     loadpoint.PollConnected, // allow polling when connected
+				Interval: pollInterval,
+			},
+		},
+	}
+
+	attachListeners(t, lp)
+
+	lp.enabled = true
+	lp.offeredCurrent = minA
+	lp.status = api.StatusC
+
+	t.Log("charging below soc target")
+	vehicle.EXPECT().Soc().Return(75.0, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+
+	t.Log("charging above target - soc deactivates charger even with climater active because of vehicle setting")
+	clock.Add(15 * time.Minute)
+	lp.energyMetrics.totalKWh += 3 // simulate energy increase to prevent division by zero in estimator
+	vehicle.EXPECT().Soc().Return(90.0, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	vehicleMock.EXPECT().DisableChargingOnClimaterActive().Return(true)
+	charger.EXPECT().Enable(false).Return(nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 }
 
