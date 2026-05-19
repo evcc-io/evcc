@@ -1,7 +1,9 @@
 template: ford-connect
 deprecated: true
 products:
-  - brand: Ford (Legacy FordConnect)
+  - brand: Ford
+    description:
+      generic: FordConnect (Legacy)
 params:
   - preset: vehicle-common
   - name: clientid

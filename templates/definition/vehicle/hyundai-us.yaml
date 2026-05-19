@@ -1,8 +1,8 @@
 template: hyundai-us
 products:
-  - brand: Hyundai (US)
+  - brand: Hyundai
     description:
-      generic: Bluelink
+      generic: Bluelink (US)
 params:
   - preset: vehicle-base
 render: |

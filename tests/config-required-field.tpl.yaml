@@ -1,0 +1,20 @@
+template: required-field-demo
+group: generic
+products:
+  - description:
+      generic: Required Field Demo
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: secret
+    description:
+      generic: Secret
+    required: true
+
+# unreachable uri so the connection test always fails, exposing the
+# "Save anyway" button (see tests/config-required-field.spec.ts)
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://localhost:1/{{ .secret }}
