@@ -827,6 +827,7 @@
         "allMonths": "Tous les mois",
         "allTimes": "Tout le temps",
         "cancel": "Annuler",
+        "charge": "Charge",
         "days": "Jours",
         "edit": "Éditer",
         "hours": "Heures",
@@ -1185,8 +1186,10 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie en charge",
       "batteryDischarge": "Décharge de la batterie",
-      "batteryForecastEmpty": "vide {time}",
-      "batteryForecastFull": "plein {time}",
+      "batteryForecastEmpty": "Vide depuis {time}",
+      "batteryForecastFull": "Plein depuis {time}",
+      "batteryForecastNextHigh": "Prochain pic",
+      "batteryForecastNextLow": "Prochain creux",
       "batteryGridChargeActive": "Charge réseau : active",
       "batteryGridChargeLimit": "Charge réseau : quand",
       "batteryHold": "Batterie (verrouillée)",
@@ -1212,6 +1215,30 @@
     "hemsWarning": {
       "description": "Réduire la charge pour ne pas dépasser {limit}.",
       "title": "Limite externe :"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "chargée",
+          "returnEnergy": "déchargée"
+        },
+        "grid": {
+          "energy": "importée",
+          "returnEnergy": "exportée"
+        }
+      },
+      "downloadCsv": "Télécharger en CSV",
+      "empty": "Pas de données historiques pour cette intervalle de temps.",
+      "group": {
+        "battery": "Batterie",
+        "forecast": "Prévisions",
+        "grid": "Réseau",
+        "loadpoint": "Chargement & Chauffage",
+        "meter": "Consommation",
+        "pv": "Production"
+      },
+      "otherConsumers": "Autres",
+      "title": "Historique"
     },
     "loadpoint": {
       "avgPrice": "Prix ⌀",
@@ -1484,6 +1511,7 @@
     "odometer": "Kilométrage",
     "overview": "Aperçu",
     "period": {
+      "day": "Jour",
       "month": "Mois",
       "total": "Total",
       "year": "Année"
