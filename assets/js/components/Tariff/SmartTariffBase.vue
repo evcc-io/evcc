@@ -123,7 +123,7 @@ export default defineComponent({
 		optionsStartAtZero: Boolean,
 		activeHoursLabel: { type: String, required: true },
 		currentPriceLabel: String,
-		resetWarningKey: String,
+		resetWarningText: String,
 		limitDirection: { type: String as PropType<LimitDirection>, default: "below" },
 		highlightColor: { type: String as PropType<HighlightColor>, default: "text-primary" },
 		isSlotActive: {
@@ -260,11 +260,6 @@ export default defineComponent({
 		},
 		limitOperator() {
 			return this.limitDirection === "below" ? "≤" : "≥";
-		},
-		resetWarningText() {
-			return this.$t(this.resetWarningKey!, {
-				limit: this.formatValue(this.currentLimit!),
-			});
 		},
 	},
 	watch: {
