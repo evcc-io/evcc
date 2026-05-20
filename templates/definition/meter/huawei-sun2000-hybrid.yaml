@@ -156,22 +156,28 @@ render: |
       - source: const
         value: 7 # Power-limited grid connection (%)
         set:
+          source: convert
+          convert: bool2int
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47415 # Active power control mode
+              type: writesingle
+              encoding: uint16
+    else:
+      source: const
+      value: 0 # Unlimited 
+      set:
+        source: convert
+        convert: bool2int
+        set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
           register:
             address: 47415 # Active power control mode
             type: writesingle
             encoding: uint16
-    else:
-      source: const
-      value: 0 # Unlimited 
-      set:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 47415 # Active power control mode
-          type: writesingle
-          encoding: uint16
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
