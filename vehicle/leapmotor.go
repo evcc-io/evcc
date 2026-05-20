@@ -26,12 +26,34 @@ type Leapmotor struct {
 	*leapmotor.Provider
 }
 
+// LeapmotorWithControl extends Leapmotor with vehicle-side charge control (requires vehicle PIN).
+type LeapmotorWithControl struct {
+	*Leapmotor
+	api *leapmotor.API
+	vin string
+}
+
+var _ api.ChargeController = (*LeapmotorWithControl)(nil)
+
+func (l *LeapmotorWithControl) ChargeEnable(enable bool) error {
+	return l.api.ChargeToggle(l.vin, enable)
+}
+
 // SinglePhaseLeapmotor wraps Leapmotor to report 1-phase charging (e.g. T03).
 type SinglePhaseLeapmotor struct {
 	*Leapmotor
 }
 
+// SinglePhaseLeapmotorWithControl wraps LeapmotorWithControl for single-phase vehicles.
+type SinglePhaseLeapmotorWithControl struct {
+	*LeapmotorWithControl
+}
+
 func (o SinglePhaseLeapmotor) Phases() int {
+	return 1
+}
+
+func (o SinglePhaseLeapmotorWithControl) Phases() int {
 	return 1
 }
 
@@ -74,6 +96,7 @@ func NewLeapmotorFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
+		Pin                 string
 		Cache               time.Duration
 	}{
 		Cache: interval,
@@ -87,7 +110,7 @@ func NewLeapmotorFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("leapmotor").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger("leapmotor").Redact(cc.User, cc.Password, cc.VIN, cc.Pin)
 
 	certPEM, keyPEM, err := getAppCertFromDB()
 	if err != nil {
@@ -97,7 +120,7 @@ func NewLeapmotorFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	newIdentity := func(certPEM, keyPEM []byte) (*leapmotor.Identity, error) {
-		return leapmotor.NewIdentity(log, certPEM, keyPEM, cc.User, cc.Password)
+		return leapmotor.NewIdentity(log, certPEM, keyPEM, cc.User, cc.Password, cc.Pin)
 	}
 
 	identity, err := newIdentity(certPEM, keyPEM)
@@ -150,6 +173,15 @@ func NewLeapmotorFromConfig(other map[string]any) (api.Vehicle, error) {
 		embed:    &cc.embed,
 		Provider: leapmotor.NewProvider(api, matched.VIN, matched.CarType, cc.Cache),
 	}
+
+	if cc.Pin != "" {
+		lmCtl := &LeapmotorWithControl{Leapmotor: lm, api: api, vin: matched.VIN}
+		if matched.CarType == "T03" {
+			return SinglePhaseLeapmotorWithControl{lmCtl}, nil
+		}
+		return lmCtl, nil
+	}
+
 	if matched.CarType == "T03" {
 		return SinglePhaseLeapmotor{lm}, nil
 	}

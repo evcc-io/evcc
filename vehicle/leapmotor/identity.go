@@ -1,6 +1,9 @@
 package leapmotor
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha256"
@@ -192,12 +195,19 @@ func loadAccountCert(p12Data []byte, password string) (tls.Certificate, error) {
 }
 
 // Identity manages Leapmotor session state (tokens, signing key, account mTLS cert).
+const (
+	defaultOperpwdKey = "f1cf0c025baec0e2"
+	defaultOperpwdIV  = "6b6a1fe94e133fd7"
+)
+
 type Identity struct {
-	mu       sync.Mutex
-	log      *util.Logger
-	appCert  tls.Certificate
-	username string
-	password string
+	mu         sync.Mutex
+	log        *util.Logger
+	appCert    tls.Certificate
+	username   string
+	password   string
+	pin        string
+	certSynced bool
 	// mutable session state (protected by mu)
 	deviceID   string
 	token      string
@@ -208,8 +218,8 @@ type Identity struct {
 }
 
 // NewIdentity parses the app certificate PEM bytes and returns an unauthenticated Identity.
-// Call Login() before making API calls.
-func NewIdentity(log *util.Logger, certPEM, keyPEM []byte, username, password string) (*Identity, error) {
+// Call Login() before making API calls. pin is optional; pass "" to disable charge control.
+func NewIdentity(log *util.Logger, certPEM, keyPEM []byte, username, password, pin string) (*Identity, error) {
 	cert, err := tls.X509KeyPair(certPEM, keyPEM)
 	if err != nil {
 		return nil, fmt.Errorf("load app cert: %w", err)
@@ -220,8 +230,65 @@ func NewIdentity(log *util.Logger, certPEM, keyPEM []byte, username, password st
 		appCert:  cert,
 		username: username,
 		password: password,
+		pin:      pin,
 		deviceID: hex.EncodeToString(h[:16]),
 	}, nil
+}
+
+// HasPin reports whether a vehicle PIN is configured for charge control.
+func (id *Identity) HasPin() bool { return id.pin != "" }
+
+// EncryptedPin returns the AES-128-CBC encrypted vehicle PIN using the current session token.
+func (id *Identity) EncryptedPin() (string, error) {
+	if id.pin == "" {
+		return "", fmt.Errorf("no vehicle PIN configured")
+	}
+	id.mu.Lock()
+	token := id.token
+	id.mu.Unlock()
+
+	keyText, ivText := defaultOperpwdKey, defaultOperpwdIV
+	if len(token) >= 64 {
+		kh := md5.Sum([]byte(token[:32]))
+		ih := md5.Sum([]byte(token[32:64]))
+		keyText = hex.EncodeToString(kh[:])[8:24]
+		ivText = hex.EncodeToString(ih[:])[8:24]
+	}
+
+	block, err := aes.NewCipher([]byte(keyText))
+	if err != nil {
+		return "", err
+	}
+	pinBytes := []byte(id.pin)
+	padLen := aes.BlockSize - len(pinBytes)%aes.BlockSize
+	padded := append(pinBytes, bytes.Repeat([]byte{byte(padLen)}, padLen)...)
+	ciphertext := make([]byte, len(padded))
+	cipher.NewCBCEncrypter(block, []byte(ivText)).CryptBlocks(ciphertext, padded)
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// CertSync registers the app certificate with the Leapmotor server (required before remote control).
+// Only called once per session; subsequent calls are no-ops.
+func (id *Identity) CertSync() error {
+	id.mu.Lock()
+	if id.certSynced {
+		id.mu.Unlock()
+		return nil
+	}
+	token, userID, deviceID, signKey := id.token, id.userID, id.deviceID, id.signKey
+	appCert := id.appCert
+	id.mu.Unlock()
+
+	appClient := newMTLSClient(&appCert)
+	headers := buildSignedHeaders(signKey, deviceID, "", defaultLang, userID, token, nil)
+	if _, err := apiPost(appClient, BaseURL+"/carownerservice/oversea/vehicle/v1/cert/sync", headers, ""); err != nil {
+		return fmt.Errorf("cert sync: %w", err)
+	}
+
+	id.mu.Lock()
+	id.certSynced = true
+	id.mu.Unlock()
+	return nil
 }
 
 // Login performs a full authentication and loads the account certificate.

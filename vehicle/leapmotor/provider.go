@@ -74,6 +74,60 @@ func (a *API) Vehicles() ([]Vehicle, error) {
 	return valid, nil
 }
 
+// ChargeToggle sends a start (enable=true) or stop (enable=false) charge command.
+// Requires a vehicle PIN configured on the Identity.
+func (a *API) ChargeToggle(vin string, enable bool) error {
+	if err := a.identity.CertSync(); err != nil {
+		return err
+	}
+
+	encPin, err := a.identity.EncryptedPin()
+	if err != nil {
+		return err
+	}
+
+	client, token, userID, deviceID, signKey := a.identity.Session()
+	if client == nil {
+		return fmt.Errorf("not authenticated")
+	}
+
+	// Step 1: verify PIN
+	verifyHeaders := buildSignedHeaders(signKey, deviceID, vin, defaultLang, userID, token, map[string]string{
+		"operatePassword": encPin,
+	})
+	verifyBody := "operatePassword=" + url.QueryEscape(encPin) + "&vin=" + url.QueryEscape(vin)
+	respBody, err := apiPost(client, BaseURL+"/carownerservice/oversea/vehicle/v1/operPwd/verify", verifyHeaders, verifyBody)
+	if err != nil {
+		return fmt.Errorf("pin verify: %w", err)
+	}
+	if _, err := parseEnvelope[json.RawMessage](respBody); err != nil {
+		return fmt.Errorf("pin verify: %w", err)
+	}
+
+	// Step 2: send remote control command (cmdId=193, value="start"/"stop")
+	value := "start"
+	if !enable {
+		value = "stop"
+	}
+	cmdContent := `{"value":"` + value + `"}`
+	cmdID := "193"
+	ctlHeaders := buildSignedHeaders(signKey, deviceID, vin, defaultLang, userID, token, map[string]string{
+		"operatePassword": encPin,
+		"cmdContent":      cmdContent,
+		"cmdId":           cmdID,
+	})
+	ctlBody := "cmdContent=" + url.QueryEscape(cmdContent) +
+		"&vin=" + url.QueryEscape(vin) +
+		"&cmdId=" + url.QueryEscape(cmdID) +
+		"&operatePassword=" + url.QueryEscape(encPin)
+	respBody, err = apiPost(client, BaseURL+"/carownerservice/oversea/vehicle/v1/app/remote/ctl", ctlHeaders, ctlBody)
+	if err != nil {
+		return fmt.Errorf("remote ctl: %w", err)
+	}
+	_, err = parseEnvelope[json.RawMessage](respBody)
+	return err
+}
+
 // Status fetches the current status for the given VIN and car type.
 func (a *API) Status(vin, carType string) (StatusData, error) {
 	path := "/carownerservice/oversea/vehicle/v1/status/get/" + strings.ToLower(carType)
