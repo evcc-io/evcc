@@ -37,4 +37,5 @@ const (
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 	Iobroker           = "iobroker"
+	DeviceColors       = "deviceColors"
 )

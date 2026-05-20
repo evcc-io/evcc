@@ -4,7 +4,7 @@
 			<Doughnut :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center">
-			<LegendList :legends="legends" grid />
+			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
@@ -25,7 +25,7 @@ import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { TYPES, GROUPS, type Session } from "./types";
 import { defineComponent, type PropType } from "vue";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, type DeviceColors } from "@/types/evcc";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
@@ -40,6 +40,7 @@ export default defineComponent({
 			default: GROUPS.LOADPOINT,
 		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
 	},
@@ -81,6 +82,7 @@ export default defineComponent({
 					label: label,
 					color: dataset.backgroundColor[index],
 					value: [this.formatValue(dataValue), fmtShare(dataValue)],
+					id: label || undefined,
 				};
 			});
 		},

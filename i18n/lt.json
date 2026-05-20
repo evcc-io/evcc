@@ -534,7 +534,7 @@
       "connectionHintSerial": "Įrenginys prijungtas tiesiogiai per RS485 (arba USB-RS485 adapterį).",
       "connectionHintTcpip": "Įrenginys pasiekiamas per tinklą (LAN / WiFi).",
       "connectionValueSerial": "RS485",
-      "connectionValueTcpip": "Tinklas",
+      "connectionValueTcpip": "Ryšys",
       "device": "Įrenginio pavadinimas",
       "deviceHint": "Pvz: /dev/ttyUSB0",
       "host": "IP adresas ar hostname",
@@ -597,7 +597,7 @@
       "labelInternalUrl": "Vidinis URL",
       "labelPort": "Port",
       "labelSchema": "Schema",
-      "title": "Tinklas",
+      "title": "Ryšys",
       "warningUrlPath": "URL paprastai nereikalauja kelio. Ar esate įsitikinę?"
     },
     "ocpp": {
@@ -828,6 +828,7 @@
         "allMonths": "Visi mėnesiai",
         "allTimes": "Visi laikai",
         "cancel": "Atšaukti",
+        "charge": "Mokestis",
         "days": "Dienos",
         "edit": "Redaguoti",
         "hours": "Valandos",
@@ -865,32 +866,13 @@
       "validate": "tikrinti"
     },
     "vehicle": {
-      "cancel": "Atšaukti",
-      "chargingSettings": "Įkrovimo nustatymai",
-      "defaultMode": "Numatytasis režimas",
-      "defaultModeHelp": "Įkrovimo režimas prijungiant automobilį.",
-      "delete": "Ištrinti",
       "generic": "Kitos integracijos",
-      "identifiers": "RFID identifikatoriai",
-      "identifiersHelp": "RFID identifikatorių, skirtų transporto priemonei identifikuoti, sąrašas. Vienas įrašas eilutėje. Dabartinį identifikatorių galite rasti atitinkamo įkroviklio apžvalgos puslapyje.",
-      "maximumCurrent": "Didžiausia srovė",
-      "maximumCurrentHelp": "Turi būti didesnė nei minimali srovė.",
-      "maximumPhases": "Maksimalus fazių skaičius",
-      "maximumPhasesHelp": "Kiek fazių įkrovimui gali panaudoti šis automobilis? Naudojama norint apskaičiuoti reikiamą minimalų saulės energijos perteklių ir planuoti trukmę.",
-      "maximumPower": "Didžiausia įkrovimo galia",
-      "maximumPowerHelp": "Maksimali galia, kurią gali paimti automobilis",
-      "minimumCurrent": "Minimali srovė",
-      "minimumCurrentHelp": "Ne mažiau 6A. Nebent tiksliai žinote, ką darote.",
       "online": "Automobiliai su internetiniu API",
       "primary": "Paprastos integracijos",
-      "priority": "Pirmumas",
-      "priorityHelp": "Didesnis prioritetas reiškia, kad šiam automobiliui suteikiama pirmenybė saulės energijos pertekliui.",
-      "save": "Išsaugoti",
       "scooter": "Motoroleris",
       "template": "Gamintojas",
       "titleAdd": "Pridėti Automobilį",
-      "titleEdit": "Koreguoti Automobilį",
-      "validateSave": "Patikrinti ir išsaugoti"
+      "titleEdit": "Koreguoti Automobilį"
     }
   },
   "footer": {
@@ -1186,13 +1168,15 @@
       "battery": "Kaupiklis",
       "batteryCharge": "Kaupiklis įkraunamas",
       "batteryDischarge": "Kaupiklis iškraunamas",
-      "batteryForecastEmpty": "tuščias {time}",
-      "batteryForecastFull": "pilnas {time}",
+      "batteryForecastEmpty": "Tuščias nuo {time}",
+      "batteryForecastFull": "Pilnas nuo {time}",
+      "batteryForecastNextHigh": "Sekanti didelė",
+      "batteryForecastNextLow": "Sekanti žema",
       "batteryGridChargeActive": "Įkrovimas iš tinklo: aktyvus",
       "batteryGridChargeLimit": "Įkrauti iš tinklo: kai",
       "batteryHold": "Kaupiklis (užblokuotas)",
       "batteryTooltip": "{energy} iš {total} ({soc})",
-      "forecast": "Prognozė: ",
+      "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",
       "gridImport": "Iš tinklo",
       "homePower": "Namo suvartojimas",
@@ -1213,6 +1197,30 @@
     "hemsWarning": {
       "description": "Įkrovimas apribotas, kad neviršyti {limit}.",
       "title": "Išorinis limitas:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "įkrauta",
+          "returnEnergy": "iškrauta"
+        },
+        "grid": {
+          "energy": "iš tinklo",
+          "returnEnergy": "į tinklą"
+        }
+      },
+      "downloadCsv": "Parsisiųsti CSV failą",
+      "empty": "Šio laikotarpio istorijos duomenų nėra.",
+      "group": {
+        "battery": "Kaupiklis",
+        "forecast": "Prognozė",
+        "grid": "Tinklas",
+        "loadpoint": "Įkrovimas ir Šildymas",
+        "meter": "Suvartojimas",
+        "pv": "Gamyba"
+      },
+      "otherConsumers": "Kiti",
+      "title": "Istorija"
     },
     "loadpoint": {
       "avgPrice": "⌀ Kaina",
@@ -1485,6 +1493,7 @@
     "odometer": "Rida",
     "overview": "Apžvalga",
     "period": {
+      "day": "Diena",
       "month": "Mėnesis",
       "total": "Suma",
       "year": "Metai"

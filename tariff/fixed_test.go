@@ -14,6 +14,7 @@ import (
 
 func TestFixed(t *testing.T) {
 	tf := &Fixed{
+		embed: &embed{},
 		clock: clock.NewMock(),
 		zones: []fixed.Zone{
 			{Price: 0.3},

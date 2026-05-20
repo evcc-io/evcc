@@ -3,31 +3,25 @@
 		<TopHeader :title="$t('sessions.title')" :notifications="notifications" />
 		<div class="row">
 			<main class="col-12">
-				<div class="header-outer sticky-top">
-					<div class="container px-4">
-						<div
-							class="row py-3 py-sm-3 d-flex flex-column flex-sm-row gap-3 gap-lg-0 mb-lg-2"
-						>
-							<div class="col-lg-5 d-flex mb-lg-0">
-								<PeriodSelector
-									:period="period"
-									:periodOptions="periodOptions"
-									@update:period="changePeriod"
-								/>
-							</div>
-							<div v-if="showDateNavigator" class="col-lg-6 offset-lg-1">
-								<DateNavigator
-									:month="month"
-									:year="year"
-									:startDate="startDate"
-									:showMonth="showMonthNavigation"
-									:showYear="showYearNavigation"
-									@update-date="updateDate"
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
+				<PeriodHeader>
+					<template #period>
+						<PeriodSelector
+							:period="period"
+							:periodOptions="periodOptions"
+							@update:period="changePeriod"
+						/>
+					</template>
+					<template v-if="showDateNavigator" #navigator>
+						<DateNavigator
+							:month="month"
+							:year="year"
+							:startDate="startDate"
+							:showMonth="showMonthNavigation"
+							:showYear="showYearNavigation"
+							@update-date="updateDate"
+						/>
+					</template>
+				</PeriodHeader>
 
 				<div class="d-flex gap-3 mb-5 justify-content-between flex-wrap pt-1">
 					<IconSelectGroup>
@@ -84,6 +78,7 @@
 					class="mb-5"
 					:sessions="currentSessions"
 					:color-mappings="colorMappings"
+					:device-colors="deviceColors"
 					:group-by="selectedGroup"
 					:period="period"
 				/>
@@ -92,6 +87,7 @@
 					class="mb-5"
 					:sessions="currentTypeSessions"
 					:color-mappings="colorMappings"
+					:device-colors="deviceColors"
 					:group-by="selectedGroup"
 					:cost-type="activeType"
 					:currency="currency"
@@ -112,6 +108,7 @@
 								v-else
 								:sessions="currentSessions"
 								:color-mappings="colorMappings"
+								:device-colors="deviceColors"
 								:group-by="selectedGroupWithoutNone"
 							/>
 						</div>
@@ -119,6 +116,7 @@
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
+							:device-colors="deviceColors"
 							:suggested-max-price="suggestedMaxAvgCost"
 							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
@@ -131,12 +129,14 @@
 							v-if="activeType === types.SOLAR"
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
+							:device-colors="deviceColors"
 							:group-by="selectedGroupWithoutNone"
 						/>
 						<CostGroupedChart
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
+							:device-colors="deviceColors"
 							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
 							:currency="currency"
@@ -205,10 +205,11 @@ import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
 import CustomSelect from "../components/Helper/CustomSelect.vue";
-import colors from "../colors";
+import colors, { resolveColors } from "../colors";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
+import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
@@ -231,6 +232,7 @@ export default defineComponent({
 		SolarYearChart,
 		PeriodSelector,
 		DateNavigator,
+		PeriodHeader,
 		DynamicPriceIcon,
 		CostHistoryChart,
 		CostGroupedChart,
@@ -342,10 +344,12 @@ export default defineComponent({
 			});
 		},
 		periodOptions() {
-			return Object.entries(PERIODS).map(([key, value]) => ({
-				name: this.$t(`sessions.period.${key.toLowerCase()}`),
-				value,
-			}));
+			return Object.entries(PERIODS)
+				.filter(([, value]) => value !== PERIODS.DAY)
+				.map(([key, value]) => ({
+					name: this.$t(`sessions.period.${key.toLowerCase()}`),
+					value,
+				}));
 		},
 		typeOptions() {
 			const options = Object.values(TYPES).map((value) => {
@@ -499,6 +503,9 @@ export default defineComponent({
 			}
 			return this.csvHrefLink();
 		},
+		deviceColors() {
+			return store.state.deviceColors ?? {};
+		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
 			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
@@ -514,40 +521,36 @@ export default defineComponent({
 				}, {});
 			};
 
-			// Assign colors based on energy usage
-			const assignColors = (
+			// Ordered key list: sessions ranked by recent energy first, then any
+			// remaining keys encountered in the dataset.
+			const orderedKeys = (
 				energyAggregation: Record<string, number>,
 				colorType: Exclude<GROUPS, GROUPS.NONE>
-			) => {
-				const result: Record<string, string> = {};
-				let colorIndex = 0;
-
-				// Assign colors by used energy in the last three months
-				const sortedEntries = Object.entries(energyAggregation).sort((a, b) => b[1] - a[1]);
-				sortedEntries.forEach(([key]) => {
-					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
-						colorIndex++;
+			): string[] => {
+				const ranked = Object.entries(energyAggregation)
+					.sort((a, b) => b[1] - a[1])
+					.map(([k]) => k)
+					.filter(Boolean);
+				const seen = new Set(ranked);
+				for (const s of this.sessionsWithDefaults) {
+					const k = s[colorType];
+					if (k && !seen.has(k)) {
+						ranked.push(k);
+						seen.add(k);
 					}
-				});
-
-				// Assign colors to remaining entries
-				this.sessionsWithDefaults.forEach((session) => {
-					const key = session[colorType];
-					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
-						colorIndex++;
-					}
-				});
-
-				return result;
+				}
+				return ranked;
 			};
 
-			const loadpointEnergy = aggregateEnergy(GROUPS.LOADPOINT);
-			const loadpointColors = assignColors(loadpointEnergy, GROUPS.LOADPOINT);
-
-			const vehicleEnergy = aggregateEnergy(GROUPS.VEHICLE);
-			const vehicleColors = assignColors(vehicleEnergy, GROUPS.VEHICLE);
+			const overrides = this.deviceColors;
+			const loadpointColors = resolveColors(
+				orderedKeys(aggregateEnergy(GROUPS.LOADPOINT), GROUPS.LOADPOINT),
+				overrides
+			);
+			const vehicleColors = resolveColors(
+				orderedKeys(aggregateEnergy(GROUPS.VEHICLE), GROUPS.VEHICLE),
+				overrides
+			);
 
 			const solar = { self: colors.self, grid: colors.grid };
 			const cost = { price: colors.price, co2: colors.co2 };
@@ -741,51 +744,4 @@ export default defineComponent({
 
 <style scoped>
 @import "../../css/breakpoints.css";
-
-.header-outer {
-	--vertical-shift: 0rem;
-	left: 0;
-	right: 0;
-	top: max(0rem, env(safe-area-inset-top)) !important;
-	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
-	background-color: var(--evcc-background);
-	box-shadow: 0 1px 8px 0px var(--evcc-background);
-}
-
-@supports (backdrop-filter: blur(1px)) {
-	.header-outer {
-		background-color: #0000;
-		backdrop-filter: var(--evcc-backdrop-blur);
-	}
-}
-
-@media (--sm-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 560px) / 2);
-	}
-}
-
-@media (--md-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 740px) / 2);
-	}
-}
-
-@media (--lg-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 980px) / 2);
-	}
-}
-
-@media (--xl-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 1160px) / 2);
-	}
-}
-
-@media (--xxl-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 1340px) / 2);
-	}
-}
 </style>
