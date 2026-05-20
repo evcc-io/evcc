@@ -2,6 +2,7 @@
 template: xtherma
 products:
   - brand: Xtherma
+capabilities: ["dim"]
 group: heating
 # requirements:
 #   evcc: ["sponsorship"]

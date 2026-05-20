@@ -1,5 +1,5 @@
 <template>
-	<div class="history-chart-wrapper">
+	<div class="history-chart-wrapper" :data-testid="`group-chart-${group}`">
 		<div ref="chartEl" class="history-chart"></div>
 	</div>
 </template>
@@ -13,7 +13,8 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 } from "../Forecast/echarts";
-import colors, { lighterColor } from "@/colors";
+import colors, { lighterColor, resolveColors } from "@/colors";
+import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
@@ -58,6 +59,18 @@ export function alphaColor(color: string, alpha: number): string {
 	return c;
 }
 
+// Symmetric axis regardless of whether the period contains both directions.
+const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
+
+// Round up to a nice number (5-tick symmetric axis: -L, -L/2, 0, L/2, L).
+function niceCeil(v: number): number {
+	if (v <= 0) return 0;
+	const mag = Math.pow(10, Math.floor(Math.log10(v)));
+	const r = v / mag;
+	const n = r <= 1 ? 1 : r <= 2 ? 2 : r <= 3 ? 3 : r <= 4 ? 4 : r <= 6 ? 6 : r <= 8 ? 8 : 10;
+	return n * mag;
+}
+
 export default defineComponent({
 	name: "GroupChart",
 	mixins: [formatter],
@@ -97,29 +110,45 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak absolute net power per slot in kW (day view only). Absolute so
-		// export-dominant slots (battery discharge, grid export) count too.
-		maxVisibleKw(): number {
-			if (this.period !== PERIODS.DAY) return Infinity;
+		// Peak of stacked per-slot sums. Bidirectional: pos/neg separately.
+		axisPeak(): number {
 			const factor = this.valueFactor;
-			const slotSums = new Map<string, number>();
-			for (const s of this.visibleSeries) {
-				for (const slot of s.data) {
-					const v = Math.abs(slot.energy - slot.returnEnergy) * factor;
-					slotSums.set(slot.start, (slotSums.get(slot.start) || 0) + v);
+			const peak = (pick: (slot: HistorySlot) => number) => {
+				const sums = new Map<string, number>();
+				for (const s of this.visibleSeries) {
+					for (const slot of s.data) {
+						sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
+					}
 				}
+				let max = 0;
+				for (const v of sums.values()) if (v > max) max = v;
+				return max;
+			};
+			if (this.isBidirectional) {
+				return Math.max(
+					peak((slot) => Math.abs(slot.energy)),
+					peak((slot) => Math.abs(slot.returnEnergy))
+				);
 			}
-			let max = 0;
-			for (const v of slotSums.values()) if (v > max) max = v;
-			return max;
+			return peak((slot) => Math.abs(slot.energy - slot.returnEnergy));
 		},
-		// Switch to watts when the peak is below 1 kW so small values stay readable.
-		useWatts(): boolean {
-			return this.period === PERIODS.DAY && this.maxVisibleKw < 1;
+		// W/Wh scale when peak below 1 kW(h). Zero data falls here too.
+		useSmallUnit(): boolean {
+			return this.axisPeak < 1;
 		},
-		unit(): "W" | "kW" | "kWh" {
-			if (this.period !== PERIODS.DAY) return "kWh";
-			return this.useWatts ? "W" : "kW";
+		// Rounded range. W mode floors at 1 kW (= 1000 W) for stable context.
+		axisLimit(): number {
+			const v = niceCeil(this.axisPeak);
+			return this.useSmallUnit ? Math.max(v, 1) : v;
+		},
+		// 1-3 kW(h) band gets one decimal to avoid duplicate integer ticks.
+		axisDigits(): number {
+			if (this.useSmallUnit) return 0;
+			return this.axisLimit > 0 && this.axisLimit <= 3 ? 1 : 0;
+		},
+		unit(): "W" | "Wh" | "kW" | "kWh" {
+			if (this.period === PERIODS.DAY) return this.useSmallUnit ? "W" : "kW";
+			return this.useSmallUnit ? "Wh" : "kWh";
 		},
 		// Consumer groups have many palette colours per entity — a single neutral
 		// tooltip background reads better than picking one entity's colour.
@@ -135,40 +164,7 @@ export default defineComponent({
 			return this.series.filter((s, i) => (s.paletteIndex ?? i) === idx);
 		},
 		isBidirectional(): boolean {
-			for (const s of this.visibleSeries) {
-				let energy = 0;
-				let returnEnergy = 0;
-				for (const slot of s.data) {
-					energy += slot.energy;
-					returnEnergy += slot.returnEnergy;
-				}
-				if (energy > 0 && returnEnergy > 0) return true;
-			}
-			return false;
-		},
-		// Soft symmetric limit. Rounded up to an even-friendly nice number so
-		// splitNumber: 4 gives integer ticks ±X, ±X/2, 0.
-		bidirectionalLimit(): number {
-			let m = 0;
-			const factor = this.valueFactor;
-			for (const s of this.visibleSeries) {
-				for (const slot of s.data) {
-					const a = Math.abs(slot.energy * factor);
-					const b = Math.abs(slot.returnEnergy * factor);
-					if (a > m) m = a;
-					if (b > m) m = b;
-				}
-			}
-			if (m <= 0) return 2;
-			const mag = Math.pow(10, Math.floor(Math.log10(m)));
-			const r = m / mag;
-			let n;
-			if (r <= 2) n = 2;
-			else if (r <= 4) n = 4;
-			else if (r <= 6) n = 6;
-			else if (r <= 8) n = 8;
-			else n = 10;
-			return n * mag;
+			return BIDIRECTIONAL_GROUPS.has(this.group);
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -205,12 +201,16 @@ export default defineComponent({
 			// stacked segments stay visually distinguishable.
 			if (this.group === "loadpoint" || this.group === "meter") {
 				const mutedColor = colors.muted || this.color;
-				return this.series.map((s, i) => {
+				const titles: string[] = [];
+				for (const s of this.series) {
+					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
+				}
+				const palette = resolveColors(titles, store.state.deviceColors ?? {});
+				return this.series.map((s) => {
 					// Virtual "other consumers" entity renders in a neutral gray to set
 					// it apart from explicit meter entities.
 					if (s.virtual) return mutedColor;
-					const idx = s.paletteIndex ?? i;
-					return colors.palette[idx % colors.palette.length] || this.color;
+					return palette[s.name] || this.color;
 				});
 			}
 			if (this.series.length <= 1) return [this.color];
@@ -570,13 +570,15 @@ export default defineComponent({
 					},
 				},
 				yAxis: forecastYAxis({
-					...(this.isBidirectional
+					...(this.isBidirectional && this.axisLimit > 0
 						? {
-								min: -this.bidirectionalLimit,
-								max: this.bidirectionalLimit,
-								interval: this.bidirectionalLimit / 2,
+								min: -this.axisLimit,
+								max: this.axisLimit,
+								interval: this.axisLimit / 2,
 							}
-						: {}),
+						: this.useSmallUnit
+							? { max: this.axisLimit, interval: this.axisLimit / 4 }
+							: {}),
 					position: "right",
 					splitNumber: 3,
 					splitLine: {
@@ -601,15 +603,12 @@ export default defineComponent({
 					axisLabel: {
 						color: colors.muted || "",
 						hideOverlap: true,
-						formatter: (v: number) =>
-							this.period === PERIODS.DAY
-								? this.fmtW(
-										v * 1000,
-										this.useWatts ? POWER_UNIT.W : POWER_UNIT.KW,
-										false,
-										0
-									)
-								: this.fmtWh(v * 1000, POWER_UNIT.KW, false, 0),
+						formatter: (v: number): string => {
+							const unit = this.useSmallUnit ? POWER_UNIT.W : POWER_UNIT.KW;
+							return this.period === PERIODS.DAY
+								? this.fmtW(v * 1000, unit, false, this.axisDigits)
+								: this.fmtWh(v * 1000, unit, false, this.axisDigits);
+						},
 					},
 				}),
 				series: this.echartsSeries,
@@ -641,7 +640,7 @@ export default defineComponent({
 								yAxis: opt["yAxis"],
 								series: opt["series"],
 							},
-					fullReset ? { notMerge: true } : { replaceMerge: ["series"] }
+					fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
 				);
 				this.previousFocusedEntity = this.focusedEntity as number | null;
 				this.previousPeriod = this.period as PERIODS;

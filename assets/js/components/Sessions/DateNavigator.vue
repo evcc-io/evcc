@@ -7,6 +7,7 @@
 			<DateNavigatorButton
 				prev
 				:disabled="!hasPrevDay"
+				:highlight="highlightPrev"
 				:onClick="emitPrevDay"
 				data-testid="navigate-prev-day"
 			/>
@@ -37,6 +38,7 @@
 			<DateNavigatorButton
 				next
 				:disabled="!hasNextDay"
+				:highlight="highlightNext"
 				:onClick="emitNextDay"
 				data-testid="navigate-next-day"
 			/>
@@ -45,6 +47,7 @@
 			<DateNavigatorButton
 				prev
 				:disabled="!hasPrevMonth"
+				:highlight="highlightPrev"
 				:onClick="emitPrevMonth"
 				data-testid="navigate-prev-month"
 			/>
@@ -65,6 +68,7 @@
 			<DateNavigatorButton
 				next
 				:disabled="!hasNextMonth"
+				:highlight="highlightNext"
 				:onClick="emitNextMonth"
 				data-testid="navigate-next-month"
 			/>
@@ -73,6 +77,7 @@
 			<DateNavigatorButton
 				prev
 				:disabled="!hasPrevMonth"
+				:highlight="highlightPrev"
 				:onClick="emitPrevMonth"
 				data-testid="navigate-prev-year-month"
 			/>
@@ -92,6 +97,7 @@
 			<DateNavigatorButton
 				next
 				:disabled="!hasNextMonth"
+				:highlight="highlightNext"
 				:onClick="emitNextMonth"
 				data-testid="navigate-next-year-month"
 			/>
@@ -104,6 +110,7 @@
 			<DateNavigatorButton
 				prev
 				:disabled="!hasPrevYear"
+				:highlight="highlightPrev"
 				:onClick="emitPrevYear"
 				data-testid="navigate-prev-year"
 			/>
@@ -124,6 +131,7 @@
 			<DateNavigatorButton
 				next
 				:disabled="!hasNextYear"
+				:highlight="highlightNext"
 				:onClick="emitNextYear"
 				data-testid="navigate-next-year"
 			/>
@@ -137,6 +145,7 @@ import CustomSelect from "../Helper/CustomSelect.vue";
 import DateNavigatorButton from "./DateNavigatorButton.vue";
 import formatter from "@/mixins/formatter";
 import type { SelectOption } from "@/types/evcc";
+import { attachSwipeHandler } from "@/utils/swipe";
 
 function daysInMonth(year: number, month: number) {
 	return new Date(year, month, 0).getDate();
@@ -163,6 +172,14 @@ export default defineComponent({
 		showYear: Boolean,
 	},
 	emits: ["update-date"],
+	data() {
+		return {
+			detachSwipe: null as (() => void) | null,
+			highlightPrev: false,
+			highlightNext: false,
+			highlightTimer: null as ReturnType<typeof setTimeout> | null,
+		};
+	},
 	computed: {
 		hasPrevDay() {
 			const prev = new Date(this.year, this.month - 1, this.day - 1);
@@ -258,6 +275,17 @@ export default defineComponent({
 			return this.fmtMonthYear(date);
 		},
 	},
+	mounted() {
+		this.detachSwipe = attachSwipeHandler(document.body, {
+			onSwipeLeft: () => this.swipeNext(),
+			onSwipeRight: () => this.swipePrev(),
+			ignoreSelector: "canvas, [_echarts_instance_]",
+		});
+	},
+	unmounted() {
+		this.detachSwipe?.();
+		if (this.highlightTimer) clearTimeout(this.highlightTimer);
+	},
 	methods: {
 		emitPrevDay() {
 			const prev = new Date(this.year, this.month - 1, this.day - 1);
@@ -349,6 +377,29 @@ export default defineComponent({
 				month: undefined,
 				...(this.showDay ? { day: this.clampDay(y, this.month) } : {}),
 			});
+		},
+		flashHighlight(dir: "prev" | "next") {
+			if (this.highlightTimer) clearTimeout(this.highlightTimer);
+			this.highlightPrev = dir === "prev";
+			this.highlightNext = dir === "next";
+			this.highlightTimer = setTimeout(() => {
+				this.highlightPrev = false;
+				this.highlightNext = false;
+			}, 300);
+		},
+		swipePrev() {
+			if (this.showDay && this.hasPrevDay) this.emitPrevDay();
+			else if (this.showMonth && this.hasPrevMonth) this.emitPrevMonth();
+			else if (this.showYear && this.hasPrevYear) this.emitPrevYear();
+			else return;
+			this.flashHighlight("prev");
+		},
+		swipeNext() {
+			if (this.showDay && this.hasNextDay) this.emitNextDay();
+			else if (this.showMonth && this.hasNextMonth) this.emitNextMonth();
+			else if (this.showYear && this.hasNextYear) this.emitNextYear();
+			else return;
+			this.flashHighlight("next");
 		},
 	},
 });

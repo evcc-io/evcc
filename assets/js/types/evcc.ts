@@ -24,6 +24,8 @@ declare global {
 
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
+export type DeviceColors = Record<string, string>;
+
 export interface MqttConfig {
   broker: string;
   topic: string;
@@ -109,6 +111,7 @@ export interface State {
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
   siteTitle?: string;
+  deviceColors?: DeviceColors;
   vehicles: Record<string, Vehicle>;
   statistics?: Statistics;
   authDisabled?: boolean;
@@ -384,6 +387,7 @@ export enum CURRENCY {
   SEK = "SEK",
   ZAR = "ZAR",
   TRY = "TRY",
+  MYR = "MYR",
 }
 
 export enum ICON_SIZE {

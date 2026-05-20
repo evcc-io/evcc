@@ -36,4 +36,5 @@ const (
 	RemoteLastSeen     = "remoteLastSeen"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
+	DeviceColors       = "deviceColors"
 )

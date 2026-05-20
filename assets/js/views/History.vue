@@ -53,37 +53,16 @@
 					class="history-tile mb-4"
 					:data-testid="`history-section-${group}`"
 				>
-					<div class="d-flex align-items-baseline gap-3">
-						<h3
-							class="fw-normal my-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden history-tile-title flex-grow-1"
-						>
-							<span class="d-block no-wrap text-truncate">
-								{{ $t(`main.history.group.${group}`) }}
-							</span>
-							<small class="d-block no-wrap text-truncate">
-								{{ groupTotalLabel(group) }}
-							</small>
-						</h3>
-						<div
-							v-if="group === 'pv' && hasForecast && effectivePeriod === 'day'"
-							class="form-check form-switch mb-0 ms-auto forecast-toggle"
-							:style="{ '--forecast-color': groupColor('forecast') }"
-						>
-							<input
-								id="historyShowForecast"
-								v-model="showForecast"
-								class="form-check-input"
-								type="checkbox"
-								role="switch"
-							/>
-							<label
-								class="form-check-label text-muted ms-1"
-								for="historyShowForecast"
-							>
-								{{ $t("main.history.group.forecast") }}
-							</label>
-						</div>
-					</div>
+					<h3
+						class="fw-normal my-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden history-tile-title"
+					>
+						<span class="d-block no-wrap text-truncate">
+							{{ $t(`main.history.group.${group}`) }}
+						</span>
+						<small class="d-block no-wrap text-truncate">
+							{{ groupTotalLabel(group) }}
+						</small>
+					</h3>
 					<GroupChart
 						v-if="displayFrom && displayTo && displayPeriod"
 						:group="group"
@@ -96,37 +75,24 @@
 						"
 						:overlayColor="groupColor('forecast')"
 						:overlayLabel="$t('main.history.group.forecast')"
-						:showOverlay="group === 'pv' && displayPeriod === 'day' && showForecast"
+						:showOverlay="
+							group === 'pv' &&
+							displayPeriod === 'day' &&
+							hasForecast &&
+							(focusedEntity[group] ?? null) === null
+						"
 						:focusedEntity="focusedEntity[group] ?? null"
 						:period="displayPeriod"
 						:from="displayFrom"
 						:to="displayTo"
 					/>
-					<ul
-						v-if="hasEntityLegend(group)"
-						class="entity-legend p-0 mt-4 mb-0 d-flex flex-wrap column-gap-4 row-gap-2"
-					>
-						<li
-							v-for="legend in entityLegends(group)"
-							:key="legend.entityIndex"
-							class="entity-legend-item d-flex align-items-baseline gap-2 no-wrap"
-							:class="{
-								'entity-legend-item--dim': isDimmed(group, legend.entityIndex),
-							}"
-							role="button"
-							tabindex="0"
-							@click="toggleFocus(group, legend.entityIndex)"
-							@keydown.enter.prevent="toggleFocus(group, legend.entityIndex)"
-							@keydown.space.prevent="toggleFocus(group, legend.entityIndex)"
-						>
-							<span
-								class="entity-legend-dot align-self-center"
-								:style="{ backgroundColor: legend.color }"
-							></span>
-							<span class="text-nowrap">{{ legend.label }}</span>
-							<span class="text-muted text-nowrap">{{ legend.value }}</span>
-						</li>
-					</ul>
+					<LegendList
+						v-if="hasEntityLegend(group) || hasForecastLegend(group)"
+						class="mt-4"
+						:legends="legendsForGroup(group)"
+						:device-colors="deviceColors"
+						@focus="onLegendFocus(group, $event)"
+					/>
 				</section>
 				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
 					<a
@@ -155,9 +121,11 @@ import GroupChart, {
 	stepAlpha,
 } from "../components/History/GroupChart.vue";
 import type { Legend } from "../components/Sessions/types";
+import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor } from "../components/History/groups";
-import colors from "../colors";
+import colors, { resolveColors } from "../colors";
+import LegendList from "../components/Sessions/LegendList.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -176,6 +144,7 @@ export default defineComponent({
 		DateNavigator,
 		PeriodHeader,
 		GroupChart,
+		LegendList,
 	},
 	mixins: [formatter],
 	props: {
@@ -193,7 +162,6 @@ export default defineComponent({
 			loading: true,
 			interval: null as ReturnType<typeof setInterval> | null,
 			startDate: new Date(2020, 0, 1),
-			showForecast: true,
 			focusedEntity: {} as Record<string, number | null>,
 		};
 	},
@@ -201,6 +169,9 @@ export default defineComponent({
 		return { title: this.$t("main.history.title") };
 	},
 	computed: {
+		deviceColors(): DeviceColors {
+			return store.state.deviceColors ?? {};
+		},
 		effectivePeriod(): PERIODS {
 			return this.period && HISTORY_PERIODS.includes(this.period)
 				? (this.period as PERIODS)
@@ -283,23 +254,13 @@ export default defineComponent({
 		},
 		visibleGroups(): string[] {
 			return GROUP_ORDER.filter((g) => {
-				// Consumption uses `home` as the source of truth, so the section
-				// shows up whenever home has data, even without explicit meters.
+				// Consumption section follows `home` (the source of truth).
 				if (g === "meter") {
 					const home = this.seriesByGroup["home"];
-					if (
-						home?.some((s) =>
-							s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
-						)
-					) {
-						return true;
-					}
+					if (home?.some((s) => s.data.length > 0)) return true;
 				}
 				const list = this.seriesByGroup[g];
-				if (!list?.length) return false;
-				return list.some((s) =>
-					s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
-				);
+				return !!list?.some((s) => s.data.length > 0);
 			});
 		},
 		// Series shown in the chart. For the consumption (`meter`) group we append
@@ -358,6 +319,14 @@ export default defineComponent({
 				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
 			);
 		},
+		forecastTotalLabel(): string {
+			const list = this.seriesByGroup["forecast"] || [];
+			let sum = 0;
+			for (const s of list) {
+				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
+			}
+			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
+		},
 		csvLink(): string {
 			const params = new URLSearchParams({
 				format: "csv",
@@ -399,6 +368,30 @@ export default defineComponent({
 	},
 	methods: {
 		groupColor,
+		legendsForGroup(group: string): Legend[] {
+			const items = this.entityLegends(group);
+			const focused = this.focusedEntity[group] ?? null;
+			const list: Legend[] = items.map((l) => ({
+				...l,
+				focusable: true,
+				focusKey: l.entityIndex,
+				dim: focused !== null && focused !== l.entityIndex,
+			}));
+			if (this.hasForecastLegend(group)) {
+				list.push({
+					label: this.$t("main.history.group.forecast") as string,
+					color: groupColor("forecast"),
+					value: this.forecastTotalLabel,
+					type: "line",
+					dim: focused !== null,
+				});
+			}
+			return list;
+		},
+		onLegendFocus(group: string, legend: Legend) {
+			if (legend.focusKey == null) return;
+			this.toggleFocus(group, legend.focusKey as number);
+		},
 		hasEntityLegend(group: string): boolean {
 			const list = this.displaySeries(group);
 			if (!list.length) return false;
@@ -406,16 +399,29 @@ export default defineComponent({
 			if (group === "pv" || group === "battery") return list.length > 1;
 			return false;
 		},
+		hasForecastLegend(group: string): boolean {
+			return group === "pv" && this.hasForecast && this.effectivePeriod === PERIODS.DAY;
+		},
 		entityLegends(group: string): (Legend & { entityIndex: number })[] {
 			const list = this.displaySeries(group);
 			const baseColor = groupColor(group);
 			const n = list.length;
+			const isPickGroup = group === "loadpoint" || group === "meter";
+
+			// Build palette for pickable groups in displayed order so that user
+			// overrides take priority and autoassign skips taken palette entries.
+			let palette: Record<string, string> = {};
+			if (isPickGroup) {
+				const titles: string[] = [];
+				for (const s of list) {
+					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
+				}
+				palette = resolveColors(titles, this.deviceColors);
+			}
+
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
-				if (group === "loadpoint" || group === "meter") {
-					const idx = s.paletteIndex ?? i;
-					return colors.palette[idx % colors.palette.length] || baseColor;
-				}
+				if (isPickGroup) return palette[s.name] || baseColor;
 				return alphaColor(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
@@ -429,6 +435,7 @@ export default defineComponent({
 					label: s.name,
 					color: colorFor(i, s),
 					value: this.fmtWh(watts, POWER_UNIT.AUTO),
+					id: isPickGroup && !s.virtual ? s.name : undefined,
 				};
 			});
 		},
@@ -568,24 +575,6 @@ export default defineComponent({
 		opacity: 0.8;
 	}
 }
-.entity-legend {
-	list-style: none;
-}
-.entity-legend-item {
-	cursor: pointer;
-	transition: opacity 150ms;
-	user-select: none;
-}
-.entity-legend-item--dim {
-	opacity: 0.35;
-}
-.entity-legend-dot {
-	display: inline-block;
-	width: 1rem;
-	height: 1rem;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
 .history-csv-link {
 	text-decoration: none;
 }
@@ -593,14 +582,6 @@ export default defineComponent({
 .history-csv-link:focus {
 	color: var(--evcc-default-text);
 	text-decoration: underline;
-}
-.forecast-toggle .form-check-input:checked {
-	background-color: var(--forecast-color);
-	border-color: var(--forecast-color);
-}
-.forecast-toggle .form-check-input:focus {
-	border-color: var(--forecast-color);
-	box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--forecast-color) 25%, transparent);
 }
 .history-tile-title {
 	margin: 0 0 0.5rem;

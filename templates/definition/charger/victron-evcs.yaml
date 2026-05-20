@@ -3,7 +3,7 @@ products:
   - brand: Victron
     description:
       generic: EV Charging Station
-capabilities: ["1p3p", "meter"]
+capabilities: ["1p3p", "meter", "dim"]
 requirements:
   description:
     en: |
