@@ -4,12 +4,25 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/gorilla/mux"
 )
+
+// vehicleWriteLocks serializes write+read-back sequences per vehicle name,
+// so concurrent POSTs do not observe each other's interleaved state.
+var vehicleWriteLocks sync.Map // vehicle name -> *sync.Mutex
+
+func vehicleWriteLock(name string) *sync.Mutex {
+	if m, ok := vehicleWriteLocks.Load(name); ok {
+		return m.(*sync.Mutex)
+	}
+	actual, _ := vehicleWriteLocks.LoadOrStore(name, &sync.Mutex{})
+	return actual.(*sync.Mutex)
+}
 
 // minSocHandler updates min soc
 func minSocHandler(site site.API) http.HandlerFunc {
@@ -129,6 +142,11 @@ func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
+
+		// serialize set+read-back so concurrent POSTs return their own writes
+		mu := vehicleWriteLock(vars["name"])
+		mu.Lock()
+		defer mu.Unlock()
 
 		if err := planStrategyHandlerSetter(r, v.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
