@@ -1413,6 +1413,7 @@
     "meterstop": "Meter stop",
     "odometer": "Mileage",
     "price": "Price",
+    "soc": "Vehicle SoC",
     "started": "Started",
     "title": "Charging Session"
   },

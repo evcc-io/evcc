@@ -1413,6 +1413,7 @@
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
     "price": "Preis",
+    "soc": "Ladestand",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },

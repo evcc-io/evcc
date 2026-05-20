@@ -113,6 +113,21 @@
 							{{ fmtCo2Medium(session.co2PerKWh) }}
 						</td>
 					</tr>
+					<tr
+						v-if="session.socStart != null || session.socEnd != null"
+						data-testid="session-details-soc"
+					>
+						<th class="align-baseline">
+							{{ $t("session.soc") }}
+						</th>
+						<td>
+							{{
+								session.socStart != null ? fmtPercentage(session.socStart, 0) : "–"
+							}}
+							→
+							{{ session.socEnd != null ? fmtPercentage(session.socEnd, 0) : "–" }}
+						</td>
+					</tr>
 					<tr v-if="session.odometer" data-testid="session-details-odometer">
 						<th>
 							{{ $t("session.odometer") }}

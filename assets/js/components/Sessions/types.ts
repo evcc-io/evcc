@@ -10,6 +10,8 @@ export interface Session {
   meterStop: number;
   chargedEnergy: number;
   chargeDuration: number;
+  socStart: number | null;
+  socEnd: number | null;
   solarPercentage: number;
   price: number | null;
   pricePerKWh: number | null;
