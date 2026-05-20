@@ -1453,6 +1453,8 @@
       "odometer": "Mileage (km)",
       "price": "Price",
       "priceperkwh": "Price/kWh",
+      "socend": "SoC end (%)",
+      "socstart": "SoC start (%)",
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },

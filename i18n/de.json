@@ -1453,6 +1453,8 @@
       "odometer": "Kilometerstand (km)",
       "price": "Preis",
       "priceperkwh": "Preis/kWh",
+      "socend": "Ladestand Ende (%)",
+      "socstart": "Ladestand Start (%)",
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },

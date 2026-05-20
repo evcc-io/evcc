@@ -492,6 +492,9 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.updateSession(func(session *session.Session) {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
+			if soc := lp.vehicleSoc; soc > 0 {
+				session.SocStart = &soc
+			}
 		}
 	})
 }
