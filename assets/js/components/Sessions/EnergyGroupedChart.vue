@@ -4,7 +4,7 @@
 			<Doughnut :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center">
-			<LegendList :legends="legends" grid />
+			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
@@ -25,6 +25,7 @@ import { registerChartComponents, commonOptions, tooltipLabelColor } from "./cha
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
 import { GROUPS, type Session } from "./types";
+import type { DeviceColors } from "@/types/evcc";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
@@ -36,6 +37,7 @@ export default defineComponent({
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {}, solar: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		chartData() {
@@ -86,12 +88,14 @@ export default defineComponent({
 				maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e4 ? POWER_UNIT.MW : POWER_UNIT.KW;
 			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
 			const fmtValue = (value: number) => this.fmtWh(value * 1e3, unit);
+			const pickable = this.groupBy !== GROUPS.NONE;
 			return this.chartData.labels.map((label, index) => {
 				const dataValue = dataset.data[index] as number;
 				return {
 					label: label,
 					color: dataset.backgroundColor[index],
 					value: [fmtValue(dataValue), fmtShare(dataValue)],
+					id: pickable ? label || undefined : undefined,
 				};
 			});
 		},

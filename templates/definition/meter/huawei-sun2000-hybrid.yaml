@@ -141,20 +141,36 @@ render: |
   curtail:
     source: ifelse
     if:
-      source: sequence
+      source: convert
+      convert: bool2int
       set:
-      - source: const
-        value: {{ .curtailpercent }}
+        source: sequence
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 47418 # Maximum Feed Grid Power (0-100 %)
-            type: writesingle
-            encoding: uint16
-          scale: 10
-      - source: const
-        value: 7 # Power-limited grid connection (%)
+        - source: const
+          value: {{ .curtailpercent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47418 # Maximum Feed Grid Power (0-100 %)
+              type: writesingle
+              encoding: uint16
+            scale: 10
+        - source: const
+          value: 7 # Power-limited grid connection (%)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47415 # Active power control mode
+              type: writesingle
+              encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Unlimited 
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -162,16 +178,6 @@ render: |
             address: 47415 # Active power control mode
             type: writesingle
             encoding: uint16
-    else:
-      source: const
-      value: 0 # Unlimited 
-      set:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 47415 # Active power control mode
-          type: writesingle
-          encoding: uint16
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
