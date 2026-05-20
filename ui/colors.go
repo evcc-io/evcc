@@ -15,11 +15,8 @@ var colorsMu sync.RWMutex
 func GetDeviceColors() map[string]string {
 	colorsMu.RLock()
 	defer colorsMu.RUnlock()
-	var m map[string]string
+	m := map[string]string{}
 	_ = settings.Json(keys.DeviceColors, &m)
-	if m == nil {
-		m = map[string]string{}
-	}
 	return m
 }
 
