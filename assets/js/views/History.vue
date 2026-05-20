@@ -284,23 +284,13 @@ export default defineComponent({
 		},
 		visibleGroups(): string[] {
 			return GROUP_ORDER.filter((g) => {
-				// Consumption uses `home` as the source of truth, so the section
-				// shows up whenever home has data, even without explicit meters.
+				// Consumption section follows `home` (the source of truth).
 				if (g === "meter") {
 					const home = this.seriesByGroup["home"];
-					if (
-						home?.some((s) =>
-							s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
-						)
-					) {
-						return true;
-					}
+					if (home?.some((s) => s.data.length > 0)) return true;
 				}
 				const list = this.seriesByGroup[g];
-				if (!list?.length) return false;
-				return list.some((s) =>
-					s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
-				);
+				return !!list?.some((s) => s.data.length > 0);
 			});
 		},
 		// Series shown in the chart. For the consumption (`meter`) group we append
