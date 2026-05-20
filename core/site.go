@@ -354,7 +354,7 @@ func (site *Site) restoreSettings() error {
 		site.SetGeoLocation(geoLocation)
 	}
 
-  // drop legacy accumulator-based forecast settings (now stored via metrics collector)
+	// drop legacy accumulator-based forecast settings (now stored via metrics collector)
 	settings.Delete("solarAccForecast")
 	settings.Delete("solarAccYield")
 	settings.Delete("solarAccDay")
