@@ -169,19 +169,13 @@ test.describe("consumption breakdown", () => {
     const consumption = section(page, "meter");
     await expect(consumption).toBeVisible();
 
-    // Section header total comes from `home`, not the sum of meters.
+    // Section total = home, not sum of meters.
     await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
 
-    // Entity legend lists Others (virtual) + explicit meters.
-    const legend = consumption.locator(".legend-item");
-    await expect(legend).toHaveCount(3);
-    await expect(consumption).toContainText("Others");
-    await expect(consumption).toContainText("Kitchen");
-    await expect(consumption).toContainText("Office");
-
-    // Per-entity totals via fmtWh + POWER_UNIT.AUTO.
-    await expect(consumption).toContainText("400 Wh"); // Kitchen
-    await expect(consumption).toContainText("300 Wh"); // Office + Others both 0.3 kWh
+    // Others (virtual) + explicit meters.
+    await expect(consumption.getByRole("button", { name: "Others 300 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Office 300 Wh" })).toBeVisible();
   });
 
   test("entity focus rescales axis and resets on unfocus", async ({ page }) => {
