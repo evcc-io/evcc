@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/updater"
+	"github.com/evcc-io/evcc/ui"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/pipe"
@@ -360,6 +361,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
+	valueChan <- util.Param{Key: keys.DeviceColors, Val: ui.GetDeviceColors()}
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
 		Config:     conf.EEBus.Redacted(),
 		Status:     eebus.GetStatus(),
@@ -400,7 +402,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
-	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath()}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}

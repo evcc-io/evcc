@@ -40,6 +40,10 @@ type ocppTestSuite struct {
 func (suite *ocppTestSuite) SetupSuite() {
 	ocpp.Timeout = 5 * time.Second
 
+	// the simulated charge points never send a spontaneous BootNotification,
+	// so shorten the proactive-trigger delay to avoid waiting 5s per charge point
+	ocpp.TriggerBootDelay = 100 * time.Millisecond
+
 	// setup cs so we can overwrite logger afterwards
 	_ = ocpp.Instance()
 	suite.logger = &ocppLogger{t: suite.T()}
@@ -54,9 +58,11 @@ func (suite *ocppTestSuite) TearDownSuite() {
 }
 
 func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client) {
-	// set a handler for all callback functions
+	// Buffered generously: handlers in ocpp_test_handler.go dispatch sends via
+	// `go func() { triggerC <- … }()`, so a small buffer leaks one extra
+	// goroutine per concurrent trigger until the drain catches up.
 	handler := &ChargePointHandler{
-		triggerC: make(chan remotetrigger.MessageTrigger, 1),
+		triggerC: make(chan remotetrigger.MessageTrigger, 16),
 	}
 
 	// ocppj endpoint with handler
@@ -71,12 +77,34 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 	cp.SetRemoteTriggerHandler(handler)
 	cp.SetSmartChargingHandler(handler)
 
-	// let cs handle the trigger messages
+	// let cs handle the trigger messages; exit on done so we do not leak a
+	// drain goroutine into subsequent subtests on the shared ocpp.Instance().
+	// Cannot close triggerC because the async senders in ocpp_test_handler.go
+	// would panic on `send on closed channel`.
+	done := make(chan struct{})
+	finished := make(chan struct{})
 	go func() {
-		for msg := range handler.triggerC {
-			suite.handleTrigger(cp, connectorId, msg)
+		defer close(finished)
+		for {
+			select {
+			case <-done:
+				return
+			case msg := <-handler.triggerC:
+				suite.handleTrigger(cp, connectorId, msg)
+			}
 		}
 	}()
+
+	suite.T().Cleanup(func() {
+		if cp.IsConnected() {
+			cp.Stop()
+		}
+		close(done)
+		// wait for the drain goroutine to fully exit before the test method
+		// returns: handleTrigger logs via suite.T(), which panics if called
+		// after the test has completed.
+		<-finished
+	})
 
 	return cp, endpoint
 }

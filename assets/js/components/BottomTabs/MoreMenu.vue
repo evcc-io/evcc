@@ -70,7 +70,7 @@
 			Optimize 🧪
 		</router-link>
 		<router-link v-if="experimental" class="dropdown-item" to="/history" active-class="active">
-			History 🧪
+			{{ $t("main.history.title") }} 🧪
 		</router-link>
 	</div>
 </template>
