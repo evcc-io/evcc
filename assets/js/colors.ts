@@ -36,27 +36,27 @@ const colors: {
   export: null,
   background: null,
   light: null,
-  selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
+  selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
     // Dynamic palette (vehicles, loadpoints, …): optimized for neighbor contrast, avoids overlap with system colors (solar, battery, grid, …).
-    "#0EA5E9FF", // Sky
-    "#EC4899FF", // Pink
-    "#34D399FF", // Mint
-    "#F97316FF", // Orange
-    "#7C3AEDFF", // Violet
-    "#84CC16FF", // Lime
-    "#F43F5EFF", // Rose
-    "#2563EBFF", // Blue
-    "#FACC15FF", // Yellow
-    "#D946EFFF", // Magenta
-    "#10B981FF", // Emerald
-    "#1E40AFFF", // Royal
-    "#BE185DFF", // Crimson
-    "#F59E0BFF", // Marigold
-    "#6366F1FF", // Indigo
-    "#14B8A6FF", // Teal
-    "#A855F7FF", // Lavender
-    "#DC2626FF", // Red
+    "#0EA5E9", // Sky
+    "#EC4899", // Pink
+    "#34D399", // Mint
+    "#F97316", // Orange
+    "#7C3AED", // Violet
+    "#84CC16", // Lime
+    "#F43F5E", // Rose
+    "#2563EB", // Blue
+    "#FACC15", // Yellow
+    "#D946EF", // Magenta
+    "#10B981", // Emerald
+    "#1E40AF", // Royal
+    "#BE185D", // Crimson
+    "#F59E0B", // Marigold
+    "#6366F1", // Indigo
+    "#14B8A6", // Teal
+    "#A855F7", // Lavender
+    "#DC2626", // Red
   ],
 });
 
@@ -70,16 +70,15 @@ const setAlpha = (color: string | null, alpha: string): string | undefined => {
   return c;
 };
 
-// regex for raw hex (no leading #): 6 or 8 digits, used for input validation
-export const HEX_RE = /^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+// regex for raw hex (no leading #): 6 digits, used for input validation
+export const HEX_RE = /^[0-9a-fA-F]{6}$/;
 
-// normalize hex to uppercase 8-digit #RRGGBBAA, appending FF when alpha missing
+// normalize hex to uppercase 7-char #RRGGBB (strips alpha if present)
 export const normalizeHex = (color?: string | null): string => {
   if (!color) return "";
   let c = color.trim().toUpperCase();
   if (!c.startsWith("#")) c = "#" + c;
-  if (c.length === 7) c += "FF";
-  return c.slice(0, 9);
+  return c.slice(0, 7);
 };
 
 // override wins; rest get next free palette entry, wrap-around when exhausted

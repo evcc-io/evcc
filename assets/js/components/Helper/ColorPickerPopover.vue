@@ -40,7 +40,7 @@
 						:value="hexInputValue"
 						:aria-label="$t('colors.hex')"
 						spellcheck="false"
-						maxlength="8"
+						maxlength="6"
 						@input="onHexInput"
 						@focus="hexFocused = true"
 						@blur="onHexBlur"
@@ -110,13 +110,11 @@ export default defineComponent({
 			return normalizeHex(this.color);
 		},
 		nativeColorValue(): string {
-			return this.customHex.slice(0, 7) || "#000000";
+			return this.customHex || "#000000";
 		},
 		matchesPalette(): boolean {
 			if (!this.customHex) return false;
-			return this.palette.some(
-				(p) => normalizeHex(p).slice(0, 7) === this.customHex.slice(0, 7)
-			);
+			return this.palette.some((p) => normalizeHex(p) === this.customHex);
 		},
 		mode(): "auto" | "palette" | "custom" {
 			if (this.hexFocused) return "custom";
@@ -150,7 +148,7 @@ export default defineComponent({
 	methods: {
 		isSwatchSelected(hex: string): boolean {
 			if (!this.customHex) return false;
-			return normalizeHex(hex).slice(0, 7) === this.customHex.slice(0, 7);
+			return normalizeHex(hex) === this.customHex;
 		},
 		pick(hex: string) {
 			this.$emit("update:color", hex);
@@ -248,11 +246,10 @@ export default defineComponent({
 }
 .footer-row {
 	display: grid;
-	grid-template-columns: repeat(6, 1fr);
+	grid-template-columns: 1fr 1fr;
 	gap: 0.35rem;
 }
 .auto-btn {
-	grid-column: span 2;
 	padding: 0.2rem 0.55rem;
 	font-size: 0.7rem;
 	letter-spacing: 0.06em;
@@ -262,7 +259,6 @@ export default defineComponent({
 	border-color: var(--evcc-default-text) !important;
 }
 .custom-input-wrap {
-	grid-column: span 4;
 	padding: 0.15rem 0.5rem;
 	gap: 0.4rem;
 	min-width: 0;

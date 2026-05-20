@@ -44,7 +44,7 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   const popover = page.getByRole("dialog");
   await expect(popover).toBeVisible();
   // palette swatches have title=hex
-  await popover.getByTitle("#EC4899FF").click();
+  await popover.getByTitle("#EC4899").click();
   await page.keyboard.press("Escape");
 
   await expectLegendColor(page, "Garage", PINK);

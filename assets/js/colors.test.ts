@@ -43,8 +43,8 @@ describe("resolveColors", () => {
   });
 
   it("respects explicit override", () => {
-    const res = resolveColors(["a", "b"], { a: "#123456FF" });
-    expect(res["a"]).toBe("#123456FF");
+    const res = resolveColors(["a", "b"], { a: "#123456" });
+    expect(res["a"]).toBe("#123456");
     expect(res["b"]).toBe(palette[0]);
   });
 
@@ -62,9 +62,9 @@ describe("resolveColors", () => {
     expect(res["b"]).toBe(palette[1]);
   });
 
-  it("normalizes alpha and case when matching taken colors", () => {
-    // override uses lowercase 6-digit; should still skip the matching palette entry
-    const lower = palette[0].slice(0, 7).toLowerCase();
+  it("normalizes case when matching taken colors", () => {
+    // override uses lowercase; should still skip the matching palette entry
+    const lower = palette[0].toLowerCase();
     const res = resolveColors(["a", "b"], { a: lower });
     expect(res["a"]).toBe(lower);
     expect(res["b"]).toBe(palette[1]);

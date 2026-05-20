@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/ui"
 )
 
-var hexColorRE = regexp.MustCompile(`^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$`)
+var hexColorRE = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 
 // updateDeviceColor sets/removes a single title→hex association.
 func updateDeviceColor(site site.API) http.HandlerFunc {
@@ -30,14 +30,9 @@ func updateDeviceColor(site site.API) http.HandlerFunc {
 			return
 		}
 		color := req.Color
-		if color != "" {
-			if !hexColorRE.MatchString(color) {
-				jsonError(w, http.StatusBadRequest, errors.New("invalid hex color"))
-				return
-			}
-			if len(color) == 7 {
-				color += "FF" // normalize to 8-digit
-			}
+		if color != "" && !hexColorRE.MatchString(color) {
+			jsonError(w, http.StatusBadRequest, errors.New("invalid hex color"))
+			return
 		}
 
 		m := ui.GetDeviceColors()
