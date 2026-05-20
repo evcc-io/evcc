@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/evcc-io/evcc/core/colors"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/ui"
 )
 
 var hexColorRE = regexp.MustCompile(`^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$`)
@@ -40,7 +40,7 @@ func updateDeviceColor(site site.API) http.HandlerFunc {
 			}
 		}
 
-		m := colors.Get()
+		m := ui.GetDeviceColors()
 		m[req.Title] = color
 
 		// clone — Publish serializes async
@@ -50,7 +50,7 @@ func updateDeviceColor(site site.API) http.HandlerFunc {
 		if color == "" {
 			delete(m, req.Title)
 		}
-		if err := colors.Save(m); err != nil {
+		if err := ui.SaveDeviceColors(m); err != nil {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
 		}
