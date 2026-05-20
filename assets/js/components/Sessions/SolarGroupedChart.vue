@@ -18,6 +18,7 @@ import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 import { GROUPS, type Session } from "./types.ts";
+import type { DeviceColors } from "@/types/evcc";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
@@ -32,7 +33,7 @@ export default defineComponent({
 			default: GROUPS.LOADPOINT,
 		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
-		deviceColors: { type: Object, default: () => ({}) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		chartData() {

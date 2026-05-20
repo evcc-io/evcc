@@ -1,4 +1,5 @@
 import { reactive } from "vue";
+import type { DeviceColors } from "./types/evcc";
 
 // alternatives
 // const COLORS = [ "#40916C", "#52B788", "#74C69D", "#95D5B2", "#B7E4C7", "#D8F3DC", "#081C15", "#1B4332", "#2D6A4F"];
@@ -82,13 +83,10 @@ export const normalizeHex = (color?: string | null): string => {
 };
 
 // override wins; rest get next free palette entry, wrap-around when exhausted
-export function resolveColors(
-  ids: string[],
-  overrides: Record<string, string> = {}
-): Record<string, string> {
+export function resolveColors(ids: string[], overrides: DeviceColors = {}): DeviceColors {
   const taken = new Set(Object.values(overrides).map(normalizeHex));
   const free = colors.palette.filter((c) => !taken.has(normalizeHex(c)));
-  const result: Record<string, string> = {};
+  const result: DeviceColors = {};
   let idx = 0;
   for (const id of ids) {
     const ov = overrides[id];

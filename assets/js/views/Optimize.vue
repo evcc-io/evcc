@@ -192,7 +192,7 @@ export default defineComponent({
 			}
 		},
 		deviceColors() {
-			return store.deviceColors.value;
+			return store.state.deviceColors ?? {};
 		},
 		batteryTitles(): string[] {
 			const details = this.evopt?.details?.batteryDetails || [];
@@ -202,7 +202,7 @@ export default defineComponent({
 		},
 		batteryColors() {
 			if (!this.evopt?.res.batteries) return [];
-			const palette = resolveColors(this.batteryTitles, store.deviceColors.value);
+			const palette = resolveColors(this.batteryTitles, this.deviceColors);
 			return this.batteryTitles.map((t) => palette[t] || "");
 		},
 		dimmedBatteryColors() {

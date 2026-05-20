@@ -25,6 +25,7 @@ import { registerChartComponents, commonOptions, tooltipLabelColor } from "./cha
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
 import { GROUPS, type Session } from "./types";
+import type { DeviceColors } from "@/types/evcc";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
@@ -36,7 +37,7 @@ export default defineComponent({
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {}, solar: {} }) },
-		deviceColors: { type: Object, default: () => ({}) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		chartData() {

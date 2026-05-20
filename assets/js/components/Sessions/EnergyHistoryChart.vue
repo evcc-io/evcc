@@ -27,6 +27,7 @@ import LegendList from "./LegendList.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
 import { GROUPS, PERIODS, type Session } from "./types";
+import type { DeviceColors } from "@/types/evcc";
 
 registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
 
@@ -39,7 +40,7 @@ export default defineComponent({
 		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
 		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
-		deviceColors: { type: Object, default: () => ({}) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		firstDay() {

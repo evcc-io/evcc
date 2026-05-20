@@ -68,6 +68,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import type { Legend } from "./types";
+import type { DeviceColors } from "@/types/evcc";
 import ColorPickerPopover from "../Helper/ColorPickerPopover.vue";
 import api from "../../api";
 
@@ -78,7 +79,7 @@ export default defineComponent({
 		legends: Array as PropType<Legend[]>,
 		grid: Boolean,
 		smallEqualWidths: Boolean,
-		deviceColors: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	emits: ["focus"],
 	data() {

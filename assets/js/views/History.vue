@@ -121,6 +121,7 @@ import GroupChart, {
 	stepAlpha,
 } from "../components/History/GroupChart.vue";
 import type { Legend } from "../components/Sessions/types";
+import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor } from "../components/History/groups";
 import colors, { resolveColors } from "../colors";
@@ -168,8 +169,8 @@ export default defineComponent({
 		return { title: this.$t("main.history.title") };
 	},
 	computed: {
-		deviceColors(): Record<string, string> {
-			return store.deviceColors.value;
+		deviceColors(): DeviceColors {
+			return store.state.deviceColors ?? {};
 		},
 		effectivePeriod(): PERIODS {
 			return this.period && HISTORY_PERIODS.includes(this.period)
@@ -425,7 +426,7 @@ export default defineComponent({
 				for (const s of list) {
 					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
 				}
-				palette = resolveColors(titles, store.deviceColors.value);
+				palette = resolveColors(titles, this.deviceColors);
 			}
 
 			const colorFor = (i: number, s: HistorySeries) => {

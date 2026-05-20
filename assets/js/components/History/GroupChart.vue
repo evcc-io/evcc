@@ -216,7 +216,7 @@ export default defineComponent({
 				for (const s of this.series) {
 					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
 				}
-				const palette = resolveColors(titles, store.deviceColors.value);
+				const palette = resolveColors(titles, store.state.deviceColors ?? {});
 				return this.series.map((s) => {
 					// Virtual "other consumers" entity renders in a neutral gray to set
 					// it apart from explicit meter entities.

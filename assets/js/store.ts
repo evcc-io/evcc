@@ -58,14 +58,10 @@ const deviceTitles = computed(() => {
   return map;
 });
 
-// title → hex overrides as published by the backend
-const deviceColors = computed<Record<string, string>>(() => state.deviceColors ?? {});
-
 export interface Store {
   state: State; // raw state from websocket
   uiLoadpoints: typeof uiLoadpoints;
   deviceTitles: typeof deviceTitles;
-  deviceColors: typeof deviceColors;
   offline(value: boolean): void;
   update(msg: any): void;
   reset(): void;
@@ -75,7 +71,6 @@ const store: Store = {
   state,
   uiLoadpoints,
   deviceTitles,
-  deviceColors,
   offline(value: boolean) {
     state.offline = value;
   },

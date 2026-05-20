@@ -28,7 +28,7 @@ import LegendList from "./LegendList.vue";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { TYPES, GROUPS, PERIODS, type Session } from "./types";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, type DeviceColors } from "@/types/evcc";
 
 registerChartComponents([
 	BarController,
@@ -52,7 +52,7 @@ export default defineComponent({
 		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
-		deviceColors: { type: Object, default: () => ({}) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 		suggestedMaxAvgCost: { type: Number, default: 0 },
 		suggestedMaxCost: { type: Number, default: 0 },
 	},

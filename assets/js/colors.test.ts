@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import colors, { dimColor, lighterColor, fullColor, resolveColors } from "./colors";
+import type { DeviceColors } from "./types/evcc";
 
 describe("setAlpha helpers", () => {
   it("appends alpha to 6-digit hex", () => {
@@ -78,7 +79,7 @@ describe("resolveColors", () => {
   });
 
   it("with every palette entry overridden, autoassign wraps palette", () => {
-    const overrides: Record<string, string> = {};
+    const overrides: DeviceColors = {};
     palette.forEach((c, i) => (overrides[`o${i}`] = c));
     const ids = [...Object.keys(overrides), "extra"];
     const res = resolveColors(ids, overrides);

@@ -504,7 +504,7 @@ export default defineComponent({
 			return this.csvHrefLink();
 		},
 		deviceColors() {
-			return store.deviceColors.value;
+			return store.state.deviceColors ?? {};
 		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
@@ -542,7 +542,7 @@ export default defineComponent({
 				return ranked;
 			};
 
-			const overrides = store.deviceColors.value;
+			const overrides = this.deviceColors;
 			const loadpointColors = resolveColors(
 				orderedKeys(aggregateEnergy(GROUPS.LOADPOINT), GROUPS.LOADPOINT),
 				overrides
