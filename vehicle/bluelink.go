@@ -62,7 +62,7 @@ func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
 			LoginFormHost:     "https://au-apigw.ccs.hyundai.com.au:8080",
 			TokenURL:          "/api/v1/user/oauth2/token",
 			Brand:             "hyundai",
-			APIHost: 		   "au-apigw.ccs.hyundai.com.au:8080",
+			APIHost:           "au-apigw.ccs.hyundai.com.au:8080",
 			UseBasicAuth:      true,
 		}
 	default:

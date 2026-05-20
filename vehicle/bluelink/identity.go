@@ -27,11 +27,11 @@ const (
 	LoginURL           = "/api/v1/user/signin"
 	TokenURL           = "/auth/api/v2/user/oauth2/token"
 	// AU region constants (sourced from hyundai_kia_connect_api KiaUvoApiAU.py)
-    HyundaiAUBaseURI          = "https://au-apigw.ccs.hyundai.com.au:8080"
-    HyundaiAUCCSPServiceID    = "855c72df-dfd7-4230-ab03-67cbf902bb1c"
-    HyundaiAUCCSPAppID        = "f9ccfdac-a48d-4c57-bd32-9116963c24ed"
-    HyundaiAUBasicToken       = "Basic ODU1YzcyZGYtZGZkNy00MjMwLWFiMDMtNjdjYmY5MDJiYjFjOmU2ZmJ3SE0zMllOYmhRbDBwdmlhUHAzcmY0dDNTNms5MWVjZUEzTUpMZGJkVGhDTw=="
-    HyundaiAUCfb              = "nGDHng3k4Cg9gWV+C+A6Yk/ecDopUNTkGmDpr2qVKAQXx9bvY2/YLoHPfObliK32mZQ="
+	HyundaiAUBaseURI       = "https://au-apigw.ccs.hyundai.com.au:8080"
+	HyundaiAUCCSPServiceID = "855c72df-dfd7-4230-ab03-67cbf902bb1c"
+	HyundaiAUCCSPAppID     = "f9ccfdac-a48d-4c57-bd32-9116963c24ed"
+	HyundaiAUBasicToken    = "Basic ODU1YzcyZGYtZGZkNy00MjMwLWFiMDMtNjdjYmY5MDJiYjFjOmU2ZmJ3SE0zMllOYmhRbDBwdmlhUHAzcmY0dDNTNms5MWVjZUEzTUpMZGJkVGhDTw=="
+	HyundaiAUCfb           = "nGDHng3k4Cg9gWV+C+A6Yk/ecDopUNTkGmDpr2qVKAQXx9bvY2/YLoHPfObliK32mZQ="
 )
 
 // Config is the bluelink API configuration
@@ -46,7 +46,7 @@ type Config struct {
 	LoginFormHost     string
 	Brand             string
 	TokenURL          string
-	APIHost			  string // used as Host header for AU-style APIs
+	APIHost           string // used as Host header for AU-style APIs
 	UseBasicAuth      bool
 }
 
@@ -115,40 +115,40 @@ func (v *Identity) getDeviceID() (string, error) {
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	var res oauth2.Token
 
-    tokenURL := TokenURL
+	tokenURL := TokenURL
 	if v.config.TokenURL != "" {
-    	tokenURL = v.config.TokenURL
+		tokenURL = v.config.TokenURL
 	}
 	uri := v.config.LoginFormHost + tokenURL
 
-    headers := map[string]string{
-        "Content-type": "application/x-www-form-urlencoded",
-        "User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
-    }
+	headers := map[string]string{
+		"Content-type": "application/x-www-form-urlencoded",
+		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
+	}
 
-    data := url.Values{
-        "grant_type":    {"refresh_token"},
-        "refresh_token": {token.RefreshToken},
-    }
+	data := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {token.RefreshToken},
+	}
 
-    // EU uses client_id/secret in body; AU uses Basic auth header
-    if v.config.UseBasicAuth {
-        stamp, err := v.stamp()
-        if err != nil {
-            return nil, err
-        }
-        headers["Authorization"] = "Basic " + v.config.BasicToken
-        headers["Stamp"] = stamp
-        headers["User-Agent"] = "okhttp/3.12.0"
-        headers["Host"] = v.config.APIHost
-    } else {
-        data.Set("client_id", v.config.CCSPServiceID)
-        data.Set("client_secret", v.config.CCSPServiceSecret)
-    }
+	// EU uses client_id/secret in body; AU uses Basic auth header
+	if v.config.UseBasicAuth {
+		stamp, err := v.stamp()
+		if err != nil {
+			return nil, err
+		}
+		headers["Authorization"] = "Basic " + v.config.BasicToken
+		headers["Stamp"] = stamp
+		headers["User-Agent"] = "okhttp/3.12.0"
+		headers["Host"] = v.config.APIHost
+	} else {
+		data.Set("client_id", v.config.CCSPServiceID)
+		data.Set("client_secret", v.config.CCSPServiceSecret)
+	}
 
-    req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
-    if err != nil {
-        return nil, err
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
+	if err != nil {
+		return nil, err
 	}
 
 	err = v.DoJSON(req, &res)

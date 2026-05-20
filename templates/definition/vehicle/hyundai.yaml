@@ -26,4 +26,4 @@ render: |
   type: hyundai
   {{ include "vehicle-base" . }}
   {{ include "vehicle-language" . }}
-  region: {{ .region }} 
+  region: {{ .region }}
