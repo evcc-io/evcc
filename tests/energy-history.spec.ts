@@ -173,7 +173,7 @@ test.describe("consumption breakdown", () => {
     await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
 
     // Entity legend lists Others (virtual) + explicit meters.
-    const legend = consumption.getByRole("button");
+    const legend = consumption.locator(".legend-item");
     await expect(legend).toHaveCount(3);
     await expect(consumption).toContainText("Others");
     await expect(consumption).toContainText("Kitchen");
