@@ -4,6 +4,7 @@ products:
     description:
       generic: Nibe S-Series (SG Ready)
 group: heating
+capabilities: ["dim"]
 requirements:
   description:
     de: |

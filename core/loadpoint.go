@@ -1307,7 +1307,9 @@ func (lp *Loadpoint) fastCharging() error {
 			}
 		}
 
-		if err := lp.scalePhasesIfAvailable(phases); err != nil {
+		// ignore api.ErrNotAvailable: the phase switch could not be performed
+		// right now, continue with the current phase configuration
+		if err := lp.scalePhasesIfAvailable(phases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			return err
 		}
 	}
@@ -1353,7 +1355,13 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetDisableDelay() {
 			if err := lp.scalePhases(1); err != nil {
-				lp.log.ERROR.Println(err)
+				// a charger may report it cannot switch phases right now
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
+					lp.log.ERROR.Println(err)
+				}
+				// switch did not complete - phase count is unchanged
+				return phases
 			}
 			return 1
 		}
@@ -1382,7 +1390,13 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetEnableDelay() {
 			if err := lp.scalePhases(3); err != nil {
-				lp.log.ERROR.Println(err)
+				// a charger may report it cannot switch phases right now
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
+					lp.log.ERROR.Println(err)
+				}
+				// switch did not complete - phase count is unchanged
+				return phases
 			}
 			return 3
 		}
@@ -2026,7 +2040,13 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		err = lp.setLimit(0)
 
 	case lp.scalePhasesRequired():
-		err = lp.scalePhases(lp.phasesConfigured)
+		if err = lp.scalePhases(lp.phasesConfigured); errors.Is(err, api.ErrNotAvailable) {
+			// the charger cannot switch phases right now (e.g. EEBus charger
+			// with an ISO 15118 vehicle). Adopt the configured phase count so
+			// the switch is not re-attempted on every cycle (issue #29974).
+			lp.SetPhases(lp.phasesConfigured)
+			err = nil
+		}
 
 	case mode == api.ModeOff:
 		var current float64

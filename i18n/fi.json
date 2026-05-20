@@ -864,32 +864,13 @@
       "validate": "vahvista"
     },
     "vehicle": {
-      "cancel": "Peruuta",
-      "chargingSettings": "Laturin asetukset",
-      "defaultMode": "Oletustila",
-      "defaultModeHelp": "Lataustila ajoneuvoa kytkettäessä.",
-      "delete": "Poista",
       "generic": "Muut integraatiot",
-      "identifiers": "RFID-tunnisteet",
-      "identifiersHelp": "Lista RFID-tunnisteista, jotka yksilöivät ajoneuvon. Yksi tunniste/rivi. Nykyinen tunniste löytyy kyseisen latausaseman yleisnäkymästä.",
-      "maximumCurrent": "Maksimivirta",
-      "maximumCurrentHelp": "Täytyy olla minimivirtaa suurempi.",
-      "maximumPhases": "Vaiheiden maksimimäärä",
-      "maximumPhasesHelp": "Kuinka monella vaiheella ajoneuvo voi vastaanottaa latausta? Tietoa käytetään minimiaurikosähkön ylituotannon laskemiseen ja latauskeston aikataulusuunnitteluun.",
-      "maximumPower": "Maksimilatausteho",
-      "maximumPowerHelp": "Maksimiteho, jonka ajoneuvo voi käyttää",
-      "minimumCurrent": "Minimivirta",
-      "minimumCurrentHelp": "Aseta arvoksi alle 6A ainoastaan jos tiedät mitä olet tekemässä.",
       "online": "Ajoneuvot, joissa API-käyttöliittymä",
       "primary": "Yleiset intergraatiot",
-      "priority": "Prioriteetti",
-      "priorityHelp": "Korkeampi prioriteetti merkitsee, että ajoneuvo saa etuoikeuden aurinkosähkön ylituottoon.",
-      "save": "Tallenna",
       "scooter": "Skootteri",
       "template": "Valmistaja",
       "titleAdd": "Lisää ajoneuvo",
-      "titleEdit": "Muokkaa ajoneuvoa",
-      "validateSave": "Vahvista ja tallenna"
+      "titleEdit": "Muokkaa ajoneuvoa"
     }
   },
   "footer": {
