@@ -13,7 +13,8 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 } from "../Forecast/echarts";
-import colors, { lighterColor } from "@/colors";
+import colors, { lighterColor, resolveColors } from "@/colors";
+import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
@@ -204,12 +205,16 @@ export default defineComponent({
 			// stacked segments stay visually distinguishable.
 			if (this.group === "loadpoint" || this.group === "meter") {
 				const mutedColor = colors.muted || this.color;
-				return this.series.map((s, i) => {
+				const titles: string[] = [];
+				for (const s of this.series) {
+					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
+				}
+				const palette = resolveColors(titles, store.state.deviceColors ?? {});
+				return this.series.map((s) => {
 					// Virtual "other consumers" entity renders in a neutral gray to set
 					// it apart from explicit meter entities.
 					if (s.virtual) return mutedColor;
-					const idx = s.paletteIndex ?? i;
-					return colors.palette[idx % colors.palette.length] || this.color;
+					return palette[s.name] || this.color;
 				});
 			}
 			if (this.series.length <= 1) return [this.color];

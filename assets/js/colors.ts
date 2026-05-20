@@ -1,4 +1,5 @@
 import { reactive } from "vue";
+import type { DeviceColors } from "./types/evcc";
 
 // alternatives
 // const COLORS = [ "#40916C", "#52B788", "#74C69D", "#95D5B2", "#B7E4C7", "#D8F3DC", "#081C15", "#1B4332", "#2D6A4F"];
@@ -35,25 +36,27 @@ const colors: {
   export: null,
   background: null,
   light: null,
-  selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
+  selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
     // Dynamic palette (vehicles, loadpoints, …): optimized for neighbor contrast, avoids overlap with system colors (solar, battery, grid, …).
-    "#06B6D4FF", // Cyan
-    "#2B7FFFFF", // Blue
-    "#6366F1FF", // Indigo
-    "#A855F7FF", // Violet
-    "#D946EFFF", // Magenta
-    "#EC4899FF", // Pink
-    "#FB7185FF", // Coral
-    "#475569FF", // Slate
-    "#1E40AFFF", // Royal
-    "#6D28D9FF", // Purple
-    "#BE185DFF", // Crimson
-    "#D2691EFF", // Sienna
-    "#67E8F9FF", // Glacier
-    "#C084FCFF", // Lilac
-    "#FFD580FF", // Sand
-    "#94A3B8FF", // Steel
+    "#0EA5E9", // Sky
+    "#EC4899", // Pink
+    "#34D399", // Mint
+    "#F97316", // Orange
+    "#7C3AED", // Violet
+    "#84CC16", // Lime
+    "#F43F5E", // Rose
+    "#2563EB", // Blue
+    "#FACC15", // Yellow
+    "#D946EF", // Magenta
+    "#10B981", // Emerald
+    "#1E40AF", // Royal
+    "#BE185D", // Crimson
+    "#F59E0B", // Marigold
+    "#6366F1", // Indigo
+    "#14B8A6", // Teal
+    "#A855F7", // Lavender
+    "#DC2626", // Red
   ],
 });
 
@@ -66,6 +69,38 @@ const setAlpha = (color: string | null, alpha: string): string | undefined => {
   if (c.length === 9) return c.slice(0, 7) + alpha;
   return c;
 };
+
+// regex for raw hex (no leading #): 6 digits, used for input validation
+export const HEX_RE = /^[0-9a-fA-F]{6}$/;
+
+// normalize hex to uppercase 7-char #RRGGBB (strips alpha if present)
+export const normalizeHex = (color?: string | null): string => {
+  if (!color) return "";
+  let c = color.trim().toUpperCase();
+  if (!c.startsWith("#")) c = "#" + c;
+  return c.slice(0, 7);
+};
+
+// override wins; rest get next free palette entry, wrap-around when exhausted
+export function resolveColors(ids: string[], overrides: DeviceColors = {}): DeviceColors {
+  const taken = new Set(Object.values(overrides).map(normalizeHex));
+  const free = colors.palette.filter((c) => !taken.has(normalizeHex(c)));
+  const result: DeviceColors = {};
+  let idx = 0;
+  for (const id of ids) {
+    const ov = overrides[id];
+    if (ov) {
+      result[id] = ov;
+    } else if (free.length) {
+      result[id] = free[idx % free.length];
+      idx++;
+    } else {
+      result[id] = colors.palette[idx % colors.palette.length];
+      idx++;
+    }
+  }
+  return result;
+}
 
 export const dimColor = (color: string | null) => setAlpha(color, "20");
 
