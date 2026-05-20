@@ -276,7 +276,12 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonWrite(w, testInstance(instance))
+	// Vehicle test results must be passive — every Soc/Range/Status/Odometer
+	// call wakes the car's telematics module and drains the 12V battery for
+	// APIs like Hyundai Bluelink. The config UI polls this endpoint every
+	// ~30s, so previously a single open browser tab could kill a 12V battery
+	// overnight (evcc-io/evcc#30006).
+	jsonWrite(w, testInstance(instance, class == templates.Vehicle))
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {

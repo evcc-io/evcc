@@ -253,9 +253,18 @@ func hasFeature(instance any, f api.Feature) bool {
 	return ok && slices.Contains(fd.Features(), f)
 }
 
-// testInstance tests the given instance similar to dump
+// testInstance tests the given instance similar to dump.
+//
+// When passiveOnly is true (currently only for vehicle polling from the config
+// UI), every getter that triggers a remote API call is skipped — only static
+// capability markers are returned. This prevents the 30s background poll in
+// `Config.vue:updateValues()` from waking the car's telematics module on every
+// tick, which previously drained the 12V battery overnight for Hyundai/Kia
+// Bluelink users (evcc-io/evcc#30006).
+//
 // TODO refactor together with dump
-func testInstance(instance any) map[string]testResult {
+func testInstance(instance any, passiveOnly ...bool) map[string]testResult {
+	passive := len(passiveOnly) > 0 && passiveOnly[0]
 	res := make(map[string]testResult)
 
 	makeResult := func(key string, val any, err error) {
@@ -269,23 +278,36 @@ func testInstance(instance any) map[string]testResult {
 		res[key] = tr
 	}
 
+	// hot marks a capability that costs an upstream API call — skipped in passive mode.
+	hot := func(key string, val any, err error) {
+		if passive {
+			res[key] = testResult{Value: nil}
+			return
+		}
+		makeResult(key, val, err)
+	}
+
 	if dev, ok := api.Cap[api.Meter](instance); ok {
 		val, err := dev.CurrentPower()
-		makeResult("power", val, err)
+		hot("power", val, err)
 	}
 
 	if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
 		val, err := dev.TotalEnergy()
-		makeResult("energy", val, err)
+		hot("energy", val, err)
 	}
 
 	if dev, ok := api.Cap[api.Battery](instance); ok {
-		val, err := dev.Soc()
 		key := "soc"
 		if hasFeature(instance, api.Heating) {
 			key = "temp"
 		}
-		makeResult(key, val, err)
+		if passive {
+			res[key] = testResult{Value: nil}
+		} else {
+			val, err := dev.Soc()
+			makeResult(key, val, err)
+		}
 	}
 
 	if api.HasCap[api.BatteryController](instance) {
@@ -294,7 +316,7 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := api.Cap[api.VehicleOdometer](instance); ok {
 		val, err := dev.Odometer()
-		makeResult("odometer", val, err)
+		hot("odometer", val, err)
 	}
 
 	if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
@@ -304,32 +326,32 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := api.Cap[api.PhaseCurrents](instance); ok {
 		i1, i2, i3, err := dev.Currents()
-		makeResult("phaseCurrents", []float64{i1, i2, i3}, err)
+		hot("phaseCurrents", []float64{i1, i2, i3}, err)
 	}
 
 	if dev, ok := api.Cap[api.PhaseVoltages](instance); ok {
 		u1, u2, u3, err := dev.Voltages()
-		makeResult("phaseVoltages", []float64{u1, u2, u3}, err)
+		hot("phaseVoltages", []float64{u1, u2, u3}, err)
 	}
 
 	if dev, ok := api.Cap[api.PhasePowers](instance); ok {
 		p1, p2, p3, err := dev.Powers()
-		makeResult("phasePowers", []float64{p1, p2, p3}, err)
+		hot("phasePowers", []float64{p1, p2, p3}, err)
 	}
 
 	if dev, ok := api.Cap[api.ChargeState](instance); ok {
 		val, err := dev.Status()
-		makeResult("chargeStatus", val, err)
+		hot("chargeStatus", val, err)
 	}
 
 	if dev, ok := api.Cap[api.Charger](instance); ok {
 		val, err := dev.Enabled()
-		makeResult("enabled", val, err)
+		hot("enabled", val, err)
 	}
 
 	if dev, ok := api.Cap[api.ChargeRater](instance); ok {
 		val, err := dev.ChargedEnergy()
-		makeResult("chargedEnergy", val, err)
+		hot("chargedEnergy", val, err)
 	}
 
 	if api.HasCap[api.PhaseSwitcher](instance) {
@@ -354,31 +376,35 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := api.Cap[api.VehicleRange](instance); ok {
 		val, err := dev.Range()
-		makeResult("range", val, err)
+		hot("range", val, err)
 	}
 
 	if dev, ok := api.Cap[api.SocLimiter](instance); ok {
-		val, err := dev.GetLimitSoc()
 		key := "vehicleLimitSoc"
 		if hasFeature(instance, api.Heating) {
 			key = "heaterTempLimit"
 		}
-		makeResult(key, val, err)
+		if passive {
+			res[key] = testResult{Value: nil}
+		} else {
+			val, err := dev.GetLimitSoc()
+			makeResult(key, val, err)
+		}
 	}
 
 	if dev, ok := api.Cap[api.Dimmer](instance); ok {
 		val, err := dev.Dimmed()
-		makeResult("dimmed", val, err)
+		hot("dimmed", val, err)
 	}
 
 	if dev, ok := api.Cap[api.Curtailer](instance); ok {
 		val, err := dev.Curtailed()
-		makeResult("curtailed", val, err)
+		hot("curtailed", val, err)
 	}
 
 	if dev, ok := api.Cap[api.Identifier](instance); ok {
 		val, err := dev.Identify()
-		makeResult("identifier", val, err)
+		hot("identifier", val, err)
 	}
 
 	if dev, ok := api.Cap[api.Tariff](instance); ok {
