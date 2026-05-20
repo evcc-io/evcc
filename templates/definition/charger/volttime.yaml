@@ -12,7 +12,7 @@ products:
   - brand: Volt Time
     description:
       generic: One
-capabilities: ["meter"]
+capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:

@@ -3,6 +3,7 @@ products:
   - brand: Phoenix Contact
     description:
       generic: EV-SER
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["rs485"]

@@ -1,6 +1,8 @@
 template: ford-connect-query
 products:
-  - brand: Ford (FordConnect Query)
+  - brand: Ford
+    description:
+      generic: FordConnect Query
 params:
   - preset: vehicle-common
   - name: clientid

@@ -6,7 +6,7 @@ products:
   - brand: Hesotec
     description:
       generic: eBox
-capabilities: ["meter"]
+capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:

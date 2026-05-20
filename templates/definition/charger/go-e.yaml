@@ -6,7 +6,7 @@ products:
   - brand: go-e
     description:
       generic: Charger PRO
-capabilities: ["rfid"]
+capabilities: ["rfid", "dim"]
 requirements:
   description:
     en: Requires firmware 040.0 or later. HTTP API v1 or v2 must be activated.

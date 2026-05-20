@@ -1,0 +1,39 @@
+interval: 0.1s
+
+site:
+  title: Battery Settings
+  meters:
+    grid: grid
+    battery: battery
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: 1000
+  - name: battery
+    type: template
+    template: demo-battery
+    power: -1000
+    soc: 50
+    capacity: 20
+    controllable: true
+
+loadpoints:
+  - title: Carport
+    charger: charger
+    mode: now
+
+chargers:
+  - name: charger
+    type: template
+    template: demo-charger
+    status: B
+    enabled: true
+    maxcurrent: 16
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.30
