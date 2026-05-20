@@ -38,7 +38,7 @@ func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	var settings bluelink.Config
 	switch cc.Region {
-	case "Europe", "":
+	case "Europe":
 		settings = bluelink.Config{
 			URI:               "https://prd.eu-ccapi.hyundai.com:8080",
 			CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
