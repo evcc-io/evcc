@@ -24,6 +24,7 @@ INSERT INTO `entities` VALUES (6, 'meter', 'Office');
 INSERT INTO `entities` VALUES (7, 'pv', 'pv-east');
 INSERT INTO `entities` VALUES (8, 'pv', 'pv-west');
 INSERT INTO `entities` VALUES (9, 'forecast', 'forecast');
+INSERT INTO `entities` VALUES (10, 'battery', 'battery-2');
 
 -- =====================================================================
 -- API test data: 2026-03-24/25 (existing). Used by the JSON-shape tests.
@@ -134,6 +135,17 @@ INSERT INTO `meters` VALUES (9, 1777716000, 1.80, 0);
 INSERT INTO `meters` VALUES (9, 1777723200, 1.70, 0);
 INSERT INTO `meters` VALUES (9, 1777730400, 1.10, 0);
 INSERT INTO `meters` VALUES (9, 1777737600, 0.35, 0);
+
+-- 2026-04-08 → two stacked batteries. Charge 1.2 kW each (stacked 2.4 kW),
+-- discharge 0.8 kW each (stacked -1.6 kW). niceCeil(2.4) = 3.
+INSERT INTO `meters` VALUES (3, 1775642400, 0.3, 0);
+INSERT INTO `meters` VALUES (3, 1775643300, 0, 0.2);
+INSERT INTO `meters` VALUES (3, 1775644200, 0.3, 0);
+INSERT INTO `meters` VALUES (3, 1775645100, 0, 0.2);
+INSERT INTO `meters` VALUES (10, 1775642400, 0.3, 0);
+INSERT INTO `meters` VALUES (10, 1775643300, 0, 0.2);
+INSERT INTO `meters` VALUES (10, 1775644200, 0.3, 0);
+INSERT INTO `meters` VALUES (10, 1775645100, 0, 0.2);
 
 -- =====================================================================
 -- Month-aggregation case: 2026-06, three days with battery bidirectional

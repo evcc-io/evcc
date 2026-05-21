@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
@@ -29,9 +30,14 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 		Helper: request.NewHelper(log),
 	}
 
-	v.Client.Transport = &oauth2.Transport{
-		Source: ts,
-		Base:   v.Client.Transport,
+	v.Client.Transport = &transport.Decorator{
+		Base: &oauth2.Transport{
+			Source: ts,
+			Base:   v.Client.Transport,
+		},
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"app-market": "android",
+		}),
 	}
 
 	return v

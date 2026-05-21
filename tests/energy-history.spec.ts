@@ -130,6 +130,18 @@ test.describe("axis and units", () => {
     expect(await yAxis(chart(page, "battery"))).toEqual(["kW", "-6", "-3", "0", "3", "6"]);
   });
 
+  test("stacked batteries: axis follows stacked sum, not per-entity max", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 8);
+    expect(await yAxis(chart(page, "battery"))).toEqual([
+      "kW",
+      "-3.0",
+      "-1.5",
+      "0.0",
+      "1.5",
+      "3.0",
+    ]);
+  });
+
   test("unidirectional axis stays positive", async ({ page }) => {
     await gotoDay(page, 2026, 4, 5);
     // Unidirectional groups use echarts auto-scale (min: 0). Peak 1.6 kW → ticks 0..2.

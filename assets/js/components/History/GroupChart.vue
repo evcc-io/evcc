@@ -110,31 +110,27 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Raw peak in display unit. Bidirectional: max of |either direction|.
-		// Unidirectional: max of stacked per-slot sum.
+		// Peak of stacked per-slot sums. Bidirectional: pos/neg separately.
 		axisPeak(): number {
 			const factor = this.valueFactor;
-			let max = 0;
-			if (this.isBidirectional) {
+			const peak = (pick: (slot: HistorySlot) => number) => {
+				const sums = new Map<string, number>();
 				for (const s of this.visibleSeries) {
 					for (const slot of s.data) {
-						const a = Math.abs(slot.energy) * factor;
-						const b = Math.abs(slot.returnEnergy) * factor;
-						if (a > max) max = a;
-						if (b > max) max = b;
+						sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
 					}
 				}
+				let max = 0;
+				for (const v of sums.values()) if (v > max) max = v;
 				return max;
+			};
+			if (this.isBidirectional) {
+				return Math.max(
+					peak((slot) => Math.abs(slot.energy)),
+					peak((slot) => Math.abs(slot.returnEnergy))
+				);
 			}
-			const slotSums = new Map<string, number>();
-			for (const s of this.visibleSeries) {
-				for (const slot of s.data) {
-					const v = Math.abs(slot.energy - slot.returnEnergy) * factor;
-					slotSums.set(slot.start, (slotSums.get(slot.start) || 0) + v);
-				}
-			}
-			for (const v of slotSums.values()) if (v > max) max = v;
-			return max;
+			return peak((slot) => Math.abs(slot.energy - slot.returnEnergy));
 		},
 		// W/Wh scale when peak below 1 kW(h). Zero data falls here too.
 		useSmallUnit(): boolean {
