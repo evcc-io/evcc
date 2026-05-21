@@ -79,6 +79,8 @@ params:
       de: Token für den Command Proxy von [myteslamate.com](https://app.myteslamate.com/) (nutzungsbasiert). Stelle sicher, dass du den Virtual Key installiert hast und die Berechtigungen 'Ladung starten', 'Ladung stoppen' und 'Ladestrom setzen' erteilt hast.
   - name: cache
     default: 15m
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: tesla
   vin: {{ .vin }}
@@ -90,5 +92,9 @@ render: |
   commandProxy: {{ .commandProxy }}
   proxyToken: {{ .proxyToken }}
   {{ include "vehicle-common" . }}
-  features: ["coarsecurrent"]
+  features: 
+  - coarsecurrent
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}
   cache: {{ .cache }}

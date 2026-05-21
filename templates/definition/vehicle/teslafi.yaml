@@ -13,6 +13,8 @@ params:
     required: true
   - name: vin
     advanced: true
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -43,4 +45,8 @@ render: |
   limitsoc:
     {{- include "teslafi_source" . | indent 2 }}
     jq: .charge_limit_soc
-  features: ["coarsecurrent"]
+  features: 
+  - coarsecurrent
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

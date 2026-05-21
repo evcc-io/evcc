@@ -16,6 +16,8 @@ params:
     default: 1
   - name: timeout
     default: 720h # 30d
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -68,4 +70,8 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/is_preconditioning
     timeout: {{ .timeout }}
-  features: ["coarsecurrent"]
+  features: 
+  - coarsecurrent
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

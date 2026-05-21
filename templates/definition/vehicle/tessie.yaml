@@ -19,6 +19,8 @@ params:
       de: Tessie API Token
       en: Tessie API Token
     required: true
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -115,4 +117,8 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
-  features: ["coarsecurrent"]
+  features: 
+  - coarsecurrent
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}
