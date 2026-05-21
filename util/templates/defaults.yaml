@@ -191,7 +191,7 @@ params:
       de: "Für die Zuordnung des Fahrzeugs an einen Ladepunkt via RFID-Karte. Die Kennung wird am Ladepunkt angezeigt. Übernehme den Wert von dort. [Mehr erfahren.](https://docs.evcc.io/docs/features/vehicle)"
       en: "Used to assign the vehicle to a loadpoint via RFID card. The identifier is shown on the loadpoint. Copy the value from there. [Learn more.](https://docs.evcc.io/en/docs/features/vehicle)"
     type: list
-  - name: disableChargingOnClimaterActive
+  - name: disablechargingonclimateractive
     type: bool
     description:
       de: Nachladen bei aktiver Klimatisierung deaktivieren
@@ -537,15 +537,6 @@ presets:
       advanced: true
     - name: identifiers
       advanced: true
-    - name: disableChargingOnClimaterActive
-      advanced: true
-      type: bool
-      description:
-        de: Nachladen bei aktiver Klimatisierung deaktivieren
-        en: Disable charging on climater active
-      help:
-        de: Ladevorgang bei Erreichen des SoC- oder Energielimits beenden, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
-        en: End the charge process when reaching the SoC- or energy limit, even if the vehicle signals an active climater request.
     - name: priority
       advanced: true
     - name: cache
@@ -569,15 +560,6 @@ presets:
       advanced: true
     - name: identifiers
       advanced: true
-    - name: disableChargingOnClimaterActive
-      advanced: true
-      type: bool
-      description:
-        de: Nachladen bei aktiver Klimatisierung deaktivieren
-        en: Disable charging on climater active
-      help:
-        de: Ladevorgang bei Erreichen des SoC- oder Energielimits beenden, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
-        en: End the charge process when reaching the SoC- or energy limit, even if the vehicle signals an active climater request.
     - name: priority
       advanced: true
   vehicle-features:
@@ -586,6 +568,8 @@ presets:
     - name: streaming
       advanced: true
     - name: welcomecharge
+      advanced: true
+    - name: disablechargingonclimateractive
       advanced: true
   charger-features:
     - name: heating

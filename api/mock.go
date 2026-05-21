@@ -527,20 +527,6 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Capacity", reflect.TypeOf((*MockVehicle)(nil).Capacity))
 }
 
-// DisableChargingOnClimaterActive mocks base method.
-func (m *MockVehicle) DisableChargingOnClimaterActive() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DisableChargingOnClimaterActive")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// DisableChargingOnClimaterActive indicates an expected call of DisableChargingOnClimaterActive.
-func (mr *MockVehicleMockRecorder) DisableChargingOnClimaterActive() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisableChargingOnClimaterActive", reflect.TypeOf((*MockVehicle)(nil).DisableChargingOnClimaterActive))
-}
-
 // Features mocks base method.
 func (m *MockVehicle) Features() []Feature {
 	m.ctrl.T.Helper()
