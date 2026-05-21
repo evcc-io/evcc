@@ -7,16 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var renderModeNames = map[int]string{
+	RenderModeInstance: "instance",
+	RenderModeDocs:     "docs",
+	RenderModeUnitTest: "unittest",
+}
+
 // TestModbusTemplateDefaultID verifies that a template-specific modbus id
 // (e.g. Wallbe/Phoenix controllers using id 255) is rendered into the resulting
 // instance config when the user did not supply an explicit id. See #29804.
 func TestModbusTemplateDefaultID(t *testing.T) {
 	for _, mode := range []int{RenderModeInstance, RenderModeDocs, RenderModeUnitTest} {
-		t.Run(map[int]string{
-			RenderModeInstance: "instance",
-			RenderModeDocs:     "docs",
-			RenderModeUnitTest: "unittest",
-		}[mode], func(t *testing.T) {
+		t.Run(renderModeNames[mode], func(t *testing.T) {
 			tmpl, err := ByName(Charger, "phoenix-ev-eth")
 			require.NoError(t, err)
 
@@ -33,16 +35,20 @@ func TestModbusTemplateDefaultID(t *testing.T) {
 // TestModbusTemplateUserIDOverridesTemplate ensures a user-supplied id wins
 // over the template default in all render modes.
 func TestModbusTemplateUserIDOverridesTemplate(t *testing.T) {
-	tmpl, err := ByName(Charger, "phoenix-ev-eth")
-	require.NoError(t, err)
+	for _, mode := range []int{RenderModeInstance, RenderModeDocs, RenderModeUnitTest} {
+		t.Run(renderModeNames[mode], func(t *testing.T) {
+			tmpl, err := ByName(Charger, "phoenix-ev-eth")
+			require.NoError(t, err)
 
-	_, values, err := tmpl.RenderResult(RenderModeInstance, map[string]any{
-		"host": "192.168.0.8",
-		"port": 502,
-		"id":   42,
-	})
-	require.NoError(t, err)
-	assert.Equal(t, "42", values["id"], "user-supplied modbus id must not be overwritten")
+			_, values, err := tmpl.RenderResult(mode, map[string]any{
+				"host": "192.168.0.8",
+				"port": 502,
+				"id":   42,
+			})
+			require.NoError(t, err)
+			assert.Equal(t, "42", values["id"], "user-supplied modbus id must not be overwritten")
+		})
+	}
 }
 
 // TestWallbeTemplateCoveredByPhoenix verifies the BC migration: a config that
