@@ -8,19 +8,19 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func Meter(meter0 func() (float64, error)) api.Meter {
-	if meter0 == nil {
+func Battery(battery0 func() (float64, error)) api.Battery {
+	if battery0 == nil {
 		return nil
 	}
-	return &iMeter{meter0}
+	return &iBattery{battery0}
 }
 
-type iMeter struct {
-	meter0 func() (float64, error)
+type iBattery struct {
+	battery0 func() (float64, error)
 }
 
-func (i *iMeter) CurrentPower() (float64, error) {
-	return i.meter0()
+func (i *iBattery) Soc() (float64, error) {
+	return i.battery0()
 }
 
 func BatteryCapacity(batteryCapacity0 func() float64) api.BatteryCapacity {
@@ -38,21 +38,6 @@ func (i *iBatteryCapacity) Capacity() float64 {
 	return i.batteryCapacity0()
 }
 
-func SocLimiter(socLimiter0 func() (int64, error)) api.SocLimiter {
-	if socLimiter0 == nil {
-		return nil
-	}
-	return &iSocLimiter{socLimiter0}
-}
-
-type iSocLimiter struct {
-	socLimiter0 func() (int64, error)
-}
-
-func (i *iSocLimiter) GetLimitSoc() (int64, error) {
-	return i.socLimiter0()
-}
-
 func BatteryController(batteryController0 func(api.BatteryMode) error) api.BatteryController {
 	if batteryController0 == nil {
 		return nil
@@ -66,21 +51,6 @@ type iBatteryController struct {
 
 func (i *iBatteryController) SetBatteryMode(p0 api.BatteryMode) error {
 	return i.batteryController0(p0)
-}
-
-func BatterySocLimiter(batterySocLimiter0 func() (float64, float64)) api.BatterySocLimiter {
-	if batterySocLimiter0 == nil {
-		return nil
-	}
-	return &iBatterySocLimiter{batterySocLimiter0}
-}
-
-type iBatterySocLimiter struct {
-	batterySocLimiter0 func() (float64, float64)
-}
-
-func (i *iBatterySocLimiter) GetSocLimits() (float64, float64) {
-	return i.batterySocLimiter0()
 }
 
 func BatteryPowerLimiter(batteryPowerLimiter0 func() (float64, float64)) api.BatteryPowerLimiter {
@@ -98,34 +68,19 @@ func (i *iBatteryPowerLimiter) GetPowerLimits() (float64, float64) {
 	return i.batteryPowerLimiter0()
 }
 
-func PhasePowers(phasePowers0 func() (float64, float64, float64, error)) api.PhasePowers {
-	if phasePowers0 == nil {
+func BatterySocLimiter(batterySocLimiter0 func() (float64, float64)) api.BatterySocLimiter {
+	if batterySocLimiter0 == nil {
 		return nil
 	}
-	return &iPhasePowers{phasePowers0}
+	return &iBatterySocLimiter{batterySocLimiter0}
 }
 
-type iPhasePowers struct {
-	phasePowers0 func() (float64, float64, float64, error)
+type iBatterySocLimiter struct {
+	batterySocLimiter0 func() (float64, float64)
 }
 
-func (i *iPhasePowers) Powers() (float64, float64, float64, error) {
-	return i.phasePowers0()
-}
-
-func PhaseGetter(phaseGetter0 func() (int, error)) api.PhaseGetter {
-	if phaseGetter0 == nil {
-		return nil
-	}
-	return &iPhaseGetter{phaseGetter0}
-}
-
-type iPhaseGetter struct {
-	phaseGetter0 func() (int, error)
-}
-
-func (i *iPhaseGetter) GetPhases() (int, error) {
-	return i.phaseGetter0()
+func (i *iBatterySocLimiter) GetSocLimits() (float64, float64) {
+	return i.batterySocLimiter0()
 }
 
 func ChargeController(chargeController0 func(bool) error) api.ChargeController {
@@ -143,49 +98,34 @@ func (i *iChargeController) ChargeEnable(p0 bool) error {
 	return i.chargeController0(p0)
 }
 
-func CurrentController(currentController0 func(int64) error) api.CurrentController {
-	if currentController0 == nil {
+func ChargeRater(chargeRater0 func() (float64, error)) api.ChargeRater {
+	if chargeRater0 == nil {
 		return nil
 	}
-	return &iCurrentController{currentController0}
+	return &iChargeRater{chargeRater0}
 }
 
-type iCurrentController struct {
-	currentController0 func(int64) error
+type iChargeRater struct {
+	chargeRater0 func() (float64, error)
 }
 
-func (i *iCurrentController) MaxCurrent(p0 int64) error {
-	return i.currentController0(p0)
+func (i *iChargeRater) ChargedEnergy() (float64, error) {
+	return i.chargeRater0()
 }
 
-func PhaseSwitcher(phaseSwitcher0 func(int) error) api.PhaseSwitcher {
-	if phaseSwitcher0 == nil {
+func ChargerEx(chargerEx0 func(float64) error) api.ChargerEx {
+	if chargerEx0 == nil {
 		return nil
 	}
-	return &iPhaseSwitcher{phaseSwitcher0}
+	return &iChargerEx{chargerEx0}
 }
 
-type iPhaseSwitcher struct {
-	phaseSwitcher0 func(int) error
+type iChargerEx struct {
+	chargerEx0 func(float64) error
 }
 
-func (i *iPhaseSwitcher) Phases1p3p(p0 int) error {
-	return i.phaseSwitcher0(p0)
-}
-
-func Battery(battery0 func() (float64, error)) api.Battery {
-	if battery0 == nil {
-		return nil
-	}
-	return &iBattery{battery0}
-}
-
-type iBattery struct {
-	battery0 func() (float64, error)
-}
-
-func (i *iBattery) Soc() (float64, error) {
-	return i.battery0()
+func (i *iChargerEx) MaxCurrentMillis(p0 float64) error {
+	return i.chargerEx0(p0)
 }
 
 func ChargeState(chargeState0 func() (api.ChargeStatus, error)) api.ChargeState {
@@ -203,64 +143,19 @@ func (i *iChargeState) Status() (api.ChargeStatus, error) {
 	return i.chargeState0()
 }
 
-func MeterEnergy(meterEnergy0 func() (float64, error)) api.MeterEnergy {
-	if meterEnergy0 == nil {
+func CurrentController(currentController0 func(int64) error) api.CurrentController {
+	if currentController0 == nil {
 		return nil
 	}
-	return &iMeterEnergy{meterEnergy0}
+	return &iCurrentController{currentController0}
 }
 
-type iMeterEnergy struct {
-	meterEnergy0 func() (float64, error)
+type iCurrentController struct {
+	currentController0 func(int64) error
 }
 
-func (i *iMeterEnergy) TotalEnergy() (float64, error) {
-	return i.meterEnergy0()
-}
-
-func PhaseCurrents(phaseCurrents0 func() (float64, float64, float64, error)) api.PhaseCurrents {
-	if phaseCurrents0 == nil {
-		return nil
-	}
-	return &iPhaseCurrents{phaseCurrents0}
-}
-
-type iPhaseCurrents struct {
-	phaseCurrents0 func() (float64, float64, float64, error)
-}
-
-func (i *iPhaseCurrents) Currents() (float64, float64, float64, error) {
-	return i.phaseCurrents0()
-}
-
-func PhaseVoltages(phaseVoltages0 func() (float64, float64, float64, error)) api.PhaseVoltages {
-	if phaseVoltages0 == nil {
-		return nil
-	}
-	return &iPhaseVoltages{phaseVoltages0}
-}
-
-type iPhaseVoltages struct {
-	phaseVoltages0 func() (float64, float64, float64, error)
-}
-
-func (i *iPhaseVoltages) Voltages() (float64, float64, float64, error) {
-	return i.phaseVoltages0()
-}
-
-func MaxACPowerGetter(maxACPowerGetter0 func() float64) api.MaxACPowerGetter {
-	if maxACPowerGetter0 == nil {
-		return nil
-	}
-	return &iMaxACPowerGetter{maxACPowerGetter0}
-}
-
-type iMaxACPowerGetter struct {
-	maxACPowerGetter0 func() float64
-}
-
-func (i *iMaxACPowerGetter) MaxACPower() float64 {
-	return i.maxACPowerGetter0()
+func (i *iCurrentController) MaxCurrent(p0 int64) error {
+	return i.currentController0(p0)
 }
 
 func CurrentGetter(currentGetter0 func() (float64, error)) api.CurrentGetter {
@@ -298,6 +193,161 @@ func (i *iCurtailer) Curtailed() (bool, error) {
 	return i.curtailer1()
 }
 
+func Dimmer(dimmer0 func(bool) error, dimmer1 func() (bool, error)) api.Dimmer {
+	if dimmer0 == nil || dimmer1 == nil {
+		return nil
+	}
+	return &iDimmer{dimmer0, dimmer1}
+}
+
+type iDimmer struct {
+	dimmer0 func(bool) error
+	dimmer1 func() (bool, error)
+}
+
+func (i *iDimmer) Dim(p0 bool) error {
+	return i.dimmer0(p0)
+}
+
+func (i *iDimmer) Dimmed() (bool, error) {
+	return i.dimmer1()
+}
+
+func Identifier(identifier0 func() (string, error)) api.Identifier {
+	if identifier0 == nil {
+		return nil
+	}
+	return &iIdentifier{identifier0}
+}
+
+type iIdentifier struct {
+	identifier0 func() (string, error)
+}
+
+func (i *iIdentifier) Identify() (string, error) {
+	return i.identifier0()
+}
+
+func MaxACPowerGetter(maxACPowerGetter0 func() float64) api.MaxACPowerGetter {
+	if maxACPowerGetter0 == nil {
+		return nil
+	}
+	return &iMaxACPowerGetter{maxACPowerGetter0}
+}
+
+type iMaxACPowerGetter struct {
+	maxACPowerGetter0 func() float64
+}
+
+func (i *iMaxACPowerGetter) MaxACPower() float64 {
+	return i.maxACPowerGetter0()
+}
+
+func Meter(meter0 func() (float64, error)) api.Meter {
+	if meter0 == nil {
+		return nil
+	}
+	return &iMeter{meter0}
+}
+
+type iMeter struct {
+	meter0 func() (float64, error)
+}
+
+func (i *iMeter) CurrentPower() (float64, error) {
+	return i.meter0()
+}
+
+func MeterEnergy(meterEnergy0 func() (float64, error)) api.MeterEnergy {
+	if meterEnergy0 == nil {
+		return nil
+	}
+	return &iMeterEnergy{meterEnergy0}
+}
+
+type iMeterEnergy struct {
+	meterEnergy0 func() (float64, error)
+}
+
+func (i *iMeterEnergy) TotalEnergy() (float64, error) {
+	return i.meterEnergy0()
+}
+
+func PhaseCurrents(phaseCurrents0 func() (float64, float64, float64, error)) api.PhaseCurrents {
+	if phaseCurrents0 == nil {
+		return nil
+	}
+	return &iPhaseCurrents{phaseCurrents0}
+}
+
+type iPhaseCurrents struct {
+	phaseCurrents0 func() (float64, float64, float64, error)
+}
+
+func (i *iPhaseCurrents) Currents() (float64, float64, float64, error) {
+	return i.phaseCurrents0()
+}
+
+func PhaseGetter(phaseGetter0 func() (int, error)) api.PhaseGetter {
+	if phaseGetter0 == nil {
+		return nil
+	}
+	return &iPhaseGetter{phaseGetter0}
+}
+
+type iPhaseGetter struct {
+	phaseGetter0 func() (int, error)
+}
+
+func (i *iPhaseGetter) GetPhases() (int, error) {
+	return i.phaseGetter0()
+}
+
+func PhasePowers(phasePowers0 func() (float64, float64, float64, error)) api.PhasePowers {
+	if phasePowers0 == nil {
+		return nil
+	}
+	return &iPhasePowers{phasePowers0}
+}
+
+type iPhasePowers struct {
+	phasePowers0 func() (float64, float64, float64, error)
+}
+
+func (i *iPhasePowers) Powers() (float64, float64, float64, error) {
+	return i.phasePowers0()
+}
+
+func PhaseSwitcher(phaseSwitcher0 func(int) error) api.PhaseSwitcher {
+	if phaseSwitcher0 == nil {
+		return nil
+	}
+	return &iPhaseSwitcher{phaseSwitcher0}
+}
+
+type iPhaseSwitcher struct {
+	phaseSwitcher0 func(int) error
+}
+
+func (i *iPhaseSwitcher) Phases1p3p(p0 int) error {
+	return i.phaseSwitcher0(p0)
+}
+
+func PhaseVoltages(phaseVoltages0 func() (float64, float64, float64, error)) api.PhaseVoltages {
+	if phaseVoltages0 == nil {
+		return nil
+	}
+	return &iPhaseVoltages{phaseVoltages0}
+}
+
+type iPhaseVoltages struct {
+	phaseVoltages0 func() (float64, float64, float64, error)
+}
+
+func (i *iPhaseVoltages) Voltages() (float64, float64, float64, error) {
+	return i.phaseVoltages0()
+}
+
 func Resurrector(resurrector0 func() error) api.Resurrector {
 	if resurrector0 == nil {
 		return nil
@@ -313,34 +363,34 @@ func (i *iResurrector) WakeUp() error {
 	return i.resurrector0()
 }
 
-func VehicleOdometer(vehicleOdometer0 func() (float64, error)) api.VehicleOdometer {
-	if vehicleOdometer0 == nil {
+func SocLimiter(socLimiter0 func() (int64, error)) api.SocLimiter {
+	if socLimiter0 == nil {
 		return nil
 	}
-	return &iVehicleOdometer{vehicleOdometer0}
+	return &iSocLimiter{socLimiter0}
 }
 
-type iVehicleOdometer struct {
-	vehicleOdometer0 func() (float64, error)
+type iSocLimiter struct {
+	socLimiter0 func() (int64, error)
 }
 
-func (i *iVehicleOdometer) Odometer() (float64, error) {
-	return i.vehicleOdometer0()
+func (i *iSocLimiter) GetLimitSoc() (int64, error) {
+	return i.socLimiter0()
 }
 
-func VehicleRange(vehicleRange0 func() (int64, error)) api.VehicleRange {
-	if vehicleRange0 == nil {
+func StatusReasoner(statusReasoner0 func() (api.Reason, error)) api.StatusReasoner {
+	if statusReasoner0 == nil {
 		return nil
 	}
-	return &iVehicleRange{vehicleRange0}
+	return &iStatusReasoner{statusReasoner0}
 }
 
-type iVehicleRange struct {
-	vehicleRange0 func() (int64, error)
+type iStatusReasoner struct {
+	statusReasoner0 func() (api.Reason, error)
 }
 
-func (i *iVehicleRange) Range() (int64, error) {
-	return i.vehicleRange0()
+func (i *iStatusReasoner) StatusReason() (api.Reason, error) {
+	return i.statusReasoner0()
 }
 
 func VehicleClimater(vehicleClimater0 func() (bool, error)) api.VehicleClimater {
@@ -373,6 +423,21 @@ func (i *iVehicleFinishTimer) FinishTime() (time.Time, error) {
 	return i.vehicleFinishTimer0()
 }
 
+func VehicleOdometer(vehicleOdometer0 func() (float64, error)) api.VehicleOdometer {
+	if vehicleOdometer0 == nil {
+		return nil
+	}
+	return &iVehicleOdometer{vehicleOdometer0}
+}
+
+type iVehicleOdometer struct {
+	vehicleOdometer0 func() (float64, error)
+}
+
+func (i *iVehicleOdometer) Odometer() (float64, error) {
+	return i.vehicleOdometer0()
+}
+
 func VehiclePosition(vehiclePosition0 func() (float64, float64, error)) api.VehiclePosition {
 	if vehiclePosition0 == nil {
 		return nil
@@ -388,62 +453,17 @@ func (i *iVehiclePosition) Position() (float64, float64, error) {
 	return i.vehiclePosition0()
 }
 
-func Identifier(identifier0 func() (string, error)) api.Identifier {
-	if identifier0 == nil {
+func VehicleRange(vehicleRange0 func() (int64, error)) api.VehicleRange {
+	if vehicleRange0 == nil {
 		return nil
 	}
-	return &iIdentifier{identifier0}
+	return &iVehicleRange{vehicleRange0}
 }
 
-type iIdentifier struct {
-	identifier0 func() (string, error)
+type iVehicleRange struct {
+	vehicleRange0 func() (int64, error)
 }
 
-func (i *iIdentifier) Identify() (string, error) {
-	return i.identifier0()
-}
-
-func ChargerEx(chargerEx0 func(float64) error) api.ChargerEx {
-	if chargerEx0 == nil {
-		return nil
-	}
-	return &iChargerEx{chargerEx0}
-}
-
-type iChargerEx struct {
-	chargerEx0 func(float64) error
-}
-
-func (i *iChargerEx) MaxCurrentMillis(p0 float64) error {
-	return i.chargerEx0(p0)
-}
-
-func ChargeRater(chargeRater0 func() (float64, error)) api.ChargeRater {
-	if chargeRater0 == nil {
-		return nil
-	}
-	return &iChargeRater{chargeRater0}
-}
-
-type iChargeRater struct {
-	chargeRater0 func() (float64, error)
-}
-
-func (i *iChargeRater) ChargedEnergy() (float64, error) {
-	return i.chargeRater0()
-}
-
-func StatusReasoner(statusReasoner0 func() (api.Reason, error)) api.StatusReasoner {
-	if statusReasoner0 == nil {
-		return nil
-	}
-	return &iStatusReasoner{statusReasoner0}
-}
-
-type iStatusReasoner struct {
-	statusReasoner0 func() (api.Reason, error)
-}
-
-func (i *iStatusReasoner) StatusReason() (api.Reason, error) {
-	return i.statusReasoner0()
+func (i *iVehicleRange) Range() (int64, error) {
+	return i.vehicleRange0()
 }

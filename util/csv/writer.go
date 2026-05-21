@@ -90,15 +90,16 @@ func writeRow(ww *csv.Writer, mp *message.Printer, structVal any) error {
 	return ww.Write(row)
 }
 
-// WriteStructSlice writes a slice of structs to CSV format with localized headers
-func WriteStructSlice(ctx context.Context, w io.Writer, slice any, cfg Config) error {
+// NewLocalizedWriter writes a UTF-8 BOM and returns a locale-configured
+// csv.Writer (German uses ';') and matching number printer.
+func NewLocalizedWriter(ctx context.Context, w io.Writer) (*csv.Writer, *message.Printer, error) {
 	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	lang := locale.Language
-	if language, ok := ctx.Value(locale.Locale).(string); ok && language != "" {
-		lang = language
+	if v, ok := ctx.Value(locale.Locale).(string); ok && v != "" {
+		lang = v
 	}
 	if lang == "" {
 		lang = "en"
@@ -106,13 +107,22 @@ func WriteStructSlice(ctx context.Context, w io.Writer, slice any, cfg Config) e
 
 	tag, err := language.Parse(lang)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	ww := csv.NewWriter(w)
-
 	if b, _ := tag.Base(); b.String() == language.German.String() {
 		ww.Comma = ';'
+	}
+
+	return ww, message.NewPrinter(tag), nil
+}
+
+// WriteStructSlice writes a slice of structs to CSV format with localized headers
+func WriteStructSlice(ctx context.Context, w io.Writer, slice any, cfg Config) error {
+	ww, mp, err := NewLocalizedWriter(ctx, w)
+	if err != nil {
+		return err
 	}
 
 	sliceVal := reflect.ValueOf(slice)
@@ -134,7 +144,6 @@ func WriteStructSlice(ctx context.Context, w io.Writer, slice any, cfg Config) e
 		return err
 	}
 
-	mp := message.NewPrinter(tag)
 	for i := 0; i < sliceVal.Len(); i++ {
 		row := sliceVal.Index(i).Interface()
 		if err := writeRow(ww, mp, row); err != nil {

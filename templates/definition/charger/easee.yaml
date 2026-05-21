@@ -12,7 +12,7 @@ products:
   - brand: Easee
     description:
       generic: Charge Core
-capabilities: ["rfid", "1p3p", "meter"]
+capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:

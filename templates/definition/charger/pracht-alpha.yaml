@@ -12,6 +12,7 @@ products:
   - brand: Pracht
     description:
       generic: PNI
+capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship"]
 params:
