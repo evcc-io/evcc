@@ -480,7 +480,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	ctrl.Finish()
 }
 
-func SetupClimaterTest(t *testing.T) *climaterTestSetup {
+func SetupClimaterTest(t *testing.T, disableChargingOnClimaterActive bool) *climaterTestSetup {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
@@ -492,9 +492,19 @@ func SetupClimaterTest(t *testing.T) *climaterTestSetup {
 		},
 	}
 
-	// wrap vehicle with estimator
-	expectVehiclePublish(vehicleMock)
+	//expectVehiclePublish
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Icon().AnyTimes()
+	if disableChargingOnClimaterActive {
+		vehicle.EXPECT().Features().Return([]api.Feature{api.DisableChargingOnClimaterActive}).AnyTimes()
+	} else {
+		vehicle.EXPECT().Features().AnyTimes()
+	}
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
 
+	// wrap vehicle with estimator
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle)
 
 	lp := &Loadpoint{
@@ -532,7 +542,7 @@ func SetupClimaterTest(t *testing.T) *climaterTestSetup {
 }
 
 func TestKeepEnabledBecauseOfClimater(t *testing.T) {
-	cts := SetupClimaterTest(t)
+	cts := SetupClimaterTest(t, false)
 	attachListeners(t, cts.lp)
 
 	cts.lp.enabled = true
@@ -552,14 +562,13 @@ func TestKeepEnabledBecauseOfClimater(t *testing.T) {
 	cts.vehicle.EXPECT().Soc().Return(90.0, nil)
 	cts.charger.EXPECT().Status().Return(api.StatusC, nil)
 	cts.charger.EXPECT().Enabled().Return(cts.lp.enabled, nil)
-	cts.vehicle.MockVehicle.EXPECT().DisableChargingOnClimaterActive().Return(false)
 	cts.charger.EXPECT().MaxCurrent(int64(minA)).Return(nil)
 	cts.lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
 	cts.ctrl.Finish()
 }
 
 func TestDisableDespiteClimater(t *testing.T) {
-	cts := SetupClimaterTest(t)
+	cts := SetupClimaterTest(t, true)
 	attachListeners(t, cts.lp)
 
 	cts.lp.enabled = true
@@ -579,7 +588,6 @@ func TestDisableDespiteClimater(t *testing.T) {
 	cts.vehicle.EXPECT().Soc().Return(90.0, nil)
 	cts.charger.EXPECT().Status().Return(api.StatusC, nil)
 	cts.charger.EXPECT().Enabled().Return(cts.lp.enabled, nil)
-	cts.vehicle.MockVehicle.EXPECT().DisableChargingOnClimaterActive().Return(true)
 	cts.charger.EXPECT().Enable(false).Return(nil)
 	cts.lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
 	cts.ctrl.Finish()
