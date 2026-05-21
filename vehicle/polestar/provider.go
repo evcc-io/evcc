@@ -48,10 +48,9 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return res, nil
 	}
 
-	if status.Battery[0].ChargingStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
-		res = api.StatusB
-	}
-	if status.Battery[0].ChargingStatus == "CHARGING_STATUS_CHARGING" {
+	// chargingStatus was removed from carTelematicsV2 — infer from remaining time;
+	// StatusB (connected, not charging) cannot be distinguished anymore
+	if status.Battery[0].EstimatedChargingTimeToFullMinutes > 0 {
 		res = api.StatusC
 	}
 
