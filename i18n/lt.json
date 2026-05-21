@@ -46,6 +46,10 @@
     "noBattery": "Nėra sukonfigūruotų kaupiklių.",
     "usageTab": "Kaupiklio naudojimas"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex spalva"
+  },
   "config": {
     "aux": {
       "description": "Įrenginys, kuris koreguoja savo suvartojimą pagal esamą energijos perteklių (pvz., išmanieji vandens šildytuvai). evcc tikisi, kad šis įrenginys prireikus sumažins energijos suvartojimą.",
