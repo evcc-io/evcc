@@ -136,8 +136,6 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 				topic := topic
 				if !mqttTagAttribute("squash", f) {
 					topic = fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
-				} else {
-					println(1)
 				}
 
 				if val.Field(i).IsZero() && jsonOmitEmpty(f) {
