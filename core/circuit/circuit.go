@@ -36,8 +36,8 @@ type Circuit struct {
 
 	current   float64
 	power     float64
-	dimmed    bool
-	curtailed bool
+	dimmed    *bool
+	curtailed *bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -394,19 +394,19 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 func (c *Circuit) Dim(dim bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.dimmed = dim
+	c.dimmed = &dim
 }
 
-func (c *Circuit) Dimmed() bool {
+func (c *Circuit) Dimmed() *bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	if c.dimmed {
-		return true
+	if c.dimmed != nil {
+		return c.dimmed
 	}
 
 	if c.parent == nil {
-		return false
+		return nil
 	}
 
 	return c.parent.Dimmed()
@@ -415,19 +415,19 @@ func (c *Circuit) Dimmed() bool {
 func (c *Circuit) Curtail(curtail bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.curtailed = curtail
+	c.curtailed = &curtail
 }
 
-func (c *Circuit) Curtailed() bool {
+func (c *Circuit) Curtailed() *bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	if c.curtailed {
-		return true
+	if c.curtailed != nil {
+		return c.curtailed
 	}
 
 	if c.parent == nil {
-		return false
+		return nil
 	}
 
 	return c.parent.Curtailed()
