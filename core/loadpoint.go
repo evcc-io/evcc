@@ -1970,8 +1970,8 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 					return
 				}
 
-				lp.publish(keys.Dimmed, dim)
-				lp.log.INFO.Printf("§14a dim: %t", dim)
+				lp.publish(keys.Dimmed, *dim)
+				lp.log.INFO.Printf("§14a dim: %t", *dim)
 			}
 
 			if *dim {

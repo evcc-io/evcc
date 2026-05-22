@@ -82,7 +82,7 @@ func (site *Site) dimMeters(dim *bool) error {
 		}
 
 		if err := m.Dim(*dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, dim)
+			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, *dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", dev.Config().Name, err))
 		}
@@ -115,7 +115,7 @@ func (site *Site) curtailPV(curtail *bool) error {
 		}
 
 		if err := m.Curtail(*curtail); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %t", dev.Config().Name, curtail)
+			site.log.DEBUG.Printf("%s curtail: %t", dev.Config().Name, *curtail)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", dev.Config().Name, err))
 		}
