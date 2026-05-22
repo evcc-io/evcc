@@ -81,7 +81,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 // NewFnn creates a new Fnn HEMS instance.
 func NewFnn(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, maxPowerDim float64, interval time.Duration) (*Fnn, error) {
 	c := &Fnn{
-		log:         util.NewLogger("Fnn"),
+		log:         util.NewLogger("fnn"),
 		root:        root,
 		maxPower:    maxPower,
 		maxPowerDim: maxPowerDim,
