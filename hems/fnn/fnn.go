@@ -221,13 +221,26 @@ func (c *Fnn) curtail(frac float64, source string) error {
 	}
 
 	limit := c.maxPower * frac
+	if !c.curtailInit {
+		c.curtailInit = true
+		if !active && source == "none" {
+			c.lastCurtailActive = active
+			c.lastCurtailLimit = limit
+			c.lastCurtailSource = source
+			c.applyMode(&c.smartgridProductionId, smartgrid.Curtail, active, limit, func() {
+				c.root.Curtail(active)
+				// TODO make ProductionNominalMax configurable (Site kWp)
+				// c.root.SetMaxPower(c.maxPower*frac)
+			})
+			return nil
+		}
+	}
 
-	if !c.curtailInit || c.lastCurtailActive != active || c.lastCurtailLimit != limit || c.lastCurtailSource != source {
+	if c.lastCurtailActive != active || c.lastCurtailLimit != limit || c.lastCurtailSource != source {
 		c.log.DEBUG.Printf("curtail: source=%s active=%t fraction=%.2f limit=%.0fW", source, active, frac, limit)
 		c.lastCurtailActive = active
 		c.lastCurtailLimit = limit
 		c.lastCurtailSource = source
-		c.curtailInit = true
 	}
 
 	c.applyMode(&c.smartgridProductionId, smartgrid.Curtail, active, limit, func() {
@@ -245,12 +258,25 @@ func (c *Fnn) setDim(limit float64, source string) error {
 	defer c.mu.Unlock()
 
 	active := limit > 0
-	if !c.dimInit || c.lastDimActive != active || c.lastDimLimit != limit || c.lastDimSource != source {
+	if !c.dimInit {
+		c.dimInit = true
+		if !active && limit == 0 {
+			c.lastDimActive = active
+			c.lastDimLimit = limit
+			c.lastDimSource = source
+			c.applyMode(&c.smartgridConsumptionId, smartgrid.Dim, active, limit, func() {
+				c.root.Dim(active)
+				c.root.SetMaxPower(limit)
+			})
+			return nil
+		}
+	}
+
+	if c.lastDimActive != active || c.lastDimLimit != limit || c.lastDimSource != source {
 		c.log.DEBUG.Printf("dim: source=%s active=%t limit=%.0fW", source, active, limit)
 		c.lastDimActive = active
 		c.lastDimLimit = limit
 		c.lastDimSource = source
-		c.dimInit = true
 	}
 
 	c.applyMode(&c.smartgridConsumptionId, smartgrid.Dim, active, limit, func() {
