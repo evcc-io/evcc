@@ -17,6 +17,9 @@ const (
 	ActionCharge      = "charging"
 	ActionChargeStart = "start"
 	ActionChargeStop  = "stop"
+
+	// appVersion is the Cupra app version mirrored in request headers
+	appVersion = "2.15.0"
 )
 
 // API is an api.Vehicle implementation for Seat Cupra cars
@@ -35,8 +38,14 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 			Source: ts,
 			Base:   v.Client.Transport,
 		},
+		// These headers mirror the official Cupra app and are required to avoid
+		// 403 Forbidden from the OLA backend (verified against pycupra v0.2.30).
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"app-market": "android",
+			"app-market":  "android",
+			"app-brand":   "cupra",
+			"app-version": appVersion,
+			"User-Agent":  "OLACupra/" + appVersion + " (Android 12; sdk_gphone64_x86_64; Google) Mobile",
+			"origin":      "app",
 		}),
 	}
 
