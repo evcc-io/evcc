@@ -28,7 +28,7 @@ selected by name or title; run the entities subcommand to list them.`,
 
 func init() {
 	metricsCmd.AddCommand(metricsDataCmd)
-	metricsDataCmd.Flags().String("range", "", "Quick timeframe: today, month or year")
+	metricsDataCmd.Flags().String("range", "", "Quick timeframe: day, month or year")
 	metricsDataCmd.Flags().String("from", "", "Start date as YYYY-MM-DD (default today)")
 	metricsDataCmd.Flags().String("to", "", "End date as YYYY-MM-DD, inclusive (default today)")
 	metricsDataCmd.Flags().String("aggregate", "hour", "Aggregation interval: 15m, hour, day or month")
@@ -104,7 +104,7 @@ func metricsTimeframe(rangeStr, fromStr, toStr string) (time.Time, time.Time, er
 
 	if rangeStr != "" {
 		switch strings.ToLower(rangeStr) {
-		case "today":
+		case "day":
 			return today, today.AddDate(0, 0, 1), nil
 		case "month":
 			from := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
@@ -113,7 +113,7 @@ func metricsTimeframe(rangeStr, fromStr, toStr string) (time.Time, time.Time, er
 			from := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, time.Local)
 			return from, from.AddDate(1, 0, 0), nil
 		default:
-			return time.Time{}, time.Time{}, fmt.Errorf("invalid --range %q (today, month or year)", rangeStr)
+			return time.Time{}, time.Time{}, fmt.Errorf("invalid --range %q (day, month or year)", rangeStr)
 		}
 	}
 

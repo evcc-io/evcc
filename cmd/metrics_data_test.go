@@ -29,8 +29,8 @@ func TestMetricsTimeframe(t *testing.T) {
 func TestMetricsTimeframeRange(t *testing.T) {
 	now := time.Now()
 
-	// today
-	from, to, err := metricsTimeframe("today", "", "")
+	// day
+	from, to, err := metricsTimeframe("day", "", "")
 	require.NoError(t, err)
 	require.Equal(t, time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local), from)
 	require.Equal(t, from.AddDate(0, 0, 1), to)

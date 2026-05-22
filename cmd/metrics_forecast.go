@@ -20,7 +20,7 @@ var metricsForecastCmd = &cobra.Command{
 
 func init() {
 	metricsCmd.AddCommand(metricsForecastCmd)
-	metricsForecastCmd.Flags().String("range", "", "Quick timeframe: today, month or year")
+	metricsForecastCmd.Flags().String("range", "", "Quick timeframe: day, month or year")
 	metricsForecastCmd.Flags().String("from", "", "Start date as YYYY-MM-DD (default today)")
 	metricsForecastCmd.Flags().String("to", "", "End date as YYYY-MM-DD, inclusive (default today)")
 	metricsForecastCmd.MarkFlagsMutuallyExclusive("range", "from")
