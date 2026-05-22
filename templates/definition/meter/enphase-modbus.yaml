@@ -2,7 +2,7 @@ template: enphase-modbus
 products:
   - brand: Enphase
     description:
-      generic: IQ Envoy (Modbus)
+      generic: IQ Gateway (Modbus)
 requirements:
   description:
     en: |
