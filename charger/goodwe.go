@@ -58,8 +58,9 @@ const (
 	goodweRegChargeCommand  = 10060 // U16 (1=stop, 2=start)
 	goodweRegTotalEnergy    = 10065 // U32 ×0.1 kWh, 2 regs
 
-	goodweChargeStop     = 1
-	goodweChargeStart    = 2
+	goodweChargeStop  = 1
+	goodweChargeStart = 2
+
 	goodweChargeModeFast = 0
 )
 
@@ -134,7 +135,6 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
 		if binary.BigEndian.Uint16(b) == 1 {
 			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
-			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	} else {
 		log.WARN.Printf("read phase switch config failed, disabling dynamic phase switching: %v", err)
@@ -264,10 +264,6 @@ func (wb *GoodWe) Voltages() (float64, float64, float64, error) {
 func (wb *GoodWe) phases1p3p(phases int) error {
 	wb.phases = phases
 	return nil
-}
-
-func (wb *GoodWe) getPhases() (int, error) {
-	return wb.phases, nil
 }
 
 var _ api.Identifier = (*GoodWe)(nil)
