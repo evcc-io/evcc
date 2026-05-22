@@ -75,23 +75,17 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		}
 	}
 
-	return NewFnn(gridcontrol, s1G, s2G, w3G, w4G, maxCurtailPower, maxDimPower, cc.Interval)
-}
-
-// NewFnn creates a new Fnn HEMS instance.
-func NewFnn(root api.Circuit, s1, s2, w3, w4 func() (bool, error), maxPower, maxPowerDim float64, interval time.Duration) (*Fnn, error) {
-	c := &Fnn{
+	return &Fnn{
 		log:         util.NewLogger("fnn"),
-		root:        root,
-		maxPower:    maxPower,
-		maxPowerDim: maxPowerDim,
-		s1:          s1,
-		s2:          s2,
-		w3:          w3,
-		w4:          w4,
-		interval:    interval,
-	}
-	return c, nil
+		root:        gridcontrol,
+		maxPower:    maxCurtailPower,
+		maxPowerDim: maxDimPower,
+		s1:          s1G,
+		s2:          s2G,
+		w3:          w3G,
+		w4:          w4G,
+		interval:    cc.Interval,
+	}, nil
 }
 
 // boolGetter returns a boolean getter function for the given plugin config.
