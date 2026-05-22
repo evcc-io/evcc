@@ -20,10 +20,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		MaxCurtailPower float64
 		MaxPowerDim     float64
 		MaxDimPower     float64
-		W3              *plugin.Config
-		W4              *plugin.Config
-		S1              *plugin.Config
-		S2              *plugin.Config
+		W3              plugin.Config
+		W4              plugin.Config
+		S1              plugin.Config
+		S2              plugin.Config
 		Interval        time.Duration
 	}{
 		Interval: 10 * time.Second,
@@ -41,22 +41,22 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 
 	site.SetCircuit(gridcontrol)
 
-	s1G, err := boolGetter(ctx, cc.S1)
+	s1G, err := cc.S1.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	s2G, err := boolGetter(ctx, cc.S2)
+	s2G, err := cc.S2.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	w3G, err := boolGetter(ctx, cc.W3)
+	w3G, err := cc.W3.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	w4G, err := boolGetter(ctx, cc.W4)
+	w4G, err := cc.W4.BoolGetter(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -88,14 +88,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 	}, nil
 }
 
-// boolGetter returns a boolean getter function for the given plugin config.
-func boolGetter(ctx context.Context, cfg *plugin.Config) (func() (bool, error), error) {
-	if cfg == nil {
-		return func() (bool, error) { return false, nil }, nil
-	}
-	return cfg.BoolGetter(ctx)
-}
-
 // Fnn implements the FNN HEMS logic for curtailment and dimming.
 type Fnn struct {
 	mu  sync.Mutex
@@ -105,8 +97,8 @@ type Fnn struct {
 	s1, s2, w3 func() (bool, error)
 	w4         func() (bool, error)
 
-	smartgridConsumptionId uint
-	smartgridProductionId  uint
+	smartgridConsumptionID uint
+	smartgridProductionID  uint
 
 	maxPower    float64
 	maxPowerDim float64
@@ -169,22 +161,17 @@ func (c *Fnn) Update() error {
 
 // runDim evaluates the dimming rule and applies the dim limit.
 func (c *Fnn) runDim() error {
-	if c.maxPowerDim <= 0 {
-		active, err := c.w4()
-		if err != nil {
-			return err
-		}
+	active, err := c.w4()
+	if err != nil {
+		return err
+	}
 
+	if c.maxPowerDim <= 0 {
 		if active {
 			c.log.WARN.Printf("dim active but no limit configured (maxDimPower/maxPowerDim)")
 		}
 
 		return nil
-	}
-
-	active, err := c.w4()
-	if err != nil {
-		return err
 	}
 
 	limit := 0.0
@@ -221,7 +208,7 @@ func (c *Fnn) curtail(frac float64, source string) error {
 			c.lastCurtailActive = active
 			c.lastCurtailLimit = limit
 			c.lastCurtailSource = source
-			c.applyMode(&c.smartgridProductionId, smartgrid.Curtail, active, limit, func() {
+			c.applyMode(&c.smartgridProductionID, smartgrid.Curtail, active, limit, func() {
 				c.root.Curtail(active)
 				// TODO make ProductionNominalMax configurable (Site kWp)
 				// c.root.SetMaxPower(c.maxPower*frac)
@@ -237,7 +224,7 @@ func (c *Fnn) curtail(frac float64, source string) error {
 		c.lastCurtailSource = source
 	}
 
-	c.applyMode(&c.smartgridProductionId, smartgrid.Curtail, active, limit, func() {
+	c.applyMode(&c.smartgridProductionID, smartgrid.Curtail, active, limit, func() {
 		c.root.Curtail(active)
 		// TODO make ProductionNominalMax configurable (Site kWp)
 		// c.root.SetMaxPower(c.maxPower*frac)
@@ -254,11 +241,11 @@ func (c *Fnn) setDim(limit float64, source string) error {
 	active := limit > 0
 	if !c.dimInit {
 		c.dimInit = true
-		if !active && limit == 0 {
+		if !active {
 			c.lastDimActive = active
 			c.lastDimLimit = limit
 			c.lastDimSource = source
-			c.applyMode(&c.smartgridConsumptionId, smartgrid.Dim, active, limit, func() {
+			c.applyMode(&c.smartgridConsumptionID, smartgrid.Dim, active, limit, func() {
 				c.root.Dim(active)
 				c.root.SetMaxPower(limit)
 			})
@@ -273,7 +260,7 @@ func (c *Fnn) setDim(limit float64, source string) error {
 		c.lastDimSource = source
 	}
 
-	c.applyMode(&c.smartgridConsumptionId, smartgrid.Dim, active, limit, func() {
+	c.applyMode(&c.smartgridConsumptionID, smartgrid.Dim, active, limit, func() {
 		c.root.Dim(active)
 		c.root.SetMaxPower(limit)
 	})
