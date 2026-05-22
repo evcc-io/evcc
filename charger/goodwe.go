@@ -28,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // GoodWe AC EV Charger Gen2 (e.g. GW11K-HCA) — Modbus TCP.
@@ -90,6 +91,10 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("goodwe")

@@ -5,6 +5,7 @@ products:
       generic: HCA Wallbox (Gen2)
 capabilities: ["mA", "rfid", "1p3p", "meter"]
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: |
       Modbus TCP muss in der SolarGo App im Menü „Kommunikation → Wallbox" aktiviert werden.
