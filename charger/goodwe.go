@@ -130,14 +130,16 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 		log.WARN.Printf("read hw phase count failed, defaulting to 3-phase: %v", err)
 	}
 
-	// conditionally register phase switching based on hardware capability; on read error
-	// fall back to a fixed-phase charger without dynamic 1p/3p switching
-	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
-		if binary.BigEndian.Uint16(b) == 1 {
-			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+	// only 3-phase hardware can do 1p/3p switching; conditionally register phase switching
+	// based on hardware capability. On read error, fall back to fixed-phase operation.
+	if wb.phases == 3 {
+		if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
+			if binary.BigEndian.Uint16(b) == 1 {
+				implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			}
+		} else {
+			log.WARN.Printf("read phase switch config failed, disabling dynamic phase switching: %v", err)
 		}
-	} else {
-		log.WARN.Printf("read phase switch config failed, disabling dynamic phase switching: %v", err)
 	}
 
 	// force "fast" charging mode so evcc fully controls power setpoint
