@@ -131,6 +131,7 @@ type Fnn struct {
 type curtailRule struct {
 	getter   func() (bool, error)
 	fraction float64
+	source   string
 }
 
 // Run starts the FNN control loop.
@@ -152,9 +153,9 @@ func (c *Fnn) Run() {
 // Update evaluates curtailment rules and applies the appropriate limit.
 func (c *Fnn) Update() error {
 	rules := []curtailRule{
-		{getter: c.w3, fraction: 0.0},
-		{getter: c.s2, fraction: 0.3},
-		{getter: c.s1, fraction: 0.6},
+		{getter: c.w3, fraction: 0.0, source: "w3"},
+		{getter: c.s2, fraction: 0.3, source: "s2"},
+		{getter: c.s1, fraction: 0.6, source: "s1"},
 	}
 
 	for _, rule := range rules {
@@ -164,16 +165,7 @@ func (c *Fnn) Update() error {
 		}
 
 		if active {
-			source := ""
-			switch rule.fraction {
-			case 0.0:
-				source = "w3"
-			case 0.3:
-				source = "s2"
-			case 0.6:
-				source = "s1"
-			}
-			return c.curtail(rule.fraction, source)
+			return c.curtail(rule.fraction, rule.source)
 		}
 	}
 
