@@ -160,6 +160,7 @@ func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
 var _ BoolGetter = (*ModbusSunspec)(nil)
 
 func boolFromPointValue(v any) (bool, error) {
+	// SunSpec enum/bitfield values are treated as boolean by convention: zero is false, non-zero is true.
 	switch x := v.(type) {
 	case bool:
 		return x, nil
@@ -177,11 +178,15 @@ func boolFromPointValue(v any) (bool, error) {
 		return x != 0, nil
 	case int64:
 		return x != 0, nil
+	case int:
+		return x != 0, nil
 	case uint16:
 		return x != 0, nil
 	case uint32:
 		return x != 0, nil
 	case uint64:
+		return x != 0, nil
+	case uint:
 		return x != 0, nil
 	default:
 		return false, fmt.Errorf("invalid point type: %T", v)

@@ -6,7 +6,7 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
-capabilities: ["battery-control","curtail"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: |
@@ -168,19 +168,20 @@ render: |
   curtail:
     source: sequence
     set:
-    - source: map
-      values:
-        0: 100 # %
-        1: {{ .curtailpercent }} # %
+    - source: convert
+      convert: bool2int
       set:
-        source: sunspec
-        uri: {{ joinHostPort .host .port }}
-        id: 1
-        value: 123:WMaxLimPct
-    - source: map
-      values:
-        0: 0
-        1: 1
+        source: map
+        values:
+          0: 100 # %
+          1: {{ .curtailpercent }} # %
+        set:
+          source: sunspec
+          uri: {{ joinHostPort .host .port }}
+          id: 1
+          value: 123:WMaxLimPct
+    - source: convert
+      convert: bool2int
       set:
         source: sunspec
         uri: {{ joinHostPort .host .port }}
