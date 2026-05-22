@@ -99,13 +99,23 @@ export default defineComponent({
 	emits: ["update:modelValue", "update:color"],
 	data() {
 		return {
-			palette: colors.palette,
 			popper: null as PopperInstance | null,
 			hexInputValue: "",
 			hexFocused: false,
 		};
 	},
 	computed: {
+		palette(): string[] {
+			// de-interleave warm/cool palette into 3×6 grid (rows: light/mid/dark, cols: hue)
+			const grid: string[][] = Array.from({ length: 3 }, () => Array(6).fill(""));
+			colors.palette.forEach((hex, i) => {
+				const row = Math.floor(i / 6);
+				const step = i % 6;
+				const col = Math.floor(step / 2) + (step % 2) * 3;
+				grid[row][col] = hex;
+			});
+			return grid.flat();
+		},
 		customHex(): string {
 			return normalizeHex(this.color);
 		},
