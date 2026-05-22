@@ -52,7 +52,7 @@ const (
 	goodweRegPhaseSwEnabled = 10023 // U16 (0=Off, 1=On)
 	goodweRegMaxPower       = 10029 // U16 ×0.1 kW, raw range [14,220]
 	goodweRegChargeMode     = 10032 // U16 (0=fast, 1=PV, 2=PV+battery)
-	goodweRegSerial         = 10040 // 8 regs ASCII (16 bytes)
+	goodweRegRfid           = 10050 // 7 regs ASCII (14 bytes)
 	goodweRegPowerSpec      = 10058 // U16 (0=7kW, 1=11kW, 2=22kW)
 	goodweRegPhaseSpec      = 10059 // U16 (0=1p, 1=3p)
 	goodweRegChargeCommand  = 10060 // U16 (1=stop, 2=start)
@@ -263,7 +263,7 @@ var _ api.Identifier = (*GoodWe)(nil)
 
 // Identify implements api.Identifier
 func (wb *GoodWe) Identify() (string, error) {
-	b, err := wb.conn.ReadHoldingRegisters(goodweRegSerial, 8)
+	b, err := wb.conn.ReadHoldingRegisters(goodweRegRfid, 7)
 	if err != nil {
 		return "", err
 	}
