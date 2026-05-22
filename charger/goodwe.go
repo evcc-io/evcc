@@ -117,21 +117,21 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSpec, 1); err == nil {
 		if binary.BigEndian.Uint16(b) == 1 {
 			wb.phases = 3
+
+			// conditionally register phase switching based on hardware capability
+			if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
+				if binary.BigEndian.Uint16(b) == 1 {
+					implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+					implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+				}
+			} else {
+				return nil, fmt.Errorf("read phase switch config: %w", err)
+			}
 		} else {
 			wb.phases = 1
 		}
 	} else {
 		return nil, fmt.Errorf("read hw phase count: %w", err)
-	}
-
-	// conditionally register phase switching based on hardware capability
-	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
-		if binary.BigEndian.Uint16(b) == 1 {
-			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
-			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
-		}
-	} else {
-		return nil, fmt.Errorf("read phase switch config: %w", err)
 	}
 
 	// force "fast" charging mode so evcc fully controls power setpoint
@@ -142,6 +142,11 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 	return wb, nil
 }
 
+// calcPower converts a per-phase current target into the wallbox's 0.1 kW power setpoint.
+// The protocol exposes only a total power register; how the wallbox converts that back into
+// a per-phase current limit is unspecified — it may assume a fixed nominal voltage (e.g. 230 V)
+// or use its own live voltage measurement. 230 V is used here as a best-effort approximation;
+// actual delivered current may deviate accordingly until verified on hardware.
 func (wb *GoodWe) calcPower(current float64, phases int) uint16 {
 	return uint16(min(max(230*float64(phases)*current, 1400), float64(wb.maxPower)) / 100) // 0.1 kW
 }
