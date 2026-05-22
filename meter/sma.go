@@ -126,13 +126,13 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 		switch sm.usage {
 		case "grid":
 			if sm.scale < 0 {
-				return sma.AsFloat(values[sunny.GridEnergyExport]) / 3600000, err
+				return sma.AsFloat(values[sunny.GridEnergyExportKWh]), err
 			}
-			return sma.AsFloat(values[sunny.GridEnergyImport]) / 3600000, err
+			return sma.AsFloat(values[sunny.GridEnergyImportKWh]), err
 		case "pv":
-			return sma.AsFloat(values[sunny.PvEnergyTotal]) / 3600000, err
+			return sma.AsFloat(values[sunny.PvEnergyTotalKWh]), err
 		case "battery":
-			return sma.AsFloat(values[sunny.BatteryEnergyDischarge]) / 3600000, err
+			return sma.AsFloat(values[sunny.BatteryEnergyDischargeKWh]), err
 		}
 	}
 	if sm.scale < 0 {

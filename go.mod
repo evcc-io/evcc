@@ -151,7 +151,7 @@ require (
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dmarkham/enumer v1.6.1 // indirect
+	github.com/dmarkham/enumer v1.6.3 // indirect
 	github.com/donovanhide/eventsource v0.0.0-20210830082556-c59027999da0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -271,4 +271,4 @@ replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20
 
 // Temporary: pick up hybrid-inverter/battery LRI codes from evcc-io/sunny#1
 // until gitlab.com/bboehmke/sunny!7 is merged and tagged upstream.
-replace gitlab.com/bboehmke/sunny => github.com/evcc-io/sunny v0.16.1-0.20260522001453-91dd70567594
+replace gitlab.com/bboehmke/sunny => github.com/evcc-io/sunny v0.16.1-0.20260525171612-2be5b102f8e0
