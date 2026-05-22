@@ -51,3 +51,10 @@ type BatteryState struct {
 	Devices  []Measurement    `json:"devices,omitempty" influxdb:"battery"`
 	Forecast *BatteryForecast `json:"forecast,omitempty"`
 }
+
+// GeoLocation defines geolocation settings (incl. geofencing for vehicle detection)
+type GeoLocation struct {
+	Enabled bool    `json:"enabled,omitempty"` // Enable geolocation services
+	Lat     float64 `json:"lat,omitempty"`     // Latitude of site
+	Lon     float64 `json:"lon,omitempty"`     // Longitude of site
+}

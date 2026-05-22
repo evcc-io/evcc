@@ -113,12 +113,6 @@
       "labelResidualPower": "Residual power",
       "title": "Control behavior"
     },
-    "currency": {
-      "description": "Used to format energy prices, costs and savings based on your tariff.",
-      "example": "Your charging price was {price}. You saved {amount}.",
-      "label": "Currency",
-      "title": "Currency"
-    },
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
@@ -269,6 +263,7 @@
       "saving": "Saving…",
       "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
+      "site": "Site",
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
       "title": "Title",
@@ -708,6 +703,35 @@
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "currency": {
+        "description": "Used to format energy prices, costs and savings based on your tariff.",
+        "example": "Your charging price was {price}. You saved {amount}.",
+        "label": "Currency"
+      },
+      "geolocation": {
+        "description": "Site coordinates are used for geolocation services (e.g. geofencing to optimise vehicle detection).",
+        "enabled": {
+          "label": "Enable geolocation services"
+        },
+        "latitude": {
+          "description": "Value range: -90 to 90",
+          "example": "49.1234",
+          "label": "Latitude"
+        },
+        "longitude": {
+          "description": "Value range: -180 to 180",
+          "example": "8.1234",
+          "label": "Longitude"
+        },
+        "title": "Coordinates"
+      },
+      "sitetitle": {
+        "description": "Displayed on main screen and browser tab.",
+        "label": "Site title"
+      },
+      "title": "Edit site settings"
+    },
     "sponsor": {
       "activationKey": "License Key",
       "activationKeyHint": "Sent to you via email. Can be found in the {url}.",
@@ -847,11 +871,6 @@
     "telemetry": {
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
       "title": "Telemetry"
-    },
-    "title": {
-      "description": "Displayed on main screen and browser tab.",
-      "label": "Title",
-      "title": "Edit Title"
     },
     "validation": {
       "failed": "failed",

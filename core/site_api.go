@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"strings"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -61,6 +63,34 @@ func (site *Site) SetTitle(title string) {
 	site.Title = title
 	site.publish(keys.SiteTitle, title)
 	settings.SetString(keys.Title, title)
+}
+
+// GetGeoLocation returns the geolocation settings
+func (site *Site) GetGeoLocation() types.GeoLocation {
+	site.RLock()
+	defer site.RUnlock()
+	return site.GeoLocation
+}
+
+// SetGeoLocation sets the geolocation settings
+func (site *Site) SetGeoLocation(geoLocation types.GeoLocation) {
+	if geoLocation.Enabled {
+		if (geoLocation.Lat == 0 && geoLocation.Lon == 0) || // geolocation enabled without setting coordinates
+			math.Abs(geoLocation.Lat) > 90 ||
+			math.Abs(geoLocation.Lon) > 180 {
+			site.log.ERROR.Printf("invalid geolocation settings: %+v", geoLocation)
+			return
+		}
+	}
+
+	site.log.DEBUG.Printf("set geolocation: %+v", geoLocation)
+
+	site.Lock()
+	defer site.Unlock()
+
+	site.GeoLocation = geoLocation
+	site.publish(keys.GeoLocation, geoLocation)
+	settings.SetJson(keys.GeoLocation, geoLocation)
 }
 
 // GetGridMeterRef returns the GridMeterRef

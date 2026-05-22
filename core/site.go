@@ -64,6 +64,8 @@ type Site struct {
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 
+	GeoLocation types.GeoLocation // Geolocation settings
+
 	// meters
 	circuit       api.Circuit                // Circuit
 	gridMeter     api.Meter                  // Grid usage meter
@@ -130,7 +132,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.tariffs = tariffs
 
 	handler := config.Vehicles()
-	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()))
+	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()), site)
 	handler.Subscribe(site.updateVehicles)
 
 	site.prioritizer = prioritizer.New(log)
@@ -345,6 +347,11 @@ func (site *Site) restoreSettings() error {
 		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
+	}
+
+	var geoLocation types.GeoLocation
+	if err := settings.Json(keys.GeoLocation, &geoLocation); err == nil {
+		site.SetGeoLocation(geoLocation)
 	}
 
 	// drop legacy accumulator-based forecast settings (now stored via metrics collector)
@@ -1037,6 +1044,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publish(keys.SiteTitle, site.Title)
+	site.publish(keys.GeoLocation, site.GeoLocation)
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Grid, api.Meter(nil))
