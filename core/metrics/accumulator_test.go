@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMeterImportMeterTotal(t *testing.T) {
+func TestMeterEnergyMeterTotal(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())
 
@@ -23,7 +23,7 @@ func TestMeterImportMeterTotal(t *testing.T) {
 	assert.Equal(t, 1.0, me.Imported())
 }
 
-func TestMeterImportAddPower(t *testing.T) {
+func TestMeterEnergyAddPower(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())
 

@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"fmt"
 	"net/http"
@@ -51,7 +68,7 @@ func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
 			implement.Has(wb, implement.Meter(wb.currentPower))
-			implement.Has(wb, implement.MeterImport(wb.totalEnergy))
+			implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 			implement.Has(wb, implement.PhaseCurrents(wb.currents))
 			return wb, nil
 		}
@@ -248,7 +265,7 @@ func (wb *PCElectric) currentPower() (float64, error) {
 	return 230 * (l1 + l2 + l3), err
 }
 
-// ImportEnergy implements the api.MeterImport interface kwh
+// TotalEnergy implements the api.MeterEnergy interface kwh
 func (wb *PCElectric) totalEnergy() (float64, error) {
 	var res pcelectric.MeterInfo
 	uri := fmt.Sprintf("%s/meterinfo/%s", wb.uri, wb.meter)

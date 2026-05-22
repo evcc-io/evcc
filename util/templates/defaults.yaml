@@ -94,10 +94,10 @@ params:
       de: Maximale Phasenanzahl
       en: Maximum number of phases
     help:
-      de: Die maximale Anzahl der Phasen welche genutzt werden können
-      en: The maximum number of phases which can be used
-    example: 3
-    type: int
+      de: Wird für die Bestimmung des minimalen Solar-Überschusses und der Planungsdauer verwendet.
+      en: Used to determine the minimum solar surplus and plan duration.
+    type: choice
+    choice: ["1", "2", "3"]
   - name: connector
     description:
       en: Connector number
@@ -128,8 +128,8 @@ params:
       de: Standardlademodus
       en: Default charging mode
     help:
-      de: Wird beim Anschließen eines Fahrzeugs verwendet. Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
-      en: Used when a vehicle is connected. Possible values are Off, Now, MinPV and PV, or empty if none should be set
+      de: Wird beim Anschließen eines Fahrzeugs gesetzt. Leer lassen, um den aktuellen Modus beizubehalten.
+      en: Applied when a vehicle is connected. Leave empty to keep the current mode.
     type: chargemodes
   - name: minsoc
     unit: "%"
@@ -157,20 +157,20 @@ params:
     unit: A
     description:
       de: Minimale Stromstärke
-      en: Minimum amperage
+      en: Minimum current
     help:
       de: Definiert die minimale Stromstärke pro angeschlossener Phase die genutzt werden kann
-      en: The minimum amperage per connected phase that can be used
+      en: The minimum current per connected phase that can be used
     example: 6
     type: int
   - name: maxcurrent
     unit: A
     description:
       de: Maximale Stromstärke
-      en: Maximum amperage
+      en: Maximum current
     help:
       de: Definiert die maximale Stromstärke pro angeschlossener Phase die genutzt werden kann
-      en: The maximum amperage per connected phase that can be used
+      en: The maximum current per connected phase that can be used
     example: 16
     type: int
   - name: maxpower
@@ -185,19 +185,19 @@ params:
     example: 10000
   - name: identifiers
     description:
-      de: Identifikation
-      en: Identification
+      de: RFID-Identifikation
+      en: RFID identification
     help:
-      de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/features/vehicle"
-      en: "Mostly this can be added later, see: https://docs.evcc.io/en/docs/features/vehicle"
+      de: "Für die Zuordnung des Fahrzeugs an einen Ladepunkt via RFID-Karte. Die Kennung wird am Ladepunkt angezeigt. Übernehme den Wert von dort. [Mehr erfahren.](https://docs.evcc.io/docs/features/vehicle)"
+      en: "Used to assign the vehicle to a loadpoint via RFID card. The identifier is shown on the loadpoint. Copy the value from there. [Learn more.](https://docs.evcc.io/en/docs/features/vehicle)"
     type: list
   - name: priority
     description:
       de: Priorität
       en: Priority
     help:
-      de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie
-      en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
+      de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von Überschussenergie (höhere Werte, höhere Priorität).
+      en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating surplus energy (higher values, higher priority).
     type: int
   - name: standbypower
     unit: W
@@ -578,6 +578,15 @@ presets:
       help:
         de: Zusätzlicher fester Aufschlag pro kWh
         en: Additional fixed charge per kWh
+    - name: chargesZones
+      type: zones
+      advanced: true
+      description:
+        en: Charges zones
+        de: Aufschlagszonen
+      help:
+        de: Zeitabhängige Aufschläge, die den Standardaufschlag überschreiben.
+        en: Time-based grid fees that override the default charge.
     - name: tax
       type: float
       advanced: true

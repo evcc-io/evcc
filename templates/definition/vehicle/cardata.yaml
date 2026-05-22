@@ -2,10 +2,10 @@ template: cardata
 products:
   - brand: BMW
     description:
-      generic: CarData (EU Data Act)
+      generic: CarData
   - brand: Mini
     description:
-      generic: CarData (EU Data Act)
+      generic: CarData
 requirements:
   description:
     de: |

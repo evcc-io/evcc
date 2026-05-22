@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"encoding/binary"
@@ -228,10 +245,10 @@ func (nrg *NRGKickGen2) CurrentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)) * 1e-3, nil
 }
 
-var _ api.MeterImport = (*NRGKickGen2)(nil)
+var _ api.MeterEnergy = (*NRGKickGen2)(nil)
 
-// ImportEnergy implements the api.MeterImport interface
-func (nrg *NRGKickGen2) ImportEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (nrg *NRGKickGen2) TotalEnergy() (float64, error) {
 	b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2TotalChargedEnergy, 4)
 	if err != nil {
 		return 0, err

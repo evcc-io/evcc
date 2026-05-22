@@ -47,6 +47,40 @@ render: |
     cache: {{ .cache }}
     timeout: {{ .timeout }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+  voltages:
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 1 )) then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 2 )) then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 3 )) then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsVoltage else 0 end
   currents:
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1
@@ -108,6 +142,40 @@ render: |
     timeout: {{ .timeout }}
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").whLifetime else .production[] | select(.type == "inverters").whLifetime end
     scale: 0.001
+  voltages:
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 1 )) then .production[] | select(.measurementType == "production").lines[0].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 2 )) then .production[] | select(.measurementType == "production").lines[1].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 3 )) then .production[] | select(.measurementType == "production").lines[2].rmsVoltage else 0 end
   currents:
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1
