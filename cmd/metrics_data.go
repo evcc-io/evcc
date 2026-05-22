@@ -28,11 +28,14 @@ selected by name or title; run the entities subcommand to list them.`,
 
 func init() {
 	metricsCmd.AddCommand(metricsDataCmd)
+	metricsDataCmd.Flags().String("range", "", "Quick timeframe: today, month or year")
 	metricsDataCmd.Flags().String("from", "", "Start date as YYYY-MM-DD (default today)")
 	metricsDataCmd.Flags().String("to", "", "End date as YYYY-MM-DD, inclusive (default today)")
 	metricsDataCmd.Flags().String("aggregate", "hour", "Aggregation interval: 15m, hour, day or month")
 	metricsDataCmd.Flags().String("group", "", "Limit output to an entity group")
 	metricsDataCmd.Flags().Bool("csv", false, "Output CSV instead of a table")
+	metricsDataCmd.MarkFlagsMutuallyExclusive("range", "from")
+	metricsDataCmd.MarkFlagsMutuallyExclusive("range", "to")
 }
 
 func runMetricsData(cmd *cobra.Command, args []string) {
@@ -43,7 +46,7 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal("--group and entity arguments are mutually exclusive")
 	}
 
-	from, to, err := metricsTimeframe(cmd.Flag("from").Value.String(), cmd.Flag("to").Value.String())
+	from, to, err := metricsTimeframe(cmd.Flag("range").Value.String(), cmd.Flag("from").Value.String(), cmd.Flag("to").Value.String())
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -89,14 +92,30 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 	fmt.Fprintln(os.Stderr, "\nvalues in kWh")
 }
 
-// metricsTimeframe resolves the from/to query bounds from optional YYYY-MM-DD
-// flags. The to date is inclusive; an empty timeframe defaults to the current
-// day.
-func metricsTimeframe(fromStr, toStr string) (time.Time, time.Time, error) {
+// metricsTimeframe resolves the from/to query bounds. A non-empty range string
+// (today, month, year) takes precedence and is mutually exclusive with the
+// from/to date flags. The to date is inclusive; an empty timeframe defaults to
+// the current day.
+func metricsTimeframe(rangeStr, fromStr, toStr string) (time.Time, time.Time, error) {
 	const layout = "2006-01-02"
 
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+
+	if rangeStr != "" {
+		switch strings.ToLower(rangeStr) {
+		case "today":
+			return today, today.AddDate(0, 0, 1), nil
+		case "month":
+			from := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
+			return from, from.AddDate(0, 1, 0), nil
+		case "year":
+			from := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, time.Local)
+			return from, from.AddDate(1, 0, 0), nil
+		default:
+			return time.Time{}, time.Time{}, fmt.Errorf("invalid --range %q (today, month or year)", rangeStr)
+		}
+	}
 
 	from := today
 	if fromStr != "" {

@@ -23,14 +23,17 @@ be selected by name or title.`,
 
 func init() {
 	metricsCmd.AddCommand(metricsBatteryCmd)
+	metricsBatteryCmd.Flags().String("range", "", "Quick timeframe: today, month or year")
 	metricsBatteryCmd.Flags().String("from", "", "Start date as YYYY-MM-DD (default today)")
 	metricsBatteryCmd.Flags().String("to", "", "End date as YYYY-MM-DD, inclusive (default today)")
+	metricsBatteryCmd.MarkFlagsMutuallyExclusive("range", "from")
+	metricsBatteryCmd.MarkFlagsMutuallyExclusive("range", "to")
 }
 
 func runMetricsBattery(cmd *cobra.Command, args []string) {
 	setupMetrics(cmd)
 
-	from, to, err := metricsTimeframe(cmd.Flag("from").Value.String(), cmd.Flag("to").Value.String())
+	from, to, err := metricsTimeframe(cmd.Flag("range").Value.String(), cmd.Flag("from").Value.String(), cmd.Flag("to").Value.String())
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}

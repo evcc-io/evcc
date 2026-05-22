@@ -12,17 +12,43 @@ import (
 
 func TestMetricsTimeframe(t *testing.T) {
 	// explicit range: to is inclusive, so it extends to the end of the named day
-	from, to, err := metricsTimeframe("2026-05-01", "2026-05-03")
+	from, to, err := metricsTimeframe("", "2026-05-01", "2026-05-03")
 	require.NoError(t, err)
 	require.Equal(t, time.Date(2026, 5, 1, 0, 0, 0, 0, time.Local), from)
 	require.Equal(t, time.Date(2026, 5, 4, 0, 0, 0, 0, time.Local), to)
 
 	// to before from
-	_, _, err = metricsTimeframe("2026-05-05", "2026-05-01")
+	_, _, err = metricsTimeframe("", "2026-05-05", "2026-05-01")
 	require.Error(t, err)
 
 	// invalid date
-	_, _, err = metricsTimeframe("notadate", "")
+	_, _, err = metricsTimeframe("", "notadate", "")
+	require.Error(t, err)
+}
+
+func TestMetricsTimeframeRange(t *testing.T) {
+	now := time.Now()
+
+	// today
+	from, to, err := metricsTimeframe("today", "", "")
+	require.NoError(t, err)
+	require.Equal(t, time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local), from)
+	require.Equal(t, from.AddDate(0, 0, 1), to)
+
+	// month, case-insensitive
+	from, to, err = metricsTimeframe("Month", "", "")
+	require.NoError(t, err)
+	require.Equal(t, time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local), from)
+	require.Equal(t, from.AddDate(0, 1, 0), to)
+
+	// year
+	from, to, err = metricsTimeframe("year", "", "")
+	require.NoError(t, err)
+	require.Equal(t, time.Date(now.Year(), 1, 1, 0, 0, 0, 0, time.Local), from)
+	require.Equal(t, from.AddDate(1, 0, 0), to)
+
+	// invalid range value
+	_, _, err = metricsTimeframe("decade", "", "")
 	require.Error(t, err)
 }
 
