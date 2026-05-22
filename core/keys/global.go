@@ -29,10 +29,12 @@ const (
 	Plant              = "plant"
 	Telemetry          = "telemetry"
 	Optimizer          = "optimizer"
+	Mcp                = "mcp"
 	DemoMode           = "demoMode"
 	Remote             = "remote"
 	RemoteClients      = "remoteClients"
 	RemoteLastSeen     = "remoteLastSeen"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
+	DeviceColors       = "deviceColors"
 )

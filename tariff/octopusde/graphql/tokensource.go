@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"github.com/hasura/go-graphql-client"
 	"golang.org/x/oauth2"
 )
+
+// ErrAuthFailed indicates the Kraken API rejected the supplied credentials.
+// Callers should treat this as permanent and stop retrying to avoid account lockouts.
+var ErrAuthFailed = errors.New("authentication failed")
 
 type tokenSource struct {
 	log             *util.Logger
@@ -34,6 +39,14 @@ func (ts *tokenSource) Token() (*oauth2.Token, error) {
 		"email":    ts.email,
 		"password": ts.password,
 	}); err != nil {
+		// Any GraphQL error response from obtainKrakenToken is an application-level
+		// rejection (bad credentials, account locked, etc.) — repeating the request
+		// will not change the outcome and continued retries can lock the account.
+		// Network/transport failures don't surface as graphql.Errors and stay
+		// transient via the wrapped path below.
+		if _, ok := errors.AsType[graphql.Errors](err); ok {
+			return nil, fmt.Errorf("%w: %v", ErrAuthFailed, err)
+		}
 		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
 

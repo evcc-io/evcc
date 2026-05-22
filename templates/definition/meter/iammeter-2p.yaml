@@ -1,0 +1,39 @@
+template: iammeter-2p
+products:
+  - brand: IAMMETER
+    description:
+      generic: WEM2067
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+  - name: channel
+    type: int
+    default: 1
+    required: true
+    description:
+      de: Messkanal (1-2)
+      en: Meter channel (1-2)
+  - name: cache
+    advanced: true
+    default: 2s
+render: |
+  type: custom
+  {{- $idx := sub .channel 1 }}
+  power:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Datas[{{ $idx }}][2] # active power, unit: W
+    cache: {{ .cache }}
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    {{- if eq .usage "pv" }}
+    jq: .Datas[{{ $idx }}][4] # reverse active energy, unit: kWh
+    {{- else }}
+    jq: .Datas[{{ $idx }}][3] # forward active energy, unit: kWh
+    {{- end }}
+    cache: {{ .cache }}

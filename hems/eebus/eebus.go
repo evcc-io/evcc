@@ -176,10 +176,10 @@ func (c *EEBus) run() error {
 
 	c.log.TRACE.Println("status:", c.status)
 
-	// check heartbeat
 	_, heartbeatErr := c.heartbeat.Get()
+
+	// LPC-911 / LPP-911: heartbeat lost while operating, enter failsafe.
 	if heartbeatErr != nil && c.status != StatusFailsafe {
-		// LPC-914/2
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
 		c.setStatus(StatusFailsafe)
 
@@ -194,12 +194,18 @@ func (c *EEBus) run() error {
 	}
 
 	if c.status == StatusFailsafe {
-		// LPC-914/2
-		if heartbeatErr != nil || time.Since(c.statusUpdated) <= c.failsafeDuration {
+		if heartbeatErr != nil {
+			// LPC-921 / LPP-921: still no heartbeat - keep applying the failsafe
+			// limit. The failsafe limit is our self-determined protective default
+			// for the Unlimited-autonomous state.
 			return nil
 		}
 
-		c.log.DEBUG.Println("heartbeat returned or failsafe duration exceeded- leaving failsafe mode")
+		// LPC-918/919/920 / LPP-equivalent: heartbeat returned - leave failsafe
+		// immediately. Fall through to the LPC-914/1 block below, which will
+		// apply whatever fresh limit the EG sent (or release the limit if the
+		// EG has not sent an active limit since the failsafe entry).
+		c.log.DEBUG.Println("heartbeat returned- leaving failsafe mode")
 		c.setStatus(StatusNormal)
 
 		c.setConsumptionLimit(0)

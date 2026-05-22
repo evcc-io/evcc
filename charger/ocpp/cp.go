@@ -159,7 +159,7 @@ func (cp *CP) onTransportConnect() {
 	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
 	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
 	// Connected() check which would fail at this point.
-	time.AfterFunc(triggerBootDelay, func() {
+	time.AfterFunc(TriggerBootDelay, func() {
 		cp.mu.RLock()
 		// If BootNotification already arrived or timer was cancelled (disconnect),
 		// there is nothing to do.
