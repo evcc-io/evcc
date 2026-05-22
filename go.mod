@@ -268,3 +268,7 @@ tool (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
+
+// Temporary: pick up hybrid-inverter/battery LRI codes from evcc-io/sunny#1
+// until gitlab.com/bboehmke/sunny!7 is merged and tagged upstream.
+replace gitlab.com/bboehmke/sunny => github.com/evcc-io/sunny v0.16.1-0.20260522001453-91dd70567594

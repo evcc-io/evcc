@@ -3,9 +3,24 @@ covers: ["sma-inverter"]
 products:
   - brand: SMA
     description:
-      de: Wechselrichter (Speedwire)
-      en: Inverter (Speedwire)
+      de: Wechselrichter / Hybrid-Wechselrichter (Speedwire)
+      en: Inverter / Hybrid Inverter (Speedwire)
 requirements:
+  description:
+    de: |
+      Liest Werte über das SMA Speedwire-Protokoll aus.
+      Bei Hybrid-Wechselrichtern (z. B. Sunny Tripower Smart Energy, Sunny Boy Storage)
+      werden zusätzlich PV-/Netz-/Hausverbrauchs- und Batterie-Telemetriedaten in der
+      Diagnoseausgabe (evcc meter --diagnose) sichtbar.
+      Für aktive Batteriesteuerung den Modbus-basierten Eintrag SMA Smart Energy Hybrid
+      Wechselrichter verwenden.
+    en: |
+      Reads values via the SMA Speedwire protocol.
+      For hybrid inverters (e.g. Sunny Tripower Smart Energy, Sunny Boy Storage)
+      additional PV/grid/consumption power and battery telemetry are exposed in
+      the diagnostic output (evcc meter --diagnose).
+      For active battery control use the Modbus-based SMA Smart Energy Hybrid
+      Inverter template instead.
   evcc: ["skiptest"]
 params:
   - name: usage

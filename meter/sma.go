@@ -19,6 +19,8 @@ type SMA struct {
 	implement.Caps
 	uri    string
 	scale  float64
+	usage  string
+	hybrid bool
 	device *sma.Device
 }
 
@@ -36,6 +38,7 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		Usage                    string
 		Serial                   uint32
 		Scale                    float64 // power only
+		Hybrid                   bool    // use direct PV/grid/battery LRIs from hybrid inverters
 	}{
 		Password: "0000",
 		Scale:    1,
@@ -45,15 +48,17 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.Usage, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.Usage, cc.Hybrid, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, hybrid bool, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
 	sm := &SMA{
-		Caps:  implement.New(),
-		uri:   uri,
-		scale: scale,
+		Caps:   implement.New(),
+		uri:    uri,
+		scale:  scale,
+		usage:  usage,
+		hybrid: hybrid,
 	}
 
 	discoverer, err := sma.GetDiscoverer(iface)
@@ -100,6 +105,15 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	values, err := sm.device.Values()
+	if sm.hybrid {
+		switch sm.usage {
+		case "grid":
+			// grid: import minus export (consumption positive)
+			return sm.scale * (sma.AsFloat(values[sunny.GridPowerImport]) - sma.AsFloat(values[sunny.GridPowerExport])), err
+		case "pv":
+			return sm.scale * sma.AsFloat(values[sunny.PvPower]), err
+		}
+	}
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
@@ -108,6 +122,19 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
+	if sm.hybrid {
+		switch sm.usage {
+		case "grid":
+			if sm.scale < 0 {
+				return sma.AsFloat(values[sunny.GridEnergyExport]) / 3600000, err
+			}
+			return sma.AsFloat(values[sunny.GridEnergyImport]) / 3600000, err
+		case "pv":
+			return sma.AsFloat(values[sunny.PvEnergyTotal]) / 3600000, err
+		case "battery":
+			return sma.AsFloat(values[sunny.BatteryEnergyDischarge]) / 3600000, err
+		}
+	}
 	if sm.scale < 0 {
 		return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
 	}

@@ -1,0 +1,41 @@
+template: sma-hybrid-speedwire
+products:
+  - brand: SMA
+    description:
+      de: Smart Energy Hybrid-Wechselrichter (Speedwire, nur Lesen)
+      en: Smart Energy Hybrid Inverter (Speedwire, read-only)
+requirements:
+  description:
+    de: |
+      Liest direkte PV-, Netz-, Hausverbrauchs- und Batterie-Werte über das SMA Speedwire-Protokoll.
+      Im Gegensatz zur Standard-Speedwire-Variante werden die in der Diagnose neu verfügbaren
+      Hybrid-LRIs (PvPower, GridPower*, BatteryEnergy*) als primäre Quelle genutzt — die
+      Messwerte sind dadurch je nach Wechselrichtertyp genauer als die AC-Gesamtwerte.
+      Für aktive Batteriesteuerung den Modbus-basierten Eintrag SMA Smart Energy Hybrid
+      Wechselrichter verwenden.
+    en: |
+      Reads direct PV, grid, consumption and battery values via the SMA Speedwire protocol.
+      In contrast to the standard Speedwire template, the hybrid-specific LRIs (PvPower,
+      GridPower*, BatteryEnergy*) are used as primary source — depending on the inverter,
+      these are more accurate than the inverter's overall AC values.
+      For active battery control use the Modbus-based SMA Smart Energy Hybrid Inverter
+      template instead.
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["pv", "battery", "grid"]
+  - name: host
+  - name: password
+    help:
+      en: Password for user group Standard
+      de: Passwort für Benutzergruppe Benutzer
+  - preset: battery-params
+render: |
+  type: sma
+  usage: {{ .usage }}
+  hybrid: true
+  uri: {{ .host }} # IP address or hostname
+  password: {{ .password }} # optional
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}
