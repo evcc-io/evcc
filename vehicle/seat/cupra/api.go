@@ -36,7 +36,11 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 			Base:   v.Client.Transport,
 		},
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"app-market": "android",
+			"app-market":  "android",
+			"app-brand":   "cupra",
+			"app-version": "2.15.0",
+			"User-Agent":  "OLACupra/2.15.0 (Android 12; sdk_gphone64_x86_64; Google) Mobile",
+			"origin":      "app",
 		}),
 	}
 
