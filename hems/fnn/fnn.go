@@ -20,10 +20,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		MaxCurtailPower float64
 		MaxPowerDim     float64
 		MaxDimPower     float64
-		W3              plugin.Config
-		W4              plugin.Config
-		S1              plugin.Config
-		S2              plugin.Config
+		W3              *plugin.Config
+		W4              *plugin.Config
+		S1              *plugin.Config
+		S2              *plugin.Config
 		Interval        time.Duration
 	}{
 		Interval: 10 * time.Second,
@@ -41,24 +41,36 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 
 	site.SetCircuit(gridcontrol)
 
-	s1G, err := cc.S1.BoolGetter(ctx)
-	if err != nil {
-		return nil, err
+	s1G := func() (bool, error) { return false, nil }
+	if cc.S1 != nil {
+		s1G, err = cc.S1.BoolGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	s2G, err := cc.S2.BoolGetter(ctx)
-	if err != nil {
-		return nil, err
+	s2G := func() (bool, error) { return false, nil }
+	if cc.S2 != nil {
+		s2G, err = cc.S2.BoolGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	w3G, err := cc.W3.BoolGetter(ctx)
-	if err != nil {
-		return nil, err
+	w3G := func() (bool, error) { return false, nil }
+	if cc.W3 != nil {
+		w3G, err = cc.W3.BoolGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	w4G, err := cc.W4.BoolGetter(ctx)
-	if err != nil {
-		return nil, err
+	w4G := func() (bool, error) { return false, nil }
+	if cc.W4 != nil {
+		w4G, err = cc.W4.BoolGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	maxCurtailPower := cc.MaxCurtailPower
