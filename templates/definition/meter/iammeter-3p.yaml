@@ -2,7 +2,13 @@ template: iammeter-3p
 products:
   - brand: IAMMETER
     description:
-      generic: WEM3080T/WEM3046T/WEM3050T
+      generic: WEM3080T
+  - brand: IAMMETER
+    description:
+      generic: WEM3046T
+  - brand: IAMMETER
+    description:
+      generic: WEM3050T
 requirements:
   description:
     de: |
