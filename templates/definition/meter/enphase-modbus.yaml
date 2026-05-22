@@ -4,15 +4,17 @@ products:
     description:
       generic: IQ Envoy (Modbus)
 requirements:
+  description:
+    en: |
+      Requires Enphase support to enable modbus functionality on IQ Gateway.
+    de: |
+      Erfordert Enphase-Unterstützung, um die Modbus-Funktionalität auf dem IQ Gateway zu aktivieren.
 params:
   - name: usage
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip"]
     id: 1
-    help:
-      en: "Requires Enphase support to enable modbus functionality on IQ Gateway."
-      de: "Erfordert Enphase-Unterstützung, um die Modbus-Funktionalität auf dem IQ Gateway zu aktivieren."
 render: |
   type: custom
   {{- if eq .usage "pv" }}
