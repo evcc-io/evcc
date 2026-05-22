@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -47,7 +48,6 @@ const (
 	goodweRegVoltages       = 10009 // U16 ×0.1 V, 3 regs (L1/L2/L3)
 	goodweRegCurrents       = 10012 // U16 ×0.1 A, 3 regs (L1/L2/L3)
 	goodweRegActualPower    = 10015 // U16 ×0.1 kW
-	goodweRegSessionEnergy  = 10016 // U16 ×0.1 kWh
 	goodweRegStatus         = 10017 // U16 enum (see status mapping)
 	goodweRegPhaseSwEnabled = 10023 // U16 (0=Off, 1=On)
 	goodweRegMaxPower       = 10029 // U16 ×0.1 kW, raw range [14,220]
@@ -94,44 +94,50 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 	log := util.NewLogger("goodwe")
 	conn.Logger(log.TRACE)
 
+	// defaults if hardware capability registers can't be read:
+	// assume 3-phase wallbox without phase switching at typical 11 kW class.
 	wb := &GoodWe{
-		Caps: implement.New(),
-		conn: conn,
+		Caps:     implement.New(),
+		conn:     conn,
+		phases:   3,
+		maxPower: 11000,
 	}
 
-	// read hardware power spec (0=7kW, 1=11kW, 2=22kW)
+	// read hardware power spec (0=7kW, 1=11kW, 2=22kW); fall back to default on error/unknown
 	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPowerSpec, 1); err == nil {
-		switch binary.BigEndian.Uint16(b) {
+		switch v := binary.BigEndian.Uint16(b); v {
 		case 0:
+			wb.phases = 1
 			wb.maxPower = 7000
 		case 1:
 			wb.maxPower = 11000
 		case 2:
 			wb.maxPower = 22000
+		default:
+			log.WARN.Printf("unknown power spec %d, defaulting to %d W", v, wb.maxPower)
 		}
 	} else {
-		return nil, fmt.Errorf("read power capability: %w", err)
+		log.WARN.Printf("read power capability failed, defaulting to %d W: %v", wb.maxPower, err)
 	}
 
-	// read hardware phase spec (0=1-phase, 1=3-phase)
+	// read hardware phase spec (0=1-phase, 1=3-phase); fall back to 3-phase on error
 	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSpec, 1); err == nil {
-		if binary.BigEndian.Uint16(b) == 1 {
-			wb.phases = 3
-
-			// conditionally register phase switching based on hardware capability
-			if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
-				if binary.BigEndian.Uint16(b) == 1 {
-					implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
-					implement.Has(wb, implement.PhaseGetter(wb.getPhases))
-				}
-			} else {
-				return nil, fmt.Errorf("read phase switch config: %w", err)
-			}
-		} else {
+		if binary.BigEndian.Uint16(b) == 0 {
 			wb.phases = 1
 		}
 	} else {
-		return nil, fmt.Errorf("read hw phase count: %w", err)
+		log.WARN.Printf("read hw phase count failed, defaulting to 3-phase: %v", err)
+	}
+
+	// conditionally register phase switching based on hardware capability; on read error
+	// fall back to a fixed-phase charger without dynamic 1p/3p switching
+	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
+		if binary.BigEndian.Uint16(b) == 1 {
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+		}
+	} else {
+		log.WARN.Printf("read phase switch config failed, disabling dynamic phase switching: %v", err)
 	}
 
 	// force "fast" charging mode so evcc fully controls power setpoint
@@ -266,13 +272,13 @@ func (wb *GoodWe) getPhases() (int, error) {
 
 var _ api.Identifier = (*GoodWe)(nil)
 
-// Identify implements api.Identifier
+// Identify implements api.Identifier (RFID UID, 14-byte NUL-padded ASCII).
 func (wb *GoodWe) Identify() (string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(goodweRegRfid, 7)
 	if err != nil {
 		return "", err
 	}
-	return bytesAsString(b), nil
+	return bytesAsString(bytes.Trim(b, "\x00")), nil
 }
 
 var _ loadpoint.Controller = (*GoodWe)(nil)
