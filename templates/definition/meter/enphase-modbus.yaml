@@ -17,65 +17,35 @@ params:
     id: 1
 render: |
   type: custom
+  # sunspec model 701 (DER AC Measurement)
   {{- if eq .usage "pv" }}
   power:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40080 # Total active power. Active power is positive for DER generation and negative for absorption.
-      type: holding
-      decode: int16
-    scale: 1
+    value: 701:W
   energy:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40089 # Total active energy injected.
-      type: holding
-      decode: uint64
+    value: 701:TotWhInj
     scale: 0.001
   currents:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40115 # Current phase L1.
-      type: holding
-      decode: int16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40138 # Current phase L2.
-      type: holding
-      decode: int16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40161 # Current phase L3.
-      type: holding
-      decode: int16
-    scale: 0.01
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:AL1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:AL2
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:AL3
   voltages:
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40117 # Phase voltage L1-N.
-      type: holding
-      decode: uint16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40140 # Phase voltage L2-N.
-      type: holding
-      decode: uint16
-    scale: 0.01
-  - source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40163 # Phase voltage L3-N.
-      type: holding
-      decode: uint16
-    scale: 0.01
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:VL1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:VL2
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:VL3
   {{- end }}
