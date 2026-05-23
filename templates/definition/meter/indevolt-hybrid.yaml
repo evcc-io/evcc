@@ -61,14 +61,14 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2101%2C2108%5D%7D
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[2101,2108]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
     jq: ."2101" - ."2108" # AC Input Power minus AC Output Power
     cache: {{ .cache }}
   energy:
     source: http
-    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2107%5D%7D
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[2107]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
     jq: ."2107" # Total AC Input Energy (kWh)
@@ -77,14 +77,14 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B1501%5D%7D
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[1501]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
     jq: ."1501" # Total DC Output Power (W)
     cache: {{ .cache }}
   energy:
     source: http
-    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B1505%5D%7D
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[1505]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
     jq: ."1505" # Cumulative PV Production (Wh)
@@ -94,21 +94,21 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6000%5D%7D
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[6000]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
     jq: ."6000" # Battery Power (W); ggf. scale: -1 falls Vorzeichen invertiert
     cache: {{ .cache }}
   soc:
     source: http
-    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6002%5D%7D
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[6002]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
     jq: ."6002" # Battery SOC (%)
     cache: {{ .cache }}
   energy:
     source: http
-    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6007%5D%7D
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[6007]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
     jq: ."6007" # Battery Total Discharging Energy (kWh)
