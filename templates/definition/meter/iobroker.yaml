@@ -1,0 +1,165 @@
+template: iobroker
+products:
+  - brand: 
+    description:
+      de: Zähler aus Iobroker states
+      en: Meter created by Iobroker states^
+group: generic
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: uri
+    required: true
+    description: 
+      en: The full uri of the host to query
+      de: Der vollständige URI der Iobroke Instanz
+    example: https://iobroker.homelab.lan:8082
+  - name: cache
+    default: 2s
+    description: 
+      en: How long to cache an answer
+      de: Dauer der Zwischenspeicherung von Ergebnissen
+    example: 2s
+  - name: user
+    description:
+      de: Username falls auth im Iobroker aktiv ist
+      en: Username if auth is enabled in Iobroker
+  - name: password
+    description:
+      de: Passwort von user
+      en: Password of user
+  - name: power
+    description:
+      de: Leistung
+      en: Power
+    unit: W
+    type: string
+  - name: soc
+    description:
+      de: Füllstand
+      en: Stae of Charge
+    type: string
+  - name: energy
+    description:
+      de: Zählerstand
+      en: Meter reading
+    unit: kWh
+    type: string
+    advanced: true
+  - name: currentL1
+    description:
+      de: L1 Stromstärke
+      en: L1 current
+    unit: A
+    type: string
+    advanced: true
+  - name: currentL2
+    description:
+      de: L2 Stromstärke
+      en: L2 current
+    unit: A
+    type: string
+    advanced: true
+  - name: currentL3
+    description:
+      de: L3 Stromstärke
+      en: L3 current
+    unit: A
+    type: string
+    advanced: true
+  - name: minsoc # ignored, only relevant for battery meter, for e2e test only
+  - name: maxacpower
+render: |
+  type: custom
+  power:
+    source: http
+    headers:
+    - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .power }}/plain
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+    {{- if .cache }}
+    cache: {{ .cache }}
+    {{- end }}
+  {{- if .soc }}
+  soc:
+      source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .soc }}/plain
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+      {{- if .cache }}
+      cache: {{ .cache }}
+      {{- end }}
+  {{- end }}
+  {{- if .energy }}
+  energy:
+      source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .energy }}/plain
+      {{- if .cache }}
+      cache: {{ .cache }}
+      {{- end}}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+  {{- end }}
+  {{- if .currentL1 }}
+  currents:
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL1 }}/plain
+      {{- if .cache }}
+      cache: {{ .cache }}
+      {{- end }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- if .currentL2 }}
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL2 }}/plain
+      {{- if .cache }}
+      cache: {{ .cache }}
+      {{- end }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- end }}
+    {{- if .currentL3 }}
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL3 }}/plain
+      {{- if .cache }}
+      cache: {{ .cache }}
+      {{- end }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- end }}
+  {{- end }}

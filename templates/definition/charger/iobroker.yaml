@@ -1,0 +1,201 @@
+template: iobroker
+group: generic
+products:
+  - description:
+      de: Wallbox über Iobroker states
+      en: Charger created by Iobroker states
+params:
+  - name: uri
+    required: true
+    description:
+      en: The full uri of the host to query
+      de: Der vollständige URI der Iobroke Instanz
+    example: https://iobroker.homelab.lan:8082
+  - name: cache
+    default: 2s
+    description:
+      en: How long to cache an answer
+      de: Dauer der Zwischenspeicherung von Ergebnissen
+  - name: user
+    description:
+      de: Username falls auth im Iobroker aktiv ist
+      en: Username if auth is enabled in Iobroker
+  - name: password
+    description:
+      de: Passwort von Username
+      en: Password of Username
+  - name: status
+    description:
+      de: Ladezustand (Status A, B, C)
+      en: Charge status (A, B, C)
+    type: string
+  - name: power
+    description:
+      de: Leistung
+      en: Power
+    unit: W
+    type: string
+  - name: enabled
+    description:
+      de: Ladebereit
+      en: Enabled
+    type: string
+  - name: enable
+    description:
+      de: Setze ladebereit
+      en: Set enabled
+    type: string
+  - name: maxcurrent
+    description:
+      de: Setze mximale Stromstärke
+      en: Set mximum amperage
+    unit: A
+    type: string
+    advanced: true
+  - name: maxcurrentmillis
+    description:
+      de: Setze mximale Stromstärke
+      en: Set maximum amperage
+    unit: mA
+    type: string
+    advanced: true
+  - name: phases1p3p
+    description:
+      de: Setze Phasen(1 oder 3)
+      en: Set num phases (1 or 3)
+    type: string
+render: |
+  type: custom
+  {{- if .status }}
+  status:
+    source: go
+    script: |
+      state := "E"
+      res := strings.ToLower(stateRaw)
+      switch res {
+      case "on", "true", "1", "active", "yes", "c", "charging":
+        state="C"
+      case "b", "connected", "ready", "plugged", "charging_completed", "initialising",
+           "preparing", "2", "no_power", "complete", "stopped", "starting", "paused",
+           "initializing":
+      state = "B"
+      case "a", "disconnected", "off", "none", "unavailable",	"unknown", 
+           "notreadyforcharging", "not_plugged", "0":
+      state="A"
+      }
+      state
+    in:
+     - name: stateRaw
+       type: string
+       config:
+        source: http
+        headers:
+          - accept: text/plain;charset=UTF-8
+        uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+        {{- if .cache }}
+        cache: {{ .cache }}
+        {{- end }}
+        {{- if .user }}
+        auth:
+          type: basic
+          user: {{ .user }}
+          password: {{ .password }}
+        {{- end }}
+  {{- end }}
+  {{- if .power }}
+  power:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .power }}/plain
+    {{- if .cache }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .enabled }}
+  enabled:
+      source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .enabled }}/plain
+      {{- if .cache }}
+      cache: {{ .cache }}
+      {{- end }}
+      {{- if .user }}
+      auth:
+       type: basic
+       user: {{ .user }}
+       password: {{ .password }}
+      {{- end }}
+  {{- end }}
+  {{- if .enable }}
+  enable:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .enabled }}?value=${enable}
+    {{- if .cache }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .maxcurrent }}
+  maxcurrent:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrent }}?value=${maxcurrent}
+    {{- if .cache }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .maxcurrentmillis }}
+  maxcurrentmillis:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrentmillis }}?value=${maxcurrentmillis}
+    {{- if .cache }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .maxcurrent }}
+  phases1p3p:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .phases1p3p }}?value=${phases}
+    {{- if .cache }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  tos: true  
+  {{- end }}
