@@ -3,7 +3,7 @@ products:
   - brand: Free2move eSolutions
     description:
       generic: eProWallbox
-capabilities: ["rfid"]
+capabilities: ["rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

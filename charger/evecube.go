@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -33,6 +34,7 @@ import (
 
 // EVECUBE charger implementation
 type EVECUBE struct {
+	implement.Caps
 	*request.Helper
 	uri          string
 	connector    int
@@ -45,8 +47,6 @@ type EVECUBE struct {
 func init() {
 	registry.Add("evecube", NewEVECUBEFromConfig)
 }
-
-//go:generate go tool decorate -f decorateEVECUBE -b *EVECUBE -r api.Charger -t api.PhaseSwitcher,api.Identifier
 
 // EVECUBEUnitConfig is the /api/admin/unitconfig response
 type EVECUBEUnitConfig struct {
@@ -135,15 +135,12 @@ func NewEVECUBEFromConfig(other map[string]any) (api.Charger, error) {
 
 	// Phases1p3p and Identify APIs affect the entire charger, not individual connectors
 	// Only enable these APIs if the charger has a single connector
-	var phases1p3p func(int) error
-	var identify func() (string, error)
-
 	if config.NumberOfConnectors == 1 {
-		phases1p3p = wb.phases1p3p
-		identify = wb.identify
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
-	return decorateEVECUBE(wb, phases1p3p, identify), nil
+	return wb, nil
 }
 
 // NewEVECUBE creates EVECUBE charger
@@ -151,6 +148,7 @@ func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) 
 	log := util.NewLogger("evecube")
 
 	wb := &EVECUBE{
+		Caps:         implement.New(),
 		Helper:       request.NewHelper(log),
 		uri:          strings.TrimRight(uri, "/"),
 		connector:    connector,

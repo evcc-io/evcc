@@ -4,6 +4,7 @@ products:
   - brand: Homecharge
     description:
       generic: Homecharger
+capabilities: ["dim"]
 requirements:
   description:
     de: |

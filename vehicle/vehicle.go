@@ -4,18 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t api.SocLimiter,api.ChargeState,api.VehicleRange,api.VehicleOdometer,api.VehicleClimater,api.CurrentController,api.CurrentGetter,api.VehicleFinishTimer,api.Resurrector,api.ChargeController,api.ChargeRater,api.VehiclePosition
-
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
+	implement.Caps
 	socG func() (float64, error)
 }
 
@@ -56,29 +55,30 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 
 	v := &Vehicle{
 		embed: &cc.embed,
+		Caps:  implement.New(),
 		socG:  socG,
 	}
 
-	// decorate range
+	// decorate limitSoc
 	limitSoc, err := cc.LimitSoc.IntGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("limitSoc: %w", err)
 	}
+	implement.May(v, implement.SocLimiter(limitSoc))
 
 	// decorate status
-	var status func() (api.ChargeStatus, error)
-	if cc.Status != nil {
-		get, err := cc.Status.StringGetter(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("status: %w", err)
-		}
-		status = func() (api.ChargeStatus, error) {
-			s, err := get()
+	status, err := cc.Status.StringGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("status: %w", err)
+	}
+	if status != nil {
+		implement.Has(v, implement.ChargeState(func() (api.ChargeStatus, error) {
+			s, err := status()
 			if err != nil {
 				return api.StatusNone, err
 			}
 			return api.ChargeStatusString(s)
-		}
+		}))
 	}
 
 	// decorate range
@@ -86,33 +86,37 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	if err != nil {
 		return nil, fmt.Errorf("range: %w", err)
 	}
+	implement.May(v, implement.VehicleRange(rng))
 
 	// decorate odometer
 	odo, err := cc.Odometer.FloatGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("odometer: %w", err)
 	}
+	implement.May(v, implement.VehicleOdometer(odo))
 
 	// decorate climater
 	climater, err := cc.Climater.BoolGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("climater: %w", err)
 	}
+	implement.May(v, implement.VehicleClimater(climater))
 
 	// decorate maxCurrent
 	maxCurrent, err := cc.MaxCurrent.IntSetter(ctx, "maxcurrent")
 	if err != nil {
 		return nil, fmt.Errorf("maxCurrent: %w", err)
 	}
+	implement.May(v, implement.CurrentController(maxCurrent))
 
 	// decorate getMaxCurrent
 	getMaxCurrent, err := cc.GetMaxCurrent.FloatGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("getMaxCurrent: %w", err)
 	}
+	implement.May(v, implement.CurrentGetter(getMaxCurrent))
 
 	// decorate position
-	var position func() (float64, float64, error)
 	if cc.Position != nil {
 		latG, err := cc.Position.Latitude.FloatGetter(ctx)
 		if err != nil {
@@ -122,7 +126,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		if err != nil {
 			return nil, fmt.Errorf("longitude: %w", err)
 		}
-		position = func() (float64, float64, error) {
+		implement.Has(v, implement.VehiclePosition(func() (float64, float64, error) {
 			lat, err := latG()
 			if err != nil {
 				return 0, 0, err
@@ -136,28 +140,25 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 				return 0, 0, api.ErrNotAvailable
 			}
 			return lat, lon, nil
-		}
+		}))
 	}
 
 	// decorate finishtime
-	var finishTime func() (time.Time, error)
-	if cc.FinishTime != nil {
-		finishTime, err = cc.FinishTime.TimeGetter(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("finishTime: %w", err)
-		}
+	finishTime, err := cc.FinishTime.TimeGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("finishTime: %w", err)
 	}
+	implement.May(v, implement.VehicleFinishTimer(finishTime))
 
 	// decorate wakeup
-	var wakeup func() error
-	if cc.Wakeup != nil {
-		set, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
-		if err != nil {
-			return nil, fmt.Errorf("wakeup: %w", err)
-		}
-		wakeup = func() error {
-			return set(true)
-		}
+	wakeup, err := cc.Wakeup.BoolSetter(ctx, "wakeup")
+	if err != nil {
+		return nil, fmt.Errorf("wakeup: %w", err)
+	}
+	if wakeup != nil {
+		implement.Has(v, implement.Resurrector(func() error {
+			return wakeup(true)
+		}))
 	}
 
 	// decorate chargeEnable
@@ -165,16 +166,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	if err != nil {
 		return nil, fmt.Errorf("chargeEnable: %w", err)
 	}
+	implement.May(v, implement.ChargeController(chargeEnable))
 
 	// decorate chargedenergy
-	var chargedEnergy func() (float64, error)
-	if cc.ChargedEnergy != nil {
-		var err error
-		chargedEnergy, err = cc.ChargedEnergy.FloatGetter(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("charged energy: %w", err)
-		}
+	chargedEnergy, err := cc.ChargedEnergy.FloatGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("charged energy: %w", err)
 	}
+	implement.May(v, implement.ChargeRater(chargedEnergy))
 
 	switch {
 	case maxCurrent == nil && getMaxCurrent != nil:
@@ -185,7 +184,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		return nil, errors.New("cannot have charge control without status")
 	}
 
-	return decorateVehicle(v, limitSoc, status, rng, odo, climater, maxCurrent, getMaxCurrent, finishTime, wakeup, chargeEnable, chargedEnergy, position), nil
+	return v, nil
 }
 
 // Soc implements the api.Vehicle interface

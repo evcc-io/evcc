@@ -1,5 +1,5 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f AS node
+FROM --platform=$BUILDPLATFORM node:24-alpine AS node
 
 RUN apk update && apk add --no-cache make
 
@@ -21,7 +21,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine@sha256:f85330846cde1e57ca9ec309382da3b8e6ae3ab943d2739500e08c86393a21b1 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.3-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -44,7 +44,7 @@ RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 
 # install tools
 COPY Makefile .
-COPY cmd/decorate/ cmd/decorate/
+COPY cmd/implement/ cmd/implement/
 COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
 RUN --mount=type=cache,target=${GOMODCACHE} make install

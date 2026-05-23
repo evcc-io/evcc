@@ -59,16 +59,6 @@ var (
 )
 
 const (
-	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
-	CapabilityMilliAmps      = "mA"              // Granular current control support
-	CapabilityRFID           = "rfid"            // RFID support
-	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
-	CapabilityBatteryControl = "battery-control" // Battery control support
-)
-
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl}
-
-const (
 	RequirementSponsorship = "sponsorship" // Sponsorship is required
 	RequirementSkipTest    = "skiptest"    // Template should be rendered but not tested
 )

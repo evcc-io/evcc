@@ -4,6 +4,7 @@ products:
     description:
       generic: Therma V R290 Monobloc (SG Ready)
 group: heating
+capabilities: ["dim"]
 requirements:
   description:
     de: |

@@ -383,6 +383,9 @@ export default defineComponent({
 			logAvailableAreas: [] as string[],
 		};
 	},
+	head() {
+		return { title: this.$t("issue.title") };
+	},
 	computed: {
 		versionString(): string {
 			return `v${store.state.version || ""}`;

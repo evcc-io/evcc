@@ -12,6 +12,7 @@
 				:zone="zone"
 				:currency="currency"
 				:index="index"
+				:valueLabel="valueLabel"
 				@save="saveEdit"
 				@cancel="cancelEdit"
 			/>
@@ -56,6 +57,7 @@ export default {
 			default: () => [],
 		},
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
+		valueLabel: { type: String, required: true },
 	},
 	emits: ["update:modelValue"],
 	data() {

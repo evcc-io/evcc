@@ -3,6 +3,7 @@ products:
   - brand: EVBox
     description:
       generic: Livo
+capabilities: ["dim"]
 requirements:
   description:
     de: Das Gerät benötigt eine feste IP Adresse. Es ist wichtig, zuerst EEBus einzurichten. Danach erkennt das Ladegerät evcc als HEMS-Gerät im Netzwerk. Verwende das Installationstool, um evcc als HEMS auszuwählen. Kopiere anschließend den angegebenen SKI aus der Installations-App und füge ihn zur Konfiguration hinzu.

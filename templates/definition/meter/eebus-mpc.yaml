@@ -5,6 +5,7 @@ products:
       de: "EEBus Verbraucher"
       en: "EEBus consumer meter"
 group: generic
+capabilities: ["dim", "curtail"]
 requirements:
   description:
     de: EEBus-Verbraucher im Hausnetz mit den Use Cases MPC (Monitoring & Power Consumption) und LPC (Limitation of Power Consumption). Kompatbibel mit steuerbaren Verbrauchseinrichtungen (SteuVE) gemäß §14a EnWG.

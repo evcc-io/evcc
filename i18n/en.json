@@ -39,9 +39,16 @@
     "legendTopAutostart": "Start automatically",
     "legendTopName": "Battery-supported vehicle charging",
     "legendTopSubline": "when home battery is above {soc}.",
+    "legendTopSublineAbove": "when above {soc}",
+    "legendTopSublineDisabled": "is {soc}.",
+    "legendTopSublineDisabledState": "disabled",
     "modalTitle": "Home Battery",
     "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"
+  },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex color"
   },
   "config": {
     "aux": {
@@ -237,6 +244,7 @@
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
+      "dismiss": "Dismiss",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
@@ -820,6 +828,7 @@
         "allMonths": "All months",
         "allTimes": "All times",
         "cancel": "Cancel",
+        "charge": "Charge",
         "days": "Days",
         "edit": "Edit",
         "hours": "Hours",
@@ -853,32 +862,13 @@
       "validate": "validate"
     },
     "vehicle": {
-      "cancel": "Cancel",
-      "chargingSettings": "Charging settings",
-      "defaultMode": "Default mode",
-      "defaultModeHelp": "Charging mode when connecting the vehicle.",
-      "delete": "Delete",
       "generic": "Other integrations",
-      "identifiers": "RFID identifiers",
-      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charging point on the overview page.",
-      "maximumCurrent": "Maximum current",
-      "maximumCurrentHelp": "Must be greater than minimum current.",
-      "maximumPhases": "Maximum phases",
-      "maximumPhasesHelp": "How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration.",
-      "maximumPower": "Maximum charging power",
-      "maximumPowerHelp": "Maximum power the vehicle can consume",
-      "minimumCurrent": "Minimum current",
-      "minimumCurrentHelp": "Only go below 6A if you know what you're doing.",
       "online": "Vehicles with online API",
       "primary": "Generic integrations",
-      "priority": "Priority",
-      "priorityHelp": "Higher priority means this vehicle gets preferred access to solar surplus.",
-      "save": "Save",
       "scooter": "Scooter",
       "template": "Manufacturer",
       "titleAdd": "Add Vehicle",
-      "titleEdit": "Edit Vehicle",
-      "validateSave": "Validate & save"
+      "titleEdit": "Edit Vehicle"
     }
   },
   "footer": {
@@ -1157,17 +1147,24 @@
       "update": "Apply",
       "weekdays": "Days"
     },
+    "continuousStatus": {
+      "charging": "Boost active.",
+      "connected": "Normal operation.",
+      "waitForVehicle": "Boost requested…"
+    },
     "energyflow": {
       "battery": "Battery",
       "batteryCharge": "Battery charging",
       "batteryDischarge": "Battery discharging",
-      "batteryForecastEmpty": "empty {time}",
-      "batteryForecastFull": "full {time}",
+      "batteryForecastEmpty": "Empty from {time}",
+      "batteryForecastFull": "Full from {time}",
+      "batteryForecastNextHigh": "Next high",
+      "batteryForecastNextLow": "Next low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryHold": "Battery (locked)",
       "batteryTooltip": "{energy} of {total} ({soc})",
-      "forecast": "Forecast: ",
+      "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",
       "gridImport": "Grid import",
       "homePower": "Consumption",
@@ -1183,11 +1180,35 @@
       "charging": "Heating…",
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
-      "waitForVehicle": "Ready. Waiting for heater…"
+      "waitForVehicle": "Ready to heat…"
     },
     "hemsWarning": {
       "description": "Reduced charging to not exceed {limit}.",
       "title": "External limit:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "charged",
+          "returnEnergy": "discharged"
+        },
+        "grid": {
+          "energy": "imported",
+          "returnEnergy": "exported"
+        }
+      },
+      "downloadCsv": "Download CSV",
+      "empty": "No history data available for this time range.",
+      "group": {
+        "battery": "Battery",
+        "forecast": "Forecast",
+        "grid": "Grid",
+        "loadpoint": "Charging & Heating",
+        "meter": "Consumption",
+        "pv": "Production"
+      },
+      "otherConsumers": "Others",
+      "title": "History"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -1460,6 +1481,7 @@
     "odometer": "Mileage",
     "overview": "Overview",
     "period": {
+      "day": "Day",
       "month": "Month",
       "total": "Total",
       "year": "Year"
