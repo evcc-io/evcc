@@ -126,7 +126,7 @@ func (c *Fnn) Run() {
 // runCurtail evaluates curtailment rules and applies the appropriate limit.
 // No-op if no curtail input is configured.
 func (c *Fnn) runCurtail() error {
-	if c.w3 == nil && c.s2 == nil && c.s1 == nil {
+	if c.w3 == nil {
 		return nil
 	}
 
