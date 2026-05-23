@@ -114,7 +114,6 @@ func (c *Fnn) Run() {
 
 // runCurtail evaluates curtailment rules and applies the appropriate limit.
 func (c *Fnn) runCurtail() error {
-
 	type curtailRule struct {
 		getter   func() (bool, error)
 		fraction float64
