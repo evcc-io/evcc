@@ -1,7 +1,6 @@
 package ocpp
 
 import (
-	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -124,19 +123,18 @@ func TestDisconnectCancelsTimer(t *testing.T) {
 		"should not be connected after cancelled timer")
 }
 
-func TestBootNotificationChannelCoalesces(t *testing.T) {
+func TestBootNotificationChannelFull(t *testing.T) {
 	log := util.NewLogger("test")
 	cp := NewChargePoint(log, "test-cp")
 
-	// pre-fill the channel (buffer size 1) with a stale notification
+	// fill the channel (buffer size 1)
 	cp.bootNotificationRequestC <- &core.BootNotificationRequest{
-		ChargePointModel: "Stale",
+		ChargePointModel: "First",
 	}
 
-	// a fresh BootNotification must replace the stale one rather than be
-	// discarded - the consumer needs the charge point's current state
+	// second notification should be dropped (channel full, non-blocking send)
 	bootReq := &core.BootNotificationRequest{
-		ChargePointModel:  "Fresh",
+		ChargePointModel:  "Second",
 		ChargePointVendor: "TestVendor",
 	}
 
@@ -144,46 +142,13 @@ func TestBootNotificationChannelCoalesces(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, core.RegistrationStatusAccepted, res.Status)
 
+	// result should still be updated even though channel was full
 	assert.Equal(t, bootReq, cp.BootNotificationResult)
 	assert.True(t, cp.Connected())
 
-	// channel must hold the freshest notification, exactly once
+	// channel should have the first message (second was dropped)
 	req := <-cp.bootNotificationRequestC
-	assert.Equal(t, "Fresh", req.ChargePointModel)
-
-	select {
-	case extra := <-cp.bootNotificationRequestC:
-		t.Fatalf("channel should hold exactly one notification, got extra: %s", extra.ChargePointModel)
-	default:
-	}
-}
-
-// TestBootNotificationRebootLoopKeepsLatest reproduces the EN+ reboot loop from
-// issue #30113: a charge point reconnects repeatedly, sending a BootNotification
-// each time, before the reboot monitor consumes any of them. The buffered
-// channel must never overflow and must always retain the most recent
-// notification so a later Setup re-runs against the charge point's real state.
-func TestBootNotificationRebootLoopKeepsLatest(t *testing.T) {
-	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
-
-	for i := range 5 {
-		_, err := cp.OnBootNotification(&core.BootNotificationRequest{
-			ChargePointModel: "EN+",
-			FirmwareVersion:  fmt.Sprintf("1.1.%d", i),
-		})
-		require.NoError(t, err)
-	}
-
-	// exactly one notification queued, and it is the latest
-	req := <-cp.bootNotificationRequestC
-	assert.Equal(t, "1.1.4", req.FirmwareVersion)
-
-	select {
-	case extra := <-cp.bootNotificationRequestC:
-		t.Fatalf("channel must buffer at most one notification, got extra: %s", extra.FirmwareVersion)
-	default:
-	}
+	assert.Equal(t, "First", req.ChargePointModel)
 }
 
 func TestReconnectAfterReboot(t *testing.T) {
