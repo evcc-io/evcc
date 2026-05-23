@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 // NewFromConfig creates an FNN HEMS from generic config.
@@ -67,11 +66,15 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	maxDimPower := math.Abs(lo.CoalesceOrEmpty(cc.MaxDimPower, cc.MaxPower))
+	maxDimPower := math.Abs(cc.MaxDimPower)
 
 	var maxCurtailPower *float64
-	if cc.MaxCurtailPower != nil {
+	switch {
+	case cc.MaxCurtailPower != nil:
 		maxCurtailPower = new(math.Abs(*cc.MaxCurtailPower))
+	case cc.MaxPower > 0:
+		// fnn-3 backwards compatibility: legacy MaxPower was the PV/curtail cap
+		maxCurtailPower = new(math.Abs(cc.MaxPower))
 	}
 
 	return &Fnn{
@@ -121,7 +124,12 @@ func (c *Fnn) Run() {
 }
 
 // runCurtail evaluates curtailment rules and applies the appropriate limit.
+// No-op if no curtail input is configured.
 func (c *Fnn) runCurtail() error {
+	if c.w3 == nil && c.s2 == nil && c.s1 == nil {
+		return nil
+	}
+
 	rules := []struct {
 		get  func() (bool, error)
 		frac float64
@@ -151,9 +159,10 @@ func (c *Fnn) runCurtail() error {
 }
 
 // runDim evaluates the dimming rule and applies the dim limit.
+// No-op if dim input is not configured.
 func (c *Fnn) runDim() error {
 	if c.w4 == nil {
-		return c.setConsumptionLimit(0)
+		return nil
 	}
 
 	active, err := c.w4()
