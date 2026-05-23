@@ -87,7 +87,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 	go sm.device.Run()
 
 	if usage == "battery" {
-		implement.May(sm, implement.MeterReturnEnergy(sm.ReturnEnergy))
+		implement.May(sm, implement.MeterEnergy(sm.TotalEnergy))
 		implement.Has(sm, implement.Battery(sm.soc))
 		implement.May(sm, implement.BatteryCapacity(capacity))
 		implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
@@ -103,10 +103,10 @@ func (sm *SMA) CurrentPower() (float64, error) {
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
-var _ api.MeterReturnEnergy = (*SMA)(nil)
+var _ api.MeterEnergy = (*SMA)(nil)
 
-// ReturnEnergy implements the api.MeterReturnEnergy interface
-func (sm *SMA) ReturnEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
 	if sm.scale < 0 {
 		return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
