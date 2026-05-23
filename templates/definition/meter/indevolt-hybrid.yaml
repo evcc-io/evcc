@@ -47,21 +47,11 @@ render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
-    source: calc
-    add:
-    # Total AC Input Power (Register 2101) - positive when drawing from grid
-    - source: http
-      uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2101%5D%7D
-      method: POST
-      jq: ."2101"
-      cache: {{ .cache }}
-    # Total AC Output Power (Register 2108) - positive when feeding to grid, negate for evcc convention
-    - source: http
-      uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2108%5D%7D
-      method: POST
-      jq: ."2108"
-      scale: -1
-      cache: {{ .cache }}
+    source: http
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2101%2C2108%5D%7D
+    method: POST
+    jq: ."2101" - ."2108" # AC Input Power minus AC Output Power
+    cache: {{ .cache }}
   energy:
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2107%5D%7D
