@@ -214,7 +214,7 @@ export default {
 			if (this.size) {
 				return this.size;
 			}
-			if (["Int", "Float", "Duration", "PricePerKWh"].includes(this.type)) {
+			if (["Int", "Float", "Duration", "PricePerKWh", "ChargeModes"].includes(this.type)) {
 				return "w-50 w-min-200";
 			}
 			return "";
@@ -290,13 +290,24 @@ export default {
 		pricePerKWh() {
 			return this.type === "PricePerKWh";
 		},
+		chargeModes() {
+			return this.type === "ChargeModes";
+		},
 		select() {
-			return this.choice.length > 0;
+			return this.choice.length > 0 || this.chargeModes;
 		},
 		durationFactor() {
 			return this.unit === "minute" ? 60 : 1;
 		},
 		selectOptions() {
+			if (this.chargeModes) {
+				return [
+					{ key: "off", name: this.$t("main.mode.off") },
+					{ key: "pv", name: this.$t("main.mode.pv") },
+					{ key: "minpv", name: this.$t("main.mode.minpv") },
+					{ key: "now", name: this.$t("main.mode.now") },
+				];
+			}
 			// If the valid values are already in the correct format, return them
 			if (typeof this.choice[0] === "object") {
 				return this.choice;

@@ -78,6 +78,7 @@
 					class="mb-5"
 					:sessions="currentSessions"
 					:color-mappings="colorMappings"
+					:device-colors="deviceColors"
 					:group-by="selectedGroup"
 					:period="period"
 				/>
@@ -86,6 +87,7 @@
 					class="mb-5"
 					:sessions="currentTypeSessions"
 					:color-mappings="colorMappings"
+					:device-colors="deviceColors"
 					:group-by="selectedGroup"
 					:cost-type="activeType"
 					:currency="currency"
@@ -106,6 +108,7 @@
 								v-else
 								:sessions="currentSessions"
 								:color-mappings="colorMappings"
+								:device-colors="deviceColors"
 								:group-by="selectedGroupWithoutNone"
 							/>
 						</div>
@@ -113,6 +116,7 @@
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
+							:device-colors="deviceColors"
 							:suggested-max-price="suggestedMaxAvgCost"
 							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
@@ -125,12 +129,14 @@
 							v-if="activeType === types.SOLAR"
 							:sessions="currentSessions"
 							:color-mappings="colorMappings"
+							:device-colors="deviceColors"
 							:group-by="selectedGroupWithoutNone"
 						/>
 						<CostGroupedChart
 							v-else
 							:sessions="currentTypeSessions"
 							:color-mappings="colorMappings"
+							:device-colors="deviceColors"
 							:group-by="selectedGroupWithoutNone"
 							:cost-type="activeType"
 							:currency="currency"
@@ -199,7 +205,7 @@ import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
 import CustomSelect from "../components/Helper/CustomSelect.vue";
-import colors from "../colors";
+import colors, { resolveColors } from "../colors";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
@@ -497,6 +503,9 @@ export default defineComponent({
 			}
 			return this.csvHrefLink();
 		},
+		deviceColors() {
+			return store.state.deviceColors ?? {};
+		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
 			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
@@ -512,40 +521,36 @@ export default defineComponent({
 				}, {});
 			};
 
-			// Assign colors based on energy usage
-			const assignColors = (
+			// Ordered key list: sessions ranked by recent energy first, then any
+			// remaining keys encountered in the dataset.
+			const orderedKeys = (
 				energyAggregation: Record<string, number>,
 				colorType: Exclude<GROUPS, GROUPS.NONE>
-			) => {
-				const result: Record<string, string> = {};
-				let colorIndex = 0;
-
-				// Assign colors by used energy in the last three months
-				const sortedEntries = Object.entries(energyAggregation).sort((a, b) => b[1] - a[1]);
-				sortedEntries.forEach(([key]) => {
-					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
-						colorIndex++;
+			): string[] => {
+				const ranked = Object.entries(energyAggregation)
+					.sort((a, b) => b[1] - a[1])
+					.map(([k]) => k)
+					.filter(Boolean);
+				const seen = new Set(ranked);
+				for (const s of this.sessionsWithDefaults) {
+					const k = s[colorType];
+					if (k && !seen.has(k)) {
+						ranked.push(k);
+						seen.add(k);
 					}
-				});
-
-				// Assign colors to remaining entries
-				this.sessionsWithDefaults.forEach((session) => {
-					const key = session[colorType];
-					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
-						colorIndex++;
-					}
-				});
-
-				return result;
+				}
+				return ranked;
 			};
 
-			const loadpointEnergy = aggregateEnergy(GROUPS.LOADPOINT);
-			const loadpointColors = assignColors(loadpointEnergy, GROUPS.LOADPOINT);
-
-			const vehicleEnergy = aggregateEnergy(GROUPS.VEHICLE);
-			const vehicleColors = assignColors(vehicleEnergy, GROUPS.VEHICLE);
+			const overrides = this.deviceColors;
+			const loadpointColors = resolveColors(
+				orderedKeys(aggregateEnergy(GROUPS.LOADPOINT), GROUPS.LOADPOINT),
+				overrides
+			);
+			const vehicleColors = resolveColors(
+				orderedKeys(aggregateEnergy(GROUPS.VEHICLE), GROUPS.VEHICLE),
+				overrides
+			);
 
 			const solar = { self: colors.self, grid: colors.grid };
 			const cost = { price: colors.price, co2: colors.co2 };

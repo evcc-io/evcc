@@ -860,32 +860,13 @@
       "validate": "validar"
     },
     "vehicle": {
-      "cancel": "Cancelar",
-      "chargingSettings": "Parâmetros de carga",
-      "defaultMode": "Modo predefinido",
-      "defaultModeHelp": "Modo de carga ao ligar o veículo.",
-      "delete": "Apagar",
       "generic": "Outras integrações",
-      "identifiers": "Identificadores RFID",
-      "identifiersHelp": "Lista de registos RFID para identificar o veículo. Uma entrada por linha. O identificador atual pode ser encontrado no respetivo ponto de carga na página de resumo.",
-      "maximumCurrent": "Corrente máxima",
-      "maximumCurrentHelp": "Deve ser superior à corrente mínima.",
-      "maximumPhases": "Máximo de fases",
-      "maximumPhasesHelp": "Com quantas fases pode carregar este veículo? A informação é utilizada para calcular o excedente solar mínimo necessário e a duração do plano.",
-      "maximumPower": "Potência máxima de carregamento",
-      "maximumPowerHelp": "Potência máxima que o veículo pode consumir",
-      "minimumCurrent": "Corrente mínima",
-      "minimumCurrentHelp": "Somente ir abaixo de 6A se souber o que está a fazer.",
       "online": "Veículos com API online",
       "primary": "Integrações genéricas",
-      "priority": "Prioridade",
-      "priorityHelp": "Uma prioridade mais elevada significa que este veículo tem acesso preferencial ao excedente solar.",
-      "save": "Guardar",
       "scooter": "Scooter",
       "template": "Fabricante",
       "titleAdd": "Adicionar Veículo",
-      "titleEdit": "Editar Veículo",
-      "validateSave": "Validar e guardar"
+      "titleEdit": "Editar Veículo"
     }
   },
   "footer": {

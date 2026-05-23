@@ -6,6 +6,7 @@ products:
   - brand: Smartfox
     description:
       generic: Pro Charger
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["rs485"]
