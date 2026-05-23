@@ -48,6 +48,10 @@ type Client struct {
 	Qos      byte
 	listener map[string][]func(string)
 	inflight *semaphore.Weighted
+
+	connMu     sync.Mutex
+	connCtx    context.Context
+	connCancel context.CancelFunc
 }
 
 type Option func(*paho.ClientOptions)
@@ -125,14 +129,45 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	return mc, nil
 }
 
+// connContext returns a context that is cancelled on disconnect and replaced
+// on every reconnect. Pending publishes use it to bail out if the connection
+// that scheduled them has gone away.
+func (m *Client) connContext() context.Context {
+	m.connMu.Lock()
+	defer m.connMu.Unlock()
+	if m.connCtx == nil {
+		return context.Background()
+	}
+	return m.connCtx
+}
+
+func (m *Client) renewConnContext() {
+	m.connMu.Lock()
+	defer m.connMu.Unlock()
+	if m.connCancel != nil {
+		m.connCancel()
+	}
+	m.connCtx, m.connCancel = context.WithCancel(context.Background())
+}
+
+func (m *Client) cancelConnContext() {
+	m.connMu.Lock()
+	defer m.connMu.Unlock()
+	if m.connCancel != nil {
+		m.connCancel()
+	}
+}
+
 // ConnectionLostHandler logs cause of connection loss as warning
 func (m *Client) ConnectionLostHandler(client paho.Client, reason error) {
 	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
+	m.cancelConnContext()
 }
 
 // ConnectionHandler restores listeners
 func (m *Client) ConnectionHandler(client paho.Client) {
 	m.log.DEBUG.Printf("%s connected", m.broker)
+	m.renewConnContext()
 
 	m.mux.Lock()
 	defer m.mux.Unlock()
@@ -178,24 +213,35 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 
 // Publish asynchronously publishes payload using client qos
 func (m *Client) Publish(topic string, retained bool, payload any) {
+	connCtx := m.connContext()
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(connCtx, request.Timeout)
 		defer cancel()
 		if err := m.inflight.Acquire(ctx, 1); err != nil {
-			m.log.ERROR.Printf("send %s: %v", topic, err)
+			if connCtx.Err() == nil {
+				m.log.ERROR.Printf("send %s: %v", topic, err)
+			}
 			return
 		}
 		defer m.inflight.Release(1)
 
+		// Bail out if the connection that scheduled this publish has been lost.
+		if connCtx.Err() != nil {
+			return
+		}
+
 		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
 		token := m.client.Publish(topic, m.Qos, retained, payload)
 
-		err := api.ErrTimeout
-		if token.WaitTimeout(request.Timeout) {
-			err = token.Error()
-		}
-		if err != nil {
-			m.log.ERROR.Printf("send: %s: %v", topic, err)
+		select {
+		case <-connCtx.Done():
+			return
+		case <-token.Done():
+			if err := token.Error(); err != nil {
+				m.log.ERROR.Printf("send: %s: %v", topic, err)
+			}
+		case <-time.After(request.Timeout):
+			m.log.ERROR.Printf("send: %s: timeout", topic)
 		}
 	}()
 }
