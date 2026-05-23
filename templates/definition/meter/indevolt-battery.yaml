@@ -34,22 +34,37 @@ params:
   - name: usage
     choice: ["grid", "battery"]
   - name: host
+  - name: user
+    advanced: true
+  - name: password
+    advanced: true
+    mask: true
   - name: cache
     default: 5s
   - preset: battery-params
 render: |
+  {{- define "auth" }}
+  {{- if .user }}
+  auth:
+    type: digest
+    user: {{ .user }}
+    password: {{ .password }}
+  {{- end }}
+  {{- end }}
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2101%2C2108%5D%7D
     method: POST
+    {{- include "auth" . | indent 2 }}
     jq: ."2101" - ."2108" # AC Input Power minus AC Output Power
     cache: {{ .cache }}
   energy:
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2107%5D%7D
     method: POST
+    {{- include "auth" . | indent 2 }}
     jq: ."2107" # Total AC Input Energy (kWh)
     cache: {{ .cache }}
   {{- end }}
@@ -58,18 +73,21 @@ render: |
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6000%5D%7D
     method: POST
+    {{- include "auth" . | indent 2 }}
     jq: ."6000" # Battery Power (W); ggf. scale: -1 falls Vorzeichen invertiert
     cache: {{ .cache }}
   soc:
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6002%5D%7D
     method: POST
+    {{- include "auth" . | indent 2 }}
     jq: ."6002" # Battery SOC (%)
     cache: {{ .cache }}
   energy:
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6007%5D%7D
     method: POST
+    {{- include "auth" . | indent 2 }}
     jq: ."6007" # Battery Total Discharging Energy (kWh)
     cache: {{ .cache }}
   {{- include "battery-params" . }}
