@@ -153,6 +153,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		}
 
 		lp.addTask(lp.vehicleOdometer)
+		lp.addTask(lp.vehicleSocAndRange)
 
 		lp.progress.Reset()
 	} else {
@@ -314,6 +315,32 @@ func (lp *Loadpoint) vehicleOdometer() {
 			})
 		} else if !loadpoint.AcceptableError(err) {
 			lp.log.ERROR.Printf("vehicle odometer: %v", err)
+		}
+	}
+}
+
+// vehicleSocAndRange reads soc and range once on vehicle attach so consumers
+// (UI, MQTT) see populated values even when the recurring poll gate keeps them
+// from being refreshed in the regular Update loop.
+func (lp *Loadpoint) vehicleSocAndRange() {
+	v := lp.GetVehicle()
+
+	if battery, ok := api.Cap[api.Battery](v); ok {
+		if s, err := soc.Guard(battery.Soc()); err == nil {
+			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", s)
+			lp.vehicleSoc = s
+			lp.publish(keys.VehicleSoc, s)
+		} else if !loadpoint.AcceptableError(err) {
+			lp.log.ERROR.Printf("vehicle soc: %v", err)
+		}
+	}
+
+	if vs, ok := api.Cap[api.VehicleRange](v); ok {
+		if rng, err := vs.Range(); err == nil {
+			lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
+			lp.publish(keys.VehicleRange, rng)
+		} else if !loadpoint.AcceptableError(err) {
+			lp.log.ERROR.Printf("vehicle range: %v", err)
 		}
 	}
 }

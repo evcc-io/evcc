@@ -316,7 +316,7 @@ func TestDefaultVehicle(t *testing.T) {
 	lp.tasks.Clear()
 	lp.evVehicleConnectHandler()
 	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
-	assert.Equal(t, 1, lp.tasks.Size(), "task queue length")
+	assert.Equal(t, 2, lp.tasks.Size(), "task queue length")
 
 	// guest connected
 	lp.setActiveVehicle(nil)
