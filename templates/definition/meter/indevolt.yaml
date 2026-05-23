@@ -1,13 +1,13 @@
-template: indevolt-solidflex
+template: indevolt
 products:
   - brand: Indevolt
     description:
-      de: Solidflex Hybrid-Wechselrichter (lokal)
-      en: Solidflex Hybrid Inverter (local)
+      de: Hybrid-Wechselrichter (lokal)
+      en: Hybrid Inverter (local)
 requirements:
   description:
     de: |
-      Lokaler Direktzugriff auf das Indevolt Solidflex-System (z.B. Solidflex 2000) per HTTP API auf Port 8080.
+      Lokaler Direktzugriff auf Indevolt-Geräte (z.B. Solidflex-Serie) per HTTP API auf Port 8080.
 
       Die IP-Adresse des Geräts kann in der Indevolt-App, im Router oder per UDP-Broadcast (Port 10000) ermittelt werden. Es empfiehlt sich, dem Gerät im Router eine feste IP zuzuweisen.
 
@@ -15,7 +15,7 @@ requirements:
 
       Siehe [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/geek/open-data/).
     en: |
-      Local direct access to the Indevolt Solidflex system (e.g. Solidflex 2000) via HTTP API on port 8080.
+      Local direct access to Indevolt devices (e.g. Solidflex series) via HTTP API on port 8080.
 
       The device's IP address can be obtained from the Indevolt app, the router, or via UDP broadcast (port 10000). Assigning a static IP in the router is recommended.
 
