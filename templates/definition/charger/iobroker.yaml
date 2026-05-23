@@ -4,6 +4,18 @@ products:
   - description:
       de: Wallbox über Iobroker states
       en: Charger created by Iobroker states
+requirements:
+  description:
+    de: | 
+      Auf der verwendeten IoBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
+      Authentiziziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
+      Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
+      So wird aus `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower  shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
+    en: |
+      The `rest-api` adapter (not `simple-api`) must be installed on the ioBroker instance being used.
+      Authentication can only be performed using `basic` authentication. If no password is provided, no authentication will be performed. 
+      When specifying the entities for the individual measured values, ensure that they are correctly URL-encoded.
+      For example, `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower` becomes `shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
 params:
   - name: uri
     required: true
