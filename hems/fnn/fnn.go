@@ -3,6 +3,7 @@ package fnn
 import (
 	"context"
 	"errors"
+	"math"
 	"sync"
 	"time"
 
@@ -66,11 +67,18 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
+	maxDimPower := math.Abs(lo.CoalesceOrEmpty(cc.MaxDimPower, cc.MaxPower))
+
+	var maxCurtailPower *float64
+	if cc.MaxCurtailPower != nil {
+		maxCurtailPower = new(math.Abs(*cc.MaxCurtailPower))
+	}
+
 	return &Fnn{
 		log:             util.NewLogger("fnn"),
 		root:            gridcontrol,
-		maxDimPower:     lo.CoalesceOrEmpty(cc.MaxDimPower, cc.MaxPower),
-		maxCurtailPower: cc.MaxCurtailPower,
+		maxDimPower:     maxDimPower,
+		maxCurtailPower: maxCurtailPower,
 		s1:              s1G,
 		s2:              s2G,
 		w3:              w3G,
