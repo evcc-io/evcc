@@ -329,14 +329,14 @@ func TestET_SoC_GW25K(t *testing.T) {
 
 func TestCache_GetMiss(t *testing.T) {
 	c := newResponseCache()
-	_, ok := c.get("nope")
+	_, ok := c.get([]byte("nope"))
 	assert.False(t, ok)
 }
 
 func TestCache_PutGet(t *testing.T) {
 	c := newResponseCache()
-	c.put("k", []byte{1, 2, 3})
-	got, ok := c.get("k")
+	c.put([]byte("k"), []byte{1, 2, 3})
+	got, ok := c.get([]byte("k"))
 	require.True(t, ok)
 	assert.Equal(t, []byte{1, 2, 3}, got)
 }

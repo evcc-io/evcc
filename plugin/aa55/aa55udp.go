@@ -1,7 +1,6 @@
 package aa55
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
@@ -25,7 +24,7 @@ type AA55UDP struct {
 	offset   int    // byte offset into the response payload (0 for register reads)
 	decode   string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale    float64
-	useCache bool // true for block-read/cached mode, false for simple register read
+	cacheKey []byte // precomputed cache key (remoteAddr/pdu); nil disables caching
 }
 
 // readConfig holds the resolved read mode configuration.
@@ -74,15 +73,18 @@ func New(log *util.Logger, conn *net.UDPConn, id int, pdu string, register, coun
 	if err != nil {
 		return nil, err
 	}
-	return &AA55UDP{
-		log:      log,
-		conn:     conn,
-		decode:   decode,
-		scale:    scale,
-		pdu:      cfg.pdu,
-		offset:   cfg.offset,
-		useCache: cfg.useCache,
-	}, nil
+	ap := &AA55UDP{
+		log:    log,
+		conn:   conn,
+		decode: decode,
+		scale:  scale,
+		pdu:    cfg.pdu,
+		offset: cfg.offset,
+	}
+	if cfg.useCache {
+		ap.cacheKey = []byte(conn.RemoteAddr().String() + "/" + string(cfg.pdu))
+	}
+	return ap, nil
 }
 
 // FloatGetter implements the evcc plugin.FloatGetter interface.
@@ -112,29 +114,14 @@ func (p *AA55UDP) query() (float64, error) {
 
 // fetch returns the response payload, using caching for block-read mode.
 func (p *AA55UDP) fetch() ([]byte, error) {
+	if p.cacheKey != nil {
+		if payload, ok := cache.get(p.cacheKey); ok {
+			p.log.TRACE.Printf("cache hit for %s pdu=%x", p.conn.RemoteAddr(), p.pdu)
+			return payload, nil
+		}
+	}
+
 	packet := append(p.pdu, modbusCRC16(p.pdu)...)
-
-	// No caching: direct send/recv
-	if !p.useCache {
-		raw, err := p.sendRecv(packet)
-		if err != nil {
-			return nil, err
-		}
-		payload, err := stripHeader(raw)
-		if err != nil {
-			return nil, err
-		}
-		return payload, nil
-	}
-
-	// Caching: shared reads by (addr, pdu)
-	key := p.conn.RemoteAddr().String() + "/" + hex.EncodeToString(p.pdu)
-
-	if payload, ok := cache.get(key); ok {
-		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), hex.EncodeToString(p.pdu))
-		return payload, nil
-	}
-
 	raw, err := p.sendRecv(packet)
 	if err != nil {
 		return nil, err
@@ -145,13 +132,15 @@ func (p *AA55UDP) fetch() ([]byte, error) {
 		return nil, err
 	}
 
-	cache.put(key, payload)
+	if p.cacheKey != nil {
+		cache.put(p.cacheKey, payload)
+	}
 	return payload, nil
 }
 
 // sendRecv sends packet over p.conn and returns the raw response bytes.
 func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
-	p.log.TRACE.Printf("send to %s: %s", p.conn.RemoteAddr(), hex.EncodeToString(packet))
+	p.log.TRACE.Printf("send to %s: %x", p.conn.RemoteAddr(), packet)
 
 	if _, err := p.conn.Write(packet); err != nil {
 		return nil, fmt.Errorf("write: %w", err)
@@ -167,7 +156,7 @@ func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
 		return nil, fmt.Errorf("read: %w", err)
 	}
 
-	p.log.TRACE.Printf("recv from %s: %s", p.conn.RemoteAddr(), hex.EncodeToString(buf[:n]))
+	p.log.TRACE.Printf("recv from %s: %x", p.conn.RemoteAddr(), buf[:n])
 
 	return buf[:n], nil
 }

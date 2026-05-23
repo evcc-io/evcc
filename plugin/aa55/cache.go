@@ -32,28 +32,29 @@ func newResponseCache() *responseCache {
 }
 
 // get returns the cached payload if it exists and is fresh, or (nil, false)
-// otherwise. Expired entries are deleted on access.
-func (c *responseCache) get(key string) ([]byte, bool) {
+// otherwise. Expired entries are deleted on access. The map lookup
+// m[string(key)] is alloc-free — the Go compiler elides the conversion.
+func (c *responseCache) get(key []byte) ([]byte, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	entry, ok := c.data[key]
+	entry, ok := c.data[string(key)]
 	if !ok {
 		return nil, false
 	}
 	if time.Now().After(entry.expiresAt) {
-		delete(c.data, key)
+		delete(c.data, string(key))
 		return nil, false
 	}
 	return entry.payload, true
 }
 
 // put inserts or overwrites a payload in the cache.
-func (c *responseCache) put(key string, payload []byte) {
+func (c *responseCache) put(key, payload []byte) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.data[key] = cacheEntry{
+	c.data[string(key)] = cacheEntry{
 		payload:   payload,
 		expiresAt: time.Now().Add(cacheTTL),
 	}
