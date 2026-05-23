@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"net/netip"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // AA55UDP implements the GoodWe WiFi AA55-over-UDP wire protocol as a generic
@@ -98,7 +100,7 @@ func buildReadConfig(id int, pdu string, register uint16, count uint16, offset i
 //	count:    2              # number of registers to read (1=U16, 2=S32/U32)
 //	decode:   int32be        # int32be | uint32be | int16be | uint16be | float32be
 //	scale:    1.0            # optional multiplier (default 1.0)
-func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, error) {
+func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
 		Id       int     `mapstructure:"id"`
@@ -126,7 +128,8 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, erro
 	if err != nil {
 		return nil, fmt.Errorf("aa55udp: resolve %s: %w", cc.Host, err)
 	}
-	conn, err := net.DialUDP("udp4", nil, raddr)
+	dialer := &net.Dialer{Timeout: request.Timeout}
+	conn, err := dialer.DialUDP(ctx, "udp4", netip.AddrPort{}, raddr.AddrPort())
 	if err != nil {
 		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.Host, err)
 	}
