@@ -24,6 +24,17 @@ type Tariff struct {
 
 var _ api.Tariff = (*Tariff)(nil)
 
+// Safety floors for the configurable tariff loop. Some providers (pvnode,
+// solcast) enforce strict monthly quotas (e.g. 1000 req / month). A
+// misconfigured interval — say 1m instead of 1h — has previously generated
+// thousands of requests within seconds and locked accounts out for the rest
+// of the month (evcc-io/evcc#29682). These constants enforce a hard minimum
+// and a warning threshold regardless of user input.
+const (
+	minTariffInterval  = 1 * time.Minute
+	warnTariffInterval = 15 * time.Minute
+)
+
 func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
@@ -47,6 +58,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.T
 
 	if (cc.Price != nil) == (cc.Forecast != nil) {
 		return nil, fmt.Errorf("must have either price or forecast")
+	}
+
+	// guard against accidental misconfiguration that can exhaust a provider's
+	// monthly quota in seconds — see comment on minTariffInterval above.
+	log := util.NewLogger("tariff")
+	if cc.Interval > 0 && cc.Interval < minTariffInterval {
+		log.ERROR.Printf("interval %s is below the safety floor %s — clamping; tighten only after confirming your provider's rate limit", cc.Interval, minTariffInterval)
+		cc.Interval = minTariffInterval
+	} else if cc.Interval > 0 && cc.Interval < warnTariffInterval {
+		log.WARN.Printf("interval %s is short — rate-limited providers (pvnode, solcast) may lock you out", cc.Interval)
 	}
 
 	if err := cc.init(); err != nil {
