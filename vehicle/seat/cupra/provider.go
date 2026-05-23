@@ -74,16 +74,15 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	// as disconnected breaks vehicle identification when several cars are in
 	// one account.
 	// https://github.com/evcc-io/evcc/issues/30045
-	// https://github.com/evcc-io/evcc/issues/30118
 	if strings.ToLower(res.Services.Charging.BatteryCardStatus) == "notconnected" {
 		return api.StatusA, nil
 	}
 
 	switch strings.ToLower(res.Services.Charging.Status) {
-	case "charging":
-		return api.StatusC, nil
 	case "connected", "readyforcharging", "notreadyforcharging", "error":
 		return api.StatusB, nil
+	case "charging":
+		return api.StatusC, nil
 	}
 
 	return api.StatusA, nil
