@@ -114,25 +114,23 @@ func (c *Fnn) Run() {
 
 // runCurtail evaluates curtailment rules and applies the appropriate limit.
 func (c *Fnn) runCurtail() error {
-	type curtailRule struct {
-		getter   func() (bool, error)
-		fraction float64
-	}
-
-	rules := []curtailRule{
-		{getter: c.w3, fraction: 0.0},
-		{getter: c.s2, fraction: 0.3},
-		{getter: c.s1, fraction: 0.6},
+	rules := []struct {
+		get  func() (bool, error)
+		frac float64
+	}{
+		{get: c.w3, frac: 0.0},
+		{get: c.s2, frac: 0.3},
+		{get: c.s1, frac: 0.6},
 	}
 
 	for _, rule := range rules {
-		active, err := rule.getter()
+		active, err := rule.get()
 		if err != nil {
 			return err
 		}
 
 		if active {
-			return c.setProductionLimit(rule.fraction)
+			return c.setProductionLimit(rule.frac)
 		}
 	}
 
