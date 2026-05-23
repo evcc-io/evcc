@@ -56,86 +56,86 @@ const (
 )
 
 // ---------------------------------------------------------------------------
-// BuildPDU
+// buildPDU
 // ---------------------------------------------------------------------------
 
 func TestBuildPDU_DTpower(t *testing.T) {
-	got := BuildPDU(0x7F, 0x75AF, 2)
+	got := buildPDU(0x7F, 0x75AF, 2)
 	assert.Equal(t, []byte{0x7f, 0x03, 0x75, 0xaf, 0x00, 0x02}, got)
 }
 
 func TestBuildPDU_DefaultAddress(t *testing.T) {
 	// When address is omitted from config, InverterAddr (0x7F) must be used.
 	// This guards existing DT/DNS and ES/EM setups that rely on the default.
-	got := BuildPDU(InverterAddr, 0x75AF, 2)
+	got := buildPDU(InverterAddr, 0x75AF, 2)
 	assert.Equal(t, byte(0x7F), got[0], "default address byte must be 0x7F")
 }
 
 func TestBuildPDU_ETgrid(t *testing.T) {
-	got := BuildPDU(0xF7, 0x8943, 2)
+	got := buildPDU(0xF7, 0x8943, 2)
 	assert.Equal(t, []byte{0xf7, 0x03, 0x89, 0x43, 0x00, 0x02}, got)
 }
 
 func TestBuildPDU_SoC(t *testing.T) {
-	got := BuildPDU(0xF7, 0x908F, 1)
+	got := buildPDU(0xF7, 0x908F, 1)
 	assert.Equal(t, []byte{0xf7, 0x03, 0x90, 0x8f, 0x00, 0x01}, got)
 }
 
 // ---------------------------------------------------------------------------
-// ParsePDU
+// parsePDU
 // ---------------------------------------------------------------------------
 
 func TestParsePDU_OK(t *testing.T) {
-	b, err := ParsePDU("7f 03 75 94 00 49")
+	b, err := parsePDU("7f 03 75 94 00 49")
 	require.NoError(t, err)
 	assert.Equal(t, []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}, b)
 }
 
 func TestParsePDU_WrongLength(t *testing.T) {
-	_, err := ParsePDU("7f0375")
+	_, err := parsePDU("7f0375")
 	require.Error(t, err)
 }
 
 func TestParsePDU_BadHex(t *testing.T) {
-	_, err := ParsePDU("zzzz03759400")
+	_, err := parsePDU("zzzz03759400")
 	require.Error(t, err)
 }
 
 // ---------------------------------------------------------------------------
-// StripHeader
+// stripHeader
 // ---------------------------------------------------------------------------
 
 func TestStripHeader_DT(t *testing.T) {
-	payload, err := StripHeader(mustHex(t, capGW3000DNS30))
+	payload, err := stripHeader(mustHex(t, capGW3000DNS30))
 	require.NoError(t, err)
 	assert.Equal(t, 146, len(payload))
 }
 
 func TestStripHeader_ET(t *testing.T) {
-	payload, err := StripHeader(mustHex(t, capGW10kET))
+	payload, err := stripHeader(mustHex(t, capGW10kET))
 	require.NoError(t, err)
 	assert.Equal(t, 250, len(payload))
 }
 
 func TestStripHeader_BadMagic(t *testing.T) {
-	_, err := StripHeader([]byte{0xFF, 0x55, 0x7F, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x00, 0x00})
+	_, err := stripHeader([]byte{0xFF, 0x55, 0x7F, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x00, 0x00})
 	require.Error(t, err)
 }
 
 func TestStripHeader_Short(t *testing.T) {
-	_, err := StripHeader([]byte{0xAA, 0x55, 0x7F, 0x03, 0x10, 0x01, 0x02})
+	_, err := stripHeader([]byte{0xAA, 0x55, 0x7F, 0x03, 0x10, 0x01, 0x02})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "short")
 }
 
 // ---------------------------------------------------------------------------
-// DecodeAt
+// decodeAt
 // ---------------------------------------------------------------------------
 
 func TestDecodeAt_Int32BE_Positive(t *testing.T) {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload, uint32(int32(1972)))
-	v, err := DecodeAt(payload, 0, "int32be")
+	v, err := decodeAt(payload, 0, "int32be")
 	require.NoError(t, err)
 	assert.InDelta(t, 1972.0, v, 0)
 }
@@ -144,7 +144,7 @@ func TestDecodeAt_Int32BE_Negative(t *testing.T) {
 	payload := make([]byte, 4)
 	v32 := int32(-2512)
 	binary.BigEndian.PutUint32(payload, uint32(v32))
-	v, err := DecodeAt(payload, 0, "int32be")
+	v, err := decodeAt(payload, 0, "int32be")
 	require.NoError(t, err)
 	assert.InDelta(t, -2512.0, v, 0)
 }
@@ -152,7 +152,7 @@ func TestDecodeAt_Int32BE_Negative(t *testing.T) {
 func TestDecodeAt_Uint32BE(t *testing.T) {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload, 43513)
-	v, err := DecodeAt(payload, 0, "uint32be")
+	v, err := decodeAt(payload, 0, "uint32be")
 	require.NoError(t, err)
 	assert.InDelta(t, 43513.0, v, 0)
 }
@@ -160,7 +160,7 @@ func TestDecodeAt_Uint32BE(t *testing.T) {
 func TestDecodeAt_Uint16BE(t *testing.T) {
 	payload := make([]byte, 2)
 	binary.BigEndian.PutUint16(payload, 68)
-	v, err := DecodeAt(payload, 0, "uint16be")
+	v, err := decodeAt(payload, 0, "uint16be")
 	require.NoError(t, err)
 	assert.InDelta(t, 68.0, v, 0)
 }
@@ -169,7 +169,7 @@ func TestDecodeAt_Int16BE_Negative(t *testing.T) {
 	payload := make([]byte, 2)
 	v16 := int16(-300)
 	binary.BigEndian.PutUint16(payload, uint16(v16))
-	v, err := DecodeAt(payload, 0, "int16be")
+	v, err := decodeAt(payload, 0, "int16be")
 	require.NoError(t, err)
 	assert.InDelta(t, -300.0, v, 0)
 }
@@ -177,7 +177,7 @@ func TestDecodeAt_Int16BE_Negative(t *testing.T) {
 func TestDecodeAt_Float32BE(t *testing.T) {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload, math.Float32bits(123.456))
-	v, err := DecodeAt(payload, 0, "float32be")
+	v, err := decodeAt(payload, 0, "float32be")
 	require.NoError(t, err)
 	assert.InDelta(t, 123.456, v, 0.001)
 }
@@ -185,7 +185,7 @@ func TestDecodeAt_Float32BE(t *testing.T) {
 func TestDecodeAt_Uint32NAN_Normal(t *testing.T) {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload, 8310) // e.g. 83.10 W string power
-	v, err := DecodeAt(payload, 0, "uint32nan")
+	v, err := decodeAt(payload, 0, "uint32nan")
 	require.NoError(t, err)
 	assert.InDelta(t, 8310.0, v, 0)
 }
@@ -193,66 +193,66 @@ func TestDecodeAt_Uint32NAN_Normal(t *testing.T) {
 func TestDecodeAt_Uint32NAN_Disconnected(t *testing.T) {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload, 0xFFFFFFFF) // disconnected string sentinel
-	v, err := DecodeAt(payload, 0, "uint32nan")
+	v, err := decodeAt(payload, 0, "uint32nan")
 	require.NoError(t, err)
 	assert.InDelta(t, 0.0, v, 0) // must return 0, not 4.3GW
 }
 
 func TestDecodeAt_TooShort(t *testing.T) {
-	_, err := DecodeAt([]byte{0x00}, 0, "int32be")
+	_, err := decodeAt([]byte{0x00}, 0, "int32be")
 	require.Error(t, err)
 }
 
 func TestDecodeAt_UnknownType(t *testing.T) {
-	_, err := DecodeAt(make([]byte, 4), 0, "float32")
+	_, err := decodeAt(make([]byte, 4), 0, "float32")
 	require.Error(t, err)
 }
 
 // ---------------------------------------------------------------------------
-// ValidateDecode / DecodeSize
+// validateDecode / decodeSize
 // ---------------------------------------------------------------------------
 
 func TestValidateDecode_OK(t *testing.T) {
 	for _, d := range []string{"int32be", "uint32be", "uint32nan", "int16be", "uint16be", "float32be"} {
-		assert.NoError(t, ValidateDecode(d), d)
+		assert.NoError(t, validateDecode(d), d)
 	}
 }
 
 func TestValidateDecode_Reject(t *testing.T) {
-	assert.Error(t, ValidateDecode("float32"))
-	assert.Error(t, ValidateDecode(""))
+	assert.Error(t, validateDecode("float32"))
+	assert.Error(t, validateDecode(""))
 }
 
 func TestDecodeSize(t *testing.T) {
-	assert.Equal(t, 4, DecodeSize("int32be"))
-	assert.Equal(t, 4, DecodeSize("uint32nan"))
-	assert.Equal(t, 2, DecodeSize("uint16be"))
+	assert.Equal(t, 4, decodeSize("int32be"))
+	assert.Equal(t, 4, decodeSize("uint32nan"))
+	assert.Equal(t, 2, decodeSize("uint16be"))
 }
 
 // ---------------------------------------------------------------------------
-// ModbusCRC16
+// modbusCRC16
 // ---------------------------------------------------------------------------
 
 func TestModbusCRC16_DTPdu(t *testing.T) {
-	pdu := BuildPDU(0x7F, 0x75AF, 2)
-	crc := ModbusCRC16(pdu)
+	pdu := buildPDU(0x7F, 0x75AF, 2)
+	crc := modbusCRC16(pdu)
 	assert.Len(t, crc, 2)
-	assert.Equal(t, crc, ModbusCRC16(pdu), "CRC must be deterministic")
+	assert.Equal(t, crc, modbusCRC16(pdu), "CRC must be deterministic")
 }
 
 func TestModbusCRC16_ETPdu(t *testing.T) {
-	pdu := BuildPDU(0xF7, 0x8943, 2)
-	crc := ModbusCRC16(pdu)
+	pdu := buildPDU(0xF7, 0x8943, 2)
+	crc := modbusCRC16(pdu)
 	assert.Len(t, crc, 2)
-	assert.Equal(t, crc, ModbusCRC16(pdu))
+	assert.Equal(t, crc, modbusCRC16(pdu))
 }
 
 func TestModbusCRC16_KnownValue(t *testing.T) {
 	// The original block-read DT PDU 7f 03 75 94 00 49 → CRC d5 c2.
 	// Known-good value verified against real hardware.
-	pdu, err := ParsePDU("7f0375940049")
+	pdu, err := parsePDU("7f0375940049")
 	require.NoError(t, err)
-	assert.Equal(t, []byte{0xd5, 0xc2}, ModbusCRC16(pdu))
+	assert.Equal(t, []byte{0xd5, 0xc2}, modbusCRC16(pdu))
 }
 
 // ---------------------------------------------------------------------------
@@ -329,14 +329,14 @@ func TestET_SoC_GW25K(t *testing.T) {
 
 func TestCache_GetMiss(t *testing.T) {
 	c := newResponseCache()
-	_, ok := c.Get("nope")
+	_, ok := c.get("nope")
 	assert.False(t, ok)
 }
 
 func TestCache_PutGet(t *testing.T) {
 	c := newResponseCache()
-	c.Put("k", []byte{1, 2, 3})
-	got, ok := c.Get("k")
+	c.put("k", []byte{1, 2, 3})
+	got, ok := c.get("k")
 	require.True(t, ok)
 	assert.Equal(t, []byte{1, 2, 3}, got)
 }
@@ -354,9 +354,9 @@ func mustHex(t *testing.T, s string) []byte {
 
 func assertBlockOffset(t *testing.T, capHex string, offset int, decode string, scale, expected float64) {
 	t.Helper()
-	payload, err := StripHeader(mustHex(t, capHex))
+	payload, err := stripHeader(mustHex(t, capHex))
 	require.NoError(t, err)
-	v, err := DecodeAt(payload, offset, decode)
+	v, err := decodeAt(payload, offset, decode)
 	require.NoError(t, err)
 	assert.InDelta(t, expected, v*scale, 0.05)
 }

@@ -17,6 +17,9 @@ render: |
   power:
     source: aa55udp
     host: {{ or .host .uri }}
+    # register: 35139
+    # count: 2
+    # id: 247
     pdu: "f703891c007d"  # READ 125 @ 0x891C
     offset: 78           # grid power: (35139-35100)*2
     decode: int32be
@@ -31,6 +34,12 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
+    # source: aa55udp
+    # host: {{ or .host .uri }}
+    # register: 35137
+    # count: 2
+    # id: 247
+    # decode: int32be
     source: calc
     add:
     - source: aa55udp
@@ -56,6 +65,9 @@ render: |
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
+    # register: 35191
+    # count: 2
+    # id: 247
     pdu: "f703891c007d"
     offset: 182            # pv energy: (35191-35100)*2
     decode: uint32be
@@ -65,12 +77,18 @@ render: |
   power:
     source: aa55udp
     host: {{ or .host .uri }}
+    # register: 35182
+    # count: 2
+    # id: 247
     pdu: "f703891c007d"  # READ 125 @ 0x891C
     offset: 164           # battery power: (35182-35100)*2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
+    # register: 35209
+    # count: 2
+    # id: 247
     pdu: "f703891c007d"
     offset: 218           # battery discharge energy: (35209-35100)*2
     decode: uint32be
@@ -78,6 +96,9 @@ render: |
   soc:
     source: aa55udp
     host: {{ or .host .uri }}
+    # register: 37007
+    # count: 1
+    # id: 247
     pdu: "f7039088000d"  # READ 13 @ 0x9088
     offset: 14            # soc: (37007-37000)*2
     decode: uint16be

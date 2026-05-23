@@ -14,27 +14,26 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/grid-x/modbus"
 )
 
 // InverterAddr is the default inverter address byte, used by DT/DNS and ES/EM
 // families. ET/EH/BT/BH families require 0xF7 (247) instead.
 const InverterAddr byte = 0x7F
 
-// ReadFunc is the Modbus function code for READ HOLDING REGISTERS.
-const ReadFunc byte = 0x03
-
-// BuildPDU constructs the 6-byte PDU body for a READ HOLDING REGISTERS request.
+// buildPDU constructs the 6-byte PDU body for a READ HOLDING REGISTERS request.
 // addr is the inverter address byte: 0x7F for DT/DNS/ES/EM, 0xF7 for ET/EH/BT/BH.
-func BuildPDU(addr byte, register, count uint16) []byte {
+func buildPDU(addr byte, register, count uint16) []byte {
 	return []byte{
-		addr, ReadFunc,
+		addr, modbus.FuncCodeReadHoldingRegisters,
 		byte(register >> 8), byte(register),
 		byte(count >> 8), byte(count),
 	}
 }
 
-// ParsePDU decodes a hex string (spaces allowed) into a 6-byte PDU body.
-func ParsePDU(s string) ([]byte, error) {
+// parsePDU decodes a hex string (spaces allowed) into a 6-byte PDU body.
+func parsePDU(s string) ([]byte, error) {
 	b, err := hex.DecodeString(strings.ReplaceAll(s, " ", ""))
 	if err != nil {
 		return nil, fmt.Errorf("invalid pdu %q: %w", s, err)
@@ -45,12 +44,12 @@ func ParsePDU(s string) ([]byte, error) {
 	return b, nil
 }
 
-// StripHeader validates the AA55 response frame and returns the bare payload
+// stripHeader validates the AA55 response frame and returns the bare payload
 // (without the 5-byte header and trailing 2-byte CRC).
 // buf[2] is the inverter source address, which varies by family — only the
-// AA 55 magic bytes and function code 0x03 are validated.
-func StripHeader(buf []byte) ([]byte, error) {
-	if len(buf) < 6 || buf[0] != 0xAA || buf[1] != 0x55 || buf[3] != 0x03 {
+// AA 55 magic bytes and the READ HOLDING REGISTERS function code are validated.
+func stripHeader(buf []byte) ([]byte, error) {
+	if len(buf) < 6 || buf[0] != 0xAA || buf[1] != 0x55 || buf[3] != modbus.FuncCodeReadHoldingRegisters {
 		return nil, errors.New("invalid response header")
 	}
 	byteCount := int(buf[4])
@@ -60,8 +59,8 @@ func StripHeader(buf []byte) ([]byte, error) {
 	return buf[5 : 5+byteCount], nil
 }
 
-// ModbusCRC16 computes the Modbus CRC-16 (little-endian byte order).
-func ModbusCRC16(data []byte) []byte {
+// modbusCRC16 computes the Modbus CRC-16 (little-endian byte order).
+func modbusCRC16(data []byte) []byte {
 	crc := uint16(0xFFFF)
 	for _, b := range data {
 		crc ^= uint16(b)
@@ -92,26 +91,26 @@ func decodeMetadata(name string) (decodeMeta, bool) {
 	}
 }
 
-// ValidateDecode returns an error if decode is not a supported type.
-func ValidateDecode(decode string) error {
+// validateDecode returns an error if decode is not a supported type.
+func validateDecode(decode string) error {
 	if _, ok := decodeMetadata(decode); !ok {
 		return fmt.Errorf("unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", decode)
 	}
 	return nil
 }
 
-// DecodeSize returns the number of bytes required to decode the given type.
-// Panics if decode type is unknown — callers must ValidateDecode first.
-func DecodeSize(decode string) int {
+// decodeSize returns the number of bytes required to decode the given type.
+// Panics if decode type is unknown — callers must validateDecode first.
+func decodeSize(decode string) int {
 	if info, ok := decodeMetadata(decode); ok {
 		return info.size
 	}
-	panic(fmt.Sprintf("aa55: unknown decode type %q", decode))
+	panic(fmt.Sprintf("unknown decode type %q", decode))
 }
 
-// DecodeAt extracts a value at the given byte offset of payload and interprets
+// decodeAt extracts a value at the given byte offset of payload and interprets
 // it according to decode.
-func DecodeAt(payload []byte, offset int, decode string) (float64, error) {
+func decodeAt(payload []byte, offset int, decode string) (float64, error) {
 	switch decode {
 	case "float32be":
 		if len(payload) < offset+4 {
