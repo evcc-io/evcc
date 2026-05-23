@@ -1,0 +1,18 @@
+template: genesis
+products:
+  - brand: Genesis
+    description:
+      generic: Bluelink
+requirements:
+  description:
+    en: |
+      Instead of your account's password, the password field needs to be filled with a `refresh_token` ([instructions](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)).
+    de: |
+      Anstelle des Passworts muss in das Passwort-Feld ein `refresh_token` eingetragen werden ([Anleitung](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)).
+params:
+  - preset: vehicle-base
+  - preset: vehicle-language
+render: |
+  type: genesis
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-language" . }}
