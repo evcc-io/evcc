@@ -154,7 +154,11 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 		}
 
 		m.log.TRACE.Printf("delete: %s", msg.Topic())
-		m.Publish(msg.Topic(), true, "")
+		// Delete synchronously at QoS 0 so the cleanup burst self-throttles
+		// to one in-flight message at a time and avoids overwhelming the
+		// broker (see #30086).
+		token := m.client.Publish(msg.Topic(), 0, true, "")
+		token.WaitTimeout(request.Timeout)
 
 		// reset timeout
 		timer.Reset(time.Second)
