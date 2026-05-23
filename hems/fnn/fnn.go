@@ -11,20 +11,19 @@ import (
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 // NewFromConfig creates an FNN HEMS from generic config.
-// The config struct fields align with EEBUS HEMS naming.
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
-		MaxPower        float64
-		MaxCurtailPower float64
-		MaxPowerDim     float64
+		MaxPower        float64 // TODO deprecated
 		MaxDimPower     float64
+		MaxCurtailPower *float64
 		W3              *plugin.Config
-		W4              *plugin.Config
 		S1              *plugin.Config
 		S2              *plugin.Config
+		W4              *plugin.Config
 		Interval        time.Duration
 	}{
 		Interval: 10 * time.Second,
@@ -67,30 +66,16 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	maxCurtailPower := cc.MaxCurtailPower
-	if maxCurtailPower <= 0 {
-		maxCurtailPower = cc.MaxPower
-	}
-
-	maxDimPower := cc.MaxDimPower
-	if maxDimPower <= 0 {
-		if cc.MaxPowerDim > 0 {
-			maxDimPower = cc.MaxPowerDim
-		} else if cc.MaxPower > 0 {
-			maxDimPower = cc.MaxPower
-		}
-	}
-
 	return &Fnn{
-		log:         util.NewLogger("fnn"),
-		root:        gridcontrol,
-		maxPower:    maxCurtailPower,
-		maxPowerDim: maxDimPower,
-		s1:          s1G,
-		s2:          s2G,
-		w3:          w3G,
-		w4:          w4G,
-		interval:    cc.Interval,
+		log:             util.NewLogger("fnn"),
+		root:            gridcontrol,
+		maxDimPower:     lo.CoalesceOrEmpty(cc.MaxDimPower, cc.MaxPower),
+		maxCurtailPower: cc.MaxCurtailPower,
+		s1:              s1G,
+		s2:              s2G,
+		w3:              w3G,
+		w4:              w4G,
+		interval:        cc.Interval,
 	}, nil
 }
 
@@ -106,24 +91,9 @@ type Fnn struct {
 	smartgridConsumptionID uint
 	smartgridProductionID  uint
 
-	maxPower    float64
-	maxPowerDim float64
-	interval    time.Duration
-
-	lastCurtailActive bool
-	lastCurtailLimit  float64
-	lastCurtailSource string
-	lastDimActive     bool
-	lastDimLimit      float64
-	lastDimSource     string
-	curtailInit       bool
-	dimInit           bool
-}
-
-type curtailRule struct {
-	getter   func() (bool, error)
-	fraction float64
-	source   string
+	maxDimPower     float64
+	maxCurtailPower *float64
+	interval        time.Duration
 }
 
 // Run starts the FNN control loop.
@@ -132,7 +102,7 @@ func (c *Fnn) Run() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		if err := c.Update(); err != nil {
+		if err := c.runCurtail(); err != nil {
 			c.log.ERROR.Println(err)
 		}
 
@@ -142,12 +112,18 @@ func (c *Fnn) Run() {
 	}
 }
 
-// Update evaluates curtailment rules and applies the appropriate limit.
-func (c *Fnn) Update() error {
+// runCurtail evaluates curtailment rules and applies the appropriate limit.
+func (c *Fnn) runCurtail() error {
+
+	type curtailRule struct {
+		getter   func() (bool, error)
+		fraction float64
+	}
+
 	rules := []curtailRule{
-		{getter: c.w3, fraction: 0.0, source: "w3"},
-		{getter: c.s2, fraction: 0.3, source: "s2"},
-		{getter: c.s1, fraction: 0.6, source: "s1"},
+		{getter: c.w3, fraction: 0.0},
+		{getter: c.s2, fraction: 0.3},
+		{getter: c.s1, fraction: 0.6},
 	}
 
 	for _, rule := range rules {
@@ -157,12 +133,12 @@ func (c *Fnn) Update() error {
 		}
 
 		if active {
-			return c.curtail(rule.fraction, rule.source)
+			return c.setProductionLimit(rule.fraction)
 		}
 	}
 
 	// 100%
-	return c.curtail(1.0, "none")
+	return c.setProductionLimit(1.0)
 }
 
 // runDim evaluates the dimming rule and applies the dim limit.
@@ -172,20 +148,16 @@ func (c *Fnn) runDim() error {
 		return err
 	}
 
-	if c.maxPowerDim <= 0 {
-		if active {
-			c.log.WARN.Printf("dim active but no limit configured (maxDimPower/maxPowerDim)")
-		}
-
-		return nil
-	}
-
 	limit := 0.0
 	if active {
-		limit = c.maxPowerDim
+		if c.maxDimPower <= 0 {
+			return errors.New("dim active but no limit configured")
+		}
+
+		limit = c.maxDimPower
 	}
 
-	return c.setDim(limit, "w4")
+	return c.setConsumptionLimit(limit)
 }
 
 func (c *Fnn) applyMode(id *uint, typ smartgrid.Type, active bool, limit float64, applyRoot func()) {
@@ -196,38 +168,20 @@ func (c *Fnn) applyMode(id *uint, typ smartgrid.Type, active bool, limit float64
 	}
 }
 
-// curtail applies the curtailment limit to the circuit.
-func (c *Fnn) curtail(frac float64, source string) error {
+// setProductionLimit applies the curtailment limit to the circuit.
+func (c *Fnn) setProductionLimit(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	limit := 0.0
 	active := frac < 1.0
-	if active && c.maxPower <= 0 {
-		c.log.WARN.Printf("curtail active but no limit configured (maxCurtailPower/maxPower)")
-		active = false
-	}
 
-	limit := c.maxPower * frac
-	if !c.curtailInit {
-		c.curtailInit = true
-		if !active && source == "none" {
-			c.lastCurtailActive = active
-			c.lastCurtailLimit = limit
-			c.lastCurtailSource = source
-			c.applyMode(&c.smartgridProductionID, smartgrid.Curtail, active, limit, func() {
-				c.root.Curtail(active)
-				// TODO make ProductionNominalMax configurable (Site kWp)
-				// c.root.SetMaxPower(c.maxPower*frac)
-			})
-			return nil
+	if active {
+		if c.maxCurtailPower == nil {
+			return errors.New("curtail active but no limit configured")
 		}
-	}
 
-	if c.lastCurtailActive != active || c.lastCurtailLimit != limit || c.lastCurtailSource != source {
-		c.log.DEBUG.Printf("curtail: source=%s active=%t fraction=%.2f limit=%.0fW", source, active, frac, limit)
-		c.lastCurtailActive = active
-		c.lastCurtailLimit = limit
-		c.lastCurtailSource = source
+		limit = *c.maxCurtailPower * frac
 	}
 
 	c.applyMode(&c.smartgridProductionID, smartgrid.Curtail, active, limit, func() {
@@ -239,32 +193,12 @@ func (c *Fnn) curtail(frac float64, source string) error {
 	return nil
 }
 
-// setDim applies the dimming limit to the circuit.
-func (c *Fnn) setDim(limit float64, source string) error {
+// setConsumptionLimit applies the dimming limit to the circuit.
+func (c *Fnn) setConsumptionLimit(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	active := limit > 0
-	if !c.dimInit {
-		c.dimInit = true
-		if !active {
-			c.lastDimActive = active
-			c.lastDimLimit = limit
-			c.lastDimSource = source
-			c.applyMode(&c.smartgridConsumptionID, smartgrid.Dim, active, limit, func() {
-				c.root.Dim(active)
-				c.root.SetMaxPower(limit)
-			})
-			return nil
-		}
-	}
-
-	if c.lastDimActive != active || c.lastDimLimit != limit || c.lastDimSource != source {
-		c.log.DEBUG.Printf("dim: source=%s active=%t limit=%.0fW", source, active, limit)
-		c.lastDimActive = active
-		c.lastDimLimit = limit
-		c.lastDimSource = source
-	}
 
 	c.applyMode(&c.smartgridConsumptionID, smartgrid.Dim, active, limit, func() {
 		c.root.Dim(active)
