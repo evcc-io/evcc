@@ -135,12 +135,24 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 	m.log.DEBUG.Printf("%s connected", m.broker)
 
 	m.mux.Lock()
-	defer m.mux.Unlock()
-
+	topics := make([]string, 0, len(m.listener))
 	for topic := range m.listener {
-		m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
-		go m.listen(topic)
+		topics = append(topics, topic)
 	}
+	m.mux.Unlock()
+
+	// Resubscribe sequentially to avoid bursting the broker right after reconnect.
+	go func() {
+		for _, topic := range topics {
+			m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
+			token := m.listen(topic)
+			if !token.WaitTimeout(request.Timeout) {
+				m.log.ERROR.Printf("subscribe %s: timeout", topic)
+			} else if err := token.Error(); err != nil {
+				m.log.ERROR.Printf("subscribe %s: %v", topic, err)
+			}
+		}
+	}()
 }
 
 // Cleanup recursively removes a topic
