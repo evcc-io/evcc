@@ -2,8 +2,8 @@ template: iobroker
 products:
   - brand: 
     description:
-      de: Zähler aus Iobroker states
-      en: Meter created by Iobroker states
+      de: Zähler aus IoBroker states
+      en: Meter created by IoBroker states
 group: generic
 requirements:
   description:
@@ -24,7 +24,7 @@ params:
     required: true
     description: 
       en: The full uri of the host to query
-      de: Der vollständige URI der Iobroke Instanz
+      de: Der vollständige URI der IoBroker Instanz
     example: https://iobroker.homelab.lan:8082
   - name: cache
     default: 2s
@@ -34,8 +34,8 @@ params:
     example: 2s
   - name: user
     description:
-      de: Username falls auth im Iobroker aktiv ist
-      en: Username if auth is enabled in Iobroker
+      de: Username falls auth im IoBroker aktiv ist
+      en: Username if auth is enabled in IoBroker
   - name: password
     description:
       de: Passwort von user
@@ -90,13 +90,6 @@ params:
   - name: maxchargepower
     advanced: true
   - name: maxdischargepower
-    advanced: true
-  - name: energy
-    description:
-      de: Zählerstand
-      en: Meter reading
-    unit: kWh
-    type: int
     advanced: true
   - name: maxacpower
 render: |
