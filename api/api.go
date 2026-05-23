@@ -280,11 +280,11 @@ type Circuit interface {
 
 	// EnWG §14a - reduce demand/consumption
 	Dim(bool)
-	Dimmed() bool
+	Dimmed() *bool
 
 	// EEG §9 - reduce feed-in to the grid
 	Curtail(bool)
-	Curtailed() bool
+	Curtailed() *bool
 }
 
 // Redactor is an interface to redact sensitive data
