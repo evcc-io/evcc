@@ -1983,6 +1983,20 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {
+		// Vehicle-API charger surfaces "vehicle is asleep" as api.ErrAsleep
+		// via Status(). Without dedicated handling we'd early-return forever
+		// and the plan deadline would silently slip (evcc-io/evcc#28652).
+		// Drive the existing wake-up timer ourselves when a plan is active.
+		if errors.Is(err, api.ErrAsleep) && lp.planActive {
+			lp.startWakeUpTimer()
+			switch lp.wakeUpTimer.Elapsed() {
+			case WakeUpTimerElapsed:
+				lp.wakeUpVehicle()
+			case WakeUpTimerFinished:
+				lp.pushEvent(evVehicleAsleep)
+			}
+			return
+		}
 		lp.log.ERROR.Println(err)
 		return
 	}
