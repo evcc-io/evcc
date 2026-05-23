@@ -38,25 +38,27 @@ const colors: {
   light: null,
   selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
-    // Dynamic palette (vehicles, loadpoints, …): optimized for neighbor contrast, avoids overlap with system colors (solar, battery, grid, …).
-    "#0EA5E9", // Sky
-    "#EC4899", // Pink
-    "#34D399", // Mint
-    "#F97316", // Orange
-    "#7C3AED", // Violet
-    "#84CC16", // Lime
-    "#F43F5E", // Rose
-    "#2563EB", // Blue
-    "#FACC15", // Yellow
-    "#D946EF", // Magenta
-    "#10B981", // Emerald
-    "#1E40AF", // Royal
-    "#BE185D", // Crimson
-    "#F59E0B", // Marigold
-    "#6366F1", // Indigo
-    "#14B8A6", // Teal
-    "#A855F7", // Lavender
-    "#DC2626", // Red
+    // light
+    "#60A5FA", // blue
+    "#FBBF24", // amber
+    "#22D3EE", // cyan
+    "#F472B6", // pink
+    "#34D399", // green
+    "#A78BFA", // violet
+    // mid
+    "#2563EB", // blue
+    "#F59E0B", // amber
+    "#06B6D4", // cyan
+    "#EC4899", // pink
+    "#10B981", // green
+    "#8B5CF6", // violet
+    // dark
+    "#1E40AF", // blue
+    "#B45309", // amber
+    "#0E7490", // cyan
+    "#BE185D", // pink
+    "#047857", // green
+    "#6D28D9", // violet
   ],
 });
 
