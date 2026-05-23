@@ -105,12 +105,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		current: 6,
 	}
 
-	if b, err := wb.conn.ReadInputRegisters(vestelRegNumberPhases, 1); err == nil && binary.BigEndian.Uint16(b) == 1 {
-		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
-		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
-	}
-
-	// compare firmware version to determine if RFID is available
+	// compare firmware version to determine optional capabilities (RFID, 1p3p phase switching)
 	b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read firmware version: %w", err)
@@ -120,9 +115,16 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	if err == nil {
 		fw, _, _ = strings.Cut(strings.TrimPrefix(fw, "v"), "-")
 		if v, err := version.NewSemver(fw); err == nil {
+			// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
 			if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.156.0"))) {
-				// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
 				implement.Has(wb, implement.Identifier(wb.identify))
+			}
+			// firmware >= v3.187.0 supports 1p3p phase switching; gating on the current
+			// phase count register flunked when the wallbox was running 3-phase, see
+			// https://github.com/evcc-io/evcc/issues/30131
+			if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.187.0"))) {
+				implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+				implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 			}
 		} else {
 			log.WARN.Printf("failed to parse firmware version %q: %v", string(b), err)
