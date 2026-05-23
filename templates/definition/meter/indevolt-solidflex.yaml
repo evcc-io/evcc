@@ -1,0 +1,93 @@
+template: indevolt-solidflex
+products:
+  - brand: Indevolt
+    description:
+      de: Solidflex Hybrid-Wechselrichter (lokal)
+      en: Solidflex Hybrid Inverter (local)
+requirements:
+  description:
+    de: |
+      Lokaler Direktzugriff auf das Indevolt Solidflex-System (z.B. Solidflex 2000) per HTTP API auf Port 8080.
+
+      Die IP-Adresse des Geräts kann in der Indevolt-App, im Router oder per UDP-Broadcast (Port 10000) ermittelt werden. Es empfiehlt sich, dem Gerät im Router eine feste IP zuzuweisen.
+
+      Vorzeichenkonvention der Batterieleistung sowie Verfügbarkeit eines Netzbezugs-/-einspeisepunktes (Register 2101/2108) hängen von der Installation (CT-Klemme) ab und sind ggf. zu prüfen.
+
+      Siehe [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/geek/open-data/).
+    en: |
+      Local direct access to the Indevolt Solidflex system (e.g. Solidflex 2000) via HTTP API on port 8080.
+
+      The device's IP address can be obtained from the Indevolt app, the router, or via UDP broadcast (port 10000). Assigning a static IP in the router is recommended.
+
+      Battery power sign convention and availability of grid import/export readings (registers 2101/2108) depend on installation (CT clamp) and should be verified.
+
+      See [docs.indevolt.com](https://docs.indevolt.com/docs/hardware/geek/open-data/).
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: cache
+    default: 5s
+  - preset: battery-params
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    # Total AC Input Power (Register 2101) - positive when drawing from grid
+    - source: http
+      uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2101%5D%7D
+      method: POST
+      jq: ."2101"
+      cache: {{ .cache }}
+    # Total AC Output Power (Register 2108) - positive when feeding to grid, negate for evcc convention
+    - source: http
+      uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2108%5D%7D
+      method: POST
+      jq: ."2108"
+      scale: -1
+      cache: {{ .cache }}
+  energy:
+    source: http
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B2107%5D%7D
+    method: POST
+    jq: ."2107" # Total AC Input Energy (kWh)
+    cache: {{ .cache }}
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B1501%5D%7D
+    method: POST
+    jq: ."1501" # Total DC Output Power (W)
+    cache: {{ .cache }}
+  energy:
+    source: http
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B1505%5D%7D
+    method: POST
+    jq: ."1505" # Cumulative PV Production (Wh)
+    scale: 0.001
+    cache: {{ .cache }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6000%5D%7D
+    method: POST
+    jq: ."6000" # Battery Power (W); ggf. scale: -1 falls Vorzeichen invertiert
+    cache: {{ .cache }}
+  soc:
+    source: http
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6002%5D%7D
+    method: POST
+    jq: ."6002" # Battery SOC (%)
+    cache: {{ .cache }}
+  energy:
+    source: http
+    uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config=%7B%22t%22%3A%5B6007%5D%7D
+    method: POST
+    jq: ."6007" # Battery Total Discharging Energy (kWh)
+    cache: {{ .cache }}
+  {{- include "battery-params" . }}
+  {{- end }}
