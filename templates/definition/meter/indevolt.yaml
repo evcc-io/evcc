@@ -2,8 +2,22 @@ template: indevolt
 products:
   - brand: Indevolt
     description:
-      de: Hybrid-Wechselrichter (lokal)
-      en: Hybrid Inverter (local)
+      generic: SolidFlex 1200
+  - brand: Indevolt
+    description:
+      generic: SolidFlex 2000
+  - brand: Indevolt
+    description:
+      generic: SolidFlex 3000 Hybrid
+  - brand: Indevolt
+    description:
+      generic: PowerFlex 1200
+  - brand: Indevolt
+    description:
+      generic: PowerFlex 2000
+  - brand: Indevolt
+    description:
+      generic: PowerFlex 3000 Hybrid
 requirements:
   description:
     de: |
