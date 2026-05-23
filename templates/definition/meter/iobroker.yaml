@@ -6,6 +6,7 @@ products:
       en: Meter created by IoBroker states
 group: generic
 requirements:
+  evcc: ["skiptest"]
   description:
     de: | 
       Auf der verwendeten IoBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 

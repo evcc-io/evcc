@@ -5,6 +5,7 @@ products:
       de: Wallbox über IoBroker states
       en: Charger created by IoBroker states
 requirements:
+  evcc: ["skiptest"]
   description:
     de: | 
       Auf der verwendeten IoBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
