@@ -132,6 +132,10 @@ func (c *Fnn) runCurtail() error {
 	}
 
 	for _, rule := range rules {
+		if rule.get == nil {
+			continue
+		}
+
 		active, err := rule.get()
 		if err != nil {
 			return err
@@ -148,6 +152,10 @@ func (c *Fnn) runCurtail() error {
 
 // runDim evaluates the dimming rule and applies the dim limit.
 func (c *Fnn) runDim() error {
+	if c.w4 == nil {
+		return c.setConsumptionLimit(0)
+	}
+
 	active, err := c.w4()
 	if err != nil {
 		return err
