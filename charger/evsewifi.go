@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/evse"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -15,6 +16,7 @@ import (
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*request.Helper
+	implement.Caps
 	uri          string
 	alwaysActive bool
 	current      int64 // current will always be the physical value sent to the API
@@ -26,8 +28,6 @@ func init() {
 	registry.Add("smartwb", NewEVSEWifiFromConfig)
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
-
-//go:generate go tool decorate -f decorateEVSE -b *EVSEWifi -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
@@ -71,42 +71,32 @@ func NewEVSEWifiFromConfig(other map[string]any) (api.Charger, error) {
 		wb.hires = true
 	}
 
-	// decorate meter
-	var (
-		power, energy      func() (float64, error)
-		currents, voltages func() (float64, float64, float64, error)
-	)
-
 	if cc.Meter.Power {
-		power = wb.currentPower
+		implement.Has(wb, implement.Meter(wb.currentPower))
 	}
 
 	if cc.Meter.Energy {
-		energy = wb.totalEnergy
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
 	if cc.Meter.Currents {
-		currents = wb.currents
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	if cc.Meter.Voltages {
-		voltages = wb.voltages
+		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
-	// decorate Charger with MaxCurrentMillis
-	var maxCurrentMillis func(float64) error
 	if wb.hires {
-		maxCurrentMillis = wb.maxCurrentMillis
+		implement.Has(wb, implement.ChargerEx(wb.maxCurrentMillis))
 		wb.current = 100 * wb.current
 	}
 
-	// decorate Charger with Identifier
-	var identify func() (string, error)
 	if params.RFIDUID != nil {
-		identify = wb.identify
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
-	return decorateEVSE(wb, power, energy, currents, voltages, maxCurrentMillis, identify), nil
+	return wb, nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
@@ -115,6 +105,7 @@ func NewEVSEWifi(uri string, cache time.Duration) (*EVSEWifi, error) {
 
 	wb := &EVSEWifi{
 		Helper:  request.NewHelper(log),
+		Caps:    implement.New(),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
 	}

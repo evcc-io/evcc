@@ -26,6 +26,7 @@ import (
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -42,8 +43,6 @@ type Vaillant struct {
 	conn     *sensonet.Connection
 	systemId string
 }
-
-//go:generate go tool decorate -f decorateVaillant -b *Vaillant -r api.Charger -t api.Meter,api.Battery
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -155,14 +154,13 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		SgReady:  sgr,
 	}
 
-	var power func() (float64, error)
 	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
-		power = util.Cached(func() (float64, error) {
+		implement.Has(res, implement.Meter(util.Cached(func() (float64, error) {
 			res, err := conn.GetMpcData(systemId)
 			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
 				return d.CurrentPower
 			}), err
-		}, cc.Cache)
+		}, cc.Cache)))
 	}
 
 	heatingTemp := func(zz []sensonet.StateZone) float64 {
@@ -181,9 +179,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		heatingTempSensor = heatingTemp(system.State.Zones) > 0
 	}
 
-	var temp func() (float64, error)
 	if !heating || heatingTempSensor {
-		temp = util.Cached(func() (float64, error) {
+		implement.Has(res, implement.Battery(util.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err
@@ -202,10 +199,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			default:
 				return 0, api.ErrNotAvailable
 			}
-		}, cc.Cache)
+		}, cc.Cache)))
 	}
 
-	return decorateVaillant(res, power, temp), nil
+	return res, nil
 }
 
 func (v *Vaillant) print(chapter int, prefix string, zz ...any) {

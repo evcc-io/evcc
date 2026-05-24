@@ -122,7 +122,15 @@ export default function setupRouter(i18n: VueI18nInstance) {
       {
         path: "/history",
         component: () => import("./views/History.vue"),
-        props: true,
+        props: (route) => {
+          const { day, month, year, period } = route.query;
+          return {
+            day: day ? parseInt(day as string, 10) : undefined,
+            month: month ? parseInt(month as string, 10) : undefined,
+            year: year ? parseInt(year as string, 10) : undefined,
+            period,
+          };
+        },
       },
       {
         path: "/optimize",

@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/security"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
@@ -124,4 +125,14 @@ func (cs *CS) OnCertificateSigned(id string, request *security.CertificateSigned
 	return &security.CertificateSignedResponse{
 		Status: security.CertificateSignedStatusAccepted,
 	}, nil
+}
+
+func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.FirmwareStatusNotificationRequest) (*firmware.FirmwareStatusNotificationConfirmation, error) {
+	// Acknowledge any firmware status notification
+	return &firmware.FirmwareStatusNotificationConfirmation{}, nil
+}
+
+func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.DiagnosticsStatusNotificationRequest) (*firmware.DiagnosticsStatusNotificationConfirmation, error) {
+	// Acknowledge any diagnostics status notification
+	return &firmware.DiagnosticsStatusNotificationConfirmation{}, nil
 }

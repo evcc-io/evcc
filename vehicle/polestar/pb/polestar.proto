@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+// Polestar gRPC API (PCCS vehicle battery service).
+//
+// Polestar removed the chargingStatus field from the GraphQL carTelematicsV2
+// API. The gRPC battery service still exposes the charger connection and
+// charging status. Protocol reconstructed by the pypolestar project from the
+// Polestar Android app, see https://github.com/pypolestar/pypolestar.
+//
+// The proto package name is significant: it forms the gRPC method path
+// (/services.vehiclestates.battery.BatteryService/GetLatestBattery) expected
+// by the server.
+//
+// Regenerate with:
+//   protoc --go_out=. --go_opt=paths=source_relative \
+//          --go-grpc_out=. --go-grpc_opt=paths=source_relative polestar.proto
+
+package services.vehiclestates.battery;
+
+option go_package = "github.com/evcc-io/evcc/vehicle/polestar/pb";
+
+enum ChargerConnectionStatus {
+  CHARGER_CONNECTION_STATUS_UNSPECIFIED = 0;
+  CHARGER_CONNECTION_STATUS_CONNECTED = 1;
+  CHARGER_CONNECTION_STATUS_DISCONNECTED = 2;
+  CHARGER_CONNECTION_STATUS_FAULT = 3;
+}
+
+enum ChargingStatus {
+  CHARGING_STATUS_UNSPECIFIED = 0;
+  CHARGING_STATUS_CHARGING = 1;
+  CHARGING_STATUS_IDLE = 2;
+  CHARGING_STATUS_DONE = 3;
+  CHARGING_STATUS_FAULT = 4;
+  CHARGING_STATUS_SCHEDULED = 5;
+  CHARGING_STATUS_DISCHARGING = 6;
+  CHARGING_STATUS_ERROR = 7;
+  CHARGING_STATUS_SMART_CHARGING = 8;
+}
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+message Battery {
+  Timestamp timestamp = 1;
+  double battery_charge_level_percentage = 2;
+  int32 estimated_distance_to_empty_km = 4;
+  int32 estimated_charging_time_to_full_minutes = 5;
+  ChargerConnectionStatus charger_connection_status = 6;
+  ChargingStatus charging_status = 7;
+}
+
+message GetBatteryRequest {
+  string id = 1;
+  string vin = 2;
+}
+
+message GetBatteryResponse {
+  string id = 1;
+  string vin = 2;
+  Battery battery = 3;
+}
+
+service BatteryService {
+  rpc GetLatestBattery(GetBatteryRequest) returns (GetBatteryResponse);
+}

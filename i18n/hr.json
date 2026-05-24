@@ -639,32 +639,13 @@
       "validate": "provjeri"
     },
     "vehicle": {
-      "cancel": "Odustani",
-      "chargingSettings": "Postavke punjenja",
-      "defaultMode": "Zadani način rada",
-      "defaultModeHelp": "Način punjenja koji se primjenjuje kada se vozilo spoji.",
-      "delete": "Izbriši",
       "generic": "Druge integracije",
-      "identifiers": "RFID identifikatori",
-      "identifiersHelp": "Popis RFID zapisa za identifikaciju vozila. Jedan unos po retku. Trenutni identifikator može se pronaći na odgovarajućoj točki punjenja na preglednoj stranici.",
-      "maximumCurrent": "Maksimalna struja",
-      "maximumCurrentHelp": "Vrijednost mora biti veća od minimalne struje.",
-      "maximumPhases": "Maksimalni broj faza",
-      "maximumPhasesHelp": "S koliko faza se ovo vozilo može puniti? Koristi se za izračun potrebnog minimalnog solarnog viška i planiranje trajanja punjenja.",
-      "maximumPower": "Maksimalna snaga punjenja",
-      "maximumPowerHelp": "Maksimalna snaga koju vozilo može potrošiti",
-      "minimumCurrent": "Minimalna struja",
-      "minimumCurrentHelp": "Ne postavljajte na manje od 6A, osim ako jako dobro znate što radite.",
       "online": "Vozila s mrežnim API-jem",
       "primary": "Opće integracije",
-      "priority": "Prioritet",
-      "priorityHelp": "Veći prioritet znači da ovo vozilo dobiva prednost pri korištenju solarnog viška.",
-      "save": "Spremi",
       "scooter": "Skuter",
       "template": "Proizvođač",
       "titleAdd": "Dodaj vozilo",
-      "titleEdit": "Uredi vozilo",
-      "validateSave": "Provjeri i spremi"
+      "titleEdit": "Uredi vozilo"
     }
   },
   "footer": {

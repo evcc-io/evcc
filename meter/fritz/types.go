@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util/request"
@@ -20,12 +21,25 @@ const SessionTimeout = 15 * time.Minute
 type Settings struct {
 	URI, AIN, User, Password string
 	Firmware82               bool // use new REST API (FritzOS 8.2+)
+	Unit                     int  // unit index for multi-unit devices (REST API only)
+
+	mu      sync.Mutex
+	sid     string
+	updated time.Time
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
 
-// getSessionID fetches a session-id based on the username and password in the connection struct
-func (s Settings) GetSessionID(c *request.Helper) (string, error) {
+// GetSessionID returns a valid Fritzbox session ID, refreshing it when the
+// previously fetched session has timed out.
+func (s *Settings) GetSessionID(c *request.Helper) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if time.Since(s.updated) < SessionTimeout {
+		return s.sid, nil
+	}
+
 	uri := fmt.Sprintf("%s/login_sid.lua", s.URI)
 	body, err := c.GetBody(uri)
 	if err != nil {
@@ -53,11 +67,17 @@ func (s Settings) GetSessionID(c *request.Helper) (string, error) {
 		}
 	}
 
-	return v.SID, err
+	if err != nil {
+		return "", err
+	}
+
+	s.sid = v.SID
+	s.updated = time.Now()
+	return v.SID, nil
 }
 
 // createChallengeResponse creates the Fritzbox challenge response string
-func (s Settings) createChallengeResponse(challenge string) (string, error) {
+func (s *Settings) createChallengeResponse(challenge string) (string, error) {
 	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
 	utf16le, err := encoder.String(challenge + "-" + s.Password)
 	if err != nil {

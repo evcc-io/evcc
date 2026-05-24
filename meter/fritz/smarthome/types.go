@@ -1,5 +1,16 @@
 package smarthome
 
+// Device represents a smarthome device from the /devices endpoint
+type Device struct {
+	UID             string   `json:"UID"`
+	AIN             string   `json:"ain"`
+	Name            string   `json:"name"`
+	ProductName     string   `json:"productName"`
+	ProductCategory string   `json:"productCategory"`
+	IsConnected     bool     `json:"isConnected"`
+	UnitUids        []string `json:"unitUids"`
+}
+
 // Unit represents a smarthome unit with its interfaces
 type Unit struct {
 	GroupUID    string      `json:"groupUid,omitempty"`
