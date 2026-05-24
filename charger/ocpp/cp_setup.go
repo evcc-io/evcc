@@ -2,10 +2,12 @@ package ocpp
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
@@ -38,7 +40,14 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 
 	resp, err := cp.GetConfigurationRequest()
 	if err != nil {
-		return err
+		if !errors.Is(err, api.ErrTimeout) {
+			return err
+		}
+		// Some chargers (e.g. EN+/EVSEDO FW 1.1.805, issue #30113) silently
+		// swallow CSMS requests after BootNotification. Proceed with built-in
+		// defaults instead of aborting charger creation fatally.
+		cp.log.WARN.Printf("GetConfiguration timeout, proceeding with defaults")
+		resp = &core.GetConfigurationConfirmation{}
 	}
 
 	for _, opt := range resp.ConfigurationKey {
