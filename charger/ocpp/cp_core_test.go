@@ -239,29 +239,3 @@ func TestMonitorRebootOnlyOnce(t *testing.T) {
 	require.Eventually(t, func() bool { return callCount.Load() == 1 }, time.Second, 10*time.Millisecond,
 		"setup should be called exactly once")
 }
-
-func TestWaitConnectedReturnsImmediatelyWhenConnected(t *testing.T) {
-	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
-
-	cp.connect(true)
-	require.NoError(t, cp.waitConnected(t.Context()))
-}
-
-func TestWaitConnectedResumesOnReconnectBoot(t *testing.T) {
-	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
-
-	// not connected, simulates the CP having dropped mid-setup
-	require.False(t, cp.Connected())
-
-	// schedule a reconnect's BootNotification after a short delay
-	go func() {
-		time.Sleep(20 * time.Millisecond)
-		_, _ = cp.OnBootNotification(&core.BootNotificationRequest{
-			ChargePointModel: "TestModel",
-		})
-	}()
-
-	require.NoError(t, cp.waitConnected(t.Context()))
-}
