@@ -31,6 +31,11 @@ func wait(err error, rc chan error) error {
 		if oe, ok := errors.AsType[*ocpp.Error](err); ok && oe.Code == ocppj.GenericError {
 			err = api.ErrTimeout
 		}
+	} else if strings.Contains(err.Error(), "no client") {
+		// The ocpp-go dispatcher returns "cannot send request ..., no client ... exists"
+		// when the CP disconnected before the request could be queued. Treat as transient
+		// timeout so callers can react to a reconnect instead of aborting setup fatally.
+		err = api.ErrTimeout
 	}
 	return err
 }
