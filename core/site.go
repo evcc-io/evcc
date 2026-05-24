@@ -508,19 +508,10 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			site.log.ERROR.Printf("%s %d power: %v", key, i+1, err)
 		}
 
-		// energy (production for pv/battery, consumption for aux/ext)
+		// energy (production)
 		var energy float64
-		if err == nil {
-			switch key {
-			case "pv", "battery":
-				if m, ok := api.Cap[api.MeterReturnEnergy](meter); ok {
-					energy, err = m.ReturnEnergy()
-				}
-			default:
-				if m, ok := api.Cap[api.MeterEnergy](meter); ok {
-					energy, err = m.TotalEnergy()
-				}
-			}
+		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
+			energy, err = m.TotalEnergy()
 			if err != nil {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}

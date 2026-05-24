@@ -624,7 +624,7 @@ func TestChargingSession_AtStartup_ProtectsSessionEnergy(t *testing.T) {
 	assert.Equal(t, 9173.5, total) // totalEnergy updated
 }
 
-func TestLifetimeEnergy_DoesNotDecreaseImportEnergy(t *testing.T) {
+func TestLifetimeEnergy_DoesNotDecreaseTotalEnergy(t *testing.T) {
 	e := newEasee()
 	e.totalEnergy = 9173.5
 

@@ -68,7 +68,7 @@ var _ api.MeterEnergy = (*CCU)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *CCU) TotalEnergy() (float64, error) {
 	if c.usage == "grid" {
-		return c.conn.GridImportEnergy()
+		return c.conn.GridTotalEnergy()
 	}
 	return c.conn.TotalEnergy()
 }
