@@ -277,7 +277,7 @@ func testInstance(instance any) map[string]testResult {
 	if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
 		val, err := dev.TotalEnergy()
 		makeResult("energy", val, err)
-	} 
+	}
 
 	if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
 		val, err := dev.ReturnEnergy()
