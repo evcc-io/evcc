@@ -1,16 +1,13 @@
 template: iobroker
 products:
-  - brand:
-    description:
-      de: Zähler aus IoBroker states
-      en: Meter created by IoBroker states
+  - brand: ioBroker
 group: generic
 requirements:
   evcc: ["skiptest"]
   description:
     de: |
-      Auf der verwendeten IoBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
-      Authentiziziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
+      Auf der verwendeten ioBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
+      Authentifiziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
       Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
       So wird aus `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower  shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
     en: |
@@ -25,7 +22,7 @@ params:
     required: true
     description:
       en: The full uri of the host to query
-      de: Der vollständige URI der IoBroker Instanz
+      de: Der vollständige URI der ioBroker Instanz
     example: https://iobroker.homelab.lan:8082
   - name: cache
     default: 2s
@@ -35,8 +32,8 @@ params:
     example: 2s
   - name: user
     description:
-      de: Username falls auth im IoBroker aktiv ist
-      en: Username if auth is enabled in IoBroker
+      de: Username falls auth im ioBroker aktiv ist
+      en: Username if auth is enabled in ioBroker
   - name: password
     description:
       de: Passwort von user

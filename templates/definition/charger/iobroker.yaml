@@ -1,19 +1,19 @@
 template: iobroker
 group: generic
 products:
-  - description:
-      de: Wallbox über IoBroker states
-      en: Charger created by IoBroker states
+  - brand: ioBroker
+    description:
+      generic: Charger
 requirements:
   evcc: ["skiptest"]
   description:
     de: |
-      Auf der verwendeten IoBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
+      Auf der verwendeten ioBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
       Authentiziziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
       Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
       So wird aus `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower  shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
     en: |
-      The `rest-api` adapter (not `simple-api`) must be installed on the IoBroker instance being used.
+      The `rest-api` adapter (not `simple-api`) must be installed on the ioBroker instance being used.
       Authentication can only be performed using `basic` authentication. If no password is provided, no authentication will be performed. 
       When specifying the entities for the individual measured values, ensure that they are correctly URL-encoded.
       For example, `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower` becomes `shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
@@ -22,7 +22,7 @@ params:
     required: true
     description:
       en: The full uri of the host to query
-      de: Der vollständige URI der Iobroker Instanz
+      de: Der vollständige URI der ioBroker Instanz
     example: https://iobroker.homelab.lan:8082
   - name: cache
     default: 2s
@@ -31,8 +31,8 @@ params:
       de: Dauer der Zwischenspeicherung von Ergebnissen
   - name: user
     description:
-      de: Username falls auth im IoBroker aktiv ist
-      en: Username if auth is enabled in IoBroker
+      de: Username falls auth im ioBroker aktiv ist
+      en: Username if auth is enabled in ioBroker
   - name: password
     description:
       de: Passwort von user
