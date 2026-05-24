@@ -55,7 +55,7 @@ func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
 
 	switch o.method {
 	case Energy:
-		if !api.HasCap[api.MeterEnergy](o.meter) && !api.HasCap[api.MeterReturnEnergy](o.meter) {
+		if !api.HasCap[api.MeterEnergy](o.meter) {
 			return nil, err
 		}
 	case Soc:
