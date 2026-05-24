@@ -14,6 +14,8 @@ params:
     required: true
   - name: timeout
     default: 720h
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -25,3 +27,7 @@ render: |
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_electric_range/state
     timeout: {{ .timeout }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

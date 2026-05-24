@@ -5,6 +5,12 @@ params:
   - preset: vehicle-base
   - name: vin
     required: true
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: aiways
   {{ include "vehicle-base" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

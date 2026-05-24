@@ -29,6 +29,8 @@ params:
       en: Port of the Tesla BLE HTTP Proxy
   - name: timeout
     default: 30s
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -80,3 +82,7 @@ render: |
       else "A" end)
     timeout: {{ .timeout }}
     cache: 1s
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

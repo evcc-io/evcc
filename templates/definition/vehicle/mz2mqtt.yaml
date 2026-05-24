@@ -15,6 +15,8 @@ params:
   - name: timeout
     default: 720h
     advanced: true
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -36,3 +38,7 @@ render: |
     source: mqtt
     topic: mz2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: {{ .timeout }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

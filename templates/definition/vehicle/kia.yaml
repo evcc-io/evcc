@@ -16,7 +16,13 @@ requirements:
 params:
   - preset: vehicle-base
   - preset: vehicle-language
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: kia
   {{ include "vehicle-base" . }}
   {{ include "vehicle-language" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

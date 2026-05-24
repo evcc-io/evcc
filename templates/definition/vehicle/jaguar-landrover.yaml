@@ -5,6 +5,12 @@ products:
   - brand: Land Rover
 params:
   - preset: vehicle-base
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: jaguar
   {{ include "vehicle-base" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

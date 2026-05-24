@@ -19,6 +19,8 @@ params:
     example: http://192.0.2.2
   - name: port
     default: 5000
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -65,3 +67,7 @@ render: |
   maxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps?${maxcurrent}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

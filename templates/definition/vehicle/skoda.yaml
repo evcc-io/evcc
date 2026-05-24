@@ -5,7 +5,13 @@ products:
 params:
   - preset: vehicle-base
   - name: timeout
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: skoda
   {{ include "vehicle-base" . }}
   timeout: {{ .timeout }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

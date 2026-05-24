@@ -33,6 +33,8 @@ params:
   - preset: vehicle-common
   - name: cache
     default: 15m
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: connected-cars
   deviceToken: {{ .deviceToken }}
@@ -41,3 +43,7 @@ render: |
   vin: {{ .vin }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

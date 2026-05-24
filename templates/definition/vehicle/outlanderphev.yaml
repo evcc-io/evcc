@@ -12,6 +12,8 @@ params:
   - name: timeout
     default: 600s
     advanced: true
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -37,3 +39,7 @@ render: |
     topic: phev/climate/status
     timeout: {{ .timeout }}
     jq: (. != "off")
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

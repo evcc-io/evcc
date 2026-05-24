@@ -7,6 +7,12 @@ params:
   - preset: vehicle-base
   - name: vin
     example: LPSVS...
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: polestar
   {{ include "vehicle-base" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

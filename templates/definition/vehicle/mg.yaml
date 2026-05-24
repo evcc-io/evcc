@@ -14,7 +14,13 @@ params:
     default: EU
     required: true
     advanced: true
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: mg
   {{ include "vehicle-base" . }}
   region: {{ .region }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

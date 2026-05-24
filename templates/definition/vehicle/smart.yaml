@@ -28,6 +28,8 @@ params:
     example: V...
   - name: cache
     default: 15m
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: smart-eq
   vin: {{ .vin }}
@@ -37,3 +39,7 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

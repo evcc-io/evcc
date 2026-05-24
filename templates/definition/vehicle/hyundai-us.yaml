@@ -5,6 +5,12 @@ products:
       generic: Bluelink (US)
 params:
   - preset: vehicle-base
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: hyundai-us
   {{ include "vehicle-base" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

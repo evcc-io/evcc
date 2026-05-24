@@ -59,6 +59,8 @@ params:
     deprecated: true
   - name: refreshToken
     deprecated: true
+  - name: disablechargingonclimateractive
+    advanced: true
 auth:
   type: volvo-connected
   params: [clientId, clientSecret, redirectUri]
@@ -71,3 +73,7 @@ render: |
   redirecturi: {{ .redirectUri }}
   vin: {{ .vin }}
   {{ include "vehicle-common" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

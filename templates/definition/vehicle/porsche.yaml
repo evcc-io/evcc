@@ -4,6 +4,12 @@ products:
   - brand: Porsche
 params:
   - preset: vehicle-base
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: porsche
   {{ include "vehicle-base" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

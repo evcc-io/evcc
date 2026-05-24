@@ -23,6 +23,8 @@ params:
     example: V...
   - name: cache
     default: 15m
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: peugeot
   vin: {{ .vin }}
@@ -32,3 +34,7 @@ render: |
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

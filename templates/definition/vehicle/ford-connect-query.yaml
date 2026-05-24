@@ -31,6 +31,8 @@ params:
     example: WF0FXX...
   - name: cache
     default: 15m
+  - name: disablechargingonclimateractive
+    advanced: true
 auth:
   type: ford-connect
   params: [clientid, clientsecret, redirecturi]
@@ -43,3 +45,7 @@ render: |
   redirecturi: {{ .redirecturi }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

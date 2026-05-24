@@ -9,6 +9,12 @@ params:
   - preset: vehicle-base
   - name: vin
     example: JF...
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: subaru
   {{ include "vehicle-base" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

@@ -5,6 +5,12 @@ products:
       generic: Leaf (pre 2019)
 params:
   - preset: vehicle-base
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: carwings
   {{ include "vehicle-base" . }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

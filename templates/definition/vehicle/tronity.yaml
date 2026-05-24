@@ -25,6 +25,8 @@ params:
     example: W...
   - name: cache
     default: 15m
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: tronity
   vin: {{ .vin }}
@@ -33,3 +35,7 @@ render: |
     secret: {{ .clientsecret }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}

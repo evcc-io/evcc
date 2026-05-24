@@ -26,6 +26,8 @@ params:
       en: Can lead to increased discharge of the 12V battery.
     default: false
     advanced: true
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -71,4 +73,8 @@ render: |
   {{- else }}
   uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
+  {{- end }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
   {{- end }}

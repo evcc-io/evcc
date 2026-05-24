@@ -25,6 +25,8 @@ params:
     required: true
   - name: cache
     default: 15m
+  - name: disablechargingonclimateractive
+    advanced: true
 render: |
   type: ovms
   {{- include "vehicle-common" . }}
@@ -33,3 +35,7 @@ render: |
   vehicleid: {{ .vehicleid }}
   server: {{ .server }}
   cache: {{ .cache }}
+  features: 
+  {{- if eq .disablechargingonclimateractive "true" }}
+  - disablechargingonclimateractive
+  {{- end }}
