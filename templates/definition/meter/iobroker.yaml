@@ -1,6 +1,6 @@
 template: iobroker
 products:
-  - brand: 
+  - brand:
     description:
       de: Zähler aus IoBroker states
       en: Meter created by IoBroker states
@@ -8,7 +8,7 @@ group: generic
 requirements:
   evcc: ["skiptest"]
   description:
-    de: | 
+    de: |
       Auf der verwendeten IoBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
       Authentiziziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
       Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
@@ -23,13 +23,13 @@ params:
     choice: ["grid", "pv", "battery", "charge"]
   - name: uri
     required: true
-    description: 
+    description:
       en: The full uri of the host to query
       de: Der vollständige URI der IoBroker Instanz
     example: https://iobroker.homelab.lan:8082
   - name: cache
     default: 2s
-    description: 
+    description:
       en: How long to cache an answer
       de: Dauer der Zwischenspeicherung von Ergebnissen
     example: 2s

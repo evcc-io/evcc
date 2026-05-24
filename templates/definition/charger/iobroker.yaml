@@ -7,7 +7,7 @@ products:
 requirements:
   evcc: ["skiptest"]
   description:
-    de: | 
+    de: |
       Auf der verwendeten IoBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
       Authentiziziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
       Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
