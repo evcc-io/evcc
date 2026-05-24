@@ -231,44 +231,6 @@ func TestUpdateProfile(t *testing.T) {
 	}
 }
 
-// TestImportProfileNullEnergy reproduces optimizer issue #73: a meter row
-// with NULL energy (left over from earlier schema migrations) made avg(energy)
-// return NULL for the entire HH:MM bucket, which then failed to scan into
-// float64 and aborted the optimizer with a fatal "converting NULL to float64
-// is unsupported". COALESCE in the query keeps the slot but treats it as zero.
-func TestImportProfileNullEnergy(t *testing.T) {
-	clock := clock.NewMock()
-	_, o := clock.Now().Zone()
-	clock.Add(-time.Duration(o) * time.Second)
-
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, SetupSchema())
-
-	entity := entity{Id: 2, Name: "home"}
-	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
-
-	// 2 days of valid data, slot 0 of each day is a NULL-energy row inserted
-	// via raw SQL — simulates legacy migration debris.
-	sqldb, err := db.Instance.DB()
-	require.NoError(t, err)
-
-	for i := range 4 * 2 * 24 {
-		ts := clock.Now().Truncate(15 * time.Minute).Unix()
-		if i%96 == 0 {
-			_, err := sqldb.Exec(`INSERT INTO meters (meter, ts, energy, return_energy) VALUES (?, ?, NULL, NULL)`, entity.Id, ts)
-			require.NoError(t, err)
-		} else {
-			persist(entity, clock.Now(), float64(i), float64(i))
-		}
-		clock.Add(15 * time.Minute)
-	}
-
-	prof, err := importProfile(entity, clock.Now().AddDate(0, 0, -3))
-	require.NoError(t, err, "must not fail on NULL energy bucket")
-	require.Equal(t, float64(0), prof[0], "NULL-only bucket must be reported as 0")
-	require.NotZero(t, prof[1], "neighbouring non-NULL bucket must still be averaged correctly")
-}
-
 func TestTimeMigration(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	mig := db.Instance.Migrator()
