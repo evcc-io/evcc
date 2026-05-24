@@ -193,7 +193,7 @@ func (m *PowerWall) CurrentPower() (float64, error) {
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
-// totalEnergy returns import (load) or export (solar) energy depending on usage
+// totalEnergy implements the api.MeterEnergy interface
 func (m *PowerWall) totalEnergy() (float64, error) {
 	res, err := m.meterG()
 	if err != nil {

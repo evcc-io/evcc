@@ -21,7 +21,7 @@ type MeterEnergy interface {
 	TotalEnergy() (float64, error)
 }
 
-// MeterReturnEnergy provides total returned/exported energy in kWh
+// MeterReturnEnergy provides total returned energy in kWh
 type MeterReturnEnergy interface {
 	ReturnEnergy() (float64, error)
 }
