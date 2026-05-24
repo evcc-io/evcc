@@ -239,7 +239,7 @@ func (c *gen2) TotalEnergy() (float64, error) {
 	}
 }
 
-// ReturnEnergy implements the api.MeterEnergy interface
+// ReturnEnergy implements the api.MeterReturnEnergy interface
 func (c *gen2) ReturnEnergy() (float64, error) {
 	switch {
 	case c.hasEM1Endpoint():
