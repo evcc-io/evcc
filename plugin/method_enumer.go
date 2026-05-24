@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _MethodName = "EnergyPowerSoc"
+const _MethodName = "EnergyReturnEnergyPowerSoc"
 
-var _MethodIndex = [...]uint8{0, 6, 11, 14}
+var _MethodIndex = [...]uint8{0, 6, 18, 23, 26}
 
-const _MethodLowerName = "energypowersoc"
+const _MethodLowerName = "energyreturnenergypowersoc"
 
 func (i Method) String() string {
 	i -= 1
@@ -26,25 +26,29 @@ func (i Method) String() string {
 func _MethodNoOp() {
 	var x [1]struct{}
 	_ = x[Energy-(1)]
-	_ = x[Power-(2)]
-	_ = x[Soc-(3)]
+	_ = x[ReturnEnergy-(2)]
+	_ = x[Power-(3)]
+	_ = x[Soc-(4)]
 }
 
-var _MethodValues = []Method{Energy, Power, Soc}
+var _MethodValues = []Method{Energy, ReturnEnergy, Power, Soc}
 
 var _MethodNameToValueMap = map[string]Method{
 	_MethodName[0:6]:        Energy,
 	_MethodLowerName[0:6]:   Energy,
-	_MethodName[6:11]:       Power,
-	_MethodLowerName[6:11]:  Power,
-	_MethodName[11:14]:      Soc,
-	_MethodLowerName[11:14]: Soc,
+	_MethodName[6:18]:       ReturnEnergy,
+	_MethodLowerName[6:18]:  ReturnEnergy,
+	_MethodName[18:23]:      Power,
+	_MethodLowerName[18:23]: Power,
+	_MethodName[23:26]:      Soc,
+	_MethodLowerName[23:26]: Soc,
 }
 
 var _MethodNames = []string{
 	_MethodName[0:6],
-	_MethodName[6:11],
-	_MethodName[11:14],
+	_MethodName[6:18],
+	_MethodName[18:23],
+	_MethodName[23:26],
 }
 
 // MethodString retrieves an enum value from the enum constants string name.
