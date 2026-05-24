@@ -21,9 +21,9 @@ type Generation interface {
 }
 
 type Phases interface {
-	Currents() (float64, float64, float64, error)
-	Voltages() (float64, float64, float64, error)
-	Powers() (float64, float64, float64, error)
+	api.PhaseCurrents
+	api.PhaseVoltages
+	api.PhasePowers
 }
 
 // Connection is the Shelly connection
