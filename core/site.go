@@ -362,7 +362,7 @@ func meterCapabilities(name string, meter any) string {
 		panic("not a meter: " + name)
 	}
 
-	energy := api.HasCap[api.MeterEnergy](meter) || api.HasCap[api.MeterReturnEnergy](meter)
+	energy := api.HasCap[api.MeterEnergy](meter)
 	currents := api.HasCap[api.PhaseCurrents](meter)
 
 	name += ":"
