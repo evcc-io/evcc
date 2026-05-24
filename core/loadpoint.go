@@ -572,7 +572,11 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.stopVehicleDetection()
 
 	// set default mode on disconnect
-	lp.defaultMode()
+	// skip for integrated devices: the "disconnect" here is just the socket
+	// being switched off, not a vehicle being unplugged - keep the user's mode (#30187)
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.defaultMode()
+	}
 
 	// set default vehicle (may be nil)
 	lp.setActiveVehicle(lp.defaultVehicle)
@@ -1963,20 +1967,20 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			return
 		}
 
-		dim := lp.circuit != nil && lp.circuit.Dimmed()
+		if dim := circuitDimmed(lp.circuit); dim != nil {
+			if *dim != dimmed {
+				if err := dimmer.Dim(*dim); err != nil {
+					lp.log.ERROR.Printf("dim: %v", err)
+					return
+				}
 
-		if dim != dimmed {
-			if err := dimmer.Dim(dim); err != nil {
-				lp.log.ERROR.Printf("dim: %v", err)
-				return
+				lp.publish(keys.Dimmed, *dim)
+				lp.log.INFO.Printf("§14a dim: %t", *dim)
 			}
 
-			lp.publish(keys.Dimmed, dim)
-			lp.log.INFO.Printf("§14a dim: %t", dim)
-		}
-
-		if dim {
-			return
+			if *dim {
+				return
+			}
 		}
 	}
 

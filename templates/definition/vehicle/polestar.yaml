@@ -10,7 +10,7 @@ params:
   - name: disablechargingonclimateractive
     advanced: true
 render: |
-  type: polestar
+  type: polestar-grpc
   {{ include "vehicle-base" . }}
   features: 
   {{- if eq .disablechargingonclimateractive "true" }}
