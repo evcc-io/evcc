@@ -10,7 +10,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/WulfgarW/sensonet v0.0.7
 	github.com/andig/go-powerwall v0.3.0
-	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
+	github.com/andig/gosunspec v0.0.0-20260523124210-852310938891
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/aws/aws-sdk-go-v2 v1.41.5
@@ -70,7 +70,7 @@ require (
 	github.com/koron/go-ssdp v0.1.0
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/libtnb/sqlite v1.0.4
+	github.com/libtnb/sqlite v1.1.1
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5

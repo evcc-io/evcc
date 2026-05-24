@@ -43,6 +43,7 @@
 							:timestamp="evopt.details.timestamp[0]"
 							:currency="currency"
 							:battery-colors="batteryColors"
+							:device-colors="deviceColors"
 						/>
 
 						<h3 class="fw-normal mb-4">Result: SoC Projection</h3>
@@ -146,7 +147,7 @@ import { formatCompactJson } from "../components/Optimize/compactJson";
 import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
-import colors from "../colors";
+import { resolveColors } from "../colors";
 import { CURRENCY } from "../types/evcc";
 
 export default defineComponent({
@@ -190,12 +191,19 @@ export default defineComponent({
 					return "bg-secondary";
 			}
 		},
+		deviceColors() {
+			return store.state.deviceColors ?? {};
+		},
+		batteryTitles(): string[] {
+			const details = this.evopt?.details?.batteryDetails || [];
+			return (this.evopt?.res.batteries || []).map(
+				(_, i) => details[i]?.title || details[i]?.name || `battery-${i}`
+			);
+		},
 		batteryColors() {
 			if (!this.evopt?.res.batteries) return [];
-
-			return this.evopt.res.batteries.map(
-				(_, index) => colors.palette[index % colors.palette.length] || ""
-			);
+			const palette = resolveColors(this.batteryTitles, this.deviceColors);
+			return this.batteryTitles.map((t) => palette[t] || "");
 		},
 		dimmedBatteryColors() {
 			return (this.batteryColors || []).map((color) => this.dimColorBy25Percent(color));

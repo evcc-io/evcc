@@ -29,18 +29,25 @@ func TestDimming(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		has, want bool
+		has  bool
+		want *bool
 	}{
-		{has: false, want: false},
-		{has: false, want: true},
-		{has: true, want: false},
-		{has: true, want: true},
+		// nil: circuit has no opinion - the device must not be touched, so a
+		// limit configured outside evcc is preserved (issue #30068)
+		{has: false, want: nil},
+		{has: true, want: nil},
+		{has: false, want: new(false)},
+		{has: false, want: new(true)},
+		{has: true, want: new(false)},
+		{has: true, want: new(true)},
 	} {
 		t.Logf("%+v", tc)
 
-		dimmer.EXPECT().Dimmed().Return(tc.has, nil)
-		if tc.has != tc.want {
-			dimmer.EXPECT().Dim(tc.want).Return(nil)
+		if tc.want != nil {
+			dimmer.EXPECT().Dimmed().Return(tc.has, nil)
+			if tc.has != *tc.want {
+				dimmer.EXPECT().Dim(*tc.want).Return(nil)
+			}
 		}
 
 		require.NoError(t, s.dimMeters(tc.want))

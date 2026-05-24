@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
@@ -159,7 +160,7 @@ func (cp *CP) onTransportConnect() {
 	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
 	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
 	// Connected() check which would fail at this point.
-	time.AfterFunc(triggerBootDelay, func() {
+	time.AfterFunc(TriggerBootDelay, func() {
 		cp.mu.RLock()
 		// If BootNotification already arrived or timer was cancelled (disconnect),
 		// there is nothing to do.
@@ -210,6 +211,27 @@ func (cp *CP) Connected() bool {
 
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
+}
+
+// waitConnected blocks until the charge point is connected (i.e. a
+// BootNotification has been received after the most recent disconnect).
+// Returns immediately if already connected, otherwise waits for the next
+// BootNotification on the coalescing request channel, bounded by Timeout.
+func (cp *CP) waitConnected(ctx context.Context) error {
+	if cp.Connected() {
+		return nil
+	}
+
+	cp.log.DEBUG.Printf("charge point disconnected, waiting for reconnect")
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(Timeout):
+		return api.ErrTimeout
+	case <-cp.bootNotificationRequestC:
+		return nil
+	}
 }
 
 // MonitorReboot ensures the given function runs only once per CP instance.

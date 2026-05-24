@@ -39,6 +39,9 @@
     "legendTopAutostart": "Start automatisch",
     "legendTopName": "Voertuig opladen met energie uit de thuisbatterij",
     "legendTopSubline": "zodra de thuisbatterij {soc} bereikt heeft.",
+    "legendTopSublineAbove": "wanneer {soc} bereikt is",
+    "legendTopSublineDisabled": "is {soc}.",
+    "legendTopSublineDisabledState": "Uitgeschakeld",
     "modalTitle": "Thuisbatterij",
     "noBattery": "Geen accu geconfigureerd.",
     "usageTab": "Batterijgebruik"
@@ -237,6 +240,7 @@
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
       "customOption": "Gebruiker-gedefinieerd apparaat",
       "delete": "Wissen",
+      "dismiss": "Negeren",
       "docsLink": "Zie documentatie.",
       "dragHandle": "Schuifknop",
       "dragItem": "Verschuifbaar:{title}",
@@ -860,32 +864,13 @@
       "validate": "valideer"
     },
     "vehicle": {
-      "cancel": "Annuleren",
-      "chargingSettings": "Laadinstellingen",
-      "defaultMode": "Standaardmodus",
-      "defaultModeHelp": "Laadmodus bij het aansluiten van een voertuig.",
-      "delete": "Verwijder",
       "generic": "Andere integraties",
-      "identifiers": "RFID identificatiegegevens",
-      "identifiersHelp": "Lijst van RFIDs om het voertuig te identificeren. Een RFID per regel. De huidige RFID kan gevonden worden op de overzichtspagina, bij het respectievelijke laadpunt.",
-      "maximumCurrent": "Maximale stroomsterkte",
-      "maximumCurrentHelp": "Moet hoger zijn dan de minimale stroomsterkte.",
-      "maximumPhases": "Maximaal aantal fases",
-      "maximumPhasesHelp": "Met hoeveel fasen kan dit voertuig laden? Wordt gebruikt om de minimale duur van zonneoverschot en laadtijd te berekenen.",
-      "maximumPower": "Maximaal laadvermogen",
-      "maximumPowerHelp": "Maximaal vermogen waarmee het voertuig kan laden",
-      "minimumCurrent": "Minimale stroomsterkte",
-      "minimumCurrentHelp": "Stel alleen lager in dan 6A waneer je weet wat je doet.",
       "online": "Voertuig met online API",
       "primary": "Generieke integraties",
-      "priority": "Prioriteit",
-      "priorityHelp": "Hogere prioriteit betekent dat dit voertuig met voorrang toegang heeft tot zonneoverschot.",
-      "save": "Opslaan",
       "scooter": "Scooter",
       "template": "Fabrikant",
       "titleAdd": "Voertuig toevoegen",
-      "titleEdit": "Voertuig bewerken",
-      "validateSave": "Valideren & opslaan"
+      "titleEdit": "Voertuig bewerken"
     }
   },
   "footer": {
@@ -1171,17 +1156,22 @@
       "update": "Toepassen",
       "weekdays": "Dagen"
     },
+    "continuousStatus": {
+      "charging": "Boost actief.",
+      "connected": "Normale modus.",
+      "waitForVehicle": "Boost aangevraagd…"
+    },
     "energyflow": {
       "battery": "Batterij",
       "batteryCharge": "Batterij opladen",
       "batteryDischarge": "Batterij ontladen",
-      "batteryForecastEmpty": "leeg {time}",
-      "batteryForecastFull": "vol {time}",
+      "batteryForecastEmpty": "Leeg om {time}",
+      "batteryForecastFull": "Vol om {time}",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryHold": "Batterij (geblokkeerd)",
       "batteryTooltip": "{energy} van {total} ({soc})",
-      "forecast": "Voorspelling: ",
+      "forecast": "Voorspelling",
       "forecastTooltip": "voorspelling: resterende zonne-energieproductie voor vandaag",
       "gridImport": "Netafname",
       "homePower": "Consumptie",
@@ -1197,11 +1187,35 @@
       "charging": "Bezig met verwarmen…",
       "connected": "Stand-by.",
       "vehicleLimit": "Verwarming limiet",
-      "waitForVehicle": "Klaar. Wachten op verwarming…"
+      "waitForVehicle": "Klaar om te verwarmen…"
     },
     "hemsWarning": {
       "description": "Gereduceerd laden niet hoger dan {limit}.",
       "title": "Externe limiet:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "geladen",
+          "returnEnergy": "ontladen"
+        },
+        "grid": {
+          "energy": "geimporteerd",
+          "returnEnergy": "geexporteerd"
+        }
+      },
+      "downloadCsv": "Download CSV",
+      "empty": "Er is voor deze tijdspanne geen data beschikbaar.",
+      "group": {
+        "battery": "Batterij",
+        "forecast": "Voorspelling",
+        "grid": "Net",
+        "loadpoint": "Laden & Verwarmen",
+        "meter": "Consumptie",
+        "pv": "Productie"
+      },
+      "otherConsumers": "Overig",
+      "title": "Geschiedenis"
     },
     "loadpoint": {
       "avgPrice": "⌀ Prijs",
@@ -1474,6 +1488,7 @@
     "odometer": "Kilometerstand",
     "overview": "Overzicht",
     "period": {
+      "day": "Dag",
       "month": "Maand",
       "total": "Totaal",
       "year": "Jaar"

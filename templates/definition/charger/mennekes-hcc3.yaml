@@ -1,5 +1,5 @@
 template: mennekes-hcc3
-capabilities: ["meter"]
+capabilities: ["meter", "dim"]
 covers: ["amtron", "menneckes-hcc3"]
 products:
   - brand: Mennekes

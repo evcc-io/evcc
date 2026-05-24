@@ -18,6 +18,13 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
+	// Some chargers (e.g. EN+/EVSEDO FW 1.1.805, issue #30113) hang on ChangeAvailability
+	// and drop the WebSocket. Without this, every subsequent request fails with
+	// "no client exists" and aborts charger creation fatally.
+	if err := cp.waitConnected(ctx); err != nil {
+		return err
+	}
+
 	// auto configuration
 	desiredMeasurands := "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 
