@@ -13,4 +13,4 @@ params:
 render: |
   type: hyundai-us
   {{ include "vehicle-base" . }}
-  pin: {{ .pin }}
+  pin: {{ quote .pin }}
