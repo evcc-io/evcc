@@ -25,7 +25,12 @@
 						$t("config.hems.lastEvent", { timeAgo: formatLastEvent(lastEvent.created) })
 					}}</span>
 				</div>
-				<a :href="csvLink" download class="alert-link text-nowrap">
+				<a
+					:href="csvLink"
+					download
+					class="alert-link text-nowrap"
+					@click="appDownloadHandler(csvLink)($event)"
+				>
 					{{ $t("config.hems.downloadCsv") }}
 				</a>
 			</div>
@@ -40,6 +45,7 @@
 import YamlModal from "./YamlModal.vue";
 import defaultYaml from "./defaultYaml/hems.yaml?raw";
 import api from "../../api";
+import { appDownloadHandler } from "../../utils/native";
 import formatter from "../../mixins/formatter";
 
 export default {
@@ -78,6 +84,7 @@ export default {
 		},
 	},
 	methods: {
+		appDownloadHandler,
 		async loadSessions() {
 			try {
 				const response = await api.get("gridsessions", {
