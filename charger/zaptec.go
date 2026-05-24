@@ -41,6 +41,9 @@ import (
 // https://api.zaptec.com/.well-known/openid-configuration/
 
 // Zaptec charger implementation
+
+const _ZaptecGo2PhaseSwitchCurrent = 32.0 // threshold (in A) at which Zaptec Go 2 switches to single-phase according to product/protocol specs
+
 type Zaptec struct {
 	*request.Helper
 	implement.Caps
@@ -385,7 +388,7 @@ func (c *Zaptec) switchPhases(phases int) error {
 	var phaseSwitchCurrent float64
 
 	if phases == 1 {
-		phaseSwitchCurrent = 32 // threshold which Go2 switches to single-phase
+		phaseSwitchCurrent = _ZaptecGo2PhaseSwitchCurrent
 	} else {
 		phaseSwitchCurrent = 0
 	}
