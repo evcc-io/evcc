@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import colors, { dimColor, lighterColor, fullColor, resolveColors } from "./colors";
+import colors, { dimColor, lighterColor, fullColor, resolveColors, deviceColorMap } from "./colors";
 import type { DeviceColors } from "./types/evcc";
 
 describe("setAlpha helpers", () => {
@@ -86,5 +86,22 @@ describe("resolveColors", () => {
     palette.forEach((c, i) => expect(res[`o${i}`]).toBe(c));
     // free list empty → falls back to wrap-around on palette
     expect(res["extra"]).toBe(palette[0]);
+  });
+});
+
+describe("deviceColorMap", () => {
+  it("returns empty map for undefined", () => {
+    expect(deviceColorMap(undefined)).toEqual({});
+  });
+  it("returns empty map for empty list", () => {
+    expect(deviceColorMap([])).toEqual({});
+  });
+  it("converts list of entries to title→color map", () => {
+    expect(
+      deviceColorMap([
+        { title: "WP-SG+", color: "#2563EB" },
+        { title: "Heizung", color: "#DC2626" },
+      ])
+    ).toEqual({ "WP-SG+": "#2563EB", Heizung: "#DC2626" });
   });
 });

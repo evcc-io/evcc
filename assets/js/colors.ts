@@ -1,5 +1,11 @@
 import { reactive } from "vue";
-import type { DeviceColors } from "./types/evcc";
+import type { DeviceColorEntry, DeviceColors } from "./types/evcc";
+
+export function deviceColorMap(list: DeviceColorEntry[] | undefined): DeviceColors {
+  const m: DeviceColors = {};
+  for (const { title, color } of list ?? []) m[title] = color;
+  return m;
+}
 
 // alternatives
 // const COLORS = [ "#40916C", "#52B788", "#74C69D", "#95D5B2", "#B7E4C7", "#D8F3DC", "#081C15", "#1B4332", "#2D6A4F"];
