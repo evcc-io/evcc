@@ -170,6 +170,7 @@
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import api, { downloadFile } from "@/api";
+import { appDownloadFile } from "@/utils/native";
 import PropertyFileField from "./PropertyFileField.vue";
 import FormRow from "./FormRow.vue";
 import { isLoggedIn } from "../Auth/auth";
@@ -296,6 +297,18 @@ export default defineComponent({
 			return r;
 		},
 		async downloadBackup() {
+			// inside the native app, hand the POST off via the bridge so the
+			// webview's auth cookies + basic-auth ride along to the fetch and
+			// the blob never has to cross JS↔native as base64+twice
+			if (
+				appDownloadFile("/api/system/backup", {
+					method: "POST",
+					body: { password: this.password },
+				})
+			) {
+				this.closeConfirmModal();
+				return;
+			}
 			const res = await this.call(
 				api.post(
 					"/system/backup",
