@@ -124,7 +124,7 @@ import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor } from "../components/History/groups";
-import colors, { resolveColors } from "../colors";
+import colors, { resolveColors, deviceColorMap } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
@@ -170,7 +170,7 @@ export default defineComponent({
 	},
 	computed: {
 		deviceColors(): DeviceColors {
-			return store.state.deviceColors ?? {};
+			return deviceColorMap(store.state.deviceColors);
 		},
 		effectivePeriod(): PERIODS {
 			return this.period && HISTORY_PERIODS.includes(this.period)
