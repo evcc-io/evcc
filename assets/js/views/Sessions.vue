@@ -205,7 +205,8 @@ import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
 import CustomSelect from "../components/Helper/CustomSelect.vue";
-import colors, { resolveColors } from "../colors";
+import colors, { resolveColors, deviceColorMap } from "../colors";
+import type { DeviceColors } from "@/types/evcc";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
@@ -503,8 +504,8 @@ export default defineComponent({
 			}
 			return this.csvHrefLink();
 		},
-		deviceColors() {
-			return store.state.deviceColors ?? {};
+		deviceColors(): DeviceColors {
+			return deviceColorMap(store.state.deviceColors);
 		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
