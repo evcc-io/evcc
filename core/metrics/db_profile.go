@@ -18,7 +18,10 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 		return nil, err
 	}
 
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(energy) AS energy
+	// COALESCE guards against legacy rows with NULL energy (e.g. left over from
+	// the import→energy rename in #29907). Without it avg() of an all-NULL
+	// bucket returns NULL and fails the float64 scan — see optimizer issue #73.
+	rows, err := db.Query(`SELECT min(ts) AS ts, COALESCE(avg(energy), 0) AS energy
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')
