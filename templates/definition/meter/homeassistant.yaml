@@ -122,34 +122,34 @@ params:
     description:
       de: Normalbetrieb Entität
       en: Normal Mode Entity
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean
+    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean,button,scene,script
     example: "switch.battery_normal"
     advanced: true
     help:
-      en: Optional switch-like entity that evcc activates for normal battery operation (e.g. switch, input_boolean). Other configured mode entities are deactivated first.
-      de: Optionale schaltbare Entität, die evcc für den Normalbetrieb der Batterie aktiviert (z.B. switch, input_boolean). Andere konfigurierte Modus-Entitäten werden zuvor deaktiviert.
+      en: Entity that evcc triggers when the home battery should return to normal operation. Required when modeHold or modeCharge is set. The entity itself is responsible for any necessary state changes on the HA side.
+      de: Entität, die evcc auslöst, wenn die Heimbatterie in den Normalbetrieb zurückkehren soll. Erforderlich, wenn modeHold oder modeCharge gesetzt ist. Die Entität selbst ist verantwortlich für alle notwendigen Statusänderungen auf der HA-Seite.
   - name: modeHold
     usages: ["battery"]
     description:
       de: Halten Entität
       en: Hold Mode Entity
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean
+    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean,button,scene,script
     example: "switch.battery_hold"
     advanced: true
     help:
-      en: Optional switch-like entity that evcc activates to prevent the home battery from charging or discharging.
-      de: Optionale schaltbare Entität, die evcc aktiviert, um Laden und Entladen der Heimbatterie zu verhindern.
+      en: Optional entity that evcc triggers to prevent the home battery from charging or discharging.
+      de: Optionale Entität, die evcc auslöst, um Laden und Entladen der Heimbatterie zu verhindern.
   - name: modeCharge
     usages: ["battery"]
     description:
       de: Netzladung Entität
       en: Grid Charge Mode Entity
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean
+    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean,button,scene,script
     example: "switch.battery_grid_charge"
     advanced: true
     help:
-      en: Optional switch-like entity that evcc activates to grid-charge the home battery (e.g. during low-tariff windows).
-      de: Optionale schaltbare Entität, die evcc aktiviert, um die Heimbatterie aus dem Netz zu laden (z.B. bei günstigem Tarif).
+      en: Optional entity that evcc triggers to grid-charge the home battery (e.g. during low-tariff windows).
+      de: Optionale Entität, die evcc auslöst, um die Heimbatterie aus dem Netz zu laden (z.B. bei günstigem Tarif).
   - name: maxacpower
   - preset: battery-params
 render: |
