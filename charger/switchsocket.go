@@ -2,7 +2,6 @@ package charger
 
 import (
 	"context"
-	"slices"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -35,12 +34,6 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	// switch sockets have no current control - advertise it so the prioritizer
-	// does not treat their above-min draw as flexible (#30192)
-	if !slices.Contains(cc.embed.Features_, api.SwitchDevice) {
-		cc.embed.Features_ = append(cc.embed.Features_, api.SwitchDevice)
 	}
 
 	enabled, err := cc.Enabled.BoolGetter(ctx)
