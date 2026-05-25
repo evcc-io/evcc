@@ -23,8 +23,11 @@ import (
 )
 
 const (
-	ocppTestUrl            = "ws://localhost:8887"
-	ocppTestConnectTimeout = 10 * time.Second
+	ocppTestUrl = "ws://localhost:8887"
+	// connectTimeout must comfortably exceed bootTimer (ocpp.Timeout=5s) plus
+	// Setup's BootNotification retry wait (another ocpp.Timeout=5s). On slow CI
+	// runners these can run back-to-back, pushing NewOCPP to ~10s exactly.
+	ocppTestConnectTimeout = 30 * time.Second
 )
 
 func TestOcpp(t *testing.T) {
