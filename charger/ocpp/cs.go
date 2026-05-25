@@ -12,10 +12,11 @@ import (
 )
 
 type registration struct {
-	mu     sync.RWMutex
-	setup  sync.RWMutex                            // serialises chargepoint setup
-	cp     *CP                                     // guarded by setup and CS mutexes
-	status map[int]*core.StatusNotificationRequest // guarded by mu mutex
+	mu        sync.RWMutex
+	setup     sync.RWMutex                            // serialises chargepoint setup
+	cp        *CP                                     // guarded by setup and CS mutexes
+	connected bool                                    // WebSocket transport connected; guarded by CS mutex
+	status    map[int]*core.StatusNotificationRequest // guarded by mu mutex
 }
 
 func newRegistration() *registration {
@@ -128,8 +129,8 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	cs.mu.Lock()
 
 	// prepare shadow state
-	reg, registered := cs.regs[id]
-	if !registered {
+	reg, ok := cs.regs[id]
+	if !ok {
 		reg = newRegistration()
 		cs.regs[id] = reg
 	}
@@ -155,14 +156,20 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 		return cp, nil
 	}
 
-	// first time- create the charge point
+	// first time - create the charge point
 	cp = newfun()
 
+	// Publish cp and check transport state atomically. NewChargePoint may have
+	// run before we created the reg (reg.connected=false here, NewChargePoint
+	// will see reg.cp and call onTransportConnect) or after we publish reg.cp
+	// (reg.connected=true here, we call onTransportConnect ourselves). The
+	// shared cs.mu serialises both code paths so exactly one of them fires.
 	cs.mu.Lock()
 	reg.cp = cp
+	wasConnected := reg.connected
 	cs.mu.Unlock()
 
-	if registered {
+	if wasConnected {
 		cp.onTransportConnect()
 	}
 
@@ -177,6 +184,9 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	reg, ok := cs.regs[chargePoint.ID()]
 	if ok {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
+
+		// record transport state so RegisterChargepoint sees it once cp is set
+		reg.connected = true
 
 		// wait for BootNotification before marking as connected
 		if cp := reg.cp; cp != nil {
@@ -196,6 +206,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 		// update id
 		cp.RegisterID(chargePoint.ID())
+		reg.connected = true
 		cs.regs[chargePoint.ID()] = reg
 		delete(cs.regs, "")
 
@@ -207,7 +218,9 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	}
 
 	// register unknown charge point
-	cs.regs[chargePoint.ID()] = newRegistration()
+	reg = newRegistration()
+	reg.connected = true
+	cs.regs[chargePoint.ID()] = reg
 	cs.log.INFO.Printf("unknown charge point connected: %s", chargePoint.ID())
 
 	cs.mu.Unlock()
@@ -217,6 +230,12 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
 	cs.log.DEBUG.Printf("charge point disconnected: %s", chargePoint.ID())
+
+	cs.mu.Lock()
+	if reg, ok := cs.regs[chargePoint.ID()]; ok {
+		reg.connected = false
+	}
+	cs.mu.Unlock()
 
 	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
