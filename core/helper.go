@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 
@@ -64,12 +65,7 @@ func deviceProperties[T any](dev config.Device[T]) config.Properties {
 
 // deviceTitleOrName returns device title or name
 func deviceTitleOrName[T any](dev config.Device[T]) string {
-	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
-		if title := d.Properties().Title; title != "" {
-			return title
-		}
-	}
-	return dev.Config().Name
+	return cmp.Or(deviceProperties(dev).Title, dev.Config().Name)
 }
 
 // circuitMaxPower returns a circuits power limit

@@ -42,14 +42,14 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 // refreshes its stored title from the caller. The title is what the UI shows
 // for the entity; refreshing on each lazy-create lets the history retain a
 // human-readable name even after the device has been renamed or removed.
+//
+// The where clause matches on (group, name) only - never on title - so an
+// existing row whose title differs (including the pre-upgrade empty title) is
+// always found and updated in place rather than duplicated.
 func createEntity(group, name, title string) (entity, error) {
-	e := entity{
-		Group: group,
-		Name:  name,
-		Title: title,
-	}
+	e := entity{Group: group, Name: name}
 
-	if err := db.Instance.Where(entity{Group: group, Name: name}).FirstOrCreate(&e).Error; err != nil {
+	if err := db.Instance.Where(&e).Attrs(entity{Title: title}).FirstOrCreate(&e).Error; err != nil {
 		return e, err
 	}
 

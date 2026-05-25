@@ -2,7 +2,6 @@ package core
 
 import (
 	"bytes"
-	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -189,7 +188,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return errors.New("missing grid meter instance")
 		}
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, cmp.Or(deviceProperties(dev).Title, site.Meters.GridMeterRef))
+		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -205,7 +204,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// energy collector (for history persistence and forecast scaling)
-		me, err := metrics.NewCollector(metrics.PV, ref, cmp.Or(deviceProperties(dev).Title, ref))
+		me, err := metrics.NewCollector(metrics.PV, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -227,7 +226,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.batteryMeters = append(site.batteryMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Battery, ref, cmp.Or(deviceProperties(dev).Title, ref))
+		me, err := metrics.NewCollector(metrics.Battery, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -242,7 +241,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.extMeters = append(site.extMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref, cmp.Or(deviceProperties(dev).Title, ref))
+		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -257,7 +256,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.auxMeters = append(site.auxMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref, cmp.Or(deviceProperties(dev).Title, ref))
+		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}

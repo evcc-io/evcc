@@ -229,4 +229,9 @@ func TestCreateEntityRefreshesTitle(t *testing.T) {
 
 	require.NoError(t, db.Instance.First(&stored, first.Id).Error)
 	require.Equal(t, "Grid", stored.Title)
+
+	// only one row exists despite four createEntity calls with varying titles
+	var count int64
+	require.NoError(t, db.Instance.Model(new(entity)).Where("\"group\" = ? AND name = ?", "grid", "grid").Count(&count).Error)
+	require.EqualValues(t, 1, count, "must not duplicate existing rows")
 }
