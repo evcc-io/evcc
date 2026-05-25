@@ -129,7 +129,9 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 
 // identifyVehicleByStatus finds active vehicle by charge state
 func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus api.ChargeStatus) api.Vehicle {
-	var res api.Vehicle
+	var exactMatch api.Vehicle
+	var approximateMatch api.Vehicle
+	var approximateMatchCount int
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -147,16 +149,36 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 			c.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.GetTitle())
 
 			// vehicle is plugged or charging and has the same state as the charger, so it should be the right one
-			if (status == api.StatusB || status == api.StatusC) && status == lpStatus {
-				if res != nil {
-					c.log.WARN.Println("vehicle status: >1 matches, giving up")
-					return nil
-				}
+			if status == api.StatusB || status == api.StatusC {
+				if status == lpStatus {
+					if exactMatch != nil {
+						c.log.WARN.Println("vehicle status: >1 exact matches, giving up")
+						return nil
+					}
 
-				res = vehicle
+					exactMatch = vehicle
+				} else {
+					// vehicle is plugged or charging, so it should be the right one if there is no exact match
+					approximateMatch = vehicle
+					approximateMatchCount++
+				}
 			}
 		}
 	}
 
-	return res
+	if exactMatch != nil {
+		c.log.INFO.Printf("vehicle status: 1 exact match (%s), using it", exactMatch.GetTitle())
+		return exactMatch
+	} else if approximateMatchCount == 1 {
+		c.log.INFO.Printf("vehicle status: 1 approximate match (%s), using it", approximateMatch.GetTitle())
+		return approximateMatch
+	} else if approximateMatchCount > 1 {
+		c.log.WARN.Printf("vehicle status: %d approximate matches, giving up", approximateMatchCount)
+		return nil
+	} else {
+		c.log.INFO.Println("vehicle status: no match")
+	}
+
+	return nil
+
 }
