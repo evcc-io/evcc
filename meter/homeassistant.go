@@ -34,6 +34,11 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		batteryCapacity    `mapstructure:",squash"`
 		batterySocLimits   `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
+
+		// battery mode control - optional switch-like entities per mode
+		ModeNormal string
+		ModeHold   string
+		ModeCharge string
 	}{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
@@ -98,6 +103,21 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
 		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
+
+		if cc.ModeHold != "" || cc.ModeCharge != "" {
+			if cc.ModeNormal == "" {
+				return nil, errors.New("modeNormal is required when modeHold or modeCharge is configured")
+			}
+			modes := map[api.BatteryMode]string{
+				api.BatteryNormal: cc.ModeNormal,
+				api.BatteryHold:   cc.ModeHold,
+				api.BatteryCharge: cc.ModeCharge,
+			}
+			implement.Has(m, implement.BatteryController(batteryModeController(conn, modes)))
+		} else if cc.ModeNormal != "" {
+			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
+		}
+
 		return m, nil
 	}
 
@@ -107,4 +127,33 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
 
 	return m, nil
+}
+
+// batteryModeController returns a BatteryController function that toggles
+// switch-like Home Assistant entities to express the desired evcc battery mode.
+// modeNormal is guaranteed to be configured (enforced by the constructor);
+// modeHold and modeCharge are optional and return api.ErrNotAvailable when
+// requested without a backing entity.
+func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
+	return func(mode api.BatteryMode) error {
+		target, known := modes[mode]
+		if !known {
+			return fmt.Errorf("unsupported battery mode: %s", mode)
+		}
+		if target == "" {
+			return api.ErrNotAvailable
+		}
+
+		// turn off the other configured entities first
+		for m, entity := range modes {
+			if m == mode || entity == "" || entity == target {
+				continue
+			}
+			if err := conn.CallSwitchService(entity, false); err != nil {
+				return err
+			}
+		}
+
+		return conn.CallSwitchService(target, true)
+	}
 }
