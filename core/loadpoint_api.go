@@ -662,10 +662,8 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 		return lp.GetChargePower()
 	}
 
-	// MinPV mode: a charger without current control (switch socket / heat pump)
-	// cannot release the power above its nominal minimum without violating the
-	// "at least minimum" guarantee, so do not advertise any flexibility.
-	if lp.chargerHasFeature(api.SwitchDevice) {
+	// MinPV mode: a charger without current control (switch socket or heatpump) cannot release power.
+	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
 		return 0
 	}
 
