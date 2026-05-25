@@ -3,6 +3,7 @@ package meter
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -112,6 +113,11 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 				api.BatteryNormal: cc.ModeNormal,
 				api.BatteryHold:   cc.ModeHold,
 				api.BatteryCharge: cc.ModeCharge,
+			}
+			for _, entity := range modes {
+				if entity != "" && !strings.HasPrefix(entity, "script.") {
+					return nil, fmt.Errorf("battery mode entity must be a script: %s", entity)
+				}
 			}
 			implement.Has(m, implement.BatteryController(batteryModeController(conn, modes)))
 		} else if cc.ModeNormal != "" {

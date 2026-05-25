@@ -120,36 +120,36 @@ params:
   - name: modeNormal
     usages: ["battery"]
     description:
-      de: Normalbetrieb Entität
-      en: Normal Mode Entity
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean,button,scene,script
-    example: "switch.battery_normal"
+      de: Normalbetrieb Skript
+      en: Normal Mode Script
+    service: homeassistant/entities?uri={uri}&domain=script
+    example: "script.battery_normal"
     advanced: true
     help:
-      en: Entity that evcc triggers when the home battery should return to normal operation. Required when modeHold or modeCharge is set. The entity itself is responsible for any necessary state changes on the HA side.
-      de: Entität, die evcc auslöst, wenn die Heimbatterie in den Normalbetrieb zurückkehren soll. Erforderlich, wenn modeHold oder modeCharge gesetzt ist. Die Entität selbst ist verantwortlich für alle notwendigen Statusänderungen auf der HA-Seite.
+      en: Script that evcc runs when the home battery should return to normal operation. Required when modeHold or modeCharge is set. The script is responsible for any necessary state changes on the HA side.
+      de: Skript, das evcc ausführt, wenn die Heimbatterie in den Normalbetrieb zurückkehren soll. Erforderlich, wenn modeHold oder modeCharge gesetzt ist. Das Skript ist verantwortlich für alle notwendigen Statusänderungen auf der HA-Seite.
   - name: modeHold
     usages: ["battery"]
     description:
-      de: Halten Entität
-      en: Hold Mode Entity
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean,button,scene,script
-    example: "switch.battery_hold"
+      de: Halten Skript
+      en: Hold Mode Script
+    service: homeassistant/entities?uri={uri}&domain=script
+    example: "script.battery_hold"
     advanced: true
     help:
-      en: Optional entity that evcc triggers to prevent the home battery from charging or discharging.
-      de: Optionale Entität, die evcc auslöst, um Laden und Entladen der Heimbatterie zu verhindern.
+      en: Optional script that evcc runs to prevent the home battery from charging or discharging.
+      de: Optionales Skript, das evcc ausführt, um Laden und Entladen der Heimbatterie zu verhindern.
   - name: modeCharge
     usages: ["battery"]
     description:
-      de: Netzladung Entität
-      en: Grid Charge Mode Entity
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean,button,scene,script
-    example: "switch.battery_grid_charge"
+      de: Netzladung Skript
+      en: Grid Charge Mode Script
+    service: homeassistant/entities?uri={uri}&domain=script
+    example: "script.battery_grid_charge"
     advanced: true
     help:
-      en: Optional entity that evcc triggers to grid-charge the home battery (e.g. during low-tariff windows).
-      de: Optionale Entität, die evcc auslöst, um die Heimbatterie aus dem Netz zu laden (z.B. bei günstigem Tarif).
+      en: Optional script that evcc runs to grid-charge the home battery (e.g. during low-tariff windows).
+      de: Optionales Skript, das evcc ausführt, um die Heimbatterie aus dem Netz zu laden (z.B. bei günstigem Tarif).
   - name: maxacpower
   - preset: battery-params
 render: |
