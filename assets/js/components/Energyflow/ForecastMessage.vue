@@ -25,16 +25,19 @@ export default defineComponent({
 						: "main.energyflow.batteryForecastEmpty"
 				);
 			}
-			const soc = this.fmtPercentage(this.point.soc);
 			return this.$t(
 				this.high
 					? "main.energyflow.batteryForecastNextHigh"
-					: "main.energyflow.batteryForecastNextLow",
-				{ soc }
+					: "main.energyflow.batteryForecastNextLow"
 			);
 		},
 		message(): string {
-			return this.fmtAbsoluteDate(new Date(this.point.time));
+			const time = this.fmtAbsoluteDate(new Date(this.point.time));
+			if (this.point.limit) {
+				return time;
+			}
+			const soc = this.fmtPercentage(this.point.soc);
+			return `${time} (${soc})`;
 		},
 	},
 });
