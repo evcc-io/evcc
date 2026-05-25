@@ -24,8 +24,8 @@ type Collector struct {
 	started time.Time
 }
 
-func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, error) {
-	entity, err := createEntity(group, name)
+func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collector, error) {
+	entity, err := createEntity(group, name, title)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +38,29 @@ func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, er
 	return c, nil
 }
 
-func createEntity(group, name string) (entity, error) {
-	entity := entity{
+// createEntity ensures the entity row exists for the given group/name pair and
+// refreshes its stored title from the caller. The title is what the UI shows
+// for the entity; refreshing on each lazy-create lets the history retain a
+// human-readable name even after the device has been renamed or removed.
+func createEntity(group, name, title string) (entity, error) {
+	e := entity{
 		Group: group,
 		Name:  name,
+		Title: title,
 	}
 
-	if err := db.Instance.Where(&entity).FirstOrCreate(&entity).Error; err != nil {
-		return entity, err
+	if err := db.Instance.Where(entity{Group: group, Name: name}).FirstOrCreate(&e).Error; err != nil {
+		return e, err
 	}
 
-	return entity, nil
+	if title != "" && e.Title != title {
+		e.Title = title
+		if err := db.Instance.Model(&e).UpdateColumn("title", title).Error; err != nil {
+			return e, err
+		}
+	}
+
+	return e, nil
 }
 
 func (c *Collector) process(fun func()) error {

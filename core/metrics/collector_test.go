@@ -15,7 +15,7 @@ func TestCollectorAddEnergy(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("foo", "foo", WithClock(clock))
+	col, err := NewCollector("foo", "foo", "", WithClock(clock))
 	require.NoError(t, err)
 	require.True(t, col.accu.updated.IsZero())
 
@@ -42,7 +42,7 @@ func TestCollectorAddEnergyWithImportMeter(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("bar", "bar", WithClock(clock))
+	col, err := NewCollector("bar", "bar", "", WithClock(clock))
 	require.NoError(t, err)
 
 	// first call: seeds meter, no delta yet
@@ -67,7 +67,7 @@ func TestCollectorAddEnergyWithImportMeterAndExport(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("baz", "baz", WithClock(clock))
+	col, err := NewCollector("baz", "baz", "", WithClock(clock))
 	require.NoError(t, err)
 
 	// seed import meter
@@ -93,7 +93,7 @@ func TestCollectorAddEnergyWithExportMeterAndImport(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("baz2", "baz2", WithClock(clock))
+	col, err := NewCollector("baz2", "baz2", "", WithClock(clock))
 	require.NoError(t, err)
 
 	// seed export meter
@@ -119,7 +119,7 @@ func TestCollectorAddEnergyWithBothMeters(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("qux", "qux", WithClock(clock))
+	col, err := NewCollector("qux", "qux", "", WithClock(clock))
 	require.NoError(t, err)
 
 	// seed both meters
@@ -139,7 +139,7 @@ func TestCollectorSetImportAndExportMeterTotal(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("set", "set", WithClock(clock))
+	col, err := NewCollector("set", "set", "", WithClock(clock))
 	require.NoError(t, err)
 
 	// seed both import and export
@@ -163,7 +163,7 @@ func TestCollectorSkipsPartialFirstSlot(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("partial", "partial", WithClock(clk))
+	col, err := NewCollector("partial", "partial", "", WithClock(clk))
 	require.NoError(t, err)
 
 	// first update mid-slot (00:05) - slot 00:00 is only partially covered
@@ -190,4 +190,43 @@ func TestCollectorSkipsPartialFirstSlot(t *testing.T) {
 	var m meter
 	require.NoError(t, db.Instance.First(&m).Error)
 	require.Equal(t, int64(15*60), m.Timestamp, "persisted slot should start at 00:15")
+}
+
+// TestCreateEntityRefreshesTitle verifies that a second call to createEntity
+// with a non-empty title fills in (or updates) the title on an existing row,
+// and that passing an empty title never clears a previously stored value.
+func TestCreateEntityRefreshesTitle(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	// existing row with empty title (simulates pre-upgrade data)
+	first, err := createEntity("grid", "grid", "")
+	require.NoError(t, err)
+	require.Empty(t, first.Title)
+
+	// lazy-create with a real title must persist it
+	second, err := createEntity("grid", "grid", "House meter")
+	require.NoError(t, err)
+	require.Equal(t, first.Id, second.Id, "should be the same row")
+	require.Equal(t, "House meter", second.Title)
+
+	var stored entity
+	require.NoError(t, db.Instance.First(&stored, first.Id).Error)
+	require.Equal(t, "House meter", stored.Title, "title must be persisted")
+
+	// subsequent call with empty title must not clear the existing one
+	third, err := createEntity("grid", "grid", "")
+	require.NoError(t, err)
+	require.Equal(t, "House meter", third.Title)
+
+	require.NoError(t, db.Instance.First(&stored, first.Id).Error)
+	require.Equal(t, "House meter", stored.Title, "title must survive empty re-create")
+
+	// changing the title overwrites the stored value
+	fourth, err := createEntity("grid", "grid", "Grid")
+	require.NoError(t, err)
+	require.Equal(t, "Grid", fourth.Title)
+
+	require.NoError(t, db.Instance.First(&stored, first.Id).Error)
+	require.Equal(t, "Grid", stored.Title)
 }

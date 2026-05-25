@@ -2,6 +2,7 @@ package core
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -136,7 +137,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
-	me, err := metrics.NewCollector(metrics.Home, metrics.Home)
+	me, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
 	if err != nil {
 		return err
 	}
@@ -188,7 +189,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return errors.New("missing grid meter instance")
 		}
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef)
+		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, cmp.Or(deviceProperties(dev).Title, site.Meters.GridMeterRef))
 		if err != nil {
 			return err
 		}
@@ -204,7 +205,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// energy collector (for history persistence and forecast scaling)
-		me, err := metrics.NewCollector(metrics.PV, ref)
+		me, err := metrics.NewCollector(metrics.PV, ref, cmp.Or(deviceProperties(dev).Title, ref))
 		if err != nil {
 			return err
 		}
@@ -212,7 +213,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// solar forecast collector (mirrors PV history shape, used for scale lookup)
-	fc, err := metrics.NewCollector(metrics.Forecast, metrics.Forecast)
+	fc, err := metrics.NewCollector(metrics.Forecast, metrics.Forecast, metrics.Forecast)
 	if err != nil {
 		return err
 	}
@@ -226,7 +227,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.batteryMeters = append(site.batteryMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Battery, ref)
+		me, err := metrics.NewCollector(metrics.Battery, ref, cmp.Or(deviceProperties(dev).Title, ref))
 		if err != nil {
 			return err
 		}
@@ -241,7 +242,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.extMeters = append(site.extMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		me, err := metrics.NewCollector(metrics.Meter, ref, cmp.Or(deviceProperties(dev).Title, ref))
 		if err != nil {
 			return err
 		}
@@ -256,7 +257,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.auxMeters = append(site.auxMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		me, err := metrics.NewCollector(metrics.Meter, ref, cmp.Or(deviceProperties(dev).Title, ref))
 		if err != nil {
 			return err
 		}

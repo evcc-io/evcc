@@ -11,6 +11,7 @@ import (
 type EntityInfo struct {
 	Group string
 	Name  string
+	Title string    // human-readable title as captured at the last lazy-create
 	Slots int       // number of persisted 15min slots
 	First time.Time // start of the earliest slot, zero if no data
 	Last  time.Time // start of the latest slot, zero if no data
@@ -23,6 +24,7 @@ func ListEntities() ([]EntityInfo, error) {
 	type row struct {
 		Group string
 		Name  string
+		Title string
 		Slots int
 		First sql.NullInt64
 		Last  sql.NullInt64
@@ -30,7 +32,7 @@ func ListEntities() ([]EntityInfo, error) {
 
 	var rows []row
 	if err := db.Instance.Table("entities e").
-		Select(`e."group" AS "group", e.name AS name,
+		Select(`e."group" AS "group", e.name AS name, e.title AS title,
 			COUNT(m.ts) AS slots,
 			MIN(m.ts) AS first, MAX(m.ts) AS last`).
 		Joins("LEFT JOIN meters m ON m.meter = e.id").
@@ -41,7 +43,7 @@ func ListEntities() ([]EntityInfo, error) {
 
 	res := make([]EntityInfo, 0, len(rows))
 	for _, r := range rows {
-		e := EntityInfo{Group: r.Group, Name: r.Name, Slots: r.Slots}
+		e := EntityInfo{Group: r.Group, Name: r.Name, Title: r.Title, Slots: r.Slots}
 		if r.First.Valid {
 			e.First = time.Unix(r.First.Int64, 0)
 		}
