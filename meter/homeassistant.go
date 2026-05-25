@@ -136,11 +136,8 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 // requested without a backing entity.
 func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
-		target, known := modes[mode]
-		if !known {
-			return fmt.Errorf("unsupported battery mode: %s", mode)
-		}
-		if target == "" {
+		target, ok := modes[mode]
+		if !ok || target == "" {
 			return api.ErrNotAvailable
 		}
 
