@@ -25,18 +25,8 @@ params:
       de: Der vollständige URI der ioBroker Instanz
     example: https://iobroker.homelab.lan:8082
   - name: cache
-    default: 2s
-    description:
-      en: How long to cache an answer
-      de: Dauer der Zwischenspeicherung von Ergebnissen
   - name: user
-    description:
-      de: Username falls auth im ioBroker aktiv ist
-      en: Username if auth is enabled in ioBroker
   - name: password
-    description:
-      de: Passwort von user
-      en: Password of user
   - name: status
     description:
       de: Ladezustand (Status A, B, C)
@@ -81,39 +71,19 @@ render: |
   type: custom
   {{- if .status }}
   status:
-    source: go
-    script: |
-      state := "E"
-      res := strings.ToLower(stateRaw)
-      switch res {
-      case "on", "true", "1", "active", "yes", "c", "charging":
-        state="C"
-      case "b", "connected", "ready", "plugged", "charging_completed", "initialising",
-           "preparing", "2", "no_power", "complete", "stopped", "starting", "paused",
-           "initializing":
-      state = "B"
-      case "a", "disconnected", "off", "none", "unavailable",	"unknown", 
-           "notreadyforcharging", "not_plugged", "0":
-      state="A"
-      }
-      state
-    in:
-     - name: stateRaw
-       type: string
-       config:
-        source: http
-        headers:
-          - accept: text/plain;charset=UTF-8
-        uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
-        {{- if .cache }}
-        cache: {{ .cache }}
-        {{- end }}
-        {{- if .user }}
-        auth:
-          type: basic
-          user: {{ .user }}
-          password: {{ .password }}
-        {{- end }}
+    source: http
+    headers:
+     - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+    {{- if .cache }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .power }}
   power:

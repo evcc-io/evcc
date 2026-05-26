@@ -25,19 +25,8 @@ params:
       de: Der vollständige URI der ioBroker Instanz
     example: https://iobroker.homelab.lan:8082
   - name: cache
-    default: 2s
-    description:
-      en: How long to cache an answer
-      de: Dauer der Zwischenspeicherung von Ergebnissen
-    example: 2s
   - name: user
-    description:
-      de: Username falls auth im ioBroker aktiv ist
-      en: Username if auth is enabled in ioBroker
   - name: password
-    description:
-      de: Passwort von user
-      en: Password of user
   - name: power
     description:
       de: Leistung
@@ -80,15 +69,10 @@ params:
     advanced: true
   - preset: battery-params
   - name: capacity
-    advanced: true
   - name: minsoc
-    advanced: true
   - name: maxsoc
-    advanced: true
   - name: maxchargepower
-    advanced: true
   - name: maxdischargepower
-    advanced: true
   - name: maxacpower
 render: |
   type: custom
