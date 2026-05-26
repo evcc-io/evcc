@@ -103,6 +103,10 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 		implement.Has(sm, implement.PhasePowers(sm.powers))
 	}
 
+	if !sm.device.IsEnergyMeter() {
+		implement.Has(sm, implement.MaxACPowerGetter(sm.maxACPower))
+	}
+
 	return sm, nil
 }
 
@@ -198,6 +202,15 @@ func (sm *SMA) powers() (float64, float64, float64, error) {
 	}
 
 	return sm.scale * res[0], sm.scale * res[1], sm.scale * res[2], err
+}
+
+// maxACPower returns the inverter's nominal max active power (LRI 0x411E)
+func (sm *SMA) maxACPower() float64 {
+	values, err := sm.device.Values()
+	if err != nil {
+		return 0
+	}
+	return sma.AsFloat(values[sunny.ActivePowerMax])
 }
 
 // soc implements the api.Battery interface
