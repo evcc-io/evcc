@@ -27,7 +27,7 @@ describe("setAlpha helpers", () => {
 });
 
 describe("resolveColors", () => {
-  const palette = colors.palette; // 18 entries
+  const palette = colors.palette;
 
   it("returns empty map for empty ids", () => {
     expect(resolveColors([], {})).toEqual({});
