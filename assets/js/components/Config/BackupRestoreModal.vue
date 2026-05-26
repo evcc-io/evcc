@@ -297,15 +297,7 @@ export default defineComponent({
 			return r;
 		},
 		async downloadBackup() {
-			// inside the native app, hand the POST off via the bridge so the
-			// webview's auth cookies + basic-auth ride along to the fetch and
-			// the blob never has to cross JS↔native as base64+twice
-			if (
-				appDownloadFile("/api/system/backup", {
-					method: "POST",
-					body: { password: this.password },
-				})
-			) {
+			if (appDownloadFile("/api/system/backup", "POST", { password: this.password })) {
 				this.closeConfirmModal();
 				return;
 			}

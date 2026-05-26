@@ -13,15 +13,9 @@ export function hasAppCapability(capability: string): boolean {
   return isApp() && window.evccAppCapabilities?.includes(capability) === true;
 }
 
-type AppDownloadInit = {
-  method?: string;
-  body?: unknown;
-  headers?: Record<string, string>;
-};
-
 type AppMessage =
   | { type: "online" | "offline" | "settings" }
-  | ({ type: "download"; url: string } & AppDownloadInit);
+  | { type: "download"; url: string; method?: string; body?: unknown };
 
 export function sendToApp(data: AppMessage) {
   window.ReactNativeWebView?.postMessage(JSON.stringify(data));
@@ -35,9 +29,9 @@ export function appDownloadHandler(url: string) {
   };
 }
 
-export function appDownloadFile(url: string, init?: AppDownloadInit): boolean {
+export function appDownloadFile(url: string, method?: string, body?: unknown): boolean {
   if (!hasAppCapability("download")) return false;
   const absolute = new URL(url, window.location.href).toString();
-  sendToApp({ type: "download", url: absolute, ...init });
+  sendToApp({ type: "download", url: absolute, method, body });
   return true;
 }
