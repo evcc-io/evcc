@@ -436,4 +436,3 @@ func (c *OCPP) Diagnose() {
 		}
 	}
 }
-
