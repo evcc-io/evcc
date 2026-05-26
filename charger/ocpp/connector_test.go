@@ -158,6 +158,7 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 // like the Zaptec Go 2 in local OCPP mode) is cleared when the connector
 // returns to Available, so the next Preparing can trigger RemoteStartTransaction.
 func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
+	suite.conn.remoteIdTag = "evcc"
 	suite.conn.txnId = 42
 	suite.conn.idTag = "stale"
 
@@ -171,7 +172,7 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.Equal(0, suite.conn.txnId, "txnId should be cleared on Available")
 	suite.Equal("", suite.conn.idTag, "idTag should be cleared on Available")
 
-	// next Preparing notification must now satisfy isWaitingForAuth
+	// next Preparing notification must now satisfy NeedsAuthentication
 	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
 		ConnectorId: 1,
 		Status:      core.ChargePointStatusPreparing,
@@ -179,7 +180,7 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 		Timestamp:   types.NewDateTime(suite.clock.Now().Add(time.Second)),
 	})
 	suite.NoError(err)
-	suite.True(suite.conn.isWaitingForAuth(), "Preparing after Available should trigger waiting-for-auth")
+	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
@@ -201,10 +202,38 @@ func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {
 			Timestamp:   types.NewDateTime(suite.clock.Now()),
 		})
 		suite.NoError(err)
-		suite.Equal(42, suite.conn.txnId, "txnId must survive %s", status)
-		suite.Equal("active", suite.conn.idTag, "idTag must survive %s", status)
+		suite.Equalf(42, suite.conn.txnId, "txnId must survive %s", status)
+		suite.Equalf("active", suite.conn.idTag, "idTag must survive %s", status)
 		suite.clock.Add(time.Second)
 	}
+}
+
+// TestOnStatusNotificationKeepsTxnOnIgnoredAvailable ensures we do not clear
+// transaction state when an Available notification is rejected due to an
+// outdated timestamp (i.e. the cached status remains the current one).
+func (suite *connTestSuite) TestOnStatusNotificationKeepsTxnOnIgnoredAvailable() {
+	// prime with a recent Charging status
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusCharging,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now()),
+	})
+	suite.NoError(err)
+	suite.conn.txnId = 42
+	suite.conn.idTag = "active"
+
+	// out-of-order Available with an older timestamp must be ignored
+	// and must not clear the running transaction
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusAvailable,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now().Add(-time.Minute)),
+	})
+	suite.NoError(err)
+	suite.Equal(42, suite.conn.txnId, "txnId must survive ignored Available")
+	suite.Equal("active", suite.conn.idTag, "idTag must survive ignored Available")
 }
 
 func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {

@@ -28,21 +28,24 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	var applied bool
 	if conn.status == nil {
 		conn.status = request
 		close(conn.statusC) // signal initial status received
+		applied = true
 	} else if request.Timestamp == nil || conn.timestampValid(request.Timestamp.Time) {
 		conn.status = request
+		applied = true
 	} else {
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
-	// defensive cleanup: returning to Available means the cable is unplugged
-	// and any prior transaction is stale. Some chargers (e.g. Zaptec Go 2 in
-	// local OCPP mode) skip StopTransaction or send it with an unknown
-	// TransactionId, which would otherwise leave txnId set across sessions
-	// and block the RemoteStartTransaction dispatch below.
-	if conn.status != nil && conn.status.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
+	// defensive cleanup: transitioning to Available means the cable is
+	// unplugged and any prior transaction is stale. Some chargers (e.g.
+	// Zaptec Go 2 in local OCPP mode) skip StopTransaction or send it with
+	// an unknown TransactionId, which would otherwise leave txnId set across
+	// sessions and block the RemoteStartTransaction dispatch below.
+	if applied && request.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
 		conn.log.DEBUG.Printf("clearing stale transaction %d on Available status", conn.txnId)
 		conn.txnId = 0
 		conn.idTag = ""
