@@ -92,7 +92,6 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 	go sm.device.Run()
 
 	if usage == "battery" {
-		implement.May(sm, implement.MeterEnergy(sm.TotalEnergy))
 		implement.Has(sm, implement.Battery(sm.soc))
 		implement.May(sm, implement.BatteryCapacity(capacity))
 		implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
