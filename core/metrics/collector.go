@@ -38,14 +38,7 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 	return c, nil
 }
 
-// createEntity ensures the entity row exists for the given group/name pair and
-// refreshes its stored title from the caller. The title is what the UI shows
-// for the entity; refreshing on each lazy-create lets the history retain a
-// human-readable name even after the device has been renamed or removed.
-//
-// The where clause matches on (group, name) only - never on title - so an
-// existing row whose title differs (including the pre-upgrade empty title) is
-// always found and updated in place rather than duplicated.
+// createEntity ensures the entity row exists and refreshes its title.
 func createEntity(group, name, title string) (entity, error) {
 	e := entity{Group: group, Name: name}
 
