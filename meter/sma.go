@@ -20,7 +20,7 @@ type SMA struct {
 	uri    string
 	scale  float64
 	usage  string
-	hybrid bool
+	dc     bool
 	device *sma.Device
 }
 
@@ -38,7 +38,7 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		Usage                    string
 		Serial                   uint32
 		Scale                    float64 // power only
-		Hybrid                   bool    // use direct PV/grid/battery LRIs from hybrid inverters
+		DC                       bool    // expose DC-side measurements (PvPower / BatteryVoltage × BatteryCurrent) for usage=pv/battery
 	}{
 		Password: "0000",
 		Scale:    1,
@@ -48,17 +48,17 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.Usage, cc.Hybrid, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.Usage, cc.DC, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, hybrid bool, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, dc bool, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
 	sm := &SMA{
-		Caps:   implement.New(),
-		uri:    uri,
-		scale:  scale,
-		usage:  usage,
-		hybrid: hybrid,
+		Caps:  implement.New(),
+		uri:   uri,
+		scale: scale,
+		usage: usage,
+		dc:    dc,
 	}
 
 	discoverer, err := sma.GetDiscoverer(iface)
@@ -99,7 +99,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
 	}
 
-	if sm.device.IsEnergyMeter() && !hybrid {
+	if sm.device.IsEnergyMeter() && !dc {
 		implement.Has(sm, implement.PhaseCurrents(sm.currents))
 		implement.Has(sm, implement.PhasePowers(sm.powers))
 	}
@@ -116,11 +116,11 @@ func (sm *SMA) CurrentPower() (float64, error) {
 			// grid: import minus export (consumption positive)
 			return sma.AsFloat(values[sunny.GridPowerImport]) - sma.AsFloat(values[sunny.GridPowerExport]), err
 		case "pv":
-			if sm.hybrid {
+			if sm.dc {
 				return sma.AsFloat(values[sunny.PvPower]), err
 			}
 		case "battery":
-			if sm.hybrid {
+			if sm.dc {
 				return sma.AsFloat(values[sunny.BatteryVoltage]) * sma.AsFloat(values[sunny.BatteryCurrent]), err
 			}
 		}
@@ -138,11 +138,11 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 		case "grid":
 			return sma.AsFloat(values[sunny.GridEnergyImportKWh]), err
 		case "pv":
-			if sm.hybrid {
+			if sm.dc {
 				return sma.AsFloat(values[sunny.PvEnergyTotalKWh]), err
 			}
 		case "battery":
-			if sm.hybrid {
+			if sm.dc {
 				return sma.AsFloat(values[sunny.BatteryEnergyDischargeKWh]), err
 			}
 		}

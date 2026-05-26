@@ -23,7 +23,7 @@ params:
 render: |
   type: sma
   usage: {{ .usage }}
-  hybrid: true
+  dc: true
   uri: {{ .host }} # IP address or hostname
   password: {{ .password }} # optional
   {{- if eq .usage "battery" }}
