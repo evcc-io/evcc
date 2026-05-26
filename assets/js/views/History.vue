@@ -100,7 +100,7 @@
 						download
 						class="text-muted small history-csv-link"
 						data-testid="history-csv-download"
-						@click="appDownloadHandler(csvLink)($event)"
+						@click="handleDownloadClick($event, csvLink)"
 					>
 						{{ $t("main.history.downloadCsv") }}
 					</a>
@@ -127,7 +127,7 @@ import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor } from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import { appDownloadHandler } from "@/utils/native";
+import { handleDownloadClick } from "@/utils/native";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -370,7 +370,7 @@ export default defineComponent({
 	},
 	methods: {
 		groupColor,
-		appDownloadHandler,
+		handleDownloadClick,
 		legendsForGroup(group: string): Legend[] {
 			const items = this.entityLegends(group);
 			const focused = this.focusedEntity[group] ?? null;

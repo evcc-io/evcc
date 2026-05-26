@@ -21,15 +21,13 @@ export function sendToApp(data: AppMessage) {
   window.ReactNativeWebView?.postMessage(JSON.stringify(data));
 }
 
-export function appDownloadHandler(url: string) {
-  return (event: Event) => {
-    if (appDownloadFile(url)) {
-      event.preventDefault();
-    }
-  };
+export function handleDownloadClick(event: Event, url: string) {
+  if (dispatchDownload(url)) {
+    event.preventDefault();
+  }
 }
 
-export function appDownloadFile(url: string, method?: string, body?: unknown): boolean {
+export function dispatchDownload(url: string, method?: string, body?: unknown): boolean {
   if (!hasAppCapability("download")) return false;
   const absolute = new URL(url, window.location.href).toString();
   sendToApp({ type: "download", url: absolute, method, body });

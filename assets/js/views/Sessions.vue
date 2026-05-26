@@ -159,7 +159,7 @@
 						:href="csvLink"
 						download
 						data-testid="sessions-download"
-						@click="appDownloadHandler(csvLink)($event)"
+						@click="handleDownloadClick($event, csvLink)"
 					>
 						{{ csvLinkLabel }}
 					</a>
@@ -212,7 +212,7 @@ import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import { appDownloadHandler } from "@/utils/native";
+import { handleDownloadClick } from "@/utils/native";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
@@ -673,7 +673,7 @@ export default defineComponent({
 		this.loadSessions();
 	},
 	methods: {
-		appDownloadHandler,
+		handleDownloadClick,
 		changePeriod(newPeriod: PERIODS) {
 			let month: number | undefined = this.month;
 			let year: number | undefined = this.year;

@@ -29,7 +29,7 @@
 					:href="csvLink"
 					download
 					class="alert-link text-nowrap"
-					@click="appDownloadHandler(csvLink)($event)"
+					@click="handleDownloadClick($event, csvLink)"
 				>
 					{{ $t("config.hems.downloadCsv") }}
 				</a>
@@ -45,7 +45,7 @@
 import YamlModal from "./YamlModal.vue";
 import defaultYaml from "./defaultYaml/hems.yaml?raw";
 import api from "../../api";
-import { appDownloadHandler } from "../../utils/native";
+import { handleDownloadClick } from "../../utils/native";
 import formatter from "../../mixins/formatter";
 
 export default {
@@ -84,7 +84,7 @@ export default {
 		},
 	},
 	methods: {
-		appDownloadHandler,
+		handleDownloadClick,
 		async loadSessions() {
 			try {
 				const response = await api.get("gridsessions", {

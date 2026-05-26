@@ -28,7 +28,7 @@
 								:aria-label="$t('log.download')"
 								:href="downloadUrl"
 								download
-								@click="appDownloadHandler(downloadUrl)($event)"
+								@click="handleDownloadClick($event, downloadUrl)"
 							>
 								<shopicon-regular-download
 									size="s"
@@ -119,7 +119,7 @@ import store from "../store";
 import { defineComponent, type PropType } from "vue";
 import type { Timeout } from "@/types/evcc";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
-import { appDownloadHandler } from "@/utils/native";
+import { handleDownloadClick } from "@/utils/native";
 const DEFAULT_COUNT = 1000;
 
 const levelMatcher = new RegExp(`\\[.*?\\] (${LOG_LEVELS.map((l) => l.toUpperCase()).join("|")})`);
@@ -224,7 +224,7 @@ export default defineComponent({
 		this.stopInterval();
 	},
 	methods: {
-		appDownloadHandler,
+		handleDownloadClick,
 		async updateLogs(showAll: boolean = false) {
 			// prevent concurrent requests
 			if (this.busy) return;
