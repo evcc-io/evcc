@@ -102,7 +102,7 @@ require (
 	github.com/traefik/yaegi v0.16.1
 	github.com/volkszaehler/mbmd v0.0.0-20260131091050-86c2d25b6103
 	github.com/warthog618/go-gpiocdev v0.9.1
-	gitlab.com/bboehmke/sunny v0.16.0
+	gitlab.com/bboehmke/sunny v0.17.0
 	go.bug.st/serial v1.6.4
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.4.0.20260501213337-dee8e44820ca
@@ -268,7 +268,3 @@ tool (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
-
-// Temporary: pick up hybrid-inverter/battery LRI codes from evcc-io/sunny#1
-// until gitlab.com/bboehmke/sunny!7 is merged and tagged upstream.
-replace gitlab.com/bboehmke/sunny => github.com/evcc-io/sunny v0.16.1-0.20260525171612-2be5b102f8e0
