@@ -110,15 +110,19 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	values, err := sm.device.Values()
-	if !sm.device.IsEnergyMeter() && sm.hybrid {
+	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
 			// grid: import minus export (consumption positive)
 			return sma.AsFloat(values[sunny.GridPowerImport]) - sma.AsFloat(values[sunny.GridPowerExport]), err
 		case "pv":
-			return sma.AsFloat(values[sunny.PvPower]), err
+			if sm.hybrid {
+				return sma.AsFloat(values[sunny.PvPower]), err
+			}
 		case "battery":
-			return sma.AsFloat(values[sunny.BatteryVoltage]) * sma.AsFloat(values[sunny.BatteryCurrent]), err
+			if sm.hybrid {
+				return sma.AsFloat(values[sunny.BatteryVoltage]) * sma.AsFloat(values[sunny.BatteryCurrent]), err
+			}
 		}
 	}
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
@@ -129,14 +133,18 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
-	if !sm.device.IsEnergyMeter() && sm.hybrid {
+	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
 			return sma.AsFloat(values[sunny.GridEnergyImportKWh]), err
 		case "pv":
-			return sma.AsFloat(values[sunny.PvEnergyTotalKWh]), err
+			if sm.hybrid {
+				return sma.AsFloat(values[sunny.PvEnergyTotalKWh]), err
+			}
 		case "battery":
-			return sma.AsFloat(values[sunny.BatteryEnergyDischargeKWh]), err
+			if sm.hybrid {
+				return sma.AsFloat(values[sunny.BatteryEnergyDischargeKWh]), err
+			}
 		}
 	}
 	if sm.scale < 0 {
