@@ -46,9 +46,10 @@ type OCPP struct {
 	enabled bool
 	current float64
 
-	stackLevelZero      bool
-	profileKindRelative bool
-	lp                  loadpoint.API
+	stackLevelZero       bool
+	profileKindRelative  bool
+	noChangeAvailability bool
+	lp                   loadpoint.API
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -74,10 +75,11 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		AutoStart        bool                       // TODO deprecated
 		NoStop           bool                       // TODO deprecated
 
-		ForcePowerCtrl      bool
-		StackLevelZero      *bool
-		ProfileKindRelative bool
-		RemoteStart         bool
+		ForcePowerCtrl       bool
+		StackLevelZero       *bool
+		ProfileKindRelative  bool
+		RemoteStart          bool
+		NoChangeAvailability *bool
 	}{
 		Connector:      1,
 		MeterInterval:  10 * time.Second,
@@ -90,11 +92,12 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
 	profileKindRelative := cc.ProfileKindRelative
+	noChangeAvailability := cc.NoChangeAvailability != nil && *cc.NoChangeAvailability
 
 	c, err := NewOCPP(ctx,
 		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		cc.ForcePowerCtrl, stackLevelZero, profileKindRelative, cc.RemoteStart,
+		cc.ForcePowerCtrl, stackLevelZero, profileKindRelative, cc.RemoteStart, noChangeAvailability,
 		cc.ConnectTimeout)
 	if err != nil {
 		return c, err
@@ -137,7 +140,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 func NewOCPP(ctx context.Context,
 	id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
-	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart bool,
+	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart, noChangeAvailability bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", cmp.Or(id, "ocpp"), connector))
@@ -157,7 +160,7 @@ func NewOCPP(ctx context.Context,
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl, noChangeAvailability)
 		},
 	)
 	if err != nil {
@@ -178,12 +181,13 @@ func NewOCPP(ctx context.Context,
 	}
 
 	c := &OCPP{
-		Caps:                implement.New(),
-		log:                 log,
-		cp:                  cp,
-		conn:                conn,
-		stackLevelZero:      stackLevelZero,
-		profileKindRelative: profileKindRelative,
+		Caps:                 implement.New(),
+		log:                  log,
+		cp:                   cp,
+		conn:                 conn,
+		stackLevelZero:       stackLevelZero,
+		profileKindRelative:  profileKindRelative,
+		noChangeAvailability: noChangeAvailability,
 	}
 
 	if cp.HasRemoteTriggerFeature {
@@ -192,7 +196,7 @@ func NewOCPP(ctx context.Context,
 
 	// monitor for charger reboots and re-run setup (once per CP, not per connector)
 	cp.MonitorReboot(ctx, func() error {
-		return c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+		return c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl, noChangeAvailability)
 	})
 
 	return c, conn.Initialized()
