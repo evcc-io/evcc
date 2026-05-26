@@ -180,5 +180,4 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 	}
 
 	return nil
-
 }
