@@ -165,7 +165,7 @@ render: |
       password: {{ .password }}
     {{- end }}
   {{- end }}
-  {{- if .maxcurrent }}
+  {{- if .phases1p3p }}
   phases1p3p:
     source: http
     headers:
