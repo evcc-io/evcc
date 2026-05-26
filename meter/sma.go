@@ -112,6 +112,15 @@ func (sm *SMA) CurrentPower() (float64, error) {
 			return sm.scale * (sma.AsFloat(values[sunny.GridPowerImport]) - sma.AsFloat(values[sunny.GridPowerExport])), err
 		case "pv":
 			return sm.scale * sma.AsFloat(values[sunny.PvPower]), err
+		case "battery":
+			// DC battery power = U × I. SMA signs the battery current matching
+			// the evcc convention (positive = discharge, negative = charge).
+			// Falls back to AC path if either value is missing.
+			if u, ok := values[sunny.BatteryVoltage]; ok {
+				if i, ok := values[sunny.BatteryCurrent]; ok {
+					return sm.scale * sma.AsFloat(u) * sma.AsFloat(i), err
+				}
+			}
 		}
 	}
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
