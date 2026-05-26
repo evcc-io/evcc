@@ -323,6 +323,36 @@ func TestDefaultVehicle(t *testing.T) {
 	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
 
+// integratedDeviceCharger is a minimal charger advertising the IntegratedDevice feature.
+type integratedDeviceCharger struct{}
+
+func (c *integratedDeviceCharger) Status() (api.ChargeStatus, error) { return api.StatusA, nil }
+func (c *integratedDeviceCharger) Enabled() (bool, error)            { return false, nil }
+func (c *integratedDeviceCharger) Enable(bool) error                 { return nil }
+func (c *integratedDeviceCharger) MaxCurrent(int64) error            { return nil }
+func (c *integratedDeviceCharger) Features() []api.Feature {
+	return []api.Feature{api.IntegratedDevice}
+}
+
+// TestDisconnectIntegratedDeviceKeepsMode is a regression test for #30187:
+// switching an integrated-device loadpoint to "off" makes a switch socket report
+// StatusA (disconnect). The disconnect handler must NOT reset the mode to the
+// configured DefaultMode in that case, otherwise the loadpoint immediately flips
+// back to pv and the socket re-enables.
+func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.charger = &integratedDeviceCharger{}
+	lp.DefaultMode = api.ModePV
+	lp.setMode(api.ModeOff)
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.evVehicleDisconnectHandler()
+
+	assert.Equal(t, api.ModeOff, lp.GetMode(), "integrated device disconnect must not reset mode")
+}
+
 func TestReconnectVehicle(t *testing.T) {
 	tc := []struct {
 		name      string
