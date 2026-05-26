@@ -99,7 +99,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
 	}
 
-	if sm.device.IsEnergyMeter() && !dc {
+	if sm.device.IsEnergyMeter() || !dc {
 		implement.Has(sm, implement.PhaseCurrents(sm.currents))
 		implement.Has(sm, implement.PhasePowers(sm.powers))
 	}
