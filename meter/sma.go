@@ -99,28 +99,26 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
 	}
 
+	if sm.device.IsEnergyMeter() && !hybrid {
+		implement.Has(sm, implement.PhaseCurrents(sm.currents))
+		implement.Has(sm, implement.PhasePowers(sm.powers))
+	}
+
 	return sm, nil
 }
 
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	values, err := sm.device.Values()
-	if sm.hybrid {
+	if !sm.device.IsEnergyMeter() && sm.hybrid {
 		switch sm.usage {
 		case "grid":
 			// grid: import minus export (consumption positive)
-			return sm.scale * (sma.AsFloat(values[sunny.GridPowerImport]) - sma.AsFloat(values[sunny.GridPowerExport])), err
+			return sma.AsFloat(values[sunny.GridPowerImport]) - sma.AsFloat(values[sunny.GridPowerExport]), err
 		case "pv":
-			return sm.scale * sma.AsFloat(values[sunny.PvPower]), err
+			return sma.AsFloat(values[sunny.PvPower]), err
 		case "battery":
-			// DC battery power = U × I. SMA signs the battery current matching
-			// the evcc convention (positive = discharge, negative = charge).
-			// Falls back to AC path if either value is missing.
-			if u, ok := values[sunny.BatteryVoltage]; ok {
-				if i, ok := values[sunny.BatteryCurrent]; ok {
-					return sm.scale * sma.AsFloat(u) * sma.AsFloat(i), err
-				}
-			}
+			return sma.AsFloat(values[sunny.BatteryVoltage]) * sma.AsFloat(values[sunny.BatteryCurrent]), err
 		}
 	}
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
@@ -131,12 +129,9 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
-	if sm.hybrid {
+	if !sm.device.IsEnergyMeter() && sm.hybrid {
 		switch sm.usage {
 		case "grid":
-			if sm.scale < 0 {
-				return sma.AsFloat(values[sunny.GridEnergyExportKWh]), err
-			}
 			return sma.AsFloat(values[sunny.GridEnergyImportKWh]), err
 		case "pv":
 			return sma.AsFloat(values[sunny.PvEnergyTotalKWh]), err
@@ -150,10 +145,22 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
-var _ api.PhaseCurrents = (*SMA)(nil)
+var _ api.PhaseVoltages = (*SMA)(nil)
 
-// Currents implements the api.PhaseCurrents interface
-func (sm *SMA) Currents() (float64, float64, float64, error) {
+// Voltages implements the api.PhaseVoltages interface
+func (sm *SMA) Voltages() (float64, float64, float64, error) {
+	values, err := sm.device.Values()
+
+	var res [3]float64
+	for i, id := range []sunny.ValueID{sunny.VoltageL1, sunny.VoltageL2, sunny.VoltageL3} {
+		res[i] = sma.AsFloat(values[id])
+	}
+
+	return res[0], res[1], res[2], err
+}
+
+// currents implements the api.PhaseCurrents interface
+func (sm *SMA) currents() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
 	var powers [3]float64
@@ -171,24 +178,8 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 	return sm.scale * res[0], sm.scale * res[1], sm.scale * res[2], err
 }
 
-var _ api.PhaseVoltages = (*SMA)(nil)
-
-// Voltages implements the api.PhaseVoltages interface
-func (sm *SMA) Voltages() (float64, float64, float64, error) {
-	values, err := sm.device.Values()
-
-	var res [3]float64
-	for i, id := range []sunny.ValueID{sunny.VoltageL1, sunny.VoltageL2, sunny.VoltageL3} {
-		res[i] = sma.AsFloat(values[id])
-	}
-
-	return res[0], res[1], res[2], err
-}
-
-var _ api.PhasePowers = (*SMA)(nil)
-
-// Powers implements the api.PhasePowers interface
-func (sm *SMA) Powers() (float64, float64, float64, error) {
+// powers implements the api.PhasePowers interface
+func (sm *SMA) powers() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
 	var res [3]float64
