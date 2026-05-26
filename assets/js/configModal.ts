@@ -7,6 +7,8 @@ export interface ModalEntry {
   id?: number;
   type?: string;
   choices?: string[];
+  usage?: string;
+  usageChoices?: string[];
 }
 
 export interface ModalResult {
@@ -106,27 +108,34 @@ function syncAllModals(): void {
 
 // Parse brackets: "meter[type:grid]" => { name: "meter", type: "grid" }
 // "meter[choices:pv,battery]" => { name: "meter", choices: ["pv", "battery"] }
-export function parseKey(key: string): { name: string; type?: string; choices?: string[] } {
-  const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
-  if (!bracketMatch) {
+// Multiple brackets are supported: "meter[type:ext][usage:charge]"
+export function parseKey(key: string): {
+  name: string;
+  type?: string;
+  choices?: string[];
+  usage?: string;
+  usageChoices?: string[];
+} {
+  const bracketStart = key.indexOf("[");
+  if (bracketStart === -1) {
     return { name: key };
   }
-  const name = bracketMatch[1]!;
-  const inner = bracketMatch[2]!;
-  // inner is "type:grid" or "choices:pv,battery"
-  const colonIdx = inner.indexOf(":");
-  if (colonIdx === -1) {
-    return { name };
+  const name = key.substring(0, bracketStart);
+  const result: ReturnType<typeof parseKey> = { name };
+  const re = /\[([^\]]+)\]/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(key)) !== null) {
+    const inner = m[1]!;
+    const colonIdx = inner.indexOf(":");
+    if (colonIdx === -1) continue;
+    const paramKey = inner.substring(0, colonIdx);
+    const paramValue = inner.substring(colonIdx + 1);
+    if (paramKey === "type") result.type = paramValue;
+    else if (paramKey === "choices") result.choices = paramValue.split(",");
+    else if (paramKey === "usage") result.usage = paramValue;
+    else if (paramKey === "usageChoices") result.usageChoices = paramValue.split(",");
   }
-  const paramKey = inner.substring(0, colonIdx);
-  const paramValue = inner.substring(colonIdx + 1);
-  if (paramKey === "type") {
-    return { name, type: paramValue };
-  }
-  if (paramKey === "choices") {
-    return { name, choices: paramValue.split(",") };
-  }
-  return { name };
+  return result;
 }
 
 // Parse raw query string into ordered stack entries
@@ -158,6 +167,8 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     }
     if (parsed.type) entry.type = parsed.type;
     if (parsed.choices) entry.choices = parsed.choices;
+    if (parsed.usage) entry.usage = parsed.usage;
+    if (parsed.usageChoices) entry.usageChoices = parsed.usageChoices;
     entries.push(entry);
   }
   return entries;
@@ -173,6 +184,8 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
     } else if (entry.choices?.length) {
       key += `[choices:${entry.choices.join(",")}]`;
     }
+    if (entry.usage) key += `[usage:${entry.usage}]`;
+    if (entry.usageChoices?.length) key += `[usageChoices:${entry.usageChoices.join(",")}]`;
     query[key] = entry.id !== undefined ? String(entry.id) : "";
   }
   return query;
@@ -225,7 +238,13 @@ export function initConfigModal(router: Router): void {
 
 export function openModal(
   name: string,
-  params?: { id?: number; type?: string; choices?: string[] }
+  params?: {
+    id?: number;
+    type?: string;
+    choices?: string[];
+    usage?: string;
+    usageChoices?: string[];
+  }
 ): Promise<ModalResult> {
   if (!_router) {
     return Promise.resolve({ action: "cancelled" });
@@ -235,6 +254,8 @@ export function openModal(
   if (params?.id !== undefined) entry.id = params.id;
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
+  if (params?.usage) entry.usage = params.usage;
+  if (params?.usageChoices) entry.usageChoices = params.usageChoices;
 
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
@@ -273,7 +294,13 @@ export async function closeModal(result?: ModalResult): Promise<void> {
 
 export function replaceModal(
   name: string,
-  params?: { id?: number; type?: string; choices?: string[] }
+  params?: {
+    id?: number;
+    type?: string;
+    choices?: string[];
+    usage?: string;
+    usageChoices?: string[];
+  }
 ): void {
   if (!_router) return;
 
@@ -281,6 +308,8 @@ export function replaceModal(
   if (params?.id !== undefined) entry.id = params.id;
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
+  if (params?.usage) entry.usage = params.usage;
+  if (params?.usageChoices) entry.usageChoices = params.usageChoices;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);

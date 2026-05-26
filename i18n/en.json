@@ -51,6 +51,11 @@
     "hex": "Hex color"
   },
   "config": {
+    "additional": {
+      "description": "Tracks meters that are not used for regulation or shown in the UI (sub-distributions, alternative grid or solar meters, ...). Their data is logged and exported like other meters.",
+      "titleAdd": "Add Additional Meter",
+      "titleEdit": "Edit Additional Meter"
+    },
     "aux": {
       "description": "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed.",
       "titleAdd": "Add Self-Regulating Consumer",
@@ -104,6 +109,11 @@
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
       "title": "Load Management",
       "usableMeters": "Usable meter references"
+    },
+    "consumer": {
+      "description": "Tracks smaller, non-controllable appliances (refrigerator, washing machine, ...). Gives you a better overview of your home consumption.",
+      "titleAdd": "Add Consumer Meter",
+      "titleEdit": "Edit Consumer Meter"
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
@@ -422,6 +432,7 @@
     },
     "main": {
       "addAdditional": "Add additional meter",
+      "addConsumer": "Add consumer",
       "addGrid": "Add grid meter",
       "addLoadpoint": "Add charger or heater",
       "addPvBattery": "Add solar or battery",
@@ -512,7 +523,9 @@
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
-        "ext": "Add regular consumer",
+        "consumer-aux": "Self-regulating consumer",
+        "consumer-ext": "Regular consumer",
+        "ext": "Add additional meter",
         "pv": "Add solar meter"
       },
       "save": "Save",
@@ -685,6 +698,7 @@
     },
     "section": {
       "additionalMeter": "Additional meters",
+      "consumers": "Consumers",
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
@@ -1201,10 +1215,10 @@
       "empty": "No history data available for this time range.",
       "group": {
         "battery": "Battery",
+        "consumer": "Consumption",
         "forecast": "Forecast",
         "grid": "Grid",
         "loadpoint": "Charging & Heating",
-        "meter": "Consumption",
         "pv": "Production"
       },
       "otherConsumers": "Others",

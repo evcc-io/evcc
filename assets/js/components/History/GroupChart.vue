@@ -153,7 +153,7 @@ export default defineComponent({
 		// Consumer groups have many palette colours per entity — a single neutral
 		// tooltip background reads better than picking one entity's colour.
 		tooltipColor(): string {
-			if (this.group === "loadpoint" || this.group === "meter") {
+			if (this.group === "loadpoint" || this.group === "consumer") {
 				return colors.text || this.color;
 			}
 			return this.color;
@@ -199,7 +199,7 @@ export default defineComponent({
 			// Loadpoint and meter use the palette per entity (distinct entities).
 			// Production and battery use the group color with subtle alpha steps so
 			// stacked segments stay visually distinguishable.
-			if (this.group === "loadpoint" || this.group === "meter") {
+			if (this.group === "loadpoint" || this.group === "consumer") {
 				const mutedColor = colors.muted || this.color;
 				const titles: string[] = [];
 				for (const s of this.series) {
@@ -260,7 +260,7 @@ export default defineComponent({
 			// Groups with multiple entities stack them; grid keeps bars side-by-side.
 			const stackEntities =
 				this.group === "loadpoint" ||
-				this.group === "meter" ||
+				this.group === "consumer" ||
 				this.group === "pv" ||
 				this.group === "battery";
 			// Build value arrays per entity first so we can determine, per slot,

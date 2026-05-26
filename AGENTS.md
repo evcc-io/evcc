@@ -235,7 +235,9 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use `expectModalVisible()` and `expectModalHidden()` helpers
 - Test configuration persistence across application restarts
 - Standard structure: import `{ start, stop, baseUrl }` from `./evcc`, use `test.afterEach(stop)`
-- Never use fixed timeouts, use existance of elements or wait for network idle
+- Never use fixed timeouts. Wait on element state (visibility, count, value) instead.
+- Never use `page.waitForLoadState("networkidle")`. SPAs keep emitting requests (websockets, polling), so it either races or hangs. Wait for the specific element / value you need instead.
+- Keep test names and describe titles short and concrete. They should complement each other, not repeat. Prefer `describe("aux meter") test("create")` over `describe("aux meter") test("create aux meter and verify it appears")`. Drop scenario filler like "and lands in section", "appears correctly", "ensure".
 
 ## Device Integration & Configuration
 

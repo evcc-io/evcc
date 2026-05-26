@@ -582,7 +582,7 @@ export default defineComponent({
 			});
 		},
 		consumers() {
-			return [...this.aux, ...this.ext];
+			return [...this.aux, ...this.ext.filter((m) => m.usage === "charge")];
 		},
 		batteryForecastHighest(): BatteryForecastPoint | undefined {
 			return this.battery?.forecast?.highest;

@@ -255,7 +255,7 @@ export default defineComponent({
 		visibleGroups(): string[] {
 			return GROUP_ORDER.filter((g) => {
 				// Consumption section follows `home` (the source of truth).
-				if (g === "meter") {
+				if (g === "consumer") {
 					const home = this.seriesByGroup["home"];
 					if (home?.some((s) => s.data.length > 0)) return true;
 				}
@@ -263,11 +263,8 @@ export default defineComponent({
 				return !!list?.some((s) => s.data.length > 0);
 			});
 		},
-		// Series shown in the chart. For the consumption (`meter`) group we append
-		// a virtual "Other consumers" series = home.net − sum(meter entities).
-		// Inactive loadpoints / meters (all-zero data in the selected period) are
-		// dropped from the displayed list; `paletteIndex` carries each entity's
-		// original position so its color stays stable when navigating periods.
+		// Consumer group: append virtual "Other consumers" = home.net − sum(consumers).
+		// paletteIndex pins color across period navigation.
 		displaySeries(): (group: string) => HistorySeries[] {
 			const hasEnergy = (s: HistorySeries) =>
 				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0);
@@ -276,40 +273,36 @@ export default defineComponent({
 					const list = this.seriesByGroup["loadpoint"] || [];
 					return list.map((s, i) => ({ ...s, paletteIndex: i })).filter(hasEnergy);
 				}
-				if (group !== "meter") return this.seriesByGroup[group] || [];
-				const meters = this.seriesByGroup["meter"] || [];
+				if (group !== "consumer") return this.seriesByGroup[group] || [];
+				const consumers = this.seriesByGroup["consumer"] || [];
 				const home = (this.seriesByGroup["home"] || [])[0];
-				const activeMeters = meters
+				const active = consumers
 					.map((s, i) => ({ ...s, paletteIndex: i }))
 					.filter(hasEnergy);
-				if (!home) return activeMeters;
-				const meterTotals = new Map<string, number>();
-				// Net per slot is computed from all meters (incl. inactive ones), so
+				if (!home) return active;
+				const totals = new Map<string, number>();
+				// Net per slot is computed from all consumers (incl. inactive ones), so
 				// dropping inactive entries from the display doesn't shift the
 				// "Other consumers" delta.
-				for (const s of meters) {
+				for (const s of consumers) {
 					for (const slot of s.data) {
 						const net = slot.energy - slot.returnEnergy;
-						meterTotals.set(slot.start, (meterTotals.get(slot.start) || 0) + net);
+						totals.set(slot.start, (totals.get(slot.start) || 0) + net);
 					}
 				}
 				const other: HistorySeries = {
 					name: this.$t("main.history.otherConsumers") as string,
-					group: "meter",
+					group: "consumer",
 					virtual: true,
-					// Use meters.length as a stable paletteIndex that can never
-					// collide with real meters (0..meters.length-1).
-					paletteIndex: meters.length,
+					paletteIndex: consumers.length,
 					data: home.data.map((slot) => {
 						const homeNet = slot.energy - slot.returnEnergy;
-						const v = Math.max(0, homeNet - (meterTotals.get(slot.start) || 0));
+						const v = Math.max(0, homeNet - (totals.get(slot.start) || 0));
 						return { start: slot.start, end: slot.end, energy: v, returnEnergy: 0 };
 					}),
 				};
-				if (!hasEnergy(other)) return activeMeters;
-				// First entry in the array = bottom of the stack, so "Other consumers"
-				// always sits underneath the explicit meters.
-				return [other, ...activeMeters];
+				if (!hasEnergy(other)) return active;
+				return [other, ...active];
 			};
 		},
 		hasForecast(): boolean {
@@ -395,7 +388,7 @@ export default defineComponent({
 		hasEntityLegend(group: string): boolean {
 			const list = this.displaySeries(group);
 			if (!list.length) return false;
-			if (group === "loadpoint" || group === "meter") return true;
+			if (group === "loadpoint" || group === "consumer") return true;
 			if (group === "pv" || group === "battery") return list.length > 1;
 			return false;
 		},
@@ -406,7 +399,7 @@ export default defineComponent({
 			const list = this.displaySeries(group);
 			const baseColor = groupColor(group);
 			const n = list.length;
-			const isPickGroup = group === "loadpoint" || group === "meter";
+			const isPickGroup = group === "loadpoint" || group === "consumer";
 
 			// Build palette for pickable groups in displayed order so that user
 			// overrides take priority and autoassign skips taken palette entries.
@@ -454,7 +447,7 @@ export default defineComponent({
 			// Consumption total comes from `home` (overall consumption),
 			// not the sum of explicit meter entities.
 			const list =
-				group === "meter"
+				group === "consumer"
 					? this.seriesByGroup["home"] || []
 					: this.seriesByGroup[group] || [];
 			let sumEnergy = 0;

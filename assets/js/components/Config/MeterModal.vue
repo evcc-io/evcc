@@ -36,7 +36,7 @@
 
 		<template #description>
 			<p v-if="hasDescription" class="mt-0 mb-4">
-				{{ $t(`config.${selectedType}.description`) }}
+				{{ $t(`config.${flowKey}.description`) }}
 			</p>
 		</template>
 
@@ -71,7 +71,7 @@
 				/>
 			</FormRow>
 			<FormRow
-				v-if="selectedType === 'ext'"
+				v-if="selectedType === 'ext' && !lockedUsage"
 				id="meterParamExtMeterUsage"
 				:label="$t('config.meter.usage.label')"
 			>
@@ -79,7 +79,7 @@
 					id="meterParamExtMeterUsage"
 					v-model="extMeterUsage"
 					:choice="extMeterUsageOptions"
-					:required="!!extMeterUsage"
+					required
 					:disabled="!isNew"
 					@change="extMeterUsageChanged"
 				/>
@@ -121,7 +121,8 @@ const CUSTOM_FIELDS = ["usage", "modbus"];
 
 const defaultIcons: Record<string, string> = {
 	aux: "smartconsumer",
-	ext: "generic",
+	consumer: "generic",
+	additional: "meter",
 };
 
 export default defineComponent({
@@ -138,7 +139,7 @@ export default defineComponent({
 	emits: ["changed", "close"],
 	data() {
 		return {
-			extMeterUsage: "charge" as MeterTemplateUsage,
+			extMeterUsage: "" as MeterTemplateUsage | "",
 			selectedTemplate: null as string | null,
 			iconChoices: ICONS,
 			initialValues,
@@ -153,29 +154,41 @@ export default defineComponent({
 		selectedType(): MeterType | undefined {
 			return getModal("meter")?.type as MeterType | undefined;
 		},
-		typeChoices(): MeterType[] {
-			return (getModal("meter")?.choices as MeterType[]) || [];
+		typeChoices(): string[] {
+			return (getModal("meter")?.choices as string[]) || [];
+		},
+		lockedUsage(): MeterTemplateUsage | undefined {
+			return getModal("meter")?.usage as MeterTemplateUsage | undefined;
+		},
+		availableUsageChoices(): MeterTemplateUsage[] {
+			const fromModal = getModal("meter")?.usageChoices as MeterTemplateUsage[] | undefined;
+			return (
+				fromModal ?? (["charge", "aux", "grid", "pv", "battery"] as MeterTemplateUsage[])
+			);
+		},
+		flowKey(): string | undefined {
+			if (this.selectedType !== "ext") return this.selectedType;
+			const usage = this.lockedUsage || this.extMeterUsage;
+			return usage === "charge" ? "consumer" : "additional";
 		},
 		modalTitle(): string {
 			if (this.isNew) {
-				if (this.selectedType) {
-					return this.$t(`config.${this.selectedType}.titleAdd`);
+				if (this.flowKey) {
+					return this.$t(`config.${this.flowKey}.titleAdd`);
 				} else {
 					return this.$t("config.meter.titleChoice");
 				}
 			}
-			return this.$t(`config.${this.selectedType}.titleEdit`);
+			return this.$t(`config.${this.flowKey}.titleEdit`);
 		},
 		templateUsage(): MeterTemplateUsage | undefined {
 			if (!this.selectedType) return undefined;
-
-			// For ext meters, the user selects the template usage explicitly
-			// For other meter types, the meter type IS the template usage
+			// ext meters carry usage separately (locked or user-picked); other types map 1:1
 			if (this.selectedType === "ext") {
-				return this.extMeterUsage;
+				return (this.lockedUsage || this.extMeterUsage || undefined) as
+					| MeterTemplateUsage
+					| undefined;
 			}
-			// For non-ext meters, selectedType directly maps to template usage
-			// (grid->grid, pv->pv, battery->battery, charge->charge, aux->aux)
 			return this.selectedType;
 		},
 		hasDeviceTitle(): boolean {
@@ -191,7 +204,7 @@ export default defineComponent({
 			return this.id === undefined;
 		},
 		extMeterUsageOptions() {
-			return ["charge", "aux", "grid", "pv", "battery"].map((key) => ({
+			return this.availableUsageChoices.map((key) => ({
 				name: this.$t(`config.meter.usage.${key}`),
 				key,
 			}));
@@ -204,10 +217,20 @@ export default defineComponent({
 				this.extMeterUsage = values.usage;
 			}
 		},
-		selectType(type: MeterType) {
-			replaceModal("meter", { id: this.id, type });
+		selectType(t: string) {
+			if (t === "consumer-ext") {
+				replaceModal("meter", { id: this.id, type: "ext", usage: "charge" });
+				return;
+			}
+			if (t === "consumer-aux") {
+				replaceModal("meter", { id: this.id, type: "aux" });
+				return;
+			}
+			replaceModal("meter", { id: this.id, type: t as MeterType });
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
+			// hide manufacturer for new ext meters until usage is picked
+			if (this.isNew && this.selectedType === "ext" && !this.templateUsage) return [];
 			return [
 				{
 					label: "generic",
@@ -241,9 +264,6 @@ export default defineComponent({
 		},
 		transformApiData(data: ApiData, values: DeviceValues): ApiData {
 			if (values.type === ConfigType.Template) {
-				// Set the template usage (what the template should do)
-				// For ext meters: user-selected usage (grid, pv, battery, charge, aux)
-				// For other meters: selectedType itself is the usage
 				data.usage = this.templateUsage;
 			}
 			return data;
@@ -257,8 +277,8 @@ export default defineComponent({
 		},
 		applyCustomDefaults(_template: Template | null, values: DeviceValues) {
 			// Apply default icon when template is loaded or meter type is selected
-			if (this.selectedType && !values.deviceIcon) {
-				values.deviceIcon = defaultIcons[this.selectedType] || "";
+			if (this.flowKey && !values.deviceIcon) {
+				values.deviceIcon = defaultIcons[this.flowKey] || "";
 			}
 		},
 		extMeterUsageChanged() {
@@ -272,7 +292,7 @@ export default defineComponent({
 			this.$emit("changed", result);
 		},
 		handleClose() {
-			this.extMeterUsage = "charge";
+			this.extMeterUsage = "";
 			this.$emit("close");
 		},
 	},

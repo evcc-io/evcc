@@ -589,11 +589,14 @@ export interface Notification {
   count: number;
 }
 
+export type MeterUsage = "grid" | "pv" | "battery" | "charge" | "aux";
+
 export interface Meter {
   name?: string;
   power: number;
   title?: string;
   icon?: string;
+  usage?: MeterUsage;
   energy?: number;
   returnEnergy?: number;
 }

@@ -155,6 +155,45 @@ func TestCollectorSetImportAndExportMeterTotal(t *testing.T) {
 	require.InDelta(t, 0.7, col.accu.Exported(), 1e-10)
 }
 
+func TestCreateEntityMigratesMeterToConsumer(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	// seed a legacy entity row with Group="meter"
+	legacy, err := createEntity(Meter, "shed")
+	require.NoError(t, err)
+	require.Equal(t, Meter, legacy.Group)
+
+	// re-creating with Group="consumer" must migrate the existing row in place
+	migrated, err := createEntity(Consumer, "shed")
+	require.NoError(t, err)
+	require.Equal(t, legacy.Id, migrated.Id)
+	require.Equal(t, Consumer, migrated.Group)
+
+	// only a single entity row remains for this name
+	var count int64
+	require.NoError(t, db.Instance.Model(new(entity)).Where("name = ?", "shed").Count(&count).Error)
+	require.EqualValues(t, 1, count)
+}
+
+func TestCreateEntityKeepsUnrelatedGroups(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	pv, err := createEntity(PV, "roof")
+	require.NoError(t, err)
+
+	// creating a consumer with the same name must NOT migrate the pv row
+	consumer, err := createEntity(Consumer, "roof")
+	require.NoError(t, err)
+	require.NotEqual(t, pv.Id, consumer.Id)
+	require.Equal(t, Consumer, consumer.Group)
+
+	var count int64
+	require.NoError(t, db.Instance.Model(new(entity)).Where("name = ?", "roof").Count(&count).Error)
+	require.EqualValues(t, 2, count)
+}
+
 // TestCollectorSkipsPartialFirstSlot verifies that the first slot, joined
 // mid-way after (re)start, is not persisted as a full 15min slot.
 func TestCollectorSkipsPartialFirstSlot(t *testing.T) {

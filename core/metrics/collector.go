@@ -15,7 +15,8 @@ const (
 	PV        = "pv"
 	Home      = "home" // meter and group (virtual measurement)
 	Loadpoint = "loadpoint"
-	Meter     = "meter" // generic meter (ext/aux)
+	Meter     = "meter"    // observational meter (ext with non-charge usage)
+	Consumer  = "consumer" // consumer meter (aux or ext with charge usage)
 )
 
 type Collector struct {
@@ -39,16 +40,16 @@ func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, er
 }
 
 func createEntity(group, name string) (entity, error) {
-	entity := entity{
-		Group: group,
-		Name:  name,
+	// migrate legacy 'meter' rows whose ref is now classified as 'consumer'
+	if group == Consumer {
+		db.Instance.Model(new(entity)).Where(&entity{Group: Meter, Name: name}).Update("group", Consumer)
 	}
 
-	if err := db.Instance.Where(&entity).FirstOrCreate(&entity).Error; err != nil {
-		return entity, err
+	e := entity{Group: group, Name: name}
+	if err := db.Instance.Where(&e).FirstOrCreate(&e).Error; err != nil {
+		return e, err
 	}
-
-	return entity, nil
+	return e, nil
 }
 
 func (c *Collector) process(fun func()) error {

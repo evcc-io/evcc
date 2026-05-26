@@ -81,6 +81,26 @@
 					/>
 				</div>
 
+				<h2 class="my-4 mt-5">{{ $t("config.section.consumers") }}</h2>
+				<div class="p-0 config-list">
+					<MeterCard
+						v-for="meter in consumerMeters"
+						:key="meter.name"
+						:meter="meter"
+						:meter-type="meter.config?.['usage'] === 'charge' ? 'ext' : 'aux'"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+					/>
+					<NewDeviceButton
+						data-testid="add-consumer"
+						:title="$t('config.main.addConsumer')"
+						@click="
+							openModal('meter', { choices: ['consumer-ext', 'consumer-aux'] })
+						"
+					/>
+				</div>
+
 				<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
 				<div class="p-0 config-list">
 					<MeterCard
@@ -128,16 +148,7 @@
 				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
 				<div class="p-0 config-list">
 					<MeterCard
-						v-for="meter in auxMeters"
-						:key="meter.name"
-						:meter="meter"
-						meter-type="aux"
-						:has-error="hasDeviceError('meter', meter.name)"
-						:tags="deviceTags('meter', meter.name)"
-						@edit="(type, id) => openModal('meter', { type, id })"
-					/>
-					<MeterCard
-						v-for="meter in extMeters"
+						v-for="meter in additionalMeters"
 						:key="meter.name"
 						:meter="meter"
 						meter-type="ext"
@@ -146,8 +157,14 @@
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<NewDeviceButton
+						data-testid="add-additional"
 						:title="$t('config.main.addAdditional')"
-						@click="openModal('meter', { choices: ['aux', 'ext'] })"
+						@click="
+							openModal('meter', {
+								type: 'ext',
+								usageChoices: ['grid', 'pv', 'battery', 'aux'],
+							})
+						"
 					/>
 				</div>
 
@@ -691,6 +708,20 @@ export default defineComponent({
 		extMeters() {
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
+		},
+		extByUsage(): { charge: ConfigMeter[]; other: ConfigMeter[] } {
+			const charge: ConfigMeter[] = [];
+			const other: ConfigMeter[] = [];
+			for (const m of this.getMetersByNames(this.site?.ext)) {
+				(m.config?.["usage"] === "charge" ? charge : other).push(m);
+			}
+			return { charge, other };
+		},
+		consumerMeters() {
+			return [...this.getMetersByNames(this.site?.aux), ...this.extByUsage.charge];
+		},
+		additionalMeters() {
+			return this.extByUsage.other;
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;

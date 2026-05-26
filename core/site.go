@@ -233,7 +233,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.collectors[ref] = me
 	}
 
-	// meters used only for monitoring
+	// meters used only for monitoring; ext meters with usage=charge are consumers
 	for _, ref := range site.Meters.ExtMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
@@ -241,14 +241,18 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.extMeters = append(site.extMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		group := metrics.Meter
+		if isConsumerExt(ref) {
+			group = metrics.Consumer
+		}
+		me, err := metrics.NewCollector(group, ref)
 		if err != nil {
 			return err
 		}
 		site.collectors[ref] = me
 	}
 
-	// auxiliary meters
+	// auxiliary meters (always consumers)
 	for _, ref := range site.Meters.AuxMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
@@ -256,7 +260,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.auxMeters = append(site.auxMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		me, err := metrics.NewCollector(metrics.Consumer, ref)
 		if err != nil {
 			return err
 		}
@@ -488,6 +492,23 @@ func (site *Site) clearPlanLocks() {
 	for _, lp := range site.Loadpoints() {
 		lp.ClearPlanLock()
 	}
+}
+
+// meterUsage returns the configured usage of a meter by ref name, or "" if unknown.
+func meterUsage(ref string) string {
+	dev, err := config.Meters().ByName(ref)
+	if err != nil {
+		return ""
+	}
+	if v, ok := dev.Config().Property("usage").(string); ok {
+		return strings.ToLower(v)
+	}
+	return ""
+}
+
+// isConsumerExt reports whether an ext meter ref is a consumer (usage=charge).
+func isConsumerExt(ref string) bool {
+	return meterUsage(ref) == "charge"
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
@@ -746,6 +767,9 @@ func (site *Site) updateExtMeters() {
 	}
 
 	mm := site.collectMeters("ext", site.extMeters)
+	for i, dev := range site.extMeters {
+		mm[i].Usage = meterUsage(dev.Config().Name)
+	}
 
 	site.addMeterEnergy(site.extMeters, mm)
 

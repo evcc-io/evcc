@@ -7,15 +7,14 @@ const CONFIG_BASICS = "basics.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
-async function createExtMeter(page: Page, title: string, power: string) {
+async function createExtConsumer(page: Page, title: string, power: string) {
   const modal = page.getByTestId("meter-modal");
 
-  await page.getByRole("button", { name: "Add additional meter" }).click();
+  await page.getByRole("button", { name: "Add consumer" }).click();
   await expectModalVisible(modal);
-  await modal.getByRole("button", { name: "Add regular consumer" }).click();
+  await modal.getByRole("button", { name: "Regular consumer" }).click();
   await modal.getByLabel("Title").fill(title);
-  await modal.getByLabel("Usage").selectOption("battery");
-  await modal.getByLabel("Manufacturer").selectOption("Demo battery");
+  await modal.getByLabel("Manufacturer").selectOption("Demo meter");
   await modal.getByLabel("Power").fill(power);
   await modal.getByRole("button", { name: "Save" }).click();
   await expectModalHidden(modal);
@@ -33,22 +32,15 @@ test.describe("ext meter", async () => {
     await page.goto("/#/config");
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
+    // additional meter flow: opens ext modal directly with usage required (no default, no charge)
     await page.getByRole("button", { name: "Add additional meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
-    await meterModal.getByRole("button", { name: "Add regular consumer" }).click();
 
-    await expect(meterModal.getByLabel("Usage")).toHaveValue("charge");
-
-    await meterModal.getByLabel("Manufacturer").selectOption("cFos PowerBrain Meter");
-    await page.waitForLoadState("networkidle");
+    await expect(meterModal.getByLabel("Usage")).toHaveValue("");
 
     await meterModal.getByLabel("Usage").selectOption("battery");
-    await page.waitForLoadState("networkidle");
-
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
-    await page.waitForLoadState("networkidle");
-
     await expect(meterModal.getByLabel("Charge")).toBeVisible();
     await meterModal.getByLabel("Title").fill("House battery");
     await meterModal.getByLabel("Charge").fill("75");
@@ -101,7 +93,6 @@ test.describe("ext meter", async () => {
     await page.getByRole("button", { name: "Add additional meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
-    await meterModal.getByRole("button", { name: "Add regular consumer" }).click();
 
     await meterModal.getByLabel("Title").fill("Custom ext meter");
     await meterModal.getByLabel("Usage").selectOption("pv");
@@ -111,7 +102,6 @@ test.describe("ext meter", async () => {
     await expect(meterModal.getByLabel("IP address or hostname")).toBeVisible();
 
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
-    await page.waitForLoadState("networkidle");
 
     const editor = meterModal.getByTestId("yaml-editor");
     await expect(editor).toContainText("power: # current power");
@@ -137,7 +127,6 @@ test.describe("ext meter", async () => {
     await expect(meterModal.getByLabel("Usage")).toBeDisabled();
     await expect(meterModal.getByLabel("Manufacturer")).toHaveValue("User-defined device");
 
-    await page.waitForLoadState("networkidle");
     await expect(editor).toContainText("value: 1000 # W");
 
     await editorClear(editor);
@@ -158,7 +147,6 @@ test.describe("ext meter", async () => {
 
     await page.getByTestId("ext").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
-    await page.waitForLoadState("networkidle");
     await expect(editor).toContainText("value: 2000 # W");
 
     await meterModal.getByRole("button", { name: "Delete" }).click();
@@ -184,9 +172,9 @@ test.describe("ext meter order", async () => {
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
     // Create meters
-    await createExtMeter(page, "Meter 1", "10");
-    await createExtMeter(page, "Meter 2", "20");
-    await createExtMeter(page, "Meter 3", "30");
+    await createExtConsumer(page, "Meter 1", "10");
+    await createExtConsumer(page, "Meter 2", "20");
+    await createExtConsumer(page, "Meter 3", "30");
 
     // Verify order in config UI
     const extMeters = page.getByTestId("ext");
