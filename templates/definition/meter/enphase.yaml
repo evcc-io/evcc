@@ -2,7 +2,7 @@ template: enphase
 products:
   - brand: Enphase
     description:
-      generic: IQ Envoy
+      generic: IQ Gateway
 requirements:
 params:
   - name: usage
