@@ -1,6 +1,6 @@
 import { test, expect, devices, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden, enableAppContext, expectAppEvent } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -306,6 +306,26 @@ test.describe("csv export", async () => {
       "href",
       `./api/sessions?format=csv&lang=en&year=${YEAR}&month=${MONTH}`
     );
+  });
+});
+
+test.describe("csv export download", async () => {
+  test("in browser context", async ({ page }) => {
+    await page.goto("/#/sessions?period=total");
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("link", { name: "Download total CSV" }).click();
+    const download = await downloadPromise;
+    expect(download.url()).toContain("/api/sessions?format=csv");
+  });
+
+  test("in app context", async ({ page }) => {
+    await enableAppContext(page);
+    await page.goto("/#/sessions?period=total");
+    await page.getByRole("link", { name: "Download total CSV" }).click();
+    expect(await expectAppEvent(page)).toMatchObject({
+      type: "download",
+      url: expect.stringContaining("/api/sessions?format=csv&lang=en"),
+    });
   });
 });
 

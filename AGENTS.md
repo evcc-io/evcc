@@ -283,3 +283,20 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Handle concurrent operations safely with Go's concurrency primitives
 - Implement proper caching strategies and connection pooling
 - Avoid blocking operations in main application loop
+
+## Pull Request Descriptions
+
+Structure PR descriptions in this order. No headlines. Be concise.
+
+1. **References first line**: link related issues or PRs (`fixes #1123`, `replaces #222`, `pairs with org/repo#345`). PRs should almost always reference an issue or related PR — only skip in rare exceptions (e.g. trivial typo fixes).
+2. **Intro**: one or a few concise sentences framing what the PR does and why it was created this way. The full problem description belongs in the linked issue, not here.
+3. **Bullet list**: most significant changes or user-facing implications. Lead with the most significant.
+4. **TODO section** (only if open points remain):
+
+   ```
+   **TODO**
+   - [ ] item a
+   - [ ] item b
+   ```
+
+Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers, no generator footers.

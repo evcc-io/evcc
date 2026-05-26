@@ -51,6 +51,7 @@ const colors: {
     "#F472B6", // pink
     "#34D399", // green
     "#A78BFA", // violet
+    "#94A3B8", // gray
     // mid
     "#2563EB", // blue
     "#F59E0B", // amber
@@ -58,6 +59,7 @@ const colors: {
     "#EC4899", // pink
     "#10B981", // green
     "#8B5CF6", // violet
+    "#64748B", // gray
     // dark
     "#1E40AF", // blue
     "#B45309", // amber
@@ -65,6 +67,7 @@ const colors: {
     "#BE185D", // pink
     "#047857", // green
     "#6D28D9", // violet
+    "#334155", // gray
   ],
 });
 
