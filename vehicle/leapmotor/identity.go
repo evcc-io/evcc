@@ -408,6 +408,9 @@ func (id *Identity) Refresh() error {
 	}
 	id.token = d.Token
 	id.refreshTok = d.RefreshToken
+	prefix := "leapmotor." + id.deviceID + "."
+	settings.SetString(prefix+"token", id.token)
+	settings.SetString(prefix+"refresh", id.refreshTok)
 	return nil
 }
 
