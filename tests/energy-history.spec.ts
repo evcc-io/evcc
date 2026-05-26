@@ -178,7 +178,7 @@ test.describe("consumption breakdown", () => {
   // virtual Others = home − meters = 0.3 kWh.
   test("home total, meter legend, virtual Others", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
-    const consumption = section(page, "meter");
+    const consumption = section(page, "consumer");
     await expect(consumption).toBeVisible();
 
     // Section total = home, not sum of meters.
@@ -192,8 +192,8 @@ test.describe("consumption breakdown", () => {
 
   test("entity focus rescales axis and resets on unfocus", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
-    const consumption = section(page, "meter");
-    const meterChart = chart(page, "meter");
+    const consumption = section(page, "consumer");
+    const meterChart = chart(page, "consumer");
 
     // Stacked total per slot 1.0 kW → echarts auto-axis 0..1.2 in 1-decimal.
     expect(await yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);

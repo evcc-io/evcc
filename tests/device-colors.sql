@@ -53,10 +53,10 @@ CREATE TABLE `configs` (
 INSERT INTO `sessions` VALUES (1, '2026-05-01 08:00:00.0+02:00', '2026-05-01 09:00:00.0+02:00', 'Garage',  NULL, 'Honda', NULL, NULL, 8.0, NULL, 50, 1.0, 0.2, 100, 3600000000000);
 INSERT INTO `sessions` VALUES (2, '2026-05-02 08:00:00.0+02:00', '2026-05-02 09:00:00.0+02:00', 'Carport', NULL, 'Honda', NULL, NULL, 4.0, NULL, 50, 0.5, 0.2,  50, 3600000000000);
 
--- db-backed ext meter (class=2 meter, title=Dishwasher, usage=ext)
+-- db-backed ext meter classified as consumer (class=2 meter, title=Dishwasher, usage=charge)
 INSERT INTO `configs`(id, class, type, title, icon, product, value)
   VALUES (1, 2, 'template', 'Dishwasher', '', 'Demo meter',
-          '{"power":"100","template":"demo-meter","usage":"ext"}');
+          '{"power":"100","template":"demo-meter","usage":"charge"}');
 
 -- assign ext meter ref + enable experimental
 INSERT INTO `settings`(key, value) VALUES ('extMeters',    'db:1');
@@ -65,7 +65,7 @@ INSERT INTO `settings`(key, value) VALUES ('experimental', 'true');
 -- history entities matching evcc internal names
 INSERT INTO `entities` VALUES (1, 'loadpoint', 'lp-1');
 INSERT INTO `entities` VALUES (2, 'loadpoint', 'lp-2');
-INSERT INTO `entities` VALUES (3, 'meter',     'db:1');
+INSERT INTO `entities` VALUES (3, 'consumer', 'db:1');
 
 -- one 15-min slot at 2026-05-15 12:00:00+02:00 (ts=1778839200) per entity
 INSERT INTO `meters` VALUES (1, 1778839200, 2.0, 0);

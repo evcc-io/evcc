@@ -95,9 +95,7 @@
 					<NewDeviceButton
 						data-testid="add-consumer"
 						:title="$t('config.main.addConsumer')"
-						@click="
-							openModal('meter', { choices: ['consumer-ext', 'consumer-aux'] })
-						"
+						@click="openModal('meter', { choices: ['consumer-ext', 'consumer-aux'] })"
 					/>
 				</div>
 
