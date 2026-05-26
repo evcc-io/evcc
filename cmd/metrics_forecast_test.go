@@ -11,18 +11,18 @@ import (
 
 func TestMetricsForecastTotals(t *testing.T) {
 	series := []metrics.Series{
-		{Group: metrics.Forecast, Name: "forecast", Data: []metrics.Slot{
+		{Group: metrics.Forecast, Title: "forecast", Data: []metrics.Slot{
 			{Energy: 10.0}, {Energy: 5.0},
 		}},
 		// actual PV production is summed across all pv entities
-		{Group: metrics.PV, Name: "pv1", Data: []metrics.Slot{
+		{Group: metrics.PV, Title: "pv1", Data: []metrics.Slot{
 			{Energy: 4.0}, {Energy: 3.0},
 		}},
-		{Group: metrics.PV, Name: "pv2", Data: []metrics.Slot{
+		{Group: metrics.PV, Title: "pv2", Data: []metrics.Slot{
 			{Energy: 2.0},
 		}},
 		// other groups are ignored
-		{Group: metrics.Grid, Name: "grid", Data: []metrics.Slot{
+		{Group: metrics.Grid, Title: "grid", Data: []metrics.Slot{
 			{Energy: 99.0},
 		}},
 	}

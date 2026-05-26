@@ -11,12 +11,12 @@ import (
 
 func TestMetricsBatteryTotals(t *testing.T) {
 	series := []metrics.Series{
-		{Group: metrics.Battery, Name: "bat", Data: []metrics.Slot{
+		{Group: metrics.Battery, Title: "bat", Data: []metrics.Slot{
 			{Energy: 1.0, ReturnEnergy: 0.4},
 			{Energy: 2.0, ReturnEnergy: 1.6},
 		}},
 		// non-battery series must be ignored
-		{Group: metrics.Grid, Name: "grid", Data: []metrics.Slot{
+		{Group: metrics.Grid, Title: "grid", Data: []metrics.Slot{
 			{Energy: 5.0, ReturnEnergy: 3.0},
 		}},
 	}
@@ -33,7 +33,7 @@ func TestMetricsWriteBatteryTable(t *testing.T) {
 		{Group: metrics.Battery, Name: "bat2"},
 	}
 	totals := map[string]batteryTotals{
-		"bat1": {charge: 10.0, discharge: 9.0},
+		"Home": {charge: 10.0, discharge: 9.0},
 		// bat2 deliberately absent: no data in the timeframe
 	}
 	title := func(group, name string) string {

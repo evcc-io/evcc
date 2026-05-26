@@ -72,13 +72,19 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 
 	byEntity := make(map[string]metrics.Series, len(series))
 	for _, s := range series {
-		byEntity[s.Group+"/"+s.Name] = s
+		byEntity[s.Group+"/"+s.Title] = s
 	}
 
 	if asCSV, _ := cmd.Flags().GetBool("csv"); asCSV {
 		var out metrics.SeriesCSV
+		seen := make(map[string]bool, len(selected))
 		for _, e := range selected {
-			if s, ok := byEntity[e.Group+"/"+e.Name]; ok {
+			key := e.Group + "/" + title(e.Group, e.Name)
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			if s, ok := byEntity[key]; ok {
 				out = append(out, s)
 			}
 		}
@@ -236,7 +242,7 @@ func metricsWriteTable(w io.Writer, selected []metrics.EntityInfo, byEntity map[
 	}
 
 	for _, spec := range specs {
-		s, ok := byEntity[spec.entity.Group+"/"+spec.entity.Name]
+		s, ok := byEntity[spec.entity.Group+"/"+title(spec.entity.Group, spec.entity.Name)]
 		if !ok {
 			continue
 		}
