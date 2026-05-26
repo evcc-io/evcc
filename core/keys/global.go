@@ -25,6 +25,7 @@ const (
 	Timezone           = "timezone"
 	Fatal              = "fatal"
 	StartupCompleted   = "startupCompleted" // false: starting, true: started
+	ApiReady           = "apiReady"         // http handlers are registered
 	SetupRequired      = "setupRequired"    // initial setup is required (lp = 0), fresh installation
 	Plant              = "plant"
 	Telemetry          = "telemetry"
