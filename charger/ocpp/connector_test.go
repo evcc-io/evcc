@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -150,6 +151,60 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 	suite.NoError(err, "Currents")
 	_, _, _, err = suite.conn.Voltages()
 	suite.NoError(err, "Voltages")
+}
+
+// TestOnStatusNotificationClearsStaleTxn ensures that a transaction left over
+// from a previous session (e.g. because the charger never sent StopTransaction,
+// like the Zaptec Go 2 in local OCPP mode) is cleared when the connector
+// returns to Available, so the next Preparing can trigger RemoteStartTransaction.
+func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
+	suite.conn.txnId = 42
+	suite.conn.idTag = "stale"
+
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusAvailable,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now()),
+	})
+	suite.NoError(err)
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared on Available")
+	suite.Equal("", suite.conn.idTag, "idTag should be cleared on Available")
+
+	// next Preparing notification must now satisfy isWaitingForAuth
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now().Add(time.Second)),
+	})
+	suite.NoError(err)
+	suite.True(suite.conn.isWaitingForAuth(), "Preparing after Available should trigger waiting-for-auth")
+}
+
+// TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
+// not cleared by transient status notifications other than Available.
+func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {
+	suite.conn.txnId = 42
+	suite.conn.idTag = "active"
+
+	for _, status := range []core.ChargePointStatus{
+		core.ChargePointStatusCharging,
+		core.ChargePointStatusSuspendedEV,
+		core.ChargePointStatusSuspendedEVSE,
+		core.ChargePointStatusFinishing,
+	} {
+		_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      status,
+			ErrorCode:   core.NoError,
+			Timestamp:   types.NewDateTime(suite.clock.Now()),
+		})
+		suite.NoError(err)
+		suite.Equal(42, suite.conn.txnId, "txnId must survive %s", status)
+		suite.Equal("active", suite.conn.idTag, "idTag must survive %s", status)
+		suite.clock.Add(time.Second)
+	}
 }
 
 func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
