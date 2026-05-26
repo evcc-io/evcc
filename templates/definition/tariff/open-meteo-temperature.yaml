@@ -8,24 +8,7 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - name: latitude
-    description:
-      en: Latitude
-      de: Breitengrad
-    type: float
-    required: true
-    help:
-      en: Geographic latitude in decimal degrees (e.g., 48.1 for Munich)
-      de: Geografischer Breitengrad in Dezimalgrad (z.B. 48.1 für München)
-  - name: longitude
-    description:
-      en: Longitude
-      de: Längengrad
-    type: float
-    required: true
-    help:
-      en: Geographic longitude in decimal degrees (e.g., 11.6 for Munich)
-      de: Geografischer Längengrad in Dezimalgrad (z.B. 11.6 für München)
+  - preset: forecast-base
   - name: interval
     default: 1h
     advanced: true
