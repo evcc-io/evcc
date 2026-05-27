@@ -93,13 +93,13 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 			}
 
 			if defaultValue != "" {
-				// for modbus params the default value is carried
-				// using the parameter default, not the value
-				// TODO figure out why that's necessary
+				// apply the template-specific default to both the render values
+				// (so RenderModeInstance YAML reflects it) and the param definition
+				// (so the Config UI surfaces it as default). The earlier guard above
+				// ensures user-supplied values are not overwritten.
+				values[p.Name] = defaultValue
 				if renderMode == RenderModeInstance {
 					t.SetParamDefault(p.Name, defaultValue)
-				} else {
-					values[p.Name] = defaultValue
 				}
 			}
 		}

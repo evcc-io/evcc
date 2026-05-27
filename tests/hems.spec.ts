@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
+import {
+  expectModalVisible,
+  expectModalHidden,
+  editorClear,
+  editorPaste,
+  enableAppContext,
+  expectAppEvent,
+} from "./utils";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
 
 test.use({ baseURL: baseUrl() });
@@ -107,6 +114,25 @@ limit:
     await simulatorApply(page);
 
     await stopSimulator();
+  });
+
+  test.describe("grid sessions CSV in app context", () => {
+    test("dispatches download event", async ({ page }) => {
+      await enableAppContext(page);
+      await start(CONFIG, "hems.sql");
+      await page.goto("/#/config");
+
+      await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+      const hemsModal = page.getByTestId("hems-modal");
+      await expectModalVisible(hemsModal);
+
+      const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
+      await csvLink.click();
+      expect(await expectAppEvent(page)).toMatchObject({
+        type: "download",
+        url: expect.stringContaining("/api/gridsessions?format=csv&lang=en"),
+      });
+    });
   });
 
   test("external control with circuits", async ({ page }) => {

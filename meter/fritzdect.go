@@ -18,7 +18,10 @@ func init() {
 
 // NewFritzDECTFromConfig creates a fritzdect meter from generic config
 func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
-	var cc fritz.Settings
+	cc := fritz.Settings{
+		Unit: 1,
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -29,7 +32,7 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
 
 	// Use new REST API if firmware82 is set, otherwise use legacy LUA API
 	if cc.Firmware82 {
-		return smarthome.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+		return smarthome.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password, cc.Unit)
 	}
 
 	return aha.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)

@@ -50,7 +50,7 @@ func init() {
 //	count:    2              # number of registers to read (1=U16, 2=S32/U32)
 //	decode:   int32be        # int32be | uint32be | int16be | uint16be | float32be
 //	scale:    1.0            # optional multiplier (default 1.0)
-func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
+func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
 		Id       int     `mapstructure:"id"`
@@ -224,7 +224,7 @@ func modbusCRC16(data []byte) []byte {
 	crc := uint16(0xFFFF)
 	for _, b := range data {
 		crc ^= uint16(b)
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			if crc&0x0001 != 0 {
 				crc = (crc >> 1) ^ 0xA001
 			} else {

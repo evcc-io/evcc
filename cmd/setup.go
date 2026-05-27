@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
@@ -222,7 +223,7 @@ NEXT:
 			}
 		}
 
-		typ, other, err := customDevice(cc.Type, cc.Other)
+		typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
@@ -327,7 +328,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	cc := conf.Named()
 	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf))) //nolint:govet
 
-	typ, other, err := customDevice(cc.Type, cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
 	}
@@ -443,7 +444,7 @@ func configureChargers(static []config.Named, names ...string) error {
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-	typ, other, err := customDevice(cc.Type, cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 
 	var instance api.Vehicle
 	if err == nil {
@@ -791,7 +792,7 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 		return nil, nil
 	}
 
-	typ, other, err := customDevice(conf.Type, conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
@@ -968,7 +969,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
 
-	typ, other, err := customDevice(conf.Type, conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
@@ -1301,14 +1302,25 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 	return site, nil
 }
 
+func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*util.Logger) coresettings.Settings) (*core.Loadpoint, error) {
+	log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(idx), idx)
+
+	collector, err := metrics.NewCollector(metrics.Loadpoint, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+}
+
 func configureLoadpoints(conf globalconfig.All) error {
 	for id, cc := range conf.Loadpoints {
-		cc.Name = "lp-" + strconv.Itoa(id+1)
+		idx := id + 1
+		cc.Name = "lp-" + strconv.Itoa(idx)
 
-		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
-		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
-
-		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
+		instance, err := newLoadpoint(idx, cc.Name, cc.Other, func(*util.Logger) coresettings.Settings {
+			return coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", idx))
+		})
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
@@ -1326,19 +1338,16 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 	for _, conf := range configurable {
 		cc := conf.Named()
-
-		id := len(config.Loadpoints().Devices())
-		name := "lp-" + strconv.Itoa(id+1)
-		log := util.NewLoggerWithLoadpoint(name, id+1)
-
-		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
+		idx := len(config.Loadpoints().Devices()) + 1
 
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+		instance, err := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+			return coresettings.NewConfigSettingsAdapter(log, &conf)
+		})
 		if err != nil {
 			err = &DeviceError{cc.Name, err}
 		}
@@ -1388,4 +1397,9 @@ func isExperimental() bool {
 func isOptimizer() bool {
 	b, _ := settings.Bool(keys.Optimizer)
 	return b
+}
+
+// isMcp returns if MCP service is enabled
+func isMcp() bool {
+	return isExperimental()
 }

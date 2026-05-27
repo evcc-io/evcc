@@ -3,11 +3,16 @@ products:
   - brand: my-PV
     description:
       generic: AC ELWA-E
+capabilities: ["meter"]
 group: heating
 requirements:
   description:
-    de: Für den Heizstab von my-PV ohne Display. Über das lokale Webinterface des AC ELWA-E muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
-    en: For the heating rod from my-PV without a display. Use the local web interface of AC ELWA-E to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
+    de: |
+      Für den Heizstab von my-PV ohne Display. Über das lokale Webinterface des AC ELWA-E muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden. 
+      Ansteuerungstyp "Modbus TCP" verwenden und minimalen Strom im Ladepunkt auf 0,125A setzen.
+    en: |
+      For the heating rod from my-PV without a display. Use the local web interface of AC ELWA-E to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
+      Use control type "Modbus TCP" and set loadpoint minimal current to 0.125A.
   evcc: ["sponsorship"]
 params:
   - name: modbus
