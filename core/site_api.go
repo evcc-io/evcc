@@ -371,6 +371,36 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 
 	return nil
 }
+func (site *Site) GetBatteryFeedInPriorityLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryFeedInPriorityLimit
+}
+
+func (site *Site) SetBatteryFeedInPriorityLimit(val *float64) error {
+	site.log.DEBUG.Println("set feed-in priority limit:", printPtr("%.1f", val))
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.batteryFeedInPriorityLimit, val) {
+		site.batteryFeedInPriorityLimit = val
+
+		if val == nil {
+			settings.SetString(keys.BatteryFeedInPriorityLimit, "")
+			site.publish(keys.BatteryFeedInPriorityLimit, nil)
+		} else {
+			settings.SetFloat(keys.BatteryFeedInPriorityLimit, *val)
+			site.publish(keys.BatteryFeedInPriorityLimit, *val)
+		}
+	}
+
+	return nil
+}
 
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {

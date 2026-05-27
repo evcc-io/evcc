@@ -52,7 +52,8 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
-func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
+// TODO implement batteryFeedInPriorityActive
+func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryFeedInPriorityActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
 
 	// put battery into hold mode when charging is active and circuit dimmed
@@ -199,6 +200,11 @@ func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
+	return limit != nil && !rate.IsZero() && rate.Value <= *limit
+}
+
+func (site *Site) batteryFeedInPriorityActive(rate api.Rate) bool {
+	limit := site.GetBatteryFeedInPriorityLimit()
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 

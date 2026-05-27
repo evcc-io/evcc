@@ -79,6 +79,8 @@ type Site struct {
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
 
+	batteryFeedInPriorityLimit *float64 // disable battery charge and prefer feed-in at this limit
+
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
@@ -1025,7 +1027,9 @@ func (site *Site) update(lp updater) {
 	// update battery after reading meters to ensure that (modbus) connection is open
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
-	site.updateBatteryMode(batteryGridChargeActive, rate)
+	batteryFeedInPriorityActive := site.batteryFeedInPriorityActive(rate)
+	site.publish(keys.BatteryFeedInPriorityActive, batteryFeedInPriorityActive)
+	site.updateBatteryMode(batteryGridChargeActive, batteryFeedInPriorityActive, rate)
 
 	site.stats.Update(site)
 }
