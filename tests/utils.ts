@@ -130,3 +130,33 @@ export async function getDatalistOptions(input: Locator): Promise<string[]> {
     return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
   });
 }
+
+type AppState = {
+  evccAppCapabilities: string[];
+  __appEvent: unknown;
+  ReactNativeWebView: { postMessage: (m: string) => void };
+};
+
+export async function enableAppContext(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      value: "evcc/playwright",
+      configurable: true,
+    });
+    const w = window as unknown as AppState;
+    w.evccAppCapabilities = ["download"];
+    w.__appEvent = undefined;
+    w.ReactNativeWebView = {
+      postMessage: (msg: string) => {
+        w.__appEvent = JSON.parse(msg);
+      },
+    };
+  });
+}
+
+export async function expectAppEvent(page: Page): Promise<unknown> {
+  await expect
+    .poll(async () => page.evaluate(() => (window as unknown as AppState).__appEvent !== undefined))
+    .toBe(true);
+  return page.evaluate(() => (window as unknown as AppState).__appEvent);
+}
