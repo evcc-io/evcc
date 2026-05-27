@@ -8,7 +8,7 @@ import (
 )
 
 type Energy struct {
-	Power        *plugin.Config
+	Power        *plugin.Config // optional
 	Energy       *plugin.Config // optional
 	ReturnEnergy *plugin.Config // optional
 }
