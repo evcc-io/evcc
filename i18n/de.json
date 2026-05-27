@@ -294,7 +294,7 @@
       "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "integrations": "Integrationen",
-      "lastEvent": "Zuletzt {timeAgo}.",
+      "lastEvent": "Letzter Eintrag {timeAgo}.",
       "template": "Integration",
       "title": "Externe Begrenzung"
     },
