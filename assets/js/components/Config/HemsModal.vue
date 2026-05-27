@@ -43,10 +43,12 @@
 				role="alert"
 				data-testid="grid-sessions"
 			>
-				<div>
-					<span>{{ $t("config.hems.eventsRecorded", { count: sessionCount }) }}</span>
-					<span class="ms-2">{{
-						$t("config.hems.lastEvent", { timeAgo: formatLastEvent(lastEvent.created) })
+				<div class="d-flex flex-wrap">
+					<span class="me-2">{{
+						$t("config.hems.eventsRecorded", { count: sessionCount })
+					}}</span>
+					<span v-if="lastEventTimeAgo">{{
+						$t("config.hems.lastEvent", { timeAgo: lastEventTimeAgo })
 					}}</span>
 				</div>
 				<a
@@ -86,20 +88,18 @@ const initialValues = {
 	template: null,
 };
 
-type HemsDevice = { id: number };
-
 export default defineComponent({
 	name: "HemsModal",
 	components: { DeviceModalBase },
 	mixins: [formatter],
 	props: {
 		yamlSource: String as PropType<YamlSource>,
+		id: Number as PropType<number | undefined>,
 	},
 	emits: ["changed", "close"],
 	data() {
 		return {
 			initialValues,
-			id: undefined as number | undefined,
 			sessions: [] as Array<{ created: string }>,
 			changing: false,
 		};
@@ -114,6 +114,13 @@ export default defineComponent({
 		lastEvent() {
 			return this.sessions[0] ?? null;
 		},
+		lastEventTimeAgo(): string {
+			const created = this.lastEvent?.created;
+			if (!created) return "";
+			const ms = new Date(created).getTime();
+			if (!Number.isFinite(ms)) return "";
+			return (this as any).fmtTimeAgo(ms - Date.now());
+		},
 		csvLink(): string {
 			const params = new URLSearchParams({
 				format: "csv",
@@ -126,21 +133,10 @@ export default defineComponent({
 		},
 	},
 	created() {
-		this.loadHemsId();
 		this.loadSessions();
 	},
 	methods: {
 		handleDownloadClick,
-		async loadHemsId() {
-			try {
-				const response = await api.get("config/devices/hems");
-				const devices = (response.data as HemsDevice[]) || [];
-				this.id = devices[0]?.id;
-			} catch (e) {
-				console.error(e);
-				this.id = undefined;
-			}
-		},
 		async loadSessions() {
 			try {
 				const response = await api.get("gridsessions", {
@@ -152,10 +148,6 @@ export default defineComponent({
 				console.error(e);
 			}
 		},
-		formatLastEvent(created: string): string {
-			const diffMs = new Date().getTime() - new Date(created).getTime();
-			return (this as any).fmtTimeAgo(-diffMs);
-		},
 		provideTemplateOptions(products: any[]): TemplateGroup[] {
 			if (this.fromYaml) {
 				return [];
@@ -163,10 +155,10 @@ export default defineComponent({
 			return [
 				{
 					label: "generic",
-					options: [customTemplateOption(this.$t("config.general.customOption"))],
+					options: [customTemplateOption(this.$t("config.hems.customOption"))],
 				},
 				{
-					label: "providers",
+					label: "integrations",
 					options: products,
 				},
 			];
@@ -181,15 +173,13 @@ export default defineComponent({
 				values.yaml = customHemsYaml;
 			}
 		},
-		async onAdded(name: string) {
-			await this.loadHemsId();
+		onAdded(name: string) {
 			this.$emit("changed", { action: "added", name });
 		},
 		onUpdated() {
 			this.$emit("changed", { action: "updated" });
 		},
-		async onRemoved() {
-			this.id = undefined;
+		onRemoved() {
 			this.$emit("changed", { action: "removed" });
 		},
 		async handleChange() {

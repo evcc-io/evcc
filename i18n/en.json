@@ -289,13 +289,14 @@
         "limitpower": "Limit (kW)",
         "type": "Type"
       },
+      "customOption": "User-defined integration",
       "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Recorded {count} grid limitation events.",
       "generic": "Generic integrations",
+      "integrations": "Integrations",
       "lastEvent": "Most recent {timeAgo}.",
-      "providers": "External limit providers",
-      "template": "Provider",
+      "template": "Integration",
       "title": "External Limit"
     },
     "icon": {

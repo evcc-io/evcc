@@ -469,6 +469,20 @@ export default defineComponent({
 				}
 			}
 		},
+		id(newVal, oldVal) {
+			if (!this.isModalVisible) return;
+			// id arrived after open (async lookup) → load existing device
+			if (newVal !== undefined && oldVal === undefined) {
+				this.loadConfiguration();
+				return;
+			}
+			// id removed while modal stays open → reset to create mode
+			if (newVal === undefined && oldVal !== undefined) {
+				this.reset();
+				this.templateName = null;
+				this.succeeded = false;
+			}
+		},
 		templateName(newValue, oldValue) {
 			// Sync back to parent if using externalTemplate
 			if (this.externalTemplate !== undefined && newValue !== this.externalTemplate) {
@@ -727,8 +741,6 @@ export default defineComponent({
 				await this.device.remove(this.id!);
 				this.$emit("removed");
 				if (this.keepOpenOnRemove) {
-					this.templateName = null;
-					this.succeeded = false;
 					return;
 				}
 				await closeModal({ action: "removed" });

@@ -36,11 +36,11 @@ test.describe("HEMS", () => {
     await expect(csvLink).toHaveAttribute("href", /\.\/api\/gridsessions\?format=csv&lang=en/);
 
     // template selector is shown in create mode, yaml editor hidden until "User-defined" is chosen
-    await expect(hemsModal.getByLabel("Provider")).toBeVisible();
+    await expect(hemsModal.getByLabel("Integration")).toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal).not.toContainText("Configured via evcc.yaml");
 
-    await hemsModal.getByRole("button", { name: "Cancel" }).click();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
   });
 
@@ -54,12 +54,11 @@ test.describe("HEMS", () => {
 
     await expect(hemsModal.getByTestId("grid-sessions")).not.toBeVisible();
     await expect(hemsModal).toContainText("Configured via evcc.yaml");
-    await expect(hemsModal.getByLabel("Provider")).not.toBeVisible();
+    await expect(hemsModal.getByLabel("Integration")).not.toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal.getByRole("button", { name: "Save" })).not.toBeVisible();
-    await expect(hemsModal.getByRole("button", { name: "Cancel" })).toBeVisible();
 
-    await hemsModal.getByRole("button", { name: "Cancel" }).click();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
   });
 
@@ -74,7 +73,7 @@ test.describe("HEMS", () => {
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Provider").selectOption({ label: "User-defined device" });
+    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -128,7 +127,7 @@ limit:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Provider").selectOption({ label: "User-defined device" });
+    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await editorClear(hemsEditor);
     await editorPaste(
@@ -143,26 +142,26 @@ limit:
     await hemsModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(hemsModal);
 
-    // card now configured
-    await expect(page.getByTestId("hems")).toContainText("Communication");
+    // card shows user-defined label
+    await expect(page.getByTestId("hems")).toContainText("User-defined integration");
 
     // reopen modal in edit mode
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(hemsModal);
     await expect(hemsEditor).toBeVisible();
-    await expect(hemsModal.getByLabel("Provider")).toBeDisabled();
+    await expect(hemsModal.getByLabel("Integration")).toBeDisabled();
 
     // click pen (change) and confirm
     page.once("dialog", (d) => d.accept());
     await hemsModal.getByRole("button", { name: "Change" }).click();
 
     // provider selector reappears, yaml editor gone
-    await expect(hemsModal.getByLabel("Provider")).toBeEnabled();
+    await expect(hemsModal.getByLabel("Integration")).toBeEnabled();
     await expect(hemsEditor).not.toBeVisible();
     await expect(hemsModal.getByRole("button", { name: "Change" })).not.toBeVisible();
 
     // close modal, card shows unconfigured
-    await hemsModal.getByRole("button", { name: "Cancel" }).click();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
     await expect(page.getByTestId("hems")).toContainText(["Configured", "no"].join(""));
   });
@@ -206,7 +205,7 @@ limit:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Provider").selectOption({ label: "User-defined device" });
+    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);

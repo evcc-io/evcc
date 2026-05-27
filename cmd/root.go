@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -334,8 +335,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
+	var hemsInstance hems.API
 	if err == nil {
-		_, err = configureHEMS(&conf.HEMS, site)
+		hemsInstance, err = configureHEMS(&conf.HEMS, site)
 		if err != nil {
 			err = wrapErrorWithClass(ClassHEMS, err)
 		}
@@ -388,7 +390,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-		Config:     conf.HEMS.Redacted(),
+		Config: struct {
+			Configured bool `json:"configured"`
+		}{hemsInstance != nil},
 		YamlSource: yamlSource.hems,
 	}}
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{

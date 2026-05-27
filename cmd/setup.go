@@ -829,17 +829,23 @@ func configureDbHems(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, err
 	dev := configurable[0]
 	cc := dev.Named()
 
+	var instance hemsapi.API
 	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
-		return nil, fmt.Errorf("hems '%s': %w", cc.Name, err)
+		err = fmt.Errorf("hems '%s': %w", cc.Name, err)
+	} else {
+		instance, err = hems.NewFromConfig(context.TODO(), typ, other, site)
+		if err != nil {
+			err = fmt.Errorf("hems '%s': %w", cc.Name, err)
+		}
 	}
 
-	instance, err := hems.NewFromConfig(context.TODO(), typ, other, site)
+	// register device even on factory error so UI can edit/delete the broken config
+	if addErr := config.Hems().Add(config.NewConfigurableDevice(&dev, instance)); addErr != nil && err == nil {
+		err = addErr
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("hems '%s': %w", cc.Name, err)
-	}
-
-	if err := config.Hems().Add(config.NewConfigurableDevice(&dev, instance)); err != nil {
 		return nil, err
 	}
 

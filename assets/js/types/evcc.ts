@@ -40,7 +40,7 @@ export interface InfluxConfig {
 }
 
 export interface HemsConfig {
-  type: string;
+  configured: boolean;
 }
 
 export interface ShmConfig {
@@ -196,6 +196,10 @@ export enum ConfigType {
 
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
+
+export interface ConfigHems extends Entity {
+  deviceProduct?: string;
+}
 
 // Configuration-specific types for device setup/configuration contexts
 export interface ConfigCharger extends Omit<Entity, "type"> {

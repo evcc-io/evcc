@@ -281,6 +281,8 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
+      "changeConfirm": "Bestehende Konfiguration wird gelöscht. Fortfahren?",
+      "customOption": "Benutzerdefinierte Integration",
       "csv": {
         "created": "Startzeit",
         "finished": "Endzeit",
@@ -291,7 +293,9 @@
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen.",
       "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "integrations": "Integrationen",
       "lastEvent": "Zuletzt {timeAgo}.",
+      "template": "Integration",
       "title": "Externe Begrenzung"
     },
     "icon": {

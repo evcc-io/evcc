@@ -317,18 +317,15 @@ func newHemsFactory(site site.API) newFromConfFunc[hemsapi.API] {
 	}
 }
 
-// publishHemsStatus emits the current hems configuration to subscribers.
-func publishHemsStatus(site site.API) {
-	var typ string
-	for _, dev := range config.Hems().Devices() {
-		typ = dev.Config().Type
-		break
+// HemsStatus returns the publish payload for the configured flag.
+func HemsStatus(configured bool) globalconfig.ConfigStatus {
+	return globalconfig.ConfigStatus{
+		Config: struct {
+			Configured bool `json:"configured"`
+		}{configured},
 	}
-	site.Publish(keys.Hems, globalconfig.ConfigStatus{
-		Config:     globalconfig.Hems{Type: typ}.Redacted(),
-		YamlSource: globalconfig.YamlSourceNone,
-	})
 }
+
 
 // newDeviceHandler creates a new device by class
 func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
@@ -387,7 +384,7 @@ func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request
 		setConfigDirty()
 
 		if class == templates.Hems {
-			publishHemsStatus(site)
+			site.Publish(keys.Hems, HemsStatus(true))
 		}
 
 		res := struct {
@@ -479,10 +476,6 @@ func updateDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		// prevent context from being cancelled
 		close(done)
-
-		if class == templates.Hems {
-			publishHemsStatus(site)
-		}
 
 		res := struct {
 			ID int `json:"id"`
@@ -663,7 +656,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 		}
 
 		if class == templates.Hems {
-			publishHemsStatus(site)
+			site.Publish(keys.Hems, HemsStatus(false))
 		}
 
 		res := struct {
