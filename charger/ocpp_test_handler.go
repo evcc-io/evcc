@@ -14,10 +14,7 @@ type ChargePointHandler struct {
 // core
 
 func (handler *ChargePointHandler) OnChangeAvailability(request *core.ChangeAvailabilityRequest) (confirmation *core.ChangeAvailabilityConfirmation, err error) {
-	// dispatch asynchronously: the trigger handler issues synchronous CP→CS
-	// requests whose responses are read by this same goroutine, so a blocking
-	// send would deadlock the WebSocket read loop
-	go func() { handler.triggerC <- core.ChangeAvailabilityFeatureName }()
+	defer func() { handler.triggerC <- core.ChangeAvailabilityFeatureName }()
 	return core.NewChangeAvailabilityConfirmation(core.AvailabilityStatusAccepted), nil
 }
 
@@ -64,8 +61,7 @@ func (handler *ChargePointHandler) OnUnlockConnector(request *core.UnlockConnect
 }
 
 func (handler *ChargePointHandler) OnTriggerMessage(request *remotetrigger.TriggerMessageRequest) (confirmation *remotetrigger.TriggerMessageConfirmation, err error) {
-	// see OnChangeAvailability for why this is async
-	go func() { handler.triggerC <- request.RequestedMessage }()
+	defer func() { handler.triggerC <- request.RequestedMessage }()
 	return remotetrigger.NewTriggerMessageConfirmation(remotetrigger.TriggerMessageStatusAccepted), nil
 }
 

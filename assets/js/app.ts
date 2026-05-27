@@ -7,6 +7,7 @@ import setupRouter from "./router.ts";
 import setupI18n from "./i18n.ts";
 import { watchThemeChanges } from "./theme.ts";
 import { appDetection, sendToApp } from "./utils/native";
+import store from "./store";
 import type { Notification } from "./types/evcc";
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
@@ -20,7 +21,12 @@ if (!window.CSS.supports("scroll-behavior", "smooth")) {
 const app = createApp(
   defineComponent({
     data() {
-      return { notifications: [] as Notification[], offline: false };
+      return { notifications: [] as Notification[], wsOffline: false };
+    },
+    computed: {
+      offline(): boolean {
+        return this.wsOffline || store.state.apiReady !== true;
+      },
     },
     watch: {
       offline(value) {
@@ -54,11 +60,11 @@ const app = createApp(
         this.notifications = [];
       },
       setOnline() {
-        this.offline = false;
+        this.wsOffline = false;
         sendToApp({ type: "online" });
       },
       setOffline() {
-        this.offline = true;
+        this.wsOffline = true;
         sendToApp({ type: "offline" });
       },
     },

@@ -19,12 +19,14 @@ declare global {
   }
   interface Window {
     ReactNativeWebView?: WebView;
+    evccAppCapabilities?: string[];
   }
 }
 
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export type DeviceColors = Record<string, string>;
+export type DeviceColorEntry = { title: string; color: string };
 
 export interface MqttConfig {
   broker: string;
@@ -70,6 +72,7 @@ export interface State {
   experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
+  apiReady?: boolean;
   loadpoints: Loadpoint[];
   forecast: Forecast;
   currency?: CURRENCY;
@@ -111,7 +114,7 @@ export interface State {
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
   siteTitle?: string;
-  deviceColors?: DeviceColors;
+  deviceColors?: DeviceColorEntry[];
   vehicles: Record<string, Vehicle>;
   statistics?: Statistics;
   authDisabled?: boolean;
