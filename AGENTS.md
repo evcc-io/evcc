@@ -284,10 +284,6 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Implement proper caching strategies and connection pooling
 - Avoid blocking operations in main application loop
 
-## Posting on the User's Behalf
-
-- Never impersonate the user when posting on their behalf. PR/issue comments, review replies, and other messages should read as the agent speaking; do not adopt first-person framing or sign-off as if the user themselves wrote it
-
 ## Pull Request Descriptions
 
 Structure PR descriptions in this order. No headlines. Be concise.
