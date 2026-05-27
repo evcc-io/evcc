@@ -783,9 +783,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		denominator := tRoom - tPastAvg
 		numerator := tRoom - tFuture
 
-		if math.Abs(denominator) < 0.5 {
-			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): historical temp %.1f°C too close to room temp %.1f°C, skipping",
-				ts.Format("15:04"), h, tPastAvg, tRoom)
+		if math.Abs(denominator) < 0.5 || math.Abs(numerator) < 0.5 || tFuture >= tRoom {
 			continue
 		}
 
