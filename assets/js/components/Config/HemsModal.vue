@@ -16,6 +16,7 @@
 		@added="onAdded"
 		@updated="onUpdated"
 		@removed="onRemoved"
+		@open="loadSessions"
 		@close="$emit('close')"
 	>
 		<template v-if="id !== undefined && !fromYaml" #template-action>
@@ -131,9 +132,6 @@ export default defineComponent({
 		docsLink(): string {
 			return `${docsPrefix()}/docs/features/external-control`;
 		},
-	},
-	created() {
-		this.loadSessions();
 	},
 	methods: {
 		handleDownloadClick,

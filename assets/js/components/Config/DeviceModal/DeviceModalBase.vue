@@ -287,6 +287,7 @@ export default defineComponent({
 		"added",
 		"updated",
 		"removed",
+		"open",
 		"close",
 		"template-changed",
 		"update:externalTemplate",
@@ -750,6 +751,7 @@ export default defineComponent({
 		},
 		handleOpen() {
 			this.isModalVisible = true;
+			this.$emit("open");
 		},
 		handleClose() {
 			this.$emit("close");
