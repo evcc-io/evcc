@@ -60,36 +60,42 @@ func (m *Accumulator) Exported() float64 {
 	return m.ReturnEnergy
 }
 
-// SetImportMeterTotal adds the difference to the last total meter value in kWh
+// SetImportMeterTotal adds the difference to the last total meter value in kWh.
+// A reading below the last seen total is treated as a transient bad sample and
+// ignored. Otherwise a single low/zero read would become the new baseline and
+// the next valid read would book the entire lifetime total as a single delta.
 func (m *Accumulator) SetImportMeterTotal(v float64) {
-	defer func() {
-		m.updated = m.clock.Now()
-		m.importMeter = new(v)
-	}()
+	m.updated = m.clock.Now()
 
 	if m.importMeter == nil {
+		m.importMeter = new(v)
 		return
 	}
 
-	if v >= *m.importMeter {
-		m.Energy += v - *m.importMeter
+	if v < *m.importMeter {
+		return
 	}
+
+	m.Energy += v - *m.importMeter
+	m.importMeter = new(v)
 }
 
-// SetExportMeterTotal adds the difference to the last total meter value in kWh
+// SetExportMeterTotal adds the difference to the last total meter value in kWh.
+// See SetImportMeterTotal for the rollback handling rationale.
 func (m *Accumulator) SetExportMeterTotal(v float64) {
-	defer func() {
-		m.updated = m.clock.Now()
-		m.exportMeter = new(v)
-	}()
+	m.updated = m.clock.Now()
 
 	if m.exportMeter == nil {
+		m.exportMeter = new(v)
 		return
 	}
 
-	if v >= *m.exportMeter {
-		m.ReturnEnergy += v - *m.exportMeter
+	if v < *m.exportMeter {
+		return
 	}
+
+	m.ReturnEnergy += v - *m.exportMeter
+	m.exportMeter = new(v)
 }
 
 // AddImportEnergy adds the given energy in kWh to the positive meter
