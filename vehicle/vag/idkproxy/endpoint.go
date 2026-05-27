@@ -22,7 +22,7 @@ const WellKnown = cariad.BaseURL + "/login/v1/idk/openid-configuration"
 
 var Config = &oidc.ProviderConfig{
 	AuthURL:  "https://identity.vwgroup.io/oidc/v1/authorize",
-	TokenURL: cariad.BaseURL + "/login/v1/idk/token",
+	TokenURL: cariad.BaseURL + "/auth/v1/idk/oidc/token",
 }
 
 var _ vag.TokenExchanger = (*Service)(nil)
