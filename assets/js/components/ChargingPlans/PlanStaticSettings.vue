@@ -243,10 +243,6 @@ export default defineComponent({
 	},
 	watch: {
 		time(newTime: Date | undefined, oldTime: Date | undefined) {
-			// the time prop is a Date object reassigned on every WS update,
-			// so reference equality always trips Vue's watcher even when the
-			// value hasn't changed. Compare timestamps to avoid clobbering
-			// the user's in-flight edits with a no-op re-init.
 			if (newTime && oldTime && newTime.getTime() === oldTime.getTime()) {
 				return;
 			}
