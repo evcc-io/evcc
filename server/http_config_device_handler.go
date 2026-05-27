@@ -326,7 +326,6 @@ func HemsStatus(configured bool) globalconfig.ConfigStatus {
 	}
 }
 
-
 // newDeviceHandler creates a new device by class
 func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
