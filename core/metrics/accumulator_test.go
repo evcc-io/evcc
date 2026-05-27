@@ -35,10 +35,17 @@ func TestMeterEnergyMeterTotalRollback(t *testing.T) {
 	assert.Equal(t, 0.0, me.Imported())
 	me.SetImportMeterTotal(25567.548)
 	assert.InDelta(t, 0.002, me.Imported(), 1e-9)
+
+	good := me.Updated()
+	clock.Add(time.Second)
 	me.SetImportMeterTotal(0) // transient bad read
 	assert.InDelta(t, 0.002, me.Imported(), 1e-9)
+	assert.Equal(t, good, me.Updated(), "updated must not advance on rejected rollback")
+
+	clock.Add(time.Second)
 	me.SetImportMeterTotal(25567.550) // baseline preserved, delta is +0.002
 	assert.InDelta(t, 0.004, me.Imported(), 1e-9)
+	assert.True(t, me.Updated().After(good), "updated must advance on accepted reading")
 
 	me.SetExportMeterTotal(100)
 	me.SetExportMeterTotal(101)

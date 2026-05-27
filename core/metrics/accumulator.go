@@ -65,10 +65,9 @@ func (m *Accumulator) Exported() float64 {
 // ignored. Otherwise a single low/zero read would become the new baseline and
 // the next valid read would book the entire lifetime total as a single delta.
 func (m *Accumulator) SetImportMeterTotal(v float64) {
-	m.updated = m.clock.Now()
-
 	if m.importMeter == nil {
 		m.importMeter = new(v)
+		m.updated = m.clock.Now()
 		return
 	}
 
@@ -78,15 +77,15 @@ func (m *Accumulator) SetImportMeterTotal(v float64) {
 
 	m.Energy += v - *m.importMeter
 	m.importMeter = new(v)
+	m.updated = m.clock.Now()
 }
 
 // SetExportMeterTotal adds the difference to the last total meter value in kWh.
 // See SetImportMeterTotal for the rollback handling rationale.
 func (m *Accumulator) SetExportMeterTotal(v float64) {
-	m.updated = m.clock.Now()
-
 	if m.exportMeter == nil {
 		m.exportMeter = new(v)
+		m.updated = m.clock.Now()
 		return
 	}
 
@@ -96,6 +95,7 @@ func (m *Accumulator) SetExportMeterTotal(v float64) {
 
 	m.ReturnEnergy += v - *m.exportMeter
 	m.exportMeter = new(v)
+	m.updated = m.clock.Now()
 }
 
 // AddImportEnergy adds the given energy in kWh to the positive meter
