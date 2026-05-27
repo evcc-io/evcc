@@ -54,6 +54,7 @@ import (
 // E3dc charger implementation using RSCP protocol.
 // Communicates with the E3DC Hauskraftwerk via TCP connection.
 type E3dc struct {
+	mu    sync.Mutex   // serializes RSCP exchanges; rscp.Client is not reentrant
 	log   *util.Logger // Logger instance for debug/warning output
 	conn  *rscp.Client // RSCP client connection to E3DC system
 	id    uint8        // Wallbox index (0 = first wallbox, 1 = second, etc.)
@@ -326,6 +327,9 @@ func (wb *E3dc) getExternDataAlg() ([]byte, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *E3dc) Enabled() (bool, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	b, err := wb.getExternDataAlg()
 	if err != nil {
 		return false, err
@@ -338,6 +342,9 @@ func (wb *E3dc) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 // Controls charging by setting the abort flag (inverted logic: abort=false means enabled)
 func (wb *E3dc) Enable(enable bool) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	wb.ensureSunModeDisabled()
 
 	_, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
@@ -351,6 +358,9 @@ func (wb *E3dc) Enable(enable bool) error {
 // Status implements the api.Charger interface
 // Returns the charging state by reading status flags from WB_EXTERN_DATA_ALG
 func (wb *E3dc) Status() (api.ChargeStatus, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	b, err := wb.getExternDataAlg()
 	if err != nil {
 		return api.StatusNone, err
@@ -379,6 +389,9 @@ func (wb *E3dc) Status() (api.ChargeStatus, error) {
 // MaxCurrent implements the api.Charger interface.
 // Sets the maximum charging current in Ampere (whole numbers only, 6-32A typical range).
 func (wb *E3dc) MaxCurrent(current int64) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	wb.ensureSunModeDisabled()
 
 	_, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
@@ -394,6 +407,9 @@ var _ api.Meter = (*E3dc)(nil)
 // CurrentPower implements the api.Meter interface
 // Returns the total charging power by summing all three phases
 func (wb *E3dc) CurrentPower() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	p1, p2, p3, err := wb.powers()
 	if err != nil {
 		return 0, err
@@ -413,6 +429,9 @@ var _ api.MeterEnergy = (*E3dc)(nil)
 // The sum of both values matches the total energy shown in the E3DC portal.
 // Testing showed: DB_TEC (8319 kWh) + WB_ENERGY (699 kWh) = 9018 kWh ≈ Portal (9019 kWh)
 func (wb *E3dc) TotalEnergy() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	// Query both energy sources sequentially
 	res, err := wb.retrySend(*rscp.NewMessage(rscp.DB_REQ_TEC_WALLBOX_VALUES, nil))
 	if err != nil {
@@ -546,6 +565,9 @@ var _ api.PhaseGetter = (*E3dc)(nil)
 // Returns the configured number of phases (1 or 3)
 // Note: WB_PM_ACTIVE_PHASES reports physical wiring, WB_NUMBER_PHASES reports actual configuration
 func (wb *E3dc) GetPhases() (int, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_NUMBER_PHASES, nil),
@@ -572,6 +594,9 @@ var _ api.CurrentLimiter = (*E3dc)(nil)
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 // Returns the wallbox's hardware current limits (typically 6-32A)
 func (wb *E3dc) GetMinMaxCurrent() (float64, float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_LOWER_CURRENT_LIMIT, nil),
@@ -604,6 +629,9 @@ var _ api.CurrentGetter = (*E3dc)(nil)
 // GetMaxCurrent implements the api.CurrentGetter interface
 // Returns the currently configured maximum charging current
 func (wb *E3dc) GetMaxCurrent() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_MAX_CHARGE_CURRENT, nil),
@@ -661,6 +689,9 @@ var _ api.ChargeRater = (*E3dc)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 // Returns the energy charged in the current session from WB_SESSION_CHARGED_ENERGY
 func (wb *E3dc) ChargedEnergy() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_CHARGED_ENERGY)
 	if err != nil || !found {
 		return 0, err
@@ -679,6 +710,9 @@ var _ api.ChargeTimer = (*E3dc)(nil)
 // ChargeDuration implements the api.ChargeTimer interface
 // Returns the active charging duration from WB_SESSION_ACTIVE_CHARGE_TIME
 func (wb *E3dc) ChargeDuration() (time.Duration, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_ACTIVE_CHARGE_TIME)
 	if err != nil || !found {
 		return 0, err
@@ -698,6 +732,9 @@ var _ api.Identifier = (*E3dc)(nil)
 // Identify implements the api.Identifier interface
 // Returns the RFID tag ID from WB_SESSION_AUTH_DATA if a session is active
 func (wb *E3dc) Identify() (string, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_AUTH_DATA)
 	if err != nil || !found {
 		return "", err
@@ -712,6 +749,9 @@ var _ api.PhaseSwitcher = (*E3dc)(nil)
 // Switches between 1-phase and 3-phase charging
 // The wallbox handles the safe switching sequence internally (reduce current, switch, ramp up)
 func (wb *E3dc) Phases1p3p(phases int) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	if phases != 1 && phases != 3 {
 		return fmt.Errorf("invalid phases: %d (must be 1 or 3)", phases)
 	}
@@ -734,6 +774,9 @@ var _ api.Diagnosis = (*E3dc)(nil)
 // Outputs wallbox information for debugging via evcc's "evcc charger" command.
 // Shows device name, firmware, current limits, phase config, and status flags.
 func (wb *E3dc) Diagnose() {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_DEVICE_NAME, nil),
