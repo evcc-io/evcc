@@ -78,6 +78,7 @@ type Site struct {
 	bufferStartSoc          float64  // start charging on battery above this Soc
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
+	smartFeedInDisableLimit *float64 // disable feed-in at or below tariff limit
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -96,6 +97,7 @@ type Site struct {
 	batteryMode              api.BatteryMode    // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode    // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time          // Battery mode timer for external control
+	smartFeedInDisableActive bool               // Smart feed-in disable active
 }
 
 // MetersConfig contains the site's meter configuration
