@@ -62,7 +62,7 @@ func (v *Service) Refresh(token *Token) (*Token, error) {
 
 	req, err := request.New(
 		http.MethodPost,
-		cariad.BaseURL+"/login/v1/idk/token",
+		cariad.BaseURL+"/auth/v1/idk/oidc/token",
 		strings.NewReader(body.Encode()),
 		request.URLEncoding,
 		map[string]string{
