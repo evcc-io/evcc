@@ -93,7 +93,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ## Comment Style
 
 - Prefer self-documenting code over comments; comment the *why*, not the *what*
-- Default to no comment. Only add one for a non-obvious constraint, invariant, workaround, or surprising behavior. Then one line, two if necessary
+- Default to no comment. Only add one for a non-obvious constraint, invariant, workaround, or surprising behavior. Keep it to one line, two if necessary
 - Skip refs to the current task, PR, issue, or caller ("added for X flow", "see #1234"). Git history covers that
 - Exception: Go exported identifiers follow godoc convention. Short `// FuncName does X` summary starting with the identifier name
 
