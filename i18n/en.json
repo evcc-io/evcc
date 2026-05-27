@@ -281,6 +281,7 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
+      "changeConfirm": "Existing configuration will be deleted. Continue?",
       "csv": {
         "created": "Created",
         "finished": "Finished",
@@ -291,7 +292,10 @@
       "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Recorded {count} grid limitation events.",
+      "generic": "Generic integrations",
       "lastEvent": "Most recent {timeAgo}.",
+      "providers": "External limit providers",
+      "template": "Provider",
       "title": "External Limit"
     },
     "icon": {

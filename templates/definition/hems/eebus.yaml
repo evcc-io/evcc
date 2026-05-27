@@ -1,20 +1,66 @@
 template: eebus
 products:
   - brand: EEBUS
-    description:
-      generic: EnWG §14a, EEG §9
 params:
   - preset: eebus
   - name: contractualconsumptionnominalmax
     type: float
+    unit: W
+    advanced: true
+    description:
+      en: Contractual consumption limit
+      de: Vertraglich vereinbarte Bezugsgrenze
+    help:
+      en: Maximum power the consumer is contractually allowed to draw from the grid
+      de: Maximale Leistung, die der Verbraucher vertraglich aus dem Netz beziehen darf
   - name: failsafeconsumptionactivepowerlimit
     type: float
+    unit: W
+    advanced: true
+    description:
+      en: Failsafe consumption limit
+      de: Failsafe-Bezugsgrenze
+    help:
+      en: Power used when the heartbeat from the control box is lost
+      de: Leistung, die bei verlorenem Heartbeat der Steuerbox verwendet wird
   - name: productionnominalmax
     type: float
+    unit: W
+    advanced: true
+    description:
+      en: Production limit
+      de: Einspeisegrenze
+    help:
+      en: Maximum feed-in power of the installation
+      de: Maximale Einspeiseleistung der Anlage
   - name: failsafeproductionactivepowerlimit
     type: float
+    unit: W
+    advanced: true
+    description:
+      en: Failsafe production limit
+      de: Failsafe-Einspeisegrenze
+    help:
+      en: Feed-in power used when the heartbeat from the control box is lost
+      de: Einspeiseleistung, die bei verlorenem Heartbeat der Steuerbox verwendet wird
   - name: failsafedurationminimum
     type: duration
+    advanced: true
+    description:
+      en: Failsafe minimum duration
+      de: Failsafe-Mindestdauer
+    help:
+      en: Minimum time the failsafe limit stays active once entered
+      de: Mindestdauer, für die der Failsafe-Wert nach Aktivierung gehalten wird
+  - name: passthroughpin
+    type: int
+    advanced: true
+    description:
+      en: Passthrough GPIO pin
+      de: Passthrough GPIO-Pin
+    help:
+      en: Output pin that mirrors the limit signal to an external system
+      de: Ausgangspin, der das Limit-Signal an externe Systeme weiterleitet
 render: |
   type: eebus
   ski: {{ .ski }}
@@ -23,3 +69,9 @@ render: |
   productionnominalmax: {{ .productionnominalmax }}
   failsafeproductionactivepowerlimit: {{ .failsafeproductionactivepowerlimit }}
   failsafedurationminimum: {{ .failsafedurationminimum }}
+  {{- if .passthroughpin }}
+  passthrough:
+    source: gpio
+    pin: {{ .passthroughpin }}
+    function: write
+  {{- end }}

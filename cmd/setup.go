@@ -775,36 +775,77 @@ func configureGo(conf []globalconfig.Go) error {
 
 // setup HEMS
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
-	// use yaml if configured
-	if conf.Type == "" {
-		if settings.Exists(keys.Hems) {
-			*conf = globalconfig.Hems{}
-			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
-				return nil, err
-			}
-			yamlSource.hems = globalconfig.YamlSourceDb
-		}
-	} else {
+	if conf.Type != "" {
 		yamlSource.hems = globalconfig.YamlSourceFile
+
+		typ, other, err := config.CustomDevice(conf.Type, conf.Other)
+		if err != nil {
+			return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+		}
+
+		instance, err := hems.NewFromConfig(context.TODO(), typ, other, site)
+		if err != nil {
+			return nil, fmt.Errorf("failed configuring hems: %w", err)
+		}
+
+		go instance.Run()
+
+		return instance, nil
 	}
 
-	if conf.Type == "" {
-		return nil, nil
+	// migrate legacy keys.Hems setting (pre-UI) to a device-managed custom entry
+	if err := migrateLegacyHemsSetting(); err != nil {
+		return nil, fmt.Errorf("migrating legacy hems setting: %w", err)
 	}
 
-	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
+	return configureDbHems(conf, site)
+}
+
+// migrateLegacyHemsSetting moves a keys.Hems YAML setting to a device-managed custom hems entry.
+func migrateLegacyHemsSetting() error {
+	raw, err := settings.String(keys.Hems)
+	if err != nil || strings.TrimSpace(raw) == "" {
+		return nil
+	}
+
+	_, err = config.AddConfig(templates.Hems,
+		map[string]any{"yaml": raw},
+		config.WithProperties(config.Properties{Type: "custom"}),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+		return err
 	}
 
-	hems, err := hems.NewFromConfig(context.TODO(), typ, other, site)
+	log.INFO.Println("migrated legacy hems yaml setting to device config")
+	return settings.Delete(keys.Hems)
+}
+
+func configureDbHems(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
+	configurable, err := config.ConfigurationsByClass(templates.Hems)
+	if err != nil || len(configurable) == 0 {
+		return nil, err
+	}
+
+	dev := configurable[0]
+	cc := dev.Named()
+
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
-		return nil, fmt.Errorf("failed configuring hems: %w", err)
+		return nil, fmt.Errorf("hems '%s': %w", cc.Name, err)
 	}
 
-	go hems.Run()
+	instance, err := hems.NewFromConfig(context.TODO(), typ, other, site)
+	if err != nil {
+		return nil, fmt.Errorf("hems '%s': %w", cc.Name, err)
+	}
 
-	return hems, nil
+	if err := config.Hems().Add(config.NewConfigurableDevice(&dev, instance)); err != nil {
+		return nil, err
+	}
+
+	conf.Type, conf.Other = typ, other
+	go instance.Run()
+	return instance, nil
 }
 
 // networkSettings reads/migrates network settings

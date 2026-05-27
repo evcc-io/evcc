@@ -1,10 +1,25 @@
 template: hemspro
 products:
   - brand: HEMS Pro
+requirements:
+  description:
+    en: Hardware platform with integrated relay. See [awatt-electronic.com](https://www.awatt-electronic.com).
+    de: Hardware-Plattform mit integriertem Relais. Siehe [awatt-electronic.com](https://www.awatt-electronic.com).
+params:
+  - name: maxpower
+    type: float
+    unit: W
+    required: true
     description:
-      generic: EnWG §14a, EEG §9
+      en: Maximum power
+      de: Maximale Leistung
+    help:
+      en: Power cap applied while the relay signal is active
+      de: Leistungsbegrenzung, während das Relaissignal aktiv ist
 render: |
   type: relay
+  maxpower: {{ .maxpower }}
   limit:
-    type: gpio
+    source: gpio
     pin: 19
+    function: read

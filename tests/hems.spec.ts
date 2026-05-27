@@ -20,7 +20,7 @@ test.afterEach(async () => {
 const CONFIG = "fast.evcc.yaml";
 
 test.describe("HEMS", () => {
-  test("grid sessions", async ({ page }) => {
+  test("grid sessions in template modal", async ({ page }) => {
     await start(CONFIG, "hems.sql");
     await page.goto("/#/config");
 
@@ -35,15 +35,16 @@ test.describe("HEMS", () => {
     const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
     await expect(csvLink).toHaveAttribute("href", /\.\/api\/gridsessions\?format=csv&lang=en/);
 
-    await expect(hemsModal.getByTestId("yaml-editor")).toBeVisible();
-    await expect(hemsModal.getByRole("button", { name: "Save" })).toBeVisible();
+    // template selector is shown in create mode, yaml editor hidden until "User-defined" is chosen
+    await expect(hemsModal.getByLabel("Provider")).toBeVisible();
+    await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal).not.toContainText("Configured via evcc.yaml");
 
     await hemsModal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(hemsModal);
   });
 
-  test("modal yaml-configured", async ({ page }) => {
+  test("modal yaml-configured is locked", async ({ page }) => {
     await start("hems-yaml.evcc.yaml");
     await page.goto("/#/config");
 
@@ -53,6 +54,7 @@ test.describe("HEMS", () => {
 
     await expect(hemsModal.getByTestId("grid-sessions")).not.toBeVisible();
     await expect(hemsModal).toContainText("Configured via evcc.yaml");
+    await expect(hemsModal.getByLabel("Provider")).not.toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal.getByRole("button", { name: "Save" })).not.toBeVisible();
     await expect(hemsModal.getByRole("button", { name: "Cancel" })).toBeVisible();
@@ -61,18 +63,20 @@ test.describe("HEMS", () => {
     await expectModalHidden(hemsModal);
   });
 
-  test("external control without circuits", async ({ page }) => {
+  test("user-defined relay drives external limit without circuits", async ({ page }) => {
     const GRID_CONFIG = "hems-grid.evcc.yaml";
     await startSimulator();
     await start(GRID_CONFIG);
 
     await page.goto("/#/config");
 
-    // configure hems
+    // configure hems via user-defined provider
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
+    await hemsModal.getByLabel("Provider").selectOption({ label: "User-defined device" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
+    await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
     await editorPaste(
       hemsEditor,
@@ -85,7 +89,7 @@ limit:
   uri: ${simulatorUrl()}/api/state
   jq: .hems.relay`
     );
-    await hemsModal.getByRole("button", { name: "Save" }).click();
+    await hemsModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(hemsModal);
 
     await restart(GRID_CONFIG);
@@ -116,6 +120,53 @@ limit:
     await stopSimulator();
   });
 
+  test("change button resets modal and unconfigures the card", async ({ page }) => {
+    await start("hems-grid.evcc.yaml");
+    await page.goto("/#/config");
+
+    // configure hems via user-defined
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+    await hemsModal.getByLabel("Provider").selectOption({ label: "User-defined device" });
+    const hemsEditor = hemsModal.getByTestId("yaml-editor");
+    await editorClear(hemsEditor);
+    await editorPaste(
+      hemsEditor,
+      page,
+      `type: relay
+maxPower: 4200
+limit:
+  source: const
+  value: false`
+    );
+    await hemsModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(hemsModal);
+
+    // card now configured
+    await expect(page.getByTestId("hems")).toContainText("Communication");
+
+    // reopen modal in edit mode
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await expect(hemsEditor).toBeVisible();
+    await expect(hemsModal.getByLabel("Provider")).toBeDisabled();
+
+    // click pen (change) and confirm
+    page.once("dialog", (d) => d.accept());
+    await hemsModal.getByRole("button", { name: "Change" }).click();
+
+    // provider selector reappears, yaml editor gone
+    await expect(hemsModal.getByLabel("Provider")).toBeEnabled();
+    await expect(hemsEditor).not.toBeVisible();
+    await expect(hemsModal.getByRole("button", { name: "Change" })).not.toBeVisible();
+
+    // close modal, card shows unconfigured
+    await hemsModal.getByRole("button", { name: "Cancel" }).click();
+    await expectModalHidden(hemsModal);
+    await expect(page.getByTestId("hems")).toContainText(["Configured", "no"].join(""));
+  });
+
   test.describe("grid sessions CSV in app context", () => {
     test("dispatches download event", async ({ page }) => {
       await enableAppContext(page);
@@ -135,7 +186,7 @@ limit:
     });
   });
 
-  test("external control with circuits", async ({ page }) => {
+  test("user-defined relay drives external limit with circuits", async ({ page }) => {
     const GRID_CONFIG = "hems-grid.evcc.yaml";
     await start(GRID_CONFIG);
 
@@ -151,11 +202,13 @@ limit:
     await circuitsModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitsModal);
 
-    // configure hems
+    // configure hems via user-defined provider
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
+    await hemsModal.getByLabel("Provider").selectOption({ label: "User-defined device" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
+    await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
     await editorPaste(
       hemsEditor,
@@ -167,7 +220,7 @@ limit:
   source: const
   value: true`
     );
-    await hemsModal.getByRole("button", { name: "Save" }).click();
+    await hemsModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(hemsModal);
 
     await restart(GRID_CONFIG);

@@ -1,0 +1,46 @@
+template: relay
+products:
+  - description:
+      generic: GPIO relay
+params:
+  - name: maxpower
+    type: float
+    unit: W
+    required: true
+    description:
+      en: Maximum power
+      de: Maximale Leistung
+    help:
+      en: Power cap applied while the relay signal is active
+      de: Leistungsbegrenzung, während das Relaissignal aktiv ist
+  - name: gpiopin
+    type: int
+    required: true
+    description:
+      en: GPIO pin
+      de: GPIO-Pin
+    help:
+      en: Input pin wired to the relay contact
+      de: Eingangspin, der mit dem Relaiskontakt verbunden ist
+  - name: passthroughpin
+    type: int
+    advanced: true
+    description:
+      en: Passthrough GPIO pin
+      de: Passthrough GPIO-Pin
+    help:
+      en: Output pin that mirrors the limit signal to an external system
+      de: Ausgangspin, der das Limit-Signal an externe Systeme weiterleitet
+render: |
+  type: relay
+  maxpower: {{ .maxpower }}
+  limit:
+    source: gpio
+    pin: {{ .gpiopin }}
+    function: read
+  {{- if .passthroughpin }}
+  passthrough:
+    source: gpio
+    pin: {{ .passthroughpin }}
+    function: write
+  {{- end }}

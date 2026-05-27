@@ -310,6 +310,26 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 	return &conf, h.Add(config.NewConfigurableDevice(&conf, instance))
 }
 
+// newHemsFactory adapts hems.NewFromConfig to the generic newFromConfFunc signature.
+func newHemsFactory(site site.API) newFromConfFunc[hemsapi.API] {
+	return func(ctx context.Context, typ string, other map[string]any) (hemsapi.API, error) {
+		return hems.NewFromConfig(ctx, typ, other, site)
+	}
+}
+
+// publishHemsStatus emits the current hems configuration to subscribers.
+func publishHemsStatus(site site.API) {
+	var typ string
+	for _, dev := range config.Hems().Devices() {
+		typ = dev.Config().Type
+		break
+	}
+	site.Publish(keys.Hems, globalconfig.ConfigStatus{
+		Config:     globalconfig.Hems{Type: typ}.Redacted(),
+		YamlSource: globalconfig.YamlSourceNone,
+	})
+}
+
 // newDeviceHandler creates a new device by class
 func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -346,9 +366,7 @@ func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request
 			conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
 		case templates.Hems:
-			conf, err = newDevice(ctx, class, req, func(ctx context.Context, typ string, other map[string]any) (hemsapi.API, error) {
-				return hems.NewFromConfig(ctx, typ, other, site)
-			}, config.Hems(), force)
+			conf, err = newDevice(ctx, class, req, newHemsFactory(site), config.Hems(), force)
 
 		case templates.Tariff:
 			conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -367,6 +385,10 @@ func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request
 		close(done)
 
 		setConfigDirty()
+
+		if class == templates.Hems {
+			publishHemsStatus(site)
+		}
 
 		res := struct {
 			ID   int    `json:"id"`
@@ -438,9 +460,7 @@ func updateDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			err = updateDevice(ctx, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
 		case templates.Hems:
-			err = updateDevice(ctx, id, class, req, func(ctx context.Context, typ string, other map[string]any) (hemsapi.API, error) {
-				return hems.NewFromConfig(ctx, typ, other, site)
-			}, config.Hems(), force)
+			err = updateDevice(ctx, id, class, req, newHemsFactory(site), config.Hems(), force)
 
 		case templates.Tariff:
 			err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -459,6 +479,10 @@ func updateDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		// prevent context from being cancelled
 		close(done)
+
+		if class == templates.Hems {
+			publishHemsStatus(site)
+		}
 
 		res := struct {
 			ID int `json:"id"`
@@ -638,6 +662,10 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			return
 		}
 
+		if class == templates.Hems {
+			publishHemsStatus(site)
+		}
+
 		res := struct {
 			ID int `json:"id"`
 		}{
@@ -664,66 +692,68 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 }
 
 // testConfigHandler tests a configuration by class
-func testConfigHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func testConfigHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 
-	class, err := templates.ClassString(vars["class"])
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	var id int
-	if vars["id"] != "" {
-		// test existing device with updated config
-		id, err = strconv.Atoi(vars["id"])
+		class, err := templates.ClassString(vars["class"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
+
+		var id int
+		if vars["id"] != "" {
+			// test existing device with updated config
+			id, err = strconv.Atoi(vars["id"])
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+		}
+
+		req, err := decodeDeviceConfig(r.Body)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		var instance any
+		ctx, cancel, done := startDeviceTimeout()
+
+		switch class {
+		case templates.Charger:
+			instance, err = testConfig(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
+
+		case templates.Meter:
+			instance, err = testConfig(ctx, id, class, req, meter.NewFromConfig, config.Meters())
+
+		case templates.Vehicle:
+			instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
+
+		case templates.Circuit:
+			instance, err = testConfig(ctx, id, class, req, circuit.NewFromConfig, config.Circuits())
+
+		case templates.Hems:
+			instance, err = testConfig(ctx, id, class, req, newHemsFactory(site), config.Hems())
+
+		case templates.Tariff:
+			instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
+
+		case templates.Messenger:
+			instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
+		}
+
+		if err != nil {
+			cancel()
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// prevent context from being cancelled during test
+		close(done)
+		defer cancel()
+
+		jsonWrite(w, testInstance(instance))
 	}
-
-	req, err := decodeDeviceConfig(r.Body)
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	var instance any
-	ctx, cancel, done := startDeviceTimeout()
-
-	switch class {
-	case templates.Charger:
-		instance, err = testConfig(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
-
-	case templates.Meter:
-		instance, err = testConfig(ctx, id, class, req, meter.NewFromConfig, config.Meters())
-
-	case templates.Vehicle:
-		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
-
-	case templates.Circuit:
-		instance, err = testConfig(ctx, id, class, req, circuit.NewFromConfig, config.Circuits())
-
-	case templates.Hems:
-		err = api.ErrNotAvailable
-
-	case templates.Tariff:
-		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
-
-	case templates.Messenger:
-		instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
-	}
-
-	if err != nil {
-		cancel()
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	// prevent context from being cancelled during test
-	close(done)
-	defer cancel()
-
-	jsonWrite(w, testInstance(instance))
 }

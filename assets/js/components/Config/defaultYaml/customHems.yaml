@@ -1,0 +1,29 @@
+## external limit via relay contact (binary on/off)
+type: relay
+maxpower: 4200 # total load limit while signal is active (W)
+limit: # input signal, plugin
+  source: const
+  value: false # 0/false = normal, 1/true = limit active
+#interval: 10s # polling interval
+#passthrough: # output, mirrors limit to a downstream system
+#  source: http
+#  uri: http://another-hems.local/api/limit?active={{ .dim }}
+#  method: POST
+
+## alternative limit sources examples
+#limit:
+#  source: gpio
+#  pin: 17
+#  function: read
+#limit:
+#  source: mqtt
+#  topic: hems/limit/status
+#limit:
+#  source: http
+#  uri: http://steuerbox.local/api/limit
+#  jq: .limited
+#limit:
+#  source: modbus
+#  uri: 192.168.179.200:4703
+#  id: 3
+#  register: { type: holding, decode: uint16, address: 8056 }

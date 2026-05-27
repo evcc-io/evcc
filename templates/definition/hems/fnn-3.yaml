@@ -1,0 +1,59 @@
+template: fnn-3
+products:
+  - description:
+      generic: FNN steuerbox (3-signal)
+params:
+  - name: maxpower
+    type: float
+    unit: W
+    required: true
+    description:
+      en: Maximum power
+      de: Maximale Leistung
+    help:
+      en: Full production power. Curtailment steps (60%, 30%, 0%) apply to this baseline.
+      de: Volle Einspeiseleistung. Reduzierungsstufen (60%, 30%, 0%) beziehen sich auf diesen Wert.
+  - name: w3pin
+    type: int
+    required: true
+    description:
+      en: W3 GPIO pin
+      de: W3 GPIO-Pin
+    help:
+      en: Input pin for the W3 signal (full shutdown, 0%)
+      de: Eingangspin für das W3-Signal (vollständige Abschaltung, 0%)
+  - name: s1pin
+    type: int
+    description:
+      en: S1 GPIO pin
+      de: S1 GPIO-Pin
+    help:
+      en: Input pin for the S1 signal (reduction to 60%)
+      de: Eingangspin für das S1-Signal (Reduzierung auf 60%)
+  - name: s2pin
+    type: int
+    description:
+      en: S2 GPIO pin
+      de: S2 GPIO-Pin
+    help:
+      en: Input pin for the S2 signal (reduction to 30%)
+      de: Eingangspin für das S2-Signal (Reduzierung auf 30%)
+render: |
+  type: fnn-3
+  maxpower: {{ .maxpower }}
+  w3:
+    source: gpio
+    pin: {{ .w3pin }}
+    function: read
+  {{- if .s1pin }}
+  s1:
+    source: gpio
+    pin: {{ .s1pin }}
+    function: read
+  {{- end }}
+  {{- if .s2pin }}
+  s2:
+    source: gpio
+    pin: {{ .s2pin }}
+    function: read
+  {{- end }}
