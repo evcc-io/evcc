@@ -1,6 +1,6 @@
 <template>
-	<div class="strategy-wrapper" :class="{ open: show }">
-		<div class="strategy-content">
+	<div class="collapsible-wrapper" :class="{ open: show }">
+		<div class="collapsible-content pb-3">
 			<div v-if="disabled" class="row mb-4">
 				<div class="small text-muted">
 					<strong class="text-primary">{{ $t("general.note") }}</strong>
@@ -142,33 +142,3 @@ export default defineComponent({
 	},
 });
 </script>
-
-<style scoped>
-.strategy-wrapper {
-	display: grid;
-	grid-template-rows: 0fr;
-	margin-bottom: 0;
-	transition:
-		grid-template-rows 0.3s ease 0.2s,
-		margin-bottom 0.3s ease 0.2s;
-}
-
-.strategy-wrapper.open {
-	grid-template-rows: 1fr;
-	margin-bottom: 1rem;
-	transition:
-		grid-template-rows 0.3s ease,
-		margin-bottom 0.3s ease;
-}
-
-.strategy-content {
-	overflow: hidden;
-	opacity: 0;
-	transition: opacity 0.2s ease;
-}
-
-.open .strategy-content {
-	opacity: 1;
-	transition: opacity 0.3s ease 0.2s;
-}
-</style>

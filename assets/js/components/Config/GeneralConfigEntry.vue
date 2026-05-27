@@ -18,7 +18,7 @@
 				type="button"
 				:title="$t('config.main.edit')"
 				tabindex="0"
-				@click.prevent="handleEditClick"
+				@click.prevent="$emit('edit')"
 			>
 				<EditIcon size="xs" />
 			</button>
@@ -27,7 +27,6 @@
 </template>
 
 <script>
-import Modal from "bootstrap/js/dist/modal";
 import EditIcon from "../MaterialIcon/Edit.vue";
 
 export default {
@@ -38,22 +37,7 @@ export default {
 		label: { type: String, required: true },
 		text: { type: String, default: "---" },
 		textClass: { type: String, default: "" },
-		modalId: { type: String, required: true },
 	},
-	emits: ["edit-clicked"],
-	methods: {
-		handleEditClick() {
-			this.$emit("edit-clicked");
-			this.openModal();
-		},
-		openModal() {
-			const $el = document.getElementById(this.modalId);
-			if ($el) {
-				Modal.getOrCreateInstance($el).show();
-			} else {
-				console.error(`modal ${this.modalId} not found`);
-			}
-		},
-	},
+	emits: ["edit"],
 };
 </script>

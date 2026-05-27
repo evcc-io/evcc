@@ -65,7 +65,6 @@
 					v-model="selectedTime"
 					type="time"
 					class="form-control mx-0 text-start"
-					:step="60 * 5"
 					data-testid="repeating-plan-time"
 					required
 					@change="update()"
@@ -184,7 +183,7 @@ export default defineComponent({
 			return this.dataChanged && this.selectedActive;
 		},
 		weekdaysLabel(): string {
-			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
+			return this.fmtWeekdaysRange(this.selectedWeekdays);
 		},
 		socOptions(): SelectOption<number>[] {
 			// a list of entries from 5 to 100 with a step of 5

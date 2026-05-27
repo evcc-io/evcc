@@ -24,6 +24,30 @@ This file provides guidance to AI coding agents when working with code in this r
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation
 
+## Domain Knowledge
+
+Deep documentation on specific subsystems is available in `docs/agents/`. Load what you need based on the task:
+
+| File | When to load |
+|------|-------------|
+| [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
+| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
+| [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
+| [Plugin System](docs/agents/plugin-system.md) | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS) |
+| [Web UI & API](docs/agents/web-ui-api.md) | REST API, WebSocket, Vue frontend, authentication |
+
+### Loading guide by task type
+
+- **Charger implementation** — hardware-integrations + core-domain
+- **Easee charger work** — easee-architecture + core-domain
+- **Meter implementation** — hardware-integrations + plugin-system
+- **Vehicle implementation** — hardware-integrations
+- **UI/frontend work** — web-ui-api
+- **API endpoint work** — web-ui-api + core-domain
+- **Config/template work** — plugin-system
+- **Control loop / charging logic** — core-domain
+- **Bug in any area** — core-domain + relevant topic file(s)
+
 ## Architecture Guidelines
 
 ### Core Components
@@ -159,6 +183,7 @@ This file provides guidance to AI coding agents when working with code in this r
 - Use placeholders for dynamic content: `{soc}`, `{duration}`, `{value}`
 - Prefer context-specific keys over generic ones
 - Test with German translations (20-40% longer text)
+- Keep separators and trailing punctuation (`: `, `…`, `—`) in the template, not in the translation value.
 
 ### Testing
 
@@ -245,3 +270,20 @@ This file provides guidance to AI coding agents when working with code in this r
 - Implement proper caching strategies and connection pooling
 - Avoid blocking operations in main application loop
 - Include appropriate comments for complex business logic
+
+## Pull Request Descriptions
+
+Structure PR descriptions in this order. No headlines. Be concise.
+
+1. **References first line**: link related issues or PRs (`fixes #1123`, `replaces #222`, `pairs with org/repo#345`). PRs should almost always reference an issue or related PR — only skip in rare exceptions (e.g. trivial typo fixes).
+2. **Intro**: one or a few concise sentences framing what the PR does and why it was created this way. The full problem description belongs in the linked issue, not here.
+3. **Bullet list**: most significant changes or user-facing implications. Lead with the most significant.
+4. **TODO section** (only if open points remain):
+
+   ```
+   **TODO**
+   - [ ] item a
+   - [ ] item b
+   ```
+
+Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers, no generator footers.

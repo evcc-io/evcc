@@ -60,7 +60,7 @@ func testAuth(other map[string]any) error {
 	_, err := auth.NewFromConfig(context.TODO(), cc.Type, params)
 
 	// ConfigError indicates invalid parameters in mapstructure decode
-	if ce := new(util.ConfigError); errors.As(err, &ce) {
+	if _, ok := errors.AsType[*util.ConfigError](err); ok {
 		return err
 	}
 

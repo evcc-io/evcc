@@ -161,3 +161,40 @@ func TestPlanLocking(t *testing.T) {
 		assert.Equal(t, 0, id)
 	})
 }
+
+func TestGetChargePowerFlexibility(t *testing.T) {
+	Voltage = 230
+
+	for _, tc := range []struct {
+		mode       api.ChargeMode
+		status     api.ChargeStatus
+		planActive bool
+		want       float64
+	}{
+		// not charging → always 0
+		{api.ModePV, api.StatusB, false, 0},
+		// PV mode, charging, no plan → full power is flexible
+		{api.ModePV, api.StatusC, false, 2700},
+		// PV mode, charging, plan active → not flexible
+		{api.ModePV, api.StatusC, true, 0},
+		// MinPV mode, charging, no plan → surplus above min is flexible (230V * 6A * 1phase = 1380W)
+		{api.ModeMinPV, api.StatusC, false, 2700 - 1380},
+		// MinPV mode, charging, plan active → not flexible
+		{api.ModeMinPV, api.StatusC, true, 0},
+		// Now mode → never flexible, regardless of plan
+		{api.ModeNow, api.StatusC, false, 0},
+	} {
+		t.Run("", func(t *testing.T) {
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.mode = tc.mode
+			lp.status = tc.status
+			lp.chargePower = 2700
+			lp.planActive = tc.planActive
+			// EffectiveMinPower() = 230V * 6A * 1phase = 1380W
+			lp.minCurrent = 6
+			lp.phases = 1
+
+			assert.Equal(t, tc.want, lp.GetChargePowerFlexibility(nil))
+		})
+	}
+}

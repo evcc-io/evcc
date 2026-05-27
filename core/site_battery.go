@@ -22,7 +22,7 @@ func (site *Site) hasBatteryControl() bool {
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
-		if _, ok := meter.(api.BatteryController); ok {
+		if api.HasCap[api.BatteryController](meter) {
 			return true
 		}
 	}
@@ -57,7 +57,7 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 
 	// put battery into hold mode when charging is active and circuit dimmed
 	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
-	if fromToCharge && circuitDimmed(site.circuit) {
+	if dimmed := circuitDimmed(site.circuit); fromToCharge && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: circuit dimmed")
 		batteryMode = api.BatteryHold
 	}
@@ -117,12 +117,12 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 func (site *Site) batteryMaxSocReached(dev config.Device[api.Meter]) (bool, error) {
 	meter := dev.Instance()
 
-	batLimiter, ok := meter.(api.BatterySocLimiter)
+	batLimiter, ok := api.Cap[api.BatterySocLimiter](meter)
 	if !ok {
 		return false, nil
 	}
 
-	batSoc, ok := meter.(api.Battery)
+	batSoc, ok := api.Cap[api.Battery](meter)
 	if !ok {
 		return false, errors.New("battery with soc limits must have soc")
 	}
@@ -152,7 +152,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
-		batCtrl, ok := meter.(api.BatteryController)
+		batCtrl, ok := api.Cap[api.BatteryController](meter)
 		if !ok {
 			continue
 		}

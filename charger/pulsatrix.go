@@ -328,14 +328,11 @@ func (c *Pulsatrix) parseMessage(messageType websocket.MessageType, message []by
 func (c *Pulsatrix) heartbeat(ctx context.Context) {
 	defer c.wg.Done()
 
-	ticker := time.NewTicker(heartbeatInterval)
-	defer ticker.Stop()
-
-	for {
+	for tick := time.NewTicker(heartbeatInterval); ; {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		case <-tick.C:
 			enabled := atomic.LoadInt32(&c.enabled) != 0
 			if err := c.Enable(enabled); err != nil {
 				atomic.AddInt32(&c.consecutiveHeartbeatErrors, 1)

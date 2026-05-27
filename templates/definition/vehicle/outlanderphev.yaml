@@ -1,0 +1,39 @@
+template: outlanderphev
+products:
+  - description:
+      generic: phev2mqtt
+group: generic
+requirements:
+  description:
+    en: Support for Mitsubishi Outlander PHEV via [github.com/buxtronix/phev2mqtt](https://github.com/buxtronix/phev2mqtt). MQTT broker required.
+    de: Unterstützung für Mitsubishi Outlander PHEV über [github.com/buxtronix/phev2mqtt](https://github.com/buxtronix/phev2mqtt). MQTT-Broker erforderlich.
+params:
+  - preset: vehicle-common
+  - name: timeout
+    default: 600s
+    advanced: true
+render: |
+  type: custom
+  {{- include "vehicle-common" . }}
+  soc:
+    source: mqtt
+    topic: phev/battery/level
+    timeout: {{ .timeout }}
+    jq: ((. - 6) * 100 / 88 | if . < 0 then 0 elif . > 100 then 100 else . end)
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: phev/charge/plug
+      timeout: {{ .timeout }}
+      jq: (. == "connected")
+    charging:
+      source: mqtt
+      topic: phev/charge/charging
+      timeout: {{ .timeout }}
+      jq: (. == "on")
+  climater:
+    source: mqtt
+    topic: phev/climate/status
+    timeout: {{ .timeout }}
+    jq: (. != "off")

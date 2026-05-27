@@ -9,7 +9,7 @@
 				:height="300"
 			/>
 		</div>
-		<LegendList :legends="legends" />
+		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
@@ -20,6 +20,7 @@ import {
 	CategoryScale,
 	LinearScale,
 	BarController,
+	LineController,
 	BarElement,
 	LineElement,
 	PointElement,
@@ -31,7 +32,7 @@ import {
 } from "chart.js";
 import { Chart } from "vue-chartjs";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
-import type { CURRENCY, BatteryDetail } from "@/types/evcc";
+import type { CURRENCY, BatteryDetail, DeviceColors } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
@@ -41,6 +42,7 @@ ChartJS.register(
 	CategoryScale,
 	LinearScale,
 	BarController,
+	LineController,
 	BarElement,
 	LineElement,
 	PointElement,
@@ -77,6 +79,7 @@ export default defineComponent({
 			type: Array as PropType<string[]>,
 			default: () => [],
 		},
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		timeLabels(): string[] {
@@ -211,7 +214,8 @@ export default defineComponent({
 								// Show ticks at exact hour boundaries
 								if (minute === 0) {
 									// Show labels only at hours divisible by 4
-									if (hour % 4 === 0) {
+									const step = window.innerWidth < 576 ? 6 : 4;
+									if (hour % step === 0) {
 										return hour.toString();
 									}
 									// Show tick but no label for other hours
@@ -241,6 +245,9 @@ export default defineComponent({
 			};
 		},
 		legends(): Legend[] {
+			const batteryTitles = new Set(
+				(this.evopt?.res?.batteries || []).map((_, i) => this.getBatteryTitle(i))
+			);
 			return this.chartData.datasets
 				.filter((dataset) => !dataset.hidden)
 				.map((dataset) => {
@@ -252,6 +259,7 @@ export default defineComponent({
 						color: (dataset.backgroundColor || dataset.borderColor) as string,
 						value: "", // Required by Legend type, but not used in this context
 						type: isLine ? "line" : "area",
+						id: batteryTitles.has(label) ? label : undefined,
 					};
 				});
 		},

@@ -21,6 +21,7 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
@@ -30,6 +31,7 @@ import (
 // SgReady charger implementation
 type SgReady struct {
 	*embed
+	implement.Caps
 	mode  int64
 	modeS func(int64) error
 	modeG func() (int64, error)
@@ -51,8 +53,6 @@ const (
 	Boost        // 3
 )
 
-//go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
-
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
 func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -65,7 +65,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
 	}
 
@@ -73,9 +73,23 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	modeS, err := cc.SetMode.IntSetter(ctx, "mode")
+	modeSet, err := cc.SetMode.IntSetter(ctx, "mode")
 	if err != nil {
 		return nil, err
+	}
+
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("sgready"))
+
+	modeS := func(mode int64) error {
+		switch mode {
+		case Dim:
+			log.DEBUG.Printf("set sgready mode: %s", "dim")
+		case Normal:
+			log.DEBUG.Printf("set sgready mode: %s", "normal")
+		case Boost:
+			log.DEBUG.Printf("set sgready mode: %s", "boost")
+		}
+		return modeSet(mode)
 	}
 
 	modeG, err := cc.GetMode.IntGetter(ctx)
@@ -97,19 +111,24 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 	if err != nil {
 		return nil, err
 	}
+	implement.May(res, implement.Meter(powerG))
+	implement.May(res, implement.MeterEnergy(energyG))
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
+	implement.May(res, implement.Battery(tempG))
+	implement.May(res, implement.SocLimiter(limitTempG))
 
-	return decorateSgReady(res, powerG, energyG, tempG, limitTempG), nil
+	return res, nil
 }
 
 // NewSgReady creates SG Ready charger
 func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error), maxPowerS func(int64) error) (*SgReady, error) {
 	res := &SgReady{
 		embed:     embed,
+		Caps:      implement.New(),
 		mode:      Normal,
 		modeS:     modeS,
 		modeG:     modeG,

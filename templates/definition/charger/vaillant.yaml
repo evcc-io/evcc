@@ -14,8 +14,50 @@ params:
   - name: password
   - name: realm
     type: choice
-    choice: [DE, AT]
-    default: DE
+    choice:
+      [
+        "albania",
+        "austria",
+        "belgium",
+        "bosnia",
+        "bulgaria",
+        "croatia",
+        "cyprus",
+        "czechrepublic",
+        "denmark",
+        "estonia",
+        "finland",
+        "france",
+        "georgia",
+        "germany",
+        "greece",
+        "hungary",
+        "ireland",
+        "italy",
+        "kosovo",
+        "latvia",
+        "lithuania",
+        "luxembourg",
+        "moldavia",
+        "netherlands",
+        "new-zealand",
+        "north-macedonia",
+        "norway",
+        "poland",
+        "portugal",
+        "romania",
+        "serbia",
+        "slovakia",
+        "slovenia",
+        "spain",
+        "sweden",
+        "switzerland",
+        "turkiye",
+        "ukraine",
+        "unitedkingdom",
+        "uzbekistan",
+      ]
+    default: germany
     description:
       de: Region
       en: Region
@@ -42,7 +84,7 @@ render: |
   type: vaillant
   user: {{ .user }}
   password: {{ .password }}
-  realm: {{ if eq .realm "AT" -}} vaillant-austria-b2c {{- end }}
+  realm: {{ if eq .realm "DE" -}} vaillant-germany-b2c {{ else if eq .realm "AT" -}} vaillant-austria-b2c {{ else }} vaillant-{{ .realm }}-b2c {{ end }}
   {{- if .system }}
   system: {{ .system }}
   {{- end }}

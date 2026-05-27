@@ -3,7 +3,6 @@ package modbus
 import (
 	"testing"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,7 +30,7 @@ func TestSettingsProtocol(t *testing.T) {
 		res Protocol
 	}{
 		{Settings{UDP: true}, Udp},
-		{Settings{RTU: lo.ToPtr(true)}, Rtu},
+		{Settings{RTU: new(true)}, Rtu},
 		{Settings{Device: "foo"}, Rtu},
 		{Settings{URI: "foo"}, Tcp},
 		{Settings{}, Tcp},

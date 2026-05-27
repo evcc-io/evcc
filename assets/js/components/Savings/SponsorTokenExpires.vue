@@ -10,7 +10,7 @@
 			<i18n-t
 				tag="span"
 				:keypath="
-					fromYaml
+					!!yamlSource
 						? 'settings.sponsorToken.expiresUpdateYaml'
 						: 'settings.sponsorToken.expiresUpdateUi'
 				"
@@ -34,14 +34,14 @@
 import formatter from "@/mixins/formatter";
 import { TRIAL } from "./Sponsor.vue";
 import { defineComponent, type PropType } from "vue";
-import type { SponsorStatus } from "@/types/evcc";
+import type { SponsorStatus, YamlSource } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SponsorTokenExpires",
 	mixins: [formatter],
 	props: {
 		status: Object as PropType<SponsorStatus>,
-		fromYaml: Boolean,
+		yamlSource: String as PropType<YamlSource>,
 	},
 	computed: {
 		expiresSoon() {

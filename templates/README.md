@@ -22,10 +22,27 @@ The following describes each possible element in a yaml file
 
 Each product contains:
 
-- `brand`: an optional brand description of the product
-- `description`: an optional description e.g. of the product model. Expects `generic`, `de`, `en`: an optional description of the product
+- `brand`: company that makes the product or offers the service. No regions, variants, or API names — those, if required for clarity, belong in `description`.
+- `description`: product, service, model, or API name. Expects `generic`, `de`, `en`.
 
-Either `brand`, or `description` need to be set.
+Either `brand` or `description` needs to be set. Examples by device class:
+
+- Vehicles — `brand` is the make, `description` the connected service:
+  - `brand: Hyundai`, `description.generic: Bluelink`
+  - `brand: Hyundai`, `description.generic: Bluelink (US)`
+- Chargers — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABL`, `description.generic: eMH1`
+  - `brand: ABL`, `description.generic: eMH2`
+  - `brand: Alfen`, `description.generic: Eve`
+- Meters — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABB`, `description.generic: A43`
+  - `brand: my-PV`, `description.generic: AC ELWA 2`
+- Tariffs — `brand` is the service provider, `description` the API variant:
+  - `brand: Electricity Maps`, `description.generic: Commercial API`
+  - `brand: Electricity Maps`, `description.generic: Free API`
+- Generic integrations (OSS tools, community projects): omit `brand`, put the project name in `description.generic`, set `group: generic`. Keep upstream casing (e.g. `TeslaFi`, `ioBroker.bmw`, `mg2mqtt`).
+
+Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
 
 ## `group`
 
@@ -65,7 +82,12 @@ Either `brand`, or `description` need to be set.
 - The content can be multiline
 - The content supports Markdown formatting
 - External URLs should always use Markdown link format with the hostname as display text: `[docs.example.com](https://docs.example.com/path/to/page)`. This provides clear context while keeping the text readable.
+- Omit `www.` from the display text: `[example.com](https://www.example.com/path)`
+- GitHub URLs use `github.com/user/repo` as display text: `[github.com/user/repo](https://github.com/user/repo)`
 - Use code formatting `` `text` `` for technical identifiers, tokens, configuration values, and entity patterns
+- Placeholder and example URLs (IP addresses, hostnames, device endpoints) should also use code formatting: `` `http://<charger-host>:8000/semp` ``, `` `ws://<evcc-host>:8887/` ``
+- Use angle-bracket placeholders for device addresses: `<evcc-host>`, `<charger-host>`, `<meter-host>`, `<inverter-host>`
+- Use only plain ASCII quotes (`”`, `’`) — never typographic/curly quotes (`”`, `”`, `„`, `’`, `’`)
 - Use bold formatting `**text**` sparingly and only for important warnings or critical information
 
 Example:
@@ -73,6 +95,8 @@ Example:
 ```
 en: |
   Requires `hcaptcha` token from [developer.example.com](https://developer.example.com/tokens).
+  Configure the SEMP base URL (`http://<charger-host>:8000/semp`).
+  Set the backend URL to `ws://<evcc-host>:8887/`.
 
   **Attention**: Token is only valid for 2 minutes.
 ```

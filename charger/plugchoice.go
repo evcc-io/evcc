@@ -147,14 +147,12 @@ func (c *Plugchoice) Status() (api.ChargeStatus, error) {
 			switch status := connector.Status; status {
 			case core.ChargePointStatusAvailable:
 				return api.StatusA, nil
-			case core.ChargePointStatusUnavailable, core.ChargePointStatusFaulted:
-				return api.StatusE, nil // Using StatusE for error conditions
 			case core.ChargePointStatusPreparing, core.ChargePointStatusSuspendedEVSE, core.ChargePointStatusSuspendedEV, core.ChargePointStatusFinishing:
 				return api.StatusB, nil
 			case core.ChargePointStatusCharging:
 				return api.StatusC, nil
 			default:
-				return api.StatusNone, fmt.Errorf("unknown status: %s", status)
+				return api.StatusNone, fmt.Errorf("invalid status: %s", status)
 			}
 		}
 	}

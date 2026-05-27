@@ -55,11 +55,11 @@ const (
 )
 
 func init() {
-	registry.AddCtx("ego-smartheater", newEgoFromConfig)
+	registry.AddCtx("ego-smartheater", NewEgoFromConfig)
 }
 
-// newEgoFromConfig creates an Ego charger from generic config
-func newEgoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+// NewEgoFromConfig creates an Ego charger from generic config
+func NewEgoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`

@@ -42,8 +42,30 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/odometer
     timeout: {{ .timeout }}
+  position:
+    latitude:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/latitude
+      timeout: {{ .timeout }}
+    longitude:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/longitude
+      timeout: {{ .timeout }}
   limitsoc:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/charge_limit_soc
+    timeout: {{ .timeout }}
+  finishtime:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/time_to_full_charge
+    timeout: {{ .timeout }}
+    jq: if (. == null) or (. == 0) or (type != "number") or (. < 0) then null else (now + (. * 3600) | strftime("%Y-%m-%dT%H:%M:%SZ")) end
+  chargedenergy:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/charge_energy_added
+    timeout: {{ .timeout }}
+  climater:
+    source: mqtt
+    topic: teslamate/cars/{{ .id }}/is_preconditioning
     timeout: {{ .timeout }}
   features: ["coarsecurrent"]

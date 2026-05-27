@@ -1,0 +1,35 @@
+template: stromleser
+products:
+  - brand: stromleser.one
+    description:
+      generic: IR Reader
+requirements:
+  description:
+    en: Requires a stromleser.one device accessible on the local network.
+    de: Erfordert ein stromleser.one-Gerät im lokalen Netzwerk.
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+  - name: cache
+    default: 15s
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/v1/data
+    cache: {{ .cache }}
+    {{- if eq .usage "pv" }}
+    jq: 'def toW: split(" ") | (.[0]|tonumber) * (if .[1]=="kW" then 1000 elif .[1]=="mW" then 0.001 else 1 end); try (.["2.7.0"]|toW) // (0 - (.["16.7.0"]|toW))'
+    {{- else }}
+    jq: 'def toW: split(" ") | (.[0]|tonumber) * (if .[1]=="kW" then 1000 elif .[1]=="mW" then 0.001 else 1 end); try (.["16.7.0"]|toW) // ((.["1.7.0"]|toW) - (.["2.7.0"]|toW))'
+    {{- end }}
+  energy:
+    source: http
+    uri: http://{{ .host }}/v1/data
+    cache: {{ .cache }}
+    {{- if eq .usage "pv" }}
+    jq: 'def tokWh: split(" ") | (.[0]|tonumber) * (if .[1]=="Wh" then 0.001 elif .[1]=="MWh" then 1000 else 1 end); (try (.["2.8.0"]|tokWh)) // 0'
+    {{- else }}
+    jq: 'def tokWh: split(" ") | (.[0]|tonumber) * (if .[1]=="Wh" then 0.001 elif .[1]=="MWh" then 1000 else 1 end); (try (.["1.8.0"]|tokWh)) // 0'
+    {{- end }}

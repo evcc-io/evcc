@@ -88,6 +88,7 @@ func unregisterConnection(key string) {
 		return
 	}
 
+	conn.Close()
 	delete(connections, key)
 }
 

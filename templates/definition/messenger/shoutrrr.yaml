@@ -1,0 +1,19 @@
+template: shout
+products:
+  - brand: Shoutrrr
+requirements:
+  description:
+    en: Shoutrrr sends messages to various services like Slack, Teams, Matrix, Mattermost. See [shoutrrr.nickfedor.com](https://shoutrrr.nickfedor.com/latest/usage/) for supported services.
+    de: Shoutrrr sendet Nachrichten an verschiedene Dienste wie Slack, Teams, Matrix, Mattermost. Übersicht unter [shoutrrr.nickfedor.com](https://shoutrrr.nickfedor.com/latest/usage/).
+group: generic
+params:
+  - name: uri
+    required: true
+    example: gotify://gotify.example.com:443/secr3t/?priority=1
+    private: true
+    help:
+      en: See [shoutrrr.nickfedor.com](https://shoutrrr.nickfedor.com/latest/usage/) for possible formats.
+      de: Übersicht unter [shoutrrr.nickfedor.com](https://shoutrrr.nickfedor.com/latest/usage/) für mögliche Formate.
+render: |
+  type: shout
+  uri: {{ .uri }}

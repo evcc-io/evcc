@@ -10,7 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
-	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -35,11 +35,11 @@ func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 
-func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *Loadpoint) {
+func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
 	t.Helper()
 
 	uiChan := make(chan util.Param)
-	pushChan := make(chan push.Event)
+	pushChan := make(chan messenger.Event)
 	lpChan := make(chan *Loadpoint)
 
 	log := false
@@ -65,7 +65,7 @@ func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *Loadp
 	return uiChan, pushChan, lpChan
 }
 
-func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan push.Event, lpChan chan *Loadpoint) {
+func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan

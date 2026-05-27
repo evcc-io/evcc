@@ -31,14 +31,6 @@
 				/>
 			</div>
 		</div>
-		<LoadpointSettingsModal
-			:id="id"
-			v-bind="settingsModal"
-			@maxcurrent-updated="setMaxCurrent"
-			@mincurrent-updated="setMinCurrent"
-			@phasesconfigured-updated="setPhasesConfigured"
-			@batteryboost-updated="setBatteryBoost"
-		/>
 
 		<div
 			v-if="remoteDisabled"
@@ -91,11 +83,14 @@
 		<Vehicle
 			class="flex-grow-1 d-flex flex-column justify-content-end"
 			v-bind="vehicleProps"
+			:soc-per-kwh="socPerKwh"
 			@limit-soc-updated="setLimitSoc"
 			@limit-energy-updated="setLimitEnergy"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
+			@batteryboost-updated="setBatteryBoost"
+			@open-modal="(openArrivalTab) => $emit('open-charging-plan-modal', openArrivalTab)"
 		/>
 	</div>
 </template>
@@ -114,11 +109,9 @@ import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
-import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CHARGE_MODE,
-	PHASES,
 	PHASE_ACTION,
 	PV_ACTION,
 	CHARGER_STATUS_REASON,
@@ -126,6 +119,7 @@ import type {
 	Vehicle,
 	Forecast,
 	SMART_COST_TYPE,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
@@ -137,7 +131,6 @@ export default defineComponent({
 		Phases,
 		LabelAndValue,
 		LoadpointSettingsButton: SettingsButton,
-		LoadpointSettingsModal: SettingsModal,
 		LoadpointSessionInfo: SessionInfo,
 		VehicleIcon,
 	},
@@ -156,7 +149,10 @@ export default defineComponent({
 		chargeDuration: { type: Number, default: 0 },
 		charging: Boolean,
 		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
+		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 
 		// session
 		sessionEnergy: Number,
@@ -169,6 +165,7 @@ export default defineComponent({
 		chargerStatusReason: String as PropType<CHARGER_STATUS_REASON | null>,
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
+		chargerFeatureContinuous: Boolean,
 		chargerIcon: String as PropType<string | null>,
 
 		// vehicle
@@ -178,6 +175,7 @@ export default defineComponent({
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: { type: Number, default: 0 },
+		minSocNotReached: Boolean,
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleLimitSoc: Number,
@@ -237,7 +235,17 @@ export default defineComponent({
 		forecast: Object as PropType<Forecast>,
 		lastSmartCostLimit: Number,
 		lastSmartFeedInPriorityLimit: Number,
+		vehicleKnown: Boolean,
+		vehicleHasSoc: Boolean,
+		vehicleNotReachable: Boolean,
+		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
+		capacity: Number,
+		range: Number,
+		rangePerSoc: Number,
+		socPerKwh: { type: Number, required: true },
 	},
+	emits: ["open-charging-plan-modal", "open-settings-modal"],
 	data() {
 		return {
 			tickerHandler: null as Timeout,
@@ -266,6 +274,9 @@ export default defineComponent({
 		heating() {
 			return this.chargerFeatureHeating;
 		},
+		continuous() {
+			return this.chargerFeatureContinuous;
+		},
 		phasesProps() {
 			return this.collectProps(Phases);
 		},
@@ -284,26 +295,9 @@ export default defineComponent({
 		showChargingIndicator() {
 			return this.charging && this.chargePower > 0;
 		},
-		vehicleKnown() {
-			return !!this.vehicleName;
-		},
-		vehicleHasSoc() {
-			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
-		},
-		vehicleNotReachable() {
-			// online vehicle that was not reachable at startup
-			const features = this.vehicle?.features || [];
-			return features.includes("Offline") && features.includes("Retryable");
-		},
 		planTimeUnreachable() {
 			// 1 minute tolerance
 			return this.planOverrun > 60;
-		},
-		socBasedCharging() {
-			return this.vehicleHasSoc || this.vehicleSoc > 0;
-		},
-		socBasedPlanning() {
-			return this.socBasedCharging && this.vehicle?.capacity && this.vehicle?.capacity > 0;
 		},
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
@@ -316,7 +310,8 @@ export default defineComponent({
 				this.batteryBoost &&
 				this.charging &&
 				this.mode &&
-				!["off", "now"].includes(this.mode)
+				!["off", "now"].includes(this.mode) &&
+				(this.batterySoc ?? 0) >= this.batteryBoostLimit
 			);
 		},
 		plannerForecast() {
@@ -372,15 +367,6 @@ export default defineComponent({
 		setLimitEnergy(kWh: number) {
 			api.post(this.apiPath("limitenergy") + "/" + kWh);
 		},
-		setMaxCurrent(maxCurrent: number) {
-			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
-		},
-		setMinCurrent(minCurrent: number) {
-			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
-		},
-		setPhasesConfigured(phases: PHASES) {
-			api.post(this.apiPath("phases") + "/" + phases);
-		},
 		changeVehicle(name: string) {
 			api.post(this.apiPath("vehicle") + `/${name}`);
 		},
@@ -397,16 +383,15 @@ export default defineComponent({
 			return this.fmtWh(value, POWER_UNIT.AUTO);
 		},
 		openSettingsModal() {
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById(`loadpointSettingsModal_${this.id}`) as HTMLElement
-			);
-			modal.show();
+			this.$emit("open-settings-modal");
 		},
 	},
 });
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .loadpoint {
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
@@ -438,7 +423,7 @@ export default defineComponent({
 	margin: 0 -1rem;
 }
 /* breakpoint sm */
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.divider {
 		margin: 0 -1.5rem;
 	}

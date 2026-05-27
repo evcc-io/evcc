@@ -3,6 +3,7 @@
 		id="controlModal"
 		ref="modal"
 		:title="$t('config.control.title')"
+		config-modal-name="control"
 		data-testid="control-modal"
 		@open="open"
 	>

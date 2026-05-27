@@ -67,7 +67,6 @@
 					v-model="selectedTime"
 					type="time"
 					class="form-control mx-0"
-					:step="60 * 5"
 					data-testid="static-plan-time"
 					required
 					@change="preview()"

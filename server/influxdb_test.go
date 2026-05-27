@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	inf2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -60,7 +59,7 @@ func (w *influxSuite) TestNil() {
 }
 
 func (w *influxSuite) TestPointer() {
-	w.WriteParam(util.Param{Key: "foo", Val: lo.ToPtr(1)})
+	w.WriteParam(util.Param{Key: "foo", Val: new(1)})
 	w.Equal([]*write.Point{inf2.NewPoint("foo", nil, map[string]any{"value": 1}, w.clock.Now())}, w.p)
 }
 
@@ -89,7 +88,7 @@ func (w *influxSuite) TestSlice() {
 }
 
 func (w *influxSuite) TestMeasurement() {
-	w.WriteParam(util.Param{Key: "battery", Val: types.Measurement{Power: 1, Soc: lo.ToPtr(10.0)}})
+	w.WriteParam(util.Param{Key: "battery", Val: types.Measurement{Power: 1, Soc: new(10.0)}})
 	w.Equal([]*write.Point{
 		inf2.NewPoint("batteryPower", nil, map[string]any{"value": 1.0}, w.clock.Now()),
 		inf2.NewPoint("batterySoc", nil, map[string]any{"value": 10.0}, w.clock.Now()),
@@ -98,8 +97,8 @@ func (w *influxSuite) TestMeasurement() {
 
 func (w *influxSuite) TestSliceOfStruct() {
 	w.WriteParam(util.Param{Key: "grid", Val: []types.Measurement{
-		{Power: 1, Soc: lo.ToPtr(10.0)},
-		{Power: 2, Soc: lo.ToPtr(20.0)},
+		{Power: 1, Soc: new(10.0)},
+		{Power: 2, Soc: new(20.0)},
 	}})
 	w.Equal([]*write.Point{
 		inf2.NewPoint("gridPower", map[string]string{"id": "1"}, map[string]any{"value": 1.0}, w.clock.Now()),
@@ -115,7 +114,7 @@ func (w *influxSuite) TestBatteryState() {
 		Soc:   20.0,
 		Devices: []types.Measurement{{
 			Power: 1,
-			Soc:   lo.ToPtr(10.0),
+			Soc:   new(10.0),
 		}},
 	}})
 	w.Equal([]*write.Point{

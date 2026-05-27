@@ -1,5 +1,10 @@
 <template>
-	<GenericModal id="ocppModal" :title="$t('config.ocpp.title')" data-testid="ocpp-modal">
+	<GenericModal
+		id="ocppModal"
+		config-modal-name="ocpp"
+		:title="$t('config.ocpp.title')"
+		data-testid="ocpp-modal"
+	>
 		<div class="container">
 			<!-- OCPP URL -->
 			<div class="mb-3">

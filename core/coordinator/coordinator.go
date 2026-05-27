@@ -116,7 +116,7 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 
 	for _, vv := range c.vehicles {
 		// status api available
-		if _, ok := vv.(api.ChargeState); ok {
+		if api.HasCap[api.ChargeState](vv) {
 			// available or associated to current loadpoint
 			if o, ok := c.tracked[vv]; o == owner || !ok {
 				res = append(res, vv)
@@ -135,7 +135,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 	defer c.mu.RUnlock()
 
 	for _, vehicle := range available {
-		if vs, ok := vehicle.(api.ChargeState); ok {
+		if vs, ok := api.Cap[api.ChargeState](vehicle); ok {
 			status, err := vs.Status()
 			if err != nil {
 				if !loadpoint.AcceptableError(err) {

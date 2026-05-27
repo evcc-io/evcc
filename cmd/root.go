@@ -16,14 +16,15 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
-	hemsapi "github.com/evcc-io/evcc/hems/hems"
-	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
+	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/updater"
+	"github.com/evcc-io/evcc/ui"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/pipe"
@@ -98,9 +99,6 @@ func init() {
 
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
-
-	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
-	bind(rootCmd, "mcp")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
@@ -190,11 +188,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureEnvironment(cmd, &conf)
 	}
 
-	// configure network
-	if err == nil {
-		err = networkSettings(&conf.Network)
-	}
-
 	// configure plugin external url
 	if err == nil {
 		// network configuration complete, start dependent services like HomeAssistant discovery
@@ -243,8 +236,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
+	// remote access tunnel
+	var remoteAccess *remote.Remote
+	if remoteHost := os.Getenv("EVCC_REMOTE_ACCESS"); remoteHost != "" {
+		remoteAccess = remote.New(remoteHost, httpd.Router(), valueChan)
+	}
+
 	// signal ui listening
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
+	valueChan <- util.Param{Key: keys.ApiReady, Val: false}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -334,16 +334,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
-	var hems hemsapi.API
 	if err == nil {
-		hems, err = configureHEMS(&conf.HEMS, site)
+		_, err = configureHEMS(&conf.HEMS, site)
 		if err != nil {
 			err = wrapErrorWithClass(ClassHEMS, err)
 		}
 	}
 
 	// setup MCP
-	if viper.GetBool("mcp") {
+	if err == nil && isMcp() {
 		router := httpd.Router()
 
 		var handler http.Handler
@@ -351,24 +350,31 @@ func runRoot(cmd *cobra.Command, args []string) {
 			router.PathPrefix("/mcp").Handler(handler)
 		}
 	}
+	if conf.Mcp {
+		log.WARN.Println("mcp: yaml config is deprecated")
+	}
 
 	// setup messaging
-	var pushChan chan push.Event
+	var pushChan chan messenger.Event
 	if err == nil {
-		pushChan, err = configureMessengers(&conf.Messaging, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 
 	// publish initial settings
+	valueChan <- util.Param{Key: keys.DeviceColors, Val: ui.DeviceColorList()}
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
-		Config:   conf.EEBus.Redacted(),
-		Status:   eebus.GetStatus(),
-		FromYaml: fromYaml.eebus,
+		Config:     conf.EEBus.Redacted(),
+		Status:     eebus.GetStatus(),
+		YamlSource: yamlSource.eebus,
 	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.IsConfigured()}
+	valueChan <- util.Param{Key: keys.Messaging, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.messaging,
+	}}
+	valueChan <- util.Param{Key: keys.MessagingEvents, Val: conf.MessagingEvents}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
@@ -377,23 +383,32 @@ func runRoot(cmd *cobra.Command, args []string) {
 		Status: ocpp.GetStatus(),
 	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
-		Status:   sponsor.RedactedStatus(),
-		FromYaml: fromYaml.sponsor,
+		Status:     sponsor.RedactedStatus(),
+		YamlSource: yamlSource.sponsor,
 	}}
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-		Config:   conf.HEMS.Redacted(),
-		Status:   hemsapi.GetStatus(hems),
-		FromYaml: fromYaml.hems,
+		Config:     conf.HEMS.Redacted(),
+		YamlSource: yamlSource.hems,
 	}}
+	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.tariffs,
+	}}
+
+	// publish remote access status
+	if remoteAccess != nil {
+		valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
+	}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
-	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath()}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
+	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
+	valueChan <- util.Param{Key: keys.Mcp, Val: isMcp()}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -430,7 +445,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
-	}, viper.ConfigFileUsed())
+	}, viper.ConfigFileUsed(), remoteAccess)
 
 	// show and check version, reduce api load during development
 	if util.Version != util.DevVersion {
@@ -449,6 +464,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			site.Run(stopC, conf.Interval)
 		}()
 	}
+
+	// signal HTTP API ready
+	valueChan <- util.Param{Key: keys.ApiReady, Val: true}
 
 	if err != nil {
 		if uw, ok := err.(interface{ Unwrap() []error }); ok {

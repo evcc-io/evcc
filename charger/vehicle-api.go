@@ -55,7 +55,7 @@ func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 		return true, nil // Assume at charger if geofencing is disabled
 	}
 
-	v, ok := vehicle.(api.VehiclePosition)
+	v, ok := api.Cap[api.VehiclePosition](vehicle)
 	if !ok {
 		return false, errors.New("vehicle must support position tracking if geofence is enabled")
 	}
@@ -97,7 +97,7 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	v, ok := vehicle.(api.ChargeState)
+	v, ok := api.Cap[api.ChargeState](vehicle)
 	if !ok {
 		return api.StatusA, errors.New("vehicle not capable of reporting charging status")
 	}
@@ -136,7 +136,7 @@ func (c *VehicleApi) Enable(enable bool) error {
 		return nil
 	}
 
-	v, ok := c.lp.GetVehicle().(api.ChargeController)
+	v, ok := api.Cap[api.ChargeController](c.lp.GetVehicle())
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
 	}
@@ -158,7 +158,7 @@ func (c *VehicleApi) MaxCurrent(current int64) error {
 		return ErrLoadpointNotInitialized
 	}
 
-	v, ok := c.lp.GetVehicle().(api.CurrentController)
+	v, ok := api.Cap[api.CurrentController](c.lp.GetVehicle())
 	if !ok {
 		// If we cannot control the current, we just pretend that we do
 		return nil
@@ -175,7 +175,7 @@ func (c *VehicleApi) WakeUp() error {
 		return ErrLoadpointNotInitialized
 	}
 
-	v, ok := c.lp.GetVehicle().(api.Resurrector)
+	v, ok := api.Cap[api.Resurrector](c.lp.GetVehicle())
 	if !ok {
 		return nil
 	}

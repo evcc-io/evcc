@@ -16,26 +16,23 @@ func ErrorAsJson(err error) any {
 		URI           string `json:"uri,omitempty"`
 	}{
 		Error: err.Error(),
+		Line:  yamlErrorLine(err),
 	}
 
-	if ae := new(api.ErrLoginRequired); errors.As(err, &ae) {
+	if ae, ok := errors.AsType[*api.ErrLoginRequired](err); ok {
 		res.LoginRequired = ae.ProviderAuth
 	}
 
-	if ue := new(api.ErrUrl); errors.As(err, &ue) {
+	if ue, ok := errors.AsType[*api.ErrUrl](err); ok {
 		res.URI = ue.URL().String()
 	}
 
-	var (
-		ype *yaml.ParserError
-		yue *yaml.UnmarshalError
-	)
-	switch {
-	case errors.As(err, &ype):
-		res.Line = ype.Line
-	case errors.As(err, &yue):
-		res.Line = yue.Line
-	}
-
 	return res
+}
+
+func yamlErrorLine(err error) int {
+	if err, ok := errors.AsType[*yaml.LoadError](err); ok {
+		return err.Mark.Line
+	}
+	return 0
 }

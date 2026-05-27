@@ -30,7 +30,7 @@ func bo() backoff.BackOff {
 
 // backoffPermanentError returns a permanent error in case of HTTP 400
 func backoffPermanentError(err error) error {
-	if se := new(request.StatusError); errors.As(err, &se) {
+	if se, ok := errors.AsType[*request.StatusError](err); ok {
 		if code := se.StatusCode(); code >= 400 && code <= 599 {
 			return backoff.Permanent(se)
 		}

@@ -30,6 +30,7 @@ products:
     description:
       generic: BWS
 group: heating
+capabilities: ["dim"]
 requirements:
   description:
     de: Für Wärmepumpen mit Luxtronik 2.1 Steuerung. Nutzt modbus-tcp. Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
@@ -38,6 +39,8 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: timeout
+    default: 10s
   - name: wwoffset
     type: float
     unit: K
@@ -77,6 +80,7 @@ render: |
       config: 
         source: modbus
         {{- include "modbus" . | indent 6 }}
+        timeout: {{ .timeout }}
         register:
           address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
           type: holding
@@ -86,6 +90,7 @@ render: |
       config: 
         source: modbus
         {{- include "modbus" . | indent 6 }}
+        timeout: {{ .timeout }}
         register:
           address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
           type: holding
@@ -95,6 +100,7 @@ render: |
       config: 
         source: modbus
         {{- include "modbus" . | indent 6 }}
+        timeout: {{ .timeout }}
         register:
           address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
           type: holding
@@ -111,6 +117,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
@@ -121,6 +128,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
               type: writeholding
@@ -132,6 +140,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
               type: writeholding
@@ -146,6 +155,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
@@ -156,6 +166,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
               type: writeholding
@@ -167,6 +178,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
               type: writeholding
@@ -181,6 +193,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
@@ -191,6 +204,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
               type: writeholding
@@ -200,6 +214,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10002 # Heiz. Offset [0.1 K]
               type: writeholding
@@ -211,6 +226,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
               type: writeholding
@@ -220,6 +236,7 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
             register:
               address: 10007 # WW Offset [0.1 K]
               type: writeholding
@@ -228,6 +245,7 @@ render: |
   temp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: {{ if gt $waterint 0 -}} 10120 {{ else }} 10100 {{- end }} # 10100 = Temp. x10 RL-Ist, 10120 = Temp x10 WW-Ist
       type: input
@@ -236,6 +254,7 @@ render: |
   limittemp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: {{ if gt $waterint 0 -}} 10121 {{ else }} 10101 {{- end }} # 10101 = Temp. x10 RL-Soll, 10121 = Temp x10 WW-Soll, 10123 = Temp x10 Tdi_solltemp
       type: input
@@ -244,6 +263,7 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: 10301 # 10301 = kW x0.01 Power-In elektrisch
       type: input
@@ -252,8 +272,10 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: 10311 # 10311 = kWh x10 kumulierter Stromverbrauch
       type: input
       decode: uint16
     scale: 0.1
+  {{ include "heatpumpswitch" . }}

@@ -3,9 +3,7 @@ package graphql
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -57,81 +55,40 @@ func NewClient(log *util.Logger, email, password, accountNumber string) (*Octopu
 	return gq, nil
 }
 
-// UnitRateForecast queries the day-ahead price forecast for the account
-func (c *OctopusDeGraphQLClient) UnitRateForecast() ([]RatePeriod, error) {
+// ActiveAgreement queries the Kraken API and returns the active electricity supply agreement.
+func (c *OctopusDeGraphQLClient) ActiveAgreement() (Agreement, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	var q getDayAheadPrices
+	var q getAgreements
 	if err := c.Client.Query(ctx, &q, map[string]any{
 		"accountNumber": c.accountNumber,
 	}); err != nil {
-		return nil, err
+		return Agreement{}, err
 	}
 
-	// Extract rates from the query result
 	if len(q.Account.Properties) == 0 {
-		return nil, errors.New("no properties found")
+		return Agreement{}, errors.New("no properties found")
 	}
 
-	// Find the active agreement across all properties
-	var unitRateForecast []unitRateForecast
-	for _, property := range q.Account.Properties {
-		for _, malo := range property.ElectricityMalos {
-			for _, agreement := range malo.Agreements {
-				if agreement.IsActive {
-					unitRateForecast = agreement.UnitRateForecast
-					break
-				}
-			}
-			if unitRateForecast != nil {
-				break
-			}
-		}
-		if unitRateForecast != nil {
-			break
-		}
+	agr, err := findActiveAgreement(&q)
+	if err != nil {
+		return Agreement{}, err
 	}
 
-	if unitRateForecast == nil {
-		return nil, errors.New("no active agreement found")
-	}
-
-	// Convert to RatePeriod slice
-	var rates []RatePeriod
-	for _, forecast := range unitRateForecast {
-		// Extract the rate from the union type
-		if forecast.UnitRateInformation.TimeOfUseProductUnitRateInformation.Rates != nil {
-			for _, rate := range forecast.UnitRateInformation.TimeOfUseProductUnitRateInformation.Rates {
-				// Parse string values to float64
-				netRate, err := parseFloat(rate.NetUnitRateCentsPerKwh)
-				if err != nil {
-					return nil, fmt.Errorf("failed to parse net unit rate: %w", err)
-				}
-
-				grossRate, err := parseFloat(rate.LatestGrossUnitRateCentsPerKwh)
-				if err != nil {
-					return nil, fmt.Errorf("failed to parse gross unit rate: %w", err)
-				}
-
-				rates = append(rates, RatePeriod{
-					ValidFrom:                      forecast.ValidFrom,
-					ValidTo:                        forecast.ValidTo,
-					LatestGrossUnitRateCentsPerKwh: grossRate,
-					NetUnitRateCentsPerKwh:         netRate,
-				})
-			}
-		}
-	}
-
-	if len(rates) == 0 {
-		return nil, errors.New("no rate forecast available")
-	}
-
-	return rates, nil
+	return *agr, nil
 }
 
-// parseFloat parses a string to float64, handling the specific format used by Octopus API
-func parseFloat(s string) (float64, error) {
-	return strconv.ParseFloat(s, 64)
+// findActiveAgreement returns the first agreement marked IsActive across all properties.
+func findActiveAgreement(q *getAgreements) (*Agreement, error) {
+	for _, property := range q.Account.Properties {
+		for _, malo := range property.ElectricityMalos {
+			for _, agr := range malo.Agreements {
+				if agr.IsActive {
+					return &agr, nil
+				}
+			}
+		}
+	}
+	return nil, errors.New("no active agreement found")
 }

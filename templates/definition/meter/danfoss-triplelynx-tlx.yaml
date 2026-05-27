@@ -1,0 +1,88 @@
+template: danfoss-triplelynx-tlx
+products:
+  - brand: Danfoss
+    description:
+      generic: TripleLynx TLX/TLX+
+requirements:
+  description:
+    de: |
+      Die Kommunikation erfolgt über die RS485-Schnittstelle des Wechselrichters (ComLynx-Protokoll).
+
+      **Verkabelung (RJ45-Stecker am Wechselrichter):**
+      - Pin 1: GND
+      - Pin 2: B (RS485-)
+      - Pin 3: A (RS485+)
+      - Pin 6: B (Daisy-Chain zum nächsten Gerät)
+      - Pin 7: A (Daisy-Chain zum nächsten Gerät)
+
+      Busabschlusswiderstände (120 Ω) am ersten und letzten Gerät der Kette erforderlich
+      (Pins 4→6 und 5→7 am Wechselrichter).
+
+      Verbinde den USB-RS485-Adapter (oder Netzwerk-Seriellbrücke) mit dem RS485-Bus.
+      Mehrere Wechselrichter an einem Bus: `node`-Parameter für jeden Wechselrichter setzen.
+    en: |
+      Communication uses the RS485 port of the inverter (ComLynx protocol).
+
+      **Wiring (RJ45 connector on the inverter):**
+      - Pin 1: GND
+      - Pin 2: B (RS485-)
+      - Pin 3: A (RS485+)
+      - Pin 6: B (daisy-chain to next device)
+      - Pin 7: A (daisy-chain to next device)
+
+      Termination resistors (120 Ω) are required at both ends of the bus
+      (bridge pins 4→6 and 5→7 on the inverter).
+
+      Connect a USB-RS485 adapter (or a network serial bridge) to the RS485 bus.
+      For multiple inverters on one bus set the `node` parameter for each meter entry.
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: device
+    description:
+      de: Serieller Anschluss (USB-RS485-Adapter)
+      en: Serial port (USB-RS485 adapter)
+    help:
+      de: z. B. /dev/ttyUSB0 — Gegenseitig ausschließend mit uri
+      en: e.g. /dev/ttyUSB0 — mutually exclusive with uri
+    example: /dev/ttyUSB0
+  - name: uri
+    description:
+      de: TCP-Endpunkt einer Netzwerk-Seriellbrücke
+      en: TCP endpoint of a network RS485 bridge
+    help:
+      de: z. B. rs485bridge.lan:4196 — Gegenseitig ausschließend mit device
+      en: e.g. rs485bridge.lan:4196 — mutually exclusive with device
+    example: localhost:4196
+  - name: node
+    description:
+      de: Geräteadresse (hex, Format N-S-NN)
+      en: Inverter node address (hex, N-S-NN)
+    help:
+      de: |
+        Nur erforderlich wenn mehrere Wechselrichter am selben RS485-Bus hängen.
+        Die Adresse wird beim Start automatisch ermittelt und im Log ausgegeben.
+        Format: Netzwerk-Subnetz-Knoten in Hex, z. B. c-6-b1
+      en: |
+        Only required when multiple inverters share the same RS485 bus.
+        The address is discovered automatically on startup and printed to the log.
+        Format: network-subnet-node in hex, e.g. c-6-b1
+    advanced: true
+    example: c-6-b1
+  - name: baudrate
+    default: 19200
+    advanced: true
+  - name: maxacpower
+render: |
+  type: danfoss-tlx
+  usage: {{ .usage }}
+  {{- if .uri }}
+  uri: {{ .uri }}
+  {{- else if .device }}
+  device: {{ .device }}
+  {{- end }}
+  node: {{ .node }}
+  baudrate: {{ .baudrate }}
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }}
+  {{- end }}

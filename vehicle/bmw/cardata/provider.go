@@ -11,7 +11,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
 )
@@ -72,10 +71,10 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		return "", err
 	}
 
-	if cc := lo.Filter(containers, func(c Container, _ int) bool {
+	if i := slices.IndexFunc(containers, func(c Container) bool {
 		return c.Name == "evcc.io" && c.Purpose == requiredVersion
-	}); len(cc) > 0 {
-		return cc[0].ContainerId, nil
+	}); i >= 0 {
+		return containers[i].ContainerId, nil
 	}
 
 	res, err := v.api.CreateContainer(CreateContainer{
@@ -253,4 +252,21 @@ func (v *Provider) Climater() (bool, error) {
 	}
 
 	return false, err
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	lat, err := v.Float("vehicle.cabin.infotainment.navigation.currentLocation.latitude")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	lon, err := v.Float("vehicle.cabin.infotainment.navigation.currentLocation.longitude")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return lat, lon, nil
 }

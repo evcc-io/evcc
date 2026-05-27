@@ -1,5 +1,6 @@
 <template>
 	<DeviceCard
+		:id="`meter_${meterType}_${meter.name}`"
 		:title="cardTitle"
 		:name="meter.name"
 		:editable="!!meter.id"

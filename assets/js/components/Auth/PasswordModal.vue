@@ -4,6 +4,7 @@
 		ref="modal"
 		:title="title"
 		:data-testid="dataTestId"
+		:config-modal-name="configModalName"
 		:uncloseable="isUncloseable"
 		@open="open"
 		@closed="closed"
@@ -113,6 +114,9 @@ export default defineComponent({
 	computed: {
 		modalId() {
 			return this.updateMode ? "passwordUpdateModal" : "passwordSetupModal";
+		},
+		configModalName() {
+			return this.updateMode ? "passwordupdate" : undefined;
 		},
 		dataTestId() {
 			return this.updateMode ? "password-update-modal" : "password-setup-modal";

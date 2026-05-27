@@ -344,7 +344,6 @@
       "thresholdDisableHelpZero": "Zaustavite kada se za {delay} ne može zadovoljiti minimalna potrebna snaga.",
       "thresholdEnableHelpZero": "­ Počnite kada se minimalna potrebna snaga može zadovoljiti za {delay}."
     },
-    "main": {},
     "meter": {
       "save": "Sačuvaj"
     },

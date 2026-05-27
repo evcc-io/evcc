@@ -14,14 +14,12 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
-    baudrate: 9600
+    choice: ["tcpip"]
     id: 1
   - name: maxacpower
     advanced: true
   - preset: battery-params
   - name: capacity
-    advanced: false
     service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}
   - name: minsoc
     advanced: true
@@ -125,7 +123,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 60166 # Cumulative Energy Storage Charging Capacity (kWh * 100)
+      address: 60172 # Cumulative Energy Storage Discharging Capacity (kWh * 100)
       type: holding
       decode: uint64
     scale: 0.01

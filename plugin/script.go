@@ -92,8 +92,7 @@ func (p *Script) exec(script string) (string, error) {
 
 	if err != nil {
 		// use STDOUT if available
-		var ee *exec.ExitError
-		if errors.As(err, &ee) {
+		if ee, ok := errors.AsType[*exec.ExitError](err); ok {
 			s = strings.TrimSpace(string(ee.Stderr))
 		}
 

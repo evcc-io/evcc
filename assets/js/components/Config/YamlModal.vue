@@ -1,5 +1,14 @@
 <template>
-	<GenericModal ref="modal" :size="size" :title="title" @open="open" @close="close">
+	<GenericModal
+		:id="`${name}Modal`"
+		ref="modal"
+		:size="size"
+		:title="title"
+		:data-testid="`${name}-modal`"
+		:config-modal-name="name"
+		@open="open"
+		@close="close"
+	>
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -67,6 +76,7 @@ export default {
 		size: { type: String, default: "xl" },
 		noYamlEditor: Boolean,
 		disableSave: Boolean,
+		name: String,
 	},
 	emits: ["changed", "open"],
 	data() {

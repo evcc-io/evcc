@@ -58,6 +58,11 @@ KEEP_ETC_SERVICE=$KEEP_ETC_SERVICE
 KEEP_USR_LOCAL_BIN=$KEEP_USR_LOCAL_BIN
 EOF
 
+	# Register file with ucfr so it is tracked as belonging to the evcc package
+	if [ -x /usr/bin/ucfr ]; then
+		ucfr evcc "$USER_CHOICE_CONFIG"
+	fi
+
 	# Execute the user decision
 	if [ -f "$ETC_SERVICE" ] && [ "$KEEP_ETC_SERVICE" -eq 0 ]; then
 		echo "Deleting old service file '$ETC_SERVICE'"

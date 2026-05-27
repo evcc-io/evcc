@@ -1,9 +1,19 @@
 <template>
 	<div class="container px-4 safe-area-inset">
 		<TopHeader title="Optimize Debug" />
-		<div class="alert alert-light mb-5">
-			This page is for development purposes only. Gives insights into the upcoming
-			optimization algorithm.
+		<div class="alert alert-light mb-5 d-flex justify-content-between align-items-center">
+			<span>
+				This page is for development purposes only. Gives insights into the upcoming
+				optimization algorithm.
+			</span>
+			<button
+				class="btn btn-sm ms-3 text-nowrap"
+				:class="optimizeCooldown ? 'btn-outline-secondary disabled' : 'btn-outline-dark'"
+				:disabled="optimizeCooldown"
+				@click="optimizeNow"
+			>
+				{{ optimizeCooldown ? "Requested" : "Optimize now" }}
+			</button>
 		</div>
 		<div class="row">
 			<main class="col-12">
@@ -24,7 +34,7 @@
 										true
 									)
 								}}
-								saved
+								net cost
 							</small>
 						</h3>
 						<ChargeChart
@@ -33,6 +43,7 @@
 							:timestamp="evopt.details.timestamp[0]"
 							:currency="currency"
 							:battery-colors="batteryColors"
+							:device-colors="deviceColors"
 						/>
 
 						<h3 class="fw-normal mb-4">Result: SoC Projection</h3>
@@ -82,7 +93,7 @@
 						<TimeSeriesDataTable
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
-							:timestamp="evopt.details.timestamp[0]"
+							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
 							:dimmed-battery-colors="dimmedBatteryColors"
@@ -133,9 +144,10 @@ import PriceChart from "../components/Optimize/PriceChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import CopyButton from "../components/Optimize/CopyButton.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
+import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
-import colors from "../colors";
+import { resolveColors, deviceColorMap } from "../colors";
 import { CURRENCY } from "../types/evcc";
 
 export default defineComponent({
@@ -150,6 +162,11 @@ export default defineComponent({
 		CopyButton,
 	},
 	mixins: [formatter],
+	data() {
+		return {
+			optimizeCooldown: false,
+		};
+	},
 	head() {
 		return { title: "Optimize Debug" };
 	},
@@ -174,12 +191,19 @@ export default defineComponent({
 					return "bg-secondary";
 			}
 		},
+		deviceColors() {
+			return deviceColorMap(store.state.deviceColors);
+		},
+		batteryTitles(): string[] {
+			const details = this.evopt?.details?.batteryDetails || [];
+			return (this.evopt?.res.batteries || []).map(
+				(_, i) => details[i]?.title || details[i]?.name || `battery-${i}`
+			);
+		},
 		batteryColors() {
 			if (!this.evopt?.res.batteries) return [];
-
-			return this.evopt.res.batteries.map(
-				(_, index) => colors.palette[index % colors.palette.length] || ""
-			);
+			const palette = resolveColors(this.batteryTitles, this.deviceColors);
+			return this.batteryTitles.map((t) => palette[t] || "");
 		},
 		dimmedBatteryColors() {
 			return (this.batteryColors || []).map((color) => this.dimColorBy25Percent(color));
@@ -191,7 +215,16 @@ export default defineComponent({
 			return this.evopt?.res ? formatCompactJson(this.evopt.res) : "";
 		},
 	},
+	watch: {
+		evopt() {
+			this.optimizeCooldown = false;
+		},
+	},
 	methods: {
+		optimizeNow() {
+			api.post("optimize");
+			this.optimizeCooldown = true;
+		},
 		dimColorBy25Percent(color: string): string {
 			// Convert color to 25% opacity (40 in hex = 25% of 255)
 			return color?.toLowerCase().replace(/ff$/, "40") || color;
