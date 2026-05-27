@@ -1,5 +1,5 @@
 <template>
-	<div class="root border d-flex gap-1 overflow-hidden" role="group">
+	<div class="root border d-flex gap-1" role="group">
 		<slot></slot>
 	</div>
 </template>

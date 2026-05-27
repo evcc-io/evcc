@@ -185,10 +185,6 @@ h5 {
 	color: var(--evcc-price) !important;
 }
 
-.text-export {
-	color: var(--evcc-export) !important;
-}
-
 .text-co2 {
 	color: var(--evcc-co2) !important;
 }

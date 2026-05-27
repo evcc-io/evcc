@@ -27,7 +27,7 @@ import { type CURRENCY } from "@/types/evcc";
 import { setLoadpointLastSmartFeedInPriorityLimit } from "@/uiLoadpoints";
 
 export default defineComponent({
-	name: "SmartFeedinPriority",
+	name: "SmartFeedInPriority",
 	components: { SmartTariffBase },
 	props: {
 		currentLimit: {

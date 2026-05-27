@@ -4,7 +4,6 @@ import deepCopy from "./deepClone";
 export enum ForecastType {
   Solar = "solar",
   Price = "price",
-  FeedIn = "feedin",
   Co2 = "co2",
 }
 

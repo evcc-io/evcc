@@ -1174,7 +1174,6 @@
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
       "pvProduction": "Erzeugung",
-      "pvProductionLimited": "reduziert",
       "selfConsumption": "Eigenverbrauch"
     },
     "heatingStatus": {

@@ -732,13 +732,13 @@
   "forecast": {
     "co2": {
       "average": "Átlag",
-      "highlightedHour": "Legtisztább óra",
+      "lowestHour": "Legtisztább óra",
       "range": "Tartomány"
     },
     "modalTitle": "Előrejelzés",
     "price": {
       "average": "Átlag",
-      "highlightedHour": "Legolcsóbb óra",
+      "lowestHour": "Legolcsóbb óra",
       "range": "Tartomány"
     },
     "solar": {

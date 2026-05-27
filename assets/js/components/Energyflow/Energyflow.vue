@@ -80,7 +80,7 @@
 					<div class="d-flex flex-column justify-content-between flex-grow-1">
 						<EnergyflowEntry
 							v-if="pvPossible"
-							:name="pvTitle"
+							:name="$t('main.energyflow.pvProduction')"
 							icon="sun"
 							:power="pvProduction"
 							:details="solarForecastRemainingToday"
@@ -396,7 +396,6 @@ export default defineComponent({
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
-		smartFeedInDisableActive: { type: Boolean },
 	},
 	data: () => {
 		return {
@@ -423,13 +422,6 @@ export default defineComponent({
 		},
 		gridImport() {
 			return Math.max(0, this.gridPower);
-		},
-		pvTitle() {
-			let title = this.$t("main.energyflow.pvProduction");
-			if (this.smartFeedInDisableActive) {
-				title += ` (${this.$t("main.energyflow.pvProductionLimited")})`;
-			}
-			return title;
 		},
 		pvProduction() {
 			return Math.abs(this.pvPower);
@@ -711,13 +703,13 @@ export default defineComponent({
 	color: var(--evcc-grid);
 }
 .color-export {
-	color: var(--evcc-export-bg);
+	color: var(--evcc-export);
 }
 .legend-grid {
 	color: var(--evcc-grid);
 }
 .legend-export {
-	color: var(--evcc-export-bg);
+	color: var(--evcc-export);
 }
 .legend-pv {
 	color: var(--evcc-pv);

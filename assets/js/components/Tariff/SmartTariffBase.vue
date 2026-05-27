@@ -171,18 +171,40 @@ export default defineComponent({
 		},
 		optionStartValue() {
 			if (!this.rates?.length) {
-				return [];
+				return 0;
+			}
+			const { min } = this.optionsCostRange;
+			const stepSize = this.optionStepSize;
+			// always show some negative values for price
+			const start = this.optionsStartAtZero ? 0 : stepSize * -11;
+			const minValue = min !== undefined ? Math.min(start, min) : start;
+			return Math.floor(minValue / stepSize) * stepSize;
+		},
+		optionStepSize() {
+			if (!this.rates?.length) {
+				return 0.001;
+			}
+			const { min, max } = this.optionsCostRange;
+			if (min === undefined || max === undefined) {
+				return 0.001;
 			}
 
-			const values = this.rates.map((rate) => rate.value);
-
-			return generateTariffLimitOptions(values, {
-				selectedValue: this.selectedLimit,
-				includeNegatives: !this.optionsStartAtZero,
-				extraHigh: this.optionsExtraHigh,
-				formatValue: (value: number) => this.formatValue(value),
-				direction: this.limitDirection,
-			});
+			const baseSteps = [0.001, 0.002, 0.005];
+			const range = max - Math.min(0, min);
+			for (let scale = 1; scale <= 10000; scale *= 10) {
+				for (const baseStep of baseSteps) {
+					const step = baseStep * scale;
+					if (range < step * 100) return step;
+				}
+			}
+			return 1;
+		},
+		optionsCostRange() {
+			const { min, max } = this.costRange(this.totalSlots);
+			if (this.optionsExtraHigh && max) {
+				return { min, max: max * 2 };
+			}
+			return { min, max };
 		},
 		slots(): Slot[] {
 			return this.slotsForLimit(this.currentLimit);

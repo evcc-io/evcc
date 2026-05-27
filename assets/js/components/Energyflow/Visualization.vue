@@ -306,7 +306,7 @@ html.dark .grid-import {
 	color: var(--bs-dark);
 }
 .pv-export {
-	background-color: var(--evcc-export-bg);
+	background-color: var(--evcc-export);
 	color: var(--bs-dark);
 }
 .unknown-power {

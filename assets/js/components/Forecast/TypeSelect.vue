@@ -17,7 +17,6 @@
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
-import "@h2d2/shopicons/es/regular/powersupply";
 import { defineComponent } from "vue";
 import IconSelectItem from "../Helper/IconSelectItem.vue";
 import IconSelectGroup from "../Helper/IconSelectGroup.vue";
@@ -43,7 +42,6 @@ export default defineComponent({
 			return {
 				[ForecastType.Solar]: !!this.forecast["solar"],
 				[ForecastType.Price]: !!this.forecast["grid"],
-				[ForecastType.FeedIn]: !!this.forecast["feedin"],
 				[ForecastType.Co2]: !!this.forecast["co2"],
 			};
 		},
@@ -51,7 +49,6 @@ export default defineComponent({
 			return {
 				[ForecastType.Solar]: "shopicon-regular-sun",
 				[ForecastType.Price]: DynamicPriceIcon,
-				[ForecastType.FeedIn]: "shopicon-regular-powersupply",
 				[ForecastType.Co2]: "shopicon-regular-eco1",
 			};
 		},
