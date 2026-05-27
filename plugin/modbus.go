@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
@@ -59,7 +59,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Plu
 	// set non-default connect delay
 	conn.ConnectDelay(cc.ConnectDelay)
 
-	log := contextLogger(ctx, util.NewLogger("modbus"))
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("modbus"))
 	conn.Logger(log.TRACE)
 
 	if err := cc.Register.Error(); err != nil {

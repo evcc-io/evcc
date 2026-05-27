@@ -9,6 +9,16 @@ products:
   - brand: LadeFoxx
     description:
       generic: Mikro 2.0
+  - brand: Veton
+    description:
+      generic: One
+  - brand: Veton
+    description:
+      generic: Two
+  - brand: Veton
+    description:
+      generic: Wall
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -68,8 +68,8 @@ meters:
       vm: shared
       script: |
         if (state.batterypower < 0) state.batterySoc++; else state.batterySoc--;
-        if (state.batterySoc < 10) state.batterySoc = 90;
-        if (state.batterySoc > 90) state.batterySoc = 10;
+        if (state.batterySoc < 10) state.batterySoc = 100;
+        if (state.batterySoc > 100) state.batterySoc = 10;
         state.batterySoc;
     capacity: 13.4
     batterymode:
@@ -254,11 +254,6 @@ loadpoints:
 
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
-  grid:
-    type: template
-    template: energy-charts-api # epex spot market prices
-    bzn: DE-LU
-    charges: 0.15
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
@@ -268,8 +263,3 @@ tariffs:
     kwp: 15.5
     sunrise: 7
     sunset: 17
-  co2:
-    type: template
-    template: demo-co2-forecast
-    base: 350
-    variation: 0.4

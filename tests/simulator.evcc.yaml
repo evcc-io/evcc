@@ -48,6 +48,7 @@ loadpoints:
     charger: charger
     meter: lp0meter
     mode: pv
+    circuit: lpc
     soc:
       estimate: false
     vehicle: golf
@@ -99,3 +100,15 @@ tariffs:
     zones:
       - hours: 1-6
         price: 0.2
+
+hems:
+  type: relay
+  maxPower: 4200
+  interval: 0.25s
+  limit:
+    source: http
+    uri: http://localhost:7072/api/state
+    jq: .hems.relay
+
+circuits:
+  - name: lpc

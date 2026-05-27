@@ -105,6 +105,7 @@ nfpms:
 
     dependencies:
       - adduser
+      - ucf
 
     contents:
       - src: ./packaging/init/evcc.service

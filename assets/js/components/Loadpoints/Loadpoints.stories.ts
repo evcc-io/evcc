@@ -1,9 +1,9 @@
 import Loadpoints from "./Loadpoints.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
-import { SMART_COST_TYPE } from "@/types/evcc";
+import { CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
 
 // Create LoadpointCompact structure for the Loadpoints component
-const createLoadpoint = (opts = {}) => {
+const createLoadpoint = (opts: any = {}) => {
   const base = {
     icon: "car",
     title: "Carport",
@@ -18,7 +18,9 @@ const createLoadpoint = (opts = {}) => {
     vehicleSoc: 0,
     chargerFeatureHeating: false,
   };
-  return { ...base, ...opts };
+  const result = { ...base, ...opts };
+  (result as any).id = result.index + 1;
+  return result;
 };
 
 export default {
@@ -46,6 +48,10 @@ const baseArgs = {
       capacity: 8,
       features: ["Offline"],
       repeatingPlans: [],
+      planStrategy: {
+        continuous: false,
+        precondition: 0,
+      },
     },
     {
       name: "vehicle_4",
@@ -54,6 +60,10 @@ const baseArgs = {
       capacity: 80,
       features: ["Offline"],
       repeatingPlans: [],
+      planStrategy: {
+        continuous: true,
+        precondition: 0,
+      },
     },
     {
       name: "vehicle_5",
@@ -62,6 +72,10 @@ const baseArgs = {
       capacity: 0.46,
       features: ["Offline"],
       repeatingPlans: [],
+      planStrategy: {
+        continuous: false,
+        precondition: 0,
+      },
     },
   ],
   smartCostType: SMART_COST_TYPE.PRICE_FORECAST,
@@ -70,7 +84,7 @@ const baseArgs = {
   tariffGrid: 0.144,
   tariffCo2: 252,
   tariffFeedIn: 0.08,
-  currency: "EUR",
+  currency: CURRENCY.EUR,
   gridConfigured: true,
   pvConfigured: true,
   batteryConfigured: true,

@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-type BluelinkVehicleStatus interface {
+type BluelinkVehicleStatusLatest interface {
 	Updated() (time.Time, error)
 	SoC() (float64, error)
 	Status() (api.ChargeStatus, error)
@@ -15,12 +15,9 @@ type BluelinkVehicleStatus interface {
 	Range() (int64, error)
 	Climater() (bool, error)
 	GetLimitSoc() (int64, error)
-}
-
-type BluelinkVehicleStatusLatest interface {
-	BluelinkVehicleStatus() BluelinkVehicleStatus
 	Odometer() (float64, error)
 	Position() (float64, float64, error)
+	Capacity() (float64, error)
 }
 
 type VehiclesResponse struct {
@@ -33,7 +30,7 @@ type VehiclesResponse struct {
 type StatusResponse struct {
 	RetCode string
 	ResCode string
-	ResMsg  VehicleStatus
+	// ResMsg is intentionally omitted - structure varies between old/CCS2 models
 }
 
 type StatusLatestResponse struct {
@@ -85,12 +82,15 @@ const (
 	timeOffset = " +0100"
 
 	plugTypeAC = 1
+	unitMiles  = 3
+	kmPerMile  = 1.60934
 )
 
 type DrivingDistance struct {
 	RangeByFuel struct {
 		EvModeRange struct {
-			Value int
+			Value float64
+			Unit  int
 		}
 	}
 }
@@ -147,14 +147,19 @@ func (d VehicleStatus) FinishTime() (time.Time, error) {
 func (d VehicleStatus) Range() (int64, error) {
 	if d.EvStatus != nil {
 		if dist := d.EvStatus.DrvDistance; len(dist) == 1 {
-			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
+			evRange := dist[0].RangeByFuel.EvModeRange
+			value := evRange.Value
+			if evRange.Unit == unitMiles {
+				value *= kmPerMile
+			}
+			return int64(value), nil
 		}
 	}
 	return 0, api.ErrNotAvailable
 }
 
 func (d VehicleStatus) Climater() (bool, error) {
-	return d.AirCtrlOn || d.Defrost, nil
+	return d.Defrost, nil
 }
 
 func (d VehicleStatus) GetLimitSoc() (int64, error) {
@@ -168,13 +173,41 @@ func (d VehicleStatus) GetLimitSoc() (int64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-func (d StatusLatestResponse) BluelinkVehicleStatus() BluelinkVehicleStatus {
-	return d.ResMsg.VehicleStatusInfo.VehicleStatus
+func (d StatusLatestResponse) Updated() (time.Time, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Updated()
+}
+
+func (d StatusLatestResponse) SoC() (float64, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.SoC()
+}
+
+func (d StatusLatestResponse) Status() (api.ChargeStatus, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Status()
+}
+
+func (d StatusLatestResponse) FinishTime() (time.Time, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.FinishTime()
+}
+
+func (d StatusLatestResponse) Range() (int64, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Range()
+}
+
+func (d StatusLatestResponse) Climater() (bool, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.Climater()
+}
+
+func (d StatusLatestResponse) GetLimitSoc() (int64, error) {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus.GetLimitSoc()
 }
 
 func (d StatusLatestResponse) Odometer() (float64, error) {
-	if d.ResMsg.VehicleStatusInfo.Odometer != nil {
-		return d.ResMsg.VehicleStatusInfo.Odometer.Value, nil
+	if odo := d.ResMsg.VehicleStatusInfo.Odometer; odo != nil {
+		value := odo.Value
+		if odo.Unit == unitMiles {
+			value *= kmPerMile
+		}
+		return value, nil
 	}
 	return 0, api.ErrNotAvailable
 }
@@ -185,6 +218,10 @@ func (d StatusLatestResponse) Position() (float64, float64, error) {
 		return pos.Lat, pos.Lon, nil
 	}
 	return 0, 0, api.ErrNotAvailable
+}
+
+func (d StatusLatestResponse) Capacity() (float64, error) {
+	return 0, api.ErrNotAvailable
 }
 
 type StatusLatestResponseCCS struct {
@@ -279,10 +316,6 @@ type VehicleStatusCCS struct {
 	}
 }
 
-func (d StatusLatestResponseCCS) BluelinkVehicleStatus() BluelinkVehicleStatus {
-	return d
-}
-
 func (d StatusLatestResponseCCS) Updated() (time.Time, error) {
 	epoch, err := strconv.ParseInt(d.ResMsg.LastUpdateTime, 10, 64)
 	if err != nil {
@@ -350,4 +383,15 @@ func (d StatusLatestResponseCCS) Position() (float64, float64, error) {
 		return d.ResMsg.State.Vehicle.Location.GeoCoord.Latitude, d.ResMsg.State.Vehicle.Location.GeoCoord.Longitude, nil
 	}
 	return 0, 0, api.ErrNotAvailable
+}
+
+func (d StatusLatestResponseCCS) Capacity() (float64, error) {
+	if d.ResMsg.State.Vehicle.Green != nil {
+		// Convert from Kilo Joules to kWh: 1 kWh = 3,600kJ
+		capacityKWh := d.ResMsg.State.Vehicle.Green.BatteryManagement.BatteryCapacity.Value / 3600
+		if capacityKWh > 0 {
+			return capacityKWh, nil
+		}
+	}
+	return 0, api.ErrNotAvailable
 }

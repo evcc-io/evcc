@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb"
 	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
@@ -19,7 +20,7 @@ func init() {
 }
 
 // NewOpenWBFromConfig creates a new configurable meter
-func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewOpenWBFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		mqtt.Config     `mapstructure:",squash"`
 		Topic           string
@@ -139,7 +140,13 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	res := m.Decorate(nil, currents, nil, nil, soc, capacity, nil, nil, nil, nil)
+	if strings.ToLower(cc.Usage) == "battery" {
+		implement.Has(m, implement.Battery(soc))
+		implement.May(m, implement.BatteryCapacity(capacity))
+		return m, nil
+	}
 
-	return res, nil
+	implement.May(m, implement.PhaseCurrents(currents))
+
+	return m, nil
 }

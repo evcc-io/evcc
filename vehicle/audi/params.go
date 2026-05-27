@@ -2,18 +2,10 @@ package audi
 
 import "net/url"
 
-const (
-	Brand   = "Audi"
-	Country = "DE"
-
-	// Authorization ClientID
-	AuthClientID = "77869e21-e30a-4a92-b016-48ab7d3db1d8"
-)
-
 // Authorization parameters
 var AuthParams = url.Values{
-	"response_type": {"code id_token token"},
-	"client_id":     {"09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"},
+	"response_type": {"code"},
+	"client_id":     {"f4d0934f-32bf-4ce4-b3c4-699a7049ad26@apps_vw-dilab_com"},
 	"redirect_uri":  {"myaudi:///"},
 	"scope":         {"openid profile mbb"}, // vin badge birthdate nickname email address phone name picture
 	"prompt":        {"login"},
@@ -21,6 +13,8 @@ var AuthParams = url.Values{
 }
 
 var IDKParams = url.Values{
-	"client_id":    {"09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"},
+	"client_id":    {"f4d0934f-32bf-4ce4-b3c4-699a7049ad26@apps_vw-dilab_com"},
 	"redirect_uri": {"myaudi:///"},
 }
+
+const AZSConfig = "myaudi"

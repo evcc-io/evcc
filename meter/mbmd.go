@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -15,26 +16,23 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
-// ModbusMbmd is an api.Meter implementation with configurable getters and setters.
-type ModbusMbmd struct {
-	conn     *modbus.Connection
-	device   *rs485.RS485
-	opPower  rs485.Operation
-	opEnergy rs485.Operation
-	opSoc    rs485.Operation
+// Mbmd is an api.Meter implementation with configurable getters and setters.
+type Mbmd struct {
+	conn   *modbus.Connection
+	device *rs485.RS485
 }
 
 func init() {
-	registry.AddCtx("mbmd", NewModbusMbmdFromConfig)
+	registry.AddCtx("mbmd", NewMbmdFromConfig)
 }
 
-//go:generate go tool decorate -f decorateModbusMbmd -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
-
-// NewModbusMbmdFromConfig creates api.Meter from config
-func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+// NewMbmdFromConfig creates api.Meter from config
+func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Model              string
 		batteryCapacity    `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, Soc string
 		Currents           []string
@@ -83,62 +81,101 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) 
 		return nil, err
 	}
 
-	m := &ModbusMbmd{
+	mbmd := &Mbmd{
 		conn:   conn,
 		device: device,
 	}
 
 	ops := device.Producer().Produce()
 
-	m.opPower, err = rs485FindDeviceOp(ops, cc.Power)
+	powerG, err := mbmd.deviceOp(ops, cc.Power)
 	if err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
+	m, _ := NewConfigurable(powerG)
 
 	// decorate energy
-	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		m.opEnergy, err = rs485FindDeviceOp(ops, cc.Energy)
+		totalEnergy, err := mbmd.deviceOp(ops, cc.Energy)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
-
-		totalEnergy = m.totalEnergy
-	}
-
-	// decorate currents
-	currentsG, err := m.buildPhaseProviders(ops, cc.Currents)
-	if err != nil {
-		return nil, fmt.Errorf("currents: %w", err)
-	}
-
-	// decorate voltages
-	voltagesG, err := m.buildPhaseProviders(ops, cc.Voltages)
-	if err != nil {
-		return nil, fmt.Errorf("voltages: %w", err)
-	}
-
-	// decorate powers
-	powersG, err := m.buildPhaseProviders(ops, cc.Powers)
-	if err != nil {
-		return nil, fmt.Errorf("powers: %w", err)
+		implement.Has(m, implement.MeterEnergy(totalEnergy))
 	}
 
 	// decorate soc
-	var soc func() (float64, error)
 	if cc.Soc != "" {
-		m.opSoc, err = rs485FindDeviceOp(ops, cc.Soc)
+		soc, err := mbmd.deviceOp(ops, cc.Soc)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
+		implement.Has(m, implement.Battery(soc))
 
-		soc = m.soc
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
+
+		return m, nil
 	}
 
-	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.batteryCapacity.Decorator()), nil
+	// decorate currents
+	currentsG, err := mbmd.buildPhaseProviders(ops, cc.Currents)
+	if err != nil {
+		return nil, fmt.Errorf("currents: %w", err)
+	}
+	implement.May(m, implement.PhaseCurrents(currentsG))
+
+	// decorate voltages
+	voltagesG, err := mbmd.buildPhaseProviders(ops, cc.Voltages)
+	if err != nil {
+		return nil, fmt.Errorf("voltages: %w", err)
+	}
+	implement.May(m, implement.PhaseVoltages(voltagesG))
+
+	// decorate powers
+	powersG, err := mbmd.buildPhaseProviders(ops, cc.Powers)
+	if err != nil {
+		return nil, fmt.Errorf("powers: %w", err)
+	}
+	implement.May(m, implement.PhasePowers(powersG))
+
+	return m, nil
 }
 
-func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []string) (func() (float64, float64, float64, error), error) {
+// deviceOp checks is RS485 device supports operation
+func (m *Mbmd) deviceOp(ops []rs485.Operation, name string) (func() (float64, error), error) {
+	// leading minus sign?
+	name, invert := strings.CutPrefix(name, "-")
+
+	measurement, err := meters.MeasurementString(name)
+	if err != nil {
+		return nil, fmt.Errorf("invalid measurement: %s", name)
+	}
+
+	for _, op := range ops {
+		if op.IEC61850 == measurement {
+			return func() (float64, error) {
+				res, err := m.device.QueryOp(m.conn, op)
+
+				// silence NaN reading errors by assuming zero
+				if err != nil && errors.Is(err, meters.ErrNaN) {
+					res.Value = 0
+					err = nil
+				}
+
+				if invert {
+					return -res.Value, err
+				}
+
+				return res.Value, err
+			}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unsupported measurement: %s", measurement.String())
+}
+
+func (m *Mbmd) buildPhaseProviders(ops []rs485.Operation, readings []string) (func() (float64, float64, float64, error), error) {
 	if len(readings) == 0 {
 		return nil, nil
 	}
@@ -149,43 +186,13 @@ func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []strin
 
 	var phases [3]func() (float64, error)
 	for idx, reading := range readings {
-		opCurrent, err := rs485FindDeviceOp(ops, reading)
+		g, err := m.deviceOp(ops, reading)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
 		}
 
-		phases[idx] = func() (float64, error) {
-			return m.floatGetter(opCurrent)
-		}
+		phases[idx] = g
 	}
 
 	return measurement.CombinePhases(phases), nil
-}
-
-// floatGetter executes configured modbus read operation and implements func() (float64, error)
-func (m *ModbusMbmd) floatGetter(op rs485.Operation) (float64, error) {
-	res, err := m.device.QueryOp(m.conn, op)
-
-	// silence NaN reading errors by assuming zero
-	if err != nil && errors.Is(err, meters.ErrNaN) {
-		res.Value = 0
-		err = nil
-	}
-
-	return res.Value, err
-}
-
-// CurrentPower implements the api.Meter interface
-func (m *ModbusMbmd) CurrentPower() (float64, error) {
-	return m.floatGetter(m.opPower)
-}
-
-// totalEnergy implements the api.MeterEnergy interface
-func (m *ModbusMbmd) totalEnergy() (float64, error) {
-	return m.floatGetter(m.opEnergy)
-}
-
-// soc implements the api.Battery interface
-func (m *ModbusMbmd) soc() (float64, error) {
-	return m.floatGetter(m.opSoc)
 }

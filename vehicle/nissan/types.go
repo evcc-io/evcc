@@ -61,8 +61,8 @@ type Request struct {
 }
 
 type Payload struct {
-	Type       string                 `json:"type"`
-	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	Type       string         `json:"type"`
+	Attributes map[string]any `json:"attributes,omitempty"`
 }
 
 type Error struct {

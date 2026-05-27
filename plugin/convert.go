@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewConvertFromConfig creates type conversion provider
-func NewConvertFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewConvertFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := convertPlugin{
 		ctx: ctx,
 	}
@@ -65,6 +65,26 @@ func (o *convertPlugin) IntSetter(param string) (func(int64) error, error) {
 			b := make([]byte, 8)
 			binary.BigEndian.PutUint64(b, uint64(val))
 			return set(b)
+		}, err
+
+	default:
+		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
+	}
+}
+
+var _ BoolSetter = (*convertPlugin)(nil)
+
+func (o *convertPlugin) BoolSetter(param string) (func(bool) error, error) {
+	switch o.Convert {
+	case "bool2int":
+		set, err := o.Set.IntSetter(o.ctx, param)
+
+		return func(val bool) error {
+			var i int64
+			if val {
+				i = 1
+			}
+			return set(i)
 		}, err
 
 	default:

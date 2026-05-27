@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb/pro"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -20,6 +21,7 @@ func init() {
 
 // OpenWBPro charger implementation
 type OpenWBPro struct {
+	implement.Caps
 	*request.Helper
 	uri     string
 	current float64
@@ -27,7 +29,7 @@ type OpenWBPro struct {
 }
 
 // NewOpenWBProFromConfig creates a OpenWBPro charger from generic config
-func NewOpenWBProFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOpenWBProFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -39,7 +41,21 @@ func NewOpenWBProFromConfig(ctx context.Context, other map[string]interface{}) (
 		return nil, err
 	}
 
-	return NewOpenWBPro(ctx, util.DefaultScheme(cc.URI, "http"), cc.Cache)
+	wb, err := NewOpenWBPro(ctx, util.DefaultScheme(cc.URI, "http"), cc.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	status, err := wb.statusG.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	if status.Version >= 9 {
+		implement.Has(wb, implement.Resurrector(wb.wakeup))
+	}
+
+	return wb, nil
 }
 
 // NewOpenWBPro creates OpenWBPro charger
@@ -47,6 +63,7 @@ func NewOpenWBPro(ctx context.Context, uri string, cache time.Duration) (*OpenWB
 	log := util.NewLogger("owbpro")
 
 	wb := &OpenWBPro{
+		Caps:    implement.New(),
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
@@ -226,4 +243,8 @@ func (wb *OpenWBPro) Identify() (string, error) {
 	}
 
 	return res.RfidTag, nil
+}
+
+func (wb *OpenWBPro) wakeup() error {
+	return wb.set("cp_interrupt=true")
 }

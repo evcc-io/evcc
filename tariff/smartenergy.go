@@ -24,7 +24,7 @@ func init() {
 	registry.Add("smartenergy", NewSmartEnergyFromConfig)
 }
 
-func NewSmartEnergyFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewSmartEnergyFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed `mapstructure:",squash"`
 	}

@@ -31,8 +31,9 @@ func NewMonitor[T any](timeout time.Duration) *Monitor[T] {
 }
 
 // WithClock sets the a clock for debugging
-func (m *Monitor[T]) WithClock(clock clock.Clock) {
+func (m *Monitor[T]) WithClock(clock clock.Clock) *Monitor[T] {
 	m.clock = clock
+	return m
 }
 
 // Set updates the current value and timestamp
@@ -86,7 +87,7 @@ func (m *Monitor[T]) GetFunc(get func(T)) error {
 			// mark as waited once
 			m.mu.Lock()
 			// TODO fix and test
-			m.updated.Add(time.Nanosecond)
+			m.updated = m.updated.Add(time.Nanosecond)
 			m.mu.Unlock()
 
 			select {

@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -36,7 +36,7 @@ func init() {
 }
 
 // NewBlueprintFromConfig creates a blueprint charger from generic config
-func NewBlueprintFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewBlueprintFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		URI   string
 		Cache time.Duration

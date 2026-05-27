@@ -1,4 +1,5 @@
 template: tinkerforge-warp
+deprecated: true
 covers:
   - tinkerforge-warp-pro
 products:
@@ -8,7 +9,7 @@ products:
   - brand: TinkerForge
     description:
       generic: WARP Charger Pro
-capabilities: ["mA", "1p3p", "rfid"]
+capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:
     en: WARP Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
@@ -27,7 +28,7 @@ params:
       en: WEM Firmware v2 required.
 render: |
   type: warp2
-  {{ include "mqtt" . }}
+  {{- include "mqtt" . }}
   topic: {{ .topic }}
   {{- if .energymanager }}
   energymanager: {{ .energymanager }}

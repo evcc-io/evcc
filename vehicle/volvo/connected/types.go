@@ -11,7 +11,7 @@ type EnergyState struct {
 	}
 	ElectricRange struct {
 		Status    string
-		Value     int64
+		Value     float64
 		Unit      string
 		Timestamp time.Time
 	}

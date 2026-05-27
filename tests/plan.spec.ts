@@ -8,6 +8,7 @@ const mobile = devices["iPhone 12 Mini"].viewport;
 
 const CONFIG = "plan.evcc.yaml";
 const CONFIG_NO_TARIFF = "basics.evcc.yaml";
+const CONFIG_FIXED_TARIFF = "plan-fixed-tariff.evcc.yaml";
 
 test.beforeEach(async () => {
   await start(CONFIG);
@@ -17,10 +18,10 @@ test.afterEach(async () => {
   await stop();
 });
 
-function getWeekday(offset = 1) {
+function getWeekday(offset = 1, style: "long" | "short" = "long") {
   const date = new Date();
   date.setDate(date.getDate() + offset);
-  return date.toLocaleDateString("en-US", { weekday: "long" });
+  return date.toLocaleDateString("en-US", { weekday: style });
 }
 
 async function setAndVerifyPlan(
@@ -78,24 +79,25 @@ test.describe("basic functionality", async () => {
     await page.getByTestId("static-plan-day").selectOption({ index: 1 });
     await page.getByTestId("static-plan-time").fill("09:30");
     await page.getByTestId("static-plan-soc").selectOption("80%");
-    await page.getByTestId("static-plan-precondition-lg-toggle").click();
-    await page
-      .getByTestId("static-plan-precondition-lg-select")
-      .getByRole("combobox")
-      .selectOption("1 hour");
+    await page.getByRole("button", { name: "Strategy settings" }).click();
+    await expect(page.getByLabel("Late Charging")).toBeVisible();
+    await page.getByLabel("Late Charging").selectOption("1 hour");
     await page.getByTestId("static-plan-active").click();
     await page.getByRole("button", { name: "Close" }).click();
 
+    const tomorrowShort = getWeekday(1, "short");
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
     await expect(lp1.getByTestId("charging-plan").getByRole("button")).toHaveText(
-      "tomorrow 09:3080%"
+      [`${tomorrowShort} 09:30`, "80%"].join("")
     );
 
     await expect(lp1.getByTestId("vehicle-status-charger")).toHaveText("Connected.");
-    await expect(lp1.getByTestId("vehicle-status-planstart")).toHaveText(/tomorrow .*/);
+    await expect(lp1.getByTestId("vehicle-status-planstart")).toHaveText(
+      new RegExp(`${tomorrowShort} .*`)
+    );
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
     await expect(lp1.getByTestId("charging-plan").getByRole("button")).toHaveText(
-      "tomorrow 09:3080%"
+      [`${tomorrowShort} 09:30`, "80%"].join("")
     );
     await lp1.getByTestId("charging-plan").getByRole("button").click();
     await expect(page.getByTestId("static-plan-soc")).toHaveValue("80");
@@ -119,6 +121,35 @@ test.describe("vehicle variations", async () => {
 
       // no repeating plans option
       await verifyRepeatingPlanAvailable(page, lp1, false);
+    });
+
+    test("non-standard energy values are visible in dropdown", async ({ page }) => {
+      await page.goto("/");
+      const lp1 = await page.getByTestId("loadpoint").first();
+
+      // verify guest vehicle
+      await expect(lp1.getByTestId("vehicle-name")).toHaveText("Guest vehicle");
+
+      // create plan with non-standard energy value via API
+      const response = await page.request.post(
+        `/api/loadpoints/1/plan/energy/32/2050-09-04T05:00:00.000Z`
+      );
+      expect(response.status()).toBe(200);
+
+      // verify plan is shown
+      const plan = await lp1.getByTestId("charging-plan");
+      await expect(plan).toContainText("32 kWh");
+
+      // open modal and verify dropdown
+      await plan.getByRole("button").click();
+      const modal = await page.getByTestId("charging-plan-modal").first();
+      const energySelect = modal.getByTestId("static-plan-energy");
+      await expect(energySelect).toBeVisible();
+
+      // verify non-standard value is selected
+      await expect(energySelect).toHaveValue("32");
+      await energySelect.selectOption("70");
+      await expect(energySelect).toHaveValue("70");
     });
   });
 
@@ -211,6 +242,35 @@ test.describe("vehicle variations", async () => {
 
       // repeating plans option
       await verifyRepeatingPlanAvailable(page, lp1, true);
+    });
+
+    test("non-standard soc values are visible in dropdown", async ({ page }) => {
+      await page.goto("/");
+      const lp1 = await page.getByTestId("loadpoint").first();
+      await lp1
+        .getByTestId("change-vehicle")
+        .locator("select")
+        .selectOption("Vehicle with SoC with Capacity");
+
+      // create plan with non-standard SoC value via API
+      const response = await page.request.post(
+        `/api/vehicles/vehicleSocCapacity/plan/soc/72/2050-09-04T05:00:00.000Z`
+      );
+      expect(response.status()).toBe(200);
+
+      // verify plan is shown
+      const plan = await lp1.getByTestId("charging-plan");
+      await expect(plan).toContainText("72%");
+
+      // open modal and verify dropdown
+      plan.getByRole("button").click();
+      const modal = await page.getByTestId("charging-plan-modal").first();
+      const socSelect = modal.getByTestId("static-plan-soc");
+
+      // verify non-standard value is selected
+      await expect(socSelect).toHaveValue("72");
+      await socSelect.selectOption("80%");
+      await expect(socSelect).toHaveValue("80");
     });
   });
 
@@ -310,6 +370,18 @@ test.describe("preview", async () => {
       await page.getByTestId("static-plan-active").click();
       await expect(page.getByTestId("plan-preview-title")).toHaveText("Preview plan");
     });
+  });
+  test("fixed tariff: show prices", async ({ page }) => {
+    await restart(CONFIG_FIXED_TARIFF);
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+
+    const modal = await page.getByTestId("charging-plan-modal");
+    await expect(modal.getByTestId("tariff-value")).toHaveText(
+      ["Energy price", "40.0 ct/kWh"].join("")
+    );
   });
 });
 
@@ -413,26 +485,17 @@ test.describe("repeating", async () => {
     await modal.getByRole("checkbox", { name: "Select all" }).check();
     await modal.getByTestId("repeating-plan-time").fill("11:11");
 
-    // switch between previews
+    // with multiple plans, preview shows first plan
     await page.waitForLoadState("networkidle");
-    await modal
-      .getByTestId("plan-preview-title")
-      .getByRole("combobox")
-      .selectOption("Preview plan #2");
-    await expect(modal.getByTestId("target-text")).toContainText("11:11");
-
-    await modal
-      .getByTestId("plan-preview-title")
-      .getByRole("combobox")
-      .selectOption("Preview plan #1");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
     await expect(modal.getByTestId("target-text")).toContainText("09:00");
 
-    // activate #1
+    // activate #1 - should show next plan #1
     await modal.getByTestId("static-plan-active").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
     await expect(modal.getByTestId("target-text")).toContainText("09:00");
 
-    // activate #2
+    // deactivate #1, activate #2 - should show next plan #2
     await modal.getByTestId("static-plan-active").click();
     await modal.getByTestId("repeating-plan-active").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
@@ -440,9 +503,7 @@ test.describe("repeating", async () => {
 
     // back to preview if no active plan
     await modal.getByTestId("repeating-plan-active").click();
-    await expect(modal.getByTestId("plan-preview-title").locator("option:checked")).toHaveText(
-      "Preview plan #1"
-    );
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
     await expect(modal.getByTestId("target-text")).toContainText("9:00");
   });
 
@@ -484,12 +545,13 @@ test.describe("repeating", async () => {
     await modal.getByTestId("repeating-plan-weekdays").click(); // close
 
     // activate
-    await modal.getByTestId("repeating-plan-time").fill("02:22");
+    await modal.getByTestId("repeating-plan-time").fill("09:22");
     await modal.getByTestId("repeating-plan-active").click();
+    await page.waitForLoadState("networkidle");
 
     // specific weekday and time
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
-    await expect(modal.getByTestId("target-text")).toContainText("Thu 02:22");
+    await expect(modal.getByTestId("target-text")).toContainText("Thu 09:22");
   });
 
   test("next plan", async ({ page }) => {
@@ -574,6 +636,7 @@ test.describe("repeating", async () => {
     await page.goto("/");
 
     const tomorrow = getWeekday(1);
+    const tomorrowShort = getWeekday(1, "short");
 
     let lp1 = await page.getByTestId("loadpoint").first();
     await lp1
@@ -591,17 +654,15 @@ test.describe("repeating", async () => {
     await plan.getByRole("checkbox", { name: "Select all" }).click(); // uncheck all
     await plan.getByRole("checkbox", { name: tomorrow }).check();
     await plan.getByTestId("repeating-plan-time").fill("09:20");
-    await plan.getByTestId("repeating-plan-precondition-lg-toggle").click();
-    await plan
-      .getByTestId("repeating-plan-precondition-lg-select")
-      .getByRole("combobox")
-      .selectOption("2 hours");
+    await modal.getByRole("button", { name: "Strategy settings" }).click();
+    await expect(modal.getByLabel("Late Charging")).toBeVisible();
+    await modal.getByLabel("Late Charging").selectOption("2 hours");
     await plan.getByTestId("repeating-plan-active").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
     await modal.getByRole("button", { name: "Close" }).click();
     await expect(
-      lp1.getByTestId("charging-plan").getByRole("button", { name: "tomorrow 09:20" })
+      lp1.getByTestId("charging-plan").getByRole("button", { name: `${tomorrowShort} 09:20` })
     ).toBeVisible();
 
     await restart(CONFIG);
@@ -613,30 +674,67 @@ test.describe("repeating", async () => {
       .locator("select")
       .selectOption("Vehicle with SoC with Capacity");
 
-    await lp1.getByTestId("charging-plan").getByRole("button", { name: "tomorrow 09:20" }).click();
+    await lp1
+      .getByTestId("charging-plan")
+      .getByRole("button", { name: `${tomorrowShort} 09:20` })
+      .click();
     await expect(modal.getByTestId("plan-entry")).toHaveCount(2);
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
-    await expect(modal.getByTestId("repeating-plan-precondition-lg-toggle")).toBeChecked();
-    await expect(
-      modal.getByTestId("repeating-plan-precondition-lg-select").locator("option:checked")
-    ).toHaveText("2 hours");
+    await expect(modal.getByLabel("Late Charging")).toHaveValue("7200");
   });
 });
 
 // add test for precondition, start with basic.evcc.yaml and verify that precondition toggle element is not visible. make dedicated describe block
-test.describe("precondition", async () => {
+test.describe("plan strategy", async () => {
   test("only if dynamic tariff exists", async ({ page }) => {
     await restart(CONFIG_NO_TARIFF);
     await page.goto("/");
     const lp1 = await page.getByTestId("loadpoint").first();
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await expect(page.getByTestId("static-plan-active")).toBeVisible();
-    await expect(page.getByTestId("static-plan-precondition-lg-toggle")).not.toBeVisible();
-    await expect(page.getByTestId("static-plan-precondition-lg-select")).not.toBeVisible();
+    const modal = page.getByTestId("charging-plan-modal");
+    await expect(modal.getByTestId("static-plan-active")).toBeVisible();
 
-    // verify small viewport
+    // Strategy toggle should be visible but expand to show informational note only
+    await expect(modal.getByRole("button", { name: "Strategy settings" })).toBeVisible();
+    await modal.getByRole("button", { name: "Strategy settings" }).click();
+    await expect(modal.getByLabel("Optimization")).not.toBeVisible();
+    await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
+    await expect(modal).toContainText("just in time for departure");
+  });
+
+  test("visible and functional on mobile", async ({ page }) => {
+    await page.goto("/");
+
+    // Set mobile viewport
     await page.setViewportSize(mobile);
-    await expect(page.getByTestId("static-plan-precondition-select")).not.toBeVisible();
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+
+    const modal = page.getByTestId("charging-plan-modal");
+
+    // Strategy toggle should be visible on mobile
+    await expect(modal.getByRole("button", { name: "Strategy settings" })).toBeVisible();
+
+    // Open strategy panel
+    await modal.getByRole("button", { name: "Strategy settings" }).click();
+
+    // Strategy controls should be visible and functional
+    await expect(modal.getByLabel("Optimization")).toBeVisible();
+    await expect(modal.getByLabel("Late Charging")).toBeVisible();
+
+    // Test changing strategy on mobile
+    await modal.getByLabel("Optimization").selectOption("true");
+    await modal.getByLabel("Late Charging").selectOption("1 hour");
+
+    // Verify the selections work
+    await expect(modal.getByLabel("Optimization")).toHaveValue("true");
+    await expect(modal.getByLabel("Late Charging")).toHaveValue("3600");
   });
 });

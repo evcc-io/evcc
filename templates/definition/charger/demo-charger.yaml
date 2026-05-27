@@ -29,7 +29,7 @@ params:
       de: Ladebereit
       en: Enabled
     type: bool
-    default: true
+    default: false
   - name: maxcurrent
     description:
       de: Maximale Stromstärke

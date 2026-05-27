@@ -24,6 +24,7 @@ const (
 	ClassJavascript
 	ClassGo
 	ClassHEMS
+	ClassSHM
 	ClassInflux
 	ClassMessenger
 	ClassSponsorship
@@ -81,7 +82,7 @@ func (e ClassError) MarshalJSON() ([]byte, error) {
 		Error: e.err.Error(),
 	}
 
-	if de := new(DeviceError); errors.As(e.err, &de) {
+	if de, ok := errors.AsType[*DeviceError](e.err); ok {
 		res.Device = de.Name
 	}
 

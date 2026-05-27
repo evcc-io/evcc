@@ -62,14 +62,14 @@ func TokenSource(log *util.Logger, uri, user, password string) (oauth2.TokenSour
 	if err == nil {
 		var token Token
 		if err = c.DoJSON(req, &token); err == nil {
-			c.TokenSource = oauth.RefreshTokenSource(token.AsOAuth2Token(), c)
+			c.TokenSource = oauth.RefreshTokenSource(token.AsOAuth2Token(), c.refreshToken)
 		}
 	}
 
 	return c, err
 }
 
-func (c *tokenSource) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (c *tokenSource) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},

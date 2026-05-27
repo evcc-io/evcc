@@ -30,11 +30,9 @@ func NewIdentity(log *util.Logger) *Identity {
 }
 
 func (v *Identity) Login(user, password string) (int64, error) {
-	hash := md5.New()
-	hash.Write([]byte(password))
-
+	hash := md5.Sum([]byte(password))
+	v.hash = hex.EncodeToString(hash[:])
 	v.user = user
-	v.hash = hex.EncodeToString(hash.Sum(nil))
 
 	var res User
 

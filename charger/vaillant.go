@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -26,6 +26,7 @@ import (
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -43,21 +44,20 @@ type Vaillant struct {
 	systemId string
 }
 
-//go:generate go tool decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
-
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
-func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed           `mapstructure:",squash"`
 		User, Password  string
 		Realm           string
+		System          string
 		HeatingZone     int
 		HeatingSetpoint float32
 		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice, api.SwitchDevice},
 		},
 		Realm: sensonet.REALM_GERMANY,
 		Cache: time.Minute,
@@ -85,12 +85,16 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		return nil, err
 	}
 
-	homes, err := conn.GetHomes()
+	home, err := ensureEx("home", cc.System, func() ([]sensonet.Home, error) {
+		return conn.GetHomes()
+	}, func(home sensonet.Home) (string, error) {
+		return home.SystemID, nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	systemId := homes[0].SystemID
+	systemId := home.SystemID
 	heating := cc.HeatingSetpoint > 0
 
 	wwCancel := func() {}
@@ -150,14 +154,13 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		SgReady:  sgr,
 	}
 
-	var power func() (float64, error)
 	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
-		power = util.Cached(func() (float64, error) {
+		implement.Has(res, implement.Meter(util.Cached(func() (float64, error) {
 			res, err := conn.GetMpcData(systemId)
 			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
 				return d.CurrentPower
 			}), err
-		}, cc.Cache)
+		}, cc.Cache)))
 	}
 
 	heatingTemp := func(zz []sensonet.StateZone) float64 {
@@ -176,9 +179,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 		heatingTempSensor = heatingTemp(system.State.Zones) > 0
 	}
 
-	var temp func() (float64, error)
 	if !heating || heatingTempSensor {
-		temp = util.Cached(func() (float64, error) {
+		implement.Has(res, implement.Battery(util.Cached(func() (float64, error) {
 			system, err := conn.GetSystem(systemId)
 			if err != nil {
 				return 0, err
@@ -197,10 +199,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]interface{}) (a
 			default:
 				return 0, api.ErrNotAvailable
 			}
-		}, cc.Cache)
+		}, cc.Cache)))
 	}
 
-	return decorateVaillant(res, power, temp), nil
+	return res, nil
 }
 
 func (v *Vaillant) print(chapter int, prefix string, zz ...any) {

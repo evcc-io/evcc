@@ -1,6 +1,5 @@
 <template>
 	<Site
-		v-if="state.startup"
 		:notifications="notifications"
 		v-bind="state"
 		:selected-loadpoint-index="selectedLoadpointIndex"

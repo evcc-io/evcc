@@ -117,7 +117,8 @@ export default defineComponent({
 			return this.uniqueNames.length == 1;
 		},
 		singleIcon() {
-			return icons[this.uniqueNames[0]] || `shopicon-regular-car3`;
+			const firstName = this.uniqueNames[0];
+			return (firstName && icons[firstName]) || `shopicon-regular-car3`;
 		},
 	},
 });

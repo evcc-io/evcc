@@ -6,6 +6,8 @@ params:
   - preset: vehicle-base
   - name: vin
     example: WAUZZZ...
+  - preset: vehicle-features
 render: |
-  type: etron
+  type: audi
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

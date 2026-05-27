@@ -20,7 +20,7 @@ func init() {
 }
 
 // NewSmartHelloFromConfig creates a new vehicle
-func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewSmartHelloFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string

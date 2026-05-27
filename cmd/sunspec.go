@@ -8,7 +8,7 @@ import (
 
 	sunspec "github.com/andig/gosunspec"
 	bus "github.com/andig/gosunspec/modbus"
-	"github.com/andig/gosunspec/smdx"
+	"github.com/andig/gosunspec/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/volkszaehler/mbmd/meters"
@@ -31,13 +31,13 @@ func init() {
 	slaveID = sunspecCmd.Flags().IntP("id", "i", 1, "Slave id")
 }
 
-func pf(format string, v ...interface{}) {
+func pf(format string, v ...any) {
 	format = strings.TrimSuffix(format, "\n") + "\n"
 	fmt.Printf(format, v...)
 }
 
 func modelName(m sunspec.Model) string {
-	model := smdx.GetModel(uint16(m.Id()))
+	model := types.GetModel(uint16(m.Id()))
 	if model == nil {
 		return ""
 	}

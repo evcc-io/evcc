@@ -13,15 +13,11 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 115200
     comset: 8N1
-  - name: capacity
-    advanced: true
+  - preset: battery-params
   # battery control
   - name: defaultmode
+    usages: ["battery"]
     default: 2
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
     advanced: true
 render: |
   type: custom
@@ -201,5 +197,5 @@ render: |
               address: 13832 # First_charge_power_time 
               type: writeholding
               decode: int16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

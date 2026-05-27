@@ -14,10 +14,10 @@ params:
     help:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
-  - name: capacity
-    advanced: true
+  - preset: battery-params
   - name: maxchargepower
     default: 4200
+    required: true
   - name: watchdog
     type: duration
     default: 60s
@@ -229,4 +229,4 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}

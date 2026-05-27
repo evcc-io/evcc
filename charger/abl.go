@@ -2,8 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
-// Copyright (c) 2022-2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -25,6 +24,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -32,6 +32,7 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
+	implement.Caps
 	conn *modbus.Connection
 	curr uint16
 }
@@ -80,7 +81,7 @@ func init() {
 // https://www.goingelectric.de/forum/viewtopic.php?p=1550459#p1550459
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
-func NewABLeMHFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewABLeMHFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -96,8 +97,6 @@ func NewABLeMHFromConfig(ctx context.Context, other map[string]interface{}) (api
 
 	return NewABLeMH(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
-
-//go:generate go tool decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
@@ -118,6 +117,7 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 	conn.Logger(log.TRACE)
 
 	wb := &ABLeMH{
+		Caps: implement.New(),
 		conn: conn,
 		curr: uint16(6 / 0.06),
 	}
@@ -126,7 +126,8 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 
 	// check presence of current sensor
 	if err == nil && (b[3]&ablSensorPresent != 0) {
-		return decorateABLeMH(wb, wb.currentPower, wb.currents), nil
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	return wb, nil

@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewHomeWizardFromConfig creates a HomeWizard meter from generic config
-func NewHomeWizardFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewHomeWizardFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI   string
 		Usage string
@@ -68,6 +68,13 @@ var _ api.PhaseCurrents = (*HomeWizard)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (c *HomeWizard) Currents() (float64, float64, float64, error) {
 	return c.conn.Currents()
+}
+
+var _ api.PhasePowers = (*HomeWizard)(nil)
+
+// Powers implements the api.PhasePowers interface
+func (c *HomeWizard) Powers() (float64, float64, float64, error) {
+	return c.conn.Powers()
 }
 
 var _ api.PhaseVoltages = (*HomeWizard)(nil)

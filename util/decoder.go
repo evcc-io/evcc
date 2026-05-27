@@ -10,7 +10,7 @@ import (
 var validate = validator.New()
 
 // DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.
-func DecodeOther(other, cc interface{}) error {
+func DecodeOther(other, cc any) error {
 	decoderConfig := &mapstructure.DecoderConfig{
 		Result:           cc,
 		ErrorUnused:      true,

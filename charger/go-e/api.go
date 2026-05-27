@@ -24,7 +24,7 @@ type Response interface {
 	Identify() string
 }
 
-type UpdateResponse map[string]interface{}
+type UpdateResponse map[string]any
 
 type API interface {
 	IsV2() bool
@@ -78,7 +78,7 @@ func (c *LocalAPI) IsV2() bool {
 }
 
 // response returns a v1/v2 api response
-func (c *LocalAPI) response(partial string, res interface{}) error {
+func (c *LocalAPI) response(partial string, res any) error {
 	url := fmt.Sprintf("%s/%s", c.uri, partial)
 	return c.GetJSON(url, &res)
 }

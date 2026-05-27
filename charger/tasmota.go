@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/tasmota"
 	"github.com/evcc-io/evcc/util"
 )
@@ -15,6 +16,7 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
+	implement.Caps
 	conn *tasmota.Connection
 	*switchSocket
 }
@@ -23,10 +25,8 @@ func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Charger -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
-
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
-func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewTasmotaFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
@@ -60,18 +60,26 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	}
 
 	c := &Tasmota{
+		Caps: implement.New(),
 		conn: conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	var currents, voltages func() (float64, float64, float64, error)
-	if len(channels) == 3 {
-		currents = c.currents
-		voltages = c.voltages
+	// check if phase specific readings are supported by the device, if not return the base meter implementation without decorators
+	var hasPhases bool
+	if len(channels) == 1 {
+		if l1, l2, l3, err := c.conn.Voltages(); err == nil && l1*l2*l3 > 0 {
+			hasPhases = true
+		}
 	}
 
-	return decorateTasmota(c, currents, voltages), nil
+	if hasPhases || len(channels) == 3 {
+		implement.Has(c, implement.PhaseVoltages(c.voltages))
+		implement.Has(c, implement.PhaseCurrents(c.currents))
+	}
+
+	return c, nil
 }
 
 // Enabled implements the api.Charger interface

@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewTeslaFromConfig creates a new vehicle
-func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		Credentials  ClientCredentials

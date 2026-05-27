@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/encode"
 )
 
@@ -31,36 +30,23 @@ func encodeSliceAsString(v any) (string, error) {
 	return fmt.Sprintf("[%s]", strings.Join(res, ",")), nil
 }
 
-func kv(p util.Param) string {
+func socketEncode(key string, pval any) string {
 	var (
 		val string
 		err error
 	)
 
 	// unwrap slices
-	if p.Val != nil && reflect.TypeOf(p.Val).Kind() == reflect.Slice {
-		val, err = encodeSliceAsString(p.Val)
+	if rv := reflect.ValueOf(pval); pval != nil && rv.Kind() == reflect.Slice && !rv.IsNil() {
+		val, err = encodeSliceAsString(pval)
 	} else {
-		val, err = encodeAsString(p.Val)
+		val, err = encodeAsString(pval)
 	}
 
 	if err != nil {
-		panic(err)
+		log.ERROR.Printf("invalid data for key %s in socket encode: %v", key, pval)
+		return "null"
 	}
 
-	if p.Key == "" && val == "" {
-		log.ERROR.Printf("invalid key/val for %+v, please report to https://github.com/evcc-io/evcc/issues/6439", p)
-		return "\"foo\":\"bar\""
-	}
-
-	var msg strings.Builder
-	msg.WriteString("\"")
-	if p.Loadpoint != nil {
-		msg.WriteString(fmt.Sprintf("loadpoints.%d.", *p.Loadpoint))
-	}
-	msg.WriteString(p.Key)
-	msg.WriteString("\":")
-	msg.WriteString(val)
-
-	return msg.String()
+	return val
 }

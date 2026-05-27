@@ -7,6 +7,7 @@ requirements:
     de: Renault Zoe and Twingo Electric benötigen bei 3p einen minimalen Ladestrom von 8A (ältere Modelle sogar 10A).
 params:
   - preset: vehicle-base
+  - preset: vehicle-features
   - name: vin
     example: WREN...
   - name: alternativewakeup
@@ -27,4 +28,5 @@ params:
 render: |
   type: renault
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}
   wakeupmode: {{ .wakeupmode }}

@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
 import {
-  enableExperimental,
-  openTopNavigation,
+  openMoreMenu,
   expectModalVisible,
   expectModalHidden,
+  enableAppContext,
+  expectAppEvent,
 } from "./utils";
 import fs from "fs";
 import path from "path";
@@ -20,9 +21,8 @@ test.describe("reset", async () => {
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
     // open backup & restore modal
-    await openTopNavigation(page);
+    await openMoreMenu(page);
     await page.getByRole("link", { name: "Configuration" }).click();
-    await enableExperimental(page);
     await page.getByRole("button", { name: "Backup & Restore" }).click();
     const modal = page.getByTestId("backup-restore-modal");
     await expectModalVisible(modal);
@@ -56,7 +56,6 @@ test.describe("reset", async () => {
 
     // create grid meter and title via UI
     await page.goto("/#/config");
-    await enableExperimental(page);
     await page.getByTestId("add-grid").click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
@@ -119,7 +118,6 @@ test.describe("backup and restore", async () => {
 
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // set initial title
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
@@ -157,6 +155,7 @@ test.describe("backup and restore", async () => {
     await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
     await expectModalHidden(backupConfirmModal);
     const download = await downloadPromise;
+    await expectModalVisible(backupModal);
     await backupModal.locator(".btn-close").click();
     await expectModalHidden(backupModal);
 
@@ -203,9 +202,14 @@ test.describe("backup and restore", async () => {
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "false");
     await restart(undefined, undefined, true);
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "true");
-    await page.getByRole("link", { name: "Let's start configuration" }).click();
 
-    // verify initial state
+    // redirect to main ui with initial title
+    await expect(
+      page.getByTestId("header").getByRole("heading", { name: initialTitle })
+    ).toBeVisible();
+
+    // verify initial state in config ui
+    await page.goto("/#/config");
     await expect(page.getByTestId("grid")).toBeVisible();
     await expect(page.getByTestId("generalconfig-title")).toContainText(initialTitle);
     await stop();
@@ -222,8 +226,6 @@ test.describe("backup and restore", async () => {
     await loginModal.getByLabel("Password").fill("secret");
     await loginModal.getByRole("button", { name: "Login" }).click();
     await expectModalHidden(loginModal);
-
-    await enableExperimental(page);
 
     // open backup & restore modal
     await page.getByRole("button", { name: "Backup & Restore" }).click();
@@ -248,6 +250,31 @@ test.describe("backup and restore", async () => {
     // verify backup was downloaded successfully
     const download = await downloadPromise;
     await expect(download.suggestedFilename()).toContain("evcc-backup");
+    await stop();
+  });
+});
+
+test.describe("backup in app context", async () => {
+  test("download backup dispatches POST event with password body", async ({ page }) => {
+    await enableAppContext(page);
+    await start();
+    await page.goto("/#/config");
+
+    await page.getByRole("button", { name: "Backup & Restore" }).click();
+    const backupModal = page.getByTestId("backup-restore-modal");
+    await expectModalVisible(backupModal);
+
+    await backupModal.getByRole("button", { name: "Download backup..." }).click();
+    const backupConfirmModal = page.getByTestId("backup-restore-confirm-modal");
+    await expectModalVisible(backupConfirmModal);
+
+    await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
+    expect(await expectAppEvent(page)).toMatchObject({
+      type: "download",
+      url: expect.stringContaining("/api/system/backup"),
+      method: "POST",
+      body: { password: "" },
+    });
     await stop();
   });
 });

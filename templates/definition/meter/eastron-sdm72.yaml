@@ -5,12 +5,17 @@ products:
       generic: SDM72D-M
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
   model: sdm72
+  {{- if ne .usage "pv" }}
   power: Power
   energy: Import
+  {{- else }}
+  power: -Power
+  energy: Export
+  {{- end }}

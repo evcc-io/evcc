@@ -28,8 +28,7 @@ params:
       en: Variation factor to simulate daily fluctuations (0.4 = 40%)
       de: Variationsfaktor zur Simulation täglicher Schwankungen (0.4 = 40%)
   - name: interval
-    default: 1h
-    advanced: true
+    deprecated: true
 
 render: |
   type: custom
@@ -37,7 +36,7 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate CO₂ forecast for next 72 hours
+      // Generate CO₂ forecast for next 72 hours in 15-minute slots
       // Based on summer grid patterns with high solar penetration
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
@@ -45,10 +44,16 @@ render: |
       var baseIntensity = parseFloat({{ .base }});
       var variation = parseFloat({{ .variation }});
 
-      // Generate hourly rates for 3 days
+      // Generate 15-minute slots for 3 days
+      var slotMinutes = 15;
+      var slotDuration = slotMinutes * 60 * 1000;
+      var slotsPerHour = 60 / slotMinutes;
+      var slotsPerDay = 24 * slotsPerHour;
+
       for (var day = 0; day < 3; day++) {
-        for (var hour = 0; hour < 24; hour++) {
-          var time = new Date(start.getTime() + (day * 24 + hour) * 3600000);
+        for (var slot = 0; slot < slotsPerDay; slot++) {
+          var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
+          var hour = slot / slotsPerHour;
 
           // Base pattern: high in morning/evening, low at midday (inverse of solar)
           var hourFactor = 1.0;
@@ -80,11 +85,10 @@ render: |
 
           rates.push({
             start: time.toISOString(),
-            end: new Date(time.getTime() + 3600000).toISOString(),
+            end: new Date(time.getTime() + slotDuration).toISOString(),
             value: Math.round(Math.max(0, co2Value))
           });
         }
       }
 
       JSON.stringify(rates);
-  interval: {{ .interval }}

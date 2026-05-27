@@ -47,7 +47,9 @@ func (rr Rates) At(ts time.Time) (Rate, error) {
 	return Rate{}, ErrNotAvailable
 }
 
-// MarshalMQTT implements server.MQTTMarshaler
-func (r Rates) MarshalMQTT() ([]byte, error) {
+var _ BytesMarshaler = (*Rates)(nil)
+
+// MarshalBytes implements server.BytesMarshaler
+func (r Rates) MarshalBytes() ([]byte, error) {
 	return json.Marshal(r)
 }

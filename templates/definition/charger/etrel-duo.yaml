@@ -3,7 +3,7 @@ products:
   - brand: Etrel
     description:
       generic: INCH Duo
-capabilities: ["mA"]
+capabilities: ["mA", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
   description:
@@ -17,4 +17,4 @@ params:
 render: |
   type: etrel
   connector: {{ .connector }}
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}

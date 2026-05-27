@@ -1,15 +1,22 @@
 import bodyParser from "body-parser";
 import type { Connect, ViteDevServer } from "vite";
 import type { ServerResponse } from "http";
+import { OcppClient } from "./ocppClient";
+
+const ocppClients = new Map<string, OcppClient>();
 
 let state = {
   site: {
-    grid: { power: 0 },
+    grid: { power: 0, energy: 0 },
     pv: { power: 0, energy: 0 },
     battery: { power: 0, soc: 0 },
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
+  hems: { relay: false },
+  ocpp: {
+    clients: [] as { stationId: string; serverUrl: string; connected: boolean }[],
+  },
 };
 
 const loggingMiddleware = (
@@ -33,6 +40,10 @@ const stateApiMiddleware = (
     res.end();
   } else if (req.method === "POST" && req.originalUrl === "/api/shutdown") {
     console.log("[simulator] POST /api/shutdown");
+    for (const client of ocppClients.values()) {
+      client.disconnect();
+    }
+    ocppClients.clear();
     res.end();
     process.exit();
   } else if (req.originalUrl === "/api/state") {
@@ -49,10 +60,13 @@ const openemsMiddleware = (
 ) => {
   const endpoints = {
     "/rest/channel/_sum/GridActivePower": { value: state.site.grid.power },
+    "/rest/channel/_sum/GridBuyActiveEnergy": { value: state.site.grid.energy },
     "/rest/channel/_sum/ProductionActivePower": { value: state.site.pv.power },
+    "/rest/channel/_sum/ProductionActiveEnergy": { value: state.site.pv.energy },
     "/rest/channel/_sum/EssDischargePower": { value: state.site.battery.power },
     "/rest/channel/_sum/EssSoc": { value: state.site.battery.soc },
   };
+
   const endpoint = endpoints[req.originalUrl as keyof typeof endpoints];
   if (req.method === "GET" && endpoint) {
     console.log("[simulator] GET", req.originalUrl);
@@ -68,7 +82,8 @@ const teslaloggerMiddleware = (
   next: Connect.NextFunction
 ) => {
   if (req.method === "GET" && req.originalUrl && req.originalUrl.startsWith("/currentjson/")) {
-    const id = parseInt(req.originalUrl.split("/")[2]);
+    const idPart = req.originalUrl.split("/")[2];
+    const id = idPart ? parseInt(idPart) : 0;
     const vehicle = state.vehicles[id - 1];
     if (!vehicle) {
       res.statusCode = 404;
@@ -112,6 +127,90 @@ const shellyMiddleware = (
   }
 };
 
+const updateOcppState = () => {
+  state.ocpp.clients = Array.from(ocppClients.entries()).map(([stationId, client]) => ({
+    stationId,
+    serverUrl: client.getServerUrl(),
+    connected: client.isConnected(),
+  }));
+};
+
+const demoAuthMiddleware = (
+  _req: Connect.IncomingMessage,
+  _res: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  // Mock login requests are now handled by the Vue app
+  // This middleware is kept for potential future extensions
+  next();
+};
+
+const ocppMiddleware = (
+  req: Connect.IncomingMessage,
+  res: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  if (req.method === "POST" && req.originalUrl === "/api/ocpp/connect") {
+    console.log("[simulator] POST /api/ocpp/connect");
+    // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
+    const { stationId, serverUrl } = req.body;
+
+    if (!stationId || !serverUrl) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: "stationId and serverUrl required" }));
+      return;
+    }
+
+    if (ocppClients.has(stationId)) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: `Client ${stationId} already exists` }));
+      return;
+    }
+
+    const client = new OcppClient(stationId, serverUrl);
+    ocppClients.set(stationId, client);
+
+    client
+      .connect()
+      .then(() => client.bootNotification())
+      .then((response) => {
+        console.log("[simulator] OCPP BootNotification response:", response);
+        updateOcppState();
+        res.end(JSON.stringify({ status: "connected", stationId, response }));
+      })
+      .catch((error) => {
+        console.error("[simulator] OCPP connection error:", error);
+        ocppClients.delete(stationId);
+        updateOcppState();
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: error.message }));
+      });
+  } else if (req.method === "POST" && req.originalUrl === "/api/ocpp/disconnect") {
+    console.log("[simulator] POST /api/ocpp/disconnect");
+    // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
+    const { stationId } = req.body;
+
+    if (!stationId) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: "stationId required" }));
+      return;
+    }
+
+    const client = ocppClients.get(stationId);
+    if (client) {
+      client.disconnect();
+      ocppClients.delete(stationId);
+      updateOcppState();
+      res.end(JSON.stringify({ status: "disconnected", stationId }));
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ error: `Client ${stationId} not found` }));
+    }
+  } else {
+    next();
+  }
+};
+
 export default () => ({
   name: "api",
   enforce: "pre",
@@ -124,6 +223,8 @@ export default () => ({
       server.middlewares.use(openemsMiddleware);
       server.middlewares.use(teslaloggerMiddleware);
       server.middlewares.use(shellyMiddleware);
+      server.middlewares.use(demoAuthMiddleware);
+      server.middlewares.use(ocppMiddleware);
     };
   },
 });

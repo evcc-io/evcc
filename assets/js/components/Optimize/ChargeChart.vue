@@ -9,7 +9,7 @@
 				:height="300"
 			/>
 		</div>
-		<LegendList :legends="legends" />
+		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
@@ -20,6 +20,7 @@ import {
 	CategoryScale,
 	LinearScale,
 	BarController,
+	LineController,
 	BarElement,
 	LineElement,
 	PointElement,
@@ -31,7 +32,7 @@ import {
 } from "chart.js";
 import { Chart } from "vue-chartjs";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
-import type { CURRENCY, BatteryDetail } from "@/types/evcc";
+import type { CURRENCY, BatteryDetail, DeviceColors } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
@@ -41,6 +42,7 @@ ChartJS.register(
 	CategoryScale,
 	LinearScale,
 	BarController,
+	LineController,
 	BarElement,
 	LineElement,
 	PointElement,
@@ -67,7 +69,7 @@ export default defineComponent({
 		},
 		timestamp: {
 			type: String,
-			required: true,
+			default: "",
 		},
 		currency: {
 			type: String as PropType<CURRENCY>,
@@ -75,15 +77,29 @@ export default defineComponent({
 		},
 		batteryColors: {
 			type: Array as PropType<string[]>,
-			required: true,
+			default: () => [],
 		},
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		timeLabels(): string[] {
 			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
-				const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
-				return currentTime.getHours().toString();
+				// Calculate cumulative time from dt array
+				let cumulativeSeconds = 0;
+				for (let i = 0; i < index; i++) {
+					cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
+				}
+
+				const currentTime = new Date(startTime.getTime() + cumulativeSeconds * 1000);
+				const hour = currentTime.getHours();
+				const minute = currentTime.getMinutes();
+
+				// Only show labels at exact hour boundaries divisible by 4
+				if (minute === 0 && hour % 4 === 0) {
+					return hour.toString();
+				}
+				return "";
 			});
 		},
 		chartData(): ChartData {
@@ -116,6 +132,10 @@ export default defineComponent({
 					mode: "index",
 					intersect: false,
 				},
+				hover: {
+					mode: "index",
+					intersect: false,
+				},
 				elements: {
 					point: {
 						radius: 0, // Hide points by default
@@ -133,9 +153,13 @@ export default defineComponent({
 						mode: "index",
 						intersect: false,
 						callbacks: {
+							title: (context) => {
+								const index = context[0]?.dataIndex;
+								return this.formatTimeRange(index ?? 0);
+							},
 							label: (context) => {
 								const label = context.dataset.label || "";
-								const value = context.parsed.y;
+								const value = context.parsed.y ?? 0;
 								// Special handling for Grid Power
 								if (label === "Grid Power") {
 									if (value > 0) {
@@ -162,7 +186,44 @@ export default defineComponent({
 						},
 						stacked: true,
 						grid: {
-							display: false,
+							display: true,
+							drawOnChartArea: true,
+							drawTicks: true,
+							color: "transparent",
+							tickLength: 4,
+						},
+						ticks: {
+							autoSkip: false,
+							maxRotation: 0,
+							minRotation: 0,
+							callback: (_value, index) => {
+								const startTime = new Date(this.timestamp);
+
+								// Calculate cumulative time from dt array
+								let cumulativeSeconds = 0;
+								for (let i = 0; i < index; i++) {
+									cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
+								}
+
+								const currentTime = new Date(
+									startTime.getTime() + cumulativeSeconds * 1000
+								);
+								const hour = currentTime.getHours();
+								const minute = currentTime.getMinutes();
+
+								// Show ticks at exact hour boundaries
+								if (minute === 0) {
+									// Show labels only at hours divisible by 4
+									const step = window.innerWidth < 576 ? 6 : 4;
+									if (hour % step === 0) {
+										return hour.toString();
+									}
+									// Show tick but no label for other hours
+									return "";
+								}
+								// Return undefined to skip this tick entirely
+								return undefined;
+							},
 						},
 					},
 					y: {
@@ -184,6 +245,9 @@ export default defineComponent({
 			};
 		},
 		legends(): Legend[] {
+			const batteryTitles = new Set(
+				(this.evopt?.res?.batteries || []).map((_, i) => this.getBatteryTitle(i))
+			);
 			return this.chartData.datasets
 				.filter((dataset) => !dataset.hidden)
 				.map((dataset) => {
@@ -195,6 +259,7 @@ export default defineComponent({
 						color: (dataset.backgroundColor || dataset.borderColor) as string,
 						value: "", // Required by Legend type, but not used in this context
 						type: isLine ? "line" : "area",
+						id: batteryTitles.has(label) ? label : undefined,
 					};
 				});
 		},
@@ -312,7 +377,7 @@ export default defineComponent({
 		convertWhToKW(wh: number, index: number): number {
 			// Convert Wh to kW by normalizing against time duration
 			// Power (kW) = Energy (Wh) / Time (h) / 1000
-			const dtSeconds = this.evopt.req.time_series.dt[index];
+			const dtSeconds = this.evopt.req.time_series.dt[index] || 0;
 			const hours = dtSeconds / 3600; // Convert seconds to hours
 			return wh / hours / 1000;
 		},
@@ -324,6 +389,28 @@ export default defineComponent({
 		getBatteryTitle(index: number): string {
 			const detail = this.batteryDetails[index];
 			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
+		},
+
+		formatTimeRange(index: number): string {
+			const startTime = new Date(this.timestamp);
+
+			// Calculate cumulative time from dt array
+			let cumulativeSeconds = 0;
+			for (let i = 0; i < index; i++) {
+				cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
+			}
+
+			const slotStart = new Date(startTime.getTime() + cumulativeSeconds * 1000);
+			const slotDuration = this.evopt.req.time_series.dt[index] || 0;
+			const slotEnd = new Date(slotStart.getTime() + slotDuration * 1000);
+
+			const formatTime = (date: Date): string => {
+				const hours = date.getHours().toString().padStart(2, "0");
+				const minutes = date.getMinutes().toString().padStart(2, "0");
+				return `${hours}:${minutes}`;
+			};
+
+			return `${formatTime(slotStart)} - ${formatTime(slotEnd)}`;
 		},
 	},
 });

@@ -41,13 +41,13 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[0].created);
+			return new Date(this.sessions[0]!.created);
 		},
 		lastDay() {
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[this.sessions.length - 1].created);
+			return new Date(this.sessions[this.sessions.length - 1]!.created);
 		},
 		chartData() {
 			console.log("update solar month data");
@@ -84,22 +84,24 @@ export default defineComponent({
 				const charged = session.chargedEnergy;
 				const self = (charged / 100) * session.solarPercentage;
 				const grid = charged - self;
-				result[year][month].self += self;
-				result[year][month].grid += grid;
+				const monthData = result[year]![month]!;
+				monthData.self += self;
+				monthData.grid += grid;
 			});
 
 			const datasets = years.map((year) => {
-				const borderColor = colors.selfPalette[years.indexOf(year)];
-				const backgroundColor = years.length === 1 ? dimColor(borderColor) : "transparent";
+				const borderColor = colors.selfPalette[years.indexOf(year)] || undefined;
+				const backgroundColor =
+					years.length === 1 && borderColor ? dimColor(borderColor) : "transparent";
 				return {
 					backgroundColor,
 					borderColor,
 					label: year,
-					data: Object.values(result[year]).map(({ self = 0, grid = 0 }) => {
+					data: Object.values(result[year] || {}).map(({ self = 0, grid = 0 }) => {
 						const total = self + grid;
 						return total === 0 ? null : (self / total) * 100;
 					}),
-					yearData: Object.values(result[year]).reduce(
+					yearData: Object.values(result[year] || {}).reduce(
 						(acc, { self = 0, grid = 0 }) => ({
 							self: acc.self + self,
 							grid: acc.grid + grid,
@@ -109,7 +111,7 @@ export default defineComponent({
 				};
 			});
 
-			const labels = Object.keys(result[firstYear]).map((month) =>
+			const labels = Object.keys(result[firstYear] || {}).map((month) =>
 				this.fmtMonth(new Date(firstYear, parseInt(month) - 1, 1), true)
 			);
 
@@ -132,18 +134,14 @@ export default defineComponent({
 					};
 				});
 			} else {
+				const dataset = this.chartData.datasets[0]!;
 				return this.chartData.labels.map((label, index) => {
-					const value = this.chartData.datasets[0].data[index];
+					const value = dataset.data[index];
 					return {
 						label,
 						color: null,
 						value:
-							value === null
-								? "- %"
-								: this.fmtPercentage(
-										this.chartData.datasets[0].data[index] || 0,
-										1
-									),
+							value === null ? "- %" : this.fmtPercentage((value as number) || 0, 1),
 					};
 				});
 			}

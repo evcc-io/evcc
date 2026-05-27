@@ -1,4 +1,11 @@
 import { reactive } from "vue";
+import type { DeviceColorEntry, DeviceColors } from "./types/evcc";
+
+export function deviceColorMap(list: DeviceColorEntry[] | undefined): DeviceColors {
+  const m: DeviceColors = {};
+  for (const { title, color } of list ?? []) m[title] = color;
+  return m;
+}
 
 // alternatives
 // const COLORS = [ "#40916C", "#52B788", "#74C69D", "#95D5B2", "#B7E4C7", "#D8F3DC", "#081C15", "#1B4332", "#2D6A4F"];
@@ -35,83 +42,84 @@ const colors: {
   export: null,
   background: null,
   light: null,
-  selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
+  selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
-    "#03C1EFFF",
-    "#FD6158FF",
-    "#31AB4AFF",
-    "#41517AFF",
-    "#FF922EFF",
-    "#0F662DFF",
-    "#0470D4FF",
-    "#FFBD2FFF",
-    "#77C93EFF",
-    "#4E1D10FF",
-    "#0AAFBFFF",
-    "#813504FF",
+    // light
+    "#60A5FA", // blue
+    "#FBBF24", // amber
+    "#22D3EE", // cyan
+    "#F472B6", // pink
+    "#34D399", // green
+    "#A78BFA", // violet
+    "#94A3B8", // gray
+    // mid
+    "#2563EB", // blue
+    "#F59E0B", // amber
+    "#06B6D4", // cyan
+    "#EC4899", // pink
+    "#10B981", // green
+    "#8B5CF6", // violet
+    "#64748B", // gray
+    // dark
+    "#1E40AF", // blue
+    "#B45309", // amber
+    "#0E7490", // cyan
+    "#BE185D", // pink
+    "#047857", // green
+    "#6D28D9", // violet
+    "#334155", // gray
   ],
 });
 
-export const dimColor = (color: string | null) => {
-  return color?.toLowerCase().replace(/ff$/, "20");
+// normalize 6-digit hex to 8-digit, then replace alpha
+const setAlpha = (color: string | null, alpha: string): string | undefined => {
+  if (!color) return undefined;
+  const c = color.trim().toLowerCase();
+  // #rrggbb → append alpha, #rrggbbaa → replace alpha
+  if (c.length === 7) return c + alpha;
+  if (c.length === 9) return c.slice(0, 7) + alpha;
+  return c;
 };
 
-export const lighterColor = (color: string | null) => {
-  return color?.toLowerCase().replace(/ff$/, "aa");
+// regex for raw hex (no leading #): 6 digits, used for input validation
+export const HEX_RE = /^[0-9a-fA-F]{6}$/;
+
+// normalize hex to uppercase 7-char #RRGGBB (strips alpha if present)
+export const normalizeHex = (color?: string | null): string => {
+  if (!color) return "";
+  let c = color.trim().toUpperCase();
+  if (!c.startsWith("#")) c = "#" + c;
+  return c.slice(0, 7);
 };
 
-export const fullColor = (color: string | null) => {
-  return color?.toLowerCase().replace(/20$/, "ff");
-};
+// override wins; rest get next free palette entry, wrap-around when exhausted
+export function resolveColors(ids: string[], overrides: DeviceColors = {}): DeviceColors {
+  const taken = new Set(Object.values(overrides).map(normalizeHex));
+  const free = colors.palette.filter((c) => !taken.has(normalizeHex(c)));
+  const result: DeviceColors = {};
+  let idx = 0;
+  for (const id of ids) {
+    const ov = overrides[id];
+    if (ov) {
+      result[id] = ov;
+    } else if (free.length) {
+      result[id] = free[idx % free.length];
+      idx++;
+    } else {
+      result[id] = colors.palette[idx % colors.palette.length];
+      idx++;
+    }
+  }
+  return result;
+}
 
-export const createFeedInDisabledPattern = (
-  ctx: CanvasRenderingContext2D,
-  color: string,
-  opacity = 0.5
-): CanvasPattern | null => {
-  const patternCanvas = document.createElement("canvas");
-  const patternContext = patternCanvas.getContext("2d");
-  if (!patternContext) return null;
+export const dimColor = (color: string | null) => setAlpha(color, "20");
 
-  // Set pattern size
-  patternCanvas.width = 10;
-  patternCanvas.height = 10;
+export const lighterColor = (color: string | null) => setAlpha(color, "aa");
 
-  // Create diagonal stripes with more saturation
-  patternContext.strokeStyle = color;
-  patternContext.globalAlpha = opacity;
-  patternContext.lineWidth = 3;
+export const fullColor = (color: string | null) => setAlpha(color, "ff");
 
-  // Draw diagonal lines
-  patternContext.beginPath();
-  patternContext.moveTo(0, 10);
-  patternContext.lineTo(10, 0);
-  patternContext.stroke();
-
-  patternContext.beginPath();
-  patternContext.moveTo(-2, 2);
-  patternContext.lineTo(2, -2);
-  patternContext.stroke();
-
-  patternContext.beginPath();
-  patternContext.moveTo(8, 12);
-  patternContext.lineTo(12, 8);
-  patternContext.stroke();
-
-  return ctx.createPattern(patternCanvas, "repeat");
-};
-
-export const feedInDisabledPattern = (color: string): string => {
-  return `repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 3px,
-    ${color} 3px,
-    ${color} 5px
-  )`;
-};
-
-function updateCssColors() {
+export function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
   colors.text = style.getPropertyValue("--evcc-default-text");
   colors.muted = style.getPropertyValue("--bs-gray-medium");
@@ -120,18 +128,13 @@ function updateCssColors() {
   colors.grid = style.getPropertyValue("--evcc-grid");
   colors.price = style.getPropertyValue("--evcc-price");
   colors.co2 = style.getPropertyValue("--evcc-co2");
-  colors.export = style.getPropertyValue("--evcc-export");
+  colors.export = style.getPropertyValue("--evcc-export-contrast");
   colors.background = style.getPropertyValue("--evcc-background");
   colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.light = style.getPropertyValue("--bs-gray-light");
 }
 
-// update colors on theme change
-const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-if (darkModeMatcher && darkModeMatcher.addEventListener) {
-  darkModeMatcher.addEventListener("change", updateCssColors);
-}
 // initialize colors
 updateCssColors();
 window.requestAnimationFrame(updateCssColors);

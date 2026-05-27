@@ -14,9 +14,9 @@ type Duration struct {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (d *Duration) UnmarshalJSON(b []byte) error {
-	var v interface{}
-	if err := json.Unmarshal(b, &v); err != nil {
+func (d *Duration) UnmarshalJSON(data []byte) error {
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 

@@ -2,6 +2,7 @@
 	<div>
 		<GenericModal
 			id="backupRestoreModal"
+			config-modal-name="backuprestore"
 			:title="$t('config.system.backupRestore.title')"
 			data-testid="backup-restore-modal"
 			@closed="backupRestoreModalClosed"
@@ -19,6 +20,7 @@
 					{{ $t("config.system.backupRestore.backup.description") }}
 				</p>
 				<button
+					data-testid="backup-restore-open-confirm-modal"
 					class="btn btn-outline-secondary"
 					@click="openBackupRestoreConfirmModal('backup')"
 				>
@@ -144,6 +146,7 @@
 					</button>
 
 					<button
+						data-testid="backup-restore-download"
 						type="submit"
 						class="btn text-truncate"
 						:class="confirmType === 'backup' ? 'btn-primary' : 'btn-danger'"
@@ -167,6 +170,7 @@
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import api, { downloadFile } from "@/api";
+import { dispatchDownload } from "@/utils/native";
 import PropertyFileField from "./PropertyFileField.vue";
 import FormRow from "./FormRow.vue";
 import { isLoggedIn } from "../Auth/auth";
@@ -293,6 +297,10 @@ export default defineComponent({
 			return r;
 		},
 		async downloadBackup() {
+			if (dispatchDownload("/api/system/backup", "POST", { password: this.password })) {
+				this.closeConfirmModal();
+				return;
+			}
 			const res = await this.call(
 				api.post(
 					"/system/backup",

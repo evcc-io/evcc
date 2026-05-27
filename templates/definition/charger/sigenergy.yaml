@@ -3,7 +3,7 @@ products:
   - brand: Sigenergy
     description:
       generic: EVAC series
-capabilities: ["mA"]
+capabilities: ["mA", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:

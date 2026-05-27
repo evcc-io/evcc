@@ -1,6 +1,6 @@
 <template>
-	<div>
-		<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
+	<div class="entry" :class="{ 'evcc-gray': !active }">
+		<div class="mb-2">
 			<div class="d-flex justify-content-between">
 				<span class="d-flex flex-nowrap">
 					<BatteryIcon v-if="isBattery" v-bind="iconProps" />
@@ -30,7 +30,7 @@
 				<span class="text-end text-nowrap ps-1 fw-bold d-flex align-items-center">
 					<div
 						ref="details"
-						class="fw-normal d-flex align-items-center"
+						class="fw-normal d-flex align-items-center user-select-none"
 						:class="{
 							'text-decoration-underline': detailsClickable,
 							'evcc-gray': detailsInactive,
@@ -200,6 +200,7 @@ export default defineComponent({
 .entry {
 	transition: color var(--evcc-transition-medium) linear;
 }
+
 .power {
 	min-width: 75px;
 }

@@ -18,7 +18,6 @@ params:
       de: Bezeichnung aus Loxone Config
       en: Name from Loxone Config
   - name: socblock
-    required: false
     description:
       de: Bausteinbezeichnung für Ladezustand
       en: Function block name for state of charge

@@ -29,7 +29,7 @@ func runConfigDelete(cmd *cobra.Command, args []string) {
 	}
 
 	// setup environment
-	if err := configureEnvironment(cmd, &conf); err != nil {
+	if err := configureDatabase(conf.Database); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

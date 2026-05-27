@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
@@ -13,12 +14,14 @@ import (
 type httpHandler struct {
 	val string
 	req *http.Request
+	cnt int
 }
 
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.req = req
 	h.val = lo.RandomString(16, lo.LettersCharset)
 	_, _ = w.Write([]byte(h.val))
+	h.cnt++
 }
 
 func TestHttp(t *testing.T) {
@@ -51,6 +54,22 @@ func (suite *httpTestSuite) TestGet() {
 	suite.Require().NoError(err)
 	suite.Require().Equal("/foo/bar/baz", suite.h.req.URL.String())
 	suite.Require().Equal(suite.h.val, res)
+}
+
+func (suite *httpTestSuite) TestCacheGet() {
+	uri := suite.srv.URL + "/foo/bar?baz=1"
+	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, time.Minute)
+
+	g, err := p.StringGetter()
+	suite.Require().NoError(err)
+
+	for range 3 {
+		res, err := g()
+		suite.Require().NoError(err)
+		suite.Require().Equal("/foo/bar?baz=1", suite.h.req.URL.String())
+		suite.Require().Equal(suite.h.val, res)
+		suite.Require().Equal(1, suite.h.cnt)
+	}
 }
 
 func (suite *httpTestSuite) TestSetQuery() {

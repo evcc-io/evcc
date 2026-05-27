@@ -1,0 +1,41 @@
+template: finder-7m38
+products:
+  - brand: Finder
+    description:
+      generic: 7M.38
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: find7m38
+  {{- if ne .usage "pv" }}
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- else }}
+  power: -Power
+  energy: Export
+  currents:
+    - -CurrentL1
+    - -CurrentL2
+    - -CurrentL3
+  powers:
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
+  {{- end }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3

@@ -1,4 +1,5 @@
 template: mini
+deprecated: true
 products:
   - brand: Mini
 requirements:

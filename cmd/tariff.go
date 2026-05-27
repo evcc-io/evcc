@@ -19,6 +19,7 @@ var tariffCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(tariffCmd)
+	withCustomTemplate(tariffCmd)
 }
 
 func runTariff(cmd *cobra.Command, args []string) {
@@ -90,7 +91,4 @@ func runTariff(cmd *cobra.Command, args []string) {
 
 		fmt.Println()
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

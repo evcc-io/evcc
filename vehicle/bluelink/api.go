@@ -14,10 +14,9 @@ import (
 
 const (
 	VehiclesURL         = "vehicles"
-	StatusURL           = "vehicles/%s/status"
-	StatusLatestURL     = "vehicles/%s/status/latest"
-	StatusURLCCS2       = "vehicles/%s/ccs2/carstatus"
-	StatusLatestURLCCS2 = "vehicles/%s/ccs2/carstatus/latest"
+	StatusURL           = "vehicles/%s/status"                // Triggers refresh from vehicle (older API)
+	StatusLatestURL     = "vehicles/%s/status/latest"         // Cached data with location/odometer (older API)
+	StatusLatestURLCCS2 = "vehicles/%s/ccs2/carstatus/latest" // Newer API (2024+ vehicles with ccOS)
 )
 
 const (
@@ -69,7 +68,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return res.ResMsg.Vehicles, err
 }
 
-// StatusLatest retrieves the latest server-side status
+// StatusLatest retrieves vehicle status (triggers refresh for older API, then returns cached data)
 func (v *API) StatusLatest(vehicle Vehicle) (BluelinkVehicleStatusLatest, error) {
 	vid := vehicle.VehicleID
 
@@ -83,6 +82,9 @@ func (v *API) StatusLatest(vehicle Vehicle) (BluelinkVehicleStatusLatest, error)
 		return res, err
 	}
 
+	// For older API: first trigger refresh, then get latest cached data
+	_ = v.Refresh(vehicle) // Ignore error, will retry with /status/latest
+
 	var res StatusLatestResponse
 	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
 	err := v.GetJSON(uri, &res)
@@ -92,25 +94,13 @@ func (v *API) StatusLatest(vehicle Vehicle) (BluelinkVehicleStatusLatest, error)
 	return res, err
 }
 
-// StatusPartial refreshes the status
-func (v *API) StatusPartial(vehicle Vehicle) (BluelinkVehicleStatus, error) {
-	vid := vehicle.VehicleID
-
-	if vehicle.CcuCCS2ProtocolSupport != 0 {
-		var res StatusLatestResponseCCS
-		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURLCCS2, vid))
-		err := v.GetJSON(uri, &res)
-		if err == nil && res.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", res.RetCode)
-		}
-		return res, err
-	}
-
+// Refresh triggers a status update from the vehicle
+func (v *API) Refresh(vehicle Vehicle) error {
 	var res StatusResponse
-	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vid))
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vehicle.VehicleID))
 	err := v.GetJSON(uri, &res)
 	if err == nil && res.RetCode != resOK {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
-	return res.ResMsg, err
+	return err
 }

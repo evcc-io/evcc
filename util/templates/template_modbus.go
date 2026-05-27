@@ -11,7 +11,7 @@ import (
 var modbusTmpl string
 
 // ModbusParams adds the modbus parameters' default values
-func (t *Template) ModbusParams(modbusType string, values map[string]interface{}) {
+func (t *Template) ModbusParams(modbusType string, values map[string]any) {
 	if len(t.ModbusChoices()) == 0 {
 		return
 	}
@@ -36,7 +36,7 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 }
 
 // ModbusValues adds the values required for modbus.tpl to the value map
-func (t *Template) ModbusValues(renderMode int, values map[string]interface{}) {
+func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
 		return
@@ -74,32 +74,32 @@ func (t *Template) ModbusValues(renderMode int, values map[string]interface{}) {
 			var defaultValue string
 
 			switch p.Name {
-			case ModbusParamNameId:
+			case ModbusParamId:
 				if modbusParam.ID != 0 {
 					defaultValue = strconv.Itoa(modbusParam.ID)
 				}
-			case ModbusParamNamePort:
+			case ModbusParamPort:
 				if modbusParam.Port != 0 {
 					defaultValue = strconv.Itoa(modbusParam.Port)
 				}
-			case ModbusParamNameBaudrate:
+			case ModbusParamBaudrate:
 				if modbusParam.Baudrate != 0 {
 					defaultValue = strconv.Itoa(modbusParam.Baudrate)
 				}
-			case ModbusParamNameComset:
+			case ModbusParamComset:
 				if modbusParam.Comset != "" {
 					defaultValue = modbusParam.Comset
 				}
 			}
 
 			if defaultValue != "" {
-				// for modbus params the default value is carried
-				// using the parameter default, not the value
-				// TODO figure out why that's necessary
+				// apply the template-specific default to both the render values
+				// (so RenderModeInstance YAML reflects it) and the param definition
+				// (so the Config UI surfaces it as default). The earlier guard above
+				// ensures user-supplied values are not overwritten.
+				values[p.Name] = defaultValue
 				if renderMode == RenderModeInstance {
 					t.SetParamDefault(p.Name, defaultValue)
-				} else {
-					values[p.Name] = defaultValue
 				}
 			}
 		}

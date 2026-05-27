@@ -23,4 +23,9 @@ type Status struct {
 	Soc            int     `json:"soc_value"`
 	SocTimestamp   int64   `json:"soc_timestamp"`
 	Serial         string
+	Version        int
+	// v9
+	CPInterruptDuration int    `json:"cp_interrupt_duration"`
+	CPInterruptIsActive int    `json:"cp_interrupt_isactive"`
+	CPInterrupt         string `json:"cp_interrupt_version"`
 }

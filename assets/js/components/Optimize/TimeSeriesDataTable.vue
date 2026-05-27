@@ -18,7 +18,9 @@
 				<tbody>
 					<!-- Request Data -->
 					<tr class="table-secondary">
-						<td colspan="100%" class="fw-bold text-start">Request Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Request Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Solar Forecast (kW)</td>
@@ -77,7 +79,9 @@
 
 					<!-- Response Data -->
 					<tr class="table-secondary">
-						<td colspan="100%" class="fw-bold text-start">Response Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Response Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Grid Export (kW)</td>
@@ -118,7 +122,7 @@
 						:key="batteryIndex"
 					>
 						<tr>
-							<td colspan="100%" class="fw-bold text-start">
+							<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
 								<div class="d-flex align-items-center">
 									<span
 										class="battery-indicator me-2"
@@ -214,9 +218,9 @@ export default defineComponent({
 			type: Array as PropType<BatteryDetail[]>,
 			required: true,
 		},
-		timestamp: {
-			type: String,
-			required: true,
+		timestamps: {
+			type: Array as PropType<string[]>,
+			default: () => [],
 		},
 		currency: {
 			type: String as PropType<CURRENCY>,
@@ -224,11 +228,11 @@ export default defineComponent({
 		},
 		batteryColors: {
 			type: Array as PropType<string[]>,
-			required: true,
+			default: () => [],
 		},
 		dimmedBatteryColors: {
 			type: Array as PropType<string[]>,
-			required: true,
+			default: () => [],
 		},
 	},
 	computed: {
@@ -246,7 +250,7 @@ export default defineComponent({
 	methods: {
 		formatEnergyToPower(wh: number, index: number): string {
 			// Convert Wh to kW by normalizing against time duration
-			const dtSeconds = this.evopt.req.time_series.dt[index];
+			const dtSeconds = this.evopt.req.time_series.dt[index] || 0;
 			const hours = dtSeconds / 3600; // Convert seconds to hours
 			const watts = wh / hours; // Convert to W (power)
 			return this.fmtW(watts, this.POWER_UNIT.KW, false, 1);
@@ -255,12 +259,19 @@ export default defineComponent({
 			return this.fmtWh(wh, this.POWER_UNIT.KW, false, 1);
 		},
 		formatDuration: (seconds: number): string => {
-			return (seconds / 3600).toFixed(1);
+			return (seconds / 3600).toFixed(2);
 		},
 		formatHour(index: number): string {
-			const startTime = new Date(this.timestamp);
-			const currentTime = new Date(startTime.getTime() + index * 60 * 60 * 1000); // Add hours
-			return currentTime.getHours().toString();
+			if (this.timestamps.length <= index) {
+				return "";
+			}
+			// Show label on fresh hour or on first quarter hour for slot 0
+			const ts = new Date(this.timestamps[index]);
+			const minutes = ts.getMinutes();
+			if (minutes === 0 || (index === 0 && minutes < 15)) {
+				return ts.getHours().toString();
+			}
+			return "";
 		},
 		getBatteryTitle(index: number): string {
 			const detail = this.batteryDetails[index];

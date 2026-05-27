@@ -3,6 +3,7 @@ package ocpp
 import (
 	"errors"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
@@ -13,7 +14,7 @@ func (cp *CP) ChangeAvailabilityRequest(connectorId int, availabilityType core.A
 	rc := make(chan error, 1)
 
 	err := Instance().ChangeAvailability(cp.id, func(request *core.ChangeAvailabilityConfirmation, err error) {
-		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
+		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted && request.Status != core.AvailabilityStatusScheduled {
 			err = errors.New(string(request.Status))
 		}
 
@@ -72,6 +73,10 @@ func (cp *CP) SetChargingProfileRequest(connectorId int, profile *types.Charging
 }
 
 func (cp *CP) TriggerMessageRequest(connectorId int, requestedMessage remotetrigger.MessageTrigger) error {
+	if !cp.Connected() {
+		return api.ErrTimeout
+	}
+
 	rc := make(chan error, 1)
 
 	err := Instance().TriggerMessage(cp.id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {

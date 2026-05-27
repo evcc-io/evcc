@@ -14,15 +14,14 @@ const (
 	URI_API_SANDBOX      = "https://sandbox.ostrom-api.io"
 	URI_GET_CITYID       = "https://api.ostrom.de/v1/addresses/cities"
 	URI_GET_STATIC_PRICE = "https://api.ostrom.de/v1/tariffs/city-id"
-	URI_AUTH             = URI_AUTH_PRODUCTION
-	URI_API              = URI_API_PRODUCTION
 )
 
 const (
-	PRODUCT_FAIR     = "SIMPLY_FAIR"
-	PRODUCT_FAIR_CAP = "SIMPLY_FAIR_WITH_PRICE_CAP"
-	PRODUCT_DYNAMIC  = "SIMPLY_DYNAMIC"
-	PRODUCT_BASIC    = "basisProdukt"
+	PRODUCT_FAIR       = "SIMPLY_FAIR"
+	PRODUCT_FAIR_CAP   = "SIMPLY_FAIR_WITH_PRICE_CAP"
+	PRODUCT_DYNAMIC    = "SIMPLY_DYNAMIC"
+	PRODUCT_DYNAMIC_V2 = "SimplyDynamic_V2"
+	PRODUCT_BASIC      = "basisProdukt"
 )
 
 type Prices struct {

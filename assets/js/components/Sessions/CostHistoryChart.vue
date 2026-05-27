@@ -3,7 +3,7 @@
 		<div style="position: relative; height: 300px" class="my-3">
 			<Bar :data="chartData" :options="options" />
 		</div>
-		<LegendList :legends="legends" />
+		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
@@ -20,6 +20,7 @@ import {
 	LineElement,
 	Tooltip,
 	type ChartData,
+	type ScriptableContext,
 	type TooltipItem,
 } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
@@ -27,8 +28,7 @@ import LegendList from "./LegendList.vue";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { TYPES, GROUPS, PERIODS, type Session } from "./types";
-import { CURRENCY } from "@/types/evcc";
-import type { Context } from "chartjs-plugin-datalabels";
+import { CURRENCY, type DeviceColors } from "@/types/evcc";
 
 registerChartComponents([
 	BarController,
@@ -52,6 +52,7 @@ export default defineComponent({
 		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 		suggestedMaxAvgCost: { type: Number, default: 0 },
 		suggestedMaxCost: { type: Number, default: 0 },
 	},
@@ -60,7 +61,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[0].created);
+			return new Date(this.sessions[0]!.created);
 		},
 		month() {
 			return (this.firstDay?.getMonth() || 0) + 1;
@@ -72,7 +73,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[this.sessions.length - 1].created);
+			return new Date(this.sessions[this.sessions.length - 1]!.created);
 		},
 		chartData(): ChartData<"bar", number[], unknown> {
 			console.log("update cost history data");
@@ -133,11 +134,12 @@ export default defineComponent({
 							? session.price || 0
 							: (session.co2PerKWh || 0) * (session.chargedEnergy || 0);
 
-					result[index][groupKey] = (result[index][groupKey] || 0) + value;
+					const item = result[index]!;
+					item[groupKey] = (item[groupKey] || 0) + value;
 
-					result[index].totalCost = (result[index].totalCost || 0) + value;
-					result[index].totalKWh = (result[index].totalKWh || 0) + session.chargedEnergy;
-					result[index].avgCost = result[index].totalCost / result[index].totalKWh;
+					item.totalCost = (item.totalCost || 0) + value;
+					item.totalKWh = (item.totalKWh || 0) + session.chargedEnergy;
+					item.avgCost = item.totalCost / item.totalKWh;
 				});
 			}
 
@@ -152,7 +154,7 @@ export default defineComponent({
 					backgroundColor,
 					label,
 					data: Object.values(result).map((index) => index[group] || 0),
-					borderRadius: (context: Context) => {
+					borderRadius: (context: ScriptableContext<"bar">) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
 						const currentValue = context.dataset.data[dataIndex] as number;
@@ -194,6 +196,7 @@ export default defineComponent({
 			};
 		},
 		legends() {
+			const pickable = this.groupBy !== GROUPS.NONE;
 			return this.chartData.datasets.map((dataset) => {
 				let value = null;
 				let type: "area" | "line" = "area";
@@ -224,6 +227,7 @@ export default defineComponent({
 					color: dataset.backgroundColor,
 					value,
 					type,
+					id: pickable && type !== "line" ? dataset.label || undefined : undefined,
 				};
 			});
 		},
@@ -257,7 +261,7 @@ export default defineComponent({
 						},
 						callbacks: {
 							title: (tooltipItem: TooltipItem<"bar">[]) => {
-								const { label } = tooltipItem[0];
+								const { label } = tooltipItem[0] || { label: "" };
 								if (this.period === PERIODS.TOTAL) {
 									return label;
 								} else if (this.period === PERIODS.YEAR) {

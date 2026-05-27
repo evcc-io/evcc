@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	goe "github.com/evcc-io/evcc/charger/go-e"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -34,22 +35,21 @@ import (
 
 // GoE charger implementation
 type GoE struct {
+	implement.Caps
 	api goe.API
 }
 
 func init() {
-	registry.Add("go-e", func(other map[string]interface{}) (api.Charger, error) {
+	registry.Add("go-e", func(other map[string]any) (api.Charger, error) {
 		return newGoEFromConfig(true, other)
 	})
-	registry.Add("go-e-v3", func(other map[string]interface{}) (api.Charger, error) {
+	registry.Add("go-e-v3", func(other map[string]any) (api.Charger, error) {
 		return newGoEFromConfig(false, other)
 	})
 }
 
-//go:generate go tool decorate -f decorateGoE -b *GoE -r api.Charger -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
-
 // newGoEFromConfig creates a go-e charger from generic config
-func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error) {
+func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Token string
 		URI   string
@@ -71,22 +71,22 @@ func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	var chargedEnergy func() (float64, error)
 	if v2 {
-		chargedEnergy = c.chargedEnergy
+		implement.Has(c, implement.ChargeRater(c.chargedEnergy))
 	}
 
-	var phases1p3p func(int) error
 	if c.api.IsV2() {
-		phases1p3p = c.phases1p3p
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
-	return decorateGoE(c, chargedEnergy, phases1p3p), nil
+	return c, nil
 }
 
 // NewGoE creates GoE charger
 func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
-	c := &GoE{}
+	c := &GoE{
+		Caps: implement.New(),
+	}
 
 	log := util.NewLogger("go-e").Redact(token)
 

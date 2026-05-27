@@ -1,10 +1,12 @@
 # evcc 🚘☀️
 
 [![Build](https://github.com/evcc-io/evcc/actions/workflows/nightly.yml/badge.svg)](https://github.com/evcc-io/evcc/actions/workflows/nightly.yml)
+[![Statuspage](https://img.shields.io/badge/status-evcc.io-green?color=brightgreen&link=https%3A%2F%2Fstatus.evcc.io)](https://status.evcc.io/)
 [![Translation](https://hosted.weblate.org/widgets/evcc/-/evcc/svg-badge.svg)](https://hosted.weblate.org/engage/evcc/)
 ![Docker Pulls](https://img.shields.io/docker/pulls/evcc/evcc)
 [![OSS hosting by cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith)](https://cloudsmith.io/~evcc/packages/)
-[![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)<br/>
+[![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
+<br/>
 [![Built with Depot](https://depot.dev/badges/built-with-depot.svg)](https://depot.dev/?utm_source=evcc)
 
 evcc is an extensible EV Charge Controller and home energy management system.
@@ -31,11 +33,11 @@ Featured in [PV Magazine](https://www.pv-magazine.de/2022/01/14/mit-open-source-
   - **sunspec**-compatible inverter or home battery devices
   - **mbmd**-compatible devices, see [volkszaehler/mbmd](https://github.com/volkszaehler/mbmd#supported-devices) for a complete list
 - [vehicle](https://docs.evcc.io/en/docs/devices/vehicles) integrations (state of charge, remote charge, battery and preconditioning status):
-  - Aiways, Audi, BMW, Citroën, Dacia, DS, Fiat, Ford, Hyundai, Jeep, Kia, Mercedes-Benz, MG, Mini, Nissan, NIU, Opel, Peugeot, Polestar, Renault, Seat, Skoda, Smart, Tesla, Toyota, Volkswagen, Volvo, Zero Motorcycles. [Read more.](https://docs.evcc.io/en/docs/devices/vehicles)
+  - Aiways, Audi, BMW, Citroën, Dacia, DS, Fiat, Ford, Genesis, Hyundai, Jeep, Kia, Mercedes-Benz, MG, Mini, Nissan, NIU, Opel, Peugeot, Polestar, Renault, Seat, Skoda, Smart, Subaru, Tesla, Toyota, Volkswagen, Volvo, Zero Motorcycles. [Read more.](https://docs.evcc.io/en/docs/devices/vehicles)
   - **services:** OVMS, Tronity, evNotify, ioBroker.bmw, mg2mqtt, mz2mqtt, TeslaLogger, TeslaMate, Tessi, volvo2mqtt
 - [plugins](https://docs.evcc.io/en/docs/devices/plugins) for integrating with any charger, smartswitch, heatpump, electric heater, meter, solar- / battery-inverter or vehicle:
   - Modbus, HTTP, MQTT, JavaScript, WebSocket, Go and shell scripts
-- status [notifications](https://docs.evcc.io/en/docs/reference/configuration/messaging) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
+- status [notifications](https://docs.evcc.io/en/docs/reference/configuration/messaging) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://shoutrrr.nickfedor.com/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - [REST](https://docs.evcc.io/en/docs/integrations/rest-api) and [MQTT](https://docs.evcc.io/en/docs/integrations/mqtt-api) APIs for integration with home automation systems
 - Add-ons for [Home Assistant](https://docs.evcc.io/en/docs/integrations/home-assistant) and [openHAB](https://www.openhab.org/addons/bindings/evcc) (not maintained by the evcc core team)
@@ -60,3 +62,14 @@ Maintaining evcc consumes time and effort. With the vast amount of different dev
 While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwise closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
 Learn more about our [sponsorship model](https://docs.evcc.io/en/docs/sponsorship).
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+For additional license information regarding fonts, icons, and other assets, please see the [LICENSES](LICENSES/) folder.
+
+**Note:** All sponsor-required components are excluded from the MIT License.
+See file license header for details.
+If you want to use them in your own project, one evcc sponsorship token is required per evcc instance.
+Custom licensing agreements are available - please [contact us](mailto:info@evcc.io) to discuss your specific requirements.

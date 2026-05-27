@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
-	"github.com/jinzhu/now"
 )
 
 type Tariff struct {
@@ -29,7 +28,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Tariff, error) {
+func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Price    *plugin.Config
@@ -116,7 +115,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 		}
 
 		// only prune rates older than current period
-		periodStart := now.With(time.Now()).BeginningOfHour()
+		periodStart := time.Now().Truncate(SlotDuration)
 		if t.typ == api.TariffTypeSolar {
 			periodStart = beginningOfDay()
 		}
@@ -140,14 +139,14 @@ func (t *Tariff) priceRates() (api.Rates, error) {
 		return nil, err
 	}
 
-	res := make(api.Rates, 48)
-	start := now.BeginningOfHour()
+	res := make(api.Rates, 48*4) // forecast for two days
+	start := time.Now().Truncate(SlotDuration)
 
 	for i := range res {
-		slot := start.Add(time.Duration(i) * time.Hour)
+		slot := start.Add(time.Duration(i) * SlotDuration)
 		res[i] = api.Rate{
 			Start: slot,
-			End:   slot.Add(time.Hour),
+			End:   slot.Add(SlotDuration),
 			Value: t.totalPrice(price, slot),
 		}
 	}

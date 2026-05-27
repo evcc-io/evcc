@@ -24,17 +24,12 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div :class="showPrecondition ? 'col-2' : 'col-3'">
+			<div class="col-3">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div v-if="showPrecondition" class="col-1">
-				<label :for="formId('precondition')">
-					{{ $t("main.chargingPlan.preconditionShort") }}
-				</label>
-			</div>
-			<div class="col-1">
+			<div class="col-2">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
 		</div>
@@ -70,7 +65,6 @@
 					v-model="selectedTime"
 					type="time"
 					class="form-control mx-0 text-start"
-					:step="60 * 5"
 					data-testid="repeating-plan-time"
 					required
 					@change="update()"
@@ -81,7 +75,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div :class="['col-7', showPrecondition ? 'col-lg-2' : 'col-lg-3', 'mb-2', 'mb-lg-0']">
+			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<select
 					:id="formId('goal')"
 					v-model="selectedSoc"
@@ -94,27 +88,12 @@
 					</option>
 				</select>
 			</div>
-			<div v-if="showPrecondition" class="col-5 d-lg-none col-form-label">
-				<label :for="formId('precondition')">
-					{{ $t("main.chargingPlan.preconditionLong") }}
-				</label>
-			</div>
-			<div
-				v-if="showPrecondition"
-				class="col-7 col-lg-1 mb-2 mb-lg-0 d-flex align-items-center"
-			>
-				<PreconditionSelect
-					:id="formId('precondition')"
-					v-model="selectedPrecondition"
-					testid="repeating-plan-precondition"
-				/>
-			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 col-lg-1 d-flex align-items-center">
+			<div class="col-3 col-lg-1 d-flex align-items-center">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -129,11 +108,13 @@
 					/>
 				</div>
 			</div>
-			<div class="col-5 col-lg-2 d-flex align-items-center">
+			<div
+				class="col-4 col-lg-2 d-flex align-items-center justify-content-end justify-content-lg-start"
+			>
 				<button
 					v-if="showApply"
 					type="button"
-					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline text-truncate"
 					data-testid="repeating-plan-apply"
 					tabindex="0"
 					@click="update(true)"
@@ -152,31 +133,22 @@
 				</button>
 			</div>
 		</div>
-		<!-- Large screen precondition description -->
-		<div class="plan-id-inset">
-			<PreconditionSelect
-				:id="formId('precondition')"
-				v-model="selectedPrecondition"
-				testid="repeating-plan-precondition"
-				description-lg-only
-			/>
-		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
+import "@h2d2/shopicons/es/regular/checkmark";
 import { distanceUnit } from "@/units";
 import MultiSelect from "../Helper/MultiSelect.vue";
 import formatter from "@/mixins/formatter";
 import deepEqual from "@/utils/deepEqual";
-import PreconditionSelect from "./PreconditionSelect.vue";
 import type { SelectOption } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
 	name: "ChargingPlanRepeatingSettings",
-	components: { MultiSelect, PreconditionSelect },
+	components: { MultiSelect },
 	mixins: [formatter],
 	props: {
 		number: Number,
@@ -184,12 +156,10 @@ export default defineComponent({
 		time: String,
 		tz: String,
 		soc: Number,
-		precondition: Number,
 		showHeader: Boolean,
 		active: Boolean,
 		rangePerSoc: Number,
 		formIdPrefix: String,
-		showPrecondition: Boolean,
 	},
 	emits: ["updated", "removed"],
 	data() {
@@ -198,7 +168,6 @@ export default defineComponent({
 			selectedTime: this.time,
 			selectedSoc: this.soc,
 			selectedActive: this.active,
-			selectedPrecondition: this.precondition,
 		};
 	},
 	computed: {
@@ -207,15 +176,14 @@ export default defineComponent({
 				!deepEqual(this.weekdays, this.selectedWeekdays) ||
 				this.time !== this.selectedTime ||
 				this.soc !== this.selectedSoc ||
-				this.active !== this.selectedActive ||
-				this.precondition !== this.selectedPrecondition
+				this.active !== this.selectedActive
 			);
 		},
 		showApply(): boolean {
 			return this.dataChanged && this.selectedActive;
 		},
 		weekdaysLabel(): string {
-			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
+			return this.fmtWeekdaysRange(this.selectedWeekdays);
 		},
 		socOptions(): SelectOption<number>[] {
 			// a list of entries from 5 to 100 with a step of 5
@@ -242,9 +210,6 @@ export default defineComponent({
 		active(newValue: boolean) {
 			this.selectedActive = newValue;
 		},
-		precondition(newValue: number) {
-			this.selectedPrecondition = newValue;
-		},
 	},
 	methods: {
 		id(): number {
@@ -268,7 +233,6 @@ export default defineComponent({
 				soc: this.selectedSoc,
 				tz: this.tz,
 				active: this.selectedActive,
-				precondition: this.selectedPrecondition,
 			};
 
 			if (forceSave || !this.selectedActive) {

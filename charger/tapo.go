@@ -17,7 +17,7 @@ func init() {
 }
 
 // NewTapoFromConfig creates a Tapo charger from generic config
-func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewTapoFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		URI          string

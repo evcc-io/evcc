@@ -20,9 +20,28 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 		Status:      core.RegistrationStatusAccepted,
 	}
 
-	cp.onceBoot.Do(func() {
-		cp.bootNotificationRequestC <- request
-	})
+	cp.mu.Lock()
+	cp.BootNotificationResult = request
+	cp.stopBootTimer()
+	cp.mu.Unlock()
+
+	// mark charge point as ready for communication
+	cp.connect(true)
+
+	// Notify the reboot monitor (and the initial Setup). The channel is
+	// buffered (size 1) and coalescing: if an older notification is still
+	// queued, drop it so the consumer always re-initializes against the most
+	// recent BootNotification. This matters when a charge point reboot-loops
+	// (e.g. issue #30113) faster than the monitor consumes notifications, or
+	// before the monitor has started at all - the channel must never overflow.
+	select {
+	case <-cp.bootNotificationRequestC:
+	default:
+	}
+	select {
+	case cp.bootNotificationRequestC <- request:
+	default:
+	}
 
 	return res, nil
 }

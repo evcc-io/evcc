@@ -1,0 +1,41 @@
+template: stroomprijsprognose
+products:
+  - brand: stroomprijsprognose.nl
+requirements:
+  description:
+    de: "Day-Ahead-Strompreise plus 4 Tage Prognose [stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
+    en: "Spot prices in day-ahead market plus 4 days prognosis [stroomprijsprognose.nl](https://stroomprijsprognose.nl)"
+  evcc: ["skiptest"]
+group: price
+countries: ["DE", "NL", "BE", "DK", "FR"]
+params:
+  - name: region
+    example: DE
+    type: choice
+    choice: ["DE", "NL", "BE", "DK1", "DK2", "FR"]
+    required: true
+  - name: currency
+    default: EUR
+    type: choice
+    description:
+      en: Currency
+      de: Währung
+    choice: ["EUR", "DKK"]
+    required: true
+  - name: horizon
+    default: 120
+    type: int
+    unit: h
+    description:
+      en: Forecast horizon
+      de: Prognosehorizont
+    required: true
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
+  forecast:
+    source: http
+    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}

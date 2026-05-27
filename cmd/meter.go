@@ -18,11 +18,17 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
+	withCustomTemplate(meterCmd)
+
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
+	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
+	meterCmd.Flags().IntP(flagCurtail, "u", -1, flagCurtailDescription)
+	meterCmd.Flags().IntP(flagDim, "m", -1, flagDimDescription)
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
 	meterCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
+	meterCmd.Flags().Duration(flagTimeout, time.Second, flagTimeoutDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
@@ -56,7 +62,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 		flagUsed = true
 
 		for _, v := range config.Instances(meters) {
-			if b, ok := v.(api.BatteryController); ok {
+			if b, ok := api.Cap[api.BatteryController](v); ok {
 				if err := b.SetBatteryMode(mode); err != nil {
 					log.FATAL.Fatalln("set battery mode:", err)
 				}
@@ -69,13 +75,29 @@ func runMeter(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	for _, v := range config.Instances(meters) {
+		if handleCurtailFlag(cmd, v) {
+			flagUsed = true
+		}
+
+		if handleDimFlag(cmd, v) {
+			flagUsed = true
+		}
+	}
+
 	if !flagUsed {
-		d := dumper{len: len(meters)}
+		timeout, _ := cmd.Flags().GetDuration(flagTimeout)
+		d := dumper{len: len(meters), timeout: timeout}
+		flag := cmd.Flag(flagDiagnose).Changed
+
 	REPEAT:
 		for _, dev := range meters {
 			v := dev.Instance()
 
 			d.DumpWithHeader(deviceHeader(dev), v)
+			if flag {
+				d.DumpDiagnosis(v)
+			}
 		}
 		if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
 			if d, err := cmd.Flags().GetDuration(flagRepeatInterval); d > 0 && err == nil {
@@ -88,7 +110,4 @@ func runMeter(cmd *cobra.Command, args []string) {
 		log.INFO.Println("running heartbeat (if any) until interrupted (Ctrl-C to stop)")
 		time.Sleep(time.Hour)
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

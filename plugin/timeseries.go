@@ -16,7 +16,7 @@ func init() {
 }
 
 // TimeSeriesFromConfig creates timeseries plugin
-func TimeSeriesFromConfig(_ context.Context, _ map[string]interface{}) (Plugin, error) {
+func TimeSeriesFromConfig(_ context.Context, _ map[string]any) (Plugin, error) {
 	return new(timeseriesPlugin), nil
 }
 

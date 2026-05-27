@@ -62,13 +62,9 @@
 							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.issueDescription") }}
 							</p>
-							<a
-								href="https://github.com/evcc-io/evcc/issues"
-								target="_blank"
-								class="btn btn-outline-primary text-nowrap"
-							>
+							<router-link to="/issue" class="btn btn-outline-primary text-nowrap">
 								{{ $t("help.issueButton") }}
-							</a>
+							</router-link>
 						</div>
 
 						<div

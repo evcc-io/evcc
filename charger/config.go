@@ -15,6 +15,6 @@ func Types() []string {
 }
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Charger, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Charger, error) {
 	return config.NewFromConfig(ctx, typ, other)
 }

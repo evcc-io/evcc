@@ -134,6 +134,42 @@ make ui build
 ./evcc --config tests/simulator.evcc.yaml
 ```
 
+## Communication Language
+
+evcc has a large German-speaking user base, but we want to be open and accessible to everyone in the global community. To balance these needs:
+
+- **Pull Requests**
+  - 🇬🇧 English required
+- **Issues**
+  - 🇬🇧 English recommended
+  - 🇩🇪 German acceptable to start, must switch to English after first English comment
+- **GitHub Discussions**
+  - 🇬🇧 🇩🇪 Both English and German allowed
+
+💬 _Non-German speakers: We strongly encourage you to ask participants to switch to English. For pull requests, we have a language check bot that does this automatically._
+
+Thank you all for helping make evcc accessible! 🌍
+
+## AI-Generated Content
+
+AI tools can be valuable aids for writing code, documentation, and creating issue reports.
+We welcome their use as part of the development process.
+
+When submitting AI-assisted contributions, keep these principles in mind:
+
+- **Understanding**: Fully understand all changes and be prepared to answer questions about them.
+- **Human-written intent**: Write issue descriptions, PR explanations, and commit messages in your own words. Keep them clear and concise, not lengthy generated text.
+- **Value**: Ensure contributions justify the review effort required from maintainers.
+- **Prior consensus**: Only open a PR if there is a related issue or discussion where the team has indicated a positive tendency toward the proposed change. Link to it in your PR description.
+
+Contributors remain responsible for their work regardless of which tools were used to create it.
+
+Contributions that appear to violate these principles will be closed with the following comment:
+
+```
+This contribution does not appear to meet our [AI contribution guidelines](https://github.com/evcc-io/evcc/blob/master/CONTRIBUTING.md#ai-generated-content).
+```
+
 ## Adding or modifying translations
 
 evcc already includes many translations for the UI. We're using [Weblate](https://hosted.weblate.org/projects/evcc/evcc/) to maintain translations. Feel free to add more languages or verify and edit existing translations. Weblate will automatically push all modifications to the evcc repository where they get reviewed and merged.
@@ -159,3 +195,8 @@ Please open a GitHub pull request in the respective repository.
 - Documentation: [evcc-io/docs](https://github.com/evcc-io/docs)
 - Website: [evcc-io/evcc.io](https://github.com/evcc-io/evcc.io)
 - iOS/Android App: [evcc-io/app](https://github.com/evcc-io/app)
+
+## License
+
+By contributing to evcc, you agree that your contributions will be licensed under the existing license terms that apply to the respective parts of the project.
+This constitutes an implicit Contributor License Agreement (CLA), following GitHub's standard practice where contributions are made under the same terms as the project license.

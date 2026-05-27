@@ -10,16 +10,25 @@
 			v-bind="vehicleStatus"
 			class="mb-2"
 			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
-			@open-minsoc-settings="openMinSocSettings"
+			@open-minsoc-settings="openPlanModal(true)"
 			@open-plan-modal="openPlanModal"
 		/>
-		<VehicleSoc
-			v-bind="vehicleSocProps"
-			class="mt-2 mb-4"
-			@limit-soc-updated="limitSocUpdated"
-			@limit-soc-drag="limitSocDrag"
-			@plan-clicked="openPlanModal"
-		/>
+		<div class="mt-2 mb-4 d-flex gap-2">
+			<BatteryBoostButton
+				v-if="showBoostButton"
+				class="flex-grow-0"
+				v-bind="batteryBoostButtonProps"
+				@updated="$emit('batteryboost-updated', $event)"
+				@status="handleBoostStatus"
+			/>
+			<VehicleSoc
+				class="flex-grow-1 position-relative"
+				v-bind="vehicleSocProps"
+				@limit-soc-updated="limitSocUpdated"
+				@limit-soc-drag="limitSocDrag"
+				@plan-clicked="openPlanModal"
+			/>
+		</div>
 		<div class="details d-flex flex-wrap justify-content-between">
 			<LabelAndValue
 				v-if="socBasedCharging"
@@ -45,6 +54,7 @@
 				class="flex-grow-1 target-charge"
 				v-bind="chargingPlan"
 				:disabled="chargingPlanDisabled"
+				@open-modal="$emit('open-modal')"
 			/>
 			<LimitSocSelect
 				v-if="socBasedCharging"
@@ -77,9 +87,18 @@ import Status from "./Status.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
-import { distanceUnit, distanceValue } from "@/units.ts";
+import { distanceUnit } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
-import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
+import {
+	CHARGE_MODE,
+	type BATTERY_MODE,
+	type Forecast,
+	type VehicleStatus,
+	type Vehicle,
+} from "@/types/evcc";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
+import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
+import type ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
 
 export default defineComponent({
 	name: "Vehicle",
@@ -91,6 +110,7 @@ export default defineComponent({
 		ChargingPlan,
 		LimitSocSelect,
 		LimitEnergySelect,
+		BatteryBoostButton,
 	},
 	mixins: [collector, formatter],
 	props: {
@@ -103,9 +123,16 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
+		batteryBoost: Boolean,
 		batteryBoostActive: Boolean,
+		batteryBoostAvailable: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
+		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		enabled: Boolean,
 		heating: Boolean,
+		continuous: Boolean,
 		id: [String, Number],
 		integratedDevice: Boolean,
 		limitEnergy: Number,
@@ -120,7 +147,6 @@ export default defineComponent({
 		planProjectedEnd: String,
 		planTime: String,
 		planTimeUnreachable: Boolean,
-		planPrecondition: Number,
 		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
@@ -145,6 +171,11 @@ export default defineComponent({
 		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
+		minSocNotReached: Boolean,
+		capacity: Number,
+		range: Number,
+		rangePerSoc: Number,
+		socPerKwh: { type: Number, required: true },
 	},
 	emits: [
 		"limit-soc-updated",
@@ -152,18 +183,21 @@ export default defineComponent({
 		"change-vehicle",
 		"remove-vehicle",
 		"open-loadpoint-settings",
+		"batteryboost-updated",
+		"open-modal",
 	],
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
+			statusOverride: undefined as VehicleStatus | undefined,
+			chargingPlanModal: this.$refs["chargingPlanModal"] as
+				| InstanceType<typeof ChargingPlanModal>
+				| undefined,
 		};
 	},
 	computed: {
 		title() {
 			return this.vehicle?.title || "";
-		},
-		capacity() {
-			return this.vehicle?.capacity || 0;
 		},
 		icon() {
 			return this.vehicle?.icon || "";
@@ -175,13 +209,19 @@ export default defineComponent({
 			return this.collectProps(Soc);
 		},
 		vehicleStatus() {
-			return this.collectProps(Status);
+			return { ...this.collectProps(Status), statusOverride: this.statusOverride };
 		},
 		vehicleTitleProps() {
 			return this.collectProps(Title);
 		},
 		chargingPlan() {
 			return this.collectProps(ChargingPlan);
+		},
+		showBoostButton(): boolean {
+			return this.connected && this.batteryBoostAvailable && this.batteryBoostLimit < 100;
+		},
+		batteryBoostButtonProps() {
+			return this.collectProps(BatteryBoostButton);
 		},
 		formattedSoc() {
 			if (!this.vehicleSoc) {
@@ -198,23 +238,8 @@ export default defineComponent({
 			}
 			return this.$t("main.vehicle.vehicleSoc");
 		},
-		range() {
-			return distanceValue(this.vehicleRange);
-		},
 		rangeUnit() {
 			return distanceUnit();
-		},
-		rangePerSoc() {
-			if (this.vehicleSoc > 10 && this.range) {
-				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
-			}
-			return undefined;
-		},
-		socPerKwh() {
-			if (this.capacity > 0) {
-				return 100 / this.capacity;
-			}
-			return 0;
 		},
 		chargedSoc() {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
@@ -255,15 +280,11 @@ export default defineComponent({
 		fmtEnergy(value: number) {
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
-		openPlanModal() {
-			(
-				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
-			)?.openPlanModal();
+		openPlanModal(openArrivalTab = false) {
+			this.$emit("open-modal", openArrivalTab);
 		},
-		openMinSocSettings() {
-			(
-				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
-			)?.openPlanModal(true);
+		handleBoostStatus(status: VehicleStatus) {
+			this.statusOverride = status;
 		},
 	},
 });

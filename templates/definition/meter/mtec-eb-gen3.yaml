@@ -10,8 +10,7 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     id: 255
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -85,5 +84,5 @@ render: |
             address: 50000
             type: writesingle
             decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

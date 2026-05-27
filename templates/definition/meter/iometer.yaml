@@ -13,12 +13,10 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/v1/reading
-    method: GET
     jq: .meter.reading.registers[] | select(.obis == "01-00:10.07.00*ff") | .value
     cache: 10s
   energy:
     source: http
     uri: http://{{ .host }}/v1/reading
-    method: GET
     jq: (.meter.reading.registers[] | select(.obis == "01-00:01.08.00*ff") | .value) / 1000
     cache: 10s

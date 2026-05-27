@@ -1,14 +1,18 @@
 package vwidentity
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
@@ -91,79 +95,242 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 		"state": {uuid.NewString()},
 	}
 
-	var vars FormVars
 	uri = uri + "&" + query.Encode()
 
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
 	resp, err := v.Get(uri)
-	if err == nil {
-		vars, err = FormValues(resp.Body, "form#emailPasswordForm")
-		resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
 
+	// Try to extract legacy form, but don't fail if it's not found
+	if vars, err := FormValues(bytes.NewReader(body), "form#emailPasswordForm"); err == nil {
+		return v.loginLegacy(vars, user, password)
+	}
+
+	return v.loginNew(body, user, password)
+}
+
+// loginLegacy performs the legacy VW identity login flow
+func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values, error) {
 	var params CredentialParams
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
-	if err == nil {
-		data := url.Values{
-			"_csrf":      {vars.Inputs["_csrf"]},
-			"relayState": {vars.Inputs["relayState"]},
-			"hmac":       {vars.Inputs["hmac"]},
-			"email":      {user},
-		}
+	data := url.Values{
+		"_csrf":      {vars.Inputs["_csrf"]},
+		"relayState": {vars.Inputs["relayState"]},
+		"hmac":       {vars.Inputs["hmac"]},
+		"email":      {user},
+	}
 
-		uri = BaseURL + vars.Action
-		if resp, err = v.PostForm(uri, data); err == nil {
-			if params, err = ParseCredentialsPage(resp.Body); err == nil && params.TemplateModel.Error != "" {
-				err = errors.New(params.TemplateModel.Error)
-			}
-			resp.Body.Close()
-		}
+	uri := BaseURL + vars.Action
+	resp, err := v.PostForm(uri, data)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if params, err = ParseCredentialsPage(resp.Body); err == nil && params.TemplateModel.Error != "" {
+		err = errors.New(params.TemplateModel.Error)
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
-	if err == nil {
-		data := url.Values{
-			"_csrf":      {params.CsrfToken},
-			"relayState": {params.TemplateModel.RelayState},
-			"hmac":       {params.TemplateModel.Hmac},
-			"email":      {user},
-			"password":   {password},
-		}
+	data = url.Values{
+		"_csrf":      {params.CsrfToken},
+		"relayState": {params.TemplateModel.RelayState},
+		"hmac":       {params.TemplateModel.Hmac},
+		"email":      {user},
+		"password":   {password},
+	}
 
-		// reuse url from identifier step before
-		uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
+	// reuse url from identifier step before
+	uri = strings.ReplaceAll(uri, params.TemplateModel.IdentifierUrl, params.TemplateModel.PostAction)
 
-		if resp, err = v.PostForm(uri, data); err == nil {
-			resp.Body.Close()
+	resp, err = v.PostForm(uri, data)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-			if resp.StatusCode >= http.StatusBadRequest {
-				err = errors.New(resp.Status)
-			}
-		}
-
-		if err == nil {
-			if e := resp.Request.URL.Query().Get("error"); e != "" {
-				err = errors.New(e)
-			}
-
-			if consent := resp.Request.URL.Query().Get("updated") != "" || strings.Contains(resp.Request.URL.Path, "/consent/"); err == nil && consent {
-				err = errors.New("terms of service updated- please open app or website and confirm: " + resp.Request.URL.String())
-			}
-		}
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, errors.New(resp.Status)
 	}
 
 	// GET identity.vwgroup.io/oidc/v1/oauth/sso?clientId=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&userId=bca09cc0-8eba-4110-af71-7242868e1bf1&HMAC=2b01ce6a351fad4dd97dc8110d0967b46c95889ab5010c660a616462e66a83ca
 	// GET identity.vwgroup.io/signin-service/v1/consent/users/bca09cc0-8eba-4110-af71-7242868e1bf1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&callback=https://identity.vwgroup.io/oidc/v1/oauth/client/callback&hmac=a590931ca3cd9dc3a27f1d1c0c162bf1e5c5c32c9f5b40fcb36d4c6edc631e03
 	// GET identity.vwgroup.io/oidc/v1/oauth/client/callback/success?user_id=bca09cc0-8eba-4110-af71-7242868e1bf1&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&consentedScopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=f89a0b750c93e278a7ace170ce374e9cb9eb0a74&hmac=2b728f463c3cfe80f3271fbb35680e5e5218ca70025a46e7fadf7c7982decc2b
 
-	var location *url.URL
-	if err == nil {
-		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") // convert to parseable url
-		if location, err = url.Parse(loc); err == nil {
-			return location.Query(), nil
-		}
+	// VW periodically interjects an optional marketing consent page after an
+	// otherwise successful login. Skip it without consenting so evcc recovers
+	// automatically instead of requiring a restart (#29760).
+	if location, ok, err := v.skipMarketingConsent(resp); err != nil {
+		return nil, err
+	} else if ok {
+		return parseAuthLocation(location)
 	}
 
-	return nil, err
+	parsed, err := url.Parse(resp.Header.Get("Location"))
+	if err != nil {
+		return nil, err
+	}
+	return parseAuthLocation(parsed)
+}
+
+// marketingConsentCallback returns the OIDC callback url embedded in an
+// optional VW/Audi marketing consent page. VW periodically interjects this
+// page (path .../consent/marketing/...) after an otherwise successful login.
+// It returns a nil url if u is not a marketing consent page.
+func marketingConsentCallback(u *url.URL) (*url.URL, error) {
+	if u == nil || !strings.Contains(u.Path, "/consent/marketing/") {
+		return nil, nil
+	}
+
+	callback := u.Query().Get("callback")
+	if callback == "" {
+		return nil, errors.New("marketing consent page is missing callback url")
+	}
+
+	cb, err := url.Parse(callback)
+	if err != nil {
+		return nil, err
+	}
+	// normalize spaces in query values (e.g. scopes) so the request is valid
+	cb.RawQuery = cb.Query().Encode()
+
+	return cb, nil
+}
+
+// skipMarketingConsent detects the optional VW/Audi marketing consent page that
+// the identity server periodically interjects and continues the login without
+// consenting by following the OIDC callback embedded in the consent request.
+// The bool result reports whether resp was such a consent page.
+func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, error) {
+	if resp.Request == nil {
+		return nil, false, nil
+	}
+
+	cb, err := marketingConsentCallback(resp.Request.URL)
+	if err != nil {
+		return nil, true, err
+	}
+	if cb == nil {
+		return nil, false, nil
+	}
+
+	cbResp, err := v.Get(cb.String())
+	if err != nil {
+		return nil, true, err
+	}
+	defer cbResp.Body.Close()
+
+	location, err := url.Parse(cbResp.Header.Get("Location"))
+	return location, true, err
+}
+
+// loginNew performs the new VW identity login flow
+func (v *Service) loginNew(body []byte, user, password string) (url.Values, error) {
+	state, err := extractState(body)
+	if err != nil {
+		return nil, err
+	}
+
+	// POST to new login endpoint
+	loginData := url.Values{
+		"username": {user},
+		"password": {password},
+		"state":    {state},
+	}
+
+	uri := fmt.Sprintf("%s/u/login?state=%s", BaseURL, state)
+	resp, err := v.PostForm(uri, loginData)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	location := resp.Header.Get("Location")
+	if resp.StatusCode >= http.StatusBadRequest {
+		return nil, errors.New(resp.Status)
+	}
+
+	// skip the optional marketing consent page without consenting (#29760)
+	if loc, ok, err := v.skipMarketingConsent(resp); err != nil {
+		return nil, err
+	} else if ok {
+		return parseAuthLocation(loc)
+	}
+
+	if location == "" {
+		return nil, errors.New("no redirect location in new login flow")
+	}
+
+	redirectURL, err := resolveLocation(resp.Request.URL, location)
+	if err != nil {
+		return nil, err
+	}
+
+	if redirectURL.Scheme == "https" || redirectURL.Scheme == "http" {
+		return nil, fmt.Errorf("unexpected redirect URL scheme: %s, expected app specific url (e.g. 'weconnect://...')", redirectURL.Scheme)
+	}
+
+	return parseAuthLocation(redirectURL)
+}
+
+func resolveLocation(base *url.URL, location string) (*url.URL, error) {
+	locURL, err := url.Parse(location)
+	if err != nil {
+		return nil, err
+	}
+	if locURL.IsAbs() {
+		return locURL, nil
+	}
+	return base.ResolveReference(locURL), nil
+}
+
+func parseAuthLocation(u *url.URL) (url.Values, error) {
+	if u.Fragment != "" {
+		u.RawQuery = u.Fragment
+	}
+
+	if errStr := u.Query().Get("error"); errStr != "" {
+		return nil, errors.New(errStr)
+	}
+
+	if consent := u.Query().Get("updated") != "" || strings.Contains(u.Path, "/consent/"); consent {
+		return nil, api.UrlError(
+			fmt.Sprintf("terms of service updated- please open app or website and confirm: %s", u.String()),
+			u,
+		)
+	}
+
+	return u.Query(), nil
+}
+
+func extractState(body []byte) (string, error) {
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+
+	stateInput := doc.Find("input[name=state]").First()
+	if stateInput.Length() == 0 {
+		return "", errors.New("state parameter not found")
+	}
+
+	state, ok := stateInput.Attr("value")
+	if !ok || state == "" {
+		return "", errors.New("state value not found")
+	}
+
+	return state, nil
 }

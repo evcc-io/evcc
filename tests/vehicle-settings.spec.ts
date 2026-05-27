@@ -90,6 +90,7 @@ test.describe("limitSoc", async () => {
     await expectModalHidden(modal);
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
     await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(500); // bad practice but may help here :/
 
     await restart(simulatorConfig());
     await page.reload();

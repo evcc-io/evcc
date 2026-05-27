@@ -13,6 +13,7 @@ import (
 	"github.com/andig/go-powerwall"
 	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -20,6 +21,7 @@ import (
 
 // PowerWall is the tesla powerwall meter
 type PowerWall struct {
+	implement.Caps
 	usage      string
 	client     *powerwall.Client
 	meterG     func() (map[string]powerwall.MeterAggregatesData, error)
@@ -31,20 +33,23 @@ func init() {
 	registry.Add("powerwall", NewPowerWallFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
-
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
-func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI, Usage, User, Password string
 		Cache                      time.Duration
 		RefreshToken               string
 		SiteId                     int64
 		batterySocLimits           `mapstructure:",squash"`
+		batteryPowerLimits         `mapstructure:",squash"`
 	}{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
+		},
+		batteryPowerLimits: batteryPowerLimits{
+			MaxChargePower:    4600,
+			MaxDischargePower: 4600,
 		},
 		Cache: time.Second,
 	}
@@ -69,11 +74,11 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits, cc.batteryPowerLimits)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits) (api.Meter, error) {
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
 	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
 
 	httpClient := &http.Client{
@@ -87,6 +92,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	m := &PowerWall{
+		Caps:   implement.New(),
 		client: client,
 		usage:  strings.ToLower(usage),
 		meterG: util.Cached(client.GetMetersAggregates, cache),
@@ -136,32 +142,27 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		m.energySite = energySite
 	}
 
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
 	if m.usage == "load" || m.usage == "solar" {
-		totalEnergy = m.totalEnergy
+		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
-	// decorate battery
-	var batterySoc func() (float64, error)
-	var batteryCapacity func() float64
 	if usage == "battery" {
-		batterySoc = m.batterySoc
+		implement.Has(m, implement.Battery(m.batterySoc))
+		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
 		res, err := m.client.GetSystemStatus()
 		if err != nil {
 			return nil, err
 		}
 
-		batteryCapacity = func() float64 {
+		implement.Has(m, implement.BatteryCapacity(func() float64 {
 			return res.NominalFullPackEnergy / 1e3
-		}
+		}))
 	}
 
-	// decorate api.BatteryController
-	var batModeS func(api.BatteryMode) error
 	if batteryControl {
-		batModeS = batterySocLimits.LimitController(m.socG, func(limit float64) error {
+		implement.May(m, implement.BatteryController(batterySocLimits.LimitController(m.socG, func(limit float64) error {
 			// Handle Tesla firmware 25.18.4 restrictions:
 			// Values between 81-99% are not allowed, only ≤80% or exactly 100%
 			limitUint := uint64(limit)
@@ -170,10 +171,10 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 				limitUint = 80
 			}
 			return m.energySite.SetBatteryReserve(limitUint)
-		})
+		})))
 	}
 
-	return decoratePowerWall(m, totalEnergy, batterySoc, batteryCapacity, batModeS), nil
+	return m, nil
 }
 
 var _ api.Meter = (*PowerWall)(nil)

@@ -9,10 +9,21 @@ requirements:
 group: generic
 params:
   - preset: vehicle-common
+  - name: coarsecurrent
+    advanced: true
+  - name: welcomecharge
+    advanced: true
 render: |
   type: custom
-  features: ["offline"]
   {{- include "vehicle-common" . }}
+  features:
+  - offline
+  {{- if eq .coarsecurrent "true" }}
+  - coarsecurrent
+  {{- end }}
+  {{- if eq .welcomecharge "true" }}
+  - welcomecharge
+  {{- end }}
   soc:
     source: const
     value: 0

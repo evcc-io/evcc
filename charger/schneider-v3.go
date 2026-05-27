@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2023 andig, premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -62,7 +62,7 @@ func init() {
 // https://download.schneider-electric.com/files?p_enDocType=Other+technical+guide&p_File_Name=GEX1969300-04.pdf&p_Doc_Ref=GEX1969300
 
 // NewSchneiderV3FromConfig creates a Schneider charger from generic config
-func NewSchneiderV3FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSchneiderV3FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}

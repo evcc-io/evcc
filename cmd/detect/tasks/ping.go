@@ -14,7 +14,7 @@ func init() {
 	registry.Add(Ping, PingHandlerFactory)
 }
 
-func PingHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func PingHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := PingHandler{
 		Count:   1,
 		Timeout: timeout,

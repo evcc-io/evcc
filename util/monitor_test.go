@@ -5,7 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/benbjohnson/clock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMonitorRacyMaps(t *testing.T) {
@@ -42,13 +43,29 @@ func TestMonitorRacyMaps(t *testing.T) {
 			default:
 				err := m.GetFunc(func(mm map[int]int) {
 					for k, v := range mm {
-						require.Equal(t, k, v)
+						assert.Equal(t, k, v)
 					}
 				})
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 		}
 	}()
 
 	<-done
+}
+
+func TestMonitorWithoutTimeout(t *testing.T) {
+	clock := clock.NewMock()
+	m := NewMonitor[int](0).WithClock(clock)
+
+	_, err := m.Get()
+	assert.Error(t, err)
+
+	m.Set(0)
+	_, err = m.Get()
+	assert.NoError(t, err)
+
+	clock.Add(time.Hour)
+	_, err = m.Get()
+	assert.NoError(t, err)
 }

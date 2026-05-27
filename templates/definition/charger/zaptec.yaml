@@ -9,7 +9,7 @@ products:
   - brand: Zaptec
     description:
       generic: Pro
-capabilities: ["rfid"]
+capabilities: ["rfid", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:
@@ -32,5 +32,5 @@ render: |
   type: zaptec
   id: {{ .id }}
   user: {{ .user }}
-  password: '{{ .password }}'
+  password: {{ .password }}
   passive: {{ .passive }}

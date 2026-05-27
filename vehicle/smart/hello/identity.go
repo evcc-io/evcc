@@ -30,14 +30,14 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		deviceID: lo.RandomString(16, lo.AlphanumericCharset),
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(nil, v)
+	v.TokenSource = oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(v.refreshToken))
 
 	_, err := v.Token()
 
 	return v, err
 }
 
-func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken() (*oauth2.Token, error) {
 	token, err := v.login()
 	if err != nil {
 		return nil, err

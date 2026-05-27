@@ -1,11 +1,29 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"encoding/binary"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -31,6 +49,7 @@ const (
 // It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
 // https://www.cfos-emobility.de/en-gb/cfos-power-brain/modbus-registers.htm
 type CfosPowerBrain struct {
+	implement.Caps
 	conn *modbus.Connection
 }
 
@@ -38,10 +57,8 @@ func init() {
 	registry.AddCtx("cfos", NewCfosPowerBrainFromConfig)
 }
 
-//go:generate go tool decorate -f decorateCfos -b *CfosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
-
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
-func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -70,30 +87,26 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 	conn.Logger(log.TRACE)
 
 	wb := &CfosPowerBrain{
+		Caps: implement.New(),
 		conn: conn,
 	}
 
 	// decorate meter
-	var (
-		power, energy func() (float64, error)
-		currents      func() (float64, float64, float64, error)
-	)
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
-		power = wb.currentPower
-		energy = wb.totalEnergy
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 
 		if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeterFlags, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
-			currents = wb.currents
+			implement.Has(wb, implement.PhaseCurrents(wb.currents))
 		}
 	}
 
 	// decorate phases
-	var phases1p3p func(int) error
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegSolarEnabled, 1); err == nil && binary.BigEndian.Uint16(b)&(1<<8) != 0 {
-		phases1p3p = wb.phases1p3p
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
-	return decorateCfos(wb, power, energy, currents, phases1p3p), nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface
@@ -167,7 +180,28 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint64(b)) / 1e3, nil
+	res := float64(binary.BigEndian.Uint64(b)) / 1e3
+
+	// cfos wallboxes sometimes return 0 erroneously shortly after startup
+	// to work around this, we retry once more, and if it is still 0, we return ErrMustRetry
+	//
+	// this has the drawback with new wallboxes that actually have 0 total energy
+	// it will return ErrMustRetry until the wallbox has been used
+	//
+	// see https://github.com/evcc-io/evcc/discussions/12886
+	if res == 0 {
+		b, err = wb.conn.ReadHoldingRegisters(cfosRegEnergy, 4)
+		if err != nil {
+			return 0, err
+		}
+
+		res = float64(binary.BigEndian.Uint64(b)) / 1e3
+		if res == 0 {
+			return 0, api.ErrMustRetry
+		}
+	}
+
+	return res, nil
 }
 
 // currents implements the api.PhaseCurrents interface

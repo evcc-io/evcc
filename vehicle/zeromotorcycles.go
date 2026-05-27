@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewZeroFromConfig creates a new vehicle
-func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewZeroFromConfig(other map[string]any) (api.Vehicle, error) {
 	var res *zero.API
 	var err error
 

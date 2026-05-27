@@ -6,6 +6,7 @@ __debug_bin*
 *.db
 *.gz
 *.py
+testdata/**/*
 *.log
 *.json
 !i18n/*.json
@@ -18,6 +19,7 @@ __debug_bin*
 !package*.json
 !evcc.dist.yaml
 !tests/**/*.evcc.yaml
+!tests/**/*.tpl.yaml
 !tsconfig.json
 /templates/docs
 evcc

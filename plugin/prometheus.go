@@ -26,7 +26,7 @@ func init() {
 	registry.Add("prometheus", NewPrometheusFromConfig)
 }
 
-func NewPrometheusFromConfig(other map[string]interface{}) (Plugin, error) {
+func NewPrometheusFromConfig(other map[string]any) (Plugin, error) {
 	cc := struct {
 		Uri, Query string
 		Timeout    time.Duration
@@ -93,12 +93,24 @@ func (p *Prometheus) FloatGetter() (func() (float64, error), error) {
 			return 0, err
 		}
 
-		if res.Type() != model.ValScalar {
-			return 0, fmt.Errorf("query returned value of type %q, expected %q, consider wrapping query in scalar()", res.Type().String(), model.ValScalar.String())
+		if res.Type() == model.ValScalar {
+			scalarVal := res.(*model.Scalar)
+			return float64(scalarVal.Value), nil
 		}
 
-		scalarVal := res.(*model.Scalar)
-		return float64(scalarVal.Value), nil
+		if res.Type() == model.ValVector {
+			vectorVal := res.(model.Vector)
+			if vectorVal.Len() != 1 {
+				return 0, fmt.Errorf("query must return exactly 1 metric, got %d instead", vectorVal.Len())
+			}
+			metric := vectorVal[0]
+			if metric.Histogram != nil {
+				return 0, fmt.Errorf("query returned histogram, expected value")
+			}
+			return float64(metric.Value), nil
+		}
+
+		return 0, fmt.Errorf("query returned value of type %q, expected %q or %q", res.Type().String(), model.ValScalar.String(), model.ValVector.String())
 	}, nil
 }
 

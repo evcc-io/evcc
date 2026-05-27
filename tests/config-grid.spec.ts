@@ -7,7 +7,7 @@ import {
   simulatorHost,
   simulatorApply,
 } from "./simulator";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
@@ -31,14 +31,13 @@ test.describe("main screen", async () => {
 });
 
 test.describe("grid meter", async () => {
-  test("create, edit and remove grid meter", async ({ page }) => {
+  test("create, edit and remove grid meter (using OpenEMS simulator)", async ({ page }) => {
     // setup test data for mock openems api
     await page.goto(simulatorUrl());
     await page.getByLabel("Grid Power").fill("5000");
     await simulatorApply(page);
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("grid")).toHaveCount(0);
     await expect(page.getByTestId("add-grid")).toBeVisible();
@@ -47,7 +46,7 @@ test.describe("grid meter", async () => {
     await page.getByTestId("add-grid").click();
 
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
+    await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS REST-API");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
@@ -57,12 +56,13 @@ test.describe("grid meter", async () => {
 
     // restart
     await restart(CONFIG_ONE_LP);
+    await expect(page.getByTestId("grid")).toContainText("Grid meter");
     await expect(page.getByTestId("grid").getByTestId("device-tag-power")).toContainText("5.0 kW");
 
     // check in main ui
     await page.goto("/");
     await page.getByTestId("visualization").click();
-    await expect(page.getByTestId("energyflow")).toContainText(["Grid use", "5.0 kW"].join(""));
+    await expect(page.getByTestId("energyflow")).toContainText(["Grid import", "5.0 kW"].join(""));
 
     // delete #1
     await page.goto("/#/config");

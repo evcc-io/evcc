@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -27,6 +28,7 @@ const (
 // PhoenixEMEth is an api.Charger implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
 type PhoenixEMEth struct {
+	implement.Caps
 	conn *modbus.Connection
 }
 
@@ -34,10 +36,8 @@ func init() {
 	registry.AddCtx("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
-
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 180,
 	}
@@ -51,22 +51,15 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]interface{}
 		return nil, err
 	}
 
-	var (
-		currentPower func() (float64, error)
-		totalEnergy  func() (float64, error)
-		currents     func() (float64, float64, float64, error)
-		voltages     func() (float64, float64, float64, error)
-	)
-
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxEMEthRegVoltages, 2); err == nil && encoding.Int32LswFirst(b) > 0 {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
-		currents = wb.currents
-		voltages = wb.voltages
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
-	return decoratePhoenixEMEth(wb, currentPower, totalEnergy, currents, voltages), nil
+	return wb, nil
 }
 
 // NewPhoenixEMEth creates a Phoenix charger
@@ -80,6 +73,7 @@ func NewPhoenixEMEth(ctx context.Context, uri string, slaveID uint8) (*PhoenixEM
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixEMEth{
+		Caps: implement.New(),
 		conn: conn,
 	}
 

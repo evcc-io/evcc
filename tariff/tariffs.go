@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,17 +30,52 @@ func Now(t api.Tariff) (float64, error) {
 	return r.Value, err
 }
 
-func Forecast(t api.Tariff) api.Rates {
-	staticTariffs := []api.TariffType{api.TariffTypePriceStatic, api.TariffTypePriceDynamic}
-	if t != nil && !slices.Contains(staticTariffs, t.Type()) {
-		if rr, err := t.Rates(); err == nil {
-			return rr
+// Rates returns the tariffs rates if not nil
+func Rates(t api.Tariff) api.Rates {
+	if t == nil {
+		return nil
+	}
+
+	rr, err := t.Rates()
+	if err != nil {
+		return nil
+	}
+
+	return rr
+}
+
+// AverageRate returns the arithmetic mean of rates in [now, now+d), or nil if unavailable.
+func AverageRate(t api.Tariff, d time.Duration) *float64 {
+	rr := Rates(t)
+	if rr == nil {
+		return nil
+	}
+
+	now := time.Now()
+	end := now.Add(d)
+
+	var sum float64
+	var count int
+	for _, r := range rr {
+		if r.Start.Before(end) && r.End.After(now) {
+			sum += r.Value
+			count++
 		}
 	}
-	return nil
+
+	if count == 0 {
+		return nil
+	}
+
+	return new(sum / float64(count))
 }
 
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
+	// ensure tariff is not a wrapper
+	exists := func(t api.Tariff) bool {
+		return t != nil && t.Type() != 0
+	}
+
 	switch u {
 	case api.TariffUsageCo2:
 		return t.Co2
@@ -55,15 +89,15 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	// TODO solar
 	case api.TariffUsagePlanner:
 		switch {
-		case t.Planner != nil:
+		case exists(t.Planner):
 			// prio 0: manually set planner tariff
 			return t.Planner
 
-		case t.Grid != nil && t.Grid.Type() == api.TariffTypePriceForecast:
+		case exists(t.Grid) && t.Grid.Type() == api.TariffTypePriceForecast:
 			// prio 1: grid tariff with forecast
 			return t.Grid
 
-		case t.Co2 != nil:
+		case exists(t.Co2):
 			// prio 2: co2 tariff
 			return t.Co2
 

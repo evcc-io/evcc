@@ -1,5 +1,4 @@
 //go:build integration
-// +build integration
 
 package toyota
 
@@ -21,7 +20,7 @@ func TestIdentityLogin(t *testing.T) {
 
 	util.LogLevel("trace", nil) // Enable trace logging
 	log := util.NewLogger("test")
-	identity := NewIdentity(log)
+	identity := NewIdentity(log, "T")
 
 	err := identity.Login(user, password)
 	require.NoError(t, err)
@@ -36,7 +35,7 @@ func TestIdentityLogin(t *testing.T) {
 	originalAccessToken := token.AccessToken
 
 	// Test token refresh
-	newToken, err := identity.RefreshToken(token)
+	newToken, err := identity.refreshToken(token)
 	require.NoError(t, err)
 	require.NotEmpty(t, newToken.AccessToken)
 	require.NotEmpty(t, newToken.RefreshToken)

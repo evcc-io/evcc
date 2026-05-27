@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023-2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -32,6 +33,7 @@ import (
 
 // Weidmüller charger implementation
 type Weidmüller struct {
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
@@ -58,7 +60,7 @@ func init() {
 }
 
 // NewWeidmüllerFromConfig creates a Weidmüller charger from generic config
-func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewWeidmüllerFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -69,8 +71,6 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{})
 
 	return NewWeidmüller(ctx, cc.URI, cc.ID)
 }
-
-//go:generate go tool decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewWeidmüller creates Weidmüller charger
 func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, error) {
@@ -87,6 +87,7 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 	conn.Logger(log.TRACE)
 
 	wb := &Weidmüller{
+		Caps: implement.New(),
 		log:  log,
 		conn: conn,
 		curr: 6, // assume min current
@@ -106,7 +107,7 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 
 	// check presence of energy meter
 	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
-		return decorateWeidmüller(wb, wb.totalEnergy), nil
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 	}
 
 	return wb, nil

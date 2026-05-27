@@ -9,8 +9,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -161,5 +160,5 @@ render: |
     value:
       - 124:ChaState
       - 802:SoC
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -28,11 +28,13 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/echarge"
 	"github.com/evcc-io/evcc/charger/echarge/salia"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/hashicorp/go-version"
 )
 
@@ -41,10 +43,11 @@ import (
 // Salia charger implementation
 type Salia struct {
 	*request.Helper
+	implement.Caps
 	log     *util.Logger
 	uri     string
 	current int64
-	fw      int // 2 if fw 2.0
+	fw      int // 2 if fw 2.0 3 if fw >= 2.3.64 (oldest firmware we seen with the new behavior)
 	apiG    util.Cacheable[salia.Api]
 }
 
@@ -52,13 +55,13 @@ func init() {
 	registry.AddCtx("hardybarth-salia", NewSaliaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
-
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
-func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSaliaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		Cache time.Duration
+		URI      string
+		User     string
+		Password string
+		Cache    time.Duration
 	}{
 		Cache: time.Second,
 	}
@@ -67,20 +70,26 @@ func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	return NewSalia(ctx, cc.URI, cc.Cache)
+	return NewSalia(ctx, cc.URI, cc.User, cc.Password, cc.Cache)
 }
 
 // NewSalia creates Hardy Barth charger with Salia controller
-func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("salia")
+func NewSalia(ctx context.Context, uri, user, password string, cache time.Duration) (api.Charger, error) {
+	basicAuth := transport.BasicAuthHeader(user, password)
+	log := util.NewLogger("salia").Redact(user, password, basicAuth)
 
 	uri = strings.TrimSuffix(uri, "/") + "/api"
 
 	wb := &Salia{
 		log:     log,
 		Helper:  request.NewHelper(log),
+		Caps:    implement.New(),
 		uri:     util.DefaultScheme(uri, "http"),
 		current: 6,
+	}
+
+	if user != "" && password != "" {
+		wb.Client.Transport = transport.BasicAuth(user, password, wb.Client.Transport)
 	}
 
 	wb.apiG = util.ResettableCached(func() (salia.Api, error) {
@@ -108,6 +117,10 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 		wb.fw = 2
 	}
 
+	if v.GreaterThanOrEqual(version.Must(version.NewSemver("2.3.64"))) {
+		wb.fw = 3
+	}
+
 	if res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		if err = wb.post(salia.ChargeMode, echarge.ModeManual); err == nil {
 			res, err = wb.apiG.Get()
@@ -126,32 +139,25 @@ func NewSalia(ctx context.Context, uri string, cache time.Duration) (api.Charger
 
 	wb.pause(false)
 
-	var (
-		currentPower func() (float64, error)
-		totalEnergy  func() (float64, error)
-		currents     func() (float64, float64, float64, error)
-		phasesG      func() (int, error)
-		phasesS      func(int) error
-	)
-
 	if res.Secc.Port0.Metering.Meter.Available > 0 {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
-		currents = wb.currents
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	if res.Secc.Port0.Salia.PhaseSwitching.Actual > 0 {
-		phasesG = wb.getPhases
-		phasesS = wb.phases1p3p
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
-	return decorateSalia(wb, currentPower, totalEnergy, currents, phasesS, phasesG), nil
+	return wb, nil
 }
 
 func (wb *Salia) heartbeat(ctx context.Context) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(5*time.Second),
-		backoff.WithMaxInterval(time.Minute))
+		backoff.WithMaxInterval(time.Minute),
+		backoff.WithMaxElapsedTime(0))
 
 	for tick := time.Tick(30 * time.Second); ; {
 		select {
@@ -170,9 +176,16 @@ func (wb *Salia) heartbeat(ctx context.Context) {
 
 func (wb *Salia) post(key, val string) error {
 	data := map[string]string{key: val}
+	httpmethod := http.MethodPut
 	uri := fmt.Sprintf("%s/secc", wb.uri)
 
-	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+	// for fw >= 2.3. use /save_mqtt.php instead of /api/secc
+	if wb.fw >= 3 {
+		httpmethod = http.MethodPost
+		uri = strings.TrimSuffix(wb.uri, "/api") + "/save_mqtt.php"
+	}
+
+	req, err := request.New(httpmethod, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		var res struct {
 			Result string

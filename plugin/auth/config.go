@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/evcc-io/evcc/util"
 	reg "github.com/evcc-io/evcc/util/registry"
+	"golang.org/x/oauth2"
 )
 
-var registry = reg.New[Authorizer]("auth")
+var registry = reg.New[oauth2.TokenSource]("auth")
+
+func Register(typ string, fun func(map[string]any) (oauth2.TokenSource, error)) {
+	registry.Add(typ, fun)
+}
 
 // NewFromConfig creates auth from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]any) (Authorizer, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (oauth2.TokenSource, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err
@@ -19,7 +25,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (Autho
 
 	v, err := factory(ctx, other)
 	if err != nil {
-		err = fmt.Errorf("cannot create auth type '%s': %w", typ, err)
+		err = fmt.Errorf("cannot create auth type '%s': %w", util.TypeWithTemplateName(typ, other), err)
 	}
 
 	return v, err

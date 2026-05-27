@@ -1,12 +1,21 @@
 package core
 
 import (
+	"encoding/json"
 	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/samber/lo"
 )
+
+type timeseries []tsEntry
+
+var _ api.BytesMarshaler = (*timeseries)(nil)
+
+func (ts timeseries) MarshalBytes() ([]byte, error) {
+	return json.Marshal(ts)
+}
 
 type tsEntry struct {
 	Timestamp time.Time `json:"ts"`

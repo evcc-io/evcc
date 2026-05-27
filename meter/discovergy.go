@@ -22,7 +22,7 @@ type Discovergy struct {
 }
 
 // NewDiscovergyFromConfig creates a new configurable meter
-func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewDiscovergyFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		User     string
 		Password string

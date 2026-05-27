@@ -1,4 +1,4 @@
-import type { TimeseriesEntry, SolarDetails } from "../components/Forecast/types";
+import type { ForecastSlot, TimeseriesEntry, SolarDetails } from "../components/Forecast/types";
 import deepCopy from "./deepClone";
 
 export enum ForecastType {
@@ -41,7 +41,8 @@ export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 
   const dayString = dayStringByOffset(day);
   const dayEntries = filterEntriesByDate(entries, dayString);
   const sortedEntries = dayEntries.sort((a, b) => b.val - a.val);
-  const highestEntry = sortedEntries[0] || {};
+  const highestEntry = sortedEntries[0];
+  if (!highestEntry) return -1;
   return entries.findIndex((entry) => entry.ts === highestEntry.ts);
 }
 
@@ -63,4 +64,33 @@ export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
   result.scale = 1 / scale; // invert to allow back-adjustment
 
   return result;
+}
+
+export function isStaticTariff(slots?: ForecastSlot[]): boolean {
+  if (!Array.isArray(slots) || slots.length === 0) return false;
+  const firstValue = slots[0].value;
+  return slots.every((slot) => slot.value === firstValue);
+}
+
+export interface SlotWithValue {
+  start: string | Date;
+  value: number;
+}
+
+// find index of first slot with lowest sum over span (e.g. span=4 for 1h with 15min slots)
+export function findLowestSumSlotIndex(slots: SlotWithValue[], span: number): number {
+  if (slots.length < span) return -1;
+
+  let lowestSum = Infinity;
+  let lowestIndex = -1;
+
+  for (let i = 0; i <= slots.length - span; i++) {
+    const sum = slots.slice(i, i + span).reduce((acc, slot) => acc + slot.value, 0);
+    if (sum < lowestSum) {
+      lowestSum = sum;
+      lowestIndex = i;
+    }
+  }
+
+  return lowestIndex;
 }

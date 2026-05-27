@@ -4,7 +4,7 @@
 			<PolarArea :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
-			<LegendList :legends="legends" grid />
+			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
@@ -18,6 +18,7 @@ import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 import { GROUPS, type Session } from "./types.ts";
+import type { DeviceColors } from "@/types/evcc";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
@@ -32,6 +33,7 @@ export default defineComponent({
 			default: GROUPS.LOADPOINT,
 		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		chartData() {
@@ -75,11 +77,16 @@ export default defineComponent({
 			};
 		},
 		legends() {
-			return this.chartData.labels.map((label, index) => ({
-				label: label,
-				color: this.chartData.datasets[0].borderColor[index],
-				value: this.fmtPercentage(this.chartData.datasets[0].data[index], 1),
-			}));
+			const dataset = this.chartData.datasets[0]!;
+			return this.chartData.labels.map((label, index) => {
+				const dataValue = dataset.data[index] as number;
+				return {
+					label: label,
+					color: dataset.borderColor[index],
+					value: this.fmtPercentage(dataValue, 1),
+					id: label || undefined,
+				};
+			});
 		},
 		options() {
 			return {
@@ -101,7 +108,7 @@ export default defineComponent({
 							title: () => null,
 							label: (tooltipItem: TooltipItem<"polarArea">) => {
 								const { label, dataset, dataIndex } = tooltipItem;
-								const d = dataset.data[dataIndex];
+								const d = dataset.data[dataIndex] as number;
 
 								return label + ": " + this.fmtPercentage(d, 1);
 							},

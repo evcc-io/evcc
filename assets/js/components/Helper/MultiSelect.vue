@@ -11,40 +11,46 @@
 		>
 			<slot></slot>
 		</button>
-		<ul ref="dropdown" class="dropdown-menu dropdown-menu-end" :aria-labelledby="id">
-			<template v-if="selectAllLabel">
-				<li class="dropdown-item p-0">
-					<label class="form-check px-3 py-2" :for="formId('all')">
+		<div
+			ref="dropdown"
+			class="dropdown-menu dropdown-menu-end multi-select-menu"
+			:class="{ 'multi-select-menu--top-level': isTopLevel }"
+		>
+			<ul class="dropdown-menu d-block position-static m-0" :aria-labelledby="id">
+				<template v-if="selectAllLabel">
+					<li class="dropdown-item p-0">
+						<label class="form-check px-3 py-2" :for="formId('all')">
+							<input
+								:id="formId('all')"
+								class="form-check-input ms-0 me-2"
+								type="checkbox"
+								value="all"
+								tabindex="0"
+								:checked="allOptionsSelected"
+								@change="toggleCheckAll()"
+							/>
+							<div class="form-check-label">{{ selectAllLabel }}</div>
+						</label>
+					</li>
+					<li><hr class="dropdown-divider" /></li>
+				</template>
+				<li v-for="option in options" :key="option.value" class="dropdown-item p-0">
+					<label class="form-check px-3 py-2 d-flex" :for="formId(option.value)">
 						<input
-							:id="formId('all')"
+							:id="formId(option.value)"
+							v-model="internalValue"
 							class="form-check-input ms-0 me-2"
 							type="checkbox"
-							value="all"
+							:value="option.value"
 							tabindex="0"
-							:checked="allOptionsSelected"
-							@change="toggleCheckAll()"
 						/>
-						<div class="form-check-label">{{ selectAllLabel }}</div>
+						<div class="form-check-label">
+							{{ option.name }}
+						</div>
 					</label>
 				</li>
-				<li><hr class="dropdown-divider" /></li>
-			</template>
-			<li v-for="option in options" :key="option.value" class="dropdown-item p-0">
-				<label class="form-check px-3 py-2 d-flex" :for="formId(option.value)">
-					<input
-						:id="formId(option.value)"
-						v-model="internalValue"
-						class="form-check-input ms-0 me-2"
-						type="checkbox"
-						:value="option.value"
-						tabindex="0"
-					/>
-					<div class="form-check-label">
-						{{ option.name }}
-					</div>
-				</label>
-			</li>
-		</ul>
+			</ul>
+		</div>
 	</div>
 </template>
 
@@ -61,6 +67,7 @@ export default defineComponent({
 		value: { type: Array as PropType<string[] | number[]>, default: () => [] },
 		options: { type: Array as PropType<SelectOption<string | number>[]>, default: () => [] },
 		selectAllLabel: String,
+		isTopLevel: Boolean,
 	},
 	emits: ["open", "update:modelValue"],
 	data() {
@@ -116,3 +123,15 @@ export default defineComponent({
 	},
 });
 </script>
+<style scoped>
+.multi-select-menu {
+	/* reset .dropdown-menu styles; inner ul carries the visible box */
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+}
+.multi-select-menu--top-level {
+	padding-bottom: calc(var(--bottom-space) + 1rem);
+}
+</style>

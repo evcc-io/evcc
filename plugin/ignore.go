@@ -18,7 +18,7 @@ func init() {
 }
 
 // NewIgnoreFromConfig creates const provider
-func NewIgnoreFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewIgnoreFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Error string
 		Set   Config

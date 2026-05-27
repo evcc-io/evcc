@@ -5,7 +5,7 @@
 		</a>
 	</div>
 	<div v-else class="alert alert-warning my-4">
-		{{ $t("config.sponsor.tokenRequired") }}
+		{{ $t(feature ? "config.sponsor.tokenRequiredFeature" : "config.sponsor.tokenRequired") }}
 		<a href="#" role="button" class="text-warning" @click.prevent="openModal">
 			{{ $t("config.sponsor.tokenRequiredLearnMore") }}
 		</a>
@@ -19,6 +19,7 @@ export default {
 	name: "SponsorTokenRequired",
 	props: {
 		compact: Boolean,
+		feature: Boolean,
 	},
 	methods: {
 		openModal() {

@@ -1,10 +1,15 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
+	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/gorilla/mux"
 	"github.com/samber/lo"
@@ -18,6 +23,70 @@ func getLang(r *http.Request) string {
 		lang = supportedLanguages[0]
 	}
 	return lang
+}
+
+// authHandler returns the authorization status
+func authHandler(w http.ResponseWriter, r *http.Request) {
+	var res map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var cc struct {
+		Type  string
+		Other map[string]any `mapstructure:",remain"`
+	}
+
+	if err := util.DecodeOther(res, &cc); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// when editing existing device, merge masked values with stored config
+	if vars := mux.Vars(r); vars["class"] != "" && vars["id"] != "" {
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		class, err := templates.ClassString(vars["class"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		old, err := deviceOther(class, id)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		merged, err := mergeMasked(class, cc.Other, old)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		cc.Other = merged
+	}
+
+	// template is only needed by mergeMasked above; the auth decoder is strict
+	delete(cc.Other, typeTemplate)
+
+	ts, err := auth.NewFromConfig(context.Background(), cc.Type, cc.Other)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if _, err := ts.Token(); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // templatesHandler returns the list of templates by class
@@ -81,7 +150,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 			for _, p := range t.Products {
 				res = append(res, product{
 					Name:     p.Title(lang),
-					Template: t.TemplateDefinition.Template,
+					Template: t.Template,
 					Group:    t.Group,
 				})
 			}

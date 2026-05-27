@@ -1,13 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
-import {
-  expectModalVisible,
-  expectModalHidden,
-  enableExperimental,
-  addDemoCharger,
-  newLoadpoint,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, addDemoCharger, newLoadpoint } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -16,12 +10,11 @@ test.afterEach(async () => {
 });
 
 test.describe("fatal config handling", async () => {
-  test("broken pv meter", async ({ page }) => {
+  test("broken pv meter (using Shelly simulator)", async ({ page }) => {
     await startSimulator();
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // create meter
     await page.getByRole("button", { name: "Add solar or battery" }).click();
@@ -42,6 +35,13 @@ test.describe("fatal config handling", async () => {
 
     // remove meter
     await expect(page.getByTestId("fatal-error")).toBeVisible();
+
+    // dismiss hides the banner; reload restores it while the error persists
+    await page.getByRole("button", { name: "Dismiss" }).click();
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
+    await page.reload();
+    await expect(page.getByTestId("fatal-error")).toBeVisible();
+
     await expect(page.getByTestId("pv")).toBeVisible();
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
@@ -56,12 +56,11 @@ test.describe("fatal config handling", async () => {
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 
-  test("broken loadpoint meter", async ({ page }) => {
+  test("broken loadpoint meter (using Shelly simulator)", async ({ page }) => {
     await startSimulator();
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const lpModal = page.getByTestId("loadpoint-modal");
 
@@ -91,7 +90,7 @@ test.describe("fatal config handling", async () => {
     // verify loadpoint still visible with error
     await expect(page.getByTestId("fatal-error")).toBeVisible();
     await expect(page.getByTestId("fatal-error")).toContainText(
-      /meter: .+? cannot create meter .+?: cannot create meter type 'template': cannot create meter type 'shelly'/
+      /meter: .+? cannot create template .+?: cannot create meter type 'template:shelly-1pm': cannot create meter type 'shelly'/
     );
     await expect(page.getByTestId("fatal-error")).toContainText(
       /loadpoint: .+? missing charge meter instance/
@@ -101,11 +100,12 @@ test.describe("fatal config handling", async () => {
     // open modal and delete meter
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("textbox", { name: "Energy meter" })).toHaveClass(/is-invalid/);
-    await lpModal.getByRole("textbox", { name: "Energy meter" }).click();
+    await expect(lpModal.getByText("Shelly 1PM")).toBeVisible();
+    await lpModal.getByText("Shelly 1PM").click();
     await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);
+    await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await page.waitForLoadState("networkidle");
@@ -117,13 +117,12 @@ test.describe("fatal config handling", async () => {
     await expect(page.getByTestId("fatal-error")).not.toBeVisible(); // error should be gone
   });
 
-  test("broken grid meter", async ({ page }) => {
+  test("broken grid meter (using Shelly simulator)", async ({ page }) => {
     // setup test data for mock api
     await startSimulator();
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();

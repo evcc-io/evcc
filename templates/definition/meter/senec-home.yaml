@@ -5,18 +5,15 @@ products:
       generic: .Home
 requirements:
   description:
-    de: Batteriesteuerung umfasst nur das Netzladen, nicht die Entlade-Sperre.
-    en: Battery control only includes grid charging, not the discharge lock.
+    de: Batteriesteuerung umfasst nur das Netzladen, nicht die Entlade-Sperre. Der SENEC.Home P4 wird nicht unterstützt.
+    en: Battery control only includes grid charging, not the discharge lock. The SENEC.Home P4 is not supported.
 capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
   - name: schema
-    default: https
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -78,5 +75,5 @@ render: |
         headers:
         - content-type: application/json
         body: '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01"}}'  # force to charge
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

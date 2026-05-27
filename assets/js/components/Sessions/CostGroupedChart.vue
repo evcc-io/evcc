@@ -4,7 +4,7 @@
 			<Doughnut :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center">
-			<LegendList :legends="legends" grid />
+			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
@@ -25,7 +25,7 @@ import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { TYPES, GROUPS, type Session } from "./types";
 import { defineComponent, type PropType } from "vue";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, type DeviceColors } from "@/types/evcc";
 
 registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
@@ -40,6 +40,7 @@ export default defineComponent({
 			default: GROUPS.LOADPOINT,
 		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
 	},
@@ -72,16 +73,18 @@ export default defineComponent({
 			};
 		},
 		legends() {
-			const total = this.chartData.datasets[0].data.reduce((acc, curr) => acc + curr, 0);
+			const dataset = this.chartData.datasets[0]!;
+			const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
-			return this.chartData.labels.map((label, index) => ({
-				label: label,
-				color: this.chartData.datasets[0].backgroundColor[index],
-				value: [
-					this.formatValue(this.chartData.datasets[0].data[index]),
-					fmtShare(this.chartData.datasets[0].data[index]),
-				],
-			}));
+			return this.chartData.labels.map((label, index) => {
+				const dataValue = dataset.data[index] as number;
+				return {
+					label: label,
+					color: dataset.backgroundColor[index],
+					value: [this.formatValue(dataValue), fmtShare(dataValue)],
+					id: label || undefined,
+				};
+			});
 		},
 		options() {
 			return {

@@ -9,16 +9,6 @@ requirements:
 group: solar
 params:
   - preset: forecast-base
-  - name: az
-    description:
-      en: Azimuth
-      de: Azimut
-    help:
-      en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
-      de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
-    type: int
-    example: 0
-    required: true
   - name: ac
     description:
       en: AC Power [kW]
@@ -59,8 +49,8 @@ params:
       en: Cooling type [Ross Model]
       de: Kühlung [Ross-Modell]
     help:
-      en: Well Cooled (0.0200), Free Standing (0.0208), Flat on Roof (0.0260), Not So Well Cooled (0.0342), Transparent PV (0.0455), Facade Integrated (0.0538), On Sloped Roof (0.0563) [Paper](https://www.sciencedirect.com/science/article/pii/S0038092X20309107)
-      de: Gut Gekühlt (0.0200), Freistehend (0.0208), Flach auf Dach (0.0260), Nicht So Gut Gekühlt (0.0342), Transparentes PV (0.0455), Fassadenintegriert (0.0538), Auf Schrägdach (0.0563) [Paper](https://www.sciencedirect.com/science/article/pii/S0038092X20309107)
+      en: Well Cooled (0.0200), Free Standing (0.0208), Flat on Roof (0.0260), Not So Well Cooled (0.0342), Transparent PV (0.0455), Facade Integrated (0.0538), On Sloped Roof (0.0563) [sciencedirect.com](https://www.sciencedirect.com/science/article/pii/S2352484722024805)
+      de: Gut Gekühlt (0,0200), Freistehend (0,0208), Flach auf Dach (0,0260), Nicht So Gut Gekühlt (0,0342), Transparentes PV (0,0455), Fassadenintegriert (0,0538), Auf Schrägdach (0,0563) [sciencedirect.com](https://www.sciencedirect.com/science/article/pii/S2352484722024805)
     type: float
     default: 0.0342
     advanced: true
@@ -70,10 +60,9 @@ params:
 render: |
   type: custom
   tariff: solar
-  features: ["cacheable"]
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&hourly=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=3&timezone=GMT&timeformat=unixtime
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&minutely_15=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=5&timezone=GMT&timeformat=unixtime
     jq: |
       def alphatemp: {{ .alphatemp }}; # temperature coefficient
       def rossmodel: {{ .rossmodel }}; # cooling type
@@ -95,15 +84,15 @@ render: |
         else
           e
         end;
-      .hourly as $h
+      .minutely_15 as $h
       | .daily as $d
       | [ range(0; ($h.time | length))
           | . as $i
           | $h.time[$i] as $time
-          | ($i / 24 | floor) as $day
+          | ($i / 96 | floor) as $day
           | {
               start: ($time | todateiso8601),
-              end: (($time + 3600) | todateiso8601),
+              end: (($time + 900) | todateiso8601),
               value: (
                 kwp
                 * ($h.global_tilted_irradiance_instant[$i] / 1000)

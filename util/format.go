@@ -11,13 +11,12 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/samber/lo"
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
 
 // FormatValue will apply specific formatting in addition to standard sprintf
-func FormatValue(format string, val interface{}) string {
+func FormatValue(format string, val any) string {
 	switch typed := val.(type) {
 	case bool:
 		if format == "%d" {
@@ -47,7 +46,7 @@ func FormatValue(format string, val interface{}) string {
 }
 
 // ReplaceFormatted replaces all occurrences of ${key} with formatted val from the kv map
-func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
+func ReplaceFormatted(s string, kv map[string]any) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
 		Funcs(sprig.TxtFuncMap()).
@@ -72,10 +71,10 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		match, key, format := m[0], m[1], m[3]
 
 		// find key and replacement value
-		var val *any
+		var val any
 		for k, v := range kv {
 			if strings.EqualFold(k, key) {
-				val = &v
+				val = v
 				break
 			}
 		}
@@ -83,11 +82,11 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		if val == nil {
 			wanted = append(wanted, key)
 			format = "%s"
-			val = lo.ToPtr(any("?"))
+			val = "?"
 		}
 
 		// update all literal matches
-		new := FormatValue(format, *val)
+		new := FormatValue(format, val)
 		s = strings.ReplaceAll(s, match, new)
 	}
 

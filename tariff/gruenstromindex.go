@@ -28,7 +28,7 @@ func init() {
 	registry.Add("grünstromindex", NewGrünStromIndexFromConfig)
 }
 
-func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewGrünStromIndexFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		Zip   string
 		Token string

@@ -1,6 +1,9 @@
 package util
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+)
 
 const DevVersion = "0.0.0"
 
@@ -17,4 +20,9 @@ func FormattedVersion() string {
 		return fmt.Sprintf("%s (%s)", Version, Commit)
 	}
 	return Version
+}
+
+// System returns the operating system and architecture
+func System() string {
+	return runtime.GOOS + "/" + runtime.GOARCH
 }

@@ -31,10 +31,10 @@ const (
 	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    Ladestation betriebsbereit, Fahrzeug getrennt
 	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fahrzeug verbunden, Netzspannung liegt nicht an
 	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    Fahrzeug lädt, Netzspannung liegt an
-	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fehler Fahrzeug / Kabel (CP-Kurzschluss, 0V)
+	statusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fehler Fahrzeug / Kabel (CP-Kurzschluss, 0V)
 )
 
-var StatusEasA = map[ChargeStatus]ChargeStatus{StatusE: StatusA}
+var StatusEasA = map[ChargeStatus]ChargeStatus{statusE: StatusA}
 
 // ChargeStatusString converts a string to ChargeStatus
 func ChargeStatusString(status string) (ChargeStatus, error) {

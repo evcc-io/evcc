@@ -23,8 +23,8 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup environment
-	if err := configureEnvironment(cmd, &conf); err != nil {
+	// setup persistence
+	if err := configureDatabase(conf.Database); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -43,7 +43,4 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 	} else {
 		auth.New().SetAdminPassword(password)
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

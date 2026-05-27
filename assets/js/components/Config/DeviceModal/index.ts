@@ -1,6 +1,7 @@
-import type { DeviceType } from "@/types/evcc";
+import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api from "@/api";
+import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 export type Product = {
   group: string;
@@ -10,12 +11,16 @@ export type Product = {
 
 export type Template = {
   Params: TemplateParam[];
+  Auth?: {
+    type: string;
+    params?: string[];
+  };
   Requirements: {
     Description: string;
   };
 };
 
-export type TemplateType = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
+export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
 export type TemplateParam = {
   Name: string;
@@ -24,25 +29,54 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
-  Usages?: TemplateType[];
+  Service?: string;
+  Usages?: TemplateParamUsage[];
+};
+
+export type ParamService = {
+  name: string;
+  service: string;
+  url: (values: Record<string, any>) => string;
 };
 
 export type ModbusCapability = "rs485" | "tcpip";
 
 export type ModbusParam = TemplateParam & {
   ID?: string;
-  Comset?: string;
+  Comset?: MODBUS_COMSET;
   Baudrate?: number;
   Port?: number;
 };
 
 export type DeviceValues = {
   type: ConfigType;
-  icon: string | undefined;
-  deviceProduct: string | undefined;
-  yaml: string | undefined;
+  icon?: string;
+  deviceProduct?: string;
+  yaml?: string;
   template: string | null;
+  deviceTitle?: string;
+  deviceIcon?: string;
+  usage?: MeterTemplateUsage;
+  heating?: boolean;
+  integrateddevice?: boolean;
+  stationid?: string;
   [key: string]: any;
+};
+
+export type ApiData = {
+  type?: ConfigType;
+  icon?: string;
+  usage?: MeterTemplateUsage;
+  title?: string;
+  priority?: number;
+  identifiers?: string[];
+  [key: string]: any;
+};
+
+export type AuthCheckResponse = {
+  success: boolean;
+  error?: string;
+  authId?: string;
 };
 
 export function handleError(e: any, msg: string) {
@@ -52,8 +86,6 @@ export function handleError(e: any, msg: string) {
   if (error) message += `: ${error}`;
   alert(message);
 }
-
-export const timeout = 15000;
 
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
@@ -76,17 +108,95 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
   return `${prefix}${type}`;
 }
 
+export async function loadServiceValues(path: string) {
+  try {
+    const response = await api.get(`/config/service/${path}`, {
+      validateStatus: (status) => status >= 200 && status < 500,
+    });
+    return (response.data as string[]) || [];
+  } catch {
+    return [];
+  }
+}
+
+// Expand {modbus} to actual connection params based on values
+const expandModbus = (service: string, values: Record<string, any>): string => {
+  if (!service.includes("{modbus}")) return service;
+
+  if (values["device"]) {
+    return service.replace(
+      "{modbus}",
+      "device={device}&baudrate={baudrate}&comset={comset}&id={id}"
+    );
+  }
+  if (values["host"]) {
+    return service.replace("{modbus}", "uri={host}:{port}&id={id}");
+  }
+  return service;
+};
+
+export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
+  return params
+    .map((param) => {
+      if (!param.Service) {
+        return null;
+      }
+      const stringValues = (values: Record<string, any>): Record<string, string> =>
+        Object.entries(values).reduce(
+          (acc, [key, val]) => {
+            if (val !== undefined && val !== null && val !== "" && key !== "modbus")
+              acc[key] = String(val);
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+      return {
+        name: param.Name,
+        service: param.Service,
+        url: (values: Record<string, any>) =>
+          replacePlaceholders(expandModbus(param.Service!, values), stringValues(values)),
+      } as ParamService;
+    })
+    .filter((endpoint): endpoint is ParamService => endpoint !== null);
+};
+
+export const fetchServiceValues = async (
+  templateParams: TemplateParam[],
+  values: DeviceValues
+): Promise<Record<string, string[]>> => {
+  const endpoints = createServiceEndpoints(templateParams);
+  const result: Record<string, string[]> = {};
+
+  await Promise.all(
+    endpoints.map(async (endpoint) => {
+      const url = endpoint.url(values);
+      if (extractPlaceholders(url).length > 0) {
+        // missing values, not all placeholders are filled
+        return;
+      }
+      const data = await loadServiceValues(url);
+      if (data) {
+        result[endpoint.name] = data;
+      }
+    })
+  );
+
+  return result;
+};
+
 export function createDeviceUtils(deviceType: DeviceType) {
   function test(id: number | undefined, data: any) {
     let url = `config/test/${deviceType}`;
     if (id !== undefined) {
       url += `/merge/${id}`;
     }
-    return api.post(url, data, { timeout });
+    return api.post(url, data);
   }
 
-  function update(id: number, data: any) {
-    return api.put(`config/devices/${deviceType}/${id}`, data);
+  function update(id: number, data: any, force = false) {
+    const params = { force };
+    return api.put(`config/devices/${deviceType}/${id}`, data, { params });
   }
 
   function remove(id: number) {
@@ -98,8 +208,9 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
-  async function create(data: any) {
-    const response = await api.post(`config/devices/${deviceType}`, data);
+  async function create(data: any, force = false) {
+    const params = { force };
+    const response = await api.post(`config/devices/${deviceType}`, data, { params });
     return response.data;
   }
 
@@ -125,6 +236,34 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
+  async function checkAuth(
+    type: string,
+    values: Record<string, any>,
+    id?: number
+  ): Promise<AuthCheckResponse> {
+    const body = { type, ...values };
+    let url = `config/auth`;
+    if (id !== undefined) {
+      url += `/${deviceType}/merge/${id}`;
+    }
+    try {
+      const { status, data = {} } = await api.post(url, body, {
+        validateStatus: (status) => [204, 400].includes(status),
+      });
+      // already set up
+      if (status === 204) {
+        return { success: true };
+      }
+      // auth error, user has to perform login
+      if (status === 400) {
+        return { success: false, error: data?.error, authId: data?.loginRequired };
+      }
+    } catch (error) {
+      return { success: false, error: (error as any).message };
+    }
+    return { success: false, error: "unexpected error" };
+  }
+
   return {
     test,
     update,
@@ -133,5 +272,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
     create,
     loadProducts,
     loadTemplate,
+    loadServiceValues,
+    checkAuth,
   };
 }

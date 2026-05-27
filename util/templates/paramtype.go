@@ -12,4 +12,6 @@ const (
 	TypeFloat
 	TypeInt
 	TypeList
+	TypeZones
+	TypePricePerKWh
 )

@@ -1,0 +1,43 @@
+template: connected-cars
+products:
+  - description:
+      generic: Connected Cars (Volkswagen Australia)
+group: generic
+params:
+  - name: deviceToken
+    required: true
+    mask: true
+    description:
+      en: Device Token
+      de: Gerätetoken
+    help:
+      en: Obtained via Connected Cars device registration.  See https://github.com/brettch/evcc-connected-cars for scripts to perform device registration.
+      de: Die Daten wurden über die Geräteregistrierung von Connected Cars bezogen. Skripte zur Geräteregistrierung finden Sie unter https://github.com/brettch/evcc-connected-cars.
+  - name: domain
+    default: au1.connectedcars.io
+    description:
+      en: API Domain
+      de: API-Domäne
+    help:
+      en: The API domain to use for Connected Cars. Each country typically has a unique domain. It can be found by logging into the Connected Cars GraphiQL tool (https://api.connectedcars.io/graphql/graphiql/), logging into the relevant country, and viewing the domain it uses (minus the leading "api.").
+      de: Die für Connected Cars zu verwendende API-Domäne. Jedes Land hat in der Regel eine eigene Domäne. Diese finden Sie, indem Sie sich im Connected Cars GraphiQL-Tool (https://api.connectedcars.io/graphql/graphiql/) anmelden, das entsprechende Land auswählen und die verwendete Domäne (ohne das vorangestellte „api.“) anzeigen.
+  - name: namespace
+    default: "vwaustralia:app"
+    description:
+      en: Organization Namespace
+      de: Namespace der Organisation
+    help:
+      en: The namespace is used to identify the organization within Connected Cars. It can be found by logging into the Connected Cars GraphiQL tool (https://api.connectedcars.io/graphql/graphiql/), logging into the relevant country, and viewing the "X-Organization-Namespace" header it sets for you.
+      de: Der Namespace dient zur Identifizierung der Organisation innerhalb von Connected Cars. Er kann ermittelt werden, indem man sich beim Connected Cars GraphiQL-Tool (https://api.connectedcars.io/graphql/graphiql/) anmeldet, das entsprechende Land auswählt und den automatisch festgelegten Header „X-Organization-Namespace“ anzeigt.
+  - name: vin
+  - preset: vehicle-common
+  - name: cache
+    default: 15m
+render: |
+  type: connected-cars
+  deviceToken: {{ .deviceToken }}
+  domain: {{ .domain }}
+  namespace: {{ .namespace }}
+  vin: {{ .vin }}
+  {{ include "vehicle-common" . }}
+  cache: {{ .cache }}

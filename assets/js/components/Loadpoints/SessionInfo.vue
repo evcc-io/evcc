@@ -31,7 +31,7 @@ import { defineComponent, type PropType } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter from "@/mixins/formatter";
-import { getSessionInfo, setSessionInfo } from "./session";
+import { getLoadpointSessionInfo, setLoadpointSessionInfo } from "@/uiLoadpoints";
 import type { CURRENCY, SelectOption, SessionInfoKey } from "@/types/evcc";
 
 export default defineComponent({
@@ -42,7 +42,7 @@ export default defineComponent({
 	},
 	mixins: [formatter],
 	props: {
-		id: { type: Number, default: 0 },
+		id: String,
 		sessionCo2PerKWh: { type: Number, default: 0 },
 		sessionPricePerKWh: { type: Number, default: 0 },
 		sessionPrice: { type: Number, default: 0 },
@@ -50,12 +50,13 @@ export default defineComponent({
 		sessionSolarPercentage: { type: Number, default: 0 },
 		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
 		chargeDurationInterpolated: Number,
+		sessionEnergy: { type: Number, default: 0 },
 		tariffCo2: Number,
 		tariffGrid: Number,
 	},
 	data() {
 		return {
-			selectedKey: getSessionInfo(this.id),
+			selectedKey: this.id ? getLoadpointSessionInfo(this.id) : undefined,
 		};
 	},
 	computed: {
@@ -101,6 +102,11 @@ export default defineComponent({
 					valueSm: this.fmtCo2Short(this.sessionCo2PerKWh),
 					available: this.tariffCo2 !== undefined,
 				},
+				{
+					key: "emission" as const,
+					value: this.emissionFormatted,
+					available: this.tariffCo2 !== undefined,
+				},
 			];
 			// only show options that are available
 			return result.filter(({ available }) => available === undefined || available);
@@ -120,13 +126,13 @@ export default defineComponent({
 			);
 		},
 		label() {
-			return this.$t(`main.loadpoint.${this.selectedOption.key}`);
+			return this.$t(`main.loadpoint.${this.selectedOption?.key || ""}`);
 		},
 		value() {
-			return this.selectedOption.value;
+			return this.selectedOption?.value;
 		},
 		valueSm() {
-			return this.selectedOption.valueSm;
+			return this.selectedOption?.valueSm;
 		},
 		showSm() {
 			return this.valueSm !== undefined;
@@ -141,6 +147,10 @@ export default defineComponent({
 		},
 		solarFormatted() {
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);
+		},
+		emissionFormatted() {
+			const kWh = this.sessionEnergy / 1000;
+			return this.fmtGrams(this.sessionCo2PerKWh * kWh);
 		},
 		priceFormatted() {
 			return `${this.fmtMoney(this.sessionPrice, this.currency)} ${this.fmtCurrencySymbol(
@@ -165,8 +175,8 @@ export default defineComponent({
 			this.presist();
 		},
 		presist() {
-			if (this.selectedKey) {
-				setSessionInfo(this.id, this.selectedKey);
+			if (this.selectedKey && this.id) {
+				setLoadpointSessionInfo(this.id, this.selectedKey);
 			}
 		},
 	},

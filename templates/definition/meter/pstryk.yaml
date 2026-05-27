@@ -1,0 +1,68 @@
+template: pstryk
+products:
+  - brand: Pstryk.pl
+    description:
+      generic: 3-phase meter via local HTTP
+
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: cache
+    advanced: true
+    default: 1s
+
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/state
+  {{- end }}
+  type: custom
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .multiSensor.sensors[] | select(.id==0 and .type=="activePower") | .value // 0
+    cache: {{ .cache }}
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==0 and .type=="forwardActiveEnergy") | .value // 0) / 1000)
+    cache: {{ .cache }}
+  currents:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==1 and .type=="current") | .value // 0) / 1000)
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==2 and .type=="current") | .value // 0) / 1000)
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==3 and .type=="current") | .value // 0) / 1000)
+    cache: {{ .cache }}
+  voltages:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==1 and .type=="voltage") | .value // 0) / 10)
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==2 and .type=="voltage") | .value // 0) / 10)
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==3 and .type=="voltage") | .value // 0) / 10)
+    cache: {{ .cache }}
+  powers:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: (.multiSensor.sensors[] | select(.id==1 and .type=="activePower") | .value // 0)
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: (.multiSensor.sensors[] | select(.id==2 and .type=="activePower") | .value // 0)
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: (.multiSensor.sensors[] | select(.id==3 and .type=="activePower") | .value // 0)
+    cache: {{ .cache }}

@@ -1,87 +1,60 @@
 package requests
 
 import (
-	"strconv"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/hex"
 )
 
-func CalculateRequestVerification(
-	resourcePath string,
-	sendDate int64,
-	tenant,
-	contentType,
-	bodyEncrypted,
-	token string,
-) string {
-	dateString := strconv.FormatInt(sendDate, 10)
-	str9 := resourcePath + tenant + token + USER_TYPE
-	a2 := Md5(str9)
-	str10 := dateString + CONTENT_ENCRYPTED + contentType
-	a3 := Md5(a2 + str10)
-	str11 := resourcePath + tenant + token + USER_TYPE + dateString + CONTENT_ENCRYPTED + contentType + bodyEncrypted
+func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
+}
 
-	a5 := Md5(a3 + dateString)
+func PKCS5Trimming(encrypt []byte) []byte {
+	padding := encrypt[len(encrypt)-1]
+	return encrypt[:len(encrypt)-int(padding)]
+}
 
-	if len(a5) != 0 && len(str11) != 0 {
-		return HmacSha256(a5, str11)
-	} else {
+func Decrypt(cipherText, hexKey, hexIV string) string {
+	if len(cipherText) == 0 || len(hexKey) == 0 || len(hexIV) == 0 {
 		return ""
 	}
+
+	secretKey, _ := hex.DecodeString(hexKey)
+	ivParameter, _ := hex.DecodeString(hexIV)
+	block, err := aes.NewCipher(secretKey)
+	if err != nil {
+		return ""
+	}
+
+	decrypter := cipher.NewCBCDecrypter(block, ivParameter)
+	text, _ := hex.DecodeString(cipherText)
+	decrypted := make([]byte, len(text))
+	decrypter.CryptBlocks(decrypted, text)
+
+	return string(PKCS5Trimming(decrypted))
 }
 
-func DecryptResponse(timeStamp, contentType, cipherText string) string {
-	str4 := timeStamp + CONTENT_ENCRYPTED + contentType
-	a2 := Md5(str4)
-	hashedTimeStamp := Md5(timeStamp)
-
-	if len(cipherText) != 0 {
-		return Decrypt(cipherText, a2, hashedTimeStamp)
-	}
-	return ""
-}
-
-func CalculateResponseVerification(str, str2, str3 string) string {
-	str4 := str + CONTENT_ENCRYPTED + str2
-	a2 := Md5(str4)
-	str5 := str + CONTENT_ENCRYPTED + str2 + str3
-	a4 := Md5(a2 + str)
-	return HmacSha256(a4, str5)
-}
-
-func EncryptRequest(path string, time int64, tenant, token, body, contentType string) string {
-	sendDate := strconv.FormatInt(time, 10)
-	// tenant
-	resourcePath := ""
-	if len(path) != 0 {
-		resourcePath = "/" + path
+func Encrypt(plainText, hexKey, hexIV string) string {
+	if len(plainText) == 0 || len(hexKey) == 0 || len(hexIV) == 0 {
+		return ""
 	}
 
-	encryptedBody := ""
-
-	if len(body) != 0 {
-		sb3 := Md5(resourcePath+tenant+token+USER_TYPE) + sendDate + CONTENT_ENCRYPTED + contentType
-		a2 := Md5(sb3)
-		a3 := Md5(sendDate)
-		if len(body) != 0 && len(a2) != 0 && len(a3) != 0 {
-			encryptedBody = Encrypt(body, a2, a3)
-		}
+	secretKey, _ := hex.DecodeString(hexKey)
+	ivParameter, _ := hex.DecodeString(hexIV)
+	block, err := aes.NewCipher(secretKey)
+	if err != nil {
+		return ""
 	}
 
-	return encryptedBody
-}
+	content := PKCS5Padding([]byte(plainText), block.BlockSize())
+	encrypter := cipher.NewCBCEncrypter(block, ivParameter)
 
-func DecryptRequest(path string, time int64, tenant, token, body, contentType string) string {
-	timeStamp := strconv.FormatInt(time, 10)
-	resourcePath := ""
+	ciphertext := make([]byte, len(content))
+	encrypter.CryptBlocks(ciphertext, content)
 
-	if len(path) != 0 {
-		resourcePath = "/" + path
-	}
-
-	if len(body) != 0 {
-		sb3 := Md5(resourcePath+tenant+token+USER_TYPE) + timeStamp + CONTENT_ENCRYPTED + contentType
-		a2 := Md5(sb3)
-		timeStampHash := Md5(timeStamp)
-		return Decrypt(body, a2, timeStampHash)
-	}
-	return ""
+	return hex.EncodeToString(ciphertext)
 }

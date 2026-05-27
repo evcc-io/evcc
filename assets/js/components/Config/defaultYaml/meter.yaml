@@ -4,6 +4,7 @@ power: # current power
   source: const
   value: 1000 # W
 
+
 ## optional attributes (read-only)
 
 #energy: # meter reading in kWh

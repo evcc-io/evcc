@@ -16,16 +16,16 @@ type Mercedes struct {
 }
 
 func init() {
-	registry.Add("mercedes", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("mercedes", func(other map[string]any) (api.Vehicle, error) {
 		return newMercedesFromConfig("mercedes", other)
 	})
-	registry.Add("smart-eq", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("smart-eq", func(other map[string]any) (api.Vehicle, error) {
 		return newMercedesFromConfig("smart-eq", other)
 	})
 }
 
 // newMercedesFromConfig creates a new vehicle
-func newMercedesFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func newMercedesFromConfig(brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Tokens   Tokens

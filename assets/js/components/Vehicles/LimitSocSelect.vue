@@ -83,6 +83,7 @@ export default defineComponent({
 <style scoped>
 .value {
 	font-size: 18px;
+	overflow: hidden;
 }
 .extraValue {
 	color: var(--evcc-gray);
@@ -96,5 +97,6 @@ export default defineComponent({
 	cursor: pointer;
 	position: absolute;
 	opacity: 0;
+	max-width: 100%;
 }
 </style>

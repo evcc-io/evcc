@@ -3,8 +3,8 @@ products:
   - brand: Tibber
 requirements:
   description:
-    en: "Get your API token from the Tibber developer portal: https://developer.tibber.com/"
-    de: "Hol dir deinen API-Token aus dem Tibber-Entwicklerportal: https://developer.tibber.com/"
+    en: "Get your API token from the Tibber developer portal: [developer.tibber.com](https://developer.tibber.com/)"
+    de: "Hol dir deinen API-Token aus dem Tibber-Entwicklerportal: [developer.tibber.com](https://developer.tibber.com/)"
   evcc: ["skiptest"]
 group: price
 countries: ["NO", "SE", "DE", "NL"]

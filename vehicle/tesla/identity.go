@@ -74,7 +74,7 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 	}
 
 	if !token.Valid() && token.RefreshToken != "" {
-		if tok, err := v.RefreshToken(token); err == nil {
+		if tok, err := v.refreshToken(token); err == nil {
 			token = tok
 		}
 	}
@@ -83,7 +83,7 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 		return nil, errors.New("token expired")
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
+	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
 
 	// add instance
 	addInstance(claims.Subject, v)
@@ -95,7 +95,7 @@ func (v *Identity) settingsKey() string {
 	return fmt.Sprintf("tesla-command.%s", v.subject)
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 

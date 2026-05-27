@@ -5,19 +5,28 @@ products:
       generic: DVH4013
 params:
   - name: usage
-    choice: ["charge"]
+    choice: ["pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
   model: dzg
+  {{- if ne .usage "pv" }}
   power: ImportPower
   energy: Import
   currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3
+  {{- else }}
+  power: -ExportPower
+  energy: Export
+  currents:
+    - -CurrentL1
+    - -CurrentL2
+    - -CurrentL3
+  {{- end }}
   voltages:
     - VoltageL1
     - VoltageL2

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/templates"
@@ -17,8 +18,10 @@ import (
 )
 
 type E3dc struct {
+	implement.Caps
 	mu             sync.Mutex
 	dischargeLimit uint32
+	externalPower  bool            // whether to include power of external sources
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
 	retry          func() error
@@ -28,19 +31,20 @@ func init() {
 	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
 
-//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
-
-func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity `mapstructure:",squash"`
-		pvMaxACPower    `mapstructure:",squash"`
-		Usage           templates.Usage
-		Uri             string
-		User            string
-		Password        string
-		Key             string
-		DischargeLimit  uint32
-		Timeout         time.Duration
+		batteryCapacity    `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
+		pvMaxACPower       `mapstructure:",squash"`
+		Usage              templates.Usage
+		Uri                string
+		User               string
+		Password           string
+		Key                string
+		ExternalPower      bool
+		DischargeLimit     uint32
+		Timeout            time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -67,12 +71,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, capacity, maxacpower func() float64) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -85,8 +89,10 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 	}
 
 	m := &E3dc{
+		Caps:           implement.New(),
 		usage:          usage,
 		conn:           conn,
+		externalPower:  externalPower,
 		dischargeLimit: dischargeLimit,
 	}
 
@@ -96,20 +102,17 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		return err
 	}
 
-	// decorate battery
-	var (
-		batteryCapacity func() float64
-		batterySoc      func() (float64, error)
-		batteryMode     func(api.BatteryMode) error
-	)
+	implement.May(m, implement.BatterySocLimiter(batterySocLimits))
+	implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
+	implement.May(m, implement.MaxACPowerGetter(maxacpower))
 
 	if usage == templates.UsageBattery {
-		batteryCapacity = capacity
-		batterySoc = m.batterySoc
-		batteryMode = m.setBatteryMode
+		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.Has(m, implement.Battery(m.batterySoc))
+		implement.Has(m, implement.BatteryController(m.setBatteryMode))
 	}
 
-	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode, maxacpower), nil
+	return m, nil
 }
 
 // retryMessage executes a single message request with retry
@@ -166,7 +169,11 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		return values[0] - values[1], nil
+		if m.externalPower {
+			return values[0] - values[1], nil
+		}
+
+		return values[0], nil
 
 	case templates.UsageBattery:
 		res, err := m.retryMessage(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))

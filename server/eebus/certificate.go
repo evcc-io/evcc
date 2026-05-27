@@ -19,7 +19,7 @@ func CreateCertificate() (tls.Certificate, error) {
 }
 
 // pemBlockForKey marshals private key into pem block
-func pemBlockForKey(priv interface{}) (*pem.Block, error) {
+func pemBlockForKey(priv any) (*pem.Block, error) {
 	switch k := priv.(type) {
 	case *rsa.PrivateKey:
 		return &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(k)}, nil

@@ -67,7 +67,7 @@ func NewConnection(uri string, usage string, cache time.Duration) (*Connection, 
 // Enable implements the api.Charger interface
 func (c *Connection) Enable(enable bool) error {
 	var res StateResponse
-	data := map[string]interface{}{
+	data := map[string]any{
 		"power_on": enable,
 	}
 
@@ -123,6 +123,15 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 		return -res.ActiveCurrentL1A, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
 	}
 	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
+}
+
+// Powers implements the api.PhasePowers interface
+func (c *Connection) Powers() (float64, float64, float64, error) {
+	res, err := c.dataG.Get()
+	if c.usage == "pv" {
+		return -res.ActivePowerL1W, -res.ActivePowerL2W, -res.ActivePowerL3W, err
+	}
+	return res.ActivePowerL1W, res.ActivePowerL2W, res.ActivePowerL3W, err
 }
 
 // Voltages implements the api.PhaseVoltages interface

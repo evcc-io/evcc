@@ -16,7 +16,7 @@ func init() {
 	registry.Add(Mqtt, MqttHandlerFactory)
 }
 
-func MqttHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func MqttHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := MqttHandler{
 		Port:    1883,
 		Timeout: timeout,

@@ -65,7 +65,7 @@ func (g *StatusResponse2) Voltages() (float64, float64, float64) {
 }
 
 func (g *StatusResponse2) Identify() string {
-	if g.Trx > 0 {
+	if g.Trx > 0 && len(g.Cards) >= g.Trx {
 		return g.Cards[g.Trx-1].Name
 	}
 

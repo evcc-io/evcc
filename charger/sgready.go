@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -19,9 +19,9 @@ package charger
 
 import (
 	"context"
-	"errors"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
@@ -31,6 +31,7 @@ import (
 // SgReady charger implementation
 type SgReady struct {
 	*embed
+	implement.Caps
 	mode  int64
 	modeS func(int64) error
 	modeG func() (int64, error)
@@ -47,15 +48,13 @@ func init() {
 
 const (
 	_      int64 = iota
-	Dimm         // 1
+	Dim          // 1
 	Normal       // 2
 	Boost        // 3
 )
 
-//go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
-
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
-func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMode                 plugin.Config
@@ -66,7 +65,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
 	}
 
@@ -74,9 +73,23 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 		return nil, err
 	}
 
-	modeS, err := cc.SetMode.IntSetter(ctx, "mode")
+	modeSet, err := cc.SetMode.IntSetter(ctx, "mode")
 	if err != nil {
 		return nil, err
+	}
+
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("sgready"))
+
+	modeS := func(mode int64) error {
+		switch mode {
+		case Dim:
+			log.DEBUG.Printf("set sgready mode: %s", "dim")
+		case Normal:
+			log.DEBUG.Printf("set sgready mode: %s", "normal")
+		case Boost:
+			log.DEBUG.Printf("set sgready mode: %s", "boost")
+		}
+		return modeSet(mode)
 	}
 
 	modeG, err := cc.GetMode.IntGetter(ctx)
@@ -98,19 +111,24 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	if err != nil {
 		return nil, err
 	}
+	implement.May(res, implement.Meter(powerG))
+	implement.May(res, implement.MeterEnergy(energyG))
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
+	implement.May(res, implement.Battery(tempG))
+	implement.May(res, implement.SocLimiter(limitTempG))
 
-	return decorateSgReady(res, powerG, energyG, tempG, limitTempG), nil
+	return res, nil
 }
 
 // NewSgReady creates SG Ready charger
 func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, modeG func() (int64, error), maxPowerS func(int64) error) (*SgReady, error) {
 	res := &SgReady{
 		embed:     embed,
+		Caps:      implement.New(),
 		mode:      Normal,
 		modeS:     modeS,
 		modeG:     modeG,
@@ -134,11 +152,11 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if mode == Dimm {
-		return api.StatusNone, errors.New("dimm mode")
+	status := map[int64]api.ChargeStatus{
+		Dim:    api.StatusB,
+		Normal: api.StatusB,
+		Boost:  api.StatusC,
 	}
-
-	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}
 	return status[mode], nil
 }
 
@@ -159,6 +177,30 @@ func (wb *SgReady) Enable(enable bool) error {
 	wb.mode = mode
 
 	return wb.setMaxPower(wb.power)
+}
+
+var _ api.Dimmer = (*SgReady)(nil)
+
+// Dimmed implements the api.Dimmer interface
+func (wb *SgReady) Dimmed() (bool, error) {
+	mode, err := wb.getMode()
+	return mode == Dim, err
+}
+
+// Dimm implements the api.Dimmer interface
+func (wb *SgReady) Dim(dim bool) error {
+	mode := Normal
+	if dim {
+		mode = Dim
+	}
+
+	if err := wb.modeS(mode); err != nil {
+		return err
+	}
+
+	wb.mode = Dim
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface

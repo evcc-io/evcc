@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -12,13 +13,13 @@ func init() {
 }
 
 // NewMovingAverageFromConfig creates api.Meter from config
-func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Decay float64
 		Meter struct {
 			batteryCapacity `mapstructure:",squash"`
 			Type            string
-			Other           map[string]interface{} `mapstructure:",remain"`
+			Other           map[string]any `mapstructure:",remain"`
 		}
 	}{
 		Decay: 0.1,
@@ -42,35 +43,47 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{
 
 	// decorate energy reading
 	var totalEnergy func() (float64, error)
-	if m, ok := m.(api.MeterEnergy); ok {
+	if m, ok := api.Cap[api.MeterEnergy](m); ok {
 		totalEnergy = m.TotalEnergy
 	}
 
 	// decorate battery reading
 	var batterySoc func() (float64, error)
-	if m, ok := m.(api.Battery); ok {
+	if m, ok := api.Cap[api.Battery](m); ok {
 		batterySoc = m.Soc
 	}
 
 	// decorate currents reading
 	var currents func() (float64, float64, float64, error)
-	if m, ok := m.(api.PhaseCurrents); ok {
+	if m, ok := api.Cap[api.PhaseCurrents](m); ok {
 		currents = m.Currents
 	}
 
 	// decorate voltages reading
 	var voltages func() (float64, float64, float64, error)
-	if m, ok := m.(api.PhaseVoltages); ok {
+	if m, ok := api.Cap[api.PhaseVoltages](m); ok {
 		voltages = m.Voltages
 	}
 
 	// decorate powers reading
 	var powers func() (float64, float64, float64, error)
-	if m, ok := m.(api.PhasePowers); ok {
+	if m, ok := api.Cap[api.PhasePowers](m); ok {
 		powers = m.Powers
 	}
 
-	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil, nil, nil), nil
+	implement.May(meter, implement.MeterEnergy(totalEnergy))
+
+	if batterySoc != nil {
+		implement.Has(meter, implement.Battery(batterySoc))
+		implement.May(meter, implement.BatteryCapacity(cc.Meter.batteryCapacity.Decorator()))
+		return meter, nil
+	}
+
+	implement.May(meter, implement.PhaseCurrents(currents))
+	implement.May(meter, implement.PhaseVoltages(voltages))
+	implement.May(meter, implement.PhasePowers(powers))
+
+	return meter, nil
 }
 
 type MovingAverage struct {

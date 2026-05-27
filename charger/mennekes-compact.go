@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023-2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -33,6 +34,7 @@ import (
 
 // MennekesCompact is an api.Charger implementation
 type MennekesCompact struct {
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -68,7 +70,7 @@ func init() {
 }
 
 // NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
-func NewMennekesCompactFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewMennekesCompactFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -86,8 +88,6 @@ func NewMennekesCompactFromConfig(ctx context.Context, other map[string]interfac
 
 	return NewMennekesCompact(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
 }
-
-//go:generate go tool decorate -f decorateMennekesCompact -b *MennekesCompact -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewMennekesCompact creates Mennekes charger
 func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
@@ -108,20 +108,20 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	conn.Logger(log.TRACE)
 
 	wb := &MennekesCompact{
+		Caps: implement.New(),
 		log:  log,
 		conn: conn,
 	}
 
 	// check phase switching support
-	var phasesS func(int) error
 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegPhaseOptionsHW, 1); err == nil && encoding.Uint16(b) == 2 {
-		phasesS = wb.phases1p3p
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	// failsafe
 	go wb.heartbeat(ctx, mennekesHeartbeatInterval)
 
-	return decorateMennekesCompact(wb, phasesS), nil
+	return wb, nil
 }
 
 func (wb *MennekesCompact) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -286,18 +286,10 @@ func (wb *MennekesCompact) phases1p3p(phases int) error {
 		u = 1
 	}
 
-	// temporarily disable charger during phase switching
-	if en, err := wb.Enabled(); err == nil && en {
-		if err := wb.Enable(false); err != nil {
-			return err
-		}
-
-		defer wb.Enable(true)
-	}
-
-	_, err := wb.conn.WriteSingleRegister(mennekesRegRequestedPhases, u)
-
-	return err
+	return whenDisabled(wb, func() error {
+		_, err := wb.conn.WriteSingleRegister(mennekesRegRequestedPhases, u)
+		return err
+	})
 }
 
 var _ api.Diagnosis = (*MennekesCompact)(nil)

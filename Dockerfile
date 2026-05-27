@@ -1,5 +1,5 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:22-alpine AS node
+FROM --platform=$BUILDPLATFORM node:24-alpine AS node
 
 RUN apk update && apk add --no-cache make
 
@@ -7,12 +7,13 @@ WORKDIR /build
 
 # install node tools
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # build ui
 COPY Makefile .
-COPY .*.js ./
 COPY *.js ./
+COPY *.ts *.mts ./
+COPY .browserslistrc .
 COPY assets assets
 COPY i18n i18n
 
@@ -20,7 +21,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26.3-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -32,22 +33,26 @@ ARG RELEASE=0
 
 WORKDIR /build
 
+# Setup Go cache
+ENV GOCACHE=/root/.cache/go-build
+ENV GOMODCACHE=/root/.cache/go-mod
+
 # download modules
 COPY go.mod .
 COPY go.sum .
-RUN go mod download
+RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 
 # install tools
 COPY Makefile .
-COPY cmd/decorate/ cmd/decorate/
+COPY cmd/implement/ cmd/implement/
 COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
-RUN make install
+RUN --mount=type=cache,target=${GOMODCACHE} make install
 
 # prepare
 COPY . .
 RUN make patch-asn1
-RUN make assets
+RUN --mount=type=cache,target=${GOMODCACHE} make assets
 
 # copy ui
 COPY --from=node /build/dist /build/dist
@@ -58,11 +63,12 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 ARG GOARM=${TARGETVARIANT#v}
 
-RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
+RUN --mount=type=cache,target=${GOCACHE} --mount=type=cache,target=${GOMODCACHE} \
+    RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.22
+FROM alpine:3.23@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11
 
 WORKDIR /app
 
@@ -79,10 +85,14 @@ COPY packaging/docker/bin/* /app/
 EXPOSE 5353/udp
 # EEBus
 EXPOSE 4712/tcp
+# mDNS
+EXPOSE 5353/udp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger
 EXPOSE 7090/udp
+# EVSE Master charger
+EXPOSE 28376/udp
 # OCPP charger
 EXPOSE 8887/tcp
 # Modbus UDP
@@ -90,7 +100,12 @@ EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp
 
-HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
+HEALTHCHECK \
+  --interval=30s \
+  --timeout=5s \
+  --start-period=30s \
+  --retries=3 \
+  CMD wget -qO /dev/null http://localhost:7070 || exit 1
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]

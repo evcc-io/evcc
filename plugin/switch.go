@@ -24,7 +24,7 @@ func init() {
 }
 
 // NewSwitchFromConfig creates switch provider
-func NewSwitchFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewSwitchFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Switch  []Case
 		Default *Config

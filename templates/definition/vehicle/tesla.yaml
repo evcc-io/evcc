@@ -7,7 +7,7 @@ requirements:
   description:
     de: |
       Tesla bietet eine offizielle, aber kostenpflichtige Fahrzeug-API an.
-      Für private Nutzung kannst du dir einen [Tesla Developer Account](https://developer.tesla.com/) erstellen und erhältst ein monatliches API-Guthaben von 10 €.
+      Für private Nutzung kannst du dir einen Tesla Developer Account auf [developer.tesla.com](https://developer.tesla.com/) erstellen und erhältst ein monatliches API-Guthaben von 10 €.
       Das ist für die gängigen evcc-Anwendungsfälle in der Regel ausreichend.
 
       Die Anleitung von [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) erklärt den Prozess und generiert dir kostenfrei die für evcc benötigten Access- und Refresh-Token.
@@ -19,10 +19,10 @@ requirements:
       Konfiguriere dafür bei myteslamate.com die Command-Berechtigungen und trage das Proxy-Token hier ein.
       Start-, Stopp- und Stromstärken-Kommandos werden über diesen Proxy an Tesla geschickt.
 
-      Weitere Informationen und Alternativen findest du in [unserem Blogbeitrag](https://docs.evcc.io/blog/2025/01/20/tesla-api-update).
+      Weitere Informationen und Alternativen findest du unter [docs.evcc.io/blog](https://docs.evcc.io/blog/2025/01/20/tesla-api-update).
     en: |
       Tesla offers an official, but paid vehicle API.
-      For private use, you can create a [Tesla Developer Account](https://developer.tesla.com/) and receive a monthly API credit of $10.
+      For private use, you can create a Tesla Developer Account at [developer.tesla.com](https://developer.tesla.com/) and receive a monthly API credit of $10.
       This is usually sufficient for the common evcc use cases.
 
       The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token.
@@ -34,15 +34,15 @@ requirements:
       Configure the Command permissions at myteslamate.com and enter the Proxy Token here.
       Start, stopp and current commands are sent to Tesla via this proxy.
 
-      More information and alternatives can be found in [our blog post](https://docs.evcc.io/en/blog/2025/01/20/tesla-api-update).
+      More information and alternatives can be found at [docs.evcc.io/blog](https://docs.evcc.io/en/blog/2025/01/20/tesla-api-update).
 params:
   - preset: vehicle-common
   - name: clientId
     description:
       generic: Client ID
     help:
-      en: from [Tesla Developer App](https://developer.tesla.com/dashboard).
-      de: von [Tesla Developer App](https://developer.tesla.com/dashboard).
+      en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
+      de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
     required: true
   - name: accessToken
     help:

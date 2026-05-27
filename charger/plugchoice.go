@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -51,7 +51,7 @@ func init() {
 }
 
 // NewPlugchoiceFromConfig creates a Plugchoice charger from generic config
-func NewPlugchoiceFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPlugchoiceFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI       string
 		UUID      string // kept for backward compatibility
@@ -147,14 +147,12 @@ func (c *Plugchoice) Status() (api.ChargeStatus, error) {
 			switch status := connector.Status; status {
 			case core.ChargePointStatusAvailable:
 				return api.StatusA, nil
-			case core.ChargePointStatusUnavailable, core.ChargePointStatusFaulted:
-				return api.StatusE, nil // Using StatusE for error conditions
 			case core.ChargePointStatusPreparing, core.ChargePointStatusSuspendedEVSE, core.ChargePointStatusSuspendedEV, core.ChargePointStatusFinishing:
 				return api.StatusB, nil
 			case core.ChargePointStatusCharging:
 				return api.StatusC, nil
 			default:
-				return api.StatusNone, fmt.Errorf("unknown status: %s", status)
+				return api.StatusNone, fmt.Errorf("invalid status: %s", status)
 			}
 		}
 	}

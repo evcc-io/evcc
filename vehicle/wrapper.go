@@ -12,15 +12,15 @@ import (
 type Wrapper struct {
 	embed
 	typ    string
-	config map[string]interface{}
+	config map[string]any
 	err    error
 }
 
 // NewWrapper creates an offline Vehicle wrapper
-func NewWrapper(name, typ string, other map[string]interface{}, err error) api.Vehicle {
+func NewWrapper(name, typ string, other map[string]any, err error) api.Vehicle {
 	var cc struct {
 		embed `mapstructure:",squash"`
-		Other map[string]interface{} `mapstructure:",remain"`
+		Other map[string]any `mapstructure:",remain"`
 	}
 
 	// try to decode vehicle-specific config and look for title attribute
@@ -45,7 +45,7 @@ func NewWrapper(name, typ string, other map[string]interface{}, err error) api.V
 }
 
 // WrappedConfig indicates a device with wrapped configuration
-func (v *Wrapper) WrappedConfig() (string, map[string]interface{}) {
+func (v *Wrapper) WrappedConfig() (string, map[string]any) {
 	return v.typ, v.config
 }
 

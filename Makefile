@@ -1,6 +1,6 @@
 # build vars
-TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
-SHA := $(shell test -d .git && git rev-parse --short HEAD)
+TAG_NAME ?= $(shell test -d .git && git describe --abbrev=0 --tags)
+SHA ?= $(shell test -d .git && git rev-parse --short HEAD)
 COMMIT := $(SHA)
 # hide commit for releases
 ifeq ($(RELEASE),1)
@@ -53,9 +53,28 @@ docs::
 
 lint::
 	golangci-lint run
+	go tool modernize -test -c 0 -stringsbuilder=false -omitzero=false ./...
+
+modernize:
+	go tool modernize -test -fix -stringsbuilder=false -omitzero=false ./...
 
 lint-ui::
 	npm run lint
+
+license::
+	go run github.com/google/go-licenses/v2@latest check \
+	--ignore github.com/evcc-io/evcc/node_modules \
+	--ignore github.com/cespare/xxhash \
+	--ignore github.com/coder/websocket \
+	--ignore github.com/cronokirby/saferith \
+	--ignore github.com/modern-go/reflect2 \
+	--ignore github.com/prometheus/client_golang \
+	--ignore golang.org/x \
+	--allowed_licenses=MIT,Apache-2.0,BSD-0-Clause,BSD-2-Clause,BSD-3-Clause,ISC,LGPL-2.1,EPL-2.0,MPL-2.0 \
+	./...
+
+license-ui::
+	npm run license
 
 test-ui::
 	npm test
@@ -142,5 +161,4 @@ patch-asn1::
 
 upgrade::
 	$(shell go list -u -f '{{if (and (not (or .Main .Indirect)) .Update)}}{{.Path}}{{end}}' -m all | xargs go get)
-	go get modernc.org/sqlite@latest
 	go mod tidy

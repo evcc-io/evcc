@@ -1,0 +1,11 @@
+site:
+  title: Host Pattern Test
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: template
+    template: shelly-pro-3em
+    usage: grid
+    host: http://192.168.1.100

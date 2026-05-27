@@ -70,7 +70,7 @@ func postProcess(res []tasks.Result) []tasks.Result {
 		// 	hit.Host = sma.Addr
 		// }
 
-		hit.Attributes = make(map[string]interface{})
+		hit.Attributes = make(map[string]any)
 		flat, _ := flatten.Flatten(structs.Map(hit), "", flatten.DotStyle)
 		for k, v := range flat {
 			hit.Attributes[strings.ToLower(k)] = v
