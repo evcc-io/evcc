@@ -19,7 +19,7 @@
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
 				:batteryGridCharge="batteryGridChargeActive"
-				:batteryHold="batteryHold"
+				:batteryHoldDischarge="batteryHoldDischarge"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
 				:batterySoc="batterySoc"
@@ -114,7 +114,7 @@
 								:power="batteryDischarge"
 								:powerUnit="powerUnit"
 								:iconProps="{
-									hold: batteryHold,
+									hold: batteryHoldDischarge,
 									soc: batterySoc,
 									gridCharge: batteryGridChargeActive,
 								}"
@@ -448,10 +448,12 @@ export default defineComponent({
 			return this.$t("main.energyflow.batteryCharge");
 		},
 		batteryDischargeLabel() {
-			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
+			return this.$t(
+				`main.energyflow.battery${this.batteryHoldDischarge ? "HoldDischarge" : "Discharge"}`
+			);
 		},
-		batteryHold() {
-			return this.batteryMode === "hold";
+		batteryHoldDischarge() {
+			return this.batteryMode === "holddischarge";
 		},
 		consumption() {
 			return this.homePower + this.batteryCharge + this.loadpointsPower;

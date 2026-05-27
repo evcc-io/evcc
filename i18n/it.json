@@ -1148,7 +1148,7 @@
       "batteryForecastFull": "full {time}",
       "batteryGridChargeActive": "Ricarica dalla rete: attiva",
       "batteryGridChargeLimit": "Ricarica dalla rete: quando",
-      "batteryHold": "Batteria (locked)",
+      "batteryHoldDischarge": "Batteria (locked)",
       "batteryTooltip": "{energy} di {total} ({soc})",
       "forecast": "Previsioni",
       "forecastTooltip": "previsioni: produzione solare rimanente per oggi",

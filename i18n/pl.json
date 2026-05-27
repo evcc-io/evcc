@@ -1069,7 +1069,7 @@
       "batteryForecastFull": "pełny {time}",
       "batteryGridChargeActive": "Ładowanie z sieci: aktywne",
       "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
-      "batteryHold": "Magazyn energii (chroniony)",
+      "batteryHoldDischarge": "Magazyn energii (chroniony)",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecast": "Prognoza",
       "forecastTooltip": "prognoza: pozostała na dziś produkcja energii słonecznej",

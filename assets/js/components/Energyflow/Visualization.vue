@@ -102,7 +102,11 @@
 			</div>
 			<div class="label-scale-name">Out</div>
 		</div>
-		<BatteryIcon hold class="battery-hold" :class="{ 'battery-hold--active': batteryHold }" />
+		<BatteryIcon
+			hold
+			class="battery-hold"
+			:class="{ 'battery-hold--active': batteryHoldDischarge }"
+		/>
 	</div>
 </template>
 
@@ -131,7 +135,7 @@ export default defineComponent({
 		batterySoc: { type: Number },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
-		batteryHold: { type: Boolean, default: false },
+		batteryHoldDischarge: { type: Boolean, default: false },
 		batteryGridCharge: { type: Boolean, default: false },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },

@@ -147,7 +147,7 @@ func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryM
 			time.Sleep(10 * time.Second)
 			// now turn Battery discharge on
 			return m.conn.BatteryMode("on", int(batterySocLimits.MinSoc), true)
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := m.batterySoc()
 			if err != nil {
 				return err

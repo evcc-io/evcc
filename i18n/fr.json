@@ -1173,7 +1173,7 @@
       "batteryForecastNextLow": "Prochain creux",
       "batteryGridChargeActive": "Charge réseau : active",
       "batteryGridChargeLimit": "Charge réseau : quand",
-      "batteryHold": "Batterie (verrouillée)",
+      "batteryHoldDischarge": "Batterie (verrouillée)",
       "batteryTooltip": "{energy} sur {total} ({soc})",
       "forecast": "Prévisions",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",

@@ -1178,7 +1178,7 @@
       "batteryForecastNextLow": "Sekanti žema",
       "batteryGridChargeActive": "Įkrovimas iš tinklo: aktyvus",
       "batteryGridChargeLimit": "Įkrauti iš tinklo: kai",
-      "batteryHold": "Kaupiklis (užblokuotas)",
+      "batteryHoldDischarge": "Kaupiklis (užblokuotas)",
       "batteryTooltip": "{energy} iš {total} ({soc})",
       "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",

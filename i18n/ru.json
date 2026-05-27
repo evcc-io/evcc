@@ -894,7 +894,7 @@
       "batteryDischarge": "Батарея разряжается",
       "batteryGridChargeActive": "сетевая зарядка активна",
       "batteryGridChargeLimit": "зарядка сети при",
-      "batteryHold": "Батарея (заблокирована)",
+      "batteryHoldDischarge": "Батарея (заблокирована)",
       "batteryTooltip": "{energy} из {total} ({soc})",
       "forecastTooltip": "прогноз: оставшееся производство солнечной энергии на сегодня",
       "gridImport": "Потребление из сети",

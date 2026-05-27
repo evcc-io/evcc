@@ -110,9 +110,9 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 				return nil, errors.New("modeNormal is required when modeHold or modeCharge is configured")
 			}
 			modes := map[api.BatteryMode]string{
-				api.BatteryNormal: cc.ModeNormal,
-				api.BatteryHold:   cc.ModeHold,
-				api.BatteryCharge: cc.ModeCharge,
+				api.BatteryNormal:        cc.ModeNormal,
+				api.BatteryHoldDischarge: cc.ModeHold,
+				api.BatteryCharge:        cc.ModeCharge,
 			}
 			for _, entity := range modes {
 				if entity != "" && !strings.HasPrefix(entity, "script.") {

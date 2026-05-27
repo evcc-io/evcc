@@ -1174,7 +1174,7 @@
       "batteryForecastNextLow": "Næste lavpunkt",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
-      "batteryHold": "Batteri (låst)",
+      "batteryHoldDischarge": "Batteri (låst)",
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",

@@ -188,7 +188,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(0))
 				})
 
-			case api.BatteryHold:
+			case api.BatteryHoldDischarge:
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})

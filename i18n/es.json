@@ -915,7 +915,7 @@
       "batteryDischarge": "Descargar la batería",
       "batteryGridChargeActive": "carga de red activa",
       "batteryGridChargeLimit": "carga de la red cuando",
-      "batteryHold": "Batería (bloqueada)",
+      "batteryHoldDischarge": "Batería (bloqueada)",
       "batteryTooltip": "{energy} de {total} ({soc})",
       "forecastTooltip": "Previsión: producción solar restante para hoy",
       "gridImport": "Consumo de red",

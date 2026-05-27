@@ -1162,7 +1162,7 @@
       "batteryForecastNextLow": "Low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
-      "batteryHold": "Battery (locked)",
+      "batteryHoldDischarge": "Battery (locked)",
       "batteryTooltip": "{energy} of {total} ({soc})",
       "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",

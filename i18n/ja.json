@@ -1178,7 +1178,7 @@
       "batteryForecastNextLow": "次の最低値",
       "batteryGridChargeActive": "系統充電: アクティブ",
       "batteryGridChargeLimit": "系統充電: 条件待ち",
-      "batteryHold": "蓄電池 (制限中)",
+      "batteryHoldDischarge": "蓄電池 (制限中)",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecast": "予測",
       "forecastTooltip": "予測: 本日の残り太陽光発電量",

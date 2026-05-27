@@ -14,7 +14,7 @@
 					class="tab-icon"
 					:soc="batterySoc || 0"
 					:grid-charge="batteryGridChargeActive"
-					:hold="batteryHold"
+					:hold="batteryHoldDischarge"
 				/>
 			</Item>
 
@@ -85,8 +85,8 @@ export default defineComponent({
 		batterySoc() {
 			return this.battery?.soc;
 		},
-		batteryHold() {
-			return this.batteryMode === "hold";
+		batteryHoldDischarge() {
+			return this.batteryMode === "holddischarge";
 		},
 		batteryConfigured() {
 			return (this.battery?.devices?.length ?? 0) > 0;

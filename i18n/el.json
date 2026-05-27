@@ -903,7 +903,7 @@
       "batteryDischarge": "Αποφόρτιση μπαταρίας",
       "batteryGridChargeActive": "ενεργή φόρτιση από το δίκτυο",
       "batteryGridChargeLimit": "φόρτιση από το δίκτυο όταν",
-      "batteryHold": "Μπαταρία (κλειδωμένο)",
+      "batteryHoldDischarge": "Μπαταρία (κλειδωμένο)",
       "batteryTooltip": "{energy} από {total} ({soc})",
       "forecastTooltip": "πρόβλεψη: εναπομένουσα ηλιακή παραγωγή σήμερα",
       "gridImport": "Χρήση δικτύου",

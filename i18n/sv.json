@@ -1179,7 +1179,7 @@
       "batteryForecastNextLow": "Nästa lågpunkt",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
-      "batteryHold": "Batteri (låst)",
+      "batteryHoldDischarge": "Batteri (låst)",
       "batteryTooltip": "{energy} av {total} ({soc})",
       "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",

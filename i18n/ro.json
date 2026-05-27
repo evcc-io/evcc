@@ -1063,7 +1063,7 @@
       "batteryForecastFull": "plin {time}",
       "batteryGridChargeActive": "Încărcare din rețea: activă",
       "batteryGridChargeLimit": "Încărcare din rețea: când",
-      "batteryHold": "Baterie (inchisa)",
+      "batteryHoldDischarge": "Baterie (inchisa)",
       "batteryTooltip": "{energy} din {total} ({soc})",
       "forecast": "Prognoză",
       "forecastTooltip": "prognoză: producția solară rămasă astăzi",

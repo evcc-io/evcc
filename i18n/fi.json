@@ -1170,7 +1170,7 @@
       "batteryForecastFull": "varaus täynnä {time}",
       "batteryGridChargeActive": "Ladataan verkosta",
       "batteryGridChargeLimit": "Milloin ladataan verkosta",
-      "batteryHold": "Akku (lukittu)",
+      "batteryHoldDischarge": "Akku (lukittu)",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecast": "Ennuste",
       "forecastTooltip": "ennuste: jäljellä oleva aurinkotuotanto tänään",

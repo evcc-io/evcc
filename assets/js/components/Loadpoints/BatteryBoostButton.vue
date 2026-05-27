@@ -2,7 +2,7 @@
 	<button
 		class="root position-relative"
 		tabindex="0"
-		:class="{ active, belowLimit, batteryHold, full }"
+		:class="{ active, belowLimit, batteryHoldDischarge, full }"
 		:style="{ '--soc': `${adjustedSoc}%` }"
 		:disabled="disabled"
 		:aria-label="ariaLabel"
@@ -67,11 +67,11 @@ export default defineComponent({
 		belowLimit(): boolean {
 			return this.batterySoc < this.batteryBoostLimit;
 		},
-		batteryHold(): boolean {
-			return this.batteryMode === BATTERY_MODE.HOLD;
+		batteryHoldDischarge(): boolean {
+			return this.batteryMode === BATTERY_MODE.HOLD_DISCHARGE;
 		},
 		available(): boolean {
-			return !this.belowLimit && !this.batteryHold;
+			return !this.belowLimit && !this.batteryHoldDischarge;
 		},
 		iconStyle() {
 			return {
@@ -83,7 +83,7 @@ export default defineComponent({
 		},
 		ariaLabel(): string {
 			const t = (key: string) => this.$t(`main.loadpointSettings.batteryBoost.${key}`);
-			if (this.batteryHold) return t("stateHold");
+			if (this.batteryHoldDischarge) return t("stateHold");
 			if (this.active) return t("stateActive");
 			if (this.belowLimit) return t("stateBelowLimit");
 			return t("stateReady");
@@ -114,7 +114,7 @@ export default defineComponent({
 			const newValue = !this.active;
 
 			// battery hold: only show message, don't toggle
-			if (newValue && this.batteryHold) {
+			if (newValue && this.batteryHoldDischarge) {
 				status("batteryBoostHold");
 				return;
 			}
@@ -172,7 +172,7 @@ export default defineComponent({
 	opacity: 0.25;
 }
 .root.belowLimit:not(:disabled),
-.root.batteryHold:not(:disabled) {
+.root.batteryHoldDischarge:not(:disabled) {
 	opacity: 0.5;
 }
 .root:before,

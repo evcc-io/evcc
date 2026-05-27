@@ -904,7 +904,7 @@
       "batteryDischarge": "Pražnjenje baterije",
       "batteryGridChargeActive": "punjenje putem mreže je aktivno",
       "batteryGridChargeLimit": "punjene putem mreže kada",
-      "batteryHold": "Baterija (zaključano)",
+      "batteryHoldDischarge": "Baterija (zaključano)",
       "batteryTooltip": "{energy} od {total} ({soc})",
       "forecastTooltip": "predviđanje: današnja preostala solarna proizvodnja",
       "gridImport": "Korištenje mreže",

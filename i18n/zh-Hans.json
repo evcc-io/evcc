@@ -646,7 +646,7 @@
       "batteryDischarge": "电池放电中",
       "batteryGridChargeActive": "电网充电已激活",
       "batteryGridChargeLimit": "电网充电条件",
-      "batteryHold": "电池（已锁定）",
+      "batteryHoldDischarge": "电池（已锁定）",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecastTooltip": "预测：今日剩余太阳能发电量",
       "gridImport": "电网用电",

@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _BatteryModeName = "unknownnormalholdchargeholdcharge"
+const _BatteryModeName = "unknownnormalholddischargechargeholdcharge"
 
-var _BatteryModeIndex = [...]uint8{0, 7, 13, 17, 23, 33}
+var _BatteryModeIndex = [...]uint8{0, 7, 13, 26, 32, 42}
 
-const _BatteryModeLowerName = "unknownnormalholdchargeholdcharge"
+const _BatteryModeLowerName = "unknownnormalholddischargechargeholdcharge"
 
 func (i BatteryMode) String() string {
 	if i < 0 || i >= BatteryMode(len(_BatteryModeIndex)-1) {
@@ -26,32 +26,32 @@ func _BatteryModeNoOp() {
 	var x [1]struct{}
 	_ = x[BatteryUnknown-(0)]
 	_ = x[BatteryNormal-(1)]
-	_ = x[BatteryHold-(2)]
+	_ = x[BatteryHoldDischarge-(2)]
 	_ = x[BatteryCharge-(3)]
 	_ = x[BatteryHoldCharge-(4)]
 }
 
-var _BatteryModeValues = []BatteryMode{BatteryUnknown, BatteryNormal, BatteryHold, BatteryCharge, BatteryHoldCharge}
+var _BatteryModeValues = []BatteryMode{BatteryUnknown, BatteryNormal, BatteryHoldDischarge, BatteryCharge, BatteryHoldCharge}
 
 var _BatteryModeNameToValueMap = map[string]BatteryMode{
 	_BatteryModeName[0:7]:        BatteryUnknown,
 	_BatteryModeLowerName[0:7]:   BatteryUnknown,
 	_BatteryModeName[7:13]:       BatteryNormal,
 	_BatteryModeLowerName[7:13]:  BatteryNormal,
-	_BatteryModeName[13:17]:      BatteryHold,
-	_BatteryModeLowerName[13:17]: BatteryHold,
-	_BatteryModeName[17:23]:      BatteryCharge,
-	_BatteryModeLowerName[17:23]: BatteryCharge,
-	_BatteryModeName[23:33]:      BatteryHoldCharge,
-	_BatteryModeLowerName[23:33]: BatteryHoldCharge,
+	_BatteryModeName[13:26]:      BatteryHoldDischarge,
+	_BatteryModeLowerName[13:26]: BatteryHoldDischarge,
+	_BatteryModeName[26:32]:      BatteryCharge,
+	_BatteryModeLowerName[26:32]: BatteryCharge,
+	_BatteryModeName[32:42]:      BatteryHoldCharge,
+	_BatteryModeLowerName[32:42]: BatteryHoldCharge,
 }
 
 var _BatteryModeNames = []string{
 	_BatteryModeName[0:7],
 	_BatteryModeName[7:13],
-	_BatteryModeName[13:17],
-	_BatteryModeName[17:23],
-	_BatteryModeName[23:33],
+	_BatteryModeName[13:26],
+	_BatteryModeName[26:32],
+	_BatteryModeName[32:42],
 }
 
 // BatteryModeString retrieves an enum value from the enum constants string name.

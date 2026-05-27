@@ -981,7 +981,7 @@
       "batteryForecastFull": "முழு {time}",
       "batteryGridChargeActive": "கிரிட் சார்சிங்: செயலில் உள்ளது",
       "batteryGridChargeLimit": "கிரிட் சார்சிங்: எப்போது",
-      "batteryHold": "மின்கலம் (பூட்டபட்டது)",
+      "batteryHoldDischarge": "மின்கலம் (பூட்டபட்டது)",
       "batteryTooltip": "{energy} ({total}) இன் {soc}",
       "forecast": "முன்னறிவிப்பு",
       "forecastTooltip": "முன்னறிவிப்பு: இன்று சூரிய விளைவாக்கம்",

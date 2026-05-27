@@ -898,7 +898,7 @@
       "batteryDischarge": "Разреждане на батерията",
       "batteryGridChargeActive": "зареждането от мрежата е актижно",
       "batteryGridChargeLimit": "зареждане от мрежата, когато",
-      "batteryHold": "Батерия (заключена)",
+      "batteryHoldDischarge": "Батерия (заключена)",
       "batteryTooltip": "{energy} от {total} ({soc})",
       "forecastTooltip": "прогноза: оставаща фотоволтаична продукция за днес",
       "gridImport": "Използвана енергия от мрежата",

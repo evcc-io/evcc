@@ -907,7 +907,7 @@
       "batteryDischarge": "Розрядження батареї",
       "batteryGridChargeActive": "активна зарядка мережі",
       "batteryGridChargeLimit": "зарядка мережі коли",
-      "batteryHold": "Акумулятор (locked)",
+      "batteryHoldDischarge": "Акумулятор (locked)",
       "batteryTooltip": "{energy} із {total} ({soc})",
       "forecastTooltip": "Прогноз: залишкове виробництво сонячної енергії сьогодні",
       "gridImport": "Використання мережі",

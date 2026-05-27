@@ -58,7 +58,7 @@ func (m *batterySocLimits) LimitController(socG func() (float64, error), limitSo
 		case api.BatteryNormal:
 			return limitSocS(m.MinSoc)
 
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := socG()
 			if err != nil {
 				return err

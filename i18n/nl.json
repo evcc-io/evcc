@@ -1169,7 +1169,7 @@
       "batteryForecastFull": "Vol om {time}",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
-      "batteryHold": "Batterij (geblokkeerd)",
+      "batteryHoldDischarge": "Batterij (geblokkeerd)",
       "batteryTooltip": "{energy} van {total} ({soc})",
       "forecast": "Voorspelling",
       "forecastTooltip": "voorspelling: resterende zonne-energieproductie voor vandaag",

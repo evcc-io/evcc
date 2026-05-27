@@ -59,7 +59,7 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
 	if dimmed := circuitDimmed(site.circuit); fromToCharge && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: circuit dimmed")
-		batteryMode = api.BatteryHold
+		batteryMode = api.BatteryHoldDischarge
 	}
 
 	// NOTE: applyBatteryMode is always called when charge mode is active to validate max soc
@@ -105,7 +105,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	case batteryGridChargeActive:
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
-		res = keepUnlessModified(api.BatteryHold)
+		res = keepUnlessModified(api.BatteryHoldDischarge)
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
 	}
@@ -158,7 +158,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 
 		// validate max soc
-		if fromToCharge && mode != api.BatteryHold {
+		if fromToCharge && mode != api.BatteryHoldDischarge {
 			ok, err := site.batteryMaxSocReached(dev)
 			if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
@@ -167,7 +167,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			// put battery into hold mode when soc limit reached
 			if ok {
 				// TODO do this only once
-				mode = api.BatteryHold
+				mode = api.BatteryHoldDischarge
 			}
 		}
 

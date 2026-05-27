@@ -914,7 +914,7 @@
       "batteryDischarge": "Energiatároló kisütés",
       "batteryGridChargeActive": "hálózatból töltés aktív",
       "batteryGridChargeLimit": "hálózatból töltés ha",
-      "batteryHold": "Energiatároló (lezárva)",
+      "batteryHoldDischarge": "Energiatároló (lezárva)",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecastTooltip": "előrejelzés: ma fennmaradó napenergia-termelés",
       "gridImport": "Hálózatból import",

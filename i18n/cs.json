@@ -1172,7 +1172,7 @@
       "batteryForecastNextLow": "Příští nízká",
       "batteryGridChargeActive": "nabíjení domácí baterie ze sítě je aktivní",
       "batteryGridChargeLimit": "nabíjení ze sítě, když",
-      "batteryHold": "Baterie (udržování stavu nabití)",
+      "batteryHoldDischarge": "Baterie (udržování stavu nabití)",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecast": "Předpověď",
       "forecastTooltip": "předpověď: zbývající solární výroba dnes",

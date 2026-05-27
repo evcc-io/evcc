@@ -1109,7 +1109,7 @@
       "batteryForecastFull": "dolu {time}",
       "batteryGridChargeActive": "Şebekeden doldurma: etkin",
       "batteryGridChargeLimit": "Şebekeden doldurma: şayet",
-      "batteryHold": "Batarya (kilitli)",
+      "batteryHoldDischarge": "Batarya (kilitli)",
       "batteryTooltip": "{total} ({soc})'ın {energy}'ı",
       "forecast": "Tahmin",
       "forecastTooltip": "“öngörü: bugün kalan güneşden üreti̇m”",

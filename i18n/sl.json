@@ -925,7 +925,7 @@
       "batteryDischarge": "Praznjenje baterije",
       "batteryGridChargeActive": "polnjenje iz omrežja aktivno",
       "batteryGridChargeLimit": "polnjenje iz omrežja ko",
-      "batteryHold": "Baterija (zaklenjena)",
+      "batteryHoldDischarge": "Baterija (zaklenjena)",
       "batteryTooltip": "{energy} od {total} ({soc})",
       "forecastTooltip": "napoved: preostala sončna proizvodnja danes",
       "gridImport": "Uvoz iz omrežja",
