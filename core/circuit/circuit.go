@@ -222,10 +222,7 @@ func (c *Circuit) effectiveMaxPower() float64 {
 		return maxPower
 	}
 
-	if maxPower == 0 || hemsLimit < maxPower {
-		return hemsLimit
-	}
-	return maxPower
+	return min(hemsLimit, maxPower)
 }
 
 // SetMaxPower sets the max power
