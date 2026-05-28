@@ -779,20 +779,19 @@ export default defineComponent({
 		},
 		hemsTags(): DeviceTags {
 			const type = this.hems?.config?.type;
-			if (!type) {
+			const status = store.state?.hems?.status;
+			if (!type && status === undefined) {
 				return { configured: { value: false } };
 			}
 			const result = {
 				hemsType: {},
 				hemsActiveLimit: { value: null as number | null },
 			};
-			if (["relay", "eebus"].includes(type)) {
+			if (type && ["relay", "eebus"].includes(type)) {
 				result.hemsType = { value: type };
 			}
-			const gc = store.state?.circuits?.[GRID_CONTROL];
-			if (gc) {
-				const value = gc.maxPower || null;
-				result.hemsActiveLimit = { value };
+			if (status?.maxConsumptionPower) {
+				result.hemsActiveLimit = { value: status.maxConsumptionPower };
 			}
 
 			return result;
@@ -879,9 +878,34 @@ export default defineComponent({
 			};
 		},
 		circuitsRoot() {
-			return circuitTree(store.state?.circuits || {});
+			const root = circuitTree(store.state?.circuits || {});
+			const status = store.state?.hems?.status;
+
+			// when HEMS is operational, synthesize a top-level pseudo-node
+			// from the runtime state so the External Limit appears above the user circuits.
+			// dimmed/curtailed are global HEMS signals so they are propagated to all
+			// descendants matching the previous parent-chain inheritance behaviour.
+			if (status !== undefined) {
+				const applyHems = (node) =>
+					node && {
+						...node,
+						dimmed: status.dimmed,
+						curtailed: status.curtailed,
+						children: node.children?.map(applyHems),
+					};
+				return {
+					name: GRID_CONTROL,
+					power: 0,
+					maxPower: status.maxConsumptionPower || 0,
+					dimmed: status.dimmed,
+					curtailed: status.curtailed,
+					children: root ? [applyHems(root)] : [],
+				};
+			}
+
+			return root;
 		},
-		tariffsYamlSource() {
+tariffsYamlSource() {
 			return store.state?.tariffs?.yamlSource;
 		},
 		tariffsUiVisible() {

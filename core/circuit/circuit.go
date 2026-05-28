@@ -193,13 +193,8 @@ func (c *Circuit) HasMeter() bool {
 	return c.meter != nil
 }
 
-// GetMaxPower returns the max power setting, clamped by the HEMS consumption
-// limit when one is registered on the root circuit.
+// GetMaxPower returns the configured max power setting.
 func (c *Circuit) GetMaxPower() float64 {
-	return c.applyHEMSLimit(c.rawMaxPower())
-}
-
-func (c *Circuit) rawMaxPower() float64 {
 	if c.getMaxPower != nil {
 		res, err := c.getMaxPower()
 		if err == nil {
@@ -213,7 +208,11 @@ func (c *Circuit) rawMaxPower() float64 {
 	return c.maxPower
 }
 
-func (c *Circuit) applyHEMSLimit(maxPower float64) float64 {
+// effectiveMaxPower returns the configured max power clamped by the HEMS
+// consumption limit. Only the root circuit applies the HEMS clamp; non-root
+// callers walk up the parent chain via ValidatePower.
+func (c *Circuit) effectiveMaxPower() float64 {
+	maxPower := c.GetMaxPower()
 	if c.hems == nil {
 		return maxPower
 	}
@@ -370,7 +369,7 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	if maxPower := c.GetMaxPower(); maxPower != 0 {
+	if maxPower := c.effectiveMaxPower(); maxPower != 0 {
 		delta := max(0, new-old)
 		potential := maxPower - c.power
 
