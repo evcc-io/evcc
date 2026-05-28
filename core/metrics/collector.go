@@ -86,56 +86,44 @@ func (c *Collector) process(fun func()) error {
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Imported(), c.accu.Exported())
+	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy)
 }
 
-func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {
-	return importProfile(c.entity, from)
+func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
+	return energyProfile(c.entity, from)
 }
 
-func (c *Collector) AddImportEnergy(v float64) error {
+func (c *Collector) SetEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddImportEnergy(v)
+		c.accu.SetEnergyMeterTotal(v)
 	})
 }
 
-func (c *Collector) AddExportEnergy(v float64) error {
+func (c *Collector) SetReturnEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddExportEnergy(v)
-	})
-}
-
-func (c *Collector) SetImportMeterTotal(v float64) error {
-	return c.process(func() {
-		c.accu.SetImportMeterTotal(v)
-	})
-}
-
-func (c *Collector) SetExportMeterTotal(v float64) error {
-	return c.process(func() {
-		c.accu.SetExportMeterTotal(v)
+		c.accu.SetReturnEnergyMeterTotal(v)
 	})
 }
 
 // AddEnergy adds energy using meter totals if available, falling back to power integration.
-func (c *Collector) AddEnergy(importTotal, exportTotal *float64, power float64) error {
+func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power float64) error {
 	return c.process(func() {
 		switch {
-		case importTotal != nil && exportTotal != nil:
-			c.accu.SetImportMeterTotal(*importTotal)
-			c.accu.SetExportMeterTotal(*exportTotal)
-		case importTotal != nil:
-			// export via power integration (before meter updates clock)
+		case energyTotal != nil && returnEnergyTotal != nil:
+			c.accu.SetEnergyMeterTotal(*energyTotal)
+			c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
+		case energyTotal != nil:
+			// return energy via power integration (before meter updates clock)
 			if power < 0 {
 				c.accu.AddPower(power)
 			}
-			c.accu.SetImportMeterTotal(*importTotal)
-		case exportTotal != nil:
-			// import via power integration (before meter updates clock)
+			c.accu.SetEnergyMeterTotal(*energyTotal)
+		case returnEnergyTotal != nil:
+			// energy via power integration (before meter updates clock)
 			if power >= 0 {
 				c.accu.AddPower(power)
 			}
-			c.accu.SetExportMeterTotal(*exportTotal)
+			c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
 		default:
 			c.accu.AddPower(power)
 		}
