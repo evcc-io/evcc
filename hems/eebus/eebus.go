@@ -40,11 +40,6 @@ type EEBus struct {
 	productionLimitActivated time.Time
 	failsafeProductionLimit  *float64
 
-	dimmed         *bool
-	curtailed      *bool
-	maxConsumption float64
-	maxProduction  *float64
-
 	heartbeat *util.Value[struct{}]
 	interval  time.Duration
 }
@@ -254,9 +249,6 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 		c.consumptionLimitActivated = time.Time{}
 	}
 
-	c.dimmed = &active
-	c.maxConsumption = limit
-
 	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
@@ -275,9 +267,6 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 		c.productionLimitActivated = time.Time{}
 	}
 
-	c.curtailed = &active
-	// TODO populate maxProduction once a Site kWp setting exists
-
 	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
@@ -285,30 +274,39 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 
 var _ api.HEMS = (*EEBus)(nil)
 
-// Dimmed implements api.HEMS
+// Dimmed implements api.HEMS, derived from consumptionLimitActivated.
 func (c *EEBus) Dimmed() *bool {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return c.dimmed
+	v := !c.consumptionLimitActivated.IsZero()
+	return &v
 }
 
-// Curtailed implements api.HEMS
+// Curtailed implements api.HEMS, derived from productionLimitActivated.
 func (c *EEBus) Curtailed() *bool {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return c.curtailed
+	v := !c.productionLimitActivated.IsZero()
+	return &v
 }
 
-// MaxConsumptionPower implements api.HEMS
+// MaxConsumptionPower implements api.HEMS, returning the consumption cap
+// currently in effect: failsafe limit while in failsafe, otherwise the
+// EG-supplied LPC limit when active, or 0 when no limit applies.
 func (c *EEBus) MaxConsumptionPower() float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return c.maxConsumption
+	if c.consumptionLimitActivated.IsZero() {
+		return 0
+	}
+	if c.status == StatusFailsafe {
+		return c.failsafeConsumptionLimit
+	}
+	return c.consumptionLimit.Value
 }
 
-// MaxProductionPower implements api.HEMS
+// MaxProductionPower implements api.HEMS. Scaffolding only — EEBus does not
+// publish a wattage-typed production cap yet.
 func (c *EEBus) MaxProductionPower() *float64 {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-	return c.maxProduction
+	return nil
 }

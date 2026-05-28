@@ -23,8 +23,6 @@ type Fnn3 struct {
 	limit       *float64
 	maxPower    float64
 	interval    time.Duration
-
-	curtailed *bool
 }
 
 // NewFromConfig creates an Fnn3 HEMS from generic config
@@ -135,9 +133,6 @@ func (c *Fnn3) curtail(frac float64) error {
 		c.limit = new(c.maxPower * frac)
 	}
 
-	c.curtailed = &active
-	// TODO populate MaxProductionPower once a Site kWp setting exists
-
 	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.site.GetGridPower(), c.maxPower*frac, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
@@ -152,11 +147,12 @@ func (c *Fnn3) Dimmed() *bool {
 	return nil
 }
 
-// Curtailed implements api.HEMS
+// Curtailed implements api.HEMS, derived from the active production limit.
 func (c *Fnn3) Curtailed() *bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.curtailed
+	v := c.limit != nil
+	return &v
 }
 
 // MaxConsumptionPower implements api.HEMS

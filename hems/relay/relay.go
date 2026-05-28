@@ -25,9 +25,6 @@ type Relay struct {
 	limit       *float64
 	maxPower    float64
 	interval    time.Duration
-
-	dimmed         *bool
-	maxConsumption float64
 }
 
 // NewFromConfig creates an Relay HEMS from generic config
@@ -112,12 +109,8 @@ func (c *Relay) setLimited(limit float64) error {
 		c.limit = new(limit)
 	}
 
-	active := limit > 0
-	c.dimmed = &active
-	c.maxConsumption = limit
-
 	if c.passthrough != nil {
-		if err := c.passthrough(active); err != nil {
+		if err := c.passthrough(limit > 0); err != nil {
 			return fmt.Errorf("passthrough failed: %w", err)
 		}
 	}
@@ -127,26 +120,30 @@ func (c *Relay) setLimited(limit float64) error {
 
 var _ api.HEMS = (*Relay)(nil)
 
-// Dimmed implements api.HEMS
+// Dimmed implements api.HEMS, derived from the active consumption limit.
 func (c *Relay) Dimmed() *bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.dimmed
+	v := c.limit != nil
+	return &v
 }
 
-// Curtailed implements api.HEMS
+// Curtailed implements api.HEMS. Relay does not curtail production.
 func (c *Relay) Curtailed() *bool {
 	return nil
 }
 
-// MaxConsumptionPower implements api.HEMS
+// MaxConsumptionPower implements api.HEMS, returning the active wattage cap.
 func (c *Relay) MaxConsumptionPower() float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.maxConsumption
+	if c.limit == nil {
+		return 0
+	}
+	return *c.limit
 }
 
-// MaxProductionPower implements api.HEMS
+// MaxProductionPower implements api.HEMS. Scaffolding only.
 func (c *Relay) MaxProductionPower() *float64 {
 	return nil
 }
