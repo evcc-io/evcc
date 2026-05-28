@@ -536,7 +536,7 @@ import type {
 	Remote,
 } from "@/types/evcc";
 import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
-import { circuitTree } from "@/utils/circuits";
+import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -780,18 +780,18 @@ export default defineComponent({
 		hemsTags(): DeviceTags {
 			const type = this.hems?.config?.type;
 			const status = store.state?.hems?.status;
-			if (!type && status === undefined) {
+			if (!type && !status) {
 				return { configured: { value: false } };
 			}
-			const result = {
+			const result: DeviceTags = {
 				hemsType: {},
-				hemsActiveLimit: { value: null as number | null },
+				hemsActiveLimit: { value: null },
 			};
 			if (type && ["relay", "eebus"].includes(type)) {
-				result.hemsType = { value: type };
+				result["hemsType"] = { value: type };
 			}
 			if (status?.maxConsumptionPower) {
-				result.hemsActiveLimit = { value: status.maxConsumptionPower };
+				result["hemsActiveLimit"] = { value: status.maxConsumptionPower };
 			}
 
 			return result;
@@ -877,7 +877,7 @@ export default defineComponent({
 				authDisabled: store.state?.authDisabled || false,
 			};
 		},
-		circuitsRoot() {
+		circuitsRoot(): CircuitNode | null {
 			const root = circuitTree(store.state?.circuits || {});
 			const status = store.state?.hems?.status;
 
@@ -885,14 +885,13 @@ export default defineComponent({
 			// from the runtime state so the External Limit appears above the user circuits.
 			// dimmed/curtailed are global HEMS signals so they are propagated to all
 			// descendants matching the previous parent-chain inheritance behaviour.
-			if (status !== undefined) {
-				const applyHems = (node) =>
-					node && {
-						...node,
-						dimmed: status.dimmed,
-						curtailed: status.curtailed,
-						children: node.children?.map(applyHems),
-					};
+			if (status) {
+				const applyHems = (node: CircuitNode): CircuitNode => ({
+					...node,
+					dimmed: status.dimmed,
+					curtailed: status.curtailed,
+					children: node.children?.map(applyHems),
+				});
 				return {
 					name: GRID_CONTROL,
 					power: 0,
@@ -905,7 +904,7 @@ export default defineComponent({
 
 			return root;
 		},
-tariffsYamlSource() {
+		tariffsYamlSource() {
 			return store.state?.tariffs?.yamlSource;
 		},
 		tariffsUiVisible() {

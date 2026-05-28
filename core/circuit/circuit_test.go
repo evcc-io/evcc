@@ -150,8 +150,8 @@ func TestWrapCycleDetection(t *testing.T) {
 	require.Error(t, pc.Wrap(lpc))
 }
 
-// TestHEMSConsumptionClamp verifies that the root circuit's GetMaxPower
-// is clamped by the HEMS-imposed consumption limit when one is registered.
+// TestHEMSConsumptionClamp verifies that ValidatePower clamps against the
+// HEMS consumption limit when one is registered on the root circuit.
 func TestHEMSConsumptionClamp(t *testing.T) {
 	log := util.NewLogger("foo")
 
@@ -159,14 +159,14 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 		name      string
 		maxPower  float64
 		hemsLimit float64
+		request   float64
 		want      float64
 	}{
-		{"no hems, no max", 0, 0, 0},
-		{"no hems, max set", 5000, 0, 5000},
-		{"hems below max", 5000, 4200, 4200},
-		{"hems above max", 5000, 9000, 5000},
-		{"hems with no max", 0, 4200, 4200},
-		{"hems zero (no limit)", 5000, 0, 5000},
+		{"no hems, no max", 0, 0, 9000, 9000},
+		{"no hems, max set", 5000, 0, 9000, 5000},
+		{"hems below max", 5000, 4200, 9000, 4200},
+		{"hems above max", 5000, 9000, 9000, 5000},
+		{"hems with no max", 0, 4200, 9000, 4200},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, err := New(log, "root", 0, tc.maxPower, nil, 0)
@@ -175,11 +175,11 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 			if tc.hemsLimit > 0 {
 				ctrl := gomock.NewController(t)
 				hems := api.NewMockHEMS(ctrl)
-				hems.EXPECT().MaxConsumptionPower().Return(tc.hemsLimit)
+				hems.EXPECT().MaxConsumptionPower().Return(tc.hemsLimit).AnyTimes()
 				c.hems = hems
 			}
 
-			assert.Equal(t, tc.want, c.GetMaxPower())
+			assert.Equal(t, tc.want, c.ValidatePower(0, tc.request))
 		})
 	}
 }

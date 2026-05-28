@@ -43,6 +43,13 @@ export interface HemsConfig {
   type: string;
 }
 
+export interface HemsStatus {
+  dimmed?: boolean;
+  curtailed?: boolean;
+  maxConsumptionPower?: number;
+  maxProductionPower?: number;
+}
+
 export interface ShmConfig {
   vendorId: string;
   deviceId: string;
@@ -96,7 +103,7 @@ export interface State {
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: ConfigStatus<HemsConfig, unknown>;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
