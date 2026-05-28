@@ -42,8 +42,9 @@ func New(log *util.Logger, q url.Values) *Service {
 // https://github.com/arjenvrh/audi_connect_ha/issues/133
 
 const (
-	qmSecret   = "e47866378ef0658ce75d71007a809f34616b9635e2ec228245784c1f63e88d06"
-	qmClientId = "c95f4fd2"
+	qmSecret   = "1ab69925ac179aaa4e83abe671a9476d176418b85bd706f1436ca15be647989c"
+	qmClientId = "01da27b0"
+	userAgent  = "Android/4.31.0 (Build 800341641.root project 'myaudi_android'.ext.buildTime) Android/13"
 )
 
 func qmauth(ts int64) string {
@@ -75,9 +76,14 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	var res vag.Token
 
 	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": request.FormContent,
-		"Accept":       request.JSONContent,
-		"x-qmauth":     qmauthNow(),
+		"Content-Type":           request.FormContent,
+		"Accept":                 request.JSONContent,
+		"Accept-Charset":         "utf-8",
+		"User-Agent":             userAgent,
+		"x-qmauth":               qmauthNow(),
+		"x-platform":             "android",
+		"x-android-package-name": "de.myaudi.mobile.assistant",
+		"x-assertion":            "0",
 	})
 	if err == nil {
 		err = v.DoJSON(req, &res)
@@ -99,9 +105,14 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 	var res vag.Token
 
 	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": request.FormContent,
-		"Accept":       request.JSONContent,
-		"x-qmauth":     qmauthNow(),
+		"Content-Type":           request.FormContent,
+		"Accept":                 request.JSONContent,
+		"Accept-Charset":         "utf-8",
+		"User-Agent":             userAgent,
+		"x-qmauth":               qmauthNow(),
+		"x-platform":             "android",
+		"x-android-package-name": "de.myaudi.mobile.assistant",
+		"x-assertion":            "0",
 	})
 	if err == nil {
 		err = v.DoJSON(req, &res)
