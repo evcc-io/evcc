@@ -1,0 +1,26 @@
+template: kaco-blueplanet
+products:
+  - brand: Kaco
+    description:
+      generic: Blueplanet NX Series (via http)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+    required: true
+    description:
+      en: The IP address of the inverter to query
+      de: Die IP-Adresse des Kaco-Wechselrichters
+    example: 192.168.0.123    
+  - name: sn
+    required: true
+    description:
+      en: The serial number of the inverter to query
+      de: Die Seriennummer des Kaco-Wechselrichters
+    example: 8.0NX312001234
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/getdevdata.cgi?device=2&sn={{ .sn }}
+    jq: .pac
