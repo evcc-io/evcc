@@ -14,5 +14,5 @@ var AuthParams = url.Values{
 	"response_type": {"code id_token token"},
 	"client_id":     {cariad.ClientID},
 	"redirect_uri":  {"weconnect://authenticated"},
-	"scope":         {"openid profile badge cars vin"},
+	"scope":         {"openid profile badge cars vin"}, // dealers
 }
