@@ -9,14 +9,14 @@ params:
   - name: host
     required: true
     description:
-      en: The ip the host to query
-      de: Der IP des Kaco Wechselrichter
+      en: The IP address of the inverter to query
+      de: Die IP-Adresse des Kaco-Wechselrichters
     example: 192.168.0.123    
   - name: sn
     required: true
     description:
-      en: The serial number the host to query
-      de: Der Serialnummer des Kaco Wechselrichter
+      en: The serial number of the inverter to query
+      de: Die Seriennummer des Kaco-Wechselrichters
     example: 8.0NX312001234
 render: |
   type: custom
