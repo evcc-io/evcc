@@ -802,6 +802,8 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 		return nil, fmt.Errorf("failed configuring hems: %w", err)
 	}
 
+	site.SetHEMS(hems)
+
 	go hems.Run()
 
 	return hems, nil

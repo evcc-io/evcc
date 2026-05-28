@@ -66,6 +66,7 @@ type Site struct {
 
 	// meters
 	circuit       api.Circuit                // Circuit
+	hems          api.HEMS                   // HEMS (set by configureHEMS at boot)
 	gridMeter     api.Meter                  // Grid usage meter
 	pvMeters      []config.Device[api.Meter] // PV generation meters
 	batteryMeters []config.Device[api.Meter] // Battery charging meters
@@ -941,6 +942,8 @@ func (site *Site) update(lp updater) {
 
 	// update loadpoints
 	totalChargePower := site.updateLoadpoints(consumption)
+
+	site.publishHEMS()
 
 	// update all circuits' power and currents
 	if site.circuit != nil {

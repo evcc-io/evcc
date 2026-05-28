@@ -187,6 +187,13 @@ func (site *Site) SetCircuit(circuit api.Circuit) {
 	site.circuit = circuit
 }
 
+// SetHEMS attaches the configured HEMS to the site
+func (site *Site) SetHEMS(hems api.HEMS) {
+	site.Lock()
+	defer site.Unlock()
+	site.hems = hems
+}
+
 // GetPrioritySoc returns the PrioritySoc
 func (site *Site) GetPrioritySoc() float64 {
 	site.RLock()
