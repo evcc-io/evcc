@@ -58,6 +58,21 @@ func qmauthNow() string {
 	return "v1:" + qmClientId + ":" + qmauth(time.Now().Unix()/100)
 }
 
+// tokenHeaders returns the assertion header set the IDK token endpoint
+// validates for both authorization_code and refresh_token grants.
+func tokenHeaders() map[string]string {
+	return map[string]string{
+		"Content-Type":           request.FormContent,
+		"Accept":                 request.JSONContent,
+		"Accept-Charset":         "utf-8",
+		"User-Agent":             userAgent,
+		"x-qmauth":               qmauthNow(),
+		"x-platform":             "android",
+		"x-android-package-name": "de.myaudi.mobile.assistant",
+		"x-assertion":            "0",
+	}
+}
+
 // Exchange exchanges an VAG identity token for an IDK token
 func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 	if err := urlvalues.Require(q, "code", "code_verifier"); err != nil {
@@ -75,16 +90,7 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 
 	var res vag.Token
 
-	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":           request.FormContent,
-		"Accept":                 request.JSONContent,
-		"Accept-Charset":         "utf-8",
-		"User-Agent":             userAgent,
-		"x-qmauth":               qmauthNow(),
-		"x-platform":             "android",
-		"x-android-package-name": "de.myaudi.mobile.assistant",
-		"x-assertion":            "0",
-	})
+	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), tokenHeaders())
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -104,16 +110,7 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 
 	var res vag.Token
 
-	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":           request.FormContent,
-		"Accept":                 request.JSONContent,
-		"Accept-Charset":         "utf-8",
-		"User-Agent":             userAgent,
-		"x-qmauth":               qmauthNow(),
-		"x-platform":             "android",
-		"x-android-package-name": "de.myaudi.mobile.assistant",
-		"x-assertion":            "0",
-	})
+	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), tokenHeaders())
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
