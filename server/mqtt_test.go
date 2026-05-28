@@ -115,7 +115,7 @@ func (suite *mqttSuite) TestMeasurement() {
 	suite.Equal(topics, suite.topics, "topics")
 	suite.Equal([]string{"", "", "", "0", "", "", "", "", "", "", "", ""}, suite.payloads, "empty payloads")
 
-	suite.publish("test", false, types.Measurement{Energy: 1})
+	suite.publish("test", false, types.Measurement{Energy: new(1.0)})
 	suite.Equal(topics, suite.topics, "topics")
 	suite.Equal([]string{"", "", "", "0", "1", "", "", "", "", "", "", ""}, suite.payloads, "energy payloads")
 

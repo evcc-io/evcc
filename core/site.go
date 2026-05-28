@@ -508,11 +508,12 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			site.log.ERROR.Printf("%s %d power: %v", key, i+1, err)
 		}
 
-		// energy (production)
-		var energy float64
+		// energy (production); nil when the device has no MeterEnergy capability or the read fails
+		var energy *float64
 		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
-			energy, err = m.TotalEnergy()
-			if err != nil {
+			if v, err := m.TotalEnergy(); err == nil {
+				energy = &v
+			} else {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
@@ -570,7 +571,10 @@ func (site *Site) updatePvMeters() {
 		return math.Abs(m.ExcessDCPower)
 	})
 	totalEnergy := lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+		if m.Energy == nil {
+			return 0
+		}
+		return *m.Energy
 	})
 
 	if len(site.pvMeters) > 1 {
@@ -589,13 +593,7 @@ func (site *Site) updatePvMeters() {
 	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
 		c := site.collectors[dev.Config().Name]
-
-		var importEnergy *float64
-		if mm[i].Energy > 0 {
-			importEnergy = &mm[i].Energy
-		}
-
-		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
+		if err := c.AddEnergy(mm[i].Energy, nil, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist pv %d energy: %v", i+1, err)
 		}
 	}
@@ -652,7 +650,10 @@ func (site *Site) updateBatteryMeters() {
 		return m.Power
 	})
 	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+		if m.Energy == nil {
+			return 0
+		}
+		return *m.Energy
 	})
 
 	if len(site.batteryMeters) > 1 {
@@ -669,11 +670,7 @@ func (site *Site) updateBatteryMeters() {
 		if !ok {
 			continue
 		}
-		var exportEnergy *float64
-		if mm[i].Energy > 0 {
-			exportEnergy = &mm[i].Energy
-		}
-		if err := c.AddEnergy(nil, exportEnergy, -mm[i].Power); err != nil {
+		if err := c.AddEnergy(nil, mm[i].Energy, -mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist battery %d energy: %v", i+1, err)
 		}
 	}
@@ -708,11 +705,7 @@ func (site *Site) addMeterEnergy(meters []config.Device[api.Meter], mm []types.M
 		if !ok {
 			continue
 		}
-		var importEnergy *float64
-		if mm[i].Energy > 0 {
-			importEnergy = &mm[i].Energy
-		}
-		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
+		if err := c.AddEnergy(mm[i].Energy, nil, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist meter %s energy: %v", ref, err)
 		}
 	}
@@ -790,18 +783,16 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	// grid energy (import)
-	var importEnergy *float64
+	// grid energy (import); nil when the device has no MeterEnergy capability or the read fails
 	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
 		if f, err := energyMeter.TotalEnergy(); err == nil {
-			mm.Energy = f
-			importEnergy = &f
+			mm.Energy = &f
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
 	}
 
-	site.collectors[site.Meters.GridMeterRef].AddEnergy(importEnergy, nil, mm.Power)
+	site.collectors[site.Meters.GridMeterRef].AddEnergy(mm.Energy, nil, mm.Power)
 
 	site.publish(keys.Grid, mm)
 
