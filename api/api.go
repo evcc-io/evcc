@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -285,6 +285,16 @@ type Circuit interface {
 	// EEG §9 - reduce feed-in to the grid
 	Curtail(bool)
 	Curtailed() *bool
+}
+
+// HEMS exposes the runtime state of the home energy management system.
+// Implementations live under hems/* and translate regulatory signals
+// (§14a dim, §9 curtail) into limits consumed by Circuit, Site and Loadpoint.
+type HEMS interface {
+	Dimmed() *bool
+	Curtailed() *bool
+	MaxConsumptionPower() float64    // 0 = no limit
+	MaxProductionPower() *float64    // nil = no limit
 }
 
 // Redactor is an interface to redact sensitive data
