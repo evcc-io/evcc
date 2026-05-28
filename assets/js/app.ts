@@ -1,3 +1,4 @@
+import "./utils/customElementsGuard"; // must be first — protects against double-define
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
 import { createApp, defineComponent, h } from "vue";
