@@ -3,11 +3,7 @@ params:
     choice: ["pv"]
   - name: host
     required: true
-    description:
-      en: The IP address of the inverter to query
-      de: Die IP-Adresse des Kaco-Wechselrichters
-    example: 192.168.0.123
-  - name: sn
+  - name: serial
     required: true
     description:
       en: The serial number of the inverter to query
@@ -17,4 +13,4 @@ render: |
   type: custom
   power:
     source: http
-    uri: http://{{ .host }}/getdevdata.cgi?device=2&sn={{ .sn }}
+    uri: http://{{ .host }}/getdevdata.cgi?device=2&sn={{ .serial }}
