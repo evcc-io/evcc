@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
-	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"github.com/evcc-io/evcc/vehicle/vw/weconnect"
 )
 
@@ -49,7 +48,7 @@ func NewVWFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
 
-	q, err := vwidentity.LoginWithAuthURL(log, weconnect.LoginURL, weconnect.AuthParams, cc.User, cc.Password)
+	q, err := weconnect.Login(log, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

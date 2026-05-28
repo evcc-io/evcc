@@ -297,6 +297,18 @@ func resolveLocation(base *url.URL, location string) (*url.URL, error) {
 	return base.ResolveReference(locURL), nil
 }
 
+// ParseAuthLocation extracts the OAuth callback values from a redirect URL.
+// Fragment values are promoted into the query so hybrid-flow responses
+// (#code=...&id_token=...) parse identically to plain ?code= callbacks.
+func ParseAuthLocation(u *url.URL) (url.Values, error) {
+	return parseAuthLocation(u)
+}
+
+// ExtractState reads the form state token off the Auth0 login page body.
+func ExtractState(body []byte) (string, error) {
+	return extractState(body)
+}
+
 func parseAuthLocation(u *url.URL) (url.Values, error) {
 	if u.Fragment != "" {
 		u.RawQuery = u.Fragment
