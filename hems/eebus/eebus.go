@@ -40,6 +40,13 @@ type EEBus struct {
 	productionLimitActivated time.Time
 	failsafeProductionLimit  *float64
 
+	// api.HEMS state mirrors what gets pushed to the root circuit; readers will
+	// migrate to these fields and the circuit writes go away in a later step.
+	dimmed         *bool
+	curtailed      *bool
+	maxConsumption float64
+	maxProduction  *float64
+
 	heartbeat *util.Value[struct{}]
 	interval  time.Duration
 }
@@ -259,6 +266,8 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 
 	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
+	c.dimmed = &active
+	c.maxConsumption = limit
 
 	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
@@ -279,10 +288,41 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 	}
 
 	c.root.Curtail(active)
+	c.curtailed = &active
 	// TODO make ProductionNominalMax configurable (Site kWp)
-	// c.root.SetMaxProduction(limit)
+	// c.maxProduction = &limit
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
+}
+
+var _ api.HEMS = (*EEBus)(nil)
+
+// Dimmed implements api.HEMS
+func (c *EEBus) Dimmed() *bool {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.dimmed
+}
+
+// Curtailed implements api.HEMS
+func (c *EEBus) Curtailed() *bool {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.curtailed
+}
+
+// MaxConsumptionPower implements api.HEMS
+func (c *EEBus) MaxConsumptionPower() float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.maxConsumption
+}
+
+// MaxProductionPower implements api.HEMS
+func (c *EEBus) MaxProductionPower() *float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.maxProduction
 }

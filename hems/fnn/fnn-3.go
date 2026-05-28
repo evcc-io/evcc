@@ -23,6 +23,10 @@ type Fnn3 struct {
 	limit       *float64
 	maxPower    float64
 	interval    time.Duration
+
+	// api.HEMS state mirrors what gets pushed to the root circuit; readers will
+	// migrate to these fields and the circuit writes go away in a later step.
+	curtailed *bool
 }
 
 // NewFromConfig creates an Fnn3 HEMS from generic config
@@ -142,6 +146,7 @@ func (c *Fnn3) curtail(frac float64) error {
 	}
 
 	c.root.Curtail(active)
+	c.curtailed = &active
 	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxPower(c.maxPower*frac)
 
@@ -149,5 +154,29 @@ func (c *Fnn3) curtail(frac float64) error {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
+	return nil
+}
+
+var _ api.HEMS = (*Fnn3)(nil)
+
+// Dimmed implements api.HEMS
+func (c *Fnn3) Dimmed() *bool {
+	return nil
+}
+
+// Curtailed implements api.HEMS
+func (c *Fnn3) Curtailed() *bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.curtailed
+}
+
+// MaxConsumptionPower implements api.HEMS
+func (c *Fnn3) MaxConsumptionPower() float64 {
+	return 0
+}
+
+// MaxProductionPower implements api.HEMS
+func (c *Fnn3) MaxProductionPower() *float64 {
 	return nil
 }

@@ -25,6 +25,11 @@ type Relay struct {
 	limit       *float64
 	maxPower    float64
 	interval    time.Duration
+
+	// api.HEMS state mirrors what gets pushed to the root circuit; readers will
+	// migrate to these fields and the circuit writes go away in a later step.
+	dimmed         *bool
+	maxConsumption float64
 }
 
 // NewFromConfig creates an Relay HEMS from generic config
@@ -117,8 +122,11 @@ func (c *Relay) setLimited(limit float64) error {
 		c.limit = new(limit)
 	}
 
-	c.root.Dim(limit > 0)
+	active := limit > 0
+	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
+	c.dimmed = &active
+	c.maxConsumption = limit
 
 	if c.passthrough != nil {
 		if err := c.passthrough(limit > 0); err != nil {
@@ -126,5 +134,31 @@ func (c *Relay) setLimited(limit float64) error {
 		}
 	}
 
+	return nil
+}
+
+var _ api.HEMS = (*Relay)(nil)
+
+// Dimmed implements api.HEMS
+func (c *Relay) Dimmed() *bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.dimmed
+}
+
+// Curtailed implements api.HEMS
+func (c *Relay) Curtailed() *bool {
+	return nil
+}
+
+// MaxConsumptionPower implements api.HEMS
+func (c *Relay) MaxConsumptionPower() float64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.maxConsumption
+}
+
+// MaxProductionPower implements api.HEMS
+func (c *Relay) MaxProductionPower() *float64 {
 	return nil
 }
