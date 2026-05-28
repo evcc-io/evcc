@@ -6,7 +6,7 @@ params:
     description:
       en: The IP address of the inverter to query
       de: Die IP-Adresse des Kaco-Wechselrichters
-    example: 192.168.0.123    
+    example: 192.168.0.123
   - name: sn
     required: true
     description:
