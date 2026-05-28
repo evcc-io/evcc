@@ -46,19 +46,21 @@ func newTestEEBus(t *testing.T) *EEBus {
 	}
 }
 
-// assertConsumptionLimit checks that the HEMS records the expected consumption state.
+// assertConsumptionLimit checks the HEMS consumption state through the api.HEMS surface.
 func assertConsumptionLimit(t *testing.T, c *EEBus, limit float64) {
 	t.Helper()
-	require.NotNil(t, c.dimmed, "dimmed must be set")
-	assert.Equal(t, limit > 0, *c.dimmed)
-	assert.Equal(t, limit, c.maxConsumption)
+	dimmed := c.Dimmed()
+	require.NotNil(t, dimmed, "dimmed must be set")
+	assert.Equal(t, limit > 0, *dimmed)
+	assert.Equal(t, limit, c.MaxConsumptionPower())
 }
 
-// assertProductionLimit checks that the HEMS records the expected production state.
+// assertProductionLimit checks the HEMS production state through the api.HEMS surface.
 func assertProductionLimit(t *testing.T, c *EEBus, active bool) {
 	t.Helper()
-	require.NotNil(t, c.curtailed, "curtailed must be set")
-	assert.Equal(t, active, *c.curtailed)
+	curtailed := c.Curtailed()
+	require.NotNil(t, curtailed, "curtailed must be set")
+	assert.Equal(t, active, *curtailed)
 }
 
 // TestRun_HeartbeatLost_EntersFailsafe verifies the LPC-911/LPP-911 transition:
