@@ -83,6 +83,20 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **tests/** contains Playwright integration tests and test configuration files
 - **dist/** contains built frontend assets (generated)
 
+## Writing Style
+
+- No em dashes (—) in comments, commit messages, or docs. Use periods, commas, or colons
+- Project name is `evcc`, always lowercase
+- Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
+- Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
+
+## Comment Style
+
+- Prefer self-documenting code over comments; comment the *why*, not the *what*
+- Default to no comment. Only add one for a non-obvious constraint, invariant, workaround, or surprising behavior. Keep it to one line, two if necessary
+- Skip refs to the current task, PR, issue, or caller ("added for X flow", "see #1234"). Git history covers that
+- Exception: Go exported identifiers follow godoc convention. Short `// FuncName does X` summary starting with the identifier name
+
 ## Go Coding Standards
 
 ### Core Principles
@@ -269,7 +283,6 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Handle concurrent operations safely with Go's concurrency primitives
 - Implement proper caching strategies and connection pooling
 - Avoid blocking operations in main application loop
-- Include appropriate comments for complex business logic
 
 ## Pull Request Descriptions
 
