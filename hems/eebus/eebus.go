@@ -22,7 +22,7 @@ type EEBus struct {
 	*eebus.Connector
 	cs *eebus.ControllableSystem
 
-	root        api.Circuit
+	site        site.API
 	passthrough func(bool) error
 
 	status        status
@@ -40,8 +40,6 @@ type EEBus struct {
 	productionLimitActivated time.Time
 	failsafeProductionLimit  *float64
 
-	// api.HEMS state mirrors what gets pushed to the root circuit; readers will
-	// migrate to these fields and the circuit writes go away in a later step.
 	dimmed         *bool
 	curtailed      *bool
 	maxConsumption float64
@@ -90,26 +88,18 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		return nil, err
 	}
 
-	// setup grid control circuit
-	gridcontrol, err := smartgrid.SetupCircuit()
-	if err != nil {
-		return nil, err
-	}
-
-	site.SetCircuit(gridcontrol)
-
-	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, gridcontrol, cc.Interval)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, site, cc.Interval)
 }
 
 // NewEEBus creates EEBus HEMS
-func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, root api.Circuit, interval time.Duration) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
 		log:         util.NewLogger("eebus"),
-		root:        root,
+		site:        site,
 		passthrough: passthrough,
 		cs:          eebus.Instance.ControllableSystem(),
 		Connector:   eebus.NewConnector(),
@@ -264,12 +254,10 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 		c.consumptionLimitActivated = time.Time{}
 	}
 
-	c.root.Dim(active)
-	c.root.SetMaxPower(limit)
 	c.dimmed = &active
 	c.maxConsumption = limit
 
-	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
@@ -287,12 +275,10 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 		c.productionLimitActivated = time.Time{}
 	}
 
-	c.root.Curtail(active)
 	c.curtailed = &active
-	// TODO make ProductionNominalMax configurable (Site kWp)
-	// c.maxProduction = &limit
+	// TODO populate maxProduction once a Site kWp setting exists
 
-	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 }

@@ -181,13 +181,6 @@ func (site *Site) GetCircuit() api.Circuit {
 	return site.circuit
 }
 
-// SetCircuit sets the root circuit
-func (site *Site) SetCircuit(circuit api.Circuit) {
-	site.Lock()
-	defer site.Unlock()
-	site.circuit = circuit
-}
-
 // SetHEMS attaches the configured HEMS to the site, the root circuit and all loadpoints
 func (site *Site) SetHEMS(hems api.HEMS) {
 	site.Lock()
@@ -296,6 +289,13 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 	}
 
 	return nil
+}
+
+// GetGridPower returns the most recent grid power reading in W (positive = import)
+func (site *Site) GetGridPower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridPower
 }
 
 // GetResidualPower returns the ResidualPower

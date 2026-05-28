@@ -16,7 +16,7 @@ type Fnn3 struct {
 	mu  sync.Mutex
 	log *util.Logger
 
-	root       api.Circuit
+	site       site.API
 	s1, s2, w3 func() (bool, error)
 
 	smartgridID uint
@@ -24,8 +24,6 @@ type Fnn3 struct {
 	maxPower    float64
 	interval    time.Duration
 
-	// api.HEMS state mirrors what gets pushed to the root circuit; readers will
-	// migrate to these fields and the circuit writes go away in a later step.
 	curtailed *bool
 }
 
@@ -45,14 +43,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	// setup grid control circuit
-	gridcontrol, err := smartgrid.SetupCircuit()
-	if err != nil {
-		return nil, err
-	}
-
-	site.SetCircuit(gridcontrol)
-
 	// s1 getter
 	s1G, err := cc.S1.BoolGetter(ctx)
 	if err != nil {
@@ -69,14 +59,14 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	return NewFnn3(gridcontrol, s1G, s2G, w3G, cc.MaxPower, cc.Interval)
+	return NewFnn3(site, s1G, s2G, w3G, cc.MaxPower, cc.Interval)
 }
 
 // NewFnn3 creates Fnn3 HEMS
-func NewFnn3(root api.Circuit, s1, s2, w3 func() (bool, error), maxPower float64, interval time.Duration) (*Fnn3, error) {
+func NewFnn3(site site.API, s1, s2, w3 func() (bool, error), maxPower float64, interval time.Duration) (*Fnn3, error) {
 	c := &Fnn3{
 		log:      util.NewLogger("fnn3"),
-		root:     root,
+		site:     site,
 		maxPower: maxPower,
 		s1:       s1,
 		s2:       s2,
@@ -145,12 +135,10 @@ func (c *Fnn3) curtail(frac float64) error {
 		c.limit = new(c.maxPower * frac)
 	}
 
-	c.root.Curtail(active)
 	c.curtailed = &active
-	// TODO make ProductionNominalMax configurable (Site kWp)
-	// c.root.SetMaxPower(c.maxPower*frac)
+	// TODO populate MaxProductionPower once a Site kWp setting exists
 
-	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.root.GetChargePower(), c.maxPower*frac, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.site.GetGridPower(), c.maxPower*frac, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 

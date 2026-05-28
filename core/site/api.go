@@ -36,7 +36,6 @@ type API interface {
 
 	// circuits
 	GetCircuit() api.Circuit
-	SetCircuit(api.Circuit)
 
 	//
 	// battery
@@ -59,6 +58,7 @@ type API interface {
 	// power and energy
 	//
 
+	GetGridPower() float64
 	GetResidualPower() float64
 	SetResidualPower(float64) error
 

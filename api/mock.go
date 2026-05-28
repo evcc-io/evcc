@@ -856,58 +856,6 @@ func (m *MockCircuit) EXPECT() *MockCircuitMockRecorder {
 	return m.recorder
 }
 
-// Curtail mocks base method.
-func (m *MockCircuit) Curtail(arg0 bool) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Curtail", arg0)
-}
-
-// Curtail indicates an expected call of Curtail.
-func (mr *MockCircuitMockRecorder) Curtail(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Curtail", reflect.TypeOf((*MockCircuit)(nil).Curtail), arg0)
-}
-
-// Curtailed mocks base method.
-func (m *MockCircuit) Curtailed() *bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Curtailed")
-	ret0, _ := ret[0].(*bool)
-	return ret0
-}
-
-// Curtailed indicates an expected call of Curtailed.
-func (mr *MockCircuitMockRecorder) Curtailed() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Curtailed", reflect.TypeOf((*MockCircuit)(nil).Curtailed))
-}
-
-// Dim mocks base method.
-func (m *MockCircuit) Dim(arg0 bool) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Dim", arg0)
-}
-
-// Dim indicates an expected call of Dim.
-func (mr *MockCircuitMockRecorder) Dim(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dim", reflect.TypeOf((*MockCircuit)(nil).Dim), arg0)
-}
-
-// Dimmed mocks base method.
-func (m *MockCircuit) Dimmed() *bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Dimmed")
-	ret0, _ := ret[0].(*bool)
-	return ret0
-}
-
-// Dimmed indicates an expected call of Dimmed.
-func (mr *MockCircuitMockRecorder) Dimmed() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimmed", reflect.TypeOf((*MockCircuit)(nil).Dimmed))
-}
-
 // GetChargePower mocks base method.
 func (m *MockCircuit) GetChargePower() float64 {
 	m.ctrl.T.Helper()

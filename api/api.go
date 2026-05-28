@@ -277,14 +277,6 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
-
-	// EnWG §14a - reduce demand/consumption
-	Dim(bool)
-	Dimmed() *bool
-
-	// EEG §9 - reduce feed-in to the grid
-	Curtail(bool)
-	Curtailed() *bool
 }
 
 // HEMS exposes the runtime state of the home energy management system.
@@ -293,8 +285,8 @@ type Circuit interface {
 type HEMS interface {
 	Dimmed() *bool
 	Curtailed() *bool
-	MaxConsumptionPower() float64    // 0 = no limit
-	MaxProductionPower() *float64    // nil = no limit
+	MaxConsumptionPower() float64 // 0 = no limit
+	MaxProductionPower() *float64 // nil = no limit
 }
 
 // Redactor is an interface to redact sensitive data

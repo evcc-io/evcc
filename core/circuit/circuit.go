@@ -34,10 +34,8 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current   float64
-	power     float64
-	dimmed    *bool
-	curtailed *bool
+	current float64
+	power   float64
 
 	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
 
@@ -412,46 +410,4 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	}
 
 	return c.parent.ValidateCurrent(old, new)
-}
-
-func (c *Circuit) Dim(dim bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.dimmed = &dim
-}
-
-func (c *Circuit) Dimmed() *bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if c.dimmed != nil {
-		return c.dimmed
-	}
-
-	if c.parent == nil {
-		return nil
-	}
-
-	return c.parent.Dimmed()
-}
-
-func (c *Circuit) Curtail(curtail bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.curtailed = &curtail
-}
-
-func (c *Circuit) Curtailed() *bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if c.curtailed != nil {
-		return c.curtailed
-	}
-
-	if c.parent == nil {
-		return nil
-	}
-
-	return c.parent.Curtailed()
 }

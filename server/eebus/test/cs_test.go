@@ -9,7 +9,6 @@ import (
 	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/ship-go/cert"
 	"github.com/enbility/spine-go/model"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/hems/eebus"
 	hems "github.com/evcc-io/evcc/hems/eebus"
 	server "github.com/evcc-io/evcc/server/eebus"
@@ -50,10 +49,7 @@ func TestEEBus(t *testing.T) {
 	eventC := make(chan api.EventType, 1)
 	box.remoteEventC = eventC
 
-	gridcontrol, err := circuit.New(util.NewLogger("gridcontrol"), "gridcontrol", 0, 0, nil, time.Minute)
-	require.NoError(t, err)
-
-	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, gridcontrol, time.Second)
+	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
 	require.NoError(t, err, "hems")
 
 	go hems.Run()
