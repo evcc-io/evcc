@@ -1968,7 +1968,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			return
 		}
 
-		if dim := circuitDimmed(lp.circuit); dim != nil {
+		if dim := hemsDimmed(lp.hems); dim != nil {
 			if *dim != dimmed {
 				if err := dimmer.Dim(*dim); err != nil {
 					lp.log.ERROR.Printf("dim: %v", err)

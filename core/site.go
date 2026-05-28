@@ -956,13 +956,13 @@ func (site *Site) update(lp updater) {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
-			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+			if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
 
 		wg.Go(func() {
-			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+			if err := site.curtailPV(hemsCurtailed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
