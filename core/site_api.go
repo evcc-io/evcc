@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
@@ -187,11 +188,17 @@ func (site *Site) SetCircuit(circuit api.Circuit) {
 	site.circuit = circuit
 }
 
-// SetHEMS attaches the configured HEMS to the site
+// SetHEMS attaches the configured HEMS to the site, the root circuit and all loadpoints
 func (site *Site) SetHEMS(hems api.HEMS) {
 	site.Lock()
 	defer site.Unlock()
 	site.hems = hems
+
+	circuit.SetHEMS(hems)
+
+	for _, lp := range site.loadpoints {
+		lp.hems = hems
+	}
 }
 
 // GetPrioritySoc returns the PrioritySoc

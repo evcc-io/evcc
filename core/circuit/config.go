@@ -41,3 +41,16 @@ func Root() api.Circuit {
 	}
 	return nil
 }
+
+// SetHEMS attaches the HEMS instance to the root circuit so its
+// consumption limit can be enforced via GetMaxPower / ValidatePower.
+// Calling with a nil hems clears the attachment.
+func SetHEMS(hems api.HEMS) {
+	root, ok := Root().(*Circuit)
+	if !ok {
+		return
+	}
+	root.mu.Lock()
+	defer root.mu.Unlock()
+	root.hems = hems
+}

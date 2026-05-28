@@ -39,6 +39,8 @@ type Circuit struct {
 	dimmed    *bool
 	curtailed *bool
 
+	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
+
 	currentUpdated time.Time
 	powerUpdated   time.Time
 }
@@ -193,8 +195,13 @@ func (c *Circuit) HasMeter() bool {
 	return c.meter != nil
 }
 
-// GetMaxPower returns the max power setting
+// GetMaxPower returns the max power setting, clamped by the HEMS consumption
+// limit when one is registered on the root circuit.
 func (c *Circuit) GetMaxPower() float64 {
+	return c.applyHEMSLimit(c.rawMaxPower())
+}
+
+func (c *Circuit) rawMaxPower() float64 {
 	if c.getMaxPower != nil {
 		res, err := c.getMaxPower()
 		if err == nil {
@@ -206,6 +213,22 @@ func (c *Circuit) GetMaxPower() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.maxPower
+}
+
+func (c *Circuit) applyHEMSLimit(maxPower float64) float64 {
+	if c.hems == nil {
+		return maxPower
+	}
+
+	hemsLimit := c.hems.MaxConsumptionPower()
+	if hemsLimit <= 0 {
+		return maxPower
+	}
+
+	if maxPower == 0 || hemsLimit < maxPower {
+		return hemsLimit
+	}
+	return maxPower
 }
 
 // SetMaxPower sets the max power
