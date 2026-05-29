@@ -98,15 +98,6 @@ func requireAdminPassword(w http.ResponseWriter, authObject auth.Auth, password 
 	return false
 }
 
-// requireAdminPasswordOrApiKey is requireAdminPassword that also accepts a valid API-key
-// Bearer header (for automation-friendly endpoints: backup, restore, reset).
-func requireAdminPasswordOrApiKey(w http.ResponseWriter, r *http.Request, authObject auth.Auth, password string) bool {
-	if key := apiKeyFromRequest(r); key != "" && authObject.ValidateApiKey(key) {
-		return true
-	}
-	return requireAdminPassword(w, authObject, password)
-}
-
 // authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
 func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -238,5 +229,44 @@ func regenerateApiKeyHandler(authObject auth.Auth) http.HandlerFunc {
 		}
 
 		jsonWrite(w, map[string]string{"key": key})
+	}
+}
+
+// ensureDbAuth guards /db/ endpoints: API key Bearer passes directly;
+// session users must also supply the admin password in X-Admin-Password header.
+func ensureDbAuth(authObject auth.Auth) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if authObject.GetAuthMode() == auth.Disabled {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			if authObject.GetAuthMode() == auth.Locked {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			if key := apiKeyFromRequest(r); key != "" {
+				if authObject.ValidateApiKey(key) {
+					next.ServeHTTP(w, r)
+					return
+				}
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			if !authObject.ValidateJwtToken(jwtFromCookie(r)) {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			if !authObject.IsAdminPasswordValid(r.Header.Get("X-Admin-Password")) {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
 	}
 }

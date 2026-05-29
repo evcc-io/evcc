@@ -20,7 +20,6 @@ import (
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
@@ -316,17 +315,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, log)
 }
 
-func getBackup(authObject auth.Auth) http.HandlerFunc {
+func getBackup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil && !errors.Is(err, io.EOF) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if !requireAdminPasswordOrApiKey(w, r, authObject, req.Password) {
-			return
-		}
-
 		if err := settings.Persist(); err != nil {
 			http.Error(w, "Synching DB failed", http.StatusInternalServerError)
 			return
@@ -376,16 +366,11 @@ func createLocalDatabaseBackup() error {
 	return nil
 }
 
-func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+func restoreDatabase(shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Parse multipart form
 		err := r.ParseMultipartForm(32 << 20) // 32MB max memory
 		if err != nil {
 			http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if !requireAdminPasswordOrApiKey(w, r, authObject, r.FormValue("password")) {
 			return
 		}
 
@@ -428,18 +413,14 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	}
 }
 
-func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+func resetDatabase(shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
-			Password string `json:"password"`
-			Sessions bool   `json:"sessions"`
-			Settings bool   `json:"settings"`
+			Sessions bool `json:"sessions"`
+			Settings bool `json:"settings"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-		if !requireAdminPasswordOrApiKey(w, r, authObject, req.Password) {
 			return
 		}
 

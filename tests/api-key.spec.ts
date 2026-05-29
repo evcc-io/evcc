@@ -111,10 +111,9 @@ test("api key authenticates protected endpoints and bypasses backup pw", async (
   });
   expect(ok.status()).toBe(200);
 
-  // backup with empty body, bypass via API key
-  const backup = await request.post("/api/system/backup", {
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    data: {},
+  // backup without X-Admin-Password, bypass via API key
+  const backup = await request.get("/api/db/backup", {
+    headers: { Authorization: `Bearer ${key}` },
   });
   expect(backup.status()).toBe(200);
   expect(backup.headers()["content-disposition"] || "").toContain("evcc-backup-");

@@ -381,18 +381,29 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		api := api.PathPrefix("/system").Subrouter()
 		api.Use(ensureAuthHandler(auth))
 
-		// system api
 		routes := map[string]route{
 			"log":        {"GET", "/log", logHandler},
 			"logareas":   {"GET", "/log/areas", logAreasHandler},
 			"clearcache": {"DELETE", "/cache", clearCacheHandler},
-			"backup":     {"POST", "/backup", getBackup(auth)},
-			"restore":    {"POST", "/restore", restoreDatabase(auth, shutdown)},
-			"reset":      {"POST", "/reset", resetDatabase(auth, shutdown)},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 				shutdown()
 				w.WriteHeader(http.StatusNoContent)
 			}},
+		}
+
+		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+	}
+
+	{ // api/db — destructive DB operations; require session+X-Admin-Password or API key
+		api := api.PathPrefix("/db").Subrouter()
+		api.Use(ensureDbAuth(auth))
+
+		routes := map[string]route{
+			"backup":  {"GET", "/backup", getBackup()},
+			"restore": {"POST", "/restore", restoreDatabase(shutdown)},
+			"reset":   {"POST", "/reset", resetDatabase(shutdown)},
 		}
 
 		for _, r := range routes {
