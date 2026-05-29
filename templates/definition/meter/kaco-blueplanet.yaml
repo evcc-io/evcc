@@ -5,9 +5,6 @@ params:
     required: true
   - name: serial
     required: true
-    description:
-      en: The serial number of the inverter to query
-      de: Die Seriennummer des Kaco-Wechselrichters
     example: 8.0NX312001234
 render: |
   type: custom
