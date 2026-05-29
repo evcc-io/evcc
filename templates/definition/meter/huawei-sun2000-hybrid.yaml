@@ -41,16 +41,7 @@ params:
     service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
   - name: storageunit
   - name: forceaccharging
-    default: false
-    advanced: true
-    type: bool
-    usages: ["battery"]
-    description:
-      en: Inverter cascade
-      de: Wechselrichterkaskade
-    help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
+    deprecated: true
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
@@ -196,7 +187,6 @@ render: |
       source: convert
       convert: bool2int
       set:
-        {{- if eq .forceaccharging "true" }}
         source: const
         value: 1 # Enable
         set:
@@ -206,9 +196,6 @@ render: |
             address: 47087 # Charge from grid
             type: writesingle
             encoding: uint16
-        {{- else }}
-        source: noop
-        {{- end }}
   dimmed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -243,17 +230,6 @@ render: |
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 2 # hold
             set:
               source: sequence
@@ -276,17 +252,6 @@ render: |
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 3 # charge
             set:
               source: sequence
