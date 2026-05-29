@@ -515,6 +515,62 @@ func TestScalePhasesNotAvailable(t *testing.T) {
 	require.Equal(t, 1, lp.GetPhases())
 }
 
+// TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
+// (the absolute minimum) when phase switching is available, so feed-in priority
+// in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
+func TestMinChargingPhaseScaling(t *testing.T) {
+	Voltage = 230
+
+	tc := []struct {
+		desc             string
+		phasesConfigured int
+		phases           int
+		expectedPhases   int
+	}{
+		{desc: "auto, 3p active scales down to 1p", phasesConfigured: 0, phases: 3, expectedPhases: 1},
+		{desc: "auto, already 1p", phasesConfigured: 0, phases: 1, expectedPhases: 1},
+		{desc: "fixed 3p cannot scale down", phasesConfigured: 3, phases: 3, expectedPhases: 3},
+		{desc: "fixed 1p stays 1p", phasesConfigured: 1, phases: 1, expectedPhases: 1},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.minCurrent = 6
+			lp.maxCurrent = 16
+			lp.phasesConfigured = tc.phasesConfigured
+			lp.phases = tc.phases
+			lp.offeredCurrent = 0 // ensure MaxCurrent is called
+			lp.wakeUpTimer = NewTimer()
+
+			plainCharger := api.NewMockCharger(ctrl)
+			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+			lp.charger = struct {
+				*api.MockCharger
+				*api.MockPhaseSwitcher
+			}{plainCharger, phaseCharger}
+
+			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+
+			if tc.phases != tc.expectedPhases {
+				phaseCharger.EXPECT().Phases1p3p(tc.expectedPhases).Return(nil)
+			}
+
+			// minimum current is offered at the scaled phase count
+			plainCharger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
+
+			err := lp.minCharging()
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+
+			ctrl.Finish()
+		})
+	}
+}
+
 func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 	Voltage = 230
 
