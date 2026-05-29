@@ -39,9 +39,16 @@
     "legendTopAutostart": "Startar automatiskt",
     "legendTopName": "Fordonsladdning med batteristöd",
     "legendTopSubline": "när hemmabatteriet är över {soc}.",
+    "legendTopSublineAbove": "när över {soc}",
+    "legendTopSublineDisabled": "är {soc}.",
+    "legendTopSublineDisabledState": "avaktiverad",
     "modalTitle": "Hemmabatteri",
     "noBattery": "Inga batterier konfigurerade.",
     "usageTab": "Batterianvändning"
+  },
+  "colors": {
+    "auto": "Bil",
+    "hex": "Hex-färg"
   },
   "config": {
     "aux": {
@@ -228,6 +235,7 @@
       "authPerformHint": "Kommer att öppnas i en ny flik. Kom tillbaka hit för att fortsätta.",
       "authPrepare": "Förbered anslutning",
       "cancel": "Avbryt",
+      "change": "Ändra",
       "clear": "Rensa",
       "close": "Stäng",
       "confirmSave": "Det finns ej sparade ändringar. Spara nu?",
@@ -236,6 +244,7 @@
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
+      "dismiss": "Avvisa",
       "docsLink": "Se dokumentation.",
       "dragHandle": "Senarelägga",
       "dragItem": "Går att senarelägga: {title}",
@@ -428,6 +437,13 @@
       "vehicles": "Mina fordon",
       "welcomeBannerText": "Börja med att skapa minst en **laddare**, **värmare**, **nät**, **solcell**, **batteri** eller **extra mätare**. Om du bara vill testa, välj en **demoenhet**.",
       "welcomeBannerTitle": "Låt oss konfigurera ditt system!"
+    },
+    "mcp": {
+      "description": "Exponerar en Model Context Protocol-server, vilket gör det möjligt för AI-assistenter som Claude att läsa status på ditt system och styra laddning.",
+      "exampleLabel": "Exempelvis: Claude CLI",
+      "restartHint": "Blir tillgänglig efter omstart.",
+      "title": "MCP server",
+      "url": "MCP slutpunkt"
     },
     "messaging": {
       "addMessenger": "Lägg till tjänst",
@@ -696,10 +712,14 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licensnyckel",
+      "activationKeyHint": "Skickas med epost. Finns här {url}.",
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
       "descriptionToken": "Sponsorer hittar sin token på {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "email": "Epost",
+      "emailHint": "Epost du använt för {url}",
       "enterYourToken": "Ange sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
@@ -812,6 +832,7 @@
         "allMonths": "Alla månader",
         "allTimes": "Alla tider",
         "cancel": "Avbryt",
+        "charge": "Ladda",
         "days": "Dagar",
         "edit": "Ändra",
         "hours": "Timmar",
@@ -849,32 +870,13 @@
       "validate": "validerar"
     },
     "vehicle": {
-      "cancel": "Avbryt",
-      "chargingSettings": "Laddinställningar",
-      "defaultMode": "Standardläge",
-      "defaultModeHelp": "Laddläge när fordonet ansluts.",
-      "delete": "Radera",
       "generic": "Andra integrationer",
-      "identifiers": "RFID-identifiering",
-      "identifiersHelp": "Lista på RFID-strängar för att identifiera fordonet. Ett inlägg per rad. Aktuell identifierare hittas på respektive laddare på översiktssidan.",
-      "maximumCurrent": "Maximal ström",
-      "maximumCurrentHelp": "Måste vara högre än minimi-ström.",
-      "maximumPhases": "Maximalt antal faser",
-      "maximumPhasesHelp": "Hur många faser kan fordonet laddas med? Används för att räkna ut minsta solöverskott och tidsåtgång.",
-      "maximumPower": "Maximal laddeffekt",
-      "maximumPowerHelp": "Maximal effekt som fordonet kan ta emot",
-      "minimumCurrent": "Minimi ström",
-      "minimumCurrentHelp": "Ställ enbart under 6A om du är medveten om konsekvenserna.",
       "online": "Fordon med online API",
       "primary": "Generisk integration",
-      "priority": "Prioritet",
-      "priorityHelp": "Högre prioritet betyder att detta fordon får förtur till solöverskott.",
-      "save": "Spara",
       "scooter": "Scooter",
       "template": "Tillverkare",
       "titleAdd": "Lägg till fordon",
-      "titleEdit": "Ändra fordon",
-      "validateSave": "Bekräfta & spara"
+      "titleEdit": "Ändra fordon"
     }
   },
   "footer": {
@@ -1162,17 +1164,24 @@
       "update": "Verkställ",
       "weekdays": "Dagar"
     },
+    "continuousStatus": {
+      "charging": "Boost aktiverad.",
+      "connected": "Normal drift.",
+      "waitForVehicle": "Boost önskad…"
+    },
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteri laddas",
       "batteryDischarge": "Batteri laddas ur",
       "batteryForecastEmpty": "tom {time}",
       "batteryForecastFull": "full {time}",
+      "batteryForecastNextHigh": "Nästa höjdpunkt",
+      "batteryForecastNextLow": "Nästa lågpunkt",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
       "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} av {total} ({soc})",
-      "forecast": "Prognos: ",
+      "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",
@@ -1193,6 +1202,30 @@
     "hemsWarning": {
       "description": "Reducerad laddning för att inte överskrida {limit}.",
       "title": "Extern begränsning:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "laddad",
+          "returnEnergy": "urladdad"
+        },
+        "grid": {
+          "energy": "importerad",
+          "returnEnergy": "exporterad"
+        }
+      },
+      "downloadCsv": "Ladda ner CSV",
+      "empty": "Ingen data för aktuell tidsperiod tillgänglig.",
+      "group": {
+        "battery": "Batteri",
+        "forecast": "Prognos",
+        "grid": "Nät",
+        "loadpoint": "Laddning & uppvärmning",
+        "meter": "Konsumtion",
+        "pv": "Produktion"
+      },
+      "otherConsumers": "Andra",
+      "title": "Historik"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -1321,7 +1354,7 @@
       "temp": "Temp.",
       "tempLimit": "Temp-gräns",
       "unknown": "Gästfordon",
-      "vehicleSoc": "Laddning"
+      "vehicleSoc": "Laddnivå"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Väntar på godkännande.",
@@ -1462,8 +1495,10 @@
     },
     "loadpoint": "Laddplats",
     "noData": "Inga laddningar denna månad.",
+    "odometer": "Mätarställning",
     "overview": "Överblick",
     "period": {
+      "day": "Dag",
       "month": "Månad",
       "total": "Total",
       "year": "År"

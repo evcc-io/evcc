@@ -162,6 +162,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"energyhistory":           {"GET", "/history/energy", energyHistoryHandler},
 		"optimize":                {"POST", "/optimize", getHandler(site.Optimize)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
+		"devicecolors":            {"PUT", "/devicecolors", updateDeviceColor(site)},
 	}
 
 	for _, r := range routes {

@@ -12,6 +12,7 @@ import (
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ghostone"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -26,8 +27,9 @@ func newTestGhostEEBusREST(t *testing.T) *GhostEEBus {
 	t.Helper()
 	return &GhostEEBus{
 		EEBus: &EEBus{
-			log: util.NewLogger("test"),
-			cem: &eebus.CustomerEnergyManagement{},
+			Caps: implement.New(),
+			log:  util.NewLogger("test"),
+			cem:  &eebus.CustomerEnergyManagement{},
 		},
 		Helper: request.NewHelper(util.NewLogger("test")),
 		uri:    "https://wallbox.local/api/v2",
@@ -42,6 +44,7 @@ func newTestGhostEEBusWithEEBus(t *testing.T) (*GhostEEBus, *mocks.CemEVCCInterf
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 
 	eb := &EEBus{
+		Caps: implement.New(),
 		cem: &eebus.CustomerEnergyManagement{
 			EvCC: evccMock,
 		},
@@ -285,13 +288,14 @@ func TestGhostEEBus_Decorator(t *testing.T) {
 	wb := newTestGhostEEBusREST(t)
 
 	// with phase switching
-	decorated := decorateGhostEEBus(wb, nil, nil, nil, wb.phases1p3p, wb.getPhases)
-	assert.True(t, api.HasCap[api.PhaseSwitcher](decorated), "expected PhaseSwitcher")
-	assert.True(t, api.HasCap[api.PhaseGetter](decorated), "expected PhaseGetter")
+	implement.May(wb, implement.PhaseSwitcher(wb.phases1p3p))
+	implement.May(wb, implement.PhaseGetter(wb.getPhases))
+	assert.True(t, api.HasCap[api.PhaseSwitcher](wb), "expected PhaseSwitcher")
+	assert.True(t, api.HasCap[api.PhaseGetter](wb), "expected PhaseGetter")
 
-	// without phase switching
-	decorated = decorateGhostEEBus(wb, nil, nil, nil, nil, nil)
-	assert.False(t, api.HasCap[api.PhaseSwitcher](decorated), "unexpected PhaseSwitcher")
+	// without phase switching — capabilities not registered, so expect false
+	wb2 := newTestGhostEEBusREST(t)
+	assert.False(t, api.HasCap[api.PhaseSwitcher](wb2), "unexpected PhaseSwitcher")
 }
 
 func TestGhostEEBus_Config(t *testing.T) {

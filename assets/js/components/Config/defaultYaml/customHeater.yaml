@@ -55,3 +55,6 @@ icon: heater # icon for UI purpose only
 #maxcurrentmillis: # set maximum heating current in A with decimal precision
 #  source: js
 #  script: console.log(maxcurrentmillis);
+#finishtime: # estimated finish time (RFC3339 timestamp, duration string, Unix timestamp, or seconds remaining)
+#  source: const
+#  value: "1h30m"

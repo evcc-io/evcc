@@ -3,9 +3,23 @@ products:
   - brand: Nissan
     description:
       generic: Ariya
+  - brand: Nissan
+    description:
+      generic: Micra
 params:
   - preset: vehicle-base
+  - name: expiry
+    description:
+      de: Ablauf
+      en: Expiry
+    help:
+      de: Maximales Alter der Daten vor erneuter Abfrage
+      en: Maximum data age before refresh
+    advanced: true
+    type: duration
+    example: 5m
 render: |
   type: nissan
   version: v2
   {{ include "vehicle-base" . }}
+  expiry: {{ .expiry }}

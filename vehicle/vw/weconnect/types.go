@@ -1,6 +1,7 @@
 package weconnect
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -322,9 +323,43 @@ type EngineRangeStatus struct {
 
 // ParkingPosition is the /parkingposition api response
 type ParkingPosition struct {
-	Latitude             float64   `json:"latitude"`
-	Longitude            float64   `json:"longitude"`
-	CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+	Latitude             float64
+	Longitude            float64
+	CarCapturedTimestamp Timestamp
+}
+
+// UnmarshalJSON accepts both the latitude/longitude and the shorter lat/lon
+// key variants the parkingposition endpoint may return.
+func (p *ParkingPosition) UnmarshalJSON(data []byte) error {
+	var res struct {
+		Latitude             *float64  `json:"latitude"`
+		Longitude            *float64  `json:"longitude"`
+		Lat                  *float64  `json:"lat"`
+		Lon                  *float64  `json:"lon"`
+		CarCapturedTimestamp Timestamp `json:"carCapturedTimestamp"`
+	}
+
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+
+	p.CarCapturedTimestamp = res.CarCapturedTimestamp
+
+	switch {
+	case res.Latitude != nil:
+		p.Latitude = *res.Latitude
+	case res.Lat != nil:
+		p.Latitude = *res.Lat
+	}
+
+	switch {
+	case res.Longitude != nil:
+		p.Longitude = *res.Longitude
+	case res.Lon != nil:
+		p.Longitude = *res.Lon
+	}
+
+	return nil
 }
 
 // Timestamp implements JSON unmarshal

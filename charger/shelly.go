@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/shelly"
 	"github.com/evcc-io/evcc/util"
 )
 
 // Shelly charger implementation
 type Shelly struct {
+	implement.Caps
 	conn *shelly.Connection
 	*switchSocket
 }
@@ -18,8 +20,6 @@ type Shelly struct {
 func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
-
-//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Charger -t api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
@@ -44,14 +44,13 @@ func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	var vol, cur, pow func() (float64, float64, float64, error)
 	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
-		vol = phases.Voltages
-		cur = phases.Currents
-		pow = phases.Powers
+		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
+		implement.Has(c, implement.PhaseCurrents(phases.Currents))
+		implement.Has(c, implement.PhasePowers(phases.Powers))
 	}
 
-	return decorateShelly(c, vol, cur, pow), nil
+	return c, nil
 }
 
 // NewShelly creates Shelly charger
@@ -62,6 +61,7 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 	}
 
 	c := &Shelly{
+		Caps: implement.New(),
 		conn: conn,
 	}
 

@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -47,6 +48,7 @@ type sempHandler struct {
 
 // BenderCC charger implementation
 type BenderCC struct {
+	implement.Caps
 	conn    *modbus.Connection
 	current uint16
 	regCurr uint16
@@ -111,8 +113,6 @@ func NewBenderCCFromConfig(ctx context.Context, other map[string]any) (api.Charg
 }
 
 // NewBenderCC creates BenderCC charger
-//
-//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t api.Meter,api.PhaseCurrents,api.PhaseVoltages,api.MeterEnergy,api.Battery,api.Identifier,api.ChargerEx,api.PhaseSwitcher,api.PhaseGetter
 func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
@@ -127,6 +127,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	conn.Logger(log.TRACE)
 
 	wb := &BenderCC{
+		Caps:    implement.New(),
 		conn:    conn,
 		current: 6, // assume min current
 		regCurr: bendRegHemsCurrentLimit,
@@ -138,18 +139,6 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		wb.legacy = true
 	}
 
-	var (
-		currentPower     func() (float64, error)
-		currents         func() (float64, float64, float64, error)
-		voltages         func() (float64, float64, float64, error)
-		totalEnergy      func() (float64, error)
-		soc              func() (float64, error)
-		identify         func() (string, error)
-		maxCurrentMillis func(float64) error
-		phases1p3p       func(int) error
-		getPhases        func() (int, error)
-	)
-
 	// check presence of metering
 	reg := uint16(bendRegActivePower)
 	if wb.legacy {
@@ -157,41 +146,39 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
-		currentPower = wb.currentPower
-		currents = wb.currents
-		totalEnergy = wb.totalEnergy
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 
 		// check presence of "ocpp meter"
 		if b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
-			voltages = wb.voltages
+			implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 		}
 
 		if !wb.legacy {
 			if _, err := wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1); err == nil {
-				soc = wb.soc
+				implement.Has(wb, implement.Battery(wb.soc))
 			}
 		}
 	}
 
 	// check feature mA
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsCurrentLimit10, 1); err == nil {
-		maxCurrentMillis = wb.maxCurrentMillis
+		implement.Has(wb, implement.ChargerEx(wb.maxCurrentMillis))
 		wb.regCurr = bendRegHemsCurrentLimit10
 	}
 
-	// check feature modbus power control/1p3p fpr Mennekes 4you / 4business chargers
+	// check feature modbus power control/1p3p for Mennekes 4you / 4business chargers
 	if _, err := wb.conn.ReadHoldingRegisters(bendRegHemsPowerLimit, 1); err == nil {
-		phases1p3p = wb.phases1p3pMennekes
-		getPhases = wb.getPhasesMennekes
-	}
-
-	// check feature semp phase switching
-	if phases1p3p == nil {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3pMennekes))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhasesMennekes))
+	} else {
+		// check feature semp phase switching
 		if wb.supportsSEMPPhaseSwitching(uri, cache) {
 			// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err == nil {
-				phases1p3p = wb.phases1p3pSEMP
-				getPhases = wb.getPhases
+				implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3pSEMP))
+				implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 				// start heartbeat to keep connection alive
 				go wb.heartbeat(ctx)
 			} else {
@@ -202,10 +189,10 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 
 	// check feature rfid
 	if _, err := wb.identify(); err == nil {
-		identify = wb.identify
+		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
+	return wb, nil
 }
 
 // heartbeat ensures that SEMP device control updates are sent about once per minute

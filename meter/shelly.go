@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/shelly"
 	"github.com/evcc-io/evcc/util"
 )
 
 // Shelly meter considering usage
 type Shelly struct {
+	implement.Caps
 	shelly.Connection
 	usage string
 }
@@ -20,8 +22,6 @@ type Shelly struct {
 func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
-
-//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Meter -t api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
@@ -45,14 +45,13 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	var vol, cur, pow func() (float64, float64, float64, error)
 	if phases, ok := c.Connection.Generation.(shelly.Phases); ok {
-		vol = phases.Voltages
-		cur = phases.Currents
-		pow = phases.Powers
+		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
+		implement.Has(c, implement.PhaseCurrents(phases.Currents))
+		implement.Has(c, implement.PhasePowers(phases.Powers))
 	}
 
-	return decorateShelly(c, vol, cur, pow), nil
+	return c, nil
 }
 
 // NewShelly creates Shelly meter
@@ -62,6 +61,7 @@ func NewShelly(uri, user, password, usage string, channel int, cache time.Durati
 		return nil, err
 	}
 	c := &Shelly{
+		Caps:       implement.New(),
 		Connection: *conn,
 		usage:      usage,
 	}

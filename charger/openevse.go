@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openevse"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -18,6 +19,7 @@ import (
 // OpenEVSE charger implementation
 type OpenEVSE struct {
 	*request.Helper
+	implement.Caps
 	uri     string
 	statusG util.Cacheable[openevse.Status]
 	current int
@@ -27,8 +29,6 @@ type OpenEVSE struct {
 func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
-
-//go:generate go tool decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t api.PhaseSwitcher
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
@@ -59,6 +59,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 
 	c := &OpenEVSE{
 		Helper: request.NewHelper(log),
+		Caps:   implement.New(),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 
@@ -75,9 +76,8 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 		return res, err
 	}, cache)
 
-	var phases1p3p func(int) error
 	if err := c.hasPhaseSwitchCapabilities(); err == nil {
-		phases1p3p = c.phases1p3p
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 
 		// disable EVSE's own 1/3-phase auto-switching
 		if err := c.rapiCommand("$S8 0"); err != nil {
@@ -85,7 +85,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 		}
 	}
 
-	return decorateOpenEVSE(c, phases1p3p), nil
+	return c, nil
 }
 
 func (c *OpenEVSE) setOverride() error {
