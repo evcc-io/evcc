@@ -4,7 +4,7 @@
 			<PolarArea :data="chartData" :options="options" />
 		</div>
 		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
-			<LegendList :legends="legends" grid />
+			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
@@ -18,6 +18,7 @@ import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 import { GROUPS, type Session } from "./types.ts";
+import type { DeviceColors } from "@/types/evcc";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
@@ -32,6 +33,7 @@ export default defineComponent({
 			default: GROUPS.LOADPOINT,
 		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		chartData() {
@@ -82,6 +84,7 @@ export default defineComponent({
 					label: label,
 					color: dataset.borderColor[index],
 					value: this.fmtPercentage(dataValue, 1),
+					id: label || undefined,
 				};
 			});
 		},
