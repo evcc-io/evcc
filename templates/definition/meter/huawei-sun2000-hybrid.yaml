@@ -5,7 +5,7 @@ products:
     description:
       de: SUN2000 Hybrid-Wechselrichter
       en: SUN2000 Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "dim"]
 requirements:
   description:
     de: |
@@ -177,6 +177,46 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.1
+  dim:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Disable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        {{- if eq .forceaccharging "true" }}
+        source: const
+        value: 1 # Enable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+        {{- else }}
+        source: sleep
+        duration: 0s
+        {{- end }}
+  dimmed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 47087 # Charge from grid
+      type: holding
+      decode: uint16
   batterymode:
     source: sequence
     set:
