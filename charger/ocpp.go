@@ -29,7 +29,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ocpp"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -40,17 +39,14 @@ import (
 // OCPP charger implementation
 type OCPP struct {
 	implement.Caps
-	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
 	phases  int
 	enabled bool
 	current float64
 
-	stackLevelZero       bool
-	profileKindRelative  bool
-	noChangeAvailability bool
-	lp                   loadpoint.API
+	stackLevelZero      bool
+	profileKindRelative bool
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -182,13 +178,11 @@ func NewOCPP(ctx context.Context,
 	}
 
 	c := &OCPP{
-		Caps:                 implement.New(),
-		log:                  log,
-		cp:                   cp,
-		conn:                 conn,
-		stackLevelZero:       stackLevelZero,
-		profileKindRelative:  profileKindRelative,
-		noChangeAvailability: noChangeAvailability,
+		Caps:                implement.New(),
+		cp:                  cp,
+		conn:                conn,
+		stackLevelZero:      stackLevelZero,
+		profileKindRelative: profileKindRelative,
 	}
 
 	if cp.HasRemoteTriggerFeature {
@@ -441,11 +435,4 @@ func (c *OCPP) Diagnose() {
 			fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
 		}
 	}
-}
-
-var _ loadpoint.Controller = (*OCPP)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (c *OCPP) LoadpointControl(lp loadpoint.API) {
-	c.lp = lp
 }
