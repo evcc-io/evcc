@@ -37,14 +37,14 @@ func (m *Accumulator) Updated() time.Time {
 
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
-	fmt.Fprintf(b, "Accumulated: %.3fkWh energy, %.3fkWh return, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
+	fmt.Fprintf(b, "Accumulated: %.3fkWh energy, %.3fkWh return energy, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
 	if m.energyMeter != nil || m.returnEnergyMeter != nil {
-		fmt.Fprintf(b, " meter:")
+		fmt.Fprintf(b, " energy total:")
 		if m.energyMeter != nil {
 			fmt.Fprintf(b, " %.3fkWh", *m.energyMeter)
 		}
 		if m.returnEnergyMeter != nil {
-			fmt.Fprintf(b, " %.3fkWh return", *m.returnEnergyMeter)
+			fmt.Fprintf(b, " %.3fkWh return energy", *m.returnEnergyMeter)
 		}
 	}
 	return b.String()
