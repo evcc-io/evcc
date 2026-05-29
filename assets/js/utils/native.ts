@@ -15,7 +15,7 @@ export function hasAppCapability(capability: string): boolean {
 
 type AppMessage =
   | { type: "online" | "offline" | "settings" }
-  | { type: "download"; url: string; method?: string; body?: unknown };
+  | { type: "download"; url: string; headers?: Record<string, string> };
 
 export function sendToApp(data: AppMessage) {
   window.ReactNativeWebView?.postMessage(JSON.stringify(data));
@@ -27,9 +27,9 @@ export function handleDownloadClick(event: Event, url: string) {
   }
 }
 
-export function dispatchDownload(url: string, method?: string, body?: unknown): boolean {
+export function dispatchDownload(url: string, headers?: Record<string, string>): boolean {
   if (!hasAppCapability("download")) return false;
   const absolute = new URL(url, window.location.href).toString();
-  sendToApp({ type: "download", url: absolute, method, body });
+  sendToApp({ type: "download", url: absolute, headers });
   return true;
 }

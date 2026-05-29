@@ -246,6 +246,98 @@ call setResidualPower {
 }
 ```
 
+## downloadBackup
+
+Downloads the SQLite database as a backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+
+**Example call:**
+
+```json
+call downloadBackup {
+  "X-Admin-Password": "example"
+}
+```
+
+## resetDatabase
+
+Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call resetDatabase {
+  "X-Admin-Password": "example",
+  "requestBody": "..."
+}
+```
+
+## restoreBackup
+
+Restores the database from a previously downloaded backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful restore.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+
+**Example call:**
+
+```json
+call restoreBackup {
+  "X-Admin-Password": "example"
+}
+```
+
+## getEnergyHistory
+
+Returns aggregated energy history data. Aggregate granularity defaults to 15 minutes. Supports CSV export.
+
+**Tags:** experimental
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| aggregate | string | Aggregation interval. Examples: 15m, 1h, day, month |
+| format | string | Response format |
+| from | string | Start time (RFC3339) |
+| grouped | boolean | Group results by loadpoint |
+| lang | string | Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header. |
+| to | string | End time (RFC3339) |
+
+**Example call:**
+
+```json
+call getEnergyHistory {
+  "aggregate": "example",
+  "format": "example",
+  "from": "example",
+  "grouped": true,
+  "lang": "example",
+  "to": "example"
+}
+```
+
 ## getState
 
 Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.

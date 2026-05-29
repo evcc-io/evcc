@@ -298,6 +298,10 @@ export default defineComponent({
 		},
 		async downloadBackup() {
 			const headers = { "X-Admin-Password": this.password };
+			if (dispatchDownload("/api/db/backup", headers)) {
+				this.closeConfirmModal();
+				return;
+			}
 			const res = await this.call(
 				api.get("/db/backup", { headers, responseType: "blob", validateStatus })
 			);
