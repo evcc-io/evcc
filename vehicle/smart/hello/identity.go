@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -15,40 +17,85 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// savedState holds the identity data persisted across evcc restarts.
+type savedState struct {
+	Token    oauth2.Token `json:"token"`
+	UserID   string       `json:"userId"`
+	DeviceID string       `json:"deviceId"`
+}
+
 type Identity struct {
 	*request.Helper
 	oauth2.TokenSource
+	log              *util.Logger
 	user, password   string
 	userID, deviceID string
+	subject          string
+	mu               sync.Mutex
 }
 
+// NewIdentity creates a Smart Hello identity with persistent token and device ID.
+// No instance singleton (unlike PSA) — deliberate Stufe-1 decision; single-vehicle
+// setups are not affected and the added complexity is deferred if ever needed.
 func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		user:     user,
 		password: password,
-		deviceID: lo.RandomString(16, lo.AlphanumericCharset),
+		subject:  "smart-hello." + user,
 	}
 
-	v.TokenSource = oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(v.refreshToken))
+	// Load persisted state (token, userID, deviceID).
+	var state savedState
+	_ = settings.Json(v.subject, &state)
 
-	_, err := v.Token()
+	// Set deviceID before any login — it is sent in request headers during login.
+	if state.DeviceID != "" {
+		v.deviceID = state.DeviceID
+	} else {
+		v.deviceID = lo.RandomString(16, lo.AlphanumericCharset)
+	}
+	v.userID = state.UserID
 
-	return v, err
+	var token *oauth2.Token
+	if state.Token.Valid() {
+		token = &state.Token
+	} else {
+		var err error
+		token, err = v.refreshToken(nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+	return v, nil
 }
 
-func (v *Identity) refreshToken() (*oauth2.Token, error) {
-	token, err := v.login()
+func (v *Identity) refreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	tok, err := v.login()
 	if err != nil {
 		return nil, err
 	}
 
-	appToken, userID, err := v.appToken(token)
+	appToken, userID, err := v.appToken(tok)
 	if err != nil {
 		return nil, err
 	}
 
 	v.userID = userID
+
+	if err := settings.SetJson(v.subject, savedState{
+		Token:    *appToken,
+		UserID:   userID,
+		DeviceID: v.deviceID,
+	}); err != nil {
+		v.log.WARN.Printf("save state: %v", err)
+	}
 
 	return appToken, nil
 }
