@@ -128,9 +128,25 @@ func (a *API) ChargeToggle(vin string, enable bool) error {
 	return err
 }
 
+// carTypeStatusPath maps car types that don't have their own status endpoint
+// to the one they share. B10 and B11 use the C10 status endpoint.
+var carTypeStatusPath = map[string]string{
+	"b10": "c10",
+	"b11": "c10",
+}
+
+// statusPathSegment returns the status endpoint segment for a car type.
+func statusPathSegment(carType string) string {
+	ct := strings.ToLower(carType)
+	if mapped, ok := carTypeStatusPath[ct]; ok {
+		return mapped
+	}
+	return ct
+}
+
 // Status fetches the current status for the given VIN and car type.
 func (a *API) Status(vin, carType string) (StatusData, error) {
-	path := "/carownerservice/oversea/vehicle/v1/status/get/" + strings.ToLower(carType)
+	path := "/carownerservice/oversea/vehicle/v1/status/get/" + statusPathSegment(carType)
 	reqBody := "vin=" + url.QueryEscape(vin)
 	body, err := a.do(path, vin, reqBody)
 	if err != nil {
