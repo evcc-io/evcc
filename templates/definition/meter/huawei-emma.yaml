@@ -116,7 +116,7 @@ render: |
     id: 0
     uri: {{ joinHostPort .host .port }}
     register:
-      address: 30344 # E-Total
+      address: 30348 # E-Total
       type: holding
       decode: uint32
     scale: 0.01
