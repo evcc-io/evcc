@@ -77,9 +77,14 @@ func (v *Provider) Range() (int64, error) {
 	}
 
 	rng, err := res.Payload.EvRangeWithAc.ValueInKilometers()
-	if err == nil || strings.TrimSpace(res.Payload.EvRangeWithAc.Unit) != "" {
-		return rng, err
+	if err == nil {
+		return rng, nil
 	}
 
-	return res.Payload.EvRange.ValueInKilometers()
+	fallback, fallbackErr := res.Payload.EvRange.ValueInKilometers()
+	if fallbackErr == nil {
+		return fallback, nil
+	}
+
+	return 0, err
 }

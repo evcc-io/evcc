@@ -35,4 +35,19 @@ func TestProviderRange(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 88, rng)
 	})
+
+	t.Run("falls back to range without ac when range with ac has empty unit", func(t *testing.T) {
+		p := &Provider{
+			status: func() (Status, error) {
+				var res Status
+				res.Payload.EvRange = EvRange{Unit: "km", Value: 88}
+				res.Payload.EvRangeWithAc = EvRange{Unit: " ", Value: 77}
+				return res, nil
+			},
+		}
+
+		rng, err := p.Range()
+		require.NoError(t, err)
+		require.EqualValues(t, 88, rng)
+	})
 }
