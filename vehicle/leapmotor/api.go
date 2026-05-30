@@ -94,3 +94,120 @@ func postAndParse[T any](client *http.Client, fullURL string, headers map[string
 	}
 	return parseEnvelope[T](b)
 }
+
+// signalToField maps the numeric signal IDs returned by C10/B10 (and other
+// signal-based models) to the named StatusData fields. T03 returns these
+// fields flat, so it bypasses this mapping. IDs from the verified APK table.
+const (
+	sigSoc              = "1204"
+	sigChargeState      = "1149"
+	sigChargeRemainTime = "1200"
+	sigBatteryCurrent   = "1178"
+	sigBatteryVoltage   = "1177"
+	sigExpectedMileage  = "3260"
+	sigSpeed            = "1319"
+	sigTotalMileage     = "1318"
+	sigAcSwitch         = "1938"
+	sigLatitude         = "3725"
+	sigLongitude        = "3724"
+	sigLatitudeAlt      = "2190"
+	sigLongitudeAlt     = "2191"
+)
+
+// parseStatusData decodes a status response. T03 returns flat fields; C10/B10
+// nest telemetry under "signal" (numeric IDs) and the charge limit under
+// config.3.percent. Flat fields take priority so T03 passes through unchanged.
+func parseStatusData(body []byte) (StatusData, error) {
+	raw, err := parseEnvelope[json.RawMessage](body)
+	if err != nil {
+		return StatusData{}, err
+	}
+
+	var sd StatusData
+	if err := json.Unmarshal(raw, &sd); err != nil {
+		return StatusData{}, err
+	}
+
+	var nested struct {
+		Signal map[string]json.Number `json:"signal"`
+		Config map[string]struct {
+			Percent *int `json:"percent"`
+		} `json:"config"`
+	}
+	if err := json.Unmarshal(raw, &nested); err != nil || nested.Signal == nil {
+		return sd, nil // flat (T03) response
+	}
+
+	sig := nested.Signal
+	setIfNil(&sd.Soc, sigInt(sig, sigSoc))
+	setIfNil(&sd.ChargeState, sigInt(sig, sigChargeState))
+	setIfNil(&sd.ChargeRemainTime, sigInt(sig, sigChargeRemainTime))
+	setIfNilF(&sd.BatteryCurrent, sigFloat(sig, sigBatteryCurrent))
+	setIfNilF(&sd.BatteryVoltage, sigFloat(sig, sigBatteryVoltage))
+	setIfNil(&sd.ExpectedMileage, sigInt(sig, sigExpectedMileage))
+	setIfNil(&sd.Speed, sigInt(sig, sigSpeed))
+	setIfNil(&sd.TotalMileage, sigInt(sig, sigTotalMileage))
+	if sd.AcSwitch == nil {
+		sd.AcSwitch = sigBool(sig, sigAcSwitch)
+	}
+	setIfNilF(&sd.Latitude, firstFloat(sig, sigLatitude, sigLatitudeAlt))
+	setIfNilF(&sd.Longitude, firstFloat(sig, sigLongitude, sigLongitudeAlt))
+
+	if sd.ChargeSocSetting == nil {
+		if c, ok := nested.Config["3"]; ok && c.Percent != nil {
+			sd.ChargeSocSetting = c.Percent
+		}
+	}
+
+	return sd, nil
+}
+
+func setIfNil(dst **int, v *int) {
+	if *dst == nil {
+		*dst = v
+	}
+}
+
+func setIfNilF(dst **float64, v *float64) {
+	if *dst == nil {
+		*dst = v
+	}
+}
+
+func sigInt(sig map[string]json.Number, id string) *int {
+	if n, ok := sig[id]; ok {
+		if f, err := n.Float64(); err == nil {
+			i := int(f)
+			return &i
+		}
+	}
+	return nil
+}
+
+func sigFloat(sig map[string]json.Number, id string) *float64 {
+	if n, ok := sig[id]; ok {
+		if f, err := n.Float64(); err == nil {
+			return &f
+		}
+	}
+	return nil
+}
+
+func sigBool(sig map[string]json.Number, id string) *bool {
+	if n, ok := sig[id]; ok {
+		if f, err := n.Float64(); err == nil {
+			b := f != 0
+			return &b
+		}
+	}
+	return nil
+}
+
+func firstFloat(sig map[string]json.Number, ids ...string) *float64 {
+	for _, id := range ids {
+		if v := sigFloat(sig, id); v != nil {
+			return v
+		}
+	}
+	return nil
+}

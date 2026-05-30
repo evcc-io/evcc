@@ -152,7 +152,7 @@ func (a *API) Status(vin, carType string) (StatusData, error) {
 	if err != nil {
 		return StatusData{}, err
 	}
-	return parseEnvelope[StatusData](body)
+	return parseStatusData(body)
 }
 
 // Provider implements the evcc vehicle interfaces using a cached status call.
