@@ -50,4 +50,20 @@ func TestProviderRange(t *testing.T) {
 		require.NoError(t, err)
 		require.EqualValues(t, 88, rng)
 	})
+
+	t.Run("returns fallback range error when both range values are unusable", func(t *testing.T) {
+		p := &Provider{
+			status: func() (Status, error) {
+				var res Status
+				res.Payload.EvRange = EvRange{Unit: "", Value: 88}
+				res.Payload.EvRangeWithAc = EvRange{Unit: "unsupported", Value: 77}
+				return res, nil
+			},
+		}
+
+		rng, err := p.Range()
+		require.Error(t, err)
+		require.Zero(t, rng)
+		require.EqualError(t, err, "unsupported unit type: ")
+	})
 }

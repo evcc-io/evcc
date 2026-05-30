@@ -86,5 +86,5 @@ func (v *Provider) Range() (int64, error) {
 		return fallback, nil
 	}
 
-	return 0, err
+	return 0, fallbackErr
 }
