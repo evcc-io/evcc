@@ -18,7 +18,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/vag/cariad"
 )
 
-const WellKnown = cariad.BaseURL + "/login/v1/idk/openid-configuration"
+const WellKnown = cariad.BaseURL + "/auth/v1/idk/oidc/openid-configuration"
 
 var Config = &oidc.ProviderConfig{
 	AuthURL:  "https://identity.vwgroup.io/oidc/v1/authorize",
