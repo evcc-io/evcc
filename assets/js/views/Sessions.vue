@@ -159,6 +159,7 @@
 						:href="csvLink"
 						download
 						data-testid="sessions-download"
+						@click="handleDownloadClick($event, csvLink)"
 					>
 						{{ csvLinkLabel }}
 					</a>
@@ -205,11 +206,13 @@ import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
 import CustomSelect from "../components/Helper/CustomSelect.vue";
-import colors, { resolveColors } from "../colors";
+import colors, { resolveColors, deviceColorMap } from "../colors";
+import type { DeviceColors } from "@/types/evcc";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
+import { handleDownloadClick } from "@/utils/native";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
@@ -503,8 +506,8 @@ export default defineComponent({
 			}
 			return this.csvHrefLink();
 		},
-		deviceColors() {
-			return store.state.deviceColors ?? {};
+		deviceColors(): DeviceColors {
+			return deviceColorMap(store.state.deviceColors);
 		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
@@ -670,6 +673,7 @@ export default defineComponent({
 		this.loadSessions();
 	},
 	methods: {
+		handleDownloadClick,
 		changePeriod(newPeriod: PERIODS) {
 			let month: number | undefined = this.month;
 			let year: number | undefined = this.year;

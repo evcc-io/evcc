@@ -57,7 +57,7 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 
 	// put battery into hold mode when charging is active and circuit dimmed
 	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
-	if fromToCharge && circuitDimmed(site.circuit) {
+	if dimmed := circuitDimmed(site.circuit); fromToCharge && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: circuit dimmed")
 		batteryMode = api.BatteryHold
 	}

@@ -106,12 +106,12 @@ export default defineComponent({
 	},
 	computed: {
 		palette(): string[] {
-			// de-interleave warm/cool palette into 3×6 grid (rows: light/mid/dark, cols: hue)
-			const grid: string[][] = Array.from({ length: 3 }, () => Array(6).fill(""));
+			// de-interleave warm/cool palette into 3×7 grid (rows: light/mid/dark, cols: hue)
+			const grid: string[][] = Array.from({ length: 3 }, () => Array(7).fill(""));
 			colors.palette.forEach((hex, i) => {
-				const row = Math.floor(i / 6);
-				const step = i % 6;
-				const col = Math.floor(step / 2) + (step % 2) * 3;
+				const row = Math.floor(i / 7);
+				const step = i % 7;
+				const col = step < 6 ? Math.floor(step / 2) + (step % 2) * 3 : 6;
 				grid[row][col] = hex;
 			});
 			return grid.flat();
@@ -240,8 +240,8 @@ export default defineComponent({
 }
 .swatch-grid {
 	display: grid;
-	grid-template-columns: repeat(6, 1fr);
-	gap: 0.5rem;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 0.4rem;
 }
 .swatch {
 	cursor: pointer;
