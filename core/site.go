@@ -524,7 +524,6 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
-
 	}
 
 	var wg sync.WaitGroup
