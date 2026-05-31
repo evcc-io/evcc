@@ -1106,6 +1106,39 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	}
 }
 
+// senseIntervalDivisor derives the fast sense cadence from the control interval.
+// Phase 1 has no dedicated config key; a fraction of the control interval keeps
+// sensing responsive while bounding charger/meter load.
+const senseIntervalDivisor = 10
+
+// senseInterval returns the fast sensing cadence derived from the control interval.
+func senseInterval(interval time.Duration) time.Duration {
+	if d := interval / senseIntervalDivisor; d >= time.Second {
+		return d
+	}
+	return time.Second
+}
+
+// senseLoop continuously polls all loadpoints in parallel for status and live
+// measurements, publishing them for snappy UI updates and triggering an
+// immediate control pass when a charger status change is detected. It runs
+// independently of the control loop so observability latency no longer scales
+// with the number of loadpoints.
+func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+			var wg sync.WaitGroup
+			for _, lp := range site.loadpoints {
+				wg.Go(lp.Sense)
+			}
+			wg.Wait()
+		case <-stopC:
+			return
+		}
+	}
+}
+
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
@@ -1134,6 +1167,11 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	loadpointChan := make(chan updater)
 	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
+	}
+
+	// fast sense loop: decouple status/measurement latency from loadpoint count
+	if len(site.loadpoints) > 0 {
+		go site.senseLoop(stopC, senseInterval(interval))
 	}
 
 	site.update(<-loadpointChan) // start immediately

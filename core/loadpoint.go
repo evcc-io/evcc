@@ -89,6 +89,7 @@ type Loadpoint struct {
 	rwMutex      atomic.Int64 // count reentrant RWMutex
 	sync.RWMutex              // guard status
 	vmu          sync.RWMutex // guard vehicle
+	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
 
 	// exposed public configuration
 	CircuitRef string `mapstructure:"circuit"` // Circuit reference
@@ -1617,6 +1618,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
+	// serialize concurrent reads from the sense and control loops
+	lp.measureMu.Lock()
+	defer lp.measureMu.Unlock()
+
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
 	if err == nil {
 		lp.Lock()
@@ -1664,6 +1669,32 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	}
 
 	return power
+}
+
+// Sense reads charger status and live measurements without mutating control
+// state or actuating. It publishes the results for snappy UI updates and
+// requests an immediate control pass when the charger status changed. Sense is
+// safe to call concurrently with the control loop and across loadpoints; it is
+// driven by the fast site sense loop (see Site.senseLoop), decoupling
+// observability latency from the number of loadpoints.
+func (lp *Loadpoint) Sense() {
+	// live measurements (parallel-safe, serialized per loadpoint via measureMu)
+	lp.UpdateChargePowerAndCurrents()
+
+	// charger status: compared against the authoritative status, which only the
+	// control pass updates. While they differ we keep requesting an update on
+	// every sense tick, which self-heals the cap(1) lpUpdateChan trigger drop.
+	status, err := lp.charger.Status()
+	if err != nil {
+		lp.log.DEBUG.Printf("sense: charger status: %v", err)
+		return
+	}
+
+	if status != lp.GetStatus() {
+		lp.publish(keys.Connected, status == api.StatusB || status == api.StatusC)
+		lp.publish(keys.Charging, status == api.StatusC)
+		lp.requestUpdate()
+	}
 }
 
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
