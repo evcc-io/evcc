@@ -9,12 +9,23 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
+	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
+	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+// odometerVehicle decorates a MockVehicle with the VehicleOdometer capability.
+type odometerVehicle struct {
+	api.Vehicle
+	odo float64
+}
+
+func (v *odometerVehicle) Odometer() (float64, error) { return v.odo, nil }
 
 func expectVehiclePublish(vehicle *api.MockVehicle) {
 	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
@@ -429,4 +440,50 @@ func TestReconnectVehicle(t *testing.T) {
 			assert.Equal(t, vehicle, lp.vehicle, "vehicle should be detected")
 		})
 	}
+}
+
+// TestOdometerOnDisconnect verifies that the odometer is re-read and persisted
+// into the session when the vehicle disconnects. Many vehicles only update their
+// mileage with a delay, so the value at connect is stale (#30225).
+func TestOdometerOnDisconnect(t *testing.T) {
+	var err error
+	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
+	require.NoError(t, err)
+
+	db, err := session.NewStore("foo", serverdb.Instance)
+	require.NoError(t, err)
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mv := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(mv)
+	vehicle := &odometerVehicle{Vehicle: mv, odo: 12345}
+
+	// rater is consulted by finalizeSessionEnergy; keep it a no-op
+	rater := api.NewMockChargeRater(ctrl)
+	rater.EXPECT().ChargedEnergy().Return(0.0, api.ErrNotAvailable).AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.clock = clock.NewMock()
+	lp.db = db
+	lp.chargeRater = rater
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// active session as if a charge just happened
+	lp.createSession()
+	lp.updateSession(func(s *session.Session) { s.Created = lp.clock.Now() })
+
+	lp.setActiveVehicle(vehicle)
+
+	// disconnect should persist the current odometer
+	lp.evVehicleDisconnectHandler()
+
+	sessions, err := db.Sessions()
+	require.NoError(t, err)
+	require.Len(t, sessions, 1)
+	require.NotNil(t, sessions[0].Odometer)
+	assert.Equal(t, 12345.0, *sessions[0].Odometer)
 }

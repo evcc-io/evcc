@@ -547,6 +547,11 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// re-read energy from charger and re-persist session if values improved
 	lp.finalizeSessionEnergy()
 
+	// re-read odometer and persist into session: many vehicles only update
+	// their mileage with a delay, so the value at connect is often stale while
+	// the value after a completed charge is current (#30225)
+	lp.vehicleOdometer()
+
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
 
