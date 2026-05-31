@@ -1141,12 +1141,13 @@ func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
 }
 
 // loopLoadpoints feeds the next loadpoint to control to the given channel. It
-// prefers loadpoints with pending control work (events, deferred actuations)
-// over the round-robin cursor, so a loadpoint needing attention is no longer
-// starved by idle ones.
+// prefers loadpoints with pending control work (events, deferred actuations) so
+// they are served promptly, but alternates with a round-robin sweep so neither
+// a pending loadpoint nor an idle one can starve the other.
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
 	var cursor int
+	var servedPending bool // alternate so pending work can't starve the round-robin
 
 	for {
 		if len(site.loadpoints) == 0 {
@@ -1157,17 +1158,25 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 			continue
 		}
 
-		// prefer a loadpoint with pending control work, else advance round-robin
+		// prefer a loadpoint with pending control work, but only every other
+		// dispatch so a perpetually-pending loadpoint cannot starve the
+		// round-robin sweep that keeps idle loadpoints regulated
 		var lp *Loadpoint
-		for _, cand := range site.loadpoints {
-			if cand.pendingControl.Load() {
-				lp = cand
-				break
+		if !servedPending {
+			for _, cand := range site.loadpoints {
+				if cand.pendingControl.Load() {
+					lp = cand
+					break
+				}
 			}
 		}
-		if lp == nil {
+
+		if lp != nil {
+			servedPending = true
+		} else {
 			lp = site.loadpoints[cursor]
 			cursor = (cursor + 1) % len(site.loadpoints)
+			servedPending = false
 		}
 
 		lp.pendingControl.Store(false)
