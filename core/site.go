@@ -518,8 +518,8 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// energy (production)
 		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
-			if v, err := m.TotalEnergy(); err == nil {
-				mm[i].Energy = &v
+			if f, err := m.TotalEnergy(); err == nil {
+				mm[i].Energy = &f
 			} else {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
