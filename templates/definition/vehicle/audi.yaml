@@ -8,6 +8,7 @@ params:
     example: WAUZZZ...
   - preset: vehicle-features
 render: |
-  type: audi
+  type: drivesomethinggreater
+  brand: Audi
   {{ include "vehicle-base" . }}
   {{ include "vehicle-features" . }}
