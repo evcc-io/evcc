@@ -91,8 +91,8 @@ type Loadpoint struct {
 	vmu          sync.RWMutex // guard vehicle
 	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
 
-	ledger         *surplusLedger // site-wide in-flight surplus ledger (nil = disabled)
-	pendingControl atomic.Bool    // control re-evaluation requested (scheduler hint)
+	actuatedAt     time.Time   // last setpoint change; opens the in-flight reserve window
+	pendingControl atomic.Bool // control re-evaluation requested (scheduler hint)
 
 	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
 	observed      bool       // set once observe has produced valid state; control must not actuate before
@@ -412,9 +412,32 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
-// setLedger wires the site-wide in-flight surplus ledger into the loadpoint.
-func (lp *Loadpoint) setLedger(l *surplusLedger) {
-	lp.ledger = l
+// inflightActive reports whether a just-actuated setpoint is still settling, so
+// the meters do not yet reflect it. The caller must hold the read lock.
+func (lp *Loadpoint) inflightActive() bool {
+	return !lp.actuatedAt.IsZero() && lp.clock.Since(lp.actuatedAt) < chargerSwitchDuration
+}
+
+// GetInflightPower returns the charge power actuated but not yet reflected by the
+// meters (max(0, intended - measured)) during the settle window, else 0. The
+// site discounts the surplus by the sum across loadpoints so a just-actuated
+// loadpoint is not re-counted as available surplus until the meters catch up.
+// It is self-correcting: the reserve collapses to zero as soon as the metered
+// power reaches the intended draw.
+func (lp *Loadpoint) GetInflightPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if !lp.inflightActive() {
+		return 0
+	}
+
+	var intended float64
+	if lp.enabled && lp.phases > 0 {
+		intended = currentToPower(lp.offeredCurrent, lp.phases)
+	}
+
+	return max(0, intended-lp.chargePower)
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -936,7 +959,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
 	}
 
-	// capture the intended draw before the change for the surplus ledger
+	// capture the intended draw before the change for the in-flight reserve
 	ledgerPhases := lp.ActivePhases()
 	var oldPower float64
 	if lp.enabled {
@@ -1005,14 +1028,15 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		}
 	}
 
-	// record the un-metered draw delta so other loadpoints discount this claim
-	// from the surplus until the meters catch up
-	if lp.ledger != nil {
-		var newPower float64
-		if lp.enabled {
-			newPower = currentToPower(lp.offeredCurrent, ledgerPhases)
-		}
-		lp.ledger.claim(newPower - oldPower)
+	// open the in-flight reserve window if the intended draw changed, so other
+	// loadpoints discount this un-metered actuation from the surplus until the
+	// meters catch up
+	var newPower float64
+	if lp.enabled {
+		newPower = currentToPower(lp.offeredCurrent, ledgerPhases)
+	}
+	if newPower != oldPower {
+		lp.actuatedAt = lp.clock.Now()
 	}
 
 	return nil
@@ -1322,20 +1346,17 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		// prevent premature measurement of active phases
 		lp.phasesSwitched = lp.clock.Now()
 
+		// open the in-flight reserve window: a phase switch causes an implicit
+		// charging pause (zero draw), so the reserve (intended post-switch draw
+		// minus the still-paused metered draw) holds the budget until the meters
+		// reflect the resumed draw
+		lp.actuatedAt = lp.clock.Now()
+
 		// update setting and reset timer
 		lp.SetPhases(phases)
 
 		// some vehicles may hang on phase switch
 		lp.startWakeUpTimer()
-
-		// ledger hold: a phase switch causes an implicit charging pause (zero
-		// draw) before the charger resumes on its own. Reserve the expected
-		// post-switch draw so no other loadpoint grabs that budget during the
-		// pause and overshoots once this loadpoint resumes. The claim expires
-		// with the ledger settle window once the meters reflect the resumed draw.
-		if lp.ledger != nil && lp.enabled {
-			lp.ledger.claim(currentToPower(lp.offeredCurrent, phases))
-		}
 	}
 
 	return nil

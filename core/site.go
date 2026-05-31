@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -58,8 +57,6 @@ type Site struct {
 
 	sync.RWMutex
 	log *util.Logger
-
-	ledger *surplusLedger // in-flight surplus ledger shared with loadpoints
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
@@ -988,8 +985,8 @@ func (site *Site) update(lp updater) {
 			// discount surplus by actuations the meters have not yet reflected,
 			// so this loadpoint does not re-claim power an earlier one already took
 			controlSitePower := sitePower
-			if site.ledger != nil {
-				controlSitePower += site.ledger.inflight()
+			for _, l := range site.loadpoints {
+				controlSitePower += l.GetInflightPower()
 			}
 
 			// control only: the sense loop runs observe() continuously to keep
@@ -1205,14 +1202,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	loadpointChan := make(chan updater)
 	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
-	}
-
-	// surplus ledger: discount sitePower by actuations the meters have not yet
-	// reflected, so loadpoints can actuate in parallel without overshoot. The
-	// reconciliation window is derived from the control interval (no new key).
-	site.ledger = newSurplusLedger(clock.New(), interval)
-	for _, lp := range site.loadpoints {
-		lp.setLedger(site.ledger)
 	}
 
 	// fast sense loop: decouple status/measurement latency from loadpoint count
