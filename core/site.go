@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -1133,9 +1134,14 @@ func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
 	}
 }
 
-// loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
+// loopLoadpoints feeds the next loadpoint to control to the given channel. It
+// prefers loadpoints with pending control work (events, deferred actuations) so
+// they are served promptly, but alternates with a round-robin sweep so neither
+// a pending loadpoint nor an idle one can starve the other.
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
+	var cursor int
+	var servedPending bool // alternate so pending work can't starve the round-robin
 
 	for {
 		if len(site.loadpoints) == 0 {
@@ -1143,11 +1149,32 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 			})
 			next <- nil
-		} else {
-			for _, lp := range site.loadpoints {
-				next <- lp
+			continue
+		}
+
+		// prefer a loadpoint with pending control work, but only every other
+		// dispatch so a perpetually-pending loadpoint cannot starve the
+		// round-robin sweep that keeps idle loadpoints regulated
+		var lp *Loadpoint
+		if !servedPending {
+			for _, cand := range site.loadpoints {
+				if cand.pendingControl.Load() {
+					lp = cand
+					break
+				}
 			}
 		}
+
+		if lp != nil {
+			servedPending = true
+		} else {
+			lp = site.loadpoints[cursor]
+			cursor = (cursor + 1) % len(site.loadpoints)
+			servedPending = false
+		}
+
+		lp.pendingControl.Store(false)
+		next <- lp
 	}
 }
 
@@ -1163,6 +1190,13 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		go site.loopLoadpoints(loadpointChan)
 	}
 
+	// settle lock: minimum spacing between budget-increasing actuations site-wide,
+	// derived from the control interval (no dedicated config key)
+	gate := newActuationGate(clock.New(), interval)
+	for _, lp := range site.loadpoints {
+		lp.setActuationGate(gate)
+	}
+
 	// fast sense loop: decouple status/measurement latency from loadpoint count
 	if len(site.loadpoints) > 0 {
 		go site.senseLoop(stopC, senseInterval(interval))
@@ -1175,6 +1209,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
+			lp.pendingControl.Store(false)
 			site.update(lp)
 		case <-stopC:
 			return
