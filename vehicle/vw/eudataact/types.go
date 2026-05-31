@@ -31,6 +31,16 @@ func Brands() []string {
 	return []string{"Volkswagen", "Audi", "Skoda", "Seat", "Cupra"}
 }
 
+// resolveBrand looks up a brand by name, case-insensitively
+func resolveBrand(name string) (brand, bool) {
+	for k, b := range brands {
+		if strings.EqualFold(k, name) {
+			return b, true
+		}
+	}
+	return brand{}, false
+}
+
 // Vehicle is a single entry of the portal vehicle list. VIN and name carry
 // several alternative field names depending on the response variant.
 type Vehicle struct {

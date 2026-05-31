@@ -95,6 +95,17 @@ func TestStatusPlugStates(t *testing.T) {
 	}
 }
 
+func TestResolveBrand(t *testing.T) {
+	for _, name := range []string{"audi", "AUDI", "Audi", "aUdI"} {
+		b, ok := resolveBrand(name)
+		require.True(t, ok, "brand %q must resolve", name)
+		assert.Equal(t, brands["Audi"], b)
+	}
+
+	_, ok := resolveBrand("nope")
+	assert.False(t, ok)
+}
+
 func TestNewestDataset(t *testing.T) {
 	list := []dataset{
 		{Name: "2026-05-31T08-00.zip", CreatedOn: "2026-05-31T08:00:00Z"},

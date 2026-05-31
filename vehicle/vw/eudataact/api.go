@@ -45,19 +45,21 @@ var portalHost = strings.TrimPrefix(BaseURL, "https://")
 // the newest dataset and decoding its flat list of data points.
 type API struct {
 	*request.Helper
+	log            *util.Logger
 	brand          brand
 	user, password string
 }
 
 // NewAPI creates an EU Data Act client and performs the initial login
 func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
-	b, ok := brands[brandName]
+	b, ok := resolveBrand(brandName)
 	if !ok {
 		return nil, fmt.Errorf("unknown brand: %s", brandName)
 	}
 
 	v := &API{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		brand:    b,
 		user:     user,
 		password: password,
@@ -311,7 +313,11 @@ func (v *API) Status(vin string) (map[string]string, error) {
 
 	name := newestDataset(list)
 	if name == "" {
-		// the car has not produced a dataset yet (asleep or just activated)
+		// the car has not produced a dataset with content yet: the portal only
+		// emits "_no_content_found" placeholders while the vehicle is asleep
+		if len(list) > 0 {
+			v.log.DEBUG.Printf("no dataset with content for %s- wake the vehicle via the app", vin)
+		}
 		return nil, api.ErrNotAvailable
 	}
 

@@ -47,7 +47,6 @@ params:
   - name: brand
     type: choice
     choice: ["Volkswagen", "Audi", "Skoda", "Seat", "Cupra"]
-    default: Volkswagen
     required: true
     description:
       de: Marke
