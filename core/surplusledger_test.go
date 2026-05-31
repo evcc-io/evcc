@@ -54,17 +54,8 @@ func TestSurplusLedgerDisabled(t *testing.T) {
 	}
 }
 
-// TestSetLimitRecordsLedgerClaim verifies that an actuation records its
-// un-metered power delta against the ledger.
-func TestSetLimitRecordsLedgerClaim(t *testing.T) {
-	Voltage = 230
-
-	clk := clock.NewMock()
-	ctrl := gomock.NewController(t)
-	charger := api.NewMockCharger(ctrl)
-
-	ledger := newSurplusLedger(clk, time.Minute)
-	lp := &Loadpoint{
+func newLedgerLoadpoint(clk clock.Clock, charger api.Charger, ledger *surplusLedger) *Loadpoint {
+	return &Loadpoint{
 		log:         util.NewLogger("foo"),
 		clock:       clk,
 		bus:         evbus.New(),
@@ -75,6 +66,19 @@ func TestSetLimitRecordsLedgerClaim(t *testing.T) {
 		phases:      1,
 		ledger:      ledger,
 	}
+}
+
+// TestSetLimitRecordsLedgerClaim verifies that an actuation records its
+// un-metered power delta against the ledger.
+func TestSetLimitRecordsLedgerClaim(t *testing.T) {
+	Voltage = 230
+
+	clk := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+
+	ledger := newSurplusLedger(clk, time.Minute)
+	lp := newLedgerLoadpoint(clk, charger, ledger)
 
 	// enable from disabled at min current -> claim = currentToPower(minA, 1p)
 	charger.EXPECT().MaxCurrent(int64(minA)).Return(nil)
@@ -94,5 +98,48 @@ func TestSetLimitRecordsLedgerClaim(t *testing.T) {
 	}
 	if got := ledger.inflight(); got != 0 {
 		t.Fatalf("inflight after disable = %v, want 0", got)
+	}
+}
+
+// TestSurplusLedgerTwoLoadpoints verifies that successive actuations on two
+// loadpoints sharing a ledger accumulate, so the site discounts the combined
+// in-flight claims — the second loadpoint cannot re-grab surplus the first
+// already took. site.update passes sitePower + ledger.inflight() to control(),
+// so an inflight of 2×draw shifts the effective surplus by that amount.
+func TestSurplusLedgerTwoLoadpoints(t *testing.T) {
+	Voltage = 230
+
+	clk := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	ledger := newSurplusLedger(clk, time.Minute)
+
+	charger1 := api.NewMockCharger(ctrl)
+	charger2 := api.NewMockCharger(ctrl)
+	lp1 := newLedgerLoadpoint(clk, charger1, ledger)
+	lp2 := newLedgerLoadpoint(clk, charger2, ledger)
+
+	draw := currentToPower(minA, 1)
+
+	// first loadpoint enables
+	charger1.EXPECT().MaxCurrent(int64(minA)).Return(nil)
+	charger1.EXPECT().Enable(true).Return(nil)
+	if err := lp1.setLimit(minA); err != nil {
+		t.Fatalf("lp1 setLimit: %v", err)
+	}
+	if got := ledger.inflight(); got != draw {
+		t.Fatalf("inflight after lp1 = %v, want %v", got, draw)
+	}
+
+	// second loadpoint enables shortly after, before the meters caught up
+	clk.Add(time.Second)
+	charger2.EXPECT().MaxCurrent(int64(minA)).Return(nil)
+	charger2.EXPECT().Enable(true).Return(nil)
+	if err := lp2.setLimit(minA); err != nil {
+		t.Fatalf("lp2 setLimit: %v", err)
+	}
+
+	// both claims are in flight -> the site discounts the combined draw
+	if got, want := ledger.inflight(), 2*draw; got != want {
+		t.Fatalf("combined inflight = %v, want %v", got, want)
 	}
 }
