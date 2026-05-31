@@ -9,25 +9,65 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// Provider implements the vehicle api on top of the EU Data Act dataset
+const (
+	// portalInterval is the cadence at which the portal delivers a new dataset
+	portalInterval = 15 * time.Minute
+	// portalLatency is the margin added to a dataset's timestamp before the
+	// following dataset is expected to be available for download
+	portalLatency = 30 * time.Second
+)
+
+// Provider implements the vehicle api on top of the EU Data Act dataset.
+//
+// The portal is not a live api: it stores a new dataset roughly every
+// portalInterval and only ever appends. Rather than re-reading the full history
+// on every poll, a store downloads each dataset once and merges its data points
+// into a single map, keeping the newest value per field across all datasets. The
+// status getter is cached; instead of relying on the cache ttl alone, each read
+// schedules a reset for the moment the next dataset is expected (the dataset's
+// timestamp plus portalInterval and a latency margin), so the map is updated as
+// soon as the portal delivers a new dataset.
 type Provider struct {
-	statusG func() (map[string]string, error)
+	statusG func() (map[string]point, error)
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
-	return &Provider{
-		statusG: util.Cached(func() (map[string]string, error) {
-			return api.Status(vin)
-		}, cache),
+	v := &Provider{}
+	s := newStore(api, vin)
+
+	var cached util.Cacheable[map[string]point]
+	cached = util.ResettableCached(func() (map[string]point, error) {
+		ts, err := s.update()
+		if err != nil {
+			return nil, err
+		}
+		if !ts.IsZero() {
+			time.AfterFunc(resetDelay(ts, time.Now()), cached.Reset)
+		}
+		return s.snapshot(), nil
+	}, cache)
+
+	v.statusG = cached.Get
+
+	return v
+}
+
+// resetDelay returns the delay until the dataset following the one delivered at
+// ts is expected to be available. It never returns less than portalLatency so a
+// late or repeated dataset does not cause immediate re-polling.
+func resetDelay(ts, now time.Time) time.Duration {
+	if d := ts.Add(portalInterval + portalLatency).Sub(now); d > portalLatency {
+		return d
 	}
+	return portalLatency
 }
 
 // lookup returns the first present, non-empty value among the given field names
-func lookup(data map[string]string, fields ...string) (string, bool) {
+func lookup(data map[string]point, fields ...string) (string, bool) {
 	for _, f := range fields {
-		if v, ok := data[f]; ok && v != "" {
-			return v, true
+		if v, ok := data[f]; ok && v.Value != "" {
+			return v.Value, true
 		}
 	}
 	return "", false

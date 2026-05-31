@@ -5,8 +5,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"slices"
 	"strings"
+	"time"
 )
 
 // brand holds the OIDC client id and state suffix for a VW group brand.
@@ -70,25 +73,44 @@ func (v Vehicle) Name() string {
 	return ""
 }
 
-// dataset describes a single delivered dataset file
+// dataset describes a single delivered dataset file. Timestamp is the parsed
+// delivery time; it is populated by contentDatasets from the file name or the
+// createdOn field.
 type dataset struct {
-	Name      string `json:"name"`
-	CreatedOn string `json:"createdOn"`
+	Name      string    `json:"name"`
+	CreatedOn string    `json:"createdOn"`
+	Timestamp time.Time `json:"-"`
 }
 
-// sortKey returns the value used to find the newest dataset
-func (d dataset) sortKey() string {
-	if d.CreatedOn != "" {
-		return d.CreatedOn
+// nameTime parses the compact timestamp the portal prefixes to a dataset file
+// name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip.
+func nameTime(name string) (time.Time, error) {
+	prefix, _, _ := strings.Cut(name, "_")
+	return time.Parse("20060102150405", prefix)
+}
+
+// time parses the delivery time the dataset carries. The portal embeds it in the
+// file name and also delivers it as the createdOn field; the file name is
+// preferred and createdOn is the fallback. An error is returned when neither
+// carries a parseable timestamp.
+func (d dataset) time() (time.Time, error) {
+	if t, err := nameTime(d.Name); err == nil {
+		return t, nil
 	}
-	return d.Name
+	return time.Parse(time.RFC3339, d.CreatedOn)
 }
 
-// dataPoint is a single decoded telemetry value of a dataset
+// dataPoint is a single data point as delivered in the dataset JSON document
 type dataPoint struct {
-	Key           string `json:"key"`
 	DataFieldName string `json:"dataFieldName"`
 	Value         string `json:"value"`
+	TimestampUtc  string `json:"timestampUtc"`
+}
+
+// point is a decoded data point: its value and the time it was recorded
+type point struct {
+	Value     string
+	Timestamp time.Time
 }
 
 // datasetFile is the JSON document contained in a dataset zip archive
@@ -105,30 +127,42 @@ const (
 	FieldRangePrimary  = "cruising_range_primary_engine"
 	FieldOdometer      = "mileage"
 	FieldChargingState = "charging_state"
-	FieldPlugState     = "charging_plug1_connectionstate"
+	FieldPlugState     = "plug_state"
 	FieldTargetSoc     = "settings.target_soc"
 )
 
-// newestDataset returns the name of the most recent dataset that actually
-// carries content. The portal emits "..._no_content_found.zip" placeholders
-// while the vehicle is asleep, which are skipped.
-func newestDataset(list []dataset) string {
-	var best dataset
+// contentDatasets returns the datasets that actually carry content, with their
+// delivery time parsed into Timestamp and sorted from oldest to newest. The
+// portal emits "..._no_content_found.zip" placeholders while the vehicle is
+// asleep, which are skipped. An error is returned when a content dataset's
+// timestamp cannot be parsed.
+func contentDatasets(list []dataset) ([]dataset, error) {
+	content := make([]dataset, 0, len(list))
 	for _, d := range list {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
 			continue
 		}
-		if best.Name == "" || d.sortKey() > best.sortKey() {
-			best = d
+
+		t, err := d.time()
+		if err != nil {
+			return nil, fmt.Errorf("dataset %q: %w", d.Name, err)
 		}
+		d.Timestamp = t
+
+		content = append(content, d)
 	}
-	return best.Name
+
+	slices.SortStableFunc(content, func(a, b dataset) int {
+		return a.Timestamp.Compare(b.Timestamp)
+	})
+
+	return content, nil
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into a map keyed by the dotted data field name. On duplicate field
-// names the entry with the smallest key uuid wins, matching the adapter.
-func parseDataset(b []byte) (map[string]string, error) {
+// decodes it into a map of data points keyed by the dotted data field name. On
+// duplicate field names the entry with the newest timestamp wins.
+func parseDataset(b []byte) (map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -161,17 +195,22 @@ func parseDataset(b []byte) (map[string]string, error) {
 		return nil, err
 	}
 
-	res := make(map[string]string, len(ds.Data))
-	keys := make(map[string]string, len(ds.Data))
+	res := make(map[string]point, len(ds.Data))
 	for _, p := range ds.Data {
 		if p.DataFieldName == "" {
 			continue
 		}
-		if k, ok := keys[p.DataFieldName]; ok && k <= p.Key {
+
+		ts, err := time.Parse(time.RFC3339, p.TimestampUtc)
+		if err != nil {
+			return nil, err
+		}
+
+		if cur, ok := res[p.DataFieldName]; ok && cur.Timestamp.After(ts) {
 			continue
 		}
-		res[p.DataFieldName] = p.Value
-		keys[p.DataFieldName] = p.Key
+
+		res[p.DataFieldName] = point{Value: p.Value, Timestamp: ts}
 	}
 
 	return res, nil
