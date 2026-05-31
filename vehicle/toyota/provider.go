@@ -81,10 +81,5 @@ func (v *Provider) Range() (int64, error) {
 		return rng, nil
 	}
 
-	fallback, fallbackErr := res.Payload.EvRange.ValueInKilometers()
-	if fallbackErr == nil {
-		return fallback, nil
-	}
-
-	return 0, fallbackErr
+	return res.Payload.EvRange.ValueInKilometers()
 }
