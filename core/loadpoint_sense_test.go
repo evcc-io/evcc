@@ -4,21 +4,14 @@ import (
 	"testing"
 	"time"
 
+	evbus "github.com/asaskevich/EventBus"
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"go.uber.org/mock/gomock"
 )
-
-// TestSenseInterval verifies the default sense cadence is a fixed 2s,
-// independent of the control interval.
-func TestSenseInterval(t *testing.T) {
-	for _, in := range []time.Duration{30 * time.Second, 10 * time.Second, 0} {
-		if got := senseInterval(in); got != 2*time.Second {
-			t.Errorf("senseInterval(%v) = %v, want 2s", in, got)
-		}
-	}
-}
 
 // drainParams collects all currently buffered published params keyed by name.
 func drainParams(ch chan util.Param) map[string]any {
@@ -33,101 +26,130 @@ func drainParams(ch chan util.Param) map[string]any {
 	}
 }
 
-func newSenseLoadpoint(charger api.Charger) (*Loadpoint, chan *Loadpoint, chan util.Param) {
-	lpChan := make(chan *Loadpoint, 1)  // mirrors production cap(1)
-	uiChan := make(chan util.Param, 16) // buffered so publish doesn't block
-
-	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		charger:     charger,
-		chargeMeter: &Null{}, // silence nil panics, returns zero power
-		lpChan:      lpChan,
-		uiChan:      uiChan,
+// TestSenseInterval verifies the default sense cadence is a fixed 2s,
+// independent of the control interval.
+func TestSenseInterval(t *testing.T) {
+	for _, in := range []time.Duration{30 * time.Second, 10 * time.Second, 0} {
+		if got := senseInterval(in); got != 2*time.Second {
+			t.Errorf("senseInterval(%v) = %v, want 2s", in, got)
+		}
 	}
-
-	return lp, lpChan, uiChan
 }
 
-// TestSenseTriggersOnStatusChange verifies that a sensed charger status which
-// differs from the authoritative status requests an immediate control pass and
-// publishes the derived connection state.
-func TestSenseTriggersOnStatusChange(t *testing.T) {
+func newObserveLoadpoint(charger api.Charger) *Loadpoint {
+	return &Loadpoint{
+		log:         util.NewLogger("foo"),
+		clock:       clock.NewMock(),
+		bus:         evbus.New(),
+		charger:     charger,
+		chargeMeter: &Null{}, // silence nil panics, returns zero power
+		uiChan:      make(chan util.Param, 32),
+		lpChan:      make(chan *Loadpoint, 1),
+		pushChan:    make(chan messenger.Event, 8),
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+	}
+}
+
+// TestObserveTriggersOnStatusChange verifies that observe authoritatively updates
+// the status and requests a prompt control pass when it changed.
+func TestObserveTriggersOnStatusChange(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 
-	lp, lpChan, uiChan := newSenseLoadpoint(charger)
-	lp.status = api.StatusA // authoritative: disconnected
+	lp := newObserveLoadpoint(charger)
+	lp.status = api.StatusA
 
-	charger.EXPECT().Status().Return(api.StatusB, nil) // sensed: connected, not charging
+	charger.EXPECT().Status().Return(api.StatusB, nil)
 
-	lp.Sense()
+	lp.observe()
 
-	select {
-	case got := <-lpChan:
-		if got != lp {
-			t.Fatalf("unexpected loadpoint on update channel")
-		}
-	default:
-		t.Fatal("expected update request on status change")
+	if lp.GetStatus() != api.StatusB {
+		t.Fatalf("status not updated: %v", lp.GetStatus())
 	}
+	if !lp.pendingControl.Load() {
+		t.Fatal("status change must request a control pass")
+	}
+}
+
+// TestObserveNoTriggerWithoutStatusChange verifies that an unchanged status does
+// not request a redundant control pass.
+func TestObserveNoTriggerWithoutStatusChange(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+
+	lp := newObserveLoadpoint(charger)
+	lp.status = api.StatusC // charging
+
+	charger.EXPECT().Status().Return(api.StatusC, nil) // unchanged
+
+	lp.observe()
+
+	if lp.pendingControl.Load() {
+		t.Fatal("unchanged status must not request a control pass")
+	}
+}
+
+// TestObservePublishesConnectionState verifies observe publishes the snappy-UI
+// connection state (the reason the sense loop exists).
+func TestObservePublishesConnectionState(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+
+	uiChan := make(chan util.Param, 32)
+	lp := newObserveLoadpoint(charger)
+	lp.uiChan = uiChan // bidirectional handle so the test can drain it
+	lp.status = api.StatusA
+
+	charger.EXPECT().Status().Return(api.StatusC, nil) // connected and charging
+
+	lp.observe()
 
 	published := drainParams(uiChan)
 	if v, ok := published[keys.Connected]; !ok || v != true {
 		t.Errorf("Connected: got %v (present=%v), want true", v, ok)
 	}
-	if v, ok := published[keys.Charging]; !ok || v != false {
-		t.Errorf("Charging: got %v (present=%v), want false", v, ok)
+	if v, ok := published[keys.Charging]; !ok || v != true {
+		t.Errorf("Charging: got %v (present=%v), want true", v, ok)
 	}
 }
 
-// TestSenseNoTriggerWithoutStatusChange verifies that an unchanged status does
-// not request a redundant control pass.
-func TestSenseNoTriggerWithoutStatusChange(t *testing.T) {
+// TestObserveSetsObserved verifies observe marks the loadpoint observed so
+// control may actuate (and that a fresh loadpoint is not yet observed).
+func TestObserveSetsObserved(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 
-	lp, lpChan, _ := newSenseLoadpoint(charger)
-	lp.status = api.StatusC // authoritative: charging
-
-	charger.EXPECT().Status().Return(api.StatusC, nil) // sensed: unchanged
-
-	lp.Sense()
-
-	select {
-	case <-lpChan:
-		t.Fatal("unexpected update request without status change")
-	default:
-	}
-}
-
-// TestSenseRetriggersUntilControlCatchesUp verifies the self-healing behavior:
-// while the authoritative status lags, a trigger stays pending even when an
-// individual re-trigger is dropped on the full cap(1) channel.
-func TestSenseRetriggersUntilControlCatchesUp(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	charger := api.NewMockCharger(ctrl)
-
-	lp, lpChan, _ := newSenseLoadpoint(charger)
+	lp := newObserveLoadpoint(charger)
 	lp.status = api.StatusA
 
-	charger.EXPECT().Status().Return(api.StatusB, nil).Times(2)
-
-	// first sense fills the cap(1) trigger channel
-	lp.Sense()
-	// the authoritative status still lags, so the second sense re-requests an
-	// update; its send is dropped on the full channel, but a trigger remains
-	// pending so control is not starved
-	lp.Sense()
-
-	if got := len(lpChan); got != 1 {
-		t.Fatalf("expected exactly one pending trigger after a dropped re-trigger, got %d", got)
+	if lp.observed {
+		t.Fatal("a fresh loadpoint must not be observed yet")
 	}
-	select {
-	case got := <-lpChan:
-		if got != lp {
-			t.Fatal("unexpected loadpoint on update channel")
-		}
-	default:
-		t.Fatal("expected a pending update request")
+
+	charger.EXPECT().Status().Return(api.StatusB, nil)
+	lp.observe()
+
+	if !lp.observed {
+		t.Fatal("observe must mark the loadpoint observed")
+	}
+}
+
+// TestObserveLatchesWelcomeCharge verifies a faster sense loop does not clobber
+// a latched welcome charge before control consumes it.
+func TestObserveLatchesWelcomeCharge(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+
+	lp := newObserveLoadpoint(charger)
+	lp.status = api.StatusC
+	lp.welcomeCharge = true // latched on an earlier connect tick
+
+	// no status change -> updateChargerStatus reports welcomeCharge=false
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	lp.observe()
+
+	if !lp.welcomeCharge {
+		t.Fatal("observe clobbered the latched welcome charge before control consumed it")
 	}
 }

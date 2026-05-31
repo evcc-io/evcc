@@ -96,6 +96,11 @@ type Loadpoint struct {
 	retryMu        sync.Mutex     // guards retryTimer
 	retryTimer     *clock.Timer   // deferred actuation retry
 
+	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
+	observed      bool       // set once observe has produced valid state; control must not actuate before
+	welcomeCharge bool       // latched by observe on connect, consumed+cleared by control
+	observeErr    error      // last charger status read error; control skips actuation while set
+
 	// exposed public configuration
 	CircuitRef string `mapstructure:"circuit"` // Circuit reference
 	ChargerRef string `mapstructure:"charger"` // Charger reference
@@ -1740,30 +1745,17 @@ func (lp *Loadpoint) getChargeCurrents() []float64 {
 	return lp.chargeCurrents
 }
 
-// Sense reads charger status and live measurements without mutating control
-// state or actuating. It publishes the results for snappy UI updates and
-// requests an immediate control pass when the charger status changed. Sense is
-// safe to call concurrently with the control loop and across loadpoints; it is
-// driven by the fast site sense loop (see Site.senseLoop), decoupling
-// observability latency from the number of loadpoints.
+// Sense runs one full sensing pass for the loadpoint: it refreshes live
+// measurements and then observes status, vehicle soc and the rest of the
+// sensing data. It performs no actuation. Driven by the fast site sense loop
+// (see Site.senseLoop), it decouples observability latency from the number of
+// loadpoints and requests a prompt control pass on a status change.
 func (lp *Loadpoint) Sense() {
 	// live measurements (parallel-safe, serialized per loadpoint via measureMu)
 	lp.UpdateChargePowerAndCurrents()
 
-	// charger status: compared against the authoritative status, which only the
-	// control pass updates. While they differ we keep requesting an update on
-	// every sense tick, which self-heals the cap(1) lpUpdateChan trigger drop.
-	status, err := lp.charger.Status()
-	if err != nil {
-		lp.log.DEBUG.Printf("sense: charger status: %v", err)
-		return
-	}
-
-	if status != lp.GetStatus() {
-		lp.publish(keys.Connected, status == api.StatusB || status == api.StatusC)
-		lp.publish(keys.Charging, status == api.StatusC)
-		lp.requestUpdate()
-	}
+	// status, vehicle soc and remaining sensing (serialized vs control)
+	lp.observe()
 }
 
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
@@ -2035,80 +2027,55 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
 }
 
-// Update is the main control function. It reevaluates meters and charger state
+// Update runs a full observe + control pass under a single lock. It is retained
+// for tests and callers that want a synchronous read-decide-actuate cycle;
+// production drives observe (sense loop) and control (control loop) separately.
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
-	// auto-disable battery boost when SOC drops below limit
-	if lp.GetBatteryBoost() != boostDisabled {
-		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
-			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
-				lp.log.DEBUG.Printf("battery boost disabled: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
+	lp.controlMu.Lock()
+	defer lp.controlMu.Unlock()
 
-				if err := lp.SetBatteryBoost(false); err != nil {
-					lp.log.ERROR.Printf("set battery boost: %v", err)
-				}
-			}
-		}
+	lp.observeLocked()
+	lp.controlLocked(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
+}
+
+// observe reads and publishes all sensing data (meters, charger status, vehicle
+// soc) without mutating control output or actuating. Driven by the fast site
+// sense loop, it requests a prompt control pass on a status change. observe is
+// serialized against control per loadpoint.
+func (lp *Loadpoint) observe() {
+	lp.controlMu.Lock()
+	changed := lp.observeLocked()
+	lp.controlMu.Unlock()
+
+	if changed {
+		lp.requestUpdate()
 	}
+}
 
-	// smart cost
-	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
-	lp.publish(keys.SmartCostActive, smartCostActive)
-	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+// observeLocked performs the sensing work and reports whether the charger status
+// changed. The caller must hold controlMu.
+func (lp *Loadpoint) observeLocked() bool {
+	prevStatus := lp.GetStatus()
 
-	smartFeedInPriorityActive, smartFeedInPriorityNextStart := lp.checkSmartLimit(lp.GetSmartFeedInPriorityLimit(), feedin, false)
-	lp.publish(keys.SmartFeedInPriorityActive, smartFeedInPriorityActive)
-	lp.publish(keys.SmartFeedInPriorityNextStart, smartFeedInPriorityNextStart)
-
-	// long-running tasks
-	lp.processTasks()
-
-	// read and publish meters first- charge power and currents have already been updated by the site
+	// read and publish meters - charge power and currents are updated separately
 	lp.updateChargeVoltages()
 	lp.phasesFromChargeCurrents()
 
-	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
-
-	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
-	lp.bus.Publish(evChargePower, lp.chargePower)
-
-	// update progress and soc before status is updated
-	lp.publishChargeProgress()
-	lp.PublishEffectiveValues()
-
-	// §14a
-	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
-		dimmed, err := dimmer.Dimmed()
-		if err != nil {
-			lp.log.ERROR.Printf("dimmed: %v", err)
-			return
-		}
-
-		if dim := circuitDimmed(lp.circuit); dim != nil {
-			if *dim != dimmed {
-				if err := dimmer.Dim(*dim); err != nil {
-					lp.log.ERROR.Printf("dim: %v", err)
-					return
-				}
-
-				lp.publish(keys.Dimmed, *dim)
-				lp.log.INFO.Printf("§14a dim: %t", *dim)
-			}
-
-			if *dim {
-				return
-			}
-		}
-	}
-
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
+	lp.observeErr = err
 	if err != nil {
 		lp.log.ERROR.Println(err)
-		return
+		return lp.GetStatus() != prevStatus
+	}
+	// latch a welcome charge: updateChargerStatus only reports it on the connect
+	// tick, so keep it set until control consumes it (a faster sense loop would
+	// otherwise overwrite the edge with false before control runs)
+	if welcomeCharge {
+		lp.welcomeCharge = true
 	}
 
-	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
+	lp.publish(keys.VehicleWelcomeActive, lp.welcomeCharge)
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
@@ -2137,11 +2104,99 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// initial update of connected state matches charger status
 	lp.publishSocAndRange()
 
+	// state is now valid; control may actuate
+	lp.observed = true
+
+	return lp.GetStatus() != prevStatus
+}
+
+// control evaluates the charging strategy and actuates the charger using the
+// state gathered by observe. It is serialized against observe per loadpoint.
+func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	lp.controlMu.Lock()
+	defer lp.controlMu.Unlock()
+
+	lp.controlLocked(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
+}
+
+// controlLocked is the decision and actuation half of the control loop. The
+// caller must hold controlMu and have run observe beforehand.
+func (lp *Loadpoint) controlLocked(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	// auto-disable battery boost when SOC drops below limit
+	if lp.GetBatteryBoost() != boostDisabled {
+		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
+			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
+				lp.log.DEBUG.Printf("battery boost disabled: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
+
+				if err := lp.SetBatteryBoost(false); err != nil {
+					lp.log.ERROR.Printf("set battery boost: %v", err)
+				}
+			}
+		}
+	}
+
+	// smart cost
+	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
+	lp.publish(keys.SmartCostActive, smartCostActive)
+	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+
+	smartFeedInPriorityActive, smartFeedInPriorityNextStart := lp.checkSmartLimit(lp.GetSmartFeedInPriorityLimit(), feedin, false)
+	lp.publish(keys.SmartFeedInPriorityActive, smartFeedInPriorityActive)
+	lp.publish(keys.SmartFeedInPriorityNextStart, smartFeedInPriorityNextStart)
+
+	// long-running tasks
+	lp.processTasks()
+
+	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
+
+	// update ChargeRater here to make sure initial meter update is caught
+	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+	lp.bus.Publish(evChargePower, lp.chargePower)
+
+	// update progress and effective values
+	lp.publishChargeProgress()
+	lp.PublishEffectiveValues()
+
+	// §14a
+	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
+		dimmed, err := dimmer.Dimmed()
+		if err != nil {
+			lp.log.ERROR.Printf("dimmed: %v", err)
+			return
+		}
+
+		if dim := circuitDimmed(lp.circuit); dim != nil {
+			if *dim != dimmed {
+				if err := dimmer.Dim(*dim); err != nil {
+					lp.log.ERROR.Printf("dim: %v", err)
+					return
+				}
+
+				lp.publish(keys.Dimmed, *dim)
+				lp.log.INFO.Printf("§14a dim: %t", *dim)
+			}
+
+			if *dim {
+				return
+			}
+		}
+	}
+
+	// do not actuate before observe has produced valid state, or if the last
+	// charger status read failed
+	if !lp.observed || lp.observeErr != nil {
+		return
+	}
+
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
+
+	// consume the latched welcome charge so it applies exactly once
+	welcomeCharge := lp.welcomeCharge
+	lp.welcomeCharge = false
 
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
@@ -2154,6 +2209,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
 
 	// execute loading strategy
+	var err error
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
