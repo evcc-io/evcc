@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/evcc-io/evcc/util"
@@ -48,6 +49,31 @@ func TestLocalV1(t *testing.T) {
 	if err := local.Update("foo=bar"); err != nil {
 		t.Error(err)
 	}
+}
+
+// TestLocalConcurrentStatus exercises the status cache from many goroutines at
+// once (as the fast sense loop and the control loop do). With cache=0 every call
+// refreshes, so without the mutex the shared status/updated fields race; run with
+// -race to verify the cache is concurrency-safe.
+func TestLocalConcurrentStatus(t *testing.T) {
+	h := &handler{}
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+
+	local := NewLocal(util.NewLogger("foo"), srv.URL, 0) // upgradeV2 fails -> v1
+	h.expect("/status")
+
+	var wg sync.WaitGroup
+	for range 50 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := local.Status(); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
 }
 
 func TestLocalV2(t *testing.T) {

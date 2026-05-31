@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -34,6 +35,7 @@ type API interface {
 
 type LocalAPI struct {
 	*request.Helper
+	mu      sync.Mutex // guards the cached status/updated against concurrent accessors
 	uri     string
 	v2      bool
 	status  Response
@@ -85,6 +87,9 @@ func (c *LocalAPI) response(partial string, res any) error {
 
 // Status reads a v1/v2 api response
 func (c *LocalAPI) Status() (res Response, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if time.Since(c.updated) > c.cache {
 		if c.v2 {
 			c.status = new(StatusResponse2)
@@ -102,7 +107,10 @@ func (c *LocalAPI) Status() (res Response, err error) {
 
 // Update executes a v1/v2 api update and returns the response
 func (c *LocalAPI) Update(payload string) error {
-	c.updated = time.Time{}
+	c.mu.Lock()
+	c.updated = time.Time{} // invalidate cache so the next Status refetches
+	c.mu.Unlock()
+
 	res := new(UpdateResponse)
 
 	if c.v2 {
@@ -116,6 +124,7 @@ func (c *LocalAPI) Update(payload string) error {
 
 type cloud struct {
 	*request.Helper
+	mu      sync.Mutex // guards the cached status/updated against concurrent accessors
 	token   string
 	cache   time.Duration
 	updated time.Time
@@ -153,6 +162,9 @@ func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 }
 
 func (c *cloud) Status() (status Response, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if time.Since(c.updated) >= c.cache {
 		status, err = c.response("api_status", "")
 		if err == nil {
@@ -165,7 +177,10 @@ func (c *cloud) Status() (status Response, err error) {
 }
 
 func (c *cloud) Update(payload string) error {
-	c.updated = time.Time{}
+	c.mu.Lock()
+	c.updated = time.Time{} // invalidate cache so the next Status refetches
+	c.mu.Unlock()
+
 	_, err := c.response("api", payload)
 	return err
 }
