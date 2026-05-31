@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"github.com/evcc-io/evcc/vehicle/vw/weconnect"
+	"golang.org/x/oauth2"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
@@ -48,17 +49,23 @@ func NewVWFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
 
-	q, err := vwidentity.Login(log, weconnect.AuthParams, cc.User, cc.Password)
+	// VW no longer issues usable refresh tokens, so the token source re-runs the
+	// full username/password login once the (2h) access token expires instead of
+	// refreshing.
+	login := func() (*oauth2.Token, error) {
+		q, err := vwidentity.Login(log, weconnect.AuthParams, cc.User, cc.Password)
+		if err != nil {
+			return nil, err
+		}
+		return weconnect.ExchangeCode(log, q)
+	}
+
+	token, err := login()
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := weconnect.ExchangeCode(log, q)
-	if err != nil {
-		return nil, err
-	}
-
-	api := weconnect.NewAPI(log, weconnect.TokenSource(log, token))
+	api := weconnect.NewAPI(log, weconnect.TokenSource(token, login))
 	api.Client.Timeout = cc.Timeout
 
 	vehicle, err := ensureVehicleEx(

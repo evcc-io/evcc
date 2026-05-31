@@ -16,10 +16,15 @@ import (
 
 const tokenURL = cariad.BaseURL + "/auth/v1/idk/oidc/token"
 
+// tokenValidity is how long an access token is treated as valid. VW's IDK token
+// endpoint no longer issues usable refresh tokens (the app uses the OIDC hybrid
+// flow, which never returns a refresh_token); the access token expires after
+// ~2 hours, after which a full username/password re-login is required.
+const tokenValidity = 2 * time.Hour
+
 // ExchangeCode swaps the authorization code from the OIDC callback for an
-// access/refresh token pair at the cariad BFF OIDC token endpoint. Replaces
-// the legacy WeConnect SSO exchange (/user-login/login/v1), which VW removed
-// in May 2026.
+// access token at the cariad BFF OIDC token endpoint. Replaces the legacy
+// WeConnect SSO exchange (/user-login/login/v1), which VW removed in May 2026.
 func ExchangeCode(log *util.Logger, q url.Values) (*oauth2.Token, error) {
 	if err := urlvalues.Require(q, "code", "code_verifier"); err != nil {
 		return nil, err
@@ -36,16 +41,13 @@ func ExchangeCode(log *util.Logger, q url.Values) (*oauth2.Token, error) {
 	return postToken(log, data)
 }
 
-// TokenSource returns a refreshing oauth2.TokenSource that swaps refresh
-// tokens for fresh access tokens at the same OIDC token endpoint.
-func TokenSource(log *util.Logger, token *oauth2.Token) oauth2.TokenSource {
-	return oauth.RefreshTokenSource(token, func(t *oauth2.Token) (*oauth2.Token, error) {
-		data := url.Values{
-			"grant_type":    {"refresh_token"},
-			"refresh_token": {t.RefreshToken},
-			"client_id":     {cariad.ClientID},
-		}
-		return postToken(log, data)
+// TokenSource returns an oauth2.TokenSource that performs a full re-login via
+// the login function once the access token expires. VW no longer issues usable
+// refresh tokens, so refreshing is replaced by re-running the username/password
+// login.
+func TokenSource(token *oauth2.Token, login func() (*oauth2.Token, error)) oauth2.TokenSource {
+	return oauth.RefreshTokenSource(token, func(*oauth2.Token) (*oauth2.Token, error) {
+		return login()
 	})
 }
 
@@ -66,6 +68,8 @@ func postToken(log *util.Logger, data url.Values) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	token.Expiry = time.Now().Add(time.Duration(token.ExpiresIn) * time.Second)
+	// VW no longer issues usable refresh tokens; treat the access token as
+	// expiring after a fixed validity, after which the caller re-logs in.
+	token.Expiry = time.Now().Add(tokenValidity)
 	return &token, nil
 }
