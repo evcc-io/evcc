@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -1139,9 +1140,13 @@ func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
 	}
 }
 
-// loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
+// loopLoadpoints feeds the next loadpoint to control to the given channel. It
+// prefers loadpoints with pending control work (events, deferred actuations)
+// over the round-robin cursor, so a loadpoint needing attention is no longer
+// starved by idle ones.
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
+	var cursor int
 
 	for {
 		if len(site.loadpoints) == 0 {
@@ -1149,11 +1154,24 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 			})
 			next <- nil
-		} else {
-			for _, lp := range site.loadpoints {
-				next <- lp
+			continue
+		}
+
+		// prefer a loadpoint with pending control work, else advance round-robin
+		var lp *Loadpoint
+		for _, cand := range site.loadpoints {
+			if cand.pendingControl.Load() {
+				lp = cand
+				break
 			}
 		}
+		if lp == nil {
+			lp = site.loadpoints[cursor]
+			cursor = (cursor + 1) % len(site.loadpoints)
+		}
+
+		lp.pendingControl.Store(false)
+		next <- lp
 	}
 }
 
@@ -1169,6 +1187,13 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		go site.loopLoadpoints(loadpointChan)
 	}
 
+	// settle lock: minimum spacing between budget-increasing actuations site-wide,
+	// derived from the control interval (no dedicated config key)
+	gate := newActuationGate(clock.New(), interval)
+	for _, lp := range site.loadpoints {
+		lp.setActuationGate(gate)
+	}
+
 	// fast sense loop: decouple status/measurement latency from loadpoint count
 	if len(site.loadpoints) > 0 {
 		go site.senseLoop(stopC, senseInterval(interval))
@@ -1181,6 +1206,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
+			lp.pendingControl.Store(false)
 			site.update(lp)
 		case <-stopC:
 			return
