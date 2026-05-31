@@ -8,5 +8,5 @@ params:
   - name: vin
     example: LPSVS...
 render: |
-  type: polestar
+  type: polestar-grpc
   {{ include "vehicle-base" . }}

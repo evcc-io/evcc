@@ -572,7 +572,11 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.stopVehicleDetection()
 
 	// set default mode on disconnect
-	lp.defaultMode()
+	// skip for integrated devices: the "disconnect" here is just the socket
+	// being switched off, not a vehicle being unplugged - keep the user's mode (#30187)
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.defaultMode()
+	}
 
 	// set default vehicle (may be nil)
 	lp.setActiveVehicle(lp.defaultVehicle)

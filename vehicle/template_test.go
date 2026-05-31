@@ -25,6 +25,7 @@ var acceptable = []string{
 	"unexpected status: 401",
 	"discussions/17501",                            // Tesla
 	"login failed: code not found",                 // Polestar
+	"login failed",                                 // drivesomethinggreater (EU Data Act, eager login)
 	"empty instance type- check for missing usage", // Mercedes
 	"connect: connection refused",                  // MQTT
 }

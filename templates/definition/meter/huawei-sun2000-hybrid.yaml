@@ -133,7 +133,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 32106 # Accumulated energy yield
+      address: 32108 # Total DC Input Energy
       type: holding
       decode: uint32nan
     scale: 0.01
