@@ -26,7 +26,6 @@ const (
 // margin), so the data is refreshed as soon as the portal delivers it.
 type Provider struct {
 	statusG func() (map[string]string, error)
-	timer   *time.Timer
 }
 
 // NewProvider creates a vehicle api provider
@@ -37,12 +36,7 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	cached = util.ResettableCached(func() (map[string]string, error) {
 		data, ts, err := api.Status(vin)
 		if err == nil && !ts.IsZero() {
-			// reset the cache when the dataset following ts is expected, so the
-			// next read fetches the freshly delivered dataset
-			if v.timer != nil {
-				v.timer.Stop()
-			}
-			v.timer = time.AfterFunc(resetDelay(ts, time.Now()), cached.Reset)
+			time.AfterFunc(resetDelay(ts, time.Now()), cached.Reset)
 		}
 		return data, err
 	}, cache)

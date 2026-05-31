@@ -128,7 +128,7 @@ const (
 	FieldRangePrimary  = "cruising_range_primary_engine"
 	FieldOdometer      = "mileage"
 	FieldChargingState = "charging_state"
-	FieldPlugState     = "charging_plug1_connectionstate"
+	FieldPlugState     = "plug_state"
 	FieldTargetSoc     = "settings.target_soc"
 )
 

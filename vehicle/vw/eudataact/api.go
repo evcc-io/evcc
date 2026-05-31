@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -42,6 +44,7 @@ var portalHost = strings.TrimPrefix(BaseURL, "https://")
 // the newest dataset and decoding its flat list of data points.
 type API struct {
 	*request.Helper
+	log            *util.Logger
 	brand          brand
 	user, password string
 }
@@ -55,6 +58,7 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 
 	v := &API{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		brand:    b,
 		user:     user,
 		password: password,
@@ -325,5 +329,18 @@ func (v *API) Status(vin string) (map[string]string, time.Time, error) {
 		return nil, time.Time{}, err
 	}
 
-	return data, d.time(), nil
+	ts := d.time()
+	v.logData(data, ts)
+
+	return data, ts, nil
+}
+
+// logData logs every received data point with its value and the dataset's
+// delivery time in local time, for debugging field availability and freshness.
+func (v *API) logData(data map[string]string, ts time.Time) {
+	local := ts.Local()
+
+	for _, name := range slices.Sorted(maps.Keys(data)) {
+		v.log.DEBUG.Printf("%s = %s (%s)", name, data[name], local.Format("2006-01-02 15:04:05"))
+	}
 }
