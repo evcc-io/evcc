@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -29,9 +28,6 @@ const (
 	RedirectURI = BaseURL + "/login"
 	// Scope is the OIDC scope requested for the EU Data Act flow
 	Scope = "openid cars profile"
-
-	// UserAgent mimics a desktop browser as expected by the portal
-	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36"
 )
 
 var portalHost = strings.TrimPrefix(BaseURL, "https://")
@@ -177,16 +173,9 @@ func (v *API) login() error {
 	return nil
 }
 
-// headers merges the default User-Agent with the given request specific headers
-func (v *API) headers(extra map[string]string) map[string]string {
-	h := map[string]string{"User-Agent": UserAgent}
-	maps.Copy(h, extra)
-	return h
-}
-
 // get executes a GET request, re-authenticating once on 401/403, and returns the body
-func (v *API) get(uri string, extra map[string]string) ([]byte, error) {
-	req, err := request.New(http.MethodGet, uri, nil, v.headers(extra))
+func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
+	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +192,7 @@ func (v *API) get(uri string, extra map[string]string) ([]byte, error) {
 			return nil, fmt.Errorf("login failed: %w", err)
 		}
 
-		if req, err = request.New(http.MethodGet, uri, nil, v.headers(extra)); err != nil {
+		if req, err = request.New(http.MethodGet, uri, nil, headers); err != nil {
 			return nil, err
 		}
 		if resp, err = v.Do(req); err != nil {
