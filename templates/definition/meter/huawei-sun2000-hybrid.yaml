@@ -131,7 +131,7 @@ render: |
         register:
           address: 32212 # MPPT1 DC cumulative energy
           type: holding
-          decode: uint32
+          decode: uint32nan
         scale: 0.01
       - source: modbus
         {{- include "modbus" . | indent 6 }}
@@ -139,7 +139,7 @@ render: |
         register:
           address: 32214 # MPPT2 DC cumulative energy
           type: holding
-          decode: uint32
+          decode: uint32nan
         scale: 0.01
       - source: modbus
         {{- include "modbus" . | indent 6 }}
@@ -147,7 +147,7 @@ render: |
         register:
           address: 32216 # MPPT3 DC cumulative energy
           type: holding
-          decode: uint32
+          decode: uint32nan
         scale: 0.01
       - source: modbus
         {{- include "modbus" . | indent 6 }}
@@ -155,7 +155,7 @@ render: |
         register:
           address: 32218 # MPPT4 DC cumulative energy
           type: holding
-          decode: uint32
+          decode: uint32nan
         scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- end }}
