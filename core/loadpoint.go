@@ -97,7 +97,8 @@ type Loadpoint struct {
 	retryTimer     *clock.Timer   // deferred actuation retry
 
 	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
-	welcomeCharge bool       // set by observe, consumed by control
+	observed      bool       // set once observe has produced valid state; control must not actuate before
+	welcomeCharge bool       // latched by observe on connect, consumed+cleared by control
 	observeErr    error      // last charger status read error; control skips actuation while set
 
 	// exposed public configuration
@@ -2067,9 +2068,14 @@ func (lp *Loadpoint) observeLocked() bool {
 		lp.log.ERROR.Println(err)
 		return lp.GetStatus() != prevStatus
 	}
-	lp.welcomeCharge = welcomeCharge
+	// latch a welcome charge: updateChargerStatus only reports it on the connect
+	// tick, so keep it set until control consumes it (a faster sense loop would
+	// otherwise overwrite the edge with false before control runs)
+	if welcomeCharge {
+		lp.welcomeCharge = true
+	}
 
-	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
+	lp.publish(keys.VehicleWelcomeActive, lp.welcomeCharge)
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
@@ -2097,6 +2103,9 @@ func (lp *Loadpoint) observeLocked() bool {
 	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status
 	lp.publishSocAndRange()
+
+	// state is now valid; control may actuate
+	lp.observed = true
 
 	return lp.GetStatus() != prevStatus
 }
@@ -2173,8 +2182,9 @@ func (lp *Loadpoint) controlLocked(sitePower, batteryBoostPower float64, consump
 		}
 	}
 
-	// skip actuation if the charger status could not be read by observe
-	if lp.observeErr != nil {
+	// do not actuate before observe has produced valid state, or if the last
+	// charger status read failed
+	if !lp.observed || lp.observeErr != nil {
 		return
 	}
 
@@ -2184,7 +2194,9 @@ func (lp *Loadpoint) controlLocked(sitePower, batteryBoostPower float64, consump
 		return
 	}
 
+	// consume the latched welcome charge so it applies exactly once
 	welcomeCharge := lp.welcomeCharge
+	lp.welcomeCharge = false
 
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
