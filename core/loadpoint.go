@@ -901,8 +901,8 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	// apply circuit limits
 	if lp.circuit != nil {
 		var actualCurrent float64
-		if lp.chargeCurrents != nil {
-			actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+		if cc := lp.getChargeCurrents(); cc != nil {
+			actualCurrent = max(cc[0], cc[1], cc[2])
 		} else if lp.charging() {
 			actualCurrent = lp.offeredCurrent
 		}
@@ -1642,8 +1642,10 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		lp.log.ERROR.Printf("charge power: %v", err)
 	}
 
-	// update charge currents
-	lp.chargeCurrents = nil
+	// update charge currents - compute into a local first, then publish the new
+	// value in a single locked assignment so concurrent readers (sense vs
+	// control loop) never observe a torn or transiently-nil slice
+	var currents []float64
 
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](lp.chargeMeter); ok {
 		if err := backoff.Retry(func() error {
@@ -1655,20 +1657,32 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 				return err
 			}
 
-			lp.Lock()
-			lp.chargeCurrents = []float64{i1, i2, i3}
-			lp.Unlock()
-
-			lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
-			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
-
+			currents = []float64{i1, i2, i3}
 			return nil
 		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
 	}
 
+	lp.Lock()
+	lp.chargeCurrents = currents
+	lp.Unlock()
+
+	if currents != nil {
+		lp.log.DEBUG.Printf("charge currents: %.3gA", currents)
+		lp.publish(keys.ChargeCurrents, currents)
+	}
+
 	return power
+}
+
+// getChargeCurrents returns a consistent snapshot of the per-phase charge
+// currents. The slice is replaced wholesale (never mutated in place), so the
+// returned value is safe to read without further locking.
+func (lp *Loadpoint) getChargeCurrents() []float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.chargeCurrents
 }
 
 // Sense reads charger status and live measurements without mutating control
@@ -1699,13 +1713,14 @@ func (lp *Loadpoint) Sense() {
 
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
 func (lp *Loadpoint) phasesFromChargeCurrents() {
-	if lp.chargeCurrents == nil {
+	chargeCurrents := lp.getChargeCurrents()
+	if chargeCurrents == nil {
 		return
 	}
 
 	if lp.charging() && lp.phaseSwitchCompleted() {
 		var phases int
-		for _, i := range lp.chargeCurrents {
+		for _, i := range chargeCurrents {
 			if i > minActiveCurrent {
 				phases++
 			}

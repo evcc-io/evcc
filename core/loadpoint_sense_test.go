@@ -10,20 +10,12 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// TestSenseInterval verifies the sense cadence derived from the control interval.
+// TestSenseInterval verifies the default sense cadence is a fixed 2s,
+// independent of the control interval.
 func TestSenseInterval(t *testing.T) {
-	tc := []struct {
-		in, want time.Duration
-	}{
-		{30 * time.Second, 3 * time.Second},
-		{10 * time.Second, 1 * time.Second},
-		{5 * time.Second, 1 * time.Second}, // clamped to 1s minimum
-		{0, 1 * time.Second},
-	}
-
-	for _, c := range tc {
-		if got := senseInterval(c.in); got != c.want {
-			t.Errorf("senseInterval(%v) = %v, want %v", c.in, got, c.want)
+	for _, in := range []time.Duration{30 * time.Second, 10 * time.Second, 0} {
+		if got := senseInterval(in); got != 2*time.Second {
+			t.Errorf("senseInterval(%v) = %v, want 2s", in, got)
 		}
 	}
 }
@@ -109,8 +101,8 @@ func TestSenseNoTriggerWithoutStatusChange(t *testing.T) {
 }
 
 // TestSenseRetriggersUntilControlCatchesUp verifies the self-healing behavior:
-// while the authoritative status lags, every sense tick re-requests an update,
-// covering a dropped cap(1) trigger.
+// while the authoritative status lags, a trigger stays pending even when an
+// individual re-trigger is dropped on the full cap(1) channel.
 func TestSenseRetriggersUntilControlCatchesUp(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
@@ -120,19 +112,22 @@ func TestSenseRetriggersUntilControlCatchesUp(t *testing.T) {
 
 	charger.EXPECT().Status().Return(api.StatusB, nil).Times(2)
 
-	// first sense triggers and fills the cap(1) channel
+	// first sense fills the cap(1) trigger channel
 	lp.Sense()
-	select {
-	case <-lpChan:
-	default:
-		t.Fatal("expected first update request")
-	}
+	// the authoritative status still lags, so the second sense re-requests an
+	// update; its send is dropped on the full channel, but a trigger remains
+	// pending so control is not starved
+	lp.Sense()
 
-	// authoritative status still lags -> second sense triggers again
-	lp.Sense()
+	if got := len(lpChan); got != 1 {
+		t.Fatalf("expected exactly one pending trigger after a dropped re-trigger, got %d", got)
+	}
 	select {
-	case <-lpChan:
+	case got := <-lpChan:
+		if got != lp {
+			t.Fatal("unexpected loadpoint on update channel")
+		}
 	default:
-		t.Fatal("expected re-trigger while status still differs")
+		t.Fatal("expected a pending update request")
 	}
 }

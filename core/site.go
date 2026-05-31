@@ -1106,17 +1106,11 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	}
 }
 
-// senseIntervalDivisor derives the fast sense cadence from the control interval.
-// Phase 1 has no dedicated config key; a fraction of the control interval keeps
-// sensing responsive while bounding charger/meter load.
-const senseIntervalDivisor = 10
-
-// senseInterval returns the fast sensing cadence derived from the control interval.
-func senseInterval(interval time.Duration) time.Duration {
-	if d := interval / senseIntervalDivisor; d >= time.Second {
-		return d
-	}
-	return time.Second
+// senseInterval is the default fast sensing cadence. It is independent of the
+// control interval; loadpoints without a charger-specific preference
+// (api.IntervalGetter) sense at this fixed rate.
+func senseInterval(time.Duration) time.Duration {
+	return 2 * time.Second
 }
 
 // senseLoop continuously polls all loadpoints in parallel for status and live
