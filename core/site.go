@@ -496,10 +496,18 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	fun := func(i int, dev config.Device[api.Meter]) {
 		meter := dev.Instance()
 
+		props := deviceProperties(dev)
+		mm[i] = types.Measurement{
+			Name:  dev.Config().Name,
+			Title: props.Title,
+			Icon:  props.Icon,
+		}
+
 		// power
 		var b bytes.Buffer
 		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
+			mm[i].Power = power
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
 			if b.Len() > 0 {
@@ -508,24 +516,15 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			site.log.ERROR.Printf("%s %d power: %v", key, i+1, err)
 		}
 
-		// energy (production); nil when the device has no MeterEnergy capability or the read fails
-		var energy *float64
+		// energy (production)
 		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
 			if v, err := m.TotalEnergy(); err == nil {
-				energy = &v
+				mm[i].Energy = &v
 			} else {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
 
-		props := deviceProperties(dev)
-		mm[i] = types.Measurement{
-			Name:   dev.Config().Name,
-			Title:  props.Title,
-			Icon:   props.Icon,
-			Power:  power,
-			Energy: energy,
-		}
 	}
 
 	var wg sync.WaitGroup
