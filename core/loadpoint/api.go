@@ -22,6 +22,11 @@ type API interface {
 	// GetStatus returns the charging status
 	GetStatus() api.ChargeStatus
 
+	// Notify requests an immediate sensing pass for this loadpoint. Push-capable
+	// chargers call it when their state changes so the change is picked up at
+	// once instead of at the next sense tick.
+	Notify()
+
 	//
 	// references
 	//

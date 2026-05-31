@@ -54,6 +54,7 @@ var _ site.API = (*Site)(nil)
 type Site struct {
 	valueChan    chan<- util.Param // client push messages
 	lpUpdateChan chan *Loadpoint
+	senseTrigger chan *Loadpoint // immediate sense requests from push-capable chargers
 
 	sync.RWMutex
 	log *util.Logger
@@ -1084,6 +1085,9 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 
 	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
 
+	// buffered so push-capable chargers never block; the sense loop drains it
+	site.senseTrigger = make(chan *Loadpoint, max(1, len(site.loadpoints)))
+
 	site.prepare()
 
 	lpDevices := config.Loadpoints().Devices()
@@ -1111,6 +1115,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
 		}
 
+		lp.senseChan = site.senseTrigger
 		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
@@ -1134,6 +1139,9 @@ func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
 				wg.Go(lp.Sense)
 			}
 			wg.Wait()
+		case lp := <-site.senseTrigger:
+			// push-capable charger reported a change: sense it immediately
+			lp.Sense()
 		case <-stopC:
 			return
 		}

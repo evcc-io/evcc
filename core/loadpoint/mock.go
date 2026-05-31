@@ -727,6 +727,18 @@ func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFastChargingActive", reflect.TypeOf((*MockAPI)(nil).IsFastChargingActive))
 }
 
+// Notify mocks base method.
+func (m *MockAPI) Notify() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Notify")
+}
+
+// Notify indicates an expected call of Notify.
+func (mr *MockAPIMockRecorder) Notify() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Notify", reflect.TypeOf((*MockAPI)(nil).Notify))
+}
+
 // PublishEffectiveValues mocks base method.
 func (m *MockAPI) PublishEffectiveValues() {
 	m.ctrl.T.Helper()

@@ -61,6 +61,34 @@ func TestObserveTriggersOnStatusChange(t *testing.T) {
 	}
 }
 
+// TestNotifyTriggersSense verifies that a push-capable charger's Notify requests
+// an immediate sense, and that it never blocks when the channel is full.
+func TestNotifyTriggersSense(t *testing.T) {
+	senseChan := make(chan *Loadpoint, 1)
+	lp := &Loadpoint{log: util.NewLogger("foo"), senseChan: senseChan}
+
+	lp.Notify()
+
+	select {
+	case got := <-senseChan:
+		if got != lp {
+			t.Fatal("unexpected loadpoint on sense channel")
+		}
+	default:
+		t.Fatal("expected an immediate sense request")
+	}
+
+	// must not block when nobody is draining the channel
+	lp.senseChan = make(chan *Loadpoint) // unbuffered, no reader
+	done := make(chan struct{})
+	go func() { lp.Notify(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("Notify blocked")
+	}
+}
+
 // TestObserveNoTriggerWithoutStatusChange verifies that an unchanged status does
 // not request a redundant control pass.
 func TestObserveNoTriggerWithoutStatusChange(t *testing.T) {
