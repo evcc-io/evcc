@@ -6,13 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"slices"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -279,68 +276,18 @@ func (v *API) datasets(vin, identifier string) ([]dataset, error) {
 		return arr, nil
 	}
 
-	var wrap struct {
+	var res struct {
 		Files []dataset `json:"files"`
 	}
-	if err := json.Unmarshal(b, &wrap); err != nil {
+	if err := json.Unmarshal(b, &res); err != nil {
 		return nil, err
 	}
 
-	return wrap.Files, nil
+	return res.Files, nil
 }
 
 // download fetches the dataset zip archive
 func (v *API) download(vin, identifier, name string) ([]byte, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/download", BaseURL, vin, identifier)
 	return v.get(uri, map[string]string{"filename": name, "type": "partial"})
-}
-
-// Status downloads the newest dataset for the vehicle and decodes its data points
-// into a map keyed by the dotted field name (e.g. "state_of_charge"). It also
-// returns the dataset's creation time, which drives the refresh cadence.
-func (v *API) Status(vin string) (map[string]string, time.Time, error) {
-	identifier, err := v.identifier(vin)
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-
-	list, err := v.datasets(vin, identifier)
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-
-	d := newestDataset(list)
-	if d.Name == "" {
-		if len(list) > 0 {
-			// the portal only emits "_no_content_found" placeholders while the
-			// vehicle is asleep and has not produced a dataset with content yet
-			return nil, time.Time{}, fmt.Errorf("no dataset with content- wake the vehicle via the app: %w", api.ErrNotAvailable)
-		}
-		return nil, time.Time{}, api.ErrNotAvailable
-	}
-
-	b, err := v.download(vin, identifier, d.Name)
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-
-	data, err := parseDataset(b)
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-
-	ts := d.time()
-	v.logData(data, ts)
-
-	return data, ts, nil
-}
-
-// logData logs every received data point with its value and the dataset's
-// delivery time in local time, for debugging field availability and freshness.
-func (v *API) logData(data map[string]string, ts time.Time) {
-	local := ts.Local()
-
-	for _, name := range slices.Sorted(maps.Keys(data)) {
-		v.log.DEBUG.Printf("%s = %s (%s)", name, data[name], local.Format("2006-01-02 15:04:05"))
-	}
 }
