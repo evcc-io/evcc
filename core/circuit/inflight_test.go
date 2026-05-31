@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // circuitLoadStub is a minimal api.CircuitLoad for in-flight tests.
@@ -71,4 +72,24 @@ func TestCircuitInflightHierarchy(t *testing.T) {
 	// parent must see the child's in-flight reserve too
 	assert.Equal(t, 3.0, parent.GetInflightCurrent())
 	assert.Equal(t, 3.0, parent.ValidateCurrent(0, 5), "parent caps to child headroom")
+}
+
+// TestCircuitInflightMetered verifies that for a circuit with its own (lagging)
+// meter, the loadpoints' in-flight reserves are still added on top of the
+// metered value.
+func TestCircuitInflightMetered(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	meter := api.NewMockMeter(ctrl)
+
+	c, err := New(util.NewLogger("foo"), "foo", 0, 10000, meter, 0) // maxPower 10kW, metered
+	require.NoError(t, err)
+
+	lp := &circuitLoadStub{circuit: c, inflightPower: 3000}
+
+	// metered 4kW + in-flight 3kW = 7kW used -> headroom 3kW
+	meter.EXPECT().CurrentPower().Return(4000.0, nil)
+	require.NoError(t, c.Update([]api.CircuitLoad{lp}))
+
+	assert.Equal(t, 3000.0, c.GetInflightPower(), "in-flight aggregated on a metered circuit")
+	assert.Equal(t, 3000.0, c.ValidatePower(0, 5000), "metered + in-flight headroom")
 }

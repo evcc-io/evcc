@@ -420,10 +420,11 @@ func (lp *Loadpoint) inflightActive() bool {
 
 // GetInflightPower returns the charge power actuated but not yet reflected by the
 // meters (max(0, intended - measured)) during the settle window, else 0. The
-// site discounts the surplus by the sum across loadpoints so a just-actuated
-// loadpoint is not re-counted as available surplus until the meters catch up.
-// It is self-correcting: the reserve collapses to zero as soon as the metered
-// power reaches the intended draw.
+// site discounts the surplus by the sum across loadpoints, and circuits add it
+// to their metered power, so a just-actuated loadpoint is not re-counted as
+// available surplus / circuit headroom until the meters catch up. It is
+// self-correcting: the reserve collapses to zero as soon as the metered power
+// reaches the intended draw.
 func (lp *Loadpoint) GetInflightPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
@@ -937,17 +938,18 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		var actualCurrent float64
-		if cc := lp.getChargeCurrents(); cc != nil {
-			actualCurrent = max(cc[0], cc[1], cc[2])
-		} else if lp.charging() {
-			actualCurrent = lp.offeredCurrent
-		}
+		// validate against this loadpoint's full contribution to the circuit
+		// (metered draw + its own in-flight reserve), exactly as the circuit
+		// aggregates c.current/c.power. Using only the metered value would let
+		// this loadpoint's own reserve cap it back down, oscillating on a circuit
+		// sized for a single charger.
+		actualCurrent := lp.GetMaxPhaseCurrent() + lp.GetInflightCurrent()
+		actualPower := lp.GetChargePower() + lp.GetInflightPower()
 
 		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
+		powerLimit := lp.circuit.ValidatePower(actualPower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))

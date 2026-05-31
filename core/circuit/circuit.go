@@ -327,9 +327,7 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 
 	// metered power/current, else aggregated from loadpoints and children
 	if c.meter != nil {
-		if err := c.updateMeters(); err != nil {
-			return err
-		}
+		err = c.updateMeters()
 	} else {
 		c.updateLoadpoints(loadpoints)
 		for _, ch := range c.children {
@@ -340,7 +338,8 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 
 	// aggregate in-flight reserves (actuations not yet reflected by the meters)
 	// so ValidateCurrent/ValidatePower account for parallel actuations that the
-	// metered power/current does not yet include
+	// metered power/current does not yet include. Run this even on a meter error
+	// so the reserve never goes stale (and stays conservative).
 	c.inflightCurrent, c.inflightPower = 0, 0
 	for _, lp := range loadpoints {
 		if lp.GetCircuit() == c {
@@ -353,7 +352,7 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 		c.inflightPower += ch.GetInflightPower()
 	}
 
-	return nil
+	return err
 }
 
 // GetChargePower returns the actual power
