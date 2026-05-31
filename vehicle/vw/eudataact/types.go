@@ -86,12 +86,10 @@ func (d dataset) sortKey() string {
 }
 
 // nameTime parses the compact timestamp the portal prefixes to a dataset file
-// name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip. It returns the zero
-// time when the prefix is not a timestamp.
-func nameTime(name string) time.Time {
+// name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip.
+func nameTime(name string) (time.Time, error) {
 	prefix, _, _ := strings.Cut(name, "_")
-	t, _ := time.Parse("20060102150405", prefix)
-	return t
+	return time.Parse("20060102150405", prefix)
 }
 
 // time returns the timestamp of the data the dataset carries. The portal embeds
@@ -100,7 +98,7 @@ func nameTime(name string) time.Time {
 // neither carries a parseable timestamp, in which case the caller falls back to
 // a fixed cadence.
 func (d dataset) time() time.Time {
-	if t := nameTime(d.Name); !t.IsZero() {
+	if t, err := nameTime(d.Name); err == nil {
 		return t
 	}
 	if t, err := time.Parse(time.RFC3339, d.CreatedOn); err == nil {
