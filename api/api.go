@@ -253,6 +253,10 @@ type CsvWriter interface {
 type CircuitMeasurements interface {
 	GetChargePower() float64
 	GetMaxPhaseCurrent() float64
+	// GetInflightPower returns power actuated but not yet reflected by the meters
+	GetInflightPower() float64
+	// GetInflightCurrent returns max phase current actuated but not yet reflected by the meters
+	GetInflightCurrent() float64
 }
 
 // CircuitLoad represents a loadpoint attached to a circuit

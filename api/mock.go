@@ -922,6 +922,34 @@ func (mr *MockCircuitMockRecorder) GetChargePower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePower", reflect.TypeOf((*MockCircuit)(nil).GetChargePower))
 }
 
+// GetInflightCurrent mocks base method.
+func (m *MockCircuit) GetInflightCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetInflightCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetInflightCurrent indicates an expected call of GetInflightCurrent.
+func (mr *MockCircuitMockRecorder) GetInflightCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInflightCurrent", reflect.TypeOf((*MockCircuit)(nil).GetInflightCurrent))
+}
+
+// GetInflightPower mocks base method.
+func (m *MockCircuit) GetInflightPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetInflightPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetInflightPower indicates an expected call of GetInflightPower.
+func (mr *MockCircuitMockRecorder) GetInflightPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInflightPower", reflect.TypeOf((*MockCircuit)(nil).GetInflightPower))
+}
+
 // GetMaxCurrent mocks base method.
 func (m *MockCircuit) GetMaxCurrent() float64 {
 	m.ctrl.T.Helper()

@@ -45,7 +45,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	control(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 var _ site.API = (*Site)(nil)
@@ -982,8 +982,17 @@ func (site *Site) update(lp updater) {
 
 		// TODO
 		if lp != nil {
-			lp.Update(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+			// discount surplus by actuations the meters have not yet reflected,
+			// so this loadpoint does not re-claim power an earlier one already took
+			controlSitePower := sitePower
+			for _, l := range site.loadpoints {
+				controlSitePower += l.GetInflightPower()
+			}
+
+			// control only: the sense loop runs observe() continuously to keep
+			// the loadpoint's sensed state fresh
+			lp.control(
+				controlSitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			)
 		}
@@ -1106,9 +1115,39 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	}
 }
 
-// loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
+// senseInterval is the default fast sensing cadence. It is independent of the
+// control interval; loadpoints without a charger-specific preference
+// (api.IntervalGetter) sense at this fixed rate.
+const senseInterval = 2 * time.Second
+
+// senseLoop continuously polls all loadpoints in parallel for status and live
+// measurements, publishing them for snappy UI updates and triggering an
+// immediate control pass when a charger status change is detected. It runs
+// independently of the control loop so observability latency no longer scales
+// with the number of loadpoints.
+func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+			var wg sync.WaitGroup
+			for _, lp := range site.loadpoints {
+				wg.Go(lp.Sense)
+			}
+			wg.Wait()
+		case <-stopC:
+			return
+		}
+	}
+}
+
+// loopLoadpoints feeds the next loadpoint to control to the given channel. It
+// prefers loadpoints with pending control work (events, deferred actuations) so
+// they are served promptly, but alternates with a round-robin sweep so neither
+// a pending loadpoint nor an idle one can starve the other.
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
+	var cursor int
+	var servedPending bool // alternate so pending work can't starve the round-robin
 
 	for {
 		if len(site.loadpoints) == 0 {
@@ -1116,11 +1155,32 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 			})
 			next <- nil
-		} else {
-			for _, lp := range site.loadpoints {
-				next <- lp
+			continue
+		}
+
+		// prefer a loadpoint with pending control work, but only every other
+		// dispatch so a perpetually-pending loadpoint cannot starve the
+		// round-robin sweep that keeps idle loadpoints regulated
+		var lp *Loadpoint
+		if !servedPending {
+			for _, cand := range site.loadpoints {
+				if cand.pendingControl.Load() {
+					lp = cand
+					break
+				}
 			}
 		}
+
+		if lp != nil {
+			servedPending = true
+		} else {
+			lp = site.loadpoints[cursor]
+			cursor = (cursor + 1) % len(site.loadpoints)
+			servedPending = false
+		}
+
+		lp.pendingControl.Store(false)
+		next <- lp
 	}
 }
 
@@ -1131,9 +1191,22 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
+	// the in-flight reserve treats a just-actuated setpoint as settling for one
+	// control interval, so each loadpoint needs to know it
+	for _, lp := range site.loadpoints {
+		lp.interval = interval
+	}
+
 	loadpointChan := make(chan updater)
 	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
+	}
+
+	// fast sense loop: decouple status/measurement latency from loadpoint count.
+	// never sense slower than the control loop (cap the 2s default at interval,
+	// relevant for very short intervals such as integration tests)
+	if len(site.loadpoints) > 0 {
+		go site.senseLoop(stopC, min(senseInterval, interval))
 	}
 
 	site.update(<-loadpointChan) // start immediately
@@ -1143,6 +1216,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		case <-tick:
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
+			lp.pendingControl.Store(false)
 			site.update(lp)
 		case <-stopC:
 			return
