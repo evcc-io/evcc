@@ -10,6 +10,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -261,6 +262,11 @@ func (v *API) datasets(vin, identifier string) ([]dataset, error) {
 
 	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
 	if err != nil {
+		// the portal answers 404 "No files available for this request" until the
+		// vehicle has delivered its first dataset
+		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -286,32 +292,38 @@ func (v *API) download(vin, identifier, name string) ([]byte, error) {
 }
 
 // Status downloads the newest dataset for the vehicle and decodes its data points
-// into a map keyed by the dotted field name (e.g. "state_of_charge").
-func (v *API) Status(vin string) (map[string]string, error) {
+// into a map keyed by the dotted field name (e.g. "state_of_charge"). It also
+// returns the dataset's creation time, which drives the refresh cadence.
+func (v *API) Status(vin string) (map[string]string, time.Time, error) {
 	identifier, err := v.identifier(vin)
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 
 	list, err := v.datasets(vin, identifier)
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 
-	name := newestDataset(list)
-	if name == "" {
+	d := newestDataset(list)
+	if d.Name == "" {
 		if len(list) > 0 {
 			// the portal only emits "_no_content_found" placeholders while the
 			// vehicle is asleep and has not produced a dataset with content yet
-			return nil, fmt.Errorf("no dataset with content- wake the vehicle via the app: %w", api.ErrNotAvailable)
+			return nil, time.Time{}, fmt.Errorf("no dataset with content- wake the vehicle via the app: %w", api.ErrNotAvailable)
 		}
-		return nil, api.ErrNotAvailable
+		return nil, time.Time{}, api.ErrNotAvailable
 	}
 
-	b, err := v.download(vin, identifier, name)
+	b, err := v.download(vin, identifier, d.Name)
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 
-	return parseDataset(b)
+	data, err := parseDataset(b)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	return data, d.time(), nil
 }

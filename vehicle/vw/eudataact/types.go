@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"time"
 )
 
 // brand holds the OIDC client id and state suffix for a VW group brand.
@@ -84,6 +85,30 @@ func (d dataset) sortKey() string {
 	return d.Name
 }
 
+// nameTime parses the compact timestamp the portal prefixes to a dataset file
+// name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip. It returns the zero
+// time when the prefix is not a timestamp.
+func nameTime(name string) time.Time {
+	prefix, _, _ := strings.Cut(name, "_")
+	t, _ := time.Parse("20060102150405", prefix)
+	return t
+}
+
+// time returns the timestamp of the data the dataset carries. The portal embeds
+// it in the file name and also delivers it as the createdOn field; the file name
+// is preferred and createdOn is the fallback. A zero time is returned when
+// neither carries a parseable timestamp, in which case the caller falls back to
+// a fixed cadence.
+func (d dataset) time() time.Time {
+	if t := nameTime(d.Name); !t.IsZero() {
+		return t
+	}
+	if t, err := time.Parse(time.RFC3339, d.CreatedOn); err == nil {
+		return t
+	}
+	return time.Time{}
+}
+
 // dataPoint is a single decoded telemetry value of a dataset
 type dataPoint struct {
 	Key           string `json:"key"`
@@ -109,10 +134,10 @@ const (
 	FieldTargetSoc     = "settings.target_soc"
 )
 
-// newestDataset returns the name of the most recent dataset that actually
-// carries content. The portal emits "..._no_content_found.zip" placeholders
-// while the vehicle is asleep, which are skipped.
-func newestDataset(list []dataset) string {
+// newestDataset returns the most recent dataset that actually carries content.
+// The portal emits "..._no_content_found.zip" placeholders while the vehicle is
+// asleep, which are skipped. The zero dataset is returned when none carry content.
+func newestDataset(list []dataset) dataset {
 	var best dataset
 	for _, d := range list {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
@@ -122,7 +147,7 @@ func newestDataset(list []dataset) string {
 			best = d
 		}
 	}
-	return best.Name
+	return best
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and

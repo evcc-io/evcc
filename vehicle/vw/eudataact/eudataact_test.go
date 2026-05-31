@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
@@ -29,6 +30,15 @@ func zipJSON(t *testing.T, doc datasetFile) []byte {
 	return buf.Bytes()
 }
 
+// testProvider returns a provider serving the given static data
+func testProvider(data map[string]string) *Provider {
+	return &Provider{
+		statusG: func() (map[string]string, error) {
+			return data, nil
+		},
+	}
+}
+
 func TestParseDataset(t *testing.T) {
 	doc := datasetFile{
 		VIN: "WVWZZZ123",
@@ -51,7 +61,7 @@ func TestParseDataset(t *testing.T) {
 	assert.Equal(t, "12345", data[FieldOdometer])
 	assert.Equal(t, "210", data[FieldRange])
 
-	p := &Provider{statusG: func() (map[string]string, error) { return data, nil }}
+	p := testProvider(data)
 
 	soc, err := p.Soc()
 	require.NoError(t, err)
@@ -87,7 +97,7 @@ func TestStatusPlugStates(t *testing.T) {
 
 	for _, tc := range tc {
 		data := map[string]string{FieldPlugState: tc.plug, FieldChargingState: tc.charge}
-		p := &Provider{statusG: func() (map[string]string, error) { return data, nil }}
+		p := testProvider(data)
 
 		status, err := p.Status()
 		require.NoError(t, err)
@@ -113,6 +123,41 @@ func TestNewestDataset(t *testing.T) {
 		{Name: "2026-05-31T09-15_no_content_found.zip", CreatedOn: "2026-05-31T09:15:00Z"},
 	}
 
-	assert.Equal(t, "2026-05-31T09-00.zip", newestDataset(list), "newest with content, no-content skipped")
-	assert.Empty(t, newestDataset([]dataset{{Name: "x_no_content_found.zip"}}))
+	assert.Equal(t, "2026-05-31T09-00.zip", newestDataset(list).Name, "newest with content, no-content skipped")
+	assert.Empty(t, newestDataset([]dataset{{Name: "x_no_content_found.zip"}}).Name)
+}
+
+func TestDatasetTime(t *testing.T) {
+	ref := time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC)
+
+	tc := []struct {
+		d        dataset
+		expected time.Time
+	}{
+		{dataset{Name: "20260531080000_WVWZZZ_no_content_found.zip"}, ref},      // real portal format
+		{dataset{Name: "20260531080000_WVWZZZ.zip"}, ref},                       // content file
+		{dataset{CreatedOn: "2026-05-31T08:00:00Z"}, ref},                       // createdOn fallback
+		{dataset{CreatedOn: "2026-05-31T08:00:00Z", Name: "no-stamp.zip"}, ref}, // name unparseable, createdOn used
+		{dataset{Name: "no-timestamp.zip"}, time.Time{}},                        // nothing parseable
+	}
+
+	for _, tc := range tc {
+		assert.Equal(t, tc.expected, tc.d.time(), "dataset %+v", tc.d)
+	}
+}
+
+// TestResetDelay verifies the cache reset is scheduled for when the portal is
+// expected to deliver the dataset following the one just read.
+func TestResetDelay(t *testing.T) {
+	now := time.Date(2026, 5, 31, 12, 0, 0, 0, time.UTC)
+
+	// fresh dataset: reset one interval + latency later
+	assert.Equal(t, portalInterval+portalLatency, resetDelay(now, now))
+
+	// dataset already 5 min old: reset interval + latency after its timestamp
+	assert.Equal(t, portalInterval+portalLatency-5*time.Minute, resetDelay(now.Add(-5*time.Minute), now))
+
+	// next dataset already due: never reset sooner than the latency margin
+	assert.Equal(t, portalLatency, resetDelay(now.Add(-portalInterval), now))
+	assert.Equal(t, portalLatency, resetDelay(now.Add(-time.Hour), now))
 }
