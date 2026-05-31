@@ -681,6 +681,32 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
 }
 
+// GetInflightCurrent returns the max phase current actuated but not yet reflected
+// by the meters (max(0, intended - measured)) during the settle window, else 0.
+// Circuits add it to their metered current so parallel actuation cannot overshoot
+// a circuit limit before the meters catch up. (inflightActive/GetInflightPower
+// live in loadpoint.go alongside the surplus reserve.)
+func (lp *Loadpoint) GetInflightCurrent() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if !lp.inflightActive() {
+		return 0
+	}
+
+	var intended float64
+	if lp.enabled {
+		intended = lp.offeredCurrent
+	}
+
+	measured := intended
+	if lp.chargeCurrents != nil {
+		measured = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	}
+
+	return max(0, intended-measured)
+}
+
 // GetMinCurrent returns the min loadpoint current
 func (lp *Loadpoint) GetMinCurrent() float64 {
 	lp.RLock()

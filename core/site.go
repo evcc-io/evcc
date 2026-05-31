@@ -1193,6 +1193,12 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
+	// the in-flight reserve treats a just-actuated setpoint as settling for one
+	// control interval, so each loadpoint needs to know it
+	for _, lp := range site.loadpoints {
+		lp.interval = interval
+	}
+
 	loadpointChan := make(chan updater)
 	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)

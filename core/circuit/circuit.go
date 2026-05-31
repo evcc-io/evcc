@@ -39,6 +39,9 @@ type Circuit struct {
 	dimmed    *bool
 	curtailed *bool
 
+	inflightCurrent float64 // current actuated but not yet reflected by the meters
+	inflightPower   float64 // power actuated but not yet reflected by the meters
+
 	currentUpdated time.Time
 	powerUpdated   time.Time
 }
@@ -322,19 +325,34 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 		}
 	}
 
-	// meter available
+	// metered power/current, else aggregated from loadpoints and children
 	if c.meter != nil {
-		return c.updateMeters()
+		err = c.updateMeters()
+	} else {
+		c.updateLoadpoints(loadpoints)
+		for _, ch := range c.children {
+			c.power += ch.GetChargePower()
+			c.current += ch.GetMaxPhaseCurrent()
+		}
 	}
 
-	// no meter available
-	c.updateLoadpoints(loadpoints)
+	// aggregate in-flight reserves (actuations not yet reflected by the meters)
+	// so ValidateCurrent/ValidatePower account for parallel actuations that the
+	// metered power/current does not yet include. Run this even on a meter error
+	// so the reserve never goes stale (and stays conservative).
+	c.inflightCurrent, c.inflightPower = 0, 0
+	for _, lp := range loadpoints {
+		if lp.GetCircuit() == c {
+			c.inflightCurrent += lp.GetInflightCurrent()
+			c.inflightPower += lp.GetInflightPower()
+		}
+	}
 	for _, ch := range c.children {
-		c.power += ch.GetChargePower()
-		c.current += ch.GetMaxPhaseCurrent()
+		c.inflightCurrent += ch.GetInflightCurrent()
+		c.inflightPower += ch.GetInflightPower()
 	}
 
-	return nil
+	return err
 }
 
 // GetChargePower returns the actual power
@@ -347,15 +365,27 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 	return c.current
 }
 
+// GetInflightPower returns the aggregated in-flight power of this circuit's
+// loadpoints and child circuits (actuated but not yet metered).
+func (c *Circuit) GetInflightPower() float64 {
+	return c.inflightPower
+}
+
+// GetInflightCurrent returns the aggregated in-flight current of this circuit's
+// loadpoints and child circuits (actuated but not yet metered).
+func (c *Circuit) GetInflightCurrent() float64 {
+	return c.inflightCurrent
+}
+
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
 	if maxPower := c.GetMaxPower(); maxPower != 0 {
 		delta := max(0, new-old)
-		potential := maxPower - c.power
+		potential := maxPower - (c.power + c.inflightPower)
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", c.power, old, new, maxPower, capped)
+			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", c.power+c.inflightPower, old, new, maxPower, capped)
 			new = capped
 		} else {
 			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW ok", c.power, old, new, maxPower)
@@ -373,11 +403,11 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
 		delta := max(0, new-old)
-		potential := maxCurrent - c.current
+		potential := maxCurrent - (c.current + c.inflightCurrent)
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
+			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current+c.inflightCurrent, old, new, maxCurrent, capped)
 			new = capped
 		} else {
 			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, maxCurrent)

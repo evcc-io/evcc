@@ -2,6 +2,7 @@ package core
 
 import (
 	"testing"
+	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
@@ -15,7 +16,7 @@ func TestGetInflightPower(t *testing.T) {
 	Voltage = 230
 
 	clk := clock.NewMock()
-	lp := &Loadpoint{log: util.NewLogger("foo"), clock: clk, phases: 1}
+	lp := &Loadpoint{log: util.NewLogger("foo"), clock: clk, phases: 1, interval: time.Minute}
 	lp.enabled = true
 	lp.offeredCurrent = 16                // just raised the setpoint to 16A
 	lp.chargePower = currentToPower(6, 1) // car still ramping, only drawing 6A
@@ -30,7 +31,7 @@ func TestGetInflightPower(t *testing.T) {
 
 	// and after the window the meters are trusted again regardless
 	lp.chargePower = currentToPower(6, 1)
-	clk.Add(chargerSwitchDuration)
+	clk.Add(lp.interval)
 	assert.Zero(t, lp.GetInflightPower(), "reserve cleared after the settle window")
 }
 
@@ -40,7 +41,7 @@ func TestGetInflightPowerDecrease(t *testing.T) {
 	Voltage = 230
 
 	clk := clock.NewMock()
-	lp := &Loadpoint{log: util.NewLogger("foo"), clock: clk, phases: 1}
+	lp := &Loadpoint{log: util.NewLogger("foo"), clock: clk, phases: 1, interval: time.Minute}
 	lp.enabled = true
 	lp.offeredCurrent = 6                  // just lowered the setpoint to 6A
 	lp.chargePower = currentToPower(16, 1) // still drawing 16A

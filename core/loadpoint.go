@@ -119,17 +119,18 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
-	title                    string   // UI title
-	priority                 int      // Priority
-	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
-	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
-	phasesConfigured         int      // Charger configured phase mode 0/1/3
-	limitSoc                 int      // Session limit for soc
-	limitEnergy              float64  // Session limit for energy
-	smartCostLimit           *float64 // always charge if consumption cost is below this value
-	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
-	batteryBoost             int      // battery boost state
-	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
+	title                    string        // UI title
+	priority                 int           // Priority
+	minCurrent               float64       // PV mode: start current	Min+PV mode: min current
+	maxCurrent               float64       // Max allowed current. Physically ensured by the charger
+	interval                 time.Duration // control interval; also the in-flight reserve settle window
+	phasesConfigured         int           // Charger configured phase mode 0/1/3
+	limitSoc                 int           // Session limit for soc
+	limitEnergy              float64       // Session limit for energy
+	smartCostLimit           *float64      // always charge if consumption cost is below this value
+	smartFeedInPriorityLimit *float64      // prevent charging if feed-in cost is above this value
+	batteryBoost             int           // battery boost state
+	batteryBoostLimit        int           // battery boost soc limit (0-100, 100=disabled)
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -415,15 +416,16 @@ func (lp *Loadpoint) requestUpdate() {
 // inflightActive reports whether a just-actuated setpoint is still settling, so
 // the meters do not yet reflect it. The caller must hold the read lock.
 func (lp *Loadpoint) inflightActive() bool {
-	return !lp.actuatedAt.IsZero() && lp.clock.Since(lp.actuatedAt) < chargerSwitchDuration
+	return !lp.actuatedAt.IsZero() && lp.clock.Since(lp.actuatedAt) < lp.interval
 }
 
 // GetInflightPower returns the charge power actuated but not yet reflected by the
 // meters (max(0, intended - measured)) during the settle window, else 0. The
-// site discounts the surplus by the sum across loadpoints so a just-actuated
-// loadpoint is not re-counted as available surplus until the meters catch up.
-// It is self-correcting: the reserve collapses to zero as soon as the metered
-// power reaches the intended draw.
+// site discounts the surplus by the sum across loadpoints, and circuits add it
+// to their metered power, so a just-actuated loadpoint is not re-counted as
+// available surplus / circuit headroom until the meters catch up. It is
+// self-correcting: the reserve collapses to zero as soon as the metered power
+// reaches the intended draw.
 func (lp *Loadpoint) GetInflightPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
@@ -937,17 +939,18 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		var actualCurrent float64
-		if cc := lp.getChargeCurrents(); cc != nil {
-			actualCurrent = max(cc[0], cc[1], cc[2])
-		} else if lp.charging() {
-			actualCurrent = lp.offeredCurrent
-		}
+		// validate against this loadpoint's full contribution to the circuit
+		// (metered draw + its own in-flight reserve), exactly as the circuit
+		// aggregates c.current/c.power. Using only the metered value would let
+		// this loadpoint's own reserve cap it back down, oscillating on a circuit
+		// sized for a single charger.
+		actualCurrent := lp.GetMaxPhaseCurrent() + lp.GetInflightCurrent()
+		actualPower := lp.GetChargePower() + lp.GetInflightPower()
 
 		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
+		powerLimit := lp.circuit.ValidatePower(actualPower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
