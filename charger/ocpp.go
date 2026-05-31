@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -41,12 +42,22 @@ type OCPP struct {
 	implement.Caps
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
+	lp      loadpoint.API // push notifications on status change
 	phases  int
 	enabled bool
 	current float64
 
 	stackLevelZero      bool
 	profileKindRelative bool
+}
+
+var _ loadpoint.Controller = (*OCPP)(nil)
+
+// LoadpointControl implements loadpoint.Controller, wiring the connector's
+// status-change notification to an immediate sense request.
+func (c *OCPP) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
+	c.conn.SetNotify(lp.Notify)
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only

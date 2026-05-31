@@ -28,6 +28,11 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	var prev core.ChargePointStatus
+	if conn.status != nil {
+		prev = conn.status.Status
+	}
+
 	if conn.status == nil {
 		conn.status = request
 		close(conn.statusC) // signal initial status received
@@ -35,6 +40,12 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.status = request
 	} else {
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
+	}
+
+	// status change is latency-sensitive (e.g. vehicle plugged in): request an
+	// immediate sense instead of waiting for the next poll
+	if conn.notify != nil && conn.status.Status != prev {
+		conn.notify()
 	}
 
 	if conn.isWaitingForAuth() {
@@ -77,6 +88,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		conn.txnId = *request.TransactionId
 	}
 
+	var updated bool
 	for _, meterValue := range sortByAge(request.MeterValue) {
 		if meterValue.Timestamp == nil {
 			// this should be done before the sorting, but lets assume either all or no sample has a timestamp
@@ -89,8 +101,15 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 				sample.Value = strings.TrimSpace(sample.Value)
 				conn.measurements[getSampleKey(sample)] = sample
 				conn.meterUpdated = meterValue.Timestamp.Time
+				updated = true
 			}
 		}
+	}
+
+	// push: fresh meter values arrived. OCPP sends these at MeterValueSampleInterval
+	// (bounded), so request an immediate sense to publish the new measurements instead of waiting for the next poll.
+	if updated && conn.notify != nil {
+		conn.notify()
 	}
 
 	return new(core.MeterValuesConfirmation), nil

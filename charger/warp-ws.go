@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/warp"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -30,6 +31,8 @@ type WarpWS struct {
 	// config
 	log        *util.Logger
 	meterIndex uint
+
+	lp loadpoint.API // push notifications on status change
 
 	mu sync.RWMutex
 
@@ -247,7 +250,11 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	case "evse/user_enabled":
 		err = json.Unmarshal(payload, &w.evse.UserEnabled)
 	case "evse/state":
-		err = json.Unmarshal(payload, &w.evse.State)
+		prev := w.evse.State.Iec61851State
+		if err = json.Unmarshal(payload, &w.evse.State); err == nil && w.evse.State.Iec61851State != prev && w.lp != nil {
+			// status change is latency-sensitive: sense immediately
+			w.lp.Notify()
+		}
 	case "meter/all_values":
 		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {
 			return nil
@@ -472,4 +479,14 @@ func (w *WarpWS) getWarpType() (string, error) {
 	uri := fmt.Sprintf("%s/info/name", w.URI)
 	err := w.GetJSON(uri, &res)
 	return res.WarpType, err
+}
+
+var _ loadpoint.Controller = (*WarpWS)(nil)
+
+// LoadpointControl implements loadpoint.Controller, storing the loadpoint
+// reference so status changes from the WebSocket can be pushed immediately.
+func (w *WarpWS) LoadpointControl(lp loadpoint.API) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.lp = lp
 }
