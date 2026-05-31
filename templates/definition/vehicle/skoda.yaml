@@ -5,7 +5,10 @@ products:
 params:
   - preset: vehicle-base
   - name: timeout
+    deprecated: true
+  - preset: vehicle-features
 render: |
-  type: skoda
+  type: drivesomethinggreater
+  brand: Skoda
   {{ include "vehicle-base" . }}
-  timeout: {{ .timeout }}
+  {{ include "vehicle-features" . }}
