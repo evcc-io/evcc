@@ -91,10 +91,8 @@ type Loadpoint struct {
 	vmu          sync.RWMutex // guard vehicle
 	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
 
-	gate           *actuationGate // site-wide settle lock for budget-increasing actuations (nil = disabled)
+	ledger         *surplusLedger // site-wide in-flight surplus ledger (nil = disabled)
 	pendingControl atomic.Bool    // control re-evaluation requested (scheduler hint)
-	retryMu        sync.Mutex     // guards retryTimer
-	retryTimer     *clock.Timer   // deferred actuation retry
 
 	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
 	observed      bool       // set once observe has produced valid state; control must not actuate before
@@ -414,24 +412,9 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
-// setActuationGate wires the site-wide settle lock into the loadpoint.
-func (lp *Loadpoint) setActuationGate(g *actuationGate) {
-	lp.gate = g
-}
-
-// deferActuation postpones a budget-increasing actuation until the settle lock
-// expires and schedules a re-evaluation. A single managed timer is reset on
-// each deferral to avoid stacking.
-func (lp *Loadpoint) deferActuation(d time.Duration) {
-	lp.pendingControl.Store(true)
-
-	lp.retryMu.Lock()
-	defer lp.retryMu.Unlock()
-
-	if lp.retryTimer != nil {
-		lp.retryTimer.Stop()
-	}
-	lp.retryTimer = lp.clock.AfterFunc(d, lp.requestUpdate)
+// setLedger wires the site-wide in-flight surplus ledger into the loadpoint.
+func (lp *Loadpoint) setLedger(l *surplusLedger) {
+	lp.ledger = l
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -953,18 +936,11 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
 	}
 
-	// settle lock: space budget-increasing actuations site-wide. Reductions and
-	// disables bypass the gate (always safe and must stay immediate).
-	if lp.gate != nil {
-		willEnable := current >= effMinCurrent && !lp.enabled
-		willRaiseCurrent := current >= effMinCurrent && current > lp.offeredCurrent
-		if willEnable || willRaiseCurrent {
-			if granted, retryAfter := lp.gate.tryAcquire(); !granted {
-				lp.log.DEBUG.Printf("actuation deferred for %v (settle lock)", retryAfter.Round(time.Second))
-				lp.deferActuation(retryAfter)
-				return nil
-			}
-		}
+	// capture the intended draw before the change for the surplus ledger
+	ledgerPhases := lp.ActivePhases()
+	var oldPower float64
+	if lp.enabled {
+		oldPower = currentToPower(lp.offeredCurrent, ledgerPhases)
 	}
 
 	// set current
@@ -1027,6 +1003,16 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		} else {
 			lp.stopWakeUpTimer()
 		}
+	}
+
+	// record the un-metered draw delta so other loadpoints discount this claim
+	// from the surplus until the meters catch up
+	if lp.ledger != nil {
+		var newPower float64
+		if lp.enabled {
+			newPower = currentToPower(lp.offeredCurrent, ledgerPhases)
+		}
+		lp.ledger.claim(newPower - oldPower)
 	}
 
 	return nil
@@ -1326,17 +1312,6 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	}
 
 	if lp.GetPhases() != phases {
-		// settle lock: a phase switch causes an implicit charging pause (zero
-		// draw) before the charger resumes on its own. Acquire (and stamp) the
-		// gate in both directions so no other loadpoint actuates during the
-		// pause, which could otherwise overshoot total power afterwards.
-		if lp.gate != nil {
-			if granted, retryAfter := lp.gate.tryAcquire(); !granted {
-				lp.deferActuation(retryAfter)
-				return errActuationDeferred
-			}
-		}
-
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
@@ -1352,6 +1327,15 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 		// some vehicles may hang on phase switch
 		lp.startWakeUpTimer()
+
+		// ledger hold: a phase switch causes an implicit charging pause (zero
+		// draw) before the charger resumes on its own. Reserve the expected
+		// post-switch draw so no other loadpoint grabs that budget during the
+		// pause and overshoots once this loadpoint resumes. The claim expires
+		// with the ledger settle window once the meters reflect the resumed draw.
+		if lp.ledger != nil && lp.enabled {
+			lp.ledger.claim(currentToPower(lp.offeredCurrent, phases))
+		}
 	}
 
 	return nil
@@ -1433,10 +1417,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetDisableDelay() {
 			if err := lp.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
-				// (api.ErrNotAvailable), or the switch was postponed by the
-				// settle lock (errActuationDeferred); assume an incomplete
-				// switch and stay silent
-				if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, errActuationDeferred) {
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
 					lp.log.ERROR.Println(err)
 				}
 				// switch did not complete - phase count is unchanged
@@ -1470,10 +1452,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetEnableDelay() {
 			if err := lp.scalePhases(3); err != nil {
 				// a charger may report it cannot switch phases right now
-				// (api.ErrNotAvailable), or the switch was postponed by the
-				// settle lock (errActuationDeferred); assume an incomplete
-				// switch and stay silent
-				if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, errActuationDeferred) {
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
 					lp.log.ERROR.Println(err)
 				}
 				// switch did not complete - phase count is unchanged
@@ -2311,8 +2291,8 @@ func (lp *Loadpoint) controlLocked(sitePower, batteryBoostPower float64, consump
 	// 	lp.publish(keys.RemoteDisabled, remoteDisabled)
 	// }
 
-	// log any error (a deferred actuation is a silent no-op that will retry)
-	if err != nil && !errors.Is(err, errActuationDeferred) {
+	// log any error
+	if err != nil {
 		lp.log.ERROR.Println(err)
 	}
 }

@@ -59,6 +59,8 @@ type Site struct {
 	sync.RWMutex
 	log *util.Logger
 
+	ledger *surplusLedger // in-flight surplus ledger shared with loadpoints
+
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
@@ -983,10 +985,17 @@ func (site *Site) update(lp updater) {
 
 		// TODO
 		if lp != nil {
+			// discount surplus by actuations the meters have not yet reflected,
+			// so this loadpoint does not re-claim power an earlier one already took
+			controlSitePower := sitePower
+			if site.ledger != nil {
+				controlSitePower += site.ledger.inflight()
+			}
+
 			// control only: the sense loop runs observe() continuously to keep
 			// the loadpoint's sensed state fresh
 			lp.control(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				controlSitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			)
 		}
@@ -1198,11 +1207,12 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		go site.loopLoadpoints(loadpointChan)
 	}
 
-	// settle lock: minimum spacing between budget-increasing actuations site-wide,
-	// derived from the control interval (no dedicated config key)
-	gate := newActuationGate(clock.New(), interval)
+	// surplus ledger: discount sitePower by actuations the meters have not yet
+	// reflected, so loadpoints can actuate in parallel without overshoot. The
+	// reconciliation window is derived from the control interval (no new key).
+	site.ledger = newSurplusLedger(clock.New(), interval)
 	for _, lp := range site.loadpoints {
-		lp.setActuationGate(gate)
+		lp.setLedger(site.ledger)
 	}
 
 	// fast sense loop: decouple status/measurement latency from loadpoint count
