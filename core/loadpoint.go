@@ -91,10 +91,8 @@ type Loadpoint struct {
 	vmu          sync.RWMutex // guard vehicle
 	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
 
-	gate           *actuationGate // site-wide settle lock for budget-increasing actuations (nil = disabled)
-	pendingControl atomic.Bool    // control re-evaluation requested (scheduler hint)
-	retryMu        sync.Mutex     // guards retryTimer
-	retryTimer     *clock.Timer   // deferred actuation retry
+	actuatedAt     time.Time   // last setpoint change; opens the in-flight reserve window
+	pendingControl atomic.Bool // control re-evaluation requested (scheduler hint)
 
 	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
 	observed      bool       // set once observe has produced valid state; control must not actuate before
@@ -414,24 +412,32 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
-// setActuationGate wires the site-wide settle lock into the loadpoint.
-func (lp *Loadpoint) setActuationGate(g *actuationGate) {
-	lp.gate = g
+// inflightActive reports whether a just-actuated setpoint is still settling, so
+// the meters do not yet reflect it. The caller must hold the read lock.
+func (lp *Loadpoint) inflightActive() bool {
+	return !lp.actuatedAt.IsZero() && lp.clock.Since(lp.actuatedAt) < chargerSwitchDuration
 }
 
-// deferActuation postpones a budget-increasing actuation until the settle lock
-// expires and schedules a re-evaluation. A single managed timer is reset on
-// each deferral to avoid stacking.
-func (lp *Loadpoint) deferActuation(d time.Duration) {
-	lp.pendingControl.Store(true)
+// GetInflightPower returns the charge power actuated but not yet reflected by the
+// meters (max(0, intended - measured)) during the settle window, else 0. The
+// site discounts the surplus by the sum across loadpoints so a just-actuated
+// loadpoint is not re-counted as available surplus until the meters catch up.
+// It is self-correcting: the reserve collapses to zero as soon as the metered
+// power reaches the intended draw.
+func (lp *Loadpoint) GetInflightPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
 
-	lp.retryMu.Lock()
-	defer lp.retryMu.Unlock()
-
-	if lp.retryTimer != nil {
-		lp.retryTimer.Stop()
+	if !lp.inflightActive() {
+		return 0
 	}
-	lp.retryTimer = lp.clock.AfterFunc(d, lp.requestUpdate)
+
+	var intended float64
+	if lp.enabled && lp.phases > 0 {
+		intended = currentToPower(lp.offeredCurrent, lp.phases)
+	}
+
+	return max(0, intended-lp.chargePower)
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -953,18 +959,11 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
 	}
 
-	// settle lock: space budget-increasing actuations site-wide. Reductions and
-	// disables bypass the gate (always safe and must stay immediate).
-	if lp.gate != nil {
-		willEnable := current >= effMinCurrent && !lp.enabled
-		willRaiseCurrent := current >= effMinCurrent && current > lp.offeredCurrent
-		if willEnable || willRaiseCurrent {
-			if granted, retryAfter := lp.gate.tryAcquire(); !granted {
-				lp.log.DEBUG.Printf("actuation deferred for %v (settle lock)", retryAfter.Round(time.Second))
-				lp.deferActuation(retryAfter)
-				return nil
-			}
-		}
+	// capture the intended draw before the change for the in-flight reserve
+	ledgerPhases := lp.ActivePhases()
+	var oldPower float64
+	if lp.enabled {
+		oldPower = currentToPower(lp.offeredCurrent, ledgerPhases)
 	}
 
 	// set current
@@ -1027,6 +1026,17 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		} else {
 			lp.stopWakeUpTimer()
 		}
+	}
+
+	// open the in-flight reserve window if the intended draw changed, so other
+	// loadpoints discount this un-metered actuation from the surplus until the
+	// meters catch up
+	var newPower float64
+	if lp.enabled {
+		newPower = currentToPower(lp.offeredCurrent, ledgerPhases)
+	}
+	if newPower != oldPower {
+		lp.actuatedAt = lp.clock.Now()
 	}
 
 	return nil
@@ -1326,17 +1336,6 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	}
 
 	if lp.GetPhases() != phases {
-		// settle lock: a phase switch causes an implicit charging pause (zero
-		// draw) before the charger resumes on its own. Acquire (and stamp) the
-		// gate in both directions so no other loadpoint actuates during the
-		// pause, which could otherwise overshoot total power afterwards.
-		if lp.gate != nil {
-			if granted, retryAfter := lp.gate.tryAcquire(); !granted {
-				lp.deferActuation(retryAfter)
-				return errActuationDeferred
-			}
-		}
-
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
@@ -1346,6 +1345,12 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 		// prevent premature measurement of active phases
 		lp.phasesSwitched = lp.clock.Now()
+
+		// open the in-flight reserve window: a phase switch causes an implicit
+		// charging pause (zero draw), so the reserve (intended post-switch draw
+		// minus the still-paused metered draw) holds the budget until the meters
+		// reflect the resumed draw
+		lp.actuatedAt = lp.clock.Now()
 
 		// update setting and reset timer
 		lp.SetPhases(phases)
@@ -1433,10 +1438,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetDisableDelay() {
 			if err := lp.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
-				// (api.ErrNotAvailable), or the switch was postponed by the
-				// settle lock (errActuationDeferred); assume an incomplete
-				// switch and stay silent
-				if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, errActuationDeferred) {
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
 					lp.log.ERROR.Println(err)
 				}
 				// switch did not complete - phase count is unchanged
@@ -1470,10 +1473,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetEnableDelay() {
 			if err := lp.scalePhases(3); err != nil {
 				// a charger may report it cannot switch phases right now
-				// (api.ErrNotAvailable), or the switch was postponed by the
-				// settle lock (errActuationDeferred); assume an incomplete
-				// switch and stay silent
-				if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, errActuationDeferred) {
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
 					lp.log.ERROR.Println(err)
 				}
 				// switch did not complete - phase count is unchanged
@@ -2311,8 +2312,8 @@ func (lp *Loadpoint) controlLocked(sitePower, batteryBoostPower float64, consump
 	// 	lp.publish(keys.RemoteDisabled, remoteDisabled)
 	// }
 
-	// log any error (a deferred actuation is a silent no-op that will retry)
-	if err != nil && !errors.Is(err, errActuationDeferred) {
+	// log any error
+	if err != nil {
 		lp.log.ERROR.Println(err)
 	}
 }

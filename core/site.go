@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -983,10 +982,17 @@ func (site *Site) update(lp updater) {
 
 		// TODO
 		if lp != nil {
+			// discount surplus by actuations the meters have not yet reflected,
+			// so this loadpoint does not re-claim power an earlier one already took
+			controlSitePower := sitePower
+			for _, l := range site.loadpoints {
+				controlSitePower += l.GetInflightPower()
+			}
+
 			// control only: the sense loop runs observe() continuously to keep
 			// the loadpoint's sensed state fresh
 			lp.control(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				controlSitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			)
 		}
@@ -1190,13 +1196,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	loadpointChan := make(chan updater)
 	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
-	}
-
-	// settle lock: minimum spacing between budget-increasing actuations site-wide,
-	// derived from the control interval (no dedicated config key)
-	gate := newActuationGate(clock.New(), interval)
-	for _, lp := range site.loadpoints {
-		lp.setActuationGate(gate)
 	}
 
 	// fast sense loop: decouple status/measurement latency from loadpoint count
