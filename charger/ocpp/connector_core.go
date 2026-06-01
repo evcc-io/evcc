@@ -28,13 +28,24 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	var applied bool
 	if conn.status == nil {
 		conn.status = request
 		close(conn.statusC) // signal initial status received
+		applied = true
 	} else if request.Timestamp == nil || conn.timestampValid(request.Timestamp.Time) {
 		conn.status = request
+		applied = true
 	} else {
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
+	}
+
+	// Available means cable unplugged and any prior transaction is stale
+	if applied && request.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
+		conn.log.DEBUG.Printf("clearing stale transaction %d on Available status", conn.txnId)
+		conn.txnId = 0
+		conn.idTag = ""
+		conn.assumeMeterStopped()
 	}
 
 	if conn.isWaitingForAuth() {
