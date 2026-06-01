@@ -311,16 +311,6 @@ export default defineComponent({
 			selectedRegion: settings.savingsRegion || ("Germany" as string),
 		};
 	},
-	mounted() {
-		const modal = this.$refs["modal"] as HTMLElement;
-		modal.addEventListener("shown.bs.modal", this.handleShown);
-		modal.addEventListener("hidden.bs.modal", this.handleHidden);
-	},
-	unmounted() {
-		const modal = this.$refs["modal"] as HTMLElement;
-		modal?.removeEventListener("shown.bs.modal", this.handleShown);
-		modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
-	},
 	computed: {
 		sponsorActive(): boolean {
 			return !!this.sponsor?.status?.name;
@@ -428,6 +418,16 @@ export default defineComponent({
 		indicatorValueShort(): string | undefined {
 			return this.indicatorValueFor(this.indicator, true);
 		},
+	},
+	mounted() {
+		const modal = this.$refs["modal"] as HTMLElement;
+		modal.addEventListener("shown.bs.modal", this.handleShown);
+		modal.addEventListener("hidden.bs.modal", this.handleHidden);
+	},
+	unmounted() {
+		const modal = this.$refs["modal"] as HTMLElement;
+		modal?.removeEventListener("shown.bs.modal", this.handleShown);
+		modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	methods: {
 		showCommunity() {
