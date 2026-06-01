@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -78,26 +77,7 @@ func (v Vehicle) Name() string {
 // createdOn field.
 type dataset struct {
 	Name      string    `json:"name"`
-	CreatedOn string    `json:"createdOn"`
-	Timestamp time.Time `json:"-"`
-}
-
-// nameTime parses the compact timestamp the portal prefixes to a dataset file
-// name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip.
-func nameTime(name string) (time.Time, error) {
-	prefix, _, _ := strings.Cut(name, "_")
-	return time.Parse("20060102150405", prefix)
-}
-
-// time parses the delivery time the dataset carries. The portal embeds it in the
-// file name and also delivers it as the createdOn field; the file name is
-// preferred and createdOn is the fallback. An error is returned when neither
-// carries a parseable timestamp.
-func (d dataset) time() (time.Time, error) {
-	if t, err := nameTime(d.Name); err == nil {
-		return t, nil
-	}
-	return time.Parse(time.RFC3339, d.CreatedOn)
+	CreatedOn time.Time `json:"createdOn"`
 }
 
 // dataPoint is a single data point as delivered in the dataset JSON document
@@ -129,6 +109,7 @@ const (
 	FieldChargingState = "charging_state"
 	FieldPlugState     = "plug_state"
 	FieldTargetSoc     = "settings.target_soc"
+	FieldRemainingTime = "remaining_charging_time"
 )
 
 // contentDatasets returns the datasets that actually carry content, with their
@@ -143,17 +124,11 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 			continue
 		}
 
-		t, err := d.time()
-		if err != nil {
-			return nil, fmt.Errorf("dataset %q: %w", d.Name, err)
-		}
-		d.Timestamp = t
-
 		content = append(content, d)
 	}
 
 	slices.SortStableFunc(content, func(a, b dataset) int {
-		return a.Timestamp.Compare(b.Timestamp)
+		return a.CreatedOn.Compare(b.CreatedOn)
 	})
 
 	return content, nil
