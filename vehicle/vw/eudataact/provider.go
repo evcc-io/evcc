@@ -64,13 +64,13 @@ func resetDelay(ts, now time.Time) time.Duration {
 }
 
 // lookup returns the first present, non-empty value among the given field names
-func lookup(data map[string]point, fields ...string) (string, bool) {
+func lookup(data map[string]point, fields ...string) *point {
 	for _, f := range fields {
-		if v, ok := data[f]; ok && v.Value != "" {
-			return v.Value, true
+		if v, ok := data[f]; ok {
+			return new(v)
 		}
 	}
-	return "", false
+	return nil
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -82,8 +82,8 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldSoc, FieldHvSoc); ok {
-		return strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldSoc, FieldHvSoc); p != nil {
+		return strconv.ParseFloat(p.Value, 64)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -98,12 +98,30 @@ func (v *Provider) Range() (int64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldRange, FieldRangePrimary); ok {
-		f, err := strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldRange, FieldRangePrimary); p != nil {
+		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}
 
 	return 0, api.ErrNotAvailable
+}
+
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	data, err := v.statusG()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if p := lookup(data, FieldRemainingTime); p != nil && p.Value != "65535" {
+		if v, err := strconv.ParseInt(p.Value, 0, 64); err == nil {
+			return p.Timestamp.Add(time.Duration(v) * time.Minute), nil
+		}
+	}
+
+	return time.Time{}, api.ErrNotAvailable
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -115,8 +133,8 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldOdometer); ok {
-		return strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldOdometer); p != nil {
+		return strconv.ParseFloat(p.Value, 64)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -133,11 +151,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, err
 	}
 
-	if s, ok := lookup(data, FieldPlugState); ok && strings.EqualFold(s, "connected") {
+	if p := lookup(data, FieldPlugState); p != nil && strings.EqualFold(p.Value, "connected") {
 		status = api.StatusB
 	}
 
-	if s, ok := lookup(data, FieldChargingState); ok && strings.EqualFold(s, "charging") {
+	if p := lookup(data, FieldChargingState); p != nil && strings.EqualFold(p.Value, "charging") {
 		status = api.StatusC
 	}
 
@@ -153,8 +171,8 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldTargetSoc); ok {
-		f, err := strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldTargetSoc); p != nil {
+		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}
 

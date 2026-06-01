@@ -881,7 +881,7 @@
       "greenShareSub2": "solar, and battery storage",
       "power": "Charging power",
       "powerSub1": "{activeClients} of {totalClients} participants",
-      "powerSub2": "charging…",
+      "powerSub2": "are charging.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -1412,7 +1412,7 @@
     "meterstart": "Meter start",
     "meterstop": "Meter stop",
     "odometer": "Mileage",
-    "price": "Price",
+    "price": "Cost",
     "started": "Started",
     "title": "Charging Session"
   },
@@ -1451,7 +1451,7 @@
       "meterstart": "Meter start (kWh)",
       "meterstop": "Meter stop (kWh)",
       "odometer": "Mileage (km)",
-      "price": "Price",
+      "price": "Cost",
       "priceperkwh": "Price/kWh",
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
@@ -1468,7 +1468,7 @@
     "group": {
       "co2": "Emissions",
       "grid": "Grid",
-      "price": "Price",
+      "price": "Cost",
       "self": "Solar"
     },
     "groupBy": {
@@ -1494,7 +1494,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Price",
+      "price": "Cost",
       "solar": "Solar"
     },
     "vehicle": "Vehicle"

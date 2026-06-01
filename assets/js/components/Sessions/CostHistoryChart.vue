@@ -53,8 +53,6 @@ export default defineComponent({
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
-		suggestedMaxAvgCost: { type: Number, default: 0 },
-		suggestedMaxCost: { type: Number, default: 0 },
 	},
 	computed: {
 		firstDay() {
@@ -179,7 +177,9 @@ export default defineComponent({
 					this.costType === TYPES.PRICE
 						? this.$t("sessions.avgPrice")
 						: this.$t("sessions.co2"),
-				data: Object.values(result).map((index) => index.avgCost),
+				data: Object.values(result).map((index) =>
+					index.totalKWh > 0 ? index.avgCost : null
+				),
 				yAxisID: "y1",
 				tension: 0.25,
 				pointRadius: 0,
@@ -230,6 +230,22 @@ export default defineComponent({
 					id: pickable && type !== "line" ? dataset.label || undefined : undefined,
 				};
 			});
+		},
+		maxBarCost() {
+			if (this.costType !== TYPES.PRICE) return 0;
+			const barDatasets = this.chartData.datasets.filter(
+				(d: any) => (d as any).type === "bar"
+			);
+			const labelCount = this.chartData.labels?.length || 0;
+			let max = 0;
+			for (let i = 0; i < labelCount; i++) {
+				const total = barDatasets.reduce(
+					(sum: number, d: any) => sum + ((d.data[i] as number) || 0),
+					0
+				);
+				if (total > max) max = total;
+			}
+			return max;
 		},
 		options() {
 			// capture vue component this to be used in chartjs callbacks
@@ -331,7 +347,7 @@ export default defineComponent({
 						ticks: {
 							callback: (value: number) => {
 								if (this.costType === TYPES.PRICE) {
-									const showDecimals = this.suggestedMaxCost < 4;
+									const showDecimals = this.maxBarCost < 4;
 									return this.fmtMoney(value, this.currency, showDecimals, true);
 								} else {
 									return this.fmtNumber(value / 1e3, 0);
@@ -340,13 +356,11 @@ export default defineComponent({
 							color: colors.muted,
 							maxTicksLimit: 6,
 						},
-						suggestedMax: this.suggestedMaxCost,
 						suggestedMin: 0,
 					},
 					y1: {
 						position: "left",
 						border: { display: false },
-						suggestedMax: this.suggestedMaxAvgCost,
 						grid: {
 							drawOnChartArea: false,
 						},
