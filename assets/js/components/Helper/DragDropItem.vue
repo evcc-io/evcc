@@ -8,12 +8,7 @@
 		:aria-label="$t('config.general.dragItem', { title })"
 		tabindex="0"
 	>
-		<div
-			class="drag-handle me-2"
-			:aria-label="$t('config.general.dragHandle')"
-			role="button"
-			tabindex="-1"
-		>
+		<div class="drag-handle me-2" aria-hidden="true">
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</div>
 		<div class="flex-grow-1">
@@ -42,12 +37,16 @@ export default defineComponent({
 
 <style scoped>
 .drag-drop-item {
-	cursor: move;
+	cursor: grab;
 	user-select: none;
 	background-color: var(--evcc-box);
 	border-color: var(--bs-border-color-translucent) !important;
 	transition: all var(--evcc-transition-fast) ease-in-out;
 	transform: translate(0, 0);
+}
+
+.drag-drop-item:active {
+	cursor: grabbing;
 }
 
 .drag-drop-item--hidden {
@@ -58,11 +57,11 @@ export default defineComponent({
 	color: var(--bs-secondary);
 	opacity: 0.7;
 	transition: opacity var(--evcc-transition-fast) ease-in-out;
-	cursor: grab;
+	cursor: inherit;
 }
 
-.drag-handle:active {
-	cursor: grabbing;
+.drag-handle > * {
+	pointer-events: none;
 }
 
 .drag-drop-item:hover .drag-handle {

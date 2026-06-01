@@ -3,6 +3,9 @@ package easee
 // API is the Easee API endpoint
 const API = "https://api.easee.com/api"
 
+// LocalOcppAPI is the Easee local OCPP configuration API endpoint
+const LocalOcppAPI = "https://api.easee.com/local-ocpp"
+
 const (
 	ChargeStart  = "start_charging"
 	ChargeStop   = "stop_charging"

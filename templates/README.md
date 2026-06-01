@@ -22,10 +22,27 @@ The following describes each possible element in a yaml file
 
 Each product contains:
 
-- `brand`: an optional brand description of the product
-- `description`: an optional description e.g. of the product model. Expects `generic`, `de`, `en`: an optional description of the product
+- `brand`: company that makes the product or offers the service. No regions, variants, or API names — those, if required for clarity, belong in `description`.
+- `description`: product, service, model, or API name. Expects `generic`, `de`, `en`.
 
-Either `brand`, or `description` need to be set.
+Either `brand` or `description` needs to be set. Examples by device class:
+
+- Vehicles — `brand` is the make, `description` the connected service:
+  - `brand: Hyundai`, `description.generic: Bluelink`
+  - `brand: Hyundai`, `description.generic: Bluelink (US)`
+- Chargers — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABL`, `description.generic: eMH1`
+  - `brand: ABL`, `description.generic: eMH2`
+  - `brand: Alfen`, `description.generic: Eve`
+- Meters — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABB`, `description.generic: A43`
+  - `brand: my-PV`, `description.generic: AC ELWA 2`
+- Tariffs — `brand` is the service provider, `description` the API variant:
+  - `brand: Electricity Maps`, `description.generic: Commercial API`
+  - `brand: Electricity Maps`, `description.generic: Free API`
+- Generic integrations (OSS tools, community projects): omit `brand`, put the project name in `description.generic`, set `group: generic`. Keep upstream casing (e.g. `TeslaFi`, `ioBroker.bmw`, `mg2mqtt`).
+
+Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
 
 ## `group`
 

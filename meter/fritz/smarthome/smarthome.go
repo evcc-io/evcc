@@ -88,10 +88,10 @@ func (c *Connection) resolveUnitUID(unit int) (string, error) {
 		if d.AIN != c.AIN {
 			continue
 		}
-		if len(d.UnitUids) < unit+1 {
+		if len(d.UnitUids) < unit {
 			return "", fmt.Errorf("invalid unit %d, got %v", unit, d.UnitUids)
 		}
-		return d.UnitUids[unit], nil
+		return d.UnitUids[unit-1], nil
 	}
 
 	return "", fmt.Errorf("ain not found: %s", c.AIN)

@@ -9,7 +9,7 @@ products:
   - brand: Mennekes
     description:
       generic: Smart T (ACU)
-capabilities: ["rfid"]
+capabilities: ["rfid", "dim"]
 requirements:
   description:
     de: |

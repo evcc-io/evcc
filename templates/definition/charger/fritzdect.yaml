@@ -39,6 +39,7 @@ params:
   - name: unit
     advanced: true
     type: int
+    default: 1
     description:
       de: Einheit
       en: Unit

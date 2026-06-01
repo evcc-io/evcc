@@ -17,8 +17,12 @@ import (
 
 var (
 	Instance *gorm.DB
-	FilePath string // Store the actual SQLite file path
+	filePath string // Store the actual SQLite file path
 )
+
+func FilePath() string {
+	return filePath
+}
 
 func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
@@ -45,12 +49,13 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		}
 
 		// Store the expanded file path for later use
-		FilePath = file
+		filePath = file
 
-		addParam := func(typ, param string) {
+		// TODO WAL mode "journal_mode(WAL)", "synchronous(NORMAL)"
+		for _, pragma := range []string{"foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
 			// Add busy_timeout pragma if not already present
-			if short, _, _ := strings.Cut(param, "("); strings.Contains(params, typ+"="+short) {
-				return
+			if short, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+short) {
+				continue
 			}
 
 			// Append '&' if there are existing connection parameters
@@ -59,16 +64,8 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			}
 
 			// Add busy_timeout pragma to connection parameters
-			params += typ + "=" + param
+			params += "_pragma=" + pragma
 		}
-
-		// TODO "foreign_keys(1)" is only set in metrics migrator to ensure home entity exists
-		for _, pragma := range []string{"busy_timeout(5000)", "synchronous(NORMAL)"} {
-			addParam("_pragma", pragma)
-		}
-
-		// https://github.com/libtnb/sqlite/issues/15
-		addParam("_time_format", "sqlite")
 
 		connectionStr := file + "?" + params
 
@@ -116,7 +113,12 @@ func Close() error {
 	return db.Close()
 }
 
-func Backup(ctx context.Context, target string) error {
+type backuper interface {
+	NewBackup(string) (*sqlite3.Backup, error)
+	NewRestore(string) (*sqlite3.Backup, error)
+}
+
+func runWithBackuper(ctx context.Context, fun func(backuper) (*sqlite3.Backup, error)) error {
 	live, err := Instance.DB()
 	if err != nil {
 		return err
@@ -129,17 +131,12 @@ func Backup(ctx context.Context, target string) error {
 	defer conn.Close()
 
 	return conn.Raw(func(driverConn any) error {
-		type backuper interface {
-			NewBackup(string) (*sqlite3.Backup, error)
-			NewRestore(string) (*sqlite3.Backup, error)
-		}
-
 		conn, ok := driverConn.(backuper)
 		if !ok {
 			return errors.New("invalid db type")
 		}
 
-		bck, err := conn.NewBackup(target)
+		bck, err := fun(conn)
 		if err != nil {
 			return err
 		}
@@ -149,5 +146,17 @@ func Backup(ctx context.Context, target string) error {
 		}
 
 		return bck.Finish()
+	})
+}
+
+func Backup(ctx context.Context, target string) error {
+	return runWithBackuper(ctx, func(conn backuper) (*sqlite3.Backup, error) {
+		return conn.NewBackup(target)
+	})
+}
+
+func Restore(ctx context.Context, target string) error {
+	return runWithBackuper(ctx, func(conn backuper) (*sqlite3.Backup, error) {
+		return conn.NewRestore(target)
 	})
 }

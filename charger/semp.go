@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -30,6 +31,7 @@ import (
 
 // SEMP charger implementation
 type SEMP struct {
+	implement.Caps
 	log            *util.Logger
 	conn           *semp.Connection
 	cache          time.Duration
@@ -43,8 +45,6 @@ type SEMP struct {
 	maxPower       int
 	hasStatusParam bool
 }
-
-//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.ChargeRater
 
 func init() {
 	registry.AddCtx("semp", NewSEMPFromConfig)
@@ -76,6 +76,7 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	log := util.NewLogger("semp")
 
 	wb := &SEMP{
+		Caps:     implement.New(),
 		log:      log,
 		cache:    cache,
 		phases:   3,
@@ -113,12 +114,6 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 		log.DEBUG.Printf("auto-detected device ID: %s", wb.deviceID)
 	}
 
-	var (
-		phases1p3p    func(int) error
-		getPhases     func() (int, error)
-		chargedEnergy func() (float64, error)
-	)
-
 	// Check if device supports phase switching by checking power characteristics
 	info, err := wb.getDeviceInfo()
 	if err != nil {
@@ -130,13 +125,13 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 
 	// Assume Phase switching support if MinPowerConsumption < 4140W and MaxPowerConsumption > 4600W
 	if wb.minPower > 0 && wb.minPower < 4140 && wb.maxPower > 4600 {
-		phases1p3p = wb.phases1p3p
-		getPhases = wb.getPhases
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	// Check if device supports charged energy reporting via Parameters endpoint
 	if _, err := wb.getParameter("Measurement.ChaSess.WhIn"); err == nil {
-		chargedEnergy = wb.chargedEnergy
+		implement.Has(wb, implement.ChargeRater(wb.chargedEnergy))
 	}
 
 	// Check if device supports status reporting via Parameters endpoint
@@ -151,7 +146,7 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 
 	go wb.heartbeat(ctx)
 
-	return decorateSEMP(wb, phases1p3p, getPhases, chargedEnergy), nil
+	return wb, nil
 }
 
 // heartbeat ensures that device control updates are sent at least once per minute

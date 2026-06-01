@@ -6,6 +6,7 @@ __debug_bin*
 *.db
 *.gz
 *.py
+testdata/**/*
 *.log
 *.json
 !i18n/*.json

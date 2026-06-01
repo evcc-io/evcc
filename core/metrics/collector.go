@@ -9,11 +9,13 @@ import (
 
 const (
 	// groups
+	Forecast  = "forecast"
 	Battery   = "battery"
 	Grid      = "grid"
 	PV        = "pv"
 	Home      = "home" // meter and group (virtual measurement)
 	Loadpoint = "loadpoint"
+	Meter     = "meter" // generic meter (ext/aux)
 )
 
 type Collector struct {
@@ -54,18 +56,31 @@ func (c *Collector) process(fun func()) error {
 
 	fun()
 
-	if slotStart := now.Truncate(tariff.SlotDuration); slotStart.After(c.started) {
-		// skip incomplete first slot
-		if !c.started.IsZero() {
+	slotStart := now.Truncate(tariff.SlotDuration)
+
+	switch {
+	case c.started.IsZero():
+		// keep started un-truncated so a mid-slot start stays distinguishable
+		c.started = now
+
+	case slotStart.After(c.started):
+		// persist the completed slot only if started is the immediately
+		// preceding slot boundary - false for the mid-slot first slot and
+		// for a slot reached after a data gap
+		if c.started.Equal(slotStart.Add(-tariff.SlotDuration)) {
 			if err := c.persist(); err != nil {
 				return err
 			}
 		}
 
 		c.started = slotStart
-		c.accu.Import = 0
-		c.accu.Export = 0
+
+	default:
+		return nil
 	}
+
+	c.accu.Energy = 0
+	c.accu.ReturnEnergy = 0
 
 	return nil
 }

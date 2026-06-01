@@ -12,6 +12,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/rct"
 	"golang.org/x/sync/errgroup"
@@ -19,6 +20,7 @@ import (
 
 // RCT implements the api.Meter interface
 type RCT struct {
+	implement.Caps
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
@@ -33,8 +35,6 @@ var (
 func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
 }
-
-//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t api.MeterEnergy,api.Curtailer,api.Battery,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController,api.BatteryCapacity
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -93,22 +93,18 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	rctMu.Unlock()
 
 	m := &RCT{
+		Caps:          implement.New(),
 		usage:         strings.ToLower(usage),
 		conn:          conn,
 		externalPower: externalPower,
 	}
 
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
 	if usage == "grid" {
-		totalEnergy = m.totalEnergy
+		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
-	// decorate api.Curtailer
-	var curtail func(bool) error
-	var curtailed func() (bool, error)
 	if usage == "pv" {
-		curtail = func(b bool) error {
+		curtail := func(b bool) error {
 			var r float64
 			if !b {
 				r = 1.0
@@ -116,18 +112,13 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(r))
 		}
 
-		curtailed = func() (bool, error) {
+		curtailed := func() (bool, error) {
 			r, err := m.queryFloat(rct.BufVControlPowerReduction)
 			return r != 1, err
 		}
-	}
 
-	// decorate api.Battery
-	var batterySoc func() (float64, error)
-	var batterySocLimiter func() (float64, float64)
-	var batteryPowerLimiter func() (float64, float64)
-	var batteryCapacity func() float64
-	var batteryMode func(api.BatteryMode) error
+		implement.Has(m, implement.Curtailer(curtail, curtailed))
+	}
 
 	if usage == "battery" {
 		// validate capacity configuration for dual battery setups
@@ -135,7 +126,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return nil, errors.New("missing first battery capacity")
 		}
 
-		batterySoc = func() (float64, error) {
+		batterySoc := func() (float64, error) {
 			soc, err := m.queryFloat(rct.BatterySoC)
 			if err != nil {
 				return 0, err
@@ -149,14 +140,15 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return (soc*capacity + soc2*capacity2) / (capacity + capacity2) * 100, err
 		}
 
-		batterySocLimiter = batterySocLimits.Decorator()
-		batteryPowerLimiter = batteryPowerLimits.Decorator()
+		implement.Has(m, implement.Battery(batterySoc))
+		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
 
 		if capacity != 0 {
-			batteryCapacity = func() float64 { return capacity + capacity2 }
+			implement.Has(m, implement.BatteryCapacity(func() float64 { return capacity + capacity2 }))
 		}
 
-		batteryMode = func(mode api.BatteryMode) error {
+		batteryMode := func(mode api.BatteryMode) error {
 			if mode != api.BatteryNormal {
 				batStatus, err := m.queryInt32(rct.BatteryStatus2)
 				if err != nil {
@@ -224,9 +216,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			return eg.Wait()
 		}
+
+		implement.Has(m, implement.BatteryController(batteryMode))
 	}
 
-	return decorateRCT(m, totalEnergy, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
+	return m, nil
 }
 
 // CurrentPower implements the api.Meter interface
