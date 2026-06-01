@@ -554,6 +554,28 @@ func (c *Easee) Enable(enable bool) (err error) {
 	}
 
 	if enable {
+		if c.current > 0 && c.current < 7 {
+			override := 7.0
+			chargerData := easee.ChargerSettings{
+				DynamicChargerCurrent: &override,
+			}
+			chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
+			noop, sendErr := c.dispatcher.Send(chargerURI, chargerData)
+			if sendErr != nil {
+				c.log.WARN.Printf("enable: failed to set charger current override: %v", sendErr)
+			} else if !noop {
+				if waitErr := c.waitForDynamicChargerCurrent(override); waitErr != nil {
+					c.log.WARN.Printf("enable: charger current override confirmation timeout: %v", waitErr)
+				}
+			}
+
+			c.mux.Lock()
+			c.current = override
+			c.mux.Unlock()
+
+			return nil
+		}
+
 		// reset currents after enable, as easee automatically resets to maxA
 		return c.MaxCurrent(int64(c.current))
 	}

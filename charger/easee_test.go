@@ -559,6 +559,93 @@ func TestEasee_Phases1p3p_scaleUp_sendsDCC7(t *testing.T) {
 	assert.Equal(t, 7.0, e.current, "c.current should be set to 7 after scale-up")
 }
 
+func TestEasee_Enable_kickstart_lowCurrent(t *testing.T) {
+	const chargerID = "TESTTEST"
+
+	e := newEasee()
+	e.charger = chargerID
+	e.current = 6
+	e.opMode = easee.ModeAwaitingStart
+	e.chargerEnabled = true
+
+	httpmock.ActivateNonDefault(e.Client)
+	defer httpmock.DeactivateAndReset()
+
+	// Mock ChargeResume command — 202 with empty object (noop)
+	resumeURI := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, chargerID, easee.ChargeResume)
+	httpmock.RegisterResponder(http.MethodPost, resumeURI,
+		httpmock.NewStringResponder(202, "{}"))
+
+	// Simulate charger reaching enabled state + DCC=32 via background goroutine
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		e.mux.Lock()
+		e.opMode = easee.ModeCharging
+		e.mux.Unlock()
+		e.obsC <- easee.Observation{ID: easee.CHARGER_OP_MODE, Value: "3", DataType: easee.Integer}
+		time.Sleep(10 * time.Millisecond)
+		e.mux.Lock()
+		e.dynamicChargerCurrent = 32
+		e.mux.Unlock()
+		e.obsC <- easee.Observation{ID: easee.DYNAMIC_CHARGER_CURRENT, Value: "32", DataType: easee.Double}
+	}()
+
+	// Mock POST charger settings (DCC:7 kickstart) — return 202 noop
+	chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+	httpmock.RegisterResponder(http.MethodPost, chargerURI,
+		httpmock.NewStringResponder(202, "[]"))
+
+	err := e.Enable(true)
+	assert.NoError(t, err)
+
+	info := httpmock.GetCallCountInfo()
+	assert.Equal(t, 1, info["POST "+chargerURI], "expected DCC:7 kickstart POST to charger settings")
+	assert.Equal(t, 7.0, e.current, "c.current should be set to 7 after kickstart")
+}
+
+func TestEasee_Enable_noKickstart_highCurrent(t *testing.T) {
+	const chargerID = "TESTTEST"
+
+	e := newEasee()
+	e.charger = chargerID
+	e.current = 10
+	e.opMode = easee.ModeAwaitingStart
+	e.chargerEnabled = true
+	e.dynamicChargerCurrent = 10 // noop: already at target
+
+	httpmock.ActivateNonDefault(e.Client)
+	defer httpmock.DeactivateAndReset()
+
+	resumeURI := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, chargerID, easee.ChargeResume)
+	httpmock.RegisterResponder(http.MethodPost, resumeURI,
+		httpmock.NewStringResponder(202, "{}"))
+
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		e.mux.Lock()
+		e.opMode = easee.ModeCharging
+		e.mux.Unlock()
+		// deliver observation for opMode change
+		e.obsC <- easee.Observation{ID: easee.CHARGER_OP_MODE, Value: "3", DataType: easee.Integer}
+		time.Sleep(10 * time.Millisecond)
+		e.mux.Lock()
+		e.dynamicChargerCurrent = 32
+		e.mux.Unlock()
+		// deliver observation for DCC=32
+		e.obsC <- easee.Observation{ID: easee.DYNAMIC_CHARGER_CURRENT, Value: "32", DataType: easee.Double}
+	}()
+
+	// Mock POST charger settings (MaxCurrent(10)) — return 202 noop
+	chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+	httpmock.RegisterResponder(http.MethodPost, chargerURI,
+		httpmock.NewStringResponder(202, "[]"))
+
+	err := e.Enable(true)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 10.0, e.current, "c.current should remain 10 (no kickstart)")
+}
+
 func TestLivenessCheck_staleObservations(t *testing.T) {
 	e := newEasee()
 	e.opMode = easee.ModeCharging
