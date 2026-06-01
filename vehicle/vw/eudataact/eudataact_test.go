@@ -132,7 +132,7 @@ func TestContentDatasets(t *testing.T) {
 	require.Len(t, content, 2, "no-content placeholder dropped")
 	assert.Equal(t, "20260531080000_WVWZZZ.zip", content[0].Name, "oldest first")
 	assert.Equal(t, "20260531090000_WVWZZZ.zip", content[1].Name, "newest last")
-	assert.Equal(t, time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC), content[0].Timestamp, "timestamp parsed")
+	assert.Equal(t, time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC), content[0].CreatedOn, "timestamp parsed")
 
 	// no-content placeholders are skipped without parsing
 	empty, err := contentDatasets([]dataset{{Name: "x_no_content_found.zip"}})
@@ -149,7 +149,7 @@ func TestPending(t *testing.T) {
 	for i := range 10 {
 		content = append(content, dataset{
 			Name:      fmt.Sprintf("20260531%02d0000_WVWZZZ.zip", i),
-			Timestamp: time.Date(2026, 5, 31, i, 0, 0, 0, time.UTC),
+			CreatedOn: time.Date(2026, 5, 31, i, 0, 0, 0, time.UTC),
 		}) // hour i, oldest first
 	}
 
@@ -163,13 +163,13 @@ func TestPending(t *testing.T) {
 	assert.Len(t, pending(content[:3], time.Time{}), 3)
 
 	// high-water at the newest merged dataset: nothing new to download
-	after := content[len(content)-1].Timestamp
+	after := content[len(content)-1].CreatedOn
 	assert.Empty(t, pending(content, after))
 
 	// a newer dataset arrives
 	content = append(content, dataset{
 		Name:      "20260531100000_WVWZZZ.zip",
-		Timestamp: time.Date(2026, 5, 31, 10, 0, 0, 0, time.UTC),
+		CreatedOn: time.Date(2026, 5, 31, 10, 0, 0, 0, time.UTC),
 	})
 	got = pending(content, after)
 	require.Len(t, got, 1)
@@ -195,32 +195,6 @@ func TestMerge(t *testing.T) {
 	assert.Equal(t, "80", dst[FieldSoc].Value, "newer datapoint wins")
 	assert.Equal(t, "100", dst[FieldOdometer].Value, "older datapoint ignored")
 	assert.Equal(t, "200", dst[FieldRange].Value, "new field added")
-}
-
-func TestDatasetTime(t *testing.T) {
-	ref := time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC)
-
-	tc := []struct {
-		d        dataset
-		expected time.Time
-		err      bool
-	}{
-		{dataset{Name: "20260531080000_WVWZZZ_no_content_found.zip"}, ref, false},      // real portal format
-		{dataset{Name: "20260531080000_WVWZZZ.zip"}, ref, false},                       // content file
-		{dataset{CreatedOn: "2026-05-31T08:00:00Z"}, ref, false},                       // createdOn fallback
-		{dataset{CreatedOn: "2026-05-31T08:00:00Z", Name: "no-stamp.zip"}, ref, false}, // name unparseable, createdOn used
-		{dataset{Name: "no-timestamp.zip"}, time.Time{}, true},                         // nothing parseable
-	}
-
-	for _, tc := range tc {
-		got, err := tc.d.time()
-		if tc.err {
-			assert.Error(t, err, "dataset %+v", tc.d)
-			continue
-		}
-		require.NoError(t, err, "dataset %+v", tc.d)
-		assert.Equal(t, tc.expected, got, "dataset %+v", tc.d)
-	}
 }
 
 // TestResetDelay verifies the cache reset is scheduled for when the portal is

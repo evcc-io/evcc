@@ -94,8 +94,8 @@ func (s *store) update() (time.Time, error) {
 		merge(s.data, data)
 
 		// advance the high-water mark so this dataset is never downloaded again
-		if d.Timestamp.After(s.after) {
-			s.after = d.Timestamp
+		if d.CreatedOn.After(s.after) {
+			s.after = d.CreatedOn
 		}
 
 		if !initial {
@@ -146,7 +146,7 @@ func pending(content []dataset, after time.Time) []dataset {
 
 	res := make([]dataset, 0, len(content))
 	for _, d := range content {
-		if d.Timestamp.After(after) {
+		if d.CreatedOn.After(after) {
 			res = append(res, d)
 		}
 	}
