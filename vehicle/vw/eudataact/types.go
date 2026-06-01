@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -141,6 +142,12 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
 			continue
 		}
+
+		t, err := d.time()
+		if err != nil {
+			return nil, err
+		}
+		d.CreatedOn = t
 
 		content = append(content, d)
 	}
