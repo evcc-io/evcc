@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -95,7 +96,10 @@ func (d dataset) time() (time.Time, error) {
 	if t, err := nameTime(d.Name); err == nil {
 		return t, nil
 	}
-	return d.CreatedOn, nil
+	if !d.CreatedOn.IsZero() {
+		return d.CreatedOn, nil
+	}
+	return time.Time{}, fmt.Errorf("dataset %q: no parseable timestamp", d.Name)
 }
 
 // dataPoint is a single data point as delivered in the dataset JSON document
