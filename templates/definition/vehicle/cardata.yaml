@@ -21,6 +21,7 @@ requirements:
       vehicle.drivetrain.electricEngine.charging.status
       vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.drivetrain.lastRemainingRange (für "Neue Klasse" Fahrzeuge)
       vehicle.powertrain.electric.battery.stateOfCharge.target
       vehicle.powertrain.electric.battery.stateOfCharge.displayed (für "Neue Klasse" Fahrzeuge)
       vehicle.vehicle.preConditioning.activity
@@ -42,6 +43,7 @@ requirements:
       vehicle.drivetrain.electricEngine.charging.status
       vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.drivetrain.lastRemainingRange (for "New Class" cars)
       vehicle.powertrain.electric.battery.stateOfCharge.target
       vehicle.powertrain.electric.battery.stateOfCharge.displayed (for "New Class" cars)
       vehicle.vehicle.preConditioning.activity

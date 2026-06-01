@@ -88,3 +88,44 @@ func TestSocFallback(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 95.0, soc)
 }
+
+func TestRangeFallback(t *testing.T) {
+	ctx := t.Context()
+
+	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: "at",
+	}), "client", "vin", 0)
+
+	// prevent container panic
+	p.updated = time.Now()
+
+	keyRangeOld := "vehicle.drivetrain.electricEngine.kombiRemainingElectricRange"
+	keyRangeNew := "vehicle.drivetrain.lastRemainingRange"
+
+	// Case 1: Old key is missing, new key is present
+	p.rest = map[string]TelematicData{
+		keyRangeNew: {Value: "200"},
+	}
+	rng, err := p.Range()
+	require.NoError(t, err)
+	require.Equal(t, int64(200), rng)
+
+	// Case 2: Old key is empty (null in JSON), new key is present
+	p.rest = map[string]TelematicData{
+		keyRangeOld: {Value: ""},
+		keyRangeNew: {Value: "150"},
+	}
+	rng, err = p.Range()
+	require.NoError(t, err)
+	require.Equal(t, int64(150), rng)
+
+	// Case 3: Old key is nil in streaming, new key is present
+	p.rest = nil
+	p.streaming = map[string]StreamingData{
+		keyRangeOld: {Value: nil},
+		keyRangeNew: {Value: 120.0},
+	}
+	rng, err = p.Range()
+	require.NoError(t, err)
+	require.Equal(t, int64(120), rng)
+}

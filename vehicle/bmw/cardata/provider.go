@@ -226,7 +226,14 @@ var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	return v.Int("vehicle.drivetrain.electricEngine.kombiRemainingElectricRange")
+	res, err := v.any("vehicle.drivetrain.electricEngine.kombiRemainingElectricRange")
+	if err != nil || res == nil || res == "" {
+		res, err = v.any("vehicle.drivetrain.lastRemainingRange")
+	}
+	if err != nil {
+		return 0, err
+	}
+	return cast.ToInt64E(res)
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
