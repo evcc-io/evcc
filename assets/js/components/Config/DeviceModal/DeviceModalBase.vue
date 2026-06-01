@@ -257,6 +257,7 @@ import {
 	prepareAuthLogin,
 	requestAuthCode,
 	submitAuthCode,
+	type AuthProviderMessages,
 } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
@@ -510,6 +511,23 @@ export default defineComponent({
 				{} as Record<string, any>
 			);
 		},
+		authMessages(): AuthProviderMessages {
+			return {
+				loginFailed: String(this.$t("authProviders.errors.loginFailed")),
+				unexpectedLoginError: String(this.$t("authProviders.errors.unexpectedLoginError")),
+				missingProvider: String(this.$t("authProviders.errors.missingProvider")),
+				codeVerificationFailed: String(
+					this.$t("authProviders.errors.codeVerificationFailed")
+				),
+				unexpectedVerificationError: String(
+					this.$t("authProviders.errors.unexpectedVerificationError")
+				),
+				logoutFailed: String(this.$t("authProviders.logoutFailed")),
+				unexpectedLogoutError: String(
+					this.$t("authProviders.errors.unexpectedLogoutError")
+				),
+			};
+		},
 	},
 	watch: {
 		isModalVisible(visible) {
@@ -719,13 +737,17 @@ export default defineComponent({
 			}
 		},
 		async prepareAuthLogin(authId: string) {
-			await prepareAuthLogin(this.auth, authId);
+			await prepareAuthLogin(this.auth, authId, this.authMessages);
 		},
 		async requestVerificationCode() {
-			await requestAuthCode(this.auth);
+			await requestAuthCode(this.auth, this.authMessages);
 		},
 		async submitVerificationCode() {
-			const result = await submitAuthCode(this.auth, this.authVerificationCode);
+			const result = await submitAuthCode(
+				this.auth,
+				this.authVerificationCode,
+				this.authMessages
+			);
 			if (result.success) {
 				this.authVerificationCode = "";
 			}

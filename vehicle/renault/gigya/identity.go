@@ -1,8 +1,6 @@
 package gigya
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,17 +9,15 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/renault/keys"
 )
 
 const (
-	errTFAPending           = 403101
-	errAccountPendingTFA    = 403102
-	providerGigyaEmail      = "gigyaEmail"
-	verificationCodeMessage = "Enter the verification code from your Renault email."
+	errTFAPending        = 403101
+	errAccountPendingTFA = 403102
+	providerGigyaEmail   = "gigyaEmail"
 )
 
 // Response is a Gigya API response used by Renault login endpoints.
@@ -58,30 +54,56 @@ type EmailRecord struct {
 // EmailRecords accepts the array and object shapes returned by Gigya.
 type EmailRecords []EmailRecord
 
-// UnmarshalJSON decodes Gigya email records.
+// UnmarshalJSON decodes []EmailRecord, one EmailRecord, or maps with object/array values.
 func (e *EmailRecords) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		return nil
 	}
 
-	var list []EmailRecord
-	if err := json.Unmarshal(data, &list); err == nil {
-		*e = list
+	if emails, ok := decodeEmailList(data); ok {
+		*e = emails
 		return nil
 	}
 
-	var single EmailRecord
-	if err := json.Unmarshal(data, &single); err == nil && (single.ID != "" || single.Plain != "") {
-		*e = []EmailRecord{single}
+	if email, ok := decodeSingleEmail(data); ok {
+		*e = []EmailRecord{email}
 		return nil
 	}
 
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
+	emails, err := decodeEmailMap(data)
+	if err != nil {
 		return err
 	}
 
-	list = make([]EmailRecord, 0, len(raw))
+	*e = emails
+	return nil
+}
+
+func decodeEmailList(data []byte) ([]EmailRecord, bool) {
+	var list []EmailRecord
+	if err := json.Unmarshal(data, &list); err == nil {
+		return list, true
+	}
+
+	return nil, false
+}
+
+func decodeSingleEmail(data []byte) (EmailRecord, bool) {
+	var single EmailRecord
+	if err := json.Unmarshal(data, &single); err == nil && (single.ID != "" || single.Plain != "") {
+		return single, true
+	}
+
+	return EmailRecord{}, false
+}
+
+func decodeEmailMap(data []byte) ([]EmailRecord, error) {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, err
+	}
+
+	list := make([]EmailRecord, 0, len(raw))
 	for key, item := range raw {
 		var email EmailRecord
 		if err := json.Unmarshal(item, &email); err == nil && (email.ID != "" || email.Plain != "") {
@@ -103,58 +125,27 @@ func (e *EmailRecords) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	*e = list
-	return nil
+	return list, nil
 }
 
 // Identity manages Renault Gigya login state.
 type Identity struct {
 	*request.Helper
 	gigya    keys.ConfigServer
-	region   string
+	subject  string
+	gmid     func() string
 	Token    string
 	PersonID string
 }
 
 // NewIdentity creates a Gigya identity client.
-func NewIdentity(log *util.Logger, gigya keys.ConfigServer, region string) *Identity {
+func NewIdentity(log *util.Logger, gigya keys.ConfigServer, subject string, gmid func() string) *Identity {
 	return &Identity{
-		Helper: request.NewHelper(log),
-		gigya:  gigya,
-		region: region,
+		Helper:  request.NewHelper(log),
+		gigya:   gigya,
+		subject: subject,
+		gmid:    gmid,
 	}
-}
-
-// Subject returns the stable provider auth id for a Renault account.
-func Subject(user, region string) string {
-	h := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(user)) + ":" + strings.ToLower(strings.TrimSpace(region))))
-	return "renault-" + hex.EncodeToString(h[:])[:12]
-}
-
-// VerificationCodeMessage returns the UI prompt for Renault TFA.
-func VerificationCodeMessage() string {
-	return verificationCodeMessage
-}
-
-// SettingsKey returns the persisted trusted device key for a Renault account.
-func SettingsKey(user, region string) string {
-	return Subject(user, region) + "-gmid"
-}
-
-// StoredGMID returns the trusted Gigya member id for a Renault account.
-func StoredGMID(user, region string) string {
-	gmid, _ := settings.String(SettingsKey(user, region))
-	return gmid
-}
-
-// StoreGMID stores the trusted Gigya member id for a Renault account.
-func StoreGMID(user, region, gmid string) {
-	settings.SetString(SettingsKey(user, region), gmid)
-}
-
-// DeleteGMID removes the trusted Gigya member id for a Renault account.
-func DeleteGMID(user, region string) error {
-	return settings.Delete(SettingsKey(user, region))
 }
 
 // IsTFARequired returns whether the Gigya error code means email TFA is required.
@@ -162,11 +153,21 @@ func IsTFARequired(code int) bool {
 	return code == errTFAPending || code == errAccountPendingTFA
 }
 
-// TFARequired returns whether the Gigya response asks for email TFA.
-func (r Response) TFARequired() bool {
+// LoginTFARequired returns whether a Gigya login response asks for email TFA.
+func LoginTFARequired(r Response) bool {
 	return IsTFARequired(r.ErrorCode) ||
 		strings.Contains(strings.ToLower(r.ErrorMessage), "tfa") ||
 		strings.Contains(strings.ToLower(r.ErrorDetails), "tfa")
+}
+
+func loginError(res Response, subject string) error {
+	if res.ErrorCode == 0 && res.ErrorMessage == "" {
+		return nil
+	}
+	if LoginTFARequired(res) {
+		return api.LoginRequiredError(subject)
+	}
+	return res.Error()
 }
 
 func (v *Identity) Login(user, password string) error {
@@ -186,12 +187,9 @@ func (v *Identity) Login(user, password string) error {
 }
 
 func (v *Identity) sessionCookie(user, password string) (string, error) {
-	res, err := v.LoginRaw(user, password, StoredGMID(user, v.region))
-	if err == nil && res.ErrorCode > 0 {
-		err = res.Error()
-		if res.TFARequired() {
-			err = api.LoginRequiredError(Subject(user, v.region))
-		}
+	res, err := v.LoginRaw(user, password, v.gmid())
+	if err == nil {
+		err = loginError(res, v.subject)
 	}
 
 	return res.SessionInfo.CookieValue, err
@@ -347,6 +345,7 @@ func (v *Identity) FinalizeTFA(regToken, gigyaAssertion, providerAssertion, gmid
 }
 
 func (v *Identity) personID(sessionCookie string) (string, error) {
+	// Keep the historical apiKey spelling for these GET endpoints.
 	data := url.Values{
 		"apiKey":      {v.gigya.APIKey},
 		"login_token": {sessionCookie},
@@ -360,6 +359,7 @@ func (v *Identity) personID(sessionCookie string) (string, error) {
 }
 
 func (v *Identity) jwtToken(sessionCookie string) (string, error) {
+	// Keep the historical apiKey spelling for these GET endpoints.
 	data := url.Values{
 		"apiKey":      {v.gigya.APIKey},
 		"login_token": {sessionCookie},

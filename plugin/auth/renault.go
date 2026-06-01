@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/renault/gigya"
 	"github.com/evcc-io/evcc/vehicle/renault/keys"
+	"github.com/evcc-io/evcc/vehicle/renault/session"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
@@ -67,7 +68,7 @@ func NewRenaultFromConfig(ctx context.Context, other map[string]any) (oauth2.Tok
 
 // NewRenault creates a Renault auth provider.
 func NewRenault(ctx context.Context, user, password, region string) (*Renault, error) {
-	subject := gigya.Subject(user, region)
+	subject := session.Subject(user, region)
 
 	renaultMu.Lock()
 	defer renaultMu.Unlock()
@@ -86,12 +87,14 @@ func NewRenault(ctx context.Context, user, password, region string) (*Renault, e
 
 	r := &Renault{
 		log:      log,
-		identity: gigya.NewIdentity(log, renaultKeys.Gigya, region),
 		user:     user,
 		password: password,
 		region:   region,
 		subject:  subject,
 	}
+	r.identity = gigya.NewIdentity(log, renaultKeys.Gigya, subject, func() string {
+		return session.StoredGMID(r.user, r.region)
+	})
 
 	onlineC, err := providerauth.Register(subject, r)
 	if err != nil {
@@ -119,21 +122,15 @@ func (r *Renault) Token() (*oauth2.Token, error) {
 		return nil, api.LoginRequiredError(r.subject)
 	}
 
-	gmid := gigya.StoredGMID(r.user, r.region)
-	res, err := r.identity.LoginRaw(r.user, r.password, gmid)
+	ok, err := r.loginOrStartTFA()
 	if err != nil {
 		return nil, err
 	}
-	if res.ErrorCode == 0 {
-		r.notify(true)
+	if ok {
 		return renaultToken(), nil
 	}
-	if res.TFARequired() {
-		r.notify(false)
-		return nil, api.LoginRequiredError(r.subject)
-	}
 
-	return nil, res.Error()
+	return nil, api.LoginRequiredError(r.subject)
 }
 
 // Login prepares Renault TFA without sending a verification code.
@@ -149,21 +146,26 @@ func (r *Renault) Login(string) (string, *oauth2.DeviceAuthResponse, error) {
 }
 
 func (r *Renault) prepareTFA() error {
-	gmid := gigya.StoredGMID(r.user, r.region)
+	_, err := r.loginOrStartTFA()
+	return err
+}
+
+func (r *Renault) loginOrStartTFA() (bool, error) {
+	gmid := session.StoredGMID(r.user, r.region)
 	res, err := r.identity.LoginRaw(r.user, r.password, gmid)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if res.ErrorCode == 0 {
 		r.pending = nil
 		r.notify(true)
-		return nil
+		return true, nil
 	}
-	if !res.TFARequired() {
-		return res.Error()
+	if !gigya.LoginTFARequired(res) {
+		return false, res.Error()
 	}
 	if res.RegToken == "" {
-		return errors.New("renault TFA required but missing regToken")
+		return false, errors.New("renault TFA required but missing regToken")
 	}
 
 	if gmid == "" {
@@ -176,7 +178,7 @@ func (r *Renault) prepareTFA() error {
 	}
 	r.notify(false)
 
-	return nil
+	return false, nil
 }
 
 // RequestCode sends a Renault email verification code.
@@ -234,7 +236,7 @@ func (r *Renault) CodeInput() *api.AuthCodeInput {
 	sent := r.pending.phvToken != ""
 	input := &api.AuthCodeInput{Sent: sent}
 	if sent {
-		input.Message = gigya.VerificationCodeMessage()
+		input.Message = session.VerificationCodeMessage()
 	}
 
 	return input
@@ -279,7 +281,7 @@ func (r *Renault) SubmitCode(code string) error {
 		return fmt.Errorf("renault login after TFA failed: %w", login.Error())
 	}
 
-	gigya.StoreGMID(r.user, r.region, r.pending.gmid)
+	session.StoreGMID(r.user, r.region, r.pending.gmid)
 	r.pending = nil
 	r.notify(true)
 
@@ -292,7 +294,7 @@ func (r *Renault) Logout() error {
 	defer r.mu.Unlock()
 
 	r.pending = nil
-	if err := gigya.DeleteGMID(r.user, r.region); err != nil {
+	if err := session.DeleteGMID(r.user, r.region); err != nil {
 		return err
 	}
 
@@ -308,7 +310,7 @@ func (r *Renault) HandleCallback(url.Values) error {
 
 // Authenticated returns whether Renault has a trusted device id.
 func (r *Renault) Authenticated() bool {
-	return gigya.StoredGMID(r.user, r.region) != ""
+	return session.StoredGMID(r.user, r.region) != ""
 }
 
 // DisplayName returns the provider name shown in the UI.

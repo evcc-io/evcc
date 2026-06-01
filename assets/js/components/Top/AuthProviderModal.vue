@@ -176,6 +176,7 @@ import {
 	performAuthLogout,
 	requestAuthCode,
 	submitAuthCode,
+	type AuthProviderMessages,
 } from "../Config/utils/authProvider";
 import type { Provider } from "./types";
 
@@ -220,6 +221,23 @@ export default defineComponent({
 		providerId(): string {
 			return this.provider?.id || "";
 		},
+		authMessages(): AuthProviderMessages {
+			return {
+				loginFailed: String(this.$t("authProviders.errors.loginFailed")),
+				unexpectedLoginError: String(this.$t("authProviders.errors.unexpectedLoginError")),
+				missingProvider: String(this.$t("authProviders.errors.missingProvider")),
+				codeVerificationFailed: String(
+					this.$t("authProviders.errors.codeVerificationFailed")
+				),
+				unexpectedVerificationError: String(
+					this.$t("authProviders.errors.unexpectedVerificationError")
+				),
+				logoutFailed: String(this.$t("authProviders.logoutFailed")),
+				unexpectedLogoutError: String(
+					this.$t("authProviders.errors.unexpectedLogoutError")
+				),
+			};
+		},
 	},
 	watch: {
 		providerId(newId) {
@@ -243,13 +261,17 @@ export default defineComponent({
 		},
 		async prepareAuthentication() {
 			if (!this.providerId || this.isAuthenticated) return;
-			await prepareAuthLogin(this.auth, this.providerId);
+			await prepareAuthLogin(this.auth, this.providerId, this.authMessages);
 		},
 		async requestVerificationCode() {
-			await requestAuthCode(this.auth);
+			await requestAuthCode(this.auth, this.authMessages);
 		},
 		async submitVerificationCode() {
-			const result = await submitAuthCode(this.auth, this.authVerificationCode);
+			const result = await submitAuthCode(
+				this.auth,
+				this.authVerificationCode,
+				this.authMessages
+			);
 			if (result.success) {
 				this.authVerificationCode = "";
 				this.waitingForAuthentication = true;
@@ -261,7 +283,7 @@ export default defineComponent({
 			this.logoutLoading = true;
 			this.logoutError = null;
 
-			const result = await performAuthLogout(this.providerId);
+			const result = await performAuthLogout(this.providerId, this.authMessages);
 			if (result.success) {
 				(this.$refs["modal"] as any)?.close();
 			} else {

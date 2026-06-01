@@ -8,15 +8,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestResponseTFARequired(t *testing.T) {
+func TestLoginTFARequired(t *testing.T) {
 	tests := []struct {
 		name string
 		res  Response
 		want bool
 	}{
 		{
-			name: "known code",
+			name: "account pending code",
 			res:  Response{ErrorCode: errAccountPendingTFA},
+			want: true,
+		},
+		{
+			name: "TFA pending code",
+			res:  Response{ErrorCode: errTFAPending},
 			want: true,
 		},
 		{
@@ -25,15 +30,60 @@ func TestResponseTFARequired(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "details",
+			res:  Response{ErrorMessage: "login blocked", ErrorDetails: "TFA verification required"},
+			want: true,
+		},
+		{
 			name: "other error",
-			res:  Response{ErrorMessage: "invalid login"},
+			res:  Response{ErrorCode: 403042, ErrorMessage: "invalid login", ErrorDetails: "invalid credentials"},
 			want: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, tc.res.TFARequired())
+			assert.Equal(t, tc.want, LoginTFARequired(tc.res))
+		})
+	}
+}
+
+func TestResponseError(t *testing.T) {
+	tests := []struct {
+		name string
+		res  Response
+		want string
+	}{
+		{
+			name: "message and details",
+			res:  Response{ErrorMessage: "login failed", ErrorDetails: "invalid credentials"},
+			want: "login failed: invalid credentials",
+		},
+		{
+			name: "message",
+			res:  Response{ErrorMessage: "login failed"},
+			want: "login failed",
+		},
+		{
+			name: "code",
+			res:  Response{ErrorCode: 403042},
+			want: "gigya error 403042",
+		},
+		{
+			name: "empty",
+			res:  Response{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.res.Error()
+			if tc.want == "" {
+				require.NoError(t, err)
+				return
+			}
+
+			require.EqualError(t, err, tc.want)
 		})
 	}
 }

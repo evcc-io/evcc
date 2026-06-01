@@ -19,6 +19,16 @@ export type ProviderLoginResponse = {
   error?: string;
 };
 
+export type AuthProviderMessages = {
+  loginFailed: string;
+  unexpectedLoginError: string;
+  missingProvider: string;
+  codeVerificationFailed: string;
+  unexpectedVerificationError: string;
+  logoutFailed: string;
+  unexpectedLogoutError: string;
+};
+
 export const initialAuthState = (): AuthState => ({
   ok: false,
   loading: false,
@@ -33,6 +43,7 @@ export const initialAuthState = (): AuthState => ({
 export const prepareAuthLogin = async (
   state: AuthState,
   providerId: string,
+  messages: AuthProviderMessages,
   sendCode = false
 ) => {
   try {
@@ -57,30 +68,34 @@ export const prepareAuthLogin = async (
       state.ok = !state.providerUrl && !state.code && !state.codeInput;
       return { success: true, data };
     } else {
-      state.error = data?.error ?? "Login failed";
+      state.error = data?.error ?? messages.loginFailed;
       return { success: false, error: state.error };
     }
   } catch (e: any) {
     console.error("prepareAuthLogin failed", e);
-    state.error = e.message || "Unexpected login error";
+    state.error = e.message || messages.unexpectedLoginError;
     return { success: false, error: state.error };
   } finally {
     state.loading = false;
   }
 };
 
-export const requestAuthCode = async (state: AuthState) => {
+export const requestAuthCode = async (state: AuthState, messages: AuthProviderMessages) => {
   if (!state.providerId) {
-    state.error = "Missing auth provider";
+    state.error = messages.missingProvider;
     return { success: false, error: state.error };
   }
 
-  return prepareAuthLogin(state, state.providerId, true);
+  return prepareAuthLogin(state, state.providerId, messages, true);
 };
 
-export const submitAuthCode = async (state: AuthState, code: string) => {
+export const submitAuthCode = async (
+  state: AuthState,
+  code: string,
+  messages: AuthProviderMessages
+) => {
   if (!state.providerId) {
-    state.error = "Missing auth provider";
+    state.error = messages.missingProvider;
     return { success: false, error: state.error };
   }
 
@@ -105,18 +120,18 @@ export const submitAuthCode = async (state: AuthState, code: string) => {
       return { success: true };
     }
 
-    state.error = data?.error ?? "Code verification failed";
+    state.error = data?.error ?? messages.codeVerificationFailed;
     return { success: false, error: state.error };
   } catch (e: any) {
     console.error("submitAuthCode failed", e);
-    state.error = e.message || "Unexpected verification error";
+    state.error = e.message || messages.unexpectedVerificationError;
     return { success: false, error: state.error };
   } finally {
     state.loading = false;
   }
 };
 
-export const performAuthLogout = async (providerId: string) => {
+export const performAuthLogout = async (providerId: string, messages: AuthProviderMessages) => {
   try {
     const url = `providerauth/logout?id=${encodeURIComponent(providerId)}`;
     const { status, data } = await baseApi.get(url, {
@@ -126,11 +141,11 @@ export const performAuthLogout = async (providerId: string) => {
     if (status === 200) {
       return { success: true };
     } else {
-      return { success: false, error: data?.error || "Logout failed" };
+      return { success: false, error: data?.error || messages.logoutFailed };
     }
   } catch (e: any) {
     console.error("performAuthLogout failed", e);
-    return { success: false, error: e.message || "Unexpected logout error" };
+    return { success: false, error: e.message || messages.unexpectedLogoutError };
   }
 };
 
@@ -144,7 +159,11 @@ export type DeviceAuthResponse = {
   error?: string;
 };
 
-export const prepareAuthRedirect = async (state: AuthState, authId: string) => {
+export const prepareAuthRedirect = async (
+  state: AuthState,
+  authId: string,
+  messages: AuthProviderMessages
+) => {
   try {
     state.loading = true;
     state.error = null;
@@ -161,7 +180,7 @@ export const prepareAuthRedirect = async (state: AuthState, authId: string) => {
     return { success: true, data };
   } catch (e: any) {
     console.error("prepareAuthRedirect failed", e);
-    state.error = e.message || "Unexpected login error";
+    state.error = e.message || messages.unexpectedLoginError;
     return { success: false, error: state.error };
   } finally {
     state.loading = false;

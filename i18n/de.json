@@ -12,6 +12,14 @@
     "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
     "connect": "verbinden",
     "disconnect": "trennen",
+    "errors": {
+      "codeVerificationFailed": "Codebestätigung fehlgeschlagen",
+      "loginFailed": "Anmeldung fehlgeschlagen",
+      "missingProvider": "Authentifizierungsanbieter fehlt",
+      "unexpectedLoginError": "Unerwarteter Anmeldefehler",
+      "unexpectedLogoutError": "Unerwarteter Abmeldefehler",
+      "unexpectedVerificationError": "Unerwarteter Bestätigungsfehler"
+    },
     "loggedOut": "Erfolgreich abgemeldet",
     "logoutFailed": "Abmeldung fehlgeschlagen",
     "modalDescriptionLogin": "Schließe die Autorisierung ab, um eine Verbindung mit {provider} herzustellen.",

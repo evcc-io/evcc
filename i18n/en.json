@@ -12,6 +12,14 @@
     "confirmLogout": "Are you sure you want to disconnect {title}?",
     "connect": "connect",
     "disconnect": "disconnect",
+    "errors": {
+      "codeVerificationFailed": "Code verification failed",
+      "loginFailed": "Login failed",
+      "missingProvider": "Missing auth provider",
+      "unexpectedLoginError": "Unexpected login error",
+      "unexpectedLogoutError": "Unexpected logout error",
+      "unexpectedVerificationError": "Unexpected verification error"
+    },
     "loggedOut": "Successfully logged out",
     "logoutFailed": "Failed to logout",
     "modalDescriptionLogin": "Complete the authorization process to establish connection with {provider}.",

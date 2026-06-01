@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/renault/gigya"
 	"github.com/evcc-io/evcc/vehicle/renault/kamereon"
 	"github.com/evcc-io/evcc/vehicle/renault/keys"
+	"github.com/evcc-io/evcc/vehicle/renault/session"
 )
 
 // Credits to
@@ -70,7 +71,9 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle,
 	keys := keys.New(log)
 	keys.Load(cc.Region)
 
-	identity := gigya.NewIdentity(log, keys.Gigya, cc.Region)
+	identity := gigya.NewIdentity(log, keys.Gigya, session.Subject(cc.User, cc.Region), func() string {
+		return session.StoredGMID(cc.User, cc.Region)
+	})
 	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return nil, err
 	}
