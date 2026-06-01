@@ -13,10 +13,10 @@ params:
   - name: vin
     example: WVWZZZ...
   - name: timeout
-    default: 10s
+    deprecated: true
   - preset: vehicle-features
 render: |
-  type: vw
+  type: drivesomethinggreater
+  brand: Volkswagen
   {{ include "vehicle-base" . }}
   {{ include "vehicle-features" . }}
-  timeout: {{ .timeout }}

@@ -3,6 +3,7 @@ package request
 import (
 	"bytes"
 	"io"
+	"mime"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sandrolain/httpcache"
 )
 
 type roundTripper struct {
@@ -60,6 +62,52 @@ func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
 	return tripper
 }
 
+func isWebSocket(req *http.Request) bool {
+	// WebSocket handshake must be GET
+	if req.Method != http.MethodGet {
+		return false
+	}
+
+	// Must contain: Connection: Upgrade
+	if !headerContainsToken(req.Header, "Connection", "Upgrade") {
+		return false
+	}
+
+	// Must contain: Upgrade: websocket
+	if !headerContainsToken(req.Header, "Upgrade", "websocket") {
+		return false
+	}
+
+	// Must contain WebSocket-specific headers
+	if req.Header.Get("Sec-WebSocket-Key") == "" {
+		return false
+	}
+
+	if req.Header.Get("Sec-WebSocket-Version") == "" {
+		return false
+	}
+
+	return true
+}
+
+func headerContainsToken(h http.Header, key, token string) bool {
+	for _, v := range h.Values(key) {
+		for part := range strings.SplitSeq(v, ",") {
+			if strings.EqualFold(strings.TrimSpace(part), token) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// binaryContent reports whether the response carries a binary body whose raw
+// bytes are not useful in the trace log, such as a downloaded archive.
+func binaryContent(h http.Header) bool {
+	mediatype, _, _ := mime.ParseMediaType(h.Get("Content-Type"))
+	return mediatype == "application/octet-stream"
+}
+
 // copy of http.drainBody
 func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if b == nil || b == http.NoBody {
@@ -90,8 +138,6 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
-
 	// add evcc user agent
 	if req.Header.Get("User-Agent") == "" {
 		req = req.Clone(req.Context())
@@ -103,17 +149,21 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	var save io.ReadCloser
 
 	bld := new(strings.Builder)
-	if LogHeaders {
-		if body, err := httputil.DumpRequestOut(req, true); err == nil {
-			bld.WriteString("\n")
-			bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
-		}
-	} else {
-		if save, req.Body, err = drainBody(req.Body); err == nil {
-			err = dump(save, bld)
-		}
-		if err != nil {
-			return nil, err
+
+	isWebSocketReq := isWebSocket(req)
+	if !isWebSocketReq {
+		if LogHeaders {
+			if body, err := httputil.DumpRequestOut(req, true); err == nil {
+				bld.WriteString("\n")
+				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+			}
+		} else {
+			if save, req.Body, err = drainBody(req.Body); err == nil {
+				err = dump(save, bld)
+			}
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -122,20 +172,30 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
 
+	var cached string
+	if err == nil && resp.Header.Get(httpcache.XFromCache) != "" {
+		cached = " CACHED"
+	}
+	r.log.TRACE.Printf("%s%s %s", req.Method, cached, req.URL.String())
+
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
-		if LogHeaders {
-			if body, err := httputil.DumpResponse(resp, true); err == nil {
-				bld.WriteString("\n\n")
-				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
-			}
-		} else {
-			if save, resp.Body, err = drainBody(resp.Body); err == nil {
-				err = dump(save, bld)
-			}
-			if err != nil {
-				return nil, err
+		if !isWebSocketReq {
+			// skip binary bodies (e.g. downloaded archives) - their raw bytes are noise in the trace log
+			logBody := !binaryContent(resp.Header)
+			if LogHeaders {
+				if body, err := httputil.DumpResponse(resp, logBody); err == nil {
+					bld.WriteString("\n\n")
+					bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+				}
+			} else if logBody {
+				if save, resp.Body, err = drainBody(resp.Body); err == nil {
+					err = dump(save, bld)
+				}
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	} else {

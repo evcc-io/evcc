@@ -654,7 +654,7 @@ func (lp *Loadpoint) GetChargePower() float64 {
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
 	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
-		lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
+		lp.planActive || lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
 
@@ -662,7 +662,11 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 		return lp.GetChargePower()
 	}
 
-	// MinPV mode
+	// MinPV mode: a charger without current control (switch socket or heatpump) cannot release power.
+	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
+		return 0
+	}
+
 	return max(0, lp.GetChargePower()-lp.EffectiveMinPower())
 }
 

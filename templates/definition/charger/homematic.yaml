@@ -1,6 +1,7 @@
 template: homematic
 products:
   - brand: Homematic IP
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host
@@ -58,7 +59,7 @@ params:
   - preset: switchsocket
 render: |
   type: homematic
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   device: {{ .device }}
   user: {{ .user }}
   password: {{ .password }}

@@ -13,7 +13,7 @@ requirements:
       Die Leistung für das Netzladen kann an die Wechselrichterleistung der sonnenBatterie über den Parameter `maxchargepower` angepasst werden.
     en: |
       For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
-      The two operating modes supported for the sonnenBatterie are “self-consumption” (default) and “time-of-use”. The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
+      The two operating modes supported for the sonnenBatterie are "self-consumption" (default) and "time-of-use". The mode can be adapted to the configuration of the sonnenBatterie via the 'defaultmode' parameter.
       The power for grid charging can be adapted to the inverter power of the sonnenBatterie via the `maxchargepower` parameter.
 params:
   - name: usage

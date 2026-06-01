@@ -61,7 +61,7 @@ products:
   - brand: SMA
     description:
       generic: EV Charger Business
-capabilities: ["rfid", "1p3p"]
+capabilities: ["rfid", "1p3p", "dim"]
 requirements:
   description:
     de: |

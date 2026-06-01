@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+type ServiceDomainResponse struct {
+	Domain   string         `json:"domain"`
+	Services map[string]any `json:"services"`
+}
+
 type StateResponse struct {
 	EntityId   string `json:"entity_id"`
 	State      string `json:"state"`

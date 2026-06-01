@@ -482,7 +482,7 @@ call removeLoadpointVehicle {
 
 ## setLoadpointBatteryBoost
 
-Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit.
+Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled).
 
 **Tags:** loadpoints
 
@@ -836,7 +836,7 @@ call setLoadpointSmartFeedInPriorityLimit {
 
 ## setLoadpointSocLimit
 
-Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions.
+Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again.
 
 **Tags:** loadpoints
 

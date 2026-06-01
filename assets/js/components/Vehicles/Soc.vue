@@ -87,6 +87,7 @@ export default defineComponent({
 		charging: Boolean,
 		heating: Boolean,
 		minSoc: { type: Number, default: 0 },
+		minSocNotReached: Boolean,
 		effectivePlanSoc: { type: Number, default: 0 },
 		effectiveLimitSoc: Number,
 		limitEnergy: { type: Number, default: 0 },
@@ -174,20 +175,17 @@ export default defineComponent({
 			return isBelowVehicleLimit && isAbovePlanLimit;
 		},
 		progressColor() {
-			if (this.minSocActive) {
+			if (this.minSocNotReached) {
 				return "bg-danger";
 			}
 			return "bg-primary";
-		},
-		minSocActive() {
-			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
 		},
 		remainingSocWidth() {
 			if (this.socBasedCharging) {
 				if (this.vehicleSocDisplayWidth === 100) {
 					return null;
 				}
-				if (this.minSocActive) {
+				if (this.minSocNotReached) {
 					return this.minSoc - this.vehicleSoc;
 				}
 				const limit = Math.min(

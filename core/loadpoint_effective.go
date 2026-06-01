@@ -146,6 +146,21 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 	return lp.socBasedPlanning()
 }
 
+// effectiveMinCurrent returns the effective min current
+func (lp *Loadpoint) effectiveMinCurrent() float64 {
+	if ctrl, ok := lp.chargeController.(*CurrentController); ok {
+		return ctrl.effectiveMinCurrent()
+	}
+	return lp.getMinCurrent()
+}
+
+// effectiveMaxCurrent returns the effective max current
+func (lp *Loadpoint) effectiveMaxCurrent() float64 {
+	if ctrl, ok := lp.chargeController.(*CurrentController); ok {
+		return ctrl.effectiveMaxCurrent()
+	}
+	return lp.getMaxCurrent()
+}
 // EffectiveLimitSoc returns the effective session limit soc
 func (lp *Loadpoint) EffectiveLimitSoc() int {
 	lp.RLock()

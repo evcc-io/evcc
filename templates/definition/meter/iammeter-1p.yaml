@@ -1,0 +1,31 @@
+template: iammeter-1p
+products:
+  - brand: IAMMETER
+    description:
+      generic: WEM3080
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+  - name: cache
+    advanced: true
+    default: 2s
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    jq: .Data[2] # active power, unit: W
+    cache: {{ .cache }}
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    {{- if eq .usage "pv" }}
+    jq: .Data[4] # reverse active energy, unit: kWh
+    {{- else }}
+    jq: .Data[3] # forward active energy, unit: kWh
+    {{- end }}
+    cache: {{ .cache }}

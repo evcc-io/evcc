@@ -869,10 +869,10 @@ func (mr *MockCircuitMockRecorder) Curtail(arg0 any) *gomock.Call {
 }
 
 // Curtailed mocks base method.
-func (m *MockCircuit) Curtailed() bool {
+func (m *MockCircuit) Curtailed() *bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Curtailed")
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*bool)
 	return ret0
 }
 
@@ -895,10 +895,10 @@ func (mr *MockCircuitMockRecorder) Dim(arg0 any) *gomock.Call {
 }
 
 // Dimmed mocks base method.
-func (m *MockCircuit) Dimmed() bool {
+func (m *MockCircuit) Dimmed() *bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Dimmed")
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*bool)
 	return ret0
 }
 

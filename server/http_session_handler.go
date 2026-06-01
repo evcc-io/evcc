@@ -21,7 +21,7 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename str
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
 
-	if ww, ok := res.(api.CsvWriter); ok {
+	if ww, ok := api.Cap[api.CsvWriter](res); ok {
 		_ = ww.WriteCsv(ctx, w)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -49,11 +49,11 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	filename := "session"
 	if year := r.URL.Query().Get("year"); year != "" {
 		filename += "-" + year
-		push("STRFTIME('%Y', created) LIKE ?", year)
+		push("STRFTIME('%Y', created, 'localtime') LIKE ?", year)
 
 		if month := fmt.Sprintf("%02s", r.URL.Query().Get("month")); month != "00" {
 			filename += "-" + month
-			push("STRFTIME('%m', created) LIKE ?", month)
+			push("STRFTIME('%m', created, 'localtime') LIKE ?", month)
 		}
 	}
 

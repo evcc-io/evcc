@@ -136,8 +136,6 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 				topic := topic
 				if !mqttTagAttribute("squash", f) {
 					topic = fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
-				} else {
-					println(1)
 				}
 
 				if val.Field(i).IsZero() && jsonOmitEmpty(f) {
@@ -248,7 +246,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
 	for _, s := range []setter{
 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
-		{"phases", intSetter(lp.SetPhasesConfigured)},
+		{"phasesConfigured", intSetter(lp.SetPhasesConfigured)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
 		{"minCurrent", floatSetter(lp.SetMinCurrent)},

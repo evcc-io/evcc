@@ -1,0 +1,74 @@
+template: homeassistant
+products:
+  - brand: Home Assistant
+auth:
+  type: homeassistant
+  params: [uri]
+params:
+  - name: uri
+    required: true
+    example: http://homeassistant.local:8123
+    description:
+      de: Home Assistant URI
+      en: Home Assistant URI
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default
+    service: homeassistant/instances
+  - name: notify
+    example: notify.mobile_app_android
+    description:
+      de: Benachrichtigungsdienst
+      en: Notify service
+    help:
+      de: >
+        Home Assistant Benachrichtigungsdienst in der Form `domain.service` (z. B. `notify.mobile_app_android`).
+        Leer lassen, um eine persistente Benachrichtigung in der HA-Oberfläche zu erstellen.
+      en: >
+        Home Assistant notify service in the form `domain.service` (e.g. `notify.mobile_app_android`).
+        Leave empty to create a persistent notification in the HA UI.
+    service: homeassistant/services?uri={uri}&domain=notify
+  - name: critical
+    type: bool
+    default: false
+    description:
+      de: Kritische Benachrichtigung
+      en: Critical notification
+    help:
+      de: Setzt ttl=0 und priority=high für sofortige Zustellung, auch im Energiesparmodus.
+      en: Sets ttl=0 and priority=high for immediate delivery even in battery saver mode.
+  - name: group
+    example: evcc
+    description:
+      de: Benachrichtigungsgruppe
+      en: Notification group
+    help:
+      de: Gruppiert Benachrichtigungen auf dem Gerät. Gleiche Gruppe fasst Meldungen zusammen.
+      en: Groups notifications on the device. Same group collapses multiple alerts together.
+  - name: notification_channel
+    example: alarm_stream
+    description:
+      de: Benachrichtigungskanal
+      en: Notification channel
+    help:
+      de: Android-Benachrichtigungskanal (bestimmt Ton und Priorität). Z. B. `alarm_stream` für Alarmton.
+      en: Android notification channel (controls sound and importance). E.g. `alarm_stream` for alarm sound.
+render: |
+  type: homeassistant
+  uri: {{ .uri }}
+  {{- if .notify }}
+  notify: {{ .notify }}
+  {{- end }}
+  {{- if or .critical .group .notification_channel }}
+  data:
+    {{- if .critical }}
+    ttl: 0
+    priority: high
+    {{- end }}
+    {{- if .group }}
+    group: {{ .group }}
+    {{- end }}
+    {{- if .notification_channel }}
+    channel: {{ .notification_channel }}
+    {{- end }}
+  {{- end }}

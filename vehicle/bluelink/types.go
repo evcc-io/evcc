@@ -82,12 +82,15 @@ const (
 	timeOffset = " +0100"
 
 	plugTypeAC = 1
+	unitMiles  = 3
+	kmPerMile  = 1.60934
 )
 
 type DrivingDistance struct {
 	RangeByFuel struct {
 		EvModeRange struct {
-			Value int
+			Value float64
+			Unit  int
 		}
 	}
 }
@@ -144,14 +147,19 @@ func (d VehicleStatus) FinishTime() (time.Time, error) {
 func (d VehicleStatus) Range() (int64, error) {
 	if d.EvStatus != nil {
 		if dist := d.EvStatus.DrvDistance; len(dist) == 1 {
-			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
+			evRange := dist[0].RangeByFuel.EvModeRange
+			value := evRange.Value
+			if evRange.Unit == unitMiles {
+				value *= kmPerMile
+			}
+			return int64(value), nil
 		}
 	}
 	return 0, api.ErrNotAvailable
 }
 
 func (d VehicleStatus) Climater() (bool, error) {
-	return d.AirCtrlOn || d.Defrost, nil
+	return d.Defrost, nil
 }
 
 func (d VehicleStatus) GetLimitSoc() (int64, error) {
@@ -194,8 +202,12 @@ func (d StatusLatestResponse) GetLimitSoc() (int64, error) {
 }
 
 func (d StatusLatestResponse) Odometer() (float64, error) {
-	if d.ResMsg.VehicleStatusInfo.Odometer != nil {
-		return d.ResMsg.VehicleStatusInfo.Odometer.Value, nil
+	if odo := d.ResMsg.VehicleStatusInfo.Odometer; odo != nil {
+		value := odo.Value
+		if odo.Unit == unitMiles {
+			value *= kmPerMile
+		}
+		return value, nil
 	}
 	return 0, api.ErrNotAvailable
 }

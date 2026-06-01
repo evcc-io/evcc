@@ -1,11 +1,6 @@
 import { test, expect, devices, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import {
-  expectModalVisible,
-  expectModalHidden,
-  openTopNavigation,
-  expectTopNavigationClosed,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, enableAppContext, expectAppEvent } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -38,12 +33,7 @@ async function selectVehicleFilter(page: Page, value: string) {
 test.describe("basics", async () => {
   test("navigation to sessions", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
-    await page
-      .getByTestId("topnavigation-dropdown")
-      .getByRole("link", { name: "Charging sessions" })
-      .click();
-    await expectTopNavigationClosed(page);
+    await page.getByRole("link", { name: "Sessions" }).click();
     await expect(page.getByRole("heading", { name: "Charging Sessions" })).toBeVisible();
   });
   test("month without data", async ({ page }) => {
@@ -255,9 +245,23 @@ test.describe("columns desktop", async () => {
     await page.goto("/#/sessions?year=2023&month=3");
     await expect(page.getByTestId("sessions-head-co2")).toBeVisible();
   });
+  test("select odometer column if it has values", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=3");
+    await expect(
+      page.getByTestId("sessions-head-co2").locator("option[value=odometer]")
+    ).toHaveCount(1);
+    await page.getByTestId("sessions-head-co2").getByRole("combobox").selectOption("odometer");
+    await expect(page.getByTestId("sessions-head-odometer")).toBeVisible();
+    await expect(page.getByTestId("sessions-entry").nth(0)).toContainText("12,345");
+    await expect(page.getByTestId("sessions-foot-odometer")).toHaveText("");
+  });
   test("hide co2 column if it doesnt have values", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
     await expect(page.getByTestId("sessions-head-co2")).toHaveCount(0);
+  });
+  test("hide odometer column if it doesnt have values", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    await expect(page.getByTestId("sessions-head-odometer")).toHaveCount(0);
   });
 });
 
@@ -305,6 +309,26 @@ test.describe("csv export", async () => {
   });
 });
 
+test.describe("csv export download", async () => {
+  test("in browser context", async ({ page }) => {
+    await page.goto("/#/sessions?period=total");
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("link", { name: "Download total CSV" }).click();
+    const download = await downloadPromise;
+    expect(download.url()).toContain("/api/sessions?format=csv");
+  });
+
+  test("in app context", async ({ page }) => {
+    await enableAppContext(page);
+    await page.goto("/#/sessions?period=total");
+    await page.getByRole("link", { name: "Download total CSV" }).click();
+    expect(await expectAppEvent(page)).toMatchObject({
+      type: "download",
+      url: expect.stringContaining("/api/sessions?format=csv&lang=en"),
+    });
+  });
+});
+
 test.describe("session details", async () => {
   test("show session details (session 5)", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
@@ -345,6 +369,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
     await expect(modal.getByTestId("session-details-co2")).toContainText("3 kg");
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
+    await expect(modal.getByTestId("session-details-odometer")).toContainText("12,345 km");
   });
 
   test("edit session (session 5)", async ({ page }) => {

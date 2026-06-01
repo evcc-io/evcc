@@ -1,5 +1,6 @@
 import type { AxiosResponse } from "axios";
 import sleep from "@/utils/sleep";
+import { reportValidityInModal } from "./reportValidityInModal";
 
 export type TestState = {
   isUnknown: boolean;
@@ -28,7 +29,7 @@ export const performTest = async (
   api: () => Promise<AxiosResponse<any, any>>,
   form: HTMLElement | undefined
 ) => {
-  if (form && !(form as HTMLFormElement).reportValidity()) return false;
+  if (form && !reportValidityInModal(form as HTMLFormElement)) return false;
   state.isUnknown = false;
   state.isSuccess = false;
   state.isRunning = true;

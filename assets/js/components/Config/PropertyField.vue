@@ -51,9 +51,10 @@
 		v-model="value"
 		class="form-select"
 		:class="inputClasses"
+		:required="required"
 		:disabled="disabled"
 	>
-		<option v-if="!required" value="" :disabled="disabled">---</option>
+		<option v-if="!required || !modelValue" value="" :disabled="disabled">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
 			<option
 				v-if="key !== null && name !== null"
@@ -75,14 +76,21 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		:rows="rows || 4"
+		:rows="textareaRows"
 		:disabled="disabled"
+	/>
+	<PropertyZonesField
+		v-else-if="zones"
+		:id="id"
+		v-model="value"
+		:currency="currency"
+		:valueLabel="zonesValueLabel"
 	/>
 	<div v-else class="d-flex" :class="sizeClass">
 		<div class="position-relative flex-grow-1">
 			<input
 				:id="id"
-				v-model="value"
+				:value="value"
 				:list="datalistId"
 				:type="inputType"
 				:step="step"
@@ -97,6 +105,8 @@
 				"
 				:autocomplete="masked || datalistId ? 'off' : null"
 				:disabled="disabled"
+				@change="onFieldChange"
+				@input="onFieldInput"
 			/>
 			<button
 				v-if="showClearButton"
@@ -126,13 +136,14 @@
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import PropertyZonesField from "./PropertyZonesField.vue";
 import formatter from "@/mixins/formatter";
 
 const NS_PER_SECOND = 1000000000;
 
 export default {
 	name: "PropertyField",
-	components: { VehicleIcon, SelectGroup },
+	components: { VehicleIcon, SelectGroup, PropertyZonesField },
 	mixins: [formatter],
 	props: {
 		id: String,
@@ -151,6 +162,7 @@ export default {
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		currency: { type: String, default: "EUR" },
 		rows: { type: Number },
 	},
 	emits: ["update:modelValue"],
@@ -193,7 +205,7 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
-			if (["Int", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration", "PricePerKWh"].includes(this.type)) {
 				return "number";
 			}
 			return "text";
@@ -202,7 +214,7 @@ export default {
 			if (this.size) {
 				return this.size;
 			}
-			if (["Int", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration", "PricePerKWh", "ChargeModes"].includes(this.type)) {
 				return "w-50 w-min-200";
 			}
 			return "";
@@ -218,10 +230,10 @@ export default {
 			return result;
 		},
 		endAlign() {
-			return ["Int", "Float", "Duration"].includes(this.type);
+			return ["Int", "Float", "Duration", "PricePerKWh"].includes(this.type);
 		},
 		step() {
-			if (this.type === "Float" || this.type === "Duration") {
+			if (this.type === "Float" || this.type === "Duration" || this.type === "PricePerKWh") {
 				return "any";
 			}
 			return null;
@@ -230,10 +242,17 @@ export default {
 			if (this.type === "Duration") {
 				return this.fmtDurationUnit(this.value, this.unit);
 			}
+			if (this.pricePerKWh) {
+				return this.pricePerKWhUnit(this.currency);
+			}
 			if (this.unit) {
 				return this.unit;
 			}
 			return null;
+		},
+		useLazyBinding() {
+			// avoid conversion loop issues
+			return this.pricePerKWh;
 		},
 		icons() {
 			return this.property === "icon";
@@ -242,8 +261,17 @@ export default {
 			return (
 				this.rows ||
 				this.array ||
-				["accessToken", "refreshToken", "identifiers"].includes(this.property)
+				["accessToken", "refreshToken", "identifiers", "formula"].includes(this.property)
 			);
+		},
+		textareaRows() {
+			if (this.rows) return this.rows;
+			const autoGrow = this.property === "formula";
+			if (autoGrow) {
+				const lines = (this.value ?? "").split("\n").length;
+				return Math.max(1, lines);
+			}
+			return 4;
 		},
 		boolean() {
 			return this.type === "Bool";
@@ -251,13 +279,35 @@ export default {
 		array() {
 			return this.type === "List";
 		},
+		zones() {
+			return this.type === "Zones";
+		},
+		zonesValueLabel() {
+			return this.property === "chargesZones"
+				? this.$t("config.tariff.zones.charge")
+				: this.$t("config.tariff.zones.price");
+		},
+		pricePerKWh() {
+			return this.type === "PricePerKWh";
+		},
+		chargeModes() {
+			return this.type === "ChargeModes";
+		},
 		select() {
-			return this.choice.length > 0;
+			return this.choice.length > 0 || this.chargeModes;
 		},
 		durationFactor() {
 			return this.unit === "minute" ? 60 : 1;
 		},
 		selectOptions() {
+			if (this.chargeModes) {
+				return [
+					{ key: "off", name: this.$t("main.mode.off") },
+					{ key: "pv", name: this.$t("main.mode.pv") },
+					{ key: "minpv", name: this.$t("main.mode.minpv") },
+					{ key: "now", name: this.$t("main.mode.now") },
+				];
+			}
 			// If the valid values are already in the correct format, return them
 			if (typeof this.choice[0] === "object") {
 				return this.choice;
@@ -277,9 +327,8 @@ export default {
 		},
 		value: {
 			get() {
-				// use first option if no value is set
-				if (this.selectOptions.length > 0 && !this.modelValue) {
-					return this.required ? this.selectOptions[0].key : "";
+				if (this.select && this.modelValue == null) {
+					return "";
 				}
 
 				if (this.scale) {
@@ -296,6 +345,12 @@ export default {
 
 				if (this.type === "Duration" && typeof this.modelValue === "number") {
 					return this.modelValue / this.durationFactor / NS_PER_SECOND;
+				}
+
+				if (this.pricePerKWh) {
+					const value = this.modelValue * this.pricePerKWhDisplayFactor(this.currency);
+					// Round to 6 decimals to eliminate floating-point errors
+					return Math.round(value * 1e6) / 1e6;
 				}
 
 				return this.modelValue;
@@ -315,11 +370,29 @@ export default {
 					newValue = newValue * this.durationFactor * NS_PER_SECOND;
 				}
 
+				if (this.pricePerKWh) {
+					newValue = value / this.pricePerKWhDisplayFactor(this.currency);
+				}
+
 				this.$emit("update:modelValue", newValue);
 			},
 		},
 	},
 	methods: {
+		coerceValue(val) {
+			if (this.inputType === "number") {
+				return val === "" ? "" : Number(val);
+			}
+			return val;
+		},
+		onFieldChange(e) {
+			this.value = this.coerceValue(e.target.value);
+		},
+		onFieldInput(e) {
+			if (!this.useLazyBinding) {
+				this.value = this.coerceValue(e.target.value);
+			}
+		},
 		getOptionName(value) {
 			const translationKey = `config.options.${this.property}.${value || "none"}`;
 			return this.$te(translationKey) ? this.$t(translationKey) : value;

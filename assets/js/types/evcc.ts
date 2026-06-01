@@ -1,6 +1,8 @@
 import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
+export const GRID_CONTROL = "gridcontrol";
+
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -17,10 +19,14 @@ declare global {
   }
   interface Window {
     ReactNativeWebView?: WebView;
+    evccAppCapabilities?: string[];
   }
 }
 
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
+
+export type DeviceColors = Record<string, string>;
+export type DeviceColorEntry = { title: string; color: string };
 
 export interface MqttConfig {
   broker: string;
@@ -37,12 +43,6 @@ export interface HemsConfig {
   type: string;
 }
 
-export interface HemsStatus {
-  maxPower: number;
-}
-
-export type Hems = ConfigStatus<HemsConfig, HemsStatus>;
-
 export interface ShmConfig {
   vendorId: string;
   deviceId: string;
@@ -54,12 +54,25 @@ export interface FatalError {
   device?: string;
 }
 
+export type StatisticsPeriod = "30d" | "365d" | "thisYear" | "total";
+export type StatisticsIndicator = "none" | "solar" | "price" | "savings" | "co2" | "co2saved";
+
+export interface StatisticsData {
+  avgCo2: number;
+  avgPrice: number;
+  chargedKWh: number;
+  solarPercentage: number;
+}
+
+export type Statistics = Record<StatisticsPeriod, StatisticsData>;
+
 export interface State {
   offline: boolean;
   telemetry?: boolean;
   experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
+  apiReady?: boolean;
   loadpoints: Loadpoint[];
   forecast: Forecast;
   currency?: CURRENCY;
@@ -67,33 +80,49 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  availableVersion?: string;
   system?: string;
   timezone?: string;
   battery?: Battery;
+  batteryMode?: BATTERY_MODE;
+  grid?: Meter;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: Hems;
+  hems?: ConfigStatus<HemsConfig, unknown>;
   shm?: ShmConfig;
-  sponsor?: Sponsor;
-  eebus?: Eebus;
+  sponsor?: ConfigStatus<unknown, SponsorStatus>;
+  eebus?: ConfigStatus<EebusConfig, EebusStatus>;
+  remote?: Remote;
   modbusproxy?: ModbusProxy[];
   messaging?: ConfigStatus<unknown, unknown>;
   messagingEvents?: MessagingEvents;
   interval?: number;
   circuits?: Record<string, Circuit>;
+  bufferSoc?: number;
+  prioritySoc?: number;
+  bufferStartSoc?: number;
+  batteryDischargeControl?: boolean;
+  batteryGridChargeLimit?: number | null;
+  smartCostAvailable?: boolean;
+  smartCostType?: SMART_COST_TYPE;
   siteTitle?: string;
+  deviceColors?: DeviceColorEntry[];
   vehicles: Record<string, Vehicle>;
+  statistics?: Statistics;
   authDisabled?: boolean;
   config?: string;
   database?: string;
   ocpp?: Ocpp;
+  optimizer?: boolean;
+  mcp?: boolean;
 }
 
 export interface ConfigStatus<C, S> {
@@ -137,12 +166,15 @@ export interface Config {
 }
 
 export interface Circuit {
-  name: string;
-  maxPower: number;
-  power?: number;
-  maxCurrent: number;
+  title?: string;
+  icon?: string;
+  parent?: string;
+  power: number;
   current?: number;
-  config?: Config;
+  maxPower?: number;
+  maxCurrent?: number;
+  dimmed?: boolean;
+  curtailed?: boolean;
 }
 
 export interface Entity {
@@ -228,6 +260,7 @@ export enum LENGTH_UNIT {
 }
 
 export interface Loadpoint {
+  name: string;
   batteryBoost: boolean;
   chargeCurrents?: number[];
   chargeDuration: number;
@@ -237,8 +270,10 @@ export interface Loadpoint {
   chargeTotalImport?: number;
   chargeVoltages?: number[];
   chargedEnergy: number;
+  chargerFeatureContinuous: boolean;
   chargerFeatureHeating: boolean;
   chargerFeatureIntegratedDevice: boolean;
+  chargerFeatureSwitchDevice: boolean;
   chargerIcon: string | null;
   chargerPhases1p3p: boolean;
   chargerSinglePhase: boolean;
@@ -263,6 +298,7 @@ export interface Loadpoint {
   limitSoc: number;
   maxCurrent: number;
   minCurrent: number;
+  minSocNotReached: boolean;
   mode: CHARGE_MODE;
   offeredCurrent: number;
   phaseAction: PHASE_ACTION;
@@ -300,6 +336,7 @@ export interface Loadpoint {
   vehicleSoc: number;
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
+  batteryBoostLimit: number;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -311,6 +348,18 @@ export interface UiLoadpoint extends Loadpoint {
   visible: boolean;
   lastSmartCostLimit: number | undefined;
   lastSmartFeedInPriorityLimit: number | undefined;
+  range: number;
+  vehicleRange: number;
+  vehicleSoc: number;
+  capacity: number;
+  vehicleKnown: boolean;
+  vehicleHasSoc: boolean;
+  socBasedCharging: boolean;
+  socBasedPlanning: boolean;
+  sessionInfo: SessionInfoKey | undefined;
+  rangePerSoc: number | undefined;
+  socPerKwh: number;
+  vehicleNotReachable: boolean;
 }
 
 export enum THEME {
@@ -326,14 +375,22 @@ export enum CURRENCY {
   CAD = "CAD",
   CHF = "CHF",
   CNY = "CNY",
+  CZK = "CZK",
   EUR = "EUR",
   GBP = "GBP",
+  HUF = "HUF",
   ILS = "ILS",
+  JPY = "JPY",
   NZD = "NZD",
+  NOK = "NOK",
   PLN = "PLN",
+  RON = "RON",
   USD = "USD",
   DKK = "DKK",
   SEK = "SEK",
+  ZAR = "ZAR",
+  TRY = "TRY",
+  MYR = "MYR",
 }
 
 export enum ICON_SIZE {
@@ -349,6 +406,13 @@ export enum CHARGE_MODE {
   NOW = "now",
   MINPV = "minpv",
   PV = "pv",
+}
+
+export enum BATTERY_MODE {
+  UNKNOWN = "unknown",
+  NORMAL = "normal",
+  HOLD = "hold",
+  CHARGE = "charge",
 }
 
 export enum PHASES {
@@ -449,6 +513,29 @@ export type Certificate = {
   private: string;
 };
 
+export type Remote = ConfigStatus<RemoteConfig, RemoteStatus>;
+
+export type RemoteConfig = {
+  enabled: boolean;
+};
+
+export type RemoteStatus = {
+  connected: boolean;
+  url?: string;
+  loginBlocked: boolean;
+  lastSeen?: Record<string, string>;
+};
+
+export type RemoteClient = {
+  username: string;
+  createdAt: string;
+  expiresAt?: string;
+};
+
+export type RemoteClientCreated = RemoteClient & {
+  password: string;
+};
+
 export type Eebus = ConfigStatus<EebusConfig, EebusStatus>;
 
 export type EebusConfig = {
@@ -505,22 +592,30 @@ export interface Notification {
 }
 
 export interface Meter {
+  name?: string;
   power: number;
   title?: string;
   icon?: string;
   energy?: number;
+  returnEnergy?: number;
 }
 
 export interface BatteryForecast {
-  full: string | null; // ISO 8601 datetime
-  empty: string | null; // ISO 8601 datetime
+  highest?: BatteryForecastPoint;
+  lowest?: BatteryForecastPoint;
+}
+
+export interface BatteryForecastPoint {
+  soc: number; // percent
+  time: string; // ISO 8601 datetime
+  limit?: boolean; // true when SMax (highest) or SMin (lowest) boundary reached
 }
 
 export interface Battery {
   power: number;
   capacity: number;
   soc: number;
-  devices: BatteryMeter[];
+  devices?: BatteryMeter[];
   forecast?: BatteryForecast;
 }
 
@@ -528,7 +623,6 @@ export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
-  forecast?: BatteryForecast;
 }
 
 export interface Vehicle {
@@ -589,9 +683,10 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger" | "tariff";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
+export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -697,4 +792,12 @@ export interface OptimizationDetails {
 // Error response
 export interface Error {
   message: string; // Error description
+}
+
+// Tariff zone configuration
+export interface Zone {
+  price: number | null;
+  days: string;
+  months: string;
+  hours: string;
 }

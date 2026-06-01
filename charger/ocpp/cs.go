@@ -163,7 +163,7 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	cs.mu.Unlock()
 
 	if registered {
-		cp.connect(true)
+		cp.onTransportConnect()
 	}
 
 	return cp, init(cp)
@@ -178,9 +178,9 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	if ok {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
-		// trigger initial connection
+		// wait for BootNotification before marking as connected
 		if cp := reg.cp; cp != nil {
-			cp.connect(true)
+			cp.onTransportConnect()
 		}
 
 		cs.mu.Unlock()
@@ -199,7 +199,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 		cs.regs[chargePoint.ID()] = reg
 		delete(cs.regs, "")
 
-		cp.connect(true)
+		cp.onTransportConnect()
 
 		cs.mu.Unlock()
 		cs.publish()

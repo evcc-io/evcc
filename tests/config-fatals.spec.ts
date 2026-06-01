@@ -35,6 +35,13 @@ test.describe("fatal config handling", async () => {
 
     // remove meter
     await expect(page.getByTestId("fatal-error")).toBeVisible();
+
+    // dismiss hides the banner; reload restores it while the error persists
+    await page.getByRole("button", { name: "Dismiss" }).click();
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
+    await page.reload();
+    await expect(page.getByTestId("fatal-error")).toBeVisible();
+
     await expect(page.getByTestId("pv")).toBeVisible();
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
@@ -83,7 +90,7 @@ test.describe("fatal config handling", async () => {
     // verify loadpoint still visible with error
     await expect(page.getByTestId("fatal-error")).toBeVisible();
     await expect(page.getByTestId("fatal-error")).toContainText(
-      /meter: .+? cannot create meter .+?: cannot create meter type 'template:shelly-1pm': cannot create meter type 'shelly'/
+      /meter: .+? cannot create template .+?: cannot create meter type 'template:shelly-1pm': cannot create meter type 'shelly'/
     );
     await expect(page.getByTestId("fatal-error")).toContainText(
       /loadpoint: .+? missing charge meter instance/
@@ -93,8 +100,8 @@ test.describe("fatal config handling", async () => {
     // open modal and delete meter
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("textbox", { name: "Energy meter" })).toHaveClass(/is-invalid/);
-    await lpModal.getByRole("textbox", { name: "Energy meter" }).click();
+    await expect(lpModal.getByText("Shelly 1PM")).toBeVisible();
+    await lpModal.getByText("Shelly 1PM").click();
     await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);

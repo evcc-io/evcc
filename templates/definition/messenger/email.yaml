@@ -24,6 +24,14 @@ params:
     help:
       de: E-Mail-Adresse des Absenders.
       en: Sender's email address.
+  - name: fromName
+    example: john
+    description:
+      de: Name
+      en: Name
+    help:
+      de: Name des Absenders.
+      en: Sender's name.
   - name: to
     required: true
     type: list
@@ -32,8 +40,8 @@ params:
       de: An
       en: To
     help:
-      de: E-Mail-Adressen der Empfänger. One entry per line.
-      en: Email addresses of recipients. Ein Eintrag pro Zeile.
+      de: E-Mail-Adressen der Empfänger. Ein Eintrag pro Zeile.
+      en: Email addresses of recipients. One entry per line.
 render: |
   type: shout
-  uri: smtp://{{ .user }}:{{ .password }}@{{ .host }}:{{ .port }}/?fromAddress={{ .from }}&to={{ .to | join "," }}
+  uri: smtp://{{ .user }}:{{ .password }}@{{ .host }}:{{ .port }}/?fromAddress={{ .from }}&to={{ .to | join "," }}{{ if .fromName }}&fromName={{ .fromName }}{{ end }}

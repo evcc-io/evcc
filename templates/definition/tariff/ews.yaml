@@ -1,8 +1,8 @@
 template: ews
 products:
-  - brand: EWS
+  - brand: EWS Elektrizitätswerke Schönau
     description:
-      generic: Dynamic eco power price of EWS Elektrizitätswerke Schönau
+      generic: Ökostrom Dynamisch
 requirements:
   evcc: ["skiptest"]
   description:

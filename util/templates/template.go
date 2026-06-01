@@ -22,7 +22,7 @@ type Template struct {
 	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string       `json:",omitempty"` // list of covered outdated template names
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
-	Capabilities []string       `json:",omitempty"`
+	Capabilities []Capability   `json:",omitempty"`
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Params       []Param        `json:",omitempty"`
@@ -81,12 +81,6 @@ func (t *Template) SortRequiredParamsFirst() error {
 
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
-	for _, c := range t.Capabilities {
-		if !slices.Contains(ValidCapabilities, c) {
-			return fmt.Errorf("invalid capability: '%s'", c)
-		}
-	}
-
 	for _, c := range t.Countries {
 		if !c.IsValid() {
 			return fmt.Errorf("invalid country code: '%s'", c)
@@ -361,12 +355,17 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 		switch typed := val.(type) {
 		case []any:
-			var list []string
-			for _, v := range typed {
-				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
-			}
-			if res[out] == nil || len(res[out].([]any)) == 0 {
-				res[out] = list
+			if i != -1 && p.Type == TypeZones {
+				// keep as structured data
+				res[out] = typed
+			} else {
+				var list []string
+				for _, v := range typed {
+					list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
+				}
+				if res[out] == nil || len(res[out].([]any)) == 0 {
+					res[out] = list
+				}
 			}
 
 		case []string:

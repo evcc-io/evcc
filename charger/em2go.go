@@ -23,7 +23,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -33,6 +35,7 @@ import (
 
 // Em2Go charger implementation
 type Em2Go struct {
+	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
 	current    uint16
@@ -46,7 +49,7 @@ const (
 	em2GoRegErrorCode       = 4   // Uint16 RO ENUM
 	em2GoRegCurrents        = 6   // Uint16 RO 0.1A
 	em2GoRegPower           = 12  // Uint32 RO 1W
-	em2GoRegEnergy          = 28  // Uint16 RO 0.1KWh
+	em2GoRegEnergy          = 28  // Uint32 RO 0.1KWh
 	em2GoRegMaxCurrent      = 32  // Uint16 RO 0.1A
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
 	em2GoRegCableMaxCurrent = 36  // Uint16 RO 0.1A
@@ -68,8 +71,6 @@ func init() {
 	registry.AddCtx("em2go", NewEm2GoFromConfig)
 	registry.AddCtx("em2go-home", NewEm2GoFromConfig)
 }
-
-//go:generate go tool decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t api.ChargerEx,api.PhaseSwitcher,api.PhaseGetter
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -103,22 +104,52 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
+		Caps:    implement.New(),
 		log:     log,
 		conn:    conn,
 		current: 60,
 	}
 
-	return wb.initialize()
+	bo := backoff.WithContext(
+		backoff.NewExponentialBackOff(
+			backoff.WithInitialInterval(2*time.Second),
+			backoff.WithMaxInterval(10*time.Second),
+			backoff.WithMaxElapsedTime(30*time.Second),
+		), ctx)
+
+	res, err := backoff.RetryWithData(wb.initialize, bo)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegCommTimeout, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+	}
+
+	return res, nil
+}
+
+// heartbeat keeps the Modbus connection alive to prevent the charger from
+// entering its failsafe state when the configured communication timeout expires.
+func (wb *Em2Go) heartbeat(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+			if _, err := wb.conn.ReadHoldingRegisters(em2GoRegSafeCurrent, 1); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 // initialize performs common initialization for both Em2Go models
 func (wb *Em2Go) initialize() (api.Charger, error) {
-	var (
-		maxCurrent func(float64) error
-		phases1p3p func(int) error
-		phasesG    func() (int, error)
-	)
-
 	// test if workaround is needed (Home fw <1.3)
 	if err := wb.maxCurrentMillis(6.1); err != nil {
 		return nil, err
@@ -133,15 +164,15 @@ func (wb *Em2Go) initialize() (api.Charger, error) {
 	if chargerCurrent == 6 {
 		wb.workaround = true
 	} else {
-		maxCurrent = wb.maxCurrentMillis
+		implement.Has(wb, implement.ChargerEx(wb.maxCurrentMillis))
 	}
 
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
-		phases1p3p = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
-	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

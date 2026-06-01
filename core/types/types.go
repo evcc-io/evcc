@@ -8,43 +8,33 @@ import (
 
 // Measurement is the device measurements struct
 type Measurement struct {
-	Title         string           `json:"title,omitempty"`
-	Icon          string           `json:"icon,omitempty"`
-	Power         float64          `json:"power"`
-	Energy        float64          `json:"energy,omitempty"`
-	Powers        []float64        `json:"powers,omitempty"`
-	Currents      []float64        `json:"currents,omitempty"`
-	ExcessDCPower float64          `json:"excessdcpower,omitempty"`
-	Capacity      *float64         `json:"capacity,omitempty"`
-	Soc           *float64         `json:"soc,omitempty"`
-	Controllable  *bool            `json:"controllable,omitempty"`
-	Forecast      *BatteryForecast `json:"forecast,omitempty"`
+	Name          string    `json:"name,omitempty"`
+	Title         string    `json:"title,omitempty"`
+	Icon          string    `json:"icon,omitempty"`
+	Power         float64   `json:"power"`
+	Energy        *float64  `json:"energy,omitempty"`
+	ReturnEnergy  *float64  `json:"returnEnergy,omitempty"`
+	Powers        []float64 `json:"powers,omitempty"`
+	Currents      []float64 `json:"currents,omitempty"`
+	ExcessDCPower float64   `json:"excessdcpower,omitempty"`
+	Capacity      *float64  `json:"capacity,omitempty"`
+	Soc           *float64  `json:"soc,omitempty"`
+	Controllable  *bool     `json:"controllable,omitempty"`
 }
 
 type BatteryForecast struct {
-	Full  *time.Time `json:"full"`
-	Empty *time.Time `json:"empty"`
+	Highest *BatteryForecastPoint `json:"highest,omitempty"`
+	Lowest  *BatteryForecastPoint `json:"lowest,omitempty"`
 }
 
-// func (f BatteryForecast) MarshalJSON() ([]byte, error) {
-// 	var full, empty int64
-// 	if !f.Full.IsZero() {
-// 		full = int64(time.Until(f.Full).Seconds())
-// 	}
-// 	if !f.Empty.IsZero() {
-// 		empty = int64(time.Until(f.Empty).Seconds())
-// 	}
-
-// 	return json.Marshal(struct {
-// 		BatteryForecast
-// 		UntilFull  int64 `json:"untilFull,omitempty"`
-// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
-// 	}{
-// 		BatteryForecast: f,
-// 		UntilFull:       full,
-// 		UntilEmpty:      empty,
-// 	})
-// }
+// BatteryForecastPoint describes an extreme SOC point in the battery forecast.
+// Limit indicates whether the configured SMax (for Highest) or SMin (for Lowest)
+// boundary was reached, i.e. the battery becomes fully charged or empty.
+type BatteryForecastPoint struct {
+	Soc   float64   `json:"soc"`
+	Time  time.Time `json:"time"`
+	Limit bool      `json:"limit,omitempty"`
+}
 
 var _ api.TitleDescriber = (*Measurement)(nil)
 

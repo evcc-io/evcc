@@ -3,7 +3,7 @@ products:
   - brand: E3/DC
     description:
       generic: Multi Connect II Wallbox
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   description:
     de: |
@@ -47,7 +47,7 @@ params:
     advanced: true
 render: |
   type: e3dc-rscp
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   user: {{ .user }}
   password: {{ .password }}
   key: {{ .key }}

@@ -78,14 +78,19 @@ func remainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
 func (s *Estimator) RemainingChargeEnergy(targetSoc int) float64 {
-	percentRemaining := float64(targetSoc) - s.vehicleSoc
-	if percentRemaining <= 0 || s.virtualCapacity <= 0 {
+	return remainingChargeEnergy(targetSoc, s.vehicleSoc, s.virtualCapacity)
+}
+
+func RemainingChargeEnergy(targetSoc int, vehicleSoc, capacity float64) float64 {
+	return remainingChargeEnergy(targetSoc, vehicleSoc, capacity*1e3/ChargeEfficiency)
+}
+
+func remainingChargeEnergy(targetSoc int, vehicleSoc, virtualCapacity float64) float64 {
+	percentRemaining := float64(targetSoc) - vehicleSoc
+	if percentRemaining <= 0 || virtualCapacity <= 0 {
 		return 0
 	}
-
-	// estimate remaining energy
-	whRemaining := percentRemaining / 100 * s.virtualCapacity
-	return whRemaining / 1e3
+	return percentRemaining / 100 * virtualCapacity / 1e3
 }
 
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account

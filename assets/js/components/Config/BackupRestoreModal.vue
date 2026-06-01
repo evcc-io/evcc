@@ -170,6 +170,7 @@
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import api, { downloadFile } from "@/api";
+import { dispatchDownload } from "@/utils/native";
 import PropertyFileField from "./PropertyFileField.vue";
 import FormRow from "./FormRow.vue";
 import { isLoggedIn } from "../Auth/auth";
@@ -296,6 +297,10 @@ export default defineComponent({
 			return r;
 		},
 		async downloadBackup() {
+			if (dispatchDownload("/api/system/backup", "POST", { password: this.password })) {
+				this.closeConfirmModal();
+				return;
+			}
 			const res = await this.call(
 				api.post(
 					"/system/backup",

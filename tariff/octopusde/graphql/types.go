@@ -9,16 +9,23 @@ type krakenTokenAuthentication struct {
 	} `graphql:"obtainKrakenToken(input: {email: $email, password: $password})"`
 }
 
-// getDayAheadPrices queries the day-ahead price forecast
-type getDayAheadPrices struct {
+// Agreement represents a single electricity supply agreement.
+// The unitRateForecast field is only populated for dynamic tariffs.
+// The unitRateInformation field covers all tariff types (Simple, TimeOfUse).
+type Agreement struct {
+	IsActive            bool
+	ValidFrom           time.Time
+	ValidTo             time.Time
+	UnitRateInformation AgreementUnitRateInformation
+	UnitRateForecast    []UnitRateForecast
+	Product             product
+}
+
+type getAgreements struct {
 	Account struct {
 		Properties []struct {
 			ElectricityMalos []struct {
-				Agreements []struct {
-					IsActive         bool
-					UnitRateForecast []unitRateForecast
-					Product          product
-				}
+				Agreements []Agreement
 			}
 		}
 	} `graphql:"account(accountNumber: $accountNumber)"`
@@ -30,29 +37,61 @@ type product struct {
 	Term        int
 }
 
-type unitRateForecast struct {
-	ValidFrom           time.Time
-	ValidTo             time.Time
-	UnitRateInformation unitRateInformation
+// AgreementUnitRateInformation is the current rate information for an agreement.
+// It supports both SimpleProductUnitRateInformation (fixed rate) and
+// TimeOfUseProductUnitRateInformation (time-slot based rates with activation rules).
+type AgreementUnitRateInformation struct {
+	SimpleProductUnitRateInformation    SimpleProductUnitRateInformation `graphql:"... on SimpleProductUnitRateInformation"`
+	TimeOfUseProductUnitRateInformation TouAgreementUnitRateInformation  `graphql:"... on TimeOfUseProductUnitRateInformation"`
 }
 
-type unitRateInformation struct {
-	TimeOfUseProductUnitRateInformation timeOfUseProductUnitRateInformation `graphql:"... on TimeOfUseProductUnitRateInformation"`
+// SimpleProductUnitRateInformation holds a single fixed rate.
+type SimpleProductUnitRateInformation struct {
+	LatestGrossUnitRateCentsPerKwh string
+	NetUnitRateCentsPerKwh         string
 }
 
-type timeOfUseProductUnitRateInformation struct {
-	Rates []rate
+// TouAgreementUnitRateInformation holds multiple time-slot rates with their activation rules.
+type TouAgreementUnitRateInformation struct {
+	Rates []TouRate
 }
 
-type rate struct {
+// TouRate is a rate with time-slot activation rules (used in non-dynamic ToU agreements).
+type TouRate struct {
 	NetUnitRateCentsPerKwh         string `graphql:"netUnitRateCentsPerKwh"`
 	LatestGrossUnitRateCentsPerKwh string `graphql:"latestGrossUnitRateCentsPerKwh"`
+	TimeslotName                   string
+	TimeslotActivationRules        []TimeslotActivationRule
 }
 
-// RatePeriod represents a rate period with pricing information
-type RatePeriod struct {
-	ValidFrom                      time.Time
-	ValidTo                        time.Time
-	NetUnitRateCentsPerKwh         float64
-	LatestGrossUnitRateCentsPerKwh float64
+// TimeslotActivationRule defines the time window during which a rate slot is active.
+type TimeslotActivationRule struct {
+	ActiveFromTime string
+	ActiveToTime   string
+}
+
+// UnitRateForecast holds a single forecast entry with its validity window.
+type UnitRateForecast struct {
+	ValidFrom           time.Time
+	ValidTo             time.Time
+	UnitRateInformation ForecastUnitRateInformation
+}
+
+// ForecastUnitRateInformation is the rate information embedded in forecast entries.
+// Dynamic tariffs use TimeOfUseProductUnitRateInformation; simple forecasts use
+// SimpleProductUnitRateInformation.
+type ForecastUnitRateInformation struct {
+	SimpleProductUnitRateInformation    SimpleProductUnitRateInformation    `graphql:"... on SimpleProductUnitRateInformation"`
+	TimeOfUseProductUnitRateInformation TimeOfUseProductUnitRateInformation `graphql:"... on TimeOfUseProductUnitRateInformation"`
+}
+
+// TimeOfUseProductUnitRateInformation holds a list of per-slot rates for dynamic/ToU forecasts.
+type TimeOfUseProductUnitRateInformation struct {
+	Rates []Rate
+}
+
+// Rate holds the net and gross unit rate strings for a single dynamic forecast slot.
+type Rate struct {
+	NetUnitRateCentsPerKwh         string `graphql:"netUnitRateCentsPerKwh"`
+	LatestGrossUnitRateCentsPerKwh string `graphql:"latestGrossUnitRateCentsPerKwh"`
 }

@@ -22,14 +22,15 @@ type Status struct {
 	}
 	Services struct {
 		Charging struct {
-			Status         string
-			TargetPct      int
-			ChargeMode     string
-			ChargeSettings string
-			Active         bool
-			RemainingTime  int64
-			CurrentPct     float64
-			ProgressBarPct float64
+			Status            string
+			BatteryCardStatus string
+			TargetPct         int
+			ChargeMode        string
+			ChargeSettings    string
+			Active            bool
+			RemainingTime     int64
+			CurrentPct        float64
+			ProgressBarPct    float64
 		}
 		Climatisation struct {
 			Status         string

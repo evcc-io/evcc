@@ -3,12 +3,9 @@ products:
   - brand: Porsche
     description:
       generic: Mobile Charger Connect
-capabilities: ["iso151182", "mA"]
-requirements:
-  evcc: ["eebus"]
+capabilities: ["iso151182", "mA", "meter", "dim"]
 params:
   - preset: eebus
 render: |
   {{ include "eebus" . }}
   meter: true
-  vasvw: true

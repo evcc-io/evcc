@@ -15,8 +15,9 @@ import (
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/samber/lo"
-	"go.yaml.in/yaml/v4"
+	goyaml "go.yaml.in/yaml/v4"
 	"gorm.io/gorm"
 )
 
@@ -135,7 +136,7 @@ func SetJson(key string, val any) error {
 
 func SetYaml(key string, val any) error {
 	var b bytes.Buffer
-	err := yaml.NewEncoder(&b).Encode(val)
+	err := goyaml.NewEncoder(&b).Encode(val)
 	if err == nil {
 		SetString(key, strings.TrimSpace(b.String()))
 	}
@@ -210,7 +211,7 @@ func DecodeOtherSliceOrMap(other, res any) error {
 	val := reflect.ValueOf(other)
 	typ := reflect.TypeOf(other)
 
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 		val = reflect.Indirect(val)
 	}

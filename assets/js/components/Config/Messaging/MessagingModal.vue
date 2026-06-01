@@ -62,20 +62,13 @@
 			</div>
 			<div v-else>
 				<div v-for="(m, index) in messengers" :key="index" class="my-4">
-					<div
-						class="d-flex align-items-center justify-content-between py-2 px-4 border rounded"
+					<DeviceRefBox
 						:data-testid="`messenger-box-${index}`"
+						@edit="openMessenger(m.id)"
 					>
-						<div class="flex-grow-1">
-							<small class="text-muted">#{{ index + 1 }}</small>
-							<span class="fw-semibold mx-3">{{ messengerType(m) }}</span>
-						</div>
-						<DeviceCardEditIcon
-							:editable="true"
-							:no-edit-button="false"
-							@edit="openMessenger(m.id)"
-						/>
-					</div>
+						<small class="text-muted">#{{ index + 1 }}</small>
+						<span class="fw-semibold mx-3">{{ messengerType(m) }}</span>
+					</DeviceRefBox>
 				</div>
 				<button
 					type="button"
@@ -97,7 +90,7 @@ import "@h2d2/shopicons/es/regular/plus";
 import JsonModal from "../JsonModal.vue";
 import EventItem from "./EventItem.vue";
 import { type PropType } from "vue";
-import DeviceCardEditIcon from "../DeviceCardEditIcon.vue";
+import DeviceRefBox from "../DeviceRefBox.vue";
 import { capitalize } from "./utils";
 import { openModal } from "@/configModal";
 
@@ -106,7 +99,7 @@ export default {
 	components: {
 		JsonModal,
 		EventItem,
-		DeviceCardEditIcon,
+		DeviceRefBox,
 	},
 	props: {
 		messengers: { type: Array as PropType<ConfigMessenger[]>, required: true },

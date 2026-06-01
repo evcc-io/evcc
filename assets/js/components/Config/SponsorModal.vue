@@ -11,7 +11,10 @@
 		:disable-remove="!hasUiToken"
 		disable-cancel
 		@changed="$emit('changed')"
-		@open="showForm = false"
+		@open="
+			showForm = false;
+			activeTab = 'github';
+		"
 	>
 		<template #default="{ values }">
 			<div class="mt-4 mb-3">
@@ -19,67 +22,177 @@
 			</div>
 			<hr class="my-4" />
 			<div v-if="showTokenForm">
-				<div class="d-flex justify-content-between align-items-center">
-					<label for="sponsorToken" class="fw-bold my-2">{{
-						$t("config.sponsor.enterYourToken")
+				<!-- hidden feature: tab navigation
+				<ul v-if="$hiddenFeatures()" class="nav nav-tabs mb-3" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button
+							class="nav-link"
+							:class="{ active: activeTab === 'github' }"
+							type="button"
+							@click="
+								if (activeTab !== 'github') {
+									values.token = '';
+									values.email = '';
+								}
+								activeTab = 'github';
+							"
+						>
+							Sponsor Token
+						</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button
+							class="nav-link"
+							:class="{ active: activeTab === 'direct' }"
+							type="button"
+							@click="
+								if (activeTab !== 'direct') {
+									values.token = '';
+									values.email = '';
+								}
+								activeTab = 'direct';
+							"
+						>
+							Activation Key 🧪
+						</button>
+					</li>
+				</ul>
+				-->
+				<div v-if="activeTab === 'github'">
+					<label for="sponsorToken" class="my-2">
+						{{ $t("config.sponsor.enterYourToken") }}
+					</label>
+					<textarea
+						id="sponsorToken"
+						v-model.trim="values.token"
+						class="form-control mb-1"
+						required
+						rows="5"
+						spellcheck="false"
+						@paste="(event) => handlePaste(event, values)"
+					/>
+					<i18n-t tag="small" keypath="config.sponsor.descriptionToken" scope="global">
+						<template #url>
+							<a href="https://sponsor.evcc.io" target="_blank">sponsor.evcc.io</a>
+						</template>
+						<template #trialToken>
+							<a :href="trialTokenLink" target="_blank">{{
+								$t("config.sponsor.trialToken")
+							}}</a>
+						</template>
+					</i18n-t>
+				</div>
+				<div v-else-if="activeTab === 'direct'">
+					<label for="sponsorEmail" class="my-2">{{ $t("config.sponsor.email") }}</label>
+					<input
+						id="sponsorEmail"
+						v-model.trim="values.email"
+						type="email"
+						class="form-control mb-1"
+						required
+					/>
+					<i18n-t
+						tag="small"
+						keypath="config.sponsor.emailHint"
+						scope="global"
+						class="mb-3 d-block text-muted"
+					>
+						<template #url>
+							<a href="https://sponsor.evcc.io/" target="_blank">direct sponsoring</a>
+						</template>
+					</i18n-t>
+					<label for="licenseKey" class="my-2">{{
+						$t("config.sponsor.activationKey")
 					}}</label>
+					<input
+						id="licenseKey"
+						v-model.trim="values.token"
+						class="form-control mb-1 font-monospace"
+						required
+						spellcheck="false"
+						pattern="[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}"
+						title="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+						@input="values.token = values.token.toUpperCase()"
+					/>
+					<i18n-t tag="small" keypath="config.sponsor.activationKeyHint" scope="global">
+						<template #url>
+							<a href="about:blank" target="_blank">Customer Portal</a>
+						</template>
+					</i18n-t>
+				</div>
+				<div v-if="hasUiToken" class="d-flex justify-content-end mt-3">
 					<button
-						v-if="hasUiToken"
 						type="button"
-						class="btn btn-link btn-sm text-nowrap text-muted"
+						class="btn btn-link text-nowrap text-muted"
 						@click="
 							editMode = false;
 							values.token = '';
+							values.email = '';
 						"
 					>
 						{{ $t("config.general.cancel") }}
 					</button>
 				</div>
-				<textarea
-					id="sponsorToken"
-					v-model="values.token"
-					class="form-control mb-1"
-					required
-					rows="5"
-					spellcheck="false"
-					@paste="(event) => handlePaste(event, values)"
-				/>
-				<i18n-t tag="small" keypath="config.sponsor.descriptionToken" scope="global">
-					<template #url>
-						<a href="https://sponsor.evcc.io" target="_blank">sponsor.evcc.io</a>
-					</template>
-					<template #trialToken>
-						<a :href="trialTokenLink" target="_blank">{{
-							$t("config.sponsor.trialToken")
-						}}</a>
-					</template>
-				</i18n-t>
 			</div>
 			<div v-else-if="token">
-				<label for="existingToken" class="fw-bold my-2">{{
-					$t("config.sponsor.yourToken")
-				}}</label>
-				<div class="d-flex align-items-start gap-2 text-muted">
-					<input
-						id="existingToken"
-						:value="token"
-						disabled
-						rows="1"
-						class="form-control"
-						:class="{ 'is-invalid': error }"
-					/>
-					<span v-if="fromYaml" class="text-muted text-nowrap align-self-center ms-2">
-						{{ $t("config.sponsor.viaYaml") }}
-					</span>
-					<button
-						v-else
-						type="button"
-						class="btn btn-link text-nowrap"
-						:class="error ? 'text-danger' : 'text-muted'"
-						@click="editMode = true"
-					>
-						{{ $t("config.sponsor.changeToken") }}
-					</button>
+				<div v-if="activationKey">
+					<label for="existingEmail" class="fw-bold my-2">{{
+						$t("config.sponsor.email")
+					}}</label>
+					<div class="text-muted mb-3">
+						<input id="existingEmail" :value="name" disabled class="form-control" />
+					</div>
+					<label for="existingActivationKey" class="fw-bold my-2">{{
+						$t("config.sponsor.activationKey")
+					}}</label>
+					<div class="text-muted">
+						<input
+							id="existingActivationKey"
+							:value="activationKey"
+							disabled
+							class="form-control font-monospace"
+							:class="{ 'is-invalid': error }"
+						/>
+					</div>
+					<div class="d-flex justify-content-end mt-2">
+						<button
+							type="button"
+							class="btn btn-link text-nowrap"
+							:class="error ? 'text-danger' : 'text-muted'"
+							@click="editMode = true"
+						>
+							{{ $t("config.general.change") }}
+						</button>
+					</div>
+				</div>
+				<div v-else>
+					<label for="existingToken" class="fw-bold my-2">{{
+						$t("config.sponsor.yourToken")
+					}}</label>
+					<div class="text-muted">
+						<input
+							id="existingToken"
+							:value="token"
+							disabled
+							rows="1"
+							class="form-control"
+							:class="{ 'is-invalid': error }"
+						/>
+					</div>
+					<div class="d-flex justify-content-end mt-2">
+						<span v-if="fromYaml" class="text-nowrap small text-muted">
+							{{ $t("config.sponsor.viaYaml") }}
+						</span>
+						<button
+							v-else
+							type="button"
+							class="btn btn-link text-nowrap"
+							:class="error ? 'text-danger' : 'text-muted'"
+							@click="editMode = true"
+						>
+							{{ $t("config.sponsor.changeToken") }}
+						</button>
+					</div>
 				</div>
 				<SponsorTokenExpires v-bind="sponsor" />
 			</div>
@@ -103,6 +216,7 @@ export default {
 	emits: ["changed"],
 	data: () => ({
 		editMode: false,
+		activeTab: "github",
 	}),
 	computed: {
 		sponsor() {
@@ -110,6 +224,9 @@ export default {
 		},
 		token() {
 			return this.sponsor?.status?.token;
+		},
+		activationKey() {
+			return this.sponsor?.status?.activationKey;
 		},
 		fromYaml() {
 			return !!this.sponsor?.yamlSource;
@@ -132,13 +249,21 @@ export default {
 	},
 	methods: {
 		transformReadValues() {
-			return { token: "" };
+			return { token: "", email: "" };
 		},
 		handlePaste(event, values) {
 			event.preventDefault();
 			const text = event.clipboardData.getData("text");
 			const cleaned = cleanYaml(text, "sponsortoken");
 			values.token = cleaned;
+			if (this.activeTab === "github" && this.isLicenseKey(cleaned)) {
+				this.activeTab = "direct";
+			}
+		},
+		isLicenseKey(token) {
+			// Match pattern XXXXX-XXXXX-XXXXX-XXXXX-XXXXX (case-insensitive alphanumeric)
+			const pattern = /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/i;
+			return pattern.test(token || "");
 		},
 	},
 };

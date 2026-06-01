@@ -1,6 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
-import { openTopNavigation, expectModalVisible, expectModalHidden } from "./utils";
+import {
+  openMoreMenu,
+  expectModalVisible,
+  expectModalHidden,
+  enableAppContext,
+  expectAppEvent,
+} from "./utils";
 import fs from "fs";
 import path from "path";
 
@@ -15,7 +21,7 @@ test.describe("reset", async () => {
     await expect(page.getByTestId("sessions-entry")).toHaveCount(4);
 
     // open backup & restore modal
-    await openTopNavigation(page);
+    await openMoreMenu(page);
     await page.getByRole("link", { name: "Configuration" }).click();
     await page.getByRole("button", { name: "Backup & Restore" }).click();
     const modal = page.getByTestId("backup-restore-modal");
@@ -244,6 +250,31 @@ test.describe("backup and restore", async () => {
     // verify backup was downloaded successfully
     const download = await downloadPromise;
     await expect(download.suggestedFilename()).toContain("evcc-backup");
+    await stop();
+  });
+});
+
+test.describe("backup in app context", async () => {
+  test("download backup dispatches POST event with password body", async ({ page }) => {
+    await enableAppContext(page);
+    await start();
+    await page.goto("/#/config");
+
+    await page.getByRole("button", { name: "Backup & Restore" }).click();
+    const backupModal = page.getByTestId("backup-restore-modal");
+    await expectModalVisible(backupModal);
+
+    await backupModal.getByRole("button", { name: "Download backup..." }).click();
+    const backupConfirmModal = page.getByTestId("backup-restore-confirm-modal");
+    await expectModalVisible(backupConfirmModal);
+
+    await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
+    expect(await expectAppEvent(page)).toMatchObject({
+      type: "download",
+      url: expect.stringContaining("/api/system/backup"),
+      method: "POST",
+      body: { password: "" },
+    });
     await stop();
   });
 });

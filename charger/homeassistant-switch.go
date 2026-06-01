@@ -24,7 +24,7 @@ func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error)
 		embed        `mapstructure:",squash"`
 		URI          string
 		Token_       string `mapstructure:"token"` // TODO deprecated
-		Home         string // TODO deprecated
+		Home_        string `mapstructure:"home"`  // TODO deprecated
 		Enable       string
 		Power        string
 		StandbyPower float64
@@ -34,7 +34,7 @@ func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Home, cc.Enable, cc.Power, cc.StandbyPower)
+	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Home_, cc.Enable, cc.Power, cc.StandbyPower)
 }
 
 func NewHomeAssistantSwitch(embed embed, uri, home, enable, power string, standbypower float64) (api.Charger, error) {
