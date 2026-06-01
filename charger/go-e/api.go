@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -35,12 +34,9 @@ type API interface {
 
 type LocalAPI struct {
 	*request.Helper
-	mu      sync.Mutex // guards the cached status/updated against concurrent accessors
 	uri     string
 	v2      bool
-	status  Response
-	updated time.Time
-	cache   time.Duration
+	statusG util.Cacheable[Response]
 }
 
 var _ API = (*LocalAPI)(nil)
@@ -52,10 +48,10 @@ func NewLocal(log *util.Logger, uri string, cache time.Duration) *LocalAPI {
 	api := &LocalAPI{
 		Helper: request.NewHelper(log),
 		uri:    uri,
-		cache:  cache,
 	}
 
 	api.upgradeV2()
+	api.statusG = util.ResettableCached(api.status, cache)
 
 	return api
 }
@@ -85,60 +81,53 @@ func (c *LocalAPI) response(partial string, res any) error {
 	return c.GetJSON(url, &res)
 }
 
-// Status reads a v1/v2 api response
-func (c *LocalAPI) Status() (res Response, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if time.Since(c.updated) > c.cache {
-		if c.v2 {
-			c.status = new(StatusResponse2)
-			err = c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &c.status)
-		} else {
-			c.status = new(StatusResponse)
-			err = c.response("status", &c.status)
-		}
-		if err == nil {
-			c.updated = time.Now()
-		}
+// status fetches a fresh v1/v2 api response
+func (c *LocalAPI) status() (Response, error) {
+	if c.v2 {
+		res := new(StatusResponse2)
+		err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
+		return res, err
 	}
-	return c.status, err
+
+	res := new(StatusResponse)
+	err := c.response("status", &res)
+	return res, err
+}
+
+// Status reads a cached v1/v2 api response
+func (c *LocalAPI) Status() (Response, error) {
+	return c.statusG.Get()
 }
 
 // Update executes a v1/v2 api update and returns the response
 func (c *LocalAPI) Update(payload string) error {
-	c.mu.Lock()
-	c.updated = time.Time{} // invalidate cache so the next Status refetches
-	c.mu.Unlock()
+	c.statusG.Reset() // invalidate cache so the next Status refetches
 
 	res := new(UpdateResponse)
 
 	if c.v2 {
-		err := c.response(fmt.Sprintf("set?%s", payload), &res)
-		return err
+		return c.response(fmt.Sprintf("set?%s", payload), &res)
 	}
 
-	err := c.response(fmt.Sprintf("mqtt?payload=%s", payload), &res)
-	return err
+	return c.response(fmt.Sprintf("mqtt?payload=%s", payload), &res)
 }
 
 type cloud struct {
 	*request.Helper
-	mu      sync.Mutex // guards the cached status/updated against concurrent accessors
 	token   string
-	cache   time.Duration
-	updated time.Time
-	status  Response
+	statusG util.Cacheable[Response]
 }
 
 var _ API = (*cloud)(nil)
 
 func NewCloud(log *util.Logger, token string, cache time.Duration) API {
-	return &cloud{
+	c := &cloud{
 		Helper: request.NewHelper(log),
 		token:  token,
-		cache:  cache,
 	}
+	c.statusG = util.ResettableCached(c.status, cache)
+
+	return c
 }
 
 func (c *cloud) IsV2() bool {
@@ -161,25 +150,18 @@ func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 	return &status.Data, err
 }
 
-func (c *cloud) Status() (status Response, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+// status fetches a fresh cloud api response
+func (c *cloud) status() (Response, error) {
+	return c.response("api_status", "")
+}
 
-	if time.Since(c.updated) >= c.cache {
-		status, err = c.response("api_status", "")
-		if err == nil {
-			c.updated = time.Now()
-			c.status = status
-		}
-	}
-
-	return c.status, err
+// Status reads a cached cloud api response
+func (c *cloud) Status() (Response, error) {
+	return c.statusG.Get()
 }
 
 func (c *cloud) Update(payload string) error {
-	c.mu.Lock()
-	c.updated = time.Time{} // invalidate cache so the next Status refetches
-	c.mu.Unlock()
+	c.statusG.Reset() // invalidate cache so the next Status refetches
 
 	_, err := c.response("api", payload)
 	return err
