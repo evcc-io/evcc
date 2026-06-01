@@ -100,12 +100,7 @@ func Instance() *CS {
 		go instance.errorHandler(cs.Errors())
 		go cs.Start(port, "/{ws}")
 
-		// Wait for the listener to bind before returning. cs.Start runs
-		// dispatcher.Start() before binding the TCP socket, so dispatcher.IsRunning()
-		// flips while the port is not yet accepting connections. Callers that dial
-		// immediately (notably the test suite) then see "connection refused".
-		// server.Addr() is only set once net.Listen succeeds, so it is the correct
-		// readiness signal. Bounded so a failed bind cannot hang startup.
+		// wait for server to start
 		tick := time.Tick(10 * time.Millisecond)
 		timeout := time.After(10 * time.Second)
 		for server.Addr() == nil {
