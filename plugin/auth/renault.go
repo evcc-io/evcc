@@ -219,7 +219,6 @@ func (r *Renault) RequestCode() error {
 
 	r.pending.gigyaAssertion = init.GigyaAssertion
 	r.pending.phvToken = send.PHVToken
-	r.notify(false)
 
 	return nil
 }

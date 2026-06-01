@@ -363,7 +363,7 @@ func (v *Identity) jwtToken(sessionCookie string) (string, error) {
 	data := url.Values{
 		"apiKey":      {v.gigya.APIKey},
 		"login_token": {sessionCookie},
-		"fields":      {"data.personId,data.DataCenter"},
+		"fields":      {"data.personId,data.gigyaDataCenter"},
 		"expiration":  {"900"},
 	}
 

@@ -108,6 +108,7 @@ func Instance() *CS {
 			case <-tick:
 			case <-timeout:
 				log.ERROR.Println("timeout waiting for server to bind")
+				instance = nil
 				return
 			}
 		}
