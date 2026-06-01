@@ -643,6 +643,9 @@ func TestEasee_Enable_noKickstart_highCurrent(t *testing.T) {
 	err := e.Enable(true)
 	assert.NoError(t, err)
 
+	info := httpmock.GetCallCountInfo()
+	assert.Equal(t, 1, info["POST "+resumeURI], "expected exactly one ChargeResume command")
+	assert.Equal(t, 1, info["POST "+chargerURI], "expected exactly one POST to charger settings (MaxCurrent, not DCC:7 kickstart)")
 	assert.Equal(t, 10.0, e.current, "c.current should remain 10 (no kickstart)")
 }
 
