@@ -28,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
+	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
@@ -775,15 +776,17 @@ func configureGo(conf []globalconfig.Go) error {
 
 // setup HEMS
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
-	// use yaml if configured
+	if !hemsConfigured(*conf) {
+		return nil, nil
+	}
+
 	if conf.Type == "" {
-		if settings.Exists(keys.Hems) {
-			*conf = globalconfig.Hems{}
-			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
-				return nil, err
-			}
-			yamlSource.hems = globalconfig.YamlSourceDb
+		// yaml from db
+		*conf = globalconfig.Hems{}
+		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
+			return nil, err
 		}
+		yamlSource.hems = globalconfig.YamlSourceDb
 	} else {
 		yamlSource.hems = globalconfig.YamlSourceFile
 	}
@@ -1178,7 +1181,19 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
 
+	// auto-create the grid control root circuit so loadpoints can reference it
+	if hemsConfigured(conf.HEMS) {
+		if _, err := smartgrid.SetupCircuit(); err != nil {
+			errs = append(errs, &ClassError{ClassCircuit, err})
+		}
+	}
+
 	return joinErrors(errs...)
+}
+
+// hemsConfigured reports whether hems is configured via yaml file or db
+func hemsConfigured(conf globalconfig.Hems) bool {
+	return conf.Type != "" || settings.Exists(keys.Hems)
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {

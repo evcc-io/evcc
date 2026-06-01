@@ -7,6 +7,8 @@ import {
   editorPaste,
   enableAppContext,
   expectAppEvent,
+  newLoadpoint,
+  addDemoCharger,
 } from "./utils";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
 
@@ -188,5 +190,50 @@ limit:
         "0.0 kW",
       ].join("")
     );
+  });
+
+  test("loadpoint assigned to external limit circuit", async ({ page }) => {
+    const GRID_CONFIG = "hems-grid.evcc.yaml";
+    await start(GRID_CONFIG);
+    await page.goto("/#/config");
+
+    // configure hems relay with a const external limit
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+    const hemsEditor = hemsModal.getByTestId("yaml-editor");
+    await editorClear(hemsEditor);
+    await editorPaste(
+      hemsEditor,
+      page,
+      `type: relay
+maxPower: 4200
+interval: 0.1s
+limit:
+  source: const
+  value: true`
+    );
+    await hemsModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(hemsModal);
+
+    // restart so the gridcontrol circuit is auto-created
+    await restart(GRID_CONFIG);
+    await page.goto("/#/config");
+    await expect(page.getByTestId("circuits")).toContainText("External Limit");
+
+    // add loadpoint with demo charger and assign it to the external limit circuit
+    await newLoadpoint(page, "Carport");
+    await addDemoCharger(page);
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByLabel("Circuit").selectOption("gridcontrol");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await expect(page.getByTestId("loadpoint")).toContainText("Carport");
+
+    // restart and verify evcc does not crash with "circuit: not found: gridcontrol"
+    await restart(GRID_CONFIG);
+    await page.reload();
+    await expect(page.getByTestId("loadpoint")).toBeVisible();
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 });
