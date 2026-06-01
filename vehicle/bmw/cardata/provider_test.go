@@ -128,4 +128,20 @@ func TestRangeFallback(t *testing.T) {
 	rng, err = p.Range()
 	require.NoError(t, err)
 	require.Equal(t, int64(120), rng)
+
+	// Case 4: Old key is present, new key is also present, old key is preferred
+	p.rest = map[string]TelematicData{
+		keyRangeOld: {Value: "300"},
+		keyRangeNew: {Value: "150"},
+	}
+	p.streaming = nil
+	rng, err = p.Range()
+	require.NoError(t, err)
+	require.Equal(t, int64(300), rng)
+
+	// Case 5: Both keys are absent, returns error
+	p.rest = map[string]TelematicData{}
+	rng, err = p.Range()
+	require.Error(t, err)
+	require.Equal(t, int64(0), rng)
 }
