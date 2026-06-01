@@ -140,6 +140,7 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 	switch brand {
 	case "kia":
 	case "hyundai":
+	case "genesis":
 	default:
 		return fmt.Errorf("unknown brand (%s)", brand)
 	}

@@ -853,32 +853,13 @@
       "validate": "convalidato"
     },
     "vehicle": {
-      "cancel": "Annulla",
-      "chargingSettings": "Impostazioni di carica",
-      "defaultMode": "Modalità predefinita",
-      "defaultModeHelp": "Modo di carica predefinito alla connessione del veicolo.",
-      "delete": "Cancella",
       "generic": "Altre integrazioni",
-      "identifiers": "Identificatori RFID",
-      "identifiersHelp": "Elenco delle stringhe RFID per identificare il veicolo. Una voce per riga. L'identificatore attuale è riportato nella pagina panoramica relativa al rispettivo punto di ricarica.",
-      "maximumCurrent": "Corrente massima",
-      "maximumCurrentHelp": "Deve essere maggiore della corrente minima.",
-      "maximumPhases": "Fasi massime",
-      "maximumPhasesHelp": "Con quante fasi può essere caricato questo veicolo? Questo dato è usato per calcolare il surplus minimo e la durata della pianificazione.",
-      "maximumPower": "Potenza massima di ricarica",
-      "maximumPowerHelp": "Potenza massima che il veicolo può consumare",
-      "minimumCurrent": "Corrente minima",
-      "minimumCurrentHelp": "Scendi al di sotto di 6A solo se sai cosa stai facendo.",
       "online": "Veicoli con API online",
       "primary": "Integrazioni generiche",
-      "priority": "Priorità",
-      "priorityHelp": "Con una priorità maggiore il veicolo ha un accesso prioritario al surplus solare.",
-      "save": "Salva",
       "scooter": "Scooter",
       "template": "Produttore",
       "titleAdd": "Aggiungi Veicolo",
-      "titleEdit": "Modifica Veicolo",
-      "validateSave": "Verifica e salva"
+      "titleEdit": "Modifica Veicolo"
     }
   },
   "footer": {

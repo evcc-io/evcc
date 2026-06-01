@@ -547,6 +547,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// re-read energy from charger and re-persist session if values improved
 	lp.finalizeSessionEnergy()
 
+	// re-read odometer to catch delayed update (#30225)
+	lp.vehicleOdometer()
+
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
 
@@ -572,7 +575,11 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.stopVehicleDetection()
 
 	// set default mode on disconnect
-	lp.defaultMode()
+	// skip for integrated devices: the "disconnect" here is just the socket
+	// being switched off, not a vehicle being unplugged - keep the user's mode (#30187)
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.defaultMode()
+	}
 
 	// set default vehicle (may be nil)
 	lp.setActiveVehicle(lp.defaultVehicle)
@@ -1307,12 +1314,27 @@ func (lp *Loadpoint) fastCharging() error {
 			}
 		}
 
-		if err := lp.scalePhasesIfAvailable(phases); err != nil {
+		// ignore api.ErrNotAvailable: the phase switch could not be performed
+		// right now, continue with the current phase configuration
+		if err := lp.scalePhasesIfAvailable(phases); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			return err
 		}
 	}
 
 	return lp.setLimit(lp.effectiveMaxCurrent())
+}
+
+// minCharging scales to 1p if available and sets minimum current
+func (lp *Loadpoint) minCharging() error {
+	if lp.hasPhaseSwitching() {
+		// ignore api.ErrNotAvailable: the phase switch could not be performed
+		// right now, continue with the current phase configuration
+		if err := lp.scalePhasesIfAvailable(1); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			return err
+		}
+	}
+
+	return lp.setLimit(lp.effectiveMinCurrent())
 }
 
 // pvScalePhases switches phases if necessary and returns number of phases switched to
@@ -1353,7 +1375,13 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetDisableDelay() {
 			if err := lp.scalePhases(1); err != nil {
-				lp.log.ERROR.Println(err)
+				// a charger may report it cannot switch phases right now
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
+					lp.log.ERROR.Println(err)
+				}
+				// switch did not complete - phase count is unchanged
+				return phases
 			}
 			return 1
 		}
@@ -1382,7 +1410,13 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetEnableDelay() {
 			if err := lp.scalePhases(3); err != nil {
-				lp.log.ERROR.Println(err)
+				// a charger may report it cannot switch phases right now
+				// (api.ErrNotAvailable); assume a failed switch and stay silent
+				if !errors.Is(err, api.ErrNotAvailable) {
+					lp.log.ERROR.Println(err)
+				}
+				// switch did not complete - phase count is unchanged
+				return phases
 			}
 			return 3
 		}
@@ -1949,20 +1983,20 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			return
 		}
 
-		dim := lp.circuit != nil && lp.circuit.Dimmed()
+		if dim := circuitDimmed(lp.circuit); dim != nil {
+			if *dim != dimmed {
+				if err := dimmer.Dim(*dim); err != nil {
+					lp.log.ERROR.Printf("dim: %v", err)
+					return
+				}
 
-		if dim != dimmed {
-			if err := dimmer.Dim(dim); err != nil {
-				lp.log.ERROR.Printf("dim: %v", err)
-				return
+				lp.publish(keys.Dimmed, *dim)
+				lp.log.INFO.Printf("§14a dim: %t", *dim)
 			}
 
-			lp.publish(keys.Dimmed, dim)
-			lp.log.INFO.Printf("§14a dim: %t", dim)
-		}
-
-		if dim {
-			return
+			if *dim {
+				return
+			}
 		}
 	}
 
@@ -2026,7 +2060,13 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		err = lp.setLimit(0)
 
 	case lp.scalePhasesRequired():
-		err = lp.scalePhases(lp.phasesConfigured)
+		if err = lp.scalePhases(lp.phasesConfigured); errors.Is(err, api.ErrNotAvailable) {
+			// the charger cannot switch phases right now (e.g. EEBus charger
+			// with an ISO 15118 vehicle). Adopt the configured phase count so
+			// the switch is not re-attempted on every cycle (issue #29974).
+			lp.SetPhases(lp.phasesConfigured)
+			err = nil
+		}
 
 	case mode == api.ModeOff:
 		var current float64
@@ -2069,11 +2109,13 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 
-			var targetCurrent float64
 			if mode == api.ModeMinPV {
-				targetCurrent = lp.GetMinCurrent()
+				// minimize self-consumption to maximize feed-in by scaling down
+				// to the absolute minimum of 1 phase at min current
+				err = lp.minCharging()
+			} else {
+				err = lp.setLimit(0)
 			}
-			err = lp.setLimit(targetCurrent)
 
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards

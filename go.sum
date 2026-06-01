@@ -37,8 +37,8 @@ github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=
 github.com/andig/go-powerwall v0.3.0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
-github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrRay7YDUZazY8M1u/JHkzwcFEjiilQ=
-github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
+github.com/andig/gosunspec v0.0.0-20260523124210-852310938891 h1:UpjccgGAJV7ce6SmNZn1hVvff3sZ7Fgc4v4TDjUXhkk=
+github.com/andig/gosunspec v0.0.0-20260523124210-852310938891/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=

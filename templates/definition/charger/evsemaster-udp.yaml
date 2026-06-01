@@ -1,5 +1,5 @@
 template: evsemaster-udp
-capabilities: ["meter"]
+capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
   description:

@@ -860,32 +860,13 @@
       "validate": "validéieren"
     },
     "vehicle": {
-      "cancel": "Ofbriechen",
-      "chargingSettings": "Astellungen fir ze lueden",
-      "defaultMode": "Standard-Modus",
-      "defaultModeHelp": "Luedmodus beim Uschléisse vum Gefier.",
-      "delete": "Läschen",
       "generic": "Aner Integratiounen",
-      "identifiers": "RFID-Kennungen",
-      "identifiersHelp": "Lëscht vun den RFID-Kennungen, fir d'Gefier ze identifizéieren. Eng Entrée pro Zeil. Op der Iwwersiichts-Säit gesäis du déi aktuell RFID-Kennung am jeeweilege Luedpunkt.",
-      "maximumCurrent": "Maximale Stroum",
-      "maximumCurrentHelp": "Muss méi grouss wéi de minimale Stroum sinn.",
-      "maximumPhases": "Maximal Phasen",
-      "maximumPhasesHelp": "Mat wéi ville Phase kann dëst Gefier lueden? Gëtt fir d'Berechnung vum minimalen Iwwerschoss a fir d'Planung benotzt.",
-      "maximumPower": "Maximal Luedleeschtung",
-      "maximumPowerHelp": "Maximal Leeschtung déi d'Gefier bezéie kann",
-      "minimumCurrent": "Minimale Stroum",
-      "minimumCurrentHelp": "Nëmmen ënner 6A goen, wann s du weess, wat s du mëss.",
       "online": "Autoe mat online API",
       "primary": "Allgemeng Integratiounen",
-      "priority": "Prioritéit",
-      "priorityHelp": "Méi héich Prioritéit bedeit, datt dëst Gefier Prioritéit zu anere Gefierer huet .",
-      "save": "Späicheren",
       "scooter": "Trottinett",
       "template": "Hiersteller",
       "titleAdd": "Auto derbäi fügen",
-      "titleEdit": "Auto beaarbechten",
-      "validateSave": "Validéieren & späicheren"
+      "titleEdit": "Auto beaarbechten"
     }
   },
   "footer": {

@@ -20,6 +20,7 @@ type Bluelink struct {
 func init() {
 	registry.Add("kia", NewKiaFromConfig)
 	registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.Add("genesis", NewGenesisFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
@@ -54,6 +55,24 @@ func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)
+}
+
+// NewGenesisFromConfig creates a new vehicle
+// Constants sourced from hyundai_kia_connect_api (KiaUvoApiEU.py, BRAND_GENESIS, Europe)
+func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
+	settings := bluelink.Config{
+		URI:               "https://prd-eu-ccapi.genesis.com:443",
+		CCSPServiceID:     "3020afa2-30ff-412a-aa51-d28fbe901e10",
+		CCSPServiceSecret: "FKDdlef2ffdleFEweELFKERiLER2FED21sDdwdgQz6hFESE3",
+		CCSPApplicationID: "f11f2b86-e0e7-4851-90df-5600b01d8b70",
+		Cfb:               "RFtoRq/vDXJmRndoZaZQyYo3/qFLtVReW8P7utRPcc0ZxOzOELm9mexvviBk/qqIp4A=",
+		BasicToken:        "MzAyMGFmYTItMzBmZi00MTJhLWFhNTEtZDI4ZmJlOTAxZTEwOkZLRGRsZWYyZmZkbGVGRXdlRUxGS0VSaUxFUjJGRUQyMXNEZHdkZ1F6NmhGRVNFMw==",
+		PushType:          "GCM",
+		LoginFormHost:     "https://idpconnect-eu.genesis.com",
+		Brand:             "genesis",
+	}
+
+	return newBluelinkFromConfig("genesis", other, settings)
 }
 
 // newBluelinkFromConfig creates a new Vehicle

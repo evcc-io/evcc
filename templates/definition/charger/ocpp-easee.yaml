@@ -12,7 +12,7 @@ products:
   - brand: Easee
     description:
       generic: Charge Core (OCPP)
-capabilities: ["rfid"]
+capabilities: ["rfid", "dim"]
 requirements:
   description:
     de: |

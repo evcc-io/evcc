@@ -61,19 +61,28 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
 	res, err := v.statusG()
-	if err == nil {
-		switch strings.ToLower(res.Services.Charging.Status) {
-		case "connected", "readyforcharging", "error":
-			status = api.StatusB
-		case "charging":
-			status = api.StatusC
-		}
+	if err != nil {
+		return api.StatusNone, err
 	}
 
-	return status, err
+	// BatteryCardStatus is the authoritative disconnect signal — the Cupra API
+	// only emits "notConnected" when the cable is unplugged. When the car is
+	// plugged the field is omitted and Status alone is unreliable: it reports
+	// "NotReadyForCharging" both for an unplugged car.
+	// https://github.com/evcc-io/evcc/issues/30045
+	if strings.ToLower(res.Services.Charging.BatteryCardStatus) == "notconnected" {
+		return api.StatusA, nil
+	}
+
+	switch strings.ToLower(res.Services.Charging.Status) {
+	case "connected", "readyforcharging", "notreadyforcharging", "error", "chargepurposereachedandnotconservationcharging":
+		return api.StatusB, nil
+	case "charging":
+		return api.StatusC, nil
+	}
+
+	return api.StatusA, nil
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)

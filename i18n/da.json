@@ -828,6 +828,7 @@
         "allMonths": "Alle måneder",
         "allTimes": "Alle tidspunkter",
         "cancel": "Fortryd",
+        "charge": "Oplader",
         "days": "Dage",
         "edit": "Juster",
         "hours": "Timer",
@@ -865,32 +866,13 @@
       "validate": "validerer"
     },
     "vehicle": {
-      "cancel": "Annuller",
-      "chargingSettings": "Opladnings indstillinger",
-      "defaultMode": "Standardtilstand",
-      "defaultModeHelp": "Opladnings tilstand når køretøj forbindes.",
-      "delete": "Slet",
       "generic": "Andre integrationer",
-      "identifiers": "RFID identifikatorer",
-      "identifiersHelp": "Liste over RFID-strenge til identifikation af køretøjet. Én post pr. linje. Den aktuelle identifikator findes på den respektive ladestation på oversigtssiden.",
-      "maximumCurrent": "Maksimal strømstyrke",
-      "maximumCurrentHelp": "Skal være højere end minimal strømstyrke.",
-      "maximumPhases": "Maksimal antal faser",
-      "maximumPhasesHelp": "Hvor mange faser kan dette køretøj oplades med? Bruges til at beregne det krævede minimale soloverskud og planens varighed.",
-      "maximumPower": "Maksimal ladeeffekt",
-      "maximumPowerHelp": "Maksimal effekt, som køretøjet kan oplades med",
-      "minimumCurrent": "Minimal strømstyrke",
-      "minimumCurrentHelp": "Gå kun under 6A, hvis du ved, hvad du har med at gøre.",
       "online": "Køretøj med online API",
       "primary": "Generiske integrationer",
-      "priority": "Prioritet",
-      "priorityHelp": "Højere prioritet betyder, at dette køretøj får fortrin til soloverskud.",
-      "save": "Gem",
       "scooter": "Knallert/Scooter",
       "template": "Fabrikant",
       "titleAdd": "Tilføj køretøj",
-      "titleEdit": "Rediger køretøj",
-      "validateSave": "Valider og gem"
+      "titleEdit": "Rediger køretøj"
     }
   },
   "footer": {
@@ -1186,8 +1168,10 @@
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
       "batteryDischarge": "Batteriet aflades",
-      "batteryForecastEmpty": "tom {time}",
-      "batteryForecastFull": "fyldt {time}",
+      "batteryForecastEmpty": "Tømt {time}",
+      "batteryForecastFull": "Fyldt {time}",
+      "batteryForecastNextHigh": "Næste højdepunkt",
+      "batteryForecastNextLow": "Næste lavpunkt",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
       "batteryHold": "Batteri (låst)",
@@ -1213,6 +1197,30 @@
     "hemsWarning": {
       "description": "Opladningen reduceres for ikke at overskride {limit}.",
       "title": "Ekstern begrænsning:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "opladet",
+          "returnEnergy": "afladet"
+        },
+        "grid": {
+          "energy": "importeret",
+          "returnEnergy": "eksporteret"
+        }
+      },
+      "downloadCsv": "Download CSV",
+      "empty": "Ingen historik i dette tidsinterval.",
+      "group": {
+        "battery": "Batteri",
+        "forecast": "Prognose",
+        "grid": "Elnet",
+        "loadpoint": "Opladning og opvarmning",
+        "meter": "Forbrug",
+        "pv": "Produktion"
+      },
+      "otherConsumers": "Andet",
+      "title": "Historik"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -1485,6 +1493,7 @@
     "odometer": "Kilometerstand",
     "overview": "Overblik",
     "period": {
+      "day": "Dag",
       "month": "Måned",
       "total": "Total",
       "year": "År"

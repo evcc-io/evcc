@@ -3,6 +3,7 @@ products:
   - brand: Home Assistant
     description:
       generic: Charger
+capabilities: ["dim"]
 group: generic
 requirements:
   description:

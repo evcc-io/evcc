@@ -5,6 +5,7 @@ products:
     description:
       generic: HomeHub air2air (SG Ready)
 group: heating
+capabilities: ["dim"]
 requirements:
   description:
     de: |

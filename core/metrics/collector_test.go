@@ -154,3 +154,40 @@ func TestCollectorSetImportAndExportMeterTotal(t *testing.T) {
 	require.InDelta(t, 0.3, col.accu.Imported(), 1e-10)
 	require.InDelta(t, 0.7, col.accu.Exported(), 1e-10)
 }
+
+// TestCollectorSkipsPartialFirstSlot verifies that the first slot, joined
+// mid-way after (re)start, is not persisted as a full 15min slot.
+func TestCollectorSkipsPartialFirstSlot(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector("partial", "partial", WithClock(clk))
+	require.NoError(t, err)
+
+	// first update mid-slot (00:05) - slot 00:00 is only partially covered
+	clk.Add(5 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+	clk.Add(5 * time.Minute) // 00:10
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+
+	// cross into slot 00:15 - the partial slot 00:00 must not be persisted
+	clk.Add(5 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+
+	var count int64
+	require.NoError(t, db.Instance.Model(new(meter)).Count(&count).Error)
+	require.Zero(t, count, "partial first slot must not be persisted")
+
+	// cross into slot 00:30 - the fully covered slot 00:15 must be persisted
+	clk.Add(15 * time.Minute) // 00:30
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+
+	require.NoError(t, db.Instance.Model(new(meter)).Count(&count).Error)
+	require.EqualValues(t, 1, count, "first full slot must be persisted")
+
+	var m meter
+	require.NoError(t, db.Instance.First(&m).Error)
+	require.Equal(t, int64(15*60), m.Timestamp, "persisted slot should start at 00:15")
+}

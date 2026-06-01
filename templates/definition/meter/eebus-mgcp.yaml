@@ -4,6 +4,7 @@ products:
       de: "EEBus Netzanschlusspunkt"
       en: "EEBus grid meter"
 group: generic
+capabilities: ["dim", "curtail"]
 requirements:
   description:
     de: EEBus-Messstelle am Netzanschlusspunkt mit dem Use Case MGCP (Monitoring of Grid Connection Point).
