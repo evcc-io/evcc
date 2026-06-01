@@ -108,7 +108,7 @@ func (v *Provider) Range() (int64, error) {
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
 
-// Finishtime implements the api.VehicleFinishTimer interface
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	data, err := v.statusG()
 	if err != nil {
