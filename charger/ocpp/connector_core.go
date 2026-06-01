@@ -40,11 +40,7 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
-	// defensive cleanup: transitioning to Available means the cable is
-	// unplugged and any prior transaction is stale. Some chargers (e.g.
-	// Zaptec Go 2 in local OCPP mode) skip StopTransaction or send it with
-	// an unknown TransactionId, which would otherwise leave txnId set across
-	// sessions and block the RemoteStartTransaction dispatch below.
+	// Available means cable unplugged and any prior transaction is stale
 	if applied && request.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
 		conn.log.DEBUG.Printf("clearing stale transaction %d on Available status", conn.txnId)
 		conn.txnId = 0
