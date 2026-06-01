@@ -24,6 +24,7 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
+	notify  func() // optional: called when the charge point status changes
 
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
@@ -83,6 +84,14 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	conn.clock = clock
+}
+
+// SetNotify registers a callback invoked when the charge point status changes,
+// so the charger can request an immediate sense instead of waiting for a poll.
+func (conn *Connector) SetNotify(notify func()) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	conn.notify = notify
 }
 
 func (conn *Connector) ID() int {

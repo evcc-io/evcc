@@ -78,13 +78,14 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock // mockable time
-	bus      evbus.Bus   // event bus
-	site     site.API
-	pushChan chan<- messenger.Event // notifications
-	uiChan   chan<- util.Param      // client push messages
-	lpChan   chan<- *Loadpoint      // update requests
-	log      *util.Logger
+	clock     clock.Clock // mockable time
+	bus       evbus.Bus   // event bus
+	site      site.API
+	pushChan  chan<- messenger.Event // notifications
+	uiChan    chan<- util.Param      // client push messages
+	lpChan    chan<- *Loadpoint      // update requests
+	senseChan chan<- *Loadpoint      // immediate sense requests (push-capable chargers)
+	log       *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
 	sync.RWMutex              // guard status
@@ -451,6 +452,16 @@ func (lp *Loadpoint) GetInflightPower() float64 {
 	}
 
 	return max(0, intended-lp.chargePower)
+}
+
+// Notify requests an immediate sensing pass for this loadpoint. Push-capable
+// chargers call it (via loadpoint.API) when their state changes so the change is
+// observed at once instead of at the next sense tick. It is non-blocking.
+func (lp *Loadpoint) Notify() {
+	select {
+	case lp.senseChan <- lp:
+	default:
+	}
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities

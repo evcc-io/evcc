@@ -419,10 +419,18 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
 
+		statusChanged := c.opMode != opMode
 		c.opMode = opMode
 
 		// startup completed
 		c.startDone()
+
+		// push: a status change is latency-sensitive (e.g. vehicle plugged in),
+		// so notify the loadpoint for an immediate sense instead of waiting for
+		// the next poll
+		if statusChanged && c.lp != nil {
+			c.lp.Notify()
+		}
 
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
