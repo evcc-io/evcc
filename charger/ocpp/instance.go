@@ -110,13 +110,12 @@ func Instance() *CS {
 		defer ticker.Stop()
 
 		timeout := time.After(10 * time.Second)
-	wait:
 		for server.Addr() == nil {
 			select {
 			case <-ticker.C:
 			case <-timeout:
 				log.ERROR.Println("timeout waiting for server to bind")
-				break wait
+				return
 			}
 		}
 	})
