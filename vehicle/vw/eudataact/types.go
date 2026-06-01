@@ -80,13 +80,6 @@ type dataset struct {
 	CreatedOn time.Time `json:"createdOn"`
 }
 
-// timeFromName parses the compact timestamp the portal prefixes to a dataset file
-// name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip.
-func timeFromName(name string) (time.Time, error) {
-	prefix, _, _ := strings.Cut(name, "_")
-	return time.Parse("20060102150405", prefix)
-}
-
 // dataPoint is a single data point as delivered in the dataset JSON document
 type dataPoint struct {
 	DataFieldName string `json:"dataFieldName"`
@@ -130,12 +123,6 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
 			continue
 		}
-
-		t, err := timeFromName(d.Name)
-		if err != nil {
-			return nil, err
-		}
-		d.CreatedOn = t
 
 		content = append(content, d)
 	}
