@@ -517,6 +517,48 @@ func TestEasee_Phases1p3p_scaleDown_resetsDCC(t *testing.T) {
 	assert.Equal(t, 7.0, e.current, "c.current should be set to 7 after scale-down")
 }
 
+func TestEasee_Phases1p3p_scaleUp_sendsDCC7(t *testing.T) {
+	const siteID = 12345
+	const circuitID = 67890
+	const chargerID = "TESTTEST"
+
+	e := newEasee()
+	e.charger = chargerID
+	e.site = siteID
+	e.circuit = circuitID
+	e.current = 6
+
+	httpmock.ActivateNonDefault(e.Client)
+	defer httpmock.DeactivateAndReset()
+
+	getURI := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, siteID, circuitID)
+	maxP1, maxP2, maxP3 := 32.0, 32.0, 32.0
+	getResp := easee.CircuitSettings{
+		MaxCircuitCurrentP1: &maxP1,
+		MaxCircuitCurrentP2: &maxP2,
+		MaxCircuitCurrentP3: &maxP3,
+	}
+	body, err := json.Marshal(getResp)
+	require.NoError(t, err)
+	httpmock.RegisterResponder(http.MethodGet, getURI,
+		httpmock.NewBytesResponder(200, body))
+
+	httpmock.RegisterResponder(http.MethodPost, getURI,
+		httpmock.NewStringResponder(200, ""))
+
+	chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+	httpmock.RegisterResponder(http.MethodPost, chargerURI,
+		httpmock.NewStringResponder(202, "[]"))
+
+	err = e.Phases1p3p(3)
+	assert.NoError(t, err)
+
+	info := httpmock.GetCallCountInfo()
+	assert.Equal(t, 1, info["POST "+chargerURI], "expected one POST to charger settings with DCC:7 on scale-up")
+
+	assert.Equal(t, 7.0, e.current, "c.current should be set to 7 after scale-up")
+}
+
 func TestLivenessCheck_staleObservations(t *testing.T) {
 	e := newEasee()
 	e.opMode = easee.ModeCharging
