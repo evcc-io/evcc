@@ -106,13 +106,11 @@ func Instance() *CS {
 		// immediately (notably the test suite) then see "connection refused".
 		// server.Addr() is only set once net.Listen succeeds, so it is the correct
 		// readiness signal. Bounded so a failed bind cannot hang startup.
-		ticker := time.NewTicker(10 * time.Millisecond)
-		defer ticker.Stop()
-
+		tick := time.Tick(10 * time.Millisecond)
 		timeout := time.After(10 * time.Second)
 		for server.Addr() == nil {
 			select {
-			case <-ticker.C:
+			case <-tick:
 			case <-timeout:
 				log.ERROR.Println("timeout waiting for server to bind")
 				return
