@@ -177,20 +177,6 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Solax) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(solaxRegState, 1)
-	if err != nil {
-		return false, err
-	}
-	switch s := encoding.Uint16(b); s {
-	case
-		8: // "SuspendedEVSE"
-		wb.enabled = false
-	case
-		2, // "Charging"
-		7: // "SuspendedEV"
-		wb.enabled = true
-	}
-
 	return wb.enabled, nil
 }
 
