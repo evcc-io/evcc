@@ -31,7 +31,7 @@
 				data-bs-backdrop="true"
 				tabindex="-1"
 				role="dialog"
-				aria-hidden="true"
+				:aria-hidden="modalVisible ? 'false' : 'true'"
 				data-testid="savings-modal"
 			>
 				<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -306,9 +306,20 @@ export default defineComponent({
 		return {
 			communityView: false,
 			telemetryEnabled: false,
+			modalVisible: false,
 			period: settings.savingsPeriod || ("30d" as StatisticsPeriod),
 			selectedRegion: settings.savingsRegion || ("Germany" as string),
 		};
+	},
+	mounted() {
+		const modal = this.$refs["modal"] as HTMLElement;
+		modal.addEventListener("shown.bs.modal", this.handleShown);
+		modal.addEventListener("hidden.bs.modal", this.handleHidden);
+	},
+	unmounted() {
+		const modal = this.$refs["modal"] as HTMLElement;
+		modal?.removeEventListener("shown.bs.modal", this.handleShown);
+		modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	computed: {
 		sponsorActive(): boolean {
@@ -428,6 +439,12 @@ export default defineComponent({
 		openModal() {
 			const modal = Modal.getOrCreateInstance(this.$refs["modal"] as HTMLElement);
 			modal.show();
+		},
+		handleShown() {
+			this.modalVisible = true;
+		},
+		handleHidden() {
+			this.modalVisible = false;
 		},
 		selectPeriod(period: StatisticsPeriod) {
 			this.period = period;
