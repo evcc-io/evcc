@@ -41,6 +41,42 @@ func newObserveLoadpoint(charger api.Charger) *Loadpoint {
 	}
 }
 
+type intervalStub struct{ d time.Duration }
+
+func (s intervalStub) GetInterval() time.Duration { return s.d }
+
+// chargerWithInterval combines a mock charger with an IntervalGetter hint.
+func chargerWithInterval(ctrl *gomock.Controller, d time.Duration) api.Charger {
+	return &struct {
+		*api.MockCharger
+		intervalStub
+	}{api.NewMockCharger(ctrl), intervalStub{d}}
+}
+
+// TestSenseCadence verifies the per-charger sense interval: a charger hint is
+// honoured (when >= 1s), otherwise the derived base is used.
+func TestSenseCadence(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	base := 3 * time.Second
+
+	tc := []struct {
+		name    string
+		charger api.Charger
+		want    time.Duration
+	}{
+		{"no hint -> base", api.NewMockCharger(ctrl), base},
+		{"slower hint -> hint", chargerWithInterval(ctrl, 30*time.Second), 30 * time.Second},
+		{"sub-second hint ignored -> base", chargerWithInterval(ctrl, 500*time.Millisecond), base},
+	}
+
+	for _, c := range tc {
+		lp := &Loadpoint{charger: c.charger}
+		if got := lp.senseCadence(base); got != c.want {
+			t.Errorf("%s: senseCadence = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
 // TestObserveTriggersOnStatusChange verifies that observe authoritatively updates
 // the status and requests a prompt control pass when it changed.
 func TestObserveTriggersOnStatusChange(t *testing.T) {
@@ -65,22 +101,19 @@ func TestObserveTriggersOnStatusChange(t *testing.T) {
 // TestNotifyTriggersSense verifies that a push-capable charger's Notify requests
 // an immediate sense, and that it never blocks when the channel is full.
 func TestNotifyTriggersSense(t *testing.T) {
-	senseChan := make(chan *Loadpoint, 1)
+	senseChan := make(chan struct{}, 1)
 	lp := &Loadpoint{log: util.NewLogger("foo"), senseChan: senseChan}
 
 	lp.Notify()
 
 	select {
-	case got := <-senseChan:
-		if got != lp {
-			t.Fatal("unexpected loadpoint on sense channel")
-		}
+	case <-senseChan:
 	default:
 		t.Fatal("expected an immediate sense request")
 	}
 
 	// must not block when nobody is draining the channel
-	lp.senseChan = make(chan *Loadpoint) // unbuffered, no reader
+	lp.senseChan = make(chan struct{}) // unbuffered, no reader
 	done := make(chan struct{})
 	go func() { lp.Notify(); close(done) }()
 	select {

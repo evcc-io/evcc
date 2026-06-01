@@ -70,6 +70,15 @@ type StatusReasoner interface {
 	StatusReason() (Reason, error)
 }
 
+// IntervalGetter is implemented by chargers that prefer a specific sensing
+// cadence: slower for rate-limited cloud APIs, or rarely for push-capable
+// chargers that report changes themselves. evcc senses such a charger at the
+// returned interval instead of the global default. A non-positive value means
+// no preference.
+type IntervalGetter interface {
+	GetInterval() time.Duration
+}
+
 // CurrentController provides settings charging maximum charging current
 type CurrentController interface {
 	MaxCurrent(current int64) error

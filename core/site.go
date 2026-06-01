@@ -54,7 +54,6 @@ var _ site.API = (*Site)(nil)
 type Site struct {
 	valueChan    chan<- util.Param // client push messages
 	lpUpdateChan chan *Loadpoint
-	senseTrigger chan *Loadpoint // immediate sense requests from push-capable chargers
 
 	sync.RWMutex
 	log *util.Logger
@@ -1085,9 +1084,6 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 
 	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
 
-	// buffered so push-capable chargers never block; the sense loop drains it
-	site.senseTrigger = make(chan *Loadpoint, max(1, len(site.loadpoints)))
-
 	site.prepare()
 
 	lpDevices := config.Loadpoints().Devices()
@@ -1115,7 +1111,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
 		}
 
-		lp.senseChan = site.senseTrigger
+		lp.senseChan = make(chan struct{}, 1) // own sense trigger; push-capable chargers never block
 		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
@@ -1124,29 +1120,6 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 // control interval; loadpoints without a charger-specific preference
 // (api.IntervalGetter) sense at this fixed rate.
 const senseInterval = 2 * time.Second
-
-// senseLoop continuously polls all loadpoints in parallel for status and live
-// measurements, publishing them for snappy UI updates and triggering an
-// immediate control pass when a charger status change is detected. It runs
-// independently of the control loop so observability latency no longer scales
-// with the number of loadpoints.
-func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
-	for tick := time.Tick(interval); ; {
-		select {
-		case <-tick:
-			var wg sync.WaitGroup
-			for _, lp := range site.loadpoints {
-				wg.Go(lp.Sense)
-			}
-			wg.Wait()
-		case lp := <-site.senseTrigger:
-			// push-capable charger reported a change: sense it immediately
-			lp.Sense()
-		case <-stopC:
-			return
-		}
-	}
-}
 
 // loopLoadpoints feeds the next loadpoint to control to the given channel. It
 // prefers loadpoints with pending control work (events, deferred actuations) so
@@ -1210,11 +1183,12 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		go site.loopLoadpoints(loadpointChan)
 	}
 
-	// fast sense loop: decouple status/measurement latency from loadpoint count.
-	// never sense slower than the control loop (cap the 2s default at interval,
-	// relevant for very short intervals such as integration tests)
-	if len(site.loadpoints) > 0 {
-		go site.senseLoop(stopC, min(senseInterval, interval))
+	// per-loadpoint sense loops: each senses at its own cadence (charger hint or
+	// the fixed default) and reacts to push notifications, so a slow rate-limited
+	// charger does not throttle a fast local one. Never sense slower than the
+	// control loop (cap the 2s default at interval, e.g. integration tests).
+	for _, lp := range site.loadpoints {
+		go lp.senseLoop(stopC, min(senseInterval, interval))
 	}
 
 	site.update(<-loadpointChan) // start immediately

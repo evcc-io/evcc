@@ -84,7 +84,7 @@ type Loadpoint struct {
 	pushChan  chan<- messenger.Event // notifications
 	uiChan    chan<- util.Param      // client push messages
 	lpChan    chan<- *Loadpoint      // update requests
-	senseChan chan<- *Loadpoint      // immediate sense requests (push-capable chargers)
+	senseChan chan struct{}          // immediate sense requests (push-capable chargers)
 	log       *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
@@ -459,7 +459,7 @@ func (lp *Loadpoint) GetInflightPower() float64 {
 // observed at once instead of at the next sense tick. It is non-blocking.
 func (lp *Loadpoint) Notify() {
 	select {
-	case lp.senseChan <- lp:
+	case lp.senseChan <- struct{}{}:
 	default:
 	}
 }
@@ -1771,11 +1771,40 @@ func (lp *Loadpoint) getChargeCurrents() []float64 {
 	return lp.chargeCurrents
 }
 
+// senseLoop continuously senses this loadpoint at its own cadence and reacts
+// immediately to push notifications (Notify). Each loadpoint runs its own loop
+// so a slow, rate-limited charger does not throttle a fast local one.
+func (lp *Loadpoint) senseLoop(stopC chan struct{}, base time.Duration) {
+	for tick := time.Tick(lp.senseCadence(base)); ; {
+		select {
+		case <-tick:
+			lp.Sense()
+		case <-lp.senseChan:
+			// push-capable charger reported a change: sense it immediately
+			lp.Sense()
+		case <-stopC:
+			return
+		}
+	}
+}
+
+// senseCadence returns this loadpoint's sensing interval: a charger-provided
+// preference (e.g. slower for rate-limited cloud, rarely for push chargers) if
+// available, otherwise the derived default.
+func (lp *Loadpoint) senseCadence(base time.Duration) time.Duration {
+	if g, ok := api.Cap[api.IntervalGetter](lp.charger); ok {
+		if d := g.GetInterval(); d >= time.Second {
+			return d
+		}
+	}
+	return base
+}
+
 // Sense runs one full sensing pass for the loadpoint: it refreshes live
 // measurements and then observes status, vehicle soc and the rest of the
-// sensing data. It performs no actuation. Driven by the fast site sense loop
-// (see Site.senseLoop), it decouples observability latency from the number of
-// loadpoints and requests a prompt control pass on a status change.
+// sensing data. It performs no actuation. Driven by the per-loadpoint sense
+// loop, it decouples observability latency from the number of loadpoints and
+// requests a prompt control pass on a status change.
 func (lp *Loadpoint) Sense() {
 	// live measurements (parallel-safe, serialized per loadpoint via measureMu)
 	lp.UpdateChargePowerAndCurrents()
