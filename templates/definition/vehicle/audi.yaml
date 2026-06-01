@@ -2,6 +2,8 @@ template: audi
 covers: ["etron"]
 products:
   - brand: Audi
+    description:
+      generic: myAudi
 params:
   - preset: vehicle-base
   - name: vin
