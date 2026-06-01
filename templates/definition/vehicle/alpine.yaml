@@ -4,6 +4,9 @@ products:
 params:
   - preset: vehicle-base
   - preset: vehicle-features
+auth:
+  type: renault
+  params: [user, password]
 render: |
   type: myalpine
   {{ include "vehicle-base" . }}

@@ -40,6 +40,26 @@
 					/>
 				</div>
 
+				<div v-if="auth.codeInput">
+					<hr class="my-4" />
+					<label for="authProviderVerificationCode" class="form-label">
+						{{ $t("authProviders.verificationCode") }}
+					</label>
+					<input
+						id="authProviderVerificationCode"
+						v-model.trim="authVerificationCode"
+						type="text"
+						inputmode="numeric"
+						autocomplete="one-time-code"
+						class="form-control"
+						:placeholder="$t('authProviders.verificationCodePlaceholder')"
+						aria-describedby="authProviderVerificationHelp"
+					/>
+					<div id="authProviderVerificationHelp" class="form-text">
+						{{ auth.codeInput.message || $t("authProviders.verificationCodeHelp") }}
+					</div>
+				</div>
+
 				<!-- Error display -->
 				<p v-if="auth.error" class="text-danger mt-3">{{ auth.error }}</p>
 
@@ -53,11 +73,27 @@
 
 					<!-- Authentication buttons -->
 					<AuthConnectButton
+						v-if="!auth.codeInput"
 						:provider-url="auth.providerUrl ?? undefined"
 						:loading="auth.loading"
 						@prepare="prepareAuthentication"
 						@external-click="waitingForAuthentication = true"
 					/>
+					<button
+						v-else
+						type="button"
+						class="btn btn-primary"
+						:disabled="auth.loading || !authVerificationCode"
+						@click="submitVerificationCode"
+					>
+						<span
+							v-if="auth.loading"
+							class="spinner-border spinner-border-sm me-2"
+							role="status"
+							aria-hidden="true"
+						></span>
+						{{ $t("authProviders.buttonVerifyCode") }}
+					</button>
 				</div>
 			</template>
 
@@ -111,6 +147,7 @@ import {
 	initialAuthState,
 	prepareAuthLogin,
 	performAuthLogout,
+	submitAuthCode,
 } from "../Config/utils/authProvider";
 import type { Provider } from "./types";
 
@@ -132,6 +169,7 @@ export default defineComponent({
 			logoutLoading: false,
 			logoutError: null as string | null,
 			auth: initialAuthState(),
+			authVerificationCode: "",
 			waitingForAuthentication: false,
 		};
 	},
@@ -140,10 +178,10 @@ export default defineComponent({
 			return this.provider?.authenticated || false;
 		},
 		showAuthentication(): boolean {
-			return !this.isAuthenticated;
+			return !this.isAuthenticated && !this.auth.ok;
 		},
 		showAuthenticationSuccess(): boolean {
-			return this.isAuthenticated && this.waitingForAuthentication;
+			return (this.isAuthenticated || this.auth.ok) && this.waitingForAuthentication;
 		},
 		modalTitle(): string {
 			return this.providerTitle;
@@ -167,6 +205,7 @@ export default defineComponent({
 	methods: {
 		reset() {
 			this.auth = initialAuthState();
+			this.authVerificationCode = "";
 			this.logoutLoading = false;
 			this.logoutError = null;
 			this.waitingForAuthentication = false;
@@ -177,6 +216,13 @@ export default defineComponent({
 		async prepareAuthentication() {
 			if (!this.providerId || this.isAuthenticated) return;
 			await prepareAuthLogin(this.auth, this.providerId);
+		},
+		async submitVerificationCode() {
+			const result = await submitAuthCode(this.auth, this.authVerificationCode);
+			if (result.success) {
+				this.authVerificationCode = "";
+				this.waitingForAuthentication = true;
+			}
 		},
 		async performLogout() {
 			if (!this.providerId) return;

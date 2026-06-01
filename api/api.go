@@ -229,6 +229,17 @@ type AuthProvider interface {
 	DisplayName() string
 }
 
+// AuthCodeInput describes a provider-side code prompt.
+type AuthCodeInput struct {
+	Message string `json:"message,omitempty"`
+}
+
+// AuthCodeProvider accepts an out-of-band verification code.
+type AuthCodeProvider interface {
+	CodeInput() *AuthCodeInput
+	SubmitCode(code string) error
+}
+
 // IconDescriber optionally provides an icon
 type IconDescriber interface {
 	Icon() string

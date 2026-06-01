@@ -18,9 +18,14 @@ type errorResponse struct {
 }
 
 type loginResponse struct {
-	LoginUri string     `json:"loginUri"`
-	Code     string     `json:"code,omitempty"`
-	Expiry   *time.Time `json:"expiry,omitempty"`
+	LoginUri  string             `json:"loginUri"`
+	Code      string             `json:"code,omitempty"`
+	Expiry    *time.Time         `json:"expiry,omitempty"`
+	CodeInput *api.AuthCodeInput `json:"codeInput,omitempty"`
+}
+
+type codeRequest struct {
+	Code string `json:"code"`
 }
 
 // jsonWrite writes a JSON response
@@ -126,7 +131,47 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if cp, ok := provider.(api.AuthCodeProvider); ok {
+		res.CodeInput = cp.CodeInput()
+		if res.CodeInput == nil && res.LoginUri == "" && res.Code == "" && !provider.Authenticated() {
+			res.CodeInput = new(api.AuthCodeInput)
+		}
+	}
+
 	jsonWrite(w, res)
+}
+
+func (a *Handler) handleCode(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	a.log.DEBUG.Printf("code submit request for: %s", id)
+
+	var body codeRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	provider, ok := a.providers[id]
+	if !ok {
+		jsonError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	cp, ok := provider.(api.AuthCodeProvider)
+	if !ok {
+		jsonError(w, http.StatusBadRequest, "provider does not accept verification codes")
+		return
+	}
+
+	if err := cp.SubmitCode(body.Code); err != nil {
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	jsonWrite(w, "OK")
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {

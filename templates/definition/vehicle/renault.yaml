@@ -25,6 +25,9 @@ params:
       de: Aufweckmechanismus
       en: Wakeup mechanism
     advanced: true
+auth:
+  type: renault
+  params: [user, password]
 render: |
   type: renault
   {{ include "vehicle-base" . }}

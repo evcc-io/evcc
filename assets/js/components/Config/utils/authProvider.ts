@@ -5,13 +5,16 @@ export type AuthState = {
   loading: boolean;
   error: string | null;
   providerUrl: string | null;
+  providerId: string | null;
   code: string | null;
+  codeInput: { message?: string } | null;
   expiry: Date | null;
 };
 
 export type ProviderLoginResponse = {
   loginUri?: string;
   code?: string;
+  codeInput?: { message?: string };
   expiry?: string;
   error?: string;
 };
@@ -21,7 +24,9 @@ export const initialAuthState = (): AuthState => ({
   loading: false,
   error: null,
   providerUrl: null,
+  providerId: null,
   code: null,
+  codeInput: null,
   expiry: null,
 });
 
@@ -36,9 +41,12 @@ export const prepareAuthLogin = async (state: AuthState, providerId: string) => 
     });
 
     if (status === 200) {
+      state.providerId = providerId;
       state.providerUrl = data.loginUri || null;
       state.code = data.code || null;
+      state.codeInput = data.codeInput || null;
       state.expiry = data.expiry ? new Date(data.expiry) : null;
+      state.ok = !state.providerUrl && !state.code && !state.codeInput;
       return { success: true, data };
     } else {
       state.error = data?.error ?? "Login failed";
@@ -47,6 +55,44 @@ export const prepareAuthLogin = async (state: AuthState, providerId: string) => 
   } catch (e: any) {
     console.error("prepareAuthLogin failed", e);
     state.error = e.message || "Unexpected login error";
+    return { success: false, error: state.error };
+  } finally {
+    state.loading = false;
+  }
+};
+
+export const submitAuthCode = async (state: AuthState, code: string) => {
+  if (!state.providerId) {
+    state.error = "Missing auth provider";
+    return { success: false, error: state.error };
+  }
+
+  try {
+    state.loading = true;
+    state.error = null;
+
+    const url = `providerauth/code?id=${encodeURIComponent(state.providerId)}`;
+    const { status, data } = await baseApi.post(
+      url,
+      { code },
+      {
+        validateStatus: (code) => [200, 400].includes(code),
+      }
+    );
+
+    if (status === 200) {
+      state.ok = true;
+      state.codeInput = null;
+      state.code = null;
+      state.providerUrl = null;
+      return { success: true };
+    }
+
+    state.error = data?.error ?? "Code verification failed";
+    return { success: false, error: state.error };
+  } catch (e: any) {
+    console.error("submitAuthCode failed", e);
+    state.error = e.message || "Unexpected verification error";
     return { success: false, error: state.error };
   } finally {
     state.loading = false;
@@ -89,9 +135,12 @@ export const prepareAuthRedirect = async (state: AuthState, authId: string) => {
     const url = `providerauth/redirect?id=${encodeURIComponent(authId)}`;
     const { data } = await baseApi.get<ProviderLoginResponse>(url);
 
+    state.providerId = authId;
     state.providerUrl = data.loginUri || null;
     state.code = data.code || null;
+    state.codeInput = data.codeInput || null;
     state.expiry = data.expiry ? new Date(data.expiry) : null;
+    state.ok = !state.providerUrl && !state.code && !state.codeInput;
     return { success: true, data };
   } catch (e: any) {
     console.error("prepareAuthRedirect failed", e);

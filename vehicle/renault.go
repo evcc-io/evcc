@@ -70,7 +70,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle,
 	keys := keys.New(log)
 	keys.Load(cc.Region)
 
-	identity := gigya.NewIdentity(log, keys.Gigya)
+	identity := gigya.NewIdentity(log, keys.Gigya, cc.Region)
 	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return nil, err
 	}

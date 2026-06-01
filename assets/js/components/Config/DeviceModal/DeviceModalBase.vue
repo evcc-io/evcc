@@ -70,6 +70,29 @@
 							/>
 						</div>
 
+						<div v-if="auth.codeInput">
+							<hr class="my-5" />
+							<label :for="`${deviceType}AuthVerificationCode`" class="form-label">
+								{{ $t("authProviders.verificationCode") }}
+							</label>
+							<input
+								:id="`${deviceType}AuthVerificationCode`"
+								v-model.trim="authVerificationCode"
+								type="text"
+								inputmode="numeric"
+								autocomplete="one-time-code"
+								class="form-control"
+								:placeholder="$t('authProviders.verificationCodePlaceholder')"
+								:aria-describedby="`${deviceType}AuthVerificationHelp`"
+							/>
+							<div :id="`${deviceType}AuthVerificationHelp`" class="form-text">
+								{{
+									auth.codeInput.message ||
+									$t("authProviders.verificationCodeHelp")
+								}}
+							</div>
+						</div>
+
 						<ErrorMessage :error="auth.error" />
 
 						<div
@@ -96,10 +119,26 @@
 							</button>
 							<!-- perform auth -->
 							<AuthConnectButton
+								v-if="!auth.codeInput"
 								:provider-url="auth.providerUrl ?? undefined"
 								:loading="auth.loading"
 								@prepare="checkAuthStatus"
 							/>
+							<button
+								v-else
+								type="button"
+								class="btn btn-primary"
+								:disabled="auth.loading || !authVerificationCode"
+								@click="submitVerificationCode"
+							>
+								<span
+									v-if="auth.loading"
+									class="spinner-border spinner-border-sm me-2"
+									role="status"
+									aria-hidden="true"
+								></span>
+								{{ $t("authProviders.buttonVerifyCode") }}
+							</button>
 						</div>
 					</div>
 					<div v-else>
@@ -189,7 +228,7 @@ import AuthCodeDisplay from "../AuthCodeDisplay.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
-import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
+import { initialAuthState, prepareAuthLogin, submitAuthCode } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
@@ -290,6 +329,7 @@ export default defineComponent({
 			template: null as Template | null,
 			saving: false,
 			auth: initialAuthState(),
+			authVerificationCode: "",
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
@@ -614,6 +654,7 @@ export default defineComponent({
 		},
 		resetAuthStatus() {
 			this.auth = initialAuthState();
+			this.authVerificationCode = "";
 		},
 		async checkAuthStatus() {
 			this.resetAuthStatus();
@@ -651,6 +692,12 @@ export default defineComponent({
 		async prepareAuthLogin(authId: string) {
 			await prepareAuthLogin(this.auth, authId);
 		},
+		async submitVerificationCode() {
+			const result = await submitAuthCode(this.auth, this.authVerificationCode);
+			if (result.success) {
+				this.authVerificationCode = "";
+			}
+		},
 		async create(force = false) {
 			if (this.test.isUnknown && !force) {
 				const success = await performTest(
@@ -659,6 +706,9 @@ export default defineComponent({
 					this.$refs["form"] as HTMLFormElement
 				);
 				if (!success) {
+					if (this.test.authId) {
+						await this.prepareAuthLogin(this.test.authId);
+					}
 					return;
 				}
 			}
@@ -682,7 +732,14 @@ export default defineComponent({
 			}
 		},
 		async testManually() {
-			await performTest(this.test, this.testDevice, this.$refs["form"] as HTMLFormElement);
+			const success = await performTest(
+				this.test,
+				this.testDevice,
+				this.$refs["form"] as HTMLFormElement
+			);
+			if (!success && this.test.authId) {
+				await this.prepareAuthLogin(this.test.authId);
+			}
 		},
 		async testDevice() {
 			return this.device.test(this.id, this.apiData);
@@ -695,6 +752,9 @@ export default defineComponent({
 					this.$refs["form"] as HTMLFormElement
 				);
 				if (!success) {
+					if (this.test.authId) {
+						await this.prepareAuthLogin(this.test.authId);
+					}
 					return;
 				}
 			}

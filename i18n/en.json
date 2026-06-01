@@ -7,6 +7,7 @@
     "authorizationSuccessful": "Authorization Successful",
     "buttonConnect": "Connect to {provider}",
     "buttonDisconnect": "Disconnect",
+    "buttonVerifyCode": "Verify code",
     "confirmLogout": "Are you sure you want to disconnect {title}?",
     "connect": "connect",
     "disconnect": "disconnect",
@@ -17,7 +18,10 @@
     "success": "{title} is now connected and ready to use.",
     "successCloseModal": "You can now close this dialog.",
     "successCloseTab": "You can now close this tab.",
-    "title": "Authorization Status"
+    "title": "Authorization Status",
+    "verificationCode": "Verification code",
+    "verificationCodeHelp": "Enter the code you received from the provider.",
+    "verificationCodePlaceholder": "123456"
   },
   "batterySettings": {
     "batteryLevel": "Battery level",

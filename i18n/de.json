@@ -7,6 +7,7 @@
     "authorizationSuccessful": "Autorisierung erfolgreich",
     "buttonConnect": "Mit {provider} verbinden",
     "buttonDisconnect": "Trennen",
+    "buttonVerifyCode": "Code bestätigen",
     "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
     "connect": "verbinden",
     "disconnect": "trennen",
@@ -17,7 +18,10 @@
     "success": "{title} ist jetzt verbunden und einsatzbereit.",
     "successCloseModal": "Du kannst diesen Dialog jetzt schließen.",
     "successCloseTab": "Du kannst diesen Tab jetzt schließen.",
-    "title": "Autorisierungsstatus"
+    "title": "Autorisierungsstatus",
+    "verificationCode": "Bestätigungscode",
+    "verificationCodeHelp": "Gib den Code ein, den du vom Anbieter erhalten hast.",
+    "verificationCodePlaceholder": "123456"
   },
   "batterySettings": {
     "batteryLevel": "Ladestand der Batterie",

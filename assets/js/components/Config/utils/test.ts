@@ -10,6 +10,7 @@ export type TestState = {
   result: Record<string, any> | null;
   error: string | null;
   errorLine: number | null;
+  authId: string | null;
 };
 
 export const initialTestState = (): TestState => ({
@@ -20,6 +21,7 @@ export const initialTestState = (): TestState => ({
   result: null,
   error: null,
   errorLine: null,
+  authId: null,
 });
 
 const MIN_TEST_DURATION = 500;
@@ -39,6 +41,7 @@ export const performTest = async (
     state.isError = false;
     state.error = null;
     state.errorLine = null;
+    state.authId = null;
     for (const [key, value] of Object.entries(res.data)) {
       const { error } = value as { error?: string };
       if (error) {
@@ -54,6 +57,7 @@ export const performTest = async (
     state.isError = true;
     state.error = e.response?.data?.error || e.message;
     state.errorLine = e.response?.data?.line || null;
+    state.authId = e.response?.data?.loginRequired || null;
   } finally {
     const elapsed = Date.now() - startTime;
     const remainingTime = MIN_TEST_DURATION - elapsed;
