@@ -114,6 +114,11 @@ func (r *Renault) Token() (*oauth2.Token, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	if r.pending != nil {
+		r.notify(false)
+		return nil, api.LoginRequiredError(r.subject)
+	}
+
 	gmid := gigya.StoredGMID(r.user, r.region)
 	res, err := r.identity.LoginRaw(r.user, r.password, gmid)
 	if err != nil {
@@ -131,63 +136,90 @@ func (r *Renault) Token() (*oauth2.Token, error) {
 	return nil, res.Error()
 }
 
-// Login starts Renault TFA and sends the email verification code.
+// Login prepares Renault TFA without sending a verification code.
 func (r *Renault) Login(string) (string, *oauth2.DeviceAuthResponse, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	if r.pending != nil {
+		return "", nil, nil
+	}
+
+	return "", nil, r.prepareTFA()
+}
+
+func (r *Renault) prepareTFA() error {
 	gmid := gigya.StoredGMID(r.user, r.region)
 	res, err := r.identity.LoginRaw(r.user, r.password, gmid)
 	if err != nil {
-		return "", nil, err
+		return err
 	}
 	if res.ErrorCode == 0 {
 		r.pending = nil
 		r.notify(true)
-		return "", nil, nil
+		return nil
 	}
 	if !res.TFARequired() {
-		return "", nil, res.Error()
+		return res.Error()
 	}
 	if res.RegToken == "" {
-		return "", nil, errors.New("renault TFA required but missing regToken")
+		return errors.New("renault TFA required but missing regToken")
 	}
 
 	if gmid == "" {
 		gmid = uuid.NewString()
 	}
 
-	init, err := r.identity.InitTFA(res.RegToken, gmid)
-	if err != nil {
-		return "", nil, err
-	}
-	if init.ErrorCode != 0 {
-		return "", nil, init.Error()
-	}
-	if init.GigyaAssertion == "" {
-		return "", nil, errors.New("renault TFA init missing gigyaAssertion")
-	}
-
-	send, err := r.identity.SendVerificationCode(init.GigyaAssertion, gmid, r.user)
-	if err != nil {
-		return "", nil, err
-	}
-	if send.ErrorCode != 0 {
-		return "", nil, send.Error()
-	}
-	if send.PHVToken == "" {
-		return "", nil, errors.New("renault TFA email response missing phvToken")
-	}
-
 	r.pending = &renaultTFA{
-		regToken:       res.RegToken,
-		gigyaAssertion: init.GigyaAssertion,
-		phvToken:       send.PHVToken,
-		gmid:           gmid,
+		regToken: res.RegToken,
+		gmid:     gmid,
 	}
 	r.notify(false)
 
-	return "", nil, nil
+	return nil
+}
+
+// RequestCode sends a Renault email verification code.
+func (r *Renault) RequestCode() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.pending == nil {
+		if err := r.prepareTFA(); err != nil {
+			return err
+		}
+	}
+	if r.pending == nil {
+		return nil
+	}
+
+	init, err := r.identity.InitTFA(r.pending.regToken, r.pending.gmid)
+	if err != nil {
+		return err
+	}
+	if init.ErrorCode != 0 {
+		return init.Error()
+	}
+	if init.GigyaAssertion == "" {
+		return errors.New("renault TFA init missing gigyaAssertion")
+	}
+
+	send, err := r.identity.SendVerificationCode(init.GigyaAssertion, r.pending.gmid, r.user)
+	if err != nil {
+		return err
+	}
+	if send.ErrorCode != 0 {
+		return send.Error()
+	}
+	if send.PHVToken == "" {
+		return errors.New("renault TFA email response missing phvToken")
+	}
+
+	r.pending.gigyaAssertion = init.GigyaAssertion
+	r.pending.phvToken = send.PHVToken
+	r.notify(false)
+
+	return nil
 }
 
 // CodeInput returns the active Renault verification-code prompt.
@@ -199,7 +231,13 @@ func (r *Renault) CodeInput() *api.AuthCodeInput {
 		return nil
 	}
 
-	return &api.AuthCodeInput{Message: gigya.VerificationCodeMessage()}
+	sent := r.pending.phvToken != ""
+	input := &api.AuthCodeInput{Sent: sent}
+	if sent {
+		input.Message = gigya.VerificationCodeMessage()
+	}
+
+	return input
 }
 
 // SubmitCode verifies and finalizes the Renault TFA challenge.
@@ -209,6 +247,9 @@ func (r *Renault) SubmitCode(code string) error {
 
 	if r.pending == nil {
 		return errors.New("no pending Renault verification code")
+	}
+	if r.pending.phvToken == "" || r.pending.gigyaAssertion == "" {
+		return errors.New("request a Renault verification code first")
 	}
 
 	complete, err := r.identity.CompleteVerification(r.pending.gigyaAssertion, r.pending.phvToken, r.pending.gmid, code)

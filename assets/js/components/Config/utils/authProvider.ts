@@ -7,14 +7,14 @@ export type AuthState = {
   providerUrl: string | null;
   providerId: string | null;
   code: string | null;
-  codeInput: { message?: string } | null;
+  codeInput: { message?: string; sent?: boolean } | null;
   expiry: Date | null;
 };
 
 export type ProviderLoginResponse = {
   loginUri?: string;
   code?: string;
-  codeInput?: { message?: string };
+  codeInput?: { message?: string; sent?: boolean };
   expiry?: string;
   error?: string;
 };
@@ -30,12 +30,20 @@ export const initialAuthState = (): AuthState => ({
   expiry: null,
 });
 
-export const prepareAuthLogin = async (state: AuthState, providerId: string) => {
+export const prepareAuthLogin = async (
+  state: AuthState,
+  providerId: string,
+  sendCode = false
+) => {
   try {
     state.loading = true;
     state.error = null;
 
-    const url = `providerauth/login?id=${encodeURIComponent(providerId)}`;
+    const params = new URLSearchParams({ id: providerId });
+    if (sendCode) {
+      params.set("sendCode", "true");
+    }
+    const url = `providerauth/login?${params.toString()}`;
     const { status, data } = await baseApi.get<ProviderLoginResponse>(url, {
       validateStatus: (code) => [200, 400].includes(code),
     });
@@ -59,6 +67,15 @@ export const prepareAuthLogin = async (state: AuthState, providerId: string) => 
   } finally {
     state.loading = false;
   }
+};
+
+export const requestAuthCode = async (state: AuthState) => {
+  if (!state.providerId) {
+    state.error = "Missing auth provider";
+    return { success: false, error: state.error };
+  }
+
+  return prepareAuthLogin(state, state.providerId, true);
 };
 
 export const submitAuthCode = async (state: AuthState, code: string) => {

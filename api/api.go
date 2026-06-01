@@ -232,11 +232,13 @@ type AuthProvider interface {
 // AuthCodeInput describes a provider-side code prompt.
 type AuthCodeInput struct {
 	Message string `json:"message,omitempty"`
+	Sent    bool   `json:"sent,omitempty"`
 }
 
 // AuthCodeProvider accepts an out-of-band verification code.
 type AuthCodeProvider interface {
 	CodeInput() *AuthCodeInput
+	RequestCode() error
 	SubmitCode(code string) error
 }
 

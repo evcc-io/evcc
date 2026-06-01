@@ -42,10 +42,15 @@
 
 				<div v-if="auth.codeInput">
 					<hr class="my-4" />
-					<label for="authProviderVerificationCode" class="form-label">
+					<label
+						v-if="auth.codeInput.sent"
+						for="authProviderVerificationCode"
+						class="form-label"
+					>
 						{{ $t("authProviders.verificationCode") }}
 					</label>
 					<input
+						v-if="auth.codeInput.sent"
 						id="authProviderVerificationCode"
 						v-model.trim="authVerificationCode"
 						type="text"
@@ -56,7 +61,14 @@
 						aria-describedby="authProviderVerificationHelp"
 					/>
 					<div id="authProviderVerificationHelp" class="form-text">
-						{{ auth.codeInput.message || $t("authProviders.verificationCodeHelp") }}
+						{{
+							auth.codeInput.message ||
+							$t(
+								auth.codeInput.sent
+									? "authProviders.verificationCodeHelp"
+									: "authProviders.requestCodeHelp"
+							)
+						}}
 					</div>
 				</div>
 
@@ -80,7 +92,7 @@
 						@external-click="waitingForAuthentication = true"
 					/>
 					<button
-						v-else
+						v-else-if="auth.codeInput.sent"
 						type="button"
 						class="btn btn-primary"
 						:disabled="auth.loading || !authVerificationCode"
@@ -93,6 +105,21 @@
 							aria-hidden="true"
 						></span>
 						{{ $t("authProviders.buttonVerifyCode") }}
+					</button>
+					<button
+						v-else
+						type="button"
+						class="btn btn-primary"
+						:disabled="auth.loading"
+						@click="requestVerificationCode"
+					>
+						<span
+							v-if="auth.loading"
+							class="spinner-border spinner-border-sm me-2"
+							role="status"
+							aria-hidden="true"
+						></span>
+						{{ $t("authProviders.buttonRequestCode") }}
 					</button>
 				</div>
 			</template>
@@ -147,6 +174,7 @@ import {
 	initialAuthState,
 	prepareAuthLogin,
 	performAuthLogout,
+	requestAuthCode,
 	submitAuthCode,
 } from "../Config/utils/authProvider";
 import type { Provider } from "./types";
@@ -216,6 +244,9 @@ export default defineComponent({
 		async prepareAuthentication() {
 			if (!this.providerId || this.isAuthenticated) return;
 			await prepareAuthLogin(this.auth, this.providerId);
+		},
+		async requestVerificationCode() {
+			await requestAuthCode(this.auth);
 		},
 		async submitVerificationCode() {
 			const result = await submitAuthCode(this.auth, this.authVerificationCode);

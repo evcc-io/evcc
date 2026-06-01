@@ -72,10 +72,15 @@
 
 						<div v-if="auth.codeInput">
 							<hr class="my-5" />
-							<label :for="`${deviceType}AuthVerificationCode`" class="form-label">
+							<label
+								v-if="auth.codeInput.sent"
+								:for="`${deviceType}AuthVerificationCode`"
+								class="form-label"
+							>
 								{{ $t("authProviders.verificationCode") }}
 							</label>
 							<input
+								v-if="auth.codeInput.sent"
 								:id="`${deviceType}AuthVerificationCode`"
 								v-model.trim="authVerificationCode"
 								type="text"
@@ -88,7 +93,11 @@
 							<div :id="`${deviceType}AuthVerificationHelp`" class="form-text">
 								{{
 									auth.codeInput.message ||
-									$t("authProviders.verificationCodeHelp")
+									$t(
+										auth.codeInput.sent
+											? "authProviders.verificationCodeHelp"
+											: "authProviders.requestCodeHelp"
+									)
 								}}
 							</div>
 						</div>
@@ -125,7 +134,7 @@
 								@prepare="checkAuthStatus"
 							/>
 							<button
-								v-else
+								v-else-if="auth.codeInput.sent"
 								type="button"
 								class="btn btn-primary"
 								:disabled="auth.loading || !authVerificationCode"
@@ -138,6 +147,21 @@
 									aria-hidden="true"
 								></span>
 								{{ $t("authProviders.buttonVerifyCode") }}
+							</button>
+							<button
+								v-else
+								type="button"
+								class="btn btn-primary"
+								:disabled="auth.loading"
+								@click="requestVerificationCode"
+							>
+								<span
+									v-if="auth.loading"
+									class="spinner-border spinner-border-sm me-2"
+									role="status"
+									aria-hidden="true"
+								></span>
+								{{ $t("authProviders.buttonRequestCode") }}
 							</button>
 						</div>
 					</div>
@@ -228,7 +252,12 @@ import AuthCodeDisplay from "../AuthCodeDisplay.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
-import { initialAuthState, prepareAuthLogin, submitAuthCode } from "../utils/authProvider";
+import {
+	initialAuthState,
+	prepareAuthLogin,
+	requestAuthCode,
+	submitAuthCode,
+} from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
@@ -691,6 +720,9 @@ export default defineComponent({
 		},
 		async prepareAuthLogin(authId: string) {
 			await prepareAuthLogin(this.auth, authId);
+		},
+		async requestVerificationCode() {
+			await requestAuthCode(this.auth);
 		},
 		async submitVerificationCode() {
 			const result = await submitAuthCode(this.auth, this.authVerificationCode);

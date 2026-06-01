@@ -132,6 +132,12 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cp, ok := provider.(api.AuthCodeProvider); ok {
+		if r.URL.Query().Get("sendCode") == "true" {
+			if err := cp.RequestCode(); err != nil {
+				jsonError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+		}
 		res.CodeInput = cp.CodeInput()
 		if res.CodeInput == nil && res.LoginUri == "" && res.Code == "" && !provider.Authenticated() {
 			res.CodeInput = new(api.AuthCodeInput)
