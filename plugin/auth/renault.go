@@ -74,9 +74,11 @@ func NewRenault(ctx context.Context, user, password, region string) (*Renault, e
 	defer renaultMu.Unlock()
 
 	if instance := renaultIdentities[subject]; instance != nil {
+		instance.mu.Lock()
 		instance.user = user
 		instance.password = password
 		instance.region = region
+		instance.mu.Unlock()
 		return instance, nil
 	}
 
@@ -102,7 +104,7 @@ func NewRenault(ctx context.Context, user, password, region string) (*Renault, e
 	}
 
 	r.onlineC = onlineC
-	r.onlineC <- r.Authenticated()
+	r.notify(r.Authenticated())
 	renaultIdentities[subject] = r
 
 	return r, nil
@@ -120,6 +122,12 @@ func (r *Renault) Token() (*oauth2.Token, error) {
 	if r.pending != nil {
 		r.notify(false)
 		return nil, api.LoginRequiredError(r.subject)
+	}
+
+	// Skip the live Gigya login if a trusted device id is already stored;
+	// repeated credential submissions on every poll cycle can trigger account lockouts.
+	if r.Authenticated() {
+		return renaultToken(), nil
 	}
 
 	ok, err := r.loginOrStartTFA()
@@ -192,7 +200,7 @@ func (r *Renault) RequestCode() error {
 		}
 	}
 	if r.pending == nil {
-		return nil
+		return errors.New("renault login succeeded without TFA; no code needed")
 	}
 
 	init, err := r.identity.InitTFA(r.pending.regToken, r.pending.gmid)
