@@ -74,10 +74,9 @@ func NewRenault(ctx context.Context, user, password, region string) (*Renault, e
 	defer renaultMu.Unlock()
 
 	if instance := renaultIdentities[subject]; instance != nil {
+		// user and region are immutable per subject; only password may change.
 		instance.mu.Lock()
-		instance.user = user
 		instance.password = password
-		instance.region = region
 		instance.mu.Unlock()
 		return instance, nil
 	}

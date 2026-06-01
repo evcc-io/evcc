@@ -291,8 +291,11 @@ func (v *Identity) SendVerificationCode(gigyaAssertion, gmid, loginID string) (R
 
 func (v *Identity) emailID(gigyaAssertion, gmid, loginID string) (string, error) {
 	res, err := v.TFAEmails(gigyaAssertion, gmid)
-	if err != nil || res.ErrorCode != 0 {
+	if err != nil {
 		return "", err
+	}
+	if res.ErrorCode != 0 {
+		return "", res.Error()
 	}
 
 	loginID = strings.ToLower(strings.TrimSpace(loginID))
