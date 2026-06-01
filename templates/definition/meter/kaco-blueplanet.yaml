@@ -1,0 +1,13 @@
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+    required: true
+  - name: serial
+    required: true
+    example: 8.0NX312001234
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/getdevdata.cgi?device=2&sn={{ .serial }}

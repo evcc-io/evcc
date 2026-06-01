@@ -1,6 +1,7 @@
 template: homewizard
 products:
   - brand: HomeWizard
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host

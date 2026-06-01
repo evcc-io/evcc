@@ -39,7 +39,15 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 
 	if conn.isWaitingForAuth() {
 		if conn.remoteIdTag != "" {
-			conn.RemoteStartTransactionRequest(conn.remoteIdTag)
+			// dispatch asynchronously: RemoteStartTransactionRequest issues a
+			// synchronous CS→CP request whose response is read by this same
+			// goroutine, so a blocking call would deadlock the WebSocket read
+			// loop (cf. ocpp_test_handler.go).
+			go func(idTag string) {
+				if err := conn.RemoteStartTransactionRequest(idTag); err != nil {
+					conn.log.ERROR.Printf("RemoteStartTransaction: %v", err)
+				}
+			}(conn.remoteIdTag)
 		} else {
 			conn.log.DEBUG.Printf("waiting for local authentication")
 		}

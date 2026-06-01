@@ -6,7 +6,7 @@ products:
   - brand: AUTEL
     description:
       generic: AC Compact
-capabilities: ["mA"]
+capabilities: ["mA", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
   description:

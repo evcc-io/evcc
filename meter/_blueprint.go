@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewBlueprintFromConfig creates a blueprint meter from generic config
-func NewBlueprintFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewBlueprintFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
 		URI   string
 		Cache time.Duration

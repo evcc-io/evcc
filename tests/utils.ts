@@ -109,22 +109,17 @@ export async function dragElement(
   sourceElement: Locator,
   targetElement: Locator
 ): Promise<void> {
-  // Get bounding boxes to calculate actual positions
-  const sourceBox = await sourceElement.boundingBox();
+  // hover() waits for animations to settle before grabbing the source —
+  // avoids stale coordinates during the modal slide-in.
+  await sourceElement.hover();
+  await page.mouse.down();
+
   const targetBox = await targetElement.boundingBox();
-
-  if (sourceBox && targetBox) {
-    // Move from center of source item to center of target item
-    const startX = sourceBox.x + sourceBox.width / 2;
-    const startY = sourceBox.y + sourceBox.height / 2;
-    const endX = targetBox.x + targetBox.width / 2;
-    const endY = targetBox.y + targetBox.height / 2;
-
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(endX, endY, { steps: 10 });
-    await page.mouse.up();
-  }
+  if (!targetBox) throw new Error("dragElement: target has no bounding box");
+  await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2, {
+    steps: 10,
+  });
+  await page.mouse.up();
 }
 
 export async function getDatalistOptions(input: Locator): Promise<string[]> {
@@ -134,4 +129,34 @@ export async function getDatalistOptions(input: Locator): Promise<string[]> {
     const datalist = document.getElementById(datalistId);
     return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
   });
+}
+
+type AppState = {
+  evccAppCapabilities: string[];
+  __appEvent: unknown;
+  ReactNativeWebView: { postMessage: (m: string) => void };
+};
+
+export async function enableAppContext(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      value: "evcc/playwright",
+      configurable: true,
+    });
+    const w = window as unknown as AppState;
+    w.evccAppCapabilities = ["download"];
+    w.__appEvent = undefined;
+    w.ReactNativeWebView = {
+      postMessage: (msg: string) => {
+        w.__appEvent = JSON.parse(msg);
+      },
+    };
+  });
+}
+
+export async function expectAppEvent(page: Page): Promise<unknown> {
+  await expect
+    .poll(async () => page.evaluate(() => (window as unknown as AppState).__appEvent !== undefined))
+    .toBe(true);
+  return page.evaluate(() => (window as unknown as AppState).__appEvent);
 }

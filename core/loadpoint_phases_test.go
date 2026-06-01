@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -480,6 +481,96 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 	}
 }
 
+// TestScalePhasesNotAvailable verifies that a charger reporting api.ErrNotAvailable
+// from Phases1p3p (e.g. an EEBus charger with an ISO 15118 vehicle, see issue #29974)
+// is treated as a failed switch: the error is api.ErrNotAvailable so callers can
+// suppress it, and the phase count is left unchanged.
+func TestScalePhasesNotAvailable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+	phaseCharger.EXPECT().Phases1p3p(3).Return(api.ErrNotAvailable)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		clock:       clock.NewMock(),
+		wakeUpTimer: NewTimer(),
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			plainCharger,
+			phaseCharger,
+		},
+		phases: 1, // current phase status, switch to 3p will be attempted
+	}
+
+	err := lp.scalePhases(3)
+	require.Error(t, err)
+	require.True(t, errors.Is(err, api.ErrNotAvailable), "want api.ErrNotAvailable, got %v", err)
+
+	// switch did not complete - phase count unchanged
+	require.Equal(t, 1, lp.GetPhases())
+}
+
+// TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
+// (the absolute minimum) when phase switching is available, so feed-in priority
+// in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
+func TestMinChargingPhaseScaling(t *testing.T) {
+	Voltage = 230
+
+	tc := []struct {
+		desc             string
+		phasesConfigured int
+		phases           int
+		expectedPhases   int
+	}{
+		{desc: "auto, 3p active scales down to 1p", phasesConfigured: 0, phases: 3, expectedPhases: 1},
+		{desc: "auto, already 1p", phasesConfigured: 0, phases: 1, expectedPhases: 1},
+		{desc: "fixed 3p cannot scale down", phasesConfigured: 3, phases: 3, expectedPhases: 3},
+		{desc: "fixed 1p stays 1p", phasesConfigured: 1, phases: 1, expectedPhases: 1},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.minCurrent = 6
+			lp.maxCurrent = 16
+			lp.phasesConfigured = tc.phasesConfigured
+			lp.phases = tc.phases
+			lp.offeredCurrent = 0 // ensure MaxCurrent is called
+			lp.wakeUpTimer = NewTimer()
+
+			plainCharger := api.NewMockCharger(ctrl)
+			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+			lp.charger = struct {
+				*api.MockCharger
+				*api.MockPhaseSwitcher
+			}{plainCharger, phaseCharger}
+
+			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+
+			if tc.phases != tc.expectedPhases {
+				phaseCharger.EXPECT().Phases1p3p(tc.expectedPhases).Return(nil)
+			}
+
+			// minimum current is offered at the scaled phase count
+			plainCharger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
+
+			err := lp.minCharging()
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+
+			ctrl.Finish()
+		})
+	}
+}
+
 func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 	Voltage = 230
 
@@ -549,4 +640,59 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			ctrl.Finish()
 		})
 	}
+}
+
+// TestUpdatePhaseSwitchNotAvailable verifies that, with a fixed phasesConfigured
+// and a charger that refuses phase switching (api.ErrNotAvailable, e.g. an EEBus
+// charger with an ISO 15118 vehicle), the configured phase count is adopted so
+// the switch is not re-attempted on every update cycle (issue #29974).
+func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	plainCharger.EXPECT().Status().Return(api.StatusC, nil).AnyTimes()
+	plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+	plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+	plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+	// charger cannot switch phases - and must only be asked once
+	phaseCharger.EXPECT().Phases1p3p(3).Return(api.ErrNotAvailable).Times(1)
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		chargeMeter: &Null{},
+		chargeRater: &Null{},
+		chargeTimer: &Null{},
+		progress:    NewProgress(0, 10),
+		wakeUpTimer: NewTimer(),
+		mode:        api.ModeNow,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		status:      api.StatusC,
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			plainCharger,
+			phaseCharger,
+		},
+		phasesConfigured: 3, // fixed 3p
+		phases:           0, // unknown
+	}
+
+	attachListeners(t, lp)
+
+	// first cycle attempts the switch, gets api.ErrNotAvailable, adopts 3p
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+	require.Equal(t, 3, lp.GetPhases(), "configured phases should be adopted")
+
+	// second cycle must not attempt the switch again (Phases1p3p .Times(1))
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+	require.Equal(t, 3, lp.GetPhases())
 }

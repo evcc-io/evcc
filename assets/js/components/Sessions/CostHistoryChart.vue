@@ -3,7 +3,7 @@
 		<div style="position: relative; height: 300px" class="my-3">
 			<Bar :data="chartData" :options="options" />
 		</div>
-		<LegendList :legends="legends" />
+		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
@@ -20,6 +20,7 @@ import {
 	LineElement,
 	Tooltip,
 	type ChartData,
+	type ScriptableContext,
 	type TooltipItem,
 } from "chart.js";
 import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
@@ -27,8 +28,7 @@ import LegendList from "./LegendList.vue";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import { TYPES, GROUPS, PERIODS, type Session } from "./types";
-import { CURRENCY } from "@/types/evcc";
-import type { Context } from "chartjs-plugin-datalabels";
+import { CURRENCY, type DeviceColors } from "@/types/evcc";
 
 registerChartComponents([
 	BarController,
@@ -52,6 +52,7 @@ export default defineComponent({
 		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 		suggestedMaxAvgCost: { type: Number, default: 0 },
 		suggestedMaxCost: { type: Number, default: 0 },
 	},
@@ -153,7 +154,7 @@ export default defineComponent({
 					backgroundColor,
 					label,
 					data: Object.values(result).map((index) => index[group] || 0),
-					borderRadius: (context: Context) => {
+					borderRadius: (context: ScriptableContext<"bar">) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
 						const currentValue = context.dataset.data[dataIndex] as number;
@@ -195,6 +196,7 @@ export default defineComponent({
 			};
 		},
 		legends() {
+			const pickable = this.groupBy !== GROUPS.NONE;
 			return this.chartData.datasets.map((dataset) => {
 				let value = null;
 				let type: "area" | "line" = "area";
@@ -225,6 +227,7 @@ export default defineComponent({
 					color: dataset.backgroundColor,
 					value,
 					type,
+					id: pickable && type !== "line" ? dataset.label || undefined : undefined,
 				};
 			});
 		},

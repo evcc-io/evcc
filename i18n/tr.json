@@ -812,32 +812,13 @@
       "validate": "doğrula"
     },
     "vehicle": {
-      "cancel": "İptal",
-      "chargingSettings": "“ Doldurma ayarları”",
-      "defaultMode": "“Varsayılan ayar”",
-      "defaultModeHelp": "Araç bağlanırken doldurma ayarı.",
-      "delete": "Aracı sil",
       "generic": "Diğer bütünleştirmeler",
-      "identifiers": "“RFID tanımlayıcıları”",
-      "identifiersHelp": "Aracı tanımlamak için RFID dizelerinin listesi. Satır başına bir giriş. Güncel tanımlayıcıyı, genel bakış sayfasındaki ilgili doldurma noktasında bulabilirsin.",
-      "maximumCurrent": "“Azami akım”",
-      "maximumCurrentHelp": "Asgari akımdan büyük olmalıdır.",
-      "maximumPhases": "“Azami aşamalar”",
-      "maximumPhasesHelp": "Bu araç kaç aşama ile doldurulabilir? Gerekli asgari güneş enerjisi fazlasını ve plân süresini hesaplamak için kullanılır.",
-      "maximumPower": "Azami doldurma gücü",
-      "maximumPowerHelp": "Aracın çekebileceği azami güç",
-      "minimumCurrent": "“Asgari akım”",
-      "minimumCurrentHelp": "Yalnızca ne yaptığını biliyorsan 6A'in altına in.",
       "online": "Çevrimiçi API'ye sahip araçlar",
       "primary": "Genel bütünleşmeler",
-      "priority": "“Öncelik”",
-      "priorityHelp": "Daha yüksek öncelik, bu araç güneş enerjisi fazlasına öncelikli erişim sağlayacak demektir.",
-      "save": "Kaydet",
       "scooter": "Elektrikli Scooter",
       "template": "Üretici",
       "titleAdd": "Araç Ekle",
-      "titleEdit": "Aracı Düzenle",
-      "validateSave": "Doğrula ve kaydet"
+      "titleEdit": "Aracı Düzenle"
     }
   },
   "footer": {
@@ -1130,7 +1111,7 @@
       "batteryGridChargeLimit": "Şebekeden doldurma: şayet",
       "batteryHold": "Batarya (kilitli)",
       "batteryTooltip": "{total} ({soc})'ın {energy}'ı",
-      "forecast": "Tahmin: ",
+      "forecast": "Tahmin",
       "forecastTooltip": "“öngörü: bugün kalan güneşden üreti̇m”",
       "gridImport": "Şebeke kullanımı",
       "homePower": "Tüketim",

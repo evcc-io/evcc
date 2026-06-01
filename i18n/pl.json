@@ -806,32 +806,13 @@
       "validate": "zweryfikować"
     },
     "vehicle": {
-      "cancel": "Anulować",
-      "chargingSettings": "Ustawienia ładowania",
-      "defaultMode": "Domyślny tryb",
-      "defaultModeHelp": "Tryb ładowania po podłączeniu pojazdu.",
-      "delete": "Usuń",
       "generic": "Inne integracje",
-      "identifiers": "Identyfikatory RFID",
-      "identifiersHelp": "Lista ciągów RFID służących do identyfikacji pojazdu. Jeden wpis w każdym wierszu. Aktualny identyfikator można znaleźć w odpowiednim punkcie ładowania na stronie przeglądu.",
-      "maximumCurrent": "Maksymalny prąd",
-      "maximumCurrentHelp": "Musi być większy niż prąd minimalny.",
-      "maximumPhases": "Maksymalne fazy",
-      "maximumPhasesHelp": "Ile faz może ładować ten pojazd? Służy do obliczenia wymaganej minimalnej nadwyżki energii słonecznej i planowanego czasu trwania.",
-      "maximumPower": "Maksymalna moc ładowania",
-      "maximumPowerHelp": "Maksymalna moc, jaką może pobierać pojazd",
-      "minimumCurrent": "Minimalny prąd",
-      "minimumCurrentHelp": "Zmniejsz natężenie prądu poniżej 6 A tylko wtedy, gdy wiesz, co robisz.",
       "online": "Pojazdy z API online",
       "primary": "Integracje ogólne",
-      "priority": "Priorytet",
-      "priorityHelp": "Wyższy priorytet oznacza, że pojazd ten ma pierwszeństwo dostępu do nadwyżki energii słonecznej.",
-      "save": "Zapisz",
       "scooter": "Skuter",
       "template": "Producent",
       "titleAdd": "Dodaj pojazd",
-      "titleEdit": "Edytuj pojazd",
-      "validateSave": "Sprawdź i zapisz"
+      "titleEdit": "Edytuj pojazd"
     }
   },
   "footer": {
@@ -1090,7 +1071,7 @@
       "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
       "batteryHold": "Magazyn energii (chroniony)",
       "batteryTooltip": "{energy} z {total} ({soc})",
-      "forecast": "Prognoza: ",
+      "forecast": "Prognoza",
       "forecastTooltip": "prognoza: pozostała na dziś produkcja energii słonecznej",
       "gridImport": "Z sieci",
       "homePower": "Konsumpcja",

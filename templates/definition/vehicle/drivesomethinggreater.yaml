@@ -1,0 +1,59 @@
+template: drivesomethinggreater
+products:
+  - brand: Volkswagen
+    description:
+      generic: EU Data Act
+  - brand: Audi
+    description:
+      generic: EU Data Act
+  - brand: Škoda
+    description:
+      generic: EU Data Act
+  - brand: Seat
+    description:
+      generic: EU Data Act
+  - brand: Cupra
+    description:
+      generic: EU Data Act
+requirements:
+  description:
+    de: |
+      Nutzt die im Rahmen des EU Data Act bereitgestellten Fahrzeugdaten über das
+      VW-Konzern-Portal (eu-data-act.drivesomethinggreater.com). Die Anmeldung
+      erfolgt mit den Zugangsdaten der jeweiligen Marken-App (We Connect, myAudi,
+      MyŠkoda, SEAT/CUPRA Connect).
+
+      Voraussetzung (einmalig im Browser): im Portal anmelden, die Einwilligung
+      bestätigen, das Fahrzeug verknüpfen und eine fortlaufende Datenanfrage
+      (alle 15 Minuten) aktivieren. Ohne diese Aktivierung liefert das Portal
+      keine Daten. Die Daten werden ca. alle 15 Minuten aktualisiert.
+
+      Implementierung analog zur "EU Data Act" Datenquelle aus
+      https://github.com/TA2k/ioBroker.vw-connect
+    en: |
+      Uses the vehicle data provided under the EU Data Act through the VW group
+      portal (eu-data-act.drivesomethinggreater.com). Log in with the credentials
+      of the respective brand app (We Connect, myAudi, MyŠkoda, SEAT/CUPRA Connect).
+
+      Prerequisite (one-time, in a browser): log in to the portal, confirm the
+      consent screen, link the vehicle and enable a continuous data request
+      (every 15 minutes). Without this activation the portal returns no data.
+      Data is refreshed roughly every 15 minutes.
+
+      Implementation analogous to the "EU Data Act" data source from
+      https://github.com/TA2k/ioBroker.vw-connect
+params:
+  - preset: vehicle-base
+  - name: brand
+    type: choice
+    choice: ["Volkswagen", "Audi", "Skoda", "Seat", "Cupra"]
+    required: true
+    description:
+      de: Marke
+      en: Brand
+  - preset: vehicle-features
+render: |
+  type: drivesomethinggreater
+  brand: {{ .brand }}
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

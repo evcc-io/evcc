@@ -194,7 +194,7 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	// Handle the callback
 	if err := provider.HandleCallback(r.URL.Query()); err != nil {
 		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
-		a.redirectToError(w, r, "callback failed")
+		a.redirectToError(w, r, err.Error())
 		return
 	}
 

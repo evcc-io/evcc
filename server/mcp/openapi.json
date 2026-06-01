@@ -1271,7 +1271,7 @@
     },
     "/loadpoints/{id}/limitsoc/{soc}": {
       "post": {
-        "description": "Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions.",
+        "description": "Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/docs/features/limit"
         },
@@ -1289,7 +1289,7 @@
             "$ref": "#/components/responses/NumberResult"
           }
         },
-        "summary": "Update limit SoC",
+        "summary": "Update session SoC limit",
         "tags": [
           "loadpoints"
         ]

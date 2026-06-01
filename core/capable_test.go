@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -81,11 +82,7 @@ func TestCapsWrapping(t *testing.T) {
 	var m api.Meter
 
 	if mt, ok := api.Cap[api.Meter](c); ok {
-		if c, ok := c.(api.Capable); ok {
-			m = &capableMeter{Meter: mt, Capable: c}
-		} else {
-			m = mt
-		}
+		m = &capableMeter{Meter: mt, source: c}
 	}
 
 	{
@@ -103,4 +100,43 @@ func TestCapsWrapping(t *testing.T) {
 		assert.False(t, ok)
 		assert.True(t, api.HasCap[api.Battery](m), "missing battery cap")
 	}
+}
+
+// staticPhaseCharger emulates a charger like DaheimLaden: it embeds an
+// implement.Caps registry (so it satisfies api.Capable) but exposes
+// api.Meter and api.PhaseCurrents as static struct methods rather than
+// registering them in the registry.
+type staticPhaseCharger struct {
+	implement.Caps
+}
+
+var (
+	_ api.Capable       = (*staticPhaseCharger)(nil)
+	_ api.Meter         = (*staticPhaseCharger)(nil)
+	_ api.PhaseCurrents = (*staticPhaseCharger)(nil)
+)
+
+func (*staticPhaseCharger) CurrentPower() (float64, error)               { return 0, nil }
+func (*staticPhaseCharger) Currents() (float64, float64, float64, error) { return 1, 2, 3, nil }
+
+// TestCapableMeterStaticInterface guards against the regression in
+// https://github.com/evcc-io/evcc/issues/29877: a charger that embeds
+// implement.Caps but implements PhaseCurrents as a static method must
+// still expose that capability through the capableMeter wrapper.
+func TestCapableMeterStaticInterface(t *testing.T) {
+	c := &staticPhaseCharger{Caps: implement.New()}
+
+	var m api.Meter
+	if mt, ok := api.Cap[api.Meter](c); ok {
+		m = &capableMeter{Meter: mt, source: c}
+	}
+
+	assert.True(t, api.HasCap[api.PhaseCurrents](m),
+		"PhaseCurrents must remain discoverable on capableMeter when implemented statically")
+
+	pc, ok := api.Cap[api.PhaseCurrents](m)
+	assert.True(t, ok)
+	i1, i2, i3, err := pc.Currents()
+	assert.NoError(t, err)
+	assert.Equal(t, []float64{1, 2, 3}, []float64{i1, i2, i3})
 }

@@ -46,67 +46,105 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
-func TestBatteryForecastTotals(t *testing.T) {
-	site := new(Site)
-
-	req := []optimizer.BatteryConfig{
-		{SMax: 80},
-		{SMax: 80},
-	}
-
-	const zero = -1
-
+func TestBatteryForecastSocExtremes(t *testing.T) {
 	for _, tc := range []struct {
-		name        string
-		bat1, bat2  []float32
-		full, empty int
+		name      string
+		req       []optimizer.BatteryConfig
+		soc       [][]float32
+		high, low *batteryForecastSlot
 	}{
 		{
-			"never full",
-			[]float32{0, 0},
-			[]float32{0, 0},
-			zero, 0,
+			"no home battery",
+			[]optimizer.BatteryConfig{{SMax: 80}}, // SCapacity unset → vehicle
+			[][]float32{{1000, 2000}},
+			nil, nil,
 		},
 		{
-			"never empty",
-			[]float32{100, 100},
-			[]float32{100, 100},
-			0, zero,
+			"single home battery rising — reaches full",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{200, 500, 1000}},
+			&batteryForecastSlot{slot: 2, soc: 100, limit: true},
+			&batteryForecastSlot{slot: 0, soc: 20, limit: false},
 		},
 		{
-			"first full then empty",
-			[]float32{100, 0},
-			[]float32{100, 0},
-			0, 1,
+			"single home battery falling — reaches empty",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{900, 500, 0}},
+			&batteryForecastSlot{slot: 0, soc: 90, limit: false},
+			&batteryForecastSlot{slot: 2, soc: 0, limit: true},
 		},
 		{
-			"first full finally empty",
-			[]float32{100, 100, 0},
-			[]float32{100, 0, 0},
-			0, 2,
+			"single home battery — local extremes (no limit reached)",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 900, SMin: 100}},
+			[][]float32{{500, 800, 200}},
+			&batteryForecastSlot{slot: 1, soc: 80, limit: false},
+			&batteryForecastSlot{slot: 2, soc: 20, limit: false},
 		},
 		{
-			"first empty then full",
-			[]float32{0, 100},
-			[]float32{0, 100},
-			1, 0,
+			"two home batteries aggregated",
+			[]optimizer.BatteryConfig{
+				{SCapacity: 1000, SMax: 1000},
+				{SCapacity: 1000, SMax: 1000},
+			},
+			[][]float32{
+				{200, 400, 1000},
+				{800, 400, 1000},
+			},
+			&batteryForecastSlot{slot: 2, soc: 100, limit: true},
+			&batteryForecastSlot{slot: 1, soc: 40, limit: false},
 		},
 		{
-			"first empty finally full",
-			[]float32{0, 100, 100},
-			[]float32{0, 0, 100},
-			2, 0,
+			"vehicle and home battery — vehicle ignored",
+			[]optimizer.BatteryConfig{
+				{SMax: 80},                    // vehicle
+				{SCapacity: 1000, SMax: 1000}, // home
+			},
+			[][]float32{
+				{0, 0, 80},
+				{200, 500, 900},
+			},
+			&batteryForecastSlot{slot: 2, soc: 90, limit: false},
+			&batteryForecastSlot{slot: 0, soc: 20, limit: false},
+		},
+		{
+			"first slot at SMax wins for highest",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{1000, 1000, 500}},
+			&batteryForecastSlot{slot: 0, soc: 100, limit: true},
+			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
+		},
+		{
+			"near SMax is not full",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{500, 999, 800}},
+			&batteryForecastSlot{slot: 1, soc: 99.9, limit: false},
+			&batteryForecastSlot{slot: 0, soc: 50, limit: false},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := []optimizer.BatteryResult{
-				{StateOfCharge: tc.bat1},
-				{StateOfCharge: tc.bat2},
+			resp := make([]optimizer.BatteryResult, len(tc.soc))
+			for i, s := range tc.soc {
+				resp[i] = optimizer.BatteryResult{StateOfCharge: s}
 			}
 
-			full, empty := site.batteryForecastFullAndEmptySlots(req, resp)
-			assert.Equal(t, tc.full, full, "full")
-			assert.Equal(t, tc.empty, empty, "empty")
+			high, low := batteryForecastSocExtremes(tc.req, resp)
+
+			if tc.high == nil {
+				assert.Nil(t, high, "high")
+			} else {
+				require.NotNil(t, high, "high")
+				assert.Equal(t, tc.high.slot, high.slot, "high.slot")
+				assert.InDelta(t, tc.high.soc, high.soc, 1e-3, "high.soc")
+				assert.Equal(t, tc.high.limit, high.limit, "high.limit")
+			}
+			if tc.low == nil {
+				assert.Nil(t, low, "low")
+			} else {
+				require.NotNil(t, low, "low")
+				assert.Equal(t, tc.low.slot, low.slot, "low.slot")
+				assert.InDelta(t, tc.low.soc, low.soc, 1e-3, "low.soc")
+				assert.Equal(t, tc.low.limit, low.limit, "low.limit")
+			}
 		})
 	}
 }

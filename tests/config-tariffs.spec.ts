@@ -337,4 +337,55 @@ grid:
     await expect(tariffGrid).toBeVisible();
     await expect(tariffGrid).toContainText(["Forecast", "10.0 ct – 30.0 ct"].join(""));
   });
+
+  test("charges zones", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const modal = page.getByTestId("tariff-modal");
+    const tariffGrid = page.getByTestId("tariff-grid");
+    const save = modal.getByRole("button", { name: "Validate & save" });
+
+    await page.getByRole("button", { name: "Add tariff" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Add grid import tariff" }).click();
+    await modal.getByLabel("Provider").selectOption("Demo Market Price");
+
+    // expand advanced settings to reveal charges + chargesZones
+    await modal.getByRole("button", { name: "Advanced" }).click();
+    await expect(modal.getByText("Charges zones")).toBeVisible();
+
+    // base charge applies when no zone matches
+    await modal.getByLabel("Charge").fill("20");
+
+    // chargesZones uses the "Charge" label override (not "Price"). Negative
+    // values must be accepted to support reduced peak-hour grid fees.
+    await modal.getByRole("button", { name: "Add zone" }).click();
+    const zoneForm = modal.getByTestId("property-zone");
+    await expect(zoneForm.getByLabel("Charge")).toBeVisible();
+    await expect(zoneForm.getByLabel("Price")).not.toBeVisible();
+    await zoneForm.getByLabel("Charge").fill("-2.5");
+    await zoneForm.getByLabel("From", { exact: true }).fill("00:00");
+    await zoneForm.getByLabel("To", { exact: true }).fill("06:00");
+    await zoneForm.getByRole("button", { name: "Save", exact: true }).click();
+
+    const zones = modal.getByTestId("property-zone");
+    await expect(zones).toHaveCount(1);
+    await expect(zones.first()).toContainText(["-2.5 ct", "00:00 – 06:00"].join(""));
+
+    // round-trip persistence
+    await save.click();
+    await expectModalHidden(modal);
+    await expect(tariffGrid).toBeVisible();
+
+    await restart();
+    await page.reload();
+
+    await tariffGrid.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Advanced" }).click();
+    await expect(modal.getByLabel("Charge")).toHaveValue("20");
+    await expect(zones).toHaveCount(1);
+    await expect(zones.first()).toContainText(["-2.5 ct", "00:00 – 06:00"].join(""));
+  });
 });

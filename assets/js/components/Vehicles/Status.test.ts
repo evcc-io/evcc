@@ -2,9 +2,15 @@ import { mount, config } from "@vue/test-utils";
 import { describe, expect, test } from "vitest";
 import Status from "./Status.vue";
 import { CURRENCY } from "@/types/evcc";
+import en from "../../../../i18n/en.json";
 
-const serializeData = (data: object) => (data ? `:${JSON.stringify(data)}` : "");
-config.global.mocks["$t"] = (key: string, data: object) => `${key}${serializeData(data)}`;
+// minimal $t/$te that walk en.json so tests assert on real English text
+const lookup = (key: string): string | undefined => {
+  const v = key.split(".").reduce<any>((o, k) => o?.[k], en);
+  return typeof v === "string" ? v : undefined;
+};
+config.global.mocks["$t"] = (key: string) => lookup(key) ?? key;
+config.global.mocks["$te"] = (key: string) => lookup(key) !== undefined;
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 
 const allEntries = {
@@ -37,25 +43,22 @@ const expectEntries = (props: InstanceType<typeof Status>["$props"], entries: ob
 
 describe("basics", () => {
   test("no vehicle is connected", () => {
-    expectEntries({ connected: false }, { charger: "main.vehicleStatus.disconnected" });
+    expectEntries({ connected: false }, { charger: "Disconnected." });
   });
   test("vehicle is connected", () => {
-    expectEntries({ connected: true }, { charger: "main.vehicleStatus.connected" });
+    expectEntries({ connected: true }, { charger: "Connected." });
   });
   test("show waiting for vehicle if charger is enabled but not charging", () => {
-    expectEntries(
-      { enabled: true, connected: true },
-      { charger: "main.vehicleStatus.waitForVehicle" }
-    );
+    expectEntries({ enabled: true, connected: true }, { charger: "Ready. Waiting for vehicle…" });
   });
   test("show waiting for authorization if enabled but charger requires auth", () => {
     expectEntries(
       { enabled: true, connected: true, chargerStatusReason: "waitingforauthorization" },
-      { charger: "main.vehicleStatus.waitForAuthorization" }
+      { charger: "Connected. Waiting for authorization…" }
     );
   });
   test("vehicle is charging", () => {
-    expectEntries({ connected: true, charging: true }, { charger: "main.vehicleStatus.charging" });
+    expectEntries({ connected: true, enabled: true, charging: true }, { charger: "Charging…" });
   });
 });
 
@@ -63,20 +66,17 @@ describe("min charge", () => {
   test("active when minSocNotReached is true", () => {
     expectEntries(
       { connected: true, minSoc: 20, minSocNotReached: true },
-      { charger: "main.vehicleStatus.connected", minsoc: "20 %" }
+      { charger: "Connected.", minsoc: "20 %" }
     );
   });
   test("not active when minSocNotReached is false", () => {
     expectEntries(
       { connected: true, minSoc: 20, minSocNotReached: false },
-      { charger: "main.vehicleStatus.connected", minsoc: false }
+      { charger: "Connected.", minsoc: false }
     );
   });
   test("not active when minSocNotReached is not set", () => {
-    expectEntries(
-      { connected: true, minSoc: 20 },
-      { charger: "main.vehicleStatus.connected", minsoc: false }
-    );
+    expectEntries({ connected: true, minSoc: 20 }, { charger: "Connected.", minsoc: false });
   });
 });
 
@@ -86,26 +86,26 @@ describe("plan", () => {
   const planProjectedEnd = "2020-03-16T05:00:00Z";
   test("charging if target time is set, status is charging but planned slot is not active", () => {
     expectEntries(
-      { effectivePlanTime, charging: true, connected: true },
-      { charger: "main.vehicleStatus.charging" }
+      { effectivePlanTime, enabled: true, charging: true, connected: true },
+      { charger: "Charging…" }
     );
   });
   test("active if target time is set, status is charging and planned slot is active", () => {
     expectEntries(
-      { planProjectedEnd, planActive: true, charging: true, connected: true },
-      { charger: "main.vehicleStatus.charging", planactive: "Mo 06:00" }
+      { planProjectedEnd, planActive: true, enabled: true, charging: true, connected: true },
+      { charger: "Charging…", planactive: "Mo 06:00" }
     );
   });
   test("waiting for vehicle if a target time is set, the charger is enabled but not charging", () => {
     expectEntries(
       { planProjectedEnd, planActive: true, enabled: true, connected: true },
-      { charger: "main.vehicleStatus.waitForVehicle", planactive: "Mo 06:00" }
+      { charger: "Ready. Waiting for vehicle…", planactive: "Mo 06:00" }
     );
   });
   test("show projected start if not enabled yet", () => {
     expectEntries(
       { effectivePlanTime, planProjectedStart, connected: true },
-      { charger: "main.vehicleStatus.connected", planstart: "Mo 03:00" }
+      { charger: "Connected.", planstart: "Mo 03:00" }
     );
   });
   test("dont show plan status if plan is disabled (e.g. off, fast mode)", () => {
@@ -113,11 +113,12 @@ describe("plan", () => {
       {
         effectivePlanTime,
         planActive: true,
+        enabled: true,
         charging: true,
         connected: true,
         chargingPlanDisabled: true,
       },
-      { charger: "main.vehicleStatus.charging" }
+      { charger: "Charging…" }
     );
     expectEntries(
       {
@@ -128,11 +129,11 @@ describe("plan", () => {
         connected: true,
         chargingPlanDisabled: true,
       },
-      { charger: "main.vehicleStatus.waitForVehicle" }
+      { charger: "Ready. Waiting for vehicle…" }
     );
     expectEntries(
       { effectivePlanTime, planProjectedStart, connected: true, chargingPlanDisabled: true },
-      { charger: "main.vehicleStatus.connected" }
+      { charger: "Connected." }
     );
   });
 });
@@ -141,17 +142,17 @@ describe("climating", () => {
   test("show climating status", () => {
     expectEntries(
       { connected: true, enabled: true, vehicleClimaterActive: true, charging: true },
-      { charger: "main.vehicleStatus.charging", climater: true }
+      { charger: "Charging…", climater: true }
     );
     expectEntries(
       { connected: true, enabled: true, vehicleClimaterActive: true, charging: false },
-      { charger: "main.vehicleStatus.waitForVehicle", climater: true }
+      { charger: "Ready. Waiting for vehicle…", climater: true }
     );
   });
   test("only show climating if enabled", () => {
     expectEntries(
       { connected: true, enabled: false, vehicleClimaterActive: true, charging: false },
-      { charger: "main.vehicleStatus.connected", climater: true }
+      { charger: "Connected.", climater: true }
     );
   });
 });
@@ -164,7 +165,7 @@ describe("timer", () => {
         connected: true,
         pvRemainingInterpolated: 90,
       },
-      { charger: "main.vehicleStatus.connected", pvtimer: "1:30\u202Fm" }
+      { charger: "Connected.", pvtimer: "1:30\u202Fm" }
     );
   });
   test("don't show pv enable timer if value is zero", () => {
@@ -174,7 +175,7 @@ describe("timer", () => {
         connected: true,
         pvRemainingInterpolated: 0,
       },
-      { charger: "main.vehicleStatus.connected" }
+      { charger: "Connected." }
     );
   });
   test("show pv disable timer if charging and timer exists", () => {
@@ -182,10 +183,11 @@ describe("timer", () => {
       {
         pvAction: "disable",
         connected: true,
+        enabled: true,
         charging: true,
         pvRemainingInterpolated: 90,
       },
-      { charger: "main.vehicleStatus.charging", pvtimer: "1:30\u202Fm" }
+      { charger: "Charging…", pvtimer: "1:30\u202Fm" }
     );
   });
   test("show phase enable timer if it exists", () => {
@@ -193,10 +195,11 @@ describe("timer", () => {
       {
         phaseAction: "scale1p",
         connected: true,
+        enabled: true,
         charging: true,
         phaseRemainingInterpolated: 91,
       },
-      { charger: "main.vehicleStatus.charging", phasetimer: "1:31\u202Fm" }
+      { charger: "Charging…", phasetimer: "1:31\u202Fm" }
     );
   });
   test("show phase disable timer if it exists", () => {
@@ -204,10 +207,11 @@ describe("timer", () => {
       {
         phaseAction: "scale3p",
         connected: true,
+        enabled: true,
         charging: true,
         phaseRemainingInterpolated: 91,
       },
-      { charger: "main.vehicleStatus.charging", phasetimer: "1:31\u202Fm" }
+      { charger: "Charging…", phasetimer: "1:31\u202Fm" }
     );
   });
 });
@@ -221,7 +225,7 @@ describe("vehicle target soc", () => {
         vehicleLimitSoc: 70,
         vehicleSoc: 70,
       },
-      { charger: "main.vehicleStatus.finished", limit: "70 %" }
+      { charger: "Finished.", limit: "70 %" }
     );
   });
   test("show reached message even if vehicle is slightly below its limit", () => {
@@ -232,7 +236,7 @@ describe("vehicle target soc", () => {
         vehicleLimitSoc: 70,
         vehicleSoc: 69,
       },
-      { charger: "main.vehicleStatus.finished", limit: "70 %" }
+      { charger: "Finished.", limit: "70 %" }
     );
   });
 });
@@ -248,7 +252,7 @@ describe("smart grid charging", () => {
         smartCostLimit: 500,
         smartCostType: "co2",
       },
-      { charger: "main.vehicleStatus.charging", smartcost: "≤ 500 g" }
+      { charger: "Charging…", smartcost: "≤ 500 g" }
     );
   });
   test("show clean energy message if active", () => {
@@ -262,7 +266,7 @@ describe("smart grid charging", () => {
         smartCostType: "co2",
         smartCostActive: true,
       },
-      { charger: "main.vehicleStatus.charging", smartcost: "400 g ≤ 500 g" }
+      { charger: "Charging…", smartcost: "400 g ≤ 500 g" }
     );
   });
   test("show cheap energy message", () => {
@@ -275,7 +279,7 @@ describe("smart grid charging", () => {
         smartCostLimit: 0.29,
         currency: CURRENCY.EUR,
       },
-      { charger: "main.vehicleStatus.charging", smartcost: "≤ 29,0 ct" }
+      { charger: "Charging…", smartcost: "≤ 29,0 ct" }
     );
   });
   test("show cheap energy message if active", () => {
@@ -289,7 +293,51 @@ describe("smart grid charging", () => {
         currency: CURRENCY.EUR,
         smartCostActive: true,
       },
-      { charger: "main.vehicleStatus.charging", smartcost: "28,0 ct ≤ 29,0 ct" }
+      { charger: "Charging…", smartcost: "28,0 ct ≤ 29,0 ct" }
+    );
+  });
+});
+
+describe("heating device", () => {
+  test("status text per state", () => {
+    const base = { heating: true };
+    // offline when not connected
+    expectEntries({ ...base, connected: false }, { charger: "Disconnected." });
+    // standby when connected but not enabled
+    expectEntries({ ...base, connected: true }, { charger: "Standby." });
+    // ready to heat when enabled but not yet drawing power
+    expectEntries({ ...base, connected: true, enabled: true }, { charger: "Ready to heat…" });
+    // heating when enabled and drawing power
+    expectEntries(
+      { ...base, connected: true, enabled: true, charging: true },
+      { charger: "Heating…" }
+    );
+    // target reached when temp limit hit
+    expectEntries(
+      { ...base, connected: true, enabled: true, vehicleLimitSoc: 60, vehicleSoc: 60 },
+      { charger: "Finished.", limit: true }
+    );
+  });
+});
+
+describe("continuous heating device (heat pump)", () => {
+  test("status text per state", () => {
+    const base = { heating: true, continuous: true };
+    // not enabled, not drawing → normal operation
+    expectEntries({ ...base, connected: true }, { charger: "Normal operation." });
+    // not enabled but device draws power autonomously → still normal operation
+    expectEntries({ ...base, connected: true, charging: true }, { charger: "Normal operation." });
+    // enabled, not yet drawing → boost requested
+    expectEntries({ ...base, connected: true, enabled: true }, { charger: "Boost requested…" });
+    // enabled and drawing → boost active
+    expectEntries(
+      { ...base, connected: true, enabled: true, charging: true },
+      { charger: "Boost active." }
+    );
+    // limit reached cascades to heatingStatus
+    expectEntries(
+      { ...base, connected: true, enabled: true, vehicleLimitSoc: 60, vehicleSoc: 60 },
+      { charger: "Finished.", limit: true }
     );
   });
 });

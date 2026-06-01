@@ -179,9 +179,7 @@ energy:
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
-    await expect(restResult).toContainText(
-      "yaml: line 2: mapping values are not allowed in this context"
-    );
+    await expect(restResult).toContainText("mapping values are not allowed in this context");
     await expect(editor.locator(".line-numbers.error")).toHaveCount(1);
 
     // invalid field error

@@ -12,11 +12,11 @@ import (
 )
 
 type meter struct {
-	Meter     int     `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
-	Timestamp int64   `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
-	Entity    entity  `json:"-" gorm:"foreignkey:Meter;references:Id"`
-	Import    float64 `json:"import" gorm:"column:import"`
-	Export    float64 `json:"export" gorm:"column:export"`
+	Meter        int     `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
+	Timestamp    int64   `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
+	Entity       entity  `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	Energy       float64 `json:"energy" gorm:"column:energy"`
+	ReturnEnergy float64 `json:"returnEnergy" gorm:"column:return_energy"`
 }
 
 type entity struct {
@@ -36,24 +36,18 @@ func SetupSchema() error {
 	m := db.Instance.Migrator()
 
 	// entites: create entity first to make sure foreign keys for existing data work
-	hasTable := m.HasTable(new(entity))
 	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
 		return err
 	}
 
-	// entites: add entity id 1
-	if hasTable {
-		var res entity
-		if err := db.Instance.Where(&entity{Id: 1, Name: Home}).FirstOrCreate(&res).Error; err != nil {
-			return err
-		}
+	// ensure home entity exists (reserves id=1 for legacy meter FK references)
+	if _, err := createEntity(Home, Home); err != nil {
+		return err
+	}
 
-		if res.Group == "" {
-			res.Group = Home
-			if err := db.Instance.Save(&res).Error; err != nil {
-				return err
-			}
-		}
+	// enable FK constraints only here to make sure entity for metric exists
+	if err := db.Instance.Exec("pragma foreign_keys(1)").Error; err != nil {
+		return err
 	}
 
 	// drop obsolete indexes
@@ -92,6 +86,14 @@ func SetupSchema() error {
 		return err
 	}
 
+	// meter: rename to energy/return_energy
+	if err := rename("import", "energy"); err != nil {
+		return err
+	}
+	if err := rename("export", "return_energy"); err != nil {
+		return err
+	}
+
 	// meter: ts migration
 	if m.HasTable(new(meter)) {
 		types, err := m.ColumnTypes(new(meter))
@@ -121,11 +123,11 @@ func SetupSchema() error {
 }
 
 // persist stores 15min consumption in kWh
-func persist(entity entity, ts time.Time, imp, exp float64) error {
+func persist(entity entity, ts time.Time, energy, returnEnergy float64) error {
 	return db.Instance.Create(&meter{
-		Meter:     entity.Id,
-		Timestamp: ts.Truncate(tariff.SlotDuration).Unix(),
-		Import:    imp,
-		Export:    exp,
+		Meter:        entity.Id,
+		Timestamp:    ts.Truncate(tariff.SlotDuration).Unix(),
+		Energy:       energy,
+		ReturnEnergy: returnEnergy,
 	}).Error
 }

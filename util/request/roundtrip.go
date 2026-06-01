@@ -11,6 +11,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sandrolain/httpcache"
 )
 
 type roundTripper struct {
@@ -90,7 +91,7 @@ func isWebSocket(req *http.Request) bool {
 
 func headerContainsToken(h http.Header, key, token string) bool {
 	for _, v := range h.Values(key) {
-		for _, part := range strings.Split(v, ",") {
+		for part := range strings.SplitSeq(v, ",") {
 			if strings.EqualFold(strings.TrimSpace(part), token) {
 				return true
 			}
@@ -129,8 +130,6 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
-
 	// add evcc user agent
 	if req.Header.Get("User-Agent") == "" {
 		req = req.Clone(req.Context())
@@ -164,6 +163,12 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := r.base.RoundTrip(req)
 
 	reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
+
+	var cached string
+	if err == nil && resp.Header.Get(httpcache.XFromCache) != "" {
+		cached = " CACHED"
+	}
+	r.log.TRACE.Printf("%s%s %s", req.Method, cached, req.URL.String())
 
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)

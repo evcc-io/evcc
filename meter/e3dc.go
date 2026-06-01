@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/templates"
@@ -17,6 +18,7 @@ import (
 )
 
 type E3dc struct {
+	implement.Caps
 	mu             sync.Mutex
 	dischargeLimit uint32
 	externalPower  bool            // whether to include power of external sources
@@ -28,8 +30,6 @@ type E3dc struct {
 func init() {
 	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
-
-//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t api.Battery,api.BatteryCapacity,api.BatteryController,api.BatterySocLimiter,api.BatteryPowerLimiter,api.MaxACPowerGetter
 
 func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
@@ -89,6 +89,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 	}
 
 	m := &E3dc{
+		Caps:           implement.New(),
 		usage:          usage,
 		conn:           conn,
 		externalPower:  externalPower,
@@ -101,20 +102,17 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		return err
 	}
 
-	// decorate battery
-	var (
-		batteryCapacity func() float64
-		batterySoc      func() (float64, error)
-		batteryMode     func(api.BatteryMode) error
-	)
+	implement.May(m, implement.BatterySocLimiter(batterySocLimits))
+	implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
+	implement.May(m, implement.MaxACPowerGetter(maxacpower))
 
 	if usage == templates.UsageBattery {
-		batteryCapacity = capacity
-		batterySoc = m.batterySoc
-		batteryMode = m.setBatteryMode
+		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.Has(m, implement.Battery(m.batterySoc))
+		implement.Has(m, implement.BatteryController(m.setBatteryMode))
 	}
 
-	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode, batterySocLimits, batteryPowerLimits, maxacpower), nil
+	return m, nil
 }
 
 // retryMessage executes a single message request with retry
