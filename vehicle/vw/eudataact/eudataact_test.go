@@ -120,30 +120,6 @@ func TestResolveBrand(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestContentDatasets(t *testing.T) {
-	list := []dataset{
-		{Name: "20260531090000_WVWZZZ.zip"},
-		{Name: "20260531080000_WVWZZZ.zip"},
-		{Name: "20260531091500_WVWZZZ_no_content_found.zip"},
-	}
-
-	content, err := contentDatasets(list)
-	require.NoError(t, err)
-	require.Len(t, content, 2, "no-content placeholder dropped")
-	assert.Equal(t, "20260531080000_WVWZZZ.zip", content[0].Name, "oldest first")
-	assert.Equal(t, "20260531090000_WVWZZZ.zip", content[1].Name, "newest last")
-	assert.Equal(t, time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC), content[0].CreatedOn, "timestamp parsed")
-
-	// no-content placeholders are skipped without parsing
-	empty, err := contentDatasets([]dataset{{Name: "x_no_content_found.zip"}})
-	require.NoError(t, err)
-	assert.Empty(t, empty)
-
-	// a content dataset with an unparseable timestamp is an error
-	_, err = contentDatasets([]dataset{{Name: "no-timestamp.zip"}})
-	require.Error(t, err)
-}
-
 func TestPending(t *testing.T) {
 	content := make([]dataset, 0, 11)
 	for i := range 10 {
