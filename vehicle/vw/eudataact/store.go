@@ -66,12 +66,8 @@ func (s *store) update() (time.Time, error) {
 
 	var newest time.Time
 	for _, d := range list {
-		t, err := d.time()
-		if err != nil {
-			return time.Time{}, err
-		}
-		if t.After(newest) {
-			newest = t
+		if d.CreatedOn.After(newest) {
+			newest = d.CreatedOn
 		}
 	}
 

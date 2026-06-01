@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -81,25 +80,11 @@ type dataset struct {
 	CreatedOn time.Time `json:"createdOn"`
 }
 
-// nameTime parses the compact timestamp the portal prefixes to a dataset file
+// timeFromName parses the compact timestamp the portal prefixes to a dataset file
 // name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip.
-func nameTime(name string) (time.Time, error) {
+func timeFromName(name string) (time.Time, error) {
 	prefix, _, _ := strings.Cut(name, "_")
 	return time.Parse("20060102150405", prefix)
-}
-
-// time parses the delivery time the dataset carries. The portal embeds it in the
-// file name and also delivers it as the createdOn field; the file name is
-// preferred and createdOn is the fallback. An error is returned when neither
-// carries a parseable timestamp.
-func (d dataset) time() (time.Time, error) {
-	if t, err := nameTime(d.Name); err == nil {
-		return t, nil
-	}
-	if !d.CreatedOn.IsZero() {
-		return d.CreatedOn, nil
-	}
-	return time.Time{}, fmt.Errorf("dataset %q: no parseable timestamp", d.Name)
 }
 
 // dataPoint is a single data point as delivered in the dataset JSON document
@@ -146,7 +131,7 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 			continue
 		}
 
-		t, err := d.time()
+		t, err := timeFromName(d.Name)
 		if err != nil {
 			return nil, err
 		}
