@@ -3,6 +3,7 @@ package gigya
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -25,17 +26,17 @@ const (
 
 // Response is a Gigya API response used by Renault login endpoints.
 type Response struct {
-	ErrorCode         int           `json:"errorCode"`
-	ErrorMessage      string        `json:"errorMessage"`
-	ErrorDetails      string        `json:"errorDetails"`
-	RegToken          string        `json:"regToken"`
-	GigyaAssertion    string        `json:"gigyaAssertion"`
-	PHVToken          string        `json:"phvToken"`
-	ProviderAssertion string        `json:"providerAssertion"`
-	SessionInfo       SessionInfo   `json:"sessionInfo"`
-	IDToken           string        `json:"id_token"`
-	Data              Data          `json:"data"`
-	Emails            []EmailRecord `json:"emails"`
+	ErrorCode         int          `json:"errorCode"`
+	ErrorMessage      string       `json:"errorMessage"`
+	ErrorDetails      string       `json:"errorDetails"`
+	RegToken          string       `json:"regToken"`
+	GigyaAssertion    string       `json:"gigyaAssertion"`
+	PHVToken          string       `json:"phvToken"`
+	ProviderAssertion string       `json:"providerAssertion"`
+	SessionInfo       SessionInfo  `json:"sessionInfo"`
+	IDToken           string       `json:"id_token"`
+	Data              Data         `json:"data"`
+	Emails            EmailRecords `json:"emails"`
 }
 
 // SessionInfo contains Gigya session cookie data.
@@ -52,6 +53,58 @@ type Data struct {
 type EmailRecord struct {
 	ID    string `json:"id"`
 	Plain string `json:"plain"`
+}
+
+// EmailRecords accepts the array and object shapes returned by Gigya.
+type EmailRecords []EmailRecord
+
+// UnmarshalJSON decodes Gigya email records.
+func (e *EmailRecords) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		return nil
+	}
+
+	var list []EmailRecord
+	if err := json.Unmarshal(data, &list); err == nil {
+		*e = list
+		return nil
+	}
+
+	var single EmailRecord
+	if err := json.Unmarshal(data, &single); err == nil && (single.ID != "" || single.Plain != "") {
+		*e = []EmailRecord{single}
+		return nil
+	}
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	list = make([]EmailRecord, 0, len(raw))
+	for key, item := range raw {
+		var email EmailRecord
+		if err := json.Unmarshal(item, &email); err == nil && (email.ID != "" || email.Plain != "") {
+			if email.ID == "" {
+				email.ID = key
+			}
+			list = append(list, email)
+			continue
+		}
+
+		var emails []EmailRecord
+		if err := json.Unmarshal(item, &emails); err == nil {
+			for i := range emails {
+				if emails[i].ID == "" && len(emails) == 1 {
+					emails[i].ID = key
+				}
+				list = append(list, emails[i])
+			}
+		}
+	}
+
+	*e = list
+	return nil
 }
 
 // Identity manages Renault Gigya login state.
