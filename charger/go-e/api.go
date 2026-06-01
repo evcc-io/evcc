@@ -84,14 +84,14 @@ func (c *LocalAPI) response(partial string, res any) error {
 // status fetches a fresh v1/v2 api response
 func (c *LocalAPI) status() (Response, error) {
 	if c.v2 {
-		res := new(StatusResponse2)
+		var res StatusResponse2
 		err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
-		return res, err
+		return &res, err
 	}
 
-	res := new(StatusResponse)
+	var res StatusResponse
 	err := c.response("status", &res)
-	return res, err
+	return &res, err
 }
 
 // Status reads a cached v1/v2 api response
