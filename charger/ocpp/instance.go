@@ -101,9 +101,14 @@ func Instance() *CS {
 		go cs.Start(port, "/{ws}")
 
 		// wait for server to start
-		for range time.Tick(10 * time.Millisecond) {
-			if dispatcher.IsRunning() {
-				break
+		tick := time.Tick(10 * time.Millisecond)
+		timeout := time.After(10 * time.Second)
+		for server.Addr() == nil {
+			select {
+			case <-tick:
+			case <-timeout:
+				log.ERROR.Println("timeout waiting for server to bind")
+				return
 			}
 		}
 	})

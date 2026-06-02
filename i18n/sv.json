@@ -717,10 +717,10 @@
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
-      "descriptionToken": "Sponsorer hittar sin token på {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "descriptionToken": "Som GitHub-sponsor hittar du din token på {url}. För att komma igång erbjuder vi en {trialToken}.",
       "email": "Epost",
       "emailHint": "Epost du använt för {url}",
-      "enterYourToken": "Ange sponsor-token",
+      "enterYourToken": "Din sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
       "labelToken": "Sponsor-token",
@@ -731,7 +731,7 @@
       "tokenRequiredShort": "Ingen sponsor-token konfigurerad.",
       "trialToken": "Testtoken",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Din sponsor-token"
+      "yourToken": "Sponsor-token"
     },
     "system": {
       "backupRestore": {
@@ -984,7 +984,7 @@
       "solar": "Förväntat solproduktion idag och imorgon. Kommer i framtiden även att användas för automatisk laddningsoptimering.",
       "title": "Tariffer & prognoser"
     },
-    "hideLine": "göm linje",
+    "hideLine": "göm graf",
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
@@ -1173,10 +1173,10 @@
       "battery": "Batteri",
       "batteryCharge": "Batteri laddas",
       "batteryDischarge": "Batteri laddas ur",
-      "batteryForecastEmpty": "tom {time}",
-      "batteryForecastFull": "full {time}",
-      "batteryForecastNextHigh": "Nästa höjdpunkt",
-      "batteryForecastNextLow": "Nästa lågpunkt",
+      "batteryForecastEmpty": "Tom",
+      "batteryForecastFull": "Full",
+      "batteryForecastNextHigh": "Högsta",
+      "batteryForecastNextLow": "Lägsta",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
       "batteryHold": "Batteri (låst)",
@@ -1197,7 +1197,7 @@
       "charging": "Värmer…",
       "connected": "Standby.",
       "vehicleLimit": "Värmarbegränsning",
-      "waitForVehicle": "Redo, väntar på värmekälla…"
+      "waitForVehicle": "Redo att värma…"
     },
     "hemsWarning": {
       "description": "Reducerad laddning för att inte överskrida {limit}.",
@@ -1430,6 +1430,7 @@
     "meterstop": "Mätare stopp",
     "odometer": "Mätarställning",
     "price": "Pris",
+    "soc": "Fordon SoC",
     "started": "Start-tid",
     "title": "Laddning"
   },
@@ -1437,6 +1438,7 @@
     "avgPower": "⌀-effekt",
     "avgPrice": "⌀-pris",
     "chargeDuration": "Laddtid",
+    "chargedSoc": "Ladda",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Pris {byGroup}",
@@ -1470,6 +1472,8 @@
       "odometer": "Mätarställning (km)",
       "price": "Kostnad",
       "priceperkwh": "Pris/kWh",
+      "socend": "SoC slut (%)",
+      "socstart": "SoC start (%)",
       "solarpercentage": "Sol (%)",
       "vehicle": "Fordon"
     },

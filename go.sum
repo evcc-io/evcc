@@ -37,8 +37,8 @@ github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=
 github.com/andig/go-powerwall v0.3.0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
-github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrRay7YDUZazY8M1u/JHkzwcFEjiilQ=
-github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
+github.com/andig/gosunspec v0.0.0-20260523124210-852310938891 h1:UpjccgGAJV7ce6SmNZn1hVvff3sZ7Fgc4v4TDjUXhkk=
+github.com/andig/gosunspec v0.0.0-20260523124210-852310938891/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=
@@ -408,8 +408,8 @@ github.com/influxdata/influxdb-client-go/v2 v2.14.0/go.mod h1:Ahpm3QXKMJslpXl3If
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf h1:7JTmneyiNEwVBOHSjoMxiWAqB992atOeepeFYegn5RU=
 github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf/go.mod h1:xaLFMmpvUxqXtVkUJfg9QmT88cDaCJ3ZKgdZ78oO8Qo=
-github.com/insomniacslk/tapo v1.0.2 h1:o2Bz941/Kp3LEjO5kvBbAE9Z4z9BcQMXRols3QkTnI0=
-github.com/insomniacslk/tapo v1.0.2/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
+github.com/insomniacslk/tapo v1.1.0 h1:Z1s1EjtdVi1dWheW/gWEZPvppOPneHEUZ/Naw065vnM=
+github.com/insomniacslk/tapo v1.1.0/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
 github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 h1:bVGPuMhjgFtxVdQGfYnFq+EnCqArOAjLNciow/nArwE=
 github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131/go.mod h1:Z4EVr4bVv9LZbbje9xyZEyOLpdCOmCvr5S9BJtrdTfw=
 github.com/itchyny/gojq v0.12.19 h1:ttXA0XCLEMoaLOz5lSeFOZ6u6Q3QxmG46vfgI4O0DEs=

@@ -66,13 +66,17 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	// BatteryCardStatus is the authoritative disconnect signal — the Cupra API
+	// only emits "notConnected" when the cable is unplugged. When the car is
+	// plugged the field is omitted and Status alone is unreliable: it reports
+	// "NotReadyForCharging" both for an unplugged car.
 	// https://github.com/evcc-io/evcc/issues/30045
 	if strings.ToLower(res.Services.Charging.BatteryCardStatus) == "notconnected" {
 		return api.StatusA, nil
 	}
 
 	switch strings.ToLower(res.Services.Charging.Status) {
-	case "connected", "readyforcharging", "error":
+	case "connected", "readyforcharging", "notreadyforcharging", "error", "chargepurposereachedandnotconservationcharging":
 		return api.StatusB, nil
 	case "charging":
 		return api.StatusC, nil

@@ -216,6 +216,18 @@ export default defineComponent({
 					format: (value) => this.fmtWh(value * 1e3, POWER_UNIT.KW, false),
 				},
 				{
+					name: "chargedSoc",
+					unit: "%",
+					total: this.chargedSoc,
+					value: (session) => {
+						if (session.socStart != null && session.socEnd != null) {
+							return Math.max(0, session.socEnd - session.socStart);
+						}
+						return null;
+					},
+					format: (value) => `+${Math.round(value)}`,
+				},
+				{
 					name: "solar",
 					unit: "%",
 					total: this.solarPercentage,
@@ -339,6 +351,16 @@ export default defineComponent({
 		},
 		chargedEnergy() {
 			return this.filteredSessions.reduce((total, s) => total + s.chargedEnergy, 0);
+		},
+		chargedSoc() {
+			const sessions = this.filteredSessions.filter(
+				(s) => s.socStart != null && s.socEnd != null
+			);
+			if (!sessions.length) return null;
+			return sessions.reduce(
+				(total, s) => total + Math.max(0, (s.socEnd || 0) - (s.socStart || 0)),
+				0
+			);
 		},
 		chargeDuration() {
 			return this.filteredSessions.reduce((total, s) => total + s.chargeDuration, 0);
