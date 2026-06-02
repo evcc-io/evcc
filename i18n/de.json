@@ -1403,6 +1403,7 @@
     "updatePassword": "Passwort ändern"
   },
   "session": {
+    "addOdometer": "Wert eintragen",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",

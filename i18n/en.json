@@ -1403,6 +1403,7 @@
     "updatePassword": "Update password"
   },
   "session": {
+    "addOdometer": "Add value",
     "cancel": "Cancel",
     "co2": "CO₂",
     "date": "Period",
