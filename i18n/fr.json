@@ -46,6 +46,10 @@
     "noBattery": "Aucune batterie n'est configurée.",
     "usageTab": "Utilisation batterie"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Couleur héxa"
+  },
   "config": {
     "aux": {
       "description": "Dispositif ajustant sa consommation en fonction du surplus disponible (comme les chauffe-eau intelligents). evcc s'attend à ce que ce dispositif réduise sa consommation d'énergie si nécessaire.",
@@ -789,14 +793,14 @@
       "generic": "Intégrations génériques",
       "grid": {
         "description": "Prix de l'électricité pour la consommation du réseau. Pour calculer les coûts de recharge réels et optimiser le prix de la recharge des véhicules, des appareils de chauffage ou de la recharge de votre batterie domestique à partir du réseau.",
-        "titleAdd": "Ajouter un tarif d'importation de réseau",
-        "titleEdit": "Modifier le tarif d'importation du réseau"
+        "titleAdd": "Ajouter un tarif pour l'import du réseau",
+        "titleEdit": "Modifier le tarif pour l’import du réseau"
       },
       "legacyWarning": "Nouvelle configuration tarifaire disponible ! Supprimez et enregistrez vos tarifs ici pour utiliser le nouveau processus guidé.",
       "option": {
         "co2": "Ajouter les prévisions de CO₂",
         "feedIn": "Ajouter un tarif d'exportation vers le réseau",
-        "grid": "Ajouter un tarif d'importation du réseau",
+        "grid": "Ajouter un tarif pour l’import du réseau",
         "planner": "Ajouter prévisions du planificateur",
         "solar": "Ajouter prévisions solaires"
       },
@@ -884,7 +888,7 @@
       "greenShareSub2": "solaire et stockage batterie",
       "power": "Puissance de charge",
       "powerSub1": "{activeClients} de {totalClients} participants",
-      "powerSub2": "sont en train de charger…",
+      "powerSub2": "sont en train de charger.",
       "tabTitle": "Communauté en ligne"
     },
     "savings": {
@@ -1167,23 +1171,23 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie en charge",
       "batteryDischarge": "Décharge de la batterie",
-      "batteryForecastEmpty": "Vide depuis {time}",
-      "batteryForecastFull": "Plein depuis {time}",
-      "batteryForecastNextHigh": "Prochain pic",
-      "batteryForecastNextLow": "Prochain creux",
+      "batteryForecastEmpty": "Vide",
+      "batteryForecastFull": "Plein",
+      "batteryForecastNextHigh": "Pic",
+      "batteryForecastNextLow": "Creux",
       "batteryGridChargeActive": "Charge réseau : active",
       "batteryGridChargeLimit": "Charge réseau : quand",
       "batteryHold": "Batterie (verrouillée)",
       "batteryTooltip": "{energy} sur {total} ({soc})",
       "forecast": "Prévisions",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
-      "gridImport": "Import depuis le réseau",
+      "gridImport": "Import du réseau",
       "homePower": "Consommation",
       "loadpoints": "Chargeur| Chargeur | {count} chargeurs",
       "loadpointsLimit": "limite à {limit}",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
-      "pvExport": "Injection réseau",
+      "pvExport": "Export surplus",
       "pvProduction": "Production",
       "selfConsumption": "Auto-consommation"
     },
@@ -1423,7 +1427,7 @@
     "meterstart": "Début du Compteur",
     "meterstop": "Fin du Compteur",
     "odometer": "Kilométrage",
-    "price": "Prix",
+    "price": "Coût",
     "started": "Démarré",
     "title": "Session de charge"
   },
@@ -1462,7 +1466,7 @@
       "meterstart": "Début de Compteur (kWh)",
       "meterstop": "Fin de Compteur (kWh)",
       "odometer": "Kilométrage (km)",
-      "price": "Prix",
+      "price": "Coût",
       "priceperkwh": "Prix/kWh",
       "solarpercentage": "Solaire (%)",
       "vehicle": "Véhicule"
@@ -1479,7 +1483,7 @@
     "group": {
       "co2": "Émissions",
       "grid": "Réseau électrique",
-      "price": "Prix",
+      "price": "Coût",
       "self": "Solaire"
     },
     "groupBy": {
@@ -1505,7 +1509,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Prix",
+      "price": "Coût",
       "solar": "Solaire"
     },
     "vehicle": "Véhicule"

@@ -167,6 +167,7 @@
       "powerRange": "Leistung",
       "price": "Preis",
       "range": "Reichweite",
+      "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
       "solarForecast": "PV-Vorhersage",
