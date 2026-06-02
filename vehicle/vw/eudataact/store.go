@@ -72,8 +72,8 @@ func (s *store) state(vin string) *vehicleState {
 
 // update downloads any datasets for vin delivered after the newest one already
 // merged and merges them into the vehicle's map oldest to newest. It returns the
-// newest dataset's delivery time (used to schedule the next poll). On the first poll 
-// only the latest maxBackfill content datasets are downloaded.
+// newest dataset's delivery time (used to schedule the next poll).
+// On first poll latest maxBackfill content datasets are downloaded.
 func (s *store) update(vin string) (time.Time, error) {
 	v := s.state(vin)
 
