@@ -167,6 +167,7 @@
       "powerRange": "Power",
       "price": "Price",
       "range": "Range",
+      "returnEnergy": "Return Energy",
       "singlePhase": "Single phase",
       "soc": "Charge",
       "solarForecast": "Solar forecast",
