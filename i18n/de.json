@@ -1333,6 +1333,7 @@
       "moreActions": "Weitere Aktionen",
       "none": "Kein Fahrzeug",
       "notReachable": "Fahrzeug war nicht erreichbar. Versuche evcc neu zu starten.",
+      "setSoc": "% setzen",
       "targetSoc": "Ladelimit",
       "temp": "Temperatur",
       "tempLimit": "Temperaturlimit",
