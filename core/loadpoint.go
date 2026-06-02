@@ -1850,6 +1850,10 @@ func (lp *Loadpoint) publishSocAndRange() {
 	// manual soc override for offline vehicles or vehicles without soc (#30393)
 	if socR != nil && *socR > 0 {
 		// genuine soc available: real soc wins, drop any manual override
+		if lp.socManual != nil && socEstimator != nil {
+			// re-baseline to the real soc so the prior manual guess doesn't skew the gradient
+			socEstimator.SetSoc(*socR, lp.GetChargedEnergy())
+		}
 		lp.socManual = nil
 	} else if lp.socManual != nil {
 		// seed the estimator with the manual soc so it interpolates from this point

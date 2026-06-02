@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -480,4 +481,59 @@ func TestPublishSocAndRangeManual(t *testing.T) {
 	lp.publishSocAndRange()
 	assert.Equal(t, 73.0, lp.vehicleSoc, "real soc wins")
 	assert.Nil(t, lp.socManual, "manual soc cleared once real soc seen")
+}
+
+func TestPublishSocAndRangeManualToReal(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	clck := clock.NewMock()
+
+	charger := api.NewMockCharger(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(8.5).AnyTimes() // 100 Wh per soc %
+	expectVehiclePublish(vehicle)
+	vehicle.EXPECT().Features().AnyTimes()
+
+	// controllable vehicle soc reading
+	vehSoc, vehErr := 0.0, error(errors.New("offline"))
+	vehicle.EXPECT().Soc().DoAndReturn(func() (float64, error) { return vehSoc, vehErr }).AnyTimes()
+
+	log := util.NewLogger("foo")
+	lp := &Loadpoint{
+		log:          log,
+		bus:          evbus.New(),
+		clock:        clck,
+		charger:      charger,
+		vehicle:      vehicle,
+		chargeMeter:  &Null{},
+		chargeRater:  &Null{},
+		chargeTimer:  &Null{},
+		socEstimator: soc.NewEstimator(log, charger, vehicle),
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		phases:       1,
+		mode:         api.ModeNow,
+		status:       api.StatusC,
+	}
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// manual phase: seed 20% (re-baselines estimator at 0 Wh)
+	require.NoError(t, lp.SetVehicleSoc(20))
+
+	// charge 1000 Wh -> manual extrapolates to 30%
+	lp.energyMetrics.Update(1.0) // 1 kWh = 1000 Wh
+	lp.publishSocAndRange()
+	assert.Equal(t, 30.0, lp.vehicleSoc, "manual extrapolation before real soc")
+
+	// real soc 80% arrives at 1000 Wh -> real wins, estimator re-baselined cleanly
+	vehSoc, vehErr = 80.0, nil
+	lp.publishSocAndRange()
+	assert.Equal(t, 80.0, lp.vehicleSoc, "real soc wins")
+	assert.Nil(t, lp.socManual, "manual cleared once real soc seen")
+
+	// charge another 500 Wh (total 1500) -> 80 + 500/100 = 85 with clean gradient
+	lp.energyMetrics.Update(1.5)
+	lp.publishSocAndRange()
+	assert.Equal(t, 85.0, lp.vehicleSoc, "clean default gradient after transition (not poisoned)")
 }
