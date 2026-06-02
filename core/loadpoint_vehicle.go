@@ -372,7 +372,7 @@ func (lp *Loadpoint) vehicleClimateActive() bool {
 			return active
 		}
 
-		if !errors.Is(err, api.ErrNotAvailable) {
+		if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrAsleep) {
 			lp.log.ERROR.Printf("climater: %v", err)
 		}
 	}

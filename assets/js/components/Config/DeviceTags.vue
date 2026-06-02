@@ -70,6 +70,7 @@
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
+import { distanceValue, distanceUnit } from "@/units";
 
 const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
@@ -208,7 +209,7 @@ export default {
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
-					return `${this.fmtNumber(value, 0)} km`;
+					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
 				case "price":

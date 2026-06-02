@@ -18,11 +18,11 @@ import (
 	"github.com/evcc-io/evcc/vehicle/vag/cariad"
 )
 
-const WellKnown = cariad.BaseURL + "/login/v1/idk/openid-configuration"
+const WellKnown = cariad.BaseURL + "/auth/v1/idk/oidc/openid-configuration"
 
 var Config = &oidc.ProviderConfig{
 	AuthURL:  "https://identity.vwgroup.io/oidc/v1/authorize",
-	TokenURL: cariad.BaseURL + "/login/v1/idk/token",
+	TokenURL: cariad.BaseURL + "/auth/v1/idk/oidc/token",
 }
 
 var _ vag.TokenExchanger = (*Service)(nil)
@@ -42,8 +42,9 @@ func New(log *util.Logger, q url.Values) *Service {
 // https://github.com/arjenvrh/audi_connect_ha/issues/133
 
 const (
-	qmSecret   = "e47866378ef0658ce75d71007a809f34616b9635e2ec228245784c1f63e88d06"
-	qmClientId = "c95f4fd2"
+	qmSecret   = "1ab69925ac179aaa4e83abe671a9476d176418b85bd706f1436ca15be647989c"
+	qmClientId = "01da27b0"
+	userAgent  = "Android/4.31.0 (Build 800341641.root project 'myaudi_android'.ext.buildTime) Android/13"
 )
 
 func qmauth(ts int64) string {
@@ -55,6 +56,21 @@ func qmauth(ts int64) string {
 
 func qmauthNow() string {
 	return "v1:" + qmClientId + ":" + qmauth(time.Now().Unix()/100)
+}
+
+// tokenHeaders returns the assertion header set the IDK token endpoint
+// validates for both authorization_code and refresh_token grants.
+func tokenHeaders() map[string]string {
+	return map[string]string{
+		"Content-Type":           request.FormContent,
+		"Accept":                 request.JSONContent,
+		"Accept-Charset":         "utf-8",
+		"User-Agent":             userAgent,
+		"x-qmauth":               qmauthNow(),
+		"x-platform":             "android",
+		"x-android-package-name": "de.myaudi.mobile.assistant",
+		"x-assertion":            "0",
+	}
 }
 
 // Exchange exchanges an VAG identity token for an IDK token
@@ -74,11 +90,7 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 
 	var res vag.Token
 
-	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": request.FormContent,
-		"Accept":       request.JSONContent,
-		"x-qmauth":     qmauthNow(),
-	})
+	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), tokenHeaders())
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -98,11 +110,7 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 
 	var res vag.Token
 
-	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": request.FormContent,
-		"Accept":       request.JSONContent,
-		"x-qmauth":     qmauthNow(),
-	})
+	req, err := request.New(http.MethodPost, Config.TokenURL, strings.NewReader(data.Encode()), tokenHeaders())
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
