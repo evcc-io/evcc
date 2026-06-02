@@ -107,6 +107,10 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 		implement.Has(sm, implement.MaxACPowerGetter(sm.maxACPower))
 	}
 
+	if !(usage == "pv" && dc) {
+		implement.Has(sm, implement.MeterReturnEnergy(sm.returnEnergy))
+	}
+
 	return sm, nil
 }
 
@@ -156,10 +160,8 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
-var _ api.MeterReturnEnergy = (*SMA)(nil)
-
-// ReturnEnergy implements the api.MeterReturnEnergy interface
-func (sm *SMA) ReturnEnergy() (float64, error) {
+// returnEnergy implements the api.MeterReturnEnergy interface
+func (sm *SMA) returnEnergy() (float64, error) {
 	values, err := sm.device.Values()
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
