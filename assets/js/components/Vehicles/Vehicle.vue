@@ -329,4 +329,9 @@ export default defineComponent({
 	flex-grow: 1;
 	flex-basis: 0;
 }
+.value-button {
+	font-size: 18px;
+	border: none;
+	background: none;
+}
 </style>
