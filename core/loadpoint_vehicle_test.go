@@ -495,7 +495,8 @@ func TestPublishSocAndRangeManualToReal(t *testing.T) {
 	vehicle.EXPECT().Features().AnyTimes()
 
 	// controllable vehicle soc reading
-	vehSoc, vehErr := 0.0, error(errors.New("offline"))
+	vehSoc := 0.0
+	vehErr := errors.New("offline")
 	vehicle.EXPECT().Soc().DoAndReturn(func() (float64, error) { return vehSoc, vehErr }).AnyTimes()
 
 	log := util.NewLogger("foo")
