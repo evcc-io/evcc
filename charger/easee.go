@@ -534,6 +534,14 @@ func (c *Easee) Enable(enable bool) (err error) {
 		}
 	}
 
+	// Easee firmware delays ~5 min when starting at 6A.
+	// Vendor docs recommend 7A minimum, clamp DCC before start.
+	if action == easee.ChargeStart && c.current < 7 {
+		if err := c.MaxCurrent(7); err != nil {
+			return err
+		}
+	}
+
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	if _, err := c.dispatcher.Send(uri, nil); err != nil {
 		return err
