@@ -46,6 +46,7 @@
 						type="number"
 						min="0"
 						max="100"
+						step="1"
 						class="form-control form-control-sm"
 						style="width: 4.5rem"
 						:placeholder="$t('main.vehicle.setSoc')"
@@ -316,8 +317,8 @@ export default defineComponent({
 		},
 		confirmManualSoc() {
 			const value = this.manualSocValue;
-			if (value == null || value < 0 || value > 100) return;
-			this.$emit("vehicle-soc-updated", value);
+			if (value == null || !Number.isFinite(value) || value < 0 || value > 100) return;
+			this.$emit("vehicle-soc-updated", Math.round(value));
 			this.manualSocValue = null;
 		},
 	},
