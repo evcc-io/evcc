@@ -16,7 +16,14 @@ requirements:
 params:
   - preset: vehicle-base
   - preset: vehicle-language
+  - name: region
+    default: Europe
+    choice: ["Europe", "Australia", "New Zealand"]
+    description:
+      en: Region your Bluelink account is registered in
+      de: Region, in der dein Bluelink-Konto registriert ist
 render: |
   type: hyundai
+  region: {{ .region }}
   {{ include "vehicle-base" . }}
   {{ include "vehicle-language" . }}

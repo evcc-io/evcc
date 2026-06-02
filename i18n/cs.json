@@ -827,6 +827,7 @@
         "allMonths": "Všechny měsíce",
         "allTimes": "Všechny časy",
         "cancel": "Zrušit",
+        "charge": "Nabíjet",
         "days": "Dny",
         "edit": "Upravit",
         "hours": "Hodiny",
@@ -1156,17 +1157,24 @@
       "update": "Nastavit",
       "weekdays": "Dny"
     },
+    "continuousStatus": {
+      "charging": "Rychlé dobití aktivní.",
+      "connected": "Standardní režim.",
+      "waitForVehicle": "Rychlé dobití vyžádáno…"
+    },
     "energyflow": {
       "battery": "Baterie domu",
       "batteryCharge": "Nabíjení baterie",
       "batteryDischarge": "Vybíjení baterie",
-      "batteryForecastEmpty": "prázdný {time}",
-      "batteryForecastFull": "plný {time}",
+      "batteryForecastEmpty": "Prázdné od {time}",
+      "batteryForecastFull": "Plný od {time}",
+      "batteryForecastNextHigh": "Příští špička",
+      "batteryForecastNextLow": "Příští nízká",
       "batteryGridChargeActive": "nabíjení domácí baterie ze sítě je aktivní",
       "batteryGridChargeLimit": "nabíjení ze sítě, když",
       "batteryHold": "Baterie (udržování stavu nabití)",
       "batteryTooltip": "{energy} z {total} ({soc})",
-      "forecast": "Předpověď ",
+      "forecast": "Předpověď",
       "forecastTooltip": "předpověď: zbývající solární výroba dnes",
       "gridImport": "Odběr ze sítě",
       "homePower": "Spotřeba domu",
@@ -1182,11 +1190,35 @@
       "charging": "Ohřívání…",
       "connected": "Pohotovostní režim.",
       "vehicleLimit": "Limit topení",
-      "waitForVehicle": "Připraven. Čekám na odpověď topidla…"
+      "waitForVehicle": "Připraven k vytápění…"
     },
     "hemsWarning": {
       "description": "Zpomalené nabíjení zamezující přesáhnutí {limit}.",
       "title": "Externí limit:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "nabito",
+          "returnEnergy": "vybito"
+        },
+        "grid": {
+          "energy": "nakoupeno z distribuce",
+          "returnEnergy": "prodáno do distribuce"
+        }
+      },
+      "downloadCsv": "Stáhnout CSV",
+      "empty": "Pro zvolený úsek nejsou k dispozici historická data.",
+      "group": {
+        "battery": "Baterie",
+        "forecast": "Předpověď",
+        "grid": "Distribuční síť",
+        "loadpoint": "Nabíjení a vytápění",
+        "meter": "Spotřeba",
+        "pv": "Výroba"
+      },
+      "otherConsumers": "Ostatní",
+      "title": "Historie"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
@@ -1459,6 +1491,7 @@
     "odometer": "Kilometry",
     "overview": "Přehled",
     "period": {
+      "day": "Den",
       "month": "Měsíc",
       "total": "Celkem",
       "year": "Rok"

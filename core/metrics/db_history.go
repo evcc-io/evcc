@@ -37,8 +37,9 @@ type Series struct {
 // SeriesCSV wraps a slice of Series for CSV export.
 type SeriesCSV []Series
 
-// csvGroupOrder mirrors the frontend GROUP_ORDER plus home/forecast.
-var csvGroupOrder = []string{PV, Battery, Grid, Loadpoint, Meter, Home, Forecast}
+// GroupOrder is the canonical display order of metric groups, mirroring the
+// frontend GROUP_ORDER plus home/forecast.
+var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Meter, Home, Forecast}
 
 var aggregateFormats = map[string]string{
 	"15m":   "%Y-%m-%d %H:%M",
@@ -147,8 +148,8 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 		byGroup[g] = append(byGroup[g], &s[i])
 	}
 
-	rank := make(map[string]int, len(csvGroupOrder))
-	for i, g := range csvGroupOrder {
+	rank := make(map[string]int, len(GroupOrder))
+	for i, g := range GroupOrder {
 		rank[g] = i
 	}
 	groups := make([]string, 0, len(byGroup))

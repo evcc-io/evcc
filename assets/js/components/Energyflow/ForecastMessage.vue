@@ -19,7 +19,11 @@ export default defineComponent({
 	computed: {
 		label(): string {
 			if (this.point.limit) {
-				return this.$t("main.energyflow.forecast");
+				return this.$t(
+					this.high
+						? "main.energyflow.batteryForecastFull"
+						: "main.energyflow.batteryForecastEmpty"
+				);
 			}
 			return this.$t(
 				this.high
@@ -30,10 +34,7 @@ export default defineComponent({
 		message(): string {
 			const time = this.fmtAbsoluteDate(new Date(this.point.time));
 			if (this.point.limit) {
-				const key = this.high
-					? "main.energyflow.batteryForecastFull"
-					: "main.energyflow.batteryForecastEmpty";
-				return this.$t(key, { time });
+				return time;
 			}
 			const soc = this.fmtPercentage(this.point.soc);
 			return `${time} (${soc})`;

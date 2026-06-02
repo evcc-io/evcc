@@ -46,6 +46,10 @@
     "noBattery": "Keine Batterien konfiguriert.",
     "usageTab": "Batterienutzung"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex-Farbe"
+  },
   "config": {
     "aux": {
       "description": "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist.",
@@ -877,7 +881,7 @@
       "greenShareSub2": "PV und Speicher",
       "power": "Ladeleistung",
       "powerSub1": "{activeClients} von {totalClients} Nutzern",
-      "powerSub2": "laden…",
+      "powerSub2": "laden gerade.",
       "tabTitle": "Live-Community"
     },
     "savings": {
@@ -1152,10 +1156,10 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie laden",
       "batteryDischarge": "Batterie entladen",
-      "batteryForecastEmpty": "Leer ab {time}",
-      "batteryForecastFull": "Voll ab {time}",
-      "batteryForecastNextHigh": "Nächstes Hoch",
-      "batteryForecastNextLow": "Nächstes Tief",
+      "batteryForecastEmpty": "Leer",
+      "batteryForecastFull": "Voll",
+      "batteryForecastNextHigh": "Hoch",
+      "batteryForecastNextLow": "Tief",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryHold": "Batterie (gesperrt)",
@@ -1408,7 +1412,7 @@
     "meterstart": "Anfangszählerstand",
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
-    "price": "Preis",
+    "price": "Kosten",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },
@@ -1447,7 +1451,7 @@
       "meterstart": "Anfangszählerstand (kWh)",
       "meterstop": "Endzählerstand (kWh)",
       "odometer": "Kilometerstand (km)",
-      "price": "Preis",
+      "price": "Kosten",
       "priceperkwh": "Preis/kWh",
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
@@ -1464,7 +1468,7 @@
     "group": {
       "co2": "Emissionen",
       "grid": "Netz",
-      "price": "Preis",
+      "price": "Kosten",
       "self": "Sonne"
     },
     "groupBy": {
@@ -1487,10 +1491,10 @@
     "showIndividualEntries": "Einzelne Ladevorgänge anzeigen",
     "solar": "Sonne",
     "title": "Ladevorgänge",
-    "total": "Insgesamt",
+    "total": "Gesamt",
     "type": {
       "co2": "CO₂",
-      "price": "Preis",
+      "price": "Kosten",
       "solar": "Sonne"
     },
     "vehicle": "Fahrzeug"

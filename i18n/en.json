@@ -46,6 +46,10 @@
     "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex color"
+  },
   "config": {
     "aux": {
       "description": "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed.",
@@ -877,7 +881,7 @@
       "greenShareSub2": "solar, and battery storage",
       "power": "Charging power",
       "powerSub1": "{activeClients} of {totalClients} participants",
-      "powerSub2": "charging…",
+      "powerSub2": "are charging.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -1152,10 +1156,10 @@
       "battery": "Battery",
       "batteryCharge": "Battery charging",
       "batteryDischarge": "Battery discharging",
-      "batteryForecastEmpty": "Empty from {time}",
-      "batteryForecastFull": "Full from {time}",
-      "batteryForecastNextHigh": "Next high",
-      "batteryForecastNextLow": "Next low",
+      "batteryForecastEmpty": "Empty",
+      "batteryForecastFull": "Full",
+      "batteryForecastNextHigh": "High",
+      "batteryForecastNextLow": "Low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryHold": "Battery (locked)",
@@ -1408,7 +1412,7 @@
     "meterstart": "Meter start",
     "meterstop": "Meter stop",
     "odometer": "Mileage",
-    "price": "Price",
+    "price": "Cost",
     "started": "Started",
     "title": "Charging Session"
   },
@@ -1447,7 +1451,7 @@
       "meterstart": "Meter start (kWh)",
       "meterstop": "Meter stop (kWh)",
       "odometer": "Mileage (km)",
-      "price": "Price",
+      "price": "Cost",
       "priceperkwh": "Price/kWh",
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
@@ -1464,7 +1468,7 @@
     "group": {
       "co2": "Emissions",
       "grid": "Grid",
-      "price": "Price",
+      "price": "Cost",
       "self": "Solar"
     },
     "groupBy": {
@@ -1490,7 +1494,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Price",
+      "price": "Cost",
       "solar": "Solar"
     },
     "vehicle": "Vehicle"
