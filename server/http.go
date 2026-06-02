@@ -325,10 +325,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network:         func() any { return new(globalconfig.Network) },         // has default
-			keys.Mqtt:            func() any { return new(globalconfig.Mqtt) },            // has default
-			keys.ModbusProxy:     func() any { return new([]globalconfig.ModbusProxy) },   // slice
-			keys.OcppForwarder:   func() any { return new([]globalconfig.OcppForwarder) }, // slice
+			keys.Network:         func() any { return new(globalconfig.Network) },       // has default
+			keys.Mqtt:            func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.ModbusProxy:     func() any { return new([]globalconfig.ModbusProxy) }, // slice
 			keys.Shm:             func() any { return new(shm.Config) },
 			keys.Influx:          func() any { return new(globalconfig.Influx) },
 			keys.EEBus:           func() any { return new(eebus.Config) },
@@ -337,6 +336,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
 		}
+
+		// ocpp forwarder rules apply at runtime and republish via the ocpp package
+		routes["updateocppforwarder"] = route{Method: "POST", Pattern: "/ocppforwarder", HandlerFunc: updateOcppForwarderHandler}
 
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)

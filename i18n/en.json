@@ -602,13 +602,12 @@
       "warningUrlPath": "The URL usually doesn't need a path. Are you sure this is correct?"
     },
     "ocpp": {
-      "connectedChargers": "Connected chargers",
-      "connectionStatus": "Configured station IDs",
-      "connectionStatusHelp": "Connection status of configured chargers.",
-      "detectedChargers": "Detected station IDs",
-      "detectedHelp": "These chargers have tried to connect to evcc. To use a charger, create a loadpoint with its station ID.",
+      "forwardingConfigured": "Forwarding configured",
+      "forwardingError": "Forwarding error",
+      "forwardingOff": "No forwarding configured",
       "noChargers": "No OCPP chargers detected.",
-      "noStations": "No stations connected",
+      "stations": "Station IDs",
+      "stationsHelp": "Configured and detected chargers. Select a station to forward its OCPP messages to an external server.",
       "status": {
         "configured": "Not connected",
         "connected": "Connected",
@@ -619,42 +618,25 @@
       "urlHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`"
     },
     "ocppforwarder": {
-      "add": "Add rule",
-      "charger": "Charger",
-      "connectionStatus": "Connection status",
-      "description": "Forward OCPP calls to an external server (billing platform, DSO, etc.) in addition to evcc. Use \"*\" as station ID to match all chargers.",
+      "description": "Forward this charger's OCPP messages to an external server (billing platform, DSO, etc.) in addition to evcc.",
+      "editTitle": "OCPP Forward",
       "labelCaCert": "Server certificate (CA)",
       "labelCheckInsecure": "Allow self-signed certificates",
       "labelInsecure": "Certificate validation",
-      "noConnections": "No active charger connections.",
-      "option": {
-        "false": "off",
-        "true": "on"
-      },
-      "password": "Upstream password",
-      "passwordHelp": "Optional password for HTTP Basic Auth to the upstream server. The upstream station ID is used as username.",
+      "password": "Password",
+      "passwordHelp": "Password for HTTP Basic Auth to the upstream server.",
       "readOnly": {
+        "check": "Block commands from the upstream server",
         "help": {
           "false": "Upstream can send commands to the charger via evcc.",
           "true": "Upstream receives all charger messages but cannot send commands. evcc retains exclusive control."
         },
-        "label": "Read-only"
+        "label": "Upstream commands"
       },
-      "rule": "Rule {number}",
-      "stationId": "Station ID",
-      "stationIdHelp": "Station ID of the charger, or \"*\" to match all chargers without a specific rule.",
-      "title": "OCPP Forwarder",
-      "upstream": "Upstream",
-      "upstreamConnected": "Connected",
-      "upstreamConnectedHelp": "A charger is connected and the upstream link is alive.",
-      "upstreamDisconnected": "Disconnected",
-      "upstreamDisconnectedHelp": "A charger is connected but the upstream dial failed.",
-      "upstreamIdle": "No charger",
-      "upstreamIdleHelp": "Forwarder is enabled but no charger has connected through this rule yet.",
-      "upstreamStationId": "Upstream station ID",
-      "upstreamStationIdHelp": "Override the station ID sent to the upstream server. Leave empty to use the charger's own ID.",
+      "upstreamStationId": "Station ID / Username",
+      "upstreamStationIdHelp": "Station ID sent to the upstream server. Also used as the HTTP Basic Auth username.",
       "upstreamUrl": "Upstream server URL",
-      "upstreamUrlHelp": "OCPP WebSocket URL of the external server (e.g. wss://billing.example.com/ocpp)."
+      "upstreamUrlHelp": "OCPP WebSocket URL of the external server."
     },
     "optimizer": {
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",

@@ -45,9 +45,52 @@ test.describe("ocpp", () => {
     await page.goto("/#/config");
     await ocppCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(ocppModal);
-    await expect(ocppModal).toContainText("Detected station IDs");
-    await expect(ocppModal).toContainText([OCPP_STATION_ID, "Unknown"].join(""));
+    await expect(ocppModal).toContainText("Station IDs");
+    const station = ocppModal.getByTestId("ocpp-station");
+    await expect(station).toContainText(OCPP_STATION_ID);
+    await expect(station).toContainText("Unknown");
     await expect(ocppModal).not.toContainText("No OCPP chargers detected.");
+  });
+
+  test("ocpp forwarder", async ({ page }) => {
+    await page.goto("/#/config");
+
+    // open OCPP modal and read the server URL
+    const ocppCard = page.getByTestId("ocpp");
+    const ocppModal = page.getByTestId("ocpp-modal");
+    await ocppCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(ocppModal);
+    const serverUrl = await ocppModal.getByLabel("Server URL").inputValue();
+
+    // connect a station via the simulator
+    await page.goto(simulatorUrl());
+    const addClientCard = page.getByTestId("ocpp-add-client");
+    await addClientCard.getByLabel("Server URL").fill(serverUrl);
+    await addClientCard.getByLabel("Station ID").fill(OCPP_STATION_ID);
+    await addClientCard.getByRole("button", { name: "Connect" }).click();
+
+    // back in evcc: open the forwarder editor for the station
+    await page.goto("/#/config");
+    await ocppCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(ocppModal);
+    const station = ocppModal.getByTestId("ocpp-station").filter({ hasText: OCPP_STATION_ID });
+    await station.getByRole("button", { name: "No forwarding configured" }).click();
+
+    const forwarderModal = page.getByTestId("ocppforwarder-modal");
+    await expectModalVisible(forwarderModal);
+    await forwarderModal.getByLabel("Upstream server URL").fill("ws://localhost:1/ocpp");
+    await forwarderModal.getByRole("button", { name: "Save" }).click();
+
+    // upstream is unreachable, so forwarding shows an error
+    await expectModalVisible(ocppModal);
+    await expect(station.getByRole("button", { name: "Forwarding error" })).toBeVisible();
+
+    // remove the rule again
+    await station.getByRole("button", { name: "Forwarding error" }).click();
+    await expectModalVisible(forwarderModal);
+    await forwarderModal.getByRole("button", { name: "Remove" }).click();
+    await expectModalVisible(ocppModal);
+    await expect(station.getByRole("button", { name: "No forwarding configured" })).toBeVisible();
   });
 
   test("create ocpp charger", async ({ page }) => {

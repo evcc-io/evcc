@@ -602,13 +602,12 @@
       "warningUrlPath": "Die URL benötigt normalerweise keinen Pfad. Bist du dir sicher?"
     },
     "ocpp": {
-      "connectedChargers": "Verbundene Wallboxen",
-      "connectionStatus": "Konfigurierte Station-IDs",
-      "connectionStatusHelp": "Verbindungsstatus der konfigurierten Wallboxen.",
-      "detectedChargers": "Erkannte Station-IDs",
-      "detectedHelp": "Diese Wallboxen haben versucht, sich mit evcc zu verbinden. Um eine Wallbox zu verwenden, erstelle einen Ladepunkt mit ihrer Station-ID.",
+      "forwardingConfigured": "Weiterleitung konfiguriert",
+      "forwardingError": "Weiterleitungsfehler",
+      "forwardingOff": "Keine Weiterleitung konfiguriert",
       "noChargers": "Keine OCPP-Wallboxen erkannt.",
-      "noStations": "Keine Stationen verbunden",
+      "stations": "Station-IDs",
+      "stationsHelp": "Konfigurierte und erkannte Wallboxen. Wähle eine Station, um ihre OCPP-Nachrichten an einen externen Server weiterzuleiten.",
       "status": {
         "configured": "Nicht verbunden",
         "connected": "Verbunden",
@@ -617,6 +616,27 @@
       "title": "OCPP Server",
       "url": "Server-URL",
       "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Leite die OCPP-Nachrichten dieser Wallbox zusätzlich zu evcc an einen externen Server weiter (Abrechnungsplattform, Netzbetreiber usw.).",
+      "editTitle": "OCPP-Weiterleitung",
+      "labelCaCert": "Serverzertifikat (CA)",
+      "labelCheckInsecure": "Selbstsignierte Zertifikate erlauben",
+      "labelInsecure": "Zertifikatsprüfung",
+      "password": "Passwort",
+      "passwordHelp": "Passwort für HTTP-Basic-Auth am Upstream-Server.",
+      "readOnly": {
+        "check": "Befehle vom Upstream-Server blockieren",
+        "help": {
+          "false": "Der Upstream kann über evcc Befehle an die Wallbox senden.",
+          "true": "Der Upstream empfängt alle Wallbox-Nachrichten, kann aber keine Befehle senden. evcc behält die alleinige Kontrolle."
+        },
+        "label": "Upstream-Befehle"
+      },
+      "upstreamStationId": "Station-ID / Benutzername",
+      "upstreamStationIdHelp": "Station-ID, die an den Upstream-Server gesendet wird. Wird auch als Benutzername für HTTP-Basic-Auth verwendet.",
+      "upstreamUrl": "Upstream-Server-URL",
+      "upstreamUrlHelp": "OCPP-WebSocket-URL des externen Servers."
     },
     "optimizer": {
       "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",

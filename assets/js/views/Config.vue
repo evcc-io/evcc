@@ -309,18 +309,6 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
-						:title="$t('config.ocppforwarder.title')"
-						editable
-						:unconfigured="isUnconfigured(ocppforwarderTags)"
-						data-testid="ocppforwarder"
-						@edit="openModal('ocppforwarder')"
-					>
-						<template #icon><OcppForwarderIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="ocppforwarderTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
 						:title="$t('config.hems.title')"
 						editable
 						:error="hasClassError('hems')"
@@ -461,7 +449,7 @@
 					:yamlSource="eebus?.yamlSource"
 					@changed="loadDirty"
 				/>
-				<OcppModal :ocpp="ocpp" />
+				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
 				<OcppForwarderModal @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
@@ -490,7 +478,6 @@ import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
 import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
-import OcppForwarderIcon from "../components/MaterialIcon/OcppForwarder.vue";
 import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
@@ -582,7 +569,6 @@ export default defineComponent({
 		EebusModal,
 		OcppIcon,
 		OcppModal,
-		OcppForwarderIcon,
 		OcppForwarderModal,
 		GeneralConfig,
 		HemsIcon,
@@ -867,12 +853,17 @@ export default defineComponent({
 			}
 			return { configured: { value: false } };
 		},
-		ocppforwarderTags(): DeviceTags {
-			const rules = store.state?.ocppforwarder || [];
-			if (rules.length > 0) {
-				return { amount: { value: rules.length } };
-			}
-			return { configured: { value: false } };
+		// maps an OCPP station id to its loadpoint title (fallback: charger title)
+		stationTitles(): Record<string, string> {
+			const map: Record<string, string> = {};
+			this.chargers.forEach((charger) => {
+				const stationId = charger.config?.["stationid"];
+				if (typeof stationId !== "string" || !stationId) return;
+				const loadpoint = this.loadpoints.find((lp) => lp.charger === charger.name);
+				const title = loadpoint?.title || charger.config?.title;
+				if (title) map[stationId] = title;
+			});
+			return map;
 		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {

@@ -1,224 +1,153 @@
 <template>
 	<JsonModal
 		name="ocppforwarder"
-		:title="$t('config.ocppforwarder.title')"
+		:title="$t('config.ocppforwarder.editTitle')"
 		:description="$t('config.ocppforwarder.description')"
 		endpoint="/config/ocppforwarder"
-		state-key="ocppforwarder"
-		store-values-in-array
-		disable-remove
-		size="xl"
+		state-key="ocppforwarder.config"
+		no-buttons
+		:transform-read-values="transformReadValues"
+		:transform-write-values="transformWriteValues"
 		@changed="$emit('changed')"
 	>
-		<template #default="{ values }: { values: OcppForwarderRule[] }">
-			<div class="mb-3">
-				<div v-for="(rule, index) in values" :key="index" data-testid="ocppforwarder-rule">
-					<div class="d-block">
-						<hr class="mt-5" />
-						<h5>
-							<div class="inner mb-4">
-								{{ $t("config.ocppforwarder.rule", { number: index + 1 }) }}
-							</div>
-						</h5>
-					</div>
-					<div class="row d-inline d-lg-flex mb-3">
-						<div class="col-lg-5" data-testid="charger-box">
-							<div class="border rounded px-3 pt-4 pb-3">
-								<div class="d-lg-block">
-									<h5 class="box-heading">
-										<div class="inner">
-											{{ $t("config.ocppforwarder.charger") }}
-										</div>
-									</h5>
-								</div>
-								<FormRow
-									:id="`ocppforwarderStationId-${index}`"
-									:label="$t('config.ocppforwarder.stationId')"
-									:help="$t('config.ocppforwarder.stationIdHelp')"
-								>
-									<input
-										:id="`ocppforwarderStationId-${index}`"
-										v-model="rule.stationId"
-										type="text"
-										class="form-control"
-										placeholder="*"
-										spellcheck="false"
-										autocomplete="off"
-										required
-									/>
-								</FormRow>
-							</div>
+		<template
+			#default="{
+				values,
+				changes,
+				save,
+			}: {
+				values: OcppForwarderRule;
+				changes: boolean;
+				save: () => void;
+			}"
+		>
+			<div
+				v-if="sessionError"
+				class="alert alert-danger"
+				role="alert"
+				data-testid="ocppforwarder-error"
+			>
+				{{ sessionError }}
+			</div>
+			<FormRow
+				id="ocppforwarderUpstreamUrl"
+				:label="$t('config.ocppforwarder.upstreamUrl')"
+				:help="$t('config.ocppforwarder.upstreamUrlHelp')"
+				example="wss://billing.example.com/ocpp"
+			>
+				<input
+					id="ocppforwarderUpstreamUrl"
+					v-model="values.upstreamUrl"
+					type="text"
+					class="form-control"
+					inputmode="url"
+					spellcheck="false"
+					autocomplete="off"
+					required
+				/>
+			</FormRow>
+			<FormRow
+				id="ocppforwarderUpstreamStationId"
+				:label="$t('config.ocppforwarder.upstreamStationId')"
+				:help="$t('config.ocppforwarder.upstreamStationIdHelp')"
+				optional
+			>
+				<input
+					id="ocppforwarderUpstreamStationId"
+					v-model="values.upstreamStationId"
+					type="text"
+					class="form-control"
+					spellcheck="false"
+					autocomplete="off"
+				/>
+			</FormRow>
+			<FormRow
+				id="ocppforwarderPassword"
+				:label="$t('config.ocppforwarder.password')"
+				:help="$t('config.ocppforwarder.passwordHelp')"
+				optional
+			>
+				<input
+					id="ocppforwarderPassword"
+					v-model="values.password"
+					type="password"
+					class="form-control"
+					autocomplete="new-password"
+				/>
+			</FormRow>
+			<PropertyCollapsible>
+				<template #advanced>
+					<FormRow
+						id="ocppforwarderReadOnly"
+						:label="$t('config.ocppforwarder.readOnly.label')"
+						:help="getReadOnlyHelp(values.readOnly)"
+					>
+						<div class="d-flex">
+							<input
+								id="ocppforwarderReadOnly"
+								v-model="values.readOnly"
+								class="form-check-input"
+								type="checkbox"
+							/>
+							<label class="form-check-label ms-2" for="ocppforwarderReadOnly">
+								{{ $t("config.ocppforwarder.readOnly.check") }}
+							</label>
 						</div>
-						<div
-							class="col-lg-2 d-none d-lg-flex justify-content-center evcc-gray"
-							style="padding-top: 2.5rem"
-						>
-							<shopicon-regular-arrowright
-								size="l"
-								class="flex-shrink-0"
-							></shopicon-regular-arrowright>
+					</FormRow>
+					<FormRow
+						id="ocppforwarderInsecure"
+						:label="$t('config.ocppforwarder.labelInsecure')"
+					>
+						<div class="d-flex">
+							<input
+								id="ocppforwarderInsecure"
+								v-model="values.insecure"
+								class="form-check-input"
+								type="checkbox"
+							/>
+							<label class="form-check-label ms-2" for="ocppforwarderInsecure">
+								{{ $t("config.ocppforwarder.labelCheckInsecure") }}
+							</label>
 						</div>
-						<div class="col d-flex d-lg-none justify-content-center evcc-gray my-3">
-							<shopicon-regular-arrowdown
-								size="l"
-								class="flex-shrink-0"
-							></shopicon-regular-arrowdown>
-						</div>
-						<div class="col-lg-5" data-testid="upstream-box">
-							<div class="border rounded px-3 pt-4 pb-3">
-								<div class="d-lg-block">
-									<h5 class="box-heading">
-										<div class="inner">
-											{{ $t("config.ocppforwarder.upstream") }}
-										</div>
-									</h5>
-								</div>
-								<FormRow
-									:id="`ocppforwarderUpstreamUrl-${index}`"
-									:label="$t('config.ocppforwarder.upstreamUrl')"
-									:help="$t('config.ocppforwarder.upstreamUrlHelp')"
-								>
-									<div class="d-flex align-items-center gap-2">
-										<input
-											:id="`ocppforwarderUpstreamUrl-${index}`"
-											v-model="rule.upstreamUrl"
-											type="text"
-											class="form-control"
-											inputmode="url"
-											spellcheck="false"
-											autocomplete="off"
-											required
-										/>
-										<span
-											v-if="rule.upstreamUrl"
-											class="badge flex-shrink-0"
-											:class="upstreamStatusClass(rule.upstreamUrl)"
-											:title="
-												$t(
-													`config.ocppforwarder.${upstreamStatusKey(rule.upstreamUrl)}Help`
-												)
-											"
-											data-bs-toggle="tooltip"
-										>
-											{{
-												$t(
-													`config.ocppforwarder.${upstreamStatusKey(rule.upstreamUrl)}`
-												)
-											}}
-										</span>
-									</div>
-								</FormRow>
-								<FormRow
-									:id="`ocppforwarderUpstreamStationId-${index}`"
-									:label="$t('config.ocppforwarder.upstreamStationId')"
-									:help="$t('config.ocppforwarder.upstreamStationIdHelp')"
-								>
-									<input
-										:id="`ocppforwarderUpstreamStationId-${index}`"
-										v-model="rule.upstreamStationId"
-										type="text"
-										class="form-control"
-										:placeholder="rule.stationId"
-										spellcheck="false"
-										autocomplete="off"
-									/>
-								</FormRow>
-								<FormRow
-									:id="`ocppforwarderPassword-${index}`"
-									:label="$t('config.ocppforwarder.password')"
-									:help="$t('config.ocppforwarder.passwordHelp')"
-								>
-									<input
-										:id="`ocppforwarderPassword-${index}`"
-										v-model="rule.password"
-										type="password"
-										class="form-control"
-										autocomplete="new-password"
-									/>
-								</FormRow>
-								<FormRow
-									:id="`ocppforwarderInsecure-${index}`"
-									:label="$t('config.ocppforwarder.labelInsecure')"
-								>
-									<div class="d-flex">
-										<input
-											:id="`ocppforwarderInsecure-${index}`"
-											v-model="rule.insecure"
-											class="form-check-input"
-											type="checkbox"
-										/>
-										<label
-											class="form-check-label ms-2"
-											:for="`ocppforwarderInsecure-${index}`"
-										>
-											{{ $t("config.ocppforwarder.labelCheckInsecure") }}
-										</label>
-									</div>
-								</FormRow>
-								<PropertyCollapsible>
-									<template #advanced>
-										<FormRow
-											:id="`ocppforwarderCaCert-${index}`"
-											:label="$t('config.ocppforwarder.labelCaCert')"
-											optional
-										>
-											<PropertyCertField
-												:id="`ocppforwarderCaCert-${index}`"
-												v-model="rule.caCert"
-											/>
-										</FormRow>
-										<FormRow
-											:id="`ocppforwarderReadOnly-${index}`"
-											:label="$t('config.ocppforwarder.readOnly.label')"
-											:help="getReadOnlyHelp(rule.readOnly)"
-										>
-											<SelectGroup
-												:id="`ocppforwarderReadOnly-${index}`"
-												:model-value="rule.readOnly ? 'true' : 'false'"
-												class="w-100"
-												:options="readOnlyOptions"
-												transparent
-												@update:model-value="
-													rule.readOnly = $event === 'true'
-												"
-											/>
-										</FormRow>
-									</template>
-								</PropertyCollapsible>
-							</div>
-						</div>
-					</div>
+					</FormRow>
+					<FormRow
+						id="ocppforwarderCaCert"
+						:label="$t('config.ocppforwarder.labelCaCert')"
+						optional
+					>
+						<PropertyCertField id="ocppforwarderCaCert" v-model="values.caCert" />
+					</FormRow>
+				</template>
+			</PropertyCollapsible>
+
+			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
+				<div
+					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
+				>
 					<button
 						type="button"
-						class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray ms-auto"
-						:aria-label="$t('config.general.remove')"
-						tabindex="0"
-						@click="values.splice(index, 1)"
+						class="btn btn-link text-muted btn-cancel"
+						data-bs-dismiss="modal"
 					>
-						<shopicon-regular-trash
-							size="s"
-							class="flex-shrink-0"
-						></shopicon-regular-trash>
+						{{ $t("config.general.cancel") }}
+					</button>
+					<button
+						v-if="ruleExists"
+						type="button"
+						class="btn btn-link text-danger"
+						:disabled="removing"
+						@click="removeRule"
+					>
 						{{ $t("config.general.remove") }}
 					</button>
 				</div>
-
-				<hr class="my-5" />
-
 				<button
-					type="button"
-					class="d-flex btn btn-sm align-items-center gap-2 mb-5"
-					:class="
-						values.length === 0
-							? 'btn-secondary'
-							: 'btn-outline-secondary border-0 evcc-gray'
-					"
-					data-testid="ocppforwarder-add"
-					tabindex="0"
-					@click="addRule(values)"
+					type="submit"
+					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
+					:disabled="!changes"
+					@click.prevent="save()"
 				>
-					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
-					{{ $t("config.ocppforwarder.add") }}
+					{{ $t("config.general.save") }}
 				</button>
 			</div>
 		</template>
@@ -226,80 +155,83 @@
 </template>
 
 <script lang="ts">
-import "@h2d2/shopicons/es/regular/arrowright";
-import "@h2d2/shopicons/es/regular/arrowdown";
-import "@h2d2/shopicons/es/regular/plus";
-import "@h2d2/shopicons/es/regular/trash";
 import { defineComponent } from "vue";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
-import SelectGroup from "@/components/Helper/SelectGroup.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyCertField from "./PropertyCertField.vue";
-import type { OcppForwarderRule, OcppForwarderSession } from "@/types/evcc";
+import type { OcppForwarderRule } from "@/types/evcc";
+import { getModal, closeModal } from "@/configModal";
+import api from "@/api";
 import store from "@/store";
 
 export default defineComponent({
 	name: "OcppForwarderModal",
-	components: { JsonModal, FormRow, SelectGroup, PropertyCollapsible, PropertyCertField },
+	components: { JsonModal, FormRow, PropertyCollapsible, PropertyCertField },
 	emits: ["changed"],
+	data() {
+		return { removing: false };
+	},
 	computed: {
-		sessions(): OcppForwarderSession[] {
-			return store.state?.ocppforwarder?.status || [];
+		// station id the modal is editing, carried via the config modal stack
+		targetStationId(): string {
+			return getModal("ocppforwarder")?.station || "";
 		},
-		readOnlyOptions() {
-			return ["false", "true"].map((value) => ({
-				value,
-				name: this.$t(`config.ocppforwarder.option.${value}`),
-			}));
+		rules(): OcppForwarderRule[] {
+			return store.state?.ocppforwarder?.config || [];
+		},
+		ruleExists(): boolean {
+			return this.rules.some((r) => r.stationId === this.targetStationId);
+		},
+		sessionError(): string | undefined {
+			return store.state?.ocppforwarder?.status?.find(
+				(s) => s.chargerId === this.targetStationId
+			)?.error;
 		},
 	},
 	methods: {
 		getReadOnlyHelp(readOnly?: boolean): string {
 			return this.$t(`config.ocppforwarder.readOnly.help.${readOnly ? "true" : "false"}`);
 		},
-		// Returns true if any active session has an upstream connection to this URL.
-		upstreamStatusKey(url: string): string {
-			if (!this.sessions.length) return "upstreamIdle";
-			const base = url.replace(/\/$/, "");
-			const connected = this.sessions.some(
-				(s) => s.upstreamUrl === base && s.upstreamConnected
-			);
-			return connected ? "upstreamConnected" : "upstreamDisconnected";
+		// pick the rule for the target station, or seed a new one prefilled with the station id
+		transformReadValues(rules: OcppForwarderRule[]): OcppForwarderRule {
+			const list = Array.isArray(rules) ? rules : [];
+			const existing = list.find((r) => r.stationId === this.targetStationId);
+			return existing
+				? { ...existing }
+				: {
+						stationId: this.targetStationId,
+						upstreamUrl: "",
+						upstreamStationId: this.targetStationId,
+					};
 		},
-		upstreamStatusClass(url: string): string {
-			if (!this.sessions.length) return "bg-secondary";
-			const base = url.replace(/\/$/, "");
-			const connected = this.sessions.some(
-				(s) => s.upstreamUrl === base && s.upstreamConnected
-			);
-			return connected ? "bg-success" : "bg-warning";
+		// merge the edited rule back into the complete set that gets persisted
+		transformWriteValues(rule: OcppForwarderRule): OcppForwarderRule[] {
+			const list = this.rules.map((r) => ({ ...r }));
+			const index = list.findIndex((r) => r.stationId === rule.stationId);
+			if (index >= 0) {
+				list[index] = rule;
+			} else {
+				list.push(rule);
+			}
+			return list;
 		},
-		addRule(values: OcppForwarderRule[]) {
-			values.push({ stationId: "", upstreamUrl: "" });
+		async removeRule() {
+			this.removing = true;
+			try {
+				const list = this.rules.filter((r) => r.stationId !== this.targetStationId);
+				const res = await api.post("/config/ocppforwarder", list, {
+					validateStatus: (code: number) => [200, 202, 400].includes(code),
+				});
+				if (res.status === 200 || res.status === 202) {
+					this.$emit("changed");
+					await closeModal();
+				}
+			} catch (e) {
+				console.error(e);
+			}
+			this.removing = false;
 		},
 	},
 });
 </script>
-
-<style scoped>
-h5 {
-	position: relative;
-	display: flex;
-	top: -25px;
-	margin-bottom: -0.5rem;
-	padding: 0 0.5rem;
-	justify-content: center;
-}
-h5.box-heading {
-	top: -34px;
-	margin-bottom: -24px;
-}
-h5 .inner {
-	padding: 0 0.5rem;
-	background-color: var(--evcc-box);
-	font-weight: normal;
-	color: var(--evcc-gray);
-	text-align: center;
-}
-</style>

@@ -152,6 +152,7 @@ export interface OcppForwarderSession {
   chargerId: string;
   upstreamUrl: string;
   upstreamConnected: boolean;
+  error?: string;
 }
 
 export interface OcppStatus {

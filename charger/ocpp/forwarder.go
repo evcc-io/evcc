@@ -70,11 +70,91 @@ func ForwarderEnabled() bool {
 }
 
 // ApplyForwarderRules updates the forwarding rules at runtime.
-// Takes effect immediately for new charger connections.
+// Takes effect immediately for new charger connections and republishes the
+// current rules and session status to the UI.
 func ApplyForwarderRules(rules []ForwarderRule) {
 	forwarderMu.Lock()
 	forwarderRules = rules
 	forwarderMu.Unlock()
+
+	valid := make(map[string]bool, len(rules))
+	for _, r := range rules {
+		valid[r.StationID] = true
+	}
+	sidecarsMu.Lock()
+	for id := range forwarderErrors {
+		if !valid[id] {
+			delete(forwarderErrors, id)
+		}
+	}
+	sidecarsMu.Unlock()
+
+	// validate upstreams without an active sidecar so config errors surface before a charger connects
+	for _, r := range rules {
+		if r.StationID == "*" || r.UpstreamURL == "" {
+			continue
+		}
+		sidecarsMu.Lock()
+		_, active := sidecars[r.StationID]
+		sidecarsMu.Unlock()
+		if !active {
+			go validateUpstream(r.StationID, r)
+		}
+	}
+
+	notifyUpdated()
+}
+
+// validateUpstream test-dials a rule's upstream (when no charger is connected) and
+// records or clears the error so the UI reflects unreachable hosts immediately.
+func validateUpstream(id string, rule ForwarderRule) {
+	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
+	upstreamPath := "/" + strings.TrimLeft(rule.UpstreamStationID, "/")
+
+	tlsConfig := &tls.Config{InsecureSkipVerify: rule.Insecure}
+	if rule.CaCert != "" {
+		caCertPool := x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM([]byte(rule.CaCert)); !ok {
+			recordForwarderError(id, "invalid CA certificate")
+			notifyUpdated()
+			return
+		}
+		tlsConfig.RootCAs = caCertPool
+	}
+
+	var header http.Header
+	if rule.Password != "" {
+		header = authHeader(strings.TrimLeft(upstreamPath, "/"), rule.Password)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	conn, _, err := websocket.Dial(ctx, upstreamBase+upstreamPath, &websocket.DialOptions{
+		Subprotocols: []string{"ocpp1.6"},
+		HTTPHeader:   header,
+		HTTPClient:   &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
+	})
+	cancel()
+
+	// a charger may have connected meanwhile; its sidecar is authoritative
+	sidecarsMu.Lock()
+	_, active := sidecars[id]
+	sidecarsMu.Unlock()
+	if active {
+		if conn != nil {
+			conn.CloseNow()
+		}
+		return
+	}
+
+	if err != nil {
+		recordForwarderError(id, err.Error())
+		notifyUpdated()
+		return
+	}
+	conn.Close(websocket.StatusNormalClosure, "")
+	if clearForwarderError(id) {
+		notifyUpdated()
+	}
 }
 
 // ForwarderRules returns the current forwarding rules.
@@ -145,6 +225,9 @@ var (
 	sidecarsMu sync.Mutex
 	sidecars   = make(map[string]*sidecar)
 
+	// last upstream failure per charger, surfaced to the UI; guarded by sidecarsMu
+	forwarderErrors = make(map[string]string)
+
 	// pendingMsgs holds raw frames received from a charger while the upstream
 	// sidecar is still being dialled.  Once the sidecar connects the buffered
 	// frames are flushed in order, ensuring that BootNotification (and any
@@ -193,10 +276,7 @@ func onChargerConnect(ch ws.Channel) {
 
 func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
-	upstreamPath := "/" + strings.TrimLeft(id, "/")
-	if rule.UpstreamStationID != "" {
-		upstreamPath = "/" + strings.TrimLeft(rule.UpstreamStationID, "/")
-	}
+	upstreamPath := "/" + strings.TrimLeft(rule.UpstreamStationID, "/")
 
 	var header http.Header
 	if rule.Password != "" {
@@ -209,6 +289,8 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 		caCertPool := x509.NewCertPool()
 		if ok := caCertPool.AppendCertsFromPEM([]byte(rule.CaCert)); !ok {
 			forwarderLog.WARN.Printf("forwarder: failed to parse CA cert for %s — forwarding disabled", id)
+			recordForwarderError(id, "invalid CA certificate")
+			notifyUpdated()
 			drainPendingWithErrors(id, nil)
 			return
 		}
@@ -224,6 +306,8 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	cancel()
 	if err != nil {
 		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v — forwarding disabled", id, err)
+		recordForwarderError(id, err.Error())
+		notifyUpdated()
 		drainPendingWithErrors(id, nil)
 		return
 	}
@@ -265,6 +349,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 		if err := conn.Write(context.Background(), websocket.MessageText, frame); err != nil {
 			forwarderLog.ERROR.Printf("forwarder: write buffered frame to upstream for %s: %v", id, err)
 			conn.CloseNow()
+			recordForwarderError(id, err.Error())
 			notifyUpdated()
 			return
 		}
@@ -275,6 +360,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 			flushed, id, len(buffered)-flushed)
 	}
 
+	clearForwarderError(id)
 	notifyUpdated()
 	forwarderLog.INFO.Printf("forwarder: %s → %s", id, upstreamBase+upstreamPath)
 
@@ -343,11 +429,15 @@ func onChargerDisconnect(ch ws.Channel) {
 	if ok {
 		delete(sidecars, id)
 	}
+	_, hadErr := forwarderErrors[id]
+	delete(forwarderErrors, id)
 	sidecarsMu.Unlock()
 	if ok {
 		sc.conn.CloseNow()
-		notifyUpdated()
 		forwarderLog.DEBUG.Printf("forwarder: %s upstream connection closed", id)
+	}
+	if ok || hadErr {
+		notifyUpdated()
 	}
 }
 
@@ -467,6 +557,13 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 		_, msg, err := sc.conn.Read(context.Background())
 		if err != nil {
 			forwarderLog.DEBUG.Printf("forwarder: upstream disconnected for %s: %v", sc.chargerID, err)
+			// charger disconnect deletes the sidecar first, so a still-current sidecar means upstream dropped
+			sidecarsMu.Lock()
+			upstreamDrop := sidecars[sc.chargerID] == sc
+			sidecarsMu.Unlock()
+			if upstreamDrop {
+				recordForwarderError(sc.chargerID, err.Error())
+			}
 			return
 		}
 
@@ -552,6 +649,23 @@ type ForwarderSessionStatus struct {
 	ChargerID         string `json:"chargerId"`
 	UpstreamURL       string `json:"upstreamUrl"`
 	UpstreamConnected bool   `json:"upstreamConnected"`
+	Error             string `json:"error,omitempty"`
+}
+
+// recordForwarderError stores a charger's last upstream failure; caller must notifyUpdated.
+func recordForwarderError(id, msg string) {
+	sidecarsMu.Lock()
+	forwarderErrors[id] = msg
+	sidecarsMu.Unlock()
+}
+
+// clearForwarderError drops a charger's stored error, reporting whether one existed; caller must notifyUpdated.
+func clearForwarderError(id string) bool {
+	sidecarsMu.Lock()
+	_, ok := forwarderErrors[id]
+	delete(forwarderErrors, id)
+	sidecarsMu.Unlock()
+	return ok
 }
 
 var (
@@ -567,8 +681,6 @@ func notifyUpdated() {
 	forwarderCbMu.Unlock()
 	if cb != nil {
 		cb()
-	} else {
-		forwarderLog.WARN.Printf("forwarder: notifyUpdated called but no callback registered")
 	}
 }
 
@@ -582,15 +694,27 @@ func SetForwarderUpdated(cb func()) {
 
 // GetForwarderStatus returns a snapshot of all active forwarder sessions.
 func GetForwarderStatus() []ForwarderSessionStatus {
+	forwarderMu.RLock()
+	rules := append([]ForwarderRule(nil), forwarderRules...)
+	forwarderMu.RUnlock()
+
 	sidecarsMu.Lock()
 	defer sidecarsMu.Unlock()
-	out := make([]ForwarderSessionStatus, 0, len(sidecars))
-	for _, sc := range sidecars {
-		out = append(out, ForwarderSessionStatus{
-			ChargerID:         sc.chargerID,
-			UpstreamURL:       sc.upstreamURL,
-			UpstreamConnected: true,
-		})
+	out := make([]ForwarderSessionStatus, 0, len(rules))
+	for _, r := range rules {
+		if r.StationID == "*" {
+			continue
+		}
+		st := ForwarderSessionStatus{
+			ChargerID:   r.StationID,
+			UpstreamURL: strings.TrimRight(r.UpstreamURL, "/"),
+		}
+		if _, ok := sidecars[r.StationID]; ok {
+			st.UpstreamConnected = true
+		} else if msg, ok := forwarderErrors[r.StationID]; ok {
+			st.Error = msg
+		}
+		out = append(out, st)
 	}
 	return out
 }
