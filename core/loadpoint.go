@@ -1852,7 +1852,9 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// genuine soc available: real soc wins, drop any manual override
 		lp.socManual = nil
 	} else if lp.socManual != nil {
-		socR = lp.socManual
+		// seed the estimator with the manual soc so it interpolates from this point
+		v := *lp.socManual
+		socR = &v
 	}
 
 	if socR != nil {

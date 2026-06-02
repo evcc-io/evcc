@@ -473,6 +473,7 @@ func TestPublishSocAndRangeManual(t *testing.T) {
 	vehicle.EXPECT().Soc().Return(0.0, nil)
 	lp.publishSocAndRange()
 	assert.Equal(t, 42.0, lp.vehicleSoc, "manual soc used when vehicle soc is zero")
+	assert.NotNil(t, lp.socManual, "manual soc retained while vehicle soc is zero")
 
 	// real soc>0 arrives -> real wins, manual cleared
 	vehicle.EXPECT().Soc().Return(73.0, nil)
