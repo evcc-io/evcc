@@ -103,7 +103,6 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 			implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
 			implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
 		}
-
 	}
 
 	if !isHybridInverter {
@@ -121,6 +120,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	values, err := sm.device.Values()
+
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
@@ -136,6 +136,7 @@ func (sm *SMA) CurrentPower() (float64, error) {
 			}
 		}
 	}
+
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
@@ -144,6 +145,7 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
+
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
@@ -158,15 +160,18 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 			}
 		}
 	}
+
 	if sm.scale < 0 {
 		return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
 	}
+
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
 // returnEnergy implements the api.MeterReturnEnergy interface
 func (sm *SMA) returnEnergy() (float64, error) {
 	values, err := sm.device.Values()
+
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
@@ -177,9 +182,11 @@ func (sm *SMA) returnEnergy() (float64, error) {
 			}
 		}
 	}
+
 	if sm.scale < 0 {
 		return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 	}
+
 	return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
 }
 
@@ -237,6 +244,7 @@ func (sm *SMA) maxACPower() float64 {
 	if err != nil {
 		return 0
 	}
+
 	return sma.AsFloat(values[sunny.ActivePowerMax])
 }
 
@@ -246,10 +254,12 @@ func (sm *SMA) soc() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	soc, ok := values[sunny.BatteryCharge]
 	if !ok {
 		return 0, api.ErrNotAvailable
 	}
+
 	return sma.AsFloat(soc), nil
 }
 
@@ -283,5 +293,6 @@ func (sm *SMA) Diagnose() {
 			}
 		}
 	}
+
 	w.Flush()
 }
