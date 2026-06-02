@@ -10,6 +10,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -46,11 +47,35 @@ type API struct {
 	user, password string
 }
 
-// NewAPI creates an EU Data Act client and performs the initial login
+// apiKey identifies a portal account. All vehicles of the same brand and user
+// share one authenticated client.
+type apiKey struct {
+	brand brand
+	user  string
+}
+
+var (
+	apiMu  sync.Mutex
+	apiReg = make(map[apiKey]*API)
+)
+
+// NewAPI returns the EU Data Act client for the given brand and user, performing
+// the initial login on first use. Subsequent calls for the same brand and user
+// return the already authenticated client so that several vehicles of one
+// account share a single portal session instead of competing for it.
 func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 	b, ok := resolveBrand(brandName)
 	if !ok {
 		return nil, fmt.Errorf("unknown brand: %s", brandName)
+	}
+
+	key := apiKey{brand: b, user: user}
+
+	apiMu.Lock()
+	defer apiMu.Unlock()
+
+	if v, ok := apiReg[key]; ok {
+		return v, nil
 	}
 
 	v := &API{
@@ -64,6 +89,8 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 	if err := v.login(); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
+
+	apiReg[key] = v
 
 	return v, nil
 }

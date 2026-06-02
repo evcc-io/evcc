@@ -135,12 +135,14 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into a map of data points keyed by the dotted data field name. On
-// duplicate field names the entry with the newest timestamp wins.
-func parseDataset(b []byte) (map[string]point, error) {
+// decodes it into the dataset's VIN and a map of data points keyed by the dotted
+// data field name. On duplicate field names the entry with the newest timestamp
+// wins. The VIN is returned so the caller can drop datasets that do not belong
+// to the requested vehicle.
+func parseDataset(b []byte) (string, map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	var file *zip.File
@@ -151,23 +153,23 @@ func parseDataset(b []byte) (map[string]point, error) {
 		}
 	}
 	if file == nil {
-		return nil, errors.New("no json document in dataset")
+		return "", nil, errors.New("no json document in dataset")
 	}
 
 	rc, err := file.Open()
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	defer rc.Close()
 
 	raw, err := io.ReadAll(rc)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	var ds datasetFile
 	if err := json.Unmarshal(raw, &ds); err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	res := make(map[string]point, len(ds.Data))
@@ -178,7 +180,7 @@ func parseDataset(b []byte) (map[string]point, error) {
 
 		ts, err := time.Parse(time.RFC3339, p.TimestampUtc)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
 
 		if cur, ok := res[p.DataFieldName]; ok && cur.Timestamp.After(ts) {
@@ -188,5 +190,5 @@ func parseDataset(b []byte) (map[string]point, error) {
 		res[p.DataFieldName] = point{Value: p.Value, Timestamp: ts}
 	}
 
-	return res, nil
+	return ds.VIN, res, nil
 }
