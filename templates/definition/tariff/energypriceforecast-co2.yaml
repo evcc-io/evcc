@@ -1,8 +1,8 @@
 template: energypriceforecast-co2
 products:
   - brand: Energy Price Forecast EU
-     description: 
-       generic: CO₂
+    description: 
+      generic: CO₂
 requirements:
   description:
     de: "5 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
