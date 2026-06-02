@@ -3,6 +3,7 @@ package eudataact
 import (
 	"maps"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,47 +15,88 @@ import (
 // on the first poll of a session to seed the merged map.
 const maxBackfill = 8
 
-// store holds the merged dataset state for a single vehicle across a session.
-// The portal only ever appends datasets. Each dataset is downloaded at most once;
-// its data points are merged into data, keeping the newest value per field. after
-// is the delivery time of the newest dataset already merged, so later polls only
-// fetch datasets delivered after it and nothing is downloaded twice.
+// store holds the merged dataset state for all vehicles of a single portal
+// account. There is one store per username and brand, shared by every vehicle of
+// that account, so the portal session and each dataset download are reused rather
+// than repeated per vehicle. vehicles maps a VIN to its own merged state.
 type store struct {
-	mu         sync.Mutex
-	api        *API
-	vin        string
+	mu       sync.Mutex // guards vehicles
+	api      *API
+	vehicles map[string]*vehicleState
+}
+
+// vehicleState holds the merged dataset state for a single vehicle across a
+// session. The portal only ever appends datasets. Each dataset is downloaded at
+// most once; its data points are merged into data, keeping the newest value per
+// field. after is the delivery time of the newest dataset already merged, so
+// later polls only fetch datasets delivered after it and nothing is downloaded
+// twice.
+type vehicleState struct {
+	mu         sync.Mutex // guards the fields below
 	identifier string
 	data       map[string]point
 	after      time.Time
 }
 
-// newStore creates an empty store for the given vehicle
-func newStore(api *API, vin string) *store {
-	return &store{
-		api:  api,
-		vin:  vin,
-		data: make(map[string]point),
+var (
+	storeMu  sync.Mutex
+	storeReg = make(map[*API]*store)
+)
+
+// sharedStore returns the store shared by all vehicles of the given account,
+// creating it on first use. Since NewAPI already returns one client per username
+// and brand, keying on the client yields a single store per account.
+func sharedStore(api *API) *store {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+
+	if s, ok := storeReg[api]; ok {
+		return s
 	}
+
+	s := &store{
+		api:      api,
+		vehicles: make(map[string]*vehicleState),
+	}
+	storeReg[api] = s
+
+	return s
 }
 
-// update downloads any datasets delivered after the newest one already merged
-// and merges them into the map oldest to newest. It returns the newest dataset's
-// delivery time (used to schedule the next poll); the merged data is read with
-// snapshot. On the first poll only the latest maxBackfill content datasets are
-// downloaded.
-func (s *store) update() (time.Time, error) {
+// state returns the per-vehicle state for vin, creating it on first use
+func (s *store) state(vin string) *vehicleState {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if s.identifier == "" {
-		id, err := s.api.identifier(s.vin)
+	v := s.vehicles[vin]
+	if v == nil {
+		v = &vehicleState{data: make(map[string]point)}
+		s.vehicles[vin] = v
+	}
+
+	return v
+}
+
+// update downloads any datasets for vin delivered after the newest one already
+// merged and merges them into the vehicle's map oldest to newest. It returns the
+// newest dataset's delivery time (used to schedule the next poll); the merged
+// data is read with snapshot. On the first poll only the latest maxBackfill
+// content datasets are downloaded.
+func (s *store) update(vin string) (time.Time, error) {
+	v := s.state(vin)
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if v.identifier == "" {
+		id, err := s.api.identifier(vin)
 		if err != nil {
 			return time.Time{}, err
 		}
-		s.identifier = id
+		v.identifier = id
 	}
 
-	list, err := s.api.datasets(s.vin, s.identifier)
+	list, err := s.api.datasets(vin, v.identifier)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -74,48 +116,56 @@ func (s *store) update() (time.Time, error) {
 	// on the first poll the backfilled datasets are logged once as the final
 	// merged map below; afterwards each newly received dataset is logged as it
 	// arrives
-	initial := s.after.IsZero()
+	initial := v.after.IsZero()
 
-	for _, d := range pending(content, s.after) {
-		b, err := s.api.download(s.vin, s.identifier, d.Name)
+	for _, d := range pending(content, v.after) {
+		b, err := s.api.download(vin, v.identifier, d.Name)
 		if err != nil {
 			return newest, err
 		}
 
-		data, err := parseDataset(b)
+		dvin, data, err := parseDataset(b)
 		if err != nil {
 			return newest, err
 		}
 
-		merge(s.data, data)
-
-		// advance the high-water mark so this dataset is never downloaded again
-		if d.CreatedOn.After(s.after) {
-			s.after = d.CreatedOn
+		// advance the high-water mark so this dataset is never downloaded again,
+		// even when it is dropped below
+		if d.CreatedOn.After(v.after) {
+			v.after = d.CreatedOn
 		}
+
+		// only merge points that belong to the requested vehicle
+		if dvin != "" && !strings.EqualFold(dvin, vin) {
+			continue
+		}
+
+		merge(v.data, data)
 
 		if !initial {
 			logData(s.api.log, data)
 		}
 	}
 
-	if len(s.data) == 0 {
+	if len(v.data) == 0 {
 		return time.Time{}, api.ErrNotAvailable
 	}
 
 	if initial {
-		logData(s.api.log, s.data)
+		logData(s.api.log, v.data)
 	}
 
 	return newest, nil
 }
 
-// snapshot returns a copy of the merged data
-func (s *store) snapshot() map[string]point {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+// snapshot returns a copy of the merged data for vin
+func (s *store) snapshot(vin string) map[string]point {
+	v := s.state(vin)
 
-	return maps.Clone(s.data)
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	return maps.Clone(v.data)
 }
 
 // logData logs every field of data at DEBUG level, sorted by field name, with

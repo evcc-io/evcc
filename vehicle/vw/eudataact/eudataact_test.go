@@ -55,9 +55,10 @@ func TestParseDataset(t *testing.T) {
 		},
 	}
 
-	data, err := parseDataset(zipJSON(t, doc))
+	vin, data, err := parseDataset(zipJSON(t, doc))
 	require.NoError(t, err)
 
+	assert.Equal(t, "WVWZZZ123", vin, "dataset vin must be returned for filtering")
 	assert.Equal(t, "80", data[FieldSoc].Value, "newest timestamp must win")
 	assert.Equal(t, "12345", data[FieldOdometer].Value)
 	assert.Equal(t, "210", data[FieldRange].Value)
@@ -107,6 +108,25 @@ func TestStatusPlugStates(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, tc.expected, status, "plug=%q charge=%q", tc.plug, tc.charge)
 	}
+}
+
+// TestSharedStore verifies a single store is shared per account and that each
+// account gets its own store.
+func TestSharedStore(t *testing.T) {
+	a := &API{}
+	assert.Same(t, sharedStore(a), sharedStore(a), "one store per account")
+
+	b := &API{}
+	assert.NotSame(t, sharedStore(a), sharedStore(b), "different account, different store")
+}
+
+// TestStoreState verifies the shared store keeps separate per-vehicle state so
+// that data of one vehicle never leaks into another.
+func TestStoreState(t *testing.T) {
+	s := sharedStore(&API{})
+
+	assert.Same(t, s.state("WVWAAA"), s.state("WVWAAA"), "same vin, same state")
+	assert.NotSame(t, s.state("WVWAAA"), s.state("WVWBBB"), "different vin, different state")
 }
 
 func TestResolveBrand(t *testing.T) {
