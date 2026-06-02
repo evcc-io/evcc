@@ -1414,6 +1414,7 @@
     "meterstop": "Meter stop",
     "odometer": "Mileage",
     "price": "Cost",
+    "soc": "Vehicle SoC",
     "started": "Started",
     "title": "Charging Session"
   },
@@ -1421,6 +1422,7 @@
     "avgPower": "⌀ Power",
     "avgPrice": "⌀ Price",
     "chargeDuration": "Duration",
+    "chargedSoc": "Charge",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Price {byGroup}",
@@ -1454,6 +1456,8 @@
       "odometer": "Mileage (km)",
       "price": "Cost",
       "priceperkwh": "Price/kWh",
+      "socend": "SoC end (%)",
+      "socstart": "SoC start (%)",
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },
