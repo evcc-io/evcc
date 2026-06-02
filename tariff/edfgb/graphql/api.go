@@ -18,7 +18,7 @@ const BaseURI = "https://api.edfgb-kraken.energy/v1/graphql/"
 
 // EdfGbGraphQLClient communicates with EDF UK's Kraken platform.
 type EdfGbGraphQLClient struct {
-	log *util.Logger
+	log           *util.Logger
 	*graphql.Client
 	accountNumber string
 }
@@ -54,40 +54,47 @@ func NewClient(log *util.Logger, email, password, accountNumber string) (*EdfGbG
 	return gq, nil
 }
 
-// ActiveAgreement queries the Kraken API and returns the active electricity supply agreement.
-func (c *EdfGbGraphQLClient) ActiveAgreement() (Agreement, error) {
+// MPAN fetches the electricity meter point reference number for this account.
+func (c *EdfGbGraphQLClient) MPAN() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	var q getAgreements
+	var q getMeterPoint
 	if err := c.Client.Query(ctx, &q, map[string]any{
 		"accountNumber": c.accountNumber,
 	}); err != nil {
-		return Agreement{}, err
+		return "", err
 	}
 
-	if len(q.Account.Properties) == 0 {
-		return Agreement{}, errors.New("no properties found")
-	}
-
-	agr, err := findActiveAgreement(&q)
-	if err != nil {
-		return Agreement{}, err
-	}
-
-	return *agr, nil
-}
-
-// findActiveAgreement returns the first agreement marked IsActive across all properties.
-func findActiveAgreement(q *getAgreements) (*Agreement, error) {
-	for _, property := range q.Account.Properties {
-		for _, malo := range property.ElectricityMalos {
-			for _, agr := range malo.Agreements {
-				if agr.IsActive {
-					return &agr, nil
-				}
+	for _, prop := range q.Account.Properties {
+		for _, mp := range prop.ElectricityMeterPoints {
+			if mp.Mpan != "" {
+				return mp.Mpan, nil
 			}
 		}
 	}
-	return nil, errors.New("no active agreement found")
+
+	return "", errors.New("no electricity meter point found")
+}
+
+// Rates fetches applicable rates for the given MPAN and time window.
+func (c *EdfGbGraphQLClient) Rates(mpan string, startAt, endAt time.Time) ([]ApplicableRate, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	var q getApplicableRates
+	if err := c.Client.Query(ctx, &q, map[string]any{
+		"accountNumber": c.accountNumber,
+		"mpxn":          mpan,
+		"startAt":       startAt,
+		"endAt":         endAt,
+	}); err != nil {
+		return nil, err
+	}
+
+	rates := make([]ApplicableRate, 0, len(q.ApplicableRates.Edges))
+	for _, edge := range q.ApplicableRates.Edges {
+		rates = append(rates, edge.Node)
+	}
+	return rates, nil
 }
