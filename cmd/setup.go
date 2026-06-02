@@ -821,12 +821,11 @@ func migrateLegacyHemsSetting() error {
 }
 
 func configureDbHems(site *core.Site) (hemsapi.API, error) {
-	configurable, err := config.ConfigurationsByClass(templates.Hems)
-	if err != nil || len(configurable) == 0 {
+	dev, err := config.ConfigurationByClass(templates.Hems)
+	if err != nil || dev == nil {
 		return nil, err
 	}
 
-	dev := configurable[0]
 	cc := dev.Named()
 
 	var instance hemsapi.API
@@ -841,7 +840,7 @@ func configureDbHems(site *core.Site) (hemsapi.API, error) {
 	}
 
 	// register device even on factory error so UI can edit/delete the broken config
-	if addErr := config.Hems().Add(config.NewConfigurableDevice(&dev, instance)); addErr != nil && err == nil {
+	if addErr := config.Hems().Add(config.NewConfigurableDevice(dev, instance)); addErr != nil && err == nil {
 		err = &DeviceError{cc.Name, addErr}
 	}
 
