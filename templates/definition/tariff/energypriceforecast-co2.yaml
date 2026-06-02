@@ -30,4 +30,3 @@ render: |
   forecast:
     source: http
     uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=co2&hours={{.horizon}}
-    
