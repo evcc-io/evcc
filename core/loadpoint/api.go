@@ -87,6 +87,10 @@ type API interface {
 	GetLimitSoc() int
 	// SetLimitSoc sets the session limit soc
 	SetLimitSoc(soc int)
+	// GetVehicleSoc returns the current vehicle soc
+	GetVehicleSoc() float64
+	// SetVehicleSoc manually sets the current vehicle soc
+	SetVehicleSoc(soc float64) error
 	// GetLimitEnergy returns the session limit energy
 	GetLimitEnergy() float64
 	// SetLimitEnergy sets the session limit energy

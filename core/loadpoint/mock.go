@@ -699,6 +699,20 @@ func (mr *MockAPIMockRecorder) GetVehicle() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVehicle", reflect.TypeOf((*MockAPI)(nil).GetVehicle))
 }
 
+// GetVehicleSoc mocks base method.
+func (m *MockAPI) GetVehicleSoc() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVehicleSoc")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetVehicleSoc indicates an expected call of GetVehicleSoc.
+func (mr *MockAPIMockRecorder) GetVehicleSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVehicleSoc", reflect.TypeOf((*MockAPI)(nil).GetVehicleSoc))
+}
+
 // HasChargeMeter mocks base method.
 func (m *MockAPI) HasChargeMeter() bool {
 	m.ctrl.T.Helper()
@@ -1061,6 +1075,20 @@ func (m *MockAPI) SetVehicle(vehicle api.Vehicle) {
 func (mr *MockAPIMockRecorder) SetVehicle(vehicle any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetVehicle", reflect.TypeOf((*MockAPI)(nil).SetVehicle), vehicle)
+}
+
+// SetVehicleSoc mocks base method.
+func (m *MockAPI) SetVehicleSoc(soc float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetVehicleSoc", soc)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetVehicleSoc indicates an expected call of SetVehicleSoc.
+func (mr *MockAPIMockRecorder) SetVehicleSoc(soc any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetVehicleSoc", reflect.TypeOf((*MockAPI)(nil).SetVehicleSoc), soc)
 }
 
 // SocBasedPlanning mocks base method.

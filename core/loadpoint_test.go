@@ -863,3 +863,41 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	welcomeCharge, _ = lp.updateChargerStatus()
 	assert.False(t, welcomeCharge)
 }
+
+func TestSetVehicleSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	clck := clock.NewMock()
+
+	vehicle := api.NewMockVehicle(ctrl)
+	charger := api.NewMockCharger(ctrl)
+	vehicle.EXPECT().Capacity().Return(8.5).AnyTimes()
+
+	log := util.NewLogger("foo")
+	lp := &Loadpoint{
+		log:          log,
+		bus:          evbus.New(),
+		clock:        clck,
+		charger:      charger,
+		vehicle:      vehicle,
+		chargeMeter:  &Null{},
+		chargeRater:  &Null{},
+		chargeTimer:  &Null{},
+		socEstimator: soc.NewEstimator(log, charger, vehicle),
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		phases:       1,
+		mode:         api.ModeNow,
+	}
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// invalid value rejected
+	assert.Error(t, lp.SetVehicleSoc(150))
+
+	// valid value seeds vehicleSoc and the manual override
+	assert.NoError(t, lp.SetVehicleSoc(55))
+	assert.Equal(t, 55.0, lp.GetVehicleSoc())
+	assert.NotNil(t, lp.socManual)
+	assert.Equal(t, 55.0, *lp.socManual)
+}

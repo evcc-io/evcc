@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/wrapper"
 )
 
@@ -307,6 +308,38 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 		lp.setLimitSoc(soc)
 		lp.requestUpdate()
 	}
+}
+
+// GetVehicleSoc returns the current vehicle soc
+func (lp *Loadpoint) GetVehicleSoc() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.vehicleSoc
+}
+
+// SetVehicleSoc manually sets the current vehicle soc for offline vehicles or
+// vehicles that report no soc. It re-baselines the estimator so charged-energy
+// extrapolation restarts from the entered value (#30393).
+func (lp *Loadpoint) SetVehicleSoc(value float64) error {
+	value, err := soc.Guard(value, nil)
+	if err != nil {
+		return err
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set manual vehicle soc: %.0f%%", value)
+
+	lp.socManual = &value
+	if lp.socEstimator != nil {
+		lp.socEstimator.SetSoc(value, lp.getChargedEnergy())
+	}
+	lp.vehicleSoc = value
+	lp.publish(keys.VehicleSoc, value)
+	lp.requestUpdate()
+
+	return nil
 }
 
 // GetLimitEnergy returns the session limit energy
