@@ -91,23 +91,27 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 	// start update loop manually to get values as fast as possible
 	go sm.device.Run()
 
-	if usage == "battery" {
-		implement.Has(sm, implement.Battery(sm.soc))
-		implement.May(sm, implement.BatteryCapacity(capacity))
-		implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
-		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
+	isInverter := !sm.device.IsEnergyMeter()
+	isHybridInverter := isInverter && dc
+
+	if isInverter {
+		implement.May(sm, implement.MaxACPowerGetter(sm.maxACPower))
+
+		if usage == "battery" {
+			implement.Has(sm, implement.Battery(sm.soc))
+			implement.May(sm, implement.BatteryCapacity(capacity))
+			implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
+			implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
+		}
+
 	}
 
-	if sm.device.IsEnergyMeter() || !dc {
+	if !isHybridInverter {
 		implement.Has(sm, implement.PhaseCurrents(sm.currents))
 		implement.Has(sm, implement.PhasePowers(sm.powers))
 	}
 
-	if !sm.device.IsEnergyMeter() {
-		implement.Has(sm, implement.MaxACPowerGetter(sm.maxACPower))
-	}
-
-	if !(usage == "pv" && dc) {
+	if !(isHybridInverter && usage == "pv") {
 		implement.Has(sm, implement.MeterReturnEnergy(sm.returnEnergy))
 	}
 
