@@ -1,0 +1,43 @@
+template: edf-gb
+products:
+  - brand: EDF Energy
+    description:
+      en: UK (Kraken)
+requirements:
+  evcc: ["skiptest"]
+countries: ["GB"]
+group: price
+params:
+  - name: email
+    type: string
+    required: true
+    example: "user@example.com"
+    description:
+      en: Email Address
+      de: E-Mail-Adresse
+    help:
+      en: "The email address of your EDF Energy account."
+  - name: password
+    type: string
+    required: true
+    mask: true
+    example: "secret"
+    description:
+      en: Password
+      de: Passwort
+    help:
+      en: "The password of your EDF Energy account."
+  - name: accountNumber
+    type: string
+    required: true
+    example: "A-12345678"
+    description:
+      en: Account Number
+      de: Kundennummer
+    help:
+      en: "Your EDF Energy account number (e.g., A-12345678)."
+render: |
+  type: edf-gb
+  accountNumber: {{ .accountNumber }}
+  email: {{ .email }}
+  password: {{ .password }}
