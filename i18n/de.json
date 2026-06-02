@@ -1334,6 +1334,8 @@
       "none": "Kein Fahrzeug",
       "notReachable": "Fahrzeug war nicht erreichbar. Versuche evcc neu zu starten.",
       "setSoc": "% setzen",
+      "setSocHelp": "Aktuellen Ladestand für Fahrzeuge eingeben, die ihn nicht melden.",
+      "setSocTitle": "Ladestand setzen",
       "targetSoc": "Ladelimit",
       "temp": "Temperatur",
       "tempLimit": "Temperaturlimit",

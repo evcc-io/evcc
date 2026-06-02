@@ -40,27 +40,14 @@
 				align="start"
 			/>
 			<div v-else-if="manualSoc" class="flex-grow-1" data-testid="manual-soc">
-				<div class="d-flex align-items-center gap-1">
-					<input
-						v-model.number="manualSocValue"
-						type="number"
-						min="0"
-						max="100"
-						step="1"
-						class="form-control form-control-sm"
-						style="width: 4.5rem"
-						:placeholder="$t('main.vehicle.setSoc')"
-						@keyup.enter="confirmManualSoc"
-					/>
-					<button
-						type="button"
-						class="btn btn-sm btn-outline-primary"
-						data-testid="manual-soc-confirm"
-						@click="confirmManualSoc"
-					>
-						%
-					</button>
-				</div>
+				<button
+					type="button"
+					class="value-button p-0 m-0 d-block evcc-default-text"
+					data-testid="manual-soc-open"
+					@click="openVehicleSocModal"
+				>
+					{{ vehicleSocManual ? formattedSoc : $t("main.vehicle.setSoc") }}
+				</button>
 				<div class="root-font-color">{{ vehicleSocTitle }}</div>
 			</div>
 			<LabelAndValue
@@ -98,6 +85,12 @@
 				@limit-energy-updated="limitEnergyUpdated"
 			/>
 		</div>
+		<VehicleSocModal
+			ref="vehicleSocModal"
+			:vehicle-soc="vehicleSoc"
+			:vehicle-soc-manual="vehicleSocManual"
+			@vehicle-soc-updated="$emit('vehicle-soc-updated', $event)"
+		/>
 	</div>
 </template>
 
@@ -123,6 +116,7 @@ import {
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
 import type ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
+import VehicleSocModal from "./VehicleSocModal.vue";
 
 export default defineComponent({
 	name: "Vehicle",
@@ -135,6 +129,7 @@ export default defineComponent({
 		LimitSocSelect,
 		LimitEnergySelect,
 		BatteryBoostButton,
+		VehicleSocModal,
 	},
 	mixins: [collector, formatter],
 	props: {
@@ -219,7 +214,6 @@ export default defineComponent({
 			chargingPlanModal: this.$refs["chargingPlanModal"] as
 				| InstanceType<typeof ChargingPlanModal>
 				| undefined,
-			manualSocValue: null as number | null,
 		};
 	},
 	computed: {
@@ -293,10 +287,6 @@ export default defineComponent({
 		effectiveLimitSoc() {
 			this.displayLimitSoc = this.effectiveLimitSoc;
 		},
-		manualSoc(active: boolean) {
-			this.manualSocValue =
-				active && this.vehicleSocManual ? Math.round(this.vehicleSoc) : null;
-		},
 	},
 	methods: {
 		limitSocDrag(limitSoc: number) {
@@ -324,11 +314,11 @@ export default defineComponent({
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;
 		},
-		confirmManualSoc() {
-			const value = this.manualSocValue;
-			if (value == null || !Number.isFinite(value) || value < 0 || value > 100) return;
-			this.$emit("vehicle-soc-updated", Math.round(value));
-			this.manualSocValue = null;
+		openVehicleSocModal() {
+			const modalRef = this.$refs["vehicleSocModal"] as
+				| InstanceType<typeof VehicleSocModal>
+				| undefined;
+			modalRef?.open();
 		},
 	},
 });
