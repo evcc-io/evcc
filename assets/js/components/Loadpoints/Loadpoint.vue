@@ -85,6 +85,7 @@
 			v-bind="vehicleProps"
 			:soc-per-kwh="socPerKwh"
 			@limit-soc-updated="setLimitSoc"
+			@vehicle-soc-updated="setVehicleSoc"
 			@limit-energy-updated="setLimitEnergy"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
@@ -363,6 +364,9 @@ export default defineComponent({
 		},
 		setLimitSoc(soc: number) {
 			api.post(this.apiPath("limitsoc") + "/" + soc);
+		},
+		setVehicleSoc(soc: number) {
+			api.post(this.apiPath("vehiclesoc") + "/" + soc);
 		},
 		setLimitEnergy(kWh: number) {
 			api.post(this.apiPath("limitenergy") + "/" + kWh);

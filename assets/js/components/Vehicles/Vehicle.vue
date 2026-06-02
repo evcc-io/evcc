@@ -31,7 +31,7 @@
 		</div>
 		<div class="details d-flex flex-wrap justify-content-between">
 			<LabelAndValue
-				v-if="socBasedCharging"
+				v-if="socBasedCharging && !manualSoc"
 				class="flex-grow-1"
 				:label="vehicleSocTitle"
 				:value="formattedSoc"
@@ -39,6 +39,29 @@
 				data-testid="current-soc"
 				align="start"
 			/>
+			<div v-else-if="manualSoc" class="flex-grow-1" data-testid="manual-soc">
+				<div class="d-flex align-items-center gap-1">
+					<input
+						v-model.number="manualSocValue"
+						type="number"
+						min="0"
+						max="100"
+						class="form-control form-control-sm"
+						style="width: 4.5rem"
+						:placeholder="$t('main.vehicle.setSoc')"
+						@keyup.enter="confirmManualSoc"
+					/>
+					<button
+						type="button"
+						class="btn btn-sm btn-outline-primary"
+						data-testid="manual-soc-confirm"
+						@click="confirmManualSoc"
+					>
+						%
+					</button>
+				</div>
+				<div class="root-font-color">{{ vehicleSocTitle }}</div>
+			</div>
 			<LabelAndValue
 				v-else
 				class="flex-grow-1"
@@ -185,6 +208,7 @@ export default defineComponent({
 		"open-loadpoint-settings",
 		"batteryboost-updated",
 		"open-modal",
+		"vehicle-soc-updated",
 	],
 	data() {
 		return {
@@ -193,6 +217,7 @@ export default defineComponent({
 			chargingPlanModal: this.$refs["chargingPlanModal"] as
 				| InstanceType<typeof ChargingPlanModal>
 				| undefined,
+			manualSocValue: null as number | null,
 		};
 	},
 	computed: {
@@ -222,6 +247,9 @@ export default defineComponent({
 		},
 		batteryBoostButtonProps() {
 			return this.collectProps(BatteryBoostButton);
+		},
+		manualSoc(): boolean {
+			return this.socBasedCharging && this.connected && !this.vehicleSoc;
 		},
 		formattedSoc() {
 			if (!this.vehicleSoc) {
@@ -285,6 +313,12 @@ export default defineComponent({
 		},
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;
+		},
+		confirmManualSoc() {
+			const value = this.manualSocValue;
+			if (value == null || value < 0 || value > 100) return;
+			this.$emit("vehicle-soc-updated", value);
+			this.manualSocValue = null;
 		},
 	},
 });
