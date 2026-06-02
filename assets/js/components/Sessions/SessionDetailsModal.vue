@@ -113,19 +113,12 @@
 							{{ fmtCo2Medium(session.co2PerKWh) }}
 						</td>
 					</tr>
-					<tr
-						v-if="session.socStart != null || session.socEnd != null"
-						data-testid="session-details-soc"
-					>
+					<tr v-if="socRange" data-testid="session-details-soc">
 						<th class="align-baseline">
 							{{ $t("session.soc") }}
 						</th>
 						<td>
-							{{
-								session.socStart != null ? fmtPercentage(session.socStart, 0) : "–"
-							}}
-							→
-							{{ session.socEnd != null ? fmtPercentage(session.socEnd, 0) : "–" }}
+							{{ socRange }}
 						</td>
 					</tr>
 					<tr v-if="session.odometer" data-testid="session-details-odometer">
@@ -219,6 +212,14 @@ export default defineComponent({
 		},
 		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
+		},
+		socRange(): string {
+			const { socStart, socEnd } = this.session;
+			if (socStart == null || socEnd == null) {
+				return "";
+			}
+			const added = socEnd - socStart;
+			return `${this.fmtPercentage(added, 0, true)} (${this.fmtNumber(socStart, 0)} – ${this.fmtPercentage(socEnd, 0)})`;
 		},
 		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({

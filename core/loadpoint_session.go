@@ -70,7 +70,7 @@ func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 		s.MeterStop = &meterStop
 	}
 
-	if soc := lp.vehicleSoc; soc > 0 {
+	if soc := lp.vehicleSoc; soc > 0 && !lp.chargerHasFeature(api.Heating) {
 		s.SocEnd = &soc
 	}
 
