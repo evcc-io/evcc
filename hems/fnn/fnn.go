@@ -10,19 +10,18 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/config"
-	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
 func init() {
-	config.Registry.AddCtx("fnn", NewFromConfig)
-	config.Registry.AddCtx("fnn-3", NewFromConfig)
+	config.AddCtx("fnn", NewFromConfig)
+	config.AddCtx("fnn-3", NewFromConfig)
 }
 
 // NewFromConfig creates an FNN HEMS from generic config.
-func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (hems.API, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
 		MaxPower        float64 // TODO deprecated
 		MaxDimPower     float64
