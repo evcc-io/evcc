@@ -46,6 +46,10 @@
     "noBattery": "Inga batterier konfigurerade.",
     "usageTab": "Batterianvändning"
   },
+  "colors": {
+    "auto": "Bil",
+    "hex": "Hex-färg"
+  },
   "config": {
     "aux": {
       "description": "Enhet som anpassar sin förbrukning baserat på tillgängligt överskott (ex. smarta varmvattenberedare). Evcc förväntar sig att denna enhet reducerar sin förbrukning om det är nödvändigt.",
@@ -1171,6 +1175,8 @@
       "batteryDischarge": "Batteri laddas ur",
       "batteryForecastEmpty": "tom {time}",
       "batteryForecastFull": "full {time}",
+      "batteryForecastNextHigh": "Nästa höjdpunkt",
+      "batteryForecastNextLow": "Nästa lågpunkt",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
       "batteryHold": "Batteri (låst)",
@@ -1218,7 +1224,8 @@
         "meter": "Konsumtion",
         "pv": "Produktion"
       },
-      "otherConsumers": "Andra"
+      "otherConsumers": "Andra",
+      "title": "Historik"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",

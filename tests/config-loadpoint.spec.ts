@@ -103,6 +103,7 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByLabel("Charge status").selectOption("A");
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
 
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);

@@ -10,7 +10,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/WulfgarW/sensonet v0.0.7
 	github.com/andig/go-powerwall v0.3.0
-	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
+	github.com/andig/gosunspec v0.0.0-20260523124210-852310938891
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/aws/aws-sdk-go-v2 v1.41.5
@@ -58,7 +58,7 @@ require (
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
-	github.com/insomniacslk/tapo v1.0.2
+	github.com/insomniacslk/tapo v1.1.0
 	github.com/itchyny/gojq v0.12.19
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/jeremywohl/flatten v1.0.1
