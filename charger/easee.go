@@ -527,13 +527,11 @@ func (c *Easee) Enable(enable bool) (err error) {
 
 	// resume/stop charger
 	action := easee.ChargePause
-	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
 		if opMode == easee.ModeAwaitingAuthentication && c.authorize {
 			action = easee.ChargeStart
 		}
-		targetCurrent = 32
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
@@ -543,19 +541,6 @@ func (c *Easee) Enable(enable bool) (err error) {
 
 	if err := c.waitForChargerEnabledState(enable); err != nil {
 		return err
-	}
-
-	if action == easee.ChargeStart { // ChargeStart does not mingle with DCC, no need for below operations
-		return nil
-	}
-
-	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
-		return err
-	}
-
-	if enable {
-		// reset currents after enable, as easee automatically resets to maxA
-		return c.MaxCurrent(int64(c.current))
 	}
 
 	return nil
