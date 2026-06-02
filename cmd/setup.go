@@ -798,7 +798,7 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 		return nil, fmt.Errorf("migrating legacy hems setting: %w", err)
 	}
 
-	return configureDbHems(conf, site)
+	return configureDbHems(site)
 }
 
 // migrateLegacyHemsSetting moves a keys.Hems YAML setting to a device-managed custom hems entry.
@@ -820,7 +820,7 @@ func migrateLegacyHemsSetting() error {
 	return settings.Delete(keys.Hems)
 }
 
-func configureDbHems(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
+func configureDbHems(site *core.Site) (hemsapi.API, error) {
 	configurable, err := config.ConfigurationsByClass(templates.Hems)
 	if err != nil || len(configurable) == 0 {
 		return nil, err
@@ -849,7 +849,6 @@ func configureDbHems(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, err
 		return nil, err
 	}
 
-	conf.Type, conf.Other = typ, other
 	go instance.Run()
 	return instance, nil
 }
