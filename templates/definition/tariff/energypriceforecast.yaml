@@ -3,7 +3,7 @@ products:
   - brand: energypriceforecast.eu
 requirements:
   description:
-    de: "Day-Ahead-Strompreise plus 4 Tage Prognose[energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
+    de: "Day-Ahead-Strompreise plus 4 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
     en: "Spot prices in day-ahead market plus 4 days prognosis [energypriceforecast.eu](https://energypriceforecast.eu)"
   evcc: ["skiptest"]
 group: price
