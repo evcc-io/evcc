@@ -37,8 +37,8 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		URI, Password, Interface string
 		Usage                    string
 		Serial                   uint32
-		Scale                    float64 // power only
-		DC                       bool    // expose DC-side measurements (PvPower / BatteryVoltage × BatteryCurrent) for usage=pv/battery
+		Scale                    float64 // scale power, swap energy registers
+		DC                       bool    // expose DC measurements (pv/battery)
 	}{
 		Password: "0000",
 		Scale:    1,
