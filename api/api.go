@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -19,6 +19,11 @@ type Meter interface {
 // MeterEnergy provides total energy in kWh
 type MeterEnergy interface {
 	TotalEnergy() (float64, error)
+}
+
+// MeterReturnEnergy provides total returned energy in kWh
+type MeterReturnEnergy interface {
+	ReturnEnergy() (float64, error)
 }
 
 // PhaseCurrents provides per-phase current A
