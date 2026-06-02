@@ -133,6 +133,9 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.vehicle = v
 	lp.vmu.Unlock()
 
+	// drop any manually entered soc when the vehicle changes/disconnects (#30393)
+	lp.socManual = nil
+
 	if from != to {
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 	}
