@@ -34,18 +34,18 @@ type Provider struct {
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{}
-	s := newStore(api, vin)
+	s := sharedStore(api)
 
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
-		ts, err := s.update()
+		ts, err := s.update(vin)
 		if err != nil {
 			return nil, err
 		}
 		if !ts.IsZero() {
 			time.AfterFunc(resetDelay(ts, time.Now()), cached.Reset)
 		}
-		return s.snapshot(), nil
+		return s.snapshot(vin), nil
 	}, cache)
 
 	v.statusG = cached.Get

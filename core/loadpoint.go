@@ -493,6 +493,10 @@ func (lp *Loadpoint) evChargeStartHandler() {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
 		}
+		// capture start soc once available (may not be present at session start)
+		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
+			session.SocStart = &soc
+		}
 	})
 }
 

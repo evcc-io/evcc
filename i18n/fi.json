@@ -46,6 +46,10 @@
     "noBattery": "Akkuja ei ole määritelty.",
     "usageTab": "Akun käyttö"
   },
+  "colors": {
+    "auto": "automaattinen",
+    "hex": "heksa-värikoodi"
+  },
   "config": {
     "aux": {
       "description": "Sähkölaite, jonka kulutusta voi säädellä ylijäämätuotannon mukaan (kuten älykäs lämminvesivaraaja). EVCC olettaa, että tämä laite pystyy tarvittaessa pienentämään sähkönkulutustaan.",
@@ -827,6 +831,7 @@
         "allMonths": "Joka kuussa",
         "allTimes": "Koko päivän",
         "cancel": "Peruuta",
+        "charge": "Lataus",
         "days": "Päivät",
         "edit": "Muokkaa",
         "hours": "Tunnit",
@@ -1166,8 +1171,10 @@
       "battery": "Akku",
       "batteryCharge": "Akunlataus",
       "batteryDischarge": "Akku purkautuu",
-      "batteryForecastEmpty": "varaus loppuu {time}",
-      "batteryForecastFull": "varaus täynnä {time}",
+      "batteryForecastEmpty": "Varaus loppuu",
+      "batteryForecastFull": "Varaus täynnä",
+      "batteryForecastNextHigh": "Korkea",
+      "batteryForecastNextLow": "Matala",
       "batteryGridChargeActive": "Ladataan verkosta",
       "batteryGridChargeLimit": "Milloin ladataan verkosta",
       "batteryHold": "Akku (lukittu)",
@@ -1193,6 +1200,30 @@
     "hemsWarning": {
       "description": "Rajoitettu latausta, jotta rajaa {limit} ei ylitettäisi.",
       "title": "Ulkoinen raja:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "ladattu",
+          "returnEnergy": "käytetty"
+        },
+        "grid": {
+          "energy": "ladattu verkosta",
+          "returnEnergy": "syötetty verkkoon"
+        }
+      },
+      "downloadCsv": "Lataa CSV",
+      "empty": "Tälle ajanjaksolle ei ole saatavilla historiadataa.",
+      "group": {
+        "battery": "Akku",
+        "forecast": "Ennuste",
+        "grid": "Sähköverkko",
+        "loadpoint": "Lataus & lämmitys",
+        "meter": "Kulutus",
+        "pv": "Tuotanto"
+      },
+      "otherConsumers": "Muut",
+      "title": "Tilastot"
     },
     "loadpoint": {
       "avgPrice": "⌀ Hinta",
@@ -1465,6 +1496,7 @@
     "odometer": "Kilometrilukema",
     "overview": "Yleiskatsaus",
     "period": {
+      "day": "Päivä",
       "month": "Kuukausi",
       "total": "Yhteensä",
       "year": "Vuosi"

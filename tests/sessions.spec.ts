@@ -1,6 +1,12 @@
 import { test, expect, devices, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, enableAppContext, expectAppEvent } from "./utils";
+import {
+  expectModalVisible,
+  expectModalHidden,
+  enableAppContext,
+  expectAppEvent,
+  openMoreMenu,
+} from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -347,7 +353,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-solar")).toContainText("0.0% (0.0 kWh)");
     await expect(modal.getByTestId("session-details-price")).toContainText("2.50 € 50.0 ct/kWh");
     await expect(modal.getByTestId("session-details-co2")).toHaveCount(0);
-    await expect(modal.getByTestId("session-details-odometer")).toHaveCount(0);
+    await expect(modal.getByTestId("session-details-odometer")).toContainText("Add value");
     await expect(modal.getByTestId("session-details-meter")).toHaveCount(0);
     await expect(modal.getByTestId("session-details-delete")).toContainText("Delete");
   });
@@ -429,5 +435,80 @@ test.describe("session details", async () => {
     await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
     page.reload();
     await expect(page.getByTestId("sessions-entry")).toHaveCount(3);
+  });
+});
+
+test.describe("edit odometer", async () => {
+  async function openFirstSession(page: Page) {
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(page.getByTestId("session-details"));
+  }
+
+  async function closeSession(page: Page) {
+    const modal = page.getByTestId("session-details");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+  }
+
+  async function setDistanceUnit(page: Page, unit: string) {
+    await openMoreMenu(page);
+    await page.getByRole("button", { name: "User Interface", exact: true }).click();
+    const settings = page.getByTestId("global-settings-modal");
+    await expectModalVisible(settings);
+    await settings.getByRole("radio", { name: `Units: ${unit}` }).click();
+    await settings.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(settings);
+  }
+
+  test("edit existing value and convert between km and miles (session 1)", async ({ page }) => {
+    const odometer = page.getByTestId("session-details").getByLabel("Mileage");
+
+    await page.goto("/#/sessions?year=2023&month=3");
+    await openFirstSession(page);
+    await expect(odometer).toContainText("12,345 km");
+    await odometer.click();
+    await expect(odometer).toHaveValue("12345");
+    await odometer.fill("100000");
+    await odometer.press("Enter");
+    // value reloads from the server after save
+    await expect(odometer).toContainText("100,000 km");
+
+    // switch to miles, value converts on display (100000 km -> 62137 mi)
+    await closeSession(page);
+    await setDistanceUnit(page, "miles");
+    await openFirstSession(page);
+    await expect(odometer).toContainText("62,137 mi");
+
+    // edit in miles
+    await odometer.click();
+    await expect(odometer).toHaveValue("62137");
+    await odometer.fill("50000");
+    await odometer.press("Enter");
+    await expect(odometer).toContainText("50,000 mi");
+
+    // switch back to km, value round-trips (50000 mi -> ~80,467 km)
+    await closeSession(page);
+    await setDistanceUnit(page, "km");
+    await openFirstSession(page);
+    await expect(odometer).toContainText("80,467 km");
+  });
+
+  test("add missing value (session 4)", async ({ page }) => {
+    const odometer = page.getByTestId("session-details").getByLabel("Mileage");
+
+    await page.goto("/#/sessions?year=2023&month=5");
+    await openFirstSession(page);
+    await expect(odometer).toContainText("Add value");
+    await odometer.click();
+    await expect(odometer).toHaveValue("");
+    await odometer.fill("1000");
+    await odometer.press("Enter");
+    await expect(odometer).toContainText("1,000 km");
+
+    // clearing the field deletes the value
+    await odometer.click();
+    await odometer.fill("");
+    await odometer.press("Enter");
+    await expect(odometer).toContainText("Add value");
   });
 });
