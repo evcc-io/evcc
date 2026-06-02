@@ -1,0 +1,27 @@
+template: homey-energy-dongle
+products:
+  - brand: Homey
+    description:
+      generic: Energy Dongle
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+    description:
+      en: Hostname or IP address
+      de: Hostname oder IP-Adresse
+  - name: timeout
+    advanced: true
+    default: 15s
+    description:
+      en: Timeout
+      de: Timeout
+    help:
+      en: Timeout for WebSocket data (default 15s)
+      de: Timeout für WebSocket-Daten (Standard 15s)
+render: |
+  type: homey
+  uri: {{ .host }}
+  {{- if ne .timeout "15s" }}
+  timeout: {{ .timeout }}
+  {{- end }}
