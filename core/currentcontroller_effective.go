@@ -21,7 +21,7 @@ func (lp *CurrentController) effectiveMinCurrent() float64 {
 		}
 	}
 
-	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
 		if res, _, err := c.GetMinMaxCurrent(); err == nil {
 			chargerMin = res
 		}
@@ -47,7 +47,7 @@ func (lp *CurrentController) effectiveMaxCurrent() float64 {
 		}
 	}
 
-	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil && res > 0 {
 			maxCurrent = min(maxCurrent, res)
 		}
@@ -56,12 +56,18 @@ func (lp *CurrentController) effectiveMaxCurrent() float64 {
 	return maxCurrent
 }
 
-// effectiveMinPower returns the effective max power taking vehicle capabilities and phase scaling into account
+// effectiveMinPower returns the effective min power for the minimum active phases
 func (lp *CurrentController) effectiveMinPower() float64 {
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *CurrentController) effectiveMaxPower() float64 {
-	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+	res := Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+	if lp.vehicle != nil {
+		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
+			return min(maxPower, res)
+		}
+	}
+	return res
 }

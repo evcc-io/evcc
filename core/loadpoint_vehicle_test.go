@@ -299,18 +299,18 @@ func TestDefaultVehicle(t *testing.T) {
 	// non-default vehicle identified
 	lp.setActiveVehicle(vehicle)
 	assert.Equal(t, vehicle, lp.vehicle, "expected vehicle "+title(vehicle))
-	assert.Equal(t, 6.0, lp.effectiveMinCurrent(), "current")
+	assert.Equal(t, 6.0, currentController(lp).effectiveMinCurrent(), "current")
 
 	// non-default vehicle disconnected
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
 	assert.Equal(t, mode, lp.GetMode(), "mode")
-	assert.Equal(t, current, lp.effectiveMinCurrent(), "current")
+	assert.Equal(t, current, currentController(lp).effectiveMinCurrent(), "current")
 
 	// default vehicle disconnected and reconnected
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, mode, lp.GetMode(), "mode")
-	assert.Equal(t, current, lp.effectiveMinCurrent(), "current")
+	assert.Equal(t, current, currentController(lp).effectiveMinCurrent(), "current")
 
 	// set non-default vehicle during disconnect - should be default on connect
 	lp.tasks.Clear()

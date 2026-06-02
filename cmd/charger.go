@@ -76,10 +76,12 @@ func runCharger(cmd *cobra.Command, args []string) {
 				if err := vv.MaxCurrentMillis(current); err != nil {
 					log.ERROR.Println("set current:", err)
 				}
-			} else {
-				if err := v.MaxCurrent(int64(current)); err != nil {
+			} else if vv, ok := api.Cap[api.CurrentController](v); ok {
+				if err := vv.MaxCurrent(int64(current)); err != nil {
 					log.ERROR.Println("set current:", err)
 				}
+			} else {
+				log.ERROR.Println("set current: not supported")
 			}
 		}
 

@@ -44,8 +44,10 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 
 		if cc, ok := api.Cap[api.ChargerEx](c); ok {
 			err = cc.MaxCurrentMillis(i)
+		} else if cc, ok := api.Cap[api.CurrentController](c); ok {
+			err = cc.MaxCurrent(int64(i))
 		} else {
-			err = c.MaxCurrent(int64(i))
+			err = api.ErrNotAvailable
 		}
 
 		time.Sleep(delay)

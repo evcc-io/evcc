@@ -178,7 +178,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
 		if maxAmp := -sitePower / Voltage; maxAmp < maxA {
-			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001); scaled != 3 {
+			if scaled := currentController(lp).pvScalePhases(sitePower, minA, maxAmp-0.0001); scaled != 3 {
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
 
@@ -187,7 +187,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		}
 	}
 
-	scaled := lp.pvScalePhases(sitePower, minA, maxA)
+	scaled := currentController(lp).pvScalePhases(sitePower, minA, maxA)
 
 	if strings.Contains(testExpectation, testDirection) {
 		if scaled == 0 {
@@ -424,7 +424,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
-		res := lp.pvScalePhases(tc.sitePower, minA, maxA)
+		res := currentController(lp).pvScalePhases(tc.sitePower, minA, maxA)
 
 		require.Equal(t, tc.res, res, tc.desc)
 		require.Equal(t, tc.toPhases, lp.phases, tc.desc)
@@ -475,7 +475,7 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 			phaseCharger.EXPECT().Phases1p3p(tc.maxExpected).Return(nil)
 		}
 
-		_ = lp.scalePhasesIfAvailable(3)
+		_ = currentController(lp).scalePhasesIfAvailable(3)
 
 		ctrl.Finish()
 	}
@@ -507,7 +507,7 @@ func TestScalePhasesNotAvailable(t *testing.T) {
 		phases: 1, // current phase status, switch to 3p will be attempted
 	}
 
-	err := lp.scalePhases(3)
+	err := currentController(lp).scalePhases(3)
 	require.Error(t, err)
 	require.True(t, errors.Is(err, api.ErrNotAvailable), "want api.ErrNotAvailable, got %v", err)
 
@@ -562,7 +562,7 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 			// minimum current is offered at the scaled phase count
 			plainCharger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 
-			err := lp.minCharging()
+			err := currentController(lp).minCharging()
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
 
@@ -633,7 +633,7 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 
 			plainCharger.EXPECT().MaxCurrent(int64(lp.maxCurrent)).Return(nil)
 
-			err := lp.fastCharging()
+			err := currentController(lp).fastCharging()
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
 

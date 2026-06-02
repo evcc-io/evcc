@@ -4,25 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 
 	"github.com/evcc-io/evcc/api"
 )
 
 type CurrentController struct {
 	*Loadpoint
-	charger api.Charger
-	ctrl    api.CurrentController
 }
 
-func newCurrentController(lp *Loadpoint, ctrl api.CurrentController) api.PowerController {
-	return &CurrentController{
-		Loadpoint: lp,
-		ctrl:      ctrl,
-	}
+func newCurrentController(lp *Loadpoint) *CurrentController {
+	return &CurrentController{Loadpoint: lp}
 }
 
+// MaxPower sets the charger to the given power target (0 disables)
 func (lp *CurrentController) MaxPower(power float64) error {
-	return api.ErrNotAvailable
+	if power <= 0 {
+		return lp.setLimit(0)
+	}
+	return lp.setLimit(powerToCurrent(power, lp.ActivePhases()))
 }
 
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
@@ -65,15 +65,33 @@ func (lp *CurrentController) setLimit(current float64) error {
 	// set current
 	if current != lp.offeredCurrent && current >= effMinCurrent {
 		var err error
-		if charger, ok := lp.charger.(api.ChargerEx); ok {
+		if charger, ok := api.Cap[api.ChargerEx](lp.charger); ok {
 			err = charger.MaxCurrentMillis(current)
 		} else {
-			err = lp.ctrl.MaxCurrent(int64(current))
+			var ctrl api.CurrentController
+			if c, ok := api.Cap[api.CurrentController](lp.charger); ok {
+				ctrl = c
+			} else if rv := reflect.Indirect(reflect.ValueOf(lp.charger)); rv.IsValid() && rv.Kind() == reflect.Struct {
+				for i := range rv.NumField() {
+					if field := rv.Field(i); field.CanInterface() {
+						if c, ok := api.Cap[api.CurrentController](field.Interface()); ok {
+							ctrl = c
+							break
+						}
+					}
+				}
+			}
+
+			if ctrl != nil {
+				err = ctrl.MaxCurrent(int64(current))
+			} else {
+				err = api.ErrNotAvailable
+			}
 		}
 
 		if err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
@@ -94,7 +112,7 @@ func (lp *CurrentController) setLimit(current float64) error {
 	if enabled := current >= effMinCurrent; enabled != lp.enabled {
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
