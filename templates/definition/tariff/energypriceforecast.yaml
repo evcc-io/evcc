@@ -2,7 +2,7 @@ template: energypriceforecast
 products:
     - brand: Energy Price Forecast EU
       description:
-        generic: Grid
+        generic: Predicted spot prices
 requirements:
   description:
     de: "Day-Ahead-Strompreise plus 4 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
