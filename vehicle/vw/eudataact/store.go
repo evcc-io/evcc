@@ -16,21 +16,14 @@ import (
 const maxBackfill = 8
 
 // store holds the merged dataset state for all vehicles of a single portal
-// account. There is one store per username and brand, shared by every vehicle of
-// that account, so the portal session and each dataset download are reused rather
-// than repeated per vehicle. vehicles maps a VIN to its own merged state.
+// account consisting of username and brand
 type store struct {
 	mu       sync.Mutex // guards vehicles
 	api      *API
 	vehicles map[string]*vehicleState
 }
 
-// vehicleState holds the merged dataset state for a single vehicle across a
-// session. The portal only ever appends datasets. Each dataset is downloaded at
-// most once; its data points are merged into data, keeping the newest value per
-// field. after is the delivery time of the newest dataset already merged, so
-// later polls only fetch datasets delivered after it and nothing is downloaded
-// twice.
+// vehicleState holds the merged dataset state for a single vehicle
 type vehicleState struct {
 	mu         sync.Mutex // guards the fields below
 	identifier string
@@ -79,9 +72,8 @@ func (s *store) state(vin string) *vehicleState {
 
 // update downloads any datasets for vin delivered after the newest one already
 // merged and merges them into the vehicle's map oldest to newest. It returns the
-// newest dataset's delivery time (used to schedule the next poll); the merged
-// data is read with snapshot. On the first poll only the latest maxBackfill
-// content datasets are downloaded.
+// newest dataset's delivery time (used to schedule the next poll). On the first poll 
+// only the latest maxBackfill content datasets are downloaded.
 func (s *store) update(vin string) (time.Time, error) {
 	v := s.state(vin)
 
