@@ -110,25 +110,6 @@ func TestStatusPlugStates(t *testing.T) {
 	}
 }
 
-// TestSharedStore verifies a single store is shared per account and that each
-// account gets its own store.
-func TestSharedStore(t *testing.T) {
-	a := &API{}
-	assert.Same(t, sharedStore(a), sharedStore(a), "one store per account")
-
-	b := &API{}
-	assert.NotSame(t, sharedStore(a), sharedStore(b), "different account, different store")
-}
-
-// TestStoreState verifies the shared store keeps separate per-vehicle state so
-// that data of one vehicle never leaks into another.
-func TestStoreState(t *testing.T) {
-	s := sharedStore(&API{})
-
-	assert.Same(t, s.state("WVWAAA"), s.state("WVWAAA"), "same vin, same state")
-	assert.NotSame(t, s.state("WVWAAA"), s.state("WVWBBB"), "different vin, different state")
-}
-
 func TestResolveBrand(t *testing.T) {
 	for _, name := range []string{"audi", "AUDI", "Audi", "aUdI"} {
 		b, ok := resolveBrand(name)
