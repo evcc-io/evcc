@@ -46,6 +46,10 @@
     "noBattery": "Ingen batterier er konfigurerede.",
     "usageTab": "Batteri anvendelse"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex farve"
+  },
   "config": {
     "aux": {
       "description": "Enhed, der justerer sit forbrug baseret på tilgængeligt overskud (som smarte vandvarmere). evcc forventer, at denne enhed reducerer sit strømforbrug, hvis det er nødvendigt.",
@@ -1168,10 +1172,10 @@
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
       "batteryDischarge": "Batteriet aflades",
-      "batteryForecastEmpty": "Tømt {time}",
-      "batteryForecastFull": "Fyldt {time}",
-      "batteryForecastNextHigh": "Næste højdepunkt",
-      "batteryForecastNextLow": "Næste lavpunkt",
+      "batteryForecastEmpty": "Tømt",
+      "batteryForecastFull": "Fyldt",
+      "batteryForecastNextHigh": "Højdepunkt",
+      "batteryForecastNextLow": "Lavpunkt",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
       "batteryHold": "Batteri (låst)",
