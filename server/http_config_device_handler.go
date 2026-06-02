@@ -362,7 +362,11 @@ func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request
 			conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
 		case templates.Hems:
-			conf, err = newDevice(ctx, class, req, newHemsFactory(site), config.Hems(), force)
+			if existing, _ := config.ConfigurationByClass(templates.Hems); existing != nil {
+				err = errors.New("hems already configured")
+			} else {
+				conf, err = newDevice(ctx, class, req, newHemsFactory(site), config.Hems(), force)
+			}
 
 		case templates.Tariff:
 			conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
