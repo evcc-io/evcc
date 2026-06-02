@@ -1,7 +1,7 @@
 template: energypriceforecast-co2
 products:
   - brand: Energy Price Forecast EU
-    description: 
+    description:
       generic: CO₂
 requirements:
   description:
