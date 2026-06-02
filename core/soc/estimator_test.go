@@ -88,6 +88,28 @@ func TestSocEstimation(t *testing.T) {
 	}
 }
 
+func TestSetSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	charger := api.NewMockCharger(ctrl)
+	// 8.5 kWh => 10 kWh virtual capacity => 100 Wh per soc %
+	vehicle.EXPECT().Capacity().Return(8.5).AnyTimes()
+
+	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
+
+	// seed 50% with 2000 Wh already charged this session
+	ce.SetSoc(50, 2000)
+	s := 50.0
+	assert.Equal(t, 50.0, ce.Soc(&s, 2000)) // no energy since baseline
+	assert.Equal(t, 55.0, ce.Soc(&s, 2500)) // +500 Wh / 100 = +5%
+
+	// updating the manual soc restarts the delta from the new baseline
+	ce.SetSoc(60, 2500)
+	s = 60.0
+	assert.Equal(t, 60.0, ce.Soc(&s, 2500)) // delta reset
+	assert.Equal(t, 65.0, ce.Soc(&s, 3000)) // +500 Wh => +5% from 60
+}
+
 func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)

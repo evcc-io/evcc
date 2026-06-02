@@ -130,3 +130,15 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 
 	return s.vehicleSoc
 }
+
+// SetSoc seeds the estimator with a known soc at the given charged energy,
+// re-baselining the delta calculation so subsequent charged energy extrapolates
+// from this point. Used for manually entered soc on offline / no-soc vehicles.
+// The learned gradient (energyPerSocStep) and the session energy counter are preserved.
+func (s *Estimator) SetSoc(soc, chargedEnergy float64) {
+	s.vehicleSoc = soc
+	s.initialSoc = soc
+	s.initialEnergy = chargedEnergy
+	s.prevSoc = soc
+	s.prevChargedEnergy = max(chargedEnergy, 0)
+}
