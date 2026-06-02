@@ -44,13 +44,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		return nil, err
 	}
 
-	powerG, energyG, err := cc.Energy.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	m, _ := NewConfigurable(powerG)
 	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterReturnEnergy(returnG))
 
 	// dim/curtail
 	if err := cc.Dimmer.Implement(ctx, m); err != nil {

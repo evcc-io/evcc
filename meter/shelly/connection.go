@@ -6,22 +6,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
 
 type Generation interface {
-	CurrentPower() (float64, error)
 	Enabled() (bool, error)
 	Enable(bool) error
-	TotalEnergy() (float64, error)
+	api.Meter
+	api.MeterEnergy
+	api.MeterReturnEnergy
 }
 
 type Phases interface {
-	Currents() (float64, float64, float64, error)
-	Voltages() (float64, float64, float64, error)
-	Powers() (float64, float64, float64, error)
+	api.PhaseCurrents
+	api.PhaseVoltages
+	api.PhasePowers
 }
 
 // Connection is the Shelly connection
