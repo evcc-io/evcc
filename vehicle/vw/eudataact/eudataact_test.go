@@ -4,7 +4,9 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
@@ -29,29 +31,38 @@ func zipJSON(t *testing.T, doc datasetFile) []byte {
 	return buf.Bytes()
 }
 
+// testProvider returns a provider serving the given static data
+func testProvider(data map[string]point) *Provider {
+	return &Provider{
+		statusG: func() (map[string]point, error) {
+			return data, nil
+		},
+	}
+}
+
 func TestParseDataset(t *testing.T) {
 	doc := datasetFile{
 		VIN: "WVWZZZ123",
 		Data: []dataPoint{
-			{Key: "ffff", DataFieldName: FieldSoc, Value: "73"},
-			{Key: "0001", DataFieldName: FieldSoc, Value: "80"}, // smaller key wins
-			{Key: "aaaa", DataFieldName: FieldOdometer, Value: "12345"},
-			{Key: "bbbb", DataFieldName: FieldRange, Value: "210"},
-			{Key: "cccc", DataFieldName: FieldChargingState, Value: "charging"},
-			{Key: "dddd", DataFieldName: FieldPlugState, Value: "connected"},
-			{Key: "eeee", DataFieldName: FieldTargetSoc, Value: "90"},
-			{Key: "0002", DataFieldName: "", Value: "ignored"}, // empty field name skipped
+			{DataFieldName: FieldSoc, Value: "73", TimestampUtc: "2026-05-31T07:00:00Z"},
+			{DataFieldName: FieldSoc, Value: "80", TimestampUtc: "2026-05-31T08:00:00Z"}, // newest timestamp wins
+			{DataFieldName: FieldOdometer, Value: "12345", TimestampUtc: "2026-05-31T08:00:00Z"},
+			{DataFieldName: FieldRange, Value: "210", TimestampUtc: "2026-05-31T08:00:00Z"},
+			{DataFieldName: FieldChargingState, Value: "charging", TimestampUtc: "2026-05-31T08:00:00Z"},
+			{DataFieldName: FieldPlugState, Value: "connected", TimestampUtc: "2026-05-31T08:00:00Z"},
+			{DataFieldName: FieldTargetSoc, Value: "90", TimestampUtc: "2026-05-31T08:00:00Z"},
+			{DataFieldName: "", Value: "ignored"}, // empty field name skipped
 		},
 	}
 
 	data, err := parseDataset(zipJSON(t, doc))
 	require.NoError(t, err)
 
-	assert.Equal(t, "80", data[FieldSoc], "smallest key must win")
-	assert.Equal(t, "12345", data[FieldOdometer])
-	assert.Equal(t, "210", data[FieldRange])
+	assert.Equal(t, "80", data[FieldSoc].Value, "newest timestamp must win")
+	assert.Equal(t, "12345", data[FieldOdometer].Value)
+	assert.Equal(t, "210", data[FieldRange].Value)
 
-	p := &Provider{statusG: func() (map[string]string, error) { return data, nil }}
+	p := testProvider(data)
 
 	soc, err := p.Soc()
 	require.NoError(t, err)
@@ -86,8 +97,11 @@ func TestStatusPlugStates(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		data := map[string]string{FieldPlugState: tc.plug, FieldChargingState: tc.charge}
-		p := &Provider{statusG: func() (map[string]string, error) { return data, nil }}
+		data := map[string]point{
+			FieldPlugState:     {Value: tc.plug},
+			FieldChargingState: {Value: tc.charge},
+		}
+		p := testProvider(data)
 
 		status, err := p.Status()
 		require.NoError(t, err)
@@ -106,13 +120,71 @@ func TestResolveBrand(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestNewestDataset(t *testing.T) {
-	list := []dataset{
-		{Name: "2026-05-31T08-00.zip", CreatedOn: "2026-05-31T08:00:00Z"},
-		{Name: "2026-05-31T09-00.zip", CreatedOn: "2026-05-31T09:00:00Z"},
-		{Name: "2026-05-31T09-15_no_content_found.zip", CreatedOn: "2026-05-31T09:15:00Z"},
+func TestPending(t *testing.T) {
+	content := make([]dataset, 0, 11)
+	for i := range 10 {
+		content = append(content, dataset{
+			Name:      fmt.Sprintf("20260531%02d0000_WVWZZZ.zip", i),
+			CreatedOn: time.Date(2026, 5, 31, i, 0, 0, 0, time.UTC),
+		}) // hour i, oldest first
 	}
 
-	assert.Equal(t, "2026-05-31T09-00.zip", newestDataset(list), "newest with content, no-content skipped")
-	assert.Empty(t, newestDataset([]dataset{{Name: "x_no_content_found.zip"}}))
+	// first poll (zero high-water): only the latest maxBackfill
+	got := pending(content, time.Time{})
+	require.Len(t, got, maxBackfill)
+	assert.Equal(t, content[len(content)-maxBackfill].Name, got[0].Name, "oldest within the backfill window")
+	assert.Equal(t, content[len(content)-1].Name, got[len(got)-1].Name, "newest")
+
+	// fewer datasets than the backfill cap: all returned
+	assert.Len(t, pending(content[:3], time.Time{}), 3)
+
+	// high-water at the newest merged dataset: nothing new to download
+	after := content[len(content)-1].CreatedOn
+	assert.Empty(t, pending(content, after))
+
+	// a newer dataset arrives
+	content = append(content, dataset{
+		Name:      "20260531100000_WVWZZZ.zip",
+		CreatedOn: time.Date(2026, 5, 31, 10, 0, 0, 0, time.UTC),
+	})
+	got = pending(content, after)
+	require.Len(t, got, 1)
+	assert.Equal(t, "20260531100000_WVWZZZ.zip", got[0].Name, "only the newer dataset is pending")
+}
+
+func TestMerge(t *testing.T) {
+	t0 := time.Date(2026, 5, 31, 7, 0, 0, 0, time.UTC)
+	t1 := time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC)
+
+	dst := map[string]point{
+		FieldSoc:      {Value: "70", Timestamp: t0},
+		FieldOdometer: {Value: "100", Timestamp: t1},
+	}
+	src := map[string]point{
+		FieldSoc:      {Value: "80", Timestamp: t1},  // newer -> wins
+		FieldOdometer: {Value: "90", Timestamp: t0},  // older -> ignored
+		FieldRange:    {Value: "200", Timestamp: t1}, // new field -> added
+	}
+
+	merge(dst, src)
+
+	assert.Equal(t, "80", dst[FieldSoc].Value, "newer datapoint wins")
+	assert.Equal(t, "100", dst[FieldOdometer].Value, "older datapoint ignored")
+	assert.Equal(t, "200", dst[FieldRange].Value, "new field added")
+}
+
+// TestResetDelay verifies the cache reset is scheduled for when the portal is
+// expected to deliver the dataset following the one just read.
+func TestResetDelay(t *testing.T) {
+	now := time.Date(2026, 5, 31, 12, 0, 0, 0, time.UTC)
+
+	// fresh dataset: reset one interval + latency later
+	assert.Equal(t, portalInterval+portalLatency, resetDelay(now, now))
+
+	// dataset already 5 min old: reset interval + latency after its timestamp
+	assert.Equal(t, portalInterval+portalLatency-5*time.Minute, resetDelay(now.Add(-5*time.Minute), now))
+
+	// next dataset already due: never reset sooner than the latency margin
+	assert.Equal(t, portalLatency, resetDelay(now.Add(-portalInterval), now))
+	assert.Equal(t, portalLatency, resetDelay(now.Add(-time.Hour), now))
 }
