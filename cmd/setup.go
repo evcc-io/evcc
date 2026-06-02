@@ -832,17 +832,17 @@ func configureDbHems(site *core.Site) (hemsapi.API, error) {
 	var instance hemsapi.API
 	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
-		err = fmt.Errorf("hems '%s': %w", cc.Name, err)
+		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
 	} else {
 		instance, err = hems.NewFromConfig(context.TODO(), typ, other, site)
 		if err != nil {
-			err = fmt.Errorf("hems '%s': %w", cc.Name, err)
+			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 		}
 	}
 
 	// register device even on factory error so UI can edit/delete the broken config
 	if addErr := config.Hems().Add(config.NewConfigurableDevice(&dev, instance)); addErr != nil && err == nil {
-		err = addErr
+		err = &DeviceError{cc.Name, addErr}
 	}
 
 	if err != nil {
