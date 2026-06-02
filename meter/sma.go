@@ -72,13 +72,11 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 		if err != nil {
 			return nil, err
 		}
-
 	case serial > 0:
 		sm.device = discoverer.DeviceBySerial(serial, password)
 		if sm.device == nil {
 			return nil, fmt.Errorf("device not found: %d", serial)
 		}
-
 	default:
 		return nil, errors.New("missing uri or serial")
 	}
