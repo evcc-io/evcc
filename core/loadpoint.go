@@ -1847,6 +1847,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 	}
 
+	// manual soc override for offline vehicles or vehicles without soc (#30393)
+	if socR != nil && *socR > 0 {
+		// genuine soc available: real soc wins, drop any manual override
+		lp.socManual = nil
+	} else if lp.socManual != nil {
+		socR = lp.socManual
+	}
+
 	if socR != nil {
 		if socEstimator == nil {
 			lp.vehicleSoc = *socR

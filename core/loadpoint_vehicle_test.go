@@ -430,3 +430,53 @@ func TestReconnectVehicle(t *testing.T) {
 		})
 	}
 }
+
+func TestPublishSocAndRangeManual(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	clck := clock.NewMock()
+
+	charger := api.NewMockCharger(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(8.5).AnyTimes()
+	expectVehiclePublish(vehicle)
+	vehicle.EXPECT().Features().AnyTimes()
+
+	log := util.NewLogger("foo")
+	lp := &Loadpoint{
+		log:          log,
+		bus:          evbus.New(),
+		clock:        clck,
+		charger:      charger,
+		vehicle:      vehicle,
+		chargeMeter:  &Null{},
+		chargeRater:  &Null{},
+		chargeTimer:  &Null{},
+		socEstimator: soc.NewEstimator(log, charger, vehicle),
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		phases:       1,
+		mode:         api.ModeNow,
+		status:       api.StatusC,
+	}
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// vehicle reports no soc -> manual value is used
+	manual := 42.0
+	lp.socManual = &manual
+	vehicle.EXPECT().Soc().Return(0.0, errors.New("offline"))
+	lp.publishSocAndRange()
+	assert.Equal(t, 42.0, lp.vehicleSoc, "manual soc used when vehicle soc missing")
+
+	// vehicle reports 0 (valid-but-missing) -> manual value still used
+	vehicle.EXPECT().Soc().Return(0.0, nil)
+	lp.publishSocAndRange()
+	assert.Equal(t, 42.0, lp.vehicleSoc, "manual soc used when vehicle soc is zero")
+
+	// real soc>0 arrives -> real wins, manual cleared
+	vehicle.EXPECT().Soc().Return(73.0, nil)
+	lp.publishSocAndRange()
+	assert.Equal(t, 73.0, lp.vehicleSoc, "real soc wins")
+	assert.Nil(t, lp.socManual, "manual soc cleared once real soc seen")
+}
