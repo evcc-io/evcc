@@ -279,6 +279,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("energy", val, err)
 	}
 
+	if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
+		val, err := dev.ReturnEnergy()
+		makeResult("returnEnergy", val, err)
+	}
+
 	if dev, ok := api.Cap[api.Battery](instance); ok {
 		val, err := dev.Soc()
 		key := "soc"

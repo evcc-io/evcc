@@ -7,6 +7,8 @@ import {
   editorPaste,
   enableAppContext,
   expectAppEvent,
+  newLoadpoint,
+  addDemoCharger,
 } from "./utils";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
 
@@ -188,5 +190,13 @@ limit:
         "0.0 kW",
       ].join("")
     );
+
+    // a new loadpoint can only be assigned to the dedicated circuit, not gridcontrol
+    await newLoadpoint(page, "Carport");
+    await addDemoCharger(page);
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await expectModalVisible(lpModal);
+    const circuitOptions = lpModal.getByLabel("Circuit").getByRole("option");
+    await expect(circuitOptions).toHaveText(["---", "House [main]"]);
   });
 });
