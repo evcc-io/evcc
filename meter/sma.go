@@ -156,6 +156,27 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
+var _ api.MeterReturnEnergy = (*SMA)(nil)
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (sm *SMA) ReturnEnergy() (float64, error) {
+	values, err := sm.device.Values()
+	if !sm.device.IsEnergyMeter() {
+		switch sm.usage {
+		case "grid":
+			return sma.AsFloat(values[sunny.GridEnergyExportKWh]), err
+		case "battery":
+			if sm.dc {
+				return sma.AsFloat(values[sunny.BatteryEnergyChargeKWh]), err
+			}
+		}
+	}
+	if sm.scale < 0 {
+		return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
+	}
+	return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
+}
+
 var _ api.PhaseVoltages = (*SMA)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
