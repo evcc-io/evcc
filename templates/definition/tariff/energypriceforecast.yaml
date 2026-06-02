@@ -1,11 +1,12 @@
-template: stroomprijsprognose
-deprecated: true
+template: energypriceforecast
 products:
-  - brand: stroomprijsprognose.nl
+  - brand: Energy Price Forecast EU
+    description:
+      generic: Predicted spot prices
 requirements:
   description:
-    de: "Day-Ahead-Strompreise plus 4 Tage Prognose [stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
-    en: "Spot prices in day-ahead market plus 4 days prognosis [stroomprijsprognose.nl](https://stroomprijsprognose.nl)"
+    de: "Day-Ahead-Strompreise plus 4 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
+    en: "Spot prices in day-ahead market plus 4 days prognosis [energypriceforecast.eu](https://energypriceforecast.eu)"
   evcc: ["skiptest"]
 group: price
 countries: ["DE", "NL", "BE", "DK", "FR"]

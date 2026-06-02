@@ -55,9 +55,10 @@ func TestParseDataset(t *testing.T) {
 		},
 	}
 
-	data, err := parseDataset(zipJSON(t, doc))
+	vin, data, err := parseDataset(zipJSON(t, doc))
 	require.NoError(t, err)
 
+	assert.Equal(t, "WVWZZZ123", vin, "dataset vin must be returned for filtering")
 	assert.Equal(t, "80", data[FieldSoc].Value, "newest timestamp must win")
 	assert.Equal(t, "12345", data[FieldOdometer].Value)
 	assert.Equal(t, "210", data[FieldRange].Value)

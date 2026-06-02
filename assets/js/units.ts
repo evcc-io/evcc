@@ -11,6 +11,10 @@ export function distanceValue(value: number) {
   return isMiles() ? value * MILES_FACTOR : value;
 }
 
+export function distanceValueReverse(value: number) {
+  return isMiles() ? value / MILES_FACTOR : value;
+}
+
 export function distanceUnit() {
   return isMiles() ? "mi" : "km";
 }

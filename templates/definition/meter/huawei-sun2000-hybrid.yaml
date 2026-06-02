@@ -79,7 +79,7 @@ render: |
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
-      address: 37113 # Grid import export power
+      address: 37113 # Grid import/export power
       type: holding
       decode: int32nan
     scale: -1
@@ -88,7 +88,16 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 37121 # Active energy import from the grid
+      address: 37121 # Active energy imported from the grid
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37119 # Active energy exported to the grid
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -193,11 +202,10 @@ render: |
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
-      {{- if eq .storageunit "1" }}
-      address: 37001
-      {{- end }}
       {{- if eq .storageunit "2" }}
       address: 37743
+      {{- else }}
+      address: 37001
       {{- end }}
       type: holding
       decode: int32nan
@@ -207,11 +215,23 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      {{- if eq .storageunit "1" }}
-      address: 37068 # [Energy storage unit 1] Total discharge
-      {{- end }}
       {{- if eq .storageunit "2" }}
       address: 37755 # [Energy storage unit 2] Total discharge
+      {{- else }}
+      address: 37068 # [Energy storage unit 1] Total discharge
+      {{- end }}
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "2" }}
+      address: 37753 # [Energy storage unit 2] Total charge
+      {{- else }}
+      address: 37066 # [Energy storage unit 1] Total charge
       {{- end }}
       type: holding
       decode: uint32nan
@@ -221,11 +241,10 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      {{- if eq .storageunit "1" }}
-      address: 37004
-      {{- end }}
       {{- if eq .storageunit "2" }}
       address: 37738
+      {{- else }}
+      address: 37004
       {{- end }}
       type: holding
       decode: uint16nan

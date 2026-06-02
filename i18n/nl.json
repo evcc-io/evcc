@@ -46,6 +46,10 @@
     "noBattery": "Geen accu geconfigureerd.",
     "usageTab": "Batterijgebruik"
   },
+  "colors": {
+    "auto": "Automatisch",
+    "hex": "Hex kleur"
+  },
   "config": {
     "aux": {
       "description": "Apparaat dat zijn verbruik aanpast op basis van het beschikbare overschot (zoals slimme boilers). evcc verwacht dat dit apparaat het stroomverbruik vermindert als dat nodig is.",
