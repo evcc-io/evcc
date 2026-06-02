@@ -1870,6 +1870,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 	}
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+	lp.publish(keys.VehicleSocManual, lp.socManual != nil)
 
 	apiLimitSoc := 100
 	if limitR != nil {

@@ -193,6 +193,7 @@ export default defineComponent({
 		vehicleRange: { type: Number, default: 0 },
 		vehicles: Array,
 		vehicleSoc: { type: Number, default: 0 },
+		vehicleSocManual: Boolean,
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
 		minSocNotReached: Boolean,
@@ -250,7 +251,11 @@ export default defineComponent({
 			return this.collectProps(BatteryBoostButton);
 		},
 		manualSoc(): boolean {
-			return this.socBasedCharging && this.connected && !this.vehicleSoc;
+			return (
+				this.socBasedCharging &&
+				this.connected &&
+				(!this.vehicleSoc || this.vehicleSocManual)
+			);
 		},
 		formattedSoc() {
 			if (!this.vehicleSoc) {
@@ -287,6 +292,10 @@ export default defineComponent({
 	watch: {
 		effectiveLimitSoc() {
 			this.displayLimitSoc = this.effectiveLimitSoc;
+		},
+		manualSoc(active: boolean) {
+			this.manualSocValue =
+				active && this.vehicleSocManual ? Math.round(this.vehicleSoc) : null;
 		},
 	},
 	methods: {

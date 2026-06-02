@@ -337,6 +337,7 @@ func (lp *Loadpoint) SetVehicleSoc(value float64) error {
 	}
 	lp.vehicleSoc = value
 	lp.publish(keys.VehicleSoc, value)
+	lp.publish(keys.VehicleSocManual, true)
 	lp.requestUpdate()
 
 	return nil
