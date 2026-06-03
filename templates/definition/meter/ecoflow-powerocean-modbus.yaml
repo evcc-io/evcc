@@ -56,7 +56,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 40525 # Battery power, W, positive charging
+      address: 40525 # Battery power, W; positive when discharging, negative when charging (raw value inverted via scale -1)
       type: holding
       encoding: float32s
     scale: -1
