@@ -96,6 +96,7 @@ func NewEnovates(ctx context.Context, uri string, slaveID uint8) (api.Charger, e
 		conn:    conn,
 		current: 6000,
 	}
+	implement.Has(wb, implement.Identifier(wb.identify))
 
 	// verify connection and EMS register availability
 	if _, err := wb.conn.ReadHoldingRegisters(enovatesRegMode3StateStr, 2); err != nil {
@@ -233,6 +234,16 @@ func (wb *Enovates) Voltages() (float64, float64, float64, error) {
 	return float64(int16(binary.BigEndian.Uint16(b[0:2]))),
 		float64(int16(binary.BigEndian.Uint16(b[2:4]))),
 		float64(int16(binary.BigEndian.Uint16(b[4:6]))), nil
+}
+
+// identify implements the api.Identifier interface
+func (wb *Enovates) identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(enovatesRegToken, 16)
+	if err != nil {
+		return "", err
+	}
+
+	return trimModbusString(b), nil
 }
 
 var _ api.Diagnosis = (*Enovates)(nil)
