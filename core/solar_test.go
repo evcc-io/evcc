@@ -59,6 +59,8 @@ func (t *solarTestSuite) TestEnergy() {
 		expected float64
 	}{
 		{-1, 0, 0},
+		{-2, -1, 0},   // whole interval before first entry
+		{-1, -0.5, 0}, // whole interval before first entry
 		{-1, 1, 0.5},
 		{-1, 90, 8},
 		{0, 0, 0},
