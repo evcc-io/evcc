@@ -167,6 +167,7 @@
       "powerRange": "Power",
       "price": "Price",
       "range": "Range",
+      "returnEnergy": "Energy (reverse)",
       "singlePhase": "Single phase",
       "soc": "Charge",
       "solarForecast": "Solar forecast",
@@ -881,7 +882,7 @@
       "greenShareSub2": "solar, and battery storage",
       "power": "Charging power",
       "powerSub1": "{activeClients} of {totalClients} participants",
-      "powerSub2": "charging…",
+      "powerSub2": "are charging.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -1403,6 +1404,7 @@
     "updatePassword": "Update password"
   },
   "session": {
+    "addOdometer": "Add value",
     "cancel": "Cancel",
     "co2": "CO₂",
     "date": "Period",
@@ -1412,7 +1414,8 @@
     "meterstart": "Meter start",
     "meterstop": "Meter stop",
     "odometer": "Mileage",
-    "price": "Price",
+    "price": "Cost",
+    "soc": "Vehicle SoC",
     "started": "Started",
     "title": "Charging Session"
   },
@@ -1420,6 +1423,7 @@
     "avgPower": "⌀ Power",
     "avgPrice": "⌀ Price",
     "chargeDuration": "Duration",
+    "chargedSoc": "Charge",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Price {byGroup}",
@@ -1451,8 +1455,10 @@
       "meterstart": "Meter start (kWh)",
       "meterstop": "Meter stop (kWh)",
       "odometer": "Mileage (km)",
-      "price": "Price",
+      "price": "Cost",
       "priceperkwh": "Price/kWh",
+      "socend": "SoC end (%)",
+      "socstart": "SoC start (%)",
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },
@@ -1468,7 +1474,7 @@
     "group": {
       "co2": "Emissions",
       "grid": "Grid",
-      "price": "Price",
+      "price": "Cost",
       "self": "Solar"
     },
     "groupBy": {
@@ -1494,7 +1500,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Price",
+      "price": "Cost",
       "solar": "Solar"
     },
     "vehicle": "Vehicle"

@@ -167,6 +167,7 @@
       "powerRange": "Leistung",
       "price": "Preis",
       "range": "Reichweite",
+      "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
       "solarForecast": "PV-Vorhersage",
@@ -881,7 +882,7 @@
       "greenShareSub2": "PV und Speicher",
       "power": "Ladeleistung",
       "powerSub1": "{activeClients} von {totalClients} Nutzern",
-      "powerSub2": "laden…",
+      "powerSub2": "laden gerade.",
       "tabTitle": "Live-Community"
     },
     "savings": {
@@ -1403,6 +1404,7 @@
     "updatePassword": "Passwort ändern"
   },
   "session": {
+    "addOdometer": "Wert eintragen",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",
@@ -1412,7 +1414,8 @@
     "meterstart": "Anfangszählerstand",
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
-    "price": "Preis",
+    "price": "Kosten",
+    "soc": "Ladestand",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },
@@ -1420,6 +1423,7 @@
     "avgPower": "⌀ Leistung",
     "avgPrice": "⌀ Preis",
     "chargeDuration": "Ladedauer",
+    "chargedSoc": "Ladung",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Preis {byGroup}",
@@ -1451,8 +1455,10 @@
       "meterstart": "Anfangszählerstand (kWh)",
       "meterstop": "Endzählerstand (kWh)",
       "odometer": "Kilometerstand (km)",
-      "price": "Preis",
+      "price": "Kosten",
       "priceperkwh": "Preis/kWh",
+      "socend": "Ladestand Ende (%)",
+      "socstart": "Ladestand Start (%)",
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },
@@ -1468,7 +1474,7 @@
     "group": {
       "co2": "Emissionen",
       "grid": "Netz",
-      "price": "Preis",
+      "price": "Kosten",
       "self": "Sonne"
     },
     "groupBy": {
@@ -1491,10 +1497,10 @@
     "showIndividualEntries": "Einzelne Ladevorgänge anzeigen",
     "solar": "Sonne",
     "title": "Ladevorgänge",
-    "total": "Insgesamt",
+    "total": "Gesamt",
     "type": {
       "co2": "CO₂",
-      "price": "Preis",
+      "price": "Kosten",
       "solar": "Sonne"
     },
     "vehicle": "Fahrzeug"

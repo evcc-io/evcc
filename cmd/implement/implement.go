@@ -75,6 +75,7 @@ func generate(out io.Writer) error {
 		reflect.TypeFor[api.MaxACPowerGetter](),
 		reflect.TypeFor[api.Meter](),
 		reflect.TypeFor[api.MeterEnergy](),
+		reflect.TypeFor[api.MeterReturnEnergy](),
 		reflect.TypeFor[api.PhaseCurrents](),
 		reflect.TypeFor[api.PhaseGetter](),
 		reflect.TypeFor[api.PhasePowers](),
