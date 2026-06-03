@@ -63,10 +63,12 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 	var maxCurtailPower *float64
 	switch {
 	case cc.MaxCurtailPower != nil:
-		maxCurtailPower = new(math.Abs(*cc.MaxCurtailPower))
+		v := math.Abs(*cc.MaxCurtailPower)
+		maxCurtailPower = &v
 	case cc.MaxPower > 0:
 		// fnn-3 backwards compatibility: legacy MaxPower was the PV/curtail cap
-		maxCurtailPower = new(math.Abs(cc.MaxPower))
+		v := math.Abs(cc.MaxPower)
+		maxCurtailPower = &v
 	}
 
 	return &Fnn{
