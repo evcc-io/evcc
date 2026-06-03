@@ -198,6 +198,7 @@ export default {
 				case "hemsActiveLimit":
 					return this.fmtW(value);
 				case "energy":
+				case "returnEnergy":
 				case "capacity":
 				case "chargedEnergy":
 					return this.fmtWh(value * 1e3);
