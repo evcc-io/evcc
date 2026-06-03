@@ -2,12 +2,15 @@ template: audi
 covers: ["etron"]
 products:
   - brand: Audi
+    description:
+      generic: myAudi
 params:
   - preset: vehicle-base
   - name: vin
     example: WAUZZZ...
   - preset: vehicle-features
 render: |
-  type: audi
+  type: drivesomethinggreater
+  brand: Audi
   {{ include "vehicle-base" . }}
   {{ include "vehicle-features" . }}

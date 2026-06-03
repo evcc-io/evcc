@@ -1,5 +1,11 @@
 import { reactive } from "vue";
-import type { DeviceColors } from "./types/evcc";
+import type { DeviceColorEntry, DeviceColors } from "./types/evcc";
+
+export function deviceColorMap(list: DeviceColorEntry[] | undefined): DeviceColors {
+  const m: DeviceColors = {};
+  for (const { title, color } of list ?? []) m[title] = color;
+  return m;
+}
 
 // alternatives
 // const COLORS = [ "#40916C", "#52B788", "#74C69D", "#95D5B2", "#B7E4C7", "#D8F3DC", "#081C15", "#1B4332", "#2D6A4F"];
@@ -45,6 +51,7 @@ const colors: {
     "#F472B6", // pink
     "#34D399", // green
     "#A78BFA", // violet
+    "#94A3B8", // gray
     // mid
     "#2563EB", // blue
     "#F59E0B", // amber
@@ -52,6 +59,7 @@ const colors: {
     "#EC4899", // pink
     "#10B981", // green
     "#8B5CF6", // violet
+    "#64748B", // gray
     // dark
     "#1E40AF", // blue
     "#B45309", // amber
@@ -59,6 +67,7 @@ const colors: {
     "#BE185D", // pink
     "#047857", // green
     "#6D28D9", // violet
+    "#334155", // gray
   ],
 });
 

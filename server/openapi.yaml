@@ -696,8 +696,8 @@ paths:
       - $ref: "#/components/parameters/id"
     put:
       operationId: updateSession
-      summary: Update vehicle of charging session
-      description: "Update vehicle of charging session."
+      summary: Update charging session
+      description: "Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value."
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/sessions
       tags:
@@ -713,6 +713,8 @@ paths:
                   $ref: "#/components/schemas/VehicleName"
                 loadpoint:
                   $ref: "#/components/schemas/LoadpointName"
+                odometer:
+                  $ref: "#/components/schemas/Odometer"
       responses:
         "200":
           description: Success
@@ -1182,9 +1184,7 @@ components:
           vehicle:
             $ref: "#/components/schemas/VehicleName"
           odometer:
-            nullable: true
-            type: "number"
-            description: Vehicle odometer reading in kilometers
+            $ref: "#/components/schemas/Odometer"
           meterStart:
             nullable: true
             type: "number"
@@ -1305,6 +1305,10 @@ components:
         - "now"
         - "minpv"
         - "pv"
+    Odometer:
+      nullable: true
+      type: "number"
+      description: Vehicle odometer reading in kilometers
     Password:
       description: Admin password
       type: string

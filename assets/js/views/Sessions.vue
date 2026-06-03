@@ -92,8 +92,6 @@
 					:cost-type="activeType"
 					:currency="currency"
 					:period="period"
-					:suggested-max-avg-cost="suggestedMaxAvgCost"
-					:suggested-max-cost="suggestedMaxCost"
 				/>
 				<div v-if="showExtraCharts" class="row align-items-start">
 					<div class="col-12 col-lg-6 mb-5">
@@ -159,6 +157,7 @@
 						:href="csvLink"
 						download
 						data-testid="sessions-download"
+						@click="handleDownloadClick($event, csvLink)"
 					>
 						{{ csvLinkLabel }}
 					</a>
@@ -205,11 +204,13 @@ import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
 import CustomSelect from "../components/Helper/CustomSelect.vue";
-import colors, { resolveColors } from "../colors";
+import colors, { resolveColors, deviceColorMap } from "../colors";
+import type { DeviceColors } from "@/types/evcc";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
+import { handleDownloadClick } from "@/utils/native";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
@@ -503,8 +504,8 @@ export default defineComponent({
 			}
 			return this.csvHrefLink();
 		},
-		deviceColors() {
-			return store.state.deviceColors ?? {};
+		deviceColors(): DeviceColors {
+			return deviceColorMap(store.state.deviceColors);
 		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
@@ -637,29 +638,6 @@ export default defineComponent({
 				? this.suggestedMaxAvgPrice
 				: this.suggestedMaxAvgCo2;
 		},
-		suggestedMaxCo2() {
-			// returns the 98th percentile of total co2 emissions by time period
-			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2Map = sessionsWithCo2.reduce((acc: Record<string, number>, s) => {
-				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + (s.co2PerKWh ?? 0) * s.chargedEnergy;
-				return acc;
-			}, {});
-			return Math.max(this.percentile(Object.values(co2Map), 98) ?? 0, 5); // 5kg default
-		},
-		suggestedMaxPrice() {
-			// returns the 98th percentile of total price by time period
-			const sessionsWithPrice = this.sessions.filter((s) => s.price !== null);
-			const priceMap = sessionsWithPrice.reduce((acc: Record<string, number>, s) => {
-				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + (s.price || 0);
-				return acc;
-			}, {});
-			return Math.max(this.percentile(Object.values(priceMap), 98) ?? 0, 1); // 1 CURRENCY default
-		},
-		suggestedMaxCost() {
-			return this.activeType === TYPES.PRICE ? this.suggestedMaxPrice : this.suggestedMaxCo2;
-		},
 	},
 	watch: {
 		offline() {
@@ -670,6 +648,7 @@ export default defineComponent({
 		this.loadSessions();
 	},
 	methods: {
+		handleDownloadClick,
 		changePeriod(newPeriod: PERIODS) {
 			let month: number | undefined = this.month;
 			let year: number | undefined = this.year;
@@ -686,16 +665,6 @@ export default defineComponent({
 					period = undefined;
 			}
 			this.$router.push({ query: { ...this.$route.query, period, month, year } });
-		},
-		dateToPeriodKey(date: Date) {
-			const options: Intl.DateTimeFormatOptions = {
-				year: "numeric",
-				month: "numeric",
-				day: "numeric",
-			};
-			if (this.period === PERIODS.YEAR) options.day = undefined;
-			if (this.period === PERIODS.TOTAL) options.month = undefined;
-			return date.toLocaleDateString(undefined, options);
 		},
 		async loadSessions() {
 			const response = await api.get("sessions");

@@ -46,6 +46,10 @@
     "noBattery": "Nejsou nakonfigurovány žádné baterie.",
     "usageTab": "Využití baterie"
   },
+  "colors": {
+    "auto": "Automaticky",
+    "hex": "Hex barva"
+  },
   "config": {
     "aux": {
       "description": "Zařízení, které přizpůsobuje svou spotřebu podle dostupného přebytku (například chytré bojlery). evcc předpokládá, že toto zařízení v případě potřeby sníží svůj odběr.",
@@ -884,11 +888,11 @@
       "greenShareSub2": "solární, a bateriové úložiště",
       "power": "Dobíjecí energie",
       "powerSub1": "{activeClients} z {totalClients} účastníků",
-      "powerSub2": "právě nabíjí",
+      "powerSub2": "právě nabíjí.",
       "tabTitle": "Komunita Live"
     },
     "savings": {
-      "co2Saved": "{value} uložena",
+      "co2Saved": "{value} uchováno",
       "co2Title": "CO₂ emise",
       "configurePriceCo2": "Zjistit jak nastavit cenu a data CO₂.",
       "footerLong": "{percent} solární energie",
@@ -903,7 +907,7 @@
       },
       "indicatorLabel": "Informace v záhlaví",
       "modalTitle": "Přehled energie",
-      "moneySaved": "{value} uložena",
+      "moneySaved": "{value} uspořeno",
       "percentGrid": "{grid} kWh síť",
       "percentSelf": "{self} kWh solár",
       "percentTitle": "Solární energie",
@@ -1166,10 +1170,10 @@
       "battery": "Baterie domu",
       "batteryCharge": "Nabíjení baterie",
       "batteryDischarge": "Vybíjení baterie",
-      "batteryForecastEmpty": "Prázdné od {time}",
-      "batteryForecastFull": "Plný od {time}",
-      "batteryForecastNextHigh": "Příští špička",
-      "batteryForecastNextLow": "Příští nízká",
+      "batteryForecastEmpty": "Prázdné",
+      "batteryForecastFull": "Plný",
+      "batteryForecastNextHigh": "Špička",
+      "batteryForecastNextLow": "Minimum",
       "batteryGridChargeActive": "nabíjení domácí baterie ze sítě je aktivní",
       "batteryGridChargeLimit": "nabíjení ze sítě, když",
       "batteryHold": "Baterie (udržování stavu nabití)",
@@ -1422,7 +1426,7 @@
     "meterstart": "Měřič začátek",
     "meterstop": "Měřič konec",
     "odometer": "Ujetých kilometrů",
-    "price": "Cena",
+    "price": "Náklady",
     "started": "Zahájeno",
     "title": "Nabíjecí relace"
   },
@@ -1461,7 +1465,7 @@
       "meterstart": "Počáteční stav měřiče (kWh)",
       "meterstop": "Konečný stav měřiče (kWh)",
       "odometer": "Tachometr (km)",
-      "price": "Cena",
+      "price": "Náklady",
       "priceperkwh": "Cena/kWh",
       "solarpercentage": "Solární energie (%)",
       "vehicle": "Vozidlo"
@@ -1478,7 +1482,7 @@
     "group": {
       "co2": "Emise",
       "grid": "Elektrická síť",
-      "price": "Cena",
+      "price": "Náklady",
       "self": "Solár"
     },
     "groupBy": {
@@ -1504,7 +1508,7 @@
     "total": "Celkem",
     "type": {
       "co2": "CO₂",
-      "price": "Cena",
+      "price": "Náklady",
       "solar": "Solár"
     },
     "vehicle": "Vozidlo"

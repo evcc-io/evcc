@@ -964,14 +964,8 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// set gridcontrol default title
-			circuits.forEach((c: ConfigCircuit) => {
-				if (c.name === GRID_CONTROL && !c.config?.title) {
-					c.config = c.config || {};
-					c.config.title = this.$t("config.hems.title");
-				}
-			});
-			this.circuits = circuits;
+			// gridcontrol is auto-created for hems and must not be user-assignable to loadpoints
+			this.circuits = circuits.filter((c: ConfigCircuit) => c.name !== GRID_CONTROL);
 		},
 		async loadTariffs() {
 			this.tariffs = (await this.loadConfig("devices/tariff")) || [];

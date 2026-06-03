@@ -1,6 +1,15 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
+import {
+  expectModalVisible,
+  expectModalHidden,
+  editorClear,
+  editorPaste,
+  enableAppContext,
+  expectAppEvent,
+  newLoadpoint,
+  addDemoCharger,
+} from "./utils";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
 
 test.use({ baseURL: baseUrl() });
@@ -109,6 +118,25 @@ limit:
     await stopSimulator();
   });
 
+  test.describe("grid sessions CSV in app context", () => {
+    test("dispatches download event", async ({ page }) => {
+      await enableAppContext(page);
+      await start(CONFIG, "hems.sql");
+      await page.goto("/#/config");
+
+      await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+      const hemsModal = page.getByTestId("hems-modal");
+      await expectModalVisible(hemsModal);
+
+      const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
+      await csvLink.click();
+      expect(await expectAppEvent(page)).toMatchObject({
+        type: "download",
+        url: expect.stringContaining("/api/gridsessions?format=csv&lang=en"),
+      });
+    });
+  });
+
   test("external control with circuits", async ({ page }) => {
     const GRID_CONFIG = "hems-grid.evcc.yaml";
     await start(GRID_CONFIG);
@@ -162,5 +190,13 @@ limit:
         "0.0 kW",
       ].join("")
     );
+
+    // a new loadpoint can only be assigned to the dedicated circuit, not gridcontrol
+    await newLoadpoint(page, "Carport");
+    await addDemoCharger(page);
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await expectModalVisible(lpModal);
+    const circuitOptions = lpModal.getByLabel("Circuit").getByRole("option");
+    await expect(circuitOptions).toHaveText(["---", "House [main]"]);
   });
 });

@@ -6,11 +6,13 @@ import (
 	"github.com/evcc-io/evcc/vehicle/vag/cariad"
 )
 
-const LoginURL = cariad.BaseURL + "/user-login/v1/authorize"
-
+// AuthParams are the OIDC authorize parameters for the WeConnect ID client.
+// The authorize endpoint is the legacy identity.vwgroup.io OIDC entry point
+// (vwidentity.Config.AuthURL); the token endpoint is the cariad BFF (see
+// oauth.go).
 var AuthParams = url.Values{
 	"response_type": {"code id_token token"},
-	"client_id":     {"a24fba63-34b3-4d43-b181-942111e6bda8@apps_vw-dilab_com"},
+	"client_id":     {cariad.ClientID},
 	"redirect_uri":  {"weconnect://authenticated"},
 	"scope":         {"openid profile badge cars vin"}, // dealers
 }

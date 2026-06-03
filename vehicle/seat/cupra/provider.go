@@ -76,7 +76,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	switch strings.ToLower(res.Services.Charging.Status) {
-	case "connected", "readyforcharging", "notreadyforcharging", "error":
+	case "connected", "readyforcharging", "notreadyforcharging", "error", "chargepurposereachedandnotconservationcharging":
 		return api.StatusB, nil
 	case "charging":
 		return api.StatusC, nil
