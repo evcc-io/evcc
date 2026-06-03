@@ -187,7 +187,11 @@ func (site *Site) SetHEMS(hems api.HEMS) {
 	defer site.Unlock()
 	site.hems = hems
 
-	circuit.SetHEMS(hems)
+	// site.circuit holds the root circuit (circuit.Root() at boot); the clamp
+	// is only meaningful there
+	if root, ok := site.circuit.(*circuit.Circuit); ok {
+		root.SetHEMS(hems)
+	}
 
 	for _, lp := range site.loadpoints {
 		lp.hems = hems

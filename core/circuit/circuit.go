@@ -232,6 +232,15 @@ func (c *Circuit) SetMaxPower(power float64) {
 	c.maxPower = power
 }
 
+// SetHEMS attaches the HEMS instance whose consumption limit is enforced via
+// this circuit's GetMaxPower clamp. Only meaningful on the root circuit.
+// Calling with a nil hems clears the attachment.
+func (c *Circuit) SetHEMS(hems api.HEMS) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.hems = hems
+}
+
 // GetMaxCurrent returns the max current setting
 func (c *Circuit) GetMaxCurrent() float64 {
 	if c.getMaxCurrent != nil {
