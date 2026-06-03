@@ -6,7 +6,7 @@ products:
 requirements:
   description:
     de: |
-      Fuer die lokale Modbus TCP Verbindung muss Modbus am EcoFlow PowerOcean durch den Installateur aktiviert sein.
+      Für die lokale Modbus TCP Verbindung muss Modbus am EcoFlow PowerOcean durch den Installateur aktiviert sein.
     en: |
       The local Modbus TCP connection requires Modbus to be enabled on the EcoFlow PowerOcean by the installer.
 params:
