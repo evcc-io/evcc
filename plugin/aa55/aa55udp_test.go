@@ -102,25 +102,33 @@ func TestFloatGetter_ET_SoC(t *testing.T) {
 
 // TestBuildReadConfig_RegisterMode verifies default register-read config.
 func TestBuildReadConfig_RegisterMode(t *testing.T) {
-	cfg, err := buildReadConfig(int(InverterAddr), "", 0x75AF, 2, 0)
+	cfg, err := buildReadConfig(int(InverterAddr), 0x75AF, 2, nil)
 	require.NoError(t, err)
 	assert.Equal(t, []byte{0x7f, 0x03, 0x75, 0xaf, 0x00, 0x02}, cfg.pdu)
 	assert.Equal(t, 0, cfg.offset)
 	assert.False(t, cfg.useCache)
 }
 
-// TestBuildReadConfig_BlockMode verifies block-read config from raw PDU.
+// TestBuildReadConfig_BlockMode verifies the block PDU is built from the block
+// register/count and the target register's offset is computed within it.
+// ET grid (0x8943) within block READ 125 @ 0x891C → offset (35139-35100)*2 = 78.
 func TestBuildReadConfig_BlockMode(t *testing.T) {
-	cfg, err := buildReadConfig(int(InverterAddr), "f703891c007d", 0, 2, 54)
+	cfg, err := buildReadConfig(0xF7, 0x8943, 2, &Block{Register: 0x891C, Count: 125})
 	require.NoError(t, err)
 	assert.Equal(t, []byte{0xf7, 0x03, 0x89, 0x1c, 0x00, 0x7d}, cfg.pdu)
-	assert.Equal(t, 54, cfg.offset)
+	assert.Equal(t, 78, cfg.offset)
 	assert.True(t, cfg.useCache)
 }
 
-// TestBuildReadConfig_RejectsMixedConfig rejects pdu+register combinations.
-func TestBuildReadConfig_RejectsMixedConfig(t *testing.T) {
-	_, err := buildReadConfig(int(InverterAddr), "f703891c007d", 0x75AF, 2, 0)
+// TestBuildReadConfig_RejectsRegisterOutsideBlock rejects a target register
+// that does not fit entirely within the configured block.
+func TestBuildReadConfig_RejectsRegisterOutsideBlock(t *testing.T) {
+	// before block start
+	_, err := buildReadConfig(0xF7, 0x8900, 2, &Block{Register: 0x891C, Count: 125})
+	require.Error(t, err)
+
+	// past block end (0x891C+125 = 0x8999; 0x8998+2 overruns)
+	_, err = buildReadConfig(0xF7, 0x8998, 2, &Block{Register: 0x891C, Count: 125})
 	require.Error(t, err)
 }
 

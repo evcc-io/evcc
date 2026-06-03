@@ -9,11 +9,9 @@ package aa55
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/grid-x/modbus"
 )
@@ -30,18 +28,6 @@ func buildPDU(addr byte, register, count uint16) []byte {
 		byte(register >> 8), byte(register),
 		byte(count >> 8), byte(count),
 	}
-}
-
-// parsePDU decodes a hex string (spaces allowed) into a 6-byte PDU body.
-func parsePDU(s string) ([]byte, error) {
-	b, err := hex.DecodeString(strings.ReplaceAll(s, " ", ""))
-	if err != nil {
-		return nil, fmt.Errorf("invalid pdu %q: %w", s, err)
-	}
-	if len(b) != 6 {
-		return nil, fmt.Errorf("pdu must be 6 bytes, got %d", len(b))
-	}
-	return b, nil
 }
 
 // stripHeader validates the AA55 response frame and returns the bare payload

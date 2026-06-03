@@ -82,26 +82,6 @@ func TestBuildPDU_SoC(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// parsePDU
-// ---------------------------------------------------------------------------
-
-func TestParsePDU_OK(t *testing.T) {
-	b, err := parsePDU("7f 03 75 94 00 49")
-	require.NoError(t, err)
-	assert.Equal(t, []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}, b)
-}
-
-func TestParsePDU_WrongLength(t *testing.T) {
-	_, err := parsePDU("7f0375")
-	require.Error(t, err)
-}
-
-func TestParsePDU_BadHex(t *testing.T) {
-	_, err := parsePDU("zzzz03759400")
-	require.Error(t, err)
-}
-
-// ---------------------------------------------------------------------------
 // stripHeader
 // ---------------------------------------------------------------------------
 
@@ -250,8 +230,7 @@ func TestModbusCRC16_ETPdu(t *testing.T) {
 func TestModbusCRC16_KnownValue(t *testing.T) {
 	// The original block-read DT PDU 7f 03 75 94 00 49 → CRC d5 c2.
 	// Known-good value verified against real hardware.
-	pdu, err := parsePDU("7f0375940049")
-	require.NoError(t, err)
+	pdu := buildPDU(0x7F, 0x7594, 0x49)
 	assert.Equal(t, []byte{0xd5, 0xc2}, modbusCRC16(pdu))
 }
 

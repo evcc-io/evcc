@@ -11,12 +11,14 @@ import (
 
 // AA55UDP is the GoodWe AA55-over-UDP source plugin transport.
 //
-// Two read modes are supported:
+// Two read modes are supported, both built from logical parameters
+// (id, register, count) on the Go side:
 //
 //	Register read: single register, value at offset 0 of response payload.
-//	Block read:    whole register block, value extracted at a byte offset.
-//	               Multiple source blocks sharing the same (host, pdu) pair
-//	               share one UDP exchange per poll cycle via the response cache.
+//	Block read:    enclosing block fetched once, target register extracted at
+//	               its computed offset. Multiple sources sharing the same
+//	               (host, block) share one UDP exchange per poll cycle via the
+//	               response cache.
 type AA55UDP struct {
 	log      *util.Logger
 	conn     *net.UDPConn
@@ -27,6 +29,15 @@ type AA55UDP struct {
 	cacheKey []byte // precomputed cache key (remoteAddr/pdu); nil disables caching
 }
 
+// Block describes the enclosing register block to fetch in block-read mode.
+// When set, one UDP exchange reads Count registers starting at Register, and
+// each source extracts its own target register at the computed offset, sharing
+// the response via the cache.
+type Block struct {
+	Register uint16
+	Count    uint16
+}
+
 // readConfig holds the resolved read mode configuration.
 type readConfig struct {
 	pdu      []byte
@@ -34,42 +45,46 @@ type readConfig struct {
 	useCache bool
 }
 
-// buildReadConfig normalizes config input and returns the resolved read mode.
-func buildReadConfig(id int, pdu string, register uint16, count uint16, offset int) (readConfig, error) {
-	// PDU/block mode
-	if pdu != "" {
-		// Reject mixed configuration where PDU and register parameters are both set.
-		if register != 0 || count != 2 || id != int(InverterAddr) {
-			return readConfig{}, errors.New("pdu cannot be combined with register/count/id settings")
-		}
-		if offset < 0 {
-			return readConfig{}, fmt.Errorf("offset must be non-negative, got %d", offset)
-		}
-		pduBytes, err := parsePDU(pdu)
-		if err != nil {
-			return readConfig{}, err
-		}
-		return readConfig{pdu: pduBytes, offset: offset, useCache: true}, nil
-	}
-
-	// Register mode
-	if count == 0 {
-		return readConfig{}, errors.New("count must be ≥ 1")
-	}
+// buildReadConfig resolves the read mode from the target register (register,
+// count, id) and the optional enclosing block. In both modes the PDU is built
+// on the Go side; the template only supplies logical parameters.
+func buildReadConfig(id int, register, count uint16, block *Block) (readConfig, error) {
 	if id < 0 || id > 255 {
 		return readConfig{}, fmt.Errorf("id must be 0-255, got %d", id)
 	}
+	if count == 0 {
+		return readConfig{}, errors.New("count must be ≥ 1")
+	}
+
+	// Block mode: fetch the whole block and extract the target register at its
+	// offset. Multiple sources sharing the same block share one UDP exchange.
+	if block != nil {
+		if block.Count == 0 {
+			return readConfig{}, errors.New("block count must be ≥ 1")
+		}
+		// The target register must fit entirely within the block.
+		if register < block.Register || uint32(register)+uint32(count) > uint32(block.Register)+uint32(block.Count) {
+			return readConfig{}, fmt.Errorf("register %d+%d does not fit in block %d+%d", register, count, block.Register, block.Count)
+		}
+		return readConfig{
+			pdu:      buildPDU(byte(id), block.Register, block.Count),
+			offset:   int(register-block.Register) * 2,
+			useCache: true,
+		}, nil
+	}
+
+	// Register mode: single targeted read, value at offset 0, no caching.
 	return readConfig{pdu: buildPDU(byte(id), register, count), useCache: false}, nil
 }
 
 // New constructs an AA55UDP from a high-level configuration. It validates
-// decode, resolves the read mode (register vs PDU/block), and wraps the conn.
+// decode, resolves the read mode (register vs block), and wraps the conn.
 // The caller is responsible for dialling conn.
-func New(log *util.Logger, conn *net.UDPConn, id int, pdu string, register, count uint16, offset int, decode string, scale float64) (*AA55UDP, error) {
+func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, block *Block, decode string, scale float64) (*AA55UDP, error) {
 	if err := validateDecode(decode); err != nil {
 		return nil, err
 	}
-	cfg, err := buildReadConfig(id, pdu, register, count, offset)
+	cfg, err := buildReadConfig(id, register, count, block)
 	if err != nil {
 		return nil, err
 	}
