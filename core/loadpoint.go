@@ -1067,8 +1067,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return active
 	}
 
-	// Capacity() is in kWh, getChargedEnergy() is in Wh- convert to Wh to compare
-	minEnergy := v.Capacity() * 1e3 * float64(minSoc) / 100 / soc.ChargeEfficiency
+	minEnergy := v.Capacity() * float64(minSoc) * 10 / soc.ChargeEfficiency
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
