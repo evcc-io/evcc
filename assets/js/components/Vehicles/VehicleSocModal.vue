@@ -26,7 +26,7 @@
 				data-testid="vehicle-soc-confirm"
 				@click="confirm"
 			>
-				{{ $t("main.vehicle.setSoc") }}
+				{{ $t("main.vehicle.setSocConfirm") }}
 			</button>
 		</div>
 	</GenericModal>

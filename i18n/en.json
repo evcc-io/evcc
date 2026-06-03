@@ -1334,6 +1334,7 @@
       "none": "No vehicle",
       "notReachable": "Vehicle was not reachable. Try restarting evcc.",
       "setSoc": "Set %",
+      "setSocConfirm": "Save",
       "setSocHelp": "Enter the current charge level for vehicles that don't report it.",
       "setSocTitle": "Set charge level",
       "targetSoc": "Limit",
