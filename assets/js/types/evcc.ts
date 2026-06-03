@@ -143,6 +143,7 @@ export interface OcppForwarderRule {
   upstreamUrl: string;
   password?: string;
   upstreamStationId?: string;
+  username?: string;
   insecure?: boolean;
   caCert?: string;
   readOnly?: boolean;

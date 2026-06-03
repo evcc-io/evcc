@@ -39,7 +39,12 @@
 						class="station-bar border rounded d-flex align-items-center gap-3 px-3 py-3"
 						data-testid="ocpp-station"
 					>
-						<div class="text-truncate me-auto">
+						<StatusIndicator
+							class="flex-shrink-0"
+							:variant="statusVariant(entry.status)"
+							:tooltip="$t(`config.ocpp.status.${entry.status}`)"
+						/>
+						<div class="station-identity text-truncate">
 							<div v-if="entry.title" class="fw-bold fs-6 text-truncate">
 								{{ entry.title }}
 							</div>
@@ -47,20 +52,11 @@
 								entry.id
 							}}</code>
 						</div>
-						<StatusIndicator :variant="statusVariant(entry.status)">
-							{{ $t(`config.ocpp.status.${entry.status}`) }}
-						</StatusIndicator>
-						<button
-							type="button"
-							class="btn d-flex align-items-center justify-content-center p-2 flex-shrink-0"
-							:class="forwardClass(entry)"
-							:title="forwardTitle(entry)"
-							:aria-label="forwardTitle(entry)"
-							data-bs-toggle="tooltip"
-							@click="editForwarder(entry.id)"
-						>
-							<OcppForwardStatus :status="forwardStatus(entry)" />
-						</button>
+						<OcppForwarderButton
+							:station-id="entry.id"
+							:rule="entry.rule"
+							:error="entry.error"
+						/>
 					</li>
 				</ul>
 			</div>
@@ -73,7 +69,7 @@ import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
 import Markdown from "./Markdown.vue";
-import OcppForwardStatus from "../MaterialIcon/OcppForwardStatus.vue";
+import OcppForwarderButton from "./OcppForwarderButton.vue";
 import StatusIndicator from "./StatusIndicator.vue";
 import type {
 	Ocpp,
@@ -83,7 +79,6 @@ import type {
 } from "@/types/evcc";
 import { OCPP_STATION_STATUS } from "@/types/evcc";
 import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
-import { openModal } from "@/configModal";
 import store from "@/store";
 
 type StationEntry = {
@@ -100,7 +95,7 @@ export default defineComponent({
 		GenericModal,
 		FormRow,
 		Markdown,
-		OcppForwardStatus,
+		OcppForwarderButton,
 		StatusIndicator,
 	},
 	props: {
@@ -130,12 +125,14 @@ export default defineComponent({
 		// a rule without a matching station is shown as "unknown".
 		entries(): StationEntry[] {
 			const byId = new Map<string, StationEntry>();
+			const published = new Set<string>();
 			for (const station of this.ocpp.status.stations) {
 				byId.set(station.id, {
 					id: station.id,
 					status: station.status,
 					title: this.stationTitles[station.id],
 				});
+				published.add(station.id);
 			}
 			for (const rule of this.rules) {
 				if (rule.stationId === "*") continue;
@@ -148,7 +145,13 @@ export default defineComponent({
 				entry.error = this.sessions.find((s) => s.chargerId === rule.stationId)?.error;
 				byId.set(rule.stationId, entry);
 			}
-			return [...byId.values()];
+			// published stations first, then rule-only entries; each sorted by id
+			const byIdAlpha = (a: StationEntry, b: StationEntry) => a.id.localeCompare(b.id);
+			const all = [...byId.values()];
+			return [
+				...all.filter((e) => published.has(e.id)).sort(byIdAlpha),
+				...all.filter((e) => !published.has(e.id)).sort(byIdAlpha),
+			];
 		},
 	},
 	methods: {
@@ -161,33 +164,6 @@ export default defineComponent({
 				default:
 					return "muted";
 			}
-		},
-		forwardStatus(entry: StationEntry): "unconfigured" | "configured" | "error" {
-			if (!entry.rule) return "unconfigured";
-			return entry.error ? "error" : "configured";
-		},
-		forwardClass(entry: StationEntry): string {
-			switch (this.forwardStatus(entry)) {
-				case "configured":
-					return "text-success border border-success forward-bg-success";
-				case "error":
-					return "text-danger border border-danger forward-bg-error";
-				default:
-					return "forward-muted border";
-			}
-		},
-		forwardTitle(entry: StationEntry): string {
-			switch (this.forwardStatus(entry)) {
-				case "configured":
-					return this.$t("config.ocpp.forwardingConfigured");
-				case "error":
-					return this.$t("config.ocpp.forwardingError");
-				default:
-					return this.$t("config.ocpp.forwardingOff");
-			}
-		},
-		editForwarder(stationId: string) {
-			openModal("ocppforwarder", { station: stationId });
 		},
 	},
 });
@@ -203,14 +179,8 @@ export default defineComponent({
 	--bs-border-color: var(--bs-gray-light);
 }
 
-/* forward button tints, scoped so global subtle colors stay untouched */
-.forward-muted {
-	color: var(--bs-gray-light);
-}
-.forward-bg-success {
-	background-color: color-mix(in srgb, var(--evcc-primary) 10%, transparent);
-}
-.forward-bg-error {
-	background-color: color-mix(in srgb, var(--evcc-red) 10%, transparent);
+/* min-width:0 lets the identity actually truncate */
+.station-identity {
+	min-width: 0;
 }
 </style>

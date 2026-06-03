@@ -607,7 +607,7 @@
       "forwardingOff": "No forwarding configured",
       "noChargers": "No OCPP chargers detected.",
       "stations": "Station IDs",
-      "stationsHelp": "Configured and detected chargers. Select a station to forward its OCPP messages to an external server.",
+      "stationsHelp": "Configured and detected OCPP chargers. In addition to local control, you can forward messages to an external server (e.g. for billing).",
       "status": {
         "configured": "Not connected",
         "connected": "Connected",
@@ -624,7 +624,7 @@
       "labelCheckInsecure": "Allow self-signed certificates",
       "labelInsecure": "Certificate validation",
       "password": "Password",
-      "passwordHelp": "Password for HTTP Basic Auth to the upstream server.",
+      "passwordHelp": "For HTTP Basic Auth to the upstream server.",
       "readOnly": {
         "check": "Block commands from the upstream server",
         "help": {
@@ -633,10 +633,13 @@
         },
         "label": "Upstream commands"
       },
-      "upstreamStationId": "Station ID / Username",
-      "upstreamStationIdHelp": "Station ID sent to the upstream server. Also used as the HTTP Basic Auth username.",
+      "status": "Status",
+      "upstreamStationId": "Station ID",
+      "upstreamStationIdHelp": "Charger identifier sent to the upstream server.",
       "upstreamUrl": "Upstream server URL",
-      "upstreamUrlHelp": "OCPP WebSocket URL of the external server."
+      "upstreamUrlHelp": "OCPP WebSocket URL of the external server.",
+      "username": "Username",
+      "usernameHelp": "For HTTP Basic Auth to the upstream server."
     },
     "optimizer": {
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",

@@ -78,26 +78,61 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 	forwarderMu.Unlock()
 
 	valid := make(map[string]bool, len(rules))
+	hasWildcard := false
 	for _, r := range rules {
 		valid[r.StationID] = true
+		if r.StationID == "*" {
+			hasWildcard = true
+		}
 	}
+
+	// drop sidecars/errors for removed rules
+	var stale []*sidecar
 	sidecarsMu.Lock()
+	for id, sc := range sidecars {
+		if !valid[id] && !hasWildcard {
+			stale = append(stale, sc)
+			delete(sidecars, id)
+		}
+	}
 	for id := range forwarderErrors {
-		if !valid[id] {
+		if !valid[id] && !hasWildcard {
 			delete(forwarderErrors, id)
 		}
 	}
 	sidecarsMu.Unlock()
+	for _, sc := range stale {
+		sc.conn.CloseNow()
+	}
 
-	// validate upstreams without an active sidecar so config errors surface before a charger connects
+	// connected charger: start (or re-dial on param change) the sidecar; else
+	// test-dial to surface config errors
 	for _, r := range rules {
 		if r.StationID == "*" || r.UpstreamURL == "" {
 			continue
 		}
 		sidecarsMu.Lock()
-		_, active := sidecars[r.StationID]
+		sc, active := sidecars[r.StationID]
+		connected := connectedChargers[r.StationID]
+		var changed *sidecar
+		if active && !sc.rule.sameConnection(r) {
+			changed = sc
+			delete(sidecars, r.StationID)
+			active = false
+		}
 		sidecarsMu.Unlock()
-		if !active {
+		if changed != nil {
+			changed.conn.CloseNow()
+		}
+		if active {
+			continue
+		}
+		if connected {
+			pendingMu.Lock()
+			pendingMsgs[r.StationID] = nil
+			pendingMu.Unlock()
+			go dialUpstreamSidecar(r.StationID, r)
+		} else {
 			go validateUpstream(r.StationID, r)
 		}
 	}
@@ -109,7 +144,7 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 // records or clears the error so the UI reflects unreachable hosts immediately.
 func validateUpstream(id string, rule ForwarderRule) {
 	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
-	upstreamPath := "/" + strings.TrimLeft(rule.UpstreamStationID, "/")
+	upstreamPath := rule.upstreamPath(id)
 
 	tlsConfig := &tls.Config{InsecureSkipVerify: rule.Insecure}
 	if rule.CaCert != "" {
@@ -123,8 +158,8 @@ func validateUpstream(id string, rule ForwarderRule) {
 	}
 
 	var header http.Header
-	if rule.Password != "" {
-		header = authHeader(strings.TrimLeft(upstreamPath, "/"), rule.Password)
+	if rule.Username != "" || rule.Password != "" {
+		header = authHeader(rule.Username, rule.Password)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -197,6 +232,7 @@ func init() {
 type sidecar struct {
 	chargerID   string
 	upstreamURL string
+	rule        ForwarderRule // rule used to dial; lets us detect param changes
 	conn        *websocket.Conn
 
 	// pendingUpstreamCalls tracks message IDs of Calls sent by upstream to the
@@ -224,6 +260,9 @@ type sidecar struct {
 var (
 	sidecarsMu sync.Mutex
 	sidecars   = make(map[string]*sidecar)
+
+	// connected charger ids, so a runtime-added rule can start their sidecar; guarded by sidecarsMu
+	connectedChargers = make(map[string]bool)
 
 	// last upstream failure per charger, surfaced to the UI; guarded by sidecarsMu
 	forwarderErrors = make(map[string]string)
@@ -260,6 +299,11 @@ func resolveRule(chargerID string) (ForwarderRule, bool) {
 // sidecar connection to upstream is dialled in a goroutine.
 func onChargerConnect(ch ws.Channel) {
 	id := ch.ID()
+
+	sidecarsMu.Lock()
+	connectedChargers[id] = true
+	sidecarsMu.Unlock()
+
 	rule, ok := resolveRule(id)
 	if !ok {
 		return
@@ -276,12 +320,11 @@ func onChargerConnect(ch ws.Channel) {
 
 func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
-	upstreamPath := "/" + strings.TrimLeft(rule.UpstreamStationID, "/")
+	upstreamPath := rule.upstreamPath(id)
 
 	var header http.Header
-	if rule.Password != "" {
-		stationID := strings.TrimLeft(upstreamPath, "/")
-		header = authHeader(stationID, rule.Password)
+	if rule.Username != "" || rule.Password != "" {
+		header = authHeader(rule.Username, rule.Password)
 	}
 
 	tlsConfig := &tls.Config{InsecureSkipVerify: rule.Insecure}
@@ -316,6 +359,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	sc := &sidecar{
 		chargerID:            id,
 		upstreamURL:          upstreamBase,
+		rule:                 rule,
 		conn:                 conn,
 		pendingUpstreamCalls: make(map[string]struct{}),
 		pendingChargerCalls:  make(map[string]struct{}),
@@ -425,6 +469,7 @@ func onChargerDisconnect(ch ws.Channel) {
 	pendingMu.Unlock()
 
 	sidecarsMu.Lock()
+	delete(connectedChargers, id)
 	sc, ok := sidecars[id]
 	if ok {
 		delete(sidecars, id)
@@ -721,10 +766,31 @@ func GetForwarderStatus() []ForwarderSessionStatus {
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-// authHeader returns an HTTP Basic Auth header for the given station ID and
+// sameConnection reports whether two rules dial the upstream identically, i.e. a
+// reconnect is not needed. ReadOnly is excluded (applied live per message).
+func (r ForwarderRule) sameConnection(o ForwarderRule) bool {
+	return r.UpstreamURL == o.UpstreamURL &&
+		r.UpstreamStationID == o.UpstreamStationID &&
+		r.Username == o.Username &&
+		r.Password == o.Password &&
+		r.Insecure == o.Insecure &&
+		r.CaCert == o.CaCert
+}
+
+// upstreamPath returns the WebSocket path forwarded to upstream, defaulting to
+// the charger's own ID when no station ID override is set.
+func (r ForwarderRule) upstreamPath(chargerID string) string {
+	sid := r.UpstreamStationID
+	if sid == "" {
+		sid = chargerID
+	}
+	return "/" + strings.TrimLeft(sid, "/")
+}
+
+// authHeader returns an HTTP Basic Auth header for the given username and
 // password.
-func authHeader(stationID, password string) http.Header {
-	creds := base64.StdEncoding.EncodeToString([]byte(stationID + ":" + password))
+func authHeader(username, password string) http.Header {
+	creds := base64.StdEncoding.EncodeToString([]byte(username + ":" + password))
 	h := make(http.Header)
 	h.Set("Authorization", "Basic "+creds)
 	return h

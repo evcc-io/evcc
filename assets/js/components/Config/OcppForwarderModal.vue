@@ -18,9 +18,15 @@
 			}: {
 				values: OcppForwarderRule;
 				changes: boolean;
-				save: () => void;
+				save: (close?: boolean) => void;
 			}"
 		>
+			<p v-if="ruleExists" class="mb-3" data-testid="ocppforwarder-status">
+				{{ $t("config.ocppforwarder.status") }}:
+				<span :class="connectionConnected ? 'text-success' : 'text-danger'">{{
+					connectionLabel
+				}}</span>
+			</p>
 			<div
 				v-if="sessionError"
 				class="alert alert-danger"
@@ -47,14 +53,14 @@
 				/>
 			</FormRow>
 			<FormRow
-				id="ocppforwarderUpstreamStationId"
-				:label="$t('config.ocppforwarder.upstreamStationId')"
-				:help="$t('config.ocppforwarder.upstreamStationIdHelp')"
+				id="ocppforwarderUsername"
+				:label="$t('config.ocppforwarder.username')"
+				:help="$t('config.ocppforwarder.usernameHelp')"
 				optional
 			>
 				<input
-					id="ocppforwarderUpstreamStationId"
-					v-model="values.upstreamStationId"
+					id="ocppforwarderUsername"
+					v-model="values.username"
 					type="text"
 					class="form-control"
 					spellcheck="false"
@@ -73,6 +79,22 @@
 					type="password"
 					class="form-control"
 					autocomplete="new-password"
+				/>
+			</FormRow>
+			<FormRow
+				id="ocppforwarderUpstreamStationId"
+				:label="$t('config.ocppforwarder.upstreamStationId')"
+				:help="$t('config.ocppforwarder.upstreamStationIdHelp')"
+				optional
+			>
+				<input
+					id="ocppforwarderUpstreamStationId"
+					v-model="values.upstreamStationId"
+					type="text"
+					class="form-control"
+					:placeholder="targetStationId"
+					spellcheck="false"
+					autocomplete="off"
 				/>
 			</FormRow>
 			<PropertyCollapsible>
@@ -142,12 +164,21 @@
 					</button>
 				</div>
 				<button
-					type="submit"
+					v-if="changes"
+					type="button"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
-					:disabled="!changes"
-					@click.prevent="save()"
+					:disabled="!values.upstreamUrl"
+					@click="save(false)"
 				>
 					{{ $t("config.general.save") }}
+				</button>
+				<button
+					v-else
+					type="button"
+					class="btn btn-outline-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
+					data-bs-dismiss="modal"
+				>
+					{{ $t("config.general.close") }}
 				</button>
 			</div>
 		</template>
@@ -160,7 +191,7 @@ import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyCertField from "./PropertyCertField.vue";
-import type { OcppForwarderRule } from "@/types/evcc";
+import type { OcppForwarderRule, OcppForwarderSession } from "@/types/evcc";
 import { getModal, closeModal } from "@/configModal";
 import api from "@/api";
 import store from "@/store";
@@ -183,10 +214,23 @@ export default defineComponent({
 		ruleExists(): boolean {
 			return this.rules.some((r) => r.stationId === this.targetStationId);
 		},
-		sessionError(): string | undefined {
+		session(): OcppForwarderSession | undefined {
 			return store.state?.ocppforwarder?.status?.find(
 				(s) => s.chargerId === this.targetStationId
-			)?.error;
+			);
+		},
+		sessionError(): string | undefined {
+			return this.session?.error;
+		},
+		connectionConnected(): boolean {
+			return !!this.session?.upstreamConnected;
+		},
+		connectionLabel(): string {
+			return this.$t(
+				this.connectionConnected
+					? "config.ocpp.status.connected"
+					: "config.ocpp.status.configured"
+			);
 		},
 	},
 	methods: {
@@ -202,7 +246,6 @@ export default defineComponent({
 				: {
 						stationId: this.targetStationId,
 						upstreamUrl: "",
-						upstreamStationId: this.targetStationId,
 					};
 		},
 		// merge the edited rule back into the complete set that gets persisted

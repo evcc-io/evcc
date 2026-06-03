@@ -607,7 +607,7 @@
       "forwardingOff": "Keine Weiterleitung konfiguriert",
       "noChargers": "Keine OCPP-Wallboxen erkannt.",
       "stations": "Station-IDs",
-      "stationsHelp": "Konfigurierte und erkannte Wallboxen. Wähle eine Station, um ihre OCPP-Nachrichten an einen externen Server weiterzuleiten.",
+      "stationsHelp": "Konfigurierte und erkannte OCPP-Wallboxen. Zusätzlich zur lokalen Steuerung kannst du eine Nachrichtenweiterleitung an einen externen Server (z. B. für die Abrechnung) konfigurieren.",
       "status": {
         "configured": "Nicht verbunden",
         "connected": "Verbunden",
@@ -624,7 +624,7 @@
       "labelCheckInsecure": "Selbstsignierte Zertifikate erlauben",
       "labelInsecure": "Zertifikatsprüfung",
       "password": "Passwort",
-      "passwordHelp": "Passwort für HTTP-Basic-Auth am Upstream-Server.",
+      "passwordHelp": "Für HTTP-Basic-Auth am Upstream-Server.",
       "readOnly": {
         "check": "Befehle vom Upstream-Server blockieren",
         "help": {
@@ -633,10 +633,13 @@
         },
         "label": "Upstream-Befehle"
       },
-      "upstreamStationId": "Station-ID / Benutzername",
-      "upstreamStationIdHelp": "Station-ID, die an den Upstream-Server gesendet wird. Wird auch als Benutzername für HTTP-Basic-Auth verwendet.",
+      "status": "Status",
+      "upstreamStationId": "Station-ID",
+      "upstreamStationIdHelp": "Wallbox-Kennung, die an den Upstream-Server gesendet wird.",
       "upstreamUrl": "Upstream-Server-URL",
-      "upstreamUrlHelp": "OCPP-WebSocket-URL des externen Servers."
+      "upstreamUrlHelp": "OCPP-WebSocket-URL des externen Servers.",
+      "username": "Benutzername",
+      "usernameHelp": "Für HTTP-Basic-Auth am Upstream-Server."
     },
     "optimizer": {
       "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",

@@ -40,7 +40,6 @@ func updateOcppForwarderHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusInternalServerError, err)
 		return
 	}
-	setConfigDirty()
 	ocpp.ApplyForwarderRules(rules)
 
 	jsonWrite(w, true)

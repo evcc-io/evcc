@@ -30,6 +30,7 @@ type ForwarderRule struct {
 	UpstreamURL       string `json:"upstreamUrl" yaml:"upstreamUrl"`
 	Password          string `json:"password,omitempty" yaml:"password,omitempty"`
 	UpstreamStationID string `json:"upstreamStationId,omitempty" yaml:"upstreamStationId,omitempty"`
+	Username          string `json:"username,omitempty" yaml:"username,omitempty"`
 	Insecure          bool   `json:"insecure,omitempty" yaml:"insecure,omitempty"`
 	CaCert            string `json:"caCert,omitempty" yaml:"caCert,omitempty"`
 	ReadOnly          bool   `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
