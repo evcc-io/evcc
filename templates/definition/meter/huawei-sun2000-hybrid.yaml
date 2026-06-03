@@ -5,7 +5,7 @@ products:
     description:
       de: SUN2000 Hybrid-Wechselrichter
       en: SUN2000 Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   description:
     de: |
@@ -39,6 +39,12 @@ params:
     default: 15s
   - name: maxacpower
     service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    advanced: true
+    usages: ["pv"]
   - name: storageunit
   - name: forceaccharging
     default: false
@@ -49,8 +55,8 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
+      en: Keep AC charging active (except for when being dimmed) to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
+      de: AC-Laden bleibt aktiv (außer bei einer aktiven Leistungsreduzierung) zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
@@ -141,6 +147,53 @@ render: |
       decode: uint32nan
     scale: 0.01
   maxacpower: {{ .maxacpower }}
+  curtail:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .curtailpercent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47418 # Maximum Feed Grid Power (0-100 %)
+              type: writesingle
+              encoding: uint16
+            scale: 10
+        - source: const
+          value: 7 # Power-limited grid connection (%)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47415 # Active power control mode
+              type: writesingle
+              encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Unlimited 
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47415 # Active power control mode
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 47415 # Active power control mode (0=no curtailment)
+      type: holding
+      decode: uint16
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -196,6 +249,46 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.1
+  dim:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Disable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        {{- if eq .forceaccharging "true" }}
+        source: const
+        value: 1 # Enable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+        {{- else }}
+        source: sleep
+        duration: 0s
+        {{- end }}
+  dimmed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 47087 # Charge from grid
+      type: holding
+      decode: uint16
   batterymode:
     source: sequence
     set:
