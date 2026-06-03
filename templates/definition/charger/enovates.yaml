@@ -1,9 +1,17 @@
 template: enovates
 products:
   - brand: Enovates
+    description:
+      generic: ENO
+  - brand: Enovates
+    description:
+      generic: SingleWallBox
   - brand: Shell Recharge
     description:
       generic: Home Advanced
+  - brand: NewMotion
+    description:
+      generic: Lolo
 capabilities: ["mA", "meter"]
 requirements:
   description:
