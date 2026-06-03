@@ -102,8 +102,7 @@ render: |
                 source: noop
             - case: 2 # hold
               set:
-                source: sleep
-                duration: 0s
+                source: noop
             # only charging requires repeated requests
             - case: 3 # charge
               set:

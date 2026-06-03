@@ -16,7 +16,7 @@ func NewNoopFromConfig(ctx context.Context, other map[string]any) (Plugin, error
 }
 
 // noop is the generic no-op setter function for noopPlugin
-func noop[T comparable]() func(T) error {
+func noop[T any]() func(T) error {
 	return func(val T) error {
 		return nil
 	}
