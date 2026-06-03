@@ -11,7 +11,7 @@ func init() {
 }
 
 // NewNoopFromConfig creates noop provider
-func NewNoopFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
+func NewNoopFromConfig(_ context.Context, _ map[string]any) (Plugin, error) {
 	return &noopPlugin{}, nil
 }
 
