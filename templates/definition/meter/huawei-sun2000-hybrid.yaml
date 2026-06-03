@@ -5,7 +5,7 @@ products:
     description:
       de: SUN2000 Hybrid-Wechselrichter
       en: SUN2000 Hybrid Inverter
-capabilities: ["battery-control", "curtail"]
+capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   description:
     de: |
@@ -55,8 +55,8 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
+      en: Keep AC charging active (except for when being dimmed) to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
+      de: AC-Laden bleibt aktiv (außer bei einer aktiven Leistungsreduzierung) zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
@@ -249,6 +249,46 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.1
+  dim:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Disable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        {{- if eq .forceaccharging "true" }}
+        source: const
+        value: 1 # Enable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+        {{- else }}
+        source: sleep
+        duration: 0s
+        {{- end }}
+  dimmed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 47087 # Charge from grid
+      type: holding
+      decode: uint16
   batterymode:
     source: sequence
     set:
