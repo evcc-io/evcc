@@ -50,6 +50,7 @@ const (
 	enovatesRegEnergy         = 216  // int32 RO, Wh (active energy import total)
 	enovatesRegMode3StateStr  = 301  // 2x register RO, IEC 61851 state, e.g. "C2"
 	enovatesRegEMSLimit       = 400  // int16 RW, mA (-1 = no limit, 0 = disabled)
+	enovatesRegToken          = 401  // 16x register RO, ASCII
 	enovatesRegCurrentOffered = 417  // uint16 RO, mA
 	enovatesRegSerial         = 5032 // 16x register RO, ASCII
 	enovatesRegModel          = 5048 // 16x register RO, ASCII
