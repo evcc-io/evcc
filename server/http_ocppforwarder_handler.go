@@ -9,9 +9,8 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 )
 
-// updateOcppForwarderHandler persists the complete set of OCPP forwarder rules,
-// restores masked secrets from the stored rules (matched by station id), applies
-// the rules at runtime and triggers a republish of the forwarder config/status.
+// updateOcppForwarderHandler persists the OCPP forwarder rules, restoring masked
+// secrets from the stored rules by station id, and applies them at runtime.
 func updateOcppForwarderHandler(w http.ResponseWriter, r *http.Request) {
 	var rules []ocpp.ForwarderRule
 	if err := json.NewDecoder(r.Body).Decode(&rules); err != nil {

@@ -49,20 +49,16 @@ var (
 	externalUrl string
 )
 
-// Forwarder hooks installed by the forwarder feature in init().  Hooks are
-// optional; when nil the wrapped ws.Server behaves like a plain ws.NewServer().
-// Read-only access is goroutine-safe because hooks are assigned exactly once
-// at package init() time, before any charger connects.
+// Forwarder hooks, nil unless the forwarder is built in (set once in init()
+// before any charger connects, so reads need no lock).
 var (
 	chargerConnectHook    func(ws.Channel)
 	chargerDisconnectHook func(ws.Channel)
 	chargerMessageHook    func(ws.Channel, []byte) bool
 )
 
-// interceptingServer wraps ws.Server and routes connect / disconnect / raw-frame
-// events through the package-level forwarder hooks.  msgHook returns true to
-// bypass the OCPP message handler (used when upstream is the authoritative
-// responder).
+// interceptingServer routes connect/disconnect/message events through the
+// forwarder hooks. The message hook returns true to bypass evcc's OCPP handler.
 type interceptingServer struct {
 	ws.Server
 }

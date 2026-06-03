@@ -213,9 +213,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if ocpp.ExternalUrl() != "" {
 		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
 	}
-	// Always register the status callback — it must be set even when no rules are
-	// active at startup so that status updates are pushed when rules are added or
-	// chargers connect later at runtime.
+	// register the callback even with no rules so runtime additions are pushed
 	ocpp.SetForwarderUpdated(func() {
 		valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
 			Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
