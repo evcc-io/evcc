@@ -57,7 +57,8 @@ export default defineComponent({
 				this.tooltipInstance = null;
 				const el = this.$refs["root"] as Element | undefined;
 				if (el && this.tooltip) {
-					this.tooltipInstance = new Tooltip(el);
+					// explicit title: bootstrap clears the attr, so :title alone goes stale
+					this.tooltipInstance = new Tooltip(el, { title: this.tooltip });
 				}
 			});
 		},
