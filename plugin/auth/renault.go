@@ -74,10 +74,9 @@ func NewRenault(ctx context.Context, user, password, region string) (*Renault, e
 	defer renaultMu.Unlock()
 
 	if instance := renaultIdentities[subject]; instance != nil {
-		// user and region are immutable per subject; only password may change.
-		instance.mu.Lock()
-		instance.password = password
-		instance.mu.Unlock()
+		if instance.password != password {
+			return nil, fmt.Errorf("renault: multiple configurations for %s must use the same password", subject)
+		}
 		return instance, nil
 	}
 
