@@ -28,13 +28,13 @@ render: |
     source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed
+      uri: http://{{ .host }}/sensor/Power Consumed
       headers:
       - content-type: application/json
       jq: .value
       scale: {{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced
+      uri: http://{{ .host }}/sensor/Power Produced
       headers:
       - content-type: application/json
       jq: .value
@@ -43,28 +43,28 @@ render: |
     source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/energy_produced_tariff_1
+      uri: http://{{ .host }}/sensor/Energy Produced Tariff 1
       headers:
       - content-type: application/json
       jq: .value
     - source: http
-      uri: http://{{ .host }}/sensor/energy_produced_tariff_2
+      uri: http://{{ .host }}/sensor/Energy Produced Tariff 2
       headers:
       - content-type: application/json
       jq: .value
   currents:
   - source: http
-    uri: http://{{ .host }}/sensor/current_phase_1
+    uri: http://{{ .host }}/sensor/Current Phase 1
     headers:
     - content-type: application/json
     jq: .value
   - source: http
-    uri: http://{{ .host }}/sensor/current_phase_2
+    uri: http://{{ .host }}/sensor/Current Phase 2
     headers:
     - content-type: application/json
     jq: (.value // 0)
   - source: http
-    uri: http://{{ .host }}/sensor/current_phase_3
+    uri: http://{{ .host }}/sensor/Current Phase 3
     headers:
     - content-type: application/json
     jq: (.value // 0)
@@ -72,13 +72,13 @@ render: |
   - source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced_phase_1
+      uri: http://{{ .host }}/sensor/Power Produced Phase 1
       headers:
       - content-type: application/json
       jq: .value
       scale: -{{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed_phase_1
+      uri: http://{{ .host }}/sensor/Power Consumed Phase 1
       headers:
       - content-type: application/json
       jq: .value
@@ -86,13 +86,13 @@ render: |
   - source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced_phase_2
+      uri: http://{{ .host }}/sensor/Power Produced Phase 2
       headers:
       - content-type: application/json
       jq: (.value // 0)
       scale: -{{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed_phase_2
+      uri: http://{{ .host }}/sensor/Power Consumed Phase 2
       headers:
       - content-type: application/json
       jq: (.value // 0)
@@ -100,13 +100,13 @@ render: |
   - source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced_phase_3
+      uri: http://{{ .host }}/sensor/Power Produced Phase 3
       headers:
       - content-type: application/json
       jq: (.value // 0)
       scale: -{{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed_phase_3
+      uri: http://{{ .host }}/sensor/Power Consumed Phase 3
       headers:
       - content-type: application/json
       jq: (.value // 0)
