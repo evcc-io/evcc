@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -36,7 +35,6 @@ import (
 
 // Enovates charger implementation
 type Enovates struct {
-	implement.Caps
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16 // offered EMS limit in mA
@@ -91,12 +89,10 @@ func NewEnovates(ctx context.Context, uri string, slaveID uint8) (api.Charger, e
 	conn.Logger(log.TRACE)
 
 	wb := &Enovates{
-		Caps:    implement.New(),
 		log:     log,
 		conn:    conn,
 		current: 6000,
 	}
-	implement.Has(wb, implement.Identifier(wb.Identify))
 
 	// verify connection and EMS register availability
 	if _, err := wb.conn.ReadHoldingRegisters(enovatesRegMode3StateStr, 2); err != nil {
@@ -235,6 +231,8 @@ func (wb *Enovates) Voltages() (float64, float64, float64, error) {
 		float64(int16(binary.BigEndian.Uint16(b[2:4]))),
 		float64(int16(binary.BigEndian.Uint16(b[4:6]))), nil
 }
+
+var _ api.Identifier = (*Enovates)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Enovates) Identify() (string, error) {
