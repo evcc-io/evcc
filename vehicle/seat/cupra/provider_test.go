@@ -31,6 +31,8 @@ func TestProviderStatus(t *testing.T) {
 		{"connected", "Connected", "", api.StatusB},
 		// fault / error while plugged
 		{"error", "error", "", api.StatusB},
+		// target SoC reached in myCupra, cable still connected (#30118)
+		{"soc_reached", "ChargePurposeReachedAndNotConservationCharging", "", api.StatusB},
 		// unknown future status with no card info defaults to disconnected
 		{"unknown", "SomethingNew", "", api.StatusA},
 	}

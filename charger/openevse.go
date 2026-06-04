@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openevse"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -24,6 +25,7 @@ type OpenEVSE struct {
 	statusG util.Cacheable[openevse.Status]
 	current int
 	enabled bool
+	lp      loadpoint.API
 }
 
 func init() {
@@ -233,7 +235,22 @@ func (c *OpenEVSE) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return res.Amp * res.Voltage / 1e3, err
+	// status only reports a single phase current, scale by the loadpoint phases
+	phases := 1
+	if c.lp != nil {
+		if p := c.lp.GetPhases(); p != 0 {
+			phases = p
+		}
+	}
+
+	return res.Amp * res.Voltage / 1e3 * float64(phases), err
+}
+
+var _ loadpoint.Controller = (*OpenEVSE)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (c *OpenEVSE) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
