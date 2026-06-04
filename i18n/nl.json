@@ -887,7 +887,7 @@
       "greenShareSub2": "zonne-energie en batterij-opslag",
       "power": "Laadvermogen",
       "powerSub1": "{activeClients} van {totalClients} deelnemers",
-      "powerSub2": "laden…",
+      "powerSub2": "laden.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -946,7 +946,7 @@
     },
     "version": {
       "availableLong": "nieuwe versie beschikbaar",
-      "community": "evcc coomunity",
+      "community": "evcc community",
       "labelRelease": "Release",
       "labelVersion": "Versie",
       "labelWebsite": "Website",
@@ -1169,8 +1169,8 @@
       "battery": "Batterij",
       "batteryCharge": "Batterij opladen",
       "batteryDischarge": "Batterij ontladen",
-      "batteryForecastEmpty": "Leeg om {time}",
-      "batteryForecastFull": "Vol om {time}",
+      "batteryForecastEmpty": "Leeg",
+      "batteryForecastFull": "Vol",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryHold": "Batterij (geblokkeerd)",
@@ -1423,7 +1423,7 @@
     "meterstart": "Beginwaarde meter",
     "meterstop": "Eindwaarde meter",
     "odometer": "Kilometerstand",
-    "price": "Prijs",
+    "price": "Kostprijs",
     "started": "Gestart",
     "title": "Oplaadsessie"
   },

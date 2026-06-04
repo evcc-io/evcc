@@ -167,6 +167,7 @@
       "powerRange": "Teho",
       "price": "Hinta",
       "range": "Toimintasäde",
+      "returnEnergy": "Annettu energia",
       "singlePhase": "Yksivaiheinen",
       "soc": "Lataus",
       "solarForecast": "Aurinkosääennuste",
@@ -888,7 +889,7 @@
       "greenShareSub2": "aurinkoenergiasta ja akkuvarastoinnista",
       "power": "Latausteho",
       "powerSub1": "{activeClients} / {totalClients} osallistujaa",
-      "powerSub2": "lataa…",
+      "powerSub2": "lataavat.",
       "tabTitle": "Yhteisö"
     },
     "savings": {
@@ -1418,6 +1419,7 @@
     "updatePassword": "Päivitä salasana"
   },
   "session": {
+    "addOdometer": "Lisää arvo",
     "cancel": "Peruuta",
     "co2": "CO₂",
     "date": "Ajanjakso",
@@ -1428,6 +1430,7 @@
     "meterstop": "Mittarin pysähdys",
     "odometer": "Ajokilometrit",
     "price": "Hinta",
+    "soc": "Ajoneuvon lataustila",
     "started": "Alkoi",
     "title": "Latausistunto"
   },
@@ -1435,6 +1438,7 @@
     "avgPower": "⌀ Teho",
     "avgPrice": "⌀ Hinta",
     "chargeDuration": "Kesto",
+    "chargedSoc": "Lataus",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Hinta {byGroup}",
@@ -1468,6 +1472,8 @@
       "odometer": "Ajokilometrit (km)",
       "price": "Hinta",
       "priceperkwh": "Hinta/kWh",
+      "socend": "loppuvaraus (%)",
+      "socstart": "alkuvaraus (%)",
       "solarpercentage": "Aurinkoenergia (%)",
       "vehicle": "Ajoneuvo"
     },

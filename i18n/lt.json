@@ -167,6 +167,7 @@
       "powerRange": "Galia",
       "price": "Kaina",
       "range": "Nuvažiuojamas atstumas",
+      "returnEnergy": "Energija (atiduota)",
       "singlePhase": "Vienfazis",
       "soc": "Įkrova",
       "solarForecast": "Saulės prognozė",
