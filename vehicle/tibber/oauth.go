@@ -13,8 +13,8 @@ const (
 	AuthURI = "https://thewall.tibber.com/connect/authorize"
 	// TokenURI is the Tibber Data API token endpoint.
 	TokenURI = "https://thewall.tibber.com/connect/token"
-	// URI is the Tibber Data API base URL.
-	URI = "https://data-api.tibber.com/v1"
+	// ApiURI is the Tibber Data API base URL.
+	ApiURI = "https://data-api.tibber.com/v1"
 )
 
 func init() {

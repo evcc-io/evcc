@@ -76,7 +76,7 @@ func (v *API) Homes() ([]Home, error) {
 	var res struct {
 		Homes []Home
 	}
-	err := v.GetJSON(fmt.Sprintf("%s/homes", URI), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/homes", ApiURI), &res)
 	return res.Homes, err
 }
 
@@ -85,7 +85,7 @@ func (v *API) Devices(homeID string) ([]Device, error) {
 	var res struct {
 		Devices []Device
 	}
-	err := v.GetJSON(fmt.Sprintf("%s/homes/%s/devices", URI, homeID), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/homes/%s/devices", ApiURI, homeID), &res)
 	return res.Devices, err
 }
 
@@ -120,7 +120,7 @@ func (v *API) Vehicles() ([]Device, error) {
 // Device returns the full state of a single device.
 func (v *API) Device(homeID, deviceID string) (DeviceDetail, error) {
 	var res DeviceDetail
-	err := v.GetJSON(fmt.Sprintf("%s/homes/%s/devices/%s", URI, homeID, deviceID), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/homes/%s/devices/%s", ApiURI, homeID, deviceID), &res)
 	return res, err
 }
 
