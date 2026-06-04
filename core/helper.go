@@ -87,7 +87,7 @@ func hemsDimmed(hems api.HEMS) *bool {
 		return nil
 	}
 
-	return hems.Dimmed()
+	return new(hems.Dimmed())
 }
 
 // hemsCurtailed returns the HEMS curtail status, nil-safe
@@ -96,5 +96,5 @@ func hemsCurtailed(hems api.HEMS) *bool {
 		return nil
 	}
 
-	return hems.Curtailed()
+	return new(hems.Curtailed())
 }

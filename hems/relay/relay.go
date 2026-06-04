@@ -2,6 +2,7 @@ package relay
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -67,6 +68,10 @@ func NewRelay(site site.API, w1 func() (bool, error), passthrough func(bool) err
 		interval:    interval,
 	}
 
+	if maxPower == 0 {
+		return nil, errors.New("missing power limit")
+	}
+
 	return c, nil
 }
 
@@ -89,7 +94,7 @@ func (c *Relay) run() error {
 		limit = c.maxPower
 	}
 
-	if err := c.setLimited(limit); err != nil {
+	if err := c.setConsumptionLimit(limit); err != nil {
 		return err
 	}
 
@@ -100,7 +105,7 @@ func (c *Relay) run() error {
 	return nil
 }
 
-func (c *Relay) setLimited(limit float64) error {
+func (c *Relay) setConsumptionLimit(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -121,16 +126,15 @@ func (c *Relay) setLimited(limit float64) error {
 var _ api.HEMS = (*Relay)(nil)
 
 // Dimmed implements api.HEMS, derived from the active consumption limit.
-func (c *Relay) Dimmed() *bool {
+func (c *Relay) Dimmed() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	v := c.limit != nil
-	return &v
+	return c.limit != nil
 }
 
 // Curtailed implements api.HEMS. Relay does not curtail production.
-func (c *Relay) Curtailed() *bool {
-	return nil
+func (c *Relay) Curtailed() bool {
+	return false
 }
 
 // MaxConsumptionPower implements api.HEMS, returning the active wattage cap.

@@ -180,7 +180,7 @@ func (site *Site) GetCircuit() api.Circuit {
 	return site.circuit
 }
 
-// SetHEMS attaches the configured HEMS to the site, the root circuit and all loadpoints
+// SetHEMS attaches the configured HEMS to the site and the root circuit
 func (site *Site) SetHEMS(hems api.HEMS) {
 	site.Lock()
 	defer site.Unlock()
@@ -188,10 +188,6 @@ func (site *Site) SetHEMS(hems api.HEMS) {
 
 	if site.circuit != nil {
 		site.circuit.SetHEMS(hems)
-	}
-
-	for _, lp := range site.loadpoints {
-		lp.hems = hems
 	}
 }
 

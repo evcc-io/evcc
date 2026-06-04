@@ -19,7 +19,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 	cc := struct {
 		MaxPower        float64 // TODO deprecated
 		MaxDimPower     float64
-		MaxCurtailPower *float64
+		MaxCurtailPower float64
 		W3              *plugin.Config
 		S1              *plugin.Config
 		S2              *plugin.Config
@@ -59,16 +59,13 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 	}
 
 	maxDimPower := math.Abs(cc.MaxDimPower)
+	if w4G != nil && maxDimPower == 0 {
+		return nil, errors.New("cannot have w4 without power limit")
+	}
 
-	var maxCurtailPower *float64
-	switch {
-	case cc.MaxCurtailPower != nil:
-		v := math.Abs(*cc.MaxCurtailPower)
-		maxCurtailPower = &v
-	case cc.MaxPower > 0:
-		// fnn-3 backwards compatibility: legacy MaxPower was the PV/curtail cap
-		v := math.Abs(cc.MaxPower)
-		maxCurtailPower = &v
+	maxCurtailPower := math.Abs(cc.MaxCurtailPower)
+	if cc.MaxPower > 0 {
+		maxCurtailPower = cc.MaxPower
 	}
 
 	return &Fnn{
@@ -93,15 +90,16 @@ type Fnn struct {
 	s1, s2, w3 func() (bool, error)
 	w4         func() (bool, error)
 
+	maxDimPower     float64
+	maxCurtailPower float64
+
 	smartgridConsumptionID uint
 	smartgridProductionID  uint
 
-	maxConsumptionPower float64
-	maxProductionPower  *float64
+	consumptionLimit float64
+	productionLimit  *float64
 
-	maxDimPower     float64
-	maxCurtailPower *float64
-	interval        time.Duration
+	interval time.Duration
 }
 
 // Run starts the FNN control loop.
@@ -169,10 +167,6 @@ func (c *Fnn) runDim() error {
 
 	limit := 0.0
 	if active {
-		if c.maxDimPower <= 0 {
-			return errors.New("dim active but no limit configured")
-		}
-
 		limit = c.maxDimPower
 	}
 
@@ -184,17 +178,16 @@ func (c *Fnn) setProductionLimit(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit := 0.0
 	active := frac < 1.0
 
-	c.maxProductionPower = nil
+	c.productionLimit = nil
 	if active {
-		if c.maxCurtailPower == nil {
-			return errors.New("curtail active but no limit configured")
-		}
+		c.productionLimit = new(c.maxCurtailPower * frac)
+	}
 
-		limit = *c.maxCurtailPower * frac
-		c.maxProductionPower = new(limit)
+	limit := 0.0
+	if c.productionLimit != nil {
+		limit = *c.productionLimit
 	}
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionID, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
@@ -210,7 +203,7 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 	defer c.mu.Unlock()
 
 	active := limit > 0
-	c.maxConsumptionPower = limit
+	c.consumptionLimit = limit
 
 	if err := smartgrid.UpdateSession(&c.smartgridConsumptionID, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
@@ -222,44 +215,41 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 var _ api.HEMS = (*Fnn)(nil)
 
 // Dimmed implements api.HEMS.
-func (c *Fnn) Dimmed() *bool {
+func (c *Fnn) Dimmed() bool {
 	if c.w4 == nil {
-		return nil
+		return false
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	v := c.maxConsumptionPower > 0
-	return &v
+	return c.consumptionLimit > 0
 }
 
 // Curtailed implements api.HEMS.
-func (c *Fnn) Curtailed() *bool {
+func (c *Fnn) Curtailed() bool {
 	if c.w3 == nil {
-		return nil
+		return false
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	v := c.maxProductionPower != nil
-	return &v
+	return c.productionLimit != nil
 }
 
 // MaxConsumptionPower implements api.HEMS.
 func (c *Fnn) MaxConsumptionPower() float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.maxConsumptionPower
+	return c.consumptionLimit
 }
 
 // MaxProductionPower implements api.HEMS.
 func (c *Fnn) MaxProductionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.maxProductionPower == nil {
+	if c.productionLimit == nil {
 		return nil
 	}
 
-	v := *c.maxProductionPower
-	return &v
+	return new(*c.productionLimit)
 }

@@ -9,8 +9,8 @@ import (
 // under a dotted key so the per-tick frame does not overwrite the cached
 // boot-time {config, yamlSource} entry on new WS subscribers.
 type hemsStatus struct {
-	Dimmed              *bool    `json:"dimmed,omitempty"`
-	Curtailed           *bool    `json:"curtailed,omitempty"`
+	Dimmed              bool     `json:"dimmed,omitempty"`
+	Curtailed           bool     `json:"curtailed,omitempty"`
 	MaxConsumptionPower float64  `json:"maxConsumptionPower,omitempty"`
 	MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
 }

@@ -283,19 +283,17 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 var _ api.HEMS = (*EEBus)(nil)
 
 // Dimmed implements api.HEMS, derived from consumptionLimitActivated.
-func (c *EEBus) Dimmed() *bool {
+func (c *EEBus) Dimmed() bool {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	v := !c.consumptionLimitActivated.IsZero()
-	return &v
+	return !c.consumptionLimitActivated.IsZero()
 }
 
 // Curtailed implements api.HEMS, derived from productionLimitActivated.
-func (c *EEBus) Curtailed() *bool {
+func (c *EEBus) Curtailed() bool {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	v := !c.productionLimitActivated.IsZero()
-	return &v
+	return !c.productionLimitActivated.IsZero()
 }
 
 // MaxConsumptionPower implements api.HEMS, returning the consumption cap
@@ -316,5 +314,13 @@ func (c *EEBus) MaxConsumptionPower() float64 {
 // MaxProductionPower implements api.HEMS. Scaffolding only — EEBus does not
 // publish a wattage-typed production cap yet.
 func (c *EEBus) MaxProductionPower() *float64 {
-	return nil
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	if c.productionLimitActivated.IsZero() {
+		return nil
+	}
+	if c.status == StatusFailsafe {
+		return c.failsafeProductionLimit
+	}
+	return new(c.productionLimit.Value)
 }
