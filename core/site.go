@@ -932,8 +932,6 @@ func (site *Site) update(lp updater) {
 	// update loadpoints
 	totalChargePower := site.updateLoadpoints(consumption)
 
-	site.publishHEMS()
-
 	// update all circuits' power and currents
 	if site.circuit != nil {
 		if err := site.circuit.Update(site.loadpointsAsCircuitDevices()); err != nil {
