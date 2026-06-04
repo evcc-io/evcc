@@ -283,12 +283,18 @@ render: |
         duration: 0s
         {{- end }}
   dimmed:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 47087 # Charge from grid
-      type: holding
-      decode: uint16
+    source: go
+    in:
+    - name: v
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47087 # Charge from grid (0=disabled → dimmed, 1=enabled → not dimmed)
+          type: holding
+          decode: uint16
+    script: v == 0
   batterymode:
     source: sequence
     set:
