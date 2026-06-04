@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
@@ -187,7 +186,9 @@ func (site *Site) SetHEMS(hems api.HEMS) {
 	defer site.Unlock()
 	site.hems = hems
 
-	circuit.SetHEMS(hems)
+	if site.circuit != nil {
+		site.circuit.SetHEMS(hems)
+	}
 
 	for _, lp := range site.loadpoints {
 		lp.hems = hems

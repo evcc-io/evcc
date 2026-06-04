@@ -175,15 +175,11 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 	return nil
 }
 
-// Wrap wraps circuit with parent, keeping the original meter
-func (c *Circuit) Wrap(parent api.Circuit) error {
-	if parent == c {
-		return nil // wrap circuit with itself
-	}
-	if c.meter != nil {
-		parent.(*Circuit).meter = c.meter
-	}
-	return c.setParent(parent)
+// SetHEMS attaches the HEMS instance to the circuit. Valid on root circuit only.
+func (c *Circuit) SetHEMS(hems api.HEMS) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.hems = hems
 }
 
 // HasMeter returns the max power setting

@@ -1005,6 +1005,18 @@ func (mr *MockCircuitMockRecorder) RegisterChild(child any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterChild", reflect.TypeOf((*MockCircuit)(nil).RegisterChild), child)
 }
 
+// SetHEMS mocks base method.
+func (m *MockCircuit) SetHEMS(arg0 HEMS) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetHEMS", arg0)
+}
+
+// SetHEMS indicates an expected call of SetHEMS.
+func (mr *MockCircuitMockRecorder) SetHEMS(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHEMS", reflect.TypeOf((*MockCircuit)(nil).SetHEMS), arg0)
+}
+
 // SetMaxCurrent mocks base method.
 func (m *MockCircuit) SetMaxCurrent(arg0 float64) {
 	m.ctrl.T.Helper()
@@ -1081,20 +1093,6 @@ func (m *MockCircuit) ValidatePower(old, new float64) float64 {
 func (mr *MockCircuitMockRecorder) ValidatePower(old, new any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePower", reflect.TypeOf((*MockCircuit)(nil).ValidatePower), old, new)
-}
-
-// Wrap mocks base method.
-func (m *MockCircuit) Wrap(parent Circuit) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Wrap", parent)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Wrap indicates an expected call of Wrap.
-func (mr *MockCircuitMockRecorder) Wrap(parent any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wrap", reflect.TypeOf((*MockCircuit)(nil).Wrap), parent)
 }
 
 // MockDimmer is a mock of Dimmer interface.

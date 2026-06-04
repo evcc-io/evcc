@@ -140,16 +140,6 @@ func TestCircuitCurrents(t *testing.T) {
 	}
 }
 
-func TestWrapCycleDetection(t *testing.T) {
-	log := util.NewLogger("foo")
-
-	pc, _ := New(log, "root", 0, 0, nil, 0)
-	lpc, _ := New(log, "lpc", 0, 0, nil, 0)
-
-	require.NoError(t, lpc.setParent(pc))
-	require.Error(t, pc.Wrap(lpc))
-}
-
 // TestHEMSConsumptionClamp verifies that ValidatePower clamps against the
 // HEMS consumption limit when one is registered on the root circuit.
 func TestHEMSConsumptionClamp(t *testing.T) {
