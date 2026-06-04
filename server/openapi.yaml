@@ -1419,7 +1419,6 @@ components:
       description: Timestamp in RFC3339 format
       type: string
       format: date-time
-      example: 2025-07-19T12:30:00.000Z
     VehicleName:
       externalDocs:
         url: https://docs.evcc.io/en/docs/reference/configuration/vehicles#name
