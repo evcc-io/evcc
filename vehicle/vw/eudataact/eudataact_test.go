@@ -1,9 +1,6 @@
 package eudataact
 
 import (
-	"archive/zip"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -12,24 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// zipJSON builds an in-memory dataset zip containing a single JSON document
-func zipJSON(t *testing.T, doc datasetFile) []byte {
-	t.Helper()
-
-	raw, err := json.Marshal(doc)
-	require.NoError(t, err)
-
-	var buf bytes.Buffer
-	zw := zip.NewWriter(&buf)
-	w, err := zw.Create("dataset.json")
-	require.NoError(t, err)
-	_, err = w.Write(raw)
-	require.NoError(t, err)
-	require.NoError(t, zw.Close())
-
-	return buf.Bytes()
-}
 
 // testProvider returns a provider serving the given static data
 func testProvider(data map[string]point) *Provider {
