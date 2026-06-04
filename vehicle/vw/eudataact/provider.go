@@ -82,7 +82,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc); p != nil {
+	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevel); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -133,7 +133,7 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldOdometer); p != nil {
+	if p := lookup(data, FieldOdometer, FieldOdometerValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -155,7 +155,8 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = api.StatusB
 	}
 
-	if p := lookup(data, FieldChargingState); p != nil && strings.EqualFold(p.Value, "charging") {
+	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
+		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV")) {
 		status = api.StatusC
 	}
 
