@@ -142,22 +142,33 @@ func (v *API) Device(homeID, deviceID string) (DeviceDetail, error) {
 	return res, err
 }
 
-// capability returns the first capability matching the predicate.
-func (d DeviceDetail) capability(match func(Capability) bool) (Capability, bool) {
+// Tibber Data API capability ids and the enum values they report.
+const (
+	idSoc       = "storage.stateOfCharge"       // %
+	idTargetSoc = "storage.targetStateOfCharge" // %
+	idRange     = "range.remaining"             // distance, typically m
+	idConnector = "connector.status"            // connected/disconnected/unknown
+	idCharging  = "charging.status"             // charging/idle/unknown
+
+	StatusConnected = "connected" // connector.status
+	StatusCharging  = "charging"  // charging.status
+)
+
+const kmPerMile = 1.609344
+
+// capability returns the capability with the given id.
+func (d DeviceDetail) capability(id string) (Capability, bool) {
 	for _, c := range d.Capabilities {
-		if match(c) {
+		if c.ID == id {
 			return c, true
 		}
 	}
 	return Capability{}, false
 }
 
-// Soc returns the battery state of charge in percent. It matches the capability
-// reporting a percentage value (the Tibber capability ids are not contractual).
+// Soc returns the battery state of charge in percent.
 func (d DeviceDetail) Soc() (float64, bool) {
-	c, ok := d.capability(func(c Capability) bool {
-		return c.Unit == "%" && hint(c, "charge", "soc", "battery") && !hint(c, "target", "limit")
-	})
+	c, ok := d.capability(idSoc)
 	if !ok {
 		return 0, false
 	}
@@ -165,12 +176,9 @@ func (d DeviceDetail) Soc() (float64, bool) {
 	return f, err == nil
 }
 
-// TargetSoc returns the configured charge limit in percent. It matches the
-// capability reporting a percentage value hinting at a target or limit.
+// TargetSoc returns the configured charge limit in percent.
 func (d DeviceDetail) TargetSoc() (float64, bool) {
-	c, ok := d.capability(func(c Capability) bool {
-		return c.Unit == "%" && hint(c, "target", "limit")
-	})
+	c, ok := d.capability(idTargetSoc)
 	if !ok {
 		return 0, false
 	}
@@ -178,14 +186,9 @@ func (d DeviceDetail) TargetSoc() (float64, bool) {
 	return f, err == nil
 }
 
-const kmPerMile = 1.609344
-
-// Range returns the estimated range in km. It matches the capability reporting
-// a distance value and converts m/mi to km as needed.
+// Range returns the estimated range in km, converting m/mi to km as needed.
 func (d DeviceDetail) Range() (float64, bool) {
-	c, ok := d.capability(func(c Capability) bool {
-		return isDistanceUnit(c.Unit) && hint(c, "range")
-	})
+	c, ok := d.capability(idRange)
 	if !ok {
 		return 0, false
 	}
@@ -202,54 +205,23 @@ func (d DeviceDetail) Range() (float64, bool) {
 	return f, true
 }
 
-// isDistanceUnit reports whether the unit denotes a distance evcc can normalize to km.
-func isDistanceUnit(unit string) bool {
-	switch unit {
-	case "m", "km", "mi", "mile", "miles":
-		return true
-	default:
-		return false
-	}
-}
-
-// Status values reported by the connector.status and charging.status
-// capabilities of the Tibber Data API.
-const (
-	StatusConnected = "connected" // connector.status: connected/disconnected/unknown
-	StatusCharging  = "charging"  // charging.status: charging/idle/unknown
-)
-
 // PlugStatus returns the connector (plug) status value, e.g. connected,
 // disconnected or unknown.
 func (d DeviceDetail) PlugStatus() (string, bool) {
-	return d.statusValue("plug", "connector")
+	return d.statusValue(idConnector)
 }
 
 // ChargingStatus returns the charging status value, e.g. charging, idle or unknown.
 func (d DeviceDetail) ChargingStatus() (string, bool) {
-	return d.statusValue("charging")
+	return d.statusValue(idCharging)
 }
 
-// statusValue returns the string value of the first unitless capability matching
-// any of the keywords.
-func (d DeviceDetail) statusValue(keywords ...string) (string, bool) {
-	c, ok := d.capability(func(c Capability) bool {
-		return c.Unit == "" && hint(c, keywords...)
-	})
+// statusValue returns the string value of the capability with the given id.
+func (d DeviceDetail) statusValue(id string) (string, bool) {
+	c, ok := d.capability(id)
 	if !ok {
 		return "", false
 	}
 	s, ok := c.Value.(string)
 	return s, ok
-}
-
-// hint reports whether the capability id or description contains any of the keywords.
-func hint(c Capability, keywords ...string) bool {
-	hay := strings.ToLower(c.ID + " " + c.Description)
-	for _, k := range keywords {
-		if strings.Contains(hay, k) {
-			return true
-		}
-	}
-	return false
 }
