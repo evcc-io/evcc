@@ -129,3 +129,40 @@ func TestRun_HeartbeatReturned_NoFreshLimit(t *testing.T) {
 	assertConsumptionLimit(t, c, 0)
 	assertProductionLimit(t, c, false)
 }
+
+// TestRun_ProductionLimitReleasedEarly verifies that an active production limit
+// is released as soon as the EG deactivates it (IsActive=false), without waiting
+// for its duration to elapse. The previous code only released on duration expiry,
+// so unchecking "Activate" in the control box had no effect until the timer ran
+// out (see PR #30284 report).
+func TestRun_ProductionLimitReleasedEarly(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+
+	// EG activates a production limit with a long duration.
+	c.productionLimit = ucapi.LoadLimit{IsActive: true, Duration: time.Hour}
+	require.NoError(t, c.run())
+	assertProductionLimit(t, c, true)
+
+	// EG deactivates well within the duration -> must release immediately.
+	c.productionLimit.IsActive = false
+	require.NoError(t, c.run())
+	assertProductionLimit(t, c, false)
+}
+
+// TestRun_ConsumptionLimitReleasedEarly is the LPC mirror of the LPP early-release
+// case: an active consumption limit must drop as soon as the EG deactivates it.
+func TestRun_ConsumptionLimitReleasedEarly(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+
+	// EG activates a consumption limit with a long duration.
+	c.consumptionLimit = ucapi.LoadLimit{Value: 3000, IsActive: true, Duration: time.Hour}
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, 3000)
+
+	// EG deactivates well within the duration -> must release immediately.
+	c.consumptionLimit.IsActive = false
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, 0)
+}

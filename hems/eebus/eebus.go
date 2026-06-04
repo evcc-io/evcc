@@ -211,7 +211,11 @@ func (c *EEBus) run() error {
 			c.setConsumptionLimit(c.consumptionLimit.Value)
 		}
 	} else {
-		if time.Since(c.consumptionLimitActivated) > c.consumptionLimit.Duration {
+		switch {
+		case !c.consumptionLimit.IsActive:
+			c.log.DEBUG.Println("consumption limit released")
+			c.setConsumptionLimit(0)
+		case time.Since(c.consumptionLimitActivated) > c.consumptionLimit.Duration:
 			c.log.DEBUG.Println("consumption limit duration exceeded")
 			c.setConsumptionLimit(0)
 			c.consumptionLimit.IsActive = false
@@ -225,7 +229,11 @@ func (c *EEBus) run() error {
 			c.setProductionLimit(c.productionLimit.Value, true)
 		}
 	} else {
-		if time.Since(c.productionLimitActivated) > c.productionLimit.Duration {
+		switch {
+		case !c.productionLimit.IsActive:
+			c.log.DEBUG.Println("production limit released")
+			c.setProductionLimit(0, false)
+		case time.Since(c.productionLimitActivated) > c.productionLimit.Duration:
 			c.log.DEBUG.Println("production limit duration exceeded")
 			c.setProductionLimit(0, false)
 			c.productionLimit.IsActive = false
