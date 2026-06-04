@@ -405,9 +405,7 @@
               "type": "number"
             },
             "odometer": {
-              "description": "Vehicle odometer reading in kilometers",
-              "nullable": true,
-              "type": "number"
+              "$ref": "#/components/schemas/Odometer"
             },
             "vehicle": {
               "$ref": "#/components/schemas/VehicleName"
@@ -561,6 +559,11 @@
         ],
         "type": "string"
       },
+      "Odometer": {
+        "description": "Vehicle odometer reading in kilometers",
+        "nullable": true,
+        "type": "number"
+      },
       "Password": {
         "description": "Admin password",
         "type": "string"
@@ -709,7 +712,6 @@
       },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
-        "example": "2025-07-19T12:30:00Z",
         "format": "date-time",
         "type": "string"
       },
@@ -1939,7 +1941,7 @@
         }
       ],
       "put": {
-        "description": "Update vehicle of charging session.",
+        "description": "Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/docs/features/sessions"
         },
@@ -1951,6 +1953,9 @@
                 "properties": {
                   "loadpoint": {
                     "$ref": "#/components/schemas/LoadpointName"
+                  },
+                  "odometer": {
+                    "$ref": "#/components/schemas/Odometer"
                   },
                   "vehicle": {
                     "$ref": "#/components/schemas/VehicleName"
@@ -1967,7 +1972,7 @@
             "description": "Success"
           }
         },
-        "summary": "Update vehicle of charging session",
+        "summary": "Update charging session",
         "tags": [
           "sessions"
         ]

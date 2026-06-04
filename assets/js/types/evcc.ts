@@ -19,6 +19,7 @@ declare global {
   }
   interface Window {
     ReactNativeWebView?: WebView;
+    evccAppCapabilities?: string[];
   }
 }
 
@@ -71,6 +72,7 @@ export interface State {
   experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
+  apiReady?: boolean;
   loadpoints: Loadpoint[];
   forecast: Forecast;
   currency?: CURRENCY;

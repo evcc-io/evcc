@@ -29,7 +29,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ocpp"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -40,17 +39,14 @@ import (
 // OCPP charger implementation
 type OCPP struct {
 	implement.Caps
-	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
 	phases  int
 	enabled bool
 	current float64
 
-	stackLevelZero       bool
-	profileKindRelative  bool
-	noChangeAvailability bool
-	lp                   loadpoint.API
+	stackLevelZero      bool
+	profileKindRelative bool
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -132,8 +128,6 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
-	implement.Has(c, implement.CurrentGetter(c.getMaxCurrent))
-
 	return c, nil
 }
 
@@ -182,13 +176,11 @@ func NewOCPP(ctx context.Context,
 	}
 
 	c := &OCPP{
-		Caps:                 implement.New(),
-		log:                  log,
-		cp:                   cp,
-		conn:                 conn,
-		stackLevelZero:       stackLevelZero,
-		profileKindRelative:  profileKindRelative,
-		noChangeAvailability: noChangeAvailability,
+		Caps:                implement.New(),
+		cp:                  cp,
+		conn:                conn,
+		stackLevelZero:      stackLevelZero,
+		profileKindRelative: profileKindRelative,
 	}
 
 	if cp.HasRemoteTriggerFeature {
@@ -354,9 +346,11 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	return res
 }
 
-// getMaxCurrent returns the current the charge point is set to offer.
+var _ api.CurrentGetter = (*OCPP)(nil)
+
+// GetMaxCurrent returns the current the charge point is set to offer.
 // Prefers the Current.Offered measurand, falls back to the last confirmed charging profile limit.
-func (c *OCPP) getMaxCurrent() (float64, error) {
+func (c *OCPP) GetMaxCurrent() (float64, error) {
 	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
 		if v, err := c.conn.GetMaxCurrent(); err == nil || !errors.Is(err, api.ErrNotAvailable) {
 			return v, err
@@ -441,11 +435,4 @@ func (c *OCPP) Diagnose() {
 			fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
 		}
 	}
-}
-
-var _ loadpoint.Controller = (*OCPP)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (c *OCPP) LoadpointControl(lp loadpoint.API) {
-	c.lp = lp
 }

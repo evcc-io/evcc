@@ -493,6 +493,10 @@ func (lp *Loadpoint) evChargeStartHandler() {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
 		}
+		// capture start soc once available (may not be present at session start)
+		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
+			session.SocStart = &soc
+		}
 	})
 }
 
@@ -546,6 +550,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// re-read energy from charger and re-persist session if values improved
 	lp.finalizeSessionEnergy()
+
+	// re-read odometer to catch delayed update (#30225)
+	lp.vehicleOdometer()
 
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
@@ -1064,7 +1071,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return active
 	}
 
-	minEnergy := v.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency
+	minEnergy := v.Capacity() * float64(minSoc) * 10 / soc.ChargeEfficiency
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
@@ -1319,6 +1326,19 @@ func (lp *Loadpoint) fastCharging() error {
 	}
 
 	return lp.setLimit(lp.effectiveMaxCurrent())
+}
+
+// minCharging scales to 1p if available and sets minimum current
+func (lp *Loadpoint) minCharging() error {
+	if lp.hasPhaseSwitching() {
+		// ignore api.ErrNotAvailable: the phase switch could not be performed
+		// right now, continue with the current phase configuration
+		if err := lp.scalePhasesIfAvailable(1); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			return err
+		}
+	}
+
+	return lp.setLimit(lp.effectiveMinCurrent())
 }
 
 // pvScalePhases switches phases if necessary and returns number of phases switched to
@@ -2093,11 +2113,13 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 
-			var targetCurrent float64
 			if mode == api.ModeMinPV {
-				targetCurrent = lp.GetMinCurrent()
+				// minimize self-consumption to maximize feed-in by scaling down
+				// to the absolute minimum of 1 phase at min current
+				err = lp.minCharging()
+			} else {
+				err = lp.setLimit(0)
 			}
-			err = lp.setLimit(targetCurrent)
 
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
