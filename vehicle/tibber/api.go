@@ -31,6 +31,15 @@ type DeviceInfo struct {
 	Model string
 }
 
+// VIN returns the vehicle identification number from the external id, which is
+// formatted as vendor:vin (e.g. tesla:5YJSA1E26MF1234567).
+func (d Device) VIN() string {
+	if _, vin, ok := strings.Cut(d.ExternalID, ":"); ok {
+		return vin
+	}
+	return d.ExternalID
+}
+
 // DeviceDetail is the full device state including capabilities.
 type DeviceDetail struct {
 	ID           string

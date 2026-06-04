@@ -47,7 +47,7 @@ func getVehicles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, v := range vehicles {
-		ids = append(ids, v.ExternalID)
+		ids = append(ids, v.VIN())
 	}
 	slices.Sort(ids)
 }
