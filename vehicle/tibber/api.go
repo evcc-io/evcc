@@ -93,6 +93,34 @@ func (v *API) Devices(homeID string) ([]Device, error) {
 	return res.Devices, err
 }
 
+// Vehicles lists the vehicles across all homes, deduplicated. With only the
+// vehicles scope granted, the devices endpoint returns vehicles only.
+func (v *API) Vehicles() ([]Device, error) {
+	homes, err := v.Homes()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []Device
+	seen := make(map[string]bool)
+
+	for _, home := range homes {
+		devices, err := v.Devices(home.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, d := range devices {
+			if !seen[d.ID] {
+				seen[d.ID] = true
+				res = append(res, d)
+			}
+		}
+	}
+
+	return res, nil
+}
+
 // Device returns the full state of a single device.
 func (v *API) Device(homeID, deviceID string) (DeviceDetail, error) {
 	var res DeviceDetail

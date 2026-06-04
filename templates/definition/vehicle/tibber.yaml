@@ -31,6 +31,7 @@ params:
     example: "https://evcc.example.org/providerauth/callback"
   - name: vin
     example: WVW...
+    service: tibber/vehicles?clientid={clientid}&clientsecret={clientsecret}&redirecturi={redirecturi}
     help:
       en: Optional, selects the vehicle when the account has more than one.
       de: Optional, wählt das Fahrzeug aus, wenn das Konto mehrere besitzt.

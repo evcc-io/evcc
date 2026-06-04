@@ -81,7 +81,9 @@ func (v *Tibber) resolve() error {
 		}
 
 		for _, d := range devices {
-			if v.vin == "" || strings.EqualFold(d.ExternalID, v.vin) {
+			// match the full external id (e.g. tesla:5YJ...) or a bare vin suffix
+			eid := strings.ToUpper(d.ExternalID)
+			if v.vin == "" || eid == v.vin || strings.HasSuffix(eid, ":"+v.vin) {
 				v.homeID = home.ID
 				v.devID = d.ID
 				return nil
