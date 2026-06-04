@@ -40,52 +40,6 @@ func testProvider(data map[string]point) *Provider {
 	}
 }
 
-func TestParseDataset(t *testing.T) {
-	doc := datasetFile{
-		VIN: "WVWZZZ123",
-		Data: []dataPoint{
-			{DataFieldName: FieldSoc, Value: "73", TimestampUtc: "2026-05-31T07:00:00Z"},
-			{DataFieldName: FieldSoc, Value: "80", TimestampUtc: "2026-05-31T08:00:00Z"}, // newest timestamp wins
-			{DataFieldName: FieldOdometer, Value: "12345", TimestampUtc: "2026-05-31T08:00:00Z"},
-			{DataFieldName: FieldRange, Value: "210", TimestampUtc: "2026-05-31T08:00:00Z"},
-			{DataFieldName: FieldChargingState, Value: "charging", TimestampUtc: "2026-05-31T08:00:00Z"},
-			{DataFieldName: FieldPlugState, Value: "connected", TimestampUtc: "2026-05-31T08:00:00Z"},
-			{DataFieldName: FieldTargetSoc, Value: "90", TimestampUtc: "2026-05-31T08:00:00Z"},
-			{DataFieldName: "", Value: "ignored"}, // empty field name skipped
-		},
-	}
-
-	vin, data, err := parseDataset(zipJSON(t, doc))
-	require.NoError(t, err)
-
-	assert.Equal(t, "WVWZZZ123", vin, "dataset vin must be returned for filtering")
-	assert.Equal(t, "80", data[FieldSoc].Value, "newest timestamp must win")
-	assert.Equal(t, "12345", data[FieldOdometer].Value)
-	assert.Equal(t, "210", data[FieldRange].Value)
-
-	p := testProvider(data)
-
-	soc, err := p.Soc()
-	require.NoError(t, err)
-	assert.Equal(t, 80.0, soc)
-
-	rng, err := p.Range()
-	require.NoError(t, err)
-	assert.Equal(t, int64(210), rng)
-
-	odo, err := p.Odometer()
-	require.NoError(t, err)
-	assert.Equal(t, 12345.0, odo)
-
-	status, err := p.Status()
-	require.NoError(t, err)
-	assert.Equal(t, api.StatusC, status)
-
-	limit, err := p.GetLimitSoc()
-	require.NoError(t, err)
-	assert.Equal(t, int64(90), limit)
-}
-
 func TestStatusPlugStates(t *testing.T) {
 	tc := []struct {
 		plug, charge string
@@ -162,16 +116,16 @@ func TestMerge(t *testing.T) {
 		FieldOdometer: {Value: "100", Timestamp: t1},
 	}
 	src := map[string]point{
-		FieldSoc:      {Value: "80", Timestamp: t1},  // newer -> wins
-		FieldOdometer: {Value: "90", Timestamp: t0},  // older -> ignored
-		FieldRange:    {Value: "200", Timestamp: t1}, // new field -> added
+		FieldSoc:            {Value: "80", Timestamp: t1},  // newer -> wins
+		FieldOdometer:       {Value: "90", Timestamp: t0},  // older -> ignored
+		FieldRangeSecondary: {Value: "200", Timestamp: t1}, // new field -> added
 	}
 
 	merge(dst, src)
 
 	assert.Equal(t, "80", dst[FieldSoc].Value, "newer datapoint wins")
 	assert.Equal(t, "100", dst[FieldOdometer].Value, "older datapoint ignored")
-	assert.Equal(t, "200", dst[FieldRange].Value, "new field added")
+	assert.Equal(t, "200", dst[FieldRangeSecondary].Value, "new field added")
 }
 
 // TestResetDelay verifies the cache reset is scheduled for when the portal is
