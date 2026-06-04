@@ -44,6 +44,16 @@ render: |
       - 203:TotWhImp
       - 213:TotWhImp
     scale: 0.001
+  returnenergy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    value:
+      - 201:TotWhExp
+      - 211:TotWhExp
+      - 203:TotWhExp
+      - 213:TotWhExp
+    scale: 0.001
   currents:
     - source: sunspec
       uri: {{ joinHostPort .host .port }}
