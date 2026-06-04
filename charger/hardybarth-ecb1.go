@@ -233,6 +233,18 @@ func (wb *HardyBarth) Currents() (float64, float64, float64, error) {
 	return res.Data[obis.CurrentDemandL1], res.Data[obis.CurrentDemandL2], res.Data[obis.CurrentDemandL3], nil
 }
 
+var _ api.PhaseVoltages = (*HardyBarth)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *HardyBarth) Voltages() (float64, float64, float64, error) {
+	res, err := wb.meterG()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return res.Data[obis.VoltageDemandL1], res.Data[obis.VoltageDemandL2], res.Data[obis.VoltageDemandL3], nil
+}
+
 // var _ api.Identifier = (*HardyBarth)(nil)
 
 // // Identify implements the api.Identifier interface
