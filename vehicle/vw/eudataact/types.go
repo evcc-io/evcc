@@ -101,6 +101,7 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
+	FieldBatteryStateReportSoc = "battery_state_report.soc"
 	FieldSoc           = "battery_state_report.soc"
 	FieldHvSoc         = "battery_level_HV.value"
 	FieldRange         = "cruising_range_combined"
