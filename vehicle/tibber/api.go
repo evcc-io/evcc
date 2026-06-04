@@ -49,17 +49,12 @@ type DeviceDetail struct {
 }
 
 // Capability is a single device capability and its last-seen value. The value
-// is delivered as a JSON number or string; Float normalizes both.
+// is delivered as a JSON number or string.
 type Capability struct {
 	ID          string
 	Description string
 	Value       any
 	Unit        string
-}
-
-// Float returns the capability value as a float, accepting both number and string encodings.
-func (c Capability) Float() (float64, error) {
-	return cast.ToFloat64E(c.Value)
 }
 
 // API is the Tibber Data API REST client.
@@ -165,7 +160,7 @@ func (d DeviceDetail) Soc() (float64, bool) {
 	if !ok {
 		return 0, false
 	}
-	f, err := c.Float()
+	f, err := cast.ToFloat64E(c.Value)
 	return f, err == nil
 }
 
@@ -175,7 +170,7 @@ func (d DeviceDetail) TargetSoc() (float64, bool) {
 	if !ok {
 		return 0, false
 	}
-	f, err := c.Float()
+	f, err := cast.ToFloat64E(c.Value)
 	return f, err == nil
 }
 
@@ -185,7 +180,7 @@ func (d DeviceDetail) Range() (float64, bool) {
 	if !ok {
 		return 0, false
 	}
-	f, err := c.Float()
+	f, err := cast.ToFloat64E(c.Value)
 	if err != nil {
 		return 0, false
 	}
