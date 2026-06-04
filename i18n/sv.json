@@ -167,6 +167,7 @@
       "powerRange": "Kraft",
       "price": "Pris",
       "range": "Räckvidd",
+      "returnEnergy": "Energi (retur)",
       "singlePhase": "En-fas",
       "soc": "Laddnivå",
       "solarForecast": "Solprognos",
@@ -889,7 +890,7 @@
       "greenShareSub2": "sol och batteri",
       "power": "Laddeffekt",
       "powerSub1": "{activeClients} av {totalClients} deltagare",
-      "powerSub2": "laddar…",
+      "powerSub2": "laddar.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -1420,6 +1421,7 @@
     "updatePassword": "Ändra lösenord"
   },
   "session": {
+    "addOdometer": "Lägg till värde",
     "cancel": "Avbryt",
     "co2": "CO₂",
     "date": "Period",
@@ -1429,7 +1431,7 @@
     "meterstart": "Mätare start",
     "meterstop": "Mätare stopp",
     "odometer": "Mätarställning",
-    "price": "Pris",
+    "price": "Kostnad",
     "soc": "Fordon SoC",
     "started": "Start-tid",
     "title": "Laddning"

@@ -82,9 +82,9 @@ type dataset struct {
 
 // dataPoint is a single data point as delivered in the dataset JSON document
 type dataPoint struct {
-	DataFieldName string `json:"dataFieldName"`
-	Value         string `json:"value"`
-	TimestampUtc  string `json:"timestampUtc"`
+	DataFieldName string     `json:"dataFieldName"`
+	Value         string     `json:"value"`
+	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
 // point is a decoded data point: its value and the time it was recorded
@@ -101,15 +101,20 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
-	FieldSoc           = "state_of_charge"
-	FieldHvSoc         = "hv_soc"
-	FieldRange         = "cruising_range_combined"
-	FieldRangePrimary  = "cruising_range_primary_engine"
-	FieldOdometer      = "mileage"
-	FieldChargingState = "charging_state"
-	FieldPlugState     = "plug_state"
-	FieldTargetSoc     = "settings.target_soc"
-	FieldRemainingTime = "remaining_charging_time"
+	FieldBatteryStateReportSoc = "battery_state_report.soc"
+	FieldSoc                   = "state_of_charge"
+	FieldHvSoc                 = "hv_soc"
+	FieldHvBatteryLevel        = "battery_level_HV.value"
+	FieldRangeCombined         = "cruising_range_combined"
+	FieldRangePrimary          = "cruising_range_primary_engine"
+	FieldRangeSecondary        = "cruising_range_secondary_engine"
+	FieldOdometer              = "mileage"
+	FieldOdometerValue         = "mileage.value"
+	FieldChargingState         = "charging_state"
+	FieldCurrentChargeState    = "charging_state_report.current_charge_state"
+	FieldPlugState             = "plug_state"
+	FieldTargetSoc             = "settings.target_soc"
+	FieldRemainingTime         = "remaining_charging_time"
 )
 
 // contentDatasets returns the datasets that actually carry content, with their
@@ -178,9 +183,9 @@ func parseDataset(b []byte) (string, map[string]point, error) {
 			continue
 		}
 
-		ts, err := time.Parse(time.RFC3339, p.TimestampUtc)
-		if err != nil {
-			return "", nil, err
+		var ts time.Time
+		if p.TimestampUtc != nil {
+			ts = *p.TimestampUtc
 		}
 
 		if cur, ok := res[p.DataFieldName]; ok && cur.Timestamp.After(ts) {

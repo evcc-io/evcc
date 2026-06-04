@@ -167,6 +167,7 @@
       "powerRange": "Plage de puissance",
       "price": "Prix",
       "range": "Autonomie",
+      "returnEnergy": "Energie (retournée)",
       "singlePhase": "Monophasé",
       "soc": "Charge",
       "solarForecast": "Prévision solaire",
@@ -1418,6 +1419,7 @@
     "updatePassword": "Mettre à jour le mot de passe"
   },
   "session": {
+    "addOdometer": "Ajouter une valeur",
     "cancel": "Annuler",
     "co2": "CO₂",
     "date": "Période",
@@ -1428,6 +1430,7 @@
     "meterstop": "Fin du Compteur",
     "odometer": "Kilométrage",
     "price": "Coût",
+    "soc": "Etat de Charge du véhicule",
     "started": "Démarré",
     "title": "Session de charge"
   },
@@ -1435,6 +1438,7 @@
     "avgPower": "Puissance ⌀",
     "avgPrice": "Prix ⌀",
     "chargeDuration": "Durée",
+    "chargedSoc": "Charge",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Prix {byGroup}",
@@ -1468,6 +1472,8 @@
       "odometer": "Kilométrage (km)",
       "price": "Coût",
       "priceperkwh": "Prix/kWh",
+      "socend": "EdC de fin (%)",
+      "socstart": "EdC début (%)",
       "solarpercentage": "Solaire (%)",
       "vehicle": "Véhicule"
     },
