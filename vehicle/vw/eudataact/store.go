@@ -165,7 +165,12 @@ func (s *store) snapshot(vin string) map[string]point {
 func logData(log *util.Logger, data map[string]point) {
 	for _, k := range slices.Sorted(maps.Keys(data)) {
 		p := data[k]
-		log.DEBUG.Printf("recv %s: %s (%s)", k, p.Value, p.Timestamp.Local().Format("2006-01-02 15:04:05"))
+		// Add this debug line to see if values are empty
+		if p.Value == "" {
+			log.DEBUG.Printf("recv %s: [EMPTY] (%s)", k, p.Timestamp.Local().Format("2006-01-02 15:04:05"))
+		} else {
+			log.DEBUG.Printf("recv %s: %s (%s)", k, p.Value, p.Timestamp.Local().Format("2006-01-02 15:04:05"))
+		}
 	}
 }
 

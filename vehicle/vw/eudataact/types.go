@@ -101,15 +101,15 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
-	FieldSoc           = "state_of_charge"
-	FieldHvSoc         = "hv_soc"
+	FieldSoc           = "battery_state_report.soc"
+	FieldHvSoc         = "battery_level_HV.value"
 	FieldRange         = "cruising_range_combined"
 	FieldRangePrimary  = "cruising_range_primary_engine"
-	FieldOdometer      = "mileage"
-	FieldChargingState = "charging_state"
+	FieldOdometer      = "mileage.value"
+	FieldChargingState = "charging_state_report.current_charge_state"
 	FieldPlugState     = "plug_state"
 	FieldTargetSoc     = "settings.target_soc"
-	FieldRemainingTime = "remaining_charging_time"
+	FieldRemainingTime = "battery_state_report.remaining_charging_time_complete"
 )
 
 // contentDatasets returns the datasets that actually carry content, with their
@@ -173,14 +173,38 @@ func parseDataset(b []byte) (string, map[string]point, error) {
 	}
 
 	res := make(map[string]point, len(ds.Data))
+	var defaultTimestamp time.Time
+
+	// First pass: find the most recent timestamp to use as fallback
 	for _, p := range ds.Data {
-		if p.DataFieldName == "" {
-			continue
+		if p.DataFieldName == "timestamp" && p.Value != "" {
+			if ts, err := time.Parse(time.RFC3339, p.Value); err == nil {
+				if ts.After(defaultTimestamp) {
+					defaultTimestamp = ts
+				}
+			}
+		}
+	}
+
+	// Second pass: process data points, using defaultTimestamp for those without timestampUtc
+	for _, p := range ds.Data {
+		if p.DataFieldName == "" || p.DataFieldName == "timestamp" {
+			continue // Skip timestamp entries and empty field names
 		}
 
-		ts, err := time.Parse(time.RFC3339, p.TimestampUtc)
-		if err != nil {
-			return "", nil, err
+		var ts time.Time
+		if p.TimestampUtc != "" {
+			var err error
+			ts, err = time.Parse(time.RFC3339, p.TimestampUtc)
+			if err != nil {
+				return "", nil, err
+			}
+		} else {
+			// Use the most recent timestamp we found, or current time as last resort
+			ts = defaultTimestamp
+			if ts.IsZero() {
+				ts = time.Now().UTC()
+			}
 		}
 
 		if cur, ok := res[p.DataFieldName]; ok && cur.Timestamp.After(ts) {
