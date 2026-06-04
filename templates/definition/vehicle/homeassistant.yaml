@@ -8,7 +8,7 @@ requirements:
     de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten und Services (z.B. `sensor.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
-  params: [uri]
+  params: [uri, insecure]
 params:
   - preset: vehicle-common
   - name: uri

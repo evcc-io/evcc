@@ -429,7 +429,10 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
+			const authParamNames: string[] = this.template?.Auth?.params ?? [];
+			return authParamNames.length > 0 && this.templateParams
+				.filter((p: TemplateParam) => authParamNames.includes(p.Name) && p.Required)
+				.some((p: TemplateParam) => !this.values[p.Name]);
 		},
 		authValues() {
 			const params = this.template?.Auth?.params ?? [];

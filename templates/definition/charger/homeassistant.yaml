@@ -11,7 +11,7 @@ requirements:
     de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Wallbox-Entitäten und Services (z.B. `sensor.*`, `switch.*`, `number.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
-  params: [uri]
+  params: [uri, insecure]
 params:
   - name: uri
     description:
