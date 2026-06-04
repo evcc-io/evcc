@@ -15,7 +15,6 @@ import (
 type Tibber struct {
 	*embed
 	*tibber.API
-	log    *util.Logger
 	vin    string
 	homeID string
 	devID  string
@@ -56,7 +55,6 @@ func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Vehicle
 	v := &Tibber{
 		embed: &cc.embed,
 		API:   tibber.NewAPI(log, ts),
-		log:   log,
 		vin:   strings.ToUpper(cc.VIN),
 	}
 
@@ -100,14 +98,7 @@ func (v *Tibber) status() (tibber.DeviceDetail, error) {
 		}
 	}
 
-	res, err := v.Device(v.homeID, v.devID)
-	if err == nil {
-		for _, c := range res.Capabilities {
-			v.log.TRACE.Printf("capability %s = %v %s (%s)", c.ID, c.Value, c.Unit, c.Description)
-		}
-	}
-
-	return res, err
+	return v.Device(v.homeID, v.devID)
 }
 
 // Soc implements the api.Vehicle interface
@@ -123,6 +114,44 @@ func (v *Tibber) Soc() (float64, error) {
 	}
 
 	return soc, nil
+}
+
+var _ api.ChargeState = (*Tibber)(nil)
+
+// Status implements the api.ChargeState interface
+func (v *Tibber) Status() (api.ChargeStatus, error) {
+	res, err := v.dataG()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	status := api.StatusA // disconnected
+
+	if plug, ok := res.PlugStatus(); ok && plug == tibber.StatusConnected {
+		status = api.StatusB // connected, not charging
+	}
+	if charging, ok := res.ChargingStatus(); ok && charging == tibber.StatusCharging {
+		status = api.StatusC // charging
+	}
+
+	return status, nil
+}
+
+var _ api.SocLimiter = (*Tibber)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Tibber) GetLimitSoc() (int64, error) {
+	res, err := v.dataG()
+	if err != nil {
+		return 0, err
+	}
+
+	soc, ok := res.TargetSoc()
+	if !ok {
+		return 0, api.ErrNotAvailable
+	}
+
+	return int64(soc), nil
 }
 
 var _ api.VehicleRange = (*Tibber)(nil)
