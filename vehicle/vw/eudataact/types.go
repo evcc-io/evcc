@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/evcc-io/evcc/util"
 )
 
 // brand holds the OIDC client id and state suffix for a VW group brand.
@@ -139,7 +141,7 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 // data field name. On duplicate field names the entry with the newest timestamp
 // wins. The VIN is returned so the caller can drop datasets that do not belong
 // to the requested vehicle.
-func parseDataset(b []byte) (string, map[string]point, error) {
+func parseDataset(log *util.Logger, b []byte) (string, map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return "", nil, err
@@ -166,6 +168,8 @@ func parseDataset(b []byte) (string, map[string]point, error) {
 	if err != nil {
 		return "", nil, err
 	}
+
+	log.TRACE.Printf("recv raw dataset json: %s", raw)
 
 	var ds datasetFile
 	if err := json.Unmarshal(raw, &ds); err != nil {

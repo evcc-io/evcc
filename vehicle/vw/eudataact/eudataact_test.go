@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,6 +42,7 @@ func testProvider(data map[string]point) *Provider {
 }
 
 func TestParseDataset(t *testing.T) {
+	log := util.NewLogger("dsg")
 	doc := datasetFile{
 		VIN: "WVWZZZ123",
 		Data: []dataPoint{
@@ -55,7 +57,7 @@ func TestParseDataset(t *testing.T) {
 		},
 	}
 
-	vin, data, err := parseDataset(zipJSON(t, doc))
+	vin, data, err := parseDataset(log, zipJSON(t, doc))
 	require.NoError(t, err)
 
 	assert.Equal(t, "WVWZZZ123", vin, "dataset vin must be returned for filtering")

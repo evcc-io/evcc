@@ -116,7 +116,7 @@ func (s *store) update(vin string) (time.Time, error) {
 			return newest, err
 		}
 
-		dvin, data, err := parseDataset(b)
+		dvin, data, err := parseDataset(s.api.log, b)
 		if err != nil {
 			return newest, err
 		}
