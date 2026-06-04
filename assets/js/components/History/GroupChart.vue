@@ -639,6 +639,7 @@ export default defineComponent({
 								xAxis: opt["xAxis"],
 								yAxis: opt["yAxis"],
 								series: opt["series"],
+								tooltip: opt["tooltip"],
 							},
 					fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
 				);
