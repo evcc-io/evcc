@@ -24,6 +24,7 @@ type EEBus struct {
 
 	site        site.API
 	passthrough func(bool) error
+	publishFunc func()
 
 	status        status
 	statusUpdated time.Time
@@ -154,10 +155,20 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	return c, nil
 }
 
+func (c *EEBus) SetUpdated(f func()) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.publishFunc = f
+}
+
 func (c *EEBus) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
+		}
+
+		if c.publishFunc != nil {
+			c.publishFunc()
 		}
 	}
 }

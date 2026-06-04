@@ -288,6 +288,7 @@ type Circuit interface {
 // Implementations live under hems/* and translate regulatory signals
 // (§14a dim, §9 curtail) into limits consumed by Circuit, Site and Loadpoint.
 type HEMS interface {
+	SetUpdated(func())
 	Dimmed() bool
 	Curtailed() bool
 	MaxConsumptionPower() float64 // 0 = no limit

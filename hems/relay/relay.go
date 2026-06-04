@@ -21,6 +21,7 @@ type Relay struct {
 	site        site.API
 	w1          func() (bool, error)
 	passthrough func(bool) error
+	publishFunc func()
 
 	smartgridID uint
 	limit       *float64
@@ -75,10 +76,20 @@ func NewRelay(site site.API, w1 func() (bool, error), passthrough func(bool) err
 	return c, nil
 }
 
+func (c *Relay) SetUpdated(f func()) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.publishFunc = f
+}
+
 func (c *Relay) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
+		}
+
+		if c.publishFunc != nil {
+			c.publishFunc()
 		}
 	}
 }

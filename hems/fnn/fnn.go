@@ -86,9 +86,10 @@ type Fnn struct {
 	mu  sync.Mutex
 	log *util.Logger
 
-	site       site.API
-	s1, s2, w3 func() (bool, error)
-	w4         func() (bool, error)
+	site        site.API
+	s1, s2, w3  func() (bool, error)
+	w4          func() (bool, error)
+	publishFunc func()
 
 	maxDimPower     float64
 	maxCurtailPower float64
@@ -102,18 +103,25 @@ type Fnn struct {
 	interval time.Duration
 }
 
+func (c *Fnn) SetUpdated(f func()) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.publishFunc = f
+}
+
 // Run starts the FNN control loop.
 func (c *Fnn) Run() {
-	ticker := time.NewTicker(c.interval)
-	defer ticker.Stop()
-
-	for range ticker.C {
+	for range time.Tick(c.interval) {
 		if err := c.runCurtail(); err != nil {
 			c.log.ERROR.Println(err)
 		}
 
 		if err := c.runDim(); err != nil {
 			c.log.ERROR.Println(err)
+		}
+
+		if c.publishFunc != nil {
+			c.publishFunc()
 		}
 	}
 }

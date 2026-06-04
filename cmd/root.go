@@ -335,9 +335,26 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// start HEMS server
 	if err == nil {
-		_, err = configureHEMS(&conf.HEMS, site)
-		if err != nil {
-			err = wrapErrorWithClass(ClassHEMS, err)
+		if hems, errConf := configureHEMS(&conf.HEMS, site); errConf == nil {
+			// republish when HEMS state updates
+			hems.SetUpdated(func() {
+				valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
+					Config: conf.HEMS,
+					Status: struct {
+						Dimmed              bool     `json:"dimmed,omitempty"`
+						Curtailed           bool     `json:"curtailed,omitempty"`
+						MaxConsumptionPower float64  `json:"maxConsumptionPower,omitempty"`
+						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
+					}{
+						Dimmed:              hems.Dimmed(),
+						Curtailed:           hems.Curtailed(),
+						MaxConsumptionPower: hems.MaxConsumptionPower(),
+						MaxProductionPower:  hems.MaxProductionPower(),
+					},
+				}}
+			})
+		} else {
+			err = wrapErrorWithClass(ClassHEMS, errConf)
 		}
 	}
 

@@ -1228,6 +1228,18 @@ func (mr *MockHEMSMockRecorder) MaxProductionPower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaxProductionPower", reflect.TypeOf((*MockHEMS)(nil).MaxProductionPower))
 }
 
+// SetUpdated mocks base method.
+func (m *MockHEMS) SetUpdated(arg0 func()) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUpdated", arg0)
+}
+
+// SetUpdated indicates an expected call of SetUpdated.
+func (mr *MockHEMSMockRecorder) SetUpdated(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpdated", reflect.TypeOf((*MockHEMS)(nil).SetUpdated), arg0)
+}
+
 // MockTariff is a mock of Tariff interface.
 type MockTariff struct {
 	ctrl     *gomock.Controller
