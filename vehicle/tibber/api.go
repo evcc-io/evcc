@@ -3,11 +3,11 @@ package tibber
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
 )
 
@@ -59,14 +59,7 @@ type Capability struct {
 
 // Float returns the capability value as a float, accepting both number and string encodings.
 func (c Capability) Float() (float64, error) {
-	switch v := c.Value.(type) {
-	case float64:
-		return v, nil
-	case string:
-		return strconv.ParseFloat(v, 64)
-	default:
-		return 0, fmt.Errorf("unexpected value type %T for capability %s", c.Value, c.ID)
-	}
+	return cast.ToFloat64E(c.Value)
 }
 
 // API is the Tibber Data API REST client.
