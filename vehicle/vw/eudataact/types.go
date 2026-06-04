@@ -107,7 +107,7 @@ const (
 	FieldRange         = "cruising_range_combined"
 	FieldRangeCombined  = "cruising_range_combined"
 	FieldRangePrimary  = "cruising_range_primary_engine"
-	FieldRangeSecondary = "cruising_range_secondary_engine"
+	FieldRangeSecondary        = "cruising_range_secondary_engine"
 	FieldOdometer      = "mileage.value"
 	FieldChargingState = "charging_state_report.current_charge_state"
 	FieldPlugState     = "plug_state"
