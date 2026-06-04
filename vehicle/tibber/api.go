@@ -2,7 +2,6 @@ package tibber
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -121,12 +120,7 @@ func (v *API) Vehicles() ([]Device, error) {
 // Device returns the full state of a single device.
 func (v *API) Device(homeID, deviceID string) (DeviceDetail, error) {
 	var res DeviceDetail
-	uri := fmt.Sprintf("%s/homes/%s/devices/%s", URI, homeID, deviceID)
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
-	if err != nil {
-		return res, err
-	}
-	err = v.DoJSON(req, &res)
+	err := v.GetJSON(fmt.Sprintf("%s/homes/%s/devices/%s", URI, homeID, deviceID), &res)
 	return res, err
 }
 
