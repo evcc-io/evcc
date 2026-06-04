@@ -285,8 +285,6 @@ type Circuit interface {
 }
 
 // HEMS exposes the runtime state of the home energy management system.
-// Implementations live under hems/* and translate regulatory signals
-// (§14a dim, §9 curtail) into limits consumed by Circuit, Site and Loadpoint.
 type HEMS interface {
 	SetUpdated(func())
 	Dimmed() bool
