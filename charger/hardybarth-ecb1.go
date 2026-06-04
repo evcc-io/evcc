@@ -195,7 +195,7 @@ func (wb *HardyBarth) MaxCurrent(current int64) error {
 }
 
 // The eCB1 meter API exposes only demand/average (OBIS D=4) and energy (D=8)
-// registers — there are no instantaneous (D=7) registers on the device.
+// registers. There are no instantaneous (D=7) registers on the device.
 // See https://github.com/evcc-io/evcc/discussions/778
 var _ api.Meter = (*HardyBarth)(nil)
 
