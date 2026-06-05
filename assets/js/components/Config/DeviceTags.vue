@@ -10,7 +10,7 @@
 				<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
 					{{ $t(`config.deviceValue.${entry.name}`) }}
 				</div>
-				<div class="value overflow-hidden text-truncate" :class="valueClasses(entry)">
+				<div class="value" :class="[valueClasses(entry), truncateClasses(entry)]">
 					{{ fmtDeviceValue(entry) }}
 				</div>
 			</span>
@@ -175,6 +175,12 @@ export default {
 		},
 	},
 	methods: {
+		truncateClasses(entry) {
+			// don't truncate numeric values
+			return typeof entry.value === "string"
+				? "overflow-hidden text-truncate"
+				: "text-nowrap flex-shrink-0";
+		},
 		valueClasses(entry) {
 			if (entry.error) {
 				return "value--error";

@@ -3,7 +3,6 @@ package eudataact
 import (
 	"maps"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -116,7 +115,7 @@ func (s *store) update(vin string) (time.Time, error) {
 			return newest, err
 		}
 
-		dvin, data, err := parseDataset(b)
+		data, err := parseDataset(b)
 		if err != nil {
 			return newest, err
 		}
@@ -125,11 +124,6 @@ func (s *store) update(vin string) (time.Time, error) {
 		// even when it is dropped below
 		if d.CreatedOn.After(v.after) {
 			v.after = d.CreatedOn
-		}
-
-		// only merge points that belong to the requested vehicle
-		if dvin != "" && !strings.EqualFold(dvin, vin) {
-			continue
 		}
 
 		merge(v.data, data)

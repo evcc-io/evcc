@@ -35,6 +35,7 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		batterySocLimits   `mapstructure:",squash"`
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, Soc string
+		ReturnEnergy       string
 		Currents           []string
 		Voltages           []string
 		Powers             []string
@@ -101,6 +102,15 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
 		implement.Has(m, implement.MeterEnergy(totalEnergy))
+	}
+
+	// decorate return energy
+	if cc.ReturnEnergy != "" {
+		returnEnergy, err := mbmd.deviceOp(ops, cc.ReturnEnergy)
+		if err != nil {
+			return nil, fmt.Errorf("invalid measurement for returnenergy: %s", cc.ReturnEnergy)
+		}
+		implement.Has(m, implement.MeterReturnEnergy(returnEnergy))
 	}
 
 	// decorate soc
