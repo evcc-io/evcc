@@ -712,7 +712,6 @@
       },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
-        "example": "2025-07-19T12:30:00Z",
         "format": "date-time",
         "type": "string"
       },

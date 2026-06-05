@@ -254,6 +254,11 @@ loadpoints:
 
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
+  grid:
+    type: template
+    template: demo-dynamic-grid
+    min: 0.18
+    max: 0.41
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
@@ -263,3 +268,7 @@ tariffs:
     kwp: 15.5
     sunrise: 7
     sunset: 17
+  co2:
+    type: template
+    template: demo-co2-forecast
+    base: 350

@@ -167,6 +167,7 @@
       "powerRange": "Effekt",
       "price": "Pris",
       "range": "Rækkevidde",
+      "returnEnergy": "Energi (baglæns)",
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
       "solarForecast": "Sol prognose",
@@ -889,7 +890,7 @@
       "greenShareSub2": "sol, og batteriopbevaring",
       "power": "Opladningsstrøm",
       "powerSub1": "{activeClients} af {totalClients} deltagere",
-      "powerSub2": "oplader…",
+      "powerSub2": "oplader.",
       "tabTitle": "Live fællesskab"
     },
     "savings": {
@@ -1419,6 +1420,7 @@
     "updatePassword": "Opdater adgangskode"
   },
   "session": {
+    "addOdometer": "Tilføj distance",
     "cancel": "Afbryd",
     "co2": "CO2",
     "date": "Tidsrum",
@@ -1428,7 +1430,8 @@
     "meterstart": "kilometertælleraflæsning",
     "meterstop": "Meter slut",
     "odometer": "Kilometerstand",
-    "price": "Pris",
+    "price": "Omkostning",
+    "soc": "Køretøjets SoC",
     "started": "Startet",
     "title": "Lade session"
   },
@@ -1436,6 +1439,7 @@
     "avgPower": "⌀ Effekt",
     "avgPrice": "⌀ pris",
     "chargeDuration": "Varighed",
+    "chargedSoc": "Oplader",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Pris {byGroup}",
@@ -1467,8 +1471,10 @@
       "meterstart": "Målerstart (kWh)",
       "meterstop": "Målerstop (kWh)",
       "odometer": "Kilometertal (km)",
-      "price": "Pris",
+      "price": "Omkostning",
       "priceperkwh": "Pris/kWh",
+      "socend": "Soc ved slut (%)",
+      "socstart": "SoC ved start (%)",
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
@@ -1484,7 +1490,7 @@
     "group": {
       "co2": "Emission",
       "grid": "Elnet",
-      "price": "Pris",
+      "price": "Omkostning",
       "self": "Sol"
     },
     "groupBy": {
@@ -1510,7 +1516,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Pris",
+      "price": "Omkostning",
       "solar": "Sol"
     },
     "vehicle": "Køretøj"
