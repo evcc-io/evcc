@@ -2,6 +2,12 @@ template: shelly-pro-3em
 products:
   - { brand: Shelly, description: { generic: Pro 3 EM } }
   - { brand: Shelly, description: { generic: 3 EM-63T/W Gen3 } }
+requirements:
+  description:
+    de: |
+      Dieses Shelly-Gerät zählt die Energie der drei Phasen nicht saldierend und ist daher für bidirektionale Messungen, insbesondere als Netzzähler nicht geeignet.
+    en: |
+      This Shelly device do not count the energy of the three phases in a balanced way and is therefore not suitable for bidirectional measurements, especially as a grid meter.
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

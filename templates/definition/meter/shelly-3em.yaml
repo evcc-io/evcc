@@ -3,6 +3,12 @@ products:
   - brand: Shelly
     description:
       generic: 3EM (Gen.1)
+requirements:
+  description:
+    de: |
+      Shelly-Geräte zählen die Energie der drei Phasen nicht saldierend und sind daher für bidirektionale Messungen, insbesondere als Netzzähler ungeeignet.
+    en: |
+      Shelly devices do not count the energy of the three phases in a balanced way and are therefore not suitable for bidirectional measurements, especially as a grid meter.
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -20,11 +26,18 @@ render: |
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.power) | add
+  {{- if ne .usage "grid" }}
   energy:
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.total) | add
     scale: 0.001
+  returnenergy:
+    source: http
+    uri: {{ include "uri" . }}/status
+    jq: .emeters | map(.total_returned) | add
+    scale: 0.001
+  {{- end }}
   currents:
   - source: http
     uri: {{ include "uri" . }}/emeter/0
