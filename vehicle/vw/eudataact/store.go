@@ -116,7 +116,7 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 			return newest, err
 		}
 
-		data, err := parseDataset(b)
+		data, err := parseDataset(log, b)
 		if err != nil {
 			return newest, err
 		}
