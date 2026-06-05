@@ -62,7 +62,6 @@ export default defineComponent({
 			);
 		},
 		gridChargeLimit() {
-			// normalize undefined (never published) and null (explicitly unset)
 			return this.state.batteryGridChargeLimit ?? null;
 		},
 		gridChargeVisible() {
