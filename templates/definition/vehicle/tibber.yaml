@@ -6,12 +6,12 @@ requirements:
     de: |
       Liest Fahrzeugdaten (Ladestand, Reichweite) über die offizielle Tibber Data API.
       Benötigt einen OAuth2-Client (Client-ID und Secret), der unter https://data-api.tibber.com/clients/manage angelegt wird.
-      Die unten angezeigte Redirect-URI muss beim Anlegen des Clients hinterlegt werden.
+      Die **unten angezeigte** Redirect-URI muss beim Anlegen des Clients hinterlegt werden.
       Ein Tibber-Stromvertrag ist nicht erforderlich, das Fahrzeug muss im Tibber-Konto verbunden sein.
     en: |
       Reads vehicle data (state of charge, range) via the official Tibber Data API.
       Requires an OAuth2 client (client id and secret) created at https://data-api.tibber.com/clients/manage.
-      Register the redirect URI shown below when creating the client.
+      Register the redirect URI **shown below** when creating the client.
       A Tibber energy contract is not required, the vehicle must be connected in the Tibber account.
 params:
   - preset: vehicle-common
@@ -25,8 +25,8 @@ params:
     description:
       generic: Redirect URI
     help:
-      en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Tibber Data API client."
-      de: "Redirect-URI der evcc-Instanz. Muss mit der im Tibber Data API Client hinterlegten Redirect URI übereinstimmen."
+      en: "Redirect URI of the evcc instance. Use this as redirect URI when creating the Tibber Data API client."
+      de: "Redirect-URI der evcc-Instanz. Muss genau so bei Registrierung des Data API Clients bei Tibber hinterlegt werden."
     service: auth/redirecturi
     example: "https://evcc.example.org/providerauth/callback"
   - name: vin
