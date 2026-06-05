@@ -25,7 +25,7 @@ params:
     description:
       generic: Redirect URI
     help:
-      en: "Redirect URI of the evcc instance. Use this as redirect URI when creating the Tibber Data API client."
+      en: "Redirect URI of the evcc instance. Use this as is when creating the Tibber Data API client."
       de: "Redirect-URI der evcc-Instanz. Muss genau so bei Registrierung des Data API Clients bei Tibber hinterlegt werden."
     service: auth/redirecturi
     example: "https://evcc.example.org/providerauth/callback"
