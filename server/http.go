@@ -301,13 +301,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
-		}
-
-		if remoteAccess != nil {
-			routes["remote"] = route{"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)}
-			routes["remoteclients"] = route{"GET", "/remote/clients", remoteClientsHandler(remoteAccess)}
-			routes["createremoteclient"] = route{"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)}
-			routes["deleteremoteclient"] = route{"DELETE", "/remote/clients", deleteRemoteClientHandler(remoteAccess)}
+			"remote":             {"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)},
+			"remoteclients":      {"GET", "/remote/clients", remoteClientsHandler(remoteAccess)},
+			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},
+			"deleteremoteclient": {"DELETE", "/remote/clients", deleteRemoteClientHandler(remoteAccess)},
 		}
 
 		// yaml handlers
