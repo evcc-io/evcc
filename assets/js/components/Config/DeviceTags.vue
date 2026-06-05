@@ -176,7 +176,7 @@ export default {
 	},
 	methods: {
 		truncateClasses(entry) {
-			// dont truncate numeric values
+			// don't truncate numeric values
 			return typeof entry.value === "string"
 				? "overflow-hidden text-truncate"
 				: "text-nowrap flex-shrink-0";
