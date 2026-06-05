@@ -3,6 +3,7 @@ package request
 import (
 	"bytes"
 	"io"
+	"mime"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -100,6 +101,13 @@ func headerContainsToken(h http.Header, key, token string) bool {
 	return false
 }
 
+// binaryContent reports whether the response carries a binary body whose raw
+// bytes are not useful in the trace log, such as a downloaded archive.
+func binaryContent(h http.Header) bool {
+	mediatype, _, _ := mime.ParseMediaType(h.Get("Content-Type"))
+	return mediatype == "application/octet-stream"
+}
+
 // copy of http.drainBody
 func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if b == nil || b == http.NoBody {
@@ -174,12 +182,14 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
 		if !isWebSocketReq {
+			// skip binary bodies (e.g. downloaded archives) - their raw bytes are noise in the trace log
+			logBody := !binaryContent(resp.Header)
 			if LogHeaders {
-				if body, err := httputil.DumpResponse(resp, true); err == nil {
+				if body, err := httputil.DumpResponse(resp, logBody); err == nil {
 					bld.WriteString("\n\n")
 					bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 				}
-			} else {
+			} else if logBody {
 				if save, resp.Body, err = drainBody(resp.Body); err == nil {
 					err = dump(save, bld)
 				}

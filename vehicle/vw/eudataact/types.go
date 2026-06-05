@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
+	"log"
 	"slices"
 	"strings"
 	"time"
@@ -78,33 +78,14 @@ func (v Vehicle) Name() string {
 // createdOn field.
 type dataset struct {
 	Name      string    `json:"name"`
-	CreatedOn string    `json:"createdOn"`
-	Timestamp time.Time `json:"-"`
-}
-
-// nameTime parses the compact timestamp the portal prefixes to a dataset file
-// name, e.g. 20260531102941_WAUZZZ..._no_content_found.zip.
-func nameTime(name string) (time.Time, error) {
-	prefix, _, _ := strings.Cut(name, "_")
-	return time.Parse("20060102150405", prefix)
-}
-
-// time parses the delivery time the dataset carries. The portal embeds it in the
-// file name and also delivers it as the createdOn field; the file name is
-// preferred and createdOn is the fallback. An error is returned when neither
-// carries a parseable timestamp.
-func (d dataset) time() (time.Time, error) {
-	if t, err := nameTime(d.Name); err == nil {
-		return t, nil
-	}
-	return time.Parse(time.RFC3339, d.CreatedOn)
+	CreatedOn time.Time `json:"createdOn"`
 }
 
 // dataPoint is a single data point as delivered in the dataset JSON document
 type dataPoint struct {
-	DataFieldName string `json:"dataFieldName"`
-	Value         string `json:"value"`
-	TimestampUtc  string `json:"timestampUtc"`
+	DataFieldName string     `json:"dataFieldName"`
+	Value         string     `json:"value"`
+	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
 // point is a decoded data point: its value and the time it was recorded
@@ -121,14 +102,20 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
-	FieldSoc           = "state_of_charge"
-	FieldHvSoc         = "hv_soc"
-	FieldRange         = "cruising_range_combined"
-	FieldRangePrimary  = "cruising_range_primary_engine"
-	FieldOdometer      = "mileage"
-	FieldChargingState = "charging_state"
-	FieldPlugState     = "plug_state"
-	FieldTargetSoc     = "settings.target_soc"
+	FieldBatteryStateReportSoc = "battery_state_report.soc"
+	FieldSoc                   = "state_of_charge"
+	FieldHvSoc                 = "hv_soc"
+	FieldHvBatteryLevel        = "battery_level_HV.value"
+	FieldRangeCombined         = "cruising_range_combined"
+	FieldRangePrimary          = "cruising_range_primary_engine"
+	FieldRangeSecondary        = "cruising_range_secondary_engine"
+	FieldOdometer              = "mileage"
+	FieldOdometerValue         = "mileage.value"
+	FieldChargingState         = "charging_state"
+	FieldCurrentChargeState    = "charging_state_report.current_charge_state"
+	FieldPlugState             = "plug_state"
+	FieldTargetSoc             = "settings.target_soc"
+	FieldRemainingTime         = "remaining_charging_time"
 )
 
 // contentDatasets returns the datasets that actually carry content, with their
@@ -143,26 +130,22 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 			continue
 		}
 
-		t, err := d.time()
-		if err != nil {
-			return nil, fmt.Errorf("dataset %q: %w", d.Name, err)
-		}
-		d.Timestamp = t
-
 		content = append(content, d)
 	}
 
 	slices.SortStableFunc(content, func(a, b dataset) int {
-		return a.Timestamp.Compare(b.Timestamp)
+		return a.CreatedOn.Compare(b.CreatedOn)
 	})
 
 	return content, nil
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into a map of data points keyed by the dotted data field name. On
-// duplicate field names the entry with the newest timestamp wins.
-func parseDataset(b []byte) (map[string]point, error) {
+// decodes it into the dataset's VIN and a map of data points keyed by the dotted
+// data field name. On duplicate field names the entry with the newest timestamp
+// wins. The VIN is returned so the caller can drop datasets that do not belong
+// to the requested vehicle.
+func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -190,6 +173,8 @@ func parseDataset(b []byte) (map[string]point, error) {
 		return nil, err
 	}
 
+	log.Println(raw)
+
 	var ds datasetFile
 	if err := json.Unmarshal(raw, &ds); err != nil {
 		return nil, err
@@ -197,13 +182,13 @@ func parseDataset(b []byte) (map[string]point, error) {
 
 	res := make(map[string]point, len(ds.Data))
 	for _, p := range ds.Data {
-		if p.DataFieldName == "" {
+		if p.DataFieldName == "" || p.Value == "" {
 			continue
 		}
 
-		ts, err := time.Parse(time.RFC3339, p.TimestampUtc)
-		if err != nil {
-			return nil, err
+		var ts time.Time
+		if p.TimestampUtc != nil {
+			ts = *p.TimestampUtc
 		}
 
 		if cur, ok := res[p.DataFieldName]; ok && cur.Timestamp.After(ts) {

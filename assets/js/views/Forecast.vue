@@ -243,8 +243,7 @@ export default defineComponent({
 			return true;
 		},
 		showSolarAdjust() {
-			// TODO fix https://github.com/evcc-io/evcc/issues/29165
-			return !!this.forecast.solar && this.experimental && false;
+			return !!this.forecast.solar && this.experimental;
 		},
 		solar() {
 			return this.showSolarAdjust && this.solarAdjusted

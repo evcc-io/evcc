@@ -1074,7 +1074,7 @@ call getSessions {
 
 ## updateSession
 
-Update vehicle of charging session.
+Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value.
 
 **Tags:** sessions
 

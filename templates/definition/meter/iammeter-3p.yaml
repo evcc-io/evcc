@@ -12,11 +12,9 @@ products:
 requirements:
   description:
     de: |
-      Die Aktivierung des Net Metering Mode (NEM) (=phasensaldierende Zählung) ist erforderlich.
-      Siehe https://www.iammeter.com/newsshow/net-energy-metering
+      Die Aktivierung des Net Metering Mode (NEM) (=phasensaldierende Zählung) ist erforderlich siehe [Dokumentation](https://www.iammeter.com/newsshow/net-energy-metering).
     en: |
-      Net Metering Mode (NEM) must be enabled.
-      See https://www.iammeter.com/newsshow/net-energy-metering
+      Net Metering Mode (NEM) must be enabled, see [documentation](https://www.iammeter.com/newsshow/net-energy-metering).
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -41,6 +39,15 @@ render: |
     jq: .Datas[3][4] # reverse active energy, unit: kWh
     {{- else }}
     jq: .Datas[3][3] # forward active energy, unit: kWh
+    {{- end }}
+    cache: {{ .cache }}
+  returnenergy:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    {{- if eq .usage "pv" }}
+    jq: .Datas[3][3] # forward active energy, unit: kWh
+    {{- else }}
+    jq: .Datas[3][4] # reverse active energy, unit: kWh
     {{- end }}
     cache: {{ .cache }}
   powers:

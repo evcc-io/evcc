@@ -273,6 +273,21 @@ func (i *iMeterEnergy) TotalEnergy() (float64, error) {
 	return i.meterEnergy0()
 }
 
+func MeterReturnEnergy(meterReturnEnergy0 func() (float64, error)) api.MeterReturnEnergy {
+	if meterReturnEnergy0 == nil {
+		return nil
+	}
+	return &iMeterReturnEnergy{meterReturnEnergy0}
+}
+
+type iMeterReturnEnergy struct {
+	meterReturnEnergy0 func() (float64, error)
+}
+
+func (i *iMeterReturnEnergy) ReturnEnergy() (float64, error) {
+	return i.meterReturnEnergy0()
+}
+
 func PhaseCurrents(phaseCurrents0 func() (float64, float64, float64, error)) api.PhaseCurrents {
 	if phaseCurrents0 == nil {
 		return nil
