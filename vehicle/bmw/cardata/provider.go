@@ -141,7 +141,6 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
-// isValid returns true if the value is neither nil nor an empty string
 func isValid(val any) bool {
 	return val != nil && val != ""
 }
