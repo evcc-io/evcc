@@ -19,6 +19,7 @@ package sponsor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/machine"
 	"google.golang.org/grpc/codes"
@@ -110,6 +112,13 @@ func ConfigureSponsorship(token string) error {
 	}
 
 	Token = token
+
+	// check expiry locally to avoid cloud roundtrip
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser().ParseUnverified(token, &claims); err == nil &&
+		claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+		return errors.New("token is expired - get a fresh one from https://sponsor.evcc.io")
+	}
 
 	conn, err := cloud.Connection()
 	if err != nil {
