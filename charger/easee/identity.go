@@ -3,11 +3,11 @@ package easee
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cache"
@@ -67,7 +67,7 @@ func TokenSource(log *util.Logger, account, user, password string) (oauth2.Token
 	})
 }
 
-// TokenSourceUncached returns a short-lived oauth2.TokenSource for the given account.
+// TokenSourceUncached returns a short-lived oauth2.TokenSource for the given credentials.
 func TokenSourceUncached(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	id := NewIdentity(log, user, password)
 	token, err := id.Authenticate()
@@ -181,14 +181,14 @@ func HasPersistedAuth(account string) bool {
 
 func PersistentTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	if user == "" {
-		return nil, errors.New("missing easee user")
+		return nil, api.ErrMissingCredentials
 	}
 
 	subject := easeeAccountSubject(user)
 	stored := loadPersistedEaseeAuth(subject)
 
-	if stored == nil && (user == "" || password == "") {
-		return nil, errors.New("missing easee credentials for initial login")
+	if stored == nil && password == "" {
+		return nil, api.ErrCredentialsRequired
 	}
 
 	currentUser := user

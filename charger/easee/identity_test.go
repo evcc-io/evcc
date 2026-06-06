@@ -24,7 +24,7 @@ func resetTokenSourceCache() {
 
 // TestTokenSource_Deduplication verifies that the cache is keyed by account.
 func TestTokenSource_Deduplication(t *testing.T) {
-	defer resetTokenSourceCache()
+	t.Cleanup(resetTokenSourceCache)
 	resetTokenSourceCache()
 
 	account := "main-account"
@@ -49,7 +49,7 @@ func TestTokenSource_Deduplication(t *testing.T) {
 
 // TestTokenSource_DifferentAccounts verifies that different accounts use distinct cache entries.
 func TestTokenSource_DifferentAccounts(t *testing.T) {
-	defer resetTokenSourceCache()
+	t.Cleanup(resetTokenSourceCache)
 	resetTokenSourceCache()
 
 	fakeTS1 := &fakeTokenSource{token: &oauth2.Token{AccessToken: "fake-at-1"}}

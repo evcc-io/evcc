@@ -152,28 +152,37 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 
 	// If credentials are now persisted, remove password from the stored config so
 	// secrets are not kept unnecessarily. The user (email) identifier is retained.
-	var effectiveUser string
-	if u, _ := params["user"].(string); u != "" {
-		effectiveUser = u
-	} else if cc.User_ != "" {
+	effectiveUser, _ := params["user"].(string)
+	if effectiveUser == "" {
 		effectiveUser = cc.User_
 	}
 
-	if source == "easee" && effectiveUser != "" && easee.HasPersistedAuth(effectiveUser) {
-		cleanup := func(m map[string]any) {
-			delete(m, "password")
-		}
-		if cc.Auth.Source == "" {
-			// Non-template path: `other` is the map that will be stored in the DB.
-			cleanup(other)
-		} else {
-			// Template path: `other` is the rendered inner map; the outer DB map is
-			// passed to cleanTemplateConfig by NewFromTemplateConfig.
-			c.templateCleanup = cleanup
-		}
-	}
+	attachEaseeCleanup(c, source, cc.Auth.Source, effectiveUser, other)
 
 	return c, nil
+}
+
+// attachEaseeCleanup removes the persisted password from the config once a
+// token has been stored so the secret is not kept beyond the initial login.
+// For the non-template path it mutates other directly; for the template path
+// it defers the cleanup via templateCleanup to be called by NewFromTemplateConfig.
+func attachEaseeCleanup(c *Easee, source, authSource, effectiveUser string, other map[string]any) {
+	if source != "easee" || effectiveUser == "" || !easee.HasPersistedAuth(effectiveUser) {
+		return
+	}
+
+	cleanup := func(m map[string]any) {
+		delete(m, "password")
+	}
+
+	if authSource == "" {
+		// Non-template path: `other` is the map that will be stored in the DB.
+		cleanup(other)
+	} else {
+		// Template path: `other` is the rendered inner map; the outer DB map is
+		// passed to cleanTemplateConfig by NewFromTemplateConfig.
+		c.templateCleanup = cleanup
+	}
 }
 
 // NewEasee creates an Easee charger using the provided token source.
