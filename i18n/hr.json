@@ -131,8 +131,6 @@
       "feedinPrice": "Cijena predaje u mrežu opskrbljivača",
       "gridPrice": "Cijena uvoza",
       "heaterTempLimit": "Ograničenje grijača",
-      "hemsActiveLimit": "Ograničenje aktivnosti",
-      "hemsType": "Komunikacija",
       "identifier": "RFID-identifikator",
       "no": "ne",
       "odometer": "Brojilo kilometara",
@@ -157,10 +155,6 @@
       "A": "A (nije povezano)",
       "B": "B (povezano)",
       "C": "C (punjenje)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "putem EEBus",
-      "relay": "putem Relay"
     },
     "devices": {
       "auxMeter": "Pametni potrošač",
@@ -924,7 +918,6 @@
       "waitForVehicle": "Spremno. Čeka se grijač…"
     },
     "hemsWarning": {
-      "description": "Punjenje je smanjeno da se ne prekorači {limit}.",
       "title": "Externo ograničenje:"
     },
     "loadpoint": {

@@ -144,8 +144,6 @@
       "forecast": "Varsel",
       "gridPrice": "Nettpris",
       "heaterTempLimit": "Varmebegrensning",
-      "hemsActiveLimit": "Aktiv grense",
-      "hemsType": "Kommunikasjon",
       "identifier": "RFID-Identifikator",
       "max": "maks",
       "messengers": "Tjenester",
@@ -173,10 +171,6 @@
       "A": "A (ikke tilkoblet)",
       "B": "B (tilkoblet)",
       "C": "C (lading)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via relé"
     },
     "devices": {
       "auxMeter": "Smart forbruker",
@@ -951,7 +945,6 @@
       "waitForVehicle": "Klar. Venter på varmeapparatet…"
     },
     "hemsWarning": {
-      "description": "Redusert lading til ikke over {limit}.",
       "title": "Ekstern grense:"
     },
     "loadpoint": {

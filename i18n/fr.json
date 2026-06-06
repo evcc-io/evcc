@@ -150,8 +150,6 @@
       "forecast": "Prévisions",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
-      "hemsActiveLimit": "Limite active",
-      "hemsType": "Communication",
       "identifier": "Identifiant RFID",
       "loginBlocked": "Limit de login atteinte",
       "max": "max",
@@ -181,10 +179,6 @@
       "A": "A (non connecté)",
       "B": "B (connecté)",
       "C": "C (en charge)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relai"
     },
     "devices": {
       "auxMeter": "Consommateur intelligent",
@@ -1199,7 +1193,6 @@
       "waitForVehicle": "Prêt à chauffer…"
     },
     "hemsWarning": {
-      "description": "Réduire la charge pour ne pas dépasser {limit}.",
       "title": "Limite externe :"
     },
     "history": {

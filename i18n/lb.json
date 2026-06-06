@@ -150,8 +150,6 @@
       "forecast": "Previsioun",
       "gridPrice": "Netz Präis",
       "heaterTempLimit": "Limitt vun der Heizung",
-      "hemsActiveLimit": "Aktiivt Limit",
-      "hemsType": "Communicatioun",
       "identifier": "RFID-Identifikatioun",
       "loginBlocked": "Login-Limit erreecht",
       "max": "max",
@@ -180,10 +178,6 @@
       "A": "A (net verbonnen)",
       "B": "B (verbonnen)",
       "C": "C (luet)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarte Verbraucher",
@@ -1197,7 +1191,6 @@
       "waitForVehicle": "Prett fir ze Heizen…"
     },
     "hemsWarning": {
-      "description": "Reduzéier d'Luedleeschtung, fir {limit} net ze iwwerschreiden.",
       "title": "Extern Begrenzung:"
     },
     "history": {

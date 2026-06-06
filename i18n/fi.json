@@ -150,8 +150,6 @@
       "forecast": "Ennuste",
       "gridPrice": "Verkosta ostonhinta",
       "heaterTempLimit": "Lämmityksen raja",
-      "hemsActiveLimit": "Aktiivinen raja",
-      "hemsType": "Kommunikaatiomenetelmä",
       "identifier": "RFID-tunniste",
       "loginBlocked": "Sisäänkirjoitumisyritysten raja saavutettu",
       "max": "maksimi",
@@ -181,10 +179,6 @@
       "A": "A (ei yhdistetty)",
       "B": "B (yhdistetty)",
       "C": "C (lataa)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "EEBusilla",
-      "relay": "Relayllä"
     },
     "devices": {
       "auxMeter": "Älykkään virranhallinnan laite",
@@ -1199,7 +1193,6 @@
       "waitForVehicle": "Lämmitystä aloitetaan…"
     },
     "hemsWarning": {
-      "description": "Rajoitettu latausta, jotta rajaa {limit} ei ylitettäisi.",
       "title": "Ulkoinen raja:"
     },
     "history": {
