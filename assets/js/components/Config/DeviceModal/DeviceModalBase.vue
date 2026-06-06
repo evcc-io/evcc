@@ -330,16 +330,17 @@ export default defineComponent({
 			const { params = [] } = this.template?.Auth ?? {};
 			return this.templateParams.filter((p) => params.includes(p.Name));
 		},
+		authParamNames() {
+			return new Set(this.template?.Auth?.params ?? []);
+		},
 		normalParams() {
-			const authParamNames = new Set(this.template?.Auth?.params ?? []);
 			return this.templateParams.filter(
-				(p) => !p.Advanced && !p.Deprecated && !authParamNames.has(p.Name)
+				(p) => !p.Advanced && !p.Deprecated && !this.authParamNames.has(p.Name)
 			);
 		},
 		advancedParams() {
-			const authParamNames = new Set(this.template?.Auth?.params ?? []);
 			return this.templateParams.filter(
-				(p) => (p.Advanced || p.Deprecated) && !authParamNames.has(p.Name)
+				(p) => (p.Advanced || p.Deprecated) && !this.authParamNames.has(p.Name)
 			);
 		},
 		visibleParams() {
