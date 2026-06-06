@@ -87,6 +87,22 @@ func TestSocFallback(t *testing.T) {
 	soc, err = p.Soc()
 	require.NoError(t, err)
 	require.Equal(t, 95.0, soc)
+
+	// Case 4: Old key is present, new key is also present, old key is preferred
+	p.rest = map[string]TelematicData{
+		keySocOld: {Value: "42"},
+		keySocNew: {Value: "90"},
+	}
+	p.streaming = nil
+	soc, err = p.Soc()
+	require.NoError(t, err)
+	require.Equal(t, 42.0, soc)
+
+	// Case 5: Both keys are absent, returns error
+	p.rest = map[string]TelematicData{}
+	soc, err = p.Soc()
+	require.Error(t, err)
+	require.Equal(t, 0.0, soc)
 }
 
 func TestRangeFallback(t *testing.T) {
