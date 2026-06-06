@@ -55,9 +55,9 @@ func NewIdentity(log *util.Logger, user, password string) *tokenSource {
 // tokenSourceCache stores per-account token sources
 var tokenSourceCache = cache.New[oauth2.TokenSource]()
 
-// TokenSource returns a shared oauth2.TokenSource for the given account.
-func TokenSource(log *util.Logger, account, user, password string) (oauth2.TokenSource, error) {
-	return tokenSourceCache.GetOrCreate(account, func() (oauth2.TokenSource, error) {
+// TokenSource returns a shared oauth2.TokenSource for the given user.
+func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
 		id := NewIdentity(log, user, password)
 		token, err := id.Authenticate()
 		if err != nil {
@@ -120,22 +120,24 @@ func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, err
 
 	var token *Token
 	if err := c.DoJSON(req, &token); err != nil {
-		// re-login on refresh failure
+		if c.password == "" {
+			return nil, api.ErrCredentialsRequired
+		}
+		// re-login on refresh failure when the password is still available in memory.
 		return c.Authenticate()
 	}
 
 	return token.AsOAuth2Token(), nil
 }
 
-func easeeAccountSubject(account string) string {
-	h := sha256.Sum256([]byte(account))
+func easeeAccountSubject(user string) string {
+	h := sha256.Sum256([]byte(user))
 	return "easee-" + hex.EncodeToString(h[:])[:8]
 }
 
 type persistedEaseeAuth struct {
-	User     string        `json:"user"`
-	Password string        `json:"password"`
-	Token    *oauth2.Token `json:"token"`
+	User  string        `json:"user"`
+	Token *oauth2.Token `json:"token"`
 }
 
 func loadPersistedEaseeAuth(subject string) *persistedEaseeAuth {
@@ -155,15 +157,14 @@ func loadPersistedEaseeAuth(subject string) *persistedEaseeAuth {
 }
 
 // persistEaseeToken saves the token to the DB so it can be reused across restarts without a fresh login.
-func persistEaseeToken(log *util.Logger, subject, user, password string, token *oauth2.Token) {
+func persistEaseeToken(log *util.Logger, subject, user string, token *oauth2.Token) {
 	if token == nil {
 		return
 	}
 
 	payload := persistedEaseeAuth{
-		User:     user,
-		Password: password,
-		Token:    token,
+		User:  user,
+		Token: token,
 	}
 
 	if err := settings.SetJson(subject, payload); err != nil {
@@ -171,12 +172,12 @@ func persistEaseeToken(log *util.Logger, subject, user, password string, token *
 	}
 }
 
-func HasPersistedAuth(account string) bool {
-	if account == "" {
+func HasPersistedAuth(user string) bool {
+	if user == "" {
 		return false
 	}
 
-	return loadPersistedEaseeAuth(easeeAccountSubject(account)) != nil
+	return loadPersistedEaseeAuth(easeeAccountSubject(user)) != nil
 }
 
 func PersistentTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
@@ -197,9 +198,6 @@ func PersistentTokenSource(log *util.Logger, user, password string) (oauth2.Toke
 		if currentUser == "" {
 			currentUser = stored.User
 		}
-		if currentPassword == "" {
-			currentPassword = stored.Password
-		}
 	}
 
 	initial := (*oauth2.Token)(nil)
@@ -216,7 +214,7 @@ func PersistentTokenSource(log *util.Logger, user, password string) (oauth2.Toke
 	}
 
 	refreshWithPersist := func(_ *oauth2.Token) (*oauth2.Token, error) {
-		base, err := TokenSource(log, user, currentUser, currentPassword)
+		base, err := TokenSource(log, currentUser, currentPassword)
 		if err != nil {
 			return nil, err
 		}
@@ -224,7 +222,7 @@ func PersistentTokenSource(log *util.Logger, user, password string) (oauth2.Toke
 		if err != nil {
 			return nil, err
 		}
-		persistEaseeToken(log, subject, currentUser, currentPassword, newToken)
+		persistEaseeToken(log, subject, currentUser, newToken)
 		return newToken, nil
 	}
 
