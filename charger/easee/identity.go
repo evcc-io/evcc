@@ -132,13 +132,6 @@ func easeeAccountSubject(account string) string {
 	return "easee-" + hex.EncodeToString(h[:])[:8]
 }
 
-func normalizeAccount(account, user string) string {
-	if account != "" {
-		return account
-	}
-	return user
-}
-
 type persistedEaseeAuth struct {
 	User     string        `json:"user"`
 	Password string        `json:"password"`
@@ -179,7 +172,6 @@ func persistEaseeToken(log *util.Logger, subject, user, password string, token *
 }
 
 func HasPersistedAuth(account string) bool {
-	account = normalizeAccount(account, "")
 	if account == "" {
 		return false
 	}
@@ -187,13 +179,12 @@ func HasPersistedAuth(account string) bool {
 	return loadPersistedEaseeAuth(easeeAccountSubject(account)) != nil
 }
 
-func PersistentTokenSource(log *util.Logger, account, user, password string) (oauth2.TokenSource, error) {
-	account = normalizeAccount(account, user)
-	if account == "" {
-		return nil, errors.New("missing easee account")
+func PersistentTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+	if user == "" {
+		return nil, errors.New("missing easee user")
 	}
 
-	subject := easeeAccountSubject(account)
+	subject := easeeAccountSubject(user)
 	stored := loadPersistedEaseeAuth(subject)
 
 	if stored == nil && (user == "" || password == "") {
@@ -219,13 +210,13 @@ func PersistentTokenSource(log *util.Logger, account, user, password string) (oa
 	// Pre-seed the inner cache with the DB token so TokenSource callers skip login
 	if initial != nil {
 		id := NewIdentity(log, currentUser, currentPassword)
-		_, _ = tokenSourceCache.GetOrCreate(account, func() (oauth2.TokenSource, error) {
+		_, _ = tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
 			return oauth.RefreshTokenSource(initial, id.RefreshToken), nil
 		})
 	}
 
 	refreshWithPersist := func(_ *oauth2.Token) (*oauth2.Token, error) {
-		base, err := TokenSource(log, account, currentUser, currentPassword)
+		base, err := TokenSource(log, user, currentUser, currentPassword)
 		if err != nil {
 			return nil, err
 		}

@@ -12,14 +12,9 @@ func TestNewEaseeFromConfig_MissingCredentials(t *testing.T) {
 	require.ErrorIs(t, err, api.ErrMissingCredentials)
 }
 
-func TestNewEaseeFromConfig_AccountWithoutCredentials(t *testing.T) {
-	_, err := newEaseeFromConfig(t.Context(), map[string]any{"account": "easee-main"})
-	require.ErrorIs(t, err, api.ErrMissingCredentials)
-}
-
 func TestNewEaseeFromConfig_MissingPassword(t *testing.T) {
 	_, err := newEaseeFromConfig(t.Context(), map[string]any{"user": "x@example.com"})
-	require.ErrorIs(t, err, api.ErrMissingCredentials)
+	require.ErrorIs(t, err, api.ErrCredentialsRequired)
 }
 
 func TestNewEaseeFromConfig_MissingUser(t *testing.T) {
@@ -29,7 +24,6 @@ func TestNewEaseeFromConfig_MissingUser(t *testing.T) {
 
 func TestNewEaseeFromConfig_ValidCredentials(t *testing.T) {
 	ts, err := newEaseeFromConfig(t.Context(), map[string]any{
-		"account":  "easee-main",
 		"user":     "x@example.com",
 		"password": "secret",
 	})

@@ -15,22 +15,21 @@ func init() {
 
 func newEaseeFromConfig(_ context.Context, other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		Account  string
 		User     string
 		Password string
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-	if cc.Account == "" {
-		cc.Account = cc.User
-	}
 
-	hasCredentials := cc.User != "" && cc.Password != ""
-	if !hasCredentials && !easee.HasPersistedAuth(cc.Account) {
+	if cc.User == "" {
 		return nil, api.ErrMissingCredentials
 	}
 
+	if cc.Password == "" && !easee.HasPersistedAuth(cc.User) {
+		return nil, api.ErrCredentialsRequired
+	}
+
 	log := util.NewLogger("easee").Redact(cc.User, cc.Password)
-	return easee.PersistentTokenSource(log, cc.Account, cc.User, cc.Password)
+	return easee.PersistentTokenSource(log, cc.User, cc.Password)
 }

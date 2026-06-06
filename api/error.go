@@ -19,8 +19,16 @@ var ErrMustRetry = errors.New("must retry")
 // ErrSponsorRequired indicates that a sponsor token is required
 var ErrSponsorRequired = errors.New("sponsorship required, see https://docs.evcc.io/docs/sponsorship")
 
-// ErrMissingCredentials indicates that user/password are missing
+// ErrMissingCredentials indicates that required static credentials are absent in
+// configuration and the operation cannot proceed without user intervention.
+// This error is marked permanent to stop retry loops.
 var ErrMissingCredentials = backoff.Permanent(errors.New("missing user/password credentials"))
+
+// ErrCredentialsRequired indicates that credentials must be provided now
+// (for example, first login when no persisted authentication is available).
+// Unlike ErrMissingCredentials, this is not marked permanent so callers can
+// surface an actionable credential prompt.
+var ErrCredentialsRequired = errors.New("credentials required")
 
 // ErrMissingToken indicates that access/refresh tokens are missing
 var ErrMissingToken = backoff.Permanent(errors.New("missing token credentials"))

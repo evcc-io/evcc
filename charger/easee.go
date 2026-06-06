@@ -98,14 +98,13 @@ func init() {
 // NewEaseeFromConfig creates a Easee charger from generic config
 func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		Account   string
 		User_     string `mapstructure:"user"`     // TODO deprecated
 		Password_ string `mapstructure:"password"` // TODO deprecated
 		Charger   string
 		Timeout   time.Duration
 		Authorize bool
 		// Auth allows referencing a shared Easee account instead of embedding
-		// credentials directly. Example: auth: {source: easee, account: x, user: y, password: z}
+		// credentials directly. Example: auth: {source: easee, user: u, password: p}
 		Auth struct {
 			Source string
 			Other  map[string]any `mapstructure:",remain"`
@@ -133,10 +132,6 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		params = make(map[string]any)
 	}
 
-	if _, exists := params["account"]; !exists && cc.Account != "" {
-		params["account"] = cc.Account
-	}
-
 	if _, exists := params["user"]; !exists && cc.User_ != "" {
 		params["user"] = cc.User_
 	}
@@ -155,25 +150,18 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, err
 	}
 
-	// If credentials are now persisted, remove them from the stored config so
-	// secrets are not kept unnecessarily. Only the account identifier is retained.
-	//
-	// Effective account: prefer explicit account param, fall back to user email.
-	var effectiveAccount string
-	if a, _ := params["account"].(string); a != "" {
-		effectiveAccount = a
-	} else if u, _ := params["user"].(string); u != "" {
-		effectiveAccount = u
+	// If credentials are now persisted, remove password from the stored config so
+	// secrets are not kept unnecessarily. The user (email) identifier is retained.
+	var effectiveUser string
+	if u, _ := params["user"].(string); u != "" {
+		effectiveUser = u
+	} else if cc.User_ != "" {
+		effectiveUser = cc.User_
 	}
 
-	if source == "easee" && effectiveAccount != "" && easee.HasPersistedAuth(effectiveAccount) {
-		account := effectiveAccount
+	if source == "easee" && effectiveUser != "" && easee.HasPersistedAuth(effectiveUser) {
 		cleanup := func(m map[string]any) {
-			delete(m, "user")
 			delete(m, "password")
-			if _, exists := m["account"]; !exists {
-				m["account"] = account
-			}
 		}
 		if cc.Auth.Source == "" {
 			// Non-template path: `other` is the map that will be stored in the DB.
