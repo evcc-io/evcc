@@ -420,7 +420,7 @@ test.describe("charging loadpoint", async () => {
       "status: # charger status (A: not connected, B: connected, C: charging)"
     );
 
-    await editorClear(chargerEditor, 20);
+    await editorClear(chargerEditor);
     await editorPaste(
       chargerEditor,
       page,
@@ -459,7 +459,7 @@ power:
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
     const meterEditor = meterModal.getByTestId("yaml-editor");
-    await editorClear(meterEditor, 20);
+    await editorClear(meterEditor);
     await editorPaste(
       meterEditor,
       page,
@@ -577,7 +577,7 @@ test.describe("heating loadpoint", async () => {
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
 
     const editor = modal.getByTestId("yaml-editor");
-    await editorClear(editor, 20);
+    await editorClear(editor);
     await editorPaste(
       editor,
       page,

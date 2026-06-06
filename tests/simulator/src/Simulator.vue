@@ -254,21 +254,24 @@
 		</div>
 
 		<h4 class="my-4">HEMS</h4>
-		<div class="row">
-			<label for="hemsRelay" class="col-sm-6 col-form-label">Relay Limit</label>
-			<div class="col-sm-6 mb-3">
-				<div class="form-check form-switch">
-					<input
-						id="hemsRelay"
-						v-model="state.hems.relay"
-						class="form-check-input"
-						type="checkbox"
-						role="switch"
-					/>
-					<label class="form-check-label" for="hemsRelay"> active </label>
+		<template v-for="(signals, group) in hemsGroups" :key="group">
+			<h5 class="my-3">{{ group }}</h5>
+			<div v-for="(label, signal) in signals" :key="signal" class="row">
+				<label :for="`hems-${signal}`" class="col-sm-6 col-form-label">{{ label }}</label>
+				<div class="col-sm-6 mb-3">
+					<div class="form-check form-switch">
+						<input
+							:id="`hems-${signal}`"
+							v-model="state.hems[signal]"
+							class="form-check-input"
+							type="checkbox"
+							role="switch"
+						/>
+						<label class="form-check-label" :for="`hems-${signal}`"> active </label>
+					</div>
 				</div>
 			</div>
-		</div>
+		</template>
 
 		<h4 class="my-4">OCPP <small>work in progress, connect only</small></h4>
 
@@ -360,6 +363,17 @@ export default defineComponent({
 			mockLoginMode: false,
 			mockLoginState: "",
 			mockLoginRedirectUri: "",
+			hemsGroups: {
+				Relay: {
+					relay: "Relay (dim)",
+				},
+				"FNN Steuerbox": {
+					w4: "FNN W4 (dim)",
+					w3: "FNN W3 (curtail 0%)",
+					s2: "FNN S2 (curtail 30%)",
+					s1: "FNN S1 (curtail 60%)",
+				},
+			} as const,
 			state: null as {
 				site: {
 					grid: { power: number };
@@ -373,7 +387,7 @@ export default defineComponent({
 					status: string;
 				}[];
 				vehicles: { soc: number; range: number }[];
-				hems: { relay: boolean };
+				hems: { relay: boolean; w3: boolean; s1: boolean; s2: boolean; w4: boolean };
 				ocpp: {
 					clients: { stationId: string; serverUrl: string; connected: boolean }[];
 				};

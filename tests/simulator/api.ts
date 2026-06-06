@@ -13,7 +13,7 @@ let state = {
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
-  hems: { relay: false },
+  hems: { relay: false, w3: false, s1: false, s2: false, w4: false },
   ocpp: {
     clients: [] as { stationId: string; serverUrl: string; connected: boolean }[],
   },

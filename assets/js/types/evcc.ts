@@ -1,8 +1,6 @@
 import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
-export const GRID_CONTROL = "gridcontrol";
-
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -44,8 +42,8 @@ export interface HemsConfig {
 }
 
 export interface HemsStatus {
-  dimmed?: boolean;
-  curtailed?: boolean;
+  dimmed: boolean;
+  curtailed: boolean;
   maxConsumptionPower?: number;
   maxProductionPower?: number;
 }
@@ -180,8 +178,6 @@ export interface Circuit {
   current?: number;
   maxPower?: number;
   maxCurrent?: number;
-  dimmed?: boolean;
-  curtailed?: boolean;
 }
 
 export interface Entity {

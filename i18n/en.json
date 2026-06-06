@@ -140,8 +140,11 @@
       "currency": "Currency",
       "current": "Current",
       "currentRange": "Current",
+      "curtailLimit": "Feed-in limit",
+      "curtailable": "Curtailable",
       "curtailed": "Feed-in limited",
       "detected": "Detected",
+      "dimLimit": "Consumption limit",
       "dimmed": "Consumption limited",
       "enabled": "Enabled",
       "energy": "Energy",
@@ -150,8 +153,6 @@
       "forecast": "Forecast",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
-      "hemsActiveLimit": "Active limit",
-      "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
       "max": "max",
@@ -166,6 +167,7 @@
       "power": "Power",
       "powerRange": "Power",
       "price": "Price",
+      "productionLimited": "Production limited",
       "range": "Range",
       "returnEnergy": "Energy (reverse)",
       "singlePhase": "Single phase",
@@ -181,10 +183,6 @@
       "A": "A (not connected)",
       "B": "B (connected)",
       "C": "C (charging)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart consumer",
@@ -1184,8 +1182,9 @@
       "waitForVehicle": "Ready to heat…"
     },
     "hemsWarning": {
-      "description": "Reduced charging to not exceed {limit}.",
-      "title": "External limit:"
+      "consumption": "Consumption",
+      "feedIn": "Feed-in",
+      "title": "External limit active"
     },
     "history": {
       "direction": {

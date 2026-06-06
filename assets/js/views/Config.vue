@@ -108,6 +108,7 @@
 						meter-type="pv"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
+						:banner="meterBanner(meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<MeterCard
@@ -283,6 +284,9 @@
 						editable
 						:error="hasClassError('circuit')"
 						:unconfigured="!circuitsRoot"
+						:banner="
+							hemsDimmed && circuitsRoot ? $t('config.deviceValue.dimmed') : undefined
+						"
 						data-testid="circuits"
 						@edit="openModal('circuits')"
 					>
@@ -535,7 +539,7 @@ import type {
 	Notification,
 	Remote,
 } from "@/types/evcc";
-import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
+import { CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -783,15 +787,25 @@ export default defineComponent({
 			if (!type && !status) {
 				return { configured: { value: false } };
 			}
-			const result: DeviceTags = {
-				hemsType: {},
-				hemsActiveLimit: { value: null },
-			};
-			if (type && ["relay", "eebus"].includes(type)) {
-				result["hemsType"] = { value: type };
+			if (!status) {
+				return { configured: { value: true } };
 			}
-			if (status?.maxConsumptionPower) {
-				result["hemsActiveLimit"] = { value: status.maxConsumptionPower };
+			const result: DeviceTags = {};
+			if (status.dimmed && status.maxConsumptionPower) {
+				result["dimLimit"] = {
+					value: status.maxConsumptionPower,
+					warning: true,
+				};
+			} else {
+				result["dimmed"] = { value: status.dimmed };
+			}
+			if (status.curtailed && status.maxProductionPower !== undefined) {
+				result["curtailLimit"] = {
+					value: status.maxProductionPower,
+					warning: true,
+				};
+			} else {
+				result["curtailed"] = { value: status.curtailed };
 			}
 
 			return result;
@@ -878,31 +892,11 @@ export default defineComponent({
 			};
 		},
 		circuitsRoot(): CircuitNode | null {
-			const root = circuitTree(store.state?.circuits || {});
-			const status = store.state?.hems?.status;
-
-			// when HEMS is operational, synthesize a top-level pseudo-node
-			// from the runtime state so the External Limit appears above the user circuits.
-			// dimmed/curtailed are global HEMS signals so they are propagated to all
-			// descendants matching the previous parent-chain inheritance behaviour.
-			if (status) {
-				const applyHems = (node: CircuitNode): CircuitNode => ({
-					...node,
-					dimmed: status.dimmed,
-					curtailed: status.curtailed,
-					children: node.children?.map(applyHems),
-				});
-				return {
-					name: GRID_CONTROL,
-					power: 0,
-					maxPower: status.maxConsumptionPower || 0,
-					dimmed: status.dimmed,
-					curtailed: status.curtailed,
-					children: root ? [applyHems(root)] : [],
-				};
-			}
-
-			return root;
+			return circuitTree(store.state?.circuits || {});
+		},
+		hemsDimmed(): boolean {
+			// only consumption limits matter for circuits, curtailment affects feed-in
+			return !!store.state?.hems?.status?.dimmed;
 		},
 		tariffsYamlSource() {
 			return store.state?.tariffs?.yamlSource;
@@ -986,9 +980,7 @@ export default defineComponent({
 			this.meters = (await this.loadConfig("devices/meter")) || [];
 		},
 		async loadCircuits() {
-			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// gridcontrol is auto-created for hems and must not be user-assignable to loadpoints
-			this.circuits = circuits.filter((c: ConfigCircuit) => c.name !== GRID_CONTROL);
+			this.circuits = (await this.loadConfig("devices/circuit")) || [];
 		},
 		async loadTariffs() {
 			this.tariffs = (await this.loadConfig("devices/tariff")) || [];
@@ -1165,6 +1157,11 @@ export default defineComponent({
 		},
 		deviceTags(type: DeviceType, id: string) {
 			return this.deviceValues[type][id] || {};
+		},
+		meterBanner(name: string): string | undefined {
+			return this.deviceTags("meter", name)["curtailed"]?.value
+				? this.$t("config.deviceValue.productionLimited")
+				: undefined;
 		},
 		loadpointTags(loadpoint: ConfigLoadpoint) {
 			const { charger, meter } = loadpoint;
