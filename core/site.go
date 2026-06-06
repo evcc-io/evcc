@@ -624,8 +624,8 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
-		if m, ok := meter.(api.BatteryPowerLimiter); ok {
-			_, discharge := m.GetPowerLimits()
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok {
+			_, discharge := bpl.GetPowerLimits()
 			mm[i].MaxDischargePower = &discharge
 		}
 
