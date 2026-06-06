@@ -141,13 +141,13 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
-func isValid(val any) bool {
-	return val != nil && val != ""
+func isNilOrEmtpy(val any) bool {
+	return val == nil || val == ""
 }
 
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
-	if err != nil || !isValid(res) {
+	if err != nil || isNilOrEmtpy(res) {
 		return "", api.ErrNotAvailable
 	}
 
@@ -156,7 +156,7 @@ func (v *Provider) String(key string) (string, error) {
 
 func (v *Provider) Int(key string) (int64, error) {
 	res, err := v.any(key)
-	if err != nil || !isValid(res) {
+	if err != nil || isNilOrEmtpy(res) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -165,7 +165,7 @@ func (v *Provider) Int(key string) (int64, error) {
 
 func (v *Provider) Float(key string) (float64, error) {
 	res, err := v.any(key)
-	if err != nil || !isValid(res) {
+	if err != nil || isNilOrEmtpy(res) {
 		return 0, api.ErrNotAvailable
 	}
 
