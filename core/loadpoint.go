@@ -1462,8 +1462,6 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		return 0
 	}
 
-	maxDischargePower := lp.site.GetBatteryMaxDischargePower()
-
 	// push demand to drain battery (at least 100W)
 	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
 
@@ -1490,7 +1488,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		}
 	}
 
-	if maxDischargePower > 0 {
+	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower > 0 {
 		// limit delta to what the battery can still provide
 		delta = min(delta, max(0, maxDischargePower-batteryBoostPower))
 	}
