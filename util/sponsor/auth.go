@@ -27,9 +27,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/machine"
+	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
