@@ -13,9 +13,11 @@ import (
 	"github.com/samber/lo"
 )
 
-func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl bool) error {
-	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
-		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
+func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl, noChangeAvailability bool) error {
+	if !noChangeAvailability {
+		if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
+			cp.log.DEBUG.Printf("failed configuring availability: %v", err)
+		}
 	}
 
 	// auto configuration

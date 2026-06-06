@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 // https://v2charge.com/trydan/
 
 import (
@@ -127,9 +144,11 @@ func (c *Trydan) setValue(param string, value int) error {
 
 // Enable implements the api.Charger interface
 func (c Trydan) Enable(enable bool) error {
-	var pause int
+	var pause, pauseDynamic int
 	if !enable {
 		pause = 1
+	} else {
+		pauseDynamic = 1
 	}
 
 	if err := c.setValue("Paused", pause); err != nil {
@@ -137,6 +156,20 @@ func (c Trydan) Enable(enable bool) error {
 	}
 	if err := c.setValue("Locked", pause); err != nil {
 		return err
+	}
+	// Pause/Unpause Dynamic Power Control if enabled.
+	// This is needed to let EVCC taking over charging power control.
+	// Charger will stop returning power readings if 'Dynamic' is disabled.
+	data, err := c.statusG.Get()
+	if err != nil {
+		return err
+	}
+
+	if data.Dynamic == 1 {
+		if err := c.setValue("PauseDynamic", pauseDynamic); err != nil {
+			// Pause V2C 'PauseDynamic' when EVCC charging is active and vice versa.
+			return err
+		}
 	}
 	c.enabled = enable
 

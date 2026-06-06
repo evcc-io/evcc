@@ -60,7 +60,7 @@ export default defineComponent({
 				description: lp ? t("loadpointDescription") : t("batteryDescription"),
 				limitLabel: co2 ? t("co2Limit") : t("priceLimit"),
 				currentPriceLabel: co2 ? t("co2Label") : t("priceLabel"),
-				resetWarningText: t("resetWarning"),
+				resetWarningKey: "smartCost.resetWarning",
 				activeHoursLabel: t("activeHoursLabel"),
 			};
 		},

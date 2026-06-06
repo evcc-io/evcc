@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"encoding/binary"
@@ -7,6 +24,7 @@ import (
 	"math"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -18,6 +36,7 @@ import (
 
 // NRGKickGen2 charger implementation
 type NRGKickGen2 struct {
+	implement.Caps
 	conn *modbus.Connection
 }
 
@@ -49,8 +68,6 @@ func init() {
 	registry.AddCtx("nrggen2", NewNRGKickGen2FromConfig)
 }
 
-//go:generate go tool decorate -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t api.PhaseSwitcher
-
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
 func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -72,17 +89,16 @@ func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	var phasesS func(int) error
 	if cc.Phases1p3p {
 		// user could have an adapter plug which doesn't support 3 phases
 		if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2MaxPhases, 1); err == nil {
 			if maxPhases := encoding.Uint16(b); maxPhases > 1 {
-				phasesS = nrg.phases1p3p
+				implement.Has(nrg, implement.PhaseSwitcher(nrg.phases1p3p))
 			}
 		}
 	}
 
-	return decorateNRGKickGen2(nrg, phasesS), nil
+	return nrg, nil
 }
 
 // NewNRGKickGen2 creates NRGKickGen2 charger
@@ -100,6 +116,7 @@ func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen
 	conn.Logger(log.TRACE)
 
 	nrg := &NRGKickGen2{
+		Caps: implement.New(),
 		conn: conn,
 	}
 

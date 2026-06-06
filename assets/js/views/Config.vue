@@ -378,6 +378,15 @@
 					>
 						<template #icon><EebusIcon /></template>
 					</DeviceCard>
+					<DeviceCard
+						v-if="experimental"
+						:title="`${$t('config.mcp.title')} 🧪`"
+						editable
+						data-testid="mcp"
+						@edit="openModal('mcp')"
+					>
+						<template #icon><McpIcon /></template>
+					</DeviceCard>
 				</div>
 
 				<hr class="my-5" />
@@ -429,6 +438,7 @@
 				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
+				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
 				<TitleModal @changed="loadDirty" />
@@ -494,6 +504,8 @@ import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
 import OptimizerModal from "../components/Config/OptimizerModal.vue";
+import McpIcon from "../components/MaterialIcon/Mcp.vue";
+import McpModal from "../components/Config/McpModal.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -579,6 +591,8 @@ export default defineComponent({
 		NotificationIcon,
 		OptimizerIcon,
 		OptimizerModal,
+		McpIcon,
+		McpModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
@@ -950,14 +964,8 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// set gridcontrol default title
-			circuits.forEach((c: ConfigCircuit) => {
-				if (c.name === GRID_CONTROL && !c.config?.title) {
-					c.config = c.config || {};
-					c.config.title = this.$t("config.hems.title");
-				}
-			});
-			this.circuits = circuits;
+			// gridcontrol is auto-created for hems and must not be user-assignable to loadpoints
+			this.circuits = circuits.filter((c: ConfigCircuit) => c.name !== GRID_CONTROL);
 		},
 		async loadTariffs() {
 			this.tariffs = (await this.loadConfig("devices/tariff")) || [];

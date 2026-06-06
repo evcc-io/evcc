@@ -1,0 +1,27 @@
+template: goodwe-wallbox
+products:
+  - brand: GoodWe
+    description:
+      generic: HCA Wallbox (Gen2)
+capabilities: ["mA", "rfid", "1p3p", "meter"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Modbus TCP muss in der SolarGo App im Menü „Kommunikation → Wallbox" aktiviert werden.
+      Standard-Geräte-ID ist 247 (0xF7).
+      Die Wallbox erlaubt nur 2 gleichzeitige Modbus-TCP-Sitzungen (1× SEMS-Cloud, 1× Client). Bei aktiver Cloud-Verbindung konkurriert evcc um den zweiten Slot.
+      Hinweis: Die Implementierung wurde anhand der Home Assistant Integration (gen2-modbus Branch) erstellt und ist nicht herstellerseitig verifiziert.
+    en: |
+      Enable Modbus TCP in the SolarGo app via "Communication → Wallbox".
+      Default device ID is 247 (0xF7).
+      The wallbox only accepts 2 concurrent Modbus TCP sessions (1× SEMS cloud, 1× client). If the cloud is active, evcc competes for the second slot.
+      Note: Implementation is derived from the Home Assistant integration (gen2-modbus branch) and is not vendor-verified.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 247
+    port: 502
+render: |
+  type: goodwe-wallbox
+  {{- include "modbus" . }}

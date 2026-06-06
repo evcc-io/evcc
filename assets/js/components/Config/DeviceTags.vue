@@ -10,7 +10,7 @@
 				<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
 					{{ $t(`config.deviceValue.${entry.name}`) }}
 				</div>
-				<div class="value overflow-hidden text-truncate" :class="valueClasses(entry)">
+				<div class="value" :class="[valueClasses(entry), truncateClasses(entry)]">
 					{{ fmtDeviceValue(entry) }}
 				</div>
 			</span>
@@ -70,6 +70,7 @@
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
+import { distanceValue, distanceUnit } from "@/units";
 
 const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
@@ -174,6 +175,12 @@ export default {
 		},
 	},
 	methods: {
+		truncateClasses(entry) {
+			// don't truncate numeric values
+			return typeof entry.value === "string"
+				? "overflow-hidden text-truncate"
+				: "text-nowrap flex-shrink-0";
+		},
 		valueClasses(entry) {
 			if (entry.error) {
 				return "value--error";
@@ -197,6 +204,7 @@ export default {
 				case "hemsActiveLimit":
 					return this.fmtW(value);
 				case "energy":
+				case "returnEnergy":
 				case "capacity":
 				case "chargedEnergy":
 					return this.fmtWh(value * 1e3);
@@ -208,7 +216,7 @@ export default {
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
-					return `${this.fmtNumber(value, 0)} km`;
+					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
 				case "price":

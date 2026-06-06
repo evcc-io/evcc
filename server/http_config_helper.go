@@ -16,9 +16,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
-	"go.yaml.in/yaml/v4"
 )
 
 const (
@@ -279,6 +279,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("energy", val, err)
 	}
 
+	if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
+		val, err := dev.ReturnEnergy()
+		makeResult("returnEnergy", val, err)
+	}
+
 	if dev, ok := api.Cap[api.Battery](instance); ok {
 		val, err := dev.Soc()
 		key := "soc"
@@ -466,9 +471,9 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	// validate yaml syntax
+	// validate yaml syntax; tolerate whitespace/comment-only input
 	var tmp map[string]any
-	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && err != io.EOF {
+	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil {
 		return configReq{}, err
 	}
 

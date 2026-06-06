@@ -2,9 +2,7 @@
 	<div class="border rounded p-3">
 		<!-- Price input -->
 		<div class="mb-3">
-			<label :for="formId('price')" class="form-label">{{
-				$t("config.tariff.zones.price")
-			}}</label>
+			<label :for="formId('price')" class="form-label">{{ valueLabel }}</label>
 			<div class="d-flex w-50 w-min-200">
 				<input
 					:id="formId('price')"
@@ -123,6 +121,7 @@ export default {
 		zone: { type: Object as PropType<Zone>, required: true },
 		currency: { type: String as PropType<CURRENCY>, required: true },
 		index: { type: Number, required: true },
+		valueLabel: { type: String, required: true },
 	},
 	emits: ["update:zone", "save", "cancel"],
 	data() {

@@ -39,9 +39,16 @@
     "legendTopAutostart": "Start automatically",
     "legendTopName": "Battery-supported vehicle charging",
     "legendTopSubline": "when home battery is above {soc}.",
+    "legendTopSublineAbove": "when above {soc}",
+    "legendTopSublineDisabled": "is {soc}.",
+    "legendTopSublineDisabledState": "disabled",
     "modalTitle": "Home Battery",
     "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"
+  },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex color"
   },
   "config": {
     "aux": {
@@ -160,6 +167,7 @@
       "powerRange": "Power",
       "price": "Price",
       "range": "Range",
+      "returnEnergy": "Energy (reverse)",
       "singlePhase": "Single phase",
       "soc": "Charge",
       "solarForecast": "Solar forecast",
@@ -237,6 +245,7 @@
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
+      "dismiss": "Dismiss",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
@@ -428,6 +437,13 @@
       "vehicles": "My Vehicles",
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
       "welcomeBannerTitle": "Let's configure your system!"
+    },
+    "mcp": {
+      "description": "Exposes a Model Context Protocol server, allowing AI assistants like Claude to read the state of your system and control charging.",
+      "exampleLabel": "Example: Claude CLI",
+      "restartHint": "Will be available after restart.",
+      "title": "MCP Server",
+      "url": "MCP endpoint"
     },
     "messaging": {
       "addMessenger": "Add service",
@@ -813,6 +829,7 @@
         "allMonths": "All months",
         "allTimes": "All times",
         "cancel": "Cancel",
+        "charge": "Charge",
         "days": "Days",
         "edit": "Edit",
         "hours": "Hours",
@@ -846,32 +863,13 @@
       "validate": "validate"
     },
     "vehicle": {
-      "cancel": "Cancel",
-      "chargingSettings": "Charging settings",
-      "defaultMode": "Default mode",
-      "defaultModeHelp": "Charging mode when connecting the vehicle.",
-      "delete": "Delete",
       "generic": "Other integrations",
-      "identifiers": "RFID identifiers",
-      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charging point on the overview page.",
-      "maximumCurrent": "Maximum current",
-      "maximumCurrentHelp": "Must be greater than minimum current.",
-      "maximumPhases": "Maximum phases",
-      "maximumPhasesHelp": "How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration.",
-      "maximumPower": "Maximum charging power",
-      "maximumPowerHelp": "Maximum power the vehicle can consume",
-      "minimumCurrent": "Minimum current",
-      "minimumCurrentHelp": "Only go below 6A if you know what you're doing.",
       "online": "Vehicles with online API",
       "primary": "Generic integrations",
-      "priority": "Priority",
-      "priorityHelp": "Higher priority means this vehicle gets preferred access to solar surplus.",
-      "save": "Save",
       "scooter": "Scooter",
       "template": "Manufacturer",
       "titleAdd": "Add Vehicle",
-      "titleEdit": "Edit Vehicle",
-      "validateSave": "Validate & save"
+      "titleEdit": "Edit Vehicle"
     }
   },
   "footer": {
@@ -884,7 +882,7 @@
       "greenShareSub2": "solar, and battery storage",
       "power": "Charging power",
       "powerSub1": "{activeClients} of {totalClients} participants",
-      "powerSub2": "charging…",
+      "powerSub2": "are charging.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -1150,17 +1148,24 @@
       "update": "Apply",
       "weekdays": "Days"
     },
+    "continuousStatus": {
+      "charging": "Boost active.",
+      "connected": "Normal operation.",
+      "waitForVehicle": "Boost requested…"
+    },
     "energyflow": {
       "battery": "Battery",
       "batteryCharge": "Battery charging",
       "batteryDischarge": "Battery discharging",
-      "batteryForecastEmpty": "empty {time}",
-      "batteryForecastFull": "full {time}",
+      "batteryForecastEmpty": "Empty",
+      "batteryForecastFull": "Full",
+      "batteryForecastNextHigh": "High",
+      "batteryForecastNextLow": "Low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryHold": "Battery (locked)",
       "batteryTooltip": "{energy} of {total} ({soc})",
-      "forecast": "Forecast: ",
+      "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",
       "gridImport": "Grid import",
       "homePower": "Consumption",
@@ -1176,11 +1181,35 @@
       "charging": "Heating…",
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
-      "waitForVehicle": "Ready. Waiting for heater…"
+      "waitForVehicle": "Ready to heat…"
     },
     "hemsWarning": {
       "description": "Reduced charging to not exceed {limit}.",
       "title": "External limit:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "charged",
+          "returnEnergy": "discharged"
+        },
+        "grid": {
+          "energy": "imported",
+          "returnEnergy": "exported"
+        }
+      },
+      "downloadCsv": "Download CSV",
+      "empty": "No history data available for this time range.",
+      "group": {
+        "battery": "Battery",
+        "forecast": "Forecast",
+        "grid": "Grid",
+        "loadpoint": "Charging & Heating",
+        "meter": "Consumption",
+        "pv": "Production"
+      },
+      "otherConsumers": "Others",
+      "title": "History"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -1375,6 +1404,7 @@
     "updatePassword": "Update password"
   },
   "session": {
+    "addOdometer": "Add value",
     "cancel": "Cancel",
     "co2": "CO₂",
     "date": "Period",
@@ -1384,7 +1414,8 @@
     "meterstart": "Meter start",
     "meterstop": "Meter stop",
     "odometer": "Mileage",
-    "price": "Price",
+    "price": "Cost",
+    "soc": "Vehicle SoC",
     "started": "Started",
     "title": "Charging Session"
   },
@@ -1392,6 +1423,7 @@
     "avgPower": "⌀ Power",
     "avgPrice": "⌀ Price",
     "chargeDuration": "Duration",
+    "chargedSoc": "Charge",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Price {byGroup}",
@@ -1423,8 +1455,10 @@
       "meterstart": "Meter start (kWh)",
       "meterstop": "Meter stop (kWh)",
       "odometer": "Mileage (km)",
-      "price": "Price",
+      "price": "Cost",
       "priceperkwh": "Price/kWh",
+      "socend": "SoC end (%)",
+      "socstart": "SoC start (%)",
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },
@@ -1440,7 +1474,7 @@
     "group": {
       "co2": "Emissions",
       "grid": "Grid",
-      "price": "Price",
+      "price": "Cost",
       "self": "Solar"
     },
     "groupBy": {
@@ -1453,6 +1487,7 @@
     "odometer": "Mileage",
     "overview": "Overview",
     "period": {
+      "day": "Day",
       "month": "Month",
       "total": "Total",
       "year": "Year"
@@ -1465,7 +1500,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Price",
+      "price": "Cost",
       "solar": "Solar"
     },
     "vehicle": "Vehicle"

@@ -15,6 +15,9 @@ import (
 	"github.com/jinzhu/now"
 )
 
+// ErrAuthFailed re-exports the GraphQL auth-failure sentinel for use in tests.
+var ErrAuthFailed = octoDeGql.ErrAuthFailed
+
 type OctopusDe struct {
 	log       *util.Logger
 	gqlClient *octoDeGql.OctopusDeGraphQLClient
@@ -93,6 +96,9 @@ func (t *OctopusDe) run(done chan error) {
 		if err := backoff.Retry(func() error {
 			agr, err := t.gqlClient.ActiveAgreement()
 			if err != nil {
+				if errors.Is(err, octoDeGql.ErrAuthFailed) {
+					return backoff.Permanent(err)
+				}
 				return backoffPermanentError(err)
 			}
 			rates, err = ratesForAgreement(agr, time.Now())

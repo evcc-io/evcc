@@ -9,12 +9,12 @@ import (
 )
 
 type Accumulator struct {
-	clock       clock.Clock
-	updated     time.Time
-	importMeter *float64 // kWh
-	exportMeter *float64 // kWh
-	Import      float64  `json:"import"` // kWh
-	Export      float64  `json:"export"` // kWh
+	clock        clock.Clock
+	updated      time.Time
+	importMeter  *float64 // kWh
+	exportMeter  *float64 // kWh
+	Energy       float64  `json:"energy"`       // kWh
+	ReturnEnergy float64  `json:"returnEnergy"` // kWh
 }
 
 func WithClock(clock clock.Clock) func(*Accumulator) {
@@ -37,7 +37,7 @@ func (m *Accumulator) Updated() time.Time {
 
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
-	fmt.Fprintf(b, "Accumulated: %.3fkWh pos, %.3fkWh neg, updated: %v", m.Import, m.Export, m.updated.Truncate(time.Second))
+	fmt.Fprintf(b, "Accumulated: %.3fkWh pos, %.3fkWh neg, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
 	if m.importMeter != nil || m.exportMeter != nil {
 		fmt.Fprintf(b, " meter: ")
 		if m.importMeter != nil {
@@ -52,12 +52,12 @@ func (m *Accumulator) String() string {
 
 // Imported returns the accumulated import energy in kWh
 func (m *Accumulator) Imported() float64 {
-	return m.Import
+	return m.Energy
 }
 
 // Exported returns the accumulated export energy in kWh
 func (m *Accumulator) Exported() float64 {
-	return m.Export
+	return m.ReturnEnergy
 }
 
 // SetImportMeterTotal adds the difference to the last total meter value in kWh
@@ -72,7 +72,7 @@ func (m *Accumulator) SetImportMeterTotal(v float64) {
 	}
 
 	if v >= *m.importMeter {
-		m.Import += v - *m.importMeter
+		m.Energy += v - *m.importMeter
 	}
 }
 
@@ -88,7 +88,7 @@ func (m *Accumulator) SetExportMeterTotal(v float64) {
 	}
 
 	if v >= *m.exportMeter {
-		m.Export += v - *m.exportMeter
+		m.ReturnEnergy += v - *m.exportMeter
 	}
 }
 
@@ -100,7 +100,7 @@ func (m *Accumulator) AddImportEnergy(v float64) {
 		return
 	}
 
-	m.Import += v
+	m.Energy += v
 }
 
 // AddExportEnergy adds the given energy in kWh to the negative meter
@@ -111,7 +111,7 @@ func (m *Accumulator) AddExportEnergy(v float64) {
 		return
 	}
 
-	m.Export += v
+	m.ReturnEnergy += v
 }
 
 // AddPower adds the given power in W, calculating the energy based on the time since the last update

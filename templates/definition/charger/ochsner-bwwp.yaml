@@ -3,6 +3,7 @@ products:
   - brand: Ochsner
     description:
       generic: BWWP Genius 333
+capabilities: ["dim"]
 group: heating
 params:
   - name: host

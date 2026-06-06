@@ -7,6 +7,7 @@ products:
       generic: Easy
   - description:
       generic: EVSE DIN
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["rs485"]

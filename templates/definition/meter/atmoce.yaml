@@ -14,8 +14,7 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
-    baudrate: 9600
+    choice: ["tcpip"]
     id: 1
   - name: maxacpower
     advanced: true
@@ -44,6 +43,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 60184 # Cumulative Electricity Purchase Volume (kWh * 100)
+      type: holding
+      decode: uint64
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60178 # Cumulative Electricity Sales Volume (kWh * 100)
       type: holding
       decode: uint64
     scale: 0.01
@@ -121,6 +128,14 @@ render: |
       decode: int32
     scale: 1
   energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60172 # Cumulative Energy Storage Discharging Capacity (kWh * 100)
+      type: holding
+      decode: uint64
+    scale: 0.01
+  returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
