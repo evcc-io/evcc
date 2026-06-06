@@ -3,8 +3,11 @@ package easee
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -178,6 +181,25 @@ func HasPersistedAuth(user string) bool {
 	}
 
 	return loadPersistedEaseeAuth(easeeAccountSubject(user)) != nil
+}
+
+// KnownAccounts returns the email addresses of all Easee accounts with persisted tokens.
+func KnownAccounts() []string {
+	var accounts []string
+	for _, s := range settings.All() {
+		if !strings.HasPrefix(s.Key, "easee-") {
+			continue
+		}
+		var stored persistedEaseeAuth
+		if err := json.Unmarshal([]byte(s.Value), &stored); err != nil {
+			continue
+		}
+		if stored.User != "" {
+			accounts = append(accounts, stored.User)
+		}
+	}
+	slices.Sort(accounts)
+	return accounts
 }
 
 func PersistentTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
