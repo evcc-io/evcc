@@ -226,7 +226,7 @@ w4:${signalSource("w4")}`
     await stopSimulator();
   });
 
-  test("no curtailment without circuits", async ({ page }) => {
+  test("curtailment without circuits", async ({ page }) => {
     const GRID_CONFIG = "hems-grid.evcc.yaml";
     await start(GRID_CONFIG);
 
@@ -254,9 +254,10 @@ w3:
     await restart(GRID_CONFIG);
     await page.goto("/#/config");
 
-    // hems reports the limit, but it is not propagated to the pv meter without circuits
     await expect(page.getByTestId("hems")).toContainText(["Feed-in limit", "0.0 kW"].join(""));
-    await expect(page.getByTestId("pv").getByTestId("device-banner")).not.toBeVisible();
+    await expect(page.getByTestId("pv").getByTestId("device-banner")).toHaveText(
+      "Production limited"
+    );
   });
 
   test.describe("grid sessions CSV in app context", () => {
