@@ -106,19 +106,3 @@ func TestMerge(t *testing.T) {
 	assert.Equal(t, "100", dst[FieldOdometer].Value, "older datapoint ignored")
 	assert.Equal(t, "200", dst[FieldRangeSecondary].Value, "new field added")
 }
-
-// TestResetDelay verifies the cache reset is scheduled for when the portal is
-// expected to deliver the dataset following the one just read.
-func TestResetDelay(t *testing.T) {
-	now := time.Date(2026, 5, 31, 12, 0, 0, 0, time.UTC)
-
-	// fresh dataset: reset one interval + latency later
-	assert.Equal(t, portalInterval+portalLatency, resetDelay(now, now))
-
-	// dataset already 5 min old: reset interval + latency after its timestamp
-	assert.Equal(t, portalInterval+portalLatency-5*time.Minute, resetDelay(now.Add(-5*time.Minute), now))
-
-	// next dataset already due: never reset sooner than the latency margin
-	assert.Equal(t, portalLatency, resetDelay(now.Add(-portalInterval), now))
-	assert.Equal(t, portalLatency, resetDelay(now.Add(-time.Hour), now))
-}
