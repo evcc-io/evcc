@@ -453,8 +453,8 @@ export default defineComponent({
 		// Only the required (identity) auth params — used to detect identity changes.
 		requiredAuthValues() {
 			const { params = [] } = this.template?.Auth ?? {};
-			const requiredNames = params.filter((name: string) =>
-				this.templateParams.find((p) => p.Name === name)?.Required
+			const requiredNames = params.filter(
+				(name: string) => this.templateParams.find((p) => p.Name === name)?.Required
 			);
 			return requiredNames.reduce(
 				(acc: Record<string, any>, name: string) => {
