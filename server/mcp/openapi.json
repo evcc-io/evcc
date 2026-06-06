@@ -1,6 +1,14 @@
 {
   "components": {
     "parameters": {
+      "adminPassword": {
+        "description": "Admin password (required for session auth, not needed for API key)",
+        "in": "header",
+        "name": "X-Admin-Password",
+        "schema": {
+          "$ref": "#/components/schemas/Password"
+        }
+      },
       "batteryMode": {
         "in": "path",
         "name": "batteryMode",
@@ -749,6 +757,11 @@
       }
     },
     "securitySchemes": {
+      "bearerAuth": {
+        "description": "Long-lived API key (prefixed `evcc_`, managed via /auth/apikey).\nGrants access to /api/db/* without requiring the X-Admin-Password header.\n",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "cookieAuth": {
         "in": "cookie",
         "name": "auth",
@@ -766,6 +779,100 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/auth/apikey": {
+      "get": {
+        "description": "Reports whether an API key has been generated. The key itself is\nonly returned once at creation time (POST), never on subsequent\nreads.\n",
+        "operationId": "getApiKeyStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "configured": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "API key status",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Generates a fresh API key, replacing any existing one. The\nreturned key is shown only once; store it immediately.\n\nEven when the request is authenticated via API key (Bearer), the\nadmin password must be supplied in the request body to prevent a\nleaked key from rotating itself. The password check is skipped\nwhen the server is started with `--disable-auth`.\n",
+        "operationId": "regenerateApiKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "$ref": "#/components/schemas/Password"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "key": {
+                      "description": "The new API key (cleartext, shown once).",
+                      "example": "evcc_aB3xYz7k0Pq2sN5mWtR4",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "description": "Invalid admin password"
+          },
+          "403": {
+            "description": "Forbidden in demo mode"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Generate or rotate the API key",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Administrator login. Returns authorization cookie required for all protected endpoints.",
@@ -1033,6 +1140,150 @@
         ]
       }
     },
+    "/db/backup": {
+      "get": {
+        "description": "Downloads the SQLite database as a backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.",
+        "operationId": "downloadBackup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "SQLite database file"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Download database backup",
+        "tags": [
+          "db"
+        ]
+      }
+    },
+    "/db/reset": {
+      "post": {
+        "description": "Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
+        "operationId": "resetDatabase",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "sessions": {
+                    "description": "Delete all charging sessions",
+                    "type": "boolean"
+                  },
+                  "settings": {
+                    "description": "Delete all settings, configs, and meters",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Reset successful, instance is restarting"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reset database",
+        "tags": [
+          "db"
+        ]
+      }
+    },
+    "/db/restore": {
+      "post": {
+        "description": "Restores the database from a previously downloaded backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful restore.",
+        "operationId": "restoreBackup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "description": "SQLite database backup file",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Restore successful, instance is restarting"
+          },
+          "400": {
+            "description": "Invalid file or missing fields"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Restore database backup",
+        "tags": [
+          "db"
+        ]
+      }
+    },
     "/gridsessions": {
       "get": {
         "description": "Returns a list of HEMS grid limitation events.",
@@ -1086,6 +1337,95 @@
         "summary": "Grid limitation sessions",
         "tags": [
           "sessions"
+        ]
+      }
+    },
+    "/history/energy": {
+      "get": {
+        "description": "Returns aggregated energy history data. Aggregate granularity defaults to 15 minutes. Supports CSV export.",
+        "operationId": "getEnergyHistory",
+        "parameters": [
+          {
+            "description": "Start time (RFC3339)",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "End time (RFC3339)",
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Aggregation interval. Examples: 15m, 1h, day, month",
+            "in": "query",
+            "name": "aggregate",
+            "schema": {
+              "default": "15m",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Group results by loadpoint",
+            "in": "query",
+            "name": "grouped",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Response format",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header.",
+            "in": "query",
+            "name": "lang",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Energy history data"
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          }
+        },
+        "summary": "Energy history",
+        "tags": [
+          "experimental"
         ]
       }
     },
@@ -2218,6 +2558,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Clear cache",
@@ -2294,6 +2637,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Logs",
@@ -2329,6 +2675,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "List of all log areas",
@@ -2352,6 +2701,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Shutdown evcc",
@@ -2643,6 +2995,12 @@
     },
     {
       "name": "battery"
+    },
+    {
+      "name": "db"
+    },
+    {
+      "name": "experimental"
     },
     {
       "name": "general"

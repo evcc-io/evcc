@@ -28,7 +28,6 @@ params:
       en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Tibber Data API client."
       de: "Redirect-URI der evcc-Instanz. Muss mit der im Tibber Data API Client hinterlegten Redirect URI übereinstimmen."
     service: auth/redirecturi
-    example: "https://evcc.example.org/providerauth/callback"
   - name: vin
     example: WVW...
     service: tibber/vehicles?clientid={clientid}&clientsecret={clientsecret}&redirecturi={redirecturi}
