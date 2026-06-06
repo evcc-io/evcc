@@ -17,7 +17,7 @@ var _ api.Capable = (*charger)(nil)
 
 func (c *charger) Capability(typ reflect.Type) (any, bool) {
 	cap, ok := c.caps[typ]
-	if !ok && reflect.TypeOf(c).Implements(typ) {
+	if !ok && reflect.TypeFor[*charger]().Implements(typ) {
 		return c, true
 	}
 	return cap, ok

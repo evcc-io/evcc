@@ -18,7 +18,10 @@ render: |
     source: aa55udp
     host: {{ or .host .uri }}
     id: 247
-    register: 35139
+    block:               # READ 125 @ 0x891C
+      register: 35100
+      count: 125
+    register: 35139      # grid power
     count: 2
     decode: int32be
   energy:
@@ -32,17 +35,52 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
-    source: aa55udp
-    host: {{ or .host .uri }}
-    id: 247
-    register: 35137
-    count: 2
-    decode: int32be
+    source: calc
+    add:
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:             # READ 125 @ 0x891C
+        register: 35100
+        count: 125
+      register: 35105    # Ppv1
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register: 35109    # Ppv2
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register: 35113    # Ppv3
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register: 35117    # Ppv4
+      count: 2
+      decode: uint32nan
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
     id: 247
-    register: 35191
+    block:
+      register: 35100
+      count: 125
+    register: 35191      # pv energy
     count: 2
     decode: uint32be
     scale: 0.1
@@ -52,14 +90,20 @@ render: |
     source: aa55udp
     host: {{ or .host .uri }}
     id: 247
-    register: 35182
+    block:               # READ 125 @ 0x891C
+      register: 35100
+      count: 125
+    register: 35182      # battery power
     count: 2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
     id: 247
-    register: 35209
+    block:
+      register: 35100
+      count: 125
+    register: 35209      # battery discharge energy
     count: 2
     decode: uint32be
     scale: 0.1
@@ -67,7 +111,10 @@ render: |
     source: aa55udp
     host: {{ or .host .uri }}
     id: 247
-    register: 37007
+    block:               # READ 13 @ 0x9088
+      register: 37000
+      count: 13
+    register: 37007      # soc
     count: 1
     decode: uint16be
   {{- end }}

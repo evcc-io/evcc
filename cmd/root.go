@@ -237,10 +237,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// remote access tunnel
-	var remoteAccess *remote.Remote
-	if remoteHost := os.Getenv("EVCC_REMOTE_ACCESS"); remoteHost != "" {
-		remoteAccess = remote.New(remoteHost, httpd.Router(), valueChan)
-	}
+	remoteAccess := remote.New(util.Getenv("EVCC_REMOTE_ACCESS", "api.evcc.cloud"), httpd.Router(), valueChan)
 
 	// signal ui listening
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
@@ -396,9 +393,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 
 	// publish remote access status
-	if remoteAccess != nil {
-		valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
-	}
+	valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}

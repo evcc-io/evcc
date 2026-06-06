@@ -51,6 +51,21 @@
     "hex": "Hex-Farbe"
   },
   "config": {
+    "apiKey": {
+      "description": "Gibt Skripten und Automatisierungsaufgaben wie geplanten Backups sicheren Zugriff, ohne dein Administrator-Passwort zu teilen.",
+      "exampleLabel": "Ausprobieren: Backup mit curl herunterladen",
+      "generate": "API-Schlüssel erstellen",
+      "generateConfirm": "Gib dein Administrator-Passwort ein, um einen neuen API-Schlüssel zu erstellen.",
+      "keyLabel": "API-Schlüssel",
+      "regenerate": "API-Schlüssel neu erstellen",
+      "regenerateConfirm": "Gib dein Administrator-Passwort ein, um den API-Schlüssel neu zu erstellen.",
+      "regenerateLink": "Neu erstellen",
+      "regenerateWarning": "Beim Neuerstellen wird der bestehende Schlüssel ungültig und Automatisierungen, die ihn nutzen, funktionieren nicht mehr. Fortfahren?",
+      "revealSuccess": "Dein neuer API-Schlüssel ist einsatzbereit.",
+      "revealTitle": "API-Schlüssel erstellt",
+      "shownOnce": "Dieser Schlüssel wird nur einmal angezeigt. Bewahre ihn sicher auf. Du kannst ihn später nicht erneut abrufen.",
+      "title": "API-Schlüssel"
+    },
     "aux": {
       "description": "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist.",
       "titleAdd": "Intelligenten Verbraucher hinzufügen",
@@ -167,6 +182,7 @@
       "powerRange": "Leistung",
       "price": "Preis",
       "range": "Reichweite",
+      "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
       "solarForecast": "PV-Vorhersage",
@@ -693,6 +709,14 @@
       "services": "Dienste",
       "system": "System",
       "vehicles": "Fahrzeuge"
+    },
+    "security": {
+      "authDisabledHint": "Authentifizierung ist deaktiviert. Anmeldedaten können nicht verwaltet werden.",
+      "description": "Verwalte Authentifizierung und Anmeldedaten dieser Instanz.",
+      "passwordDescription": "Aktualisiere das Passwort, mit dem du dich an der Konfigurationsoberfläche anmeldest.",
+      "passwordTitle": "Administrator-Passwort",
+      "title": "Sicherheit",
+      "updatePassword": "Passwort ändern"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -1403,6 +1427,7 @@
     "updatePassword": "Passwort ändern"
   },
   "session": {
+    "addOdometer": "Wert eintragen",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",
@@ -1413,6 +1438,7 @@
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
     "price": "Kosten",
+    "soc": "Ladestand",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },
@@ -1420,6 +1446,7 @@
     "avgPower": "⌀ Leistung",
     "avgPrice": "⌀ Preis",
     "chargeDuration": "Ladedauer",
+    "chargedSoc": "Ladung",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Preis {byGroup}",
@@ -1453,6 +1480,8 @@
       "odometer": "Kilometerstand (km)",
       "price": "Kosten",
       "priceperkwh": "Preis/kWh",
+      "socend": "Ladestand Ende (%)",
+      "socstart": "Ladestand Start (%)",
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },

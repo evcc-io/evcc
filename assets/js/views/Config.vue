@@ -322,8 +322,8 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
-						v-if="remote"
-						:title="$t('config.remote.title')"
+						v-if="experimental"
+						:title="`${$t('config.remote.title')} 🧪`"
 						editable
 						:unconfigured="isUnconfigured(remoteTags)"
 						data-testid="remote-access"
@@ -451,6 +451,8 @@
 				/>
 				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
+				<SecurityModal :auth-disabled="authDisabled" />
+				<ApiKeyModal :auth-disabled="authDisabled" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
@@ -549,6 +551,8 @@ import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import SecurityModal from "../components/Config/Security/SecurityModal.vue";
+import ApiKeyModal from "../components/Config/Security/ApiKeyModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 
 export default defineComponent({
@@ -606,6 +610,8 @@ export default defineComponent({
 		WelcomeBanner,
 		AuthSuccessBanner,
 		PasswordModal,
+		SecurityModal,
+		ApiKeyModal,
 		AuthProvidersCard,
 	},
 	mixins: [formatter, collector],
@@ -873,9 +879,12 @@ export default defineComponent({
 				Object.values(store.state.messagingEvents ?? {}).some((e) => !e.disabled)
 			);
 		},
+		authDisabled() {
+			return store.state?.authDisabled || false;
+		},
 		backupRestoreProps() {
 			return {
-				authDisabled: store.state?.authDisabled || false,
+				authDisabled: this.authDisabled,
 			};
 		},
 		circuitsRoot() {
@@ -964,14 +973,8 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// set gridcontrol default title
-			circuits.forEach((c: ConfigCircuit) => {
-				if (c.name === GRID_CONTROL && !c.config?.title) {
-					c.config = c.config || {};
-					c.config.title = this.$t("config.hems.title");
-				}
-			});
-			this.circuits = circuits;
+			// gridcontrol is auto-created for hems and must not be user-assignable to loadpoints
+			this.circuits = circuits.filter((c: ConfigCircuit) => c.name !== GRID_CONTROL);
 		},
 		async loadTariffs() {
 			this.tariffs = (await this.loadConfig("devices/tariff")) || [];
