@@ -1327,7 +1327,7 @@ func (lp *Loadpoint) fastCharging() error {
 	if lp.phasesConfigured != 0 {
 		// user configured fixed phase count overrides automatic switching
 		if lp.phasesConfigured == 3 && targetPhases == 1 {
-			lp.log.WARN.Printf("configured fixed phase count %dp prevents switching to 1p to match %.0fW available circuit power", lp.phasesConfigured, powerLimit)
+			lp.log.DEBUG.Printf("configured fixed phase count %dp prevents switching to 1p to match %.0fW available circuit power", lp.phasesConfigured, powerLimit)
 		}
 		targetPhases = lp.phasesConfigured
 	}
