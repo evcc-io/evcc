@@ -130,7 +130,7 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 // identifyVehicleByStatus finds active vehicle by charge state
 func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus api.ChargeStatus) api.Vehicle {
 	var exactMatch api.Vehicle
-	var approximateMatches []api.vehicle
+	var approximateMatches []api.Vehicle
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -171,7 +171,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 		return approximateMatches[0]
 	} 
 	if len(approximateMatches) > 1 {
-		c.log.WARN.Printf("vehicle status: %d approximate matches, giving up", approximateMatchCount)
+		c.log.WARN.Printf("vehicle status: %d approximate matches, giving up", len(approximateMatches))
 		return nil
 	}
 
