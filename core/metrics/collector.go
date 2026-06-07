@@ -49,8 +49,7 @@ func createEntity(group, name, title string) (entity, error) {
 	return e, e.updateTitle(title)
 }
 
-// updateTitle refreshes the entity's stored title if it changed. An empty title
-// is ignored so a once-captured label survives a later config without a title.
+// updateTitle refreshes the entity's stored title if it changed
 func (e *entity) updateTitle(title string) error {
 	if title == "" || e.Title == title {
 		return nil

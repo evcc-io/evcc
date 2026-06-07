@@ -1315,13 +1315,11 @@ func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*u
 		return lp, err
 	}
 
-	// lazily set the entity title from the loadpoint, falling back to its name
-	title := lp.GetTitle()
-	if title == "" {
-		title = name
-	}
-	if err := collector.UpdateTitle(title); err != nil {
-		return lp, err
+	// lazily update entity title
+	if title := lp.GetTitle(); title != "" {
+		if err := collector.UpdateTitle(title); err != nil {
+			return lp, err
+		}
 	}
 
 	return lp, nil
