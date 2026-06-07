@@ -201,8 +201,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	for _, lp := range site.Loadpoints() {
-		// ignore disconnected loadpoints
-		if lp.GetStatus() == api.StatusA {
+		// ignore disconnected loadpoints, including StatusNone
+		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
 		}
 
