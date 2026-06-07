@@ -201,8 +201,12 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	for _, lp := range site.Loadpoints() {
-		// ignore disconnected loadpoints
-		if lp.GetStatus() == api.StatusA {
+		// only consider connected loadpoints; this also excludes loadpoints that
+		// have not yet completed their first update and still report the default
+		// status api.StatusNone with a zero vehicle soc, which would otherwise be
+		// optimized as a connected vehicle at 0% soc on startup
+		// (https://github.com/evcc-io/evcc/issues/30582)
+		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
 		}
 
