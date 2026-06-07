@@ -314,6 +314,15 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
+                value: {{ .maxchargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47075 # Max. Charge Power
+                    type: writemultiple
+                    encoding: uint32
+              - source: const
                 value: {{ .maxdischargepower }}
                 set:
                   source: modbus
@@ -346,6 +355,15 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
+              - source: const
+                value: {{ .maxchargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47075 # Max. Charge Power
+                    type: writemultiple
+                    encoding: uint32
               - source: const
                 value: 0 # W Discharge Power
                 set:
@@ -406,6 +424,48 @@ render: |
                     address: 47246 # Forcible charge/discharge setting mode
                     type: writesingle
                     encoding: uint16
+          - case: 4 # nocharge/holdcharge
+            set:
+              source: sequence
+              set:
+              - source: const
+                value: 0 # stop
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0 # W
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47075 # Max. Charge Power
+                    type: writemultiple
+                    encoding: uint32
+              - source: const
+                value: {{ .maxdischargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47077 # Max. Discharge Power
+                    type: writemultiple
+                    encoding: uint32
+              {{- if eq .forceaccharging "false" }}
+              - source: const
+                value: 0 # Disable
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47087 # Charge from grid
+                    type: writesingle
+                    encoding: uint16
+              {{- end }}
       - source: watchdog
         timeout: 30s
         reset: 1
@@ -432,6 +492,9 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
-
+            - case: 4 # nocharge/holdcharge
+              set:
+                source: sleep
+                duration: 0s
   {{- include "battery-params" . }}
   {{- end }}
