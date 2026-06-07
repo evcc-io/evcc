@@ -158,7 +158,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 					exactMatch = vehicle
 				} else {
 					// vehicle is plugged or charging, so it should be the right one if there is no exact match
-					append(approximateMatches, vehicle)
+					approximateMatches = append(approximateMatches, vehicle)
 				}
 			}
 		}
@@ -167,7 +167,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 	if exactMatch != nil {
 		return exactMatch
 	} 
-    if len(approximateMatches) == 1 {
+	if len(approximateMatches) == 1 {
 		return approximateMatches[0]
 	} 
 	if len(approximateMatches) > 1 {
