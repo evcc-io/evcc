@@ -50,7 +50,7 @@ func NewValidPlugin(ctx context.Context, valid func() (bool, error), value Confi
 
 var _ StringGetter = (*validPlugin)(nil)
 
-func validGetter[T any](o *validPlugin, valuer func(ctx context.Context) (func() (T, error), error)) (func() (T, error), error) {
+func (o *validPlugin) validGetter[T any](valuer func(ctx context.Context) (func() (T, error), error)) (func() (T, error), error) {
 	value, err := valuer(o.ctx)
 	if err != nil {
 		return nil, fmt.Errorf("valid: %w", err)
@@ -74,17 +74,17 @@ func validGetter[T any](o *validPlugin, valuer func(ctx context.Context) (func()
 var _ StringGetter = (*validPlugin)(nil)
 
 func (o *validPlugin) StringGetter() (func() (string, error), error) {
-	return validGetter(o, o.value.StringGetter)
+	return o.validGetter(o.value.StringGetter)
 }
 
 var _ FloatGetter = (*validPlugin)(nil)
 
 func (o *validPlugin) FloatGetter() (func() (float64, error), error) {
-	return validGetter(o, o.value.FloatGetter)
+	return o.validGetter(o.value.FloatGetter)
 }
 
 var _ IntGetter = (*validPlugin)(nil)
 
 func (o *validPlugin) IntGetter() (func() (int64, error), error) {
-	return validGetter(o, o.value.IntGetter)
+	return o.validGetter(o.value.IntGetter)
 }
