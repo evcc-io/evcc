@@ -150,8 +150,6 @@
       "forecast": "Prognose",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
-      "hemsActiveLimit": "Aktiv begrænsning",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
       "loginBlocked": "Grænsen for loginforsøg er nået",
       "max": "max",
@@ -181,10 +179,6 @@
       "A": "A (ikke forbundet)",
       "B": "B (forbundet)",
       "C": "C (oplader)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
@@ -1200,7 +1194,6 @@
       "waitForVehicle": "Klar til at varme…"
     },
     "hemsWarning": {
-      "description": "Opladningen reduceres for ikke at overskride {limit}.",
       "title": "Ekstern begrænsning:"
     },
     "history": {

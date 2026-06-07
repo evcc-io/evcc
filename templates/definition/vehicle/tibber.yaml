@@ -1,6 +1,7 @@
 template: tibber
 products:
   - brand: Tibber
+group: generic
 requirements:
   description:
     de: |

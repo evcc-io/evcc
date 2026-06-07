@@ -73,9 +73,6 @@
 	--bs-danger: var(--evcc-red);
 	--bs-danger-rgb: var(--evcc-red-rgb);
 
-	--bs-danger: var(--evcc-red);
-	--bs-danger-rgb: var(--evcc-red-rgb);
-
 	--bs-form-invalid-border-color: var(--bs-danger);
 
 	--bs-body-font-size: 14px;

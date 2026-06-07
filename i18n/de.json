@@ -155,8 +155,11 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "curtailLimit": "Einspeiselimit",
+      "curtailable": "Abregelbar",
       "curtailed": "Einspeisung begrenzt",
       "detected": "Erkannt",
+      "dimLimit": "Verbrauchslimit",
       "dimmed": "Verbrauch begrenzt",
       "enabled": "Ladebereit",
       "energy": "Energie",
@@ -165,8 +168,6 @@
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
-      "hemsActiveLimit": "Aktives Limit",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
       "max": "max",
@@ -181,6 +182,7 @@
       "power": "Leistung",
       "powerRange": "Leistung",
       "price": "Preis",
+      "productionLimited": "Erzeugung begrenzt",
       "range": "Reichweite",
       "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
@@ -196,10 +198,6 @@
       "A": "A (nicht verbunden)",
       "B": "B (verbunden)",
       "C": "C (lädt)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
@@ -618,13 +616,12 @@
       "warningUrlPath": "Die URL benötigt normalerweise keinen Pfad. Bist du dir sicher?"
     },
     "ocpp": {
-      "connectedChargers": "Verbundene Wallboxen",
-      "connectionStatus": "Konfigurierte Station-IDs",
-      "connectionStatusHelp": "Verbindungsstatus der konfigurierten Wallboxen.",
-      "detectedChargers": "Erkannte Station-IDs",
-      "detectedHelp": "Diese Wallboxen haben versucht, sich mit evcc zu verbinden. Um eine Wallbox zu verwenden, erstelle einen Ladepunkt mit ihrer Station-ID.",
+      "forwardingConfigured": "Weiterleitung konfiguriert",
+      "forwardingError": "Weiterleitungsfehler",
+      "forwardingOff": "Keine Weiterleitung konfiguriert",
       "noChargers": "Keine OCPP-Wallboxen erkannt.",
-      "noStations": "Keine Stationen verbunden",
+      "stations": "Station-IDs",
+      "stationsHelp": "Konfigurierte und erkannte OCPP-Wallboxen. Zusätzlich zur lokalen Steuerung kannst du eine Nachrichtenweiterleitung an einen externen Server (z. B. für die Abrechnung) konfigurieren.",
       "status": {
         "configured": "Nicht verbunden",
         "connected": "Verbunden",
@@ -633,6 +630,30 @@
       "title": "OCPP Server",
       "url": "Server-URL",
       "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Leite die OCPP-Nachrichten dieser Wallbox zusätzlich zu evcc an einen externen Server weiter (Abrechnungsplattform, Netzbetreiber usw.).",
+      "editTitle": "OCPP-Weiterleitung",
+      "labelCaCert": "Serverzertifikat (CA)",
+      "labelCheckInsecure": "Selbstsignierte Zertifikate erlauben",
+      "labelInsecure": "Zertifikatsprüfung",
+      "password": "Passwort",
+      "passwordHelp": "Für HTTP-Basic-Auth am Upstream-Server.",
+      "readOnly": {
+        "check": "Befehle vom Upstream-Server blockieren",
+        "help": {
+          "false": "Der Upstream kann über evcc Befehle an die Wallbox senden.",
+          "true": "Der Upstream empfängt alle Wallbox-Nachrichten, kann aber keine Befehle senden. evcc behält die alleinige Kontrolle."
+        },
+        "label": "Upstream-Befehle"
+      },
+      "status": "Status",
+      "upstreamStationId": "Station-ID",
+      "upstreamStationIdHelp": "Wallbox-Kennung, die an den Upstream-Server gesendet wird.",
+      "upstreamUrl": "Upstream-Server-URL",
+      "upstreamUrlHelp": "OCPP-WebSocket-URL des externen Servers.",
+      "username": "Benutzername",
+      "usernameHelp": "Für HTTP-Basic-Auth am Upstream-Server."
     },
     "optimizer": {
       "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
@@ -1207,8 +1228,9 @@
       "waitForVehicle": "Bereit zum Heizen …"
     },
     "hemsWarning": {
-      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
-      "title": "Externe Begrenzung:"
+      "consumption": "Verbrauch",
+      "feedIn": "Einspeisung",
+      "title": "Externe Begrenzung aktiv"
     },
     "history": {
       "direction": {

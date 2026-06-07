@@ -150,8 +150,6 @@
       "forecast": "Předpověď",
       "gridPrice": "Cena ze sítě",
       "heaterTempLimit": "Limit topení",
-      "hemsActiveLimit": "Aktivní limit",
-      "hemsType": "Komunikace",
       "identifier": "RFID identifikátor",
       "loginBlocked": "Dosažen limit přihlášení",
       "max": "maximum",
@@ -180,10 +178,6 @@
       "A": "A (nepřipojeno)",
       "B": "B (připojeno)",
       "C": "C (nabíjení)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "skrze EEBus",
-      "relay": "skrze relé"
     },
     "devices": {
       "auxMeter": "Chytrý spotřebič",
@@ -1197,7 +1191,6 @@
       "waitForVehicle": "Připraven k vytápění…"
     },
     "hemsWarning": {
-      "description": "Zpomalené nabíjení zamezující přesáhnutí {limit}.",
       "title": "Externí limit:"
     },
     "history": {

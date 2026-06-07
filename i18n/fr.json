@@ -150,8 +150,6 @@
       "forecast": "Prévisions",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
-      "hemsActiveLimit": "Limite active",
-      "hemsType": "Communication",
       "identifier": "Identifiant RFID",
       "loginBlocked": "Limit de login atteinte",
       "max": "max",
@@ -181,10 +179,6 @@
       "A": "A (non connecté)",
       "B": "B (connecté)",
       "C": "C (en charge)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relai"
     },
     "devices": {
       "auxMeter": "Consommateur intelligent",
@@ -621,6 +615,44 @@
       "title": "Serveur OCPP",
       "url": "URL du Serveur",
       "urlHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur devrait ajouter automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier manuellement l'identifiant. Exemple : `{url}`"
+    },
+    "ocppforwarder": {
+      "add": "Ajouter une règle",
+      "charger": "Chargeur",
+      "connectionStatus": "État de connexion",
+      "description": "Transmet les appels OCPP à un serveur externe (plateforme de facturation, DSO, etc.) en plus d'evcc. Utilisez \"*\" comme identifiant de station pour correspondre à tous les chargeurs.",
+      "labelCaCert": "Certificat serveur (CA)",
+      "labelCheckInsecure": "Autoriser les certificats auto-signés",
+      "labelInsecure": "Validation du certificat",
+      "noConnections": "Aucune connexion de chargeur active.",
+      "option": {
+        "false": "non",
+        "true": "oui"
+      },
+      "password": "Mot de passe en amont",
+      "passwordHelp": "Mot de passe optionnel pour l'authentification HTTP Basic vers le serveur en amont. L'identifiant de station en amont est utilisé comme nom d'utilisateur.",
+      "readOnly": {
+        "help": {
+          "false": "Le serveur en amont peut envoyer des commandes au chargeur via evcc.",
+          "true": "Le serveur en amont reçoit tous les messages du chargeur mais ne peut pas envoyer de commandes. evcc conserve le contrôle exclusif."
+        },
+        "label": "Lecture seule"
+      },
+      "rule": "Règle {number}",
+      "stationId": "Identifiant de station",
+      "stationIdHelp": "Identifiant de station du chargeur, ou \"*\" pour correspondre à tous les chargeurs sans règle spécifique.",
+      "title": "Transmetteur OCPP",
+      "upstream": "En amont",
+      "upstreamConnected": "Connecté",
+      "upstreamConnectedHelp": "Un chargeur est connecté et la liaison en amont est active.",
+      "upstreamDisconnected": "Déconnecté",
+      "upstreamDisconnectedHelp": "Un chargeur est connecté mais la connexion en amont a échoué.",
+      "upstreamIdle": "Aucun chargeur",
+      "upstreamIdleHelp": "Le transmetteur est actif mais aucun chargeur ne s'est encore connecté via cette règle.",
+      "upstreamStationId": "Identifiant de station en amont",
+      "upstreamStationIdHelp": "Remplace l'identifiant de station envoyé au serveur en amont. Laisser vide pour utiliser l'identifiant du chargeur.",
+      "upstreamUrl": "URL du serveur en amont",
+      "upstreamUrlHelp": "URL WebSocket OCPP du serveur externe (ex. wss://facturation.exemple.com/ocpp)."
     },
     "optimizer": {
       "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
@@ -1199,7 +1231,6 @@
       "waitForVehicle": "Prêt à chauffer…"
     },
     "hemsWarning": {
-      "description": "Réduire la charge pour ne pas dépasser {limit}.",
       "title": "Limite externe :"
     },
     "history": {

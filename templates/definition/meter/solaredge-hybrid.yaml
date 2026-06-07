@@ -126,6 +126,22 @@ render: |
       address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32nans
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xE176 # Battery 1 Lifetime Export Energy Counter (discharged)
+      type: holding
+      decode: uint64
+    scale: 0.001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xE17A # Battery 1 Lifetime Import Energy Counter (charged)
+      type: holding
+      decode: uint64
+    scale: 0.001
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}

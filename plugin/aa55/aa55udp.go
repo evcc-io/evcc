@@ -127,30 +127,34 @@ func (p *AA55UDP) query() (float64, error) {
 	return v * p.scale, nil
 }
 
-// fetch returns the response payload, using caching for block-read mode.
+// fetch returns the response payload. In block-read mode the shared cache
+// serves and de-duplicates requests.
 func (p *AA55UDP) fetch() ([]byte, error) {
-	if p.cacheKey != nil {
-		if payload, ok := cache.get(p.cacheKey); ok {
-			p.log.TRACE.Printf("cache hit for %s pdu=%x", p.conn.RemoteAddr(), p.pdu)
-			return payload, nil
-		}
+	// Register mode: single targeted read, no caching.
+	if p.cacheKey == nil {
+		return p.exchange()
 	}
 
+	payload, ok, err := cache.fetch(p.cacheKey, p.exchange)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		p.log.TRACE.Printf("cache hit for %s pdu=%x", p.conn.RemoteAddr(), p.pdu)
+	}
+	return payload, nil
+}
+
+// exchange performs one request/response round trip and returns the response
+// payload with the AA55 header stripped. It is the cache-miss path shared by
+// single flight in block-read mode.
+func (p *AA55UDP) exchange() ([]byte, error) {
 	packet := append(p.pdu, modbusCRC16(p.pdu)...)
 	raw, err := p.sendRecv(packet)
 	if err != nil {
 		return nil, err
 	}
-
-	payload, err := stripHeader(raw)
-	if err != nil {
-		return nil, err
-	}
-
-	if p.cacheKey != nil {
-		cache.put(p.cacheKey, payload)
-	}
-	return payload, nil
+	return stripHeader(raw)
 }
 
 // sendRecv sends packet over p.conn and returns the raw response bytes.

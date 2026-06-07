@@ -104,7 +104,9 @@ func (t *OctopusDe) run(done chan error) {
 			rates, err = ratesForAgreement(agr, time.Now())
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Printf("failed to fetch unit rate forecast: %v", err)
 			continue

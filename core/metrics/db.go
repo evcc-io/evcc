@@ -23,6 +23,7 @@ type entity struct {
 	Id    int    `gorm:"column:id;primarykey"`
 	Group string `gorm:"column:group;uniqueIndex:entities_group_name"`
 	Name  string `gorm:"column:name;uniqueIndex:entities_group_name"`
+	Title string `gorm:"column:title"`
 }
 
 func init() {
@@ -41,7 +42,7 @@ func SetupSchema() error {
 	}
 
 	// ensure home entity exists (reserves id=1 for legacy meter FK references)
-	if _, err := createEntity(Home, Home); err != nil {
+	if _, err := createEntity(Home, Home, Home); err != nil {
 		return err
 	}
 

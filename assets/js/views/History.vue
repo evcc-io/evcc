@@ -245,12 +245,10 @@ export default defineComponent({
 			return `${this.aggregate}|${this.from.getTime()}|${this.to.getTime()}`;
 		},
 		seriesByGroup(): Record<string, HistorySeries[]> {
-			const titles = store.deviceTitles.value;
 			const map: Record<string, HistorySeries[]> = {};
 			for (const s of this.rawSeries) {
 				if (!s.group) continue;
-				if (!map[s.group]) map[s.group] = [];
-				map[s.group]!.push({ ...s, name: titles[s.name] || s.name });
+				(map[s.group] ||= []).push(s);
 			}
 			return map;
 		},
@@ -284,7 +282,7 @@ export default defineComponent({
 				const activeMeters = meters
 					.map((s, i) => ({ ...s, paletteIndex: i }))
 					.filter(hasEnergy);
-				if (!home) return activeMeters;
+				if (!home || activeMeters.length === 0) return activeMeters;
 				const meterTotals = new Map<string, number>();
 				// Net per slot is computed from all meters (incl. inactive ones), so
 				// dropping inactive entries from the display doesn't shift the
@@ -296,7 +294,7 @@ export default defineComponent({
 					}
 				}
 				const other: HistorySeries = {
-					name: this.$t("main.history.otherConsumers") as string,
+					title: this.$t("main.history.otherConsumers") as string,
 					group: "meter",
 					virtual: true,
 					// Use meters.length as a stable paletteIndex that can never
@@ -309,9 +307,7 @@ export default defineComponent({
 					}),
 				};
 				if (!hasEnergy(other)) return activeMeters;
-				// First entry in the array = bottom of the stack, so "Other consumers"
-				// always sits underneath the explicit meters.
-				return [other, ...activeMeters];
+				return [...activeMeters, other];
 			};
 		},
 		hasForecast(): boolean {
@@ -417,14 +413,14 @@ export default defineComponent({
 			if (isPickGroup) {
 				const titles: string[] = [];
 				for (const s of list) {
-					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
+					if (!s.virtual && !titles.includes(s.title)) titles.push(s.title);
 				}
 				palette = resolveColors(titles, this.deviceColors);
 			}
 
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
-				if (isPickGroup) return palette[s.name] || baseColor;
+				if (isPickGroup) return palette[s.title] || baseColor;
 				return alphaColor(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
@@ -435,10 +431,10 @@ export default defineComponent({
 					// Use stable paletteIndex as the focus identifier so that the
 					// selected entity keeps its identity across period navigations.
 					entityIndex: s.paletteIndex ?? i,
-					label: s.name,
+					label: s.title,
 					color: colorFor(i, s),
 					value: this.fmtWh(watts, POWER_UNIT.AUTO),
-					id: isPickGroup && !s.virtual ? s.name : undefined,
+					id: isPickGroup && !s.virtual ? s.title : undefined,
 				};
 			});
 		},

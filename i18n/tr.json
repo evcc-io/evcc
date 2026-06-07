@@ -150,8 +150,6 @@
       "forecast": "Tahmin",
       "gridPrice": "Alım fiyatı",
       "heaterTempLimit": "Isıtıcı sınırlaması",
-      "hemsActiveLimit": "Etkin sınır",
-      "hemsType": "İletişim",
       "identifier": "RFID tanımlayıcısı",
       "loginBlocked": "Giriş sınırına ulaşıldı",
       "max": "azami",
@@ -180,10 +178,6 @@
       "A": "“A (bağlı değil)”",
       "B": "“B (bağlı)”",
       "C": "“C (dolduruyor)”"
-    },
-    "deviceValueHemsType": {
-      "eebus": "EEBus aracılığıyla",
-      "relay": "Röle aracılığıyla"
     },
     "devices": {
       "auxMeter": "“Akıllı tüketici”",
@@ -1197,7 +1191,6 @@
       "waitForVehicle": "Isıtmaya hazır…"
     },
     "hemsWarning": {
-      "description": "Doldurmayı {limit} değerini aşmayacak şekilde azalt.",
       "title": "Harici sınır:"
     },
     "history": {

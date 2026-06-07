@@ -1,8 +1,6 @@
 import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
-export const GRID_CONTROL = "gridcontrol";
-
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -41,6 +39,13 @@ export interface InfluxConfig {
 
 export interface HemsConfig {
   type: string;
+}
+
+export interface HemsStatus {
+  dimmed: boolean;
+  curtailed: boolean;
+  maxConsumptionPower?: number;
+  maxProductionPower?: number;
 }
 
 export interface ShmConfig {
@@ -96,7 +101,7 @@ export interface State {
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: ConfigStatus<HemsConfig, unknown>;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
@@ -121,6 +126,7 @@ export interface State {
   config?: string;
   database?: string;
   ocpp?: Ocpp;
+  ocppforwarder?: ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]>;
   optimizer?: boolean;
   mcp?: boolean;
 }
@@ -135,6 +141,24 @@ export type YamlSource = "file" | "db" | undefined;
 
 export interface OcppConfig {
   port: number;
+}
+
+export interface OcppForwarderRule {
+  stationId: string;
+  upstreamUrl: string;
+  password?: string;
+  upstreamStationId?: string;
+  username?: string;
+  insecure?: boolean;
+  caCert?: string;
+  readOnly?: boolean;
+}
+
+export interface OcppForwarderSession {
+  chargerId: string;
+  upstreamUrl: string;
+  upstreamConnected: boolean;
+  error?: string;
 }
 
 export interface OcppStatus {
@@ -173,8 +197,6 @@ export interface Circuit {
   current?: number;
   maxPower?: number;
   maxCurrent?: number;
-  dimmed?: boolean;
-  curtailed?: boolean;
 }
 
 export interface Entity {

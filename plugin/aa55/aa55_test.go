@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math"
+	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -318,6 +320,63 @@ func TestCache_PutGet(t *testing.T) {
 	got, ok := c.get([]byte("k"))
 	require.True(t, ok)
 	assert.Equal(t, []byte{1, 2, 3}, got)
+}
+
+// TestCache_FetchSingleFlight verifies that concurrent fetches for the same key
+// collapse into a single load (one UDP exchange), all observe the same payload,
+// and the cache is left warm for subsequent reads.
+func TestCache_FetchSingleFlight(t *testing.T) {
+	c := newResponseCache()
+	key := []byte("10.0.0.1:8899/f703891c007d")
+	want := []byte{0xde, 0xad, 0xbe, 0xef}
+
+	var calls atomic.Int32
+	var once sync.Once
+	entered := make(chan struct{})
+	release := make(chan struct{})
+	load := func() ([]byte, error) {
+		calls.Add(1)
+		once.Do(func() { close(entered) })
+		<-release // hold the flight open while followers pile up
+		return want, nil
+	}
+
+	const n = 8
+	var wg sync.WaitGroup
+	payloads := make([][]byte, n)
+
+	wg.Go(func() {
+		got, _, err := c.fetch(key, load)
+		assert.NoError(t, err)
+		payloads[0] = got
+	})
+
+	<-entered // ensure the flight is open before followers join
+
+	for i := 1; i < n; i++ {
+		wg.Go(func() {
+			got, _, err := c.fetch(key, load)
+			assert.NoError(t, err)
+			payloads[i] = got
+		})
+	}
+
+	close(release)
+	wg.Wait()
+
+	assert.Equal(t, int32(1), calls.Load(), "concurrent reads of the same block must share one exchange")
+	for i := range n {
+		assert.Equal(t, want, payloads[i])
+	}
+
+	// cache is now warm: a subsequent read hits without loading again
+	got, ok, err := c.fetch(key, func() ([]byte, error) {
+		t.Fatal("must not load on warm cache")
+		return nil, nil
+	})
+	require.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, want, got)
 }
 
 // ---------------------------------------------------------------------------
