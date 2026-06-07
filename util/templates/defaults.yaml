@@ -61,6 +61,8 @@ params:
     help:
       de: Zugangspasswort des Dienstes
       en: Service account password
+    mask: true
+  - name: email
     description:
       de: E-Mail-Adresse
       en: Email address
