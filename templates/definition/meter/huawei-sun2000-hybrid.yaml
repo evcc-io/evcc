@@ -424,7 +424,7 @@ render: |
                     address: 47246 # Forcible charge/discharge setting mode
                     type: writesingle
                     encoding: uint16
-          - case: 4 # nocharge/holdcharge
+          - case: 4 # holdcharge
             set:
               source: sequence
               set:
@@ -492,7 +492,7 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
-            - case: 4 # nocharge/holdcharge
+            - case: 4 # holdcharge
               set:
                 source: sleep
                 duration: 0s
