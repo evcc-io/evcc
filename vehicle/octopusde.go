@@ -64,34 +64,16 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
 	return v, nil
 }
 
-// resolve discovers the account number of the configured vehicle. It is deferred
-// until first use because authorization happens on the first request. With no
-// account configured, the first account is used.
-func (v *OctopusDe) resolve() error {
-	if v.account != "" {
-		return nil
-	}
-
-	accounts, err := v.Accounts()
-	if err != nil {
-		return err
-	}
-	if len(accounts) == 0 {
-		return api.ErrNotAvailable
-	}
-
-	v.account = accounts[0]
-	return nil
-}
-
 // status fetches the live state of the configured device, resolving the account
 // and matching device on first use.
 func (v *OctopusDe) status() (octopusde.Device, error) {
-	if err := v.resolve(); err != nil {
+	account, err := v.Account(v.account)
+	if err != nil {
 		return octopusde.Device{}, err
 	}
+	v.account = account
 
-	devices, err := v.Devices(v.account)
+	devices, err := v.Devices(account)
 	if err != nil {
 		return octopusde.Device{}, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
 	"github.com/evcc-io/evcc/util"
 )
@@ -32,6 +33,24 @@ type krakenAccounts struct {
 			Number string
 		}
 	}
+}
+
+// Account returns the configured account number, or the first account accessible
+// to the authenticated user when none is configured.
+func (v *API) Account(account string) (string, error) {
+	if account != "" {
+		return account, nil
+	}
+
+	accounts, err := v.Accounts()
+	if err != nil {
+		return "", err
+	}
+	if len(accounts) == 0 {
+		return "", api.ErrNotAvailable
+	}
+
+	return accounts[0], nil
 }
 
 // Accounts returns the account numbers accessible to the authenticated user.
