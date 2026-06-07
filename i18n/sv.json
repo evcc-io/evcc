@@ -150,8 +150,6 @@
       "forecast": "Prognos",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
-      "hemsActiveLimit": "Aktiv begränsning",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
       "loginBlocked": "Inloggningsgräns nådd",
       "max": "max",
@@ -181,10 +179,6 @@
       "A": "A (ej ansluten)",
       "B": "B (ansluten)",
       "C": "C (laddar)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via relä"
     },
     "devices": {
       "auxMeter": "Smart förbrukare",
@@ -1201,7 +1195,6 @@
       "waitForVehicle": "Redo att värma…"
     },
     "hemsWarning": {
-      "description": "Reducerad laddning för att inte överskrida {limit}.",
       "title": "Extern begränsning:"
     },
     "history": {

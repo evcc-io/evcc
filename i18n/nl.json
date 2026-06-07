@@ -150,8 +150,6 @@
       "forecast": "Voorspelling",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
-      "hemsActiveLimit": "Actieve limiet",
-      "hemsType": "Communicatie",
       "identifier": "RFID-Nummer",
       "loginBlocked": "Inloglimiet bereikt",
       "max": "max",
@@ -180,10 +178,6 @@
       "A": "A (niet aangesloten)",
       "B": "B (aangesloten)",
       "C": "C (opladen)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Slimme verbruiker",
@@ -1194,7 +1188,6 @@
       "waitForVehicle": "Klaar om te verwarmen…"
     },
     "hemsWarning": {
-      "description": "Gereduceerd laden niet hoger dan {limit}.",
       "title": "Externe limiet:"
     },
     "history": {

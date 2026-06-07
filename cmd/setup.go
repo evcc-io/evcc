@@ -788,6 +788,8 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 			return nil, fmt.Errorf("failed configuring hems: %w", err)
 		}
 
+		site.SetHEMS(instance)
+
 		go instance.Run()
 
 		return instance, nil
@@ -848,6 +850,8 @@ func configureDbHems(site *core.Site) (hemsapi.API, error) {
 		return nil, err
 	}
 
+	site.SetHEMS(instance)
+
 	go instance.Run()
 	return instance, nil
 }
@@ -887,7 +891,18 @@ func configureMDNS(conf globalconfig.Network) error {
 
 // setup OCPP
 func configureOCPP(cfg *ocpp.Config, externalUrl string) {
+	if settings.Exists(keys.Ocpp) {
+		if err := settings.Json(keys.Ocpp, cfg); err != nil {
+			log.WARN.Printf("ocpp: failed to load settings: %v", err)
+		}
+	}
 	ocpp.Init(*cfg, externalUrl)
+
+	// Load proxy forwarding rules from DB if present.
+	var rules []ocpp.ForwarderRule
+	if err := settings.Json(keys.OcppForwarder, &rules); err == nil {
+		ocpp.ApplyForwarderRules(rules)
+	}
 }
 
 // setup EEBus

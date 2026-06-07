@@ -45,7 +45,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -66,6 +66,7 @@ type Site struct {
 
 	// meters
 	circuit       api.Circuit                // Circuit
+	hems          api.HEMS                   // HEMS (set by configureHEMS at boot)
 	gridMeter     api.Meter                  // Grid usage meter
 	pvMeters      []config.Device[api.Meter] // PV generation meters
 	batteryMeters []config.Device[api.Meter] // Battery charging meters
@@ -938,17 +939,19 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.publishCircuits()
+	}
 
+	if site.hems != nil {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
-			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+			if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
 
 		wg.Go(func() {
-			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+			if err := site.curtailPV(hemsCurtailed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
@@ -985,6 +988,7 @@ func (site *Site) update(lp updater) {
 			lp.Update(
 				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+				hemsDimmed(site.hems),
 			)
 		}
 

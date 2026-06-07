@@ -77,20 +77,20 @@ func circuitMaxPower(circuit api.Circuit) float64 {
 	return circuit.GetMaxPower()
 }
 
-// circuitDimmed returns a circuits dim status
-func circuitDimmed(circuit api.Circuit) *bool {
-	if circuit == nil {
+// hemsDimmed returns the HEMS dim status, nil-safe
+func hemsDimmed(hems api.HEMS) *bool {
+	if hems == nil {
 		return nil
 	}
 
-	return circuit.Dimmed()
+	return new(hems.Dimmed())
 }
 
-// circuitCurtailed returns a circuit's curtail status
-func circuitCurtailed(circuit api.Circuit) *bool {
-	if circuit == nil {
+// hemsCurtailed returns the HEMS curtail status, nil-safe
+func hemsCurtailed(hems api.HEMS) *bool {
+	if hems == nil {
 		return nil
 	}
 
-	return circuit.Curtailed()
+	return new(hems.Curtailed())
 }

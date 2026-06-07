@@ -149,8 +149,6 @@
       "forecast": "Prognoza",
       "gridPrice": "Cena z sieci",
       "heaterTempLimit": "Limit podgrzewacza",
-      "hemsActiveLimit": "Limit aktywny",
-      "hemsType": "Komunikacja",
       "identifier": "Identyfikator RFID",
       "max": "maks",
       "messengers": "Usługi",
@@ -178,10 +176,6 @@
       "A": "A (niepodłączony)",
       "B": "B (podłączony)",
       "C": "C (ładowanie)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "przez EEBus",
-      "relay": "przez Relay"
     },
     "devices": {
       "auxMeter": "Inteligentne urządzenie konsumujące",
@@ -1102,7 +1096,6 @@
       "waitForVehicle": "Gotowe. Czekam na podgrzewacz…"
     },
     "hemsWarning": {
-      "description": "Obniżenie poboru energii, nieprzekraczające {limit}.",
       "title": "Limit zewnętrzny:"
     },
     "loadpoint": {
