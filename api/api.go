@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -273,7 +273,7 @@ type Circuit interface {
 	SetTitle(string)
 	GetParent() Circuit
 	RegisterChild(child Circuit)
-	Wrap(parent Circuit) error
+	SetHEMS(HEMS)
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64
@@ -282,14 +282,15 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+}
 
-	// EnWG §14a - reduce demand/consumption
-	Dim(bool)
-	Dimmed() *bool
-
-	// EEG §9 - reduce feed-in to the grid
-	Curtail(bool)
-	Curtailed() *bool
+// HEMS exposes the runtime state of the home energy management system.
+type HEMS interface {
+	SetUpdated(func())
+	Dimmed() bool
+	Curtailed() bool
+	MaxConsumptionPower() float64 // 0 = no limit
+	MaxProductionPower() *float64 // nil = no limit
 }
 
 // Redactor is an interface to redact sensitive data

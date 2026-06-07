@@ -131,8 +131,6 @@
       "feedinPrice": "Цена отбора электроэнергии",
       "gridPrice": "Цена сетки",
       "heaterTempLimit": "Ограничение нагревателя",
-      "hemsActiveLimit": "Активный лимит",
-      "hemsType": "Коммуникация",
       "identifier": "RFID-идентификатор",
       "no": "нет",
       "odometer": "Одометр",
@@ -157,10 +155,6 @@
       "A": "A (не подключено)",
       "B": "B (подключено)",
       "C": "C (зарядка)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "через EEBus",
-      "relay": "через реле"
     },
     "devices": {
       "auxMeter": "Умный потребитель",
@@ -914,7 +908,6 @@
       "waitForVehicle": "Готов. Жду нагревателя…"
     },
     "hemsWarning": {
-      "description": "Снижение заряда до уровня, не превышающего {limit}.",
       "title": "Внешний предел:"
     },
     "loadpoint": {

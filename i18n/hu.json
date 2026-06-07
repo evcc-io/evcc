@@ -133,8 +133,6 @@
       "forecast": "Előrejelzés",
       "gridPrice": "Villamosenergia ára",
       "heaterTempLimit": "Fűtés limit",
-      "hemsActiveLimit": "Aktív limit",
-      "hemsType": "Kommunikáció",
       "identifier": "RFID-Azonosító",
       "messengers": "Szolgáltatások",
       "no": "nem",
@@ -160,10 +158,6 @@
       "A": "A (nincs csatlakoztatva)",
       "B": "B (csatlakoztatva)",
       "C": "C (töltés)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "EEBus által",
-      "relay": "Relé által"
     },
     "devices": {
       "auxMeter": "Okos fogyasztó",
@@ -934,7 +928,6 @@
       "waitForVehicle": "Üzemkész. Fűtésre várakozás…"
     },
     "hemsWarning": {
-      "description": "Csökkentett töltés, amely nem haladhatja meg a {limit}-et.",
       "title": "Külső határérték:"
     },
     "loadpoint": {

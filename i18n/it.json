@@ -143,8 +143,6 @@
       "forecast": "Previsione",
       "gridPrice": "Prezzo d'acquisto",
       "heaterTempLimit": "Limite del dispositivo di riscaldamento",
-      "hemsActiveLimit": "Limite attivo",
-      "hemsType": "Comunicazione",
       "identifier": "Identificatore RFID",
       "loginBlocked": "Limite login raggiunto",
       "max": "max",
@@ -173,10 +171,6 @@
       "A": "A (non collegato)",
       "B": "B (collegato)",
       "C": "C (in carica)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "tramite EEBus",
-      "relay": "tramite Relay"
     },
     "devices": {
       "auxMeter": "Dispositivo smart",
@@ -1169,7 +1163,6 @@
       "waitForVehicle": "Pronto. In attesa del calorifero…"
     },
     "hemsWarning": {
-      "description": "Riduzione della ricarica fino a un massimo di {limit}.",
       "title": "Limite esterno:"
     },
     "loadpoint": {

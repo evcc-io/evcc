@@ -131,8 +131,6 @@
       "feedinPrice": "Tarifa za prodaju električne energije iz obnovljivih izvora",
       "gridPrice": "Mrežna cijena",
       "heaterTempLimit": "Ograničenje grijača",
-      "hemsActiveLimit": "Aktivni limit",
-      "hemsType": "Komunikacija",
       "identifier": "RFID identifikator",
       "no": "ne",
       "odometer": "brojač kilometara",
@@ -157,10 +155,6 @@
       "A": "A (nije povezano)",
       "B": "B (povezano)",
       "C": "C (punjenje)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "putem EEBus-a",
-      "relay": "putem štafete"
     },
     "devices": {
       "auxMeter": "Pametni potrošač",
@@ -393,9 +387,6 @@
       "batteryTooltip": "{energy} od {total} ({soc})",
       "loadpoints": "Punjač | Punjač | {count} punjača",
       "loadpointsLimit": "{limit} ograničenje"
-    },
-    "hemsWarning": {
-      "description": "Smanjiti punjenje kako ne bi prelazilo {limit}."
     },
     "loadpoint": {
       "remoteDisabledHard": "{source}: isključen",

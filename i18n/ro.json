@@ -139,8 +139,6 @@
       "forecast": "Prognoză",
       "gridPrice": "Prețul rețelei",
       "heaterTempLimit": "Limită încălzitor",
-      "hemsActiveLimit": "Limită activă",
-      "hemsType": "Comunicare",
       "identifier": "Identificator RFID",
       "max": "max",
       "messengers": "Servicii",
@@ -168,10 +166,6 @@
       "A": "A (neconectat)",
       "B": "B (conectat)",
       "C": "C (încărcare)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "prin EEBus",
-      "relay": "prin releu"
     },
     "devices": {
       "auxMeter": "Consumator inteligent",
@@ -1084,7 +1078,6 @@
       "waitForVehicle": "Pregatit. Astept dupa incalzitor…"
     },
     "hemsWarning": {
-      "description": "Încărcare redusă pentru a nu depăși {limit}.",
       "title": "Limită externă:"
     },
     "loadpoint": {

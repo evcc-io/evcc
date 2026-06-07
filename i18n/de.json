@@ -155,8 +155,11 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "curtailLimit": "Einspeiselimit",
+      "curtailable": "Abregelbar",
       "curtailed": "Einspeisung begrenzt",
       "detected": "Erkannt",
+      "dimLimit": "Verbrauchslimit",
       "dimmed": "Verbrauch begrenzt",
       "enabled": "Ladebereit",
       "energy": "Energie",
@@ -165,8 +168,6 @@
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
-      "hemsActiveLimit": "Aktives Limit",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
       "max": "max",
@@ -181,6 +182,7 @@
       "power": "Leistung",
       "powerRange": "Leistung",
       "price": "Preis",
+      "productionLimited": "Erzeugung begrenzt",
       "range": "Reichweite",
       "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
@@ -196,10 +198,6 @@
       "A": "A (nicht verbunden)",
       "B": "B (verbunden)",
       "C": "C (lädt)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
@@ -1230,8 +1228,9 @@
       "waitForVehicle": "Bereit zum Heizen …"
     },
     "hemsWarning": {
-      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
-      "title": "Externe Begrenzung:"
+      "consumption": "Verbrauch",
+      "feedIn": "Einspeisung",
+      "title": "Externe Begrenzung aktiv"
     },
     "history": {
       "direction": {

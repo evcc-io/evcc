@@ -5,6 +5,7 @@
 		:name="meter.name"
 		:editable="!!meter.id"
 		:error="hasError"
+		:banner="banner"
 		:data-testid="meterType"
 		@edit="$emit('edit', meterType, meter.id)"
 	>
@@ -50,6 +51,9 @@ export default {
 		tags: {
 			type: Object,
 			default: () => ({}),
+		},
+		banner: {
+			type: String,
 		},
 	},
 	emits: ["edit"],
