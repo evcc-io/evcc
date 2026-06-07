@@ -1806,9 +1806,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		var socErr error
 
 		if battery, ok := api.Cap[api.Battery](dev); ok {
-			soc, err := soc.Guard(battery.Soc())
-			socErr = err
-			if err == nil {
+			if soc, err := soc.Guard(battery.Soc()); err == nil {
 				socR = &soc
 
 				// don't publish here in case it needs be updated by the estimator
@@ -1826,6 +1824,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 					}
 				}
 			} else if !loadpoint.AcceptableError(err) {
+				socErr = err
 				lp.log.ERROR.Printf("charger soc: %v", err)
 			}
 		}
