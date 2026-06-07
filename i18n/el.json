@@ -131,8 +131,6 @@
       "feedinPrice": "Ταρίφα Feed-in",
       "gridPrice": "Τιμή δικτύου",
       "heaterTempLimit": "Όριο θερμαντήρα",
-      "hemsActiveLimit": "Ενεργό όριο",
-      "hemsType": "Επικοινωνία",
       "identifier": "Αναγνωριστικό RFID",
       "no": "όχι",
       "odometer": "Οδόμετρο",
@@ -157,10 +155,6 @@
       "A": "A (δεν είναι συνδεδεμένο)",
       "B": "B (συνδεδεμένο)",
       "C": "C (φορτίζει)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "μέσω EEBus",
-      "relay": "μέσω ρελέ"
     },
     "devices": {
       "auxMeter": "Έξυπνος καταναλωτής",
@@ -923,7 +917,6 @@
       "waitForVehicle": "Έτοιμο. Αναμονή για θερμαντήρα…"
     },
     "hemsWarning": {
-      "description": "Μειωμένη φόρτιση ώστε να μην υπερβαίνει το {limit}.",
       "title": "Εξωτερικό όριο:"
     },
     "loadpoint": {

@@ -25,7 +25,7 @@ test.describe("custom meter type override", async () => {
     await page.waitForLoadState("networkidle");
 
     const editor = meterModal.getByTestId("yaml-editor");
-    await editorClear(editor, 20);
+    await editorClear(editor);
     await editorPaste(
       editor,
       page,

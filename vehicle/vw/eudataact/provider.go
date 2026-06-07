@@ -10,11 +10,9 @@ import (
 )
 
 const (
-	// portalInterval is the cadence at which the portal delivers a new dataset
-	portalInterval = 15 * time.Minute
 	// portalLatency is the margin added to a dataset's timestamp before the
 	// following dataset is expected to be available for download
-	portalLatency = 30 * time.Second
+	portalLatency = time.Minute
 )
 
 // Provider implements the vehicle api on top of the EU Data Act dataset.
@@ -32,20 +30,19 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{}
-	s := newStore(api, vin)
+	s := sharedStore(api)
 
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
-		ts, err := s.update()
+		ts, err := s.update(log.TRACE, vin)
 		if err != nil {
-			return nil, err
+			log.ERROR.Println(err)
+		} else if !ts.IsZero() {
+			time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 		}
-		if !ts.IsZero() {
-			time.AfterFunc(resetDelay(ts, time.Now()), cached.Reset)
-		}
-		return s.snapshot(), nil
+		return s.snapshot(vin), nil
 	}, cache)
 
 	v.statusG = cached.Get
@@ -56,21 +53,21 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 // resetDelay returns the delay until the dataset following the one delivered at
 // ts is expected to be available. It never returns less than portalLatency so a
 // late or repeated dataset does not cause immediate re-polling.
-func resetDelay(ts, now time.Time) time.Duration {
-	if d := ts.Add(portalInterval + portalLatency).Sub(now); d > portalLatency {
+func resetDelay(ts time.Time, cache time.Duration) time.Duration {
+	if d := time.Until(ts.Add(cache + portalLatency)); d > portalLatency {
 		return d
 	}
 	return portalLatency
 }
 
 // lookup returns the first present, non-empty value among the given field names
-func lookup(data map[string]point, fields ...string) (string, bool) {
+func lookup(data map[string]point, fields ...string) *point {
 	for _, f := range fields {
-		if v, ok := data[f]; ok && v.Value != "" {
-			return v.Value, true
+		if v, ok := data[f]; ok {
+			return new(v)
 		}
 	}
-	return "", false
+	return nil
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -82,8 +79,8 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldSoc, FieldHvSoc); ok {
-		return strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevel); p != nil {
+		return strconv.ParseFloat(p.Value, 64)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -98,12 +95,30 @@ func (v *Provider) Range() (int64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldRange, FieldRangePrimary); ok {
-		f, err := strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldRangeSecondary, FieldRangePrimary, FieldRangeCombined); p != nil {
+		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}
 
 	return 0, api.ErrNotAvailable
+}
+
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	data, err := v.statusG()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if p := lookup(data, FieldRemainingTime); p != nil && p.Value != "65535" {
+		if v, err := strconv.ParseInt(p.Value, 0, 64); err == nil {
+			return p.Timestamp.Add(time.Duration(v) * time.Minute), nil
+		}
+	}
+
+	return time.Time{}, api.ErrNotAvailable
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -115,8 +130,8 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldOdometer); ok {
-		return strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldOdometer, FieldOdometerValue); p != nil {
+		return strconv.ParseFloat(p.Value, 64)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -133,11 +148,12 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, err
 	}
 
-	if s, ok := lookup(data, FieldPlugState); ok && strings.EqualFold(s, "connected") {
+	if p := lookup(data, FieldPlugState); p != nil && strings.EqualFold(p.Value, "connected") {
 		status = api.StatusB
 	}
 
-	if s, ok := lookup(data, FieldChargingState); ok && strings.EqualFold(s, "charging") {
+	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
+		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV")) {
 		status = api.StatusC
 	}
 
@@ -153,8 +169,8 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 
-	if s, ok := lookup(data, FieldTargetSoc); ok {
-		f, err := strconv.ParseFloat(s, 64)
+	if p := lookup(data, FieldTargetSoc); p != nil {
+		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}
 

@@ -5,6 +5,7 @@ products:
       generic: Bluelink (US)
 params:
   - preset: vehicle-base
+  - preset: vehicle-climater
   - name: pin
     required: true
     help:
@@ -14,3 +15,4 @@ render: |
   type: hyundai-us
   {{ include "vehicle-base" . }}
   pin: {{ quote .pin }}
+  {{ include "vehicle-features" . }}

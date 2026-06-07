@@ -255,7 +255,7 @@ test.describe("backup and restore", async () => {
 });
 
 test.describe("backup in app context", async () => {
-  test("download backup dispatches POST event with password body", async ({ page }) => {
+  test("download backup dispatches GET event with X-Admin-Password header", async ({ page }) => {
     await enableAppContext(page);
     await start();
     await page.goto("/#/config");
@@ -271,9 +271,8 @@ test.describe("backup in app context", async () => {
     await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
     expect(await expectAppEvent(page)).toMatchObject({
       type: "download",
-      url: expect.stringContaining("/api/system/backup"),
-      method: "POST",
-      body: { password: "" },
+      url: expect.stringContaining("/api/db/backup"),
+      headers: { "X-Admin-Password": "" },
     });
     await stop();
   });

@@ -802,6 +802,8 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 		return nil, fmt.Errorf("failed configuring hems: %w", err)
 	}
 
+	site.SetHEMS(hems)
+
 	go hems.Run()
 
 	return hems, nil
@@ -842,7 +844,18 @@ func configureMDNS(conf globalconfig.Network) error {
 
 // setup OCPP
 func configureOCPP(cfg *ocpp.Config, externalUrl string) {
+	if settings.Exists(keys.Ocpp) {
+		if err := settings.Json(keys.Ocpp, cfg); err != nil {
+			log.WARN.Printf("ocpp: failed to load settings: %v", err)
+		}
+	}
 	ocpp.Init(*cfg, externalUrl)
+
+	// Load proxy forwarding rules from DB if present.
+	var rules []ocpp.ForwarderRule
+	if err := settings.Json(keys.OcppForwarder, &rules); err == nil {
+		ocpp.ApplyForwarderRules(rules)
+	}
 }
 
 // setup EEBus
@@ -1305,12 +1318,24 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*util.Logger) coresettings.Settings) (*core.Loadpoint, error) {
 	log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(idx), idx)
 
-	collector, err := metrics.NewCollector(metrics.Loadpoint, name)
+	collector, err := metrics.NewCollector(metrics.Loadpoint, name, "")
 	if err != nil {
 		return nil, err
 	}
 
-	return core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+	lp, err := core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+	if err != nil {
+		return lp, err
+	}
+
+	// lazily update entity title
+	if title := lp.GetTitle(); title != "" {
+		if err := collector.UpdateTitle(title); err != nil {
+			return lp, err
+		}
+	}
+
+	return lp, nil
 }
 
 func configureLoadpoints(conf globalconfig.All) error {

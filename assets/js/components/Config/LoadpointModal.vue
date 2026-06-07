@@ -758,11 +758,11 @@ export default {
 			return circuit && !this.circuitOptions.some((c) => c.key === circuit);
 		},
 		circuitOptions() {
-			const options = this.circuits.map((c) => ({
+			// empty option is provided by PropertyField placeholder
+			return this.circuits.map((c) => ({
 				key: c.name,
 				name: `${c.config?.title || ""} [${c.name}]`.trim(),
 			}));
-			return [{ key: "", name: "unassigned" }, ...options];
 		},
 		invalidVehicle() {
 			const { vehicle } = this.values;

@@ -15,8 +15,10 @@ requirements:
       Manche Modelle (z.B. Niro EV) schalten bei geringen Ladeströmen (< 8A) intern auf 2 Phasen um. In den Fällen, in denen die Wallbox auch die Phasenströme misst, führt das zu unerwünschten Schwankungen der Ladeleistung. Abhilfe schafft hier, den Mindestladestrom auf 8A zu setzen.
 params:
   - preset: vehicle-base
+  - preset: vehicle-climater
   - preset: vehicle-language
 render: |
   type: kia
   {{ include "vehicle-base" . }}
   {{ include "vehicle-language" . }}
+  {{ include "vehicle-features" . }}

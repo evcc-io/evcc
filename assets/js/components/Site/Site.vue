@@ -12,7 +12,7 @@
 				</h1>
 				<TopNavigationArea :notifications="notifications" />
 			</div>
-			<HemsWarning :circuits="circuits" />
+			<HemsWarning :status="hems?.status" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
@@ -92,7 +92,9 @@ import type {
 	CURRENCY,
 	Forecast,
 	Notification,
-	Circuit,
+	ConfigStatus,
+	HemsConfig,
+	HemsStatus,
 	SMART_COST_TYPE,
 	FatalError,
 	EvOpt,
@@ -152,7 +154,7 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
-		circuits: Object as PropType<Record<string, Circuit>>,
+		hems: Object as PropType<ConfigStatus<HemsConfig, HemsStatus>>,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {

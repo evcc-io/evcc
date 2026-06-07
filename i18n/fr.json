@@ -46,6 +46,10 @@
     "noBattery": "Aucune batterie n'est configurée.",
     "usageTab": "Utilisation batterie"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Couleur héxa"
+  },
   "config": {
     "aux": {
       "description": "Dispositif ajustant sa consommation en fonction du surplus disponible (comme les chauffe-eau intelligents). evcc s'attend à ce que ce dispositif réduise sa consommation d'énergie si nécessaire.",
@@ -146,8 +150,6 @@
       "forecast": "Prévisions",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
-      "hemsActiveLimit": "Limite active",
-      "hemsType": "Communication",
       "identifier": "Identifiant RFID",
       "loginBlocked": "Limit de login atteinte",
       "max": "max",
@@ -163,6 +165,7 @@
       "powerRange": "Plage de puissance",
       "price": "Prix",
       "range": "Autonomie",
+      "returnEnergy": "Energie (retournée)",
       "singlePhase": "Monophasé",
       "soc": "Charge",
       "solarForecast": "Prévision solaire",
@@ -176,10 +179,6 @@
       "A": "A (non connecté)",
       "B": "B (connecté)",
       "C": "C (en charge)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relai"
     },
     "devices": {
       "auxMeter": "Consommateur intelligent",
@@ -617,6 +616,44 @@
       "url": "URL du Serveur",
       "urlHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur devrait ajouter automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier manuellement l'identifiant. Exemple : `{url}`"
     },
+    "ocppforwarder": {
+      "add": "Ajouter une règle",
+      "charger": "Chargeur",
+      "connectionStatus": "État de connexion",
+      "description": "Transmet les appels OCPP à un serveur externe (plateforme de facturation, DSO, etc.) en plus d'evcc. Utilisez \"*\" comme identifiant de station pour correspondre à tous les chargeurs.",
+      "labelCaCert": "Certificat serveur (CA)",
+      "labelCheckInsecure": "Autoriser les certificats auto-signés",
+      "labelInsecure": "Validation du certificat",
+      "noConnections": "Aucune connexion de chargeur active.",
+      "option": {
+        "false": "non",
+        "true": "oui"
+      },
+      "password": "Mot de passe en amont",
+      "passwordHelp": "Mot de passe optionnel pour l'authentification HTTP Basic vers le serveur en amont. L'identifiant de station en amont est utilisé comme nom d'utilisateur.",
+      "readOnly": {
+        "help": {
+          "false": "Le serveur en amont peut envoyer des commandes au chargeur via evcc.",
+          "true": "Le serveur en amont reçoit tous les messages du chargeur mais ne peut pas envoyer de commandes. evcc conserve le contrôle exclusif."
+        },
+        "label": "Lecture seule"
+      },
+      "rule": "Règle {number}",
+      "stationId": "Identifiant de station",
+      "stationIdHelp": "Identifiant de station du chargeur, ou \"*\" pour correspondre à tous les chargeurs sans règle spécifique.",
+      "title": "Transmetteur OCPP",
+      "upstream": "En amont",
+      "upstreamConnected": "Connecté",
+      "upstreamConnectedHelp": "Un chargeur est connecté et la liaison en amont est active.",
+      "upstreamDisconnected": "Déconnecté",
+      "upstreamDisconnectedHelp": "Un chargeur est connecté mais la connexion en amont a échoué.",
+      "upstreamIdle": "Aucun chargeur",
+      "upstreamIdleHelp": "Le transmetteur est actif mais aucun chargeur ne s'est encore connecté via cette règle.",
+      "upstreamStationId": "Identifiant de station en amont",
+      "upstreamStationIdHelp": "Remplace l'identifiant de station envoyé au serveur en amont. Laisser vide pour utiliser l'identifiant du chargeur.",
+      "upstreamUrl": "URL du serveur en amont",
+      "upstreamUrlHelp": "URL WebSocket OCPP du serveur externe (ex. wss://facturation.exemple.com/ocpp)."
+    },
     "optimizer": {
       "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
       "enable": "Activer l'optimiseur",
@@ -789,14 +826,14 @@
       "generic": "Intégrations génériques",
       "grid": {
         "description": "Prix de l'électricité pour la consommation du réseau. Pour calculer les coûts de recharge réels et optimiser le prix de la recharge des véhicules, des appareils de chauffage ou de la recharge de votre batterie domestique à partir du réseau.",
-        "titleAdd": "Ajouter un tarif d'importation de réseau",
-        "titleEdit": "Modifier le tarif d'importation du réseau"
+        "titleAdd": "Ajouter un tarif pour l'import du réseau",
+        "titleEdit": "Modifier le tarif pour l’import du réseau"
       },
       "legacyWarning": "Nouvelle configuration tarifaire disponible ! Supprimez et enregistrez vos tarifs ici pour utiliser le nouveau processus guidé.",
       "option": {
         "co2": "Ajouter les prévisions de CO₂",
         "feedIn": "Ajouter un tarif d'exportation vers le réseau",
-        "grid": "Ajouter un tarif d'importation du réseau",
+        "grid": "Ajouter un tarif pour l’import du réseau",
         "planner": "Ajouter prévisions du planificateur",
         "solar": "Ajouter prévisions solaires"
       },
@@ -884,7 +921,7 @@
       "greenShareSub2": "solaire et stockage batterie",
       "power": "Puissance de charge",
       "powerSub1": "{activeClients} de {totalClients} participants",
-      "powerSub2": "sont en train de charger…",
+      "powerSub2": "sont en train de charger.",
       "tabTitle": "Communauté en ligne"
     },
     "savings": {
@@ -1167,23 +1204,23 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie en charge",
       "batteryDischarge": "Décharge de la batterie",
-      "batteryForecastEmpty": "Vide depuis {time}",
-      "batteryForecastFull": "Plein depuis {time}",
-      "batteryForecastNextHigh": "Prochain pic",
-      "batteryForecastNextLow": "Prochain creux",
+      "batteryForecastEmpty": "Vide",
+      "batteryForecastFull": "Plein",
+      "batteryForecastNextHigh": "Pic",
+      "batteryForecastNextLow": "Creux",
       "batteryGridChargeActive": "Charge réseau : active",
       "batteryGridChargeLimit": "Charge réseau : quand",
       "batteryHold": "Batterie (verrouillée)",
       "batteryTooltip": "{energy} sur {total} ({soc})",
       "forecast": "Prévisions",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
-      "gridImport": "Import depuis le réseau",
+      "gridImport": "Import du réseau",
       "homePower": "Consommation",
       "loadpoints": "Chargeur| Chargeur | {count} chargeurs",
       "loadpointsLimit": "limite à {limit}",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
-      "pvExport": "Injection réseau",
+      "pvExport": "Export surplus",
       "pvProduction": "Production",
       "selfConsumption": "Auto-consommation"
     },
@@ -1194,7 +1231,6 @@
       "waitForVehicle": "Prêt à chauffer…"
     },
     "hemsWarning": {
-      "description": "Réduire la charge pour ne pas dépasser {limit}.",
       "title": "Limite externe :"
     },
     "history": {
@@ -1414,6 +1450,7 @@
     "updatePassword": "Mettre à jour le mot de passe"
   },
   "session": {
+    "addOdometer": "Ajouter une valeur",
     "cancel": "Annuler",
     "co2": "CO₂",
     "date": "Période",
@@ -1423,7 +1460,8 @@
     "meterstart": "Début du Compteur",
     "meterstop": "Fin du Compteur",
     "odometer": "Kilométrage",
-    "price": "Prix",
+    "price": "Coût",
+    "soc": "Etat de Charge du véhicule",
     "started": "Démarré",
     "title": "Session de charge"
   },
@@ -1431,6 +1469,7 @@
     "avgPower": "Puissance ⌀",
     "avgPrice": "Prix ⌀",
     "chargeDuration": "Durée",
+    "chargedSoc": "Charge",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Prix {byGroup}",
@@ -1462,8 +1501,10 @@
       "meterstart": "Début de Compteur (kWh)",
       "meterstop": "Fin de Compteur (kWh)",
       "odometer": "Kilométrage (km)",
-      "price": "Prix",
+      "price": "Coût",
       "priceperkwh": "Prix/kWh",
+      "socend": "EdC de fin (%)",
+      "socstart": "EdC début (%)",
       "solarpercentage": "Solaire (%)",
       "vehicle": "Véhicule"
     },
@@ -1479,7 +1520,7 @@
     "group": {
       "co2": "Émissions",
       "grid": "Réseau électrique",
-      "price": "Prix",
+      "price": "Coût",
       "self": "Solaire"
     },
     "groupBy": {
@@ -1505,7 +1546,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Prix",
+      "price": "Coût",
       "solar": "Solaire"
     },
     "vehicle": "Véhicule"

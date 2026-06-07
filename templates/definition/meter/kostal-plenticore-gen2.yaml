@@ -66,20 +66,13 @@ render: |
       {{- include "modbus" . | indent 4 }}
       value: 160:3:DCW # string 3
   energy:
-    source: calc
-    add:
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      value: 160:1:DCWH # string 1
-      scale: 0.001
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      value: 160:2:DCWH # string 2
-      scale: 0.001
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      value: 160:3:DCWH # string 3
-      scale: 0.001
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1056 # total DC PV energy (sum), Wh
+      type: holding
+      decode: float32s
+    scale: 0.001 # Wh -> kWh
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}

@@ -132,8 +132,6 @@
       "feedinPrice": "ஃபீட்-இன் விலை",
       "gridPrice": "கட்டம் விலை",
       "heaterTempLimit": "ஈட்டர் வரம்பு",
-      "hemsActiveLimit": "செயலில் வரம்பு",
-      "hemsType": "தொடர்பு",
       "identifier": "RFID-IDENTIFIER",
       "messengers": "சேவைகள்",
       "no": "இல்லை",
@@ -159,10 +157,6 @@
       "A": "A (இணைக்கப்படவில்லை)",
       "B": "பி (இணைக்கப்பட்டுள்ளது)",
       "C": "சி (சார்சிங்)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "EEBus வழியாக",
-      "relay": "ரிலே வழியாக"
     },
     "devices": {
       "auxMeter": "அறிவுள்ள நுகர்வோர்",
@@ -1002,7 +996,6 @@
       "waitForVehicle": "Ready. Waiting க்கு heater…"
     },
     "hemsWarning": {
-      "description": "{limit} ஐ விட அதிகமாகக் குறைக்கப்பட்ட சார்சிங்.",
       "title": "வெளிப்புற வரம்பு:"
     },
     "loadpoint": {

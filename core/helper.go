@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 
@@ -64,12 +65,7 @@ func deviceProperties[T any](dev config.Device[T]) config.Properties {
 
 // deviceTitleOrName returns device title or name
 func deviceTitleOrName[T any](dev config.Device[T]) string {
-	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
-		if title := d.Properties().Title; title != "" {
-			return title
-		}
-	}
-	return dev.Config().Name
+	return cmp.Or(deviceProperties(dev).Title, dev.Config().Name)
 }
 
 // circuitMaxPower returns a circuits power limit
@@ -81,20 +77,20 @@ func circuitMaxPower(circuit api.Circuit) float64 {
 	return circuit.GetMaxPower()
 }
 
-// circuitDimmed returns a circuits dim status
-func circuitDimmed(circuit api.Circuit) *bool {
-	if circuit == nil {
+// hemsDimmed returns the HEMS dim status, nil-safe
+func hemsDimmed(hems api.HEMS) *bool {
+	if hems == nil {
 		return nil
 	}
 
-	return circuit.Dimmed()
+	return new(hems.Dimmed())
 }
 
-// circuitCurtailed returns a circuit's curtail status
-func circuitCurtailed(circuit api.Circuit) *bool {
-	if circuit == nil {
+// hemsCurtailed returns the HEMS curtail status, nil-safe
+func hemsCurtailed(hems api.HEMS) *bool {
+	if hems == nil {
 		return nil
 	}
 
-	return circuit.Curtailed()
+	return new(hems.Curtailed())
 }
