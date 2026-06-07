@@ -1,8 +1,17 @@
 package ocpp
 
 import (
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	// bind the central system to an ephemeral port so this test binary does not
+	// contend with the charger package test binary for the fixed default port
+	// when both run in parallel under `go test ./...`
+	Init(Config{Port: 0}, "")
+	os.Exit(m.Run())
+}
 
 func TestExternalUrl(t *testing.T) {
 	tests := []struct{ input, expected string }{

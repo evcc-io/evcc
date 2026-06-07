@@ -10,6 +10,9 @@ power: # current power
 #energy: # meter reading in kWh
 #  source: const
 #  value: 42.5
+#returnenergy: # meter reading in reverse direction in kWh (e.g. grid feed-in)
+#  source: const
+#  value: 12.3
 #maxpower: # maximum AC power in W (for hybrid pv)
 #  source: const
 #  value: 5000

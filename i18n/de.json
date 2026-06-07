@@ -51,6 +51,21 @@
     "hex": "Hex-Farbe"
   },
   "config": {
+    "apiKey": {
+      "description": "Gibt Skripten und Automatisierungsaufgaben wie geplanten Backups sicheren Zugriff, ohne dein Administrator-Passwort zu teilen.",
+      "exampleLabel": "Ausprobieren: Backup mit curl herunterladen",
+      "generate": "API-Schlüssel erstellen",
+      "generateConfirm": "Gib dein Administrator-Passwort ein, um einen neuen API-Schlüssel zu erstellen.",
+      "keyLabel": "API-Schlüssel",
+      "regenerate": "API-Schlüssel neu erstellen",
+      "regenerateConfirm": "Gib dein Administrator-Passwort ein, um den API-Schlüssel neu zu erstellen.",
+      "regenerateLink": "Neu erstellen",
+      "regenerateWarning": "Beim Neuerstellen wird der bestehende Schlüssel ungültig und Automatisierungen, die ihn nutzen, funktionieren nicht mehr. Fortfahren?",
+      "revealSuccess": "Dein neuer API-Schlüssel ist einsatzbereit.",
+      "revealTitle": "API-Schlüssel erstellt",
+      "shownOnce": "Dieser Schlüssel wird nur einmal angezeigt. Bewahre ihn sicher auf. Du kannst ihn später nicht erneut abrufen.",
+      "title": "API-Schlüssel"
+    },
     "aux": {
       "description": "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist.",
       "titleAdd": "Intelligenten Verbraucher hinzufügen",
@@ -167,6 +182,7 @@
       "powerRange": "Leistung",
       "price": "Preis",
       "range": "Reichweite",
+      "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
       "solarForecast": "PV-Vorhersage",
@@ -694,6 +710,14 @@
       "system": "System",
       "vehicles": "Fahrzeuge"
     },
+    "security": {
+      "authDisabledHint": "Authentifizierung ist deaktiviert. Anmeldedaten können nicht verwaltet werden.",
+      "description": "Verwalte Authentifizierung und Anmeldedaten dieser Instanz.",
+      "passwordDescription": "Aktualisiere das Passwort, mit dem du dich an der Konfigurationsoberfläche anmeldest.",
+      "passwordTitle": "Administrator-Passwort",
+      "title": "Sicherheit",
+      "updatePassword": "Passwort ändern"
+    },
     "shm": {
       "cardTitle": "Sunny Home Manager",
       "description": "evcc ist mit einer Integration für den SMA Sunny Home Manager (SHM) mittels SEMP-Protokoll ausgestattet. Wenn dieser im selben Netzwerk läuft, sollte dir nach der Anmeldung in deinem Sunny Portal-Konto automatisch angeboten werden, alle in evcc konfigurierten Ladepunkte als neu erkannte Verbraucher hinzuzufügen. Alles sollte sofort einsatzbereit sein, ohne dass hier weitere Anpassungen erforderlich sind.",
@@ -881,7 +905,7 @@
       "greenShareSub2": "PV und Speicher",
       "power": "Ladeleistung",
       "powerSub1": "{activeClients} von {totalClients} Nutzern",
-      "powerSub2": "laden…",
+      "powerSub2": "laden gerade.",
       "tabTitle": "Live-Community"
     },
     "savings": {
@@ -1403,6 +1427,7 @@
     "updatePassword": "Passwort ändern"
   },
   "session": {
+    "addOdometer": "Wert eintragen",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",
@@ -1412,7 +1437,8 @@
     "meterstart": "Anfangszählerstand",
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
-    "price": "Preis",
+    "price": "Kosten",
+    "soc": "Ladestand",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },
@@ -1420,6 +1446,7 @@
     "avgPower": "⌀ Leistung",
     "avgPrice": "⌀ Preis",
     "chargeDuration": "Ladedauer",
+    "chargedSoc": "Ladung",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Preis {byGroup}",
@@ -1451,8 +1478,10 @@
       "meterstart": "Anfangszählerstand (kWh)",
       "meterstop": "Endzählerstand (kWh)",
       "odometer": "Kilometerstand (km)",
-      "price": "Preis",
+      "price": "Kosten",
       "priceperkwh": "Preis/kWh",
+      "socend": "Ladestand Ende (%)",
+      "socstart": "Ladestand Start (%)",
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },
@@ -1468,7 +1497,7 @@
     "group": {
       "co2": "Emissionen",
       "grid": "Netz",
-      "price": "Preis",
+      "price": "Kosten",
       "self": "Sonne"
     },
     "groupBy": {
@@ -1491,10 +1520,10 @@
     "showIndividualEntries": "Einzelne Ladevorgänge anzeigen",
     "solar": "Sonne",
     "title": "Ladevorgänge",
-    "total": "Insgesamt",
+    "total": "Gesamt",
     "type": {
       "co2": "CO₂",
-      "price": "Preis",
+      "price": "Kosten",
       "solar": "Sonne"
     },
     "vehicle": "Fahrzeug"
