@@ -9,6 +9,7 @@ requirements:
     de: Open Source Tesla Datenlogger [github.com/adriankumpf/teslamate](https://github.com/adriankumpf/teslamate). Voraussetzung ist konfigurierter MQTT Broker.
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: id
     description:
       de: Fahrzeug-ID
@@ -68,4 +69,8 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/is_preconditioning
     timeout: {{ .timeout }}
-  features: ["coarsecurrent"]
+  features:
+  - coarsecurrent
+  {{- if eq .climaterdisabled "true" }}
+  - climaterdisabled
+  {{- end }}

@@ -9,6 +9,7 @@ requirements:
 group: generic
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
@@ -23,6 +24,9 @@ render: |
   {{- end }}
   {{- if eq .welcomecharge "true" }}
   - welcomecharge
+  {{- end }}
+  {{- if eq .climaterdisabled "true" }}
+  - climaterdisabled
   {{- end }}
   soc:
     source: const
