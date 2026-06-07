@@ -142,7 +142,8 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		return nil, err
 	}
 	if typ == "warp3" || (typ == "warp2" && emURI != "") {
-		enabled, err := w.disablePhaseAutoSwitch(); err != nil {
+		enabled, err := w.disablePhaseAutoSwitch()
+		if err != nil {
 			return nil, err
 		}
 		if enabled {
