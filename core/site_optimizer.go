@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -122,7 +123,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		minLen = min(minLen, len(solar))
 	}
 
-	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
+	uri := cmp.Or(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 	if uri == OPTIMIZER_URI {
 		// limit to 2 days for sake of performance
 		minLen = min(2*96, minLen)
@@ -554,7 +555,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	from := now.BeginningOfDay().AddDate(0, 0, -7)
 
 	// base load (excludes loadpoints) - kWh over last 30 days
-	gt_base, err := site.collectors[metrics.Home].ImportProfile(now.BeginningOfDay().AddDate(0, 0, -30))
+	gt_base, err := site.collectors[metrics.Home].EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
 	}
@@ -666,7 +667,7 @@ func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSe
 		lp := site.loadpoints[lpID]
 
 		if lp.chargeEnergy != nil {
-			profile, err := lp.chargeEnergy.ImportProfile(from)
+			profile, err := lp.chargeEnergy.EnergyProfile(from)
 			if err == nil && profile != nil {
 				lp := site.loadpoints[lpID]
 				isTempSensitive := hasFeature(lp.charger, api.OutdoorTemperatureSensitive)

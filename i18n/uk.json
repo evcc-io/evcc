@@ -131,8 +131,6 @@
       "feedinPrice": "Збірна ціна",
       "gridPrice": "Ціна сітки",
       "heaterTempLimit": "Обмеження нагрівача",
-      "hemsActiveLimit": "Активний ліміт",
-      "hemsType": "Зв'язок",
       "identifier": "RFID-ідентифікатор",
       "no": "ні",
       "odometer": "Одометр",
@@ -157,10 +155,6 @@
       "A": "A (не підключено)",
       "B": "B (підключено)",
       "C": "C (зарядка)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "через EEBus",
-      "relay": "через реле"
     },
     "devices": {
       "auxMeter": "Розумний споживач",
@@ -927,7 +921,6 @@
       "waitForVehicle": "Готовий. Очікування обігрівача…"
     },
     "hemsWarning": {
-      "description": "Зменшено плату до не більше {limit}.",
       "title": "Зовнішнє обмеження:"
     },
     "loadpoint": {

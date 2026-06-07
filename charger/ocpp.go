@@ -33,7 +33,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
-	"github.com/samber/lo"
 )
 
 // OCPP charger implementation
@@ -138,7 +137,7 @@ func NewOCPP(ctx context.Context,
 	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart, noChangeAvailability bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
-	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
+	log := util.NewLogger(fmt.Sprintf("%s-%d", cmp.Or(id, "ocpp"), connector))
 
 	cp, err := ocpp.Instance().RegisterChargepoint(id,
 		func() *ocpp.CP {
@@ -167,7 +166,7 @@ func NewOCPP(ctx context.Context,
 	}
 
 	if remoteStart {
-		idTag = lo.CoalesceOrEmpty(idTag, cp.IdTag, defaultIdTag)
+		idTag = cmp.Or(idTag, cp.IdTag, defaultIdTag)
 	}
 
 	conn, err := ocpp.NewConnector(ctx, log, connector, cp, idTag, meterInterval)
