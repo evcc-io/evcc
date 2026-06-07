@@ -449,7 +449,8 @@
 					:yamlSource="eebus?.yamlSource"
 					@changed="loadDirty"
 				/>
-				<OcppModal :ocpp="ocpp" />
+				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
+				<OcppForwarderModal @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
@@ -479,6 +480,7 @@ import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
 import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
+import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -571,6 +573,7 @@ export default defineComponent({
 		EebusModal,
 		OcppIcon,
 		OcppModal,
+		OcppForwarderModal,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -855,6 +858,18 @@ export default defineComponent({
 				return { amount: { value: config.length } };
 			}
 			return { configured: { value: false } };
+		},
+		// maps an OCPP station id to its loadpoint title (fallback: charger title)
+		stationTitles(): Record<string, string> {
+			const map: Record<string, string> = {};
+			this.chargers.forEach((charger) => {
+				const stationId = charger.config?.["stationid"];
+				if (typeof stationId !== "string" || !stationId) return;
+				const loadpoint = this.loadpoints.find((lp) => lp.charger === charger.name);
+				const title = loadpoint?.title || charger.config?.title;
+				if (title) map[stationId] = title;
+			});
+			return map;
 		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {

@@ -32,6 +32,7 @@ import (
 	"github.com/evcc-io/evcc/util/telemetry"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -204,13 +205,23 @@ func runRoot(cmd *cobra.Command, args []string) {
 	ocppCS.SetUpdated(func() {
 		// republish when OCPP state updates
 		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
-			Config: conf.Ocpp,
+			Config: ocpp.CurrentConfig(),
 			Status: ocpp.GetStatus(),
 		}}
 	})
 	log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
 	if ocpp.ExternalUrl() != "" {
 		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+	}
+	// register the callback even with no rules so runtime additions are pushed
+	ocpp.SetForwarderUpdated(func() {
+		valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+			Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+			Status: ocpp.GetForwarderStatus(),
+		}}
+	})
+	if ocpp.ForwarderEnabled() {
+		log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
 	}
 
 	// value cache
@@ -376,8 +387,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
-		Config: conf.Ocpp,
+		Config: ocpp.CurrentConfig(),
 		Status: ocpp.GetStatus(),
+	}}
+	valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+		Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+		Status: ocpp.GetForwarderStatus(),
 	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
 		Status:     sponsor.RedactedStatus(),
