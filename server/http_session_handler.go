@@ -119,22 +119,30 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 
-	var data struct {
-		Vehicle, Loadpoint *string
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if data.Vehicle == nil && data.Loadpoint == nil {
+	// only update fields present in the request; a null value clears the column
+	updates := map[string]any{}
+	if v, ok := body["vehicle"]; ok {
+		updates["vehicle"] = v
+	}
+	if v, ok := body["loadpoint"]; ok {
+		updates["loadpoint"] = v
+	}
+	if v, ok := body["odometer"]; ok {
+		updates["odometer"] = v
+	}
+
+	if len(updates) == 0 {
 		jsonError(w, http.StatusBadRequest, errors.New("nothing to update"))
 		return
 	}
 
-	// https://github.com/evcc-io/evcc/issues/13738#issuecomment-2094070362
-	if txn := db.Instance.Table("sessions").Where("id = ?", id).Updates(data); txn.Error != nil {
+	if txn := db.Instance.Table("sessions").Where("id = ?", id).Updates(updates); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}

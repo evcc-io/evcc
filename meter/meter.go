@@ -44,13 +44,22 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		return nil, err
 	}
 
-	powerG, energyG, err := cc.Energy.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	m, _ := NewConfigurable(powerG)
 	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterReturnEnergy(returnG))
+
+	// dim/curtail
+	if err := cc.Dimmer.Implement(ctx, m); err != nil {
+		return nil, err
+	}
+	if err := cc.Curtailer.Implement(ctx, m); err != nil {
+		return nil, err
+	}
 
 	// decorate soc
 	socG, err := cc.Soc.FloatGetter(ctx)
@@ -96,14 +105,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	implement.May(m, implement.PhaseVoltages(voltagesG))
 	implement.May(m, implement.PhasePowers(powersG))
 	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
-
-	// dim/curtail
-	if err := cc.Dimmer.Implement(ctx, m); err != nil {
-		return nil, err
-	}
-	if err := cc.Curtailer.Implement(ctx, m); err != nil {
-		return nil, err
-	}
 
 	return m, nil
 }

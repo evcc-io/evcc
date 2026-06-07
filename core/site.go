@@ -45,7 +45,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -66,6 +66,7 @@ type Site struct {
 
 	// meters
 	circuit       api.Circuit                // Circuit
+	hems          api.HEMS                   // HEMS (set by configureHEMS at boot)
 	gridMeter     api.Meter                  // Grid usage meter
 	pvMeters      []config.Device[api.Meter] // PV generation meters
 	batteryMeters []config.Device[api.Meter] // Battery charging meters
@@ -136,7 +137,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
-	me, err := metrics.NewCollector(metrics.Home, metrics.Home)
+	me, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
 	if err != nil {
 		return err
 	}
@@ -188,7 +189,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return errors.New("missing grid meter instance")
 		}
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef)
+		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -204,7 +205,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// energy collector (for history persistence and forecast scaling)
-		me, err := metrics.NewCollector(metrics.PV, ref)
+		me, err := metrics.NewCollector(metrics.PV, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -212,7 +213,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// solar forecast collector (mirrors PV history shape, used for scale lookup)
-	fc, err := metrics.NewCollector(metrics.Forecast, metrics.Forecast)
+	fc, err := metrics.NewCollector(metrics.Forecast, metrics.Forecast, metrics.Forecast)
 	if err != nil {
 		return err
 	}
@@ -226,7 +227,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.batteryMeters = append(site.batteryMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Battery, ref)
+		me, err := metrics.NewCollector(metrics.Battery, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -241,7 +242,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.extMeters = append(site.extMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -256,7 +257,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.auxMeters = append(site.auxMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -496,10 +497,18 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	fun := func(i int, dev config.Device[api.Meter]) {
 		meter := dev.Instance()
 
+		props := deviceProperties(dev)
+		mm[i] = types.Measurement{
+			Name:  dev.Config().Name,
+			Title: props.Title,
+			Icon:  props.Icon,
+		}
+
 		// power
 		var b bytes.Buffer
 		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
+			mm[i].Power = power
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
 			if b.Len() > 0 {
@@ -509,21 +518,12 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		}
 
 		// energy (production)
-		var energy float64
 		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
-			energy, err = m.TotalEnergy()
-			if err != nil {
+			if f, err := m.TotalEnergy(); err == nil {
+				mm[i].Energy = &f
+			} else {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
-		}
-
-		props := deviceProperties(dev)
-		mm[i] = types.Measurement{
-			Name:   dev.Config().Name,
-			Title:  props.Title,
-			Icon:   props.Icon,
-			Power:  power,
-			Energy: energy,
 		}
 	}
 
@@ -570,7 +570,10 @@ func (site *Site) updatePvMeters() {
 		return math.Abs(m.ExcessDCPower)
 	})
 	totalEnergy := lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+		if m.Energy == nil {
+			return 0
+		}
+		return *m.Energy
 	})
 
 	if len(site.pvMeters) > 1 {
@@ -589,13 +592,7 @@ func (site *Site) updatePvMeters() {
 	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
 		c := site.collectors[dev.Config().Name]
-
-		var importEnergy *float64
-		if mm[i].Energy > 0 {
-			importEnergy = &mm[i].Energy
-		}
-
-		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
+		if err := c.AddEnergy(mm[i].Energy, nil, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist pv %d energy: %v", i+1, err)
 		}
 	}
@@ -652,7 +649,10 @@ func (site *Site) updateBatteryMeters() {
 		return m.Power
 	})
 	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+		if m.Energy == nil {
+			return 0
+		}
+		return *m.Energy
 	})
 
 	if len(site.batteryMeters) > 1 {
@@ -669,11 +669,7 @@ func (site *Site) updateBatteryMeters() {
 		if !ok {
 			continue
 		}
-		var exportEnergy *float64
-		if mm[i].Energy > 0 {
-			exportEnergy = &mm[i].Energy
-		}
-		if err := c.AddEnergy(nil, exportEnergy, -mm[i].Power); err != nil {
+		if err := c.AddEnergy(nil, mm[i].Energy, -mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist battery %d energy: %v", i+1, err)
 		}
 	}
@@ -708,11 +704,7 @@ func (site *Site) addMeterEnergy(meters []config.Device[api.Meter], mm []types.M
 		if !ok {
 			continue
 		}
-		var importEnergy *float64
-		if mm[i].Energy > 0 {
-			importEnergy = &mm[i].Energy
-		}
-		if err := c.AddEnergy(importEnergy, nil, mm[i].Power); err != nil {
+		if err := c.AddEnergy(mm[i].Energy, nil, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist meter %s energy: %v", ref, err)
 		}
 	}
@@ -790,18 +782,16 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	// grid energy (import)
-	var importEnergy *float64
+	// grid energy (import); nil when the device has no MeterEnergy capability or the read fails
 	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
 		if f, err := energyMeter.TotalEnergy(); err == nil {
-			mm.Energy = f
-			importEnergy = &f
+			mm.Energy = &f
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
 	}
 
-	site.collectors[site.Meters.GridMeterRef].AddEnergy(importEnergy, nil, mm.Power)
+	site.collectors[site.Meters.GridMeterRef].AddEnergy(mm.Energy, nil, mm.Power)
 
 	site.publish(keys.Grid, mm)
 
@@ -949,17 +939,19 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.publishCircuits()
+	}
 
+	if site.hems != nil {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
-			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+			if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
 
 		wg.Go(func() {
-			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+			if err := site.curtailPV(hemsCurtailed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
@@ -996,6 +988,7 @@ func (site *Site) update(lp updater) {
 			lp.Update(
 				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+				hemsDimmed(site.hems),
 			)
 		}
 

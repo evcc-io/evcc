@@ -5,7 +5,7 @@ products:
     description:
       de: SUN2000 Hybrid-Wechselrichter
       en: SUN2000 Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   description:
     de: |
@@ -39,6 +39,12 @@ params:
     default: 15s
   - name: maxacpower
     service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    advanced: true
+    usages: ["pv"]
   - name: storageunit
   - name: forceaccharging
     default: false
@@ -49,8 +55,8 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
+      en: Keep AC charging active (except for when being dimmed) to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
+      de: AC-Laden bleibt aktiv (außer bei einer aktiven Leistungsreduzierung) zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
@@ -73,7 +79,7 @@ render: |
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
-      address: 37113 # Grid import export power
+      address: 37113 # Grid import/export power
       type: holding
       decode: int32nan
     scale: -1
@@ -82,7 +88,16 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 37121 # Active energy import from the grid
+      address: 37121 # Active energy imported from the grid
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37119 # Active energy exported to the grid
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -127,11 +142,58 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 32106 # Accumulated energy yield
+      address: 32108 # Total DC Input Energy
       type: holding
       decode: uint32nan
     scale: 0.01
   maxacpower: {{ .maxacpower }}
+  curtail:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .curtailpercent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47418 # Maximum Feed Grid Power (0-100 %)
+              type: writesingle
+              encoding: uint16
+            scale: 10
+        - source: const
+          value: 7 # Power-limited grid connection (%)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47415 # Active power control mode
+              type: writesingle
+              encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Unlimited 
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47415 # Active power control mode
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 47415 # Active power control mode (0=no curtailment)
+      type: holding
+      decode: uint16
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -140,11 +202,10 @@ render: |
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
-      {{- if eq .storageunit "1" }}
-      address: 37001
-      {{- end }}
       {{- if eq .storageunit "2" }}
       address: 37743
+      {{- else }}
+      address: 37001
       {{- end }}
       type: holding
       decode: int32nan
@@ -154,11 +215,23 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      {{- if eq .storageunit "1" }}
-      address: 37068 # [Energy storage unit 1] Total discharge
-      {{- end }}
       {{- if eq .storageunit "2" }}
       address: 37755 # [Energy storage unit 2] Total discharge
+      {{- else }}
+      address: 37068 # [Energy storage unit 1] Total discharge
+      {{- end }}
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "2" }}
+      address: 37753 # [Energy storage unit 2] Total charge
+      {{- else }}
+      address: 37066 # [Energy storage unit 1] Total charge
       {{- end }}
       type: holding
       decode: uint32nan
@@ -168,15 +241,60 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      {{- if eq .storageunit "1" }}
-      address: 37004
-      {{- end }}
       {{- if eq .storageunit "2" }}
       address: 37738
+      {{- else }}
+      address: 37004
       {{- end }}
       type: holding
       decode: uint16nan
     scale: 0.1
+  dim:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Disable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        {{- if eq .forceaccharging "true" }}
+        source: const
+        value: 1 # Enable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+        {{- else }}
+        source: sleep
+        duration: 0s
+        {{- end }}
+  dimmed:
+    source: go
+    in:
+    - name: v
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47087 # Charge from grid (0=disabled → dimmed, 1=enabled → not dimmed)
+          type: holding
+          decode: uint16
+    script: v == 0
   batterymode:
     source: sequence
     set:

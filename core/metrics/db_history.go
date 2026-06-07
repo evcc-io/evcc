@@ -27,9 +27,9 @@ func roundEnergy(v float64) float64 {
 	return max(0, math.Round(v*1000)/1000)
 }
 
-// Series represents a named series of energy slots
+// Series represents an energy series for one title group or one entity group.
 type Series struct {
-	Name  string `json:"name,omitempty"`
+	Title string `json:"title,omitempty"`
 	Group string `json:"group"`
 	Data  []Slot `json:"data"`
 }
@@ -55,7 +55,7 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryEnergy returns aggregated energy data, per entity or per group.
+// QueryEnergy returns aggregated energy data, per title or per group.
 func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
 
@@ -64,13 +64,18 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 		return nil, errors.New("invalid aggregate value")
 	}
 
-	groupCols := `e."group", ` + fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
-	if !grouped {
-		groupCols = "e.name, " + groupCols
+	titleExpr := `COALESCE(NULLIF(e.title,''), e.name)`
+	timeCol := fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
+
+	selectTitle := titleExpr + ` AS title`
+	groupCols := titleExpr + `, e."group", ` + timeCol
+	if grouped {
+		selectTitle = `'' AS title`
+		groupCols = `e."group", ` + timeCol
 	}
 
 	type row struct {
-		Name         string
+		Title        string
 		Group        string
 		Start        SqlTime
 		Energy       float64
@@ -78,7 +83,7 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 	}
 
 	tx := db.Instance.Table("meters m").
-		Select(`e.name, e."group",
+		Select(selectTitle + `, e."group",
 			MIN(m.ts) AS start,
 			COALESCE(SUM(m.energy), 0) AS energy,
 			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
@@ -100,13 +105,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 
 	var res []Series
 	for _, r := range rows {
-		name := r.Name
-		if grouped {
-			name = ""
-		}
-
-		if n := len(res); n == 0 || res[n-1].Name != name || res[n-1].Group != r.Group {
-			res = append(res, Series{Name: name, Group: r.Group})
+		if n := len(res); n == 0 || res[n-1].Title != r.Title || res[n-1].Group != r.Group {
+			res = append(res, Series{Title: r.Title, Group: r.Group})
 		}
 
 		s := &res[len(res)-1]
@@ -180,19 +180,30 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 	tsSet := make(map[int64]time.Time)
 	endByStart := make(map[int64]time.Time)
 
+	label := func(e *Series, g string) string {
+		if e.Title != "" {
+			return e.Title
+		}
+		return g
+	}
+
+	prefix := func(g, l string) string {
+		if l == g {
+			return g
+		}
+		return g + "." + l
+	}
+
 	for _, g := range groups {
 		entities := byGroup[g]
-		sort.Slice(entities, func(i, j int) bool { return entities[i].Name < entities[j].Name })
+		sort.Slice(entities, func(i, j int) bool { return label(entities[i], g) < label(entities[j], g) })
 
 		for _, e := range entities {
-			name := e.Name
-			if name == "" {
-				name = g
-			}
-			header = append(header, g+"."+name+".energy.Wh")
+			p := prefix(g, label(e, g))
+			header = append(header, p+".energy.Wh")
 			cols = append(cols, col{series: e, returnEnergy: false})
 			if hasReturnEnergy(g) {
-				header = append(header, g+"."+name+".returnEnergy.Wh")
+				header = append(header, p+".returnEnergy.Wh")
 				cols = append(cols, col{series: e, returnEnergy: true})
 			}
 			for _, slot := range e.Data {
