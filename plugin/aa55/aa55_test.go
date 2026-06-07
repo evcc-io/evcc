@@ -370,12 +370,12 @@ func TestCache_FetchSingleFlight(t *testing.T) {
 	}
 
 	// cache is now warm: a subsequent read hits without loading again
-	got, hit, err := c.fetch(key, func() ([]byte, error) {
+	got, ok, err := c.fetch(key, func() ([]byte, error) {
 		t.Fatal("must not load on warm cache")
 		return nil, nil
 	})
 	require.NoError(t, err)
-	assert.True(t, hit)
+	assert.True(t, ok)
 	assert.Equal(t, want, got)
 }
 

@@ -135,11 +135,11 @@ func (p *AA55UDP) fetch() ([]byte, error) {
 		return p.exchange()
 	}
 
-	payload, hit, err := cache.fetch(p.cacheKey, p.exchange)
+	payload, ok, err := cache.fetch(p.cacheKey, p.exchange)
 	if err != nil {
 		return nil, err
 	}
-	if hit {
+	if ok {
 		p.log.TRACE.Printf("cache hit for %s pdu=%x", p.conn.RemoteAddr(), p.pdu)
 	}
 	return payload, nil
