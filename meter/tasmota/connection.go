@@ -237,6 +237,21 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	return res.StatusSNS.Energy.Total, err
 }
 
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (c *Connection) ReturnEnergy() (float64, error) {
+	res, err := c.statusSnsG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	// SML total energy available
+	if sml := res.StatusSNS.SML.TotalOut; sml != nil {
+		return *sml, nil
+	}
+
+	return 0, errors.New("SML TotalOut metric is missing")
+}
+
 // Powers implements the api.PhasePowers interface
 func (c *Connection) Powers() (float64, float64, float64, error) {
 	s, err := c.statusSnsG.Get()
