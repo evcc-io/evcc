@@ -37,17 +37,17 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ `{{ now | mustDateModify "-24h" | date "2006-01-02" }}` }}&window_end={{ `{{ now | mustDateModify "+72h" | date "2006-01-02" }}` }}
+    uri: https://api.pstryk.pl/integrations/meter-data/unified-metrics/?metrics=pricing&resolution=hour&window_start={{ `{{ now.UTC | mustDateModify "-24h" | date "2006-01-02" }}` }}:00:00Z&window_end={{ `{{ now.UTC | mustDateModify "+72h" | date "2006-01-02" }}` }}:00:00Z
     headers:
       Authorization: {{ .token }}
       Accept: application/json
     jq: |
       [(.frames // [])[]
-        | select(.is_cheap != null or .is_expensive != null)
+        | select(.metrics?.pricing? != null)
         | {
           start: (.start | sub("\\+00:00$"; "Z")),
           end: (.end | sub("\\+00:00$"; "Z")),
-          value: .price_gross
+          value: .metrics.pricing.{{ if eq .plan "prosumer-pricing" }}price_prosumer_gross{{ else }}price_gross{{ end }}
         }
       ] | tostring
   interval: {{ .interval }}

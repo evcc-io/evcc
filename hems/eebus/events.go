@@ -1,8 +1,6 @@
 package eebus
 
 import (
-	"time"
-
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	"github.com/enbility/eebus-go/usecases/cs/lpp"
@@ -112,7 +110,6 @@ func (c *EEBus) updateConsumptionLimit() {
 	defer c.mux.Unlock()
 
 	c.consumptionLimit = limit
-	c.statusUpdated = time.Now()
 }
 
 func (c *EEBus) updateProductionLimit() {
@@ -126,7 +123,6 @@ func (c *EEBus) updateProductionLimit() {
 	defer c.mux.Unlock()
 
 	c.productionLimit = limit
-	c.statusUpdated = time.Now()
 }
 
 func (c *EEBus) consumptionWriteApprovalRequired() {
@@ -183,7 +179,7 @@ func (c *EEBus) updateFailsafeProductionActivePowerLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.failsafeProductionLimit = limit
+	c.failsafeProductionLimit = new(limit)
 }
 
 func (c *EEBus) updateFailsafeConsumptionDurationMinimum() {

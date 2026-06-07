@@ -3,6 +3,7 @@ products:
   - brand: TP-Link
     description:
       generic: Tapo P-Series Smart Plug
+capabilities: ["meter"]
 group: switchsockets
 requirements:
   description:
@@ -17,7 +18,7 @@ params:
   - preset: switchsocket
 render: |
   type: tapo
-  uri: http://{{ .host }}
+  host: {{ .host }}
   user: {{ .user }}
   password: {{ .password }}
   {{ include "switchsocket" . }}

@@ -25,10 +25,17 @@ const (
 	Timezone           = "timezone"
 	Fatal              = "fatal"
 	StartupCompleted   = "startupCompleted" // false: starting, true: started
+	ApiReady           = "apiReady"         // http handlers are registered
 	SetupRequired      = "setupRequired"    // initial setup is required (lp = 0), fresh installation
 	Plant              = "plant"
 	Telemetry          = "telemetry"
+	Optimizer          = "optimizer"
+	Mcp                = "mcp"
 	DemoMode           = "demoMode"
+	Remote             = "remote"
+	RemoteClients      = "remoteClients"
+	RemoteLastSeen     = "remoteLastSeen"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
+	DeviceColors       = "deviceColors"
 )

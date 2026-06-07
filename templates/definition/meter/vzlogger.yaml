@@ -11,15 +11,35 @@ params:
     default: 8081
   - name: uuid
     required: true
+    description:
+      de: Die vzlogger Kanal uuid für die Leistung
+      en: The vzlogger channel uuid for power
   - name: scale
     advanced: true
     default: 1
     description:
-      de: Skalierungsfaktor
-      en: Scale factor
+      de: Skalierungsfaktor Leistung
+      en: Scale factor power
     help:
-      de: Multipliziere Rohwert mit diesem Faktor
-      en: Multiply by this value
+      de: Multipliziere Leistungs-Rohwert mit diesem Faktor
+      en: Multiply power raw value by this factor
+  - name: energyuuid
+    advanced: true
+    description:
+      de: Die vzlogger Kanal uuid für den Zählerstand
+      en: The vzlogger channel uuid for the meter reading
+    help:
+      de: Die vzlogger Kanal uuid für den Zählerstand (OBIS Code 1.8.0, Strombezug)
+      en: The vzlogger channel uuid for the meter reading (OBIS Code 1.8.0, electricity consumption)
+  - name: energyscale
+    advanced: true
+    default: 0.001
+    description:
+      de: Skalierungsfaktor Energie
+      en: Scale factor energy
+    help:
+      de: Multipliziere Energie-Rohwert mit diesem Faktor
+      en: Multiply energy raw value by this factor
   - name: l1currentuuid
     advanced: true
     description:
@@ -100,12 +120,22 @@ render: |
   power: # power reading
     source: http # use http plugin
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=="{{ unquote .uuid }}") | .tuples[0][1] # parse response json
+    jq: .data[] | select(.uuid=="{{ unquote .uuid }}") | (.tuples[0][1]? // 0) # parse response json
     cache: {{ .cache }}
     {{- if .scale }}
     scale: {{ .scale }}
     {{- end }}
-  {{ if and .l1currentuuid .l2currentuuid .l3currentuuid -}}
+  {{- if .energyuuid }}
+  energy: # meter reading in kWh
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/
+    jq: .data[] | select(.uuid=="{{ unquote .energyuuid }}") | .tuples[0][1]
+    cache: {{ .cache }}
+    {{- if .energyscale }}
+    scale: {{ .energyscale }}
+    {{- end }}
+  {{- end }}
+  {{- if and .l1currentuuid .l2currentuuid .l3currentuuid }}
   currents:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
@@ -119,8 +149,8 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=="{{ unquote .l3currentuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
-  {{ end -}}
-  {{ if and .l1poweruuid .l2poweruuid .l3poweruuid -}}
+  {{- end }}
+  {{- if and .l1poweruuid .l2poweruuid .l3poweruuid }}
   powers:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
@@ -134,8 +164,8 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=="{{ unquote .l3poweruuid }}") | .tuples[0][1]
     cache: {{ .cache }}
-  {{ end -}}
-  {{ if and .l1voltageuuid .l2voltageuuid .l3voltageuuid -}}
+  {{- end }}
+  {{- if and .l1voltageuuid .l2voltageuuid .l3voltageuuid }}
   voltages:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
@@ -149,4 +179,4 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=="{{ unquote .l3voltageuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
-  {{ end -}}
+  {{- end }}

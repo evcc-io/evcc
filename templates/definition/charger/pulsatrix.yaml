@@ -1,6 +1,7 @@
 template: pulsatrix
 products:
   - brand: Pulsatrix
+capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:

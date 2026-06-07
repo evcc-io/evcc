@@ -16,6 +16,7 @@ type API interface {
 
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
+	Optimize() error
 
 	// Meta
 	GetTitle() string

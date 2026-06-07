@@ -80,6 +80,8 @@ func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag s
 }
 
 func (conn *Connector) TestClock(clock clock.Clock) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
 	conn.clock = clock
 }
 

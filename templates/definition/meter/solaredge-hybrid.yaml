@@ -44,6 +44,12 @@ render: |
     subdevice: 1 # Metering device
     value: 203:TotWhImp
     scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    subdevice: 1 # Metering device
+    value: 203:TotWhExp
+    scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
@@ -102,13 +108,6 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
-  energy:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value:
-      - 101:WH
-      - 103:WH
-    scale: 0.001
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}

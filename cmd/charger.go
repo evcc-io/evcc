@@ -28,6 +28,8 @@ func init() {
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
 	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
+	chargerCmd.Flags().IntP(flagCurtail, "u", -1, flagCurtailDescription)
+	chargerCmd.Flags().IntP(flagDim, "m", -1, flagDimDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
 	chargerCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
@@ -70,7 +72,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 				log.ERROR.Fatalln(err)
 			}
 
-			if vv, ok := v.(api.ChargerEx); ok {
+			if vv, ok := api.Cap[api.ChargerEx](v); ok {
 				if err := vv.MaxCurrentMillis(current); err != nil {
 					log.ERROR.Println("set current:", err)
 				}
@@ -97,10 +99,18 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
+		if handleCurtailFlag(cmd, v) {
+			flagUsed = true
+		}
+
+		if handleDimFlag(cmd, v) {
+			flagUsed = true
+		}
+
 		if cmd.Flag(flagWakeup).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.Resurrector); ok {
+			if vv, ok := api.Cap[api.Resurrector](v); ok {
 				if err := vv.WakeUp(); err != nil {
 					log.ERROR.Println("wakeup:", err)
 				}
@@ -112,7 +122,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		if phases > 0 {
 			flagUsed = true
 
-			if vv, ok := v.(api.PhaseSwitcher); ok {
+			if vv, ok := api.Cap[api.PhaseSwitcher](v); ok {
 				if err := vv.Phases1p3p(phases); err != nil {
 					log.ERROR.Println("set phases:", err)
 				}

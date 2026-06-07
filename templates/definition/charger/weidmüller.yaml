@@ -3,11 +3,11 @@ products:
   - brand: Weidmüller
     description:
       generic: AC Smart
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:
   - name: host
 render: |
   type: weidmüller
-  uri: {{ .host }}:502
+  uri: {{ joinHostPort .host "502" }}

@@ -30,6 +30,7 @@ products:
     description:
       generic: BWS
 group: heating
+capabilities: ["dim"]
 requirements:
   description:
     de: Für Wärmepumpen mit Luxtronik 2.1 Steuerung. Nutzt modbus-tcp. Braucht mindestens Software v3.90.3. Aktivierung über SERVICE, Systemsteuerung, Konnektivität, Smart-Home-Interface.
@@ -277,3 +278,4 @@ render: |
       type: input
       decode: uint16
     scale: 0.1
+  {{ include "heatpumpswitch" . }}

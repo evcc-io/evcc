@@ -103,6 +103,7 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByLabel("Charge status").selectOption("A");
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
 
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -156,7 +157,7 @@ test.describe("charging loadpoint", async () => {
     // second loadpoint: increase priority
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByLabel("Priority")).toHaveValue("0 (default)");
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("0");
     await lpModal.getByLabel("Priority").selectOption("1");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -182,7 +183,7 @@ test.describe("charging loadpoint", async () => {
     // check priorities
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByLabel("Priority")).toHaveValue("0 (default)");
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("0");
   });
 
   test("vehicle", async ({ page }) => {

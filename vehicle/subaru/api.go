@@ -24,6 +24,7 @@ const (
 	RemoteElectricStatusPath = "v1/vehicle/electric/status"
 	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
 	ClientRefKey             = "2.19.0"
+	channel                  = "ONEAPP"
 )
 
 type API struct {
@@ -58,6 +59,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 		"x-client-ref": v.clientRef,
 		"x-appversion": ClientRefKey,
 		"X-Appbrand":   "S",
+		"x-channel":    channel,
 	}
 
 	v.Transport = &transport.Decorator{

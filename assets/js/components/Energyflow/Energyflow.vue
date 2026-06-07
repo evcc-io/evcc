@@ -92,14 +92,14 @@
 							:powerUnit="powerUnit"
 							:expanded="pvExpanded"
 							data-testid="energyflow-entry-production"
-							@details-clicked="openForecastModal"
+							@details-clicked="openForecastView"
 							@toggle="togglePv"
 						>
 							<template v-if="pv.length > 1" #expanded>
 								<EnergyflowEntry
 									v-for="(p, index) in pv"
 									:key="index"
-									:name="p.title || genericPvTitle(index)"
+									:name="p.title || p.name"
 									:power="p.power"
 									:powerUnit="powerUnit"
 									:data-testid="`energyflow-entry-production-${index}`"
@@ -123,7 +123,7 @@
 								:expanded="batteryExpanded"
 								detailsClickable
 								data-testid="energyflow-entry-batterydischarge"
-								@details-clicked="openBatterySettingsModal"
+								@details-clicked="openBatteryView"
 								@toggle="toggleBattery"
 							>
 								<template
@@ -131,13 +131,13 @@
 									#subline
 								>
 									<div
-										v-if="batteryForecastEmpty"
+										v-if="batteryForecastLowest"
 										class="d-flex align-items-center mb-2"
 									>
-										<ForecastMessage :message="batteryForecastEmpty" />
+										<ForecastMessage :point="batteryForecastLowest" />
 									</div>
 									<div
-										v-else-if="batteryForecastFull"
+										v-else-if="batteryForecastHighest"
 										class="d-none d-md-block mb-2"
 									>
 										&nbsp;
@@ -150,7 +150,7 @@
 									<EnergyflowEntry
 										v-for="(b, index) in batteryDevices"
 										:key="index"
-										:name="b.title || genericBatteryTitle(index)"
+										:name="b.title || b.name"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="dischargePower(b.power)"
@@ -201,7 +201,7 @@
 									<EnergyflowEntry
 										v-for="(c, index) in consumers"
 										:key="index"
-										:name="c.title || genericConsumerTitle(index)"
+										:name="c.title || c.name"
 										:power="c.power"
 										:powerUnit="powerUnit"
 										icon="vehicle"
@@ -229,9 +229,9 @@
 								@details-clicked="toggleCo2"
 								@toggle="toggleLoadpoints"
 							>
-								<template v-if="activeLoadpointsCount > 0" #expanded>
+								<template v-if="loadpoints.length > 0" #expanded>
 									<EnergyflowEntry
-										v-for="lp in activeLoadpoints"
+										v-for="lp in loadpoints"
 										:key="lp.id"
 										:name="lp.displayTitle"
 										:power="lp.chargePower"
@@ -264,7 +264,7 @@
 								:expanded="batteryExpanded"
 								detailsClickable
 								data-testid="energyflow-entry-batterycharge"
-								@details-clicked="openBatterySettingsModal"
+								@details-clicked="openBatteryView"
 								@toggle="toggleBattery"
 							>
 								<template
@@ -272,13 +272,13 @@
 									#subline
 								>
 									<div
-										v-if="batteryForecastFull"
+										v-if="batteryForecastHighest"
 										class="d-flex align-items-center mb-2"
 									>
-										<ForecastMessage :message="batteryForecastFull" />
+										<ForecastMessage :point="batteryForecastHighest" high />
 									</div>
 									<div
-										v-else-if="batteryForecastEmpty"
+										v-else-if="batteryForecastLowest"
 										class="d-none d-md-block mb-2"
 									>
 										&nbsp;
@@ -287,7 +287,7 @@
 										v-if="batteryGridChargeLimitSet"
 										type="button"
 										class="btn-reset d-flex justify-content-between text-start pe-4"
-										@click.stop="openBatterySettingsModal"
+										@click.stop="openBatteryView"
 									>
 										<span v-if="batteryGridChargeActive">
 											{{ $t("main.energyflow.batteryGridChargeActive") }}
@@ -308,7 +308,7 @@
 									<EnergyflowEntry
 										v-for="(b, index) in batteryDevices"
 										:key="index"
-										:name="b.title || genericBatteryTitle(index)"
+										:name="b.title || b.name"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="chargePower(b.power)"
@@ -339,7 +339,6 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/filled/square";
-import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -351,6 +350,7 @@ import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
 	type Battery,
+	type BatteryForecastPoint,
 	type Meter,
 	type CURRENCY,
 	type Forecast,
@@ -463,7 +463,7 @@ export default defineComponent({
 			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
 		activeLoadpoints() {
-			return this.loadpoints.filter((lp) => lp.charging);
+			return this.loadpoints.filter((lp) => lp.charging || lp.chargePower > 10);
 		},
 		activeLoadpointsCount() {
 			return this.activeLoadpoints.length;
@@ -584,14 +584,14 @@ export default defineComponent({
 		consumers() {
 			return [...this.aux, ...this.ext];
 		},
-		batteryForecastFull(): string | undefined {
-			return this.fmtForecast(this.battery?.forecast, true);
+		batteryForecastHighest(): BatteryForecastPoint | undefined {
+			return this.battery?.forecast?.highest;
 		},
-		batteryForecastEmpty(): string | undefined {
-			return this.fmtForecast(this.battery?.forecast, false);
+		batteryForecastLowest(): BatteryForecastPoint | undefined {
+			return this.battery?.forecast?.lowest;
 		},
 		batteryForecastExists(): boolean {
-			return !!(this.batteryForecastEmpty || this.batteryForecastFull);
+			return !!(this.batteryForecastHighest || this.batteryForecastLowest);
 		},
 	},
 	watch: {
@@ -651,17 +651,11 @@ export default defineComponent({
 		updateHeight() {
 			this.detailsCompleteHeight = this.$refs["detailsInner"]?.offsetHeight ?? 0;
 		},
-		openBatterySettingsModal() {
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal") as HTMLElement
-			);
-			modal.show();
+		openBatteryView() {
+			this.$router.push("/battery");
 		},
-		openForecastModal() {
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById("forecastModal") as HTMLElement
-			);
-			modal.show();
+		openForecastView() {
+			this.$router.push("/forecast");
 		},
 		dischargePower(power: number) {
 			return Math.abs(Math.max(0, power));
@@ -684,27 +678,6 @@ export default defineComponent({
 		toggleConsumers() {
 			settings.energyflowConsumers = !settings.energyflowConsumers;
 			this.$nextTick(this.updateHeight);
-		},
-		genericBatteryTitle(index: number) {
-			return `${this.$t("config.devices.batteryStorage")} #${index + 1}`;
-		},
-		genericPvTitle(index: number) {
-			return `${this.$t("config.devices.solarSystem")} #${index + 1}`;
-		},
-		genericConsumerTitle(index: number) {
-			return `${this.$t("config.devices.consumer")} #${index + 1}`;
-		},
-		fmtForecast(
-			forecast: { full?: string | null; empty?: string | null } | undefined,
-			full: boolean
-		): string | undefined {
-			const isoString = full ? forecast?.full : forecast?.empty;
-			if (!isoString) return undefined;
-			const time = this.fmtAbsoluteDate(new Date(isoString));
-			const key = full
-				? "main.energyflow.batteryForecastFull"
-				: "main.energyflow.batteryForecastEmpty";
-			return this.$t(key, { time });
 		},
 	},
 });

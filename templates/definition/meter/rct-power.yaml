@@ -3,7 +3,7 @@ products:
   - brand: RCT
     description:
       generic: Power
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   evcc: ["skiptest"]
 params:
@@ -41,7 +41,7 @@ params:
     default: 30s
 render: |
   type: rct
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   usage: {{ .usage }}
   cache: {{ .cache }}
   {{- include "battery-params" . }}

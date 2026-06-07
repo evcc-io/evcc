@@ -34,7 +34,7 @@ type API struct {
 	identity *Identity
 }
 
-func NewAPI(log *util.Logger, identity *Identity) *API {
+func NewAPI(log *util.Logger, identity *Identity, brandCode string) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		log:      log,
@@ -57,6 +57,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 			"x-client-ref": clientRef,
 			"x-appversion": clientRefKey,
 			"x-channel":    channel,
+			"X-Appbrand":   brandCode,
 		}),
 		Base: &oauth2.Transport{
 			Source: identity,

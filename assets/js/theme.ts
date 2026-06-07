@@ -1,3 +1,4 @@
+import { updateCssColors } from "./colors";
 import settings from "./settings";
 import { THEME } from "./types/evcc";
 
@@ -47,6 +48,7 @@ function updateTheme() {
     $html.classList.add("no-transitions");
     $html.classList.toggle("dark", theme === THEME.DARK);
     $html.setAttribute("data-bs-theme", theme!);
+    requestAnimationFrame(updateCssColors);
     window.setTimeout(function () {
       $html.classList.remove("no-transitions");
     }, 100);

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -32,8 +33,10 @@ import (
 
 // Solax charger implementation
 type Solax struct {
+	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
+	enabled    bool
 	isLegacyHw bool
 }
 
@@ -75,8 +78,6 @@ func init() {
 	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSolax -b *Solax -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
-
 func NewSolaxG1FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, true)
 }
@@ -113,23 +114,21 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 	conn.Logger(log.TRACE)
 
 	wb := &Solax{
+		Caps:       implement.New(),
 		log:        log,
 		conn:       conn,
 		isLegacyHw: isLegacyHw,
 	}
 
-	var phases1p3p func(int) error
-	var phasesG func() (int, error)
-
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
 		v := encoding.Uint16(b)
 		if !wb.isLegacyHw && v >= solaxFirmwarePhaseSwitching {
-			phases1p3p = wb.phases1p3p
-			phasesG = wb.getPhases
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
 
-	return decorateSolax(wb, phases1p3p, phasesG), nil
+	return wb, nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -171,8 +170,6 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2: // "Charging"
 		return api.StatusC, nil
-	case 4: // "Fault"
-		return api.StatusE, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
@@ -180,12 +177,7 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Solax) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(solaxRegDeviceMode, 1)
-	if err != nil {
-		return false, err
-	}
-
-	return binary.BigEndian.Uint16(b) != solaxModeStop, nil
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -196,6 +188,9 @@ func (wb *Solax) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(solaxRegCommandControl, cmd)
+	if err == nil {
+		wb.enabled = enable
+	}
 	return err
 }
 

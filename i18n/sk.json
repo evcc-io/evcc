@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Overovací kód",
+    "authCodeHelp": "Skopírujte tento kód a použite ho v ďalšom kroku. Platí pre {duration}.",
+    "authorizationFailed": "Autorizácia sa nepodarila",
+    "authorizationRequired": "Vyžaduje sa autorizácia",
+    "authorizationSuccessful": "Autorizácia prebehla úspešne",
+    "buttonConnect": "Pripojte sa k {provider}",
+    "buttonDisconnect": "Odpojiť",
+    "confirmLogout": "Naozaj chcete odpojiť {title}?",
+    "connect": "pripojiť",
+    "disconnect": "odpojiť",
+    "loggedOut": "Úspešne ste sa odhlásili",
+    "logoutFailed": "Odhlásenie sa nepodarilo",
+    "modalDescriptionLogin": "Dokončite proces autorizácie, aby ste nadviazali spojenie s {provider}.",
+    "modalDescriptionLogout": "Týmto krokom odhlásite svoj účet u {provider} a zrušíte prístup k jeho údajom.",
+    "success": "{title} je teraz pripojené a pripravené na použitie.",
+    "successCloseModal": "Toto dialógové okno môžete teraz zavrieť."
+  },
   "batterySettings": {
     "batteryLevel": "Nabitie batérie",
     "bufferStart": {

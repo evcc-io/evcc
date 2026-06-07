@@ -207,7 +207,7 @@ export default defineComponent({
 			},
 		},
 	},
-	mounted(): void {
+	created(): void {
 		this.updatePlanPreviewDebounced = debounceLeading(
 			async () => await this.updatePreviewPlan(),
 			300
@@ -216,6 +216,8 @@ export default defineComponent({
 			async () => await this.updateActivePlan(),
 			300
 		);
+	},
+	mounted(): void {
 		this.updatePlanDebounced();
 	},
 	methods: {

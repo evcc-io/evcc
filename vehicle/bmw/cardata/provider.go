@@ -253,3 +253,20 @@ func (v *Provider) Climater() (bool, error) {
 
 	return false, err
 }
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	lat, err := v.Float("vehicle.cabin.infotainment.navigation.currentLocation.latitude")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	lon, err := v.Float("vehicle.cabin.infotainment.navigation.currentLocation.longitude")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return lat, lon, nil
+}

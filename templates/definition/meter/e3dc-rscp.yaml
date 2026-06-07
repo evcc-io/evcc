@@ -67,7 +67,7 @@ params:
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   user: {{ .user }}
   password: {{ .password }}
   key: {{ .key }}

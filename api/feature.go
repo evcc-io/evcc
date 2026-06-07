@@ -6,8 +6,9 @@ type Feature int
 const (
 	_                Feature = iota
 	CoarseCurrent            // charger
-	IntegratedDevice         // charger
-	Heating                  // charger - heating device
+	IntegratedDevice         // charger - always connected - no vehicle, no charging sessions
+	SwitchDevice             // charger - no current control - heat pumps or switch sockets
+	Heating                  // charger - heating device - soc ist temperature (°C)
 	Continuous               // charger - heating device where disabled means "normal operation"
 	Average                  // tariff
 	Cacheable                // tariff

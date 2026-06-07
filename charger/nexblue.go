@@ -169,20 +169,16 @@ func (wb *Nexblue) Status() (api.ChargeStatus, error) {
 	switch res.ChargingState {
 	case 0: // Idle
 		return api.StatusA, nil
-	case 1: // Connected
+	case
+		1, // Connected
+		3, // Finished
+		6, // Delayed
+		7: // EV Waiting
 		return api.StatusB, nil
-	case 2: // Charging
+	case
+		2, // Charging
+		5: // Load Balancing
 		return api.StatusC, nil
-	case 3: // Finished
-		return api.StatusB, nil
-	case 4: // Error
-		return api.StatusE, nil
-	case 5: // Load Balancing
-		return api.StatusC, nil
-	case 6: // Delayed
-		return api.StatusB, nil
-	case 7: // EV Waiting
-		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", res.ChargingState)
 	}
@@ -266,21 +262,5 @@ func (wb *Nexblue) TotalEnergy() (float64, error) {
 	return res.LifetimeEnergy, err
 }
 
-var _ api.PhaseSwitcher = (*Nexblue)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *Nexblue) Phases1p3p(phases int) error {
-	if phases != 1 && phases != 3 {
-		return fmt.Errorf("invalid phases: %d", phases)
-	}
-
-	uri := fmt.Sprintf("%s/chargers/command/%s/switch_phase_mode", nexblueHost, wb.serial)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
-		EnforceSinglePhase bool `json:"enforce_single_phase"`
-	}{
-		phases == 1,
-	}), request.JSONEncoding)
-
-	_, err := wb.DoBody(req)
-	return err
-}
+// https://github.com/evcc-io/evcc/issues/27975
+// var _ api.PhaseSwitcher = (*Nexblue)(nil)

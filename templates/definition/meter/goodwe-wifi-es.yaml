@@ -1,0 +1,45 @@
+template: goodwe-wifi-es
+requirements:
+  evcc: ["skiptest"]
+products:
+  - brand: GoodWe
+    description:
+      generic: ES/EM Hybrid Inverter (WiFi)
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: uri
+    deprecated: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    register: 29964
+    count: 2
+    decode: int32be
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    register: 29958
+    count: 2
+    decode: int32be
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    register: 29970
+    count: 2
+    decode: int32be
+  soc:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    register: 29966
+    count: 1
+    decode: uint16be
+  {{- end }}

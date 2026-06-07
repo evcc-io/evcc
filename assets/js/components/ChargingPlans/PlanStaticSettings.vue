@@ -67,7 +67,6 @@
 					v-model="selectedTime"
 					type="time"
 					class="form-control mx-0"
-					:step="60 * 5"
 					data-testid="static-plan-time"
 					required
 					@change="preview()"
@@ -243,7 +242,10 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		time() {
+		time(newTime: Date | undefined, oldTime: Date | undefined) {
+			if (newTime && oldTime && newTime.getTime() === oldTime.getTime()) {
+				return;
+			}
 			this.initInputFields();
 		},
 		soc() {

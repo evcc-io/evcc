@@ -4,6 +4,7 @@ products:
     description:
       de: einphasig
       en: single phase
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host

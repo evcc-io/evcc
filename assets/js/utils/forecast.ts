@@ -1,4 +1,4 @@
-import type { TimeseriesEntry, SolarDetails } from "../components/Forecast/types";
+import type { ForecastSlot, TimeseriesEntry, SolarDetails } from "../components/Forecast/types";
 import deepCopy from "./deepClone";
 
 export enum ForecastType {
@@ -63,6 +63,12 @@ export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
   result.scale = 1 / scale; // invert to allow back-adjustment
 
   return result;
+}
+
+export function isStaticTariff(slots?: ForecastSlot[]): boolean {
+  if (!Array.isArray(slots) || slots.length === 0) return false;
+  const firstValue = slots[0].value;
+  return slots.every((slot) => slot.value === firstValue);
 }
 
 export interface SlotWithValue {

@@ -114,7 +114,6 @@
 								v-model="values.defaultMode"
 								type="Choice"
 								class="w-100"
-								required
 								:choice="[
 									{ key: '', name: '---' },
 									{ key: 'off', name: $t('main.mode.off') },
@@ -302,8 +301,8 @@
 								type="Choice"
 								size="w-100"
 								class="me-2"
-								:choice="priorityOptions"
 								required
+								:choice="priorityOptions"
 							/>
 						</FormRow>
 
@@ -435,7 +434,6 @@
 									type="Choice"
 									class="me-2"
 									:choice="circuitOptions"
-									required
 								/>
 							</FormRow>
 						</div>
@@ -465,7 +463,6 @@
 										type="Choice"
 										class="me-2"
 										:choice="allVehicleOptions"
-										required
 									/>
 								</FormRow>
 
@@ -744,7 +741,6 @@ export default {
 				name: string;
 			}[];
 			result[0]!.name = "0 (default)";
-			result[0]!.key = undefined;
 			result[10]!.name = "10 (highest)";
 			return result;
 		},
@@ -762,11 +758,11 @@ export default {
 			return circuit && !this.circuitOptions.some((c) => c.key === circuit);
 		},
 		circuitOptions() {
-			const options = this.circuits.map((c) => ({
+			// empty option is provided by PropertyField placeholder
+			return this.circuits.map((c) => ({
 				key: c.name,
 				name: `${c.config?.title || ""} [${c.name}]`.trim(),
 			}));
-			return [{ key: "", name: "unassigned" }, ...options];
 		},
 		invalidVehicle() {
 			const { vehicle } = this.values;

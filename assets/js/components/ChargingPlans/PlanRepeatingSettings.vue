@@ -65,7 +65,6 @@
 					v-model="selectedTime"
 					type="time"
 					class="form-control mx-0 text-start"
-					:step="60 * 5"
 					data-testid="repeating-plan-time"
 					required
 					@change="update()"

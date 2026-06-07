@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
@@ -41,6 +42,38 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// when editing existing device, merge masked values with stored config
+	if vars := mux.Vars(r); vars["class"] != "" && vars["id"] != "" {
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		class, err := templates.ClassString(vars["class"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		old, err := deviceOther(class, id)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		merged, err := mergeMasked(class, cc.Other, old)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		cc.Other = merged
+	}
+
+	// template is only needed by mergeMasked above; the auth decoder is strict
+	delete(cc.Other, typeTemplate)
 
 	ts, err := auth.NewFromConfig(context.Background(), cc.Type, cc.Other)
 	if err != nil {

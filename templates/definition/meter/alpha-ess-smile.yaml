@@ -34,6 +34,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 18 # 0x12 Total energy consumed from grid (Grid)
+      # 0x10 (address 16) Total energy feed to grid (Grid) - for future grid energy import/export split
       type: holding
       decode: uint32
     scale: 0.01
@@ -110,10 +111,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 16 # 0x10 Total energy feed to Grid (Grid Meter)
+      address: 1086 # 0x43E Inverter Total PV Energy
       type: holding
       decode: uint32
-    scale: 0.01
+    scale: 0.1
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}

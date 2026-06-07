@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -39,6 +40,7 @@ import (
 // Keba is an api.Charger implementation
 type Keba struct {
 	*embed
+	implement.Caps
 	log          *util.Logger
 	conn         *modbus.Connection
 	current      uint16
@@ -72,8 +74,6 @@ func init() {
 	registry.AddCtx("keba-modbus", NewKebaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateKeba -b *Keba -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.Identifier,api.StatusReasoner,api.PhaseSwitcher,api.PhaseGetter
-
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -93,16 +93,6 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	if err != nil {
 		return nil, err
 	}
-
-	// optional features
-	var (
-		currentPower, totalEnergy func() (float64, error)
-		currents                  func() (float64, float64, float64, error)
-		identify                  func() (string, error)
-		reason                    func() (api.Reason, error)
-		phasesS                   func(int) error
-		phasesG                   func() (int, error)
-	)
 
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegProduct, 2)
 	if err != nil {
@@ -140,21 +130,21 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	}
 
 	if hasEnergyMeter {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
-		currents = wb.currents
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
 	}
 
 	if hasRFID {
-		identify = wb.identify
-		reason = wb.statusReason
+		implement.Has(wb, implement.Identifier(wb.identify))
+		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
 	}
 
 	// phases
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2); err == nil {
 		if source := binary.BigEndian.Uint32(b); source == 3 {
-			phasesS = wb.phases1p3p
-			phasesG = wb.getPhases
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		}
 	}
 
@@ -168,7 +158,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		go wb.heartbeat(ctx, u)
 	}
 
-	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
+	return wb, nil
 }
 
 // NewKeba creates a new charger
@@ -187,6 +177,7 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 
 	wb := &Keba{
 		embed:        &embed,
+		Caps:         implement.New(),
 		log:          log,
 		conn:         conn,
 		regEnable:    kebaRegEnable,

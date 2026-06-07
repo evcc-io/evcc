@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
@@ -87,6 +88,7 @@ var yamlSource struct {
 	eebus     globalconfig.YamlSource
 	tariffs   globalconfig.YamlSource
 	messaging globalconfig.YamlSource
+	circuits  globalconfig.YamlSource
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -157,19 +159,56 @@ func isWritable(filePath string) bool {
 }
 
 func configureCircuits(conf *[]config.Named) error {
-	// migrate settings
+	// yaml config from file
+	if len(*conf) != 0 {
+		yamlSource.circuits = globalconfig.YamlSourceFile
+	}
+
+	// yaml config from db (deprecated)
 	if settings.Exists(keys.Circuits) {
+		if yamlSource.circuits == globalconfig.YamlSourceFile {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("circuits configured via UI yaml; evcc.yaml config will be ignored")
+		}
 		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
+		yamlSource.circuits = globalconfig.YamlSourceDb
 	}
 
-	children := slices.Clone(*conf)
+	// load configCircuits devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Circuit)
+	if err != nil {
+		return err
+	}
 
+	// device config from db
+	if yamlSource.circuits != globalconfig.YamlSourceNone && len(configurable) > 0 {
+		return errors.New("circuits are configured via UI; having an additional yaml config is not allowed")
+	}
+
+	if err := validateStaticCircuits(slices.Clone(*conf)); err != nil {
+		return err
+	}
+	if err := validateConfigurableCircuits(configurable); err != nil {
+		return err
+	}
+
+	for _, c := range configurable {
+		*conf = append(*conf, c.Named())
+	}
+
+	return nil
+}
+
+// validateCircuitConfigs validates circuit configurations with support for both static and configurable types
+func validateCircuitConfigs[T any](children []T, getConfigAndLogger func(T) (config.Named, *util.Logger), getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
 	// TODO check for circular references
 NEXT:
-	for i, cc := range children {
+	for i, child := range children {
+		cc, log := getConfigAndLogger(child)
+
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create circuit: missing name")
 		}
@@ -184,14 +223,14 @@ NEXT:
 			}
 		}
 
-		log := util.NewLogger("circuit-" + cc.Name)
-
-		props, err := customDevice(cc.Other)
+		typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
 
-		instance, err := circuit.NewFromConfig(context.TODO(), log, props)
+		ctx := util.WithLogger(context.TODO(), log)
+
+		instance, err := circuit.NewFromConfig(ctx, typ, other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -202,7 +241,7 @@ NEXT:
 			instance.SetTitle(strings.Title(cc.Name))
 		}
 
-		if err := config.Circuits().Add(config.NewStaticDevice(cc, instance)); err != nil {
+		if err := config.Circuits().Add(getDevice(child, instance)); err != nil {
 			return err
 		}
 
@@ -211,7 +250,8 @@ NEXT:
 	}
 
 	if len(children) > 0 {
-		return fmt.Errorf("circuit is missing parent: %s", children[0].Name)
+		cn, _ := getConfigAndLogger(children[0])
+		return fmt.Errorf("circuit is missing parent: %s", cn.Name)
 	}
 
 	var rootFound bool
@@ -233,35 +273,69 @@ NEXT:
 	return nil
 }
 
+func validateStaticCircuits(children []config.Named) error {
+	return validateCircuitConfigs(
+		children,
+		func(cc config.Named) (config.Named, *util.Logger) { return cc, util.NewLogger(cc.Name) },
+		func(cc config.Named, instance api.Circuit) config.Device[api.Circuit] {
+			return config.NewStaticDevice(cc, instance)
+		},
+	)
+}
+
+func validateConfigurableCircuits(children []config.Config) error {
+	return validateCircuitConfigs(
+		children,
+		func(cc config.Config) (config.Named, *util.Logger) { return cc.Named(), loggerForConfig(&cc) },
+		func(cc config.Config, instance api.Circuit) config.Device[api.Circuit] {
+			return config.NewConfigurableDevice(&cc, instance)
+		},
+	)
+}
+
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name))) //nolint:govet
 
 	instance, err := newFromConf(ctx, cc.Type, cc.Other)
 	if err != nil {
-		return &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
+		err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 	}
 
-	if err := h.Add(config.NewStaticDevice(cc, instance)); err != nil {
-		return &DeviceError{cc.Name, err}
+	if e := h.Add(config.NewStaticDevice(cc, instance)); e != nil && err == nil {
+		err = &DeviceError{cc.Name, e}
 	}
 
-	return nil
+	// release resources
+	if err != nil {
+		cancel()
+	}
+
+	return err //nolint:govet
+}
+
+// loggerForConfig creates a logger with sensible name for (custom) configurable device
+func loggerForConfig(conf *config.Config) *util.Logger {
+	res := conf.Named().Name
+	if t := conf.Title; t != "" && t != res {
+		res += "-" + t
+	}
+	return util.NewLogger(res)
 }
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf))) //nolint:govet
 
-	props, err := customDevice(cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
 	}
 
 	var instance T
 	if err == nil {
-		instance, err = newFromConf(ctx, cc.Type, props)
+		instance, err = newFromConf(ctx, typ, other)
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 		}
@@ -271,7 +345,12 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 		err = &DeviceError{cc.Name, e}
 	}
 
-	return err
+	// release resources
+	if err != nil {
+		cancel()
+	}
+
+	return err //nolint:govet
 }
 
 func configureMeters(static []config.Named, names ...string) error {
@@ -365,11 +444,11 @@ func configureChargers(static []config.Named, names ...string) error {
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-	props, err := customDevice(cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 
 	var instance api.Vehicle
 	if err == nil {
-		instance, err = vehicle.NewFromConfig(ctx, cc.Type, props)
+		instance, err = vehicle.NewFromConfig(ctx, typ, other)
 	}
 
 	if err != nil {
@@ -502,6 +581,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 
 	// setup persistence
 	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+
+	// configure network
+	if err == nil {
+		err = networkSettings(&conf.Network)
+	}
 
 	// setup additional templates
 	if err == nil {
@@ -708,12 +792,12 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 		return nil, nil
 	}
 
-	props, err := customDevice(conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
 
-	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
+	hems, err := hems.NewFromConfig(context.TODO(), typ, other, site)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring hems: %w", err)
 	}
@@ -885,12 +969,12 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
 
-	props, err := customDevice(conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
+	instance, err := tariff.NewFromConfig(ctx, typ, other)
 	if err != nil {
 		if _, ok := errors.AsType[*util.ConfigError](err); ok {
 			return nil, err
@@ -1218,14 +1302,25 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 	return site, nil
 }
 
+func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*util.Logger) coresettings.Settings) (*core.Loadpoint, error) {
+	log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(idx), idx)
+
+	collector, err := metrics.NewCollector(metrics.Loadpoint, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+}
+
 func configureLoadpoints(conf globalconfig.All) error {
 	for id, cc := range conf.Loadpoints {
-		cc.Name = "lp-" + strconv.Itoa(id+1)
+		idx := id + 1
+		cc.Name = "lp-" + strconv.Itoa(idx)
 
-		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
-		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
-
-		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
+		instance, err := newLoadpoint(idx, cc.Name, cc.Other, func(*util.Logger) coresettings.Settings {
+			return coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", idx))
+		})
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
@@ -1243,19 +1338,16 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 	for _, conf := range configurable {
 		cc := conf.Named()
-
-		id := len(config.Loadpoints().Devices())
-		name := "lp-" + strconv.Itoa(id+1)
-		log := util.NewLoggerWithLoadpoint(name, id+1)
-
-		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
+		idx := len(config.Loadpoints().Devices()) + 1
 
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+		instance, err := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+			return coresettings.NewConfigSettingsAdapter(log, &conf)
+		})
 		if err != nil {
 			err = &DeviceError{cc.Name, err}
 		}
@@ -1299,4 +1391,15 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 func isExperimental() bool {
 	b, _ := settings.Bool(keys.Experimental)
 	return b
+}
+
+// isOptimizer returns if optimizer is enabled
+func isOptimizer() bool {
+	b, _ := settings.Bool(keys.Optimizer)
+	return b
+}
+
+// isMcp returns if MCP service is enabled
+func isMcp() bool {
+	return isExperimental()
 }

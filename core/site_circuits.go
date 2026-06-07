@@ -19,8 +19,8 @@ type circuitStruct struct {
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
 	MaxCurrent float64  `json:"maxCurrent,omitempty"`
-	Dimmed     bool     `json:"dimmed"`
-	Curtailed  bool     `json:"curtailed"`
+	Dimmed     *bool    `json:"dimmed,omitempty"`
+	Curtailed  *bool    `json:"curtailed,omitempty"`
 }
 
 // publishCircuits returns a list of circuit titles
@@ -58,17 +58,20 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
-func (site *Site) dimMeters(dim bool) error {
-	var errs error
+func (site *Site) dimMeters(dim *bool) error {
+	if dim == nil {
+		return nil
+	}
 
+	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
-		m, ok := dev.Instance().(api.Dimmer)
+		m, ok := api.Cap[api.Dimmer](dev.Instance())
 		if !ok {
 			continue
 		}
 
 		if dimmed, err := m.Dimmed(); err == nil {
-			if dim == dimmed {
+			if *dim == dimmed {
 				continue
 			}
 		} else {
@@ -78,8 +81,8 @@ func (site *Site) dimMeters(dim bool) error {
 			continue
 		}
 
-		if err := m.Dim(dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, dim)
+		if err := m.Dim(*dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, *dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", dev.Config().Name, err))
 		}
@@ -88,17 +91,20 @@ func (site *Site) dimMeters(dim bool) error {
 	return errs
 }
 
-func (site *Site) curtailPV(curtail bool) error {
-	var errs error
+func (site *Site) curtailPV(curtail *bool) error {
+	if curtail == nil {
+		return nil
+	}
 
+	var errs error
 	for _, dev := range site.pvMeters {
-		m, ok := dev.Instance().(api.Curtailer)
+		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
 		}
 
 		if curtailed, err := m.Curtailed(); err == nil {
-			if curtail == curtailed {
+			if *curtail == curtailed {
 				continue
 			}
 		} else {
@@ -108,8 +114,8 @@ func (site *Site) curtailPV(curtail bool) error {
 			continue
 		}
 
-		if err := m.Curtail(curtail); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %t", dev.Config().Name, curtail)
+		if err := m.Curtail(*curtail); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %t", dev.Config().Name, *curtail)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", dev.Config().Name, err))
 		}

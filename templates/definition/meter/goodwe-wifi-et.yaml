@@ -1,0 +1,120 @@
+template: goodwe-wifi-et
+requirements:
+  evcc: ["skiptest"]
+products:
+  - brand: GoodWe
+    description:
+      generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: uri
+    deprecated: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:               # READ 125 @ 0x891C
+      register: 35100
+      count: 125
+    register: 35139      # grid power
+    count: 2
+    decode: int32be
+  energy:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    register: 36017
+    count: 2
+    decode: float32be
+    scale: 0.001
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:             # READ 125 @ 0x891C
+        register: 35100
+        count: 125
+      register: 35105    # Ppv1
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register: 35109    # Ppv2
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register: 35113    # Ppv3
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register: 35117    # Ppv4
+      count: 2
+      decode: uint32nan
+  energy:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:
+      register: 35100
+      count: 125
+    register: 35191      # pv energy
+    count: 2
+    decode: uint32be
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:               # READ 125 @ 0x891C
+      register: 35100
+      count: 125
+    register: 35182      # battery power
+    count: 2
+    decode: int32be
+  energy:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:
+      register: 35100
+      count: 125
+    register: 35209      # battery discharge energy
+    count: 2
+    decode: uint32be
+    scale: 0.1
+  soc:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:               # READ 13 @ 0x9088
+      register: 37000
+      count: 13
+    register: 37007      # soc
+    count: 1
+    decode: uint16be
+  {{- end }}
