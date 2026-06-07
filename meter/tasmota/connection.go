@@ -249,7 +249,7 @@ func (c *Connection) ReturnEnergy() (float64, error) {
 		return *sml, nil
 	}
 
-	return 0, errors.New("SML TotalOut metric is missing")
+	return 0, api.ErrNotAvailable
 }
 
 // Powers implements the api.PhasePowers interface
