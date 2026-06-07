@@ -1800,12 +1800,15 @@ func (lp *Loadpoint) publishSocAndRange() {
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
 
-	socAndLimit := func(typ string, dev any) (*float64, *int64) {
+	socAndLimit := func(typ string, dev any) (*float64, *int64, error) {
 		var socR *float64
 		var limitR *int64
+		var socErr error
 
 		if battery, ok := api.Cap[api.Battery](dev); ok {
-			if soc, err := soc.Guard(battery.Soc()); err == nil {
+			soc, err := soc.Guard(battery.Soc())
+			socErr = err
+			if err == nil {
 				socR = &soc
 
 				// don't publish here in case it needs be updated by the estimator
@@ -1827,13 +1830,19 @@ func (lp *Loadpoint) publishSocAndRange() {
 			}
 		}
 
-		return socR, limitR
+		return socR, limitR, socErr
 	}
 
-	socR, limitR := socAndLimit("charger", lp.charger)
+	socR, limitR, _ := socAndLimit("charger", lp.charger)
 	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
-		lp.socUpdated = lp.clock.Now()
-		socR, limitR = socAndLimit("vehicle", lp.GetVehicle())
+		var socErr error
+		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle())
+
+		// keep polling async vehicle APIs that return ErrMustRetry until a SoC
+		// arrives, instead of waiting for the next interval
+		if !errors.Is(socErr, api.ErrMustRetry) {
+			lp.socUpdated = lp.clock.Now()
+		}
 
 		// range
 		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
