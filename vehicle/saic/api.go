@@ -70,7 +70,7 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 		return err
 	}
 
-	req, err := requests.CreateRequest(
+	req, _ := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -78,9 +78,6 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 		request.JSONContent,
 		token.AccessToken,
 		event_id)
-	if err != nil {
-		return err
-	}
 
 	var res requests.Answer[requests.ChargeStatus]
 	if _, err = doRequest(v, req, &res); err == nil {
@@ -195,7 +192,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 
 	path := "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
 	// get charging status of vehicle
-	req, err := requests.CreateRequest(
+	req, _ := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -203,9 +200,6 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		request.JSONContent,
 		token.AccessToken,
 		"")
-	if err != nil {
-		return zero, err
-	}
 
 	var res requests.Answer[requests.ChargeStatus]
 	event_id, err := doRequest(v, req, &res)
@@ -218,7 +212,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		return v.last()
 	}
 
-	req, err = requests.CreateRequest(
+	req, _ = requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -226,9 +220,6 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		request.JSONContent,
 		token.AccessToken,
 		event_id)
-	if err != nil {
-		return zero, err
-	}
 
 	// answer not yet available, keep polling in the background
 	if _, err = doRequest(v, req, &res); err == api.ErrMustRetry {
