@@ -21,11 +21,11 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	t1 := t0.Add(15 * time.Minute)
 
 	series := SeriesCSV{
-		{Group: PV, Name: "pv", Data: []Slot{mkSlot(t0, 2.5, 0), mkSlot(t1, 3.0, 0)}},
-		{Group: Battery, Name: "battery-home", Data: []Slot{mkSlot(t0, 0, 0.7800), mkSlot(t1, 0.5300, 0)}},
-		{Group: Battery, Name: "battery-garage", Data: []Slot{mkSlot(t0, 0, 1.2500), mkSlot(t1, 0, 0)}},
-		{Group: Grid, Name: "grid", Data: []Slot{mkSlot(t0, 0, 0.4123), mkSlot(t1, 0.1, 0)}},
-		{Group: Home, Name: "home", Data: []Slot{mkSlot(t0, 0.3661, 0), mkSlot(t1, 0.4, 0)}},
+		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2.5, 0), mkSlot(t1, 3.0, 0)}},
+		{Group: Battery, Title: "battery-home", Data: []Slot{mkSlot(t0, 0, 0.7800), mkSlot(t1, 0.5300, 0)}},
+		{Group: Battery, Title: "battery-garage", Data: []Slot{mkSlot(t0, 0, 1.2500), mkSlot(t1, 0, 0)}},
+		{Group: Grid, Title: "grid", Data: []Slot{mkSlot(t0, 0, 0.4123), mkSlot(t1, 0.1, 0)}},
+		{Group: Home, Title: "home", Data: []Slot{mkSlot(t0, 0.3661, 0), mkSlot(t1, 0.4, 0)}},
 	}
 
 	var buf bytes.Buffer
@@ -42,13 +42,13 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	header := rows[0]
 	expected := []string{
 		"time.start", "time.end",
-		"pv.pv.energy.Wh",
+		"pv.energy.Wh",
 		"battery.battery-garage.energy.Wh", "battery.battery-garage.returnEnergy.Wh",
 		"battery.battery-home.energy.Wh", "battery.battery-home.returnEnergy.Wh",
-		"grid.grid.energy.Wh", "grid.grid.returnEnergy.Wh",
-		"home.home.energy.Wh",
+		"grid.energy.Wh", "grid.returnEnergy.Wh",
+		"home.energy.Wh",
 	}
-	require.Equal(t, expected, header, "header order: GROUP_ORDER, alphabetical entities; returnEnergy only for grid/battery")
+	require.Equal(t, expected, header, "single-entity groups omit the title level; multi-entity groups include the title")
 
 	// time.end = time.start + slot length (15 min in mkSlot)
 	require.Equal(t, t0.Local().Format("2006-01-02 15:04:05"), rows[1][0])
@@ -68,7 +68,7 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 func TestSeriesCSV_GermanLocale(t *testing.T) {
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	series := SeriesCSV{
-		{Group: PV, Name: "pv", Data: []Slot{mkSlot(t0, 2.5, 0)}},
+		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2.5, 0)}},
 	}
 
 	var buf bytes.Buffer
@@ -91,8 +91,8 @@ func TestSeriesCSV_MissingSlotIsEmpty(t *testing.T) {
 	// Two entities, second one only has data for the first timestamp → second
 	// timestamp must produce an empty cell rather than 0.000.
 	series := SeriesCSV{
-		{Group: PV, Name: "a", Data: []Slot{mkSlot(t0, 1, 0), mkSlot(t1, 2, 0)}},
-		{Group: PV, Name: "b", Data: []Slot{mkSlot(t0, 3, 0)}},
+		{Group: PV, Title: "a", Data: []Slot{mkSlot(t0, 1, 0), mkSlot(t1, 2, 0)}},
+		{Group: PV, Title: "b", Data: []Slot{mkSlot(t0, 3, 0)}},
 	}
 
 	var buf bytes.Buffer
@@ -119,7 +119,7 @@ func TestSeriesCSV_BatteryHasReturnEnergyColumn(t *testing.T) {
 	// returnEnergy column.
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	series := SeriesCSV{
-		{Group: Battery, Name: "bat", Data: []Slot{mkSlot(t0, 0.5, 0)}},
+		{Group: Battery, Title: "bat", Data: []Slot{mkSlot(t0, 0.5, 0)}},
 	}
 
 	var buf bytes.Buffer

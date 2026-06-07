@@ -55,7 +55,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		return nil, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 
-	model := strings.Split(resp.Type+resp.Model, "-")[0]
+	model, _, _ := strings.Cut(resp.Type+resp.Model, "-")
 
 	client.Transport = request.NewTripper(log, transport.Insecure())
 
