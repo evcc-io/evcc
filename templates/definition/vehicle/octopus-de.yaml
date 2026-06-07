@@ -28,16 +28,16 @@ params:
       en: Account Number
       de: Kundennummer
     help:
-      en: Selects the account when several are linked (e.g. A-12345678).
-      de: Wählt das Konto aus, wenn mehrere verknüpft sind (z.B. A-12345678).
+      en: Account when several are linked (e.g. A-12345678).
+      de: Konto, wenn mehrere verknüpft sind (z.B. A-12345678).
   - name: device
     description:
       en: Vehicle
       de: Fahrzeug
     service: octopus-de/devices?email={email}&password={password}&accountnumber={accountnumber}
     help:
-      en: Selects the vehicle when the account has more than one.
-      de: Wählt das Fahrzeug aus, wenn das Konto mehrere besitzt.
+      en: Vehicle when the account has more than one.
+      de: Fahrzeug, wenn das Konto mehrere besitzt.
   - name: cache
     default: 15m
 render: |
