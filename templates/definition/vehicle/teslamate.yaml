@@ -69,8 +69,4 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/is_preconditioning
     timeout: {{ .timeout }}
-  features:
-  - coarsecurrent
-  {{- if eq .climaterdisabled "true" }}
-  - climaterdisabled
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}

@@ -17,17 +17,7 @@ params:
 render: |
   type: custom
   {{- include "vehicle-common" . }}
-  features:
-  - offline
-  {{- if eq .coarsecurrent "true" }}
-  - coarsecurrent
-  {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  - welcomecharge
-  {{- end }}
-  {{- if eq .climaterdisabled "true" }}
-  - climaterdisabled
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const
     value: 0

@@ -1,6 +1,9 @@
 {{ define "vehicle-features" }}
-{{- if or (eq .coarsecurrent "true") (eq .welcomecharge "true") (eq .streaming "true") (eq .climaterdisabled "true") }}
+{{- if or .basefeatures (eq .coarsecurrent "true") (eq .welcomecharge "true") (eq .streaming "true") (eq .climaterdisabled "true") }}
 features:
+{{- range .basefeatures }}
+- {{ . }}
+{{- end }}
 {{- if eq .coarsecurrent "true" }}
 - coarsecurrent
 {{- end }}
