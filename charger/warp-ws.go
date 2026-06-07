@@ -259,7 +259,7 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 				return err
 			}
 
-			if role == wsRoleMain && isPmTopic(event.Topic) {
+			if role == wsRoleMain && w.pm != w.Connection && isPmTopic(event.Topic) {
 				continue
 			}
 
