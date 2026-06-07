@@ -142,10 +142,11 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		return nil, err
 	}
 	if typ == "warp3" || (typ == "warp2" && emURI != "") {
-		if err := w.disablePhaseAutoSwitch(); err != nil {
+		if wasEnabled, err := w.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
+		} else if wasEnabled {
+			w.log.WARN.Println("disabled WARP phase auto switching")
 		}
-		w.log.TRACE.Println("disabled phase auto switching")
 	}
 
 	wsURI, err := parseURI(w.URI)
@@ -153,16 +154,12 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		return nil, err
 	}
 
-	var pmWsURI string
+	go w.run(ctx, wsRoleMain, w.Connection.Client, wsURI)
 	if emURI != "" {
-		pmWsURI, err = parseURI(w.pm.URI)
+		pmWsURI, err := parseURI(w.pm.URI)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	go w.run(ctx, wsRoleMain, w.Connection.Client, wsURI)
-	if emURI != "" {
 		go w.run(ctx, wsRolePM, w.pm.Client, pmWsURI)
 	}
 
@@ -445,11 +442,20 @@ func (w *WarpWS) setCurrent(curr int64) error {
 	return err
 }
 
-func (w *WarpWS) disablePhaseAutoSwitch() error {
+func (w *WarpWS) disablePhaseAutoSwitch() (bool, error) {
 	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.URI)
+	var state struct {
+		Enabled bool `json:"enabled"`
+	}
+	if err := w.GetJSON(uri, &state); err != nil {
+		return false, err
+	}
+	if !state.Enabled {
+		return false, nil
+	}
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
 	_, err := w.Do(req)
-	return err
+	return true, err
 }
 
 func (w *WarpWS) postPhasesWanted(phases int) error {
