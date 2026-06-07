@@ -3,13 +3,13 @@ products:
   - description:
       generic: FNN steuerbox (3-signal)
 params:
-  - name: maxpower
+  - name: maxcurtailpower
     type: float
     unit: W
     required: true
     description:
-      en: Maximum power
-      de: Maximale Leistung
+      en: Maximum curtailment power
+      de: Maximale Reduzierungsleistung
     help:
       en: Full production power. Curtailment steps (60%, 30%, 0%) apply to this baseline.
       de: Volle Einspeiseleistung. Reduzierungsstufen (60%, 30%, 0%) beziehen sich auf diesen Wert.
@@ -39,8 +39,8 @@ params:
       en: Input pin for the S2 signal (reduction to 30%)
       de: Eingangspin für das S2-Signal (Reduzierung auf 30%)
 render: |
-  type: fnn-3
-  maxpower: {{ .maxpower }}
+  type: fnn
+  maxcurtailpower: {{ .maxcurtailpower }}
   w3:
     source: gpio
     pin: {{ .w3pin }}
