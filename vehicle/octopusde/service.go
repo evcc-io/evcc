@@ -34,19 +34,19 @@ func getDevices(w http.ResponseWriter, req *http.Request) {
 	log := util.NewLogger("octopus-de").Redact(email, password)
 	api, err := NewAPI(log, email, password)
 	if err != nil {
+		log.ERROR.Println(err)
 		return
 	}
 
-	if account == "" {
-		accounts, err := api.Accounts()
-		if err != nil || len(accounts) == 0 {
-			return
-		}
-		account = accounts[0]
+	account, err = api.Account(account)
+	if err != nil {
+		log.ERROR.Println(err)
+		return
 	}
 
 	devices, err := api.Devices(account)
 	if err != nil {
+		log.ERROR.Println(err)
 		return
 	}
 
