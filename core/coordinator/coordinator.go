@@ -166,10 +166,10 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 
 	if exactMatch != nil {
 		return exactMatch
-	} 
+	}
 	if len(approximateMatches) == 1 {
 		return approximateMatches[0]
-	} 
+	}
 	if len(approximateMatches) > 1 {
 		c.log.WARN.Printf("vehicle status: %d approximate matches, giving up", len(approximateMatches))
 		return nil
