@@ -35,11 +35,7 @@ func newResponseCache() *responseCache {
 }
 
 // fetch returns the cached payload for key if it is fresh. On a miss, load is
-// invoked exactly once across all concurrent callers sharing the same key
-// (single flight); the result is cached and returned to every caller. This
-// collapses the cache-miss stampede at the start of each poll cycle, where
-// several source blocks for the same (host, pdu) all miss simultaneously,
-// into a single UDP exchange. The returned bool reports a fresh cache hit.
+// invoked exactly once across all concurrent callers sharing the same key.
 func (c *responseCache) fetch(key []byte, load func() ([]byte, error)) ([]byte, bool, error) {
 	if payload, ok := c.get(key); ok {
 		return payload, true, nil
