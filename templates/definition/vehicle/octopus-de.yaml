@@ -32,12 +32,12 @@ params:
       de: Optional, wählt das Konto aus, wenn mehrere verknüpft sind (z.B. A-12345678).
   - name: device
     description:
-      en: Device
-      de: Gerät
+      en: Vehicle
+      de: Fahrzeug
     service: octopus-de/devices?email={email}&password={password}&accountnumber={accountnumber}
     help:
-      en: Optional, selects the device when the account has more than one.
-      de: Optional, wählt das Gerät aus, wenn das Konto mehrere besitzt.
+      en: Optional, selects the vehicle when the account has more than one.
+      de: Optional, wählt das Fahrzeug aus, wenn das Konto mehrere besitzt.
   - name: cache
     default: 15m
 render: |
