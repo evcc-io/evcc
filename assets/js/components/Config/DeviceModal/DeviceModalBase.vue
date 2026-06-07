@@ -334,17 +334,26 @@ export default defineComponent({
 			return new Set(this.template?.Auth?.params ?? []);
 		},
 		normalParams() {
+			if (!this.isNew) {
+				return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
+			}
 			return this.templateParams.filter(
 				(p) => !p.Advanced && !p.Deprecated && !this.authParamNames.has(p.Name)
 			);
 		},
 		advancedParams() {
+			if (!this.isNew) {
+				return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
+			}
 			return this.templateParams.filter(
 				(p) => (p.Advanced || p.Deprecated) && !this.authParamNames.has(p.Name)
 			);
 		},
 		visibleParams() {
-			return this.authRequired ? this.authParams : this.templateParams;
+			if (this.authRequired) {
+				return this.authParams;
+			}
+			return [...this.normalParams, ...this.advancedParams];
 		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
