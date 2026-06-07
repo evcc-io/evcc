@@ -54,12 +54,12 @@ func (caps caps) Capability(typ reflect.Type) (any, bool) {
 
 // Has registers impl as a capability on c. It panics if impl is nil.
 func (caps caps) Has[T any](impl T) {
-	return Has(caps, impl)
+	Has(caps, impl)
 }
 
 // May registers impl as a capability on c. If impl is nil, it is silently ignored.
 func (caps caps) May[T any](impl T) {
-	return May(caps, impl)
+	May(caps, impl)
 }
 
 func (caps caps) add(typ reflect.Type, impl any) {
