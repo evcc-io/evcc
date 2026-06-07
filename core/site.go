@@ -939,7 +939,9 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.publishCircuits()
+	}
 
+	if site.hems != nil {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
