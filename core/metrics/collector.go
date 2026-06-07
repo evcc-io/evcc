@@ -46,14 +46,23 @@ func createEntity(group, name, title string) (entity, error) {
 		return e, err
 	}
 
-	if title != "" && e.Title != title {
-		e.Title = title
-		if err := db.Instance.Model(&e).UpdateColumn("title", title).Error; err != nil {
-			return e, err
-		}
+	return e, e.updateTitle(title)
+}
+
+// updateTitle refreshes the entity's stored title if it changed. An empty title
+// is ignored so a once-captured label survives a later config without a title.
+func (e *entity) updateTitle(title string) error {
+	if title == "" || e.Title == title {
+		return nil
 	}
 
-	return e, nil
+	e.Title = title
+	return db.Instance.Model(e).UpdateColumn("title", title).Error
+}
+
+// UpdateTitle refreshes the collector entity's stored title if it changed.
+func (c *Collector) UpdateTitle(title string) error {
+	return c.entity.updateTitle(title)
 }
 
 func (c *Collector) process(fun func()) error {
