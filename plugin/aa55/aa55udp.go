@@ -128,9 +128,7 @@ func (p *AA55UDP) query() (float64, error) {
 }
 
 // fetch returns the response payload. In block-read mode the shared cache
-// serves and de-duplicates requests: concurrent sources for the same
-// (host, pdu) share a single UDP exchange via single flight rather than each
-// issuing its own request.
+// serves and de-duplicates requests.
 func (p *AA55UDP) fetch() ([]byte, error) {
 	// Register mode: single targeted read, no caching.
 	if p.cacheKey == nil {
