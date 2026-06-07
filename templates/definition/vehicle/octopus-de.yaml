@@ -20,22 +20,8 @@ params:
   - preset: vehicle-climater
   - name: email
     required: true
-    example: "user@example.com"
-    description:
-      en: Email Address
-      de: E-Mail-Adresse
-    help:
-      de: "Die E-Mail-Adresse Ihres Octopus Energy Kontos."
-      en: "The email address of your Octopus Energy account."
   - name: password
     required: true
-    mask: true
-    description:
-      en: Password
-      de: Passwort
-    help:
-      de: "Das Passwort Ihres Octopus Energy Kontos."
-      en: "The password of your Octopus Energy account."
   - name: accountnumber
     example: "A-12345678"
     description:
