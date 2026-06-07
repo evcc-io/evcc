@@ -999,7 +999,7 @@ func (site *Site) update(lp updater) {
 		// TODO
 		if lp != nil {
 			lp.Update(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				sitePower, site.battery.Power, consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			)
 		}
