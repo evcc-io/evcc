@@ -91,9 +91,5 @@ render: |
   commandProxy: {{ .commandProxy }}
   proxyToken: {{ .proxyToken }}
   {{ include "vehicle-common" . }}
-  features:
-  - coarsecurrent
-  {{- if eq .climaterdisabled "true" }}
-  - climaterdisabled
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
   cache: {{ .cache }}

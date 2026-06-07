@@ -36,8 +36,4 @@ render: |
     source: mqtt
     topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: {{ .timeout }}
-  features:
-  - streaming
-  {{- if eq .climaterdisabled "true" }}
-  - climaterdisabled
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "streaming")) .) }}

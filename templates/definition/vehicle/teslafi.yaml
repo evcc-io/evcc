@@ -44,8 +44,4 @@ render: |
   limitsoc:
     {{- include "teslafi_source" . | indent 2 }}
     jq: .charge_limit_soc
-  features:
-  - coarsecurrent
-  {{- if eq .climaterdisabled "true" }}
-  - climaterdisabled
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}

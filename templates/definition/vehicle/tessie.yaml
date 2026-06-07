@@ -116,8 +116,4 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
-  features:
-  - coarsecurrent
-  {{- if eq .climaterdisabled "true" }}
-  - climaterdisabled
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
