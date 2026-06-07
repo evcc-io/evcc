@@ -62,34 +62,42 @@ func (m *Accumulator) Exported() float64 {
 
 // SetImportMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetImportMeterTotal(v float64) {
-	defer func() {
-		m.updated = m.clock.Now()
-		m.importMeter = new(v)
-	}()
+	defer func() { m.updated = m.clock.Now() }()
 
 	if m.importMeter == nil {
+		m.importMeter = new(v)
 		return
 	}
 
-	if v >= *m.importMeter {
-		m.Energy += v - *m.importMeter
+	// A cumulative energy counter cannot run backwards. Ignore spurious drops
+	// (e.g. a momentary zero while the meter times out or restarts) without
+	// rebasing the last value, so the recovery to the real total is not counted
+	// as one huge spike. https://github.com/evcc-io/evcc/discussions/30555
+	if v < *m.importMeter {
+		return
 	}
+
+	m.Energy += v - *m.importMeter
+	m.importMeter = new(v)
 }
 
 // SetExportMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetExportMeterTotal(v float64) {
-	defer func() {
-		m.updated = m.clock.Now()
-		m.exportMeter = new(v)
-	}()
+	defer func() { m.updated = m.clock.Now() }()
 
 	if m.exportMeter == nil {
+		m.exportMeter = new(v)
 		return
 	}
 
-	if v >= *m.exportMeter {
-		m.ReturnEnergy += v - *m.exportMeter
+	// see SetImportMeterTotal: ignore spurious backward values instead of
+	// rebasing, so a momentary drop does not produce a spike on recovery
+	if v < *m.exportMeter {
+		return
 	}
+
+	m.ReturnEnergy += v - *m.exportMeter
+	m.exportMeter = new(v)
 }
 
 // AddImportEnergy adds the given energy in kWh to the positive meter
