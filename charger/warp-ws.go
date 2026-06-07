@@ -259,6 +259,8 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 				return err
 			}
 
+			// only drop PM topics on the main WS when a dedicated PM connection exists;
+			// on single-WS setups (WARP3) PM events arrive here and must be processed
 			if role == wsRoleMain && w.pm != w.Connection && isPmTopic(event.Topic) {
 				continue
 			}
