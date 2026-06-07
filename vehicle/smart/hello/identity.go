@@ -46,16 +46,19 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		subject:  "smart-hello." + user,
 	}
 
-	// Load persisted state (token, userID, deviceID).
+	// Load persisted state (token, userID, deviceID). A missing key (ErrNotFound)
+	// is the normal first-run case; only malformed state is worth a warning.
 	var state savedState
-	_ = settings.Json(v.subject, &state)
-
-	// Set deviceID before any login — it is sent in request headers during login.
-	if state.DeviceID != "" {
-		v.deviceID = state.DeviceID
-	} else {
-		v.deviceID = lo.RandomString(16, lo.AlphanumericCharset)
+	if err := settings.Json(v.subject, &state); err != nil {
+		if !errors.Is(err, settings.ErrNotFound) {
+			v.log.WARN.Printf("load state: %v", err)
+		}
+		// no usable persisted state — generate a fresh device ID (sent in login headers)
+		state.DeviceID = lo.RandomString(16, lo.AlphanumericCharset)
 	}
+
+	// deviceID must be set before any login — it is sent in request headers.
+	v.deviceID = state.DeviceID
 	v.userID = state.UserID
 
 	var token *oauth2.Token
@@ -94,7 +97,7 @@ func (v *Identity) refreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		UserID:   userID,
 		DeviceID: v.deviceID,
 	}); err != nil {
-		v.log.WARN.Printf("save state: %v", err)
+		return nil, err
 	}
 
 	return appToken, nil
