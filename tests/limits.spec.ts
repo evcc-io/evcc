@@ -76,6 +76,7 @@ test.describe("limitSoc", async () => {
     await simulatorApply(page);
 
     await page.goto("/");
+    await expect(page.getByTestId("vehicle-title")).toContainText("blauer e-Golf");
     await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
     await expect(page.getByTestId("limit-soc-value")).toHaveText("100%");
 

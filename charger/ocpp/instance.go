@@ -28,8 +28,17 @@ var (
 	once        sync.Once
 	instance    *CS
 	port        = 8887
+	boundPort   int
 	externalUrl string
 )
+
+// Port returns the TCP port the central system is bound to. With the default
+// configuration this equals the configured port; when port 0 is configured
+// (as in tests) it is the OS-assigned ephemeral port. It returns 0 while the
+// server is not bound.
+func Port() int {
+	return boundPort
+}
 
 // GetStatus returns the OCPP runtime status
 func GetStatus() Status {
@@ -50,8 +59,7 @@ func ExternalUrl() string {
 		return ""
 	}
 
-	// Replace protocol: http -> ws, https -> wss
-	u.Scheme = strings.Replace(u.Scheme, "http", "ws", 1)
+	u.Scheme = "ws"
 	u.Host = fmt.Sprintf("%s:%d", strings.Split(u.Host, ":")[0], 8887) // deliberately fixed, port configurability only for testing
 
 	return u.String()
@@ -111,6 +119,8 @@ func Instance() *CS {
 				return
 			}
 		}
+
+		boundPort = server.Addr().Port
 	})
 
 	return instance

@@ -20,7 +20,6 @@ import (
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
@@ -317,24 +316,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, log)
 }
 
-// adminPasswordValid validates the admin password and returns true if valid
-func adminPasswordValid(authObject auth.Auth, password string) bool {
-	return authObject.GetAuthMode() == auth.Disabled || authObject.IsAdminPasswordValid(password)
-}
-
-func getBackup(authObject auth.Auth) http.HandlerFunc {
+func getBackup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
-		}
-
 		if err := settings.Persist(); err != nil {
 			http.Error(w, "Synching DB failed", http.StatusInternalServerError)
 			return
@@ -378,7 +361,7 @@ func createLocalDatabaseBackup(ctx context.Context) error {
 	return db.Backup(ctx, db.FilePath()+".bak")
 }
 
-func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+func restoreDatabase(shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// cap upload size to bound disk usage
 		r.Body = http.MaxBytesReader(w, r.Body, 256<<20)
@@ -389,10 +372,7 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		var (
-			password string
-			tmpName  string
-		)
+		var tmpName string
 
 		for {
 			part, err := mr.NextPart()
@@ -405,15 +385,6 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			}
 
 			switch part.FormName() {
-			case "password":
-				b, err := io.ReadAll(io.LimitReader(part, 1<<10))
-				part.Close()
-				if err != nil {
-					http.Error(w, "Upload failed", http.StatusBadRequest)
-					return
-				}
-				password = string(b)
-
 			case "file":
 				tmpFile, err := os.CreateTemp("", "evcc-restore-*.db")
 				if err != nil {
@@ -435,11 +406,6 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 			default:
 				part.Close()
 			}
-		}
-
-		if !adminPasswordValid(authObject, password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
 		}
 
 		if tmpName == "" {
@@ -472,21 +438,14 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	}
 }
 
-func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+func resetDatabase(shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
-			Password string `json:"password"`
-			Sessions bool   `json:"sessions"`
-			Settings bool   `json:"settings"`
+			Sessions bool `json:"sessions"`
+			Settings bool `json:"settings"`
 		}
-
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
 

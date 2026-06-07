@@ -24,8 +24,8 @@ type Collector struct {
 	started time.Time
 }
 
-func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, error) {
-	entity, err := createEntity(group, name)
+func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collector, error) {
+	entity, err := createEntity(group, name, title)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +38,30 @@ func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, er
 	return c, nil
 }
 
-func createEntity(group, name string) (entity, error) {
-	entity := entity{
-		Group: group,
-		Name:  name,
+// createEntity ensures the entity row exists and refreshes its title.
+func createEntity(group, name, title string) (entity, error) {
+	e := entity{Group: group, Name: name}
+
+	if err := db.Instance.Where(&e).Attrs(entity{Title: title}).FirstOrCreate(&e).Error; err != nil {
+		return e, err
 	}
 
-	if err := db.Instance.Where(&entity).FirstOrCreate(&entity).Error; err != nil {
-		return entity, err
+	return e, e.updateTitle(title)
+}
+
+// updateTitle refreshes the entity's stored title if it changed
+func (e *entity) updateTitle(title string) error {
+	if title == "" || e.Title == title {
+		return nil
 	}
 
-	return entity, nil
+	e.Title = title
+	return db.Instance.Model(e).UpdateColumn("title", title).Error
+}
+
+// UpdateTitle refreshes the collector entity's stored title if it changed.
+func (c *Collector) UpdateTitle(title string) error {
+	return c.entity.updateTitle(title)
 }
 
 func (c *Collector) process(fun func()) error {

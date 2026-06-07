@@ -50,8 +50,7 @@
       "success": "ناجح",
       "unknown": "غير معروف",
       "validate": "تحقق من الصحة"
-    },
-    "vehicle": {}
+    }
   },
   "footer": {
     "community": {

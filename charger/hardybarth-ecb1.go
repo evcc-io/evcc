@@ -194,6 +194,9 @@ func (wb *HardyBarth) MaxCurrent(current int64) error {
 	return wb.post(uri, data)
 }
 
+// The eCB1 meter API exposes only demand/average (OBIS D=4) and energy (D=8)
+// registers. There are no instantaneous (D=7) registers on the device.
+// See https://github.com/evcc-io/evcc/discussions/778
 var _ api.Meter = (*HardyBarth)(nil)
 
 // CurrentPower implements the api.Meter interface
@@ -203,7 +206,7 @@ func (wb *HardyBarth) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return res.Data[obis.PowerConsumption], nil
+	return res.Data[obis.PowerImportDemand], nil
 }
 
 var _ api.MeterEnergy = (*HardyBarth)(nil)
@@ -215,7 +218,7 @@ func (wb *HardyBarth) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return res.Data[obis.EnergyConsumption], nil
+	return res.Data[obis.EnergyImport], nil
 }
 
 var _ api.PhaseCurrents = (*HardyBarth)(nil)
@@ -227,7 +230,19 @@ func (wb *HardyBarth) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	return res.Data[obis.CurrentL1], res.Data[obis.CurrentL2], res.Data[obis.CurrentL3], nil
+	return res.Data[obis.CurrentDemandL1], res.Data[obis.CurrentDemandL2], res.Data[obis.CurrentDemandL3], nil
+}
+
+var _ api.PhaseVoltages = (*HardyBarth)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *HardyBarth) Voltages() (float64, float64, float64, error) {
+	res, err := wb.meterG()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return res.Data[obis.VoltageDemandL1], res.Data[obis.VoltageDemandL2], res.Data[obis.VoltageDemandL3], nil
 }
 
 // var _ api.Identifier = (*HardyBarth)(nil)

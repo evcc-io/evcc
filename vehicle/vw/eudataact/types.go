@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"slices"
 	"strings"
 	"time"
@@ -82,9 +83,9 @@ type dataset struct {
 
 // dataPoint is a single data point as delivered in the dataset JSON document
 type dataPoint struct {
-	DataFieldName string `json:"dataFieldName"`
-	Value         string `json:"value"`
-	TimestampUtc  string `json:"timestampUtc"`
+	DataFieldName string     `json:"dataFieldName"`
+	Value         string     `json:"value"`
+	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
 // point is a decoded data point: its value and the time it was recorded
@@ -101,15 +102,20 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
-	FieldSoc           = "state_of_charge"
-	FieldHvSoc         = "hv_soc"
-	FieldRange         = "cruising_range_combined"
-	FieldRangePrimary  = "cruising_range_primary_engine"
-	FieldOdometer      = "mileage"
-	FieldChargingState = "charging_state"
-	FieldPlugState     = "plug_state"
-	FieldTargetSoc     = "settings.target_soc"
-	FieldRemainingTime = "remaining_charging_time"
+	FieldBatteryStateReportSoc = "battery_state_report.soc"
+	FieldSoc                   = "state_of_charge"
+	FieldHvSoc                 = "hv_soc"
+	FieldHvBatteryLevel        = "battery_level_HV.value"
+	FieldRangeCombined         = "cruising_range_combined"
+	FieldRangePrimary          = "cruising_range_primary_engine"
+	FieldRangeSecondary        = "cruising_range_secondary_engine"
+	FieldOdometer              = "mileage"
+	FieldOdometerValue         = "mileage.value"
+	FieldChargingState         = "charging_state"
+	FieldCurrentChargeState    = "charging_state_report.current_charge_state"
+	FieldPlugState             = "plug_state"
+	FieldTargetSoc             = "settings.target_soc"
+	FieldRemainingTime         = "remaining_charging_time"
 )
 
 // contentDatasets returns the datasets that actually carry content, with their
@@ -135,9 +141,11 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into a map of data points keyed by the dotted data field name. On
-// duplicate field names the entry with the newest timestamp wins.
-func parseDataset(b []byte) (map[string]point, error) {
+// decodes it into the dataset's VIN and a map of data points keyed by the dotted
+// data field name. On duplicate field names the entry with the newest timestamp
+// wins. The VIN is returned so the caller can drop datasets that do not belong
+// to the requested vehicle.
+func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -165,6 +173,8 @@ func parseDataset(b []byte) (map[string]point, error) {
 		return nil, err
 	}
 
+	log.Println(raw)
+
 	var ds datasetFile
 	if err := json.Unmarshal(raw, &ds); err != nil {
 		return nil, err
@@ -172,13 +182,13 @@ func parseDataset(b []byte) (map[string]point, error) {
 
 	res := make(map[string]point, len(ds.Data))
 	for _, p := range ds.Data {
-		if p.DataFieldName == "" {
+		if p.DataFieldName == "" || p.Value == "" {
 			continue
 		}
 
-		ts, err := time.Parse(time.RFC3339, p.TimestampUtc)
-		if err != nil {
-			return nil, err
+		var ts time.Time
+		if p.TimestampUtc != nil {
+			ts = *p.TimestampUtc
 		}
 
 		if cur, ok := res[p.DataFieldName]; ok && cur.Timestamp.After(ts) {
