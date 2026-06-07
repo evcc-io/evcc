@@ -67,9 +67,6 @@ params:
     description:
       de: E-Mail-Adresse
       en: Email address
-    help:
-      de: E-Mail-Adresse des Kontos
-      en: Account email address
     example: "user@example.com"
   - name: capacity
     unit: kWh
