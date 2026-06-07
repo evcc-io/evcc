@@ -9,6 +9,7 @@ requirements:
       Requires Lexus Link+ Connected Services Account.
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: user
     required: true
   - name: password
@@ -24,3 +25,4 @@ render: |
   password: {{ .password }}
   vin: {{ .vin }}
   cache: {{ .cache }}
+  {{ include "vehicle-features" . }}

@@ -16,6 +16,7 @@ requirements:
       A Tibber energy contract is not required, the vehicle must be connected in the Tibber account.
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: clientid
     required: true
   - name: clientsecret
@@ -48,3 +49,4 @@ render: |
   redirecturi: {{ .redirecturi }}
   vin: {{ .vin }}
   cache: {{ .cache }}
+  {{ include "vehicle-features" . }}

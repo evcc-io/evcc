@@ -13,6 +13,7 @@ params:
   - name: vin
     required: true
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: host
     deprecated: true
   - name: port
@@ -72,3 +73,4 @@ render: |
   uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
   {{- end }}
+  {{ include "vehicle-features" . }}
