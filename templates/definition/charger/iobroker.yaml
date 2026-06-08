@@ -57,7 +57,7 @@ params:
       en: Set maximum amperage
     unit: A
     type: string
-    advanced: true
+    required: true
   - name: maxcurrentmillis
     description:
       de: Setze maximale Stromstärke
