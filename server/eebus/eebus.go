@@ -168,8 +168,6 @@ func NewServer(other Config) (*EEBus, error) {
 			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
 			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
 			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
-			// OHPCF reads heat pump compressor flexibility; its events are read
-			// for diagnostics before being forwarded to registered devices
 			OHPCF: ohpcf.NewOHPCF(localEntity, c.onOHPCFEvent),
 		}
 
