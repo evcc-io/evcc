@@ -76,6 +76,7 @@ params:
   - name: maxacpower
 render: |
   type: custom
+  {{- if .power }}
   power:
     source: http
     headers:
@@ -90,6 +91,7 @@ render: |
     {{- if .cache }}
     cache: {{ .cache }}
     {{- end }}
+  {{- end }}
   {{- if .soc }}
   soc:
       source: http
