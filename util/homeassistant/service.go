@@ -6,6 +6,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/server/service"
@@ -35,7 +36,8 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
-	return NewConnection(log, uri, "", false)
+	insecure, _ := strconv.ParseBool(req.URL.Query().Get("insecure"))
+	return NewConnection(log, uri, "", insecure)
 }
 
 // domainsFromRequest parses the comma-separated "domain" query parameter.

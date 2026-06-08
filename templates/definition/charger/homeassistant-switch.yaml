@@ -32,14 +32,14 @@ params:
     description:
       de: Entity ID des schaltbaren Geräts
       en: Entity ID of the switch device
-    service: homeassistant/entities?uri={uri}&domain=switch
+    service: homeassistant/entities?uri={uri}&domain=switch&insecure={insecure}
     example: switch.smartsocket
     required: true
   - name: power
     description:
       de: Entity ID für Leistungsmessung
       en: Entity ID for power measurement
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&domain=sensor&insecure={insecure}
     example: sensor.smartsocket_power
   - preset: switchsocket
 render: |
