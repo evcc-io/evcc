@@ -230,7 +230,7 @@ func (c *Connection) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// SML total energy available
+	// SML import energy available
 	if sml := res.StatusSNS.SML.TotalIn; sml != nil {
 		return *sml, err
 	}
@@ -245,7 +245,7 @@ func (c *Connection) ReturnEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// SML total energy available
+	// SML export energy available
 	if sml := res.StatusSNS.SML.TotalOut; sml != nil {
 		return *sml, nil
 	}
