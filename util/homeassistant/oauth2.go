@@ -80,6 +80,7 @@ func NewHomeAssistant(uri string, insecure bool) (oauth2.TokenSource, error) {
 	ctx := util.WithLogger(context.Background(), log)
 
 	if insecure {
+		log.WARN.Println("insecure mode enabled - TLS certificate verification is disabled, use only for trusted local/self-signed instances")
 		httpClient := &http.Client{Transport: transport.Insecure()}
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	}
