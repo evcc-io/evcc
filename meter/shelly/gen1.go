@@ -145,11 +145,9 @@ func (c *gen1) ReturnEnergy() (float64, error) {
 }
 
 // IsThreePhase reports whether the device is a three-phase energy meter.
-// On a status error it conservatively reports true so that unbalanced grid
-// energy metering stays suppressed rather than being wrongly enabled.
 func (c *gen1) IsThreePhase() bool {
 	res, err := c.status.Get()
-	return err != nil || len(res.EMeters) == 3
+	return err == nil && len(res.EMeters) == 3
 }
 
 // gen1Energy in kWh
