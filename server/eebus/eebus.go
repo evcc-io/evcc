@@ -168,7 +168,7 @@ func NewServer(other Config) (*EEBus, error) {
 			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
 			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
 			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
-			OHPCF: ohpcf.NewOHPCF(localEntity, c.onOHPCFEvent),
+			OHPCF:  ohpcf.NewOHPCF(localEntity, c.ucCallback),
 		}
 
 		// monitoring appliance to meters
