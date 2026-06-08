@@ -9,6 +9,7 @@ import (
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
+	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -25,11 +26,13 @@ import (
 // it pauses or aborts the running process.
 type EEBusOHPCF struct {
 	cem *eebus.CustomerEnergyManagement
+	ma  *eebus.MonitoringAppliance
 
 	mux        sync.RWMutex
 	log        *util.Logger
 	lp         loadpoint.API
 	compressor spineapi.EntityRemoteInterface
+	mpcEntity  spineapi.EntityRemoteInterface
 	enabled    bool
 
 	connector *eebus.Connector
@@ -63,6 +66,7 @@ func NewEEBusOHPCF(ctx context.Context, ski, ip string) (api.Charger, error) {
 	c := &EEBusOHPCF{
 		log:       util.NewLogger("eebus-ohpcf"),
 		cem:       eebus.Instance.CustomerEnergyManagement(),
+		ma:        eebus.Instance.MonitoringAppliance(),
 		connector: eebus.NewConnector(),
 	}
 
@@ -98,6 +102,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 	defer c.mux.Unlock()
 
 	c.compressor = nil
+	c.mpcEntity = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface.
@@ -116,6 +121,15 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		ohpcf.DataUpdateMinimalPauseDuration:
 		c.mux.Lock()
 		c.compressor = entity
+		c.mux.Unlock()
+
+	// Monitoring Appliance MPC provides the measured power consumption
+	case mpc.UseCaseSupportUpdate:
+		c.mux.Lock()
+		// use most specific selector
+		if c.mpcEntity == nil || len(entity.Address().Entity) < len(c.mpcEntity.Address().Entity) {
+			c.mpcEntity = entity
+		}
 		c.mux.Unlock()
 	}
 }
@@ -340,23 +354,21 @@ func (c *EEBusOHPCF) LoadpointControl(lp loadpoint.API) {
 
 var _ api.Meter = (*EEBusOHPCF)(nil)
 
-// CurrentPower implements the api.Meter interface and reports the announced
-// optional power consumption while the compressor is running.
+// CurrentPower implements the api.Meter interface and reports the heat pump's
+// measured power consumption via the MPC use case.
 func (c *EEBusOHPCF) CurrentPower() (float64, error) {
-	entity, ok := c.connectedCompressor()
-	if !ok {
-		return 0, nil
+	c.mux.RLock()
+	entity := c.mpcEntity
+	c.mux.RUnlock()
+
+	if entity == nil || !c.ma.MaMPCInterface.IsScenarioAvailableAtEntity(entity, eebus.MPCPower) {
+		return 0, api.ErrNotAvailable
 	}
 
-	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
-	if err != nil || state != ucapi.CompressorPowerConsumptionStateRunning {
-		return 0, nil
+	power, err := c.ma.MaMPCInterface.Power(entity)
+	if err != nil {
+		return 0, eebus.WrapError(err)
 	}
 
-	info, err := c.cem.OHPCF.OptionalPowerConsumption(entity)
-	if err != nil || info == nil || info.Power == nil {
-		return 0, nil
-	}
-
-	return *info.Power, nil
+	return power, nil
 }
