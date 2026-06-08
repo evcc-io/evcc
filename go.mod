@@ -29,7 +29,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/enbility/eebus-go v0.7.1-0.20260520155652-11bc53084557
+	github.com/enbility/eebus-go v0.7.1-0.20260608105936-abdcf864d0cf
 	github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c
 	github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260503092507-6199c7ad3baf

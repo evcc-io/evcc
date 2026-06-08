@@ -136,8 +136,8 @@ github.com/eclipse/paho.golang v0.23.0 h1:KHgl2wz6EJo7cMBmkuhpt7C576vP+kpPv7jjvS
 github.com/eclipse/paho.golang v0.23.0/go.mod h1:nQRhTkoZv8EAiNs5UU0/WdQIx2NrnWUpL9nsGJTQN04=
 github.com/eclipse/paho.mqtt.golang v1.5.1 h1:/VSOv3oDLlpqR2Epjn1Q7b2bSTplJIeV2ISgCl2W7nE=
 github.com/eclipse/paho.mqtt.golang v1.5.1/go.mod h1:1/yJCneuyOoCOzKSsOTUc0AJfpsItBGWvYpBLimhArU=
-github.com/enbility/eebus-go v0.7.1-0.20260520155652-11bc53084557 h1:YQvO8wiUG1OEjFAkKtLTrCFze8KpG7YZ1TwrQKj9H54=
-github.com/enbility/eebus-go v0.7.1-0.20260520155652-11bc53084557/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
+github.com/enbility/eebus-go v0.7.1-0.20260608105936-abdcf864d0cf h1:2bRLRn/fBYpNa0gKu6Qt5Coq+GPpSOvZ16awQQSK9eg=
+github.com/enbility/eebus-go v0.7.1-0.20260608105936-abdcf864d0cf/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a h1:foChWb8lhzqa6lWDRs6COYMdp649YlUirFP8GqoT0JQ=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a/go.mod h1:H64mhYcAQUGUUnVqMdZQf93kPecH4M79xwH95Lddt3U=
 github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c h1:ZNYyr/SDaAMHi6ubJqWuoId8QUu5V4xXWCIRf7VnfCY=

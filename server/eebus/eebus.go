@@ -17,6 +17,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	"github.com/enbility/eebus-go/usecases/cem/evsecc"
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
+	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
 	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
@@ -47,6 +48,7 @@ type CustomerEnergyManagement struct {
 	EvSoc  ucapi.CemEVSOCInterface
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
+	OHPCF  ucapi.CemOHPCFInterface
 }
 
 // Controllable System
@@ -166,6 +168,9 @@ func NewServer(other Config) (*EEBus, error) {
 			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
 			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
 			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+			// OHPCF reads heat pump compressor flexibility; its events are read
+			// for diagnostics before being forwarded to registered devices
+			OHPCF: ohpcf.NewOHPCF(localEntity, c.onOHPCFEvent),
 		}
 
 		// monitoring appliance to meters
@@ -206,6 +211,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.cem.EvseCC, c.cem.EvCC,
 		c.cem.EvCem, c.cem.OpEV,
 		c.cem.OscEV, c.cem.EvSoc,
+		c.cem.OHPCF,
 		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
 		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
 		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
