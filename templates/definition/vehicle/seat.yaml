@@ -6,5 +6,6 @@ products:
 params:
   - preset: vehicle-base
 render: |
-  type: seat
+  type: drivesomethinggreater
+  brand: Seat
   {{ include "vehicle-base" . }}
