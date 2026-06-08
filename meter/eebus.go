@@ -155,10 +155,7 @@ func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.Ent
 	res, err := update(entity)
 	if err != nil {
 		// announced but not provided
-		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
-			err = api.ErrNotAvailable
-		}
-		return zero, err
+		return zero, eebus.WrapError(err)
 	}
 
 	return res, nil
@@ -188,10 +185,6 @@ func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemo
 
 	res, err := eebusReadValue(c.mm, c.maEntity, scenario, update)
 	if err != nil {
-		// announced but not provided
-		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
-			err = api.ErrNotAvailable
-		}
 		return 0, 0, 0, err
 	}
 
