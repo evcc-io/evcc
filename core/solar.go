@@ -51,6 +51,11 @@ func solarEnergy(rr api.Rates, from, to time.Time) float64 {
 		panic("from cannot be after to")
 	}
 
+	// no rates- nothing to integrate
+	if len(rr) == 0 {
+		return 0
+	}
+
 	idx, ok := search(rr, from)
 	if !ok {
 		switch {
