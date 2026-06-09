@@ -53,3 +53,35 @@ func TestNtfyDelay(t *testing.T) {
 		t.Fatal("ntfy request not received")
 	}
 }
+
+func TestNtfyDelayNonBlocking(t *testing.T) {
+	requestTime := make(chan time.Time, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestTime <- time.Now()
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	messenger, err := NewNtfyFromConfig(map[string]any{
+		"uri":      server.URL,
+		"delay":    1,
+		"tags":     "",
+		"priority": "default",
+	})
+	require.NoError(t, err)
+
+	start := time.Now()
+	messenger.Send("title", "message")
+	elapsed := time.Since(start)
+
+	// Send must be non-blocking relative to the configured delay.
+	require.Less(t, elapsed, 100*time.Millisecond)
+
+	// Still ensure the HTTP request arrives after the configured delay.
+	select {
+	case received := <-requestTime:
+		require.GreaterOrEqual(t, received.Sub(start), time.Second)
+	case <-time.After(2 * time.Second):
+		t.Fatal("ntfy request not received")
+	}
+}
