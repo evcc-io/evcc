@@ -19,12 +19,12 @@ requirements:
 caveats:
   - description:
       de: |
-        Die folgendenden Gegebenheiten können zu Fehlern in der Modbus-Kommunikation führen:
+        Die folgenden Gegebenheiten können zu Fehlern in der Modbus-Kommunikation führen:
         - veraltete Firmware
         - Änderung von Wechselrichter/Speicher-Einstellungen über das Huawei FusionSolar-Portal
         - weitere Anwendungen (z.B. Home Assistant) greifen über einen Modbus Proxy auf die Anlage zu (auch abhängig von der Anlagenkomplexität, z.B. Anzahl kaskadierter Wechselrichter)
       en: |
-        Please beware that the following circumstances may lead to Modbus communication errors:
+        Please be aware that the following circumstances may lead to Modbus communication errors:
         - outdated firmware
         - altering inverter/battery configuration settings via Huawei FusionSolar portal
         - other applications (e.g. Home Assistant) accessing the inverter via Modbus Proxy (also depending on plant complexity, e.g. number of cascaded inverters)
