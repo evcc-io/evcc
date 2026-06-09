@@ -6,7 +6,7 @@ products:
 caveats:
   - description:
       de: Integrierter Zähler ohne Phasensaldierung; stattdessen Leistungsintegration.
-      en: Built-in meter lacks phase balancing; power is integrated instead.
+      en: Built-in meter lacks summative energy measurement; power is integrated instead.
     link: https://github.com/evcc-io/evcc/issues/29727
 params:
   - name: usage
