@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/WulfgarW/sensonet"
@@ -35,6 +36,40 @@ import (
 
 func init() {
 	registry.AddCtx("vaillant", NewVaillantFromConfig)
+}
+
+var (
+	vaillantMu         sync.Mutex
+	vaillantIdentities = make(map[string]oauth2.TokenSource)
+)
+
+// vaillantIdentity returns an oauth2 token source shared by all Vaillant chargers
+// on the same myVaillant account, keyed by realm and user. The login is performed
+// once while holding the lock, which serialises concurrent startups so the parallel
+// Keycloak auth-code flows can no longer clobber each other; further chargers on the
+// same account reuse the resulting refreshing token source (#30625).
+func vaillantIdentity(realm, user, password string) (oauth2.TokenSource, error) {
+	vaillantMu.Lock()
+	defer vaillantMu.Unlock()
+
+	key := realm + "\x00" + user
+	if ts, ok := vaillantIdentities[key]; ok {
+		return ts, nil
+	}
+
+	log := util.NewLogger("vaillant").Redact(user, password)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+
+	oc := sensonet.Oauth2ConfigForRealm(realm)
+	token, err := oc.PasswordCredentialsToken(ctx, user, password)
+	if err != nil {
+		return nil, err
+	}
+
+	ts := oc.TokenSource(ctx, token)
+	vaillantIdentities[key] = ts
+
+	return ts, nil
 }
 
 type Vaillant struct {
@@ -72,15 +107,15 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
-	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
-	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
-	token, err := oc.PasswordCredentialsToken(logCtx, cc.User, cc.Password)
+	// share a single token source across all chargers on the same account to
+	// avoid concurrent logins racing on the Keycloak auth-code flow (#30625)
+	ts, err := vaillantIdentity(cc.Realm, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := sensonet.NewConnection(oc.TokenSource(logCtx, token), sensonet.WithHttpClient(request.NewClient(log)))
+	conn, err := sensonet.NewConnection(ts, sensonet.WithHttpClient(request.NewClient(log)))
 	if err != nil {
 		return nil, err
 	}
