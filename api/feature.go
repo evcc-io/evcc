@@ -19,5 +19,3 @@ const (
 	WelcomeCharge                  // vehicle
 	ClimaterDisabled               // vehicle - ignore climater state for charge control
 )
-
-// Made with Bob

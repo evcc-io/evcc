@@ -122,4 +122,14 @@ func (i Feature) IsAFeature() bool {
 	return false
 }
 
-// Made with Bob
+// MarshalText implements the encoding.TextMarshaler interface for Feature
+func (i Feature) MarshalText() ([]byte, error) {
+	return []byte(i.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface for Feature
+func (i *Feature) UnmarshalText(text []byte) error {
+	var err error
+	*i, err = FeatureString(string(text))
+	return err
+}
