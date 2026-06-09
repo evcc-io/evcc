@@ -73,8 +73,6 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
 
-	// share a single token source across all chargers on the same account to
-	// avoid concurrent logins racing on the Keycloak auth-code flow (#30625)
 	ts, err := vaillant.Identity(cc.Realm, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
