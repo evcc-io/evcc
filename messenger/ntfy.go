@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -23,6 +24,7 @@ type Ntfy struct {
 	uri      string
 	priority string
 	tags     string
+	delay    time.Duration
 }
 
 // NewNtfyFromConfig creates new Ntfy messenger
@@ -31,6 +33,7 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 		URI       string
 		Priority  string
 		Tags      string
+		Delay     int
 		AuthToken string
 	}
 
@@ -75,6 +78,7 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 		uri:      cc.URI,
 		priority: cc.Priority,
 		tags:     cc.Tags,
+		delay:    time.Duration(cc.Delay) * time.Second,
 	}
 
 	return m, nil
@@ -82,6 +86,10 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 
 // Send sends to all receivers
 func (m *Ntfy) Send(title, msg string) {
+	if m.delay > 0 {
+		time.Sleep(m.delay)
+	}
+
 	req, err := request.New("POST", m.uri, strings.NewReader(msg), map[string]string{
 		"Priority": m.priority,
 		"Title":    title,
