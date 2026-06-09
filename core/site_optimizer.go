@@ -670,7 +670,7 @@ func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSe
 			profile, err := lp.chargeEnergy.EnergyProfile(from)
 			if err == nil && profile != nil {
 				lp := site.loadpoints[lpID]
-				isTempSensitive := hasFeature(lp.charger, api.OutdoorTemperatureSensitive)
+				isTempSensitive := hasFeature(lp.charger, api.ScaleLoadByTemperatureForecast)
 
 				site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data (temperature-sensitive: %v)",
 					lpID, len(profile), isTempSensitive)
@@ -734,7 +734,10 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		return profile
 	}
 
-	const tRoom = 21.0
+	const (
+		tRoom                = 21.0
+		heatingStopThreshold = 18.0
+	)
 
 	currentTime := time.Now()
 
@@ -784,7 +787,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		denominator := tRoom - tPastAvg
 		numerator := tRoom - tFuture
 
-		if math.Abs(denominator) < 0.5 || math.Abs(numerator) < 0.5 || tFuture >= tRoom {
+		if math.Abs(denominator) < 0.5 || tFuture >= heatingStopThreshold {
 			continue
 		}
 
@@ -799,7 +802,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		result[i] = oldValue * correctionFactor
 
 		if i < 3 && oldValue != 0 {
-			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): forecast=%.1f°C, hist_avg=%.1f°C, factor=%.3f, load: %.0fWh -> %.0fWh (%.1f%%)",
+			site.log.DEBUG.Printf("temperature correction sample: slot %s (hour %d): forecast=%.1f°C, hist_avg=%.1f°C, factor=%.3f, load: %.0fWh -> %.0fWh (%.1f%%)",
 				ts.Format("15:04"), h, tFuture, tPastAvg, correctionFactor, oldValue*1e3, result[i]*1e3, ((result[i]/oldValue)-1)*100)
 		}
 	}

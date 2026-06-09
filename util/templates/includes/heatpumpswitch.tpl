@@ -3,6 +3,6 @@ features:
 - continuous
 - heating
 - integrateddevice
-- outdoortemperaturesensitive
+- scaleloadbytemperatureforecast
 - switchdevice
 {{- end }}

@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingOutdoorTemperatureSensitiveContinuousAverageCacheableOfflineRetryableStreamingWelcomeCharge"
+const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingScaleLoadByTemperatureForecastContinuousAverageCacheableOfflineRetryableStreamingWelcomeCharge"
 
-var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 75, 85, 92, 101, 108, 117, 126, 139}
+var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 78, 88, 95, 104, 111, 120, 129, 142}
 
-const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingoutdoortemperaturesensitivecontinuousaveragecacheableofflineretryablestreamingwelcomecharge"
+const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingscaleloadbytemperatureforecastcontinuousaveragecacheableofflineretryablestreamingwelcomecharge"
 
 func (i Feature) String() string {
 	i -= 1
@@ -29,7 +29,7 @@ func _FeatureNoOp() {
 	_ = x[IntegratedDevice-(2)]
 	_ = x[SwitchDevice-(3)]
 	_ = x[Heating-(4)]
-	_ = x[OutdoorTemperatureSensitive-(5)]
+	_ = x[ScaleLoadByTemperatureForecast-(5)]
 	_ = x[Continuous-(6)]
 	_ = x[Average-(7)]
 	_ = x[Cacheable-(8)]
@@ -39,7 +39,7 @@ func _FeatureNoOp() {
 	_ = x[WelcomeCharge-(12)]
 }
 
-var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, OutdoorTemperatureSensitive, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge}
+var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, ScaleLoadByTemperatureForecast, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge}
 
 var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureName[0:13]:         CoarseCurrent,
@@ -50,22 +50,22 @@ var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureLowerName[29:41]:   SwitchDevice,
 	_FeatureName[41:48]:        Heating,
 	_FeatureLowerName[41:48]:   Heating,
-	_FeatureName[48:75]:        OutdoorTemperatureSensitive,
-	_FeatureLowerName[48:75]:   OutdoorTemperatureSensitive,
-	_FeatureName[75:85]:        Continuous,
-	_FeatureLowerName[75:85]:   Continuous,
-	_FeatureName[85:92]:        Average,
-	_FeatureLowerName[85:92]:   Average,
-	_FeatureName[92:101]:       Cacheable,
-	_FeatureLowerName[92:101]:  Cacheable,
-	_FeatureName[101:108]:      Offline,
-	_FeatureLowerName[101:108]: Offline,
-	_FeatureName[108:117]:      Retryable,
-	_FeatureLowerName[108:117]: Retryable,
-	_FeatureName[117:126]:      Streaming,
-	_FeatureLowerName[117:126]: Streaming,
-	_FeatureName[126:139]:      WelcomeCharge,
-	_FeatureLowerName[126:139]: WelcomeCharge,
+	_FeatureName[48:78]:        ScaleLoadByTemperatureForecast,
+	_FeatureLowerName[48:78]:   ScaleLoadByTemperatureForecast,
+	_FeatureName[78:88]:        Continuous,
+	_FeatureLowerName[78:88]:   Continuous,
+	_FeatureName[88:95]:        Average,
+	_FeatureLowerName[88:95]:   Average,
+	_FeatureName[95:104]:       Cacheable,
+	_FeatureLowerName[95:104]:  Cacheable,
+	_FeatureName[104:111]:      Offline,
+	_FeatureLowerName[104:111]: Offline,
+	_FeatureName[111:120]:      Retryable,
+	_FeatureLowerName[111:120]: Retryable,
+	_FeatureName[120:129]:      Streaming,
+	_FeatureLowerName[120:129]: Streaming,
+	_FeatureName[129:142]:      WelcomeCharge,
+	_FeatureLowerName[129:142]: WelcomeCharge,
 }
 
 var _FeatureNames = []string{
@@ -73,14 +73,14 @@ var _FeatureNames = []string{
 	_FeatureName[13:29],
 	_FeatureName[29:41],
 	_FeatureName[41:48],
-	_FeatureName[48:75],
-	_FeatureName[75:85],
-	_FeatureName[85:92],
-	_FeatureName[92:101],
-	_FeatureName[101:108],
-	_FeatureName[108:117],
-	_FeatureName[117:126],
-	_FeatureName[126:139],
+	_FeatureName[48:78],
+	_FeatureName[78:88],
+	_FeatureName[88:95],
+	_FeatureName[95:104],
+	_FeatureName[104:111],
+	_FeatureName[111:120],
+	_FeatureName[120:129],
+	_FeatureName[129:142],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.
