@@ -21,21 +21,18 @@ func init() {
 
 func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
-		embed        `mapstructure:",squash"`
-		URI          string
-		Token_       string `mapstructure:"token"` // TODO deprecated
-		Home         string // TODO deprecated
-		Insecure     bool
-		Enable       string
-		Power        string
-		StandbyPower float64
+		embed                `mapstructure:",squash"`
+		homeassistant.Config `mapstructure:",squash"`
+		Enable               string
+		Power                string
+		StandbyPower         float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Home, cc.Insecure, cc.Enable, cc.Power, cc.StandbyPower)
+	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Home_, cc.Insecure, cc.Enable, cc.Power, cc.StandbyPower)
 }
 
 func NewHomeAssistantSwitch(embed embed, uri, home string, insecure bool, enable, power string, standbypower float64) (api.Charger, error) {
