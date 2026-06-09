@@ -176,4 +176,68 @@ test.describe("messaging", async () => {
 
     await expect(card).toContainText(["Configured", "no"].join(""));
   });
+
+  test("configure ntfy delay via ui", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const card = page.getByTestId("messaging");
+    await expect(card).toBeVisible();
+
+    await card.getByRole("button", { name: "edit" }).click();
+    const modal = page.getByTestId("messaging-modal");
+    await expectModalVisible(modal);
+
+    page.once("dialog", (dialog) => dialog.accept());
+
+    await modal.getByRole("link", { name: /Services \(\d+\)/ }).click();
+
+    const addService = modal.getByRole("button", { name: "Add service" });
+    await expect(addService).toBeVisible();
+    await addService.click();
+
+    const messengerModal = page.getByTestId("messenger-modal");
+    await expectModalHidden(modal);
+    await expectModalVisible(messengerModal);
+
+    await messengerModal.getByLabel("Service").selectOption("Ntfy");
+    await messengerModal.getByLabel("Host").fill("ntfy.sh");
+    await messengerModal.getByLabel("Topics").fill("evcc_alert");
+    await page.getByRole("button", { name: "Show advanced settings" }).click();
+    await messengerModal.getByLabel("Delay").fill("5");
+    await messengerModal.getByRole("button", { name: "Validate & save" }).click();
+
+    await expectModalHidden(messengerModal);
+    await expectModalVisible(modal);
+
+    const messengerBox = modal.getByTestId("messenger-box-0");
+    await expect(messengerBox).toHaveText(["#1", "Ntfy"].join(""));
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    const restartButton = page
+      .getByTestId("bottom-banner")
+      .getByRole("button", { name: "Restart" });
+    await expect(restartButton).toBeVisible();
+
+    await restart();
+    await page.reload();
+
+    await card.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+
+    // after reload the modal opens on Events tab, so switch to Services again
+    await modal.getByRole("link", { name: /Services \(\d+\)/ }).click();
+
+    const reloadedMessengerBox = modal.getByTestId("messenger-box-0");
+    await expect(reloadedMessengerBox).toBeVisible();
+
+    await reloadedMessengerBox.getByRole("button", { name: "edit" }).click();
+
+    await expectModalHidden(modal);
+    await expectModalVisible(messengerModal);
+
+    await page.getByRole("button", { name: "Show advanced settings" }).click();
+    await expect(messengerModal.getByLabel("Delay")).toHaveValue("5");
+  });
 });
