@@ -36,7 +36,13 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
-	insecure, _ := strconv.ParseBool(req.URL.Query().Get("insecure"))
+	var insecure bool
+	if s := req.URL.Query().Get("insecure"); s != "" {
+		var err error
+		if insecure, err = strconv.ParseBool(s); err != nil {
+			return nil, err
+		}
+	}
 	return NewConnection(log, uri, "", insecure)
 }
 
