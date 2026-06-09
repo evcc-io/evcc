@@ -9,6 +9,7 @@ requirements:
     en: Connect your Tesla using the Tessie API. This will never wake up the car, polling can be set to "always" and interval "1M". If the vehicle is awake, the data is usually less than 15 seconds old. If the vehicle is asleep, the data is from the time the vehicle went to sleep. Get your token at [dash.tessie.com](https://dash.tessie.com/settings/api)
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: vin
     description:
       de: Fahrzeug-VIN
@@ -115,4 +116,4 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
-  features: ["coarsecurrent"]
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}

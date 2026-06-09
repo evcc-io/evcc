@@ -2,6 +2,9 @@ template: shelly-pro-3em
 products:
   - { brand: Shelly, description: { generic: Pro 3 EM } }
   - { brand: Shelly, description: { generic: 3 EM-63T/W Gen3 } }
+# 3-phase Shelly EM devices count each phase's energy separately (non-balanced),
+# so the totals are unsuitable for bidirectional grid metering. The shelly meter
+# suppresses energy and returnEnergy for grid usage (see #29727).
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
