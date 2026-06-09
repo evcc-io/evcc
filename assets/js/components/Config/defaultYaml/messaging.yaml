@@ -40,3 +40,4 @@
 #  authtoken: <auth_token>
 #  priority: <priority>
 #  tags: <tags>
+#  delay: <seconds>

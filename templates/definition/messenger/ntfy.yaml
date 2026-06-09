@@ -55,9 +55,20 @@ params:
       en: >
         Messages can be tagged with emojis or strings, which will be shown in the title or message.
         For more details, see [docs.ntfy.sh](https://docs.ntfy.sh/publish#tags-emojis). One entry per line.
+  - name: delay
+    type: int
+    advanced: true
+    default: 0
+    description:
+      de: Verzögerung
+      en: Delay
+    help:
+      de: Benachrichtigungen werden um die angegebene Anzahl Sekunden verzögert gesendet. Werte unter 0 werden wie 0 behandelt, Werte über 300 auf 300 begrenzt.
+      en: Notifications are sent after the specified number of seconds. Values below 0 are treated as 0, values above 300 are capped to 300.
 render: |
   type: ntfy
   uri: https://{{ .host }}/{{ .topics | join "," }}
   priority: {{ .priority }}
   tags: {{ .tags | join "," }}
+  delay: {{ .delay }}
   authtoken: {{ .authtoken }}
