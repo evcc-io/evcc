@@ -757,8 +757,10 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if lp.enabled = enabled; enabled {
-			// set defined current for use by pv mode
-			_ = lp.chargeController.SetPower(lp.effectiveMinPower())
+			// sync a defined current for use by pv mode without taking a charging decision
+			if ctrl, ok := lp.chargeController.(*CurrentController); ok {
+				_ = ctrl.setLimit(ctrl.effectiveMinCurrent())
+			}
 		}
 	} else {
 		lp.log.ERROR.Printf("charger enabled: %v", err)
@@ -1675,7 +1677,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			if mode == api.ModeMinPV {
 				// minimize self-consumption to maximize feed-in by scaling down
 				// to the absolute minimum of 1 phase at min current
-				err = ctrl.minCharging()
+				err = ctrl.SetPower(lp.effectiveMinPower())
 			} else {
 				err = ctrl.SetPower(0)
 			}

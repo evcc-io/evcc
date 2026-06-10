@@ -37,7 +37,8 @@ func (lp *CurrentController) SetPower(power float64) error {
 
 	// surplus tracking: reconcile phases for the current surplus
 	// TODO pass surplus explicitly once the controller owns its state
-	if lp.surplus != nil {
+	surplusTracking := lp.surplus != nil
+	if surplusTracking {
 		surplus := *lp.surplus
 		lp.surplus = nil
 
@@ -53,6 +54,12 @@ func (lp *CurrentController) SetPower(power float64) error {
 	// full envelope requested: scale up phases if possible
 	if power >= lp.effectiveMaxPower() {
 		return lp.fastCharging()
+	}
+
+	// bottom envelope requested: scale down phases if possible. surplus-tracking
+	// targets are excluded as their phase scaling is subject to hysteresis above.
+	if !surplusTracking && power <= lp.reachableMinPower() {
+		return lp.minCharging()
 	}
 
 	current := powerToCurrent(power, lp.ActivePhases())

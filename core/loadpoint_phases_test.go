@@ -515,9 +515,10 @@ func TestScalePhasesNotAvailable(t *testing.T) {
 	require.Equal(t, 1, lp.GetPhases())
 }
 
-// TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
-// (the absolute minimum) when phase switching is available, so feed-in priority
-// in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
+// TestMinChargingPhaseScaling verifies that a bottom-envelope SetPower target
+// scales down to 1 phase (the absolute minimum) when phase switching is available,
+// so feed-in priority in min+pv mode drops to 1p min current instead of staying
+// on 3p (issue #30298).
 func TestMinChargingPhaseScaling(t *testing.T) {
 	Voltage = 230
 
@@ -562,7 +563,7 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 			// minimum current is offered at the scaled phase count
 			plainCharger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 
-			err := currentController(lp).minCharging()
+			err := currentController(lp).SetPower(lp.effectiveMinPower())
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
 
