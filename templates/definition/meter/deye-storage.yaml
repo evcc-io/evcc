@@ -76,7 +76,7 @@ render: |
     register:
       address: 96 # "historyPV PowerWh"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -93,7 +93,7 @@ render: |
     register:
       address: 74 # "Battery cumulative discharge"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   soc:
     source: modbus
