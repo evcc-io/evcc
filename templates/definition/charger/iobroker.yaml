@@ -118,10 +118,8 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .enable }}?value=${enable}
-    {{- if .cache }}
+    uri: {{ .uri }}/rest-api/v1/state/{{ .enable }}?value=${enable}    
     cache: {{ .cache }}
-    {{- end }}
     {{- if .user }}
     auth:
       type: basic
