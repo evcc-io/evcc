@@ -3,8 +3,6 @@ package core
 import (
 	"errors"
 	"fmt"
-	"math"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 )
@@ -12,11 +10,6 @@ import (
 // enforcePhases scales to the configured phases
 func (lp *CurrentController) enforcePhases() error {
 	return lp.scalePhases(lp.phasesConfigured)
-}
-
-// pvMaxPower returns the PV mode target power (0 disables)
-func (lp *CurrentController) pvMaxPower(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
-	return currentToPower(lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart), lp.ActivePhases())
 }
 
 // effectiveCurrent returns the currently effective charging current
@@ -211,168 +204,4 @@ func (lp *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent flo
 	}
 
 	return 0
-}
-
-// boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *CurrentController) boostPower(batteryBoostPower float64) float64 {
-	boost := lp.GetBatteryBoost()
-	if boost == boostDisabled {
-		return 0
-	}
-
-	// push demand to drain battery (at least 100W)
-	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
-
-	if lp.coarseCurrent() {
-		// add effective step power to delta to make sure to step up to the next full amp
-		// just using lp.EffectiveStepPower() as delta is not enough because this will result
-		// in a too low current when there is a bit remaining grid consumption due to the accuracy
-		// of the battery controller
-		delta += lp.EffectiveStepPower()
-	}
-
-	// start boosting by setting maximum power
-	if boost == boostStart {
-		delta = lp.EffectiveMaxPower()
-
-		// expire timers
-		if lp.hasPhaseSwitching() {
-			lp.phaseTimer = elapsed
-		}
-		lp.pvTimer = elapsed
-
-		if lp.charging() {
-			lp.setBatteryBoost(boostContinue)
-		}
-	}
-
-	res := batteryBoostPower + delta + lp.site.GetResidualPower()
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
-
-	return res
-}
-
-// pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *CurrentController) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
-	// read only once to simplify testing
-	minCurrent := lp.effectiveMinCurrent()
-	maxCurrent := lp.effectiveMaxCurrent()
-
-	// push demand to drain battery
-	sitePower -= lp.boostPower(batteryBoostPower)
-
-	// switch phases up/down
-	var scaledTo int
-	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
-	}
-
-	// calculate target charge current from delta power and actual current
-	activePhases := lp.ActivePhases()
-	effectiveCurrent := lp.effectiveCurrent()
-	if scaledTo == 3 {
-		// if we did scale, adjust the effective current to the new phase count
-		effectiveCurrent /= float64(lp.maxActivePhases())
-	}
-	if lp.chargerHasFeature(api.IntegratedDevice) {
-		// for slow-acting heating devices, only take actually consumed power into account
-		effectiveCurrent = powerToCurrent(lp.chargePower, activePhases)
-	}
-	deltaCurrent := powerToCurrent(-sitePower, activePhases)
-	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
-
-	// in MinPV mode or under special conditions return at least minCurrent
-	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
-		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
-		return minCurrent
-	}
-
-	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
-
-	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
-		projectedSitePower := sitePower
-		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
-			// calculate site power after a phase switch from activePhases phases -> 1 phase
-			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
-			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
-		}
-		// kick off disable sequence, unless climater keep-alive is holding
-		// charging at minCurrent — otherwise the "pausing soon" badge would
-		// flash on/off forever while climater is active (issue #29834).
-		if projectedSitePower >= lp.Disable.Threshold && !lp.vehicleClimateActive() {
-			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
-
-			if lp.pvTimer.IsZero() {
-				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
-				lp.pvTimer = lp.clock.Now()
-			}
-
-			lp.publishTimer(pvTimer, lp.GetDisableDelay(), pvDisable)
-
-			elapsed := lp.clock.Since(lp.pvTimer)
-			if elapsed >= lp.GetDisableDelay() {
-				lp.log.DEBUG.Println("pv disable timer elapsed")
-
-				// reset timer to prevent immediate charger re-enabling
-				lp.resetPVTimer()
-
-				return 0
-			}
-
-			// suppress duplicate log message after timer started
-			if elapsed > time.Second {
-				lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.GetDisableDelay() - elapsed).Round(time.Second))
-			}
-		} else {
-			// reset timer
-			lp.resetPVTimer("disable")
-		}
-
-		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
-		return minCurrent
-	}
-
-	if mode == api.ModePV && !lp.enabled {
-		// kick off enable sequence
-		if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
-			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
-
-			if lp.pvTimer.IsZero() {
-				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
-				lp.pvTimer = lp.clock.Now()
-			}
-
-			lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
-
-			elapsed := lp.clock.Since(lp.pvTimer)
-			if elapsed >= lp.GetEnableDelay() {
-				lp.log.DEBUG.Println("pv enable timer elapsed")
-
-				// reset timer to prevent immediate charger re-disabling
-				lp.resetPVTimer()
-
-				return minCurrent
-			}
-
-			// suppress duplicate log message after timer started
-			if elapsed > time.Second {
-				lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.GetEnableDelay() - elapsed).Round(time.Second))
-			}
-		} else {
-			// reset timer
-			lp.resetPVTimer("enable")
-		}
-
-		// lp.log.DEBUG.Println("pv enable timer: keep disabled")
-		return 0
-	}
-
-	// reset timer to disabled state
-	lp.resetPVTimer()
-
-	// cap at maximum current
-	targetCurrent = min(targetCurrent, maxCurrent)
-
-	return targetCurrent
 }

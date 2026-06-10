@@ -131,6 +131,7 @@ type Loadpoint struct {
 	phases              int       // Charger enabled phases, guarded by mutex
 	measuredPhases      int       // Charger physically measured phases
 	offeredCurrent      float64   // Charger current limit
+	surplus             *float64  // Surplus power for phase reconciliation, valid for current cycle only
 	socUpdated          time.Time // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
 	chargerSwitched     time.Time // Charger enabled/disabled timestamp
@@ -1620,6 +1621,9 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		return
 	}
 
+	// surplus is only valid for the current cycle when provided by pv mode
+	lp.surplus = nil
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1681,7 +1685,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			break
 		}
 
-		switch power := ctrl.pvMaxPower(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart); {
+		switch power := lp.pvTargetPower(ctrl, mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart); {
 		case power == 0 && lp.vehicleClimateActive():
 			err = ctrl.SetPower(lp.effectiveMinPower())
 

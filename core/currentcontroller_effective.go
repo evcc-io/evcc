@@ -61,6 +61,35 @@ func (lp *CurrentController) effectiveMinPower() float64 {
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
+// activeMinPower returns the min power at the currently active phases
+func (lp *CurrentController) activeMinPower() float64 {
+	return currentToPower(lp.effectiveMinCurrent(), lp.ActivePhases())
+}
+
+// activeMaxPower returns the max power at the currently active phases
+func (lp *CurrentController) activeMaxPower() float64 {
+	return currentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())
+}
+
+// reachableMinPower returns the min power taking an immediate or pending
+// phase scale-down into account
+func (lp *CurrentController) reachableMinPower() float64 {
+	phases := lp.ActivePhases()
+	if lp.hasPhaseSwitching() && lp.phasesConfigured < 3 && phases > 1 {
+		phases = 1
+	}
+	return currentToPower(lp.effectiveMinCurrent(), phases)
+}
+
+// effectivePower returns the currently effective charging power
+func (lp *CurrentController) effectivePower() float64 {
+	// for slow-acting heating devices, only take actually consumed power into account
+	if lp.chargerHasFeature(api.IntegratedDevice) {
+		return lp.chargePower
+	}
+	return currentToPower(lp.effectiveCurrent(), lp.ActivePhases())
+}
+
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *CurrentController) effectiveMaxPower() float64 {
 	res := Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())

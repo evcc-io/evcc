@@ -35,6 +35,17 @@ func (lp *CurrentController) SetPower(power float64) error {
 		return err
 	}
 
+	// surplus tracking: reconcile phases for the current surplus
+	// TODO pass surplus explicitly once the controller owns its state
+	if lp.surplus != nil {
+		surplus := *lp.surplus
+		lp.surplus = nil
+
+		if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
+			lp.pvScalePhases(surplus, lp.effectiveMinCurrent(), lp.effectiveMaxCurrent())
+		}
+	}
+
 	if power <= 0 {
 		return lp.setLimit(0)
 	}
