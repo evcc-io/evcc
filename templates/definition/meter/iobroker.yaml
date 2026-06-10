@@ -88,9 +88,7 @@ render: |
       user: {{ .user }}
       password: {{ .password }}
     {{- end }}
-    {{- if .cache }}
     cache: {{ .cache }}
-    {{- end }}
   {{- end }}
   {{- if .soc }}
   soc:
@@ -104,19 +102,15 @@ render: |
         user: {{ .user }}
         password: {{ .password }}
       {{- end }}
-      {{- if .cache }}
       cache: {{ .cache }}
-      {{- end }}
   {{- end }}
   {{- if .energy }}
   energy:
       source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .energy }}/plain
-      {{- if .cache }}
+      uri: {{ .uri }}/rest-api/v1/state/{{ .energy }}/plain      
       cache: {{ .cache }}
-      {{- end}}
       {{- if .user }}
       auth:
         type: basic
@@ -130,9 +124,7 @@ render: |
       headers:
        - accept: text/plain;charset=UTF-8
       uri: {{ .uri }}/rest-api/v1/state/{{ .currentL1 }}/plain
-      {{- if .cache }}
       cache: {{ .cache }}
-      {{- end }}
       {{- if .user }}
       auth:
         type: basic
@@ -144,9 +136,7 @@ render: |
       headers:
        - accept: text/plain;charset=UTF-8
       uri: {{ .uri }}/rest-api/v1/state/{{ .currentL2 }}/plain
-      {{- if .cache }}
       cache: {{ .cache }}
-      {{- end }}
       {{- if .user }}
       auth:
         type: basic
@@ -159,9 +149,7 @@ render: |
       headers:
        - accept: text/plain;charset=UTF-8
       uri: {{ .uri }}/rest-api/v1/state/{{ .currentL3 }}/plain
-      {{- if .cache }}
       cache: {{ .cache }}
-      {{- end }}
       {{- if .user }}
       auth:
         type: basic

@@ -57,7 +57,6 @@ params:
       en: Set maximum amperage
     unit: A
     type: string
-    required: true
   - name: maxcurrentmillis
     description:
       de: Setze maximale Stromstärke
@@ -106,9 +105,7 @@ render: |
       headers:
        - accept: text/plain;charset=UTF-8
       uri: {{ .uri }}/rest-api/v1/state/{{ .enabled }}/plain
-      {{- if .cache }}
       cache: {{ .cache }}
-      {{- end }}
       {{- if .user }}
       auth:
        type: basic
@@ -138,9 +135,7 @@ render: |
     headers:
        - accept: text/plain;charset=UTF-8
     uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrent }}?value=${maxcurrent}
-    {{- if .cache }}
     cache: {{ .cache }}
-    {{- end }}
     {{- if .user }}
     auth:
       type: basic
@@ -154,9 +149,7 @@ render: |
     headers:
        - accept: text/plain;charset=UTF-8
     uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrentmillis }}?value=${maxcurrentmillis}
-    {{- if .cache }}
     cache: {{ .cache }}
-    {{- end }}
     {{- if .user }}
     auth:
       type: basic
@@ -170,9 +163,7 @@ render: |
     headers:
        - accept: text/plain;charset=UTF-8
     uri: {{ .uri }}/rest-api/v1/state/{{ .phases1p3p }}?value=${phases}
-    {{- if .cache }}
     cache: {{ .cache }}
-    {{- end }}
     {{- if .user }}
     auth:
       type: basic
