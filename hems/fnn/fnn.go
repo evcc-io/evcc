@@ -223,25 +223,25 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 var _ api.HEMS = (*Fnn)(nil)
 
 // Dimmed implements api.HEMS.
-func (c *Fnn) Dimmed() bool {
+func (c *Fnn) Dimmed() *bool {
 	if c.w4 == nil {
-		return false
+		return nil
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.consumptionLimit > 0
+	return new(c.consumptionLimit > 0)
 }
 
 // Curtailed implements api.HEMS.
-func (c *Fnn) Curtailed() bool {
+func (c *Fnn) Curtailed() *bool {
 	if c.w3 == nil {
-		return false
+		return nil
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.productionLimit != nil
+	return new(c.productionLimit != nil)
 }
 
 // MaxConsumptionPower implements api.HEMS.

@@ -42,8 +42,8 @@ export interface HemsConfig {
 }
 
 export interface HemsStatus {
-  dimmed: boolean;
-  curtailed: boolean;
+  dimmed?: boolean;
+  curtailed?: boolean;
   maxConsumptionPower?: number;
   maxProductionPower?: number;
 }
