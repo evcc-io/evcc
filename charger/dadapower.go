@@ -30,21 +30,31 @@ import (
 )
 
 const (
-	dadapowerRegFailsafeTimeout     = 102
-	dadapowerRegModel               = 105
-	dadapowerRegSerial              = 106 // 6
-	dadapowerRegFirmware            = 112 // 6
-	dadapowerRegChargingAllowed     = 1000
-	dadapowerRegChargeCurrentLimit  = 1001
-	dadapowerRegActivePhases        = 1002
-	dadapowerRegVolts               = 1003
-	dadapowerRegCurrents            = 1006
-	dadapowerRegActiveEnergy        = 1009
-	dadapowerRegChargingPortState   = 1015
-	dadapowerRegPlugState           = 1016
-	dadapowerRegEnergyImportSession = 1017
-	dadapowerRegEnergyImportTotal   = 1025
-	dadapowerRegIdentification      = 1040 // 20
+	dadapowerRegFailsafeTimeout          = 102  // RW uint16
+	dadapowerRegModel                    = 105  // RO uint16
+	dadapowerRegSerial                   = 106  // RO, 12 Bytes (6 Registers)
+	dadapowerRegFirmware                 = 112  // RO, 12 Bytes (6 Registers)
+	dadapowerRegChargingAllowed          = 1000 // RW uint16
+	dadapowerRegChargeCurrentLimit       = 1001 // RW uint16
+	dadapowerRegActivePhases             = 1002 // RW uint16
+	dadapowerRegVoltages                 = 1003 // RO uint16
+	dadapowerRegCurrents                 = 1006 // RO int16
+	dadapowerRegActivePower              = 1009 // RO uint32
+	dadapowerRegMinChargeCurrent         = 1011 // RO uint16
+	dadapowerRegMaxChargeCurrent         = 1012 // RO uint16
+	dadapowerRegMinDischargeCurrent      = 1013 // RO uint16
+	dadapowerRegMaxDischargeCurrent      = 1014 // RO uint16
+	dadapowerRegChargingPortState        = 1015 // RO uint16
+	dadapowerRegPlugState                = 1016 // RO uint16
+	dadapowerRegEnergyImportSession      = 1017 // RO uint64
+	dadapowerRegEnergyExportSession      = 1021 // RO uint64
+	dadapowerRegEnergyImportTotal        = 1025 // RO uint64
+	dadapowerRegEnergyExportTotal        = 1029 // RO uint64
+	dadapowerRegBatteryCapacity          = 1033 // RO uint32
+	dadapowerRegStateOfCharge            = 1035 // RO uint16
+	dadapowerRegFailsafeChargeCurrent    = 1036 // RW uint16
+	dadapowerRegFailsafeDischargeCurrent = 1037 // RW uint16
+	dadapowerRegIdentification           = 1040 // RO, 40 Bytes (20 Registers)
 )
 
 // Dadapower charger implementation
@@ -60,18 +70,26 @@ func init() {
 
 // NewDadapowerFromConfig creates a Dadapower charger from generic config
 func NewDadapowerFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := modbus.TcpSettings{}
+	cc := struct {
+		Connector          uint16
+		modbus.TcpSettings `mapstructure:",squash"`
+	}{
+		Connector: 1,
+		TcpSettings: modbus.TcpSettings{
+			ID: 1,
+		},
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDadapower(ctx, cc.URI, cc.ID)
+	return NewDadapower(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
 // NewDadapower creates a Dadapower charger
-func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewDadapower(ctx context.Context, uri string, slaveID uint8, connector uint16) (*Dadapower, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +112,8 @@ func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error)
 	}
 
 	// The charging station may have multiple charging ports - use offset for register addresses for each port
-	if id > 1 {
-		wb.regOffset = (uint16(id) - 1) * 1000
+	if connector > 1 {
+		wb.regOffset = (connector - 1) * 1000
 	}
 
 	go wb.heartbeat(ctx)
@@ -194,7 +212,7 @@ var _ api.Meter = (*Dadapower)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Dadapower) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(dadapowerRegActiveEnergy+wb.regOffset, 2)
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegActivePower+wb.regOffset, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -212,6 +230,30 @@ func (wb *Dadapower) TotalEnergy() (float64, error) {
 	}
 
 	return float64(binary.BigEndian.Uint64(b)) / 1e3, err
+}
+
+var _ api.MeterReturnEnergy = (*Dadapower)(nil)
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (wb *Dadapower) ReturnEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegEnergyExportTotal+wb.regOffset, 4)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint64(b)) / 1e3, err
+}
+
+var _ api.Battery = (*Dadapower)(nil)
+
+// Soc implements the api.Battery interface
+func (wb *Dadapower) Soc() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegStateOfCharge+wb.regOffset, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)), err
 }
 
 var _ api.ChargeRater = (*Dadapower)(nil)
@@ -245,7 +287,7 @@ func (wb *Dadapower) Currents() (float64, float64, float64, error) {
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Dadapower) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(dadapowerRegVolts+wb.regOffset, 3)
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegVoltages+wb.regOffset, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -312,6 +354,42 @@ func (wb *Dadapower) Diagnose() {
 	}
 	if b, err := wb.conn.ReadInputRegisters(dadapowerRegFirmware, 6); err == nil {
 		fmt.Printf("Firmware:\t%s\n", b)
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegMinChargeCurrent+wb.regOffset, 1); err == nil {
+		fmt.Printf("MinChargeCurrent:\t%d A\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegMaxChargeCurrent+wb.regOffset, 1); err == nil {
+		fmt.Printf("MaxChargeCurrent:\t%d A\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegMinDischargeCurrent+wb.regOffset, 1); err == nil {
+		fmt.Printf("MinDischargeCurrent:\t%d A\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegMaxDischargeCurrent+wb.regOffset, 1); err == nil {
+		fmt.Printf("MaxDischargeCurrent:\t%d A\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegEnergyImportSession+wb.regOffset, 4); err == nil {
+		fmt.Printf("EnergyImportSession:\t%.3f kWh\n", float64(binary.BigEndian.Uint64(b))/1e3)
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegEnergyExportSession+wb.regOffset, 4); err == nil {
+		fmt.Printf("EnergyExportSession:\t%.3f kWh\n", float64(binary.BigEndian.Uint64(b))/1e3)
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegEnergyImportTotal+wb.regOffset, 4); err == nil {
+		fmt.Printf("EnergyImportTotal:\t%.3f kWh\n", float64(binary.BigEndian.Uint64(b))/1e3)
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegEnergyExportTotal+wb.regOffset, 4); err == nil {
+		fmt.Printf("EnergyExportTotal:\t%.3f kWh\n", float64(binary.BigEndian.Uint64(b))/1e3)
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegBatteryCapacity+wb.regOffset, 2); err == nil {
+		fmt.Printf("BatteryCapacity:\t%.3f kWh\n", float64(binary.BigEndian.Uint32(b)/1e3))
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegStateOfCharge+wb.regOffset, 1); err == nil {
+		fmt.Printf("StateOfCharge:\t%d %%\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeChargeCurrent+wb.regOffset, 1); err == nil {
+		fmt.Printf("FailsafeChargeCurrent:\t%.2f A\n", float64(binary.BigEndian.Uint16(b))/100)
+	}
+	if b, err := wb.conn.ReadInputRegisters(dadapowerRegFailsafeDischargeCurrent+wb.regOffset, 1); err == nil {
+		fmt.Printf("FailsafeDischargeCurrent:\t%.2f A\n", float64(binary.BigEndian.Uint16(b))/100)
 	}
 	if b, err := wb.conn.ReadInputRegisters(dadapowerRegIdentification, 20); err == nil {
 		fmt.Printf("Identification:\t%s\n", b)

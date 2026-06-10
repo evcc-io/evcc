@@ -3,13 +3,17 @@ products:
   - brand: Dadapower
     description:
       generic: Premium Wallbox
-capabilities: ["mA", "rfid", "1p3p", "meter", "dim"]
+  - brand: Dadapower
+    description:
+      generic: Premium Ladestation
+capabilities: ["iso151182", "mA", "rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+  - name: connector
 render: |
   type: dadapower
   {{- include "modbus" . }}
+  connector: {{ .connector }}
