@@ -380,7 +380,7 @@ func (wb *Dadapower) Diagnose() {
 		fmt.Printf("EnergyExportTotal:\t%.3f kWh\n", float64(binary.BigEndian.Uint64(b))/1e3)
 	}
 	if b, err := wb.conn.ReadInputRegisters(dadapowerRegBatteryCapacity+wb.regOffset, 2); err == nil {
-		fmt.Printf("BatteryCapacity:\t%.3f kWh\n", float64(binary.BigEndian.Uint32(b)/1e3))
+		fmt.Printf("BatteryCapacity:\t%.3f kWh\n", float64(binary.BigEndian.Uint32(b))/1e3)
 	}
 	if b, err := wb.conn.ReadInputRegisters(dadapowerRegStateOfCharge+wb.regOffset, 1); err == nil {
 		fmt.Printf("StateOfCharge:\t%d %%\n", binary.BigEndian.Uint16(b))
