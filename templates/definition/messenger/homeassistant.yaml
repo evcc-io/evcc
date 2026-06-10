@@ -27,7 +27,7 @@ params:
       en: >
         Home Assistant notify service in the form `domain.service` (e.g. `notify.mobile_app_android`).
         Leave empty to create a persistent notification in the HA UI.
-    service: homeassistant/services?uri={uri}&domain=notify&insecure={insecure}
+    service: homeassistant/services?uri={uri}&insecure={insecure}&domain=notify
   - name: insecure
   - name: critical
     type: bool
