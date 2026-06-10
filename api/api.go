@@ -88,7 +88,7 @@ type BatteryController interface {
 // PowerController provides power-based charger control in W.
 // Chargers that natively accept power targets implement this interface.
 type PowerController interface {
-	MaxPower(power float64) error
+	SetPower(power float64) error
 }
 
 // PowerLimiter returns the power limits for power-controlled devices

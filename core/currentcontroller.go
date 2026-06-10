@@ -17,8 +17,8 @@ func newCurrentController(lp *Loadpoint) *CurrentController {
 	return &CurrentController{Loadpoint: lp}
 }
 
-// MaxPower sets the charger to the given power target (0 disables)
-func (lp *CurrentController) MaxPower(power float64) error {
+// SetPower sets the charger to the given power target (0 disables)
+func (lp *CurrentController) SetPower(power float64) error {
 	if power <= 0 {
 		return lp.setLimit(0)
 	}

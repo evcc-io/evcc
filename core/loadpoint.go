@@ -1000,7 +1000,7 @@ func (lp *Loadpoint) disableUnlessClimater(ctrl *CurrentController) error {
 	if lp.vehicleClimateActive() {
 		return ctrl.chargeMinimum()
 	}
-	return ctrl.MaxPower(0)
+	return ctrl.SetPower(0)
 }
 
 // statusEvents converts the observed charger status change into a logical sequence of events
@@ -1627,7 +1627,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	case !lp.connected():
 		// always disable charger if not connected
 		// https://github.com/evcc-io/evcc/issues/105
-		err = ctrl.MaxPower(0)
+		err = ctrl.SetPower(0)
 
 	case ctrl.scalePhasesRequired():
 		if err = ctrl.enforcePhases(); errors.Is(err, api.ErrNotAvailable) {
@@ -1642,7 +1642,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		if welcomeCharge {
 			err = ctrl.chargeMinimum()
 		} else {
-			err = ctrl.MaxPower(0)
+			err = ctrl.SetPower(0)
 		}
 
 	// minimum or target charging
@@ -1684,7 +1684,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 				// to the absolute minimum of 1 phase at min current
 				err = ctrl.minCharging()
 			} else {
-				err = ctrl.MaxPower(0)
+				err = ctrl.SetPower(0)
 			}
 
 			lp.resetPhaseTimer()
@@ -1701,7 +1701,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			err = ctrl.chargeMinimum()
 
 		default:
-			err = ctrl.MaxPower(power)
+			err = ctrl.SetPower(power)
 		}
 	}
 
