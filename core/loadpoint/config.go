@@ -36,6 +36,13 @@ type DynamicConfig struct {
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
+	UI         UIConfig         `json:"ui"`
+}
+
+// UIConfig holds display-only settings. Not used in control logic.
+type UIConfig struct {
+	MinTemp float64 `json:"minTemp"`
+	MaxTemp float64 `json:"maxTemp"`
 }
 
 func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) {
@@ -71,6 +78,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)
+	lp.SetUI(payload.UI)
 
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {

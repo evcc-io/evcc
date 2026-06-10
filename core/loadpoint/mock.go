@@ -643,6 +643,20 @@ func (mr *MockAPIMockRecorder) GetSocConfig() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocConfig", reflect.TypeOf((*MockAPI)(nil).GetSocConfig))
 }
 
+// GetUI mocks base method.
+func (m *MockAPI) GetUI() UIConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUI")
+	ret0, _ := ret[0].(UIConfig)
+	return ret0
+}
+
+// GetUI indicates an expected call of GetUI.
+func (mr *MockAPIMockRecorder) GetUI() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUI", reflect.TypeOf((*MockAPI)(nil).GetUI))
+}
+
 // GetStatus mocks base method.
 func (m *MockAPI) GetStatus() api.ChargeStatus {
 	m.ctrl.T.Helper()
@@ -1025,6 +1039,18 @@ func (m *MockAPI) SetSocConfig(soc SocConfig) {
 func (mr *MockAPIMockRecorder) SetSocConfig(soc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSocConfig", reflect.TypeOf((*MockAPI)(nil).SetSocConfig), soc)
+}
+
+// SetUI mocks base method.
+func (m *MockAPI) SetUI(ui UIConfig) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUI", ui)
+}
+
+// SetUI indicates an expected call of SetUI.
+func (mr *MockAPIMockRecorder) SetUI(ui any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUI", reflect.TypeOf((*MockAPI)(nil).SetUI), ui)
 }
 
 // SetThresholds mocks base method.

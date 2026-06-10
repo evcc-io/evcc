@@ -1,24 +1,56 @@
 <template>
 	<div class="vehicle-soc">
 		<div class="progress">
-			<div
-				v-if="connected"
-				class="progress-bar"
-				role="progressbar"
-				:class="{
-					[progressColor]: true,
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
-				}"
-				:style="{ width: `${vehicleSocDisplayWidth}%`, ...transition }"
-			></div>
-			<div
-				v-if="remainingSocWidth !== null && remainingSocWidth > 0 && enabled && connected"
-				class="progress-bar bg-muted"
-				role="progressbar"
-				:class="progressColor"
-				:style="{ width: `${remainingSocWidth}%`, ...transition }"
-			></div>
+			<template v-if="heating">
+				<div v-if="connected" class="thermal-track">
+					<div
+						v-if="heatingHasTemp"
+						class="thermal-fill"
+						role="progressbar"
+						:style="{
+							width: `${vehicleSocDisplayWidth}%`,
+							opacity: charging ? 1 : 0.55,
+							...transition,
+						}"
+					>
+						<div
+							class="thermal-fill-inner"
+							:style="{ width: `${thermalInnerWidth}%` }"
+						></div>
+						<div v-if="charging" class="heating-stripes"></div>
+					</div>
+					<div
+						v-else
+						class="thermal-fill thermal-fill--warm"
+						role="progressbar"
+						:style="{ opacity: charging ? 1 : 0.55 }"
+					>
+						<div v-if="charging" class="heating-stripes"></div>
+					</div>
+				</div>
+			</template>
+			<template v-else>
+				<div
+					v-if="connected"
+					class="progress-bar"
+					role="progressbar"
+					:class="{
+						[progressColor]: true,
+						'progress-bar-striped': charging,
+						'progress-bar-animated': charging,
+					}"
+					:style="{ width: `${vehicleSocDisplayWidth}%`, ...transition }"
+				></div>
+				<div
+					v-if="
+						remainingSocWidth !== null && remainingSocWidth > 0 && enabled && connected
+					"
+					class="progress-bar bg-muted"
+					role="progressbar"
+					:class="progressColor"
+					:style="{ width: `${remainingSocWidth}%`, ...transition }"
+				></div>
+			</template>
 			<div
 				v-show="vehicleLimitSoc"
 				ref="vehicleLimitSoc"
@@ -26,7 +58,7 @@
 				data-bs-toggle="tooltip"
 				title=" "
 				:class="{ 'vehicle-limit-soc--active': vehicleLimitSocActive }"
-				:style="{ left: `${vehicleLimitSoc}%` }"
+				:style="{ left: `${vehicleLimitSocPosition}%` }"
 			/>
 			<div
 				v-show="energyLimitMarkerPosition"
@@ -54,12 +86,13 @@
 			<input
 				v-if="socBasedCharging && connected"
 				type="range"
-				min="0"
-				max="100"
+				:min="lowerBound"
+				:max="upperBound"
 				:step="step"
 				:value="visibleLimitSoc"
 				class="slider"
-				:class="{ 'slider--active': sliderActive }"
+				:class="{ 'slider--active': sliderActive, 'slider--heating': heating }"
+				:style="{ '--thumb-pos': `${limitPosition}%` }"
 				@mousedown="changeLimitSocStart"
 				@touchstart="changeLimitSocStart"
 				@input="movedLimitSoc"
@@ -74,7 +107,8 @@
 import Tooltip from "bootstrap/js/dist/tooltip";
 import "@h2d2/shopicons/es/regular/clock";
 import formatter from "@/mixins/formatter";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
+import type { LoadpointUi } from "@/types/evcc";
 
 export default defineComponent({
 	name: "VehicleSoc",
@@ -86,6 +120,7 @@ export default defineComponent({
 		enabled: Boolean,
 		charging: Boolean,
 		heating: Boolean,
+		ui: Object as PropType<LoadpointUi>,
 		minSoc: { type: Number, default: 0 },
 		minSocNotReached: Boolean,
 		effectivePlanSoc: { type: Number, default: 0 },
@@ -109,10 +144,45 @@ export default defineComponent({
 		step() {
 			return this.heating ? 1 : 5;
 		},
+		minTemp() {
+			return this.ui?.minTemp ?? 0;
+		},
+		maxTemp() {
+			return this.ui?.maxTemp ?? 100;
+		},
+		lowerBound() {
+			if (!this.heating) {
+				return 0;
+			}
+			const base = this.maxTemp > this.minTemp ? this.minTemp : 0;
+			// 0 means no reading yet, don't collapse the scale to it
+			return this.vehicleSoc > 0 ? Math.min(base, this.vehicleSoc) : base;
+		},
+		upperBound() {
+			if (!this.heating) {
+				return 100;
+			}
+			const base = this.maxTemp > this.minTemp ? this.maxTemp : 100;
+			return this.vehicleSoc > 0 ? Math.max(base, this.vehicleSoc) : base;
+		},
+		thermalInnerWidth() {
+			// widen the inner gradient so colors stay anchored to the full track, not the fill width
+			const tp = this.vehicleSocDisplayWidth;
+			return tp > 0.5 ? 10000 / tp : 20000;
+		},
+		limitPosition() {
+			return this.toPercent(this.visibleLimitSoc);
+		},
+		heatingHasTemp() {
+			return this.socBasedCharging && this.vehicleSoc > 0;
+		},
+		vehicleLimitSocPosition() {
+			return this.toPercent(this.vehicleLimitSoc);
+		},
 		vehicleSocDisplayWidth() {
 			if (this.socBasedCharging) {
 				if (this.vehicleSoc >= 0) {
-					return this.vehicleSoc;
+					return this.toPercent(this.vehicleSoc);
 				}
 				return 100;
 			} else {
@@ -136,7 +206,7 @@ export default defineComponent({
 		},
 		planMarkerPosition(): number {
 			if (this.socBasedPlanning) {
-				return this.effectivePlanSoc;
+				return this.toPercent(this.effectivePlanSoc);
 			}
 			const maxEnergy = Math.max(this.planEnergy, this.limitEnergy);
 			if (maxEnergy) {
@@ -186,14 +256,14 @@ export default defineComponent({
 					return null;
 				}
 				if (this.minSocNotReached) {
-					return this.minSoc - this.vehicleSoc;
+					return this.toPercent(this.minSoc) - this.vehicleSocDisplayWidth;
 				}
 				const limit = Math.min(
 					this.vehicleLimitSoc || 100,
 					Math.max(this.visibleLimitSoc, this.effectivePlanSoc || 0)
 				);
 				if (limit > this.vehicleSoc) {
-					return limit - this.vehicleSoc;
+					return this.toPercent(limit) - this.vehicleSocDisplayWidth;
 				}
 			} else {
 				return 100 - this.vehicleSocDisplayWidth;
@@ -217,6 +287,14 @@ export default defineComponent({
 		this.updateTooltip();
 	},
 	methods: {
+		toPercent(value: number) {
+			const span = this.upperBound - this.lowerBound;
+			if (span <= 0) {
+				return 0;
+			}
+			const pct = ((value - this.lowerBound) / span) * 100;
+			return Math.min(100, Math.max(0, pct));
+		},
 		changeLimitSocStart(e: Event) {
 			this.dragging = true;
 			e.stopPropagation();
@@ -232,7 +310,7 @@ export default defineComponent({
 		movedLimitSoc(e: Event) {
 			const value = parseInt((e.target as HTMLInputElement).value, 10);
 			e.stopPropagation();
-			const minLimit = 20;
+			const minLimit = this.heating ? this.lowerBound : 20;
 			if (value < minLimit) {
 				(e.target as HTMLInputElement).value = minLimit.toString();
 				this.selectedLimitSoc = value;
@@ -266,14 +344,73 @@ export default defineComponent({
 	--label-height: 26px;
 	position: relative;
 	height: var(--height);
+	/* 100cqw on the thumb gradient resolves to the bar width */
+	container-type: inline-size;
 }
 .progress {
+	position: relative;
 	height: 100%;
 	font-size: 1rem;
 	background: var(--evcc-background);
 }
 .progress-bar.bg-muted {
 	opacity: 0.5;
+}
+.thermal-track {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	border-radius: inherit;
+}
+.thermal-fill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	overflow: hidden;
+}
+.thermal-fill-inner {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	background: var(--evcc-heating-gradient);
+}
+/* no reading: full-width bar showing only the warm (right) half of the scale */
+.thermal-fill--warm {
+	right: 0;
+	background: var(--evcc-heating-gradient);
+	background-size: 200% 100%;
+	background-position: right;
+}
+.heating-stripes {
+	position: absolute;
+	inset: 0;
+	background-image: linear-gradient(
+		-45deg,
+		rgba(255, 255, 255, 0.24) 25%,
+		transparent 25%,
+		transparent 50%,
+		rgba(255, 255, 255, 0.24) 50%,
+		rgba(255, 255, 255, 0.24) 75%,
+		transparent 75%,
+		transparent
+	);
+	background-size: 18px 18px;
+	animation: stripeShift 0.7s linear infinite;
+}
+@keyframes stripeShift {
+	from {
+		background-position: 0 0;
+	}
+	to {
+		background-position: 18px 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.heating-stripes {
+		animation: none;
+	}
 }
 .bg-light {
 	color: var(--bs-gray-dark);
@@ -341,6 +478,25 @@ export default defineComponent({
 }
 .slider--active::-moz-range-thumb {
 	background-color: var(--evcc-dark-green);
+}
+/* thumb shows the gradient slice at its position, shifted via --thumb-pos */
+.slider--heating.slider--active::-webkit-slider-thumb {
+	background: var(--evcc-heating-gradient);
+	background-size: 100cqw 100%;
+	background-position-x: var(--thumb-pos, 50%);
+	background-repeat: no-repeat;
+}
+.slider--heating.slider--active::-moz-range-thumb {
+	background: var(--evcc-heating-gradient);
+	background-size: 100cqw 100%;
+	background-position-x: var(--thumb-pos, 50%);
+	background-repeat: no-repeat;
+}
+.slider--heating:not(.slider--active)::-webkit-slider-thumb {
+	background: var(--evcc-gray);
+}
+.slider--heating:not(.slider--active)::-moz-range-thumb {
+	background: var(--evcc-gray);
 }
 .vehicle-limit-soc {
 	position: absolute;

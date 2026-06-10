@@ -54,6 +54,16 @@
 	--evcc-accent2: var(--evcc-darker-green);
 	--evcc-accent3: var(--evcc-darkest-green);
 
+	/* heating temperature bar: thermometer scale (cool -> hot), warm stops shifted left */
+	--evcc-heating-gradient: linear-gradient(
+		90deg,
+		#16a8d6 0%,
+		#36c795 22%,
+		#bbd52a 34%,
+		#f4b617 48%,
+		#ef7b16 73%,
+		#dd4f0d 100%
+	);
 	--evcc-transition-slow: 1000ms;
 	--evcc-transition-medium: 500ms;
 	--evcc-transition-fast: 250ms;
