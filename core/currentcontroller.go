@@ -22,6 +22,19 @@ func newCurrentController(lp *Loadpoint) *CurrentController {
 // expresses that charging shall happen, hence a target below the feasible
 // minimum charges at minimum power.
 func (lp *CurrentController) SetPower(power float64) error {
+	// fixed phase configuration must match active phases before setting current
+	if lp.connected() && lp.scalePhasesRequired() {
+		err := lp.enforcePhases()
+		if errors.Is(err, api.ErrNotAvailable) {
+			// the charger cannot switch phases right now (e.g. EEBus charger
+			// with an ISO 15118 vehicle). Adopt the configured phase count so
+			// the switch is not re-attempted on every cycle (issue #29974).
+			lp.SetPhases(lp.phasesConfigured)
+			err = nil
+		}
+		return err
+	}
+
 	if power <= 0 {
 		return lp.setLimit(0)
 	}
