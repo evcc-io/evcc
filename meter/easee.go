@@ -57,7 +57,6 @@ type Easee struct {
 	returnEnergyValue               float64
 	currentL1, currentL2, currentL3 float64
 	voltageL1, voltageL2, voltageL3 float64
-	maxACPower                      float64
 	siteStructure                   easeeMeter.SiteStructure
 
 	dispatcher *easee.CommandDispatcher
@@ -424,16 +423,4 @@ func (c *Easee) Voltages() (float64, float64, float64, error) {
 	}
 
 	return c.voltageL1, c.voltageL2, c.voltageL3, nil
-}
-
-// MaxACPower implements the api.MaxACPowerGetter interface
-func (c *Easee) MaxACPower() float64 {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-
-	if time.Since(c.lastObsReceived) > observationTimeout {
-		return 0
-	}
-
-	return c.siteStructure.MaxAllocatedCurrent * 230 // API returns A, convert to W
 }
