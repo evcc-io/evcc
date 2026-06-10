@@ -53,9 +53,9 @@ const (
 	goodweRegPhaseSwEnabled = 10023 // U16 (0=Off, 1=On)
 	goodweRegMaxPower       = 10029 // U16 ×0.1 kW, raw range [14,220]
 	goodweRegChargeMode     = 10032 // U16 (0=fast, 1=PV, 2=PV+battery)
-	goodweRegRfid           = 10050 // 7 regs ASCII (14 bytes)
 	goodweRegPowerSpec      = 10058 // U16 (0=7kW, 1=11kW, 2=22kW)
-	goodweRegPhaseSpec      = 10059 // U16 (0=1p, 1=3p)
+	goodweRegPhaseSpec      = 10059 // U16 (0=3p, 1=1p)
+	goodweRegRfid           = 10500 // 7 regs ASCII (14-byte card UID)
 	goodweRegChargeCommand  = 10060 // U16 (1=stop, 2=start)
 	goodweRegTotalEnergy    = 10065 // U32 ×0.1 kWh, 2 regs
 
@@ -126,9 +126,9 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 		log.WARN.Printf("read power capability failed, defaulting to %d W: %v", wb.maxPower, err)
 	}
 
-	// read hardware phase spec (0=1-phase, 1=3-phase); fall back to 3-phase on error
+	// read hardware phase spec (0=3-phase, 1=1-phase); fall back to 3-phase on error
 	if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSpec, 1); err == nil {
-		if binary.BigEndian.Uint16(b) == 0 {
+		if binary.BigEndian.Uint16(b) == 1 {
 			wb.phases = 1
 		}
 	} else {

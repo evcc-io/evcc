@@ -307,6 +307,12 @@ func (conn *Connector) CurrentPower() (float64, error) {
 		}
 	}
 
+	// no power measurand: chargers that only report energy while idle (e.g. Mennekes ACU)
+	// never send power outside a transaction, so report zero as nothing is charging
+	if conn.txnId == 0 {
+		return 0, nil
+	}
+
 	return 0, api.ErrNotAvailable
 }
 

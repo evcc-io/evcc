@@ -213,10 +213,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.mode = api.ModeOff
 	}
 
-	if lp.Title != "" {
-		lp.setTitle(lp.Title)
-	}
-
 	if lp.Priority > 0 {
 		lp.setPriority(lp.Priority)
 	}
@@ -272,6 +268,11 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	// add collector
 	if lp.chargeMeter != nil {
 		lp.chargeEnergy = collector
+	}
+
+	// set title after collector is wired to refresh the metrics entity
+	if lp.Title != "" {
+		lp.setTitle(lp.Title)
 	}
 
 	// phase switching defaults based on charger capabilities
