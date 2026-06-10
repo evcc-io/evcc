@@ -51,6 +51,21 @@
     "hex": "Hex color"
   },
   "config": {
+    "apiKey": {
+      "description": "Give scripts and automation tasks like scheduled backups secure access without sharing your admin password.",
+      "exampleLabel": "Try it: download a backup with curl",
+      "generate": "Generate API Key",
+      "generateConfirm": "Enter your admin password to generate a new API key.",
+      "keyLabel": "API Key",
+      "regenerate": "Regenerate API Key",
+      "regenerateConfirm": "Enter your admin password to regenerate the API key.",
+      "regenerateLink": "Regenerate",
+      "regenerateWarning": "Regenerating will invalidate the existing key and any automation using it will stop working. Continue?",
+      "revealSuccess": "Your new API key is ready to use.",
+      "revealTitle": "API Key Created",
+      "shownOnce": "This key is shown only once. Store it somewhere safe. You cannot retrieve it later.",
+      "title": "API Key"
+    },
     "aux": {
       "description": "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed.",
       "titleAdd": "Add Self-Regulating Consumer",
@@ -140,8 +155,11 @@
       "currency": "Currency",
       "current": "Current",
       "currentRange": "Current",
+      "curtailLimit": "Feed-in limit",
+      "curtailable": "Curtailable",
       "curtailed": "Feed-in limited",
       "detected": "Detected",
+      "dimLimit": "Consumption limit",
       "dimmed": "Consumption limited",
       "enabled": "Enabled",
       "energy": "Energy",
@@ -150,8 +168,6 @@
       "forecast": "Forecast",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
-      "hemsActiveLimit": "Active limit",
-      "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
       "max": "max",
@@ -166,6 +182,7 @@
       "power": "Power",
       "powerRange": "Power",
       "price": "Price",
+      "productionLimited": "Production limited",
       "range": "Range",
       "returnEnergy": "Energy (reverse)",
       "singlePhase": "Single phase",
@@ -181,10 +198,6 @@
       "A": "A (not connected)",
       "B": "B (connected)",
       "C": "C (charging)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart consumer",
@@ -260,7 +273,6 @@
       "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
-      "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
       "required": "required",
@@ -603,13 +615,12 @@
       "warningUrlPath": "The URL usually doesn't need a path. Are you sure this is correct?"
     },
     "ocpp": {
-      "connectedChargers": "Connected chargers",
-      "connectionStatus": "Configured station IDs",
-      "connectionStatusHelp": "Connection status of configured chargers.",
-      "detectedChargers": "Detected station IDs",
-      "detectedHelp": "These chargers have tried to connect to evcc. To use a charger, create a loadpoint with its station ID.",
+      "forwardingConfigured": "Forwarding configured",
+      "forwardingError": "Forwarding error",
+      "forwardingOff": "No forwarding configured",
       "noChargers": "No OCPP chargers detected.",
-      "noStations": "No stations connected",
+      "stations": "Station IDs",
+      "stationsHelp": "Configured and detected OCPP chargers. In addition to local control, you can forward messages to an external server (e.g. for billing).",
       "status": {
         "configured": "Not connected",
         "connected": "Connected",
@@ -618,6 +629,30 @@
       "title": "OCPP Server",
       "url": "Server URL",
       "urlHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Forward this charger's OCPP messages to an external server (billing platform, DSO, etc.) in addition to evcc.",
+      "editTitle": "OCPP Forward",
+      "labelCaCert": "Server certificate (CA)",
+      "labelCheckInsecure": "Allow self-signed certificates",
+      "labelInsecure": "Certificate validation",
+      "password": "Password",
+      "passwordHelp": "For HTTP Basic Auth to the upstream server.",
+      "readOnly": {
+        "check": "Block commands from the upstream server",
+        "help": {
+          "false": "Upstream can send commands to the charger via evcc.",
+          "true": "Upstream receives all charger messages but cannot send commands. evcc retains exclusive control."
+        },
+        "label": "Upstream commands"
+      },
+      "status": "Status",
+      "upstreamStationId": "Station ID",
+      "upstreamStationIdHelp": "Charger identifier sent to the upstream server.",
+      "upstreamUrl": "Upstream server URL",
+      "upstreamUrlHelp": "OCPP WebSocket URL of the external server.",
+      "username": "Username",
+      "usernameHelp": "For HTTP Basic Auth to the upstream server."
     },
     "optimizer": {
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",
@@ -694,6 +729,14 @@
       "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
+    },
+    "security": {
+      "authDisabledHint": "Authentication is disabled. Credential management is unavailable.",
+      "description": "Manage authentication and credentials for this instance.",
+      "passwordDescription": "Update the password used to log in to the configuration UI.",
+      "passwordTitle": "Admin password",
+      "title": "Security",
+      "updatePassword": "Update password"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -1156,14 +1199,15 @@
     "energyflow": {
       "battery": "Battery",
       "batteryCharge": "Battery charging",
+      "batteryChargeHold": "Battery (charge locked)",
       "batteryDischarge": "Battery discharging",
+      "batteryDischargeHold": "Battery (discharge locked)",
       "batteryForecastEmpty": "Empty",
       "batteryForecastFull": "Full",
       "batteryForecastNextHigh": "High",
       "batteryForecastNextLow": "Low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
-      "batteryHold": "Battery (locked)",
       "batteryTooltip": "{energy} of {total} ({soc})",
       "forecast": "Forecast",
       "forecastTooltip": "forecast: remaining solar production today",
@@ -1184,8 +1228,9 @@
       "waitForVehicle": "Ready to heat…"
     },
     "hemsWarning": {
-      "description": "Reduced charging to not exceed {limit}.",
-      "title": "External limit:"
+      "consumption": "Consumption",
+      "feedIn": "Feed-in",
+      "title": "External limit active"
     },
     "history": {
       "direction": {

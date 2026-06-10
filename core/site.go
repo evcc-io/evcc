@@ -45,7 +45,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -66,6 +66,7 @@ type Site struct {
 
 	// meters
 	circuit       api.Circuit                // Circuit
+	hems          api.HEMS                   // HEMS (set by configureHEMS at boot)
 	gridMeter     api.Meter                  // Grid usage meter
 	pvMeters      []config.Device[api.Meter] // PV generation meters
 	batteryMeters []config.Device[api.Meter] // Battery charging meters
@@ -136,7 +137,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
-	me, err := metrics.NewCollector(metrics.Home, metrics.Home)
+	me, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
 	if err != nil {
 		return err
 	}
@@ -188,7 +189,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return errors.New("missing grid meter instance")
 		}
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef)
+		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -204,7 +205,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// energy collector (for history persistence and forecast scaling)
-		me, err := metrics.NewCollector(metrics.PV, ref)
+		me, err := metrics.NewCollector(metrics.PV, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -212,7 +213,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// solar forecast collector (mirrors PV history shape, used for scale lookup)
-	fc, err := metrics.NewCollector(metrics.Forecast, metrics.Forecast)
+	fc, err := metrics.NewCollector(metrics.Forecast, metrics.Forecast, metrics.Forecast)
 	if err != nil {
 		return err
 	}
@@ -226,7 +227,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.batteryMeters = append(site.batteryMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Battery, ref)
+		me, err := metrics.NewCollector(metrics.Battery, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -241,7 +242,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.extMeters = append(site.extMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -256,7 +257,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.auxMeters = append(site.auxMeters, dev)
 
-		me, err := metrics.NewCollector(metrics.Meter, ref)
+		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
@@ -938,17 +939,19 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.publishCircuits()
+	}
 
+	if site.hems != nil {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
-			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+			if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
 
 		wg.Go(func() {
-			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+			if err := site.curtailPV(hemsCurtailed(site.hems)); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		})
@@ -985,6 +988,7 @@ func (site *Site) update(lp updater) {
 			lp.Update(
 				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+				hemsDimmed(site.hems),
 			)
 		}
 

@@ -131,8 +131,6 @@
       "feedinPrice": "Precio de entrada",
       "gridPrice": "Precio de red",
       "heaterTempLimit": "Límite del calentador",
-      "hemsActiveLimit": "Límite activo",
-      "hemsType": "Comunicación",
       "identifier": "Identificador RFID",
       "no": "no",
       "odometer": "Cuentakilómetros",
@@ -157,10 +155,6 @@
       "A": "A (no conectado)",
       "B": "B (conectado)",
       "C": "C (carga)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "a través de EEBus",
-      "relay": "a través de Relay"
     },
     "devices": {
       "auxMeter": "Consumidor inteligente",
@@ -913,9 +907,9 @@
       "battery": "Batería",
       "batteryCharge": "Cargar la batería",
       "batteryDischarge": "Descargar la batería",
+      "batteryDischargeHold": "Batería (bloqueada)",
       "batteryGridChargeActive": "carga de red activa",
       "batteryGridChargeLimit": "carga de la red cuando",
-      "batteryHold": "Batería (bloqueada)",
       "batteryTooltip": "{energy} de {total} ({soc})",
       "forecastTooltip": "Previsión: producción solar restante para hoy",
       "gridImport": "Consumo de red",
@@ -935,7 +929,6 @@
       "waitForVehicle": "Listo. Esperando el calentador…"
     },
     "hemsWarning": {
-      "description": "Carga reducida para no superar {limit}.",
       "title": "Límite externo:"
     },
     "loadpoint": {

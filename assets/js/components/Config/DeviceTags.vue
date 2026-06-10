@@ -201,7 +201,8 @@ export default {
 			switch (name) {
 				case "power":
 				case "solarForecast":
-				case "hemsActiveLimit":
+				case "dimLimit":
+				case "curtailLimit":
 					return this.fmtW(value);
 				case "energy":
 				case "returnEnergy":
@@ -230,18 +231,18 @@ export default {
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":
+				case "curtailable":
 				case "phases1p3p":
 				case "singlePhase":
 				case "enabled":
 				case "configured":
 				case "connected":
 				case "dimmed":
+				case "curtailed":
 				case "loginBlocked":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
-				case "hemsType":
-					return this.$t(`config.deviceValueHemsType.${value}`);
 			}
 			return value;
 		},
