@@ -43,8 +43,6 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		subject:  "smart-hello." + user,
 	}
 
-	// Load persisted state (token, userID, deviceID). A missing key (ErrNotFound)
-	// is the normal first-run case; only malformed state is worth a warning.
 	var state savedState
 	if err := settings.Json(v.subject, &state); err != nil {
 		if !errors.Is(err, settings.ErrNotFound) {
