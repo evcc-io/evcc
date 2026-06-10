@@ -150,8 +150,6 @@
       "forecast": "Ennuste",
       "gridPrice": "Verkosta ostonhinta",
       "heaterTempLimit": "Lämmityksen raja",
-      "hemsActiveLimit": "Aktiivinen raja",
-      "hemsType": "Kommunikaatiomenetelmä",
       "identifier": "RFID-tunniste",
       "loginBlocked": "Sisäänkirjoitumisyritysten raja saavutettu",
       "max": "maksimi",
@@ -167,6 +165,7 @@
       "powerRange": "Teho",
       "price": "Hinta",
       "range": "Toimintasäde",
+      "returnEnergy": "Annettu energia",
       "singlePhase": "Yksivaiheinen",
       "soc": "Lataus",
       "solarForecast": "Aurinkosääennuste",
@@ -180,10 +179,6 @@
       "A": "A (ei yhdistetty)",
       "B": "B (yhdistetty)",
       "C": "C (lataa)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "EEBusilla",
-      "relay": "Relayllä"
     },
     "devices": {
       "auxMeter": "Älykkään virranhallinnan laite",
@@ -888,7 +883,7 @@
       "greenShareSub2": "aurinkoenergiasta ja akkuvarastoinnista",
       "power": "Latausteho",
       "powerSub1": "{activeClients} / {totalClients} osallistujaa",
-      "powerSub2": "lataa…",
+      "powerSub2": "lataavat.",
       "tabTitle": "Yhteisö"
     },
     "savings": {
@@ -1171,13 +1166,13 @@
       "battery": "Akku",
       "batteryCharge": "Akunlataus",
       "batteryDischarge": "Akku purkautuu",
+      "batteryDischargeHold": "Akku (lukittu)",
       "batteryForecastEmpty": "Varaus loppuu",
       "batteryForecastFull": "Varaus täynnä",
       "batteryForecastNextHigh": "Korkea",
       "batteryForecastNextLow": "Matala",
       "batteryGridChargeActive": "Ladataan verkosta",
       "batteryGridChargeLimit": "Milloin ladataan verkosta",
-      "batteryHold": "Akku (lukittu)",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecast": "Ennuste",
       "forecastTooltip": "ennuste: jäljellä oleva aurinkotuotanto tänään",
@@ -1198,7 +1193,6 @@
       "waitForVehicle": "Lämmitystä aloitetaan…"
     },
     "hemsWarning": {
-      "description": "Rajoitettu latausta, jotta rajaa {limit} ei ylitettäisi.",
       "title": "Ulkoinen raja:"
     },
     "history": {
@@ -1418,6 +1412,7 @@
     "updatePassword": "Päivitä salasana"
   },
   "session": {
+    "addOdometer": "Lisää arvo",
     "cancel": "Peruuta",
     "co2": "CO₂",
     "date": "Ajanjakso",
@@ -1428,6 +1423,7 @@
     "meterstop": "Mittarin pysähdys",
     "odometer": "Ajokilometrit",
     "price": "Hinta",
+    "soc": "Ajoneuvon lataustila",
     "started": "Alkoi",
     "title": "Latausistunto"
   },
@@ -1435,6 +1431,7 @@
     "avgPower": "⌀ Teho",
     "avgPrice": "⌀ Hinta",
     "chargeDuration": "Kesto",
+    "chargedSoc": "Lataus",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Hinta {byGroup}",
@@ -1468,6 +1465,8 @@
       "odometer": "Ajokilometrit (km)",
       "price": "Hinta",
       "priceperkwh": "Hinta/kWh",
+      "socend": "loppuvaraus (%)",
+      "socstart": "alkuvaraus (%)",
       "solarpercentage": "Aurinkoenergia (%)",
       "vehicle": "Ajoneuvo"
     },

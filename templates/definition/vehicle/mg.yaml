@@ -3,6 +3,7 @@ products:
   - brand: MG
 params:
   - preset: vehicle-base
+  - preset: vehicle-climater
   - name: vin
     required: true
   - name: region
@@ -18,3 +19,4 @@ render: |
   type: mg
   {{ include "vehicle-base" . }}
   region: {{ .region }}
+  {{ include "vehicle-features" . }}

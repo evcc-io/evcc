@@ -12,6 +12,7 @@ requirements:
       Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`. On December 31, 2024, Mercedes disabled the online access and the app for the Smart EQ. Therefore, integration into EVCC is no longer possible.
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: user
     required: true
   - name: region
@@ -37,3 +38,4 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" . }}

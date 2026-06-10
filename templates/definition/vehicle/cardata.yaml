@@ -9,7 +9,7 @@ products:
 requirements:
   description:
     de: |
-      Benötigt CarData Einrichtung im BMW/Mini portal. Die folgenden Datenpunkte müssen für Streaming konfiguriert werden:
+      Benötigt CarData Einrichtung im BMW/Mini portal. Die folgenden Datenpunkte müssen für Streaming konfiguriert werden (die Verfügbarkeit der Datenpunkte kann je nach Fahrzeugmodell variieren):
 
       ```
       vehicle.body.chargingPort.status
@@ -21,7 +21,9 @@ requirements:
       vehicle.drivetrain.electricEngine.charging.status
       vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.drivetrain.lastRemainingRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.powertrain.electric.battery.stateOfCharge.displayed
       vehicle.vehicle.preConditioning.activity
       vehicle.vehicle.travelledDistance
       ```
@@ -29,7 +31,7 @@ requirements:
       Aktualisierung der Daten erfolgt einmalig bei Neustart und wenn Streamingdaten eingehen. Dies ist ausschließlich der Fall,
       wenn das Fahrzeug aktiv Daten erzeugt.
     en: |
-      Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access:
+      Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access (the availability of data points may vary depending on the vehicle model):
 
       ```
       vehicle.body.chargingPort.status
@@ -41,7 +43,9 @@ requirements:
       vehicle.drivetrain.electricEngine.charging.status
       vehicle.drivetrain.electricEngine.charging.timeRemaining
       vehicle.drivetrain.electricEngine.kombiRemainingElectricRange
+      vehicle.drivetrain.lastRemainingRange
       vehicle.powertrain.electric.battery.stateOfCharge.target
+      vehicle.powertrain.electric.battery.stateOfCharge.displayed
       vehicle.vehicle.preConditioning.activity
       vehicle.vehicle.travelledDistance
       ```

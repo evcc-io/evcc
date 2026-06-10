@@ -33,6 +33,8 @@ const (
 
 var portalHost = strings.TrimPrefix(BaseURL, "https://")
 
+var ErrNotConfigured = errors.New("EU Data Act subscription not configured")
+
 // API is the EU Data Act portal client. It authenticates through the VW group
 // identity service and reads vehicle data from the portal's data delivery API.
 //
@@ -274,6 +276,9 @@ func (v *API) identifier(vin string) (string, error) {
 		Identifier string `json:"Identifier"`
 	}
 	if err := v.getJSON(uri, &res); err != nil {
+		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(404) {
+			err = ErrNotConfigured
+		}
 		return "", err
 	}
 

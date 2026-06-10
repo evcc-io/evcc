@@ -150,8 +150,6 @@
       "forecast": "Prognos",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
-      "hemsActiveLimit": "Aktiv begränsning",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
       "loginBlocked": "Inloggningsgräns nådd",
       "max": "max",
@@ -167,6 +165,7 @@
       "powerRange": "Kraft",
       "price": "Pris",
       "range": "Räckvidd",
+      "returnEnergy": "Energi (retur)",
       "singlePhase": "En-fas",
       "soc": "Laddnivå",
       "solarForecast": "Solprognos",
@@ -180,10 +179,6 @@
       "A": "A (ej ansluten)",
       "B": "B (ansluten)",
       "C": "C (laddar)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via relä"
     },
     "devices": {
       "auxMeter": "Smart förbrukare",
@@ -889,7 +884,7 @@
       "greenShareSub2": "sol och batteri",
       "power": "Laddeffekt",
       "powerSub1": "{activeClients} av {totalClients} deltagare",
-      "powerSub2": "laddar…",
+      "powerSub2": "laddar.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -1173,13 +1168,13 @@
       "battery": "Batteri",
       "batteryCharge": "Batteri laddas",
       "batteryDischarge": "Batteri laddas ur",
+      "batteryDischargeHold": "Batteri (låst)",
       "batteryForecastEmpty": "Tom",
       "batteryForecastFull": "Full",
       "batteryForecastNextHigh": "Högsta",
       "batteryForecastNextLow": "Lägsta",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
-      "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} av {total} ({soc})",
       "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
@@ -1200,7 +1195,6 @@
       "waitForVehicle": "Redo att värma…"
     },
     "hemsWarning": {
-      "description": "Reducerad laddning för att inte överskrida {limit}.",
       "title": "Extern begränsning:"
     },
     "history": {
@@ -1420,6 +1414,7 @@
     "updatePassword": "Ändra lösenord"
   },
   "session": {
+    "addOdometer": "Lägg till värde",
     "cancel": "Avbryt",
     "co2": "CO₂",
     "date": "Period",
@@ -1429,7 +1424,7 @@
     "meterstart": "Mätare start",
     "meterstop": "Mätare stopp",
     "odometer": "Mätarställning",
-    "price": "Pris",
+    "price": "Kostnad",
     "soc": "Fordon SoC",
     "started": "Start-tid",
     "title": "Laddning"

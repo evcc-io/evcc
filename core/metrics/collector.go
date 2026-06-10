@@ -24,8 +24,8 @@ type Collector struct {
 	started time.Time
 }
 
-func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, error) {
-	entity, err := createEntity(group, name)
+func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collector, error) {
+	entity, err := createEntity(group, name, title)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +38,30 @@ func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, er
 	return c, nil
 }
 
-func createEntity(group, name string) (entity, error) {
-	entity := entity{
-		Group: group,
-		Name:  name,
+// createEntity ensures the entity row exists and refreshes its title.
+func createEntity(group, name, title string) (entity, error) {
+	e := entity{Group: group, Name: name}
+
+	if err := db.Instance.Where(&e).Attrs(entity{Title: title}).FirstOrCreate(&e).Error; err != nil {
+		return e, err
 	}
 
-	if err := db.Instance.Where(&entity).FirstOrCreate(&entity).Error; err != nil {
-		return entity, err
+	return e, e.updateTitle(title)
+}
+
+// updateTitle refreshes the entity's stored title if it changed
+func (e *entity) updateTitle(title string) error {
+	if title == "" || e.Title == title {
+		return nil
 	}
 
-	return entity, nil
+	e.Title = title
+	return db.Instance.Model(e).UpdateColumn("title", title).Error
+}
+
+// UpdateTitle refreshes the collector entity's stored title if it changed.
+func (c *Collector) UpdateTitle(title string) error {
+	return c.entity.updateTitle(title)
 }
 
 func (c *Collector) process(fun func()) error {
@@ -86,56 +99,44 @@ func (c *Collector) process(fun func()) error {
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Imported(), c.accu.Exported())
+	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy)
 }
 
-func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {
-	return importProfile(c.entity, from)
+func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
+	return energyProfile(c.entity, from)
 }
 
-func (c *Collector) AddImportEnergy(v float64) error {
+func (c *Collector) SetEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddImportEnergy(v)
+		c.accu.SetEnergyMeterTotal(v)
 	})
 }
 
-func (c *Collector) AddExportEnergy(v float64) error {
+func (c *Collector) SetReturnEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddExportEnergy(v)
-	})
-}
-
-func (c *Collector) SetImportMeterTotal(v float64) error {
-	return c.process(func() {
-		c.accu.SetImportMeterTotal(v)
-	})
-}
-
-func (c *Collector) SetExportMeterTotal(v float64) error {
-	return c.process(func() {
-		c.accu.SetExportMeterTotal(v)
+		c.accu.SetReturnEnergyMeterTotal(v)
 	})
 }
 
 // AddEnergy adds energy using meter totals if available, falling back to power integration.
-func (c *Collector) AddEnergy(importTotal, exportTotal *float64, power float64) error {
+func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power float64) error {
 	return c.process(func() {
 		switch {
-		case importTotal != nil && exportTotal != nil:
-			c.accu.SetImportMeterTotal(*importTotal)
-			c.accu.SetExportMeterTotal(*exportTotal)
-		case importTotal != nil:
-			// export via power integration (before meter updates clock)
+		case energyTotal != nil && returnEnergyTotal != nil:
+			c.accu.SetEnergyMeterTotal(*energyTotal)
+			c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
+		case energyTotal != nil:
+			// return energy via power integration (before meter updates clock)
 			if power < 0 {
 				c.accu.AddPower(power)
 			}
-			c.accu.SetImportMeterTotal(*importTotal)
-		case exportTotal != nil:
-			// import via power integration (before meter updates clock)
+			c.accu.SetEnergyMeterTotal(*energyTotal)
+		case returnEnergyTotal != nil:
+			// energy via power integration (before meter updates clock)
 			if power >= 0 {
 				c.accu.AddPower(power)
 			}
-			c.accu.SetExportMeterTotal(*exportTotal)
+			c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
 		default:
 			c.accu.AddPower(power)
 		}

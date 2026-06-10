@@ -9,6 +9,7 @@ requirements:
 group: generic
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
@@ -16,14 +17,7 @@ params:
 render: |
   type: custom
   {{- include "vehicle-common" . }}
-  features:
-  - offline
-  {{- if eq .coarsecurrent "true" }}
-  - coarsecurrent
-  {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  - welcomecharge
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const
     value: 0

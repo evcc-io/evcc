@@ -15,7 +15,7 @@ func TestCollectorAddEnergy(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("foo", "foo", WithClock(clock))
+	col, err := NewCollector("foo", "foo", "", WithClock(clock))
 	require.NoError(t, err)
 	require.True(t, col.accu.updated.IsZero())
 
@@ -25,92 +25,92 @@ func TestCollectorAddEnergy(t *testing.T) {
 
 	clock.Add(5 * time.Minute)
 	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
-	require.Equal(t, 1e3*5/60/1e3, col.accu.Imported()) // kWh
+	require.Equal(t, 1e3*5/60/1e3, col.accu.Energy) // kWh
 
 	clock.Add(5 * time.Minute)
 	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
-	require.Equal(t, 0.0, col.accu.Imported()) // accumulator reset after 15 minutes
+	require.Equal(t, 0.0, col.accu.Energy) // accumulator reset after 15 minutes
 
 	clock.Add(15 * time.Minute)
 	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
-	require.Equal(t, 0.0, col.accu.Imported()) // accumulator reset after 15 minutes
+	require.Equal(t, 0.0, col.accu.Energy) // accumulator reset after 15 minutes
 }
 
-func TestCollectorAddEnergyWithImportMeter(t *testing.T) {
+func TestCollectorAddEnergyWithEnergyMeter(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("bar", "bar", WithClock(clock))
+	col, err := NewCollector("bar", "bar", "", WithClock(clock))
 	require.NoError(t, err)
 
 	// first call: seeds meter, no delta yet
 	clock.Add(5 * time.Minute)
 	require.NoError(t, col.AddEnergy(new(50000.0), nil, 1e3))
-	require.Equal(t, 0.0, col.accu.Imported())
+	require.Equal(t, 0.0, col.accu.Energy)
 
-	// second call: meter delta of 0.5 kWh, power ignored for import
+	// second call: meter delta of 0.5 kWh, power ignored for energy
 	clock.Add(5 * time.Minute)
 	require.NoError(t, col.AddEnergy(new(50000.5), nil, 1e3))
-	require.Equal(t, 0.5, col.accu.Imported())
+	require.Equal(t, 0.5, col.accu.Energy)
 
 	// implausible reading (decreased): ignored by guard
 	clock.Add(5 * time.Minute)
 	require.NoError(t, col.AddEnergy(new(49000.0), nil, 1e3))
-	require.Equal(t, 0.0, col.accu.Imported()) // reset at slot boundary
+	require.Equal(t, 0.0, col.accu.Energy) // reset at slot boundary
 }
 
-func TestCollectorAddEnergyWithImportMeterAndExport(t *testing.T) {
+func TestCollectorAddEnergyWithEnergyMeterAndReturn(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("baz", "baz", WithClock(clock))
+	col, err := NewCollector("baz", "baz", "", WithClock(clock))
 	require.NoError(t, err)
 
-	// seed import meter
+	// seed energy meter
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(new(1000.0), nil, 0))
 
-	// positive power: import via meter delta, no export
+	// positive power: energy via meter delta, no return energy
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(new(1000.3), nil, 500))
-	require.InDelta(t, 0.3, col.accu.Imported(), 1e-10)
-	require.Equal(t, 0.0, col.accu.Exported())
+	require.InDelta(t, 0.3, col.accu.Energy, 1e-10)
+	require.Equal(t, 0.0, col.accu.ReturnEnergy)
 
-	// negative power: import via meter (no change), export via power integration
+	// negative power: energy via meter (no change), return energy via power integration
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(new(1000.3), nil, -600))
-	require.InDelta(t, 0.3, col.accu.Imported(), 1e-10)
-	require.InDelta(t, 600.0*3/60/1e3, col.accu.Exported(), 1e-10) // 0.03 kWh
+	require.InDelta(t, 0.3, col.accu.Energy, 1e-10)
+	require.InDelta(t, 600.0*3/60/1e3, col.accu.ReturnEnergy, 1e-10) // 0.03 kWh
 }
 
-func TestCollectorAddEnergyWithExportMeterAndImport(t *testing.T) {
+func TestCollectorAddEnergyWithReturnEnergyMeterAndEnergy(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("baz2", "baz2", WithClock(clock))
+	col, err := NewCollector("baz2", "baz2", "", WithClock(clock))
 	require.NoError(t, err)
 
-	// seed export meter
+	// seed return energy meter
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(nil, new(1000.0), 0))
 
-	// negative power: export via meter delta, no import
+	// negative power: return energy via meter delta, no energy
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(nil, new(1000.3), -500))
-	require.InDelta(t, 0.3, col.accu.Exported(), 1e-10)
-	require.Equal(t, 0.0, col.accu.Imported())
+	require.InDelta(t, 0.3, col.accu.ReturnEnergy, 1e-10)
+	require.Equal(t, 0.0, col.accu.Energy)
 
-	// positive power: export via meter (no change), import via power integration
+	// positive power: return energy via meter (no change), energy via power integration
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(nil, new(1000.3), 600))
-	require.InDelta(t, 0.3, col.accu.Exported(), 1e-10)
-	require.InDelta(t, 600.0*3/60/1e3, col.accu.Imported(), 1e-10) // 0.03 kWh
+	require.InDelta(t, 0.3, col.accu.ReturnEnergy, 1e-10)
+	require.InDelta(t, 600.0*3/60/1e3, col.accu.Energy, 1e-10) // 0.03 kWh
 }
 
 func TestCollectorAddEnergyWithBothMeters(t *testing.T) {
@@ -119,7 +119,7 @@ func TestCollectorAddEnergyWithBothMeters(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("qux", "qux", WithClock(clock))
+	col, err := NewCollector("qux", "qux", "", WithClock(clock))
 	require.NoError(t, err)
 
 	// seed both meters
@@ -129,30 +129,30 @@ func TestCollectorAddEnergyWithBothMeters(t *testing.T) {
 	// both deltas used, power ignored
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(new(1000.3), new(2000.7), 999))
-	require.InDelta(t, 0.3, col.accu.Imported(), 1e-10)
-	require.InDelta(t, 0.7, col.accu.Exported(), 1e-10)
+	require.InDelta(t, 0.3, col.accu.Energy, 1e-10)
+	require.InDelta(t, 0.7, col.accu.ReturnEnergy, 1e-10)
 }
 
-func TestCollectorSetImportAndExportMeterTotal(t *testing.T) {
+func TestCollectorSetEnergyAndReturnEnergyMeterTotal(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("set", "set", WithClock(clock))
+	col, err := NewCollector("set", "set", "", WithClock(clock))
 	require.NoError(t, err)
 
-	// seed both import and export
+	// seed both energy and return energy
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.SetImportMeterTotal(1000))
-	require.NoError(t, col.SetExportMeterTotal(2000))
+	require.NoError(t, col.SetEnergyMeterTotal(1000))
+	require.NoError(t, col.SetReturnEnergyMeterTotal(2000))
 
 	// both deltas used
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.SetImportMeterTotal(1000.3))
-	require.NoError(t, col.SetExportMeterTotal(2000.7))
-	require.InDelta(t, 0.3, col.accu.Imported(), 1e-10)
-	require.InDelta(t, 0.7, col.accu.Exported(), 1e-10)
+	require.NoError(t, col.SetEnergyMeterTotal(1000.3))
+	require.NoError(t, col.SetReturnEnergyMeterTotal(2000.7))
+	require.InDelta(t, 0.3, col.accu.Energy, 1e-10)
+	require.InDelta(t, 0.7, col.accu.ReturnEnergy, 1e-10)
 }
 
 // TestCollectorSkipsPartialFirstSlot verifies that the first slot, joined
@@ -163,7 +163,7 @@ func TestCollectorSkipsPartialFirstSlot(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("partial", "partial", WithClock(clk))
+	col, err := NewCollector("partial", "partial", "", WithClock(clk))
 	require.NoError(t, err)
 
 	// first update mid-slot (00:05) - slot 00:00 is only partially covered
@@ -190,4 +190,48 @@ func TestCollectorSkipsPartialFirstSlot(t *testing.T) {
 	var m meter
 	require.NoError(t, db.Instance.First(&m).Error)
 	require.Equal(t, int64(15*60), m.Timestamp, "persisted slot should start at 00:15")
+}
+
+// TestCreateEntityRefreshesTitle verifies that a second call to createEntity
+// with a non-empty title fills in (or updates) the title on an existing row,
+// and that passing an empty title never clears a previously stored value.
+func TestCreateEntityRefreshesTitle(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	// existing row with empty title (simulates pre-upgrade data)
+	first, err := createEntity("grid", "grid", "")
+	require.NoError(t, err)
+	require.Empty(t, first.Title)
+
+	// lazy-create with a real title must persist it
+	second, err := createEntity("grid", "grid", "House meter")
+	require.NoError(t, err)
+	require.Equal(t, first.Id, second.Id, "should be the same row")
+	require.Equal(t, "House meter", second.Title)
+
+	var stored entity
+	require.NoError(t, db.Instance.First(&stored, first.Id).Error)
+	require.Equal(t, "House meter", stored.Title, "title must be persisted")
+
+	// subsequent call with empty title must not clear the existing one
+	third, err := createEntity("grid", "grid", "")
+	require.NoError(t, err)
+	require.Equal(t, "House meter", third.Title)
+
+	require.NoError(t, db.Instance.First(&stored, first.Id).Error)
+	require.Equal(t, "House meter", stored.Title, "title must survive empty re-create")
+
+	// changing the title overwrites the stored value
+	fourth, err := createEntity("grid", "grid", "Grid")
+	require.NoError(t, err)
+	require.Equal(t, "Grid", fourth.Title)
+
+	require.NoError(t, db.Instance.First(&stored, first.Id).Error)
+	require.Equal(t, "Grid", stored.Title)
+
+	// only one row exists despite four createEntity calls with varying titles
+	var count int64
+	require.NoError(t, db.Instance.Model(new(entity)).Where("\"group\" = ? AND name = ?", "grid", "grid").Count(&count).Error)
+	require.EqualValues(t, 1, count, "must not duplicate existing rows")
 }

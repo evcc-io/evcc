@@ -166,7 +166,8 @@ export default {
 					if (shouldClose) {
 						await closeModal();
 					} else {
-						await this.load();
+						// keep open: saved values become the new baseline (no longer dirty)
+						this.serverValues = deepClone(this.values);
 					}
 				}
 				if (res.status === 400) {

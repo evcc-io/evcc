@@ -52,18 +52,17 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		filePath = file
 
 		// TODO WAL mode "journal_mode(WAL)", "synchronous(NORMAL)"
-		for _, pragma := range []string{"foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
-			// Add busy_timeout pragma if not already present
+		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
+			// add pragma if not already present
 			if short, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+short) {
 				continue
 			}
 
-			// Append '&' if there are existing connection parameters
+			// append '&' if there are existing connection parameters
 			if len(params) > 0 {
 				params += "&"
 			}
 
-			// Add busy_timeout pragma to connection parameters
 			params += "_pragma=" + pragma
 		}
 

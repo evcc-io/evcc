@@ -37,6 +37,7 @@ requirements:
       More information and alternatives can be found at [docs.evcc.io/blog](https://docs.evcc.io/en/blog/2025/01/20/tesla-api-update).
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: clientId
     description:
       generic: Client ID
@@ -90,5 +91,5 @@ render: |
   commandProxy: {{ .commandProxy }}
   proxyToken: {{ .proxyToken }}
   {{ include "vehicle-common" . }}
-  features: ["coarsecurrent"]
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
   cache: {{ .cache }}

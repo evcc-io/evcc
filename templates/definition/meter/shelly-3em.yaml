@@ -3,6 +3,9 @@ products:
   - brand: Shelly
     description:
       generic: 3EM (Gen.1)
+# 3-phase Shelly EM devices count each phase's energy separately (non-balanced),
+# so the totals are unsuitable for bidirectional grid metering. Energy and
+# returnEnergy are therefore omitted for grid usage (see #29727).
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -20,11 +23,18 @@ render: |
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.power) | add
+  {{- if ne .usage "grid" }}
   energy:
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.total) | add
     scale: 0.001
+  returnenergy:
+    source: http
+    uri: {{ include "uri" . }}/status
+    jq: .emeters | map(.total_returned) | add
+    scale: 0.001
+  {{- end }}
   currents:
   - source: http
     uri: {{ include "uri" . }}/emeter/0

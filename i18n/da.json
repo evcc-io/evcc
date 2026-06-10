@@ -150,8 +150,6 @@
       "forecast": "Prognose",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
-      "hemsActiveLimit": "Aktiv begrænsning",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
       "loginBlocked": "Grænsen for loginforsøg er nået",
       "max": "max",
@@ -167,6 +165,7 @@
       "powerRange": "Effekt",
       "price": "Pris",
       "range": "Rækkevidde",
+      "returnEnergy": "Energi (baglæns)",
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
       "solarForecast": "Sol prognose",
@@ -180,10 +179,6 @@
       "A": "A (ikke forbundet)",
       "B": "B (forbundet)",
       "C": "C (oplader)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
@@ -889,7 +884,7 @@
       "greenShareSub2": "sol, og batteriopbevaring",
       "power": "Opladningsstrøm",
       "powerSub1": "{activeClients} af {totalClients} deltagere",
-      "powerSub2": "oplader…",
+      "powerSub2": "oplader.",
       "tabTitle": "Live fællesskab"
     },
     "savings": {
@@ -1172,13 +1167,13 @@
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
       "batteryDischarge": "Batteriet aflades",
+      "batteryDischargeHold": "Batteri (låst)",
       "batteryForecastEmpty": "Tømt",
       "batteryForecastFull": "Fyldt",
       "batteryForecastNextHigh": "Højdepunkt",
       "batteryForecastNextLow": "Lavpunkt",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
-      "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
@@ -1199,7 +1194,6 @@
       "waitForVehicle": "Klar til at varme…"
     },
     "hemsWarning": {
-      "description": "Opladningen reduceres for ikke at overskride {limit}.",
       "title": "Ekstern begrænsning:"
     },
     "history": {
@@ -1419,6 +1413,7 @@
     "updatePassword": "Opdater adgangskode"
   },
   "session": {
+    "addOdometer": "Tilføj distance",
     "cancel": "Afbryd",
     "co2": "CO2",
     "date": "Tidsrum",
@@ -1428,7 +1423,8 @@
     "meterstart": "kilometertælleraflæsning",
     "meterstop": "Meter slut",
     "odometer": "Kilometerstand",
-    "price": "Pris",
+    "price": "Omkostning",
+    "soc": "Køretøjets SoC",
     "started": "Startet",
     "title": "Lade session"
   },
@@ -1436,6 +1432,7 @@
     "avgPower": "⌀ Effekt",
     "avgPrice": "⌀ pris",
     "chargeDuration": "Varighed",
+    "chargedSoc": "Oplader",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Pris {byGroup}",
@@ -1467,8 +1464,10 @@
       "meterstart": "Målerstart (kWh)",
       "meterstop": "Målerstop (kWh)",
       "odometer": "Kilometertal (km)",
-      "price": "Pris",
+      "price": "Omkostning",
       "priceperkwh": "Pris/kWh",
+      "socend": "Soc ved slut (%)",
+      "socstart": "SoC ved start (%)",
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
@@ -1484,7 +1483,7 @@
     "group": {
       "co2": "Emission",
       "grid": "Elnet",
-      "price": "Pris",
+      "price": "Omkostning",
       "self": "Sol"
     },
     "groupBy": {
@@ -1510,7 +1509,7 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Pris",
+      "price": "Omkostning",
       "solar": "Sol"
     },
     "vehicle": "Køretøj"

@@ -5,6 +5,8 @@ products:
   - brand: Land Rover
 params:
   - preset: vehicle-base
+  - preset: vehicle-climater
 render: |
   type: jaguar
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

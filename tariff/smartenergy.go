@@ -56,7 +56,9 @@ func (t *SmartEnergy) run(done chan error) {
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(client.GetJSON(smartenergy.URI, &res))
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue

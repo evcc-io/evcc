@@ -150,8 +150,6 @@
       "forecast": "Prognozė",
       "gridPrice": "Energijos pirkimo kaina",
       "heaterTempLimit": "Šildymo limitas",
-      "hemsActiveLimit": "Aktyvus limitas",
-      "hemsType": "Komunikacija",
       "identifier": "RFID-Identifikatorius",
       "loginBlocked": "Pasiektas prisijungimų limitas",
       "max": "max",
@@ -167,6 +165,7 @@
       "powerRange": "Galia",
       "price": "Kaina",
       "range": "Nuvažiuojamas atstumas",
+      "returnEnergy": "Energija (atiduota)",
       "singlePhase": "Vienfazis",
       "soc": "Įkrova",
       "solarForecast": "Saulės prognozė",
@@ -180,10 +179,6 @@
       "A": "A (neprijungtas)",
       "B": "B (prijungtas)",
       "C": "C (įkrauna)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "naudoja EEBus",
-      "relay": "naudoja Relė"
     },
     "devices": {
       "auxMeter": "Išmanusis vartotojas",
@@ -1172,13 +1167,13 @@
       "battery": "Kaupiklis",
       "batteryCharge": "Kaupiklis įkraunamas",
       "batteryDischarge": "Kaupiklis iškraunamas",
+      "batteryDischargeHold": "Kaupiklis (užblokuotas)",
       "batteryForecastEmpty": "Tuščias",
       "batteryForecastFull": "Pilnas",
       "batteryForecastNextHigh": "Didelė",
       "batteryForecastNextLow": "Žema",
       "batteryGridChargeActive": "Įkrovimas iš tinklo: aktyvus",
       "batteryGridChargeLimit": "Įkrauti iš tinklo: kai",
-      "batteryHold": "Kaupiklis (užblokuotas)",
       "batteryTooltip": "{energy} iš {total} ({soc})",
       "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",
@@ -1199,7 +1194,6 @@
       "waitForVehicle": "Paruošta šildyti…"
     },
     "hemsWarning": {
-      "description": "Įkrovimas apribotas, kad neviršyti {limit}.",
       "title": "Išorinis limitas:"
     },
     "history": {

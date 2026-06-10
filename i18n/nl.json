@@ -150,8 +150,6 @@
       "forecast": "Voorspelling",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
-      "hemsActiveLimit": "Actieve limiet",
-      "hemsType": "Communicatie",
       "identifier": "RFID-Nummer",
       "loginBlocked": "Inloglimiet bereikt",
       "max": "max",
@@ -180,10 +178,6 @@
       "A": "A (niet aangesloten)",
       "B": "B (aangesloten)",
       "C": "C (opladen)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Slimme verbruiker",
@@ -887,7 +881,7 @@
       "greenShareSub2": "zonne-energie en batterij-opslag",
       "power": "Laadvermogen",
       "powerSub1": "{activeClients} van {totalClients} deelnemers",
-      "powerSub2": "laden…",
+      "powerSub2": "laden.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -946,7 +940,7 @@
     },
     "version": {
       "availableLong": "nieuwe versie beschikbaar",
-      "community": "evcc coomunity",
+      "community": "evcc community",
       "labelRelease": "Release",
       "labelVersion": "Versie",
       "labelWebsite": "Website",
@@ -1169,11 +1163,11 @@
       "battery": "Batterij",
       "batteryCharge": "Batterij opladen",
       "batteryDischarge": "Batterij ontladen",
-      "batteryForecastEmpty": "Leeg om {time}",
-      "batteryForecastFull": "Vol om {time}",
+      "batteryDischargeHold": "Batterij (geblokkeerd)",
+      "batteryForecastEmpty": "Leeg",
+      "batteryForecastFull": "Vol",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
-      "batteryHold": "Batterij (geblokkeerd)",
       "batteryTooltip": "{energy} van {total} ({soc})",
       "forecast": "Voorspelling",
       "forecastTooltip": "voorspelling: resterende zonne-energieproductie voor vandaag",
@@ -1194,7 +1188,6 @@
       "waitForVehicle": "Klaar om te verwarmen…"
     },
     "hemsWarning": {
-      "description": "Gereduceerd laden niet hoger dan {limit}.",
       "title": "Externe limiet:"
     },
     "history": {
@@ -1423,7 +1416,7 @@
     "meterstart": "Beginwaarde meter",
     "meterstop": "Eindwaarde meter",
     "odometer": "Kilometerstand",
-    "price": "Prijs",
+    "price": "Kostprijs",
     "started": "Gestart",
     "title": "Oplaadsessie"
   },

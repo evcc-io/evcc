@@ -23,8 +23,8 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { name: string }) => s.name === "grid");
-    const home = data.find((s: { name: string }) => s.name === "home");
+    const grid = data.find((s: { title: string }) => s.title === "grid");
+    const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
 
@@ -46,8 +46,8 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { name: string }) => s.name === "grid");
-    const home = data.find((s: { name: string }) => s.name === "home");
+    const grid = data.find((s: { title: string }) => s.title === "grid");
+    const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
 
@@ -188,6 +188,17 @@ test.describe("consumption breakdown", () => {
     await expect(consumption.getByRole("button", { name: "Others 300 Wh" })).toBeVisible();
     await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toBeVisible();
     await expect(consumption.getByRole("button", { name: "Office 300 Wh" })).toBeVisible();
+  });
+
+  // 2026-03-24: home = 0.4 kWh, no meter entities with data.
+  test("home without meters shows chart without legend", async ({ page }) => {
+    await gotoDay(page, 2026, 3, 24);
+    const consumption = section(page, "meter");
+    await expect(consumption).toBeVisible();
+
+    await expect(consumption.getByRole("heading")).toContainText("0.4 kWh");
+    // No explicit consumers, no entity legend.
+    await expect(consumption.getByRole("button")).toHaveCount(0);
   });
 
   test("entity focus rescales axis and resets on unfocus", async ({ page }) => {
