@@ -68,8 +68,7 @@ func (site *Site) dimMeters(dim *bool) error {
 			continue
 		}
 
-		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
-		if err == nil {
+		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
 			if *dim == dimmed {
 				continue
 			}
@@ -102,8 +101,7 @@ func (site *Site) curtailPV(curtail *bool) error {
 			continue
 		}
 
-		curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff())
-		if err == nil {
+		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
 			if *curtail == curtailed {
 				continue
 			}
