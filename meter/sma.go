@@ -92,15 +92,15 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 	isInverter := !sm.device.IsEnergyMeter()
 	isHybridInverter := isInverter && dc
 
-	if isInverter {
-		implement.May(sm, implement.MaxACPowerGetter(sm.maxACPower))
+	if isInverter && usage == "battery" {
+		implement.Has(sm, implement.Battery(sm.soc))
+		implement.May(sm, implement.BatteryCapacity(capacity))
+		implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
+		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
+	}
 
-		if usage == "battery" {
-			implement.Has(sm, implement.Battery(sm.soc))
-			implement.May(sm, implement.BatteryCapacity(capacity))
-			implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
-			implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
-		}
+	if isHybridInverter && usage == "pv" {
+		implement.Has(sm, implement.MaxACPowerGetter(sm.maxACPower))
 	}
 
 	if !isHybridInverter {
