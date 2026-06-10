@@ -757,9 +757,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if lp.enabled = enabled; enabled {
 			// set defined current for use by pv mode
-			if ctrl, ok := lp.chargeController.(*CurrentController); ok {
-				_ = ctrl.chargeMinimum()
-			}
+			_ = lp.chargeController.SetPower(lp.effectiveMinPower())
 		}
 	} else {
 		lp.log.ERROR.Printf("charger enabled: %v", err)
@@ -996,9 +994,9 @@ func (lp *Loadpoint) minSocNotReached() bool {
 }
 
 // disableUnlessClimater disables the charger unless climate is active
-func (lp *Loadpoint) disableUnlessClimater(ctrl *CurrentController) error {
+func (lp *Loadpoint) disableUnlessClimater(ctrl api.PowerController) error {
 	if lp.vehicleClimateActive() {
-		return ctrl.chargeMinimum()
+		return ctrl.SetPower(lp.effectiveMinPower())
 	}
 	return ctrl.SetPower(0)
 }
@@ -1640,14 +1638,14 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	case mode == api.ModeOff:
 		if welcomeCharge {
-			err = ctrl.chargeMinimum()
+			err = ctrl.SetPower(lp.effectiveMinPower())
 		} else {
 			err = ctrl.SetPower(0)
 		}
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
-		err = ctrl.fastCharging()
+		err = ctrl.SetPower(lp.effectiveMaxPower())
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
@@ -1661,14 +1659,14 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
-		err = ctrl.fastCharging()
+		err = ctrl.SetPower(lp.effectiveMaxPower())
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
 		if smartCostActive {
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
-			err = ctrl.fastCharging()
+			err = ctrl.SetPower(lp.effectiveMaxPower())
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
 			break
@@ -1694,11 +1692,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 		switch power := ctrl.pvMaxPower(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart); {
 		case power == 0 && lp.vehicleClimateActive():
-			err = ctrl.chargeMinimum()
+			err = ctrl.SetPower(lp.effectiveMinPower())
 
 		case power == 0 && welcomeCharge:
 			lp.resetPVTimer()
-			err = ctrl.chargeMinimum()
+			err = ctrl.SetPower(lp.effectiveMinPower())
 
 		default:
 			err = ctrl.SetPower(power)

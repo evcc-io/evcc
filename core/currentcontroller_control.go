@@ -9,11 +9,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// chargeMinimum charges at the effective minimum current
-func (lp *CurrentController) chargeMinimum() error {
-	return lp.setLimit(lp.effectiveMinCurrent())
-}
-
 // enforcePhases scales to the configured phases
 func (lp *CurrentController) enforcePhases() error {
 	return lp.scalePhases(lp.phasesConfigured)

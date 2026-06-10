@@ -17,12 +17,24 @@ func newCurrentController(lp *Loadpoint) *CurrentController {
 	return &CurrentController{Loadpoint: lp}
 }
 
-// SetPower sets the charger to the given power target (0 disables)
+// SetPower sets the charger to the given power target (0 disables).
+// A positive target is clamped to the effective limits: a positive setpoint
+// expresses that charging shall happen, hence a target below the feasible
+// minimum charges at minimum power.
 func (lp *CurrentController) SetPower(power float64) error {
 	if power <= 0 {
 		return lp.setLimit(0)
 	}
-	return lp.setLimit(powerToCurrent(power, lp.ActivePhases()))
+
+	// full envelope requested: scale up phases if possible
+	if power >= lp.effectiveMaxPower() {
+		return lp.fastCharging()
+	}
+
+	current := powerToCurrent(power, lp.ActivePhases())
+	current = min(max(current, lp.effectiveMinCurrent()), lp.effectiveMaxCurrent())
+
+	return lp.setLimit(current)
 }
 
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
