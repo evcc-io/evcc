@@ -232,10 +232,10 @@ func (c *Connection) TotalEnergy() (float64, error) {
 
 	// SML import energy available
 	if sml := res.StatusSNS.SML.TotalIn; sml != nil {
-		return *sml, err
+		return *sml, nil
 	}
 
-	return res.StatusSNS.Energy.Total, err
+	return res.StatusSNS.Energy.Total, nil
 }
 
 // ReturnEnergy implements the api.MeterReturnEnergy interface
