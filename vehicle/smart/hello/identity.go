@@ -34,9 +34,6 @@ type Identity struct {
 	mu               sync.Mutex
 }
 
-// NewIdentity creates a Smart Hello identity with persistent token and device ID.
-// No instance singleton (unlike PSA) — deliberate Stufe-1 decision; single-vehicle
-// setups are not affected and the added complexity is deferred if ever needed.
 func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
