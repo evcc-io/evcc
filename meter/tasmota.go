@@ -100,7 +100,7 @@ func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
 
-// ReturnEnergy implements the api.MeterReturnEnergy interface
+// returnEnergy implements the api.MeterReturnEnergy interface
 func (c *Tasmota) returnEnergy() (float64, error) {
 	return c.conn.ReturnEnergy()
 }
