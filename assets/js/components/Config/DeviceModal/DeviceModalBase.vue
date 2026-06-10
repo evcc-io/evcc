@@ -52,7 +52,7 @@
 
 					<div v-if="authRequired">
 						<PropertyEntry
-							v-for="param in authParams"
+							v-for="param in authNormalParams"
 							:id="`${deviceType}Param${param.Name}`"
 							:key="param.Name"
 							v-bind="param"
@@ -60,6 +60,19 @@
 							:service-values="serviceValues[param.Name]"
 							:currency="currency"
 						/>
+						<PropertyCollapsible v-if="authAdvancedParams.length">
+							<template #advanced>
+								<PropertyEntry
+									v-for="param in authAdvancedParams"
+									:id="`${deviceType}Param${param.Name}`"
+									:key="param.Name"
+									v-bind="param"
+									v-model="values[param.Name]"
+									:service-values="serviceValues[param.Name]"
+									:currency="currency"
+								/>
+							</template>
+						</PropertyCollapsible>
 
 						<div v-if="auth.code">
 							<hr class="my-5" />
@@ -329,6 +342,12 @@ export default defineComponent({
 		authParams() {
 			const { params = [] } = this.template?.Auth ?? {};
 			return this.templateParams.filter((p) => params.includes(p.Name));
+		},
+		authNormalParams() {
+			return this.authParams.filter((p: TemplateParam) => !p.Advanced && !p.Deprecated);
+		},
+		authAdvancedParams() {
+			return this.authParams.filter((p: TemplateParam) => p.Advanced || p.Deprecated);
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
