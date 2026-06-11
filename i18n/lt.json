@@ -51,6 +51,21 @@
     "hex": "Hex spalva"
   },
   "config": {
+    "apiKey": {
+      "description": "Suteikite saugią prieigą nebendrindami administratoriaus slaptažodžio scenarijams ir automatizavimo užduotims, pvz., suplanuotoms atsarginėms kopijoms.",
+      "exampleLabel": "Išbandykite: atsisiųskite atsarginę kopiją naudodami curl",
+      "generate": "Sukurti API raktą",
+      "generateConfirm": "Įveskite administratoriaus slaptažodį, kad sugeneruotumėte naują API raktą.",
+      "keyLabel": "API Raktas",
+      "regenerate": "Iš naujo generuoti API raktą",
+      "regenerateConfirm": "Įveskite administratoriaus slaptažodį, kad iš naujo sugeneruotumėte API raktą.",
+      "regenerateLink": "Sukurti iš naujo",
+      "regenerateWarning": "Generuojant naują raktą, nebeveiks jokia automatizacija, naudojanti esamą raktą. Tęsti?",
+      "revealSuccess": "Jūsų naujas API raktas paruoštas naudoti.",
+      "revealTitle": "API raktas sukurtas",
+      "shownOnce": "Šis raktas rodomas tik vieną kartą. Išsaugokite jį saugioje vietoje. Vėliau jo atgauti nebegalėsite.",
+      "title": "API Raktas"
+    },
     "aux": {
       "description": "Įrenginys, kuris koreguoja savo suvartojimą pagal esamą energijos perteklių (pvz., išmanieji vandens šildytuvai). evcc tikisi, kad šis įrenginys prireikus sumažins energijos suvartojimą.",
       "titleAdd": "Pridėti Savireguliuojantį vartotoją",
@@ -140,11 +155,14 @@
       "currency": "Valiuta",
       "current": "Srovė",
       "currentRange": "Srovė",
+      "curtailLimit": "Atidavimo į tinklą ribojimas",
+      "curtailable": "Apribojama",
       "curtailed": "Eksportas apribotas",
       "detected": "Aptikta",
+      "dimLimit": "Vartojimo riba",
       "dimmed": "Suvartojimas apribotas",
       "enabled": "Aktyvuotas",
-      "energy": "Energija",
+      "energy": "Energija (paimta)",
       "events": "Įvykiai",
       "feedinPrice": "Tiekimo į tinklą kaina",
       "forecast": "Prognozė",
@@ -164,6 +182,7 @@
       "power": "Galia",
       "powerRange": "Galia",
       "price": "Kaina",
+      "productionLimited": "Gamyba apribota",
       "range": "Nuvažiuojamas atstumas",
       "returnEnergy": "Energija (atiduota)",
       "singlePhase": "Vienfazis",
@@ -605,8 +624,13 @@
       "connectionStatusHelp": "Sukonfigūruotų įkroviklių ryšio būsena.",
       "detectedChargers": "Atpažinti stotelių ID",
       "detectedHelp": "Šie įkrovikliai bandė prisijungti prie evcc. Norėdami naudoti įkroviklį, sukurkite įkroviklį su jo stotelės ID.",
+      "forwardingConfigured": "Persiuntimas sukonfigūruotas",
+      "forwardingError": "Persiuntimo klaida",
+      "forwardingOff": "Persiuntimas nesukonfigūruotas",
       "noChargers": "Neaptikta jokių OCPP įkroviklių.",
       "noStations": "Nėra prijungtų stotelių",
+      "stations": "Įkroviklių ID",
+      "stationsHelp": "Sukonfigūruoti ir aptikti OCPP įkrovikliai. Neskaitant vietinio valdymo, dar galite persiųsti pranešimus į išorinį serverį (pvz., sąskaitų išrašymui).",
       "status": {
         "configured": "Neprijungta",
         "connected": "Prijungta",
@@ -615,6 +639,30 @@
       "title": "OCPP Serveris",
       "url": "Serverio URL",
       "urlHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis turėtų automatiškai pridėti savo unikalų identifikatorių (stotelės ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Persiųskite šio įkroviklio OCPP pranešimus ne tik į evcc bet ir į išorinį serverį (atsiskaitymo platformą, operatoriui ir kt.).",
+      "editTitle": "OCPP Persiuntimas",
+      "labelCaCert": "Serverio sertifikatas (CA)",
+      "labelCheckInsecure": "Leisti savarankiškai pasirašytus sertifikatus",
+      "labelInsecure": "Sertifikato patvirtinimas",
+      "password": "Slaptažodis",
+      "passwordHelp": "HTTP baziniam autentifikavimui į serverį.",
+      "readOnly": {
+        "check": "Blokuoti komandas iš serverio",
+        "help": {
+          "false": "Serveris gali siųsti komandas įkrovikliui per evcc.",
+          "true": "Serveris gauna visus įkroviklio pranešimus, bet negali siųsti komandų. evcc išlaiko išskirtinę kontrolę."
+        },
+        "label": "Serverio komandos"
+      },
+      "status": "Būsena",
+      "upstreamStationId": "Įkroviklio ID",
+      "upstreamStationIdHelp": "Įkroviklio identifikatorius, išsiųstas į serverį.",
+      "upstreamUrl": "Serverio URL",
+      "upstreamUrlHelp": "OCPP serverio WebSocket URL.",
+      "username": "Vartotojo vardas",
+      "usernameHelp": "Skirta serverio HTTP baziniam autentifikavimui."
     },
     "optimizer": {
       "description": "Analizuoja saulės energijos prognozę, elektros energijos kainas ir jūsų vartojimo įpročius, kad optimizuotų kaupiklį ir įkrovimo strategiją. Duomenys siunčiami apdorojimui į evcc optimizavimo paslaugą. Šiuo metu tik apskaičiuoja ir vizualizuoja, įrenginių kol kas nevaldo.",
@@ -691,6 +739,14 @@
       "services": "Paslaugos",
       "system": "Sistema",
       "vehicles": "Automobiliai"
+    },
+    "security": {
+      "authDisabledHint": "Autentifikavimas išjungtas. Įgaliojimų valdymas negalimas.",
+      "description": "Tvarkykite šio egzemplioriaus autentifikavimą ir įgaliojimus.",
+      "passwordDescription": "Atnaujinkite slaptažodį, naudojamą prisijungiant prie konfigūracijos vartotojo sąsajos.",
+      "passwordTitle": "Administratoriaus slaptažodis",
+      "title": "Saugumas",
+      "updatePassword": "Atnaujinti slaptažodį"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -1053,7 +1109,7 @@
       "logsDescription": "Naujausi žurnalo įrašai, kurie gali padėti nustatyti problemą.",
       "showDetails": "rodyti išsamiai",
       "source": "Šaltinis",
-      "state": "Būsena",
+      "state": "Būklė",
       "stateDescription": "Išsami veikimo būsenos informacija, įskaitant įkroviklį, įrenginį ir informaciją apie energiją. Pateikite tik tuo atveju, jei prašoma.",
       "title": "Papildoma informacija",
       "uiConfig": "Konfigūracija (UI)",
@@ -1118,7 +1174,7 @@
     "iframeIssue": "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP.",
     "invalid": "Neteisingas slaptažodis.",
     "login": "Prisijungti",
-    "password": "Administratoriaus slaptažodis",
+    "password": "Administratoriaus Slaptažodis",
     "reset": "Atstatyti slaptažodį?",
     "title": "Autentifikavimas"
   },
@@ -1166,8 +1222,9 @@
     "energyflow": {
       "battery": "Kaupiklis",
       "batteryCharge": "Kaupiklis įkraunamas",
+      "batteryChargeHold": "Įkroviklis (įkrovimas užblokuotas)",
       "batteryDischarge": "Kaupiklis iškraunamas",
-      "batteryDischargeHold": "Kaupiklis (užblokuotas)",
+      "batteryDischargeHold": "Kaupiklis (iškrovimas užblokuotas)",
       "batteryForecastEmpty": "Tuščias",
       "batteryForecastFull": "Pilnas",
       "batteryForecastNextHigh": "Didelė",
@@ -1194,7 +1251,9 @@
       "waitForVehicle": "Paruošta šildyti…"
     },
     "hemsWarning": {
-      "title": "Išorinis limitas:"
+      "consumption": "Vartojimas",
+      "feedIn": "Atidavimas į tinklą",
+      "title": "Išorinis ribojimas aktyvuotas"
     },
     "history": {
       "direction": {
