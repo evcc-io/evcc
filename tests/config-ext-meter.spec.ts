@@ -198,8 +198,8 @@ test.describe("ext meter order", async () => {
     // Restart and check order is preserved in both UIs
     await restart(CONFIG_BASICS);
 
-    // Check config UI
-    await page.goto("/#/config");
+    // Check config UI, reload to reconnect websocket
+    await page.reload();
     await expect(extMeters).toHaveCount(3);
     await expect(extMeters.nth(0)).toContainText("Meter 1");
     await expect(extMeters.nth(1)).toContainText("Meter 2");

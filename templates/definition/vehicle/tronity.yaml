@@ -7,6 +7,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: clientid
     description:
       generic: Tronity API Client ID
@@ -33,3 +34,4 @@ render: |
     secret: {{ .clientsecret }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
+  {{ include "vehicle-features" . }}

@@ -7,6 +7,7 @@ params:
   - preset: vehicle-base
   - preset: vehicle-features
 render: |
-  type: cupra
+  type: drivesomethinggreater
+  brand: Cupra
   {{ include "vehicle-base" . }}
   {{ include "vehicle-features" . }}

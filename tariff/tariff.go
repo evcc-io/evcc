@@ -108,7 +108,9 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			}
 			return nil
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue

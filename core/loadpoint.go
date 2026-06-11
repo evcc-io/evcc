@@ -213,10 +213,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.mode = api.ModeOff
 	}
 
-	if lp.Title != "" {
-		lp.setTitle(lp.Title)
-	}
-
 	if lp.Priority > 0 {
 		lp.setPriority(lp.Priority)
 	}
@@ -272,6 +268,11 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	// add collector
 	if lp.chargeMeter != nil {
 		lp.chargeEnergy = collector
+	}
+
+	// set title after collector is wired to refresh the metrics entity
+	if lp.Title != "" {
+		lp.setTitle(lp.Title)
 	}
 
 	// phase switching defaults based on charger capabilities
@@ -1800,9 +1801,10 @@ func (lp *Loadpoint) publishSocAndRange() {
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
 
-	socAndLimit := func(typ string, dev any) (*float64, *int64) {
+	socAndLimit := func(typ string, dev any) (*float64, *int64, error) {
 		var socR *float64
 		var limitR *int64
+		var socErr error
 
 		if battery, ok := api.Cap[api.Battery](dev); ok {
 			if soc, err := soc.Guard(battery.Soc()); err == nil {
@@ -1822,18 +1824,28 @@ func (lp *Loadpoint) publishSocAndRange() {
 						lp.log.ERROR.Printf("%s soc limit: %v", typ, err)
 					}
 				}
-			} else if !loadpoint.AcceptableError(err) {
-				lp.log.ERROR.Printf("charger soc: %v", err)
+			} else {
+				socErr = err
+
+				if !loadpoint.AcceptableError(err) {
+					lp.log.ERROR.Printf("charger soc: %v", err)
+				}
 			}
 		}
 
-		return socR, limitR
+		return socR, limitR, socErr
 	}
 
-	socR, limitR := socAndLimit("charger", lp.charger)
+	socR, limitR, _ := socAndLimit("charger", lp.charger)
 	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
-		lp.socUpdated = lp.clock.Now()
-		socR, limitR = socAndLimit("vehicle", lp.GetVehicle())
+		var socErr error
+		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle())
+
+		// keep polling async vehicle APIs that return ErrMustRetry until a SoC
+		// arrives, instead of waiting for the next interval
+		if !errors.Is(socErr, api.ErrMustRetry) {
+			lp.socUpdated = lp.clock.Now()
+		}
 
 		// range
 		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
@@ -1939,7 +1951,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
 	// auto-disable battery boost when SOC drops below limit
 	if lp.GetBatteryBoost() != boostDisabled {
 		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
@@ -1987,7 +1999,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			return
 		}
 
-		if dim := circuitDimmed(lp.circuit); dim != nil {
+		if dim != nil {
 			if *dim != dimmed {
 				if err := dimmer.Dim(*dim); err != nil {
 					lp.log.ERROR.Printf("dim: %v", err)

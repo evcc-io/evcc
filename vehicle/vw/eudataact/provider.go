@@ -10,11 +10,9 @@ import (
 )
 
 const (
-	// portalInterval is the cadence at which the portal delivers a new dataset
-	portalInterval = 15 * time.Minute
 	// portalLatency is the margin added to a dataset's timestamp before the
 	// following dataset is expected to be available for download
-	portalLatency = 30 * time.Second
+	portalLatency = time.Minute
 )
 
 // Provider implements the vehicle api on top of the EU Data Act dataset.
@@ -32,18 +30,17 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{}
 	s := sharedStore(api)
 
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
-		ts, err := s.update(vin)
+		ts, err := s.update(log.TRACE, vin)
 		if err != nil {
-			return nil, err
-		}
-		if !ts.IsZero() {
-			time.AfterFunc(resetDelay(ts, time.Now()), cached.Reset)
+			log.ERROR.Println(err)
+		} else if !ts.IsZero() {
+			time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 		}
 		return s.snapshot(vin), nil
 	}, cache)
@@ -56,8 +53,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 // resetDelay returns the delay until the dataset following the one delivered at
 // ts is expected to be available. It never returns less than portalLatency so a
 // late or repeated dataset does not cause immediate re-polling.
-func resetDelay(ts, now time.Time) time.Duration {
-	if d := ts.Add(portalInterval + portalLatency).Sub(now); d > portalLatency {
+func resetDelay(ts time.Time, cache time.Duration) time.Duration {
+	if d := time.Until(ts.Add(cache + portalLatency)); d > portalLatency {
 		return d
 	}
 	return portalLatency

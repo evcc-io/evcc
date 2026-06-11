@@ -1,9 +1,9 @@
 package eudataact
 
 import (
+	"log"
 	"maps"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -74,7 +74,7 @@ func (s *store) state(vin string) *vehicleState {
 // merged and merges them into the vehicle's map oldest to newest. It returns the
 // newest dataset's delivery time (used to schedule the next poll).
 // On first poll latest maxBackfill content datasets are downloaded.
-func (s *store) update(vin string) (time.Time, error) {
+func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 	v := s.state(vin)
 
 	v.mu.Lock()
@@ -116,7 +116,7 @@ func (s *store) update(vin string) (time.Time, error) {
 			return newest, err
 		}
 
-		dvin, data, err := parseDataset(b)
+		data, err := parseDataset(log, b)
 		if err != nil {
 			return newest, err
 		}
@@ -125,11 +125,6 @@ func (s *store) update(vin string) (time.Time, error) {
 		// even when it is dropped below
 		if d.CreatedOn.After(v.after) {
 			v.after = d.CreatedOn
-		}
-
-		// only merge points that belong to the requested vehicle
-		if dvin != "" && !strings.EqualFold(dvin, vin) {
-			continue
 		}
 
 		merge(v.data, data)

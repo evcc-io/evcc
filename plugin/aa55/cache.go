@@ -3,6 +3,8 @@ package aa55
 import (
 	"sync"
 	"time"
+
+	"golang.org/x/sync/singleflight"
 )
 
 const cacheTTL = 2 * time.Second
@@ -23,12 +25,39 @@ type cacheEntry struct {
 }
 
 type responseCache struct {
-	mu   sync.Mutex
-	data map[string]cacheEntry
+	mu     sync.Mutex
+	data   map[string]cacheEntry
+	flight singleflight.Group
 }
 
 func newResponseCache() *responseCache {
 	return &responseCache{data: make(map[string]cacheEntry)}
+}
+
+// fetch returns the cached payload for key if it is fresh. On a miss, load is
+// invoked exactly once across all concurrent callers sharing the same key.
+func (c *responseCache) fetch(key []byte, load func() ([]byte, error)) ([]byte, bool, error) {
+	if payload, ok := c.get(key); ok {
+		return payload, true, nil
+	}
+
+	payload, err, _ := c.flight.Do(string(key), func() (any, error) {
+		// re-check under the flight: a prior flight may have populated the
+		// cache between our miss above and acquiring the call.
+		if payload, ok := c.get(key); ok {
+			return payload, nil
+		}
+		payload, err := load()
+		if err != nil {
+			return nil, err
+		}
+		c.put(key, payload)
+		return payload, nil
+	})
+	if err != nil {
+		return nil, false, err
+	}
+	return payload.([]byte), false, nil
 }
 
 // get returns the cached payload if it exists and is fresh, or (nil, false)
