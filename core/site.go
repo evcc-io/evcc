@@ -1119,20 +1119,26 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
+	updateSiteLoadpoints := func() {
+		if len(site.loadpoints) == 0 {
+			logOnce.Do(func() {
+				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
+			})
+			site.update(nil)
+			return
+		}
+
+		for _, lp := range site.loadpoints {
+			site.update(lp)
+		}
+	}
+
+	updateSiteLoadpoints() // start immediately
+
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
-			if len(site.loadpoints) == 0 {
-				logOnce.Do(func() {
-					site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
-				})
-				site.update(nil)
-				break
-			}
-
-			for _, lp := range site.loadpoints {
-				site.update(lp)
-			}
+			updateSiteLoadpoints()
 		case lp := <-site.lpUpdateChan:
 			site.update(lp)
 		case <-stopC:
