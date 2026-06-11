@@ -51,6 +51,14 @@
     "hex": "Hex barva"
   },
   "config": {
+    "apiKey": {
+      "description": "Předává skriptům a automatizacím bezpečný přístup bez poskytování admin hesla.",
+      "exampleLabel": "Zkuste to: stáhněte si zálohu curl",
+      "generate": "Vytvořit API klíč",
+      "generateConfirm": "Vložte administrátorské heslo a vygenerujte nový API klíč.",
+      "keyLabel": "API klíč",
+      "regenerate": "Znovu vygenerovat API klíč"
+    },
     "aux": {
       "description": "Zařízení, které přizpůsobuje svou spotřebu podle dostupného přebytku (například chytré bojlery). evcc předpokládá, že toto zařízení v případě potřeby sníží svůj odběr.",
       "titleAdd": "Přidat samoregulační spotřebič",
