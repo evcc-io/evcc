@@ -831,7 +831,7 @@
       "greenShareSub2": "słońce i magazyn energii",
       "power": "Moc ładowania",
       "powerSub1": "{activeClients} z {totalClients} uczestników",
-      "powerSub2": "ładuje się…",
+      "powerSub2": "ładuje się.",
       "tabTitle": "Dane społeczności"
     },
     "savings": {
@@ -1289,6 +1289,7 @@
     "updatePassword": "Aktualizuj hasło"
   },
   "session": {
+    "addOdometer": "Dodaj wartość",
     "cancel": "Anuluj",
     "co2": "CO₂",
     "date": "Okres",
@@ -1298,7 +1299,8 @@
     "meterstart": "Licznik początek",
     "meterstop": "Licznik koniec",
     "odometer": "Przebieg",
-    "price": "Cena",
+    "price": "Koszt",
+    "soc": "Poziom naładowania pojazdu",
     "started": "Zaczęło się",
     "title": "Sesja ładowania"
   },
@@ -1337,8 +1339,10 @@
       "meterstart": "Licznik początek (kWh)",
       "meterstop": "Licznik zakończenie (kWh)",
       "odometer": "Przebieg (km)",
-      "price": "Cena",
+      "price": "Koszt",
       "priceperkwh": "Cena/kWh",
+      "socend": "Końcowy poziom naładowania (%)",
+      "socstart": "Początkowy poziom naładowania (%)",
       "solarpercentage": "Słońce (%)",
       "vehicle": "Pojazd"
     },
@@ -1354,7 +1358,7 @@
     "group": {
       "co2": "Emisje",
       "grid": "Sieć",
-      "price": "Cena",
+      "price": "Koszt",
       "self": "Słońce"
     },
     "groupBy": {
@@ -1364,8 +1368,10 @@
     },
     "loadpoint": "Punkt obciążenia",
     "noData": "Brak sesji ładowania w tym miesiącu.",
+    "odometer": "Przebieg",
     "overview": "Przegląd",
     "period": {
+      "day": "Dzień",
       "month": "Miesiąc",
       "total": "Wszystko",
       "year": "Rok"
@@ -1378,7 +1384,7 @@
     "total": "Razem",
     "type": {
       "co2": "CO₂",
-      "price": "Cena",
+      "price": "Koszt",
       "solar": "Słońce"
     },
     "vehicle": "Pojazd"
