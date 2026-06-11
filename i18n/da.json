@@ -947,8 +947,8 @@
       "co2Saved": "{value} sparet",
       "co2Title": "CO₂ Udledning",
       "configurePriceCo2": "Lær hvordan man indstiller pris og CO₂ data.",
-      "footerLong": "{percent} Solenergi",
-      "footerShort": "{percent} Solenergi",
+      "footerLong": "{percent} solenergi",
+      "footerShort": "{percent} solenergi",
       "indicator": {
         "co2": "CO₂ emission",
         "co2saved": "CO₂ sparet",
