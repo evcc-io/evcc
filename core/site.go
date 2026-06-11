@@ -1110,42 +1110,28 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	}
 }
 
-// loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
-func (site *Site) loopLoadpoints(next chan<- updater) {
-	var logOnce sync.Once
-
-	for {
-		if len(site.loadpoints) == 0 {
-			logOnce.Do(func() {
-				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
-			})
-			next <- nil
-		} else {
-			for _, lp := range site.loadpoints {
-				next <- lp
-			}
-		}
-	}
-}
-
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
 func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
+	var logOnce sync.Once
+
 	if max := 30 * time.Second; interval < max {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
-	loadpointChan := make(chan updater)
-	if site.IsConfigured() {
-		go site.loopLoadpoints(loadpointChan)
-	}
-
-	site.update(<-loadpointChan) // start immediately
-
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
-			site.update(<-loadpointChan)
+			if len(site.loadpoints) == 0 {
+				logOnce.Do(func() {
+					site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
+				})
+				break
+			}
+
+			for _, lp := range site.loadpoints {
+				site.update(lp)
+			}
 		case lp := <-site.lpUpdateChan:
 			site.update(lp)
 		case <-stopC:
