@@ -296,23 +296,25 @@ func validateConfigurableCircuits(children []config.Config) error {
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name))) //nolint:govet
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
 
 	instance, err := newFromConf(ctx, cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 	}
 
+	// ctx lives for the device lifetime- only release it on failure
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
+
 	if e := h.Add(config.NewStaticDevice(cc, instance)); e != nil && err == nil {
 		err = &DeviceError{cc.Name, e}
 	}
 
-	// release resources
-	if err != nil {
-		cancel()
-	}
-
-	return err //nolint:govet
+	return err
 }
 
 // loggerForConfig creates a logger with sensible name for (custom) configurable device
@@ -326,12 +328,19 @@ func loggerForConfig(conf *config.Config) *util.Logger {
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf))) //nolint:govet
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf)))
 
 	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
 	}
+
+	// ctx lives for the device lifetime- only release it on failure
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
 
 	var instance T
 	if err == nil {
@@ -345,12 +354,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 		err = &DeviceError{cc.Name, e}
 	}
 
-	// release resources
-	if err != nil {
-		cancel()
-	}
-
-	return err //nolint:govet
+	return err
 }
 
 func configureMeters(static []config.Named, names ...string) error {

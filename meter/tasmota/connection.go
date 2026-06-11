@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -229,12 +230,27 @@ func (c *Connection) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// SML total energy available
+	// SML import energy available
 	if sml := res.StatusSNS.SML.TotalIn; sml != nil {
-		return *sml, err
+		return *sml, nil
 	}
 
-	return res.StatusSNS.Energy.Total, err
+	return res.StatusSNS.Energy.Total, nil
+}
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (c *Connection) ReturnEnergy() (float64, error) {
+	res, err := c.statusSnsG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	// SML export energy available
+	if sml := res.StatusSNS.SML.TotalOut; sml != nil {
+		return *sml, nil
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 // Powers implements the api.PhasePowers interface
