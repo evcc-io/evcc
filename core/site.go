@@ -1126,6 +1126,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 				logOnce.Do(func() {
 					site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 				})
+				site.update(nil)
 				break
 			}
 
