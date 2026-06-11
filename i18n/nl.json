@@ -935,7 +935,7 @@
       "greenEnergySub1": "geladen met evcc",
       "greenEnergySub2": "sinds oktober 2022",
       "greenShare": "Aandeel zonne-energie",
-      "greenShareSub1": "van de stroom werd geleverd door",
+      "greenShareSub1": "stroom geleverd door",
       "greenShareSub2": "zonne-energie en batterij-opslag",
       "power": "Laadvermogen",
       "powerSub1": "{activeClients} van {totalClients} deelnemers",
