@@ -110,9 +110,8 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak of stacked per-slot sums. Includes the forecast overlay (production,
-		// always positive) when shown so the dotted line is not clipped at the axis
-		// limit. Bidirectional: pos/neg separately.
+		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
+		// clipped. Bidirectional: pos/neg separately.
 		axisPeak(): number {
 			const factor = this.valueFactor;
 			const peak = (series: HistorySeries[], pick: (slot: HistorySlot) => number) => {
