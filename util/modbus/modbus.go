@@ -19,6 +19,7 @@ const (
 	Rtu
 	Ascii
 	Udp
+	Tls
 
 	CoilOn uint16 = 0xFF00
 )
@@ -59,6 +60,16 @@ type Settings struct {
 	RTU       *bool         `json:"rtu,omitempty" yaml:",omitempty"`
 	Delay     time.Duration `json:"delay,omitempty" yaml:",omitempty"`
 	Timeout   time.Duration `json:"timeout,omitempty" yaml:",omitempty"`
+	// TLS: when Cert and Key are set, the TCP connection is wrapped in TLS
+	// (Modbus over TLS). If unset, no TLS is used.
+	Cert   string `json:"cert,omitempty" yaml:",omitempty"`
+	Key    string `json:"key,omitempty" yaml:",omitempty"`
+	CACert string `json:"cacert,omitempty" yaml:",omitempty"`
+}
+
+// TLS reports whether TLS is configured (client certificate present)
+func (s Settings) TLS() bool {
+	return s.Cert != "" && s.Key != ""
 }
 
 // Connection creates a modbus connection from the settings, applying delay and timeout.
@@ -69,7 +80,7 @@ func (s Settings) Connection(ctx context.Context, proto ...Protocol) (*Connectio
 		p = proto[0]
 	}
 
-	conn, err := NewConnection(ctx, s.URI, s.Device, s.Comset, s.Baudrate, p, s.ID)
+	conn, err := NewConnectionFromSettings(ctx, s, p)
 	if err != nil {
 		return nil, err
 	}
