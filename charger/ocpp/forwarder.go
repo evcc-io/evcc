@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -102,7 +103,7 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 			pendingMu.Lock()
 			pendingMsgs[r.StationID] = nil
 			pendingMu.Unlock()
-			go dialUpstreamSidecar(r.StationID, r, 0)
+			go runUpstreamSidecar(r.StationID, r)
 		} else {
 			go validateUpstream(r.StationID, r)
 		}
@@ -239,28 +240,42 @@ var (
 	reconnectMaxDelay     = 5 * time.Minute
 )
 
-// reconnectDelay returns the exponential backoff delay for the given 0-based attempt.
-func reconnectDelay(attempt int) time.Duration {
-	delay := reconnectMaxDelay
-	if attempt < 16 {
-		if d := reconnectInitialDelay << attempt; d < delay {
-			delay = d
+// dialResult describes the outcome of a sidecar dial attempt.
+type dialResult int
+
+const (
+	dialFatal     dialResult = iota // configuration error; do not retry
+	dialFailed                      // transient failure; retry with backoff
+	dialConnected                   // session established and ended; retry with reset backoff
+)
+
+// runUpstreamSidecar dials a charger's upstream sidecar and re-dials with
+// exponential backoff for as long as the charger stays connected and the rule
+// remains in effect.
+func runUpstreamSidecar(id string, rule ForwarderRule) {
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(reconnectInitialDelay),
+		backoff.WithMaxInterval(reconnectMaxDelay),
+		backoff.WithMaxElapsedTime(0),
+	)
+
+	for {
+		switch dialUpstreamSidecar(id, rule) {
+		case dialFatal:
+			return
+		case dialConnected:
+			bo.Reset()
 		}
-	}
-	return delay
-}
 
-// scheduleReconnect re-dials a charger's upstream sidecar after a backoff delay
-// as long as the charger is still connected and the rule still in effect.
-func scheduleReconnect(id string, rule ForwarderRule, attempt int) {
-	delay := reconnectDelay(attempt)
-	forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
+		delay := bo.NextBackOff()
+		forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
+		time.Sleep(delay)
 
-	time.AfterFunc(delay, func() {
 		current, ok := resolveRule(id)
 		if !ok || current.UpstreamURL == "" || !current.sameConnection(rule) {
 			return
 		}
+		rule = current
 		sidecarsMu.Lock()
 		connected := connectedChargers[id]
 		_, active := sidecars[id]
@@ -271,8 +286,7 @@ func scheduleReconnect(id string, rule ForwarderRule, attempt int) {
 		pendingMu.Lock()
 		pendingMsgs[id] = nil
 		pendingMu.Unlock()
-		dialUpstreamSidecar(id, current, attempt+1)
-	})
+	}
 }
 
 // resolveRule returns the forwarding rule for chargerID, or the "*" fallback.
@@ -311,10 +325,10 @@ func onChargerConnect(ch ws.Channel) {
 	pendingMsgs[id] = nil
 	pendingMu.Unlock()
 
-	go dialUpstreamSidecar(id, rule, 0)
+	go runUpstreamSidecar(id, rule)
 }
 
-func dialUpstreamSidecar(id string, rule ForwarderRule, attempt int) {
+func dialUpstreamSidecar(id string, rule ForwarderRule) dialResult {
 	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
 	upstreamPath := rule.upstreamPath(id)
 
@@ -331,7 +345,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule, attempt int) {
 			recordForwarderError(id, "invalid CA certificate")
 			notifyUpdated()
 			drainPendingWithErrors(id, nil)
-			return
+			return dialFatal
 		}
 		tlsConfig.RootCAs = caCertPool
 	}
@@ -348,8 +362,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule, attempt int) {
 		recordForwarderError(id, err.Error())
 		notifyUpdated()
 		drainPendingWithErrors(id, nil)
-		scheduleReconnect(id, rule, attempt)
-		return
+		return dialFailed
 	}
 	conn.SetReadLimit(-1) // no limit; OCPP frames can be large
 
@@ -417,8 +430,7 @@ func dialUpstreamSidecar(id string, rule ForwarderRule, attempt int) {
 			sidecarsMu.Unlock()
 			recordForwarderError(id, err.Error())
 			notifyUpdated()
-			scheduleReconnect(id, rule, attempt)
-			return
+			return dialFailed
 		}
 		flushed++
 	}
@@ -432,6 +444,8 @@ func dialUpstreamSidecar(id string, rule ForwarderRule, attempt int) {
 	forwarderLog.INFO.Printf("forwarder: %s → %s", id, upstreamBase+upstreamPath)
 
 	sc.readFromUpstream(rule.ReadOnly)
+
+	return dialConnected
 }
 
 // drainPendingWithErrors discards charger id's pending buffer, sending a CallError
@@ -619,7 +633,6 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 			sidecarsMu.Unlock()
 			if upstreamDrop {
 				recordForwarderError(sc.chargerID, err.Error())
-				scheduleReconnect(sc.chargerID, sc.rule, 0)
 			}
 			return
 		}

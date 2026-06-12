@@ -33,14 +33,6 @@ func TestForwarderWithMessageID(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestForwarderReconnectDelay(t *testing.T) {
-	assert.Equal(t, 5*time.Second, reconnectDelay(0))
-	assert.Equal(t, 10*time.Second, reconnectDelay(1))
-	assert.Equal(t, 160*time.Second, reconnectDelay(5))
-	assert.Equal(t, 5*time.Minute, reconnectDelay(6))
-	assert.Equal(t, 5*time.Minute, reconnectDelay(100))
-}
-
 // fakeChannel implements ws.Channel for hook tests
 type fakeChannel string
 
