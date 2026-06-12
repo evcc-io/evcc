@@ -13,6 +13,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
 	sqlite3 "modernc.org/sqlite"
+	sqlite3lib "modernc.org/sqlite/lib"
 )
 
 var (
@@ -110,6 +111,13 @@ func Close() error {
 		return err
 	}
 	return db.Close()
+}
+
+// IsReadonly reports whether err indicates a database file that is not
+// writable by the current user. The code mask covers extended result codes.
+func IsReadonly(err error) bool {
+	var serr *sqlite3.Error
+	return errors.As(err, &serr) && serr.Code()&0xff == sqlite3lib.SQLITE_READONLY
 }
 
 type backuper interface {
