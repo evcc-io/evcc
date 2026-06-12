@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ func init() {
 // fatalDatabase logs a database error and exits, hinting at file permissions
 // when the database is not writable by the current user.
 func fatalDatabase(err error) {
-	if strings.Contains(err.Error(), "readonly database") {
+	if db.IsReadonly(err) {
 		log.FATAL.Println("database is not writable; run this command as the user owning the database file, e.g. sudo -u evcc")
 	}
 	log.FATAL.Fatal(err)
