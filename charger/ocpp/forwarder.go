@@ -253,25 +253,28 @@ func runUpstreamSidecar(id string, rule ForwarderRule) {
 	)
 
 	for {
-		if dialUpstreamSidecar(id, rule) {
-			bo.Reset()
+		if !dialUpstreamSidecar(id, rule) {
+			delay := bo.NextBackOff()
+			forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
+			time.Sleep(delay)
+			continue
 		}
 
-		delay := bo.NextBackOff()
-		forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
-		time.Sleep(delay)
+		bo.Reset()
 
-		current, ok := resolveRule(id)
-		if !ok || current.UpstreamURL == "" || !current.sameConnection(rule) {
+		if current, ok := resolveRule(id); !ok || current.UpstreamURL == "" || !current.sameConnection(rule) {
 			return
 		}
+
 		sidecarsMu.Lock()
 		connected := connectedChargers[id]
 		_, active := sidecars[id]
 		sidecarsMu.Unlock()
+
 		if !connected || active {
 			return
 		}
+
 		pendingMu.Lock()
 		pendingMsgs[id] = nil
 		pendingMu.Unlock()
