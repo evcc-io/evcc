@@ -102,7 +102,7 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 			pendingMu.Lock()
 			pendingMsgs[r.StationID] = nil
 			pendingMu.Unlock()
-			go dialUpstreamSidecar(r.StationID, r)
+			go dialUpstreamSidecar(r.StationID, r, 0)
 		} else {
 			go validateUpstream(r.StationID, r)
 		}
@@ -226,7 +226,54 @@ var (
 	// on connect so BootNotification reaches upstream
 	pendingMu   sync.Mutex
 	pendingMsgs = make(map[string][][]byte)
+
+	// last BootNotification per connected charger, replayed to upstream when a
+	// sidecar (re)connects mid-session so upstream sees a boot before transactions
+	bootMu   sync.Mutex
+	lastBoot = make(map[string][]byte)
 )
+
+// reconnect backoff bounds; variables for testing
+var (
+	reconnectInitialDelay = 5 * time.Second
+	reconnectMaxDelay     = 5 * time.Minute
+)
+
+// reconnectDelay returns the exponential backoff delay for the given 0-based attempt.
+func reconnectDelay(attempt int) time.Duration {
+	delay := reconnectMaxDelay
+	if attempt < 16 {
+		if d := reconnectInitialDelay << attempt; d < delay {
+			delay = d
+		}
+	}
+	return delay
+}
+
+// scheduleReconnect re-dials a charger's upstream sidecar after a backoff delay
+// as long as the charger is still connected and the rule still in effect.
+func scheduleReconnect(id string, rule ForwarderRule, attempt int) {
+	delay := reconnectDelay(attempt)
+	forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
+
+	time.AfterFunc(delay, func() {
+		current, ok := resolveRule(id)
+		if !ok || current.UpstreamURL == "" || !current.sameConnection(rule) {
+			return
+		}
+		sidecarsMu.Lock()
+		connected := connectedChargers[id]
+		_, active := sidecars[id]
+		sidecarsMu.Unlock()
+		if !connected || active {
+			return
+		}
+		pendingMu.Lock()
+		pendingMsgs[id] = nil
+		pendingMu.Unlock()
+		dialUpstreamSidecar(id, current, attempt+1)
+	})
+}
 
 // resolveRule returns the forwarding rule for chargerID, or the "*" fallback.
 func resolveRule(chargerID string) (ForwarderRule, bool) {
@@ -264,10 +311,10 @@ func onChargerConnect(ch ws.Channel) {
 	pendingMsgs[id] = nil
 	pendingMu.Unlock()
 
-	go dialUpstreamSidecar(id, rule)
+	go dialUpstreamSidecar(id, rule, 0)
 }
 
-func dialUpstreamSidecar(id string, rule ForwarderRule) {
+func dialUpstreamSidecar(id string, rule ForwarderRule, attempt int) {
 	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
 	upstreamPath := rule.upstreamPath(id)
 
@@ -297,10 +344,11 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	})
 	cancel()
 	if err != nil {
-		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v; forwarding disabled", id, err)
+		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v", id, err)
 		recordForwarderError(id, err.Error())
 		notifyUpdated()
 		drainPendingWithErrors(id, nil)
+		scheduleReconnect(id, rule, attempt)
 		return
 	}
 	conn.SetReadLimit(-1) // no limit; OCPP frames can be large
@@ -317,11 +365,34 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	// install sidecar and drain the pending buffer
 	sidecarsMu.Lock()
 	pendingMu.Lock()
+	old := sidecars[id]
 	sidecars[id] = sc
 	buffered := pendingMsgs[id]
 	delete(pendingMsgs, id)
 	pendingMu.Unlock()
 	sidecarsMu.Unlock()
+
+	// a concurrent dial may have installed a sidecar meanwhile; this one wins
+	if old != nil {
+		old.conn.CloseNow()
+	}
+
+	// replay the charger's BootNotification (with a fresh message id) when the
+	// buffer doesn't already carry one, i.e. the sidecar (re)connects mid-session;
+	// upstream's reply is discarded as evcc has long answered the charger
+	if !slices.ContainsFunc(buffered, func(frame []byte) bool {
+		msgType, _, action, err := parseOCPPFrame(frame)
+		return err == nil && msgType == ocppj.CALL && action == "BootNotification"
+	}) {
+		bootMu.Lock()
+		boot := lastBoot[id]
+		bootMu.Unlock()
+		if boot != nil {
+			if frame, err := withMessageID(boot, fmt.Sprintf("evcc-boot-%d", time.Now().UnixNano())); err == nil {
+				buffered = append([][]byte{frame}, buffered...)
+			}
+		}
+	}
 
 	// flush buffered Calls; register relay actions so upstream's reply routes back.
 	// CallResults/Errors are skipped: evcc already answered them.
@@ -339,8 +410,14 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 		if err := conn.Write(context.Background(), websocket.MessageText, frame); err != nil {
 			forwarderLog.ERROR.Printf("forwarder: write buffered frame to upstream for %s: %v", id, err)
 			conn.CloseNow()
+			sidecarsMu.Lock()
+			if sidecars[id] == sc {
+				delete(sidecars, id)
+			}
+			sidecarsMu.Unlock()
 			recordForwarderError(id, err.Error())
 			notifyUpdated()
+			scheduleReconnect(id, rule, attempt)
 			return
 		}
 		flushed++
@@ -406,10 +483,13 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 func onChargerDisconnect(ch ws.Channel) {
 	id := ch.ID()
 
-	// discard pending buffer
+	// discard pending buffer and cached boot frame
 	pendingMu.Lock()
 	delete(pendingMsgs, id)
 	pendingMu.Unlock()
+	bootMu.Lock()
+	delete(lastBoot, id)
+	bootMu.Unlock()
 
 	sidecarsMu.Lock()
 	delete(connectedChargers, id)
@@ -440,6 +520,13 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 	msgType, msgID, action, err := parseOCPPFrame(data)
 	if err != nil {
 		return false
+	}
+
+	// remember the charger's boot frame for replay on sidecar (re)connect
+	if msgType == ocppj.CALL && action == "BootNotification" {
+		bootMu.Lock()
+		lastBoot[id] = slices.Clone(data)
+		bootMu.Unlock()
 	}
 
 	sidecarsMu.Lock()
@@ -532,6 +619,7 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 			sidecarsMu.Unlock()
 			if upstreamDrop {
 				recordForwarderError(sc.chargerID, err.Error())
+				scheduleReconnect(sc.chargerID, sc.rule, 0)
 			}
 			return
 		}
@@ -725,6 +813,23 @@ func extractMeterValueSampleInterval(msg []byte) (time.Duration, bool) {
 		return 0, false
 	}
 	return time.Duration(secs) * time.Second, true
+}
+
+// withMessageID returns a copy of a raw OCPP frame with its message id replaced.
+func withMessageID(frame []byte, msgID string) ([]byte, error) {
+	var parts []json.RawMessage
+	if err := json.Unmarshal(frame, &parts); err != nil {
+		return nil, err
+	}
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("invalid OCPP frame")
+	}
+	id, err := json.Marshal(msgID)
+	if err != nil {
+		return nil, err
+	}
+	parts[1] = id
+	return json.Marshal(parts)
 }
 
 // parseOCPPFrame extracts the message type, id and (for Calls) action from a raw frame.
