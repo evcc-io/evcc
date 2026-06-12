@@ -110,9 +110,9 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak of stacked per-slot sums, including the forecast overlay when shown
-		// so the dotted line is not clipped at the axis limit. Bidirectional:
-		// pos/neg separately.
+		// Peak of stacked per-slot sums. Includes the forecast overlay (production,
+		// always positive) when shown so the dotted line is not clipped at the axis
+		// limit. Bidirectional: pos/neg separately.
 		axisPeak(): number {
 			const factor = this.valueFactor;
 			const peak = (series: HistorySeries[], pick: (slot: HistorySlot) => number) => {
@@ -126,16 +126,17 @@ export default defineComponent({
 				for (const v of sums.values()) if (v > max) max = v;
 				return max;
 			};
-			const overlay = this.showOverlay ? this.overlay : [];
-			const net = (slot: HistorySlot) => Math.abs(slot.energy - slot.returnEnergy);
 			if (this.isBidirectional) {
 				return Math.max(
 					peak(this.visibleSeries, (slot) => Math.abs(slot.energy)),
-					peak(this.visibleSeries, (slot) => Math.abs(slot.returnEnergy)),
-					peak(overlay, net)
+					peak(this.visibleSeries, (slot) => Math.abs(slot.returnEnergy))
 				);
 			}
-			return Math.max(peak(this.visibleSeries, net), peak(overlay, net));
+			const overlay = this.showOverlay ? this.overlay : [];
+			return Math.max(
+				peak(this.visibleSeries, (slot) => Math.abs(slot.energy - slot.returnEnergy)),
+				peak(overlay, (slot) => slot.energy)
+			);
 		},
 		// W/Wh scale when peak below 1 kW(h). Zero data falls here too.
 		useSmallUnit(): boolean {
