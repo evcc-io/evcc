@@ -35,7 +35,7 @@
     "legendBottomName": "Prioriser le chargement de la batterie domestique",
     "legendBottomSubline": "Jusqu'à ce que {soc} soit atteint.",
     "legendMiddleName": "Prioriser le chargement du véhicule",
-    "legendMiddleSubline": "lorsque la batterie maison est au-dessus de {soc}.",
+    "legendMiddleSubline": "lorsque la batterie domestique est au-dessus de {soc}.",
     "legendTopAutostart": "Démarrer automatiquement",
     "legendTopName": "Charge véhicule par la batterie",
     "legendTopSubline": "lorsque la batterie domestique est au-dessus de {soc}.",
@@ -51,6 +51,21 @@
     "hex": "Couleur héxa"
   },
   "config": {
+    "apiKey": {
+      "description": "Donner à des scripts ou des automatisations tel qu’une sauvegarde planifiée un accès sécurisé sans partagé votre mot de passe d’admin.",
+      "exampleLabel": "Essaie : télécharge un backup avec curl",
+      "generate": "Générer un clé d’API",
+      "generateConfirm": "Entrer votre mot de passe d’admin pour générer une nouvelle clé d’API.",
+      "keyLabel": "Clé d’API",
+      "regenerate": "Re-générer une clé d’API",
+      "regenerateConfirm": "Entrer votre mot de passe admin pour re-générer une clé d’API.",
+      "regenerateLink": "Re-générer",
+      "regenerateWarning": "Re-générer un nouvelle clé va invalider la clé existante. Toute automatisation l’utilisant cessera de fonctionner. Continuer quand même ?",
+      "revealSuccess": "Votre nouvelle clé d’API est prête à être utilisée.",
+      "revealTitle": "Clé d’API créée",
+      "shownOnce": "Cette clé n’est affiché qu’une seule fois. Stockez-la en lieu sûr. Vous ne pourrez-pas la récupérer ensuite.",
+      "title": "Clé d’API"
+    },
     "aux": {
       "description": "Dispositif ajustant sa consommation en fonction du surplus disponible (comme les chauffe-eau intelligents). evcc s'attend à ce que ce dispositif réduise sa consommation d'énergie si nécessaire.",
       "titleAdd": "Ajouter un consommateur auto-régulé",
@@ -140,8 +155,11 @@
       "currency": "Devise",
       "current": "Courant",
       "currentRange": "Courant",
+      "curtailLimit": "Limite d’entrée",
+      "curtailable": "Suspendable",
       "curtailed": "Limitation de l'injection",
       "detected": "Détecté",
+      "dimLimit": "Limite de consommation",
       "dimmed": "Consommation limitée",
       "enabled": "Activé",
       "energy": "Énergie",
@@ -164,6 +182,7 @@
       "power": "Puissance",
       "powerRange": "Plage de puissance",
       "price": "Prix",
+      "productionLimited": "Production limitée",
       "range": "Autonomie",
       "returnEnergy": "Energie (retournée)",
       "singlePhase": "Monophasé",
@@ -605,8 +624,13 @@
       "connectionStatusHelp": "État de connexion des chargeurs configurés.",
       "detectedChargers": "Identifiants de stations détectées",
       "detectedHelp": "Ces chargeurs ont tenté de se connecter à evcc. Pour utiliser un chargeur, créez un point de charge avec son identifiant de station.",
+      "forwardingConfigured": "Redirection configurée",
+      "forwardingError": "Erreur de redirection",
+      "forwardingOff": "Aucune redirection configurée",
       "noChargers": "Aucun chargeur OCPP détecté.",
       "noStations": "Aucune station connectée",
+      "stations": "IDs des stations",
+      "stationsHelp": "Chargeurs OCPP détectés et configurés. En plus du contrôle local, vous pouvez rediriger les messages vers un serveur externe (ex. pour la facturation).",
       "status": {
         "configured": "Non connecté",
         "connected": "Connecté",
@@ -621,6 +645,7 @@
       "charger": "Chargeur",
       "connectionStatus": "État de connexion",
       "description": "Transmet les appels OCPP à un serveur externe (plateforme de facturation, DSO, etc.) en plus d'evcc. Utilisez \"*\" comme identifiant de station pour correspondre à tous les chargeurs.",
+      "editTitle": "Redirection OCPP",
       "labelCaCert": "Certificat serveur (CA)",
       "labelCheckInsecure": "Autoriser les certificats auto-signés",
       "labelInsecure": "Validation du certificat",
@@ -632,6 +657,7 @@
       "password": "Mot de passe en amont",
       "passwordHelp": "Mot de passe optionnel pour l'authentification HTTP Basic vers le serveur en amont. L'identifiant de station en amont est utilisé comme nom d'utilisateur.",
       "readOnly": {
+        "check": "Bloquer les commandes du serveur en amont",
         "help": {
           "false": "Le serveur en amont peut envoyer des commandes au chargeur via evcc.",
           "true": "Le serveur en amont reçoit tous les messages du chargeur mais ne peut pas envoyer de commandes. evcc conserve le contrôle exclusif."
@@ -641,6 +667,7 @@
       "rule": "Règle {number}",
       "stationId": "Identifiant de station",
       "stationIdHelp": "Identifiant de station du chargeur, ou \"*\" pour correspondre à tous les chargeurs sans règle spécifique.",
+      "status": "Status",
       "title": "Transmetteur OCPP",
       "upstream": "En amont",
       "upstreamConnected": "Connecté",
@@ -652,7 +679,9 @@
       "upstreamStationId": "Identifiant de station en amont",
       "upstreamStationIdHelp": "Remplace l'identifiant de station envoyé au serveur en amont. Laisser vide pour utiliser l'identifiant du chargeur.",
       "upstreamUrl": "URL du serveur en amont",
-      "upstreamUrlHelp": "URL WebSocket OCPP du serveur externe (ex. wss://facturation.exemple.com/ocpp)."
+      "upstreamUrlHelp": "URL WebSocket OCPP du serveur externe (ex. wss://facturation.exemple.com/ocpp).",
+      "username": "Nom d’utilisateur",
+      "usernameHelp": "Pour l’authentification HTTP Basique sur le serveur en amont."
     },
     "optimizer": {
       "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
@@ -729,6 +758,14 @@
       "services": "Services",
       "system": "Système",
       "vehicles": "Véhicules"
+    },
+    "security": {
+      "authDisabledHint": "L’authentification est désactivée. La gestion des comptes n’est pas disponible.",
+      "description": "Gérer l’authentification et les comptes pour cette instancce.",
+      "passwordDescription": "Mettez à jour le mot de passe à utiliser pour se connecter à l’interface d’administration.",
+      "passwordTitle": "Mot de passe admin",
+      "title": "Sécurité",
+      "updatePassword": "Mettre à jour le mot de passe"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -1220,7 +1257,7 @@
       "loadpointsLimit": "limite à {limit}",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
-      "pvExport": "Export surplus",
+      "pvExport": "Export du surplus",
       "pvProduction": "Production",
       "selfConsumption": "Auto-consommation"
     },
@@ -1231,7 +1268,9 @@
       "waitForVehicle": "Prêt à chauffer…"
     },
     "hemsWarning": {
-      "title": "Limite externe :"
+      "consumption": "Consommation",
+      "feedIn": "Entrée",
+      "title": "Limite externe active"
     },
     "history": {
       "direction": {

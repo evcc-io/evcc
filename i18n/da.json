@@ -51,6 +51,21 @@
     "hex": "Hex farve"
   },
   "config": {
+    "apiKey": {
+      "description": "Giv scripts og automatiseringsopgaver, såsom planlagte sikkerhedskopier, sikker adgang uden at dele din administratoradgangskode.",
+      "exampleLabel": "Prøv det: Hent en backup med curl",
+      "generate": "Lav en API nøgle",
+      "generateConfirm": "Skriv admin kodeordet for at lave en ny API nøgle.",
+      "keyLabel": "API nøgle",
+      "regenerate": "Opret en ny API-nøgle",
+      "regenerateConfirm": "Skriv admin kodeord for at lave en ny API nøgle.",
+      "regenerateLink": "Lav ny",
+      "regenerateWarning": "At lave en ny nøgle vil gøre den eksisterende ugyldig og enhver automation som benytter den stopper med at virke. Vil du fortsætte?",
+      "revealSuccess": "Den nye API nøgle er klar til brug.",
+      "revealTitle": "API nøgle lavet",
+      "shownOnce": "Nøglen vises kun én gang. Gem den et sikkert sted, da den ikke kan hentes senere.",
+      "title": "API nøgle"
+    },
     "aux": {
       "description": "Enhed, der justerer sit forbrug baseret på tilgængeligt overskud (som smarte vandvarmere). evcc forventer, at denne enhed reducerer sit strømforbrug, hvis det er nødvendigt.",
       "titleAdd": "Tilføj selvregulerende forbrugsenhed",
@@ -140,8 +155,11 @@
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
+      "curtailLimit": "Indfødnings begrænsning",
+      "curtailable": "Kan begrænses",
       "curtailed": "Indfødning begrænset",
       "detected": "Registreret",
+      "dimLimit": "Forbrugsgrænse",
       "dimmed": "Forbrug begrænset",
       "enabled": "Aktiveret",
       "energy": "Energi",
@@ -164,6 +182,7 @@
       "power": "Effekt",
       "powerRange": "Effekt",
       "price": "Pris",
+      "productionLimited": "Produktionsgrænse",
       "range": "Rækkevidde",
       "returnEnergy": "Energi (baglæns)",
       "singlePhase": "Enkelt fase",
@@ -605,8 +624,13 @@
       "connectionStatusHelp": "Forbindelsesstatus for konfigurerede ladere.",
       "detectedChargers": "Registrerede stations-ID’er",
       "detectedHelp": "Disse ladere har forsøgt at forbinde til evcc. For at bruge en lader skal du oprette et loadpoint med dens stations-ID.",
+      "forwardingConfigured": "Videresendelse af OCPP data er konfigureret",
+      "forwardingError": "Fejl ved videresendelse",
+      "forwardingOff": "Videresendelse er ikke konfigureret",
       "noChargers": "Ingen OCPP-ladere fundet.",
       "noStations": "Ingen stationer tilsluttet",
+      "stations": "Station ID'er",
+      "stationsHelp": "Konfigurerede og fundne OCPP ladere. Udover lokal kontrol kan du videresende beskeder til en ekstern server (f.eks. til regninger).",
       "status": {
         "configured": "Ikke tilsluttet",
         "connected": "Tilsluttet",
@@ -615,6 +639,30 @@
       "title": "OCPP Server",
       "url": "Server URL",
       "urlHelp": "Kopier denne URL til din laders opsætning. Tjek producentens vejledning for detaljer. Laderen tilføjer normalt automatisk sit unikke ID (stations-id) til URL’en. I sjældne tilfælde skal ID’et angives manuelt. Eksempel: {url}"
+    },
+    "ocppforwarder": {
+      "description": "Videresend denne laders OCPP beskeder til en ekstern server (regnings platform, DSO osv.) ud over evcc.",
+      "editTitle": "OCPP videresend",
+      "labelCaCert": "Server certifikat (CA)",
+      "labelCheckInsecure": "Tillad selv-signerede certifikater",
+      "labelInsecure": "Certifikat validerering",
+      "password": "Kodeord",
+      "passwordHelp": "Til HTTP Basic Authentication mod den eksterne server.",
+      "readOnly": {
+        "check": "Bloker kommandoer fra den eksterne server",
+        "help": {
+          "false": "Den eksterne server kan sende kommandoer til laderen via evcc.",
+          "true": "Den eksterne server modtager alle beskeder fra laderen, men kan ikke sende kommandoer. evcc bibeholder eksklusiv kontrol."
+        },
+        "label": "Eksterne kommandoer"
+      },
+      "status": "Status",
+      "upstreamStationId": "Stations ID",
+      "upstreamStationIdHelp": "Laderens ID er sendt til den eksterne server.",
+      "upstreamUrl": "Ekstern server URL",
+      "upstreamUrlHelp": "OCPP WebSocket URL på den eksterne server.",
+      "username": "Brugernavn",
+      "usernameHelp": "Til HTTP Basic Authentication mod den overordnede server."
     },
     "optimizer": {
       "description": "Analyserer sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service for at blive beregnet. Aktuelt beregnes og vises data kun, der er ingen styring af enheder endnu.",
@@ -691,6 +739,14 @@
       "services": "Tjenester",
       "system": "System",
       "vehicles": "Køretøjer"
+    },
+    "security": {
+      "authDisabledHint": "Autentificering er deaktiveret. Håndtering af legitimationsoplysninger er ikke tilgængelig.",
+      "description": "Håndtér autentificering og loginoplysninger for denne instans.",
+      "passwordDescription": "Opdater kodeordet som benyttes for at logge ind på konfigurerings UI.",
+      "passwordTitle": "Admin kodeord",
+      "title": "Sikkerhed",
+      "updatePassword": "Opdater kodeord"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -891,8 +947,8 @@
       "co2Saved": "{value} sparet",
       "co2Title": "CO₂ Udledning",
       "configurePriceCo2": "Lær hvordan man indstiller pris og CO₂ data.",
-      "footerLong": "{percent} Solenergi",
-      "footerShort": "{percent} Solenergi",
+      "footerLong": "{percent} solenergi",
+      "footerShort": "{percent} solenergi",
       "indicator": {
         "co2": "CO₂ emission",
         "co2saved": "CO₂ sparet",
@@ -1194,7 +1250,9 @@
       "waitForVehicle": "Klar til at varme…"
     },
     "hemsWarning": {
-      "title": "Ekstern begrænsning:"
+      "consumption": "Forbrug",
+      "feedIn": "Indfødning",
+      "title": "Ekstern begrænsning er aktiv"
     },
     "history": {
       "direction": {
