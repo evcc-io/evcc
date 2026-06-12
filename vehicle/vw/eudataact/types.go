@@ -102,20 +102,32 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
+	// status
+	FieldChargingState                = "charging_state"
+	FieldChargingPlug1ConnectionState = "charging_plug1_connectionstate"
+	FieldCurrentChargeState           = "charging_state_report.current_charge_state"
+	FieldPlugState                    = "plug_state"
+
+	// soc
 	FieldBatteryStateReportSoc = "battery_state_report.soc"
 	FieldSoc                   = "state_of_charge"
 	FieldHvSoc                 = "hv_soc"
 	FieldHvBatteryLevel        = "battery_level_HV.value"
-	FieldRangeCombined         = "cruising_range_combined"
-	FieldRangePrimary          = "cruising_range_primary_engine"
-	FieldRangeSecondary        = "cruising_range_secondary_engine"
-	FieldOdometer              = "mileage"
-	FieldOdometerValue         = "mileage.value"
-	FieldChargingState         = "charging_state"
-	FieldCurrentChargeState    = "charging_state_report.current_charge_state"
-	FieldPlugState             = "plug_state"
-	FieldTargetSoc             = "settings.target_soc"
-	FieldRemainingTime         = "remaining_charging_time"
+
+	// target soc
+	FieldTargetSoc = "settings.target_soc"
+
+	// range
+	FieldRangeCombined  = "cruising_range_combined"
+	FieldRangePrimary   = "cruising_range_primary_engine"
+	FieldRangeSecondary = "cruising_range_secondary_engine"
+
+	// odo
+	FieldOdometer      = "mileage"
+	FieldOdometerValue = "mileage.value"
+
+	// time
+	FieldRemainingTime = "remaining_charging_time"
 )
 
 // contentDatasets returns the datasets that actually carry content, with their
