@@ -58,14 +58,17 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	maxDimPower := math.Abs(cc.MaxDimPower)
-	if w4G != nil && maxDimPower == 0 {
-		return nil, errors.New("cannot have w4 without power limit")
-	}
-
 	maxCurtailPower := math.Abs(cc.MaxCurtailPower)
 	if cc.MaxPower > 0 {
 		maxCurtailPower = cc.MaxPower
+	}
+
+	return NewFnn(site, math.Abs(cc.MaxDimPower), maxCurtailPower, w3G, s1G, s2G, w4G, cc.Interval)
+}
+
+func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, w4G func() (bool, error), interval time.Duration) (*Fnn, error) {
+	if w4G != nil && maxDimPower == 0 {
+		return nil, errors.New("cannot have w4 without power limit")
 	}
 
 	return &Fnn{
@@ -77,7 +80,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		s2:              s2G,
 		w3:              w3G,
 		w4:              w4G,
-		interval:        cc.Interval,
+		interval:        interval,
 	}, nil
 }
 
