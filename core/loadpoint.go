@@ -468,9 +468,7 @@ func (lp *Loadpoint) pushEvent(event string) {
 }
 
 // maybePushVehicleConnect sends a deferred connect notification once vehicle
-// detection has settled - vehicle identified, detection not running, or the
-// grace period elapsed - or when forced. This lets the message render the
-// identified vehicle instead of a transient guest (#30665).
+// detection has settled
 func (lp *Loadpoint) maybePushVehicleConnect(force bool) {
 	if !lp.connectPending {
 		return
