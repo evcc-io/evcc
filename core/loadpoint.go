@@ -83,7 +83,6 @@ type Loadpoint struct {
 	site     site.API
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
-	lpChan   chan<- *Loadpoint      // update requests
 	log      *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
@@ -404,16 +403,6 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 }
 
-// requestUpdate requests site to update this loadpoint
-func (lp *Loadpoint) requestUpdate() {
-	// TODO improve this
-	lp.pendingControl.Store(true) // persists even if the cap(1) channel send is dropped
-	select {
-	case lp.lpChan <- lp: // request loadpoint update
-	default:
-	}
-}
-
 // GetInflightPower returns the charge power actuated but not yet reflected by the meter
 func (lp *Loadpoint) GetInflightPower() float64 {
 	lp.RLock()
@@ -678,11 +667,10 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
-	lp.lpChan = lpChan
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
@@ -2041,7 +2029,7 @@ func (lp *Loadpoint) observe() {
 	lp.controlMu.Unlock()
 
 	if changed {
-		lp.requestUpdate()
+		lp.requestControl()
 	}
 }
 
@@ -2103,12 +2091,15 @@ func (lp *Loadpoint) observeLocked() bool {
 	return lp.GetStatus() != prevStatus
 }
 
-// Control evaluates the charging strategy and actuates the charger using the
-// state gathered by observe. It is serialized against observe per loadpoint.
+// Control evaluates the charging strategy and actuates the charger using the cached state.
+// It is serialized against concurrently updating loadpoint.
 func (lp *Loadpoint) Control(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	lp.controlMu.Lock()
 	defer lp.controlMu.Unlock()
-	defer lp.controlDone()
+
+	// clear immediately- an intermittent UI request may re-request control
+	// TODO do we need to handle lost requests?
+	lp.controlDone()
 
 	lp.control(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
 }

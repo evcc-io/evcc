@@ -33,7 +33,6 @@ func newObserveLoadpoint(charger api.Charger) *Loadpoint {
 		charger:     charger,
 		chargeMeter: &Null{}, // silence nil panics, returns zero power
 		uiChan:      make(chan util.Param, 32),
-		lpChan:      make(chan *Loadpoint, 1),
 		pushChan:    make(chan messenger.Event, 8),
 		minCurrent:  minA,
 		maxCurrent:  maxA,

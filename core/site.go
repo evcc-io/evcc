@@ -52,8 +52,7 @@ var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	valueChan    chan<- util.Param // client push messages
-	lpUpdateChan chan *Loadpoint
+	valueChan chan<- util.Param // client push messages
 
 	sync.RWMutex
 	log *util.Logger
@@ -1082,8 +1081,6 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 		}
 	}()
 
-	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
-
 	site.prepare()
 
 	lpDevices := config.Loadpoints().Devices()
@@ -1111,7 +1108,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
 		}
 
-		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
+		lp.Prepare(site, lpUIChan, lpPushChan)
 	}
 }
 
@@ -1194,8 +1191,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		select {
 		case <-tick:
 			site.update(<-loadpointChan)
-		case lp := <-site.lpUpdateChan:
-			site.update(lp)
 		case <-stopC:
 			return
 		}

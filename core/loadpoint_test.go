@@ -35,12 +35,11 @@ func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 
-func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
+func createChannels(t *testing.T) (chan util.Param, chan messenger.Event) {
 	t.Helper()
 
 	uiChan := make(chan util.Param)
 	pushChan := make(chan messenger.Event)
-	lpChan := make(chan *Loadpoint)
 
 	log := false
 	go func() {
@@ -54,21 +53,16 @@ func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *
 				if log {
 					t.Log(v)
 				}
-			case v := <-lpChan:
-				if log {
-					t.Log(v)
-				}
 			}
 		}
 	}()
 
-	return uiChan, pushChan, lpChan
+	return uiChan, pushChan
 }
 
-func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint) {
+func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
-	lp.lpChan = lpChan
 }
 
 func attachListeners(t *testing.T, lp *Loadpoint) {
@@ -81,8 +75,8 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 	}
 
-	uiChan, pushChan, lpChan := createChannels(t)
-	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+	uiChan, pushChan := createChannels(t)
+	lp.Prepare(new(Site), uiChan, pushChan)
 }
 
 func TestNew(t *testing.T) {

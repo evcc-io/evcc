@@ -179,7 +179,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 			lp.resetPVTimer()
 		}
 
-		lp.requestUpdate()
+		lp.requestControl()
 	}
 }
 
@@ -276,7 +276,7 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	lp.setPhasesConfigured(phases)
 	lp.Unlock()
 
-	lp.requestUpdate()
+	lp.requestControl()
 
 	return nil
 }
@@ -305,7 +305,7 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	// apply immediately
 	if lp.limitSoc != soc {
 		lp.setLimitSoc(soc)
-		lp.requestUpdate()
+		lp.requestControl()
 	}
 }
 
@@ -338,7 +338,7 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 	// apply immediately
 	if lp.limitEnergy != energy {
 		lp.setLimitEnergy(energy)
-		lp.requestUpdate()
+		lp.requestControl()
 	}
 }
 
@@ -392,7 +392,7 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	// apply immediately
 	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
 		lp.setPlanEnergy(finishAt, energy)
-		lp.requestUpdate()
+		lp.requestControl()
 	}
 
 	return nil
@@ -409,7 +409,7 @@ func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
 
 	lp.publish(keys.EffectivePlanStrategy, lp.getEffectivePlanStrategy())
 
-	lp.requestUpdate()
+	lp.requestControl()
 
 	return nil
 }
@@ -446,7 +446,7 @@ func (lp *Loadpoint) GetSocConfig() loadpoint.SocConfig {
 func (lp *Loadpoint) setSocConfig(soc loadpoint.SocConfig) {
 	lp.Soc = soc
 	lp.settings.SetJson(keys.Soc, soc)
-	lp.requestUpdate()
+	lp.requestControl()
 }
 
 // SetSoc sets the PV mode threshold settings
@@ -476,7 +476,7 @@ func (lp *Loadpoint) setThresholds(thresholds loadpoint.ThresholdsConfig) {
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 	lp.settings.SetJson(keys.Thresholds, thresholds)
-	lp.requestUpdate()
+	lp.requestControl()
 }
 
 // SetThresholds sets the PV mode threshold settings
@@ -609,7 +609,7 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 		lp.batteryBoost = boostDisabled
 		if enable {
 			lp.batteryBoost = boostStart
-			lp.requestUpdate()
+			lp.requestControl()
 		}
 	}
 
