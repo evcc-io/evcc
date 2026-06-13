@@ -16,10 +16,10 @@ func TestLoadpointInflight(t *testing.T) {
 
 	clk := clock.NewMock()
 	lp := &Loadpoint{
-		log:      util.NewLogger("foo"),
-		clock:    clk,
-		phases:   1,
-		interval: time.Minute,
+		log:             util.NewLogger("foo"),
+		clock:           clk,
+		phases:          1,
+		controlInterval: time.Minute,
 	}
 	lp.enabled = true
 	lp.offeredCurrent = 16                 // just raised the setpoint to 16A
@@ -32,7 +32,7 @@ func TestLoadpointInflight(t *testing.T) {
 	assert.Equal(t, currentToPower(16, 1)-currentToPower(6, 1), lp.GetInflightPower())
 
 	// after the settle window the meters are trusted again
-	clk.Add(lp.interval)
+	clk.Add(lp.controlInterval)
 	assert.Zero(t, lp.GetInflightCurrent(), "reserve cleared after settle")
 	assert.Zero(t, lp.GetInflightPower())
 }
@@ -44,10 +44,10 @@ func TestLoadpointInflightDecrease(t *testing.T) {
 
 	clk := clock.NewMock()
 	lp := &Loadpoint{
-		log:      util.NewLogger("foo"),
-		clock:    clk,
-		phases:   1,
-		interval: time.Minute,
+		log:             util.NewLogger("foo"),
+		clock:           clk,
+		phases:          1,
+		controlInterval: time.Minute,
 	}
 	lp.enabled = true
 	lp.offeredCurrent = 6                     // just lowered the setpoint to 6A

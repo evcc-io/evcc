@@ -20,7 +20,7 @@ func TestLoopLoadpointsPrefersPending(t *testing.T) {
 	lp1.pendingControl.Store(true)
 
 	next := make(chan updater)
-	go site.loopLoadpoints(next)
+	go site.loopControllableLoadpoints(next)
 
 	if got := <-next; got != lp1 {
 		t.Fatalf("first dispatch: want pending lp1, got %v", got)
@@ -47,7 +47,7 @@ func TestLoopLoadpointsNoStarvation(t *testing.T) {
 	lp0.pendingControl.Store(true)
 
 	next := make(chan updater)
-	go site.loopLoadpoints(next)
+	go site.loopControllableLoadpoints(next)
 
 	var seenLp1 bool
 	for i := 0; i < 6; i++ {

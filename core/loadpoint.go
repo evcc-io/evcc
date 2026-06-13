@@ -91,8 +91,9 @@ type Loadpoint struct {
 	vmu          sync.RWMutex // guard vehicle
 	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
 
-	actuatedAt     time.Time   // last setpoint change; opens the in-flight reserve window
-	pendingControl atomic.Bool // control re-evaluation requested (scheduler hint)
+	actuatedAt      time.Time     // last setpoint change; opens the in-flight reserve window
+	pendingControl  atomic.Bool   // control re-evaluation requested (scheduler hint)
+	controlInterval time.Duration // control interval; also the in-flight reserve settle window
 
 	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
 	observed      bool       // set once observe has produced valid state; control must not actuate before
@@ -119,18 +120,17 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
-	title                    string        // UI title
-	priority                 int           // Priority
-	minCurrent               float64       // PV mode: start current	Min+PV mode: min current
-	maxCurrent               float64       // Max allowed current. Physically ensured by the charger
-	interval                 time.Duration // control interval; also the in-flight reserve settle window
-	phasesConfigured         int           // Charger configured phase mode 0/1/3
-	limitSoc                 int           // Session limit for soc
-	limitEnergy              float64       // Session limit for energy
-	smartCostLimit           *float64      // always charge if consumption cost is below this value
-	smartFeedInPriorityLimit *float64      // prevent charging if feed-in cost is above this value
-	batteryBoost             int           // battery boost state
-	batteryBoostLimit        int           // battery boost soc limit (0-100, 100=disabled)
+	title                    string   // UI title
+	priority                 int      // Priority
+	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
+	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
+	phasesConfigured         int      // Charger configured phase mode 0/1/3
+	limitSoc                 int      // Session limit for soc
+	limitEnergy              float64  // Session limit for energy
+	smartCostLimit           *float64 // always charge if consumption cost is below this value
+	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
+	batteryBoost             int      // battery boost state
+	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -411,19 +411,6 @@ func (lp *Loadpoint) requestUpdate() {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:
 	}
-}
-
-// inflightActive reports whether a just-actuated setpoint is still settling, so
-// the meters do not yet reflect it. The caller must hold the read lock.
-func (lp *Loadpoint) inflightActive() bool {
-	// settle window is the control interval; fall back to chargerSwitchDuration
-	// if interval was never set (loadpoint not run via Site.Run) so the reserve
-	// is never silently disabled.
-	window := lp.interval
-	if window <= 0 {
-		window = chargerSwitchDuration
-	}
-	return !lp.actuatedAt.IsZero() && lp.clock.Since(lp.actuatedAt) < window
 }
 
 // GetInflightPower returns the charge power actuated but not yet reflected by the
@@ -2050,7 +2037,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	defer lp.controlMu.Unlock()
 
 	lp.observeLocked()
-	lp.controlLocked(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
+	lp.control(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
 }
 
 // observe reads and publishes all sensing data (meters, charger status, vehicle
@@ -2125,18 +2112,19 @@ func (lp *Loadpoint) observeLocked() bool {
 	return lp.GetStatus() != prevStatus
 }
 
-// control evaluates the charging strategy and actuates the charger using the
+// Control evaluates the charging strategy and actuates the charger using the
 // state gathered by observe. It is serialized against observe per loadpoint.
-func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Control(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	lp.controlMu.Lock()
 	defer lp.controlMu.Unlock()
+	defer lp.controlDone()
 
-	lp.controlLocked(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
+	lp.control(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
 }
 
-// controlLocked is the decision and actuation half of the control loop. The
+// control is the decision and actuation half of the control loop. The
 // caller must hold controlMu and have run observe beforehand.
-func (lp *Loadpoint) controlLocked(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// auto-disable battery boost when SOC drops below limit
 	if lp.GetBatteryBoost() != boostDisabled {
 		if limit := lp.GetBatteryBoostLimit(); limit < 100 {

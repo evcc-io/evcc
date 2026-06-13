@@ -30,17 +30,17 @@ func TestSetLimitNoSelfCapFromOwnReserve(t *testing.T) {
 	}
 
 	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		clock:       clk,
-		bus:         evbus.New(),
-		charger:     charger,
-		chargeMeter: &Null{},
-		wakeUpTimer: NewTimer(),
-		circuit:     circ,
-		minCurrent:  minA,
-		maxCurrent:  maxA,
-		phases:      1,
-		interval:    time.Minute,
+		log:             util.NewLogger("foo"),
+		clock:           clk,
+		bus:             evbus.New(),
+		charger:         charger,
+		chargeMeter:     &Null{},
+		wakeUpTimer:     NewTimer(),
+		circuit:         circ,
+		minCurrent:      minA,
+		maxCurrent:      maxA,
+		phases:          1,
+		controlInterval: time.Minute,
 	}
 	lp.status = api.StatusC
 	lp.enabled = true
@@ -78,10 +78,10 @@ func TestInflightCurrentMeteredCircuit(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := &Loadpoint{
-		log:      util.NewLogger("foo"),
-		clock:    clk,
-		phases:   1,
-		interval: time.Minute,
+		log:             util.NewLogger("foo"),
+		clock:           clk,
+		phases:          1,
+		controlInterval: time.Minute,
 	}
 	lp.enabled = true
 	lp.offeredCurrent = maxA
