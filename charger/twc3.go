@@ -128,6 +128,12 @@ func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 			return nil, errors.New("tesla: clientId, accessToken and refreshToken are all required")
 		}
 
+		// redact the tesla secrets on the shared logger before any token handling
+		log.Redact(
+			cc.Tesla.Tokens.Access, cc.Tesla.Tokens.Refresh,
+			cc.Tesla.Credentials.ID, cc.Tesla.Credentials.Secret,
+		)
+
 		// switchCurrent override only takes effect in this on/off fallback mode
 		if cc.SwitchCurrent != 0 && (cc.SwitchCurrent < 1 || cc.SwitchCurrent > 32) {
 			return nil, fmt.Errorf("switchCurrent must be between 1 and 32 A, got %g", cc.SwitchCurrent)
@@ -137,11 +143,6 @@ func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		log := util.NewLogger("twc3").Redact(
-			cc.Tesla.Tokens.Access, cc.Tesla.Tokens.Refresh,
-			cc.Tesla.Credentials.ID, cc.Tesla.Credentials.Secret,
-		)
 
 		identity, err := tesla.NewIdentity(log, tesla.OAuth2Config(cc.Tesla.Credentials.ID, cc.Tesla.Credentials.Secret), token)
 		if err != nil {
