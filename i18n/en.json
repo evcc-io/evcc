@@ -1007,6 +1007,14 @@
     }
   },
   "forecast": {
+    "chargingStrategy": {
+      "label": "Grid charging",
+      "option": {
+        "attenuate_grid_peaks": "Attenuate grid peaks",
+        "charge_before_export": "Charge before export",
+        "none": "No grid charging"
+      }
+    },
     "co2": {
       "average": "Average",
       "constant": "CO₂ intensity",

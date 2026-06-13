@@ -80,6 +80,9 @@ type Site struct {
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
 
+	// optimizer settings
+	optimizerChargingStrategy string // optimizer grid charging strategy
+
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
@@ -347,6 +350,13 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
+	if v, err := settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
+		if err := site.SetOptimizerChargingStrategy(v); err != nil {
+			return err
+		}
+	}
+	// publish the effective strategy so the UI reflects the default when unset
+	site.publish(keys.OptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
 
 	// drop legacy accumulator-based forecast settings (now stored via metrics collector)
 	settings.Delete("solarAccForecast")

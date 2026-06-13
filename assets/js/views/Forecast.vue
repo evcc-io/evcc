@@ -83,18 +83,41 @@
 				>
 					<div class="d-flex align-items-baseline my-4">
 						<h3 class="fw-normal mb-0">{{ $t("forecast.type.price") }}</h3>
-						<div class="form-check form-switch ms-auto mb-0 text-nowrap">
-							<input
-								id="priceZoom"
-								:checked="priceZoom"
-								class="form-check-input"
-								type="checkbox"
-								role="switch"
-								@change="togglePriceZoom"
-							/>
-							<label class="form-check-label text-muted" for="priceZoom">
-								{{ $t("forecast.priceZoom") }}
-							</label>
+						<div class="ms-auto d-flex align-items-baseline gap-3">
+							<div
+								v-if="showChargingStrategy"
+								class="d-flex align-items-baseline gap-2 text-nowrap"
+							>
+								<label
+									class="form-label text-muted mb-0"
+									for="optimizerChargingStrategy"
+								>
+									{{ $t("forecast.chargingStrategy.label") }}
+								</label>
+								<select
+									id="optimizerChargingStrategy"
+									:value="optimizerChargingStrategy"
+									class="form-select form-select-sm w-auto"
+									@change="changeChargingStrategy"
+								>
+									<option v-for="s in chargingStrategies" :key="s" :value="s">
+										{{ $t(`forecast.chargingStrategy.option.${s}`) }}
+									</option>
+								</select>
+							</div>
+							<div class="form-check form-switch mb-0 text-nowrap">
+								<input
+									id="priceZoom"
+									:checked="priceZoom"
+									class="form-check-input"
+									type="checkbox"
+									role="switch"
+									@change="togglePriceZoom"
+								/>
+								<label class="form-check-label text-muted" for="priceZoom">
+									{{ $t("forecast.priceZoom") }}
+								</label>
+							</div>
 						</div>
 					</div>
 					<div class="chart-edge">
@@ -151,10 +174,14 @@ import Co2Details from "../components/Forecast/Co2Details.vue";
 import formatter from "@/mixins/formatter";
 import settings from "@/settings";
 import store from "../store";
+import api from "@/api";
 import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
 
 const MIN_HOURS = 76;
 const MAX_HOURS = 96;
+
+// optimizer grid charging strategies, mirrors the backend enum (first is default)
+const CHARGING_STRATEGIES = ["charge_before_export", "attenuate_grid_peaks", "none"];
 
 export default defineComponent({
 	name: "Forecast",
@@ -245,6 +272,15 @@ export default defineComponent({
 		showSolarAdjust() {
 			return !!this.forecast.solar && this.experimental;
 		},
+		showChargingStrategy(): boolean {
+			return !!this.experimental && !!store.state?.optimizer;
+		},
+		chargingStrategies(): string[] {
+			return CHARGING_STRATEGIES;
+		},
+		optimizerChargingStrategy(): string {
+			return store.state?.optimizerChargingStrategy || CHARGING_STRATEGIES[0];
+		},
 		solar() {
 			return this.showSolarAdjust && this.solarAdjusted
 				? adjustedSolar(this.forecast.solar)
@@ -265,6 +301,10 @@ export default defineComponent({
 	methods: {
 		changeAdjusted() {
 			settings.solarAdjusted = !settings.solarAdjusted;
+		},
+		async changeChargingStrategy(e: Event) {
+			const value = (e.target as HTMLSelectElement).value;
+			await api.post(`optimizerchargingstrategy/${value}`);
 		},
 		togglePriceZoom() {
 			settings.priceZoom = !settings.priceZoom;

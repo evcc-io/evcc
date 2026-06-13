@@ -128,6 +128,7 @@ export interface State {
   ocpp?: Ocpp;
   ocppforwarder?: ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]>;
   optimizer?: boolean;
+  optimizerChargingStrategy?: string;
   mcp?: boolean;
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -147,4 +148,55 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestOptimizerChargingStrategy(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// default when unset
+	assert.Equal(t, defaultOptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
+
+	// invalid value rejected, strategy unchanged
+	require.Error(t, site.SetOptimizerChargingStrategy("bogus"))
+	assert.Equal(t, defaultOptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
+
+	// valid change is applied and re-triggers the optimizer
+	optimizerUpdated = time.Now()
+	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
+	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
+	assert.True(t, optimizerUpdated.IsZero(), "optimizer should be re-triggered on strategy change")
+}
+
+func TestCurrentSlotSuggestion(t *testing.T) {
+	// slotHours 1 makes the per-slot Wh values map 1:1 to W
+	for _, tc := range []struct {
+		name          string
+		typ           batteryType
+		charge, disch float32
+		gridImporting bool
+		want          string
+	}{
+		{"battery grid charge", batteryTypeBattery, 3000, 0, true, "charge"},
+		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, false, "normal"},
+		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, true, "hold"},
+		{"battery discharge", batteryTypeBattery, 0, 2000, true, "normal"},
+		{"battery idle no import", batteryTypeBattery, 0, 0, false, "normal"},
+		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, false, "charge"},
+		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, false, "stop"},
+		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, false, "stop"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := optimizer.BatteryResult{
+				ChargingPower:    []float32{tc.charge},
+				DischargingPower: []float32{tc.disch},
+			}
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.gridImporting, 1)
+			assert.Equal(t, tc.want, s.Action)
+			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
+			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
+		})
+	}
+
+	// no result yields an empty suggestion
+	assert.Equal(t, batterySuggestion{}, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, 1))
 }
