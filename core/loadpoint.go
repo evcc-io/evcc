@@ -2179,10 +2179,6 @@ func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, 
 		return
 	}
 
-	// consume the latched welcome charge so it applies exactly once
-	welcomeCharge := lp.welcomeCharge
-	lp.welcomeCharge = false
-
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
 
@@ -2212,7 +2208,8 @@ func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, 
 
 	case mode == api.ModeOff:
 		var current float64
-		if welcomeCharge {
+		if lp.welcomeCharge {
+			lp.welcomeCharge = false
 			current = lp.effectiveMinCurrent()
 		}
 		err = lp.setLimit(current)
