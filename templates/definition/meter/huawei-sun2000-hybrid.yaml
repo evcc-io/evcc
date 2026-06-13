@@ -320,12 +320,15 @@ render: |
                   - name: rated
                     type: int
                     config:
-                      source: modbus
-                      {{- include "modbus" . | indent 20 }}
-                      register:
-                        address: 37048 # [ESS] Maximum discharge power (RO)
-                        type: holding
-                        decode: uint32
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37048 # [ESS] Maximum discharge power (RO)
+                          type: holding
+                          decode: uint32
                 out:
                   - name: power
                     type: int
@@ -405,12 +408,15 @@ render: |
                   - name: rated
                     type: int
                     config:
-                      source: modbus
-                      {{- include "modbus" . | indent 20 }}
-                      register:
-                        address: 37046 # [ESS] Maximum charge power (RO)
-                        type: holding
-                        decode: uint32
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37046 # [ESS] Maximum charge power (RO)
+                          type: holding
+                          decode: uint32
                 out:
                   - name: power
                     type: int
