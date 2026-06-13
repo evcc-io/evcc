@@ -43,6 +43,21 @@ func init() {
 	registry.Add("twc3", NewTwc3FromConfig)
 }
 
+// jq queries for the deeply-nested, non-contractual Fleet responses, compiled
+// once - a bad query then panics at init instead of failing per request.
+var (
+	twc3ScheduleErrQuery   = jqMustParse(".. | .ConfigureChargeScheduleResponse? | .error? | numbers")
+	twc3MaxOutputAmpsQuery = jqMustParse(".. | .max_output_current_amps? | numbers")
+)
+
+func jqMustParse(s string) *gojq.Query {
+	q, err := gojq.Parse(s)
+	if err != nil {
+		panic(err)
+	}
+	return q
+}
+
 // Vitals is the /api/1/vitals response
 type Vitals struct {
 	ContactorClosed   bool    `json:"contactor_closed"`    // false
@@ -313,11 +328,7 @@ func (f *twc3Fleet) switchSchedule(enable bool) error {
 	// Success is signalled by ConfigureChargeScheduleResponse.error == 1 (same as the
 	// Tesla app); anything else (e.g. 4) means rejected despite HTTP 200. The code sits
 	// deep in a non-contractual envelope, so anchor on the unique response key with jq.
-	query, err := gojq.Parse(".. | .ConfigureChargeScheduleResponse? | .error? | numbers")
-	if err != nil {
-		return err
-	}
-	if v, err := jq.Query(query, body); err == nil {
+	if v, err := jq.Query(twc3ScheduleErrQuery, body); err == nil {
 		if code, ok := v.(float64); ok && code == 1 {
 			return nil
 		}
@@ -365,11 +376,7 @@ func (f *twc3Fleet) maxOutputCurrent() (float64, error) {
 
 	// the response is deeply nested in a non-contractual gRPC envelope; extract the
 	// unique max_output_current_amps key with jq instead of mirroring the structure.
-	query, err := gojq.Parse(".. | .max_output_current_amps? | numbers")
-	if err != nil {
-		return 0, err
-	}
-	v, err := jq.Query(query, body)
+	v, err := jq.Query(twc3MaxOutputAmpsQuery, body)
 	if err != nil {
 		return 0, err
 	}
