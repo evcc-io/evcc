@@ -71,8 +71,61 @@ type batteryDetail struct {
 
 type batteryResult struct {
 	batteryDetail
-	Full  time.Time `json:"full,omitzero"`
-	Empty time.Time `json:"empty,omitzero"`
+	Full       time.Time         `json:"full,omitzero"`
+	Empty      time.Time         `json:"empty,omitzero"`
+	Suggestion batterySuggestion `json:"suggestion,omitzero"`
+}
+
+// batterySuggestion is the advisory action derived from the optimizer corner result for the
+// current slot. It is published for visibility only and not yet wired into control.
+type batterySuggestion struct {
+	// Action is the recommended action for the current slot.
+	// home battery: normal|hold|charge|holdcharge; loadpoint/vehicle: charge|stop
+	Action    string  `json:"action,omitempty"`
+	Charge    float64 `json:"charge,omitempty"`    // recommended charge power, W
+	Discharge float64 `json:"discharge,omitempty"` // recommended discharge power, W
+}
+
+// suggestionThreshold ignores numerical noise around zero power (W)
+const suggestionThreshold = 50
+
+// currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
+// Because the optimization is linear, the first slot is at an operating-range extreme, so it
+// maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
+// An idle battery is interpreted from the grid flow: importing means discharge is withheld
+// (hold), exporting means charging is withheld (holdcharge).
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64) batterySuggestion {
+	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
+		return batterySuggestion{}
+	}
+
+	charge := float64(res.ChargingPower[0]) / slotHours
+	discharge := float64(res.DischargingPower[0]) / slotHours
+
+	s := batterySuggestion{Charge: charge, Discharge: discharge}
+
+	if detail.Type == batteryTypeBattery {
+		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
+		switch {
+		case charge > suggestionThreshold && gridImporting:
+			// charging while importing means grid charging
+			s.Action = api.BatteryCharge.String()
+		case idle && gridImporting:
+			// idle while importing: discharge is deliberately withheld
+			s.Action = api.BatteryHold.String()
+		case idle && gridExporting:
+			// idle while exporting: surplus is exported instead of charged
+			s.Action = api.BatteryHoldCharge.String()
+		default:
+			s.Action = api.BatteryNormal.String()
+		}
+	} else if charge > suggestionThreshold {
+		s.Action = "charge"
+	} else {
+		s.Action = "stop"
+	}
+
+	return s
 }
 
 type requestDetails struct {
@@ -263,18 +316,24 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Details: details,
 	})
 
+	slotHours := firstSlotDuration.Hours()
+	gridImporting := len(resp.JSON200.GridImport) > 0 && resp.JSON200.GridImport[0] > 0
+	gridExporting := len(resp.JSON200.GridExport) > 0 && resp.JSON200.GridExport[0] > 0
+
 	var batteries []batteryResult
 	for i, batReq := range req.Batteries {
 		batResp := resp.JSON200.Batteries[i]
+		detail := details.BatteryDetails[i]
 
 		batResult := batteryResult{
-			batteryDetail: details.BatteryDetails[i],
+			batteryDetail: detail,
 			Full: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
 			Empty: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
+			Suggestion: currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours),
 		}
 
 		batteries = append(batteries, batResult)
