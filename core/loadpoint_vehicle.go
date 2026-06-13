@@ -18,11 +18,6 @@ import (
 const (
 	vehicleDetectInterval = 1 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
-
-	// vehicleConnectGrace caps how long the connect notification is held while
-	// waiting for detection to identify the vehicle. After this it is sent
-	// regardless, rendering as guest if still unidentified.
-	vehicleConnectGrace = vehicleDetectInterval
 )
 
 // availableVehicles is the slice of vehicles from the coordinator that are available

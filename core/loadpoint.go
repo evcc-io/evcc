@@ -469,12 +469,13 @@ func (lp *Loadpoint) pushEvent(event string) {
 
 // maybePushVehicleConnect sends a deferred connect notification once vehicle
 // detection has settled
-func (lp *Loadpoint) maybePushVehicleConnect(force bool) {
+func (lp *Loadpoint) maybePushVehicleConnect() {
 	if !lp.connectPending {
 		return
 	}
 
-	if !force && lp.GetVehicle() == nil && !lp.vehicleDetect.IsZero() && lp.clock.Since(lp.connectedTime) < vehicleConnectGrace {
+	// hold while detection is still running and the vehicle is unidentified
+	if lp.GetVehicle() == nil && !lp.vehicleDetect.IsZero() {
 		return
 	}
 
@@ -1153,9 +1154,13 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 					lp.connectPending = true
 					welcomeCharge = lp.needsWelcomeCharge()
 				case evVehicleDisconnect:
-					// flush a still-pending connect so the connect/disconnect pair stays ordered
-					lp.maybePushVehicleConnect(true)
-					lp.pushEvent(evVehicleDisconnect)
+					// a still-pending connect means the vehicle disconnected before
+					// its notification was confirmed; omit both connect and disconnect
+					if lp.connectPending {
+						lp.connectPending = false
+					} else {
+						lp.pushEvent(evVehicleDisconnect)
+					}
 					welcomeCharge = false
 				}
 			}
@@ -2068,7 +2073,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	}
 
 	// release deferred connect notification once detection has settled
-	lp.maybePushVehicleConnect(false)
+	lp.maybePushVehicleConnect()
 
 	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status
