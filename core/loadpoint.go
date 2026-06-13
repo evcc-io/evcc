@@ -1149,8 +1149,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 			if prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
-					// defer notification until vehicle detection settles so it
-					// renders the identified vehicle, not a transient guest (#30665)
+					// defer notification until vehicle detection settles
 					lp.connectPending = true
 					welcomeCharge = lp.needsWelcomeCharge()
 				case evVehicleDisconnect:
