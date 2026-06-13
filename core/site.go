@@ -1144,7 +1144,8 @@ func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
 func (site *Site) loopControllableLoadpoints(next chan<- updater) {
 	candidates := append(site.loadpoints, site.loadpoints...)
 
-	for cursor := 0; ; cursor++ {
+	var cursor int
+	for {
 		var lp *Loadpoint
 
 		for i := cursor; i < cursor+len(site.loadpoints); i++ {
@@ -1157,7 +1158,12 @@ func (site *Site) loopControllableLoadpoints(next chan<- updater) {
 		if lp != nil {
 			next <- lp
 		} else {
-			time.Sleep(2 * time.Second) // TODO
+			time.Sleep(senseInterval)
+		}
+
+		cursor++
+		if cursor >= len(site.loadpoints) {
+			cursor = 0
 		}
 	}
 }
