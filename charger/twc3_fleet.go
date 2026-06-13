@@ -30,7 +30,8 @@ type twc3Fleet struct {
 	client          *request.Helper // with oauth2 transport
 	commandURL      string          // fleetBaseURL + /api/1/energy_sites/{id}/command
 	din             string
-	lockMaybeActive bool // schedule may be gating the contactor (true = unknown/locked)
+	switchCurrent   float64 // on/off full-load current (0 = unavailable)
+	lockMaybeActive bool    // schedule may be gating the contactor (true = unknown/locked)
 }
 
 // setCharging allows (enable) or blocks (disable) charging via the wall connector
@@ -77,13 +78,13 @@ func jqMustParse(s string) *gojq.Query {
 // newTwc3Fleet sets up the optional Tesla Fleet on/off control: it validates the
 // tesla block, builds the authenticated fleet client, auto-discovers region, wall
 // connector DIN and energy site, and resolves the on/off current (explicit override
-// or the box's commissioned maximum). It returns the fleet and that current; a
-// max-current read failure is non-fatal (current 0 -> on/off mode stays unavailable).
-func newTwc3Fleet(log *util.Logger, local *request.Helper, baseURI string, cfg *twc3TeslaConfig, switchCurrentOverride float64) (*twc3Fleet, float64, error) {
+// or the box's commissioned maximum). A max-current read failure is non-fatal
+// (switchCurrent stays 0 -> on/off mode reports no current range).
+func newTwc3Fleet(log *util.Logger, local *request.Helper, baseURI string, cfg *twc3TeslaConfig, switchCurrentOverride float64) (*twc3Fleet, error) {
 	// the template renders the tesla block as soon as any field is set, so a
 	// partial config surfaces here instead of being silently ignored
 	if cfg.Credentials.ID == "" || cfg.Tokens.Access == "" || cfg.Tokens.Refresh == "" {
-		return nil, 0, errors.New("tesla: clientId, accessToken and refreshToken are all required")
+		return nil, errors.New("tesla: clientId, accessToken and refreshToken are all required")
 	}
 
 	// redact the tesla secrets on the shared logger before any token handling
@@ -94,17 +95,17 @@ func newTwc3Fleet(log *util.Logger, local *request.Helper, baseURI string, cfg *
 
 	// switchCurrent override only takes effect in this on/off fallback mode
 	if switchCurrentOverride != 0 && (switchCurrentOverride < 1 || switchCurrentOverride > 32) {
-		return nil, 0, fmt.Errorf("switchCurrent must be between 1 and 32 A, got %g", switchCurrentOverride)
+		return nil, fmt.Errorf("switchCurrent must be between 1 and 32 A, got %g", switchCurrentOverride)
 	}
 
 	token, err := cfg.Tokens.Token()
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	identity, err := tesla.NewIdentity(log, tesla.OAuth2Config(cfg.Credentials.ID, cfg.Credentials.Secret), token)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	hc := request.NewClient(log)
@@ -117,46 +118,46 @@ func newTwc3Fleet(log *util.Logger, local *request.Helper, baseURI string, cfg *
 	// fleet base url: auto-detect the account's region (same as the tesla vehicle)
 	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	region, err := tc.UserRegion()
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	fleetBaseURL := strings.TrimRight(region.FleetApiBaseUrl, "/")
 
 	// derive the wall connector DIN locally from this box (works per-uri, also with multiple TWC3s)
 	din, err := localDIN(local, baseURI)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	// find the energy site containing this wall connector
 	energySiteID, err := discoverEnergySite(fleetClient, fleetBaseURL, din)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	f := &twc3Fleet{
 		client:          fleetClient,
 		commandURL:      fmt.Sprintf("%s/api/1/energy_sites/%d/command", fleetBaseURL, energySiteID),
 		din:             din,
+		switchCurrent:   switchCurrentOverride,
 		lockMaybeActive: true, // unknown at startup -> first enable clears any stale lock once
 	}
 
 	// determine the on/off current: explicit override, else the wall connector's
 	// commissioned maximum (read once at startup - it does not change). On read
 	// failure there is no fallback; the on/off mode stays unavailable (logged here).
-	switchCurrent := switchCurrentOverride
-	if switchCurrent == 0 {
+	if f.switchCurrent == 0 {
 		if a, err := f.maxOutputCurrent(); err != nil {
 			log.WARN.Printf("could not read max output current, on/off mode disabled (set switchCurrent to enable): %v", err)
 		} else {
-			switchCurrent = a
+			f.switchCurrent = a
 		}
 	}
 
-	return f, switchCurrent, nil
+	return f, nil
 }
 
 // localDIN derives the wall connector DIN (part_number--serial_number) from the

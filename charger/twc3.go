@@ -14,11 +14,10 @@ import (
 
 // Twc3 is an api.Charger implementation for the Tesla Wall Connector Gen 3
 type Twc3 struct {
-	lp            loadpoint.API
-	vitalsG       func() (Vitals, error)
-	enabled       bool
-	fleet         *twc3Fleet // nil without tesla block
-	switchCurrent float64    // on/off threshold current, only used in switch mode
+	lp      loadpoint.API
+	vitalsG func() (Vitals, error)
+	enabled bool
+	fleet   *twc3Fleet // nil without tesla block
 }
 
 func init() {
@@ -84,12 +83,11 @@ func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 
 	// optional vehicle-independent on/off via Tesla Fleet API
 	if cc.Tesla != nil {
-		fleet, switchCurrent, err := newTwc3Fleet(log, client, baseURI, cc.Tesla, cc.SwitchCurrent)
+		fleet, err := newTwc3Fleet(log, client, baseURI, cc.Tesla, cc.SwitchCurrent)
 		if err != nil {
 			return nil, err
 		}
 		c.fleet = fleet
-		c.switchCurrent = switchCurrent
 	}
 
 	return c, nil
@@ -189,9 +187,9 @@ var _ api.CurrentLimiter = (*Twc3)(nil)
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (c *Twc3) GetMinMaxCurrent() (float64, float64, error) {
-	if c.switchMode() && c.switchCurrent > 0 {
+	if c.switchMode() && c.fleet.switchCurrent > 0 {
 		// min=max -> on/off only at full power
-		return c.switchCurrent, c.switchCurrent, nil
+		return c.fleet.switchCurrent, c.fleet.switchCurrent, nil
 	}
 	// Tesla/classic, or unknown switch current: vehicle/loadpoint range applies
 	return 0, 0, api.ErrNotAvailable
