@@ -351,12 +351,10 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
-		// a bad persisted value must not prevent startup - warn and keep the default
 		if err := site.SetOptimizerChargingStrategy(v); err != nil {
 			site.log.WARN.Printf("optimizer charging strategy: %v", err)
 		}
 	}
-	// publish the effective strategy (default when unset) and the available options
 	site.publish(keys.OptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
 	site.publish(keys.OptimizerChargingStrategies, optimizerChargingStrategies)
 
