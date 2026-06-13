@@ -27,9 +27,36 @@ type twc3TeslaConfig struct {
 
 // twc3Fleet sends vehicle-independent on/off commands via the Tesla Fleet API
 type twc3Fleet struct {
-	client     *request.Helper // with oauth2 transport
-	commandURL string          // fleetBaseURL + /api/1/energy_sites/{id}/command
-	din        string
+	client          *request.Helper // with oauth2 transport
+	commandURL      string          // fleetBaseURL + /api/1/energy_sites/{id}/command
+	din             string
+	lockMaybeActive bool // schedule may be gating the contactor (true = unknown/locked)
+}
+
+// setCharging allows (enable) or blocks (disable) charging via the wall connector
+// schedule. It always re-asserts the schedule so the desired state is restored even
+// if it was changed externally; evcc only calls this on state transitions, so this
+// adds no redundant Fleet calls.
+func (f *twc3Fleet) setCharging(enable bool) error {
+	if err := f.switchSchedule(enable); err != nil {
+		return err
+	}
+	f.lockMaybeActive = !enable
+	return nil
+}
+
+// clearLock lifts a possibly-active guest lock before charge control is handed back
+// to the vehicle. It only calls out when a lock may actually be active, avoiding a
+// redundant Fleet API call on every enable.
+func (f *twc3Fleet) clearLock() error {
+	if !f.lockMaybeActive {
+		return nil
+	}
+	if err := f.switchSchedule(true); err != nil {
+		return err
+	}
+	f.lockMaybeActive = false
+	return nil
 }
 
 // jq queries for the deeply-nested, non-contractual Fleet responses, compiled
@@ -111,9 +138,10 @@ func newTwc3Fleet(log *util.Logger, local *request.Helper, baseURI string, cfg *
 	}
 
 	f := &twc3Fleet{
-		client:     fleetClient,
-		commandURL: fmt.Sprintf("%s/api/1/energy_sites/%d/command", fleetBaseURL, energySiteID),
-		din:        din,
+		client:          fleetClient,
+		commandURL:      fmt.Sprintf("%s/api/1/energy_sites/%d/command", fleetBaseURL, energySiteID),
+		din:             din,
+		lockMaybeActive: true, // unknown at startup -> first enable clears any stale lock once
 	}
 
 	// determine the on/off current: explicit override, else the wall connector's

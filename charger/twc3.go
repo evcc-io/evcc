@@ -14,12 +14,11 @@ import (
 
 // Twc3 is an api.Charger implementation for the Tesla Wall Connector Gen 3
 type Twc3 struct {
-	lp              loadpoint.API
-	vitalsG         func() (Vitals, error)
-	enabled         bool
-	fleet           *twc3Fleet // nil without tesla block
-	switchCurrent   float64    // on/off threshold current, only used in switch mode
-	lockMaybeActive bool       // schedule may be gating the contactor (true = unknown/locked)
+	lp            loadpoint.API
+	vitalsG       func() (Vitals, error)
+	enabled       bool
+	fleet         *twc3Fleet // nil without tesla block
+	switchCurrent float64    // on/off threshold current, only used in switch mode
 }
 
 func init() {
@@ -71,9 +70,7 @@ func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	c := &Twc3{
-		lockMaybeActive: true, // unknown at startup -> first enable clears any stale lock once
-	}
+	c := &Twc3{}
 
 	log := util.NewLogger("twc3")
 	client := request.NewHelper(log)
@@ -154,26 +151,19 @@ func (c *Twc3) setCharging(enable bool) error {
 	// 1. vehicle can start/stop (Tesla) -> control via vehicle
 	if v, ok := api.Cap[api.ChargeController](c.lp.GetVehicle()); ok {
 		// a guest may have locked the contactor via the schedule; clear it before
-		// handing control back to the vehicle, but only when a lock may actually be
-		// active - avoids a redundant Fleet API call on every enable. Disabling needs
-		// no schedule change - the vehicle stops charging itself.
-		if c.fleet != nil && enable && c.lockMaybeActive {
-			if err := c.fleet.switchSchedule(true); err != nil {
+		// handing control back to the vehicle. Disabling needs no schedule change -
+		// the vehicle stops charging itself.
+		if c.fleet != nil && enable {
+			if err := c.fleet.clearLock(); err != nil {
 				return err
 			}
-			c.lockMaybeActive = false
 		}
 		return v.ChargeEnable(enable)
 	}
 
 	// 2. fallback: vehicle cannot -> wall connector schedule
 	if c.fleet != nil {
-		if err := c.fleet.switchSchedule(enable); err != nil {
-			return err
-		}
-		// the schedule now gates the contactor iff we disabled charging
-		c.lockMaybeActive = !enable
-		return nil
+		return c.fleet.setCharging(enable)
 	}
 
 	// 3. neither
