@@ -413,13 +413,7 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
-// GetInflightPower returns the charge power actuated but not yet reflected by the
-// meters (max(0, intended - measured)) during the settle window, else 0. The
-// site discounts the surplus by the sum across loadpoints, and circuits add it
-// to their metered power, so a just-actuated loadpoint is not re-counted as
-// available surplus / circuit headroom until the meters catch up. It is
-// self-correcting: the reserve collapses to zero as soon as the metered power
-// reaches the intended draw.
+// GetInflightPower returns the charge power actuated but not yet reflected by the meter
 func (lp *Loadpoint) GetInflightPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
