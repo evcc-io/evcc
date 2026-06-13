@@ -351,12 +351,14 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
+		// a bad persisted value must not prevent startup - warn and keep the default
 		if err := site.SetOptimizerChargingStrategy(v); err != nil {
-			return err
+			site.log.WARN.Printf("optimizer charging strategy: %v", err)
 		}
 	}
-	// publish the effective strategy so the UI reflects the default when unset
+	// publish the effective strategy (default when unset) and the available options
 	site.publish(keys.OptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
+	site.publish(keys.OptimizerChargingStrategies, optimizerChargingStrategies)
 
 	// drop legacy accumulator-based forecast settings (now stored via metrics collector)
 	settings.Delete("solarAccForecast")

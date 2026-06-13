@@ -165,12 +165,13 @@ import formatter from "../mixins/formatter";
 import { resolveColors, deviceColorMap } from "../colors";
 import { CURRENCY } from "../types/evcc";
 
-// optimizer grid charging strategies, mirrors the backend enum (first is default)
-const CHARGING_STRATEGIES = [
-	{ value: "charge_before_export", label: "Charge before export" },
-	{ value: "attenuate_grid_peaks", label: "Attenuate grid peaks" },
-	{ value: "none", label: "No grid charging" },
-];
+// human labels for the optimizer grid charging strategies; the available values
+// themselves come from backend state to avoid drift if the enum changes
+const STRATEGY_LABELS: Record<string, string> = {
+	charge_before_export: "Charge before export",
+	attenuate_grid_peaks: "Attenuate grid peaks",
+	none: "No grid charging",
+};
 
 export default defineComponent({
 	name: "Optimize",
@@ -200,10 +201,13 @@ export default defineComponent({
 			return store.state.currency || CURRENCY.EUR;
 		},
 		chargingStrategies() {
-			return CHARGING_STRATEGIES;
+			return (store.state.optimizerChargingStrategies || []).map((value) => ({
+				value,
+				label: STRATEGY_LABELS[value] || value,
+			}));
 		},
 		optimizerChargingStrategy(): string {
-			return store.state.optimizerChargingStrategy || CHARGING_STRATEGIES[0].value;
+			return store.state.optimizerChargingStrategy || "";
 		},
 		statusBadgeClass() {
 			if (!this.evopt?.res.status) return "bg-secondary";

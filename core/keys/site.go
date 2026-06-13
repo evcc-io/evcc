@@ -45,7 +45,8 @@ const (
 	BufferStartSoc          = "bufferStartSoc"
 
 	// optimizer
-	OptimizerChargingStrategy = "optimizerChargingStrategy"
+	OptimizerChargingStrategy   = "optimizerChargingStrategy"
+	OptimizerChargingStrategies = "optimizerChargingStrategies"
 
 	// battery status
 	Battery     = "battery"
