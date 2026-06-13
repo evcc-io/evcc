@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -427,6 +428,60 @@ func TestReconnectVehicle(t *testing.T) {
 
 			// vehicle detected
 			assert.Equal(t, vehicle, lp.vehicle, "vehicle should be detected")
+		})
+	}
+}
+
+// TestDeferredVehicleConnect verifies that a pending connect notification is
+// held while vehicle detection is running and released once it settles (#30665).
+func TestDeferredVehicleConnect(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	for _, tc := range []struct {
+		name       string
+		force      bool
+		identified bool
+		detecting  bool
+		elapsed    time.Duration
+		wantPush   bool
+	}{
+		{"detecting, unidentified, within grace", false, false, true, 30 * time.Second, false},
+		{"detecting, identified", false, true, true, 30 * time.Second, true},
+		{"detecting, grace elapsed", false, false, true, vehicleConnectGrace, true},
+		{"no detection running", false, false, false, 0, true},
+		{"forced flush on disconnect", true, false, true, 0, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			clck := clock.NewMock()
+			pushChan := make(chan messenger.Event, 1)
+
+			lp := &Loadpoint{
+				log:            util.NewLogger("foo"),
+				clock:          clck,
+				pushChan:       pushChan,
+				connectPending: true,
+				connectedTime:  clck.Now(),
+			}
+
+			if tc.detecting {
+				lp.vehicleDetect = clck.Now()
+			}
+			if tc.identified {
+				lp.vehicle = api.NewMockVehicle(ctrl)
+			}
+
+			clck.Add(tc.elapsed)
+			lp.maybePushVehicleConnect(tc.force)
+
+			select {
+			case ev := <-pushChan:
+				assert.True(t, tc.wantPush, "unexpected push")
+				assert.Equal(t, evVehicleConnect, ev.Event)
+			default:
+				assert.False(t, tc.wantPush, "expected push but none sent")
+			}
+
+			assert.Equal(t, !tc.wantPush, lp.connectPending, "pending flag")
 		})
 	}
 }
