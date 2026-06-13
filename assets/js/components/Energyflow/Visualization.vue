@@ -22,7 +22,7 @@
 			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
-			<div class="site-progress-bar self-pv" :style="{ width: widthTotal(selfPvAdjusted) }">
+			<div class="site-progress-bar self-pv" :style="barStyle(selfPvAdjusted)">
 				<AnimatedNumber
 					v-if="selfPv && visualizationReady"
 					class="power"
@@ -30,10 +30,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar self-battery"
-				:style="{ width: widthTotal(selfBatteryAdjusted) }"
-			>
+			<div class="site-progress-bar self-battery" :style="barStyle(selfBatteryAdjusted)">
 				<AnimatedNumber
 					v-if="selfBattery && visualizationReady"
 					class="power"
@@ -41,10 +38,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar grid-import"
-				:style="{ width: widthTotal(gridImportAdjusted) }"
-			>
+			<div class="site-progress-bar grid-import" :style="barStyle(gridImportAdjusted)">
 				<AnimatedNumber
 					v-if="gridImport && visualizationReady"
 					class="power"
@@ -52,10 +46,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar pv-export"
-				:style="{ width: widthTotal(pvExportAdjusted) }"
-			>
+			<div class="site-progress-bar pv-export" :style="barStyle(pvExportAdjusted)">
 				<AnimatedNumber
 					v-if="pvExport && visualizationReady"
 					class="power"
@@ -63,10 +54,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar unknown-power"
-				:style="{ width: widthTotal(unknownPower) }"
-			>
+			<div class="site-progress-bar unknown-power" :style="barStyle(unknownPower)">
 				<AnimatedNumber
 					v-if="unknownPower && visualizationReady"
 					class="power"
@@ -144,22 +132,22 @@ export default defineComponent({
 	},
 	computed: {
 		gridExport() {
-			return this.applyThreshold(this.pvExport);
+			return this.pvExport;
 		},
 		totalRaw() {
 			return this.gridImport + this.selfPv + this.selfBattery + this.pvExport;
 		},
 		gridImportAdjusted() {
-			return this.applyThreshold(this.gridImport);
+			return this.gridImport;
 		},
 		selfPvAdjusted() {
-			return this.applyThreshold(this.selfPv);
+			return this.selfPv;
 		},
 		selfBatteryAdjusted() {
-			return this.applyThreshold(this.selfBattery);
+			return this.selfBattery;
 		},
 		pvExportAdjusted() {
-			return this.applyThreshold(this.pvExport);
+			return this.pvExport;
 		},
 		totalAdjusted() {
 			return (
@@ -215,6 +203,11 @@ export default defineComponent({
 			if (this.totalAdjusted === 0 || power === 0) return "0";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
+		barStyle(power: number) {
+			// keep small but non-zero segments visible as a thin colored band
+			const width = this.widthTotal(power);
+			return power > 0 ? { width, minWidth: "var(--bar-min-width)" } : { width };
+		},
 		fmtBarValue(watt: number) {
 			if (!this.enoughSpaceForValue(watt)) {
 				return "";
@@ -261,6 +254,7 @@ export default defineComponent({
 <style scoped>
 .site-progress {
 	--height: 2.5rem;
+	--bar-min-width: 0.5rem;
 	height: var(--height);
 	border-radius: 10px;
 	display: flex;
