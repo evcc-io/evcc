@@ -256,6 +256,7 @@
 								:power="batteryCharge"
 								:powerUnit="powerUnit"
 								:iconProps="{
+									hold: batteryChargeHold,
 									soc: batterySoc,
 									gridCharge: batteryGridChargeActive,
 								}"
@@ -445,13 +446,20 @@ export default defineComponent({
 			return this.chargePower(this.batteryPower);
 		},
 		batteryChargeLabel() {
-			return this.$t("main.energyflow.batteryCharge");
+			return this.$t(
+				`main.energyflow.battery${this.batteryChargeHold ? "ChargeHold" : "Charge"}`
+			);
 		},
 		batteryDischargeLabel() {
-			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
+			return this.$t(
+				`main.energyflow.battery${this.batteryHold ? "DischargeHold" : "Discharge"}`
+			);
 		},
 		batteryHold() {
 			return this.batteryMode === "hold";
+		},
+		batteryChargeHold() {
+			return this.batteryMode === "holdcharge";
 		},
 		consumption() {
 			return this.homePower + this.batteryCharge + this.loadpointsPower;

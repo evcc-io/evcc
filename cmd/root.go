@@ -350,8 +350,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 					Config:     conf.HEMS.Redacted(),
 					YamlSource: yamlSource.hems,
 					Status: struct {
-						Dimmed              bool     `json:"dimmed"`
-						Curtailed           bool     `json:"curtailed"`
+						Dimmed              *bool    `json:"dimmed,omitempty"`
+						Curtailed           *bool    `json:"curtailed,omitempty"`
 						MaxConsumptionPower float64  `json:"maxConsumptionPower,omitempty"`
 						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
 					}{
