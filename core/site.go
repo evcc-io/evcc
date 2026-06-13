@@ -1115,9 +1115,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	}
 }
 
-// senseInterval is the default fast sensing cadence. It is independent of the
-// control interval; loadpoints without a charger-specific preference
-// (api.IntervalGetter) sense at this fixed rate.
+// default sensing interval
 const senseInterval = 2 * time.Second
 
 // loopSenseLoadpoints continuously polls all loadpoints in parallel for status and live
