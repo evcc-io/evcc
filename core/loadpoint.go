@@ -2025,10 +2025,9 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 // serialized against control per loadpoint.
 func (lp *Loadpoint) observe() {
 	lp.controlMu.Lock()
-	changed := lp.observeLocked()
-	lp.controlMu.Unlock()
+	defer lp.controlMu.Unlock()
 
-	if changed {
+	if lp.observeLocked() {
 		lp.requestControl()
 	}
 }
@@ -2099,6 +2098,7 @@ func (lp *Loadpoint) Control(sitePower, batteryBoostPower float64, consumption, 
 
 	// clear immediately- an intermittent UI request may re-request control
 	// TODO do we need to handle lost requests?
+	// TODO needs to take observed into account
 	lp.controlDone()
 
 	lp.control(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
