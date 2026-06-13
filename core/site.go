@@ -1120,12 +1120,12 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 // (api.IntervalGetter) sense at this fixed rate.
 const senseInterval = 2 * time.Second
 
-// senseLoop continuously polls all loadpoints in parallel for status and live
+// loopSenseLoadpoints continuously polls all loadpoints in parallel for status and live
 // measurements, publishing them for snappy UI updates and triggering an
 // immediate control pass when a charger status change is detected. It runs
 // independently of the control loop so observability latency no longer scales
 // with the number of loadpoints.
-func (site *Site) senseLoop(stopC chan struct{}, interval time.Duration) {
+func (site *Site) loopSenseLoadpoints(stopC chan struct{}, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
@@ -1175,7 +1175,8 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
-	// TODO why
+	// TODO how
+
 	// the in-flight reserve treats a just-actuated setpoint as settling for one
 	// control interval, so each loadpoint needs to know it
 	for _, lp := range site.loadpoints {
@@ -1187,15 +1188,10 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		if len(site.loadpoints) == 0 {
 			site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 		} else {
+			// never sense slower than the control loop
+			go site.loopSenseLoadpoints(stopC, min(senseInterval, interval))
 			go site.loopControllableLoadpoints(loadpointChan)
 		}
-	}
-
-	// fast sense loop: decouple status/measurement latency from loadpoint count.
-	// never sense slower than the control loop (cap the 2s default at interval,
-	// relevant for very short intervals such as integration tests)
-	if len(site.loadpoints) > 0 {
-		go site.senseLoop(stopC, min(senseInterval, interval))
 	}
 
 	site.update(<-loadpointChan) // start immediately

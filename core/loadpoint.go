@@ -1747,11 +1747,7 @@ func (lp *Loadpoint) getChargeCurrents() []float64 {
 	return lp.chargeCurrents
 }
 
-// Sense runs one full sensing pass for the loadpoint: it refreshes live
-// measurements and then observes status, vehicle soc and the rest of the
-// sensing data. It performs no actuation. Driven by the fast site sense loop
-// (see Site.senseLoop), it decouples observability latency from the number of
-// loadpoints and requests a prompt control pass on a status change.
+// Sense updates loadpoint measurements and observations
 func (lp *Loadpoint) Sense() {
 	// live measurements (parallel-safe, serialized per loadpoint via measureMu)
 	lp.UpdateChargePowerAndCurrents()
