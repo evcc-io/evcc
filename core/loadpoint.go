@@ -406,6 +406,7 @@ func (lp *Loadpoint) restoreSettings() {
 
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
+	// TODO improve this
 	lp.pendingControl.Store(true) // persists even if the cap(1) channel send is dropped
 	select {
 	case lp.lpChan <- lp: // request loadpoint update

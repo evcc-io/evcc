@@ -1115,15 +1115,11 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	}
 }
 
-// default sensing interval
-const senseInterval = 2 * time.Second
+// default measurement interval
+const measureInterval = 2 * time.Second
 
-// loopSenseLoadpoints continuously polls all loadpoints in parallel for status and live
-// measurements, publishing them for snappy UI updates and triggering an
-// immediate control pass when a charger status change is detected. It runs
-// independently of the control loop so observability latency no longer scales
-// with the number of loadpoints.
-func (site *Site) loopSenseLoadpoints(stopC chan struct{}, interval time.Duration) {
+// measureLoadpoints continuously polls all loadpoints in parallel
+func (site *Site) measureLoadpoints(stopC chan struct{}, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
@@ -1156,7 +1152,7 @@ func (site *Site) loopControllableLoadpoints(next chan<- updater) {
 		if lp != nil {
 			next <- lp
 		} else {
-			time.Sleep(senseInterval)
+			time.Sleep(measureInterval)
 		}
 
 		cursor++
@@ -1187,7 +1183,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 			site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 		} else {
 			// never sense slower than the control loop
-			go site.loopSenseLoadpoints(stopC, min(senseInterval, interval))
+			go site.measureLoadpoints(stopC, min(measureInterval, interval))
 			go site.loopControllableLoadpoints(loadpointChan)
 		}
 	}
