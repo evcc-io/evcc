@@ -122,6 +122,12 @@ func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 
 	// optional vehicle-independent on/off via Tesla Fleet API
 	if cc.Tesla != nil {
+		// the template renders the tesla block as soon as any field is set, so a
+		// partial config surfaces here instead of being silently ignored
+		if cc.Tesla.Credentials.ID == "" || cc.Tesla.Tokens.Access == "" || cc.Tesla.Tokens.Refresh == "" {
+			return nil, errors.New("tesla: clientId, accessToken and refreshToken are all required")
+		}
+
 		// switchCurrent override only takes effect in this on/off fallback mode
 		if cc.SwitchCurrent != 0 && (cc.SwitchCurrent < 1 || cc.SwitchCurrent > 32) {
 			return nil, fmt.Errorf("switchCurrent must be between 1 and 32 A, got %g", cc.SwitchCurrent)

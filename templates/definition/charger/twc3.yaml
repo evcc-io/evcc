@@ -59,7 +59,7 @@ params:
 render: |
   type: twc3
   uri: http://{{ .host }}
-  {{- if .clientId }}
+  {{- if or .clientId .accessToken .refreshToken }}
   tesla:
     credentials:
       id: {{ .clientId }}
