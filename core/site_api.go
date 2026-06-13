@@ -416,7 +416,7 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
-		triggerOptimizer()
+		site.triggerOptimizer()
 	}
 
 	return nil

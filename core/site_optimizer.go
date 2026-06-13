@@ -46,12 +46,21 @@ var optimizerChargingStrategies = []string{
 
 const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport)
 
-// triggerOptimizer forces the optimizer to re-run on the next site update by
-// clearing the last-run timestamp, bypassing the regular slot/debounce gates.
-func triggerOptimizer() {
-	mu.Lock()
-	defer mu.Unlock()
-	optimizerUpdated = time.Time{}
+// triggerOptimizer re-runs the optimizer immediately so a changed setting takes
+// effect without waiting for the next slot. It is a no-op when the optimizer is
+// not active or a run is already in progress; the running update reflects the
+// change on its next slot.
+func (site *Site) triggerOptimizer() {
+	if !sponsor.IsAuthorized() || !optimizerEnabled() {
+		return
+	}
+	if !mu.TryLock() {
+		return
+	}
+	optimizerUpdated = time.Time{} // bypass the slot/debounce gate
+	mu.Unlock()
+
+	go site.optimizerUpdateAsync()
 }
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.

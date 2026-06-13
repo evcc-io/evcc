@@ -6,14 +6,29 @@
 				This page is for development purposes only. Gives insights into the upcoming
 				optimization algorithm.
 			</span>
-			<button
-				class="btn btn-sm ms-3 text-nowrap"
-				:class="optimizeCooldown ? 'btn-outline-secondary disabled' : 'btn-outline-dark'"
-				:disabled="optimizeCooldown"
-				@click="optimizeNow"
-			>
-				{{ optimizeCooldown ? "Requested" : "Optimize now" }}
-			</button>
+			<div class="d-flex align-items-center gap-2 ms-3 text-nowrap">
+				<label class="mb-0" for="optimizerChargingStrategy">Grid charging</label>
+				<select
+					id="optimizerChargingStrategy"
+					class="form-select form-select-sm w-auto"
+					:value="optimizerChargingStrategy"
+					@change="changeChargingStrategy"
+				>
+					<option v-for="s in chargingStrategies" :key="s.value" :value="s.value">
+						{{ s.label }}
+					</option>
+				</select>
+				<button
+					class="btn btn-sm text-nowrap"
+					:class="
+						optimizeCooldown ? 'btn-outline-secondary disabled' : 'btn-outline-dark'
+					"
+					:disabled="optimizeCooldown"
+					@click="optimizeNow"
+				>
+					{{ optimizeCooldown ? "Requested" : "Optimize now" }}
+				</button>
+			</div>
 		</div>
 		<div class="row">
 			<main class="col-12">
@@ -150,6 +165,13 @@ import formatter from "../mixins/formatter";
 import { resolveColors, deviceColorMap } from "../colors";
 import { CURRENCY } from "../types/evcc";
 
+// optimizer grid charging strategies, mirrors the backend enum (first is default)
+const CHARGING_STRATEGIES = [
+	{ value: "charge_before_export", label: "Charge before export" },
+	{ value: "attenuate_grid_peaks", label: "Attenuate grid peaks" },
+	{ value: "none", label: "No grid charging" },
+];
+
 export default defineComponent({
 	name: "Optimize",
 	components: {
@@ -176,6 +198,12 @@ export default defineComponent({
 		},
 		currency() {
 			return store.state.currency || CURRENCY.EUR;
+		},
+		chargingStrategies() {
+			return CHARGING_STRATEGIES;
+		},
+		optimizerChargingStrategy(): string {
+			return store.state.optimizerChargingStrategy || CHARGING_STRATEGIES[0].value;
 		},
 		statusBadgeClass() {
 			if (!this.evopt?.res.status) return "bg-secondary";
@@ -224,6 +252,9 @@ export default defineComponent({
 		optimizeNow() {
 			api.post("optimize");
 			this.optimizeCooldown = true;
+		},
+		changeChargingStrategy(e: Event) {
+			api.post(`optimizerchargingstrategy/${(e.target as HTMLSelectElement).value}`);
 		},
 		dimColorBy25Percent(color: string): string {
 			// Convert color to 25% opacity (40 in hex = 25% of 255)
