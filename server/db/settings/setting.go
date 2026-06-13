@@ -15,9 +15,8 @@ import (
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/samber/lo"
-	goyaml "go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v4"
 	"gorm.io/gorm"
 )
 
@@ -136,7 +135,7 @@ func SetJson(key string, val any) error {
 
 func SetYaml(key string, val any) error {
 	var b bytes.Buffer
-	err := goyaml.NewEncoder(&b).Encode(val)
+	err := yaml.NewEncoder(&b).Encode(val)
 	if err == nil {
 		SetString(key, strings.TrimSpace(b.String()))
 	}
