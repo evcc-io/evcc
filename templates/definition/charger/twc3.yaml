@@ -6,10 +6,67 @@ products:
 capabilities: ["meter", "dim"]
 requirements:
   description:
-    en: The TWC wallbox cannot be controlled directly. Control is via the vehicle. The vehicle must be selected at the TWC3 loadpoint. At this time only Tesla vehicles listed on [docs.evcc.io](https://docs.evcc.io/en/docs/devices/vehicles#tesla) are supported.
-    de: Die TWC Wallbox ist nicht direkt regelbar. Die Regelung erfolgt über das Fahrzeug. Das Fahrzeug muss am TWC3 Ladepunkt ausgewählt sein. Aktuell ausschließlich mit [docs.evcc.io](https://docs.evcc.io/docs/devices/vehicles#tesla) unterstützten Tesla Fahrzeugen nutzbar.
+    en: |
+      The TWC3 is read out locally (status, power, energy). Fine-grained current control is only available when a controllable Tesla vehicle is selected at the loadpoint.
+
+      With the optional Tesla Fleet block the wallbox can additionally be switched on/off vehicle-independently (e.g. for guests or non-Tesla vehicles) — no Tesla vehicle in evcc required.
+
+      The token setup is the same as for the Tesla vehicle integration: create a Tesla Developer account at [developer.tesla.com](https://developer.tesla.com/) and generate an Access and Refresh token (e.g. via the [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide), then enter them together with your Client ID. The only difference: the token must carry the energy scope (energy_device_data, energy_cmds) instead of the vehicle scope.
+
+      More information and alternatives can be found at [docs.evcc.io/blog](https://docs.evcc.io/en/blog/2025/01/20/tesla-api-update).
+    de: |
+      Der TWC3 wird lokal ausgelesen (Status, Leistung, Energie). Eine feine Strom-Regelung gibt es nur, wenn ein steuerbares Tesla-Fahrzeug am Ladepunkt ausgewählt ist.
+
+      Mit dem optionalen Tesla-Fleet-Block lässt sich die Wallbox zusätzlich fahrzeugunabhängig an/aus schalten (z. B. für Gäste oder Nicht-Tesla-Fahrzeuge) — kein Tesla-Fahrzeug in evcc nötig.
+
+      Die Einrichtung der Token ist identisch zur Tesla-Fahrzeug-Integration: Tesla Developer Account auf [developer.tesla.com](https://developer.tesla.com/) erstellen und Access- sowie Refresh-Token erzeugen (z. B. über die Anleitung von [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/)), dann zusammen mit der Client ID eintragen. Einziger Unterschied: Der Token muss den Energie-Scope (energy_device_data, energy_cmds) statt des Fahrzeug-Scopes haben.
+
+      Weitere Informationen und Alternativen findest du unter [docs.evcc.io/blog](https://docs.evcc.io/blog/2025/01/20/tesla-api-update).
 params:
   - name: host
+  - name: clientId
+    advanced: true
+    description:
+      generic: Client ID
+    help:
+      en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
+      de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
+  - name: accessToken
+    advanced: true
+    mask: true
+    help:
+      en: Fleet API token with energy scope (energy_device_data, energy_cmds). evcc only needs to refresh it, so no client secret is required.
+      de: Fleet-API-Token mit Energie-Scope (energy_device_data, energy_cmds). evcc muss ihn nur erneuern, daher ist kein Client Secret nötig.
+  - name: refreshToken
+    advanced: true
+    mask: true
+    help:
+      en: matching refresh token; evcc refreshes the access token automatically and persists it.
+      de: passender Refresh Token; evcc erneuert den Access Token automatisch und speichert ihn.
+  - name: switchCurrent
+    type: int
+    unit: A
+    advanced: true
+    pattern:
+      regex: ^([1-9]|[12][0-9]|3[0-2])?$
+      examples: ["16", "32"]
+    description:
+      en: Switch current
+      de: Schaltstrom
+    help:
+      en: On/off current (1-32 A) for PV mode, since the wall connector does not support direct ampere control. Default is the wall connector's configured max output current.
+      de: An/Aus-Strom (1-32 A) für den PV-Modus, da die Wallbox keine direkte Ampere-Regelung unterstützt. Standard ist der konfigurierte Maximalstrom der Wallbox.
 render: |
   type: twc3
   uri: http://{{ .host }}
+  {{- if .clientId }}
+  tesla:
+    credentials:
+      id: {{ .clientId }}
+    tokens:
+      access: {{ .accessToken }}
+      refresh: {{ .refreshToken }}
+  {{- end }}
+  {{- if .switchCurrent }}
+  switchCurrent: {{ .switchCurrent }}
+  {{- end }}
