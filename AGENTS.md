@@ -91,6 +91,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - No em dashes (—) in comments, commit messages, or docs. Use periods, commas, or colons
 - Project name is `evcc`, always lowercase
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
+- Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
 
 ## Comment Style
