@@ -13,7 +13,7 @@ params:
     deprecated: true
   - name: delay
     type: duration
-    default: 100ms
+    default: 0.1s
     advanced: true
 render: |
   type: custom
