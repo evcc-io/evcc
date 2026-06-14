@@ -10,9 +10,13 @@ import (
 	"github.com/evcc-io/evcc/util/modbus/blockread"
 )
 
+// cacheTTL serves all sources within one poll cycle (well under 1s) while
+// forcing a fresh read on the next cycle.
+const cacheTTL = 2 * time.Second
+
 // cache de-duplicates block reads across all AA55UDP instances so multiple
 // sources covering the same (host, block) share one UDP exchange per cycle.
-var cache = blockread.NewCache(blockread.DefaultTTL)
+var cache = blockread.NewCache(cacheTTL)
 
 // AA55UDP is the GoodWe AA55-over-UDP source plugin transport.
 //

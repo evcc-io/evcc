@@ -15,10 +15,13 @@ import (
 	gridx "github.com/grid-x/modbus"
 )
 
-// modbusBlockCache de-duplicates block reads across all Modbus instances so
-// sources covering the same (device, block) share one read per poll cycle.
-const modbusBlockTTL = time.Second
-var modbusBlockCache = blockread.NewCache(modbusBlockTTL)
+// modbusCacheTTL dedups block reads within a poll cycle, short enough to force
+// a fresh read on the next cycle.
+const modbusCacheTTL = time.Second
+
+// modbusBlockCache lets sources covering the same (device, block) share one
+// read per poll cycle.
+var modbusBlockCache = blockread.NewCache(modbusCacheTTL)
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {

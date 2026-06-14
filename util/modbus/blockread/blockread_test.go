@@ -4,10 +4,13 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const testTTL = 2 * time.Second
 
 func TestBlockContains(t *testing.T) {
 	b := Block{Register: 37107, Count: 16}
@@ -27,13 +30,13 @@ func TestBlockByteOffset(t *testing.T) {
 }
 
 func TestCacheGetMiss(t *testing.T) {
-	c := NewCache(DefaultTTL)
+	c := NewCache(testTTL)
 	_, ok := c.get("nope")
 	assert.False(t, ok)
 }
 
 func TestCachePutGet(t *testing.T) {
-	c := NewCache(DefaultTTL)
+	c := NewCache(testTTL)
 	c.put("k", []byte{1, 2, 3})
 	got, ok := c.get("k")
 	require.True(t, ok)
@@ -43,7 +46,7 @@ func TestCachePutGet(t *testing.T) {
 // TestCacheFetchSingleFlight verifies that concurrent fetches for the same key
 // collapse into a single load and leave the cache warm.
 func TestCacheFetchSingleFlight(t *testing.T) {
-	c := NewCache(DefaultTTL)
+	c := NewCache(testTTL)
 	key := "10.0.0.1::1/3/37107/16"
 	want := []byte{0xde, 0xad, 0xbe, 0xef}
 

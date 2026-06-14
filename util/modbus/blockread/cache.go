@@ -7,12 +7,8 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
-// DefaultTTL serves all sources within one poll cycle (which completes well
-// under 1s) while forcing fresh data on the next cycle.
-const DefaultTTL = 2 * time.Second
-
-// Cache is a TTL response cache with single-flight de-duplication. Sources
-// covering the same key share one device exchange per poll cycle.
+// Cache is a TTL response cache with single-flight de-duplication, sharing one
+// device exchange per key. The TTL is caller-chosen (depends on poll cadence).
 type Cache struct {
 	ttl    time.Duration
 	mu     sync.Mutex
