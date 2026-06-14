@@ -7,10 +7,8 @@ products:
 capabilities: ["curtail"]
 requirements:
   description:
-    de: |
-      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
-    en: |
-      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+    de: Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+    en: Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
 caveats:
   - description:
       de: |
