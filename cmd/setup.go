@@ -885,6 +885,18 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 	}
 
+	// generate a SHIP pairing secret for configs that predate SHIP pairing
+	if conf.Secret == "" {
+		secret, err := eebus.CreatePairingSecret()
+		if err != nil {
+			return err
+		}
+		conf.Secret = secret
+		if err := settings.SetJson(keys.EEBus, conf); err != nil {
+			return err
+		}
+	}
+
 	var err error
 	if eebus.Instance, err = eebus.NewServer(*conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)

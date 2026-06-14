@@ -5,7 +5,10 @@ import (
 	"sync"
 
 	shipapi "github.com/enbility/ship-go/api"
+	"github.com/evcc-io/evcc/server/db/settings"
 )
+
+const ringBufferKey = "eebus.pairing.ringbuffer"
 
 // pairing builds the SHIP Pairing Service config (listener mode) and a ring
 // buffer from the hex secret. An empty secret disables SHIP pairing.
@@ -22,24 +25,31 @@ func pairing(secret string) (*shipapi.PairingConfig, shipapi.RingBufferPersisten
 	return shipapi.NewPairingConfig(shipapi.PairingModeListener, shipapi.PairingSecret(b)), new(ringBuffer), nil
 }
 
-// ringBuffer is an in-memory RingBufferPersistence for SHIP pairing replay
-// protection. TODO: persist across restarts so it survives a restart.
+// ringBuffer persists the SHIP pairing replay-protection digests via settings.
 type ringBuffer struct {
-	mu        sync.Mutex
-	entries   []shipapi.DigestEntry
-	nextIndex int
+	mu sync.Mutex
+}
+
+type ringBufferState struct {
+	Entries   []shipapi.DigestEntry `json:"entries"`
+	NextIndex int                   `json:"nextIndex"`
 }
 
 func (r *ringBuffer) LoadRingBuffer() ([]shipapi.DigestEntry, int, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.entries, r.nextIndex, nil
+
+	var s ringBufferState
+	if err := settings.Json(ringBufferKey, &s); err != nil {
+		// no data yet is not an error
+		return nil, 0, nil
+	}
+	return s.Entries, s.NextIndex, nil
 }
 
 func (r *ringBuffer) SaveRingBuffer(entries []shipapi.DigestEntry, nextIndex int) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.entries = entries
-	r.nextIndex = nextIndex
-	return nil
+
+	return settings.SetJson(ringBufferKey, ringBufferState{Entries: entries, NextIndex: nextIndex})
 }

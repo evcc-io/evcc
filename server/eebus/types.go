@@ -55,8 +55,8 @@ func createShipID() string {
 	return fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 }
 
-// createPairingSecret returns a 16-byte SHIP pairing secret as hex string.
-func createPairingSecret() (string, error) {
+// CreatePairingSecret returns a 16-byte SHIP pairing secret as hex string.
+func CreatePairingSecret() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
@@ -75,7 +75,7 @@ func DefaultConfig(conf *Config) (*Config, error) {
 		return nil, err
 	}
 
-	secret, err := createPairingSecret()
+	secret, err := CreatePairingSecret()
 	if err != nil {
 		return nil, err
 	}
