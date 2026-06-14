@@ -85,7 +85,7 @@
     "eslint-plugin-vue": "^10.9.0",
     "globals": "^17.5.0",
     "happy-dom": "^20.9.0",
-    "jiti": "^2.6.1",
+    "jiti": "^2.7.0",
     "kill-port": "^2.0.1",
     "license-compliance": "^3.0.1",
     "mqtt": "^5.15.1",
