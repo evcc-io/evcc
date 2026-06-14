@@ -6,11 +6,12 @@ products:
       generic: Plenticore Hybrid
 capabilities: ["battery-control"]
 caveats:
-  description:
-    de: |
-      **Das Netzladen der Batterie steht nicht zur Verfügung!** _siehe auch https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
-    en: |
-      **Grid charging is not available!** _see also https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
+  - description:
+      de: |
+        **Das Netzladen der Batterie steht nicht zur Verfügung!**
+      en: |
+        **Grid charging is not available!**
+    link: https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
 requirements:
   description:
     de: |
