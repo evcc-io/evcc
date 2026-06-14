@@ -44,6 +44,9 @@ const (
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
 
+	BatteryFeedInPriorityLimit  = "batteryFeedInPriorityLimit"
+	BatteryFeedInPriorityActive = "batteryFeedInPriorityActive"
+
 	// battery status
 	Battery     = "battery"
 	BatteryMode = "batteryMode"
