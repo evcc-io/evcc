@@ -89,14 +89,15 @@ type Site struct {
 	collectors map[string]*metrics.Collector // keyed by meter ref
 
 	// cached state
-	gridPower                float64            // Grid power
-	pvPower                  float64            // PV power
-	excessDCPower            float64            // PV excess DC charge power (hybrid only)
-	auxPower                 float64            // Aux power
-	battery                  types.BatteryState // Battery cached and published state
-	batteryMode              api.BatteryMode    // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode    // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time          // Battery mode timer for external control
+	gridPower                float64             // Grid power
+	pvPower                  float64             // PV power
+	pvMeasurements           []types.Measurement // PV measurements, incl. curtailment state, reused by curtailPV
+	excessDCPower            float64             // PV excess DC charge power (hybrid only)
+	auxPower                 float64             // Aux power
+	battery                  types.BatteryState  // Battery cached and published state
+	batteryMode              api.BatteryMode     // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode     // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time           // Battery mode timer for external control
 }
 
 // MetersConfig contains the site's meter configuration
@@ -561,7 +562,19 @@ func (site *Site) updatePvMeters() {
 				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, dc)
 			}
 		}
+
+		// capture curtailment state alongside the measurement so curtailPV can
+		// reuse it instead of re-reading the device each cycle
+		if m, ok := api.Cap[api.Curtailer](meter); ok {
+			if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
+				mm[i].Curtailed = &curtailed
+			} else if !errors.Is(err, api.ErrNotAvailable) {
+				site.log.ERROR.Printf("pv %d curtailed: %v", i+1, err)
+			}
+		}
 	}
+
+	site.pvMeasurements = mm
 
 	site.pvPower = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return max(0, m.Power)

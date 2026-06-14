@@ -95,21 +95,18 @@ func (site *Site) curtailPV(curtail *bool) error {
 	}
 
 	var errs error
-	for _, dev := range site.pvMeters {
+	for i, dev := range site.pvMeters {
 		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
 		}
 
-		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			if *curtail == curtailed {
+		// reuse the curtailment state captured during the meter measurement
+		// instead of re-reading the device each cycle
+		if i < len(site.pvMeasurements) {
+			if curtailed := site.pvMeasurements[i].Curtailed; curtailed != nil && *curtailed == *curtail {
 				continue
 			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
-			}
-			continue
 		}
 
 		if err := m.Curtail(*curtail); err == nil {

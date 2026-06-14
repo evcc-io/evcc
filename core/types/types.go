@@ -20,6 +20,7 @@ type Measurement struct {
 	Capacity      *float64  `json:"capacity,omitempty"`
 	Soc           *float64  `json:"soc,omitempty"`
 	Controllable  *bool     `json:"controllable,omitempty"`
+	Curtailed     *bool     `json:"curtailed,omitempty"`
 }
 
 type BatteryForecast struct {
