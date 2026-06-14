@@ -805,7 +805,7 @@ export default defineComponent({
 					value: status.maxConsumptionPower,
 					warning: true,
 				};
-			} else {
+			} else if (status.dimmed !== undefined) {
 				result["dimmed"] = { value: status.dimmed };
 			}
 			if (status.curtailed && status.maxProductionPower !== undefined) {
@@ -813,7 +813,7 @@ export default defineComponent({
 					value: status.maxProductionPower,
 					warning: true,
 				};
-			} else {
+			} else if (status.curtailed !== undefined) {
 				result["curtailed"] = { value: status.curtailed };
 			}
 

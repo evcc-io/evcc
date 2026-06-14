@@ -179,7 +179,15 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 		return parseAuthLocation(location)
 	}
 
-	parsed, err := url.Parse(resp.Header.Get("Location"))
+	// Audi/VW periodically withhold the post-login redirect when a terms-of-service
+	// or consent prompt is pending. Surface a clear error instead of failing later
+	// with an opaque token exchange error (audiconnect/audi_connect_ha#731).
+	location := resp.Header.Get("Location")
+	if location == "" {
+		return nil, errors.New("login redirect missing after password submission - open the myAudi app or website, accept any pending terms or consent prompts, then retry")
+	}
+
+	parsed, err := url.Parse(location)
 	if err != nil {
 		return nil, err
 	}
