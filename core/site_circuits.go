@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/samber/lo"
 )
 
@@ -66,7 +68,7 @@ func (site *Site) dimMeters(dim *bool) error {
 			continue
 		}
 
-		if dimmed, err := m.Dimmed(); err == nil {
+		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
 			if *dim == dimmed {
 				continue
 			}
@@ -99,7 +101,7 @@ func (site *Site) curtailPV(curtail *bool) error {
 			continue
 		}
 
-		if curtailed, err := m.Curtailed(); err == nil {
+		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
 			if *curtail == curtailed {
 				continue
 			}

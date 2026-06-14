@@ -201,7 +201,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
-		prof, err := importProfile(entity, from)
+		prof, err := energyProfile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -219,7 +219,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
 
-		prof, err := importProfile(entity, from)
+		prof, err := energyProfile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64

@@ -148,7 +148,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, err
 	}
 
-	if p := lookup(data, FieldPlugState); p != nil && strings.EqualFold(p.Value, "connected") {
+	if p := lookup(data, FieldPlugState, FieldChargingPlug1ConnectionState); p != nil && strings.EqualFold(p.Value, "connected") {
 		status = api.StatusB
 	}
 

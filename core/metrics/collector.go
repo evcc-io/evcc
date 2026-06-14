@@ -99,58 +99,51 @@ func (c *Collector) process(fun func()) error {
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Imported(), c.accu.Exported())
+	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy)
 }
 
-func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {
-	return importProfile(c.entity, from)
+func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
+	return energyProfile(c.entity, from)
 }
 
-func (c *Collector) AddImportEnergy(v float64) error {
+func (c *Collector) SetEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddImportEnergy(v)
+		c.accu.SetEnergyMeterTotal(v)
 	})
 }
 
-func (c *Collector) AddExportEnergy(v float64) error {
+func (c *Collector) SetReturnEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddExportEnergy(v)
+		c.accu.SetReturnEnergyMeterTotal(v)
 	})
 }
 
-func (c *Collector) SetImportMeterTotal(v float64) error {
+// AddEnergy adds energy using meter totals if available, falling back to power
+// integration only for directions without an energy meter. A direction that has
+// reported a total before keeps using meter deltas even if a single read fails,
+// so a transient failure is recovered via the next delta and not double-counted.
+func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power float64) error {
 	return c.process(func() {
-		c.accu.SetImportMeterTotal(v)
-	})
-}
+		// a direction that ever reported a total is metered, so a nil read is a
+		// transient failure rather than a power-only meter
+		hasEnergyMeter := energyTotal != nil || c.accu.energyMeter != nil
+		hasReturnMeter := returnEnergyTotal != nil || c.accu.returnEnergyMeter != nil
 
-func (c *Collector) SetExportMeterTotal(v float64) error {
-	return c.process(func() {
-		c.accu.SetExportMeterTotal(v)
-	})
-}
-
-// AddEnergy adds energy using meter totals if available, falling back to power integration.
-func (c *Collector) AddEnergy(importTotal, exportTotal *float64, power float64) error {
-	return c.process(func() {
-		switch {
-		case importTotal != nil && exportTotal != nil:
-			c.accu.SetImportMeterTotal(*importTotal)
-			c.accu.SetExportMeterTotal(*exportTotal)
-		case importTotal != nil:
-			// export via power integration (before meter updates clock)
-			if power < 0 {
+		// integrate power for the unmetered direction first, since applying a
+		// meter total advances the accumulator clock
+		if power >= 0 {
+			if !hasEnergyMeter {
 				c.accu.AddPower(power)
 			}
-			c.accu.SetImportMeterTotal(*importTotal)
-		case exportTotal != nil:
-			// import via power integration (before meter updates clock)
-			if power >= 0 {
-				c.accu.AddPower(power)
-			}
-			c.accu.SetExportMeterTotal(*exportTotal)
-		default:
+		} else if !hasReturnMeter {
 			c.accu.AddPower(power)
+		}
+
+		if energyTotal != nil {
+			c.accu.SetEnergyMeterTotal(*energyTotal)
+		}
+		if returnEnergyTotal != nil {
+			c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
 		}
 	})
 }

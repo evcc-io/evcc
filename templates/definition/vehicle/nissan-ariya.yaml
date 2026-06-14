@@ -8,6 +8,7 @@ products:
       generic: Micra
 params:
   - preset: vehicle-base
+  - preset: vehicle-climater
   - name: expiry
     description:
       de: Ablauf
@@ -23,3 +24,4 @@ render: |
   version: v2
   {{ include "vehicle-base" . }}
   expiry: {{ .expiry }}
+  {{ include "vehicle-features" . }}

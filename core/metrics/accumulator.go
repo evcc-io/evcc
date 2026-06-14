@@ -9,12 +9,12 @@ import (
 )
 
 type Accumulator struct {
-	clock        clock.Clock
-	updated      time.Time
-	importMeter  *float64 // kWh
-	exportMeter  *float64 // kWh
-	Energy       float64  `json:"energy"`       // kWh
-	ReturnEnergy float64  `json:"returnEnergy"` // kWh
+	clock             clock.Clock
+	updated           time.Time
+	energyMeter       *float64 // kWh
+	returnEnergyMeter *float64 // kWh
+	Energy            float64  `json:"energy"`       // kWh
+	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
 }
 
 func WithClock(clock clock.Clock) func(*Accumulator) {
@@ -37,63 +37,53 @@ func (m *Accumulator) Updated() time.Time {
 
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
-	fmt.Fprintf(b, "Accumulated: %.3fkWh pos, %.3fkWh neg, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
-	if m.importMeter != nil || m.exportMeter != nil {
-		fmt.Fprintf(b, " meter: ")
-		if m.importMeter != nil {
-			fmt.Fprintf(b, " %.3fkWh pos", *m.importMeter)
+	fmt.Fprintf(b, "Accumulated: %.3fkWh energy, %.3fkWh return energy, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
+	if m.energyMeter != nil || m.returnEnergyMeter != nil {
+		fmt.Fprintf(b, " energy total:")
+		if m.energyMeter != nil {
+			fmt.Fprintf(b, " %.3fkWh", *m.energyMeter)
 		}
-		if m.exportMeter != nil {
-			fmt.Fprintf(b, " %.3fkWh pos", *m.exportMeter)
+		if m.returnEnergyMeter != nil {
+			fmt.Fprintf(b, " %.3fkWh return energy", *m.returnEnergyMeter)
 		}
 	}
 	return b.String()
 }
 
-// Imported returns the accumulated import energy in kWh
-func (m *Accumulator) Imported() float64 {
-	return m.Energy
-}
-
-// Exported returns the accumulated export energy in kWh
-func (m *Accumulator) Exported() float64 {
-	return m.ReturnEnergy
-}
-
-// SetImportMeterTotal adds the difference to the last total meter value in kWh
-func (m *Accumulator) SetImportMeterTotal(v float64) {
+// SetEnergyMeterTotal adds the difference to the last total meter value in kWh
+func (m *Accumulator) SetEnergyMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.importMeter = new(v)
+		m.energyMeter = new(v)
 	}()
 
-	if m.importMeter == nil {
+	if m.energyMeter == nil {
 		return
 	}
 
-	if v >= *m.importMeter {
-		m.Energy += v - *m.importMeter
+	if v >= *m.energyMeter {
+		m.Energy += v - *m.energyMeter
 	}
 }
 
-// SetExportMeterTotal adds the difference to the last total meter value in kWh
-func (m *Accumulator) SetExportMeterTotal(v float64) {
+// SetReturnEnergyMeterTotal adds the difference to the last total meter value in kWh
+func (m *Accumulator) SetReturnEnergyMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.exportMeter = new(v)
+		m.returnEnergyMeter = new(v)
 	}()
 
-	if m.exportMeter == nil {
+	if m.returnEnergyMeter == nil {
 		return
 	}
 
-	if v >= *m.exportMeter {
-		m.ReturnEnergy += v - *m.exportMeter
+	if v >= *m.returnEnergyMeter {
+		m.ReturnEnergy += v - *m.returnEnergyMeter
 	}
 }
 
-// AddImportEnergy adds the given energy in kWh to the positive meter
-func (m *Accumulator) AddImportEnergy(v float64) {
+// AddEnergy adds the given energy in kWh to the energy total
+func (m *Accumulator) AddEnergy(v float64) {
 	defer func() { m.updated = m.clock.Now() }()
 
 	if m.updated.IsZero() {
@@ -103,8 +93,8 @@ func (m *Accumulator) AddImportEnergy(v float64) {
 	m.Energy += v
 }
 
-// AddExportEnergy adds the given energy in kWh to the negative meter
-func (m *Accumulator) AddExportEnergy(v float64) {
+// AddReturnEnergy adds the given energy in kWh to the return energy total
+func (m *Accumulator) AddReturnEnergy(v float64) {
 	defer func() { m.updated = m.clock.Now() }()
 
 	if m.updated.IsZero() {
@@ -118,8 +108,8 @@ func (m *Accumulator) AddExportEnergy(v float64) {
 func (m *Accumulator) AddPower(v float64) {
 	since := v * m.clock.Since(m.updated).Hours() / 1e3
 	if v >= 0 {
-		m.AddImportEnergy(since)
+		m.AddEnergy(since)
 	} else {
-		m.AddExportEnergy(-since)
+		m.AddReturnEnergy(-since)
 	}
 }

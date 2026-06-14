@@ -26,11 +26,19 @@ params:
   - name: energyuuid
     advanced: true
     description:
-      de: Die vzlogger Kanal uuid für den Zählerstand
-      en: The vzlogger channel uuid for the meter reading
+      de: Zählerstand
+      en: Meter reading
     help:
       de: Die vzlogger Kanal uuid für den Zählerstand (OBIS Code 1.8.0, Strombezug)
       en: The vzlogger channel uuid for the meter reading (OBIS Code 1.8.0, electricity consumption)
+  - name: returnenergyuuid
+    advanced: true
+    description:
+      de: Einspeisezählerstand
+      en: Return meter reading
+    help:
+      de: Die vzlogger Kanal uuid für den Einspeisezählerstand (OBIS Code 2.8.0)
+      en: The vzlogger channel uuid for the return meter reading (OBIS Code 2.8.0)
   - name: energyscale
     advanced: true
     default: 0.001
@@ -130,6 +138,16 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=="{{ unquote .energyuuid }}") | .tuples[0][1]
+    cache: {{ .cache }}
+    {{- if .energyscale }}
+    scale: {{ .energyscale }}
+    {{- end }}
+  {{- end }}
+  {{- if .returnenergyuuid }}
+  returnenergy: # meter reading in kWh
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/
+    jq: .data[] | select(.uuid=="{{ unquote .returnenergyuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
     {{- if .energyscale }}
     scale: {{ .energyscale }}

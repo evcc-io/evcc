@@ -91,18 +91,40 @@ func TestMerge(t *testing.T) {
 	t1 := time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC)
 
 	dst := map[string]point{
-		FieldSoc:      {Value: "70", Timestamp: t0},
+		FieldSoc:      {Value: "70", Timestamp: t1},
 		FieldOdometer: {Value: "100", Timestamp: t1},
 	}
 	src := map[string]point{
-		FieldSoc:            {Value: "80", Timestamp: t1},  // newer -> wins
-		FieldOdometer:       {Value: "90", Timestamp: t0},  // older -> ignored
+		FieldSoc:            {Value: "80", Timestamp: t0},  // newer dataset wins despite older capture
 		FieldRangeSecondary: {Value: "200", Timestamp: t1}, // new field -> added
 	}
 
 	merge(dst, src)
 
-	assert.Equal(t, "80", dst[FieldSoc].Value, "newer datapoint wins")
-	assert.Equal(t, "100", dst[FieldOdometer].Value, "older datapoint ignored")
+	assert.Equal(t, "80", dst[FieldSoc].Value, "newer dataset wins, even with an older timestampUtc")
+	assert.Equal(t, "100", dst[FieldOdometer].Value, "field absent from src is retained")
 	assert.Equal(t, "200", dst[FieldRangeSecondary].Value, "new field added")
+}
+
+// TestMergeDeliveryOrder guards the case where the portal stamps fresh values
+// with older capture times: precedence must follow delivery order, not the timestamp.
+func TestMergeDeliveryOrder(t *testing.T) {
+	parse := func(local string) time.Time {
+		ts, err := time.ParseInLocation("2006-01-02 15:04:05", local, time.Local)
+		require.NoError(t, err)
+		return ts
+	}
+
+	data := map[string]point{}
+	// datasets in delivery order; capture timestamps go backwards as SoC rises
+	for _, d := range []struct{ value, capture string }{
+		{"60", "2026-06-13 14:03:37"}, // delivered 14:10
+		{"65", "2026-06-13 12:44:31"}, // delivered 14:55, older capture
+		{"66", "2026-06-13 13:03:16"}, // delivered 15:11
+		{"75", "2026-06-13 13:52:11"}, // delivered 16:54
+	} {
+		merge(data, map[string]point{FieldSoc: {Value: d.value, Timestamp: parse(d.capture)}})
+	}
+
+	assert.Equal(t, "75", data[FieldSoc].Value, "the newest delivered SoC wins")
 }

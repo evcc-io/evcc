@@ -153,7 +153,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	// allow empty solar forecast
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
-	if solarTariff != nil {
+	if solarTariff != nil && len(solar) > 0 {
 		solarEnergy, err := solarRatesToEnergy(solar)
 		if err != nil {
 			return err
@@ -201,8 +201,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	for _, lp := range site.Loadpoints() {
-		// ignore disconnected loadpoints
-		if lp.GetStatus() == api.StatusA {
+		// ignore disconnected loadpoints, including StatusNone
+		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
 		}
 
@@ -552,7 +552,7 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	// kWh over last 30 days
-	profile, err := site.collectors[metrics.Home].ImportProfile(now.BeginningOfDay().AddDate(0, 0, -30))
+	profile, err := site.collectors[metrics.Home].EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
 	}
@@ -771,7 +771,7 @@ func apiError(resp *optimizer.PostOptimizeChargeScheduleResponse) error {
 	}
 
 	if errObj == nil {
-		return fmt.Errorf("invalid status: %d", resp.StatusCode())
+		return fmt.Errorf("invalid status: %d: %s", resp.StatusCode(), resp.Body)
 	}
 
 	if len(errObj.Details) > 0 {

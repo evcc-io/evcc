@@ -192,8 +192,8 @@
             "schema": {
               "properties": {
                 "result": {
-                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge",
-                  "maximum": 3,
+                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+                  "maximum": 4,
                   "minimum": 0,
                   "type": "integer"
                 }
@@ -366,7 +366,8 @@
           "unknown",
           "normal",
           "hold",
-          "charge"
+          "charge",
+          "holdcharge"
         ],
         "example": "normal",
         "type": "string"

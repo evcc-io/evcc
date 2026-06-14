@@ -9,6 +9,11 @@ requirements:
   description:
     de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware. Ältere Versionen liefern nicht alle benötigten Daten (Leistung, Ladestand).
     en: Connections via the WiNet-S dongle (WiFi or LAN) only work with the latest firmware. Older versions do not provide all required data (power, state of charge).
+caveats:
+  - description:
+      de: Für korrekte Funktion dürfen maximale Lade- und Entladeleistung nicht zu hoch angesetzt werden.
+      en: For correct operation, maximum charge and discharge power must not be set too high.
+    link: https://github.com/evcc-io/evcc/discussions/23557
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

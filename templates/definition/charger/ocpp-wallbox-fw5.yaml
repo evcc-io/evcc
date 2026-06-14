@@ -33,6 +33,15 @@ requirements:
       * Charge Point Identity: Custom value (e.g. serial number of charger) which is reused in configuration as *stationid*
       * Password: leave empty
   evcc: ["sponsorship", "skiptest"]
+caveats:
+  - description:
+      de: OCPP-Messwerte können fehlen oder unvollständig sein.
+      en: OCPP meter values can be missing or incomplete.
+    link: https://github.com/evcc-io/evcc/discussions/26186
+  - description:
+      de: Die OCPP-Verbindung kann instabil sein und sich teils erst nach Neustart von evcc erholen.
+      en: The OCPP connection can be unstable and may only recover after restarting evcc.
+    link: https://github.com/evcc-io/evcc/issues/27203
 params:
   - preset: ocpp
   - name: metervalues
