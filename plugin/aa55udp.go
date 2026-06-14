@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/plugin/aa55"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus/blockread"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -47,7 +48,7 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 		Id       int
 		Register uint16
 		Count    uint16
-		Block    *aa55.Block
+		Block    *blockread.Block
 		Decode   string
 		Scale    float64
 		Delay    time.Duration

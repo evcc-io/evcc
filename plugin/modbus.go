@@ -3,6 +3,7 @@ package plugin
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -10,14 +11,20 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/modbus/blockread"
 	gridx "github.com/grid-x/modbus"
 )
+
+// modbusBlockCache de-duplicates block reads across all Modbus instances so
+// sources covering the same (device, block) share one read per poll cycle.
+var modbusBlockCache = blockread.NewCache(blockread.DefaultTTL)
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
 	log   *util.Logger
 	conn  *modbus.Connection
 	reg   modbus.Register
+	block *blockread.Block
 	scale float64
 }
 
@@ -30,6 +37,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
+		Block           *blockread.Block
 		Scale           float64
 		Delay           time.Duration
 		ConnectDelay    time.Duration
@@ -66,16 +74,30 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 		return nil, err
 	}
 
+	if cc.Block != nil {
+		if cc.Block.Count == 0 {
+			return nil, errors.New("block count must be ≥ 1")
+		}
+		fc, err := cc.Register.FuncCode()
+		if err != nil {
+			return nil, err
+		}
+		if fc != gridx.FuncCodeReadHoldingRegisters && fc != gridx.FuncCodeReadInputRegisters {
+			return nil, errors.New("block read requires holding or input register type")
+		}
+	}
+
 	mb := &Modbus{
 		log:   log,
 		conn:  conn,
 		reg:   cc.Register,
+		block: cc.Block,
 		scale: cc.Scale,
 	}
 	return mb, nil
 }
 
-func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
+func (m *Modbus) read(op modbus.RegisterOperation) ([]byte, error) {
 	switch op.FuncCode {
 	case gridx.FuncCodeReadHoldingRegisters:
 		return m.conn.ReadHoldingRegisters(op.Addr, op.Length)
@@ -89,6 +111,44 @@ func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("invalid read function code: %d", op.FuncCode)
 	}
+}
+
+// readBytes returns the bytes for op. In block mode it fetches the enclosing
+// block once (shared via modbusBlockCache) and extracts op at its offset.
+func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
+	if m.block == nil {
+		return m.read(op)
+	}
+
+	blockOp := modbus.RegisterOperation{FuncCode: op.FuncCode, Addr: m.block.Register, Length: m.block.Count}
+	key := fmt.Sprintf("%s/%d/%d/%d", m.conn.Addr(), op.FuncCode, m.block.Register, m.block.Count)
+
+	payload, hit, err := modbusBlockCache.Fetch(key, func() ([]byte, error) {
+		return m.read(blockOp)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if hit {
+		m.log.TRACE.Printf("block cache hit %s", key)
+	}
+
+	return extractBlock(*m.block, op, payload)
+}
+
+// extractBlock returns the bytes for op sliced out of a block payload.
+func extractBlock(block blockread.Block, op modbus.RegisterOperation, payload []byte) ([]byte, error) {
+	if !block.Contains(op.Addr, op.Length) {
+		return nil, fmt.Errorf("register %d+%d does not fit in block %d+%d", op.Addr, op.Length, block.Register, block.Count)
+	}
+
+	offset := block.ByteOffset(op.Addr)
+	end := offset + int(op.Length)*2
+	if len(payload) < end {
+		return nil, fmt.Errorf("block payload too short (len=%d, need=%d)", len(payload), end)
+	}
+
+	return payload[offset:end], nil
 }
 
 var _ FloatGetter = (*Modbus)(nil)
