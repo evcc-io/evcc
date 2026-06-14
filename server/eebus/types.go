@@ -74,11 +74,3 @@ func DefaultConfig(conf *Config) (*Config, error) {
 
 	return &res, nil
 }
-
-// Ski returns the EEbus server SKI
-func Ski() string {
-	if Instance == nil {
-		return ""
-	}
-	return Instance.ski
-}

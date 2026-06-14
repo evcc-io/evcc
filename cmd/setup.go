@@ -881,12 +881,12 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 	}
 
-	var err error
-	if eebus.Instance, err = eebus.NewServer(*conf); err != nil {
+	srv, err := eebus.NewServer(*conf)
+	if err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	shutdown.Register(eebus.Instance.Shutdown)
+	shutdown.Register(srv.Shutdown)
 
 	return nil
 }

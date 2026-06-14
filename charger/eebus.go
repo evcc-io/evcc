@@ -2,7 +2,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -74,33 +73,34 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 // newEEBus creates and initializes a raw *EEBus charger.
 // It registers the device with the EEBus instance and waits for the connection.
 func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
 	c := &EEBus{
 		Caps:    implement.New(),
 		log:     util.NewLogger("eebus"),
 		current: 6,
-		cem:     eebus.Instance.CustomerEnergyManagement(),
+		cem:     inst.CustomerEnergyManagement(),
 	}
 
 	c.connector = eebus.NewConnector()
 	c.minMaxG = util.Cached(c.minMax, time.Second)
 
-	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
+	if err := inst.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
 	if err := c.connector.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 	}()
 
 	return c, nil
