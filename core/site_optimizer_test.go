@@ -148,3 +148,38 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		})
 	}
 }
+
+func TestCurrentSlotSuggestion(t *testing.T) {
+	// slotHours 1 makes the per-slot Wh values map 1:1 to W
+	for _, tc := range []struct {
+		name              string
+		typ               batteryType
+		charge, disch     float32
+		importing, export bool
+		want              string
+	}{
+		{"battery grid charge", batteryTypeBattery, 3000, 0, true, false, "charge"},
+		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, false, true, "normal"},
+		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, true, false, "hold"},
+		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, false, true, "holdcharge"},
+		{"battery discharge", batteryTypeBattery, 0, 2000, true, false, "normal"},
+		{"battery idle balanced", batteryTypeBattery, 0, 0, false, false, "normal"},
+		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, false, false, "charge"},
+		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, false, false, "stop"},
+		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, false, false, "stop"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := optimizer.BatteryResult{
+				ChargingPower:    []float32{tc.charge},
+				DischargingPower: []float32{tc.disch},
+			}
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.importing, tc.export, 1)
+			assert.Equal(t, tc.want, s.Action)
+			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
+			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
+		})
+	}
+
+	// no result yields an empty suggestion
+	assert.Equal(t, batterySuggestion{}, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1))
+}

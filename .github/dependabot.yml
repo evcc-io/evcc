@@ -12,3 +12,15 @@ updates:
       interval: "monthly"
     labels:
       - "infrastructure"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "infrastructure"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "infrastructure"
