@@ -89,7 +89,7 @@
     "kill-port": "^2.0.1",
     "license-compliance": "^3.0.1",
     "mqtt": "^5.15.1",
-    "prettier": "^3.8.3",
+    "prettier": "^3.8.4",
     "prettier-plugin-sh": "^0.18.1",
     "prettier-plugin-sort-json": "^4.2.0",
     "rollup-plugin-visualizer": "^7.0.1",
