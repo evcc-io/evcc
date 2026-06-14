@@ -1,3 +1,7 @@
+<!--
+	Layout and style changes here need manual visual confirmation in Storybook (Energyflow.stories),
+	including thin-segment and label edge cases.
+-->
 <template>
 	<div
 		data-testid="visualization"
