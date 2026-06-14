@@ -2,8 +2,8 @@ template: huawei-sun2000-sdongle
 products:
   - brand: Huawei
     description:
-      de: SUN2000 Hybrid-Wechselrichter (Smart Dongle)
-      en: SUN2000 Hybrid Inverter (Smart Dongle)
+      de: SUN2000 Wechselrichter mit Smart Dongle
+      en: SUN2000 Inverter with Smart Dongle
 capabilities: ["curtail"]
 requirements:
   description:
@@ -12,9 +12,9 @@ requirements:
 caveats:
   - description:
       de: |
-        Bitte beachten, dass für dieses Gerät der SDongleA-05 mit Unterstützung für Echtzeitdaten in FusionSolar benötigt wird.
+        Bitte beachten, dass für dieses Gerät der SDongleA-05 mit Unterstützung für Echtzeitdaten in FusionSolar benötigt wird. Es wird nicht empfohlen, mit parallelen Clients wie Home Assistant auf den Smart Dongle zuzugreifen.
       en: |
-        Please be aware that this device requires the SDongleA-05 supporting Live Data in FusionSolar.
+        Please be aware that this device requires the SDongleA-05 supporting Live Data in FusionSolar. It is not advised to access the Smart Dongle with parallel clients like Home Assistant.
 params:
   - name: usage
     choice: ["pv"]

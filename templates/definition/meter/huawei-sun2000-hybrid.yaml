@@ -3,8 +3,8 @@ covers: ["huawei-sun2000", "huawei-dongle-powersensor", "huawei-sun2000-rs485"]
 products:
   - brand: Huawei
     description:
-      de: SUN2000 Hybrid-Wechselrichter
-      en: SUN2000 Hybrid Inverter
+      de: SUN2000/LUNA2000
+      en: SUN2000/LUNA2000
 capabilities: ["battery-control", "dim"]
 requirements:
   description:
