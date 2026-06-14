@@ -128,15 +128,18 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
+	pairingConfig, ringBuffer, err := pairing(cc.Secret)
+	if err != nil {
+		return nil, err
+	}
+
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
 		cc.Port, certificate, time.Second*4,
-		// no SHIP Pairing (and thus no ring buffer persistence): remote services are
-		// trusted by their configured SKI via RegisterRemoteService
-		nil, nil,
+		pairingConfig, ringBuffer,
 	)
 	if err != nil {
 		return nil, err
