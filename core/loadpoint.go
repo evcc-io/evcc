@@ -1735,7 +1735,7 @@ func (lp *Loadpoint) Sense() {
 	lp.UpdateChargePowerAndCurrents()
 
 	// status, vehicle soc and remaining sensing (serialized vs control)
-	lp.observe()
+	lp.Observe()
 }
 
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
@@ -2014,26 +2014,26 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.controlMu.Lock()
 	defer lp.controlMu.Unlock()
 
-	lp.observeLocked()
+	lp.observe()
 	lp.control(sitePower, batteryBoostPower, consumption, feedin, batteryBuffered, batteryStart, greenShare, effPrice, effCo2)
 }
 
-// observe reads and publishes all sensing data (meters, charger status, vehicle
+// Observe reads and publishes all sensing data (meters, charger status, vehicle
 // soc) without mutating control output or actuating. Driven by the fast site
-// sense loop, it requests a prompt control pass on a status change. observe is
-// serialized against control per loadpoint.
-func (lp *Loadpoint) observe() {
+// sense loop, it requests a prompt control pass on a status change. Observe is
+// serialized against control per loadpoint, mirroring Control.
+func (lp *Loadpoint) Observe() {
 	lp.controlMu.Lock()
 	defer lp.controlMu.Unlock()
 
-	if lp.observeLocked() {
+	if lp.observe() {
 		lp.requestControl()
 	}
 }
 
-// observeLocked performs the sensing work and reports whether the charger status
-// changed. The caller must hold controlMu.
-func (lp *Loadpoint) observeLocked() bool {
+// observe performs the sensing work and reports whether the charger status
+// changed. The caller must hold controlMu (cf. Observe, Update).
+func (lp *Loadpoint) observe() bool {
 	prevStatus := lp.GetStatus()
 
 	// read and publish meters - charge power and currents are updated separately

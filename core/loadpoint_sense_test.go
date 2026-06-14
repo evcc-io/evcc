@@ -50,7 +50,7 @@ func TestObserveTriggersOnStatusChange(t *testing.T) {
 
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 
-	lp.observe()
+	lp.Observe()
 
 	if lp.GetStatus() != api.StatusB {
 		t.Fatalf("status not updated: %v", lp.GetStatus())
@@ -71,7 +71,7 @@ func TestObserveNoTriggerWithoutStatusChange(t *testing.T) {
 
 	charger.EXPECT().Status().Return(api.StatusC, nil) // unchanged
 
-	lp.observe()
+	lp.Observe()
 
 	if lp.pendingControl.Load() {
 		t.Fatal("unchanged status must not request a control pass")
@@ -91,7 +91,7 @@ func TestObservePublishesConnectionState(t *testing.T) {
 
 	charger.EXPECT().Status().Return(api.StatusC, nil) // connected and charging
 
-	lp.observe()
+	lp.Observe()
 
 	published := drainParams(uiChan)
 	if v, ok := published[keys.Connected]; !ok || v != true {
@@ -116,7 +116,7 @@ func TestObserveSetsObserved(t *testing.T) {
 	}
 
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.observe()
+	lp.Observe()
 
 	if !lp.observed {
 		t.Fatal("observe must mark the loadpoint observed")
@@ -135,7 +135,7 @@ func TestObserveLatchesWelcomeCharge(t *testing.T) {
 
 	// no status change -> updateChargerStatus reports welcomeCharge=false
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.observe()
+	lp.Observe()
 
 	if !lp.welcomeCharge {
 		t.Fatal("observe clobbered the latched welcome charge before control consumed it")
