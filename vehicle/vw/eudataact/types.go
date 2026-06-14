@@ -123,8 +123,7 @@ const (
 	FieldRangeCombined  = "cruising_range_combined"
 	FieldRangePrimary   = "cruising_range_primary_engine"
 	FieldRangeSecondary = "cruising_range_secondary_engine"
-	// KeyRangeID3 identifies the VW ID.3 cruising range, delivered as "value"
-	KeyRangeID3 = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04"
+	KeyRangeID3 = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 cruising range, delivered as "value"
 
 	// odo
 	FieldOdometer      = "mileage"
