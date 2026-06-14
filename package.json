@@ -95,7 +95,7 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "^10.3.5",
     "terser": "^5.46.2",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "typescript-eslint-language-service": "^5.0.5",
     "vite": "^8.0.10",
