@@ -14,7 +14,7 @@ requirements:
       Furthermore, the device's IP address must be set to a fixed, permanent IP address in the router.
       If the `grid` mode is used, an external meter (e.g., Shelly) must be connected to the battery to measure the grid connection point (via the manufacturer's app).
     de: |
-      Der lokale Modus der Batterie muss in der Hersteller-App aktiviert werden. 
+      Der lokale Modus der Batterie muss in der Hersteller-App aktiviert werden.
       Des Weiteren muss die IP-Adresse des Geräts im Router auf eine feste, dauerhafte IP-Adresse eingestellt werden.
       Wenn der `grid` Modus verwendet wird, muss mit der Batterie ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst (dieser wird über die Hersteller-App hinzugefügt).
 caveats:
