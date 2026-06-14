@@ -1,17 +1,20 @@
 template: kostal-plenticore
+deprecated: true
 products:
   - brand: Kostal
     description:
       generic: Plenticore Hybrid
 capabilities: ["battery-control"]
+caveats:
+  - description:
+      de: **Das Netzladen der Batterie steht nicht zur Verfügung!** _siehe auch https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
+      en: **Grid charging is not available!** _see also https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
 requirements:
   description:
     de: |
       Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. 
-      **Das Netzladen der Batterie steht nicht zur Verfügung!** _siehe auch https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
     en: |
       Only a single system may access the inverter! For active battery control the function external battery control via Modbus must be activated using installer access.
-      **Grid charging is not available!** _see also https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
 params:
   - name: usage
     choice: ["pv", "battery"]
