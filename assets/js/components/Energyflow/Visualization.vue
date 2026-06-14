@@ -22,7 +22,7 @@
 			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
-			<div class="site-progress-bar self-pv" :style="barStyle(selfPvAdjusted)">
+			<div class="site-progress-bar self-pv" :style="{ width: widthTotal(selfPv) }">
 				<AnimatedNumber
 					v-if="selfPv && visualizationReady"
 					class="power"
@@ -30,7 +30,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div class="site-progress-bar self-battery" :style="barStyle(selfBatteryAdjusted)">
+			<div class="site-progress-bar self-battery" :style="{ width: widthTotal(selfBattery) }">
 				<AnimatedNumber
 					v-if="selfBattery && visualizationReady"
 					class="power"
@@ -38,7 +38,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div class="site-progress-bar grid-import" :style="barStyle(gridImportAdjusted)">
+			<div class="site-progress-bar grid-import" :style="{ width: widthTotal(gridImport) }">
 				<AnimatedNumber
 					v-if="gridImport && visualizationReady"
 					class="power"
@@ -46,7 +46,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div class="site-progress-bar pv-export" :style="barStyle(pvExportAdjusted)">
+			<div class="site-progress-bar pv-export" :style="{ width: widthTotal(pvExport) }">
 				<AnimatedNumber
 					v-if="pvExport && visualizationReady"
 					class="power"
@@ -54,7 +54,10 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div class="site-progress-bar unknown-power" :style="barStyle(unknownPower)">
+			<div
+				class="site-progress-bar unknown-power"
+				:style="{ width: widthTotal(unknownPower) }"
+			>
 				<AnimatedNumber
 					v-if="unknownPower && visualizationReady"
 					class="power"
@@ -62,7 +65,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div v-if="totalAdjusted <= 0" class="site-progress-bar w-100 grid-import">
+			<div v-if="total <= 0" class="site-progress-bar w-100 grid-import">
 				<span>{{ fmtW(0, POWER_UNIT.AUTO, true) }}</span>
 			</div>
 		</div>
@@ -81,7 +84,7 @@
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
+				<LabelBar v-bind="labelBarProps('bottom', 'pvExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'unknownOutput')">
@@ -131,31 +134,8 @@ export default defineComponent({
 		return { width: 0, transitionsEnabled: false };
 	},
 	computed: {
-		gridExport() {
-			return this.pvExport;
-		},
-		totalRaw() {
+		total() {
 			return this.gridImport + this.selfPv + this.selfBattery + this.pvExport;
-		},
-		gridImportAdjusted() {
-			return this.gridImport;
-		},
-		selfPvAdjusted() {
-			return this.selfPv;
-		},
-		selfBatteryAdjusted() {
-			return this.selfBattery;
-		},
-		pvExportAdjusted() {
-			return this.pvExport;
-		},
-		totalAdjusted() {
-			return (
-				this.gridImportAdjusted +
-				this.selfPvAdjusted +
-				this.selfBatteryAdjusted +
-				this.pvExportAdjusted
-			);
 		},
 		unknownImport() {
 			// input/output mismatch > 10%
@@ -168,12 +148,12 @@ export default defineComponent({
 		unknownPower() {
 			if (this.unknownImport || this.unknownOutput) {
 				const total = Math.max(this.inPower, this.outPower);
-				return Math.abs(total - this.totalAdjusted);
+				return Math.abs(total - this.total);
 			}
 			return 0;
 		},
 		visualizationReady() {
-			return this.totalAdjusted > 0 && this.width > 0;
+			return this.total > 0 && this.width > 0;
 		},
 	},
 
@@ -200,13 +180,8 @@ export default defineComponent({
 	},
 	methods: {
 		widthTotal(power: number) {
-			if (this.totalAdjusted === 0 || power === 0) return "0";
-			return (100 / this.totalAdjusted) * power + "%";
-		},
-		barStyle(power: number) {
-			// keep small but non-zero segments visible as a thin colored band
-			const width = this.widthTotal(power);
-			return power > 0 ? { width, minWidth: "var(--bar-min-width)" } : { width };
+			if (this.total === 0 || power === 0) return "0";
+			return (100 / this.total) * power + "%";
 		},
 		fmtBarValue(watt: number) {
 			if (!this.enoughSpaceForValue(watt)) {
@@ -216,8 +191,8 @@ export default defineComponent({
 			return this.fmtW(watt, this.powerUnit, withUnit);
 		},
 		powerLabelAvailableSpace(power: number) {
-			if (this.totalAdjusted === 0) return 0;
-			const percent = (100 / this.totalAdjusted) * power;
+			if (this.total === 0) return 0;
+			const percent = (100 / this.total) * power;
 			return (this.width / 100) * percent;
 		},
 		enoughSpaceForValue(power: number) {
@@ -226,13 +201,8 @@ export default defineComponent({
 		enoughSpaceForUnit(power: number) {
 			return this.powerLabelAvailableSpace(power) > 60;
 		},
-		hideLabelIcon(power: number, minWidth = 32) {
-			if (this.totalAdjusted === 0) return true;
-			const percent = (100 / this.totalAdjusted) * power;
-			return (this.width / 100) * percent < minWidth;
-		},
 		applyThreshold(power: number, threshold = 2) {
-			const percent = (100 / this.totalRaw) * power;
+			const percent = (100 / this.total) * power;
 			return percent < threshold ? 0 : power;
 		},
 		updateElementWidth() {
@@ -240,10 +210,13 @@ export default defineComponent({
 		},
 		labelBarProps(position: string, name: string, val?: number) {
 			const value = val === undefined ? (this as any)[name] : val;
-			const minWidth = 40;
+			const space = this.powerLabelAvailableSpace(value);
 			return {
 				value,
-				hideIcon: this.hideLabelIcon(value, minWidth),
+				// shrink the icon to an anonymous dot when the bar gets narrow,
+				// drop the dot once the bar is too thin to render it cleanly
+				hideIcon: space < 40,
+				hideDot: space < 16,
 				style: { "flex-basis": this.widthTotal(value) },
 				[position]: true,
 			};
@@ -254,7 +227,6 @@ export default defineComponent({
 <style scoped>
 .site-progress {
 	--height: 2.5rem;
-	--bar-min-width: 0.5rem;
 	height: var(--height);
 	border-radius: 10px;
 	display: flex;
