@@ -2267,7 +2267,8 @@ func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, 
 			targetCurrent = lp.effectiveMinCurrent()
 		}
 
-		if targetCurrent == 0 && welcomeCharge {
+		if targetCurrent == 0 && lp.welcomeCharge {
+			lp.welcomeCharge = false
 			targetCurrent = lp.effectiveMinCurrent()
 			lp.resetPVTimer()
 		}
