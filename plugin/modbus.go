@@ -17,7 +17,8 @@ import (
 
 // modbusBlockCache de-duplicates block reads across all Modbus instances so
 // sources covering the same (device, block) share one read per poll cycle.
-var modbusBlockCache = blockread.NewCache(blockread.DefaultTTL)
+const modbusBlockTTL = time.Second
+var modbusBlockCache = blockread.NewCache(modbusBlockTTL)
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
