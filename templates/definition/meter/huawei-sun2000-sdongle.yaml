@@ -12,15 +12,9 @@ requirements:
 caveats:
   - description:
       de: |
-        Die folgenden Gegebenheiten können zu Fehlern in der Modbus-Kommunikation führen:
-        - veraltete Firmware
-        - Änderung von Wechselrichter/Speicher-Einstellungen über das Huawei FusionSolar-Portal
-        - weitere Anwendungen (z.B. Home Assistant) greifen über einen Modbus Proxy auf die Anlage zu (auch abhängig von der Anlagenkomplexität, z.B. Anzahl kaskadierter Wechselrichter)
+        Bitte beachten, dass für dieses Gerät der SDongleA-05 mit Unterstützung für Echtzeitdaten in FusionSolar benötigt wird.
       en: |
-        Please be aware that the following circumstances may lead to Modbus communication errors:
-        - outdated firmware
-        - altering inverter/battery configuration settings via Huawei FusionSolar portal
-        - other applications (e.g. Home Assistant) accessing the inverter via Modbus Proxy (also depending on plant complexity, e.g. number of cascaded inverters)
+        Please be aware that this device requires the SDongleA-05 supporting Live Data in FusionSolar.
 params:
   - name: usage
     choice: ["pv"]
