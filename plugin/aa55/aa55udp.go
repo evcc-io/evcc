@@ -31,9 +31,10 @@ var cache = modbus.NewCache(cacheTTL)
 type AA55UDP struct {
 	log      *util.Logger
 	conn     *net.UDPConn
-	pdu      []byte // 6-byte PDU body, no CRC
-	offset   int    // byte offset into the response payload (0 for register reads)
-	decode   string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
+	pdu      []byte               // 6-byte PDU body, no CRC
+	offset   int                  // byte offset into the response payload (0 for register reads)
+	length   int                  // value length in bytes
+	decode   func([]byte) float64 // modbus register decoder
 	scale    float64
 	cacheKey string        // precomputed cache key (remoteAddr/pdu); empty disables caching
 	delay    time.Duration // minimum gap between sends to the inverter (0 disables)
@@ -77,14 +78,18 @@ func buildReadConfig(id int, register, count uint16, block *modbus.Block) (readC
 	return readConfig{pdu: buildPDU(byte(id), register, count), useCache: false}, nil
 }
 
-// New constructs an AA55UDP from a high-level configuration. It validates
-// decode, resolves the read mode (register vs block), and wraps the conn.
-// The caller is responsible for dialling conn.
-func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, block *modbus.Block, decode string, scale float64, delay time.Duration) (*AA55UDP, error) {
-	if err := validateDecode(decode); err != nil {
+// New constructs an AA55UDP from a high-level configuration. The register count
+// and decoder are derived from reg; the read mode is resolved from block.
+func New(log *util.Logger, conn *net.UDPConn, id int, reg modbus.Register, block *modbus.Block, scale float64, delay time.Duration) (*AA55UDP, error) {
+	count, err := reg.Length()
+	if err != nil {
 		return nil, err
 	}
-	cfg, err := buildReadConfig(id, register, count, block)
+	decode, err := reg.DecodeFunc()
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := buildReadConfig(id, reg.Address, count, block)
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +97,7 @@ func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, bl
 		log:    log,
 		conn:   conn,
 		decode: decode,
+		length: int(count) * 2,
 		scale:  scale,
 		delay:  delay,
 		pdu:    cfg.pdu,
@@ -115,17 +121,12 @@ func (p *AA55UDP) query() (float64, error) {
 		return 0, err
 	}
 
-	minLen := p.offset + decodeSize(p.decode)
-	if len(payload) < minLen {
-		return 0, fmt.Errorf("payload too short (len=%d, need=%d)", len(payload), minLen)
+	end := p.offset + p.length
+	if len(payload) < end {
+		return 0, fmt.Errorf("payload too short (len=%d, need=%d)", len(payload), end)
 	}
 
-	v, err := decodeAt(payload, p.offset, p.decode)
-	if err != nil {
-		return 0, err
-	}
-
-	return v * p.scale, nil
+	return p.decode(payload[p.offset:end]) * p.scale, nil
 }
 
 // fetch returns the response payload. In block-read mode the shared cache

@@ -16,11 +16,11 @@ render: |
     host: {{ .host }}
     register:
       address: 30127
-      decode: int32be
+      decode: int32
   energy:
     source: aa55udp
     host: {{ .host }}
     register:
       address: 30145
-      decode: uint32be
+      decode: uint32
     scale: 0.1
