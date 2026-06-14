@@ -11,19 +11,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Wire-protocol primitives (buildPDU, stripHeader, DecodeAt, ModbusCRC16,
-// Cache, real-capture register tests) are covered in aa55_test.go.
+// Wire-protocol primitives are covered in aa55_test.go.
 // This file covers the AA55UDP plugin adapter end-to-end via FloatGetter.
+
+func decodeFor(t *testing.T, name string) (func([]byte) float64, int) {
+	t.Helper()
+	reg := modbus.Register{Type: "holding", Decode: name}
+	length, err := reg.Length()
+	require.NoError(t, err)
+	fn, err := reg.DecodeFunc()
+	require.NoError(t, err)
+	return fn, int(length) * 2
+}
 
 // TestFloatGetter_DT_Power verifies the full query/decode pipeline using the
 // GW17K-DT real capture sliced to just the power register bytes: 12470 W.
 func TestFloatGetter_DT_Power(t *testing.T) {
 	response := singleRegResponse(t, capGW17kDT, 54, 4, 0x7f)
+	dec, n := decodeFor(t, "int32")
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
 		pdu:    buildPDU(0x7F, 0x75AF, 2),
-		decode: "int32be",
+		decode: dec,
+		length: n,
 		scale:  1.0,
 	}
 	getter, err := p.FloatGetter()
@@ -36,11 +47,13 @@ func TestFloatGetter_DT_Power(t *testing.T) {
 // TestFloatGetter_DT_Energy verifies scale 0.1: 299844 × 0.1 = 29984.4 kWh.
 func TestFloatGetter_DT_Energy(t *testing.T) {
 	response := singleRegResponse(t, capGW17kDT, 90, 4, 0x7f)
+	dec, n := decodeFor(t, "uint32")
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
 		pdu:    buildPDU(0x7F, 0x75C1, 2),
-		decode: "uint32be",
+		decode: dec,
+		length: n,
 		scale:  0.1,
 	}
 	getter, err := p.FloatGetter()
@@ -53,11 +66,13 @@ func TestFloatGetter_DT_Energy(t *testing.T) {
 // TestFloatGetter_ET_PV verifies ET pv power: GW10K-ET = 831 W.
 func TestFloatGetter_ET_PV(t *testing.T) {
 	response := singleRegResponse(t, capGW10kET, 74, 4, 0xf7)
+	dec, n := decodeFor(t, "int32")
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
 		pdu:    buildPDU(0xF7, 0x8941, 2),
-		decode: "int32be",
+		decode: dec,
+		length: n,
 		scale:  1.0,
 	}
 	getter, err := p.FloatGetter()
@@ -70,11 +85,13 @@ func TestFloatGetter_ET_PV(t *testing.T) {
 // TestFloatGetter_ET_Battery verifies charging battery: GW10K-ET = -2512 W.
 func TestFloatGetter_ET_Battery(t *testing.T) {
 	response := singleRegResponse(t, capGW10kET, 164, 4, 0xf7)
+	dec, n := decodeFor(t, "int32")
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
 		pdu:    buildPDU(0xF7, 0x896E, 2),
-		decode: "int32be",
+		decode: dec,
+		length: n,
 		scale:  1.0,
 	}
 	getter, err := p.FloatGetter()
@@ -87,11 +104,13 @@ func TestFloatGetter_ET_Battery(t *testing.T) {
 // TestFloatGetter_ET_SoC verifies SoC: GW10K-ET = 68%.
 func TestFloatGetter_ET_SoC(t *testing.T) {
 	response := singleRegResponse(t, capGW10kETBattery, 14, 2, 0xf7)
+	dec, n := decodeFor(t, "uint16")
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
 		conn:   mockConn(t, response),
 		pdu:    buildPDU(0xF7, 0x908F, 1),
-		decode: "uint16be",
+		decode: dec,
+		length: n,
 		scale:  1.0,
 	}
 	getter, err := p.FloatGetter()

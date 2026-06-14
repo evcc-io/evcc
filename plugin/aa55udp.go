@@ -60,11 +60,6 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 		return nil, err
 	}
 
-	count, err := cc.Register.Length()
-	if err != nil {
-		return nil, err
-	}
-
 	raddr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.Host, "8899"))
 	if err != nil {
 		return nil, err
@@ -76,7 +71,7 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 		return nil, err
 	}
 
-	res, err := aa55.New(util.NewLogger("aa55udp"), conn, cc.Id, cc.Register.Address, count, cc.Block, cc.Register.Decode, cc.Scale, cc.Delay)
+	res, err := aa55.New(util.NewLogger("aa55udp"), conn, cc.Id, cc.Register, cc.Block, cc.Scale, cc.Delay)
 	if err != nil {
 		return nil, fmt.Errorf("aa55udp: %w", err)
 	}

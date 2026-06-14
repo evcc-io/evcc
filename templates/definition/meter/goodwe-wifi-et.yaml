@@ -27,7 +27,7 @@ render: |
       count: 125
     register:
       address: 35139     # grid power
-      decode: int32be
+      decode: int32
     delay: {{ .delay }}
   energy:
     source: aa55udp
@@ -35,7 +35,7 @@ render: |
     id: 247
     register:
       address: 36017
-      decode: float32be
+      decode: float32
     scale: 0.001
     delay: {{ .delay }}
   {{- end }}
@@ -92,7 +92,7 @@ render: |
       count: 125
     register:
       address: 35191     # pv energy
-      decode: uint32be
+      decode: uint32
     scale: 0.1
     delay: {{ .delay }}
   {{- end }}
@@ -106,7 +106,7 @@ render: |
       count: 125
     register:
       address: 35182     # battery power
-      decode: int32be
+      decode: int32
     delay: {{ .delay }}
   energy:
     source: aa55udp
@@ -117,7 +117,7 @@ render: |
       count: 125
     register:
       address: 35209     # battery discharge energy
-      decode: uint32be
+      decode: uint32
     scale: 0.1
     delay: {{ .delay }}
   soc:
@@ -129,6 +129,6 @@ render: |
       count: 13
     register:
       address: 37007     # soc
-      decode: uint16be
+      decode: uint16
     delay: {{ .delay }}
   {{- end }}
