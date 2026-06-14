@@ -187,13 +187,8 @@ func pending(content []dataset, after time.Time) []dataset {
 	return res
 }
 
-// merge copies the data points from src into dst, keeping the newest value per
-// field across datasets.
+// merge lets src (the newer dataset) win per field. The portal's per-field
+// timestampUtc is unreliable, so delivery order decides, not the timestamp.
 func merge(dst, src map[string]point) {
-	for k, p := range src {
-		if cur, ok := dst[k]; ok && cur.Timestamp.After(p.Timestamp) {
-			continue
-		}
-		dst[k] = p
-	}
+	maps.Copy(dst, src)
 }
