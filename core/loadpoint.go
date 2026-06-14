@@ -91,7 +91,7 @@ type Loadpoint struct {
 	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
 
 	actuatedAt      time.Time     // last setpoint change; opens the in-flight reserve window
-	pendingControl  atomic.Bool   // control re-evaluation requested (scheduler hint)
+	pendingControl  atomic.Bool   // loadpoint requests re-evaluation
 	controlInterval time.Duration // control interval; also the in-flight reserve settle window
 
 	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
@@ -1720,10 +1720,10 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	return power
 }
 
-// getChargeCurrents returns a consistent snapshot of the per-phase charge
+// GetChargeCurrents returns a consistent snapshot of the per-phase charge
 // currents. The slice is replaced wholesale (never mutated in place), so the
 // returned value is safe to read without further locking.
-func (lp *Loadpoint) getChargeCurrents() []float64 {
+func (lp *Loadpoint) GetChargeCurrents() []float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.chargeCurrents
@@ -1740,7 +1740,7 @@ func (lp *Loadpoint) Sense() {
 
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
 func (lp *Loadpoint) phasesFromChargeCurrents() {
-	chargeCurrents := lp.getChargeCurrents()
+	chargeCurrents := lp.GetChargeCurrents()
 	if chargeCurrents == nil {
 		return
 	}
