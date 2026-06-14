@@ -1,7 +1,9 @@
 package core
 
 import (
+	"sync"
 	"testing"
+	"time"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
@@ -11,6 +13,63 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"go.uber.org/mock/gomock"
 )
+
+// measuringMeter is a minimal, lock-free charge meter for concurrency tests.
+type measuringMeter struct{}
+
+func (measuringMeter) CurrentPower() (float64, error)               { return 3700, nil }
+func (measuringMeter) Currents() (float64, float64, float64, error) { return 16, 16, 16, nil }
+
+// TestSenseControlConcurrency exercises the concurrent access introduced by the
+// sense/control split: the sense loop writes chargePower/chargeCurrents (under
+// lp.Lock) while the control loop and API read them via the locked getters. It
+// is meant to be run under -race to verify the locking discipline.
+func TestSenseControlConcurrency(t *testing.T) {
+	lp := newObserveLoadpoint(nil)
+	lp.chargeMeter = measuringMeter{}
+	lp.uiChan = nil // suppress publish so the tight loop does not block on the channel
+	lp.enabled = true
+	lp.offeredCurrent = 16
+
+	var wg sync.WaitGroup
+	stop := make(chan struct{})
+
+	// sense loop: writes charge power and currents
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				lp.UpdateChargePowerAndCurrents()
+			}
+		}
+	}()
+
+	// control loop / API: reads the sensed values via the locked getters
+	for range 4 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+					_ = lp.GetChargePower()
+					_ = lp.GetChargeCurrents()
+					_ = lp.GetInflightPower()
+				}
+			}
+		}()
+	}
+
+	time.Sleep(30 * time.Millisecond)
+	close(stop)
+	wg.Wait()
+}
 
 // drainParams collects all currently buffered published params keyed by name.
 func drainParams(ch chan util.Param) map[string]any {

@@ -85,7 +85,7 @@ type Loadpoint struct {
 	uiChan   chan<- util.Param      // client push messages
 	log      *util.Logger
 
-	rwMutex      atomic.Int64 // count reentrant RWMutex
+	rwMutex      atomic.Int64 // writer goroutine id for reentrancy detection (test only)
 	sync.RWMutex              // guard status
 	vmu          sync.RWMutex // guard vehicle
 	measureMu    sync.Mutex   // serialize meter measurement reads across sense and control loops
@@ -1246,8 +1246,9 @@ func (lp *Loadpoint) effectiveCurrent() float64 {
 	}
 
 	// adjust actual current for vehicles like Zoe where it remains below target
-	if lp.chargeCurrents != nil {
-		cur := max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	// (locked getter: chargeCurrents is written by the concurrent sense loop)
+	if cc := lp.GetChargeCurrents(); cc != nil {
+		cur := max(cc[0], cc[1], cc[2])
 		return min(cur+2.0, lp.offeredCurrent)
 	}
 
@@ -1353,7 +1354,7 @@ func (lp *Loadpoint) fastCharging() error {
 		// load management limit active
 		if lp.circuit != nil {
 			minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
-			if powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower3p); powerLimit < minPower3p {
+			if powerLimit := lp.circuit.ValidatePower(lp.GetChargePower(), minPower3p); powerLimit < minPower3p {
 				phases = 1
 				lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
 			}
@@ -1400,7 +1401,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 
 	var waiting bool
 	activePhases := lp.ActivePhases()
-	availablePower := lp.chargePower - sitePower
+	availablePower := lp.GetChargePower() - sitePower
 	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.phasesConfigured < 3
 
 	// scale down phases
@@ -1559,7 +1560,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	}
 	if lp.chargerHasFeature(api.IntegratedDevice) {
 		// for slow-acting heating devices, only take actually consumed power into account
-		effectiveCurrent = powerToCurrent(lp.chargePower, activePhases)
+		effectiveCurrent = powerToCurrent(lp.GetChargePower(), activePhases)
 	}
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
@@ -1851,7 +1852,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	if lp.chargeEnergy != nil {
-		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
+		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.GetChargePower())
 	}
 }
 
@@ -2136,7 +2137,7 @@ func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, 
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
-	lp.bus.Publish(evChargePower, lp.chargePower)
+	lp.bus.Publish(evChargePower, lp.GetChargePower())
 
 	// update progress and effective values
 	lp.publishChargeProgress()
