@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 	// bind the OCPP central system to an ephemeral port so this test binary
 	// does not contend with the charger/ocpp package test binary for the fixed
 	// default port when both run in parallel under `go test ./...`
-	ocpp.Init(ocpp.Config{Port: 0}, "")
+	ocpp.NewServer(ocpp.Config{Port: 0}, "")
 	os.Exit(m.Run())
 }
 

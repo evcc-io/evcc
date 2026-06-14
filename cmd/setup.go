@@ -849,7 +849,7 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 			log.WARN.Printf("ocpp: failed to load settings: %v", err)
 		}
 	}
-	ocpp.Init(*cfg, externalUrl)
+	ocpp.NewServer(*cfg, externalUrl)
 
 	// Load proxy forwarding rules from DB if present.
 	var rules []ocpp.ForwarderRule

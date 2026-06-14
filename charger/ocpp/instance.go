@@ -129,63 +129,66 @@ func CurrentConfig() Config {
 	return Config{Port: port}
 }
 
-// Init initializes the OCPP server
-func Init(cfg Config, networkExternalUrl string) {
+// NewServer builds the OCPP central system without starting it.
+func NewServer(cfg Config, networkExternalUrl string) {
 	port = cfg.Port
 	externalUrl = networkExternalUrl
+
+	log := util.NewLogger("ocpp")
+
+	server := &interceptingServer{Server: ws.NewServer()}
+	server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
+
+	dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
+
+	endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile, security.Profile, firmware.Profile)
+	endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []any) *ocpp.Error {
+		log.ERROR.Printf("%v (%s)", err, rawMessage)
+		return nil
+	})
+
+	cs := ocpp16.NewCentralSystem(endpoint, server)
+
+	instance = &CS{
+		log:           log,
+		regs:          make(map[string]*registration),
+		CentralSystem: cs,
+		server:        server,
+		dispatcher:    dispatcher,
+	}
+
+	instance.txnId.Store(time.Now().UTC().Unix())
+
+	ocppj.SetLogger(instance)
+
+	cs.SetCoreHandler(instance)
+	cs.SetSecurityHandler(instance)
+	cs.SetFirmwareManagementHandler(instance)
+	cs.SetNewChargePointHandler(instance.NewChargePoint)
+	cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 }
 
+// Instance returns the central system, starting it once on first call.
 func Instance() *CS {
 	once.Do(func() {
-		log := util.NewLogger("ocpp")
+		instance.dispatcher.SetTimeout(Timeout)
 
-		server := &interceptingServer{Server: ws.NewServer()}
-		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
-
-		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
-		dispatcher.SetTimeout(Timeout)
-
-		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile, security.Profile, firmware.Profile)
-		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []any) *ocpp.Error {
-			log.ERROR.Printf("%v (%s)", err, rawMessage)
-			return nil
-		})
-
-		cs := ocpp16.NewCentralSystem(endpoint, server)
-
-		instance = &CS{
-			log:           log,
-			regs:          make(map[string]*registration),
-			CentralSystem: cs,
-			server:        server,
-		}
-
-		instance.txnId.Store(time.Now().UTC().Unix())
-
-		ocppj.SetLogger(instance)
-
-		cs.SetCoreHandler(instance)
-		cs.SetSecurityHandler(instance)
-		cs.SetFirmwareManagementHandler(instance)
-		cs.SetNewChargePointHandler(instance.NewChargePoint)
-		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
-
-		go instance.errorHandler(cs.Errors())
-		go cs.Start(port, "/{ws}")
+		go instance.errorHandler(instance.Errors())
+		go instance.CentralSystem.Start(port, "/{ws}")
 
 		// wait for server to start
 		tick := time.Tick(10 * time.Millisecond)
 		timeout := time.After(10 * time.Second)
-		for server.Addr() == nil {
+		for instance.server.Addr() == nil {
 			select {
 			case <-tick:
 			case <-timeout:
-				log.ERROR.Println("timeout waiting for server to bind")
+				instance.log.ERROR.Println("timeout waiting for server to bind")
 				return
 			}
 		}
 
-		boundPort = server.Addr().Port
+		boundPort = instance.server.Addr().Port
 	})
 
 	return instance
