@@ -18,4 +18,5 @@ const (
 	WelcomeCharge              // vehicle
 	ClimaterDisabled           // vehicle - ignore climater state for charge control
 	AutodetectDisabled         // vehicle - do not try to identify vehicle by status
+	ManualSoc                  // vehicle - soc is manually set by user
 )

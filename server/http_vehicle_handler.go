@@ -11,6 +11,52 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// manualSocHandler updates manual soc
+func manualSocHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		soc, err := strconv.ParseFloat(vars["value"], 64)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		v.SetManualSoc(soc)
+
+		res := struct {
+			Soc float64 `json:"soc"`
+		}{
+			Soc: v.GetManualSoc(),
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
+// manualSocRemoveHandler clears manual soc
+func manualSocRemoveHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		v.SetManualSoc(0)
+
+		jsonWrite(w, struct{}{})
+	}
+}
+
 // minSocHandler updates min soc
 func minSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

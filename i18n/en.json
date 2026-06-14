@@ -1385,7 +1385,9 @@
       "temp": "Temp.",
       "tempLimit": "Temp. limit",
       "unknown": "Guest vehicle",
-      "vehicleSoc": "Charge"
+      "vehicleSoc": "Charge",
+      "manualSoc": "Manual SoC",
+      "manualSocClear": "Clear manual SoC"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Waiting for authorization.",

@@ -360,6 +360,7 @@ export interface Loadpoint {
   vehicleSoc: number;
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
+  manualSoc: number;
   batteryBoostLimit: number;
 }
 
@@ -655,6 +656,7 @@ export interface Vehicle {
   name: string;
   minSoc?: number;
   limitSoc?: number;
+  manualSoc?: number;
   plan?: StaticPlan;
   repeatingPlans: RepeatingPlan[] | null;
   planStrategy: PlanStrategy;

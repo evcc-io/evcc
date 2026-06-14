@@ -16,7 +16,7 @@ params:
 render: |
   type: custom
   {{- include "vehicle-common" . }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline" "manualsoc")) .) }}
   soc:
     source: const
     value: 0

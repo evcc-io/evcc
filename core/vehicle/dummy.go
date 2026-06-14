@@ -64,3 +64,12 @@ func (v *dummy) GetPlanStrategy() api.PlanStrategy {
 func (v *dummy) SetPlanStrategy(strategy api.PlanStrategy) error {
 	return nil
 }
+
+// GetManualSoc returns the manually set SoC (0 = not set)
+func (v *dummy) GetManualSoc() float64 {
+	return 0
+}
+
+// SetManualSoc sets a manual SoC override (0 = clear)
+func (v *dummy) SetManualSoc(soc float64) {
+}
