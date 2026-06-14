@@ -68,6 +68,26 @@
       ],
       "title": "Requirements"
     },
+    "Caveats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "$ref": "#/definitions/LanguageText"
+          },
+          "link": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "description"
+        ]
+      },
+      "title": "Caveats"
+    },
     "ParamDevice": {
       "anyOf": [
         {

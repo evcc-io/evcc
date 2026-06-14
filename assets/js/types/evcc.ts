@@ -42,8 +42,8 @@ export interface HemsConfig {
 }
 
 export interface HemsStatus {
-  dimmed: boolean;
-  curtailed: boolean;
+  dimmed?: boolean;
+  curtailed?: boolean;
   maxConsumptionPower?: number;
   maxProductionPower?: number;
 }
@@ -435,6 +435,7 @@ export enum BATTERY_MODE {
   NORMAL = "normal",
   HOLD = "hold",
   CHARGE = "charge",
+  HOLDCHARGE = "holdcharge",
 }
 
 export enum PHASES {
