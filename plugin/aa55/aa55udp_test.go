@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -113,7 +114,7 @@ func TestBuildReadConfig_RegisterMode(t *testing.T) {
 // register/count and the target register's offset is computed within it.
 // ET grid (0x8943) within block READ 125 @ 0x891C → offset (35139-35100)*2 = 78.
 func TestBuildReadConfig_BlockMode(t *testing.T) {
-	cfg, err := buildReadConfig(0xF7, 0x8943, 2, &Block{Register: 0x891C, Count: 125})
+	cfg, err := buildReadConfig(0xF7, 0x8943, 2, &modbus.Block{Register: 0x891C, Count: 125})
 	require.NoError(t, err)
 	assert.Equal(t, []byte{0xf7, 0x03, 0x89, 0x1c, 0x00, 0x7d}, cfg.pdu)
 	assert.Equal(t, 78, cfg.offset)
@@ -124,11 +125,11 @@ func TestBuildReadConfig_BlockMode(t *testing.T) {
 // that does not fit entirely within the configured block.
 func TestBuildReadConfig_RejectsRegisterOutsideBlock(t *testing.T) {
 	// before block start
-	_, err := buildReadConfig(0xF7, 0x8900, 2, &Block{Register: 0x891C, Count: 125})
+	_, err := buildReadConfig(0xF7, 0x8900, 2, &modbus.Block{Register: 0x891C, Count: 125})
 	require.Error(t, err)
 
 	// past block end (0x891C+125 = 0x8999; 0x8998+2 overruns)
-	_, err = buildReadConfig(0xF7, 0x8998, 2, &Block{Register: 0x891C, Count: 125})
+	_, err = buildReadConfig(0xF7, 0x8998, 2, &modbus.Block{Register: 0x891C, Count: 125})
 	require.Error(t, err)
 }
 

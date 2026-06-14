@@ -7,7 +7,16 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 )
+
+// cacheTTL serves all sources within one poll cycle (well under 1s) while
+// forcing a fresh read on the next cycle.
+const cacheTTL = 2 * time.Second
+
+// cache de-duplicates block reads across all AA55UDP instances so multiple
+// sources covering the same (host, block) share one UDP exchange per cycle.
+var cache = modbus.NewCache(cacheTTL)
 
 // AA55UDP is the GoodWe AA55-over-UDP source plugin transport.
 //
@@ -26,17 +35,8 @@ type AA55UDP struct {
 	offset   int    // byte offset into the response payload (0 for register reads)
 	decode   string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale    float64
-	cacheKey []byte        // precomputed cache key (remoteAddr/pdu); nil disables caching
+	cacheKey string        // precomputed cache key (remoteAddr/pdu); empty disables caching
 	delay    time.Duration // minimum gap between sends to the inverter (0 disables)
-}
-
-// Block describes the enclosing register block to fetch in block-read mode.
-// When set, one UDP exchange reads Count registers starting at Register, and
-// each source extracts its own target register at the computed offset, sharing
-// the response via the cache.
-type Block struct {
-	Register uint16
-	Count    uint16
 }
 
 // readConfig holds the resolved read mode configuration.
@@ -49,7 +49,7 @@ type readConfig struct {
 // buildReadConfig resolves the read mode from the target register (register,
 // count, id) and the optional enclosing block. In both modes the PDU is built
 // on the Go side; the template only supplies logical parameters.
-func buildReadConfig(id int, register, count uint16, block *Block) (readConfig, error) {
+func buildReadConfig(id int, register, count uint16, block *modbus.Block) (readConfig, error) {
 	if id < 0 || id > 255 {
 		return readConfig{}, fmt.Errorf("id must be 0-255, got %d", id)
 	}
@@ -63,13 +63,12 @@ func buildReadConfig(id int, register, count uint16, block *Block) (readConfig, 
 		if block.Count == 0 {
 			return readConfig{}, errors.New("block count must be ≥ 1")
 		}
-		// The target register must fit entirely within the block.
-		if register < block.Register || uint32(register)+uint32(count) > uint32(block.Register)+uint32(block.Count) {
+		if !block.Contains(register, count) {
 			return readConfig{}, fmt.Errorf("register %d+%d does not fit in block %d+%d", register, count, block.Register, block.Count)
 		}
 		return readConfig{
 			pdu:      buildPDU(byte(id), block.Register, block.Count),
-			offset:   int(register-block.Register) * 2,
+			offset:   block.ByteOffset(register),
 			useCache: true,
 		}, nil
 	}
@@ -81,7 +80,7 @@ func buildReadConfig(id int, register, count uint16, block *Block) (readConfig, 
 // New constructs an AA55UDP from a high-level configuration. It validates
 // decode, resolves the read mode (register vs block), and wraps the conn.
 // The caller is responsible for dialling conn.
-func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, block *Block, decode string, scale float64, delay time.Duration) (*AA55UDP, error) {
+func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, block *modbus.Block, decode string, scale float64, delay time.Duration) (*AA55UDP, error) {
 	if err := validateDecode(decode); err != nil {
 		return nil, err
 	}
@@ -99,7 +98,7 @@ func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, bl
 		offset: cfg.offset,
 	}
 	if cfg.useCache {
-		ap.cacheKey = []byte(conn.RemoteAddr().String() + "/" + string(cfg.pdu))
+		ap.cacheKey = conn.RemoteAddr().String() + "/" + string(cfg.pdu)
 	}
 	return ap, nil
 }
@@ -133,11 +132,11 @@ func (p *AA55UDP) query() (float64, error) {
 // serves and de-duplicates requests.
 func (p *AA55UDP) fetch() ([]byte, error) {
 	// Register mode: single targeted read, no caching.
-	if p.cacheKey == nil {
+	if p.cacheKey == "" {
 		return p.exchange()
 	}
 
-	payload, ok, err := cache.fetch(p.cacheKey, p.exchange)
+	payload, ok, err := cache.Fetch(p.cacheKey, p.exchange)
 	if err != nil {
 		return nil, err
 	}
