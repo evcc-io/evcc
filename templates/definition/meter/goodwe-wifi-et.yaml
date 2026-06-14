@@ -11,6 +11,10 @@ params:
   - name: host
   - name: uri
     deprecated: true
+  - name: delay
+    type: duration
+    default: 100ms
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -24,6 +28,7 @@ render: |
     register: 35139      # grid power
     count: 2
     decode: int32be
+    delay: {{ .delay }}
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
@@ -32,6 +37,7 @@ render: |
     count: 2
     decode: float32be
     scale: 0.001
+    delay: {{ .delay }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -46,6 +52,7 @@ render: |
       register: 35105    # Ppv1
       count: 2
       decode: uint32nan
+      delay: {{ .delay }}
     - source: aa55udp
       host: {{ or .host .uri }}
       id: 247
@@ -55,6 +62,7 @@ render: |
       register: 35109    # Ppv2
       count: 2
       decode: uint32nan
+      delay: {{ .delay }}
     - source: aa55udp
       host: {{ or .host .uri }}
       id: 247
@@ -64,6 +72,7 @@ render: |
       register: 35113    # Ppv3
       count: 2
       decode: uint32nan
+      delay: {{ .delay }}
     - source: aa55udp
       host: {{ or .host .uri }}
       id: 247
@@ -73,6 +82,7 @@ render: |
       register: 35117    # Ppv4
       count: 2
       decode: uint32nan
+      delay: {{ .delay }}
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
@@ -84,6 +94,7 @@ render: |
     count: 2
     decode: uint32be
     scale: 0.1
+    delay: {{ .delay }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -96,6 +107,7 @@ render: |
     register: 35182      # battery power
     count: 2
     decode: int32be
+    delay: {{ .delay }}
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
@@ -107,6 +119,7 @@ render: |
     count: 2
     decode: uint32be
     scale: 0.1
+    delay: {{ .delay }}
   soc:
     source: aa55udp
     host: {{ or .host .uri }}
@@ -117,4 +130,5 @@ render: |
     register: 37007      # soc
     count: 1
     decode: uint16be
+    delay: {{ .delay }}
   {{- end }}

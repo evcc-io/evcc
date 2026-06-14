@@ -26,8 +26,8 @@ type AA55UDP struct {
 	offset   int    // byte offset into the response payload (0 for register reads)
 	decode   string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale    float64
-	delay    time.Duration // minimum gap between sends to the inverter (0 disables)
 	cacheKey []byte        // precomputed cache key (remoteAddr/pdu); nil disables caching
+	delay    time.Duration // minimum gap between sends to the inverter (0 disables)
 }
 
 // Block describes the enclosing register block to fetch in block-read mode.
