@@ -54,7 +54,7 @@
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
-    "@eslint/js": "^9.39.4",
+    "@eslint/js": "^10.0.1",
     "@jest/types": "^30.3.0",
     "@playwright/test": "^1.60.0",
     "@storybook/vue3": "^10.3.5",
