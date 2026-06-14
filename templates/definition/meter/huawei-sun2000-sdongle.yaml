@@ -36,12 +36,6 @@ params:
       en: Active power limit in percent
     advanced: true
     usages: ["pv"]
-    description:
-      en: Inverter cascade
-      de: Wechselrichterkaskade
-    help:
-      en: Keep AC charging active (except for when being dimmed) to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
-      de: AC-Laden bleibt aktiv (außer bei einer aktiven Leistungsreduzierung) zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
 render: |
   type: custom
   {{- if eq .usage "pv" }}
