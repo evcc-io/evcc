@@ -32,7 +32,7 @@
     "chartjs-adapter-dayjs-4": "^1.0.4",
     "chartjs-plugin-datalabels": "^2.2.0",
     "countup.js": "^2.10.0",
-    "dayjs": "^1.11.20",
+    "dayjs": "^1.11.21",
     "echarts": "^6.0.0",
     "monaco-editor": "0.52.2",
     "qrcode": "^1.5.4",
