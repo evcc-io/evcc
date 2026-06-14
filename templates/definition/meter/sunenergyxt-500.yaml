@@ -37,7 +37,6 @@ params:
   - name: timeout
     advanced: true
     default: 10s
-  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -86,7 +85,6 @@ render: |
     cache: {{ .cache }}
     timeout: {{ .timeout }}
     jq: if .state.reported.PK == 2 then 2400 else 800 end
-  {{- include "battery-params" . }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
