@@ -1173,10 +1173,10 @@ func (m *MockHEMS) EXPECT() *MockHEMSMockRecorder {
 }
 
 // Curtailed mocks base method.
-func (m *MockHEMS) Curtailed() bool {
+func (m *MockHEMS) Curtailed() *bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Curtailed")
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*bool)
 	return ret0
 }
 
@@ -1187,10 +1187,10 @@ func (mr *MockHEMSMockRecorder) Curtailed() *gomock.Call {
 }
 
 // Dimmed mocks base method.
-func (m *MockHEMS) Dimmed() bool {
+func (m *MockHEMS) Dimmed() *bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Dimmed")
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(*bool)
 	return ret0
 }
 

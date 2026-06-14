@@ -180,7 +180,8 @@ func (c *EEBus) approveDeviceConfigurations(
 	pending map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration,
 	approve func(msgCounter model.MsgCounterType, approve bool, reason string),
 ) {
-	for msg := range pending {
+	for msg, configs := range pending {
+		c.log.DEBUG.Println("approving device configuration write:", msg, configs)
 		approve(msg, true, "")
 	}
 }
