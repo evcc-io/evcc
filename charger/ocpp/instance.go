@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -44,6 +45,7 @@ func (r ForwarderRule) Redacted() ForwarderRule {
 
 var (
 	once        sync.Once
+	startErr    error
 	instance    *CS
 	port        = 8887
 	boundPort   int
@@ -168,8 +170,9 @@ func NewServer(cfg Config, networkExternalUrl string) {
 	cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 }
 
-// Instance returns the central system, starting it once on first call.
-func Instance() *CS {
+// Instance returns the central system, starting it once on first call. It
+// returns an error if the server fails to bind its port.
+func Instance() (*CS, error) {
 	once.Do(func() {
 		instance.dispatcher.SetTimeout(Timeout)
 
@@ -183,7 +186,7 @@ func Instance() *CS {
 			select {
 			case <-tick:
 			case <-timeout:
-				instance.log.ERROR.Println("timeout waiting for server to bind")
+				startErr = errors.New("timeout waiting for server to bind")
 				return
 			}
 		}
@@ -191,5 +194,5 @@ func Instance() *CS {
 		boundPort = instance.server.Addr().Port
 	})
 
-	return instance
+	return instance, startErr
 }

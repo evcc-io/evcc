@@ -171,7 +171,7 @@ func (cp *CP) onTransportConnect() {
 
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
-		if err := Instance().TriggerMessage(
+		if err := instance.TriggerMessage(
 			cp.id,
 			func(conf *remotetrigger.TriggerMessageConfirmation, err error) {
 				if err != nil {
