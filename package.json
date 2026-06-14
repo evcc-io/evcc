@@ -55,7 +55,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.39.4",
-    "@jest/types": "^30.3.0",
+    "@jest/types": "^30.4.1",
     "@playwright/test": "^1.60.0",
     "@storybook/vue3": "^10.3.5",
     "@storybook/vue3-vite": "^10.3.5",
