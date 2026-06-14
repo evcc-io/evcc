@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"time"
 
 	"github.com/evcc-io/evcc/plugin/aa55"
 	"github.com/evcc-io/evcc/util"
@@ -39,6 +40,7 @@ func init() {
 //	  count:    125          # block length (registers)
 //	decode:   int32be        # int32be | uint32be | uint32nan | int16be | uint16be | float32be
 //	scale:    1.0            # optional multiplier (default 1.0)
+//	delay:    100ms          # optional min gap between sends to one inverter (0 disables)
 func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Host     string
@@ -48,6 +50,7 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 		Block    *aa55.Block
 		Decode   string
 		Scale    float64
+		Delay    time.Duration
 	}{
 		Id:    int(aa55.InverterAddr),
 		Count: 2,
@@ -69,7 +72,7 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 		return nil, err
 	}
 
-	res, err := aa55.New(util.NewLogger("aa55udp"), conn, cc.Id, cc.Register, cc.Count, cc.Block, cc.Decode, cc.Scale)
+	res, err := aa55.New(util.NewLogger("aa55udp"), conn, cc.Id, cc.Register, cc.Count, cc.Block, cc.Decode, cc.Scale, cc.Delay)
 	if err != nil {
 		return nil, fmt.Errorf("aa55udp: %w", err)
 	}
