@@ -95,7 +95,7 @@ func (v *Provider) Range() (int64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldRangeSecondary, FieldRangePrimary, FieldRangeCombined); p != nil {
+	if p := lookup(data, FieldRangeSecondary, FieldRangePrimary, FieldRangeCombined, KeyRangeID3); p != nil {
 		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}
