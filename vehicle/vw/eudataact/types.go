@@ -123,7 +123,7 @@ const (
 	FieldRangeCombined  = "cruising_range_combined"
 	FieldRangePrimary   = "cruising_range_primary_engine"
 	FieldRangeSecondary = "cruising_range_secondary_engine"
-	KeyRangeID3 = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 cruising range, delivered as "value"
+	KeyRangeID3         = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 cruising range, delivered as "value"
 
 	// odo
 	FieldOdometer      = "mileage"
@@ -201,15 +201,26 @@ func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
 		return nil, err
 	}
 
-	res := make(map[string]point, len(ds.Data))
-	for _, p := range ds.Data {
-		// index known data points by their unique key, others by field name
-		name := p.DataFieldName
-		if _, ok := knownKeys[p.Key]; ok {
-			name = p.Key
-		}
+	return points(ds.Data), nil
+}
 
-		if name == "" || p.Value == "" {
+// points indexes data points by field name (newest timestamp wins), and known
+// data points additionally by their unique key, as their name is not unique.
+func points(data []dataPoint) map[string]point {
+	res := make(map[string]point, len(data))
+
+	set := func(name string, p point) {
+		if name == "" {
+			return
+		}
+		if cur, ok := res[name]; ok && cur.Timestamp.After(p.Timestamp) {
+			return
+		}
+		res[name] = p
+	}
+
+	for _, p := range data {
+		if p.Value == "" {
 			continue
 		}
 
@@ -217,13 +228,13 @@ func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
 		if p.TimestampUtc != nil {
 			ts = *p.TimestampUtc
 		}
+		pt := point{Value: p.Value, Timestamp: ts}
 
-		if cur, ok := res[name]; ok && cur.Timestamp.After(ts) {
-			continue
+		set(p.DataFieldName, pt)
+		if _, ok := knownKeys[p.Key]; ok {
+			set(p.Key, pt)
 		}
-
-		res[name] = point{Value: p.Value, Timestamp: ts}
 	}
 
-	return res, nil
+	return res
 }

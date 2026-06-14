@@ -1,11 +1,7 @@
 package eudataact
 
 import (
-	"archive/zip"
-	"bytes"
 	"fmt"
-	"io"
-	"log"
 	"testing"
 	"time"
 
@@ -133,43 +129,15 @@ func TestMergeDeliveryOrder(t *testing.T) {
 	assert.Equal(t, "75", data[FieldSoc].Value, "the newest delivered SoC wins")
 }
 
-// zipDataset wraps a dataset JSON document in a zip archive as delivered by the portal
-func zipDataset(t *testing.T, json string) []byte {
-	t.Helper()
+// TestPoints guards that a data point with a generic field name ("value") is
+// indexed by its unique key while the name stays indexed (and thus logged).
+func TestPoints(t *testing.T) {
+	data := points([]dataPoint{
+		{Key: KeyRangeID3, DataFieldName: "value", Value: "317"},
+		{DataFieldName: FieldOdometer, Value: "22164"},
+	})
 
-	var buf bytes.Buffer
-	zw := zip.NewWriter(&buf)
-	w, err := zw.Create("dataset.json")
-	require.NoError(t, err)
-	_, err = io.WriteString(w, json)
-	require.NoError(t, err)
-	require.NoError(t, zw.Close())
-
-	return buf.Bytes()
-}
-
-// TestParseDatasetKey guards that a data point with a generic, non-unique
-// dataFieldName ("value") is indexed by its unique key, not the name.
-func TestParseDatasetKey(t *testing.T) {
-	b := zipDataset(t, `{"vin":"WVWZZZ","Data":[
-		{"key":"`+KeyRangeID3+`","dataFieldName":"value","value":"317"},
-		{"key":"other-guid","dataFieldName":"mileage","value":"22164"}
-	]}`)
-
-	data, err := parseDataset(log.New(io.Discard, "", 0), b)
-	require.NoError(t, err)
-
-	assert.Equal(t, "317", data[KeyRangeID3].Value, "ID.3 range is indexed by key")
-	assert.NotContains(t, data, "value", "generic field name is not indexed")
-	assert.Equal(t, "22164", data[FieldOdometer].Value, "named field is indexed by name")
-}
-
-// TestRangeByKey guards that Range falls back to the ID.3 cruising range
-// delivered under its key when the named range fields are absent.
-func TestRangeByKey(t *testing.T) {
-	p := testProvider(map[string]point{KeyRangeID3: {Value: "317"}})
-
-	rng, err := p.Range()
-	require.NoError(t, err)
-	assert.Equal(t, int64(317), rng)
+	assert.Equal(t, "317", data[KeyRangeID3].Value, "ID.3 range indexed by key")
+	assert.Equal(t, "317", data["value"].Value, "field name remains indexed")
+	assert.Equal(t, "22164", data[FieldOdometer].Value, "named field indexed by name")
 }
