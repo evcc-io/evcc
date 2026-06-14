@@ -1,5 +1,7 @@
 package modbus
 
+import "fmt"
+
 // Block describes an enclosing register block: Count 16-bit registers starting
 // at Register, fetched once per poll cycle and shared via a Cache.
 type Block struct {
@@ -18,4 +20,19 @@ func (b Block) Contains(register, count uint16) bool {
 // (each register occupies two bytes).
 func (b Block) ByteOffset(register uint16) int {
 	return int(register-b.Register) * 2
+}
+
+// Extract returns the bytes for op sliced out of a block payload.
+func (b Block) Extract(op RegisterOperation, payload []byte) ([]byte, error) {
+	if !b.Contains(op.Addr, op.Length) {
+		return nil, fmt.Errorf("register %d+%d does not fit in block %d+%d", op.Addr, op.Length, b.Register, b.Count)
+	}
+
+	offset := b.ByteOffset(op.Addr)
+	end := offset + int(op.Length)*2
+	if len(payload) < end {
+		return nil, fmt.Errorf("block payload too short (len=%d, need=%d)", len(payload), end)
+	}
+
+	return payload[offset:end], nil
 }

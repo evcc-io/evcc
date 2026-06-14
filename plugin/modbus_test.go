@@ -27,13 +27,13 @@ func TestExtractBlock(t *testing.T) {
 	// imported energy @ 37121 (offset 28), uint32 = 567890
 	binary.BigEndian.PutUint32(payload[28:], 567890)
 
-	power, err := extractBlock(huaweiGridBlock, op(37113, 2), payload)
+	power, err := huaweiGridBlock.Extract(op(37113, 2), payload)
 	require.NoError(t, err)
 	powerDec, err := (modbus.Register{Type: "holding", Decode: "int32"}).DecodeFunc()
 	require.NoError(t, err)
 	assert.Equal(t, 1234.0, powerDec(power))
 
-	energy, err := extractBlock(huaweiGridBlock, op(37121, 2), payload)
+	energy, err := huaweiGridBlock.Extract(op(37121, 2), payload)
 	require.NoError(t, err)
 	energyDec, err := (modbus.Register{Type: "holding", Decode: "uint32"}).DecodeFunc()
 	require.NoError(t, err)
@@ -44,10 +44,10 @@ func TestExtractBlockBounds(t *testing.T) {
 	payload := make([]byte, 2*huaweiGridBlock.Count)
 
 	// register outside the block is rejected
-	_, err := extractBlock(huaweiGridBlock, op(37200, 2), payload)
+	_, err := huaweiGridBlock.Extract(op(37200, 2), payload)
 	require.Error(t, err)
 
 	// short payload is rejected
-	_, err = extractBlock(huaweiGridBlock, op(37121, 2), payload[:10])
+	_, err = huaweiGridBlock.Extract(op(37121, 2), payload[:10])
 	require.Error(t, err)
 }

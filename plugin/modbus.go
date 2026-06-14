@@ -136,22 +136,7 @@ func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
 		m.log.TRACE.Printf("block cache hit %s", key)
 	}
 
-	return extractBlock(*m.block, op, payload)
-}
-
-// extractBlock returns the bytes for op sliced out of a block payload.
-func extractBlock(block modbus.Block, op modbus.RegisterOperation, payload []byte) ([]byte, error) {
-	if !block.Contains(op.Addr, op.Length) {
-		return nil, fmt.Errorf("register %d+%d does not fit in block %d+%d", op.Addr, op.Length, block.Register, block.Count)
-	}
-
-	offset := block.ByteOffset(op.Addr)
-	end := offset + int(op.Length)*2
-	if len(payload) < end {
-		return nil, fmt.Errorf("block payload too short (len=%d, need=%d)", len(payload), end)
-	}
-
-	return payload[offset:end], nil
+	return m.block.Extract(op, payload)
 }
 
 var _ FloatGetter = (*Modbus)(nil)
