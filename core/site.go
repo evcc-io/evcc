@@ -1131,14 +1131,19 @@ func (site *Site) measureLoadpoints(stopC chan struct{}, interval time.Duration)
 	}
 }
 
-// loopControllableLoadpoints feeds the next loadpoint to control to the given channel
+// loopControllableLoadpoints feeds the next loadpoint to control to the given channel.
+// Loadpoints with pending control work (mode/limit/status change) are served first;
+// otherwise loadpoints are re-controlled round-robin so PV/surplus regulation keeps
+// tracking even while no explicit event is pending.
 func (site *Site) loopControllableLoadpoints(next chan<- updater) {
 	candidates := append(site.loadpoints, site.loadpoints...)
 
 	var cursor int
 	for {
-		var lp *Loadpoint
+		// default: round-robin re-control for continuous PV/surplus tracking
+		lp := candidates[cursor]
 
+		// prefer a loadpoint with pending control work, scanning from cursor
 		for i := cursor; i < cursor+len(site.loadpoints); i++ {
 			if c := candidates[i]; c.controlPending() {
 				lp = c
@@ -1146,11 +1151,7 @@ func (site *Site) loopControllableLoadpoints(next chan<- updater) {
 			}
 		}
 
-		if lp != nil {
-			next <- lp
-		} else {
-			time.Sleep(measureInterval)
-		}
+		next <- lp
 
 		cursor++
 		if cursor >= len(site.loadpoints) {
@@ -1166,8 +1167,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
-	// TODO how
-
 	// the in-flight reserve treats a just-actuated setpoint as settling for one
 	// control interval, so each loadpoint needs to know it
 	for _, lp := range site.loadpoints {
@@ -1175,6 +1174,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	}
 
 	loadpointChan := make(chan updater)
+	controllable := site.IsConfigured() && len(site.loadpoints) > 0
 	if site.IsConfigured() {
 		if len(site.loadpoints) == 0 {
 			site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
@@ -1185,12 +1185,22 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		}
 	}
 
-	site.update(<-loadpointChan) // start immediately
+	// next returns the loadpoint to control this cycle, or nil in meter-only mode.
+	// The site refresh (meters, battery, publishing) always runs, independent of
+	// whether a loadpoint needs controlling.
+	next := func() updater {
+		if controllable {
+			return <-loadpointChan
+		}
+		return nil
+	}
+
+	site.update(next()) // start immediately
 
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
-			site.update(<-loadpointChan)
+			site.update(next())
 		case <-stopC:
 			return
 		}
