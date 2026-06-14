@@ -72,7 +72,7 @@
     "@vue/compiler-sfc": "^3.5.33",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.7.0",
-    "@vue/test-utils": "^2.4.9",
+    "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
     "body-parser": "^2.2.2",
     "cross-env": "^10.1.0",
