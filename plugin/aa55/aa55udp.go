@@ -26,7 +26,8 @@ type AA55UDP struct {
 	offset   int    // byte offset into the response payload (0 for register reads)
 	decode   string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale    float64
-	cacheKey []byte // precomputed cache key (remoteAddr/pdu); nil disables caching
+	delay    time.Duration // minimum gap between sends to the inverter (0 disables)
+	cacheKey []byte        // precomputed cache key (remoteAddr/pdu); nil disables caching
 }
 
 // Block describes the enclosing register block to fetch in block-read mode.
@@ -80,7 +81,7 @@ func buildReadConfig(id int, register, count uint16, block *Block) (readConfig, 
 // New constructs an AA55UDP from a high-level configuration. It validates
 // decode, resolves the read mode (register vs block), and wraps the conn.
 // The caller is responsible for dialling conn.
-func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, block *Block, decode string, scale float64) (*AA55UDP, error) {
+func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, block *Block, decode string, scale float64, delay time.Duration) (*AA55UDP, error) {
 	if err := validateDecode(decode); err != nil {
 		return nil, err
 	}
@@ -93,6 +94,7 @@ func New(log *util.Logger, conn *net.UDPConn, id int, register, count uint16, bl
 		conn:   conn,
 		decode: decode,
 		scale:  scale,
+		delay:  delay,
 		pdu:    cfg.pdu,
 		offset: cfg.offset,
 	}
@@ -157,8 +159,16 @@ func (p *AA55UDP) exchange() ([]byte, error) {
 	return stripHeader(raw)
 }
 
-// sendRecv sends packet over p.conn and returns the raw response bytes.
+// sendRecv sends packet over p.conn and returns the raw response bytes. When a
+// delay is set it serializes and spaces exchanges to the same inverter.
 func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
+	if p.delay > 0 {
+		g := pace.gate(p.conn.RemoteAddr().String())
+		g.mu.Lock()
+		defer g.mu.Unlock()
+		g.wait(p.delay)
+	}
+
 	p.log.TRACE.Printf("send to %s: %x", p.conn.RemoteAddr(), packet)
 
 	if _, err := p.conn.Write(packet); err != nil {
