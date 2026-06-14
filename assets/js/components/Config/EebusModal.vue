@@ -14,6 +14,9 @@
 			<p v-if="fromYaml" class="text-muted">
 				{{ $t("config.general.fromYamlHint") }}
 			</p>
+			<div v-if="status.error" class="alert alert-danger">
+				{{ $t("config.eebus.serverError", { error: status.error }) }}
+			</div>
 			<FormRow
 				v-if="values.shipid"
 				:id="formId('shipid-display')"

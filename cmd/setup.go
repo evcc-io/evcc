@@ -886,7 +886,11 @@ func configureEEBus(conf *eebus.Config) error {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	eebus.Instance.Run()
+	// a server start failure (e.g. port already in use) is recorded and surfaced
+	// via the eebus status; it must not abort evcc startup
+	if err := eebus.Instance.Run(); err != nil {
+		log.ERROR.Printf("eebus: %v", err)
+	}
 	shutdown.Register(eebus.Instance.Shutdown)
 
 	return nil

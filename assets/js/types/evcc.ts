@@ -570,6 +570,7 @@ export type EebusConfig = {
 
 export type EebusStatus = {
   ski: string;
+  error?: string;
 };
 
 export type ModbusProxy = {
