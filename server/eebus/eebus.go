@@ -213,6 +213,12 @@ func NewServer(other Config) (*EEBus, error) {
 		c.service.AddUseCase(uc)
 	}
 
+	// start the service; on failure (e.g. port already in use) return no instance
+	// so the caller does not configure a dead server
+	if err := c.service.Start(); err != nil {
+		return nil, err
+	}
+
 	return c, nil
 }
 
@@ -279,10 +285,6 @@ func (c *EEBus) RemoteServices() []shipapi.RemoteMdnsService {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	return c.remoteServices
-}
-
-func (c *EEBus) Run() error {
-	return c.service.Start()
 }
 
 func (c *EEBus) Shutdown() {

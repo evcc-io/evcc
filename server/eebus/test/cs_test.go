@@ -39,7 +39,6 @@ func TestEEBus(t *testing.T) {
 	require.NoError(t, err, "server")
 
 	server.Instance = srv
-	go srv.Run()
 
 	require.NotEmpty(t, server.Ski(), "server ski")
 

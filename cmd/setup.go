@@ -886,13 +886,6 @@ func configureEEBus(conf *eebus.Config) error {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	// a server start failure (e.g. port already in use) leaves no usable instance,
-	// so tear it down and report the error instead of running a dead server
-	if err := eebus.Instance.Run(); err != nil {
-		eebus.Instance.Shutdown()
-		eebus.Instance = nil
-		return err
-	}
 	shutdown.Register(eebus.Instance.Shutdown)
 
 	return nil
