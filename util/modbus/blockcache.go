@@ -1,4 +1,4 @@
-package blockread
+package modbus
 
 import (
 	"sync"
@@ -12,18 +12,18 @@ import (
 type Cache struct {
 	ttl    time.Duration
 	mu     sync.Mutex
-	data   map[string]entry
+	data   map[string]cacheEntry
 	flight singleflight.Group
 }
 
-type entry struct {
+type cacheEntry struct {
 	payload   []byte
 	expiresAt time.Time
 }
 
 // NewCache returns a Cache that holds entries for ttl.
 func NewCache(ttl time.Duration) *Cache {
-	return &Cache{ttl: ttl, data: make(map[string]entry)}
+	return &Cache{ttl: ttl, data: make(map[string]cacheEntry)}
 }
 
 // Fetch returns the cached payload for key if it is fresh. On a miss, load is
@@ -58,15 +58,15 @@ func (c *Cache) get(key string) ([]byte, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	entry, ok := c.data[key]
+	e, ok := c.data[key]
 	if !ok {
 		return nil, false
 	}
-	if time.Now().After(entry.expiresAt) {
+	if time.Now().After(e.expiresAt) {
 		delete(c.data, key)
 		return nil, false
 	}
-	return entry.payload, true
+	return e.payload, true
 }
 
 // put inserts or overwrites a payload in the cache.
@@ -74,7 +74,7 @@ func (c *Cache) put(key string, payload []byte) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.data[key] = entry{
+	c.data[key] = cacheEntry{
 		payload:   payload,
 		expiresAt: time.Now().Add(c.ttl),
 	}

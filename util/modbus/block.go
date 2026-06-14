@@ -1,6 +1,4 @@
-// Package blockread provides transport-agnostic block-read primitives shared by
-// the modbus and aa55 source plugins: fetch one enclosing block, extract many.
-package blockread
+package modbus
 
 // Block describes an enclosing register block: Count 16-bit registers starting
 // at Register, fetched once per poll cycle and shared via a Cache.

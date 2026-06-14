@@ -1,4 +1,4 @@
-package blockread
+package modbus
 
 import (
 	"sync"

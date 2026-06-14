@@ -11,7 +11,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/modbus/blockread"
 	gridx "github.com/grid-x/modbus"
 )
 
@@ -21,14 +20,14 @@ const modbusBlockTTL = time.Second
 
 // modbusBlockCache lets sources covering the same (device, block) share one
 // read per poll cycle.
-var modbusBlockCache = blockread.NewCache(modbusBlockTTL)
+var modbusBlockCache = modbus.NewCache(modbusBlockTTL)
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
 	log   *util.Logger
 	conn  *modbus.Connection
 	reg   modbus.Register
-	block *blockread.Block
+	block *modbus.Block
 	scale float64
 }
 
@@ -41,7 +40,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
-		Block           *blockread.Block
+		Block           *modbus.Block
 		Scale           float64
 		Delay           time.Duration
 		ConnectDelay    time.Duration
@@ -141,7 +140,7 @@ func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
 }
 
 // extractBlock returns the bytes for op sliced out of a block payload.
-func extractBlock(block blockread.Block, op modbus.RegisterOperation, payload []byte) ([]byte, error) {
+func extractBlock(block modbus.Block, op modbus.RegisterOperation, payload []byte) ([]byte, error) {
 	if !block.Contains(op.Addr, op.Length) {
 		return nil, fmt.Errorf("register %d+%d does not fit in block %d+%d", op.Addr, op.Length, block.Register, block.Count)
 	}

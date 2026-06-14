@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/modbus/blockread"
 	gridx "github.com/grid-x/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,7 +12,7 @@ import (
 
 // huaweiGridBlock mirrors the shared grid block of the huawei-sun2000-hybrid
 // template: 16 registers (32 bytes) starting at 37107.
-var huaweiGridBlock = blockread.Block{Register: 37107, Count: 16}
+var huaweiGridBlock = modbus.Block{Register: 37107, Count: 16}
 
 func op(addr, length uint16) modbus.RegisterOperation {
 	return modbus.RegisterOperation{FuncCode: gridx.FuncCodeReadHoldingRegisters, Addr: addr, Length: length}
