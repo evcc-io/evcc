@@ -13,16 +13,18 @@ requirements:
       The battery's local mode must be enabled in the manufacturer's app.
       Furthermore, the device's IP address must be set to a fixed, permanent IP address in the router.
       If the `grid` mode is used, an external meter (e.g., Shelly) must be connected to the battery to measure the grid connection point (via the manufacturer's app).
-      Currently, each head storage must be individually added in EVCC.
     de: |
       Der lokale Modus der Batterie muss in der Hersteller-App aktiviert werden. 
       Des Weiteren muss die IP-Adresse des Geräts im Router auf eine feste, dauerhafte IP-Adresse eingestellt werden.
       Wenn der `grid` Modus verwendet wird, muss mit der Batterie ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst (dieser wird über die Hersteller-App hinzugefügt).
-      Aktuell muss jeder Kopfspeicher einzeln in EVCC angelegt werden.
 caveats:
   - description:
-      de: Mehrere Kopfspeicher in ein System zu verbinden, ist vom Hersteller angekündigt, jedoch softwareseitig noch nicht umgesetzt.
-      en: Connecting multiple head storages into one system has been announced by the manufacturer but is not yet implemented on the software side.
+      de: |
+        Aktuell muss jeder Kopfspeicher einzeln in EVCC angelegt werden.
+        Mehrere Kopfspeicher in ein System zu verbinden, ist vom Hersteller angekündigt, jedoch softwareseitig noch nicht umgesetzt.
+      en: |
+        Currently, each head storage must be individually added in EVCC.
+        Connecting multiple head storages into one system has been announced by the manufacturer but is not yet implemented on the software side.
     # link:
 params:
   - name: usage
@@ -31,6 +33,15 @@ params:
     required: true
   - name: host
     required: true
+  - name: maxacpower
+    default: 800.0
+  - preset: battery-params
+  - name: capacity
+    default: 4.8
+  - name: maxchargepower
+    default: 2400.0
+  - name: maxdischargepower
+    default: 800.0
   - name: cache
     advanced: true
     default: 1s
@@ -60,31 +71,7 @@ render: |
     cache: {{ .cache }}
     timeout: {{ .timeout }}
     jq: .state.reported.SC
-  capacity:
-    source: http
-    uri: http://{{ .host }}/read
-    cache: {{ .cache }}
-    timeout: {{ .timeout }}
-    jq: if .state.reported.BN == null then null else .state.reported.BN * 4.8 end
-  minsoc:
-    source: http
-    uri: http://{{ .host }}/read
-    cache: {{ .cache }}
-    timeout: {{ .timeout }}
-    jq: .state.reported.SI
-  maxsoc:
-    source: http
-    uri: http://{{ .host }}/read
-    cache: {{ .cache }}
-    timeout: {{ .timeout }}
-    jq: .state.reported.SA
-  maxchargepower: 2400
-  maxdischargepower:
-    source: http
-    uri: http://{{ .host }}/read
-    cache: {{ .cache }}
-    timeout: {{ .timeout }}
-    jq: if .state.reported.PK == 2 then 2400 else 800 end
+  {{- include "battery-params" . }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -93,10 +80,4 @@ render: |
     cache: {{ .cache }}
     timeout: {{ .timeout }}
     jq: .state.reported.PV
-  maxacpower:
-    source: http
-    uri: http://{{ .host }}/read
-    cache: {{ .cache }}
-    timeout: {{ .timeout }}
-    jq: if .state.reported.PK == 2 then 2400 else 800 end
   {{- end }}
