@@ -221,7 +221,6 @@
       "port": "Port",
       "portHelp": "The port to be used.",
       "removeConfirm": "All EEBus configuration will be removed. New certificates and identifiers will be generated on next start. Are you sure?",
-      "serverError": "The EEBus server failed to start: {error}. The configured port may already be in use by another application. EEBus devices cannot be paired until this is resolved.",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent device identifier for identification in the EEBus network.",
       "shipidHelp": "This SHIP-ID is linked to the certificates below.",

@@ -79,8 +79,7 @@ type EEBus struct {
 	mux sync.Mutex
 	log *util.Logger
 
-	ski       string
-	serverErr error // server start failure (e.g. port already in use), surfaced via GetStatus
+	ski string
 
 	clients map[string][]Device
 }
@@ -89,11 +88,9 @@ var Instance *EEBus
 
 func GetStatus() any {
 	return struct {
-		Ski   string `json:"ski"`
-		Error string `json:"error,omitempty"`
+		Ski string `json:"ski"`
 	}{
-		Ski:   Ski(),
-		Error: serverError(),
+		Ski: Ski(),
 	}
 }
 
@@ -285,13 +282,7 @@ func (c *EEBus) RemoteServices() []shipapi.RemoteMdnsService {
 }
 
 func (c *EEBus) Run() error {
-	err := c.service.Start()
-
-	c.mux.Lock()
-	c.serverErr = err
-	c.mux.Unlock()
-
-	return err
+	return c.service.Start()
 }
 
 func (c *EEBus) Shutdown() {

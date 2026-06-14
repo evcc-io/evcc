@@ -82,16 +82,3 @@ func Ski() string {
 	}
 	return Instance.ski
 }
-
-// serverError returns the EEbus server start failure, if any
-func serverError() string {
-	if Instance == nil {
-		return ""
-	}
-	Instance.mux.Lock()
-	defer Instance.mux.Unlock()
-	if Instance.serverErr == nil {
-		return ""
-	}
-	return Instance.serverErr.Error()
-}
