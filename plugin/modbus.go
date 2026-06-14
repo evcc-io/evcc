@@ -27,7 +27,7 @@ type Modbus struct {
 	log   *util.Logger
 	conn  *modbus.Connection
 	reg   modbus.Register
-	block *modbus.Block
+	block modbus.Block
 	scale float64
 }
 
@@ -40,7 +40,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
-		Block           *modbus.Block
+		Block           modbus.Block
 		Scale           float64
 		Delay           time.Duration
 		ConnectDelay    time.Duration
@@ -77,10 +77,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 		return nil, err
 	}
 
-	if cc.Block != nil {
-		if cc.Block.Count == 0 {
-			return nil, errors.New("block count must be ≥ 1")
-		}
+	if cc.Block.Count > 0 {
 		fc, err := cc.Register.FuncCode()
 		if err != nil {
 			return nil, err
@@ -119,7 +116,7 @@ func (m *Modbus) read(op modbus.RegisterOperation) ([]byte, error) {
 // readBytes returns the bytes for op. In block mode it fetches the enclosing
 // block once (shared via modbusBlockCache) and extracts op at its offset.
 func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
-	if m.block == nil {
+	if m.block.Count == 0 {
 		return m.read(op)
 	}
 
