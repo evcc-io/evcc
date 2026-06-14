@@ -95,9 +95,8 @@ type Loadpoint struct {
 	controlInterval time.Duration // control interval; also the in-flight reserve settle window
 
 	controlMu     sync.Mutex // serialize observe (sense loop) vs control (control loop) per loadpoint
-	observed      bool       // set once observe has produced valid state; control must not actuate before
+	observed      bool       // set once observe has produced valid state, cleared on status read error; control must not actuate before
 	welcomeCharge bool       // latched by observe on connect, consumed+cleared by control
-	observeErr    error      // last charger status read error; control skips actuation while set
 
 	// exposed public configuration
 	CircuitRef string `mapstructure:"circuit"` // Circuit reference
@@ -2043,8 +2042,9 @@ func (lp *Loadpoint) observeLocked() bool {
 
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
-	lp.observeErr = err
 	if err != nil {
+		// state is no longer valid; control must not actuate on stale data
+		lp.observed = false
 		lp.log.ERROR.Println(err)
 		return lp.GetStatus() != prevStatus
 	}
@@ -2167,9 +2167,9 @@ func (lp *Loadpoint) control(sitePower, batteryBoostPower float64, consumption, 
 		}
 	}
 
-	// do not actuate before observe has produced valid state, or if the last
-	// charger status read failed
-	if !lp.observed || lp.observeErr != nil {
+	// do not actuate before observe has produced valid state (also cleared when
+	// the last charger status read failed)
+	if !lp.observed {
 		return
 	}
 
