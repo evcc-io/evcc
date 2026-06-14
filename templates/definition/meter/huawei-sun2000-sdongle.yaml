@@ -1,0 +1,116 @@
+template: huawei-sun2000-sdongle
+products:
+  - brand: Huawei
+    description:
+      de: SUN2000 Hybrid-Wechselrichter (Smart Dongle)
+      en: SUN2000 Hybrid Inverter (Smart Dongle)
+capabilities: ["curtail"]
+requirements:
+  description:
+    de: |
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+    en: |
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+caveats:
+  - description:
+      de: |
+        Die folgenden Gegebenheiten können zu Fehlern in der Modbus-Kommunikation führen:
+        - veraltete Firmware
+        - Änderung von Wechselrichter/Speicher-Einstellungen über das Huawei FusionSolar-Portal
+        - weitere Anwendungen (z.B. Home Assistant) greifen über einen Modbus Proxy auf die Anlage zu (auch abhängig von der Anlagenkomplexität, z.B. Anzahl kaskadierter Wechselrichter)
+      en: |
+        Please be aware that the following circumstances may lead to Modbus communication errors:
+        - outdated firmware
+        - altering inverter/battery configuration settings via Huawei FusionSolar portal
+        - other applications (e.g. Home Assistant) accessing the inverter via Modbus Proxy (also depending on plant complexity, e.g. number of cascaded inverters)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+  - name: timeout
+    default: 15s
+  - name: maxacpower
+    service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    advanced: true
+    usages: ["pv"]
+    description:
+      en: Inverter cascade
+      de: Wechselrichterkaskade
+    help:
+      en: Keep AC charging active (except for when being dimmed) to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
+      de: AC-Laden bleibt aktiv (außer bei einer aktiven Leistungsreduzierung) zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    connectdelay: 1s
+    register:
+      address: 32064 # Input power DC
+      type: holding
+      decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 32108 # Total DC Input Energy
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  maxacpower: {{ .maxacpower }}
+  curtail:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .curtailpercent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47418 # Maximum Feed Grid Power (0-100 %)
+              type: writesingle
+              encoding: uint16
+            scale: 10
+        - source: const
+          value: 7 # Power-limited grid connection (%)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47415 # Active power control mode
+              type: writesingle
+              encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Unlimited 
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47415 # Active power control mode
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 47415 # Active power control mode (0=no curtailment)
+      type: holding
+      decode: uint16
+  {{- end }}
