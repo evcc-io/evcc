@@ -1524,7 +1524,7 @@
     },
     "groupBy": {
       "loadpoint": "Charging point",
-      "none": "Total",
+      "none": "Solar",
       "vehicle": "Vehicle"
     },
     "loadpoint": "Charging point",
@@ -1546,7 +1546,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Cost",
-      "solar": "Solar"
+      "solar": "Energy"
     },
     "vehicle": "Vehicle"
   },
