@@ -510,7 +510,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		if err == nil {
 			mm[i].Power = power
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
-		} else {
+		} else if !errors.Is(err, api.ErrNotAvailable) {
 			if b.Len() > 0 {
 				site.log.ERROR.Println("\n" + b.String())
 			}
@@ -518,19 +518,19 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		}
 
 		// energy (production)
-		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
+		if m, ok := api.Cap[api.MeterEnergy](meter); ok {
 			if f, err := m.TotalEnergy(); err == nil {
 				mm[i].Energy = &f
-			} else {
+			} else if !errors.Is(err, api.ErrNotAvailable) {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
 
 		// return energy (export)
-		if m, ok := api.Cap[api.MeterReturnEnergy](meter); err == nil && ok {
+		if m, ok := api.Cap[api.MeterReturnEnergy](meter); ok {
 			if f, err := m.ReturnEnergy(); err == nil {
 				mm[i].ReturnEnergy = &f
-			} else {
+			} else if !errors.Is(err, api.ErrNotAvailable) {
 				site.log.ERROR.Printf("%s %d return energy: %v", key, i+1, err)
 			}
 		}
@@ -765,7 +765,7 @@ func (site *Site) updateGridMeter() error {
 		mm.Power = res
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
-	} else {
+	} else if !errors.Is(err, api.ErrNotAvailable) {
 		return fmt.Errorf("grid power: %v", err)
 	}
 
@@ -778,7 +778,7 @@ func (site *Site) updateGridMeter() error {
 			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 				mm.Powers = []float64{p1, p2, p3}
 				site.log.DEBUG.Printf("grid powers: %.0fW", mm.Powers)
-			} else {
+			} else if !errors.Is(err, api.ErrNotAvailable) {
 				site.log.ERROR.Printf("grid powers: %v", err)
 			}
 		}
@@ -786,7 +786,7 @@ func (site *Site) updateGridMeter() error {
 		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
 			mm.Currents = []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 			site.log.DEBUG.Printf("grid currents: %.3gA", mm.Currents)
-		} else {
+		} else if !errors.Is(err, api.ErrNotAvailable) {
 			site.log.ERROR.Printf("grid currents: %v", err)
 		}
 	}
@@ -795,7 +795,7 @@ func (site *Site) updateGridMeter() error {
 	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
 		if f, err := energyMeter.TotalEnergy(); err == nil {
 			mm.Energy = &f
-		} else {
+		} else if !errors.Is(err, api.ErrNotAvailable) {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
 	}
@@ -804,7 +804,7 @@ func (site *Site) updateGridMeter() error {
 	if returnEnergyMeter, ok := api.Cap[api.MeterReturnEnergy](site.gridMeter); ok {
 		if f, err := returnEnergyMeter.ReturnEnergy(); err == nil {
 			mm.ReturnEnergy = &f
-		} else {
+		} else if !errors.Is(err, api.ErrNotAvailable) {
 			site.log.ERROR.Printf("grid return energy: %v", err)
 		}
 	}
