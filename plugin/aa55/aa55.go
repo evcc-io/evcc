@@ -8,10 +8,7 @@
 package aa55
 
 import (
-	"encoding/binary"
 	"errors"
-	"fmt"
-	"math"
 
 	"github.com/grid-x/modbus"
 )
@@ -59,81 +56,4 @@ func modbusCRC16(data []byte) []byte {
 		}
 	}
 	return []byte{byte(crc & 0xFF), byte(crc >> 8)}
-}
-
-// decodeMeta describes the properties of a supported decode type.
-type decodeMeta struct {
-	size int
-}
-
-func decodeMetadata(name string) (decodeMeta, bool) {
-	switch name {
-	case "float32be", "int32be", "uint32be", "uint32nan":
-		return decodeMeta{size: 4}, true
-	case "int16be", "uint16be":
-		return decodeMeta{size: 2}, true
-	default:
-		return decodeMeta{}, false
-	}
-}
-
-// validateDecode returns an error if decode is not a supported type.
-func validateDecode(decode string) error {
-	if _, ok := decodeMetadata(decode); !ok {
-		return fmt.Errorf("unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", decode)
-	}
-	return nil
-}
-
-// decodeSize returns the number of bytes required to decode the given type.
-// Panics if decode type is unknown — callers must validateDecode first.
-func decodeSize(decode string) int {
-	if info, ok := decodeMetadata(decode); ok {
-		return info.size
-	}
-	panic(fmt.Sprintf("unknown decode type %q", decode))
-}
-
-// decodeAt extracts a value at the given byte offset of payload and interprets
-// it according to decode.
-func decodeAt(payload []byte, offset int, decode string) (float64, error) {
-	switch decode {
-	case "float32be":
-		if len(payload) < offset+4 {
-			return 0, fmt.Errorf("payload too short for float32be at offset %d (len=%d)", offset, len(payload))
-		}
-		bits := binary.BigEndian.Uint32(payload[offset:])
-		return float64(math.Float32frombits(bits)), nil
-	case "int32be":
-		if len(payload) < offset+4 {
-			return 0, fmt.Errorf("payload too short for int32be at offset %d (len=%d)", offset, len(payload))
-		}
-		return float64(int32(binary.BigEndian.Uint32(payload[offset:]))), nil
-	case "uint32be":
-		if len(payload) < offset+4 {
-			return 0, fmt.Errorf("payload too short for uint32be at offset %d (len=%d)", offset, len(payload))
-		}
-		return float64(binary.BigEndian.Uint32(payload[offset:])), nil
-	case "uint32nan":
-		// Like uint32be but treats 0xFFFFFFFF (not-connected sentinel) as 0.
-		// Used for PV string power registers where disconnected strings report NaN.
-		if len(payload) < offset+4 {
-			return 0, fmt.Errorf("payload too short for uint32nan at offset %d (len=%d)", offset, len(payload))
-		}
-		if v := binary.BigEndian.Uint32(payload[offset:]); v != 0xFFFFFFFF {
-			return float64(v), nil
-		}
-		return 0, nil
-	case "int16be":
-		if len(payload) < offset+2 {
-			return 0, fmt.Errorf("payload too short for int16be at offset %d (len=%d)", offset, len(payload))
-		}
-		return float64(int16(binary.BigEndian.Uint16(payload[offset:]))), nil
-	case "uint16be":
-		if len(payload) < offset+2 {
-			return 0, fmt.Errorf("payload too short for uint16be at offset %d (len=%d)", offset, len(payload))
-		}
-		return float64(binary.BigEndian.Uint16(payload[offset:])), nil
-	}
-	return 0, fmt.Errorf("unknown decode type: %s", decode)
 }
