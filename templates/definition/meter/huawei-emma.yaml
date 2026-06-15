@@ -9,6 +9,12 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    advanced: true
+    usages: ["pv"]
   - preset: battery-params
 render: |
   type: custom
