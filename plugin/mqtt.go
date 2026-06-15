@@ -117,7 +117,7 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 	return p
 }
 
- // WithLwt configures the Last Will and Testament (LWT) settings for the MQTT client.
+// WithLwt configures the Last Will and Testament (LWT) settings for the MQTT client.
 func (p *Mqtt) WithLwt(lwt *Lwt) *Mqtt {
 	p.lwtConfig = lwt
 	return p
