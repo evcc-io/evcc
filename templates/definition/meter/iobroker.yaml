@@ -119,15 +119,15 @@ params:
   - name: maxacpower
     usages: [pv]
   - name: curtail
-    usages: [PV]
+    usages: [pv]
     description:
-      de: Abgregeln (schreiben)
+      de: Abregeln (schreiben)
       en: Curtail (write)
     example: "0_userdata.0.Meter.Curtailed"
     type: string
     advanced: true
   - name: curtailed
-    usages: [PV]
+    usages: [pv]
     description:
       de: Abgeregelt (lesen)
       en: Curtailed (read)
