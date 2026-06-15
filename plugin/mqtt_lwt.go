@@ -11,13 +11,9 @@ type availabilityHandler struct {
 	expectedPayload string
 	ready           chan struct{}
 	once            sync.Once
-	mu              sync.RWMutex
 }
 
 func (h *availabilityHandler) receive(payload string) {
-
-	h.mu.Lock()
-	defer h.mu.Unlock()
 
 	h.asExpected.Store(payload == h.expectedPayload)
 
