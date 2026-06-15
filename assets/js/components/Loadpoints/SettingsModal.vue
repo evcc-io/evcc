@@ -37,93 +37,97 @@
 				class="mt-2"
 				@batteryboostlimit-updated="setBatteryBoostLimit"
 			/>
-			<h6>
-				{{ $t("main.loadpointSettings.currents") }}
-			</h6>
-			<div v-if="phasesOptions.length" class="mb-3 row">
-				<label
-					:for="formId(`phases_${phasesOptions[0]}`)"
-					class="col-sm-4 col-form-label pt-0"
-				>
-					{{ $t("main.loadpointSettings.phasesConfigured.label") }}
-				</label>
-				<div class="col-sm-8 pe-0">
-					<p v-if="!loadpoint?.chargerPhases1p3p" class="mt-0 mb-2">
-						<small>
-							{{ $t("main.loadpointSettings.phasesConfigured.no1p3pSupport") }}</small
-						>
-					</p>
-					<div v-for="phases in phasesOptions" :key="phases" class="form-check">
-						<input
-							:id="formId(`phases_${phases}`)"
-							v-model.number="selectedPhases"
-							class="form-check-input"
-							type="radio"
-							:name="formId('phases')"
-							:value="phases"
-							@change="setPhasesConfigured"
-						/>
-						<label class="form-check-label" :for="formId(`phases_${phases}`)">
-							{{ $t(`main.loadpointSettings.phasesConfigured.phases_${phases}`) }}
-							<small v-if="phases > 0">
+			<template v-if="!switchDevice">
+				<h6>
+					{{ $t("main.loadpointSettings.currents") }}
+				</h6>
+				<div v-if="phasesOptions.length" class="mb-3 row">
+					<label
+						:for="formId(`phases_${phasesOptions[0]}`)"
+						class="col-sm-4 col-form-label pt-0"
+					>
+						{{ $t("main.loadpointSettings.phasesConfigured.label") }}
+					</label>
+					<div class="col-sm-8 pe-0">
+						<p v-if="!loadpoint?.chargerPhases1p3p" class="mt-0 mb-2">
+							<small>
 								{{
-									$t(
-										`main.loadpointSettings.phasesConfigured.phases_${phases}_hint`,
-										{
-											min: fmtPhasePower(minCurrent, phases),
-											max: fmtPhasePower(maxCurrent, phases),
-										}
-									)
-								}}
-							</small>
-						</label>
+									$t("main.loadpointSettings.phasesConfigured.no1p3pSupport")
+								}}</small
+							>
+						</p>
+						<div v-for="phases in phasesOptions" :key="phases" class="form-check">
+							<input
+								:id="formId(`phases_${phases}`)"
+								v-model.number="selectedPhases"
+								class="form-check-input"
+								type="radio"
+								:name="formId('phases')"
+								:value="phases"
+								@change="setPhasesConfigured"
+							/>
+							<label class="form-check-label" :for="formId(`phases_${phases}`)">
+								{{ $t(`main.loadpointSettings.phasesConfigured.phases_${phases}`) }}
+								<small v-if="phases > 0">
+									{{
+										$t(
+											`main.loadpointSettings.phasesConfigured.phases_${phases}_hint`,
+											{
+												min: fmtPhasePower(minCurrent, phases),
+												max: fmtPhasePower(maxCurrent, phases),
+											}
+										)
+									}}
+								</small>
+							</label>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<div class="mb-3 row">
-				<label :for="formId('maxcurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-					{{ $t("main.loadpointSettings.maxCurrent.label") }}
-				</label>
-				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
-					<select
-						:id="formId('maxcurrent')"
-						v-model.number="selectedMaxCurrent"
-						class="form-select form-select-sm"
-						@change="setMaxCurrent"
-					>
-						<option
-							v-for="{ value, name } in maxCurrentOptions"
-							:key="value"
-							:value="value"
+				<div class="mb-3 row">
+					<label :for="formId('maxcurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+						{{ $t("main.loadpointSettings.maxCurrent.label") }}
+					</label>
+					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+						<select
+							:id="formId('maxcurrent')"
+							v-model.number="selectedMaxCurrent"
+							class="form-select form-select-sm"
+							@change="setMaxCurrent"
 						>
-							{{ name }}
-						</option>
-					</select>
+							<option
+								v-for="{ value, name } in maxCurrentOptions"
+								:key="value"
+								:value="value"
+							>
+								{{ name }}
+							</option>
+						</select>
+					</div>
 				</div>
-			</div>
 
-			<div class="mb-3 row">
-				<label :for="formId('mincurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-					{{ $t("main.loadpointSettings.minCurrent.label") }}
-				</label>
-				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
-					<select
-						:id="formId('mincurrent')"
-						v-model.number="selectedMinCurrent"
-						class="form-select form-select-sm"
-						@change="setMinCurrent"
-					>
-						<option
-							v-for="{ value, name } in minCurrentOptions"
-							:key="value"
-							:value="value"
+				<div class="mb-3 row">
+					<label :for="formId('mincurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+						{{ $t("main.loadpointSettings.minCurrent.label") }}
+					</label>
+					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+						<select
+							:id="formId('mincurrent')"
+							v-model.number="selectedMinCurrent"
+							class="form-select form-select-sm"
+							@change="setMinCurrent"
 						>
-							{{ name }}
-						</option>
-					</select>
+							<option
+								v-for="{ value, name } in minCurrentOptions"
+								:key="value"
+								:value="value"
+							>
+								{{ name }}
+							</option>
+						</select>
+					</div>
 				</div>
-			</div>
+			</template>
 		</div>
 	</GenericModal>
 </template>
@@ -193,6 +197,9 @@ export default defineComponent({
 		},
 		minCurrent() {
 			return this.loadpoint?.minCurrent;
+		},
+		switchDevice() {
+			return this.loadpoint?.chargerFeatureSwitchDevice;
 		},
 		batteryBoostLimit() {
 			return this.loadpoint?.batteryBoostLimit;

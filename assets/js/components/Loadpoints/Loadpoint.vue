@@ -71,7 +71,8 @@
 				/>
 			</div>
 			<LabelAndValue
-				v-show="socBasedCharging"
+				v-show="socBasedCharging && !integratedDevice"
+				data-testid="charged"
 				:label="$t('main.loadpoint.charged')"
 				:value="chargedEnergy"
 				:valueFmt="fmtEnergy"
@@ -166,6 +167,7 @@ export default defineComponent({
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
 		chargerFeatureContinuous: Boolean,
+		chargerFeatureSwitchDevice: Boolean,
 		chargerIcon: String as PropType<string | null>,
 
 		// vehicle
@@ -276,6 +278,9 @@ export default defineComponent({
 		},
 		continuous() {
 			return this.chargerFeatureContinuous;
+		},
+		switchDevice() {
+			return this.chargerFeatureSwitchDevice;
 		},
 		phasesProps() {
 			return this.collectProps(Phases);
