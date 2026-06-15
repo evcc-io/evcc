@@ -28,6 +28,7 @@ render: |
     register:
       address: 35139     # grid power
       decode: int32
+    scale: -1
     delay: {{ .delay }}
   energy:
     source: aa55udp
