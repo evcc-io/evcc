@@ -106,5 +106,5 @@ const (
 	VehicleLimitSoc        = "vehicleLimitSoc"        // vehicle api soc limit
 	VehicleClimaterActive  = "vehicleClimaterActive"  // vehicle climater active
 	VehicleWelcomeActive   = "vehicleWelcomeActive"   // vehicle might need welcome charge
-	ManualSoc              = "manualSoc"               // manually set vehicle soc
+	ManualSoc              = "manualSoc"              // manually set vehicle soc
 )
