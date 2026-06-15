@@ -106,6 +106,7 @@ const (
 	FieldChargingState                = "charging_state"
 	FieldChargingPlug1ConnectionState = "charging_plug1_connectionstate"
 	FieldCurrentChargeState           = "charging_state_report.current_charge_state"
+	FieldChargingScenario             = "charging_state_report.charging_scenario"
 	FieldPlugState                    = "plug_state"
 
 	// soc

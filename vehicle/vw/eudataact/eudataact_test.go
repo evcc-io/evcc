@@ -43,6 +43,51 @@ func TestStatusPlugStates(t *testing.T) {
 	}
 }
 
+func TestStatusConservationCharging(t *testing.T) {
+	tc := []struct {
+		field    string
+		value    string
+		expected api.ChargeStatus
+	}{
+		{FieldChargingState, "conservationCharging", api.StatusC},
+		{FieldCurrentChargeState, "CHARGE_STATE_CONSERVATION_CHARGING", api.StatusC},
+	}
+
+	for _, tc := range tc {
+		data := map[string]point{tc.field: {Value: tc.value}}
+		p := testProvider(data)
+
+		status, err := p.Status()
+		require.NoError(t, err)
+		assert.Equal(t, tc.expected, status, "field=%q value=%q", tc.field, tc.value)
+	}
+}
+
+func TestStatusChargingScenario(t *testing.T) {
+	tc := []struct {
+		scenario string
+		expected api.ChargeStatus
+	}{
+		{"CHARGING_SCENARIO_IMMEDIATELY_CHARGING_FINISHED", api.StatusB},
+		{"CHARGING_SCENARIO_OPTIMISED_CHARGING_FINISHED", api.StatusB},
+		{"CHARGING_SCENARIO_CHARGING_TO_DEPARTURE_TIME_FINISHED", api.StatusB},
+		{"CHARGING_SCENARIO_IMMEDIATELY_CHARGING_ACTIVE", api.StatusC},
+		{"CHARGING_SCENARIO_CHARGING_TO_DEPARTURE_TIME_ACTIVE", api.StatusC},
+		{"CHARGING_SCENARIO_OFF", api.StatusA},
+		// case-insensitivity: mixed-case value should behave like its uppercased equivalent
+		{"Charging_Scenario_Off", api.StatusA},
+	}
+
+	for _, tc := range tc {
+		data := map[string]point{FieldChargingScenario: {Value: tc.scenario}}
+		p := testProvider(data)
+
+		status, err := p.Status()
+		require.NoError(t, err)
+		assert.Equal(t, tc.expected, status, "scenario=%q", tc.scenario)
+	}
+}
+
 func TestResolveBrand(t *testing.T) {
 	for _, name := range []string{"audi", "AUDI", "Audi", "aUdI"} {
 		b, ok := resolveBrand(name)
