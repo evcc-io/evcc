@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/plugin/mqtt"
@@ -9,16 +10,23 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+type Lwt struct {
+	Topic    string
+	Expected string
+	Timeout  time.Duration
+}
+
 // Mqtt provider
 type Mqtt struct {
 	*getter
-	log      *util.Logger
-	client   *mqtt.Client
-	topic    string
-	retained bool
-	payload  string
-	timeout  time.Duration
-	pipeline *pipeline.Pipeline
+	log       *util.Logger
+	client    *mqtt.Client
+	topic     string
+	retained  bool
+	payload   string
+	timeout   time.Duration
+	lwtConfig *Lwt
+	pipeline  *pipeline.Pipeline
 }
 
 func init() {
@@ -28,14 +36,19 @@ func init() {
 // NewMqttPluginFromConfig creates Mqtt provider
 func NewMqttPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
-		mqtt.Config       `mapstructure:",squash"`
-		Topic, Payload    string // Payload only applies to setters
-		Retained          bool
-		Scale             float64
-		Timeout           time.Duration
+		mqtt.Config    `mapstructure:",squash"`
+		Topic, Payload string // Payload only applies to setters
+		Retained       bool
+		Scale          float64
+		Timeout        time.Duration
+		Lwt
 		pipeline.Settings `mapstructure:",squash"`
 	}{
 		Scale: 1,
+		Lwt: Lwt{
+			Expected: "online",
+			Timeout:  time.Second,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -52,6 +65,10 @@ func NewMqttPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	m := NewMqtt(log, client, cc.Topic, cc.Timeout).WithScale(cc.Scale).WithPayload(cc.Payload)
 	if cc.Retained {
 		m = m.WithRetained()
+	}
+
+	if cc.Lwt.Topic != "" {
+		m = m.WithLwt(&cc.Lwt)
 	}
 
 	pipe, err := pipeline.New(log, cc.Settings)
@@ -100,6 +117,12 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 	return p
 }
 
+// WithPipeline adds a processing pipeline
+func (p *Mqtt) WithLwt(lwt *Lwt) *Mqtt {
+	p.lwtConfig = lwt
+	return p
+}
+
 // newReceiver creates a msgHandler and subscribes it to the topic.
 func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	h := &msgHandler{
@@ -109,6 +132,28 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	}
 
 	err := m.client.Listen(m.topic, h.receive)
+	if err != nil {
+		return h, err
+	}
+
+	if m.lwtConfig != nil {
+		h.availability = &availabilityHandler{
+			expectedPayload: m.lwtConfig.Expected,
+			ready:           make(chan struct{}),
+		}
+
+		if err := m.client.Listen(
+			m.lwtConfig.Topic,
+			h.availability.receive,
+		); err != nil {
+			return nil, err
+		}
+
+		if !h.availability.Wait(m.lwtConfig.Timeout) {
+			return h, fmt.Errorf("Timeout waiting for LWT availability topic")
+		}
+	}
+
 	return h, err
 }
 

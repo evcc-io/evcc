@@ -1,23 +1,35 @@
 package plugin
 
 import (
+	"fmt"
+
 	"github.com/evcc-io/evcc/plugin/pipeline"
 	"github.com/evcc-io/evcc/util"
 )
 
 type msgHandler struct {
-	topic    string
-	pipeline *pipeline.Pipeline
-	val      *util.Monitor[string]
+	topic        string
+	pipeline     *pipeline.Pipeline
+	val          *util.Monitor[string]
+	availability *availabilityHandler
 }
 
 func (h *msgHandler) receive(payload string) {
+
 	h.val.Set(payload)
 }
 
 // hasValue returned the received and processed payload as string
 func (h *msgHandler) hasValue() (string, error) {
 	payload, err := h.val.Get()
+
+	if h.availability != nil {
+		if !h.availability.AsExpected() {
+			return "", fmt.Errorf("mqtt source offline")
+		}
+		err = nil
+	}
+
 	if err != nil {
 		return "", err
 	}
