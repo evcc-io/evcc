@@ -525,6 +525,15 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
+
+		// return energy (export)
+		if m, ok := api.Cap[api.MeterReturnEnergy](meter); err == nil && ok {
+			if f, err := m.ReturnEnergy(); err == nil {
+				mm[i].ReturnEnergy = &f
+			} else {
+				site.log.ERROR.Printf("%s %d return energy: %v", key, i+1, err)
+			}
+		}
 	}
 
 	var wg sync.WaitGroup
@@ -592,7 +601,7 @@ func (site *Site) updatePvMeters() {
 	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
 		c := site.collectors[dev.Config().Name]
-		if err := c.AddEnergy(mm[i].Energy, nil, mm[i].Power); err != nil {
+		if err := c.AddEnergy(mm[i].Energy, mm[i].ReturnEnergy, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist pv %d energy: %v", i+1, err)
 		}
 	}
@@ -669,7 +678,7 @@ func (site *Site) updateBatteryMeters() {
 		if !ok {
 			continue
 		}
-		if err := c.AddEnergy(nil, mm[i].Energy, -mm[i].Power); err != nil {
+		if err := c.AddEnergy(mm[i].ReturnEnergy, mm[i].Energy, -mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist battery %d energy: %v", i+1, err)
 		}
 	}
@@ -704,7 +713,7 @@ func (site *Site) addMeterEnergy(meters []config.Device[api.Meter], mm []types.M
 		if !ok {
 			continue
 		}
-		if err := c.AddEnergy(mm[i].Energy, nil, mm[i].Power); err != nil {
+		if err := c.AddEnergy(mm[i].Energy, mm[i].ReturnEnergy, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist meter %s energy: %v", ref, err)
 		}
 	}
@@ -791,7 +800,16 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	site.collectors[site.Meters.GridMeterRef].AddEnergy(mm.Energy, nil, mm.Power)
+	// grid return energy (export); nil when the device has no MeterReturnEnergy capability or the read fails
+	if returnEnergyMeter, ok := api.Cap[api.MeterReturnEnergy](site.gridMeter); ok {
+		if f, err := returnEnergyMeter.ReturnEnergy(); err == nil {
+			mm.ReturnEnergy = &f
+		} else {
+			site.log.ERROR.Printf("grid return energy: %v", err)
+		}
+	}
+
+	site.collectors[site.Meters.GridMeterRef].AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
 
 	site.publish(keys.Grid, mm)
 
