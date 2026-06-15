@@ -51,6 +51,21 @@
     "hex": "Hex kleur"
   },
   "config": {
+    "apiKey": {
+      "description": "Geef scripts en automatiseringen zoals geplande backups veilige toegang zonder het admin wachtwoord te delen.",
+      "exampleLabel": "Probeer het: download een backup met curl",
+      "generate": "Genereer API sleutel",
+      "generateConfirm": "Voer het admin wachtwoord in om een nieuwe API sleutel te maken.",
+      "keyLabel": "API sleutel",
+      "regenerate": "Regenereer API sleutel",
+      "regenerateConfirm": "Voer het admin wachtwoord in om de API sleutel te regenereren.",
+      "regenerateLink": "Regenereren",
+      "regenerateWarning": "Regenereren zorgt er voor dat de huidige sleutel invalide wordt, alle automatiseringen die deze sleutel gebruiken werken vervolgens niet meer. Doorgaan?",
+      "revealSuccess": "De nieuwe sleutel is klaar voor gebruik.",
+      "revealTitle": "API sleutel aangemaakt",
+      "shownOnce": "De sleutel wordt eenmaal getoond. Bewaar deze op een veilige plek. Hij kan niet op een later moment opgehaald worden.",
+      "title": "API sleutel"
+    },
     "aux": {
       "description": "Apparaat dat zijn verbruik aanpast op basis van het beschikbare overschot (zoals slimme boilers). evcc verwacht dat dit apparaat het stroomverbruik vermindert als dat nodig is.",
       "titleAdd": "Zelfregulerende verbruiker toevoegen",
@@ -140,8 +155,11 @@
       "currency": "Valuta",
       "current": "Stroom",
       "currentRange": "Stroom",
+      "curtailLimit": "Terugleveringslimiet",
+      "curtailable": "Curtailbaar",
       "curtailed": "Teruglevering beperkt",
       "detected": "Gedetecteerd",
+      "dimLimit": "Consumptie limiet",
       "dimmed": "Verbruik gelimiteerd",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
@@ -164,7 +182,9 @@
       "power": "Vermogen",
       "powerRange": "Vermogen",
       "price": "Prijs",
+      "productionLimited": "Productie limiet",
       "range": "Actieradius",
+      "returnEnergy": "Energie (teruglevering)",
       "singlePhase": "Monofase",
       "soc": "Laden",
       "solarForecast": "Voorspelling van zonne-energie",
@@ -604,8 +624,13 @@
       "connectionStatusHelp": "Verbindingsstatus van geconfigureerde laders.",
       "detectedChargers": "Gedetecteerde station ID's",
       "detectedHelp": "Deze laders hebben geprobeerd verbinding te maken met evcc. Om een lader te gebruiken, moet u een laadpunt aanmaken met de bijbehorende station ID.",
+      "forwardingConfigured": "Doorsturen geconfigureerd",
+      "forwardingError": "Fout bij doorsturen",
+      "forwardingOff": "Doorsturen niet geconfigureerd",
       "noChargers": "Geen OCPP-laders gedetecteerd.",
       "noStations": "Geen stations verbonden",
+      "stations": "Laadstation IDs",
+      "stationsHelp": "Geconfigureerde en gedeteceerde OCPP laders. Naast lokale controle, kunnen berichten ook worden doorgestuurd naar een externe server (bijv. voor facturatie).",
       "status": {
         "configured": "Niet verbonden",
         "connected": "Verbonden",
@@ -614,6 +639,30 @@
       "title": "OCPP Server",
       "url": "Server URL",
       "urlHelp": "Kopieer deze URL naar de configuratie van uw lader. Raadpleeg de handleiding van de fabrikant voor meer informatie. De lader voegt naar verwachting automatisch zijn unieke identificatiecode (station-ID) toe aan de URL. In zeldzame gevallen moet u de identificatiecode mogelijk handmatig ingeven. Voorbeeld: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Stuur de berichten van de OCPP lader naar een exterene server (facturatie systeem, DSO, ERE inboeker, etc.) naast evcc.",
+      "editTitle": "OCPP Doorsturen",
+      "labelCaCert": "Server certificaat (CA)",
+      "labelCheckInsecure": "Sta zelf ondertekende (self-signed) certificaten toe",
+      "labelInsecure": "Certificaat validatie",
+      "password": "Wachtwoord",
+      "passwordHelp": "Voor HTTP Basic Auth in de upstream server.",
+      "readOnly": {
+        "check": "Blokkeer commando's van de upstream server",
+        "help": {
+          "false": "Upstream kan commando's versturen naar de lader via evcc.",
+          "true": "Upstream ontvangt alle berichten van de lader, maar kan geen commando's versturen. Alleen evcc heeft de controle."
+        },
+        "label": "Upstream commando's"
+      },
+      "status": "Status",
+      "upstreamStationId": "Laadstation ID",
+      "upstreamStationIdHelp": "id van de lader, verzonden naar de upstream server.",
+      "upstreamUrl": "Upstream server URL",
+      "upstreamUrlHelp": "OCPP WebSocket URL van de externe server.",
+      "username": "Gebruikersnaam",
+      "usernameHelp": "Voor HTTP Basic Auth richting de upstream server."
     },
     "optimizer": {
       "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking. Momenteel worden alleen berekeningen en visualisaties gemaakt, maar nog geen apparaten aangestuurd.",
@@ -690,6 +739,14 @@
       "services": "Diensten",
       "system": "Systeem",
       "vehicles": "Voertuigen"
+    },
+    "security": {
+      "authDisabledHint": "Authenticatie is uitgeschakeld. Credentialbeheer is niet beschikbaar.",
+      "description": "Beheer authenticate en credentails voor deze instantie.",
+      "passwordDescription": "Werk het wachtwoord wat gebruikt wordt voor de configuratie UI bij.",
+      "passwordTitle": "Admin wachtwoord",
+      "title": "Beveiliging",
+      "updatePassword": "Update wachtwoord"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -825,6 +882,7 @@
         "allMonths": "Alle maanden",
         "allTimes": "Alle tijdstippen",
         "cancel": "Annuleren",
+        "charge": "Laden",
         "days": "Dagen",
         "edit": "Aanpassen",
         "hours": "Uren",
@@ -877,7 +935,7 @@
       "greenEnergySub1": "geladen met evcc",
       "greenEnergySub2": "sinds oktober 2022",
       "greenShare": "Aandeel zonne-energie",
-      "greenShareSub1": "van de stroom werd geleverd door",
+      "greenShareSub1": "stroom geleverd door",
       "greenShareSub2": "zonne-energie en batterij-opslag",
       "power": "Laadvermogen",
       "powerSub1": "{activeClients} van {totalClients} deelnemers",
@@ -959,7 +1017,7 @@
       "modalUpdateStatusStart": "Installatie gestart:",
       "modalViewOnGitHub": "Op GitHub bekijken",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredByOpenSource": "Mogelijk gemaakt door {0}."
     }
   },
   "forecast": {
@@ -993,6 +1051,7 @@
       "tomorrow": "Morgen"
     },
     "solarAdjust": "Pas de zonne-energie voorspelling aan op basis van echte productiegegevens{percent}.",
+    "solarAdjustMedium": "pas aan op basis van gemeten data",
     "solarAdjustShort": "aanpassen",
     "type": {
       "co2": "CO₂ Uitstoot",
@@ -1160,12 +1219,15 @@
       "waitForVehicle": "Boost aangevraagd…"
     },
     "energyflow": {
-      "battery": "Batterij",
-      "batteryCharge": "Batterij opladen",
-      "batteryDischarge": "Batterij ontladen",
-      "batteryDischargeHold": "Batterij (geblokkeerd)",
+      "battery": "Accu",
+      "batteryCharge": "Accu opladen",
+      "batteryChargeHold": "Accu (laden vergrendeld)",
+      "batteryDischarge": "Accu ontladen",
+      "batteryDischargeHold": "Accu (geblokkeerd)",
       "batteryForecastEmpty": "Leeg",
       "batteryForecastFull": "Vol",
+      "batteryForecastNextHigh": "Hoog",
+      "batteryForecastNextLow": "Laag",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryTooltip": "{energy} van {total} ({soc})",
@@ -1188,7 +1250,9 @@
       "waitForVehicle": "Klaar om te verwarmen…"
     },
     "hemsWarning": {
-      "title": "Externe limiet:"
+      "consumption": "Verbruik",
+      "feedIn": "Teruglevering",
+      "title": "Externe limiet actief"
     },
     "history": {
       "direction": {
@@ -1309,7 +1373,7 @@
       "setTargetTime": "geen",
       "targetIsAboveLimit": "De ingestelde laadlimiet {limit} wordt genegeerd gedurende deze periode.",
       "targetIsAboveVehicleLimit": "Voertuiglimiet is lager dan het laaddoel.",
-      "targetIsInThePast": "Kies een tijd in de toekomst, Marty.",
+      "targetIsInThePast": "Kies een tijd in de toekomst.",
       "targetIsTooFarInTheFuture": "We passen het plan aan zodra we meer weten over de toekomst.",
       "title": "Doeltijd",
       "today": "vandaag",
@@ -1407,6 +1471,7 @@
     "updatePassword": "Wachtwoord bijwerken"
   },
   "session": {
+    "addOdometer": "Voeg waarde toe",
     "cancel": "Annuleer",
     "co2": "CO₂",
     "date": "Periode",
@@ -1417,6 +1482,7 @@
     "meterstop": "Eindwaarde meter",
     "odometer": "Kilometerstand",
     "price": "Kostprijs",
+    "soc": "Voertuig SoC",
     "started": "Gestart",
     "title": "Oplaadsessie"
   },
@@ -1424,6 +1490,7 @@
     "avgPower": "⌀ Vermogen",
     "avgPrice": "⌀ Prijs",
     "chargeDuration": "Duur",
+    "chargedSoc": "Lading",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Prijs {byGroup}",
@@ -1457,6 +1524,8 @@
       "odometer": "Kilometerstand (km)",
       "price": "Prijs",
       "priceperkwh": "Prijs/kWh",
+      "socend": "SoC eind (%)",
+      "socstart": "SoC start (%)",
       "solarpercentage": "Zonne-energie (%)",
       "vehicle": "Voertuig"
     },

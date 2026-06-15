@@ -25,6 +25,7 @@ params:
     default: ac
     choice: ["ac", "iq"]
     advanced: true
+    usages: ["battery"]
   - preset: battery-params
   - name: cache
     advanced: true

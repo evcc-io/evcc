@@ -46,18 +46,17 @@ type GoodWe struct {
 }
 
 const (
-	goodweRegVoltages       = 10009 // U16 ×0.1 V, 3 regs (L1/L2/L3)
-	goodweRegCurrents       = 10012 // U16 ×0.1 A, 3 regs (L1/L2/L3)
-	goodweRegActualPower    = 10015 // U16 ×0.1 kW
-	goodweRegStatus         = 10017 // U16 enum (see status mapping)
-	goodweRegPhaseSwEnabled = 10023 // U16 (0=Off, 1=On)
-	goodweRegMaxPower       = 10029 // U16 ×0.1 kW, raw range [14,220]
-	goodweRegChargeMode     = 10032 // U16 (0=fast, 1=PV, 2=PV+battery)
-	goodweRegPowerSpec      = 10058 // U16 (0=7kW, 1=11kW, 2=22kW)
-	goodweRegPhaseSpec      = 10059 // U16 (0=3p, 1=1p)
-	goodweRegRfid           = 10500 // 7 regs ASCII (14-byte card UID)
-	goodweRegChargeCommand  = 10060 // U16 (1=stop, 2=start)
-	goodweRegTotalEnergy    = 10065 // U32 ×0.1 kWh, 2 regs
+	goodweRegVoltages      = 10009 // U16 ×0.1 V, 3 regs (L1/L2/L3)
+	goodweRegCurrents      = 10012 // U16 ×0.1 A, 3 regs (L1/L2/L3)
+	goodweRegActualPower   = 10015 // U16 ×0.1 kW
+	goodweRegStatus        = 10017 // U16 enum (see status mapping)
+	goodweRegMaxPower      = 10029 // U16 ×0.1 kW, raw range [14,220]
+	goodweRegChargeMode    = 10032 // U16 (0=fast, 1=PV, 2=PV+battery)
+	goodweRegPowerSpec     = 10058 // U16 (0=7kW, 1=11kW, 2=22kW)
+	goodweRegPhaseSpec     = 10059 // U16 (0=3p, 1=1p)
+	goodweRegRfid          = 10500 // 7 regs ASCII (14-byte card UID)
+	goodweRegChargeCommand = 10060 // U16 (1=stop, 2=start)
+	goodweRegTotalEnergy   = 10065 // U32 ×0.1 kWh, 2 regs
 
 	goodweChargeStop  = 1
 	goodweChargeStart = 2
@@ -133,18 +132,6 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 		}
 	} else {
 		log.WARN.Printf("read hw phase count failed, defaulting to 3-phase: %v", err)
-	}
-
-	// only 3-phase hardware can do 1p/3p switching; conditionally register phase switching
-	// based on hardware capability. On read error, fall back to fixed-phase operation.
-	if wb.phases == 3 {
-		if b, err := wb.conn.ReadHoldingRegisters(goodweRegPhaseSwEnabled, 1); err == nil {
-			if binary.BigEndian.Uint16(b) == 1 {
-				implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
-			}
-		} else {
-			log.WARN.Printf("read phase switch config failed, disabling dynamic phase switching: %v", err)
-		}
 	}
 
 	// force "fast" charging mode so evcc fully controls power setpoint
@@ -266,11 +253,6 @@ var _ api.PhaseVoltages = (*GoodWe)(nil)
 // Voltages implements api.PhaseVoltages
 func (wb *GoodWe) Voltages() (float64, float64, float64, error) {
 	return wb.phaseValues(goodweRegVoltages, 10)
-}
-
-func (wb *GoodWe) phases1p3p(phases int) error {
-	wb.phases = phases
-	return nil
 }
 
 var _ api.Identifier = (*GoodWe)(nil)

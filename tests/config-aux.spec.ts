@@ -174,13 +174,13 @@ energy:
     );
 
     // no errors
-    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
+    await expect(editor.locator(".cm-errorLine")).toHaveCount(0);
     const restResult = modal.getByTestId("test-result");
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("mapping values are not allowed in this context");
-    await expect(editor.locator(".line-numbers.error")).toHaveCount(1);
+    await expect(editor.locator(".cm-errorLine")).toHaveCount(1);
 
     // invalid field error
     await editorClear(editor);
@@ -194,7 +194,7 @@ energy:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("has invalid keys: apower");
-    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
+    await expect(editor.locator(".cm-errorLine")).toHaveCount(0);
 
     // unknown source error
     await editorClear(editor);
@@ -208,7 +208,7 @@ energy:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("invalid plugin type: unknown");
-    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
+    await expect(editor.locator(".cm-errorLine")).toHaveCount(0);
 
     // missing required field error
     await editorClear(editor);
@@ -222,6 +222,6 @@ energy:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("power: missing plugin source");
-    await expect(editor.locator(".line-numbers.error")).toHaveCount(0);
+    await expect(editor.locator(".cm-errorLine")).toHaveCount(0);
   });
 });

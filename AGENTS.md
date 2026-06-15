@@ -91,6 +91,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - No em dashes (—) in comments, commit messages, or docs. Use periods, commas, or colons
 - Project name is `evcc`, always lowercase
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
+- Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
 
 ## Comment Style
@@ -111,6 +112,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use `context.Context` for I/O, long-running, or cancelable operations
 - Organize code into logical packages with clear responsibilities
 - Prefer composition over inheritance, minimize external dependencies
+- Navigate Go symbols with go-to-definition and find-references rather than text search; reserve text search for comments and string literals
 
 ### File Patterns
 
@@ -264,6 +266,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
+- When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details
 
 ### Configuration
 

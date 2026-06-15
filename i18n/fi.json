@@ -51,6 +51,21 @@
     "hex": "heksa-värikoodi"
   },
   "config": {
+    "apiKey": {
+      "description": "Salli skriptien ja automaatioiden, kuten ajastettujen varmuuskopioiden, käyttää järjestelmää turvallisesti ilman ylläpitäjän salasanan jakamista.",
+      "exampleLabel": "Kokeile sitä: lataa varmuuskopio curl:lla",
+      "generate": "Luo API-avain",
+      "generateConfirm": "Syötä pääkäyttäjän salasanasi luodaksesi uuden API-avaimen.",
+      "keyLabel": "API-avain",
+      "regenerate": "Muodosta API-avain uudelleen",
+      "regenerateConfirm": "Syötä pääkäyttäjän salasanasi muodostaaksesi API-avaimen uudelleen.",
+      "regenerateLink": "Muodosta uudelleen",
+      "regenerateWarning": "Uudelleenmuodostus korvaa olemassaolevan API-avaimen, jolloin sitä käyttävät automaatiot lakkaavat toimivasta. Jatka?",
+      "revealSuccess": "Uusi API-avaimesi on käyttövalmis.",
+      "revealTitle": "API-avain luotu",
+      "shownOnce": "Tämä avain paljastetaan vain kerran. Tallenna se turvalliseen paikkaan. Et voi saada sitä näkyviin jälkikäteen.",
+      "title": "API-avain"
+    },
     "aux": {
       "description": "Sähkölaite, jonka kulutusta voi säädellä ylijäämätuotannon mukaan (kuten älykäs lämminvesivaraaja). EVCC olettaa, että tämä laite pystyy tarvittaessa pienentämään sähkönkulutustaan.",
       "titleAdd": "Lisää kulutustaan itsesäätelevä sähkölaite",
@@ -140,8 +155,11 @@
       "currency": "Valuutta",
       "current": "Virta",
       "currentRange": "Virta",
+      "curtailLimit": "Verkkoonsyötön raja",
+      "curtailable": "Teho leikattavissa",
       "curtailed": "Sähkönsyöttöä rajoitettu",
       "detected": "Tunnistettu",
+      "dimLimit": "Kulutusraja",
       "dimmed": "Kulutusta rajoitettu",
       "enabled": "Käytössä",
       "energy": "Energia",
@@ -164,6 +182,7 @@
       "power": "Teho",
       "powerRange": "Teho",
       "price": "Hinta",
+      "productionLimited": "Tuotanto rajoitettu",
       "range": "Toimintasäde",
       "returnEnergy": "Annettu energia",
       "singlePhase": "Yksivaiheinen",
@@ -605,8 +624,13 @@
       "connectionStatusHelp": "Määritettyjen laturien yhteyden tila.",
       "detectedChargers": "Havaittujen asemien ID:t",
       "detectedHelp": "Nämä laturit ovat yrittäneet yhdistää itseään evcc:hen. Käyttääksesi tätä laturia, luo latausasema sen asematunnuksella (ID).",
+      "forwardingConfigured": "Välitys määritetty",
+      "forwardingError": "Välitysvirhe",
+      "forwardingOff": "Välitystä ei ole määritelty",
       "noChargers": "Ei havaittu OCPP-latureita.",
       "noStations": "Asemia ei yhdistetty",
+      "stations": "Asemien tunnisteet",
+      "stationsHelp": "Määritetyt ja tunnistetut OCPP-laturit. Paikallisen ohjauksen lisäksi voit välittää viestit ulkoiselle palvelimelle (esim. laskutuksen vuoksi).",
       "status": {
         "configured": "Ei yhteyttä",
         "connected": "Yhdistetty",
@@ -615,6 +639,30 @@
       "title": "OCPP-palvelin",
       "url": "Palvelimen URL",
       "urlHelp": "Kopioi tämä URL laturisi asetuksiin. Tarkista laturivalmistajan ohjeista yksityiskohdat. Laturin odotetaan lisäävän URL-osoitteeseen yksilöllinen tunnus (aseman ID). Joissain harvoissa tapauksissa sinun täytyy käsin lisätä tämä tunnus. Esim: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Välitä tämän laturin OCPP-viestit ulkoiselle palvelimelle (laskutusalusta, DSO, jne) evcc:n lisäksi.",
+      "editTitle": "OCPP-välitys",
+      "labelCaCert": "Palvelimen varmenne (CA)",
+      "labelCheckInsecure": "Salli itsemuodostetut varmenteet",
+      "labelInsecure": "Varmenteen varmistus",
+      "password": "Salasana",
+      "passwordHelp": "HTTP-perus-autentikointia varten välitettävälle palvelimelle.",
+      "readOnly": {
+        "check": "Estä komentojen vastaanotto välitettävältä palvelimelta",
+        "help": {
+          "false": "Välitettävä palvelimen voi lähettää komentoja laturille evcc:n välittämänä.",
+          "true": "Välitettävä palvelin saa kaikki laturin viestit, mutta ei voi lähettää ohjauskäskyjä. evcc pidättää hallinnan vain itsellään."
+        },
+        "label": "Välittevän palvelimen ohjaus"
+      },
+      "status": "Tila",
+      "upstreamStationId": "Aseman tunniste",
+      "upstreamStationIdHelp": "Laturin tunniste, joka lähetetään välitettävälle palvelimelle.",
+      "upstreamUrl": "Välitettävän palvelimen URL",
+      "upstreamUrlHelp": "OCPP WebSocker URL-osoite ulkoiselle palvelimelle.",
+      "username": "Tunnus",
+      "usernameHelp": "HTTP-perus-autentikointia varten välitettävälle palvelimelle."
     },
     "optimizer": {
       "description": "Analysoi aurinkoennustetta, sähkönhintaa ja kulutustottumuksiasi optimoidakseen akun ja latauspisteiden käyttöä. Tiedot lähetetään käsiteltäväksi evcc:n optimointipalveluun. Tällä hetkellä luo vain laskelman ja visualisoinnin eikä suoraan hallinnoi laitteita.",
@@ -691,6 +739,14 @@
       "services": "Palvelut",
       "system": "Järjestelmä",
       "vehicles": "Ajoneuvot"
+    },
+    "security": {
+      "authDisabledHint": "Autentikointi ei päällä. Tunnuksien hallinta ei käytössä.",
+      "description": "Hallitse autentikointi ja tunnuksia tälle yksikölle.",
+      "passwordDescription": "Muuta salasanasi jolla kirjaudut hallintakäyttöliittymään.",
+      "passwordTitle": "Pääkäyttäjäsalasana",
+      "title": "Turvallisuus",
+      "updatePassword": "Muuta salasana"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -1193,7 +1249,9 @@
       "waitForVehicle": "Lämmitystä aloitetaan…"
     },
     "hemsWarning": {
-      "title": "Ulkoinen raja:"
+      "consumption": "Kulutus",
+      "feedIn": "Verkkoon syöttö",
+      "title": "Ulkoinen raja: aktiivinen"
     },
     "history": {
       "direction": {
