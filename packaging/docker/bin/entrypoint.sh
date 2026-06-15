@@ -79,12 +79,37 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 		exec env EVCC_DATABASE_DSN="${DB_PATH}" evcc
 	fi
 else
+	PUID="${PUID:-1000}"
+	PGID="${PGID:-1000}"
+	DATA_DIR="/root/.evcc" # documented mount path, kept for compatibility
+	RUNAS=""
+
+	# When started as root, repair ownership of the database directory and drop
+	# privileges so the long-lived evcc process does not run as root. The evcc
+	# user's home is set to /root so ~/.evcc/evcc.db keeps resolving to the
+	# existing mount (su-exec sets HOME from the passwd entry, not the env).
+	if [ "$(id -u)" = "0" ]; then
+		getent group evcc > /dev/null 2>&1 || addgroup -g "$PGID" evcc 2> /dev/null || addgroup evcc
+		getent passwd evcc > /dev/null 2>&1 || adduser -D -H -h /root -u "$PUID" -G evcc evcc 2> /dev/null || adduser -D -H -h /root -G evcc evcc
+
+		mkdir -p "$DATA_DIR"
+		chown -R "$PUID:$PGID" "$DATA_DIR"
+		# fix a custom database directory if EVCC_DATABASE_DSN points elsewhere
+		[ -n "$EVCC_DATABASE_DSN" ] && chown -R "$PUID:$PGID" "$(dirname "$EVCC_DATABASE_DSN")" 2> /dev/null || true
+
+		RUNAS="su-exec $PUID:$PGID"
+	else
+		# started via docker's own `user:`, already non-root: keep HOME on /root so
+		# ~/.evcc/evcc.db still resolves to the mount (no passwd entry sets it here)
+		RUNAS="env HOME=/root"
+	fi
+
 	if [ "$1" = 'evcc' ]; then
 		shift
-		exec evcc "$@"
+		exec $RUNAS evcc "$@"
 	elif expr "$1" : '-.*' > /dev/null; then
-		exec evcc "$@"
+		exec $RUNAS evcc "$@"
 	else
-		exec "$@"
+		exec $RUNAS "$@"
 	fi
 fi
