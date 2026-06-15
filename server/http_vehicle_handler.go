@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,6 +26,11 @@ func manualSocHandler(site site.API) http.HandlerFunc {
 		soc, err := strconv.ParseFloat(vars["value"], 64)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if soc < 0 || soc > 100 {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("soc must be between 0 and 100"))
 			return
 		}
 
