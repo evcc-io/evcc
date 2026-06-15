@@ -15,7 +15,6 @@ type msgHandler struct {
 }
 
 func (h *msgHandler) receive(payload string) {
-
 	h.val.Set(payload)
 }
 

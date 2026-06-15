@@ -14,7 +14,6 @@ type availabilityHandler struct {
 }
 
 func (h *availabilityHandler) receive(payload string) {
-
 	h.asExpected.Store(payload == h.expectedPayload)
 
 	h.once.Do(func() {
