@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"time"
+
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/eg/lpp"
@@ -30,6 +32,9 @@ func (c *EEBus) Connect(connected bool) {
 	c.maEntity = nil
 	c.egLpcEntity = nil
 	c.egLppEntity = nil
+
+	// restart the data-stall grace window for the next connection
+	c.dataSeen = time.Time{}
 }
 
 // UseCaseEvent implements the eebus.Device interface

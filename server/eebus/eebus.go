@@ -259,6 +259,14 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	c.mux.Unlock()
 }
 
+// Reconnect tears down the current SHIP session for the given ski so ship-go
+// re-dials cleanly, recovering from a stalled remote (see #30889).
+func (c *EEBus) Reconnect(ski, reason string) {
+	ski = shiputil.NormalizeSKI(ski)
+	c.log.DEBUG.Printf("reconnecting ski %s: %s", ski, reason)
+	c.service.DisconnectService(shipapi.NewServiceIdentity(ski, "", ""), reason)
+}
+
 func (c *EEBus) CustomerEnergyManagement() *CustomerEnergyManagement {
 	return &c.cem
 }

@@ -24,6 +24,7 @@ import (
 // Additionally supports LPC (Limitation of Power Consumption) and LPP (Limitation of Power Production)
 type EEBus struct {
 	log *util.Logger
+	ski string
 
 	connector *eebus.Connector
 	ma        *eebus.MonitoringAppliance
@@ -35,6 +36,9 @@ type EEBus struct {
 	maEntity    spineapi.EntityRemoteInterface
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
+
+	dataSeen      time.Time // last successful measurement read
+	lastReconnect time.Time // last forced reconnect
 }
 
 // maScenarios holds the spec scenario numbers for the active monitoring use case.
@@ -60,6 +64,11 @@ var (
 		currents: eebus.MGCPCurrentPerPhase,
 		voltages: eebus.MGCPVoltagePerPhase,
 	}
+)
+
+const (
+	dataStallTimeout  = 2 * time.Minute // supported-but-no-data grace before reconnect
+	reconnectCooldown = 5 * time.Minute // rate-limit for forced reconnects
 )
 
 type measurements interface {
@@ -112,6 +121,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
+		ski:       ski,
 		ma:        ma,
 		eg:        eebus.Instance.EnergyGuard(),
 		mm:        mm,
@@ -175,7 +185,33 @@ func (c *EEBus) readValue(scenario uint, update func(entity spineapi.EntityRemot
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.readValue(c.scenarios.power, c.mm.Power)
+	power, err := c.readValue(c.scenarios.power, c.mm.Power)
+	c.watchdog(err)
+	return power, err
+}
+
+// watchdog forces a reconnect when the monitoring use case stays supported but
+// keeps returning no data, recovering from a stalled remote (see #30889).
+func (c *EEBus) watchdog(err error) {
+	c.mu.Lock()
+	now := time.Now()
+
+	switch {
+	case err == nil:
+		c.dataSeen = now
+	case c.maEntity == nil:
+		// use case not (yet) supported: nothing to recover
+	case c.dataSeen.IsZero():
+		c.dataSeen = now // start grace window
+	case now.Sub(c.dataSeen) >= dataStallTimeout && now.Sub(c.lastReconnect) >= reconnectCooldown:
+		c.lastReconnect = now
+		c.mu.Unlock()
+		c.log.WARN.Printf("no measurement data for %v, reconnecting", dataStallTimeout)
+		eebus.Instance.Reconnect(c.ski, "no measurement data")
+		return
+	}
+
+	c.mu.Unlock()
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
