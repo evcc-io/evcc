@@ -128,3 +128,16 @@ func TestMergeDeliveryOrder(t *testing.T) {
 
 	assert.Equal(t, "75", data[FieldSoc].Value, "the newest delivered SoC wins")
 }
+
+// TestPoints guards that a data point with a generic field name ("value") is
+// indexed by its unique key while the name stays indexed (and thus logged).
+func TestPoints(t *testing.T) {
+	data := points([]dataPoint{
+		{Key: KeyRangeID3, DataFieldName: "value", Value: "317"},
+		{DataFieldName: FieldOdometer, Value: "22164"},
+	})
+
+	assert.Equal(t, "317", data[KeyRangeID3].Value, "ID.3 range indexed by key")
+	assert.Equal(t, "317", data["value"].Value, "field name remains indexed")
+	assert.Equal(t, "22164", data[FieldOdometer].Value, "named field indexed by name")
+}
