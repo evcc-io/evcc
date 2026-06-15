@@ -40,8 +40,8 @@
 						max="100"
 						step="1"
 						:value="manualSocInput"
-						@change="updateManualSoc"
 						style="width: 4.5em"
+						@change="updateManualSoc"
 					/>
 					<span>%</span>
 					<button
@@ -53,8 +53,12 @@
 						✕
 					</button>
 				</div>
-				<small v-if="estimatedCurrentSoc" class="text-muted">{{ estimatedCurrentSoc }}</small>
-				<small v-if="range" class="text-muted"> · {{ fmtNumber(range, 0) }} {{ rangeUnit }}</small>
+				<small v-if="estimatedCurrentSoc" class="text-muted">{{
+					estimatedCurrentSoc
+				}}</small>
+				<small v-if="range" class="text-muted">
+					· {{ fmtNumber(range, 0) }} {{ rangeUnit }}</small
+				>
 			</div>
 			<LabelAndValue
 				v-else-if="socBasedCharging"

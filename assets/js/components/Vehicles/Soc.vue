@@ -116,7 +116,10 @@ export default defineComponent({
 				return this.vehicleSoc;
 			}
 			if (this.manualSoc > 0 && this.socPerKwh > 0) {
-				return Math.min(100, Math.round(this.manualSoc + this.socPerKwh * (this.chargedEnergy / 1e3)));
+				return Math.min(
+					100,
+					Math.round(this.manualSoc + this.socPerKwh * (this.chargedEnergy / 1e3))
+				);
 			}
 			return this.vehicleSoc;
 		},

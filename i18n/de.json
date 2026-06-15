@@ -1379,6 +1379,8 @@
       "changeVehicle": "Fahrzeug ändern",
       "detectionActive": "Fahrzeugerkennung läuft …",
       "fallbackName": "Fahrzeug",
+      "manualSoc": "Manueller Ladestand",
+      "manualSocClear": "Manuellen Ladestand löschen",
       "moreActions": "Weitere Aktionen",
       "none": "Kein Fahrzeug",
       "notReachable": "Fahrzeug war nicht erreichbar. Versuche evcc neu zu starten.",
