@@ -52,8 +52,9 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// Store the expanded file path for later use
 		filePath = file
 
-		// TODO WAL mode "journal_mode(WAL)", "synchronous(NORMAL)"
-		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
+		// WAL mode keeps readers from blocking the single writer; it creates
+		// sidecar evcc.db-wal and evcc.db-shm files next to the database.
+		for _, pragma := range []string{"busy_timeout(5000)", "journal_mode(WAL)", "synchronous(NORMAL)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
 			// add pragma if not already present
 			if short, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+short) {
 				continue
