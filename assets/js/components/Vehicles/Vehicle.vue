@@ -1,4 +1,4 @@
-ud<template>
+<template>
 	<div class="vehicle pt-4">
 		<VehicleTitle
 			v-if="!integratedDevice"
