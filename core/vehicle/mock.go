@@ -55,6 +55,20 @@ func (mr *MockAPIMockRecorder) GetLimitSoc() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetLimitSoc))
 }
 
+// GetManualSoc mocks base method.
+func (m *MockAPI) GetManualSoc() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetManualSoc")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetManualSoc indicates an expected call of GetManualSoc.
+func (mr *MockAPIMockRecorder) GetManualSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetManualSoc", reflect.TypeOf((*MockAPI)(nil).GetManualSoc))
+}
+
 // GetMinSoc mocks base method.
 func (m *MockAPI) GetMinSoc() int {
 	m.ctrl.T.Helper()
@@ -152,6 +166,18 @@ func (mr *MockAPIMockRecorder) SetLimitSoc(soc any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), soc)
 }
 
+// SetManualSoc mocks base method.
+func (m *MockAPI) SetManualSoc(soc float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetManualSoc", soc)
+}
+
+// SetManualSoc indicates an expected call of SetManualSoc.
+func (mr *MockAPIMockRecorder) SetManualSoc(soc any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetManualSoc", reflect.TypeOf((*MockAPI)(nil).SetManualSoc), soc)
+}
+
 // SetMinSoc mocks base method.
 func (m *MockAPI) SetMinSoc(soc int) {
 	m.ctrl.T.Helper()
@@ -204,30 +230,4 @@ func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlan) error {
 func (mr *MockAPIMockRecorder) SetRepeatingPlans(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).SetRepeatingPlans), arg0)
-}
-
-// GetManualSoc mocks base method.
-func (m *MockAPI) GetManualSoc() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetManualSoc")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetManualSoc indicates an expected call of GetManualSoc.
-func (mr *MockAPIMockRecorder) GetManualSoc() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetManualSoc", reflect.TypeOf((*MockAPI)(nil).GetManualSoc))
-}
-
-// SetManualSoc mocks base method.
-func (m *MockAPI) SetManualSoc(soc float64) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetManualSoc", soc)
-}
-
-// SetManualSoc indicates an expected call of SetManualSoc.
-func (mr *MockAPIMockRecorder) SetManualSoc(soc any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetManualSoc", reflect.TypeOf((*MockAPI)(nil).SetManualSoc), soc)
 }
