@@ -146,7 +146,7 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 			m.lwtConfig.Topic,
 			h.availability.receive,
 		); err != nil {
-			return nil, err
+			return h, err
 		}
 
 		if !h.availability.Wait(m.lwtConfig.Timeout) {
