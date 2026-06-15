@@ -108,6 +108,7 @@
 						meter-type="pv"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
+						:banner="meterBanner(meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<MeterCard
@@ -283,6 +284,9 @@
 						editable
 						:error="hasClassError('circuit')"
 						:unconfigured="!circuitsRoot"
+						:banner="
+							hemsDimmed && circuitsRoot ? $t('config.deviceValue.dimmed') : undefined
+						"
 						data-testid="circuits"
 						@edit="openModal('circuits')"
 					>
@@ -322,8 +326,8 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
-						v-if="remote"
-						:title="$t('config.remote.title')"
+						v-if="experimental"
+						:title="`${$t('config.remote.title')} 🧪`"
 						editable
 						:unconfigured="isUnconfigured(remoteTags)"
 						data-testid="remote-access"
@@ -449,8 +453,11 @@
 					:yamlSource="eebus?.yamlSource"
 					@changed="loadDirty"
 				/>
-				<OcppModal :ocpp="ocpp" />
+				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
+				<OcppForwarderModal @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
+				<SecurityModal :auth-disabled="authDisabled" />
+				<ApiKeyModal :auth-disabled="authDisabled" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
@@ -477,6 +484,7 @@ import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
 import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
+import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -535,8 +543,8 @@ import type {
 	Notification,
 	Remote,
 } from "@/types/evcc";
-import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
-import { circuitTree } from "@/utils/circuits";
+import { CURRENCY } from "@/types/evcc";
+import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -549,6 +557,8 @@ import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import SecurityModal from "../components/Config/Security/SecurityModal.vue";
+import ApiKeyModal from "../components/Config/Security/ApiKeyModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 
 export default defineComponent({
@@ -567,6 +577,7 @@ export default defineComponent({
 		EebusModal,
 		OcppIcon,
 		OcppModal,
+		OcppForwarderModal,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -606,6 +617,8 @@ export default defineComponent({
 		WelcomeBanner,
 		AuthSuccessBanner,
 		PasswordModal,
+		SecurityModal,
+		ApiKeyModal,
 		AuthProvidersCard,
 	},
 	mixins: [formatter, collector],
@@ -779,20 +792,29 @@ export default defineComponent({
 		},
 		hemsTags(): DeviceTags {
 			const type = this.hems?.config?.type;
-			if (!type) {
+			const status = store.state?.hems?.status;
+			if (!type && !status) {
 				return { configured: { value: false } };
 			}
-			const result = {
-				hemsType: {},
-				hemsActiveLimit: { value: null as number | null },
-			};
-			if (["relay", "eebus"].includes(type)) {
-				result.hemsType = { value: type };
+			if (!status) {
+				return { configured: { value: true } };
 			}
-			const gc = store.state?.circuits?.[GRID_CONTROL];
-			if (gc) {
-				const value = gc.maxPower || null;
-				result.hemsActiveLimit = { value };
+			const result: DeviceTags = {};
+			if (status.dimmed && status.maxConsumptionPower) {
+				result["dimLimit"] = {
+					value: status.maxConsumptionPower,
+					warning: true,
+				};
+			} else if (status.dimmed !== undefined) {
+				result["dimmed"] = { value: status.dimmed };
+			}
+			if (status.curtailed && status.maxProductionPower !== undefined) {
+				result["curtailLimit"] = {
+					value: status.maxProductionPower,
+					warning: true,
+				};
+			} else if (status.curtailed !== undefined) {
+				result["curtailed"] = { value: status.curtailed };
 			}
 
 			return result;
@@ -850,6 +872,18 @@ export default defineComponent({
 			}
 			return { configured: { value: false } };
 		},
+		// maps an OCPP station id to its loadpoint title (fallback: charger title)
+		stationTitles(): Record<string, string> {
+			const map: Record<string, string> = {};
+			this.chargers.forEach((charger) => {
+				const stationId = charger.config?.["stationid"];
+				if (typeof stationId !== "string" || !stationId) return;
+				const loadpoint = this.loadpoints.find((lp) => lp.charger === charger.name);
+				const title = loadpoint?.title || charger.config?.title;
+				if (title) map[stationId] = title;
+			});
+			return map;
+		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
 				const events = store.state?.messagingEvents || [];
@@ -873,13 +907,20 @@ export default defineComponent({
 				Object.values(store.state.messagingEvents ?? {}).some((e) => !e.disabled)
 			);
 		},
+		authDisabled() {
+			return store.state?.authDisabled || false;
+		},
 		backupRestoreProps() {
 			return {
-				authDisabled: store.state?.authDisabled || false,
+				authDisabled: this.authDisabled,
 			};
 		},
-		circuitsRoot() {
+		circuitsRoot(): CircuitNode | null {
 			return circuitTree(store.state?.circuits || {});
+		},
+		hemsDimmed(): boolean {
+			// only consumption limits matter for circuits, curtailment affects feed-in
+			return !!store.state?.hems?.status?.dimmed;
 		},
 		tariffsYamlSource() {
 			return store.state?.tariffs?.yamlSource;
@@ -963,15 +1004,7 @@ export default defineComponent({
 			this.meters = (await this.loadConfig("devices/meter")) || [];
 		},
 		async loadCircuits() {
-			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// set gridcontrol default title
-			circuits.forEach((c: ConfigCircuit) => {
-				if (c.name === GRID_CONTROL && !c.config?.title) {
-					c.config = c.config || {};
-					c.config.title = this.$t("config.hems.title");
-				}
-			});
-			this.circuits = circuits;
+			this.circuits = (await this.loadConfig("devices/circuit")) || [];
 		},
 		async loadTariffs() {
 			this.tariffs = (await this.loadConfig("devices/tariff")) || [];
@@ -1148,6 +1181,11 @@ export default defineComponent({
 		},
 		deviceTags(type: DeviceType, id: string) {
 			return this.deviceValues[type][id] || {};
+		},
+		meterBanner(name: string): string | undefined {
+			return this.deviceTags("meter", name)["curtailed"]?.value
+				? this.$t("config.deviceValue.productionLimited")
+				: undefined;
 		},
 		loadpointTags(loadpoint: ConfigLoadpoint) {
 			const { charger, meter } = loadpoint;

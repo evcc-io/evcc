@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -14,27 +15,20 @@ import (
 )
 
 const (
-	StatRunning = iota
-	StatValid
-	StatInvalid
-)
-
-const (
 	RegionEU = "https://gateway-mg-eu.soimt.com/api.app/v1/"
 	RegionAU = "https://gateway-mg-au.soimt.com/api.app/v1/"
 )
-
-type ConcurrentRequest struct {
-	Status int
-	Result requests.ChargeStatus
-}
 
 // API is an api.Vehicle implementation for SAIC cars
 type API struct {
 	*request.Helper
 	identity *Identity
-	request  ConcurrentRequest
 	log      *util.Logger
+
+	mu      sync.Mutex
+	running bool                  // background refresh in progress
+	valid   bool                  // result holds a valid response
+	result  requests.ChargeStatus // last valid response
 }
 
 // NewAPI creates a new vehicle
@@ -49,19 +43,34 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 		Decorator: requests.Decorate,
 		Base:      v.Client.Transport,
 	}
-	v.request.Status = StatInvalid
 
 	return v
+}
+
+// store saves a valid response and clears the running flag
+func (v *API) store(res requests.ChargeStatus) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.result, v.valid, v.running = res, true, false
+}
+
+// last returns the last valid response, or ErrMustRetry until one is available
+func (v *API) last() (requests.ChargeStatus, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if v.valid {
+		return v.result, nil
+	}
+	return v.result, api.ErrMustRetry
 }
 
 func (v *API) doRepeatedRequest(path string, event_id string) error {
 	token, err := v.identity.Token()
 	if err != nil {
-		v.request.Status = StatInvalid
 		return err
 	}
 
-	req, err := requests.CreateRequest(
+	req, _ := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -69,40 +78,29 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 		request.JSONContent,
 		token.AccessToken,
 		event_id)
-	if err != nil {
-		v.request.Status = StatInvalid
-		return err
-	}
 
 	var res requests.Answer[requests.ChargeStatus]
-	_, err = doRequest(v, req, &res)
-	if err == nil {
-		v.request = ConcurrentRequest{
-			Status: StatValid,
-			Result: res.Data,
-		}
-	} else if err != api.ErrMustRetry {
-		v.request.Status = StatInvalid
+	if _, err = doRequest(v, req, &res); err == nil {
+		v.store(res.Data)
 	}
 	return err
 }
 
-// This is running concurrently
+// repeatRequest polls for the deferred answer in the background
 func (v *API) repeatRequest(path string, event_id string) {
-	var count int
+	// always clear running so a future query can start
+	defer func() {
+		v.mu.Lock()
+		v.running = false
+		v.mu.Unlock()
+	}()
 
-	v.request.Status = StatRunning
-	for err := api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
+	for count := range 20 {
 		time.Sleep(2 * time.Second)
-		v.log.TRACE.Printf("Starting repeated query. Count: %d", count)
-		err = v.doRepeatedRequest(path, event_id)
-		count++
-	}
-
-	// Make sure that we don't exit here with status running (probably after 20 tries).
-	// This would not allow us to ever do a query again.
-	if v.request.Status == StatRunning {
-		v.request.Status = StatInvalid
+		v.log.TRACE.Printf("repeated query %d", count)
+		if err := v.doRepeatedRequest(path, event_id); err != api.ErrMustRetry {
+			return
+		}
 	}
 }
 
@@ -178,18 +176,14 @@ func (v *API) Wakeup(vin string) error {
 func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	var zero requests.ChargeStatus
 
-	// Check if we are already running in the background
-	if v.request.Status == StatValid {
-		v.request.Status = StatInvalid
-		v.log.TRACE.Printf("StatValid. Returning stored value")
-		// v.printAnswer()
-		return v.request.Result, nil
+	// refresh in progress, return last known value
+	v.mu.Lock()
+	running := v.running
+	v.mu.Unlock()
+	if running {
+		v.log.TRACE.Printf("query running")
+		return v.last()
 	}
-	if v.request.Status == StatRunning {
-		v.log.TRACE.Printf("StatRunning. Exiting")
-		return zero, api.ErrMustRetry
-	}
-	v.log.TRACE.Printf("StatInvalid. Starting query")
 
 	token, err := v.identity.Token()
 	if err != nil {
@@ -198,7 +192,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 
 	path := "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
 	// get charging status of vehicle
-	req, err := requests.CreateRequest(
+	req, _ := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -206,9 +200,6 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		request.JSONContent,
 		token.AccessToken,
 		"")
-	if err != nil {
-		return zero, err
-	}
 
 	var res requests.Answer[requests.ChargeStatus]
 	event_id, err := doRequest(v, req, &res)
@@ -217,11 +208,11 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	}
 
 	if event_id == "" {
-		v.log.TRACE.Printf("Answer without event ID")
-		return zero, api.ErrMustRetry
+		v.log.TRACE.Printf("answer without event id")
+		return v.last()
 	}
 
-	req, err = requests.CreateRequest(
+	req, _ = requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -229,18 +220,19 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		request.JSONContent,
 		token.AccessToken,
 		event_id)
-	if err != nil {
+
+	// answer not yet available, keep polling in the background
+	if _, err = doRequest(v, req, &res); err == api.ErrMustRetry {
+		v.mu.Lock()
+		v.running = true
+		v.mu.Unlock()
+		v.log.TRACE.Printf("no answer yet, continuing in background")
+		go v.repeatRequest(path, event_id)
+		return v.last()
+	} else if err != nil {
 		return zero, err
 	}
 
-	_, err = doRequest(v, req, &res)
-
-	// Continue checking....
-	if err == api.ErrMustRetry {
-		v.request.Status = StatRunning
-		v.log.TRACE.Printf(" No answer yet. Continue status query in background")
-		go v.repeatRequest(path, event_id)
-	}
-
-	return res.Data, err
+	v.store(res.Data)
+	return res.Data, nil
 }

@@ -39,9 +39,16 @@
     "legendTopAutostart": "Automatesch starten",
     "legendTopName": "Batterie-ënnerstëtzt Opluede vum Gefier",
     "legendTopSubline": "wann d'Hausbatterie iwwer {soc} ass.",
+    "legendTopSublineAbove": "wann iwwert {soc}",
+    "legendTopSublineDisabled": "ass {soc}.",
+    "legendTopSublineDisabledState": "desaktivéiert",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keng Batterien konfiguréiert.",
     "usageTab": "Batterieverbrauch"
+  },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex Faarw"
   },
   "config": {
     "aux": {
@@ -143,8 +150,6 @@
       "forecast": "Previsioun",
       "gridPrice": "Netz Präis",
       "heaterTempLimit": "Limitt vun der Heizung",
-      "hemsActiveLimit": "Aktiivt Limit",
-      "hemsType": "Communicatioun",
       "identifier": "RFID-Identifikatioun",
       "loginBlocked": "Login-Limit erreecht",
       "max": "max",
@@ -162,7 +167,7 @@
       "range": "Autonomie",
       "singlePhase": "Eephaseg",
       "soc": "Luedstand",
-      "solarForecast": "PV-Previsioun",
+      "solarForecast": "PV Previsioun",
       "temp": "Temperatur",
       "topic": "Sujet",
       "url": "URL",
@@ -174,15 +179,11 @@
       "B": "B (verbonnen)",
       "C": "C (luet)"
     },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
-    },
     "devices": {
       "auxMeter": "Smarte Verbraucher",
-      "batteryStorage": "Batterie",
+      "batteryStorage": "Batterie stockage",
       "consumer": "Verbraucher",
-      "solarSystem": "PV-Anlag"
+      "solarSystem": "PV Anlag"
     },
     "editor": {
       "loading": "YAML-Editeur gëtt gelueden …"
@@ -237,6 +238,7 @@
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
       "customOption": "Benotzerdefinéiert Gerät",
       "delete": "Läschen",
+      "dismiss": "Ignoréieren",
       "docsLink": "D'Dokumentatioun kucken.",
       "dragHandle": "Verréckelen",
       "dragItem": "Verréckelbar: {title}",
@@ -518,7 +520,7 @@
         "battery": "Batterie",
         "charge": "Verbraucher / Luedgerät",
         "grid": "Réseau",
-        "label": "Verbrauch",
+        "label": "Benotzung",
         "pv": "Productioun"
       },
       "validateSave": "Iwwerpréiwen & späicheren"
@@ -823,6 +825,7 @@
         "allMonths": "All Mount",
         "allTimes": "Déi ganzen Zäit",
         "cancel": "Ofbriechen",
+        "charge": "Lueden",
         "days": "Deeg",
         "edit": "Beaarbechten",
         "hours": "Stonnen",
@@ -1152,15 +1155,22 @@
       "update": "Uwennen",
       "weekdays": "Deeg"
     },
+    "continuousStatus": {
+      "charging": "Boost aktiv.",
+      "connected": "Normalbetriib.",
+      "waitForVehicle": "Boost ugefroot…"
+    },
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie oplueden",
       "batteryDischarge": "Batterie entlueden",
-      "batteryForecastEmpty": "eidel {time}",
-      "batteryForecastFull": "voll {time}",
+      "batteryDischargeHold": "Batterie (gespäert)",
+      "batteryForecastEmpty": "Eidel",
+      "batteryForecastFull": "Voll",
+      "batteryForecastNextHigh": "Héich",
+      "batteryForecastNextLow": "Déif",
       "batteryGridChargeActive": "Oluede vum Netz: aktiv",
       "batteryGridChargeLimit": "Opluede vum Netz: wann",
-      "batteryHold": "Batterie (gespäert)",
       "batteryTooltip": "{energy} vun {total} ({soc})",
       "forecast": "Viraussoen",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
@@ -1178,11 +1188,34 @@
       "charging": "Wiermen…",
       "connected": "Standby.",
       "vehicleLimit": "Limitt vun der Heizung",
-      "waitForVehicle": "Prett. Waarden op d'Heizung…"
+      "waitForVehicle": "Prett fir ze Heizen…"
     },
     "hemsWarning": {
-      "description": "Reduzéier d'Luedleeschtung, fir {limit} net ze iwwerschreiden.",
       "title": "Extern Begrenzung:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "gelueden",
+          "returnEnergy": "entlueden"
+        },
+        "grid": {
+          "energy": "importéiert",
+          "returnEnergy": "agespeist"
+        }
+      },
+      "downloadCsv": "CSV eroflueden",
+      "empty": "Keng historesch Daten fir dësen Zäitraum.",
+      "group": {
+        "battery": "Batterie",
+        "forecast": "Virso",
+        "grid": "Netz",
+        "loadpoint": "Lueden & Heizen",
+        "meter": "Verbrauch",
+        "pv": "Produktioun"
+      },
+      "otherConsumers": "Aneres",
+      "title": "Historique"
     },
     "loadpoint": {
       "avgPrice": "⌀ Präis",
@@ -1455,6 +1488,7 @@
     "odometer": "Kilometerstand",
     "overview": "Iwwersiicht",
     "period": {
+      "day": "Dag",
       "month": "Mount",
       "total": "Gesamt",
       "year": "Joer"

@@ -61,8 +61,11 @@ export default defineComponent({
 				devices.some(({ controllable }) => controllable) && this.state.smartCostAvailable
 			);
 		},
+		gridChargeLimit() {
+			return this.state.batteryGridChargeLimit ?? null;
+		},
 		gridChargeVisible() {
-			return this.gridChargePossible || this.state.batteryGridChargeLimit !== null;
+			return this.gridChargePossible || this.gridChargeLimit !== null;
 		},
 		gridChargeTariff() {
 			const { forecast, smartCostType } = this.state;
@@ -70,7 +73,7 @@ export default defineComponent({
 		},
 		smartCostLimitProps() {
 			return {
-				currentLimit: this.state.batteryGridChargeLimit ?? null,
+				currentLimit: this.gridChargeLimit,
 				lastLimit: settings.lastBatterySmartCostLimit,
 				smartCostType: this.state.smartCostType,
 				currency: this.state.currency,

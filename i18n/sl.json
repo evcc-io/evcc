@@ -131,8 +131,6 @@
       "feedinPrice": "Cena prejete energije iz omrežja",
       "gridPrice": "Cena omrežja",
       "heaterTempLimit": "Omejitev ogrevanja",
-      "hemsActiveLimit": "Aktivna omejitev",
-      "hemsType": "Komunikacija",
       "identifier": "RFID-identifikator",
       "no": "ne",
       "odometer": "Število kilometrov",
@@ -157,10 +155,6 @@
       "A": "A (brez povezave)",
       "B": "B (povezan)",
       "C": "C (polnjenje)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "preko EEBus",
-      "relay": "prek releja"
     },
     "devices": {
       "auxMeter": "Pametni porabnik",
@@ -923,9 +917,9 @@
       "battery": "Baterija",
       "batteryCharge": "Polnjenje baterije",
       "batteryDischarge": "Praznjenje baterije",
+      "batteryDischargeHold": "Baterija (zaklenjena)",
       "batteryGridChargeActive": "polnjenje iz omrežja aktivno",
       "batteryGridChargeLimit": "polnjenje iz omrežja ko",
-      "batteryHold": "Baterija (zaklenjena)",
       "batteryTooltip": "{energy} od {total} ({soc})",
       "forecastTooltip": "napoved: preostala sončna proizvodnja danes",
       "gridImport": "Uvoz iz omrežja",
@@ -945,7 +939,6 @@
       "waitForVehicle": "Pripravljen. Čakam na grelec…"
     },
     "hemsWarning": {
-      "description": "Upočasnjeno polnjenje, da se ne preseže {limit}.",
       "title": "Zunanja omejitev:"
     },
     "loadpoint": {

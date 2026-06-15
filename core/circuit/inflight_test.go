@@ -64,7 +64,7 @@ func TestCircuitInflightHierarchy(t *testing.T) {
 	require.NoError(t, err)
 	child, err := New(log, "child", 10, 0, nil, 0)
 	require.NoError(t, err)
-	require.NoError(t, child.Wrap(parent))
+	require.NoError(t, child.setParent(parent))
 
 	lp := &circuitLoadStub{circuit: child, current: 4, inflightCurrent: 3}
 	require.NoError(t, parent.Update([]api.CircuitLoad{lp}))

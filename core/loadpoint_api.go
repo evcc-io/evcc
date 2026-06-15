@@ -127,6 +127,12 @@ func (lp *Loadpoint) setTitle(title string) {
 	lp.title = title
 	lp.publish(keys.Title, lp.title)
 	lp.settings.SetString(keys.Title, lp.title)
+
+	if lp.chargeEnergy != nil {
+		if err := lp.chargeEnergy.UpdateTitle(title); err != nil {
+			lp.log.ERROR.Printf("update title: %v", err)
+		}
+	}
 }
 
 // GetStatus returns the charging status

@@ -318,6 +318,14 @@ params:
     help:
       en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
       de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
+  - name: climaterdisabled
+    type: bool
+    description:
+      en: Disable climater detection
+      de: Klimatisierungserkennung deaktivieren
+    help:
+      en: Ignore the vehicle's climater state for charge control, so charging stops at the SoC or energy limit even when the vehicle signals an active climater request.
+      de: Klimatisierungsstatus des Fahrzeugs für die Ladesteuerung ignorieren, sodass der Ladevorgang am SoC- oder Energielimit endet, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
   - name: heating
     type: bool
     description:
@@ -560,6 +568,11 @@ presets:
     - name: streaming
       advanced: true
     - name: welcomecharge
+      advanced: true
+    - name: climaterdisabled
+      advanced: true
+  vehicle-climater:
+    - name: climaterdisabled
       advanced: true
   charger-features:
     - name: heating

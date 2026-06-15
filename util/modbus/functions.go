@@ -69,6 +69,14 @@ func decodeBool16(mask uint64) func(b []byte) float64 {
 	}
 }
 
+// uint64LswFirst decodes a uint64 stored in little-endian word order (LSW first)
+func uint64LswFirst(b []byte) uint64 {
+	return uint64(binary.BigEndian.Uint16(b)) |
+		uint64(binary.BigEndian.Uint16(b[2:]))<<16 |
+		uint64(binary.BigEndian.Uint16(b[4:]))<<32 |
+		uint64(binary.BigEndian.Uint16(b[6:]))<<48
+}
+
 func decodeNaN16(f func(b []byte) float64, nan ...uint16) func(b []byte) float64 {
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint16(b)

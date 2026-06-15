@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
+	"slices"
 	"strings"
+	"time"
 )
 
 // brand holds the OIDC client id and state suffix for a VW group brand.
@@ -70,25 +73,27 @@ func (v Vehicle) Name() string {
 	return ""
 }
 
-// dataset describes a single delivered dataset file
+// dataset describes a single delivered dataset file. Timestamp is the parsed
+// delivery time; it is populated by contentDatasets from the file name or the
+// createdOn field.
 type dataset struct {
-	Name      string `json:"name"`
-	CreatedOn string `json:"createdOn"`
+	Name      string    `json:"name"`
+	CreatedOn time.Time `json:"createdOn"`
 }
 
-// sortKey returns the value used to find the newest dataset
-func (d dataset) sortKey() string {
-	if d.CreatedOn != "" {
-		return d.CreatedOn
-	}
-	return d.Name
-}
-
-// dataPoint is a single decoded telemetry value of a dataset
+// dataPoint is a single data point as delivered in the dataset JSON document.
+// Key is the data point's unique GUID, used when DataFieldName is generic (e.g. "value").
 type dataPoint struct {
-	Key           string `json:"key"`
-	DataFieldName string `json:"dataFieldName"`
-	Value         string `json:"value"`
+	Key           string     `json:"key"`
+	DataFieldName string     `json:"dataFieldName"`
+	Value         string     `json:"value"`
+	TimestampUtc  *time.Time `json:"timestampUtc"`
+}
+
+// point is a decoded data point: its value and the time it was recorded
+type point struct {
+	Value     string
+	Timestamp time.Time
 }
 
 // datasetFile is the JSON document contained in a dataset zip archive
@@ -99,36 +104,69 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
-	FieldSoc           = "state_of_charge"
-	FieldHvSoc         = "hv_soc"
-	FieldRange         = "cruising_range_combined"
-	FieldRangePrimary  = "cruising_range_primary_engine"
+	// status
+	FieldChargingState                = "charging_state"
+	FieldChargingPlug1ConnectionState = "charging_plug1_connectionstate"
+	FieldCurrentChargeState           = "charging_state_report.current_charge_state"
+	FieldPlugState                    = "plug_state"
+
+	// soc
+	FieldBatteryStateReportSoc = "battery_state_report.soc"
+	FieldSoc                   = "state_of_charge"
+	FieldHvSoc                 = "hv_soc"
+	FieldHvBatteryLevel        = "battery_level_HV.value"
+
+	// target soc
+	FieldTargetSoc = "settings.target_soc"
+
+	// range
+	FieldRangeCombined  = "cruising_range_combined"
+	FieldRangePrimary   = "cruising_range_primary_engine"
+	FieldRangeSecondary = "cruising_range_secondary_engine"
+	KeyRangeID3         = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 cruising range, delivered as "value"
+
+	// odo
 	FieldOdometer      = "mileage"
-	FieldChargingState = "charging_state"
-	FieldPlugState     = "charging_plug1_connectionstate"
-	FieldTargetSoc     = "settings.target_soc"
+	FieldOdometerValue = "mileage.value"
+
+	// time
+	FieldRemainingTime = "remaining_charging_time"
 )
 
-// newestDataset returns the name of the most recent dataset that actually
-// carries content. The portal emits "..._no_content_found.zip" placeholders
-// while the vehicle is asleep, which are skipped.
-func newestDataset(list []dataset) string {
-	var best dataset
+// knownKeys lists data point GUIDs that are indexed by their key instead of the
+// generic, non-unique DataFieldName they are delivered with
+var knownKeys = map[string]struct{}{
+	KeyRangeID3: {},
+}
+
+// contentDatasets returns the datasets that actually carry content, with their
+// delivery time parsed into Timestamp and sorted from oldest to newest. The
+// portal emits "..._no_content_found.zip" placeholders while the vehicle is
+// asleep, which are skipped. An error is returned when a content dataset's
+// timestamp cannot be parsed.
+func contentDatasets(list []dataset) ([]dataset, error) {
+	content := make([]dataset, 0, len(list))
 	for _, d := range list {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
 			continue
 		}
-		if best.Name == "" || d.sortKey() > best.sortKey() {
-			best = d
-		}
+
+		content = append(content, d)
 	}
-	return best.Name
+
+	slices.SortStableFunc(content, func(a, b dataset) int {
+		return a.CreatedOn.Compare(b.CreatedOn)
+	})
+
+	return content, nil
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into a map keyed by the dotted data field name. On duplicate field
-// names the entry with the smallest key uuid wins, matching the adapter.
-func parseDataset(b []byte) (map[string]string, error) {
+// decodes it into the dataset's VIN and a map of data points keyed by the dotted
+// data field name. On duplicate field names the entry with the newest timestamp
+// wins. The VIN is returned so the caller can drop datasets that do not belong
+// to the requested vehicle.
+func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -156,23 +194,47 @@ func parseDataset(b []byte) (map[string]string, error) {
 		return nil, err
 	}
 
+	log.Println(raw)
+
 	var ds datasetFile
 	if err := json.Unmarshal(raw, &ds); err != nil {
 		return nil, err
 	}
 
-	res := make(map[string]string, len(ds.Data))
-	keys := make(map[string]string, len(ds.Data))
-	for _, p := range ds.Data {
-		if p.DataFieldName == "" {
-			continue
+	return points(ds.Data), nil
+}
+
+// points indexes data points by field name (newest timestamp wins), and known
+// data points additionally by their unique key, as their name is not unique.
+func points(data []dataPoint) map[string]point {
+	res := make(map[string]point, len(data))
+
+	set := func(name string, p point) {
+		if name == "" {
+			return
 		}
-		if k, ok := keys[p.DataFieldName]; ok && k <= p.Key {
-			continue
+		if cur, ok := res[name]; ok && cur.Timestamp.After(p.Timestamp) {
+			return
 		}
-		res[p.DataFieldName] = p.Value
-		keys[p.DataFieldName] = p.Key
+		res[name] = p
 	}
 
-	return res, nil
+	for _, p := range data {
+		if p.Value == "" {
+			continue
+		}
+
+		var ts time.Time
+		if p.TimestampUtc != nil {
+			ts = *p.TimestampUtc
+		}
+		pt := point{Value: p.Value, Timestamp: ts}
+
+		set(p.DataFieldName, pt)
+		if _, ok := knownKeys[p.Key]; ok {
+			set(p.Key, pt)
+		}
+	}
+
+	return res
 }

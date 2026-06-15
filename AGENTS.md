@@ -33,8 +33,10 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
 | [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
 | [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
+| [OCPP Forwarder](docs/agents/ocpp-forwarder.md) | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
 | [Plugin System](docs/agents/plugin-system.md) | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS) |
 | [Web UI & API](docs/agents/web-ui-api.md) | REST API, WebSocket, Vue frontend, authentication |
+| [API Security](docs/agents/api-security.md) | Auth modes, JWT/API key/session, two-tier checks, credential storage |
 
 ### Loading guide by task type
 
@@ -44,6 +46,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Vehicle implementation** — hardware-integrations
 - **UI/frontend work** — web-ui-api
 - **API endpoint work** — web-ui-api + core-domain
+- **Auth / login / API key / permissions** — api-security + web-ui-api
 - **Config/template work** — plugin-system
 - **Control loop / charging logic** — core-domain
 - **Bug in any area** — core-domain + relevant topic file(s)
@@ -88,6 +91,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - No em dashes (—) in comments, commit messages, or docs. Use periods, commas, or colons
 - Project name is `evcc`, always lowercase
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
+- Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
 
 ## Comment Style
@@ -108,6 +112,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use `context.Context` for I/O, long-running, or cancelable operations
 - Organize code into logical packages with clear responsibilities
 - Prefer composition over inheritance, minimize external dependencies
+- Navigate Go symbols with go-to-definition and find-references rather than text search; reserve text search for comments and string literals
 
 ### File Patterns
 
@@ -115,6 +120,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - `_enumer.go` - generated enum code
 - `*_decorators.go` - generated decorator pattern implementations
 - Validate interface implementations: `var _ Interface = (*Type)(nil)`
+- Capabilities: register via `implement.Has`/`May` only when a capability is *conditional* (runtime/config detection, e.g. `if cp.PhaseSwitching { implement.Has(...) }`). For capabilities present on every code path, declare a plain exported method plus `var _ api.Interface = (*Type)(nil)` instead. `api.Cap` resolves static methods via direct type assertion, so unconditional `implement.Has` is redundant. A type with no conditional capabilities needs neither the `implement.Caps` embed nor `implement.New()`
 
 ### Error Handling
 
@@ -260,6 +266,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
+- When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details
 
 ### Configuration
 

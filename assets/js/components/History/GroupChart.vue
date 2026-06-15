@@ -27,7 +27,7 @@ export interface HistorySlot {
 }
 
 export interface HistorySeries {
-	name: string;
+	title: string;
 	group: string;
 	data: HistorySlot[];
 	// Marks a synthetic / derived series (e.g. "other consumers"). Gets a neutral
@@ -110,12 +110,13 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
-		// Peak of stacked per-slot sums. Bidirectional: pos/neg separately.
+		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
+		// clipped. Bidirectional: pos/neg separately.
 		axisPeak(): number {
 			const factor = this.valueFactor;
-			const peak = (pick: (slot: HistorySlot) => number) => {
+			const peak = (series: HistorySeries[], pick: (slot: HistorySlot) => number) => {
 				const sums = new Map<string, number>();
-				for (const s of this.visibleSeries) {
+				for (const s of series) {
 					for (const slot of s.data) {
 						sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
 					}
@@ -126,11 +127,15 @@ export default defineComponent({
 			};
 			if (this.isBidirectional) {
 				return Math.max(
-					peak((slot) => Math.abs(slot.energy)),
-					peak((slot) => Math.abs(slot.returnEnergy))
+					peak(this.visibleSeries, (slot) => Math.abs(slot.energy)),
+					peak(this.visibleSeries, (slot) => Math.abs(slot.returnEnergy))
 				);
 			}
-			return peak((slot) => Math.abs(slot.energy - slot.returnEnergy));
+			const overlay = this.showOverlay ? this.overlay : [];
+			return Math.max(
+				peak(this.visibleSeries, (slot) => Math.abs(slot.energy - slot.returnEnergy)),
+				peak(overlay, (slot) => slot.energy)
+			);
 		},
 		// W/Wh scale when peak below 1 kW(h). Zero data falls here too.
 		useSmallUnit(): boolean {
@@ -203,14 +208,14 @@ export default defineComponent({
 				const mutedColor = colors.muted || this.color;
 				const titles: string[] = [];
 				for (const s of this.series) {
-					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
+					if (!s.virtual && !titles.includes(s.title)) titles.push(s.title);
 				}
 				const palette = resolveColors(titles, deviceColorMap(store.state.deviceColors));
 				return this.series.map((s) => {
 					// Virtual "other consumers" entity renders in a neutral gray to set
 					// it apart from explicit meter entities.
 					if (s.virtual) return mutedColor;
-					return palette[s.name] || this.color;
+					return palette[s.title] || this.color;
 				});
 			}
 			if (this.series.length <= 1) return [this.color];
@@ -512,7 +517,7 @@ export default defineComponent({
 								? [this.focusedEntity]
 								: this.series.map((s, i) => s.paletteIndex ?? i);
 						const nameByIdx = new Map(
-							this.series.map((s, i) => [s.paletteIndex ?? i, s.name])
+							this.series.map((s, i) => [s.paletteIndex ?? i, s.title])
 						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
@@ -639,6 +644,7 @@ export default defineComponent({
 								xAxis: opt["xAxis"],
 								yAxis: opt["yAxis"],
 								series: opt["series"],
+								tooltip: opt["tooltip"],
 							},
 					fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
 				);
@@ -691,15 +697,15 @@ export default defineComponent({
 		directionLabel(s: HistorySeries, dir: "energy" | "returnEnergy"): string {
 			const key = `main.history.direction.${s.group}.${dir}`;
 			const label = this.$t(key);
-			if (label === key) return s.name;
-			if (this.series.length > 1) return `${s.name} ${label}`;
+			if (label === key) return s.title;
+			if (this.series.length > 1) return `${s.title} ${label}`;
 			return String(label);
 		},
 		singleEntityName(s: HistorySeries): string {
-			if (this.series.length > 1) return s.name;
+			if (this.series.length > 1) return s.title;
 			const key = `main.history.group.${s.group}`;
 			const label = this.$t(key);
-			return label === key ? s.name : String(label);
+			return label === key ? s.title : String(label);
 		},
 	},
 });

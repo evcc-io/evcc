@@ -98,9 +98,19 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+    {{- if not .firmware1098 }}
     scale: 0.1
-    {{- end }}      
+    {{- end }}
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 524 # "Total_GridSell_Power Wh"
+      type: holding
+      decode: uint32s
+    {{- if not .firmware1098 }}
+    scale: 0.1
+    {{- end }}
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -123,6 +133,28 @@ render: |
         type: holding
         decode: int16
       scale: 0.01
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 598 # Grid voltage L1
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 599 # Grid voltage L2
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 600 # Grid voltage L3
+        type: holding
+        decode: uint16
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -183,7 +215,7 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+      {{- if not .firmware1098 }}
       scale: 0.1
       {{- end }}
     {{- if .includegenport }}
@@ -193,7 +225,7 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+      {{- if not .firmware1098 }}
       scale: 0.1
       {{- end }}
     {{- end }}
@@ -222,7 +254,17 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+    {{- if not .firmware1098 }}
+    scale: 0.1
+    {{- end }}
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 516 # "Total charge of the battery (Wh)"
+      type: holding
+      decode: uint32s
+    {{- if not .firmware1098 }}
     scale: 0.1
     {{- end }}
   soc:

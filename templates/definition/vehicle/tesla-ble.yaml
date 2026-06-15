@@ -9,6 +9,7 @@ requirements:
     en: Open Source Tesla BLE HTTP Proxy [github.com/wimaha/TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy)
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: vin
     required: true
     example: W...
@@ -80,3 +81,4 @@ render: |
       else "A" end)
     timeout: {{ .timeout }}
     cache: 1s
+  {{ include "vehicle-features" . }}

@@ -101,7 +101,7 @@ func TestQueryEnergyGrouped(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Equal(t, Grid, res[0].Group)
-	require.Empty(t, res[0].Name)
+	require.Empty(t, res[0].Title)
 	require.Len(t, res[0].Data, 2)
 	require.InDelta(t, 1+2, res[0].Data[0].Energy, 0.001)
 	require.InDelta(t, 3+4, res[0].Data[1].Energy, 0.001)
@@ -138,19 +138,19 @@ func TestQueryEnergyMultipleSeries(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 3)
 
-	byName := map[string]Series{}
+	byTitle := map[string]Series{}
 	for _, s := range res {
 		require.Len(t, s.Data, 2)
-		byName[s.Name] = s
+		byTitle[s.Title] = s
 	}
-	require.Equal(t, Grid, byName[Grid].Group)
-	require.Equal(t, PV, byName["pv1"].Group)
-	require.Equal(t, PV, byName["pv2"].Group)
+	require.Equal(t, Grid, byTitle[Grid].Group)
+	require.Equal(t, PV, byTitle["pv1"].Group)
+	require.Equal(t, PV, byTitle["pv2"].Group)
 
-	require.InDelta(t, 1, byName[Grid].Data[0].Energy, 0.001)
-	require.InDelta(t, 2, byName[Grid].Data[1].Energy, 0.001)
-	require.InDelta(t, 10, byName["pv1"].Data[0].ReturnEnergy, 0.001)
-	require.InDelta(t, 21, byName["pv2"].Data[1].ReturnEnergy, 0.001)
+	require.InDelta(t, 1, byTitle[Grid].Data[0].Energy, 0.001)
+	require.InDelta(t, 2, byTitle[Grid].Data[1].Energy, 0.001)
+	require.InDelta(t, 10, byTitle["pv1"].Data[0].ReturnEnergy, 0.001)
+	require.InDelta(t, 21, byTitle["pv2"].Data[1].ReturnEnergy, 0.001)
 
 	// grouped: 2 series, pv summed per bucket
 	res, err = QueryEnergy(from, to, "hour", true)
@@ -159,7 +159,7 @@ func TestQueryEnergyMultipleSeries(t *testing.T) {
 
 	byGroup := map[string]Series{}
 	for _, s := range res {
-		require.Empty(t, s.Name)
+		require.Empty(t, s.Title)
 		require.Len(t, s.Data, 2)
 		byGroup[s.Group] = s
 	}
@@ -201,7 +201,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
-		prof, err := importProfile(entity, from)
+		prof, err := energyProfile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -219,7 +219,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
 
-		prof, err := importProfile(entity, from)
+		prof, err := energyProfile(entity, from)
 		require.NoError(t, err)
 
 		var expected [96]float64

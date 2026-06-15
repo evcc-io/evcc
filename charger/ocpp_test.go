@@ -2,6 +2,8 @@ package charger
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -22,10 +24,20 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const (
-	ocppTestUrl            = "ws://localhost:8887"
-	ocppTestConnectTimeout = 10 * time.Second
-)
+const ocppTestConnectTimeout = 10 * time.Second
+
+// ocppTestUrl is derived from the actual bound port in SetupSuite: the central
+// system binds an ephemeral port to avoid bind failures when the fixed default
+// port is already in use on the CI runner.
+var ocppTestUrl string
+
+func TestMain(m *testing.M) {
+	// bind the OCPP central system to an ephemeral port so this test binary
+	// does not contend with the charger/ocpp package test binary for the fixed
+	// default port when both run in parallel under `go test ./...`
+	ocpp.Init(ocpp.Config{Port: 0}, "")
+	os.Exit(m.Run())
+}
 
 func TestOcpp(t *testing.T) {
 	suite.Run(t, new(ocppTestSuite))
@@ -48,6 +60,9 @@ func (suite *ocppTestSuite) SetupSuite() {
 	_ = ocpp.Instance()
 	suite.logger = &ocppLogger{t: suite.T()}
 	ocppj.SetLogger(suite.logger)
+
+	suite.Require().NotZero(ocpp.Port(), "central system did not bind")
+	ocppTestUrl = fmt.Sprintf("ws://localhost:%d", ocpp.Port())
 
 	suite.clock = clock.NewMock()
 	suite.NotNil(ocpp.Instance())
