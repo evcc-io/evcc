@@ -23,10 +23,8 @@ params:
     required: true
   - name: accessToken
     required: true
-    mask: true
   - name: refreshToken
     required: true
-    mask: true
   - name: vin
     example: WF0FXX...
   - name: cache

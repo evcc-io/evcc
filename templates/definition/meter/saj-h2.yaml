@@ -16,7 +16,6 @@ params:
   - preset: battery-params
   # battery control
   - name: defaultmode
-    usages: ["battery"]
     default: 2
     advanced: true
 render: |

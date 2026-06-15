@@ -20,7 +20,6 @@ params:
     default: 7979
   - preset: battery-params
   - name: cache
-    advanced: true
     default: 5s
 render: |
   type: custom

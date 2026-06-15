@@ -137,7 +137,6 @@ params:
     advanced: true
   - name: connector
     type: int
-    default: 1
 render: |
   type: openwb-native
   phases1p3p: {{ .phases1p3p }}

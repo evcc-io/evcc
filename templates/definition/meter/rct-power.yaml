@@ -37,7 +37,6 @@ params:
     type: float
     usages: ["battery"]
   - name: cache
-    advanced: true
     default: 30s
 render: |
   type: rct

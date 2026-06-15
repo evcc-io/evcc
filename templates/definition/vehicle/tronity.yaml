@@ -23,7 +23,6 @@ params:
       en: Setup at [app.tronity.tech](https://app.tronity.tech)
     required: true
   - name: vin
-    example: W...
   - name: cache
     default: 15m
 render: |

@@ -35,7 +35,6 @@ params:
     default: self-consumption
     required: true
     advanced: true
-    usages: ["battery"]
   - name: chargepower
     deprecated: true
 render: |

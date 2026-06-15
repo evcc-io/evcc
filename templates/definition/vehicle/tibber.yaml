@@ -21,7 +21,6 @@ params:
     required: true
   - name: clientsecret
     required: true
-    mask: true
   - name: redirecturi
     required: true
     description:
