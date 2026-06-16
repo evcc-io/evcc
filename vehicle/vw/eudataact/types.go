@@ -90,10 +90,12 @@ type dataPoint struct {
 	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
-// point is a decoded data point: its value and the time it was recorded
+// point is a decoded data point: its value, the time it was recorded and the
+// delivery sequence of the dataset it last arrived in (higher Seq is newer).
 type point struct {
 	Value     string
 	Timestamp time.Time
+	Seq       uint64
 }
 
 // datasetFile is the JSON document contained in a dataset zip archive
