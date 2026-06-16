@@ -208,10 +208,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	if slices.Contains([]string{
-		"INITIALIZATION",    	  // vehicle.drivetrain.electricEngine.charging.status
+		"INITIALIZATION",         // vehicle.drivetrain.electricEngine.charging.status
 		"CHARGINGPAUSED",         // vehicle.drivetrain.electricEngine.charging.status
 		"CHARGINGENDED",          // vehicle.drivetrain.electricEngine.charging.status
-		"NOT_CHARGING",		 	  // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"NOT_CHARGING",           // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"WAITING_FOR_CHARGING",   // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"FINISHED_FULLY_CHARGED", // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"FINISHED_NOT_FULL",      // vehicle.drivetrain.electricEngine.charging.hvStatus
