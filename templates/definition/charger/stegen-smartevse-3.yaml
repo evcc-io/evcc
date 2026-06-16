@@ -62,8 +62,7 @@ render: |
     topic: {{ .topic }}/StateID
     quote: true
     timeout: 5s
-    #jq: 'if . == "A" then "A" elif . == "B1" or . == "C" then "C" else "B" end'
-    jq: '.'
+    jq: 'if . == "A" then "A" elif . == "B1" or . == "C" then "C" else "B" end'
   enabled:
     source: mqtt
     topic: {{ .topic }}/Mode
