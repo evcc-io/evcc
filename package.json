@@ -75,6 +75,7 @@
     "@vue/eslint-config-typescript": "^14.8.0",
     "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
+    "aedes": "^0.51.3",
     "body-parser": "^2.2.2",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.4",

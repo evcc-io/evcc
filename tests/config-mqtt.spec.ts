@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalHidden, expectModalVisible } from "./utils";
-import { isMqttReachable } from "./mqtt";
+import { isMqttReachable, LOCAL_BROKER, LOCAL_USERNAME, LOCAL_PASSWORD } from "./mqtt";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -15,12 +15,12 @@ test.afterEach(async () => {
   await stop();
 });
 
-const VALID_BROKER = "test.mosquitto.org:1884";
+const VALID_BROKER = LOCAL_BROKER;
 const INVALID_BROKER = "unknown.example.org";
 const VALID_TOPIC = "my-topic";
 const VALID_CLIENT_ID = "my-client-id";
-const VALID_USERNAME = "rw";
-const VALID_PASSWORD = "readwrite";
+const VALID_USERNAME = LOCAL_USERNAME;
+const VALID_PASSWORD = LOCAL_PASSWORD;
 
 test.describe("mqtt", async () => {
   test("mqtt not configured", async ({ page }) => {
