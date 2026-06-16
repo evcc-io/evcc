@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -147,4 +148,18 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 			}
 		})
 	}
+}
+func TestOptimizerChargingStrategy(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// default when unset
+	assert.Equal(t, defaultOptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
+
+	// invalid value rejected, strategy unchanged
+	require.Error(t, site.SetOptimizerChargingStrategy("bogus"))
+	assert.Equal(t, defaultOptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
+
+	// valid change is applied (re-trigger is gated on sponsor/enabled, not unit-tested here)
+	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
+	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
 }

@@ -82,6 +82,9 @@ render: |
       address: 37113 # Grid import/export power
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -1
   energy:
     source: modbus
@@ -91,6 +94,9 @@ render: |
       address: 37121 # Active energy imported from the grid
       type: holding
       decode: uint32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: 0.01
   returnenergy:
     source: modbus
@@ -100,6 +106,9 @@ render: |
       address: 37119 # Active energy exported to the grid
       type: holding
       decode: uint32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: 0.01
   currents:
   - source: modbus
@@ -109,6 +118,9 @@ render: |
       address: 37107 # Huawei phase A grid current
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -117,6 +129,9 @@ render: |
       address: 37109 # Huawei phase B grid current
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -125,6 +140,9 @@ render: |
       address: 37111 # Huawei phase C grid current
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -0.01
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -313,15 +331,37 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
-              - source: const
-                value: {{ .maxdischargepower }}
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47077 # Max. Discharge Power
-                    type: writemultiple
-                    encoding: uint32
+              # register 47077 is range-checked: a maxdischargepower above the
+              # inverter rated max (37048) is rejected, so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37048 # [ESS] Maximum discharge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47077 # Max. Discharge Power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxdischargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
               {{- if eq .forceaccharging "false" }}
               - source: const
                 value: 0 # Disable
@@ -379,15 +419,37 @@ render: |
                     address: 47087 # Charge from grid
                     type: writesingle
                     encoding: uint16
-              - source: const
-                value: {{ .maxchargepower }} # W
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47247 # Forcible charge power
-                    type: writemultiple
-                    encoding: uint32
+              # clamp maxchargepower to the inverter rated max (37046) for parity
+              # with discharge, avoiding a stale out-of-range value
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37046 # [ESS] Maximum charge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47247 # Forcible charge power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxchargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
               - source: const
                 value: 1 # Minute
                 set:

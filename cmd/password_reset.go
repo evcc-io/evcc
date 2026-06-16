@@ -26,7 +26,7 @@ func runPasswordReset(cmd *cobra.Command, args []string) {
 
 	// setup persistence
 	if err := configureDatabase(conf.Database); err != nil {
-		log.FATAL.Fatal(err)
+		fatalDatabase(err)
 	}
 
 	confirm, _ := cmd.Flags().GetBool(flagForce)
@@ -44,5 +44,6 @@ func runPasswordReset(cmd *cobra.Command, args []string) {
 
 	if confirm {
 		auth.New().RemoveAdminPassword()
+		persistPasswordSettings()
 	}
 }

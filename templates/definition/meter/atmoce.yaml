@@ -17,7 +17,6 @@ params:
     choice: ["tcpip"]
     id: 1
   - name: maxacpower
-    advanced: true
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}

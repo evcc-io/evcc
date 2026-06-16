@@ -1,42 +1,25 @@
 <template>
 	<div class="container px-4 safe-area-inset">
-		<TopHeader title="Optimize Debug" />
-		<div class="alert alert-light mb-5 d-flex justify-content-between align-items-center">
-			<span>
-				This page is for development purposes only. Gives insights into the upcoming
-				optimization algorithm.
-			</span>
-			<button
-				class="btn btn-sm ms-3 text-nowrap"
-				:class="optimizeCooldown ? 'btn-outline-secondary disabled' : 'btn-outline-dark'"
-				:disabled="optimizeCooldown"
-				@click="optimizeNow"
-			>
-				{{ optimizeCooldown ? "Requested" : "Optimize now" }}
-			</button>
-		</div>
+		<TopHeader title="Optimize Debug 🧪" />
+		<OptimizeHeader
+			class="mt-4 mb-5"
+			:updated="evopt?.updated"
+			:status="evopt?.res?.status"
+			:net-cost="netCost"
+			:horizon-hours="horizonHours"
+			:currency="currency"
+			:charging-strategies="chargingStrategies"
+			:selected-strategy="optimizerChargingStrategy"
+			:pending="pending"
+			@optimize="optimizeNow"
+			@change-strategy="changeChargingStrategy"
+		/>
 		<div class="row">
 			<main class="col-12">
 				<div v-if="evopt">
 					<!-- Optimizer Plan -->
 					<section class="mb-5">
-						<h3
-							class="fw-normal d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden mb-4"
-						>
-							<span class="d-block no-wrap text-truncate">Result: Charging Plan</span>
-							<small class="d-block no-wrap text-truncate">
-								{{ evopt.res.status }} ・
-								{{
-									fmtMoney(
-										(evopt.res.objective_value || 0) * -1,
-										currency,
-										true,
-										true
-									)
-								}}
-								net cost
-							</small>
-						</h3>
+						<h3 class="fw-normal mb-4">Result: Charging Plan</h3>
 						<ChargeChart
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
@@ -137,6 +120,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
+import OptimizeHeader from "../components/Optimize/OptimizeHeader.vue";
 import BatteryConfigurationTable from "../components/Optimize/BatteryConfigurationTable.vue";
 import SocChart from "../components/Optimize/SocChart.vue";
 import ChargeChart from "../components/Optimize/ChargeChart.vue";
@@ -154,6 +138,7 @@ export default defineComponent({
 	name: "Optimize",
 	components: {
 		TopHeader: Header,
+		OptimizeHeader,
 		BatteryConfigurationTable,
 		SocChart,
 		ChargeChart,
@@ -164,7 +149,7 @@ export default defineComponent({
 	mixins: [formatter],
 	data() {
 		return {
-			optimizeCooldown: false,
+			pending: false,
 		};
 	},
 	head() {
@@ -177,19 +162,19 @@ export default defineComponent({
 		currency() {
 			return store.state.currency || CURRENCY.EUR;
 		},
-		statusBadgeClass() {
-			if (!this.evopt?.res.status) return "bg-secondary";
-
-			switch (this.evopt.res.status) {
-				case "Optimal":
-					return "bg-success";
-				case "Infeasible":
-					return "bg-danger";
-				case "Unbounded":
-					return "bg-warning";
-				default:
-					return "bg-secondary";
-			}
+		chargingStrategies(): string[] {
+			return store.state.optimizerChargingStrategies || [];
+		},
+		optimizerChargingStrategy(): string {
+			return store.state.optimizerChargingStrategy || "";
+		},
+		netCost(): number {
+			return (this.evopt?.res?.objective_value || 0) * -1;
+		},
+		horizonHours(): number {
+			const dt = this.evopt?.req?.time_series?.dt;
+			if (!dt?.length) return 0;
+			return Math.round(dt.reduce((sum, s) => sum + s, 0) / 3600);
 		},
 		deviceColors() {
 			return deviceColorMap(store.state.deviceColors);
@@ -216,14 +201,18 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		evopt() {
-			this.optimizeCooldown = false;
+		"evopt.updated"() {
+			// re-enable the refresh action once a fresh optimizer run lands
+			this.pending = false;
 		},
 	},
 	methods: {
 		optimizeNow() {
+			this.pending = true;
 			api.post("optimize");
-			this.optimizeCooldown = true;
+		},
+		changeChargingStrategy(value: string) {
+			api.post(`optimizerchargingstrategy/${value}`);
 		},
 		dimColorBy25Percent(color: string): string {
 			// Convert color to 25% opacity (40 in hex = 25% of 255)

@@ -1,8 +1,8 @@
 template: cupra
 products:
-  - brand: Seat
+  - brand: Cupra
     description:
-      generic: CUPRA Connect Gen4 (Born, Formentor, Tavascan)
+      generic: EU Data Act
 params:
   - preset: vehicle-base
   - preset: vehicle-features
@@ -10,4 +10,4 @@ render: |
   type: drivesomethinggreater
   brand: Cupra
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "streaming")) .) }}
