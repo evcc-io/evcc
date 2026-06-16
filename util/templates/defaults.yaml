@@ -99,6 +99,7 @@ params:
     type: choice
     choice: ["1", "2", "3"]
   - name: connector
+    type: int
     description:
       en: Connector number
       de: Anschlussnummer
