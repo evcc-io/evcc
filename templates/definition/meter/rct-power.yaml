@@ -43,7 +43,6 @@ render: |
   uri: {{ joinHostPort .host .port }}
   usage: {{ .usage }}
   cache: {{ .cache }}
-  {{- end }}
   {{- include "battery-params" . }}
   capacity2: {{ .capacity2 }} # kWh
   externalpower: {{ .externalpower }}
