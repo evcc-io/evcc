@@ -307,4 +307,14 @@ Structure PR descriptions in this order. No headlines. Be concise.
    - [ ] item b
    ```
 
-Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers, no generator footers.
+Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers.
+
+## AI Attribution
+
+End every GitHub comment, review, and PR/issue description authored by an AI agent with the attribution footer:
+
+```
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+Omit the footer only from commit messages (and never add co-author trailers to commits).
