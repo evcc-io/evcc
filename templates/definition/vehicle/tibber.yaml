@@ -18,12 +18,9 @@ params:
   - preset: vehicle-common
   - preset: vehicle-climater
   - name: clientid
-    required: true
   - name: clientsecret
-    required: true
     mask: true
   - name: redirecturi
-    required: true
     description:
       generic: Redirect URI
     help:

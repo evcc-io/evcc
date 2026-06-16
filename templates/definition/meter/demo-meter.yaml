@@ -37,21 +37,18 @@ params:
       en: L1 current
     unit: A
     type: int
-    advanced: true
   - name: currentL2
     description:
       de: L2 Stromstärke
       en: L2 current
     unit: A
     type: int
-    advanced: true
   - name: currentL3
     description:
       de: L3 Stromstärke
       en: L3 current
     unit: A
     type: int
-    advanced: true
   - name: minsoc # ignored, only relevant for battery meter, for e2e test only
   - name: maxacpower
 

@@ -18,7 +18,6 @@ params:
   - name: defaultmode
     usages: ["battery"]
     default: 2
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

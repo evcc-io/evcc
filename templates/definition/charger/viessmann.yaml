@@ -18,12 +18,10 @@ params:
   - name: password
     deprecated: true
   - name: clientid
-    required: true
     help:
       de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
       en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
   - name: redirecturi
-    required: true
     description:
       generic: Redirect URI
     help:

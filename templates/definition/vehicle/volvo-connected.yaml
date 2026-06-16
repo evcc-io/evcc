@@ -35,17 +35,14 @@ params:
       en: "from [Volvo Developer App](https://developer.volvocars.com/)."
       de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientId
-    required: true
     help:
       en: "from [Volvo Developer App](https://developer.volvocars.com/)."
       de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientSecret
-    required: true
     help:
       en: "from [Volvo Developer App](https://developer.volvocars.com/)."
       de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: redirectUri
-    required: true
     description:
       generic: Redirect URI
     help:

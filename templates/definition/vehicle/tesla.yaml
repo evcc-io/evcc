@@ -44,7 +44,6 @@ params:
     help:
       en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
       de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
-    required: true
   - name: accessToken
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
