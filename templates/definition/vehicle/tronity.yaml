@@ -14,14 +14,12 @@ params:
     help:
       de: Einrichtung unter [app.tronity.tech](https://app.tronity.tech)
       en: Setup at [app.tronity.tech](https://app.tronity.tech)
-    required: true
   - name: clientsecret
     description:
       generic: Tronity API Client Secret
     help:
       de: Einrichtung unter [app.tronity.tech](https://app.tronity.tech)
       en: Setup at [app.tronity.tech](https://app.tronity.tech)
-    required: true
   - name: vin
   - name: cache
     default: 15m

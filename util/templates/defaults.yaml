@@ -287,6 +287,7 @@ params:
       generic: URL
   - name: ain
     private: true
+    required: true
     example: "307788992233"
     description:
       en: Actor Identification Number (AIN)
@@ -312,6 +313,7 @@ params:
       de: Streaming Datenempfang erfolgt asynchron
   - name: welcomecharge
     type: bool
+    advanced: true
     description:
       en: Charge on connection
       de: Laden bei Verbindung
@@ -344,6 +346,7 @@ params:
       de: Fest angeschlossenes Gerät. Keine Ladevorgänge
   - name: defaultmode
     type: int
+    advanced: true
     usages: ["battery"]
     description:
       de: Standardmodus für die aktive Batteriesteuerung
@@ -408,10 +411,12 @@ params:
       de: Kanal
     type: int
   - name: clientid
+    required: true
     description:
       generic: Client ID
   - name: clientsecret
     mask: true
+    required: true
     description:
       generic: Client Secret
   - name: token
@@ -432,6 +437,8 @@ params:
     description:
       generic: PIN
   - name: watchdog
+    type: duration
+    advanced: true
     description:
       generic: Watchdog
   - name: uuid
@@ -512,6 +519,17 @@ params:
       en: Typical values are 9600, 19200, 38400, 57600, 115200
     default: 9600
     type: int
+  - name: currency
+    type: choice
+    default: EUR
+    required: true
+    description:
+      en: Currency
+      de: Währung
+  - name: redirecturi
+    required: true
+    description:
+      generic: Redirect URI
 
 presets:
   vehicle-base:

@@ -13,14 +13,12 @@ params:
     help:
       de: Einrichtung unter [developer.ford.com](https://developer.ford.com)
       en: Setup at [developer.ford.com](https://developer.ford.com)
-    required: true
   - name: clientsecret
     description:
       generic: FordConnect API Client Secret
     help:
       de: Einrichtung unter [developer.ford.com](https://developer.ford.com)
       en: Setup at [developer.ford.com](https://developer.ford.com)
-    required: true
   - name: accessToken
     required: true
   - name: refreshToken
