@@ -36,11 +36,39 @@ var (
 	optimizerUpdated time.Time
 )
 
+// optimizerChargingStrategies are the valid grid charging strategies; the first
+// entry is the default and preserves the previous hard-coded behavior.
+var optimizerChargingStrategies = []string{
+	string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks),
+	string(optimizer.OptimizerStrategyChargingStrategyNone),
+}
+
+const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport)
+
+// triggerOptimizer re-runs the optimizer immediately so a changed setting takes
+// effect without waiting for the next slot. It is a no-op when the optimizer is
+// not active or a run is already in progress; the running update reflects the
+// change on its next slot.
+func (site *Site) triggerOptimizer() {
+	if !sponsor.IsAuthorized() || !optimizerEnabled() {
+		return
+	}
+	if !mu.TryLock() {
+		return
+	}
+	optimizerUpdated = time.Time{} // bypass the slot/debounce gate
+	mu.Unlock()
+
+	go site.optimizerUpdateAsync()
+}
+
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
 // This ensures publishComplex serializes it as a single JSON message instead of
 // recursively decomposing each struct field and array element into individual MQTT
 // topics (~1,500 messages per optimizer run).
 type optimizerResult struct {
+	Updated time.Time                    `json:"updated"`
 	Req     optimizer.OptimizationInput  `json:"req"`
 	Res     optimizer.OptimizationResult `json:"res"`
 	Details requestDetails               `json:"details"`
@@ -164,7 +192,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	req := optimizer.OptimizationInput{
 		Strategy: optimizer.OptimizerStrategy{
-			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
+			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategy(site.GetOptimizerChargingStrategy()),
 			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,
@@ -217,6 +245,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	for i, dev := range site.batteryMeters {
+		// measurements may lag the configured meters on an off-cycle trigger
+		if i >= len(battery) {
+			break
+		}
 		b := battery[i]
 
 		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
@@ -258,6 +290,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	site.publish("evopt", optimizerResult{
+		Updated: time.Now(),
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
