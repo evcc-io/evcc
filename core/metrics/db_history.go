@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"slices"
 	"sort"
 	"strconv"
 	"time"
@@ -20,6 +21,8 @@ type Slot struct {
 	End          time.Time `json:"end"`
 	Energy       float64   `json:"energy"`
 	ReturnEnergy float64   `json:"returnEnergy"`
+	Soc          *float64  `json:"soc,omitempty"`
+	Temp         *float64  `json:"temp,omitempty"`
 }
 
 // roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
@@ -80,13 +83,21 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 		Start        SqlTime
 		Energy       float64
 		ReturnEnergy float64
+		Soc          *float64
+		Temp         *float64
+	}
+
+	// soc/temp report the bucket's first slot; omitted for grouped sums
+	socCols := `, m.soc AS soc, m.temp AS temp`
+	if grouped {
+		socCols = ``
 	}
 
 	tx := db.Instance.Table("meters m").
 		Select(selectTitle + `, e."group",
 			MIN(m.ts) AS start,
 			COALESCE(SUM(m.energy), 0) AS energy,
-			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
+			COALESCE(SUM(m.return_energy), 0) AS return_energy` + socCols).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
@@ -115,6 +126,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 			End:          addDuration(time.Time(r.Start)),
 			Energy:       roundEnergy(r.Energy),
 			ReturnEnergy: roundEnergy(r.ReturnEnergy),
+			Soc:          r.Soc,
+			Temp:         r.Temp,
 		})
 	}
 
@@ -126,6 +139,22 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 // single energy column.
 func hasReturnEnergy(group string) bool {
 	return group == Grid || group == Battery
+}
+
+func seriesHasSoc(s *Series) bool {
+	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.Soc != nil })
+}
+
+func seriesHasTemp(s *Series) bool {
+	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.Temp != nil })
+}
+
+// formatSocTemp renders a soc/temp value rounded to 0.1, empty when unset.
+func formatSocTemp(v *float64) string {
+	if v == nil {
+		return ""
+	}
+	return strconv.FormatFloat(math.Round(*v*10)/10, 'f', -1, 64)
 }
 
 // WriteCsv emits a wide-table CSV with columns
@@ -175,6 +204,8 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 	type col struct {
 		series       *Series
 		returnEnergy bool
+		soc          bool
+		temp         bool
 	}
 	cols := []col{{}, {}}
 	tsSet := make(map[int64]time.Time)
@@ -205,6 +236,14 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 			if hasReturnEnergy(g) {
 				header = append(header, p+".returnEnergy.Wh")
 				cols = append(cols, col{series: e, returnEnergy: true})
+			}
+			if seriesHasSoc(e) {
+				header = append(header, p+".soc.pct")
+				cols = append(cols, col{series: e, soc: true})
+			}
+			if seriesHasTemp(e) {
+				header = append(header, p+".temp.degC")
+				cols = append(cols, col{series: e, temp: true})
 			}
 			for _, slot := range e.Data {
 				tsSet[slot.Start.UnixNano()] = slot.Start
@@ -254,11 +293,16 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 				row[i] = ""
 				continue
 			}
-			v := slot.Energy
-			if c.returnEnergy {
-				v = slot.ReturnEnergy
+			switch {
+			case c.soc:
+				row[i] = formatSocTemp(slot.Soc)
+			case c.temp:
+				row[i] = formatSocTemp(slot.Temp)
+			case c.returnEnergy:
+				row[i] = strconv.FormatInt(int64(math.Round(slot.ReturnEnergy*1000)), 10)
+			default:
+				row[i] = strconv.FormatInt(int64(math.Round(slot.Energy*1000)), 10)
 			}
-			row[i] = strconv.FormatInt(int64(math.Round(v*1000)), 10)
 		}
 		if err := ww.Write(row); err != nil {
 			return err

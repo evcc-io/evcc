@@ -309,3 +309,56 @@ func TestCreateEntityRefreshesTitle(t *testing.T) {
 	require.NoError(t, db.Instance.Model(new(entity)).Where("\"group\" = ? AND name = ?", "grid", "grid").Count(&count).Error)
 	require.EqualValues(t, 1, count, "must not duplicate existing rows")
 }
+
+func TestCollectorSetSoc(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Battery, "bat", "", WithClock(clk))
+	require.NoError(t, err)
+
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	col.SetSoc(50, false)
+	col.SetSoc(60, false) // first reading per slot wins
+	require.Equal(t, 50.0, *col.accu.Soc)
+	require.Nil(t, col.accu.Temp)
+
+	// cross into the next slot: prior slot persisted, snapshot cleared
+	clk.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	require.Nil(t, col.accu.Soc)
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ?", col.entity.Id).First(&m).Error)
+	require.Equal(t, 50.0, *m.Soc)
+	require.Nil(t, m.Temp)
+
+	// fresh slot captures its own start value
+	col.SetSoc(70, false)
+	require.Equal(t, 70.0, *col.accu.Soc)
+}
+
+func TestCollectorSetTemp(t *testing.T) {
+	clk := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Loadpoint, "lp", "", WithClock(clk))
+	require.NoError(t, err)
+
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	col.SetSoc(21.5, true) // heating charger: value is temperature
+	require.Nil(t, col.accu.Soc)
+	require.Equal(t, 21.5, *col.accu.Temp)
+
+	clk.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ?", col.entity.Id).First(&m).Error)
+	require.Nil(t, m.Soc)
+	require.Equal(t, 21.5, *m.Temp)
+}

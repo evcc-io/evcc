@@ -94,12 +94,18 @@ func (c *Collector) process(fun func()) error {
 
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
-
+	c.accu.Soc = nil
+	c.accu.Temp = nil
 	return nil
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy)
+	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.Soc, c.accu.Temp)
+}
+
+// SetSoc records the slot-start soc/temp. Call after AddEnergy so a boundary reading lands in the new slot.
+func (c *Collector) SetSoc(value float64, isTemp bool) {
+	c.accu.setSoc(value, isTemp)
 }
 
 func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {

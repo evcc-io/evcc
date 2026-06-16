@@ -15,6 +15,21 @@ type Accumulator struct {
 	returnEnergyMeter *float64 // kWh
 	Energy            float64  `json:"energy"`       // kWh
 	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
+	Soc               *float64 `json:"soc,omitempty"`
+	Temp              *float64 `json:"temp,omitempty"`
+}
+
+// setSoc keeps the first reading per slot; isTemp selects temperature over soc.
+func (m *Accumulator) setSoc(value float64, isTemp bool) {
+	if isTemp {
+		if m.Temp == nil {
+			m.Temp = &value
+		}
+		return
+	}
+	if m.Soc == nil {
+		m.Soc = &value
+	}
 }
 
 func WithClock(clock clock.Clock) func(*Accumulator) {

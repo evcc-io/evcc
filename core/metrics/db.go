@@ -12,11 +12,13 @@ import (
 )
 
 type meter struct {
-	Meter        int     `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
-	Timestamp    int64   `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
-	Entity       entity  `json:"-" gorm:"foreignkey:Meter;references:Id"`
-	Energy       float64 `json:"energy" gorm:"column:energy"`
-	ReturnEnergy float64 `json:"returnEnergy" gorm:"column:return_energy"`
+	Meter        int      `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
+	Timestamp    int64    `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
+	Entity       entity   `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	Energy       float64  `json:"energy" gorm:"column:energy"`
+	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
+	Soc          *float64 `json:"soc,omitempty" gorm:"column:soc"`
+	Temp         *float64 `json:"temp,omitempty" gorm:"column:temp"`
 }
 
 type entity struct {
@@ -123,12 +125,14 @@ func SetupSchema() error {
 	return db.Instance.AutoMigrate(new(meter))
 }
 
-// persist stores 15min consumption in kWh
-func persist(entity entity, ts time.Time, energy, returnEnergy float64) error {
+// persist stores a completed 15min slot
+func persist(entity entity, ts time.Time, energy, returnEnergy float64, soc, temp *float64) error {
 	return db.Instance.Create(&meter{
 		Meter:        entity.Id,
 		Timestamp:    ts.Truncate(tariff.SlotDuration).Unix(),
 		Energy:       energy,
 		ReturnEnergy: returnEnergy,
+		Soc:          soc,
+		Temp:         temp,
 	}).Error
 }
