@@ -18,9 +18,7 @@ params:
   - name: apiKey
     deprecated: true
   - name: clientid
-    required: true
   - name: clientsecret
-    required: true
   - name: zone
     description:
       de: Zonencode

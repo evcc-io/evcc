@@ -60,14 +60,16 @@ func resetDelay(ts time.Time, cache time.Duration) time.Duration {
 	return portalLatency
 }
 
-// lookup returns the first present, non-empty value among the given field names
+// lookup returns the freshest present value among the given field names (most to
+// least authoritative); the highest Seq wins, equal Seq keeps the priority order.
 func lookup(data map[string]point, fields ...string) *point {
+	var best *point
 	for _, f := range fields {
-		if v, ok := data[f]; ok {
-			return new(v)
+		if v, ok := data[f]; ok && (best == nil || v.Seq > best.Seq) {
+			best = new(v)
 		}
 	}
-	return nil
+	return best
 }
 
 var _ api.Battery = (*Provider)(nil)

@@ -8,7 +8,6 @@ params:
     choice: ["grid", "pv", "charge"]
   - name: host
   - name: cache
-    advanced: true
     default: 2s
 render: |
   type: custom

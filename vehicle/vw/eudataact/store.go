@@ -29,6 +29,7 @@ type vehicleState struct {
 	identifier string
 	data       map[string]point
 	after      time.Time
+	seq        uint64 // delivery counter, incremented per merged dataset
 }
 
 var (
@@ -127,7 +128,8 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 			v.after = d.CreatedOn
 		}
 
-		merge(v.data, data)
+		v.seq++
+		merge(v.data, data, v.seq)
 
 		if !initial {
 			logData(s.api.log, data)
@@ -187,8 +189,11 @@ func pending(content []dataset, after time.Time) []dataset {
 	return res
 }
 
-// merge lets src (the newer dataset) win per field. The portal's per-field
-// timestampUtc is unreliable, so delivery order decides, not the timestamp.
-func merge(dst, src map[string]point) {
-	maps.Copy(dst, src)
+// merge lets src (the newer dataset) win per field and stamps each field with
+// seq, the dataset's delivery sequence (timestampUtc is unreliable).
+func merge(dst, src map[string]point, seq uint64) {
+	for k, p := range src {
+		p.Seq = seq
+		dst[k] = p
+	}
 }

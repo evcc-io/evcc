@@ -12,7 +12,6 @@ params:
   - preset: vehicle-climater
   - name: vin
     required: true
-    example: W...
     help:
       de: Erforderlich für BLE-Verbindung
       en: Required for BLE connection
