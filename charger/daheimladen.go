@@ -92,6 +92,11 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, err
 	}
 
+	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
+	if s, _ := utf16BEBytesAsString(c); err != nil || s == "" {
+		return nil, api.ErrSponsorRequired
+	}
+
 	log := util.NewLogger("daheimladen")
 	conn.Logger(log.TRACE)
 
@@ -137,8 +142,17 @@ func (wb *DaheimLaden) heartbeat(ctx context.Context, timeout time.Duration) {
 			return
 		}
 
-		if _, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err != nil {
+		curr, err := wb.getCurrent()
+		if err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
+			continue
+		}
+
+		// avoid autostart
+		if curr == 0 {
+			if err := wb.setCurrent(1); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
 		}
 	}
 }
