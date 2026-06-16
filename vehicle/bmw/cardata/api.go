@@ -17,7 +17,7 @@ const ApiURL = "https://api-cardata.bmwgroup.com"
 // https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
 var requiredKeys = []string{
 	"vehicle.body.chargingPort.status",
-	"vehicle.body.chargingPort.combinedStatus"
+	"vehicle.body.chargingPort.combinedStatus",
 	"vehicle.cabin.infotainment.navigation.currentLocation.latitude",
 	"vehicle.cabin.infotainment.navigation.currentLocation.longitude",
 	"vehicle.cabin.hvac.preconditioning.status.comfortState",

@@ -141,13 +141,13 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
-func isNilOrEmtpy(val any) bool {
+func isNilOrEmpty(val any) bool {
 	return val == nil || val == ""
 }
 
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return "", api.ErrNotAvailable
 	}
 
@@ -156,7 +156,7 @@ func (v *Provider) String(key string) (string, error) {
 
 func (v *Provider) Int(key string) (int64, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -165,7 +165,7 @@ func (v *Provider) Int(key string) (int64, error) {
 
 func (v *Provider) Float(key string) (float64, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -207,14 +207,14 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
 	}
 
-	if sices.Contains([]string{
+	if slices.Contains([]string{
 		"INITIALIZATION",    	  // vehicle.drivetrain.electricEngine.charging.status
 		"CHARGINGPAUSED",         // vehicle.drivetrain.electricEngine.charging.status
 		"CHARGINGENDED",          // vehicle.drivetrain.electricEngine.charging.status
 		"NOT_CHARGING",		 	  // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"WAITING_FOR_CHARGING",   // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"FINISHED_FULLY_CHARGED", // vehicle.drivetrain.electricEngine.charging.hvStatus
-		"FINISHED_NOT_FULL"       // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_NOT_FULL",       // vehicle.drivetrain.electricEngine.charging.hvStatus
 	}, cs) {
 		return api.StatusB, nil
 	}
