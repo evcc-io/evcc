@@ -69,10 +69,28 @@ jobs:
       pull-requests: write # post the review on the PR
       issues: read
       id-token: write
+      statuses: write # mirror the review result onto the PR head commit
     concurrency:
       group: claude-review-run-${{ needs.gate.outputs.number }}
       cancel-in-progress: true
     steps:
+      # workflow_run runs are detached and never show up in the PR's checks, so
+      # publish a commit status on the PR head SHA. This surfaces a "Claude Code
+      # Review" check next to the regular CI jobs.
+      - name: Report review pending
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.workflow_run.head_sha,
+              context: 'Claude Code Review',
+              state: 'pending',
+              description: 'Review in progress',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
       # Default checkout (base ref) only — do NOT check out the untrusted PR head.
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -80,6 +98,8 @@ jobs:
           fetch-depth: 1
 
       - name: Run Claude Code Review
+        id: review
+        continue-on-error: true # always report status below, even on failure
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -96,3 +116,22 @@ jobs:
           prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ needs.gate.outputs.number }}"
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
+
+      - name: Report review result
+        if: always()
+        env:
+          OUTCOME: ${{ steps.review.outcome }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ok = process.env.OUTCOME === 'success';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.workflow_run.head_sha,
+              context: 'Claude Code Review',
+              state: ok ? 'success' : 'failure',
+              description: ok ? 'Review complete' : 'Review failed',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            if (!ok) core.setFailed('Claude Code Review failed');
