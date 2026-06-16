@@ -57,12 +57,9 @@
 	/* heating temperature bar: thermometer scale (cool -> hot), warm stops shifted left */
 	--evcc-heating-gradient: linear-gradient(
 		90deg,
-		#16a8d6 0%,
-		#36c795 22%,
-		#bbd52a 34%,
-		#f4b617 48%,
-		#ef7b16 73%,
-		#dd4f0d 100%
+		#3498db 10%,
+		#ff9800 50%,
+		#e74b3c 90%
 	);
 	--evcc-transition-slow: 1000ms;
 	--evcc-transition-medium: 500ms;

@@ -4,6 +4,21 @@
 			<template v-if="heating">
 				<div v-if="connected" class="thermal-track">
 					<div
+						v-if="
+							heatingHasTemp &&
+							enabled &&
+							remainingSocWidth !== null &&
+							remainingSocWidth > 0
+						"
+						class="thermal-fill thermal-fill--remaining"
+						:style="{ width: `${thermalLimitWidth}%`, ...transition }"
+					>
+						<div
+							class="thermal-fill-inner"
+							:style="{ width: `${thermalRemainingInnerWidth}%` }"
+						></div>
+					</div>
+					<div
 						v-if="heatingHasTemp"
 						class="thermal-fill"
 						role="progressbar"
@@ -168,6 +183,15 @@ export default defineComponent({
 		thermalInnerWidth() {
 			// widen the inner gradient so colors stay anchored to the full track, not the fill width
 			const tp = this.vehicleSocDisplayWidth;
+			return tp > 0.5 ? 10000 / tp : 20000;
+		},
+		thermalLimitWidth() {
+			// current temp position plus the remaining span up to the limit
+			return this.vehicleSocDisplayWidth + (this.remainingSocWidth ?? 0);
+		},
+		thermalRemainingInnerWidth() {
+			// same anchoring trick as thermalInnerWidth, relative to the limit width
+			const tp = this.thermalLimitWidth;
 			return tp > 0.5 ? 10000 / tp : 20000;
 		},
 		limitPosition() {
@@ -375,6 +399,10 @@ export default defineComponent({
 	top: 0;
 	bottom: 0;
 	background: var(--evcc-heating-gradient);
+}
+/* muted gradient slice from current temp to the limit, behind the main fill */
+.thermal-fill--remaining {
+	opacity: 0.3;
 }
 /* no reading: full-width bar showing only the warm (right) half of the scale */
 .thermal-fill--warm {
