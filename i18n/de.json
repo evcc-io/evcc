@@ -220,6 +220,8 @@
       "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
       "port": "Port",
       "portHelp": "Der zu verwendende Port.",
+      "qr": "Kopplungscode",
+      "qrExplain": "Während der Installation von einem anderen EEBus-Gerät scannen, um automatisch zu koppeln, ohne die SKI manuell einzugeben.",
       "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
@@ -1525,7 +1527,7 @@
     },
     "groupBy": {
       "loadpoint": "Ladepunkt",
-      "none": "Gesamt",
+      "none": "Sonne",
       "vehicle": "Fahrzeug"
     },
     "loadpoint": "Ladepunkt",
@@ -1547,7 +1549,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Kosten",
-      "solar": "Sonne"
+      "solar": "Energie"
     },
     "vehicle": "Fahrzeug"
   },

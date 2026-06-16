@@ -2,6 +2,8 @@ package core
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -378,6 +380,43 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+	}
+
+	return nil
+}
+
+// GetOptimizerChargingStrategy returns the optimizer grid charging strategy,
+// falling back to the default when unset.
+func (site *Site) GetOptimizerChargingStrategy() string {
+	site.RLock()
+	defer site.RUnlock()
+	if site.optimizerChargingStrategy == "" {
+		return defaultOptimizerChargingStrategy
+	}
+	return site.optimizerChargingStrategy
+}
+
+// SetOptimizerChargingStrategy validates and persists the optimizer grid
+// charging strategy and re-runs the optimizer when it changes.
+func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
+	if !slices.Contains(optimizerChargingStrategies, strategy) {
+		return fmt.Errorf("invalid optimizer charging strategy: %s", strategy)
+	}
+
+	site.Lock()
+	changed := site.optimizerChargingStrategy != strategy
+	if changed {
+		site.optimizerChargingStrategy = strategy
+	}
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set optimizer charging strategy:", strategy)
+		settings.SetString(keys.OptimizerChargingStrategy, strategy)
+		site.publish(keys.OptimizerChargingStrategy, strategy)
+
+		// re-run the optimizer so the new strategy takes effect immediately
+		site.triggerOptimizer()
 	}
 
 	return nil
