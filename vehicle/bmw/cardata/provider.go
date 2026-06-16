@@ -214,7 +214,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		"NOT_CHARGING",		 	  // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"WAITING_FOR_CHARGING",   // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"FINISHED_FULLY_CHARGED", // vehicle.drivetrain.electricEngine.charging.hvStatus
-		"FINISHED_NOT_FULL",       // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_NOT_FULL",      // vehicle.drivetrain.electricEngine.charging.hvStatus
 	}, cs) {
 		return api.StatusB, nil
 	}
