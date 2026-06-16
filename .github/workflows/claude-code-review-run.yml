@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: Check for PR-number artifact
         id: check
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         with:
           script: |
             const { data } = await github.rest.actions.listWorkflowRunArtifacts({
@@ -42,7 +42,7 @@ jobs:
 
       - name: Download PR number
         if: steps.check.outputs.found == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4
         with:
           name: pr-number
           run-id: ${{ github.event.workflow_run.id }}
@@ -78,7 +78,7 @@ jobs:
       # publish a commit status on the PR head SHA. This surfaces a "Claude Code
       # Review" check next to the regular CI jobs.
       - name: Report review pending
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         with:
           script: |
             await github.rest.repos.createCommitStatus({
@@ -93,7 +93,7 @@ jobs:
 
       # Default checkout (base ref) only — do NOT check out the untrusted PR head.
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
           fetch-depth: 1
 
@@ -121,7 +121,7 @@ jobs:
         if: always()
         env:
           OUTCOME: ${{ steps.review.outcome }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
         with:
           script: |
             const ok = process.env.OUTCOME === 'success';
