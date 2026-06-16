@@ -176,6 +176,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 ### State Management
 
+- Never access the store from sub-components; keep them stateless and pass the values they need as props (emit events back to the parent). Only top-level views read from the store. This keeps components reusable and testable (e.g. Storybook should never mock the store).
 - Use `reactive()` from Vue for simple global state
 - Implement property setters for nested object updates using helper functions
 - Use localStorage with reactive wrappers for persistent settings

@@ -128,6 +128,8 @@ export interface State {
   ocpp?: Ocpp;
   ocppforwarder?: ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]>;
   optimizer?: boolean;
+  optimizerChargingStrategy?: string;
+  optimizerChargingStrategies?: string[];
   mcp?: boolean;
 }
 
@@ -729,6 +731,7 @@ export type ValueOf<T> = T[keyof T];
 
 // EvOpt interfaces matching OpenAPI spec exactly
 export interface EvOpt {
+  updated: string;
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
