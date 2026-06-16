@@ -188,6 +188,7 @@
       "singlePhase": "Single phase",
       "soc": "Charge",
       "solarForecast": "Solar forecast",
+      "switchDevice": "Current control",
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",

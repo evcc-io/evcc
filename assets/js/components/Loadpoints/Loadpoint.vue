@@ -71,8 +71,7 @@
 				/>
 			</div>
 			<LabelAndValue
-				v-show="socBasedCharging && !integratedDevice"
-				data-testid="charged"
+				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
 				:value="chargedEnergy"
 				:valueFmt="fmtEnergy"
