@@ -188,7 +188,10 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	port, err := v.String("vehicle.body.chargingPort.status")
 	if err != nil {
-		return api.StatusNone, err
+		port, err = v.String("vehicle.body.chargingPort.combinedStatus")
+		if err != nil {
+			return api.StatusNone, err
+		}
 	}
 
 	status := api.StatusA // disconnected
@@ -202,6 +205,18 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
 	if err != nil {
 		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	}
+
+	if sices.Contains([]string{
+		"INITIALIZATION",    	  // vehicle.drivetrain.electricEngine.charging.status
+		"CHARGINGPAUSED",         // vehicle.drivetrain.electricEngine.charging.status
+		"CHARGINGENDED",          // vehicle.drivetrain.electricEngine.charging.status
+		"NOT_CHARGING",		 	  // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"WAITING_FOR_CHARGING",   // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_FULLY_CHARGED", // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_NOT_FULL"       // vehicle.drivetrain.electricEngine.charging.hvStatus
+	}, cs) {
+		return api.StatusB, nil
 	}
 
 	if slices.Contains([]string{
