@@ -320,8 +320,8 @@ func TestCollectorSetSoc(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, col.AddEnergy(nil, nil, 0))
-	col.SetSoc(50, false)
-	col.SetSoc(60, false) // first reading per slot wins
+	col.SetSoc(50)
+	col.SetSoc(60) // first reading per slot wins
 	require.Equal(t, 50.0, *col.accu.Soc)
 	require.Nil(t, col.accu.Temp)
 
@@ -336,7 +336,7 @@ func TestCollectorSetSoc(t *testing.T) {
 	require.Nil(t, m.Temp)
 
 	// fresh slot captures its own start value
-	col.SetSoc(70, false)
+	col.SetSoc(70)
 	require.Equal(t, 70.0, *col.accu.Soc)
 }
 
@@ -350,7 +350,7 @@ func TestCollectorSetTemp(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, col.AddEnergy(nil, nil, 0))
-	col.SetSoc(21.5, true) // heating charger: value is temperature
+	col.SetTemp(21.5) // heating charger: value is temperature
 	require.Nil(t, col.accu.Soc)
 	require.Equal(t, 21.5, *col.accu.Temp)
 

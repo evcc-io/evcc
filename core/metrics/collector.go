@@ -103,9 +103,14 @@ func (c *Collector) persist() error {
 	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.Soc, c.accu.Temp)
 }
 
-// SetSoc records the slot-start soc/temp. Call after AddEnergy so a boundary reading lands in the new slot.
-func (c *Collector) SetSoc(value float64, isTemp bool) {
-	c.accu.setSoc(value, isTemp)
+// SetSoc records the slot-start soc. Call after AddEnergy so a boundary reading lands in the new slot.
+func (c *Collector) SetSoc(value float64) {
+	c.accu.setSoc(value)
+}
+
+// SetTemp records the slot-start temperature (heating chargers), like SetSoc.
+func (c *Collector) SetTemp(value float64) {
+	c.accu.setTemp(value)
 }
 
 func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {

@@ -1809,7 +1809,11 @@ func (lp *Loadpoint) publishChargeProgress() {
 	if lp.chargeEnergy != nil {
 		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
 		if v := lp.GetSoc(); v > 0 {
-			lp.chargeEnergy.SetSoc(v, lp.chargerHasFeature(api.Heating))
+			if lp.chargerHasFeature(api.Heating) {
+				lp.chargeEnergy.SetTemp(v)
+			} else {
+				lp.chargeEnergy.SetSoc(v)
+			}
 		}
 	}
 }

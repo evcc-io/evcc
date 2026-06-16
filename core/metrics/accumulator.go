@@ -19,16 +19,17 @@ type Accumulator struct {
 	Temp              *float64 `json:"temp,omitempty"`
 }
 
-// setSoc keeps the first reading per slot; isTemp selects temperature over soc.
-func (m *Accumulator) setSoc(value float64, isTemp bool) {
-	if isTemp {
-		if m.Temp == nil {
-			m.Temp = &value
-		}
-		return
-	}
+// setSoc keeps the first soc reading per slot.
+func (m *Accumulator) setSoc(value float64) {
 	if m.Soc == nil {
 		m.Soc = &value
+	}
+}
+
+// setTemp keeps the first temperature reading per slot.
+func (m *Accumulator) setTemp(value float64) {
+	if m.Temp == nil {
+		m.Temp = &value
 	}
 }
 
