@@ -46,7 +46,7 @@
 				:label="$t('config.eebus.qr')"
 				:help="$t('config.eebus.qrExplain')"
 			>
-				<img :src="qrDataUrl" alt="EEBus pairing QR code" class="qr-code" />
+				<img :src="qrDataUrl" :alt="$t('config.eebus.qr')" class="qr-code" />
 			</FormRow>
 			<PropertyCollapsible v-if="!fromYaml">
 				<template #advanced>
