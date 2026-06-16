@@ -52,6 +52,7 @@ params:
       en: L1 Current Entity
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_current_l1"
+    advanced: true
     help:
       en: Entity ID for L1 current measurement in amperes
       de: Entitäts-ID für L1 Strommessung in Ampere
@@ -61,6 +62,7 @@ params:
       en: L2 Current Entity
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_current_l2"
+    advanced: true
     help:
       en: Entity ID for L2 current measurement in amperes
       de: Entitäts-ID für L2 Strommessung in Ampere
@@ -70,6 +72,7 @@ params:
       en: L3 Current Entity
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_current_l3"
+    advanced: true
     help:
       en: Entity ID for L3 current measurement in amperes
       de: Entitäts-ID für L3 Strommessung in Ampere

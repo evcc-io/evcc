@@ -519,12 +519,6 @@ params:
       en: Typical values are 9600, 19200, 38400, 57600, 115200
     default: 9600
     type: int
-  - name: currentl1
-    advanced: true
-  - name: currentl2
-    advanced: true
-  - name: currentl3
-    advanced: true
   - name: currency
     type: choice
     default: EUR
@@ -534,6 +528,8 @@ params:
       de: Währung
   - name: redirecturi
     required: true
+    description:
+      generic: Redirect URI
 
 presets:
   vehicle-base:
