@@ -68,6 +68,7 @@ func (site *Site) triggerOptimizer() {
 // recursively decomposing each struct field and array element into individual MQTT
 // topics (~1,500 messages per optimizer run).
 type optimizerResult struct {
+	Updated time.Time                    `json:"updated"`
 	Req     optimizer.OptimizationInput  `json:"req"`
 	Res     optimizer.OptimizationResult `json:"res"`
 	Details requestDetails               `json:"details"`
@@ -244,6 +245,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	for i, dev := range site.batteryMeters {
+		// measurements may lag the configured meters on an off-cycle trigger
+		if i >= len(battery) {
+			break
+		}
 		b := battery[i]
 
 		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
@@ -285,6 +290,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	site.publish("evopt", optimizerResult{
+		Updated: time.Now(),
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
