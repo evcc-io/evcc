@@ -264,6 +264,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Device types: chargers, meters, vehicles, tariffs
 - Plugin protocols: Modbus, HTTP, MQTT, JavaScript, Go
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
+- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a *different* value. Restating the same value is redundant duplication: reference the param by `name` alone.
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
 - When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details
