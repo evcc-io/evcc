@@ -176,6 +176,9 @@ export default defineComponent({
 		gridPower() {
 			return this.grid?.power || 0;
 		},
+		experimental() {
+			return store.state?.experimental;
+		},
 		energyflow() {
 			return this.collectProps(Energyflow);
 		},
