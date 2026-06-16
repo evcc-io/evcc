@@ -13,7 +13,6 @@ params:
   - name: port
     default: 8899
     required: true
-  - name: maxacpower
   - name: externalpower
     type: bool
     description:
@@ -44,8 +43,6 @@ render: |
   uri: {{ joinHostPort .host .port }}
   usage: {{ .usage }}
   cache: {{ .cache }}
-  {{- if eq .usage "pv" }}
-  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- include "battery-params" . }}
   capacity2: {{ .capacity2 }} # kWh
