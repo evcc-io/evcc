@@ -93,7 +93,7 @@ render: |
       count: 125
     register:
       address: 35191     # pv energy
-      decode: uint32
+      decode: uint32nan
     scale: 0.1
     delay: {{ .delay }}
   {{- end }}
@@ -118,7 +118,7 @@ render: |
       count: 125
     register:
       address: 35209     # battery discharge energy
-      decode: uint32
+      decode: uint32nan
     scale: 0.1
     delay: {{ .delay }}
   soc:
@@ -130,6 +130,6 @@ render: |
       count: 13
     register:
       address: 37007     # soc
-      decode: uint16
+      decode: uint16nan
     delay: {{ .delay }}
   {{- end }}
