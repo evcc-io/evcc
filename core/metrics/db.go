@@ -17,8 +17,8 @@ type meter struct {
 	Entity       entity   `json:"-" gorm:"foreignkey:Meter;references:Id"`
 	Energy       float64  `json:"energy" gorm:"column:energy"`
 	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
-	Soc          *float64 `json:"soc,omitempty" gorm:"column:soc"`
-	Temp         *float64 `json:"temp,omitempty" gorm:"column:temp"`
+	Soc          *float64 `json:"soc,omitempty" gorm:"column:soc"`   // at start of slot
+	Temp         *float64 `json:"temp,omitempty" gorm:"column:temp"` // at start of slot
 }
 
 type entity struct {
