@@ -15,6 +15,11 @@ import (
 // on the first poll of a session to seed the merged map.
 const maxBackfill = 8
 
+const (
+	staleThreshold    = 2 * time.Hour
+	staleErrThreshold = 3
+)
+
 // store holds the merged dataset state for all vehicles of a single portal
 // account consisting of username and brand
 type store struct {
@@ -30,6 +35,7 @@ type vehicleState struct {
 	data       map[string]point
 	after      time.Time
 	seq        uint64 // delivery counter, incremented per merged dataset
+	errCount   int    // consecutive update errors
 }
 
 var (
@@ -103,6 +109,12 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 	for _, d := range list {
 		if d.CreatedOn.After(newest) {
 			newest = d.CreatedOn
+		}
+	}
+
+	if !newest.IsZero() {
+		if age := time.Since(newest); age > staleThreshold {
+			s.api.log.DEBUG.Printf("data may be stale: newest dataset is %v old", age.Round(time.Minute))
 		}
 	}
 
@@ -187,6 +199,24 @@ func pending(content []dataset, after time.Time) []dataset {
 	}
 
 	return res
+}
+
+// recordResult tracks consecutive update errors for vin and logs a DEBUG
+// warning when the count reaches staleErrThreshold. Resets to zero on success.
+func (s *store) recordResult(vin string, err error) {
+	v := s.state(vin)
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if err != nil {
+		v.errCount++
+		if v.errCount == staleErrThreshold {
+			s.api.log.DEBUG.Printf("update failed %d times in a row, data may be stale", v.errCount)
+		}
+	} else {
+		v.errCount = 0
+	}
 }
 
 // merge lets src (the newer dataset) win per field and stamps each field with
