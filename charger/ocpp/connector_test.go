@@ -210,6 +210,45 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
+// TestOnStatusNotificationRemoteStartGuard ensures RemoteStartTransaction is
+// issued at most once per auth cycle: repeated Preparing notifications must not
+// re-fire it, while a fresh cycle (leaving and re-entering Preparing) re-arms it.
+func (suite *connTestSuite) TestOnStatusNotificationRemoteStartGuard() {
+	suite.conn.remoteIdTag = "evcc"
+
+	preparing := func(offset time.Duration) {
+		_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      core.ChargePointStatusPreparing,
+			ErrorCode:   core.NoError,
+			Timestamp:   types.NewDateTime(suite.clock.Now().Add(offset)),
+		})
+		suite.NoError(err)
+	}
+
+	// first Preparing arms the guard
+	preparing(0)
+	suite.True(suite.conn.remoteStarted, "guard must be set after first Preparing")
+
+	// repeated Preparing must not re-arm (guard stays set)
+	preparing(time.Second)
+	suite.True(suite.conn.remoteStarted, "guard must stay set on repeated Preparing")
+
+	// leaving Preparing (e.g. cable unplugged) ends the auth cycle
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusAvailable,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now().Add(2 * time.Second)),
+	})
+	suite.NoError(err)
+	suite.False(suite.conn.remoteStarted, "guard must reset when leaving Preparing")
+
+	// next Preparing re-arms a fresh RemoteStartTransaction
+	preparing(3 * time.Second)
+	suite.True(suite.conn.remoteStarted, "guard must re-arm on the next auth cycle")
+}
+
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
 // not cleared by transient status notifications other than Available.
 func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {
