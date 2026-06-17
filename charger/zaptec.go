@@ -27,7 +27,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/zaptec"
@@ -57,7 +56,6 @@ type Zaptec struct {
 	passive    bool
 	lastStatus int
 
-	clock        clock.Clock
 	session      string    // last seen SessionIdentifier
 	sessionStart time.Time // start of the current session
 }
@@ -103,7 +101,6 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 		log:      log,
 		priority: priority,
 		passive:  passive,
-		clock:    clock.New(),
 	}
 
 	// Add User-Agent header for Zaptec API compliance
@@ -336,14 +333,14 @@ func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
 
 	if session != c.session {
 		c.session = session
-		c.sessionStart = c.clock.Now()
+		c.sessionStart = time.Now()
 	}
 
 	if session == "" {
 		return 0, nil
 	}
 
-	return c.clock.Now().Sub(c.sessionStart), nil
+	return time.Since(c.sessionStart), nil
 }
 
 var _ api.PhaseCurrents = (*Zaptec)(nil)
