@@ -17,15 +17,6 @@ params:
     default: 0.1s
     advanced: true
   - preset: battery-params
-  - name: maxchargepower
-    # config-time default from the inverter rated power (35001); user can override
-    service: aa55udp/read?host={host}&id=247&address=35001&decode=uint16&resulttype=int
-  - name: maxdischargepower
-    default: 10000
-  - name: minsoc
-    default: 10
-  - name: maxsoc
-    default: 100
 render: |
   type: custom
   {{- if eq .usage "grid" }}
