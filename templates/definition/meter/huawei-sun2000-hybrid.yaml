@@ -354,17 +354,6 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 2 # hold
             set:
               source: sequence
@@ -387,30 +376,10 @@ render: |
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 3 # charge
             set:
               source: sequence
               set:
-              - source: const
-                value: 1 # Enable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
               # clamp maxchargepower to the inverter rated max (37046) for parity
               # with discharge, avoiding a stale out-of-range value
               - source: go
