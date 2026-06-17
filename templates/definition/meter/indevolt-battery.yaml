@@ -54,8 +54,6 @@ params:
     help:
       en: Maximum charge power (W). Valid range 50-2400.
       de: Maximale Ladeleistung (W). Gültiger Bereich 50-2400.
-  - name: maxdischargepower
-    default: 2400
 render: |
   {{- define "auth" }}
   {{- if .user }}
