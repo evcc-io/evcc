@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"slices"
 	"strings"
 	"time"
@@ -168,7 +167,7 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 // data field name. On duplicate field names the entry with the newest timestamp
 // wins. The VIN is returned so the caller can drop datasets that do not belong
 // to the requested vehicle.
-func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
+func parseDataset(b []byte) (map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -195,8 +194,6 @@ func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println(raw)
 
 	var ds datasetFile
 	if err := json.Unmarshal(raw, &ds); err != nil {
