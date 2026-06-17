@@ -37,6 +37,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
 		ts, err := s.update(log.TRACE, vin)
+		s.recordResult(vin, err)
 		if err != nil {
 			log.ERROR.Println(err)
 		} else if !ts.IsZero() {
