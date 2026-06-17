@@ -332,10 +332,10 @@ params:
   - name: autodetectdisabled
     type: bool
     description:
-      en: Exclude from auto discovery
+      en: Exclude from auto detection
       de: Von automatischer Erkennung ausschließen
     help:
-      en: Ignore the vehicle for auto discovery of connected vehicles
+      en: Ignore the vehicle for auto detection of connected vehicles
       de: Das Fahrzeug von der automatischen Erkennung beim Anschließen eines Fahrzeugs ausschließen
   - name: heating
     type: bool
