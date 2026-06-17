@@ -1,4 +1,5 @@
 template: goodwe-wifi-et
+covers: ["goodwe-wifi"] # superseded broken native UDP implementation
 requirements:
   evcc: ["skiptest"]
 products:
