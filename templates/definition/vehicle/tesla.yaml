@@ -39,26 +39,20 @@ params:
   - preset: vehicle-common
   - preset: vehicle-climater
   - name: clientId
-    description:
-      generic: Client ID
     help:
       en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
       de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
-    required: true
   - name: accessToken
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).
     required: true
-    mask: true
   - name: refreshToken
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).
     required: true
-    mask: true
   - name: vin
-    example: W...
   - name: control
     description:
       generic: Control

@@ -36,11 +36,39 @@ var (
 	optimizerUpdated time.Time
 )
 
+// optimizerChargingStrategies are the valid grid charging strategies; the first
+// entry is the default and preserves the previous hard-coded behavior.
+var optimizerChargingStrategies = []string{
+	string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks),
+	string(optimizer.OptimizerStrategyChargingStrategyNone),
+}
+
+const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport)
+
+// triggerOptimizer re-runs the optimizer immediately so a changed setting takes
+// effect without waiting for the next slot. It is a no-op when the optimizer is
+// not active or a run is already in progress; the running update reflects the
+// change on its next slot.
+func (site *Site) triggerOptimizer() {
+	if !sponsor.IsAuthorized() || !optimizerEnabled() {
+		return
+	}
+	if !mu.TryLock() {
+		return
+	}
+	optimizerUpdated = time.Time{} // bypass the slot/debounce gate
+	mu.Unlock()
+
+	go site.optimizerUpdateAsync()
+}
+
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
 // This ensures publishComplex serializes it as a single JSON message instead of
 // recursively decomposing each struct field and array element into individual MQTT
 // topics (~1,500 messages per optimizer run).
 type optimizerResult struct {
+	Updated time.Time                    `json:"updated"`
 	Req     optimizer.OptimizationInput  `json:"req"`
 	Res     optimizer.OptimizationResult `json:"res"`
 	Details requestDetails               `json:"details"`
@@ -71,61 +99,8 @@ type batteryDetail struct {
 
 type batteryResult struct {
 	batteryDetail
-	Full       time.Time         `json:"full,omitzero"`
-	Empty      time.Time         `json:"empty,omitzero"`
-	Suggestion batterySuggestion `json:"suggestion,omitzero"`
-}
-
-// batterySuggestion is the advisory action derived from the optimizer corner result for the
-// current slot. It is published for visibility only and not yet wired into control.
-type batterySuggestion struct {
-	// Action is the recommended action for the current slot.
-	// home battery: normal|hold|charge|holdcharge; loadpoint/vehicle: charge|stop
-	Action    string  `json:"action,omitempty"`
-	Charge    float64 `json:"charge,omitempty"`    // recommended charge power, W
-	Discharge float64 `json:"discharge,omitempty"` // recommended discharge power, W
-}
-
-// suggestionThreshold ignores numerical noise around zero power (W)
-const suggestionThreshold = 50
-
-// currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
-// Because the optimization is linear, the first slot is at an operating-range extreme, so it
-// maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
-// An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64) batterySuggestion {
-	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
-		return batterySuggestion{}
-	}
-
-	charge := float64(res.ChargingPower[0]) / slotHours
-	discharge := float64(res.DischargingPower[0]) / slotHours
-
-	s := batterySuggestion{Charge: charge, Discharge: discharge}
-
-	if detail.Type == batteryTypeBattery {
-		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
-		switch {
-		case charge > suggestionThreshold && gridImporting:
-			// charging while importing means grid charging
-			s.Action = api.BatteryCharge.String()
-		case idle && gridImporting:
-			// idle while importing: discharge is deliberately withheld
-			s.Action = api.BatteryHold.String()
-		case idle && gridExporting:
-			// idle while exporting: surplus is exported instead of charged
-			s.Action = api.BatteryHoldCharge.String()
-		default:
-			s.Action = api.BatteryNormal.String()
-		}
-	} else if charge > suggestionThreshold {
-		s.Action = "charge"
-	} else {
-		s.Action = "stop"
-	}
-
-	return s
+	Full  time.Time `json:"full,omitzero"`
+	Empty time.Time `json:"empty,omitzero"`
 }
 
 type requestDetails struct {
@@ -217,7 +192,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	req := optimizer.OptimizationInput{
 		Strategy: optimizer.OptimizerStrategy{
-			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
+			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategy(site.GetOptimizerChargingStrategy()),
 			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,
@@ -270,6 +245,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	for i, dev := range site.batteryMeters {
+		// measurements may lag the configured meters on an off-cycle trigger
+		if i >= len(battery) {
+			break
+		}
 		b := battery[i]
 
 		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
@@ -311,29 +290,24 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	site.publish("evopt", optimizerResult{
+		Updated: time.Now(),
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
 	})
 
-	slotHours := firstSlotDuration.Hours()
-	gridImporting := len(resp.JSON200.GridImport) > 0 && resp.JSON200.GridImport[0] > 0
-	gridExporting := len(resp.JSON200.GridExport) > 0 && resp.JSON200.GridExport[0] > 0
-
 	var batteries []batteryResult
 	for i, batReq := range req.Batteries {
 		batResp := resp.JSON200.Batteries[i]
-		detail := details.BatteryDetails[i]
 
 		batResult := batteryResult{
-			batteryDetail: detail,
+			batteryDetail: details.BatteryDetails[i],
 			Full: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
 			Empty: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
-			Suggestion: currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours),
 		}
 
 		batteries = append(batteries, batResult)
