@@ -38,7 +38,6 @@ func aa55udpRead(w http.ResponseWriter, req *http.Request) {
 	}
 
 	query := AA55Query{
-		Id:    247,
 		Scale: 1.0,
 	}
 
@@ -47,8 +46,8 @@ func aa55udpRead(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if query.Host == "" || cc["address"] == nil {
-		jsonError(w, http.StatusBadRequest, fmt.Errorf("host and address parameters are required"))
+	if query.Host == "" || cc["address"] == nil || cc["id"] == nil {
+		jsonError(w, http.StatusBadRequest, fmt.Errorf("host, address and id parameters are required"))
 		return
 	}
 
