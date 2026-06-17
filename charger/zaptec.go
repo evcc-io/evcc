@@ -27,6 +27,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/zaptec"
@@ -55,6 +56,10 @@ type Zaptec struct {
 	priority   bool
 	passive    bool
 	lastStatus int
+
+	clock        clock.Clock
+	session      string    // last seen SessionIdentifier
+	sessionStart time.Time // start of the current session
 }
 
 func init() {
@@ -98,6 +103,7 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 		log:      log,
 		priority: priority,
 		passive:  passive,
+		clock:    clock.New(),
 	}
 
 	// Add User-Agent header for Zaptec API compliance
@@ -311,6 +317,33 @@ func (c *Zaptec) ChargedEnergy() (float64, error) {
 	}
 
 	return res.ObservationByID(zaptec.TotalChargePowerSession).Float64()
+}
+
+var _ api.ConnectionTimer = (*Zaptec)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface.
+// Derived from SessionIdentifier: a session change drops the duration, so the loadpoint detects a cable swap as reconnect.
+func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
+	res, err := c.statusG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	var session string
+	if o := res.ObservationByID(zaptec.SessionIdentifier); o != nil {
+		session = o.ValueAsString
+	}
+
+	if session != c.session {
+		c.session = session
+		c.sessionStart = c.clock.Now()
+	}
+
+	if session == "" {
+		return 0, nil
+	}
+
+	return c.clock.Now().Sub(c.sessionStart), nil
 }
 
 var _ api.PhaseCurrents = (*Zaptec)(nil)
