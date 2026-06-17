@@ -156,7 +156,7 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 	// 1p->3p only works when all phases are set equal, so warn about an inconsistent setting
 	if err == nil && c.version == zaptec.ZaptecGo2 {
 		if p1, p2, p3 := inst.AvailableCurrentPhase1, inst.AvailableCurrentPhase2, inst.AvailableCurrentPhase3; p2 != p1 || p3 != p1 {
-			c.log.WARN.Printf("installation available current is unequal across phases (%.3gA/%.3gA/%.3gA); phase switching back to 3p requires equal available current on all phases in the Zaptec portal", p1, p2, p3)
+			c.log.WARN.Printf("installation available current is unequal across phases (%.3gA/%.3gA/%.3gA); phase switching back to 3p requires available current on all phases", p1, p2, p3)
 		}
 	}
 
