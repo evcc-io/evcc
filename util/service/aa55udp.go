@@ -51,7 +51,7 @@ func aa55udpRead(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cacheKey := fmt.Sprintf("aa55:%s:%d", query.Host, query.Address)
+	cacheKey := fmt.Sprintf("aa55:%s:%d:%+v:%g:%s", query.Host, query.Id, query.Register, query.Scale, query.ResultType)
 
 	mu.RLock()
 	if entry, ok := cache[cacheKey]; ok && time.Since(entry.timestamp) < cacheTTL {
