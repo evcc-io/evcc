@@ -33,6 +33,7 @@ type CS struct {
 	publishFunc func()
 	server      ws.Server              // raw server, used by the forwarder to write frames
 	dispatcher  ocppj.ServerDispatcher // request dispatcher, timeout set at start
+	started     func() error           // memoized listen; set in NewServer, runs once
 }
 
 // Write sends a raw OCPP frame to the charger with the given station ID.

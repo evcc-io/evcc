@@ -44,8 +44,6 @@ func (r ForwarderRule) Redacted() ForwarderRule {
 }
 
 var (
-	once        sync.Once
-	startErr    error
 	instance    *CS
 	port        = 8887
 	boundPort   int
@@ -168,31 +166,34 @@ func NewServer(cfg Config, networkExternalUrl string) {
 	cs.SetFirmwareManagementHandler(instance)
 	cs.SetNewChargePointHandler(instance.NewChargePoint)
 	cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
+
+	instance.started = sync.OnceValue(instance.listen)
+}
+
+// listen starts the central system and blocks until it has bound its port.
+func (cs *CS) listen() error {
+	cs.dispatcher.SetTimeout(Timeout)
+
+	go cs.errorHandler(cs.Errors())
+	go cs.CentralSystem.Start(port, "/{ws}")
+
+	// wait for server to bind
+	tick := time.Tick(10 * time.Millisecond)
+	timeout := time.After(10 * time.Second)
+	for cs.server.Addr() == nil {
+		select {
+		case <-tick:
+		case <-timeout:
+			return errors.New("timeout waiting for server to bind")
+		}
+	}
+
+	boundPort = cs.server.Addr().Port
+	return nil
 }
 
 // Instance returns the central system, starting it once on first call. It
 // returns an error if the server fails to bind its port.
 func Instance() (*CS, error) {
-	once.Do(func() {
-		instance.dispatcher.SetTimeout(Timeout)
-
-		go instance.errorHandler(instance.Errors())
-		go instance.CentralSystem.Start(port, "/{ws}")
-
-		// wait for server to start
-		tick := time.Tick(10 * time.Millisecond)
-		timeout := time.After(10 * time.Second)
-		for instance.server.Addr() == nil {
-			select {
-			case <-tick:
-			case <-timeout:
-				startErr = errors.New("timeout waiting for server to bind")
-				return
-			}
-		}
-
-		boundPort = instance.server.Addr().Port
-	})
-
-	return instance, startErr
+	return instance, instance.started()
 }
