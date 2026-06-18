@@ -47,9 +47,7 @@ params:
   - name: maxchargerate
     deprecated: true
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
 render: |
   {{- if eq .usage "pv" }}
   type: custom
@@ -71,7 +69,7 @@ render: |
     register:
       address: 1056 # total DC PV energy (sum), Wh
       type: holding
-      decode: float32s
+      encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
     scale: 0.001 # Wh -> kWh
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
@@ -131,5 +129,16 @@ render: |
           source: error
           error: ErrNotAvailable
           {{- end }}
+      - case: 4 # holdcharge
+        set:
+          source: const
+          value: 0 # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1038 # Battery max. charge power limit, absolute [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   {{- include "battery-params" . }}
   {{- end }}

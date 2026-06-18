@@ -42,6 +42,11 @@ test.describe("messaging", async () => {
   start:
     title: Charge started
     msg: Started charging`;
+    // differs from the stored config so saving is an actual change
+    const changedYaml = `events:
+  start:
+    title: Charge started
+    msg: Charging has begun`;
 
     // default content
     const editor = modal.getByTestId("yaml-editor");
@@ -55,7 +60,7 @@ test.describe("messaging", async () => {
 
     // clear and enter valid yaml
     await editorClear(editor);
-    await editorPaste(editor, page, validYaml);
+    await editorPaste(editor, page, changedYaml);
 
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).not.toBeVisible();

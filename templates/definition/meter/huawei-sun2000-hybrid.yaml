@@ -9,27 +9,19 @@ capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   description:
     de: |
-      Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+      Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 oder SmartPS).
 
       Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
-
-
-      ##### WARNUNG!
-      Die folgendenden Gegebenheiten können zu Unterbrechungen in der Modbus-Kommunikation führen:
-      - veraltete Firmware
-      - Änderung von Wechselrichter/Speicher-Einstellungen über das Huawei FusionSolar-Portal
-      - weitere Anwendungen (z.B. Home Assistant) greifen über einen Modbus Proxy auf die Anlage zu (auch abhängig von der Anlagenkomplexität, z.B. Anzahl kaskadierter Wechselrichter)
     en: |
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
       Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
-
-
-      ##### WARNING!
-      Please beware that the following circumstances may lead to Modbus communication interruptions:
-      - outdated firmware
-      - altering inverter/battery configuration settings via Huawei FusionSolar portal
-      - other applications (e.g. Home Assistant) accessing the inverter via Modbus proxy (also depending on plant complexity, e.g. number of cascaded inverters)
+caveats:
+  - description:
+      de: |
+        Parallele, via Modbus Proxy auf das Huawei System zugreifende Anwendungen (z.B. Home Assistant) können Fehler in der Kommunikation verursachen.
+      en: |
+        Parallel clients (e.g. Home Assistant) accessing the Huawei solar system via Modbus proxy may cause communication errors.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -82,6 +74,9 @@ render: |
       address: 37113 # Grid import/export power
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -1
   energy:
     source: modbus
@@ -91,6 +86,9 @@ render: |
       address: 37121 # Active energy imported from the grid
       type: holding
       decode: uint32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: 0.01
   returnenergy:
     source: modbus
@@ -100,6 +98,9 @@ render: |
       address: 37119 # Active energy exported to the grid
       type: holding
       decode: uint32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: 0.01
   currents:
   - source: modbus
@@ -109,6 +110,9 @@ render: |
       address: 37107 # Huawei phase A grid current
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -117,6 +121,9 @@ render: |
       address: 37109 # Huawei phase B grid current
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -125,6 +132,9 @@ render: |
       address: 37111 # Huawei phase C grid current
       type: holding
       decode: int32nan
+    block: # 37107-37122
+      register: 37107
+      count: 16
     scale: -0.01
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -344,17 +354,6 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 2 # hold
             set:
               source: sequence
@@ -377,30 +376,10 @@ render: |
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 3 # charge
             set:
               source: sequence
               set:
-              - source: const
-                value: 1 # Enable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
               # clamp maxchargepower to the inverter rated max (37046) for parity
               # with discharge, avoiding a stale out-of-range value
               - source: go
