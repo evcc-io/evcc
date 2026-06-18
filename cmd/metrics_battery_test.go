@@ -65,8 +65,10 @@ func TestMetricsWriteBatteryTable(t *testing.T) {
 	require.Contains(t, lines[2], "3.000")
 	require.Contains(t, lines[2], "75.0%")
 
-	// db:3: no data -> zero totals, blank efficiency
-	require.Contains(t, lines[3], "db:3")
+	// db:3: no title anywhere -> label falls back to the name; no data -> blank efficiency
+	f := strings.Fields(lines[3])
+	require.Equal(t, "db:3", f[0]) // name column
+	require.Equal(t, "db:3", f[1]) // title column falls back to name
 	require.Contains(t, lines[3], "0.000")
 	require.NotContains(t, lines[3], "%")
 }

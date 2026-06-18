@@ -106,10 +106,13 @@ func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals
 	for _, e := range selected {
 		t := totals[e.Name]
 
-		// prefer the live config title, fall back to the title stored in the db
+		// prefer the live config title, then the db title, then the name
 		label := title(e.Group, e.Name)
 		if label == "" {
 			label = e.Title
+		}
+		if label == "" {
+			label = e.Name
 		}
 
 		efficiency := ""
