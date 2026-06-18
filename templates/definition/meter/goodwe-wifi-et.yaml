@@ -17,6 +17,16 @@ params:
     default: 0.1s
     advanced: true
   - preset: battery-params
+  - name: capacity
+    required: true
+  - name: minsoc
+    required: true
+  - name: maxsoc
+    required: true
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
