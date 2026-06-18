@@ -63,8 +63,14 @@ func DefaultConfig(conf *Config) (*Config, error) {
 		return nil, err
 	}
 
+	// preserve a configured port (e.g. EVCC_EEBUS_PORT), default otherwise
+	port := conf.Port
+	if port == 0 {
+		port = 4712
+	}
+
 	res := Config{
-		Port:   4712,
+		Port:   port,
 		ShipID: createShipID(),
 		Certificate: Certificate{
 			Public:  public,
