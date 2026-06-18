@@ -8,8 +8,8 @@ params:
     unit: W
     required: true
     description:
-      en: Maximum curtailment power
-      de: Maximale Reduzierungsleistung
+      en: Curtailment power limit
+      de: Leistungslimit der Abregelung
     help:
       en: Full production power. Curtailment steps (60%, 30%, 0%) apply to this baseline.
       de: Volle Einspeiseleistung. Reduzierungsstufen (60%, 30%, 0%) beziehen sich auf diesen Wert.

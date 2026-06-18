@@ -11,8 +11,8 @@ params:
       en: Maximum power
       de: Maximale Leistung
     help:
-      en: Power cap applied while the relay signal is active
-      de: Leistungsbegrenzung, während das Relaissignal aktiv ist
+      en: Power cap applied to the root circuit while the relay signal is active
+      de: Leistungsbegrenzung des Hauptstromkreises, während das Relaissignal aktiv ist
   - name: gpiopin
     type: int
     required: true
