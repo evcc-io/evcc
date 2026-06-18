@@ -1889,11 +1889,12 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 	// apply manual SoC override if vehicle supports it
 	if v := lp.GetVehicle(); v != nil && lp.vehicleHasFeature(api.ManualSoc) {
-		if manualSoc := vehicle.Settings(lp.log, v).GetManualSoc(); manualSoc > 0 {
+		vs := vehicle.Settings(lp.log, v)
+		if manualSoc := vs.GetManualSoc(); manualSoc > 0 {
 			lp.vehicleSoc = manualSoc
 			lp.log.DEBUG.Printf("vehicle soc (manual): %.0f%%", lp.vehicleSoc)
 		}
-		lp.publish(keys.ManualSoc, vehicle.Settings(lp.log, v).GetManualSoc())
+		lp.publish(keys.ManualSoc, vs.GetManualSoc())
 	}
 
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
