@@ -76,21 +76,21 @@ render: |
       register:
         address: 36055 # Meter Current R, A
         type: holding
-        decode: uint16
+        decode: uint16nan
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 36056 # Meter Current S, A
         type: holding
-        decode: uint16
+        decode: uint16nan
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 36057 # Meter Current T, A  
+        address: 36057 # Meter Current T, A
         type: holding
-        decode: uint16
+        decode: uint16nan
       scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -127,7 +127,7 @@ render: |
     register: # manual non-sunspec register configuration
       address: 35191 # PV Energy-Total
       type: holding
-      decode: uint32
+      decode: uint32nan
     scale: 0.1
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
@@ -145,7 +145,7 @@ render: |
     register: # manual non-sunspec register configuration
       address: {{ if eq .battery "1" }}37007{{ else }}39005{{ end }} # Battery1/2 Soc
       type: holding
-      decode: uint16
+      decode: uint16nan
   {{- if eq .battery "1" }}
   energy:
     source: modbus
@@ -153,7 +153,7 @@ render: |
     register: # manual non-sunspec register configuration
       address: 35209 # Energy-Battery Discharge
       type: holding
-      decode: uint32
+      decode: uint32nan
     scale: 0.1
   {{- end }}
   batterymode:

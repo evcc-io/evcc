@@ -51,6 +51,14 @@
     "hex": "Hex barva"
   },
   "config": {
+    "apiKey": {
+      "description": "Předává skriptům a automatizacím bezpečný přístup bez poskytování admin hesla.",
+      "exampleLabel": "Zkuste to: stáhněte si zálohu curl",
+      "generate": "Vytvořit API klíč",
+      "generateConfirm": "Vložte administrátorské heslo a vygenerujte nový API klíč.",
+      "keyLabel": "API klíč",
+      "regenerate": "Znovu vygenerovat API klíč"
+    },
     "aux": {
       "description": "Zařízení, které přizpůsobuje svou spotřebu podle dostupného přebytku (například chytré bojlery). evcc předpokládá, že toto zařízení v případě potřeby sníží svůj odběr.",
       "titleAdd": "Přidat samoregulační spotřebič",
@@ -150,8 +158,6 @@
       "forecast": "Předpověď",
       "gridPrice": "Cena ze sítě",
       "heaterTempLimit": "Limit topení",
-      "hemsActiveLimit": "Aktivní limit",
-      "hemsType": "Komunikace",
       "identifier": "RFID identifikátor",
       "loginBlocked": "Dosažen limit přihlášení",
       "max": "maximum",
@@ -180,10 +186,6 @@
       "A": "A (nepřipojeno)",
       "B": "B (připojeno)",
       "C": "C (nabíjení)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "skrze EEBus",
-      "relay": "skrze relé"
     },
     "devices": {
       "auxMeter": "Chytrý spotřebič",
@@ -1170,13 +1172,13 @@
       "battery": "Baterie domu",
       "batteryCharge": "Nabíjení baterie",
       "batteryDischarge": "Vybíjení baterie",
+      "batteryDischargeHold": "Baterie (udržování stavu nabití)",
       "batteryForecastEmpty": "Prázdné",
       "batteryForecastFull": "Plný",
       "batteryForecastNextHigh": "Špička",
       "batteryForecastNextLow": "Minimum",
       "batteryGridChargeActive": "nabíjení domácí baterie ze sítě je aktivní",
       "batteryGridChargeLimit": "nabíjení ze sítě, když",
-      "batteryHold": "Baterie (udržování stavu nabití)",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecast": "Předpověď",
       "forecastTooltip": "předpověď: zbývající solární výroba dnes",
@@ -1197,7 +1199,6 @@
       "waitForVehicle": "Připraven k vytápění…"
     },
     "hemsWarning": {
-      "description": "Zpomalené nabíjení zamezující přesáhnutí {limit}.",
       "title": "Externí limit:"
     },
     "history": {

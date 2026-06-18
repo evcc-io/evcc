@@ -26,6 +26,15 @@ call changePassword {
 }
 ```
 
+## getApiKeyStatus
+
+Reports whether an API key has been generated. The key itself is
+only returned once at creation time (POST), never on subsequent
+reads.
+
+
+**Tags:** auth
+
 ## getAuthStatus
 
 Whether the current user is logged in.
@@ -57,6 +66,33 @@ call login {
 Logout and delete authorization cookie
 
 **Tags:** auth
+
+## regenerateApiKey
+
+Generates a fresh API key, replacing any existing one. The
+returned key is shown only once; store it immediately.
+
+Even when the request is authenticated via API key (Bearer), the
+admin password must be supplied in the request body to prevent a
+leaked key from rotating itself. The password check is skipped
+when the server is started with `--disable-auth`.
+
+
+**Tags:** auth
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call regenerateApiKey {
+  "requestBody": "..."
+}
+```
 
 ## disableExternalBatteryControl
 
@@ -207,6 +243,98 @@ Set grid connection operating point.
 ```json
 call setResidualPower {
   "power": 123.45
+}
+```
+
+## downloadBackup
+
+Downloads the SQLite database as a backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+
+**Example call:**
+
+```json
+call downloadBackup {
+  "X-Admin-Password": "example"
+}
+```
+
+## resetDatabase
+
+Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call resetDatabase {
+  "X-Admin-Password": "example",
+  "requestBody": "..."
+}
+```
+
+## restoreBackup
+
+Restores the database from a previously downloaded backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful restore.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+
+**Example call:**
+
+```json
+call restoreBackup {
+  "X-Admin-Password": "example"
+}
+```
+
+## getEnergyHistory
+
+Returns aggregated energy history data. Aggregate granularity defaults to 15 minutes. Supports CSV export.
+
+**Tags:** experimental
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| aggregate | string | Aggregation interval. Examples: 15m, 1h, day, month |
+| format | string | Response format |
+| from | string | Start time (RFC3339) |
+| grouped | boolean | Group results by loadpoint |
+| lang | string | Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header. |
+| to | string | End time (RFC3339) |
+
+**Example call:**
+
+```json
+call getEnergyHistory {
+  "aggregate": "example",
+  "format": "example",
+  "from": "example",
+  "grouped": true,
+  "lang": "example",
+  "to": "example"
 }
 ```
 

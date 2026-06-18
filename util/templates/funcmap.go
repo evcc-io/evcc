@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/util/yaml"
+	"go.yaml.in/yaml/v4"
 )
 
 func yamlQuote(value string) string {

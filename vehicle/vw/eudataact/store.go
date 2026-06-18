@@ -3,7 +3,6 @@ package eudataact
 import (
 	"maps"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +28,7 @@ type vehicleState struct {
 	identifier string
 	data       map[string]point
 	after      time.Time
+	seq        uint64 // delivery counter, incremented per merged dataset
 }
 
 var (
@@ -116,7 +116,7 @@ func (s *store) update(vin string) (time.Time, error) {
 			return newest, err
 		}
 
-		dvin, data, err := parseDataset(b)
+		data, err := parseDataset(b)
 		if err != nil {
 			return newest, err
 		}
@@ -127,12 +127,8 @@ func (s *store) update(vin string) (time.Time, error) {
 			v.after = d.CreatedOn
 		}
 
-		// only merge points that belong to the requested vehicle
-		if dvin != "" && !strings.EqualFold(dvin, vin) {
-			continue
-		}
-
-		merge(v.data, data)
+		v.seq++
+		merge(v.data, data, v.seq)
 
 		if !initial {
 			logData(s.api.log, data)
@@ -192,13 +188,11 @@ func pending(content []dataset, after time.Time) []dataset {
 	return res
 }
 
-// merge copies the data points from src into dst, keeping the newest value per
-// field across datasets.
-func merge(dst, src map[string]point) {
+// merge lets src (the newer dataset) win per field and stamps each field with
+// seq, the dataset's delivery sequence (timestampUtc is unreliable).
+func merge(dst, src map[string]point, seq uint64) {
 	for k, p := range src {
-		if cur, ok := dst[k]; ok && cur.Timestamp.After(p.Timestamp) {
-			continue
-		}
+		p.Seq = seq
 		dst[k] = p
 	}
 }

@@ -9,6 +9,7 @@ requirements:
     en: Open source Tesla data logger [github.com/bassmaster187/TeslaLogger](https://github.com/bassmaster187/TeslaLogger)
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: id
     description:
       de: TeslaLogger CarID
@@ -65,3 +66,4 @@ render: |
   maxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps?${maxcurrent}
+  {{ include "vehicle-features" . }}

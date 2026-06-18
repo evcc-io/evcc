@@ -16,9 +16,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
-	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
+	"go.yaml.in/yaml/v4"
 )
 
 const (
@@ -377,8 +377,10 @@ func testInstance(instance any) map[string]testResult {
 	}
 
 	if dev, ok := api.Cap[api.Curtailer](instance); ok {
-		val, err := dev.Curtailed()
-		makeResult("curtailed", val, err)
+		makeResult("curtailable", true, nil)
+		if val, err := dev.Curtailed(); err != nil || val {
+			makeResult("curtailed", true, err)
+		}
 	}
 
 	if dev, ok := api.Cap[api.Identifier](instance); ok {

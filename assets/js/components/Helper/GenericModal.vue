@@ -96,8 +96,12 @@ export default defineComponent({
 			this.$emit("opened");
 			if (this.autofocus) {
 				this.$nextTick(() => {
-					const firstInput =
-						this.$refs["modalBody"]?.querySelector("input, select, button");
+					const modalBody = this.$refs["modalBody"];
+					// don't steal focus if user already interacts with the modal content
+					if (modalBody?.contains(document.activeElement)) {
+						return;
+					}
+					const firstInput = modalBody?.querySelector("input, select, button");
 					if (firstInput instanceof HTMLElement) {
 						firstInput.focus();
 					}

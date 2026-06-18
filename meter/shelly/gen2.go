@@ -332,6 +332,11 @@ func (c *gen2) hasEMEndpoint() bool {
 	return c.hasMethod("EM.GetStatus")
 }
 
+// IsThreePhase reports whether the device is a three-phase energy meter
+func (c *gen2) IsThreePhase() bool {
+	return c.hasEMEndpoint()
+}
+
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy
 // https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1#em1getstatus-example
 // https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1Data#em1datagetstatus-example

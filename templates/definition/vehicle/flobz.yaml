@@ -13,6 +13,7 @@ params:
   - name: vin
     required: true
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: host
     deprecated: true
   - name: port
@@ -48,7 +49,7 @@ render: |
     jq: .timed_odometer.mileage
   climater:
     {{- include "source" . | indent 2 }}
-    jq: .preconditionning.air_conditioning.status != "Disabled"
+    jq: (.preconditionning.air_conditioning.status // "Disabled") != "Disabled"
   wakeup:
     source: http
     {{- if .host }}
@@ -72,3 +73,4 @@ render: |
   uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
   {{- end }}
+  {{ include "vehicle-features" . }}
