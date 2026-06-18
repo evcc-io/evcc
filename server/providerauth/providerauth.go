@@ -27,7 +27,7 @@ func init() {
 		log:       util.NewLogger("providerauth"),
 		secret:    secret[:],
 		providers: make(map[string]api.AuthProvider),
-		states:    make(map[string]string),
+		states:    make(map[string]stateEntry),
 		updateC:   make(chan string, 1),
 	}
 }

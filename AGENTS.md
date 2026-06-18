@@ -90,6 +90,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 - No em dashes (—) in comments, commit messages, or docs. Use periods, commas, or colons
 - Project name is `evcc`, always lowercase
+- In user-facing strings, only mention `evcc` when needed to understand the context. Inside evcc's own UI the self-reference is usually redundant
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
 - Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
@@ -175,6 +176,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 ### State Management
 
+- Never access the store from sub-components; keep them stateless and pass the values they need as props (emit events back to the parent). Only top-level views read from the store. This keeps components reusable and testable (e.g. Storybook should never mock the store).
 - Use `reactive()` from Vue for simple global state
 - Implement property setters for nested object updates using helper functions
 - Use localStorage with reactive wrappers for persistent settings
@@ -264,6 +266,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Device types: chargers, meters, vehicles, tariffs
 - Plugin protocols: Modbus, HTTP, MQTT, JavaScript, Go
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
+- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a *different* value. Restating the same value is redundant duplication: reference the param by `name` alone.
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
 - When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details

@@ -154,6 +154,7 @@ export default defineComponent({
 		month: { type: Number, default: undefined },
 		year: { type: Number, default: undefined },
 		period: { type: String as PropType<PERIODS>, default: undefined },
+		offline: Boolean,
 	},
 	data() {
 		return {
@@ -340,6 +341,9 @@ export default defineComponent({
 		fetchKey() {
 			this.fetchData();
 		},
+		offline(offline) {
+			if (!offline) this.fetchData();
+		},
 		rawSeries() {
 			// Drop focused entries whose paletteIndex no longer matches any entity
 			// in the new data (e.g. a loadpoint was filtered out after a period
@@ -498,7 +502,7 @@ export default defineComponent({
 				this.displayPeriod = requestPeriod;
 			} catch (e) {
 				console.error("Failed to load energy history", e);
-				this.rawSeries = [];
+				// keep previous data on error
 			} finally {
 				this.loading = false;
 			}

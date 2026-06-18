@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	_ "embed"
 	"net"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"google.golang.org/grpc"
@@ -29,7 +30,11 @@ func Connection() (*grpc.ClientConn, error) {
 	creds := credentials.NewTLS(&tls.Config{
 		ServerName: host,
 	})
-	conn, err = grpc.Dial(hostport, grpc.WithTransportCredentials(creds))
+	// close idle connection shortly after startup auth instead of churning against the server's idle close
+	conn, err = grpc.NewClient(hostport,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithIdleTimeout(5*time.Second),
+	)
 
 	return conn, err
 }
