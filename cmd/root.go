@@ -227,6 +227,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
 	}
 
+	// start EEBus server
+	if _, err := eebus.Instance(); err != nil {
+		log.ERROR.Println("eebus:", err)
+	}
+
 	// value cache
 	cache := util.NewParamCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
