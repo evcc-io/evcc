@@ -365,7 +365,10 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 	delete(pendingMsgs, id)
 	pendingMu.Unlock()
 
-	cs := instance
+	cs, err := Instance()
+	if err != nil {
+		return
+	}
 
 	for _, frame := range buffered {
 		msgType, msgID, action, err := parseOCPPFrame(frame)
@@ -522,6 +525,12 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 		notifyUpdated()
 	}()
 
+	cs, err := Instance()
+	if err != nil {
+		forwarderLog.ERROR.Printf("forwarder: central system unavailable for %s: %v", sc.chargerID, err)
+		return
+	}
+
 	for {
 		_, msg, err := sc.conn.Read(context.Background())
 		if err != nil {
@@ -579,7 +588,7 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 			sc.pendingUpstreamCalls[msgID] = struct{}{}
 			sc.pendingUpstreamCallsMu.Unlock()
 
-			if err := instance.Write(sc.chargerID, msg); err != nil {
+			if err := cs.Write(sc.chargerID, msg); err != nil {
 				forwarderLog.ERROR.Printf("forwarder: inject upstream call into charger %s: %v", sc.chargerID, err)
 			}
 
@@ -594,7 +603,7 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 
 			if isChargerCall {
 				// relay to charger; its handler was bypassed and it awaits this reply
-				if err := instance.Write(sc.chargerID, msg); err != nil {
+				if err := cs.Write(sc.chargerID, msg); err != nil {
 					forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
 				}
 				continue
