@@ -201,11 +201,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go tee.Run(valueChan)
 
 	// start OCPP server
-	ocppCS, err := ocpp.Instance()
+	cs, err := ocpp.Instance()
 	if err != nil {
 		log.ERROR.Println("ocpp:", err)
 	}
-	ocppCS.SetUpdated(func() {
+	cs.SetUpdated(func() {
 		// republish when OCPP state updates
 		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 			Config: ocpp.CurrentConfig(),
