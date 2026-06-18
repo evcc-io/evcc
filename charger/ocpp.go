@@ -146,7 +146,7 @@ func NewOCPP(ctx context.Context,
 
 	cp, err := cs.RegisterChargepoint(id,
 		func() *ocpp.CP {
-			return ocpp.NewChargePoint(log, id)
+			return ocpp.NewChargePoint(log, cs, id)
 		},
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
