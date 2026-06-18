@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
+import { start, stop, restart, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 
@@ -217,5 +217,16 @@ test.describe("consumption breakdown", () => {
     // Unfocus → axis returns to kW range, not stuck on 1000 W cap.
     await kitchen.click();
     await expect.poll(() => yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);
+  });
+});
+
+test.describe("reconnect", () => {
+  test("history still shows content after backend restart", async ({ page }) => {
+    await gotoDay(page, 2026, 3, 24);
+    await expect(chart(page, "grid")).toBeVisible();
+
+    await restart();
+
+    await expect(chart(page, "grid")).toBeVisible();
   });
 });
