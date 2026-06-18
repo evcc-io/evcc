@@ -353,6 +353,12 @@ params:
     help:
       en: Integrated device. No charging sessions
       de: Fest angeschlossenes Gerät. Keine Ladevorgänge
+  - name: insecure
+    type: bool
+    advanced: true
+    description:
+      en: Accept self-signed certificates
+      de: Selbstsignierte Zertifikate akzeptieren
   - name: defaultmode
     type: int
     advanced: true
