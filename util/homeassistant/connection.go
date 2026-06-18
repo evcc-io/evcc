@@ -36,8 +36,9 @@ func NewConnection(log *util.Logger, uri, home string, insecure bool) (*Connecti
 	c := &Connection{
 		Helper: request.NewHelper(log),
 		instance: &proxyInstance{
-			home: home,
-			uri:  util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+			home:     home,
+			uri:      util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+			insecure: insecure,
 		},
 	}
 
