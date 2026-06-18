@@ -69,7 +69,7 @@ type EnergyGuard struct {
 
 type EEBus struct {
 	service        eebusapi.ServiceInterface
-	remoteServices []shipapi.RemoteService
+	remoteServices []shipapi.RemoteMdnsService
 
 	cem CustomerEnergyManagement
 	cs  ControllableSystem
@@ -89,9 +89,24 @@ var Instance *EEBus
 func GetStatus() any {
 	return struct {
 		Ski string `json:"ski"`
+		QR  string `json:"qr,omitempty"`
 	}{
 		Ski: Ski(),
+		QR:  qrCode(),
 	}
+}
+
+// qrCode returns the SHIP installation QR code text per EEBus SHIP installation
+// requirements, or empty if unavailable
+func qrCode() string {
+	if Instance == nil {
+		return ""
+	}
+	qr, err := Instance.service.QRCodeText()
+	if err != nil {
+		return ""
+	}
+	return qr
 }
 
 func NewServer(other Config) (*EEBus, error) {
@@ -115,9 +130,13 @@ func NewServer(other Config) (*EEBus, error) {
 
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
+		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
 		cc.Port, certificate, time.Second*4,
+		// no SHIP Pairing (and thus no ring buffer persistence): remote services are
+		// trusted by their configured SKI via RegisterRemoteService
+		nil, nil,
 	)
 	if err != nil {
 		return nil, err
@@ -220,10 +239,11 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 		return errors.New("device ski can not be identical to host ski")
 	}
 
+	identity := shipapi.NewServiceIdentity(ski, "", "")
 	if len(ip) > 0 {
-		c.service.RemoteServiceForSKI(ski).SetIPv4(ip)
+		identity.IPv4 = ip
 	}
-	c.service.RegisterRemoteSKI(ski)
+	c.service.RegisterRemoteService(identity)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -248,7 +268,7 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 			// which calls back into evcc's connect(ski, false) — and that needs to
 			// acquire c.mux. Holding c.mux across this cross-layer call would
 			// deadlock the same goroutine on its own non-reentrant mutex. See #28942.
-			defer c.service.UnregisterRemoteSKI(ski)
+			defer c.service.UnregisterRemoteService(shipapi.NewServiceIdentity(ski, "", ""))
 		}
 	}
 	c.mux.Unlock()
@@ -270,7 +290,7 @@ func (c *EEBus) EnergyGuard() *EnergyGuard {
 	return &c.eg
 }
 
-func (c *EEBus) RemoteServices() []shipapi.RemoteService {
+func (c *EEBus) RemoteServices() []shipapi.RemoteMdnsService {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	return c.remoteServices
@@ -314,32 +334,32 @@ func (c *EEBus) connect(ski string, connected bool) {
 	}
 }
 
-func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string) {
-	c.connect(ski, true)
+func (c *EEBus) RemoteServiceConnected(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity) {
+	c.connect(identity.SKI, true)
 }
 
-func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski string) {
-	c.connect(ski, false)
+func (c *EEBus) RemoteServiceDisconnected(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity) {
+	c.connect(identity.SKI, false)
 }
 
 // report all currently visible EEBUS services
 // this is needed to provide an UI for pairing with other devices
 // if not all incoming pairing requests should be accepted
-func (c *EEBus) VisibleRemoteServicesUpdated(service eebusapi.ServiceInterface, entries []shipapi.RemoteService) {
+func (c *EEBus) VisibleRemoteMdnsServicesUpdated(service eebusapi.ServiceInterface, entries []shipapi.RemoteMdnsService) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.remoteServices = slices.Clone(entries)
 }
 
-// Provides the SHIP ID the remote service reported during the handshake process
-// This needs to be persisted and passed on for future remote service connections
-// when using `PairRemoteService`
-func (c *EEBus) ServiceShipIDUpdate(ski string, shipdID string) {}
+// Provides updated service information (ShipID, fingerprint, ...) discovered
+// during the handshake process. This needs to be persisted and passed on for
+// future remote service connections when using `RegisterRemoteService`
+func (c *EEBus) ServiceUpdated(identity shipapi.ServiceIdentity) {}
 
 // Provides the current pairing state for the remote service
 // This is called whenever the state changes and can be used to
 // provide user information for the pairing/connection process
-func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.ConnectionStateDetail) {
+func (c *EEBus) ServicePairingDetailUpdate(identity shipapi.ServiceIdentity, detail *shipapi.ConnectionStateDetail) {
 	if detail.State() != shipapi.ConnectionStateReceivedPairingRequest {
 		return
 	}
@@ -347,10 +367,24 @@ func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.Connectio
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if clients, ok := c.clients[ski]; !ok || len(clients) == 0 {
+	if clients, ok := c.clients[identity.SKI]; !ok || len(clients) == 0 {
 		// this is an unknown SKI, so deny pairing
-		c.service.CancelPairingWithSKI(ski)
+		c.service.CancelPairing(identity)
 	}
+}
+
+// SHIP Pairing Service events: evcc trusts remote services by configured SKI via
+// RegisterRemoteService and does not use SHIP Pairing; logged for visibility only
+func (c *EEBus) ServiceAutoTrusted(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity) {
+	c.log.INFO.Printf("service trusted: %s", identity.SKI)
+}
+
+func (c *EEBus) ServiceAutoTrustFailed(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason error) {
+	c.log.INFO.Printf("service trust failed: %s: %v", identity.SKI, reason)
+}
+
+func (c *EEBus) ServiceAutoTrustRemoved(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason string) {
+	c.log.INFO.Printf("service trust removed: %s: %s", identity.SKI, reason)
 }
 
 // EEBUS Logging interface

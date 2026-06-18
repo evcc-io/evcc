@@ -10,6 +10,7 @@ requirements:
     de: myMazda zu MQTT. Voraussetzung ist ein konfigurierter MQTT Broker und eine mz2mqtt Installation [github.com/C64Axel/mz2mqtt](https://github.com/C64Axel/mz2mqtt).
 params:
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: vin
     required: true
   - name: timeout
@@ -36,3 +37,4 @@ render: |
     source: mqtt
     topic: mz2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: {{ .timeout }}
+  {{ include "vehicle-features" . }}

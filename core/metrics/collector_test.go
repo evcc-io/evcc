@@ -155,6 +155,80 @@ func TestCollectorSetEnergyAndReturnEnergyMeterTotal(t *testing.T) {
 	require.InDelta(t, 0.7, col.accu.ReturnEnergy, 1e-10)
 }
 
+// TestCollectorRecoversAfterFullMeterFailure verifies that a meter whose power
+// AND energy reads both fail for one cycle (collectMeters then passes power 0
+// and a nil energy total) recovers cleanly: the meter delta on the next good
+// read covers the gap and nothing is double-counted.
+func TestCollectorRecoversAfterFullMeterFailure(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector("full-fail", "full-fail", "", WithClock(clock))
+	require.NoError(t, err)
+
+	// seed energy meter at 10 kWh, constant 1 kW
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(10.0), nil, 1e3))
+	require.Equal(t, 0.0, col.accu.Energy)
+
+	// good read: meter advanced 0.05 kWh (3 min @ 1 kW)
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(10.05), nil, 1e3))
+	require.InDelta(t, 0.05, col.accu.Energy, 1e-9)
+
+	// both reads fail: power 0, energy nil -> AddPower(0) contributes nothing
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+
+	// recovered read: meter advanced to 10.15 (real 0.10 kWh since last good read)
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(10.15), nil, 1e3))
+
+	// 9 min @ 1 kW = 0.15 kWh delivered; meter 10.00 -> 10.15 = 0.15 kWh
+	require.InDelta(t, 0.15, col.accu.Energy, 1e-9)
+}
+
+// TestCollectorRecoversAfterFailedEnergyRead verifies energy accounting when a
+// meter's energy total read fails for one cycle while power keeps reporting
+// (collectMeters passes a nil energy total but a valid power). A metered
+// direction skips power integration on the failed read and recovers the gap via
+// the next meter delta, so the failed interval is not double-counted.
+func TestCollectorRecoversAfterFailedEnergyRead(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector("energy-fail", "energy-fail", "", WithClock(clock))
+	require.NoError(t, err)
+
+	// seed energy meter at 10 kWh, constant 1 kW
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(10.0), nil, 1e3))
+	require.Equal(t, 0.0, col.accu.Energy)
+
+	// good read: meter advanced 0.05 kWh (3 min @ 1 kW)
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(10.05), nil, 1e3))
+	require.InDelta(t, 0.05, col.accu.Energy, 1e-9)
+
+	// energy read fails (nil) while power is still reported: the gap is not
+	// power-integrated because the meter has reported a total before
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+	require.InDelta(t, 0.05, col.accu.Energy, 1e-9)
+
+	// recovered read: meter advanced to 10.15 (real 0.10 kWh since last good read)
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(new(10.15), nil, 1e3))
+
+	// 9 min @ 1 kW = 0.15 kWh delivered (meter 10.00 -> 10.15). The recovery
+	// delta (10.15 - 10.05) captures the gap exactly, without double-counting.
+	require.InDelta(t, 0.15, col.accu.Energy, 1e-9)
+}
+
 // TestCollectorSkipsPartialFirstSlot verifies that the first slot, joined
 // mid-way after (re)start, is not persisted as a full 15min slot.
 func TestCollectorSkipsPartialFirstSlot(t *testing.T) {

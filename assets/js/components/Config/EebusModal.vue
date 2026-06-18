@@ -40,6 +40,14 @@
 					class="form-control text-muted"
 				/>
 			</FormRow>
+			<FormRow
+				v-if="qrDataUrl"
+				:id="formId('qr-display')"
+				:label="$t('config.eebus.qr')"
+				:help="$t('config.eebus.qrExplain')"
+			>
+				<img :src="qrDataUrl" :alt="$t('config.eebus.qr')" class="qr-code" />
+			</FormRow>
 			<PropertyCollapsible v-if="!fromYaml">
 				<template #advanced>
 					<div class="alert alert-danger">
@@ -118,6 +126,7 @@
 
 <script lang="ts">
 import type { PropType } from "vue";
+import QRCode from "qrcode";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { EebusConfig, EebusStatus, YamlSource } from "@/types/evcc";
 import JsonModal from "./JsonModal.vue";
@@ -143,9 +152,30 @@ export default {
 		yamlSource: String as PropType<YamlSource>,
 	},
 	emits: ["changed"],
+	data() {
+		return {
+			qrDataUrl: null as string | null,
+		};
+	},
 	computed: {
 		fromYaml(): boolean {
 			return this.yamlSource === "file";
+		},
+	},
+	watch: {
+		"status.qr": {
+			immediate: true,
+			async handler(qr?: string) {
+				if (!qr) {
+					this.qrDataUrl = null;
+					return;
+				}
+				try {
+					this.qrDataUrl = await QRCode.toDataURL(qr, { width: 200, margin: 1 });
+				} catch {
+					this.qrDataUrl = null;
+				}
+			},
 		},
 	},
 	methods: {
@@ -155,3 +185,9 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.qr-code {
+	image-rendering: pixelated;
+}
+</style>

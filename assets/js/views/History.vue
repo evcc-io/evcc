@@ -282,7 +282,7 @@ export default defineComponent({
 				const activeMeters = meters
 					.map((s, i) => ({ ...s, paletteIndex: i }))
 					.filter(hasEnergy);
-				if (!home || activeMeters.length === 0) return activeMeters;
+				if (!home) return activeMeters;
 				const meterTotals = new Map<string, number>();
 				// Net per slot is computed from all meters (incl. inactive ones), so
 				// dropping inactive entries from the display doesn't shift the
@@ -394,7 +394,8 @@ export default defineComponent({
 		hasEntityLegend(group: string): boolean {
 			const list = this.displaySeries(group);
 			if (!list.length) return false;
-			if (group === "loadpoint" || group === "meter") return true;
+			// Without explicit consumers an "Others"-only legend is meaningless.
+			if (group === "loadpoint" || group === "meter") return list.some((s) => !s.virtual);
 			if (group === "pv" || group === "battery") return list.length > 1;
 			return false;
 		},

@@ -42,8 +42,8 @@ export interface HemsConfig {
 }
 
 export interface HemsStatus {
-  dimmed: boolean;
-  curtailed: boolean;
+  dimmed?: boolean;
+  curtailed?: boolean;
   maxConsumptionPower?: number;
   maxProductionPower?: number;
 }
@@ -128,6 +128,8 @@ export interface State {
   ocpp?: Ocpp;
   ocppforwarder?: ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]>;
   optimizer?: boolean;
+  optimizerChargingStrategy?: string;
+  optimizerChargingStrategies?: string[];
   mcp?: boolean;
 }
 
@@ -435,6 +437,7 @@ export enum BATTERY_MODE {
   NORMAL = "normal",
   HOLD = "hold",
   CHARGE = "charge",
+  HOLDCHARGE = "holdcharge",
 }
 
 export enum PHASES {
@@ -570,6 +573,7 @@ export type EebusConfig = {
 
 export type EebusStatus = {
   ski: string;
+  qr?: string;
 };
 
 export type ModbusProxy = {
@@ -727,6 +731,7 @@ export type ValueOf<T> = T[keyof T];
 
 // EvOpt interfaces matching OpenAPI spec exactly
 export interface EvOpt {
+  updated: string;
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;
