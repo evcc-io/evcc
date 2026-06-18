@@ -1,4 +1,4 @@
-template: fnn-3
+template: fnn
 products:
   - description:
       generic: FNN steuerbox (3-signal)
