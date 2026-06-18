@@ -71,10 +71,14 @@ func TestDecoding(t *testing.T) {
 		out float64
 	}{
 		{Register{Decode: "float32"}, []byte{0x4b, 0x3c, 0x61, 0x4e}, 12345678},
-		{Register{Decode: "float32"}, []byte{0xff, 0xff, 0xff, 0x7f}, 0}, // NaN
+		{Register{Decode: "float32"}, []byte{0xff, 0xff, 0xff, 0x7f}, 0}, // IEEE NaN -> 0
 		{Register{Decode: "float32s"}, []byte{0x61, 0x4e, 0x4b, 0x3c}, 12345678},
-		{Register{Decode: "float32s"}, []byte{0xff, 0x7f, 0xff, 0xff}, 0},    // NaN swapped
-		{Register{Decode: "float32nans"}, []byte{0xff, 0xff, 0xff, 0x7f}, 0}, // NaN
+		{Register{Decode: "float32s"}, []byte{0xff, 0x7f, 0xff, 0xff}, 0}, // IEEE NaN swapped -> 0
+		// "*nan" sentinel decodes to NaN so callers can map it to "not available"
+		{Register{Decode: "float32nans"}, []byte{0xff, 0xff, 0xff, 0x7f}, math.NaN()},
+		{Register{Decode: "uint16nan"}, []byte{0xff, 0xff}, math.NaN()},
+		{Register{Decode: "uint32nan"}, []byte{0xff, 0xff, 0xff, 0xff}, math.NaN()},
+		{Register{Decode: "uint64nan"}, []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, math.NaN()},
 		{Register{Decode: "uint64"}, []byte{0x00, 0x04, 0x00, 0x03, 0x00, 0x02, 0x00, 0x01}, 0x0004000300020001},
 		{Register{Decode: "uint64s"}, []byte{0x00, 0x04, 0x00, 0x03, 0x00, 0x02, 0x00, 0x01}, 0x0001000200030004},
 	}
@@ -82,6 +86,12 @@ func TestDecoding(t *testing.T) {
 	for _, tc := range tc {
 		fun, err := tc.r.DecodeFunc()
 		require.NoError(t, err, tc)
-		require.Equal(t, tc.out, fun(tc.in), tc)
+
+		out := fun(tc.in)
+		if math.IsNaN(tc.out) {
+			require.True(t, math.IsNaN(out), tc)
+			continue
+		}
+		require.Equal(t, tc.out, out, tc)
 	}
 }
