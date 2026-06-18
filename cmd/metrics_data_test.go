@@ -93,10 +93,10 @@ func TestMetricsWriteTable(t *testing.T) {
 		{Group: metrics.Grid, Name: "grid"},
 	}
 	byEntity := map[string]metrics.Series{
-		metrics.Loadpoint + "/Carport": {Group: metrics.Loadpoint, Title: "Carport", Data: []metrics.Slot{
+		metrics.Loadpoint + "/lp-1": {Group: metrics.Loadpoint, Name: "lp-1", Title: "Carport", Data: []metrics.Slot{
 			{Start: h0, Energy: 1.84},
 		}},
-		metrics.Grid + "/grid": {Group: metrics.Grid, Title: "grid", Data: []metrics.Slot{
+		metrics.Grid + "/grid": {Group: metrics.Grid, Name: "grid", Title: "grid", Data: []metrics.Slot{
 			{Start: h0, Energy: 0.412},
 			{Start: h1, Energy: 0.38, ReturnEnergy: 0.05},
 		}},

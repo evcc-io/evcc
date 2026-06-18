@@ -27,8 +27,9 @@ func roundEnergy(v float64) float64 {
 	return max(0, math.Round(v*1000)/1000)
 }
 
-// Series represents an energy series for one title group or one entity group.
+// Series represents an energy series for one entity or one entity group.
 type Series struct {
+	Name  string `json:"name,omitempty"`
 	Title string `json:"title,omitempty"`
 	Group string `json:"group"`
 	Data  []Slot `json:"data"`
@@ -67,14 +68,17 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 	titleExpr := `COALESCE(NULLIF(e.title,''), e.name)`
 	timeCol := fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
 
-	selectTitle := titleExpr + ` AS title`
-	groupCols := titleExpr + `, e."group", ` + timeCol
+	// key non-grouped series by entity name so callers can join even for
+	// renamed/removed devices; the resolved title is carried for display only
+	selectCols := `e.name AS name, ` + titleExpr + ` AS title`
+	groupCols := `e.name, e."group", ` + timeCol
 	if grouped {
-		selectTitle = `'' AS title`
+		selectCols = `'' AS name, '' AS title`
 		groupCols = `e."group", ` + timeCol
 	}
 
 	type row struct {
+		Name         string
 		Title        string
 		Group        string
 		Start        SqlTime
@@ -83,7 +87,7 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 	}
 
 	tx := db.Instance.Table("meters m").
-		Select(selectTitle + `, e."group",
+		Select(selectCols + `, e."group",
 			MIN(m.ts) AS start,
 			COALESCE(SUM(m.energy), 0) AS energy,
 			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
@@ -105,8 +109,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 
 	var res []Series
 	for _, r := range rows {
-		if n := len(res); n == 0 || res[n-1].Title != r.Title || res[n-1].Group != r.Group {
-			res = append(res, Series{Title: r.Title, Group: r.Group})
+		if n := len(res); n == 0 || res[n-1].Name != r.Name || res[n-1].Group != r.Group {
+			res = append(res, Series{Name: r.Name, Title: r.Title, Group: r.Group})
 		}
 
 		s := &res[len(res)-1]
