@@ -38,7 +38,15 @@ var (
 	mu                            sync.RWMutex
 	Subject, Token, ActivationKey string
 	ExpiresAt                     time.Time
+	configHash                    string // fingerprint of the static configuration
 )
+
+// SetConfigHash sets the static configuration fingerprint sent with token verification.
+func SetConfigHash(hash string) {
+	mu.Lock()
+	defer mu.Unlock()
+	configHash = hash
+}
 
 func machineID() string {
 	return machine.ProtectedID("evcc-sponsor")
@@ -130,7 +138,7 @@ func ConfigureSponsorship(token string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, ConfigHash: configHash})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ActivationKey = res.ActivationKey

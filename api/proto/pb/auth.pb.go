@@ -7,13 +7,12 @@
 package pb
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -26,6 +25,7 @@ const (
 type AuthRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	ConfigHash    string                 `protobuf:"bytes,2,opt,name=config_hash,json=configHash,proto3" json:"config_hash,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -63,6 +63,13 @@ func (*AuthRequest) Descriptor() ([]byte, []int) {
 func (x *AuthRequest) GetToken() string {
 	if x != nil {
 		return x.Token
+	}
+	return ""
+}
+
+func (x *AuthRequest) GetConfigHash() string {
+	if x != nil {
+		return x.ConfigHash
 	}
 	return ""
 }
@@ -363,9 +370,11 @@ var File_proto_auth_proto protoreflect.FileDescriptor
 
 const file_proto_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x10proto/auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"#\n" +
+	"\x10proto/auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"D\n" +
 	"\vAuthRequest\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"\xa7\x01\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1f\n" +
+	"\vconfig_hash\x18\x02 \x01(\tR\n" +
+	"configHash\"\xa7\x01\n" +
 	"\tAuthReply\x12\x1e\n" +
 	"\n" +
 	"authorized\x18\x01 \x01(\bR\n" +
