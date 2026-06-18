@@ -13,8 +13,8 @@ type Measurement struct {
 	Icon          string    `json:"icon,omitempty"`
 	Usage         string    `json:"usage,omitempty"` // ext meter usage (charge|grid|pv|battery|aux)
 	Power         float64   `json:"power"`
-	Energy        float64   `json:"energy,omitempty"`
-	ReturnEnergy  float64   `json:"returnEnergy,omitempty"`
+	Energy        *float64  `json:"energy,omitempty"`
+	ReturnEnergy  *float64  `json:"returnEnergy,omitempty"`
 	Powers        []float64 `json:"powers,omitempty"`
 	Currents      []float64 `json:"currents,omitempty"`
 	ExcessDCPower float64   `json:"excessdcpower,omitempty"`

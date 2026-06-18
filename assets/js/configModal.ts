@@ -9,6 +9,7 @@ export interface ModalEntry {
   choices?: string[];
   usage?: string;
   usageChoices?: string[];
+  station?: string;
 }
 
 export interface ModalResult {
@@ -115,6 +116,7 @@ export function parseKey(key: string): {
   choices?: string[];
   usage?: string;
   usageChoices?: string[];
+  station?: string;
 } {
   const bracketStart = key.indexOf("[");
   if (bracketStart === -1) {
@@ -134,6 +136,7 @@ export function parseKey(key: string): {
     else if (paramKey === "choices") result.choices = paramValue.split(",");
     else if (paramKey === "usage") result.usage = paramValue;
     else if (paramKey === "usageChoices") result.usageChoices = paramValue.split(",");
+    else if (paramKey === "station") result.station = paramValue;
   }
   return result;
 }
@@ -169,6 +172,7 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     if (parsed.choices) entry.choices = parsed.choices;
     if (parsed.usage) entry.usage = parsed.usage;
     if (parsed.usageChoices) entry.usageChoices = parsed.usageChoices;
+    if (parsed.station) entry.station = parsed.station;
     entries.push(entry);
   }
   return entries;
@@ -183,6 +187,8 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
       key += `[type:${entry.type}]`;
     } else if (entry.choices?.length) {
       key += `[choices:${entry.choices.join(",")}]`;
+    } else if (entry.station) {
+      key += `[station:${entry.station}]`;
     }
     if (entry.usage) key += `[usage:${entry.usage}]`;
     if (entry.usageChoices?.length) key += `[usageChoices:${entry.usageChoices.join(",")}]`;
@@ -244,6 +250,7 @@ export function openModal(
     choices?: string[];
     usage?: string;
     usageChoices?: string[];
+    station?: string;
   }
 ): Promise<ModalResult> {
   if (!_router) {
@@ -256,6 +263,7 @@ export function openModal(
   if (params?.choices) entry.choices = params.choices;
   if (params?.usage) entry.usage = params.usage;
   if (params?.usageChoices) entry.usageChoices = params.usageChoices;
+  if (params?.station) entry.station = params.station;
 
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
@@ -300,6 +308,7 @@ export function replaceModal(
     choices?: string[];
     usage?: string;
     usageChoices?: string[];
+    station?: string;
   }
 ): void {
   if (!_router) return;
@@ -310,6 +319,7 @@ export function replaceModal(
   if (params?.choices) entry.choices = params.choices;
   if (params?.usage) entry.usage = params.usage;
   if (params?.usageChoices) entry.usageChoices = params.usageChoices;
+  if (params?.station) entry.station = params.station;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);

@@ -8,7 +8,6 @@ params:
     choice: ["grid", "pv", "charge"]
   - name: host
   - name: cache
-    advanced: true
     default: 2s
 render: |
   type: custom
@@ -27,5 +26,14 @@ render: |
     jq: .Data[4] # reverse active energy, unit: kWh
     {{- else }}
     jq: .Data[3] # forward active energy, unit: kWh
+    {{- end }}
+    cache: {{ .cache }}
+  returnenergy:
+    source: http
+    uri: http://{{ .host }}/api/monitorjson
+    {{- if eq .usage "pv" }}
+    jq: .Data[3] # forward active energy, unit: kWh
+    {{- else }}
+    jq: .Data[4] # reverse active energy, unit: kWh
     {{- end }}
     cache: {{ .cache }}

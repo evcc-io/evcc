@@ -22,19 +22,29 @@ params:
     help:
       de: Verwenden Skala von 1000 für Zuidwijk Slimmelezer. Verwenden Skala 1 für ESPHome DSMR und mhendriks P1 Dongle
       en: Use scale of 1000 for Zuidwijk Slimmelezer. Use scale 1 for ESPHome DSMR and mhendriks P1 Dongle
+  - name: firmware
+    type: choice
+    choice: ["<2026.1", ">=2026.1"]
+    default: "<2026.1"
+    description:
+      de: ESPHome Firmware-Version
+      en: ESPHome firmware version
+    help:
+      de: ESPHome ab 2026.1 adressiert Sensoren über den Entitätsnamen. Die alten /sensor/<object_id> URLs sind veraltet und werden in ESPHome 2026.7.0 entfernt. Wähle '>=2026.1', wenn dein Gerät ESPHome 2026.1 oder neuer verwendet.
+      en: ESPHome 2026.1+ addresses sensors by entity name. The legacy /sensor/<object_id> URLs are deprecated and will be removed in ESPHome 2026.7.0. Choose '>=2026.1' if your device runs ESPHome 2026.1 or newer.
 render: |
   type: custom
   power:
     source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Consumed{{ else }}power_consumed{{ end }}
       headers:
       - content-type: application/json
       jq: .value
       scale: {{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Produced{{ else }}power_produced{{ end }}
       headers:
       - content-type: application/json
       jq: .value
@@ -43,28 +53,28 @@ render: |
     source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/energy_produced_tariff_1
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Energy Produced Tariff 1{{ else }}energy_produced_tariff_1{{ end }}
       headers:
       - content-type: application/json
       jq: .value
     - source: http
-      uri: http://{{ .host }}/sensor/energy_produced_tariff_2
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Energy Produced Tariff 2{{ else }}energy_produced_tariff_2{{ end }}
       headers:
       - content-type: application/json
       jq: .value
   currents:
   - source: http
-    uri: http://{{ .host }}/sensor/current_phase_1
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Current Phase 1{{ else }}current_phase_1{{ end }}
     headers:
     - content-type: application/json
     jq: .value
   - source: http
-    uri: http://{{ .host }}/sensor/current_phase_2
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Current Phase 2{{ else }}current_phase_2{{ end }}
     headers:
     - content-type: application/json
     jq: (.value // 0)
   - source: http
-    uri: http://{{ .host }}/sensor/current_phase_3
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Current Phase 3{{ else }}current_phase_3{{ end }}
     headers:
     - content-type: application/json
     jq: (.value // 0)
@@ -72,13 +82,13 @@ render: |
   - source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced_phase_1
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Produced Phase 1{{ else }}power_produced_phase_1{{ end }}
       headers:
       - content-type: application/json
       jq: .value
       scale: -{{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed_phase_1
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Consumed Phase 1{{ else }}power_consumed_phase_1{{ end }}
       headers:
       - content-type: application/json
       jq: .value
@@ -86,13 +96,13 @@ render: |
   - source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced_phase_2
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Produced Phase 2{{ else }}power_produced_phase_2{{ end }}
       headers:
       - content-type: application/json
       jq: (.value // 0)
       scale: -{{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed_phase_2
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Consumed Phase 2{{ else }}power_consumed_phase_2{{ end }}
       headers:
       - content-type: application/json
       jq: (.value // 0)
@@ -100,13 +110,13 @@ render: |
   - source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/power_produced_phase_3
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Produced Phase 3{{ else }}power_produced_phase_3{{ end }}
       headers:
       - content-type: application/json
       jq: (.value // 0)
       scale: -{{ .scale }}
     - source: http
-      uri: http://{{ .host }}/sensor/power_consumed_phase_3
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Power Consumed Phase 3{{ else }}power_consumed_phase_3{{ end }}
       headers:
       - content-type: application/json
       jq: (.value // 0)

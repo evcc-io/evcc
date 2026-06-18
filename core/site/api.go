@@ -36,7 +36,6 @@ type API interface {
 
 	// circuits
 	GetCircuit() api.Circuit
-	SetCircuit(api.Circuit)
 
 	//
 	// battery
@@ -55,10 +54,16 @@ type API interface {
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
 
+	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
+	GetOptimizerChargingStrategy() string
+	// SetOptimizerChargingStrategy sets the optimizer grid charging strategy
+	SetOptimizerChargingStrategy(strategy string) error
+
 	//
 	// power and energy
 	//
 
+	GetGridPower() float64
 	GetResidualPower() float64
 	SetResidualPower(float64) error
 

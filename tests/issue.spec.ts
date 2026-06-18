@@ -17,7 +17,7 @@ test.afterEach(async () => {
   await stop();
 });
 
-const REDACT_CONFIG = "sponsor.evcc.yaml";
+const REDACT_CONFIG = "redact.evcc.yaml";
 const CONFIG = "issue.evcc.yaml";
 
 test.describe("issue creation", () => {

@@ -34,6 +34,7 @@ func NewDemoFromConfig(_ context.Context, other map[string]any) (oauth2.TokenSou
 		Method      string
 		RedirectUri string
 		Secret      string
+		Scope       string // advanced auth param, used by e2e tests
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

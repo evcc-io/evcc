@@ -3,6 +3,7 @@
 		class="label-bar"
 		:class="{
 			'label-bar--hide-icon': hideIcon,
+			'label-bar--hide-dot': hideDot,
 			'label-bar--hidden': !value,
 			'label-bar--top': top,
 			'label-bar--bottom': bottom,
@@ -26,6 +27,7 @@ export default defineComponent({
 	props: {
 		value: { type: Number, default: 0 },
 		hideIcon: { type: Boolean },
+		hideDot: { type: Boolean },
 		top: { type: Boolean },
 		bottom: { type: Boolean },
 		first: { type: Boolean },
@@ -89,6 +91,9 @@ export default defineComponent({
 	border-radius: 100%;
 	border-width: 1.5rem;
 	transition-delay: 400ms, 0s;
+}
+.label-bar--hide-dot .label-bar-icon {
+	transform: scale(0);
 }
 .label-bar--hidden {
 	opacity: 0;
