@@ -193,7 +193,7 @@ test.describe("consumption breakdown", () => {
   // 2026-03-24: home = 0.4 kWh, no meter entities with data.
   test("home without meters shows chart without legend", async ({ page }) => {
     await gotoDay(page, 2026, 3, 24);
-    const consumption = section(page, "meter");
+    const consumption = section(page, "consumer");
     await expect(consumption).toBeVisible();
 
     await expect(consumption.getByRole("heading")).toContainText("0.4 kWh");
