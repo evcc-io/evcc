@@ -57,8 +57,10 @@ func (suite *ocppTestSuite) SetupSuite() {
 	ocpp.TriggerBootDelay = 100 * time.Millisecond
 
 	// setup cs so we can overwrite logger afterwards
-	_, err := ocpp.Instance()
+	cs, err := ocpp.Instance()
 	suite.Require().NoError(err, "instance")
+	suite.NotNil(cs)
+
 	suite.logger = &ocppLogger{t: suite.T()}
 	ocppj.SetLogger(suite.logger)
 
@@ -66,9 +68,6 @@ func (suite *ocppTestSuite) SetupSuite() {
 	ocppTestUrl = fmt.Sprintf("ws://localhost:%d", ocpp.Port())
 
 	suite.clock = clock.NewMock()
-	cs, err := ocpp.Instance()
-	suite.Require().NoError(err)
-	suite.NotNil(cs)
 }
 
 func (suite *ocppTestSuite) TearDownSuite() {
