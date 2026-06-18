@@ -1,71 +1,30 @@
 <template>
 	<div class="vehicle-soc">
 		<div class="progress">
-			<template v-if="heating">
-				<div v-if="connected" class="thermal-track">
-					<div
-						v-if="
-							heatingHasTemp &&
-							enabled &&
-							remainingSocWidth !== null &&
-							remainingSocWidth > 0
-						"
-						class="thermal-fill thermal-fill--remaining"
-						:style="{ width: `${thermalLimitWidth}%`, ...transition }"
-					>
-						<div
-							class="thermal-fill-inner"
-							:style="{ width: `${thermalRemainingInnerWidth}%` }"
-						></div>
-					</div>
-					<div
-						v-if="heatingHasTemp"
-						class="thermal-fill"
-						role="progressbar"
-						:style="{
-							width: `${vehicleSocDisplayWidth}%`,
-							opacity: charging ? 1 : 0.55,
-							...transition,
-						}"
-					>
-						<div
-							class="thermal-fill-inner"
-							:style="{ width: `${thermalInnerWidth}%` }"
-						></div>
-						<div v-if="charging" class="heating-stripes"></div>
-					</div>
-					<div
-						v-else
-						class="thermal-fill thermal-fill--warm"
-						role="progressbar"
-						:style="{ opacity: charging ? 1 : 0.55 }"
-					>
-						<div v-if="charging" class="heating-stripes"></div>
-					</div>
+			<div v-if="connected" class="bar-fills">
+				<!-- behind: track from current position up to the limit, muted -->
+				<div
+					v-if="showRemaining"
+					class="progress-bar bar-fill bar-fill--remaining"
+					role="progressbar"
+					:class="remainingClass"
+					:style="remainingStyle"
+				></div>
+				<!-- front: current fill (solid color, or heating gradient) -->
+				<div
+					v-if="!showWarmBar"
+					class="progress-bar bar-fill"
+					role="progressbar"
+					:class="fillClass"
+					:style="mainFillStyle"
+				>
+					<div v-if="heatingActive && charging" class="heating-stripes"></div>
 				</div>
-			</template>
-			<template v-else>
-				<div
-					v-if="connected"
-					class="progress-bar"
-					role="progressbar"
-					:class="{
-						[progressColor]: true,
-						'progress-bar-striped': charging,
-						'progress-bar-animated': charging,
-					}"
-					:style="{ width: `${vehicleSocDisplayWidth}%`, ...transition }"
-				></div>
-				<div
-					v-if="
-						remainingSocWidth !== null && remainingSocWidth > 0 && enabled && connected
-					"
-					class="progress-bar bg-muted"
-					role="progressbar"
-					:class="progressColor"
-					:style="{ width: `${remainingSocWidth}%`, ...transition }"
-				></div>
-			</template>
+				<!-- heating without a reading yet: warm half of the scale -->
+				<div v-else class="progress-bar bar-fill thermal-warm" role="progressbar">
+					<div v-if="charging" class="heating-stripes"></div>
+				</div>
+			</div>
 			<div
 				v-show="vehicleLimitSoc"
 				ref="vehicleLimitSoc"
@@ -99,7 +58,7 @@
 		</div>
 		<div class="target">
 			<input
-				v-if="socBasedCharging && connected"
+				v-if="socBasedCharging && connected && (!heating || heatingHasTemp)"
 				type="range"
 				:min="lowerBound"
 				:max="upperBound"
@@ -169,36 +128,67 @@ export default defineComponent({
 			if (!this.heating) {
 				return 0;
 			}
-			const base = this.maxTemp > this.minTemp ? this.minTemp : 0;
-			// 0 means no reading yet, don't collapse the scale to it
-			return this.vehicleSoc > 0 ? Math.min(base, this.vehicleSoc) : base;
+			// fixed scale; an out-of-range temp clips to the edge (see toPercent)
+			return this.maxTemp > this.minTemp ? this.minTemp : 0;
 		},
 		upperBound() {
 			if (!this.heating) {
 				return 100;
 			}
-			const base = this.maxTemp > this.minTemp ? this.maxTemp : 100;
-			return this.vehicleSoc > 0 ? Math.max(base, this.vehicleSoc) : base;
+			return this.maxTemp > this.minTemp ? this.maxTemp : 100;
 		},
-		thermalInnerWidth() {
-			// widen the inner gradient so colors stay anchored to the full track, not the fill width
-			const tp = this.vehicleSocDisplayWidth;
-			return tp > 0.5 ? 10000 / tp : 20000;
-		},
-		thermalLimitWidth() {
-			// current temp position plus the remaining span up to the limit
+		limitWidth() {
+			// current position plus the remaining span up to the limit (absolute, from 0)
 			return this.vehicleSocDisplayWidth + (this.remainingSocWidth ?? 0);
-		},
-		thermalRemainingInnerWidth() {
-			// same anchoring trick as thermalInnerWidth, relative to the limit width
-			const tp = this.thermalLimitWidth;
-			return tp > 0.5 ? 10000 / tp : 20000;
 		},
 		limitPosition() {
 			return this.toPercent(this.visibleLimitSoc);
 		},
 		heatingHasTemp() {
 			return this.socBasedCharging && this.vehicleSoc > 0;
+		},
+		// heating with a usable reading -> render the temperature gradient.
+		// emergency (minSocNotReached) falls back to the solid danger color.
+		heatingActive() {
+			return this.heating && !this.minSocNotReached;
+		},
+		showWarmBar() {
+			return this.heatingActive && !this.heatingHasTemp;
+		},
+		showRemaining() {
+			return (
+				this.connected &&
+				this.enabled &&
+				this.remainingSocWidth !== null &&
+				this.remainingSocWidth > 0 &&
+				(!this.heating || this.heatingHasTemp)
+			);
+		},
+		fillClass() {
+			if (this.heatingActive) {
+				return ["thermal"];
+			}
+			return [
+				this.progressColor,
+				{ "progress-bar-striped": this.charging, "progress-bar-animated": this.charging },
+			];
+		},
+		remainingClass() {
+			return this.heatingActive ? ["thermal"] : [this.progressColor];
+		},
+		mainFillStyle() {
+			return {
+				width: `${this.vehicleSocDisplayWidth}%`,
+				"--temp-pos": this.vehicleSocDisplayWidth,
+				...this.transition,
+			};
+		},
+		remainingStyle() {
+			return {
+				width: `${this.limitWidth}%`,
+				"--temp-pos": this.vehicleSocDisplayWidth,
+				...this.transition,
+			};
 		},
 		vehicleLimitSocPosition() {
 			return this.toPercent(this.vehicleLimitSoc);
@@ -377,35 +367,35 @@ export default defineComponent({
 	font-size: 1rem;
 	background: var(--evcc-background);
 }
-.progress-bar.bg-muted {
-	opacity: 0.5;
-}
-.thermal-track {
+/* clip wrapper so the fills get the bar's rounded corners; markers stay outside */
+.bar-fills {
 	position: absolute;
 	inset: 0;
 	overflow: hidden;
 	border-radius: inherit;
 }
-.thermal-fill {
+/* both fills stack from the left edge; the remaining one sits behind the front fill */
+.bar-fill {
 	position: absolute;
 	left: 0;
 	top: 0;
 	bottom: 0;
 	overflow: hidden;
 }
-.thermal-fill-inner {
-	position: absolute;
-	left: 0;
-	top: 0;
-	bottom: 0;
-	background: var(--evcc-heating-gradient);
+.bar-fill--remaining {
+	opacity: 0.5;
 }
-/* muted gradient slice from current temp to the limit, behind the main fill */
-.thermal-fill--remaining {
-	opacity: 0.3;
+/* enlarge a sub-window of the gradient and slide it by temp: cold (left) at low
+   temp -> solid blue, warm (right) at high temp. 500cqw = 5x zoom on the track,
+   so each state shows a narrow slice and reads as a distinct color. */
+.thermal {
+	background: var(--evcc-heating-gradient);
+	background-size: 500cqw 100%;
+	background-position-x: calc(var(--temp-pos, 0) * -4cqw);
+	background-repeat: no-repeat;
 }
 /* no reading: full-width bar showing only the warm (right) half of the scale */
-.thermal-fill--warm {
+.thermal-warm {
 	right: 0;
 	background: var(--evcc-heating-gradient);
 	background-size: 200% 100%;
@@ -414,8 +404,9 @@ export default defineComponent({
 .heating-stripes {
 	position: absolute;
 	inset: 0;
+	/* same diagonal direction as the charging (bootstrap) striped bar */
 	background-image: linear-gradient(
-		-45deg,
+		45deg,
 		rgba(255, 255, 255, 0.24) 25%,
 		transparent 25%,
 		transparent 50%,
