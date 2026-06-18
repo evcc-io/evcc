@@ -200,36 +200,38 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
 
-	// start OCPP server
-	cs, err := ocpp.Instance()
-	if err != nil {
-		log.ERROR.Println("ocpp:", err)
-	}
-	cs.SetUpdated(func() {
-		// republish when OCPP state updates
-		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
-			Config: ocpp.CurrentConfig(),
-			Status: ocpp.GetStatus(),
-		}}
-	})
-	log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
-	if ocpp.ExternalUrl() != "" {
-		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
-	}
-	// register the callback even with no rules so runtime additions are pushed
-	ocpp.SetForwarderUpdated(func() {
-		valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
-			Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
-			Status: ocpp.GetForwarderStatus(),
-		}}
-	})
-	if ocpp.ForwarderEnabled() {
-		log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
-	}
+	// start OCPP and EEBus servers (skipped in degraded mode where setup failed,
+	// so a misconfigured instance serves only the offline UI)
+	if err == nil {
+		cs, ocppErr := ocpp.Instance()
+		if ocppErr != nil {
+			log.ERROR.Println("ocpp:", ocppErr)
+		}
+		cs.SetUpdated(func() {
+			// republish when OCPP state updates
+			valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+				Config: ocpp.CurrentConfig(),
+				Status: ocpp.GetStatus(),
+			}}
+		})
+		log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+		if ocpp.ExternalUrl() != "" {
+			log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+		}
+		// register the callback even with no rules so runtime additions are pushed
+		ocpp.SetForwarderUpdated(func() {
+			valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+				Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+				Status: ocpp.GetForwarderStatus(),
+			}}
+		})
+		if ocpp.ForwarderEnabled() {
+			log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
+		}
 
-	// start EEBus server
-	if _, err := eebus.Instance(); err != nil {
-		log.ERROR.Println("eebus:", err)
+		if _, eebusErr := eebus.Instance(); eebusErr != nil {
+			log.ERROR.Println("eebus:", eebusErr)
+		}
 	}
 
 	// value cache

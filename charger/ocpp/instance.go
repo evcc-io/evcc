@@ -195,5 +195,8 @@ func (cs *CS) listen() error {
 // Instance returns the central system, starting it once on first call. It
 // returns an error if the server fails to bind its port.
 func Instance() (*CS, error) {
+	if instance == nil {
+		return nil, errors.New("ocpp not configured")
+	}
 	return instance, instance.started()
 }
