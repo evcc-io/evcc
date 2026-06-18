@@ -81,12 +81,13 @@ type EEBus struct {
 
 	ski string
 
-	started func() error // memoized service start; set in NewServer, runs once
-
 	clients map[string][]Device
 }
 
-var instance *EEBus
+var (
+	instance *EEBus
+	started  func() error // memoized service start; set in NewServer, runs once
+)
 
 // Instance returns the eebus server, starting the service once on first call
 // (OCPP pattern). Returns an error if eebus is unconfigured or start fails.
@@ -94,7 +95,7 @@ func Instance() (*EEBus, error) {
 	if instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
-	if err := instance.started(); err != nil {
+	if err := started(); err != nil {
 		return nil, err
 	}
 	return instance, nil
@@ -246,7 +247,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.service.AddUseCase(uc)
 	}
 
-	c.started = sync.OnceValue(c.service.Start)
+	started = sync.OnceValue(c.service.Start)
 	instance = c
 
 	return c, nil

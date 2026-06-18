@@ -45,6 +45,7 @@ func (r ForwarderRule) Redacted() ForwarderRule {
 
 var (
 	instance    *CS
+	started     func() error // memoized listen; set in NewServer, runs once
 	port        = 8887
 	boundPort   int
 	externalUrl string
@@ -167,7 +168,7 @@ func NewServer(cfg Config, networkExternalUrl string) {
 	cs.SetNewChargePointHandler(instance.NewChargePoint)
 	cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 
-	instance.started = sync.OnceValue(instance.listen)
+	started = sync.OnceValue(instance.listen)
 }
 
 // listen starts the central system and blocks until it has bound its port.
@@ -198,5 +199,5 @@ func Instance() (*CS, error) {
 	if instance == nil {
 		return nil, errors.New("ocpp not configured")
 	}
-	return instance, instance.started()
+	return instance, started()
 }
