@@ -138,7 +138,11 @@ func ConfigureSponsorship(token string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, ConfigHash: configHash})
+	mu.RLock()
+	hash := configHash
+	mu.RUnlock()
+
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, ConfigHash: hash})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ActivationKey = res.ActivationKey
