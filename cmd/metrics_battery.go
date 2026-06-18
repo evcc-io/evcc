@@ -54,9 +54,7 @@ func runMetricsBattery(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal("no battery entities found")
 	}
 
-	title := metricsEntityTitle()
-
-	selected, err := metricsSelectEntities(batteries, args, "", title)
+	selected, err := metricsSelectEntities(batteries, args, "")
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -66,7 +64,7 @@ func runMetricsBattery(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	metricsWriteBatteryTable(os.Stdout, selected, metricsBatteryTotals(series), title)
+	metricsWriteBatteryTable(os.Stdout, selected, metricsBatteryTotals(series))
 	fmt.Fprintln(os.Stderr, "\nvalues in kWh")
 }
 
@@ -99,21 +97,12 @@ func metricsBatteryTotals(series []metrics.Series) map[string]batteryTotals {
 // metricsWriteBatteryTable renders one row per battery comparing charge and
 // discharge energy. Efficiency is the discharge/charge ratio, left blank when
 // no energy was charged.
-func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals map[string]batteryTotals, title func(group, name string) string) {
+func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals map[string]batteryTotals) {
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(tw, "name\ttitle\tcharge\tdischarge\tefficiency")
 
 	for _, e := range selected {
 		t := totals[e.Name]
-
-		// prefer the live config title, then the db title, then the name
-		label := title(e.Group, e.Name)
-		if label == "" {
-			label = e.Title
-		}
-		if label == "" {
-			label = e.Name
-		}
 
 		efficiency := ""
 		if t.charge > 0 {
@@ -121,7 +110,7 @@ func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals
 		}
 
 		fmt.Fprintf(tw, "%s\t%s\t%.3f\t%.3f\t%s\n",
-			e.Name, label, t.charge, t.discharge, efficiency)
+			e.Name, metricsEntityLabel(e), t.charge, t.discharge, efficiency)
 	}
 
 	tw.Flush()

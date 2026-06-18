@@ -29,8 +29,8 @@ func TestMetricsBatteryTotals(t *testing.T) {
 
 func TestMetricsWriteBatteryTable(t *testing.T) {
 	selected := []metrics.EntityInfo{
-		{Group: metrics.Battery, Name: "db:1"},
-		{Group: metrics.Battery, Name: "db:2", Title: "Hyper2000"}, // removed device: only the db title remains
+		{Group: metrics.Battery, Name: "db:1", Title: "Home"},
+		{Group: metrics.Battery, Name: "db:2", Title: "Hyper2000"}, // removed device: stored db title remains
 		{Group: metrics.Battery, Name: "db:3"},
 	}
 	totals := map[string]batteryTotals{
@@ -38,22 +38,16 @@ func TestMetricsWriteBatteryTable(t *testing.T) {
 		"db:2": {charge: 4.0, discharge: 3.0},
 		// db:3 deliberately absent: no data in the timeframe
 	}
-	title := func(group, name string) string {
-		if name == "db:1" {
-			return "Home"
-		}
-		return ""
-	}
 
 	var buf bytes.Buffer
-	metricsWriteBatteryTable(&buf, selected, totals, title)
+	metricsWriteBatteryTable(&buf, selected, totals)
 
 	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 	require.Len(t, lines, 4) // header + 3 rows
 
 	require.Contains(t, lines[0], "efficiency")
 
-	// db:1: live config title, efficiency = discharge/charge
+	// db:1: stored title, efficiency = discharge/charge
 	require.Contains(t, lines[1], "Home")
 	require.Contains(t, lines[1], "10.000")
 	require.Contains(t, lines[1], "9.000")
