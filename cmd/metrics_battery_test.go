@@ -11,20 +11,20 @@ import (
 
 func TestMetricsBatteryTotals(t *testing.T) {
 	series := []metrics.Series{
-		{Group: metrics.Battery, Name: "db:1", Title: "bat", Data: []metrics.Slot{
+		{Group: metrics.Battery, Title: "bat", Data: []metrics.Slot{
 			{Energy: 1.0, ReturnEnergy: 0.4},
 			{Energy: 2.0, ReturnEnergy: 1.6},
 		}},
 		// non-battery series must be ignored
-		{Group: metrics.Grid, Name: "db:2", Title: "grid", Data: []metrics.Slot{
+		{Group: metrics.Grid, Title: "grid", Data: []metrics.Slot{
 			{Energy: 5.0, ReturnEnergy: 3.0},
 		}},
 	}
 
 	totals := metricsBatteryTotals(series)
 	require.Len(t, totals, 1)
-	require.InDelta(t, 3.0, totals["db:1"].charge, 0.001)
-	require.InDelta(t, 2.0, totals["db:1"].discharge, 0.001)
+	require.InDelta(t, 3.0, totals["bat"].charge, 0.001)
+	require.InDelta(t, 2.0, totals["bat"].discharge, 0.001)
 }
 
 func TestMetricsWriteBatteryTable(t *testing.T) {
@@ -34,8 +34,8 @@ func TestMetricsWriteBatteryTable(t *testing.T) {
 		{Group: metrics.Battery, Name: "db:3"},
 	}
 	totals := map[string]batteryTotals{
-		"db:1": {charge: 10.0, discharge: 9.0},
-		"db:2": {charge: 4.0, discharge: 3.0},
+		"Home":      {charge: 10.0, discharge: 9.0},
+		"Hyper2000": {charge: 4.0, discharge: 3.0},
 		// db:3 deliberately absent: no data in the timeframe
 	}
 
@@ -53,7 +53,7 @@ func TestMetricsWriteBatteryTable(t *testing.T) {
 	require.Contains(t, lines[1], "9.000")
 	require.Contains(t, lines[1], "90.0%")
 
-	// db:2: removed device still joins by name; label falls back to the db title
+	// db:2: removed device still joins via its stored title; label is that title
 	require.Contains(t, lines[2], "Hyper2000")
 	require.Contains(t, lines[2], "4.000")
 	require.Contains(t, lines[2], "3.000")

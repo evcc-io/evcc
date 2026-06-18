@@ -76,20 +76,19 @@ type batteryTotals struct {
 	discharge float64
 }
 
-// metricsBatteryTotals sums charge and discharge energy per battery, keyed by
-// entity name so removed devices still match (titles come from the live config).
+// metricsBatteryTotals sums charge and discharge energy per battery title.
 func metricsBatteryTotals(series []metrics.Series) map[string]batteryTotals {
 	res := make(map[string]batteryTotals)
 	for _, s := range series {
 		if s.Group != metrics.Battery {
 			continue
 		}
-		t := res[s.Name]
+		t := res[s.Title]
 		for _, slot := range s.Data {
 			t.charge += slot.Energy
 			t.discharge += slot.ReturnEnergy
 		}
-		res[s.Name] = t
+		res[s.Title] = t
 	}
 	return res
 }
@@ -102,7 +101,7 @@ func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals
 	fmt.Fprintln(tw, "name\ttitle\tcharge\tdischarge\tefficiency")
 
 	for _, e := range selected {
-		t := totals[e.Name]
+		t := totals[metricsEntityLabel(e)]
 
 		efficiency := ""
 		if t.charge > 0 {
