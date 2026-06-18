@@ -18,11 +18,13 @@ params:
     advanced: true
   - preset: battery-params
   - name: minsoc
-    required: true
+    default: 10
   - name: maxsoc
-    required: true
+    default: 100
   - name: maxchargepower
     required: true
+    # config-time default from the inverter rated power (35001)
+    service: aa55udp/read?host={host}&id=247&address=35001&decode=uint16&resulttype=int
   - name: maxdischargepower
     required: true
 render: |
