@@ -857,7 +857,12 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 
 	// Load proxy forwarding rules from DB if present.
 	var rules []ocpp.ForwarderRule
-	if err := settings.Json(keys.OcppForwarder, &rules); err == nil {
+	if err := settings.Json(keys.OcppForwarder, &rules); err == nil && len(rules) > 0 {
+		// the forwarder relays through the central system; abort if it failed to start
+		if _, err := ocpp.Instance(); err != nil {
+			log.ERROR.Printf("ocpp: forwarder disabled: %v", err)
+			return
+		}
 		ocpp.ApplyForwarderRules(rules)
 	}
 }
