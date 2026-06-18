@@ -23,7 +23,9 @@ test.afterAll(async () => {
 test.describe("config bool service param", async () => {
   test("unset bool defaults to false and fills service placeholder", async ({ page }) => {
     // service call fires with insecure=false even though the bool was never touched
-    const servicePromise = page.waitForRequest(/\/config\/service\/demo\/insecure\?insecure=false$/);
+    const servicePromise = page.waitForRequest(
+      /\/config\/service\/demo\/insecure\?insecure=false$/
+    );
 
     await page.goto("/#/config");
     await page.getByRole("button", { name: "Add grid meter" }).click();
