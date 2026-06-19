@@ -2,6 +2,7 @@ package auth
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
@@ -31,4 +32,26 @@ func TestOAuth(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, token.Valid())
 	require.Equal(t, 1, storerCalled)
+}
+
+// TestSetOnlineNonBlocking guards against the deadlock where a stalled auth
+// handler (not draining the online channel) wedges a token refresh that holds
+// o.mu, freezing every caller that reads through the OAuth http transport.
+// setOnline must coalesce instead of blocking, even when the buffer is full.
+func TestSetOnlineNonBlocking(t *testing.T) {
+	o := &OAuth{onlineC: make(chan bool, 1)}
+	o.setOnline(true) // fill the buffer; nobody is draining it
+
+	done := make(chan struct{})
+	go func() {
+		o.setOnline(false) // would block forever on a full unbuffered/direct send
+		o.setOnline(true)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("setOnline blocked while the online channel was not drained")
+	}
 }

@@ -146,7 +146,7 @@ func NewOAuth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 	}
 	o.onlineC = onlineC
 
-	o.onlineC <- token.Valid()
+	o.setOnline(token.Valid())
 
 	// add instance
 	addInstance(o.subject, o)
@@ -172,7 +172,7 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 		// force logout
 		if strings.Contains(err.Error(), "invalid_") && settings.Exists(o.subject) {
 			o.token = nil
-			o.onlineC <- false
+			o.setOnline(false)
 			settings.Delete(o.subject)
 		}
 
@@ -199,7 +199,28 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 
 	o.token = token
 
-	o.onlineC <- token.Valid()
+	o.setOnline(token.Valid())
+}
+
+// setOnline notifies the auth handler of the current online state without ever
+// blocking the caller.
+//
+// The online channel is only a signal: the handler re-reads the live state of
+// every provider when it fires (see server/providerauth), so coalescing - i.e.
+// dropping a notification when one is already queued - is lossless.
+//
+// A blocking send here would deadlock: callers such as updateToken/Token hold
+// o.mu, and the handler re-enters this provider via Authenticated() -> Token(),
+// which also takes o.mu. If the handler is momentarily not draining the channel
+// (e.g. startup races or back-pressure on the UI param channel), a blocking
+// send under o.mu wedges the token refresh indefinitely. Because metering and
+// other plugins read through the OAuth http transport on the synchronous site
+// update loop, that single stuck Token() call freezes the whole control loop.
+func (o *OAuth) setOnline(online bool) {
+	select {
+	case o.onlineC <- online:
+	default:
+	}
 }
 
 // HandleCallback implements api.AuthProvider.
@@ -272,7 +293,7 @@ func (o *OAuth) Logout() error {
 	defer o.mu.Unlock()
 
 	o.token = nil
-	o.onlineC <- false
+	o.setOnline(false)
 
 	return nil
 }
