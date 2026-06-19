@@ -96,17 +96,9 @@ func hemsCurtailed(hems api.HEMS) *bool {
 }
 
 // nonZeroEnergy reports a zero lifetime energy reading as api.ErrNotAvailable.
-// Some inverters reset their total counter to 0 at night; this keeps the last value (#30951).
-func nonZeroEnergy(g func() (float64, error)) func() (float64, error) {
-	if g == nil {
-		panic("missing getter")
+func nonZeroEnergy(f float64, err error) (float64, error) {
+	if err == nil && f == 0 {
+		return 0, api.ErrNotAvailable
 	}
-
-	return func() (float64, error) {
-		f, err := g()
-		if err == nil && f == 0 {
-			return 0, api.ErrNotAvailable
-		}
-		return f, err
-	}
+	return f, err
 }
