@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
+import { start, stop, restart, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 
@@ -23,7 +23,7 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { title: string }) => s.title === "grid");
+    const grid = data.find((s: { title: string }) => s.title === "Grid");
     const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
@@ -46,7 +46,7 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { title: string }) => s.title === "grid");
+    const grid = data.find((s: { title: string }) => s.title === "Grid");
     const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
@@ -178,7 +178,7 @@ test.describe("consumption breakdown", () => {
   // virtual Others = home − meters = 0.3 kWh.
   test("home total, meter legend, virtual Others", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
-    const consumption = section(page, "meter");
+    const consumption = section(page, "consumer");
     await expect(consumption).toBeVisible();
 
     // Section total = home, not sum of meters.
@@ -193,7 +193,7 @@ test.describe("consumption breakdown", () => {
   // 2026-03-24: home = 0.4 kWh, no meter entities with data.
   test("home without meters shows chart without legend", async ({ page }) => {
     await gotoDay(page, 2026, 3, 24);
-    const consumption = section(page, "meter");
+    const consumption = section(page, "consumer");
     await expect(consumption).toBeVisible();
 
     await expect(consumption.getByRole("heading")).toContainText("0.4 kWh");
@@ -203,8 +203,8 @@ test.describe("consumption breakdown", () => {
 
   test("entity focus rescales axis and resets on unfocus", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
-    const consumption = section(page, "meter");
-    const meterChart = chart(page, "meter");
+    const consumption = section(page, "consumer");
+    const meterChart = chart(page, "consumer");
 
     // Stacked total per slot 1.0 kW → echarts auto-axis 0..1.2 in 1-decimal.
     expect(await yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);
@@ -217,5 +217,38 @@ test.describe("consumption breakdown", () => {
     // Unfocus → axis returns to kW range, not stuck on 1000 W cap.
     await kitchen.click();
     await expect.poll(() => yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);
+  });
+});
+
+test.describe("additional meters", () => {
+  // 2026-04-09: single ext meter "Submeter" = 1.2 kWh, no home data.
+  test("standalone section without virtual Others", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 9);
+    const additional = section(page, "meter");
+    await expect(additional).toBeVisible();
+
+    // Total is the entity sum, not home-derived.
+    await expect(additional.getByRole("heading")).toContainText("1.2 kWh");
+
+    // Explicit entity legend, no virtual "Others" (unlike the consumer group).
+    await expect(additional.getByRole("button", { name: "Submeter 1.2 kWh" })).toBeVisible();
+    await expect(additional.getByText("Others", { exact: true })).toBeHidden();
+  });
+
+  // 2026-04-10: same meter with export. Negatives flip the axis to symmetric.
+  test("bidirectional axis when data contains exports", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 10);
+    expect(await yAxis(chart(page, "meter"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
+  });
+});
+
+test.describe("reconnect", () => {
+  test("history still shows content after backend restart", async ({ page }) => {
+    await gotoDay(page, 2026, 3, 24);
+    await expect(chart(page, "grid")).toBeVisible();
+
+    await restart();
+
+    await expect(chart(page, "grid")).toBeVisible();
   });
 });

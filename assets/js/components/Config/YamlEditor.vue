@@ -73,7 +73,7 @@ export default {
 	height: 100%;
 	font-size: 13px;
 	background-color: var(--evcc-box);
-	color: var(--bs-body-color);
+	color: var(--evcc-default-text);
 }
 .editor :global(.cm-editor.cm-focused) {
 	outline: none;
@@ -93,11 +93,11 @@ export default {
 	background-color: transparent;
 }
 .editor :global(.cm-cursor) {
-	border-left-color: var(--bs-body-color);
+	border-left-color: var(--evcc-default-text) !important;
 }
 .editor :global(.cm-selectionBackground),
 .editor :global(.cm-focused .cm-selectionBackground) {
-	background-color: var(--evcc-gray-50);
+	background-color: rgba(128, 128, 128, 0.4) !important;
 }
 .editor :global(.cm-errorLine) {
 	background-color: var(--bs-danger) !important;

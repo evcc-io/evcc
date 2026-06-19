@@ -18,15 +18,13 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
-		URI      string
-		Token_   string `mapstructure:"token"` // TODO deprecated
-		Home_    string `mapstructure:"home"`  // TODO deprecated
-		Power    string
-		Energy   string
-		Currents []string
-		Voltages []string
-		Powers   []string
-		Soc      string
+		homeassistant.Config `mapstructure:",squash"`
+		Power                string
+		Energy               string
+		Currents             []string
+		Voltages             []string
+		Powers               []string
+		Soc                  string
 
 		// pv
 		pvMaxACPower `mapstructure:",squash"`
@@ -57,7 +55,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 
 	log := util.NewLogger("ha-meter")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
+	conn, err := cc.Config.NewConnection(log)
 	if err != nil {
 		return nil, err
 	}
