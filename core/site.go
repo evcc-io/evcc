@@ -527,19 +527,19 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			site.log.ERROR.Printf("%s %d power: %v", key, i+1, err)
 		}
 
-		// energy (production)
+		// energy (production); ignore spurious zero readings (NaN-derived or nightly reset, #30950)
 		if m, ok := api.Cap[api.MeterEnergy](meter); ok {
-			if f, err := m.TotalEnergy(); err == nil {
-				mm[i].Energy = &f
+			if f, err := nonZeroEnergy(m.TotalEnergy()); err == nil {
+				mm[i].Energy = new(f)
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
 		}
 
-		// return energy (export)
+		// return energy (export); ignore spurious zero readings as above
 		if m, ok := api.Cap[api.MeterReturnEnergy](meter); ok {
-			if f, err := m.ReturnEnergy(); err == nil {
-				mm[i].ReturnEnergy = &f
+			if f, err := nonZeroEnergy(m.ReturnEnergy()); err == nil {
+				mm[i].ReturnEnergy = new(f)
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				site.log.ERROR.Printf("%s %d return energy: %v", key, i+1, err)
 			}
