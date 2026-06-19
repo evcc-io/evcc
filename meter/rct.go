@@ -308,7 +308,7 @@ func (m *RCT) returnEnergy() (float64, error) {
 	switch m.usage {
 	case "grid":
 		res, err := m.queryFloat(rct.TotalEnergyGridFeedInWh)
-		return res / 1000, err
+		return -res / 1000, err
 
 	case "battery":
 		res, err := m.queryFloat(rct.TotalEnergyBattInWh)
