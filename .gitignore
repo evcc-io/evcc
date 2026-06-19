@@ -18,6 +18,7 @@ testdata/**/*
 !assets/js/**/*.yaml
 !package*.json
 !evcc.dist.yaml
+!.coderabbit.yaml
 !tests/**/*.evcc.yaml
 !tests/**/*.tpl.yaml
 !tsconfig.json

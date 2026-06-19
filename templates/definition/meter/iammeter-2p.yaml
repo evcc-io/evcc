@@ -8,14 +8,12 @@ params:
     choice: ["grid", "pv", "charge"]
   - name: host
   - name: channel
-    type: int
     default: 1
     required: true
     description:
       de: Messkanal (1-2)
       en: Meter channel (1-2)
   - name: cache
-    advanced: true
     default: 2s
 render: |
   type: custom

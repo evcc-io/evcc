@@ -194,7 +194,7 @@ export function filterForecastSlots(
 }
 
 export function minSlotIndex(slots: ForecastSlot[]): number {
-  return slots.reduce((min, s, i) => (s.value < (slots[min]?.value || Infinity) ? i : min), 0);
+  return slots.reduce((min, s, i) => (s.value < (slots[min]?.value ?? Infinity) ? i : min), 0);
 }
 
 export function maxSlotIndex(slots: ForecastSlot[]): number {

@@ -99,6 +99,7 @@ params:
     type: choice
     choice: ["1", "2", "3"]
   - name: connector
+    type: int
     description:
       en: Connector number
       de: Anschlussnummer
@@ -287,6 +288,7 @@ params:
       generic: URL
   - name: ain
     private: true
+    required: true
     example: "307788992233"
     description:
       en: Actor Identification Number (AIN)
@@ -312,6 +314,7 @@ params:
       de: Streaming Datenempfang erfolgt asynchron
   - name: welcomecharge
     type: bool
+    advanced: true
     description:
       en: Charge on connection
       de: Laden bei Verbindung
@@ -326,6 +329,14 @@ params:
     help:
       en: Ignore the vehicle's climater state for charge control, so charging stops at the SoC or energy limit even when the vehicle signals an active climater request.
       de: Klimatisierungsstatus des Fahrzeugs für die Ladesteuerung ignorieren, sodass der Ladevorgang am SoC- oder Energielimit endet, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
+  - name: autodetectdisabled
+    type: bool
+    description:
+      en: Exclude from auto detection
+      de: Von automatischer Erkennung ausschließen
+    help:
+      en: Ignore the vehicle for auto detection of connected vehicles
+      de: Das Fahrzeug von der automatischen Erkennung beim Anschließen eines Fahrzeugs ausschließen
   - name: heating
     type: bool
     description:
@@ -342,8 +353,15 @@ params:
     help:
       en: Integrated device. No charging sessions
       de: Fest angeschlossenes Gerät. Keine Ladevorgänge
+  - name: insecure
+    type: bool
+    advanced: true
+    description:
+      en: Accept self-signed certificates
+      de: Selbstsignierte Zertifikate akzeptieren
   - name: defaultmode
     type: int
+    advanced: true
     usages: ["battery"]
     description:
       de: Standardmodus für die aktive Batteriesteuerung
@@ -408,10 +426,12 @@ params:
       de: Kanal
     type: int
   - name: clientid
+    required: true
     description:
       generic: Client ID
   - name: clientsecret
     mask: true
+    required: true
     description:
       generic: Client Secret
   - name: token
@@ -432,6 +452,8 @@ params:
     description:
       generic: PIN
   - name: watchdog
+    type: duration
+    advanced: true
     description:
       generic: Watchdog
   - name: uuid
@@ -512,6 +534,17 @@ params:
       en: Typical values are 9600, 19200, 38400, 57600, 115200
     default: 9600
     type: int
+  - name: currency
+    type: choice
+    default: EUR
+    required: true
+    description:
+      en: Currency
+      de: Währung
+  - name: redirecturi
+    required: true
+    description:
+      generic: Redirect URI
 
 presets:
   vehicle-base:
@@ -570,6 +603,8 @@ presets:
     - name: welcomecharge
       advanced: true
     - name: climaterdisabled
+      advanced: true
+    - name: autodetectdisabled
       advanced: true
   vehicle-climater:
     - name: climaterdisabled
