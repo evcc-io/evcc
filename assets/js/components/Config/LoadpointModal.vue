@@ -540,6 +540,49 @@
 								<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 							</div>
 						</div>
+
+						<div v-if="chargerIsHeating">
+							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
+							<p class="text-muted">
+								{{ $t("config.loadpoint.temperatureRangeHelp") }}
+							</p>
+							<div class="row">
+								<FormRow
+									id="loadpointMinTemp"
+									:label="$t('config.loadpoint.minTempLabel')"
+									class="col-sm-6 mb-sm-0"
+								>
+									<PropertyField
+										id="loadpointMinTemp"
+										v-model="values.ui.minTemp"
+										type="Float"
+										unit="°C"
+										size="w-25 w-min-200"
+										class="me-2"
+									/>
+								</FormRow>
+
+								<FormRow
+									id="loadpointMaxTemp"
+									:label="$t('config.loadpoint.maxTempLabel')"
+									class="col-sm-6 mb-sm-0"
+									:help="
+										values.ui.maxTemp <= values.ui.minTemp
+											? $t('config.loadpoint.maxTempHelp')
+											: undefined
+									"
+								>
+									<PropertyField
+										id="loadpointMaxTemp"
+										v-model="values.ui.maxTemp"
+										type="Float"
+										unit="°C"
+										size="w-25 w-min-200"
+										class="me-2"
+									/>
+								</FormRow>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -618,6 +661,10 @@ const defaultValues = {
 	soc: {
 		poll: { mode: "charging", interval: 60 * nsPerMin },
 		estimate: true,
+	},
+	ui: {
+		minTemp: 0,
+		maxTemp: 100,
 	},
 	vehicle: "",
 	charger: "",
