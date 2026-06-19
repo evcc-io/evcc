@@ -158,7 +158,7 @@ export default defineComponent({
 		// Consumer groups have many palette colours per entity — a single neutral
 		// tooltip background reads better than picking one entity's colour.
 		tooltipColor(): string {
-			if (this.group === "loadpoint" || this.group === "consumer") {
+			if (this.group === "loadpoint" || this.group === "consumer" || this.group === "meter") {
 				return colors.text || this.color;
 			}
 			return this.color;
@@ -201,10 +201,10 @@ export default defineComponent({
 			return this.categoryTimestamps.map((t) => this.timestampKey(t));
 		},
 		entryColors(): string[] {
-			// Loadpoint and meter use the palette per entity (distinct entities).
-			// Production and battery use the group color with subtle alpha steps so
-			// stacked segments stay visually distinguishable.
-			if (this.group === "loadpoint" || this.group === "consumer") {
+			// Loadpoint, consumer and additional meters use the palette per entity
+			// (distinct entities). Production and battery use the group color with
+			// subtle alpha steps so stacked segments stay visually distinguishable.
+			if (this.group === "loadpoint" || this.group === "consumer" || this.group === "meter") {
 				const mutedColor = colors.muted || this.color;
 				const titles: string[] = [];
 				for (const s of this.series) {
@@ -266,6 +266,7 @@ export default defineComponent({
 			const stackEntities =
 				this.group === "loadpoint" ||
 				this.group === "consumer" ||
+				this.group === "meter" ||
 				this.group === "pv" ||
 				this.group === "battery";
 			// Build value arrays per entity first so we can determine, per slot,

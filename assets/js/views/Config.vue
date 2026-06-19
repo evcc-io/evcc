@@ -87,7 +87,7 @@
 						v-for="meter in consumerMeters"
 						:key="meter.name"
 						:meter="meter"
-						:meter-type="meter.config?.['usage'] === 'charge' ? 'ext' : 'aux'"
+						:meter-type="meter.config?.['usage'] === 'charge' ? 'consumer' : 'aux'"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
@@ -95,7 +95,7 @@
 					<NewDeviceButton
 						data-testid="add-consumer"
 						:title="$t('config.main.addConsumer')"
-						@click="openModal('meter', { choices: ['consumer-ext', 'consumer-aux'] })"
+						@click="openModal('meter', { choices: ['consumer', 'aux'] })"
 					/>
 				</div>
 
@@ -147,7 +147,7 @@
 				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
 				<div class="p-0 config-list">
 					<MeterCard
-						v-for="meter in additionalMeters"
+						v-for="meter in extMeters"
 						:key="meter.name"
 						:meter="meter"
 						meter-type="ext"
@@ -158,12 +158,7 @@
 					<NewDeviceButton
 						data-testid="add-additional"
 						:title="$t('config.main.addAdditional')"
-						@click="
-							openModal('meter', {
-								type: 'ext',
-								usageChoices: ['grid', 'pv', 'battery', 'aux'],
-							})
-						"
+						@click="openModal('meter', { type: 'ext' })"
 					/>
 				</div>
 
@@ -664,6 +659,7 @@ export default defineComponent({
 				title: "",
 				aux: null as string[] | null,
 				ext: null as string[] | null,
+				consumers: null as string[] | null,
 			} as SiteConfig,
 			deviceValueTimeout: null as Timeout,
 			deviceValues: {
@@ -720,19 +716,11 @@ export default defineComponent({
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
 		},
-		extByUsage(): { charge: ConfigMeter[]; other: ConfigMeter[] } {
-			const charge: ConfigMeter[] = [];
-			const other: ConfigMeter[] = [];
-			for (const m of this.getMetersByNames(this.site?.ext)) {
-				(m.config?.["usage"] === "charge" ? charge : other).push(m);
-			}
-			return { charge, other };
-		},
 		consumerMeters() {
-			return [...this.getMetersByNames(this.site?.aux), ...this.extByUsage.charge];
-		},
-		additionalMeters() {
-			return this.extByUsage.other;
+			return [
+				...this.getMetersByNames(this.site?.consumers),
+				...this.getMetersByNames(this.site?.aux),
+			];
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1094,6 +1082,11 @@ export default defineComponent({
 						if (!this.site.ext) this.site.ext = [];
 						this.site.ext.push(name);
 						this.saveSite(type);
+						break;
+					case "consumer":
+						if (!this.site.consumers) this.site.consumers = [];
+						this.site.consumers.push(name);
+						this.saveSite("consumers");
 						break;
 				}
 			}

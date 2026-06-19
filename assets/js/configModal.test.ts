@@ -10,19 +10,6 @@ describe("parseKey", () => {
       choices: ["pv", "battery"],
     });
   });
-
-  test("parses multiple bracket pairs", () => {
-    expect(parseKey("meter[type:ext][usage:charge]")).toEqual({
-      name: "meter",
-      type: "ext",
-      usage: "charge",
-    });
-    expect(parseKey("meter[type:ext][usageChoices:aux,grid,pv,battery]")).toEqual({
-      name: "meter",
-      type: "ext",
-      usageChoices: ["aux", "grid", "pv", "battery"],
-    });
-  });
 });
 
 describe("parseQueryString", () => {

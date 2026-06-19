@@ -270,8 +270,10 @@ export default defineComponent({
 			const hasEnergy = (s: HistorySeries) =>
 				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0);
 			return (group: string): HistorySeries[] => {
-				if (group === "loadpoint") {
-					const list = this.seriesByGroup["loadpoint"] || [];
+				// Loadpoint and additional meters stack distinct entities without a
+				// home-derived "Others" series.
+				if (group === "loadpoint" || group === "meter") {
+					const list = this.seriesByGroup[group] || [];
 					return list.map((s, i) => ({ ...s, paletteIndex: i })).filter(hasEnergy);
 				}
 				if (group !== "consumer") return this.seriesByGroup[group] || [];
@@ -394,7 +396,8 @@ export default defineComponent({
 			const list = this.displaySeries(group);
 			if (!list.length) return false;
 			// Without explicit consumers an "Others"-only legend is meaningless.
-			if (group === "loadpoint" || group === "consumer") return list.some((s) => !s.virtual);
+			if (group === "loadpoint" || group === "consumer" || group === "meter")
+				return list.some((s) => !s.virtual);
 			if (group === "pv" || group === "battery") return list.length > 1;
 			return false;
 		},
@@ -405,7 +408,7 @@ export default defineComponent({
 			const list = this.displaySeries(group);
 			const baseColor = groupColor(group);
 			const n = list.length;
-			const isPickGroup = group === "loadpoint" || group === "consumer";
+			const isPickGroup = group === "loadpoint" || group === "consumer" || group === "meter";
 
 			// Build palette for pickable groups in displayed order so that user
 			// overrides take priority and autoassign skips taken palette entries.

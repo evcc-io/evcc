@@ -3,6 +3,7 @@ package keys
 const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
+	Consumers             = "consumers"
 	Circuits              = "circuits"
 	Currency              = "currency"
 	Ext                   = "ext"
@@ -31,11 +32,12 @@ const (
 	Vehicles              = "vehicles"
 
 	// meters
-	GridMeter     = "gridMeter"
-	PvMeters      = "pvMeters"
-	BatteryMeters = "batteryMeters"
-	ExtMeters     = "extMeters"
-	AuxMeters     = "auxMeters"
+	GridMeter      = "gridMeter"
+	PvMeters       = "pvMeters"
+	BatteryMeters  = "batteryMeters"
+	ExtMeters      = "extMeters"
+	AuxMeters      = "auxMeters"
+	ConsumerMeters = "consumerMeters"
 
 	// battery settings
 	BatteryDischargeControl = "batteryDischargeControl"

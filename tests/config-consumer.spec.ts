@@ -20,7 +20,7 @@ test.describe("consumer", () => {
     await expectModalVisible(modal);
     await modal.getByRole("button", { name: "Regular consumer" }).click();
 
-    // usage selector hidden — pre-locked to charge
+    // usage selector hidden — consumers are always charge meters
     await expect(modal.getByLabel("Usage")).toHaveCount(0);
 
     await modal.getByLabel("Title").fill("EV charger");
@@ -29,15 +29,15 @@ test.describe("consumer", () => {
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
-    // appears in consumers section (rendered as ext meter card)
-    await expect(page.getByTestId("ext")).toHaveCount(1);
-    await expect(page.getByTestId("ext")).toContainText("EV charger");
+    // appears in consumers section as a consumer card
+    await expect(page.getByTestId("consumer")).toHaveCount(1);
+    await expect(page.getByTestId("consumer")).toContainText("EV charger");
 
-    // restart and confirm persistence + classification
+    // restart and confirm persistence
     await restart();
     await page.reload();
-    await expect(page.getByTestId("ext")).toHaveCount(1);
-    await expect(page.getByTestId("ext")).toContainText("EV charger");
+    await expect(page.getByTestId("consumer")).toHaveCount(1);
+    await expect(page.getByTestId("consumer")).toContainText("EV charger");
   });
 
   test("self-regulating consumer", async ({ page }) => {
@@ -51,37 +51,11 @@ test.describe("consumer", () => {
     await modal.getByLabel("Title").fill("Heat pump");
     await modal.getByLabel("Manufacturer").selectOption("Demo meter");
     await modal.getByLabel("Power").fill("800");
-    await modal.getByRole("button", { name: "Validate & save" }).click();
-    await expectModalHidden(modal);
-
-    await expect(page.getByTestId("aux")).toHaveCount(1);
-    await expect(page.getByTestId("aux")).toContainText("Heat pump");
-  });
-
-  test("additional meter", async ({ page }) => {
-    await page.goto("/#/config");
-
-    await page.getByRole("button", { name: "Add additional meter" }).click();
-    const modal = page.getByTestId("meter-modal");
-    await expectModalVisible(modal);
-
-    // usage selector visible without default; charge not offered
-    const usage = modal.getByLabel("Usage");
-    await expect(usage).toHaveValue("");
-    const usageValues = await usage
-      .locator("option")
-      .evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value).filter((v) => v !== ""));
-    expect(usageValues).toEqual(["grid", "pv", "battery", "aux"]);
-
-    await modal.getByLabel("Usage").selectOption("grid");
-    await modal.getByLabel("Title").fill("Garage submeter");
-    await modal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await modal.getByLabel("Power").fill("500");
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
-    // appears in additional section
-    await expect(page.getByTestId("ext")).toHaveCount(1);
-    await expect(page.getByTestId("ext")).toContainText("Garage submeter");
+    // self-regulating consumers are stored as aux meters
+    await expect(page.getByTestId("aux")).toHaveCount(1);
+    await expect(page.getByTestId("aux")).toContainText("Heat pump");
   });
 });

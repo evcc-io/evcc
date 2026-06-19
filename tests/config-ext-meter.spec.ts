@@ -7,12 +7,11 @@ const CONFIG_BASICS = "basics.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
-async function createExtConsumer(page: Page, title: string, power: string) {
+async function createAdditionalMeter(page: Page, title: string, power: string) {
   const modal = page.getByTestId("meter-modal");
 
-  await page.getByRole("button", { name: "Add consumer" }).click();
+  await page.getByRole("button", { name: "Add additional meter" }).click();
   await expectModalVisible(modal);
-  await modal.getByRole("button", { name: "Regular consumer" }).click();
   await modal.getByLabel("Title").fill(title);
   await modal.getByLabel("Manufacturer").selectOption("Demo meter");
   await modal.getByLabel("Power").fill(power);
@@ -32,12 +31,12 @@ test.describe("ext meter", async () => {
     await page.goto("/#/config");
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
-    // additional meter flow: opens ext modal directly with usage required (no default, no charge)
+    // additional meter flow: opens ext modal directly, usage defaults to charge
     await page.getByRole("button", { name: "Add additional meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
 
-    await expect(meterModal.getByLabel("Usage")).toHaveValue("");
+    await expect(meterModal.getByLabel("Usage")).toHaveValue("charge");
 
     await meterModal.getByLabel("Usage").selectOption("battery");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
@@ -172,9 +171,9 @@ test.describe("ext meter order", async () => {
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
     // Create meters
-    await createExtConsumer(page, "Meter 1", "10");
-    await createExtConsumer(page, "Meter 2", "20");
-    await createExtConsumer(page, "Meter 3", "30");
+    await createAdditionalMeter(page, "Meter 1", "10");
+    await createAdditionalMeter(page, "Meter 2", "20");
+    await createAdditionalMeter(page, "Meter 3", "30");
 
     // Verify order in config UI
     const extMeters = page.getByTestId("ext");
@@ -192,15 +191,5 @@ test.describe("ext meter order", async () => {
     await expect(extMeters.nth(0)).toContainText("Meter 1");
     await expect(extMeters.nth(1)).toContainText("Meter 2");
     await expect(extMeters.nth(2)).toContainText("Meter 3");
-
-    // Verify order in main UI consumer dropdown
-    await page.goto("/#/");
-    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
-    await page.getByTestId("energyflow").click();
-    await page.getByRole("button", { name: "Consumption" }).click();
-    const consumers = page.getByTestId("energyflow-entry-consumer");
-    await expect(consumers.nth(0)).toContainText("Meter 1");
-    await expect(consumers.nth(1)).toContainText("Meter 2");
-    await expect(consumers.nth(2)).toContainText("Meter 3");
   });
 });

@@ -65,13 +65,14 @@ type Site struct {
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 
 	// meters
-	circuit       api.Circuit                // Circuit
-	hems          api.HEMS                   // HEMS (set by configureHEMS at boot)
-	gridMeter     api.Meter                  // Grid usage meter
-	pvMeters      []config.Device[api.Meter] // PV generation meters
-	batteryMeters []config.Device[api.Meter] // Battery charging meters
-	extMeters     []config.Device[api.Meter] // External meters - for monitoring only
-	auxMeters     []config.Device[api.Meter] // Auxiliary meters
+	circuit        api.Circuit                // Circuit
+	hems           api.HEMS                   // HEMS (set by configureHEMS at boot)
+	gridMeter      api.Meter                  // Grid usage meter
+	pvMeters       []config.Device[api.Meter] // PV generation meters
+	batteryMeters  []config.Device[api.Meter] // Battery charging meters
+	extMeters      []config.Device[api.Meter] // External meters - for monitoring only
+	auxMeters      []config.Device[api.Meter] // Auxiliary meters
+	consumerMeters []config.Device[api.Meter] // Consumer meters
 
 	// battery settings
 	prioritySoc             float64  // prefer battery up to this Soc
@@ -104,11 +105,12 @@ type Site struct {
 
 // MetersConfig contains the site's meter configuration
 type MetersConfig struct {
-	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
-	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
-	BatteryMetersRef []string `mapstructure:"battery"` // Battery charging meter
-	ExtMetersRef     []string `mapstructure:"ext"`     // Meters used only for monitoring
-	AuxMetersRef     []string `mapstructure:"aux"`     // Auxiliary meters
+	GridMeterRef      string   `mapstructure:"grid"`      // Grid usage meter
+	PVMetersRef       []string `mapstructure:"pv"`        // PV meter
+	BatteryMetersRef  []string `mapstructure:"battery"`   // Battery charging meter
+	ExtMetersRef      []string `mapstructure:"ext"`       // Meters used only for monitoring
+	AuxMetersRef      []string `mapstructure:"aux"`       // Auxiliary meters
+	ConsumerMetersRef []string `mapstructure:"consumers"` // Consumer meters
 }
 
 // NewSiteFromConfig creates a new site
@@ -237,7 +239,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.collectors[ref] = me
 	}
 
-	// meters used only for monitoring; ext meters with usage=charge are consumers
+	// additional meters used only for monitoring
 	for _, ref := range site.Meters.ExtMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
@@ -245,24 +247,35 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.extMeters = append(site.extMeters, dev)
 
-		group := metrics.Meter
-		if isConsumerExt(ref) {
-			group = metrics.Consumer
-		}
-		me, err := metrics.NewCollector(group, ref, deviceTitleOrName(dev))
+		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
 		}
 		site.collectors[ref] = me
 	}
 
-	// auxiliary meters (always consumers)
+	// auxiliary meters (consumers)
 	for _, ref := range site.Meters.AuxMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev)
+
+		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
+		if err != nil {
+			return err
+		}
+		site.collectors[ref] = me
+	}
+
+	// consumer meters
+	for _, ref := range site.Meters.ConsumerMetersRef {
+		dev, err := config.Meters().ByName(ref)
+		if err != nil {
+			return err
+		}
+		site.consumerMeters = append(site.consumerMeters, dev)
 
 		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
 		if err != nil {
@@ -316,6 +329,9 @@ func (site *Site) restoreMetersAndTitle() {
 	}
 	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
 		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurable(strings.Split(v, ","))...)
+	}
+	if v, err := settings.String(keys.ConsumerMeters); err == nil && v != "" {
+		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurable(strings.Split(v, ","))...)
 	}
 }
 
@@ -503,23 +519,6 @@ func (site *Site) clearPlanLocks() {
 	for _, lp := range site.Loadpoints() {
 		lp.ClearPlanLock()
 	}
-}
-
-// meterUsage returns the configured usage of a meter by ref name, or "" if unknown.
-func meterUsage(ref string) string {
-	dev, err := config.Meters().ByName(ref)
-	if err != nil {
-		return ""
-	}
-	if v, ok := dev.Config().Property("usage").(string); ok {
-		return strings.ToLower(v)
-	}
-	return ""
-}
-
-// isConsumerExt reports whether an ext meter ref is a consumer (usage=charge).
-func isConsumerExt(ref string) bool {
-	return meterUsage(ref) == "charge"
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
@@ -771,6 +770,19 @@ func (site *Site) updateAuxMeters() {
 	site.publish(keys.Aux, mm)
 }
 
+// updateConsumerMeters updates consumer meters
+func (site *Site) updateConsumerMeters() {
+	if len(site.consumerMeters) == 0 {
+		return
+	}
+
+	mm := site.collectMeters("consumer", site.consumerMeters)
+
+	site.addMeterEnergy(site.consumerMeters, mm)
+
+	site.publish(keys.Consumers, mm)
+}
+
 // updateExtMeters updates ext meters
 func (site *Site) updateExtMeters() {
 	if len(site.extMeters) == 0 {
@@ -778,9 +790,6 @@ func (site *Site) updateExtMeters() {
 	}
 
 	mm := site.collectMeters("ext", site.extMeters)
-	for i, dev := range site.extMeters {
-		mm[i].Usage = meterUsage(dev.Config().Name)
-	}
 
 	site.addMeterEnergy(site.extMeters, mm)
 
@@ -856,6 +865,7 @@ func (site *Site) updateMeters() error {
 	eg.Go(func() error { site.updatePvMeters(); return nil })
 	eg.Go(func() error { site.updateBatteryMeters(); return nil })
 	eg.Go(func() error { site.updateAuxMeters(); return nil })
+	eg.Go(func() error { site.updateConsumerMeters(); return nil })
 	eg.Go(func() error { site.updateExtMeters(); return nil })
 
 	eg.Go(site.updateGridMeter)

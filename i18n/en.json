@@ -51,11 +51,6 @@
     "hex": "Hex color"
   },
   "config": {
-    "additional": {
-      "description": "Tracks meters that are not used for regulation or shown in the UI (sub-distributions, alternative grid or solar meters, ...). Their data is logged and exported like other meters.",
-      "titleAdd": "Add Additional Meter",
-      "titleEdit": "Edit Additional Meter"
-    },
     "apiKey": {
       "description": "Give scripts and automation tasks like scheduled backups secure access without sharing your admin password.",
       "exampleLabel": "Try it: download a backup with curl",
@@ -245,9 +240,9 @@
       "title": "Experimental"
     },
     "ext": {
-      "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
-      "titleAdd": "Add Consumer Meter",
-      "titleEdit": "Edit Consumer Meter"
+      "description": "Tracks meters that are not used for regulation or shown in the UI (sub-distributions, alternative grid or solar meters, ...). Their data is logged and exported like other meters.",
+      "titleAdd": "Add Additional Meter",
+      "titleEdit": "Edit Additional Meter"
     },
     "form": {
       "danger": "Danger",
@@ -538,9 +533,7 @@
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
-        "consumer-aux": "Self-regulating consumer",
-        "consumer-ext": "Regular consumer",
-        "ext": "Add additional meter",
+        "consumer": "Add regular consumer",
         "pv": "Add solar meter"
       },
       "save": "Save",
@@ -1267,6 +1260,7 @@
         "forecast": "Forecast",
         "grid": "Grid",
         "loadpoint": "Charging & Heating",
+        "meter": "Additional meters",
         "pv": "Production"
       },
       "otherConsumers": "Others",

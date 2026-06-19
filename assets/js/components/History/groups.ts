@@ -1,4 +1,4 @@
-export const GROUP_ORDER = ["pv", "battery", "grid", "loadpoint", "consumer"] as const;
+export const GROUP_ORDER = ["pv", "battery", "grid", "loadpoint", "consumer", "meter"] as const;
 
 const GROUP_COLOR_VAR: Record<string, string> = {
   pv: "--evcc-dark-green",
@@ -7,6 +7,7 @@ const GROUP_COLOR_VAR: Record<string, string> = {
   grid: "--evcc-grid",
   battery: "--evcc-darker-green",
   consumer: "--evcc-price",
+  meter: "--evcc-self",
 };
 
 export function groupColor(group: string): string {
