@@ -88,7 +88,7 @@
 					/>
 					<LegendList
 						v-if="hasEntityLegend(group) || hasForecastLegend(group)"
-						class="mt-4"
+						class="mt-4 mb-0"
 						:legends="legendsForGroup(group)"
 						:device-colors="deviceColors"
 						@focus="onLegendFocus(group, $event)"
