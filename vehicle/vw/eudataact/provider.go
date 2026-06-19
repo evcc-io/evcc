@@ -36,7 +36,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
-		ts, err := s.update(log.TRACE, vin)
+		ts, err := s.update(vin)
 		if err != nil {
 			log.ERROR.Println(err)
 		} else if !ts.IsZero() {
@@ -60,14 +60,16 @@ func resetDelay(ts time.Time, cache time.Duration) time.Duration {
 	return portalLatency
 }
 
-// lookup returns the first present, non-empty value among the given field names
+// lookup returns the freshest present value among the given field names (most to
+// least authoritative); the highest Seq wins, equal Seq keeps the priority order.
 func lookup(data map[string]point, fields ...string) *point {
+	var best *point
 	for _, f := range fields {
-		if v, ok := data[f]; ok {
-			return new(v)
+		if v, ok := data[f]; ok && (best == nil || v.Seq > best.Seq) {
+			best = new(v)
 		}
 	}
-	return nil
+	return best
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -95,7 +97,7 @@ func (v *Provider) Range() (int64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldRangeSecondary, FieldRangePrimary, FieldRangeCombined); p != nil {
+	if p := lookup(data, FieldRangeSecondary, FieldRangePrimary, FieldRangeCombined, KeyRangeID3); p != nil {
 		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}

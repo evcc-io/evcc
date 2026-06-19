@@ -3,7 +3,7 @@ products:
   - brand: GoodWe
     description:
       generic: HCA Wallbox (Gen2)
-capabilities: ["mA", "rfid", "1p3p", "meter"]
+capabilities: ["mA", "rfid", "meter"]
 requirements:
   evcc: ["sponsorship"]
   description:

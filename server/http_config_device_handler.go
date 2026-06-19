@@ -22,9 +22,9 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
-	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
+	"go.yaml.in/yaml/v4"
 )
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
@@ -272,6 +272,10 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		if errors.Is(err, config.ErrNotFound) {
+			jsonError(w, http.StatusNotFound, err)
+			return
+		}
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}

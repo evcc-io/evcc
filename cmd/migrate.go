@@ -76,6 +76,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	settings.Delete(keys.PvMeters)
 	settings.Delete(keys.AuxMeters)
 	settings.Delete(keys.ExtMeters)
+	settings.Delete(keys.ConsumerMeters)
 	settings.Delete(keys.BatteryMeters)
 	// clear config table
 	result := db.Instance.Delete(&config.Config{}, "true")

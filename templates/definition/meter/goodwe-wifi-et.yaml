@@ -1,4 +1,5 @@
 template: goodwe-wifi-et
+covers: ["goodwe-wifi"]
 requirements:
   evcc: ["skiptest"]
 products:
@@ -11,6 +12,10 @@ params:
   - name: host
   - name: uri
     deprecated: true
+  - name: delay
+    type: duration
+    default: 0.1s
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -21,17 +26,20 @@ render: |
     block:               # READ 125 @ 0x891C
       register: 35100
       count: 125
-    register: 35139      # grid power
-    count: 2
-    decode: int32be
+    register:
+      address: 35139     # grid power
+      decode: int32
+    scale: -1
+    delay: {{ .delay }}
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
     id: 247
-    register: 36017
-    count: 2
-    decode: float32be
+    register:
+      address: 36017
+      decode: float32
     scale: 0.001
+    delay: {{ .delay }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -43,36 +51,40 @@ render: |
       block:             # READ 125 @ 0x891C
         register: 35100
         count: 125
-      register: 35105    # Ppv1
-      count: 2
-      decode: uint32nan
+      register:
+        address: 35105   # Ppv1
+        decode: uint32nan
+      delay: {{ .delay }}
     - source: aa55udp
       host: {{ or .host .uri }}
       id: 247
       block:
         register: 35100
         count: 125
-      register: 35109    # Ppv2
-      count: 2
-      decode: uint32nan
+      register:
+        address: 35109   # Ppv2
+        decode: uint32nan
+      delay: {{ .delay }}
     - source: aa55udp
       host: {{ or .host .uri }}
       id: 247
       block:
         register: 35100
         count: 125
-      register: 35113    # Ppv3
-      count: 2
-      decode: uint32nan
+      register:
+        address: 35113   # Ppv3
+        decode: uint32nan
+      delay: {{ .delay }}
     - source: aa55udp
       host: {{ or .host .uri }}
       id: 247
       block:
         register: 35100
         count: 125
-      register: 35117    # Ppv4
-      count: 2
-      decode: uint32nan
+      register:
+        address: 35117   # Ppv4
+        decode: uint32nan
+      delay: {{ .delay }}
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
@@ -80,10 +92,11 @@ render: |
     block:
       register: 35100
       count: 125
-    register: 35191      # pv energy
-    count: 2
-    decode: uint32be
+    register:
+      address: 35191     # pv energy
+      decode: uint32nan
     scale: 0.1
+    delay: {{ .delay }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -93,9 +106,10 @@ render: |
     block:               # READ 125 @ 0x891C
       register: 35100
       count: 125
-    register: 35182      # battery power
-    count: 2
-    decode: int32be
+    register:
+      address: 35182     # battery power
+      decode: int32
+    delay: {{ .delay }}
   energy:
     source: aa55udp
     host: {{ or .host .uri }}
@@ -103,10 +117,11 @@ render: |
     block:
       register: 35100
       count: 125
-    register: 35209      # battery discharge energy
-    count: 2
-    decode: uint32be
+    register:
+      address: 35209     # battery discharge energy
+      decode: uint32nan
     scale: 0.1
+    delay: {{ .delay }}
   soc:
     source: aa55udp
     host: {{ or .host .uri }}
@@ -114,7 +129,8 @@ render: |
     block:               # READ 13 @ 0x9088
       register: 37000
       count: 13
-    register: 37007      # soc
-    count: 1
-    decode: uint16be
+    register:
+      address: 37007     # soc
+      decode: uint16nan
+    delay: {{ .delay }}
   {{- end }}
