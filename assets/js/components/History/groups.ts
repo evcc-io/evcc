@@ -1,5 +1,11 @@
 export const GROUP_ORDER = ["pv", "battery", "grid", "loadpoint", "consumer", "meter"] as const;
 
+const COLOR_PICKER_GROUPS = ["loadpoint", "consumer", "meter"];
+
+export function hasColorPicker(group: string): boolean {
+  return COLOR_PICKER_GROUPS.includes(group);
+}
+
 const GROUP_COLOR_VAR: Record<string, string> = {
   pv: "--evcc-dark-green",
   forecast: "--evcc-dark-yellow",

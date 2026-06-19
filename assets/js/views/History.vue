@@ -124,7 +124,7 @@ import GroupChart, {
 import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
-import { GROUP_ORDER, groupColor } from "../components/History/groups";
+import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
 import { handleDownloadClick } from "@/utils/native";
@@ -396,8 +396,7 @@ export default defineComponent({
 			const list = this.displaySeries(group);
 			if (!list.length) return false;
 			// Without explicit consumers an "Others"-only legend is meaningless.
-			if (group === "loadpoint" || group === "consumer" || group === "meter")
-				return list.some((s) => !s.virtual);
+			if (hasColorPicker(group)) return list.some((s) => !s.virtual);
 			if (group === "pv" || group === "battery") return list.length > 1;
 			return false;
 		},
@@ -408,12 +407,11 @@ export default defineComponent({
 			const list = this.displaySeries(group);
 			const baseColor = groupColor(group);
 			const n = list.length;
-			const isPickGroup = group === "loadpoint" || group === "consumer" || group === "meter";
+			const colorPicker = hasColorPicker(group);
 
-			// Build palette for pickable groups in displayed order so that user
-			// overrides take priority and autoassign skips taken palette entries.
+			// Resolve in display order so user overrides win and autoassign skips taken entries.
 			let palette: Record<string, string> = {};
-			if (isPickGroup) {
+			if (colorPicker) {
 				const titles: string[] = [];
 				for (const s of list) {
 					if (!s.virtual && !titles.includes(s.title)) titles.push(s.title);
@@ -423,7 +421,7 @@ export default defineComponent({
 
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
-				if (isPickGroup) return palette[s.title] || baseColor;
+				if (colorPicker) return palette[s.title] || baseColor;
 				return alphaColor(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
@@ -437,7 +435,7 @@ export default defineComponent({
 					label: s.title,
 					color: colorFor(i, s),
 					value: this.fmtWh(watts, POWER_UNIT.AUTO),
-					id: isPickGroup && !s.virtual ? s.title : undefined,
+					id: colorPicker && !s.virtual ? s.title : undefined,
 				};
 			});
 		},

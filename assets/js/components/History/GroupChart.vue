@@ -18,6 +18,7 @@ import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
+import { hasColorPicker } from "./groups";
 
 export interface HistorySlot {
 	start: string;
@@ -155,10 +156,9 @@ export default defineComponent({
 			if (this.period === PERIODS.DAY) return this.useSmallUnit ? "W" : "kW";
 			return this.useSmallUnit ? "Wh" : "kWh";
 		},
-		// Consumer groups have many palette colours per entity — a single neutral
-		// tooltip background reads better than picking one entity's colour.
+		// Picker groups have many entity colors, so use a neutral tooltip background.
 		tooltipColor(): string {
-			if (this.group === "loadpoint" || this.group === "consumer" || this.group === "meter") {
+			if (hasColorPicker(this.group)) {
 				return colors.text || this.color;
 			}
 			return this.color;
@@ -201,10 +201,8 @@ export default defineComponent({
 			return this.categoryTimestamps.map((t) => this.timestampKey(t));
 		},
 		entryColors(): string[] {
-			// Loadpoint, consumer and additional meters use the palette per entity
-			// (distinct entities). Production and battery use the group color with
-			// subtle alpha steps so stacked segments stay visually distinguishable.
-			if (this.group === "loadpoint" || this.group === "consumer" || this.group === "meter") {
+			// Picker groups color per entity; pv/battery use alpha steps of the group color.
+			if (hasColorPicker(this.group)) {
 				const mutedColor = colors.muted || this.color;
 				const titles: string[] = [];
 				for (const s of this.series) {
