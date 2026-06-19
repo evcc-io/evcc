@@ -52,10 +52,8 @@ func Register(name string, handler api.AuthProvider) (chan<- bool, error) {
 		return nil, err
 	}
 
-	// buffered so providers can signal a status change without blocking; the
-	// value is unused (it is only a signal) and the handler re-reads the live
-	// provider state when it fires, so a coalesced send from the provider is
-	// lossless. See OAuth.setOnline for why a blocking send would deadlock.
+	// buffered + non-blocking send (see OAuth.setOnline): the value is only a
+	// signal and the handler re-reads live state, so coalescing is lossless.
 	onlineC := make(chan bool, 1)
 
 	go func() {

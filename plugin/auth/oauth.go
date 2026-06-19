@@ -202,20 +202,8 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 	o.setOnline(token.Valid())
 }
 
-// setOnline notifies the auth handler of the current online state without ever
-// blocking the caller.
-//
-// The online channel is only a signal: the handler re-reads the live state of
-// every provider when it fires (see server/providerauth), so coalescing - i.e.
-// dropping a notification when one is already queued - is lossless.
-//
-// A blocking send here would deadlock: callers such as updateToken/Token hold
-// o.mu, and the handler re-enters this provider via Authenticated() -> Token(),
-// which also takes o.mu. If the handler is momentarily not draining the channel
-// (e.g. startup races or back-pressure on the UI param channel), a blocking
-// send under o.mu wedges the token refresh indefinitely. Because metering and
-// other plugins read through the OAuth http transport on the synchronous site
-// update loop, that single stuck Token() call freezes the whole control loop.
+// setOnline signals the auth handler without blocking; the value is only a
+// wakeup. A blocking send under o.mu would deadlock via Authenticated()->Token().
 func (o *OAuth) setOnline(online bool) {
 	select {
 	case o.onlineC <- online:

@@ -34,10 +34,8 @@ func TestOAuth(t *testing.T) {
 	require.Equal(t, 1, storerCalled)
 }
 
-// TestSetOnlineNonBlocking guards against the deadlock where a stalled auth
-// handler (not draining the online channel) wedges a token refresh that holds
-// o.mu, freezing every caller that reads through the OAuth http transport.
-// setOnline must coalesce instead of blocking, even when the buffer is full.
+// TestSetOnlineNonBlocking ensures setOnline coalesces instead of blocking when
+// the channel isn't drained, guarding the token-refresh deadlock.
 func TestSetOnlineNonBlocking(t *testing.T) {
 	o := &OAuth{onlineC: make(chan bool, 1)}
 	o.setOnline(true) // fill the buffer; nobody is draining it
