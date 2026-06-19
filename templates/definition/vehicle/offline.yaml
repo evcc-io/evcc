@@ -13,7 +13,6 @@ params:
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
-    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}

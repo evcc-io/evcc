@@ -10,6 +10,7 @@ import (
 type proxyInstance struct {
 	mu        sync.Mutex
 	home, uri string
+	insecure  bool
 	oauth2.TokenSource
 }
 
@@ -42,7 +43,7 @@ func (inst *proxyInstance) Token() (*oauth2.Token, error) {
 	defer inst.mu.Unlock()
 
 	if inst.TokenSource == nil {
-		ts, err := NewHomeAssistant(uri)
+		ts, err := NewHomeAssistant(uri, inst.insecure)
 		if err != nil {
 			return nil, err
 		}

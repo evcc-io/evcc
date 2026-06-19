@@ -19,10 +19,8 @@ params:
     default: EMEA
   - name: accessToken
     required: true
-    mask: true
   - name: refreshToken
     required: true
-    mask: true
   - name: vin
     example: V...
   - name: cache

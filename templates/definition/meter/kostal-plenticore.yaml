@@ -41,9 +41,7 @@ params:
   - name: maxdischargepower
     service: modbus/read?address=1040&type=holding&encoding=float32s&resulttype=int&{modbus}
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
 render: |
   {{- if eq .usage "pv" }}
   type: custom

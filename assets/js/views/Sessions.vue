@@ -187,6 +187,7 @@ import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/lightning";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -212,7 +213,6 @@ import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
 import { handleDownloadClick } from "@/utils/native";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
-import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
 import { CURRENCY, type Notification } from "@/types/evcc";
@@ -565,14 +565,14 @@ export default defineComponent({
 		},
 		groupIcons() {
 			return {
-				[GROUPS.NONE]: TotalIcon,
+				[GROUPS.NONE]: "shopicon-regular-sun",
 				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
 				[GROUPS.VEHICLE]: "shopicon-regular-car3",
 			};
 		},
 		typeIcons() {
 			return {
-				[TYPES.SOLAR]: "shopicon-regular-sun",
+				[TYPES.SOLAR]: "shopicon-regular-lightning",
 				[TYPES.PRICE]: DynamicPriceIcon,
 				[TYPES.CO2]: "shopicon-regular-eco1",
 			};

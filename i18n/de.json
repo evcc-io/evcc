@@ -120,6 +120,11 @@
       "title": "Lastmanagement",
       "usableMeters": "Verwendbare Zählerreferenzen"
     },
+    "consumer": {
+      "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Hausverbrauch.",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
+    },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
       "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
@@ -220,6 +225,8 @@
       "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
       "port": "Port",
       "portHelp": "Der zu verwendende Port.",
+      "qr": "Kopplungscode",
+      "qrExplain": "Während der Installation von einem anderen EEBus-Gerät scannen, um automatisch zu koppeln, ohne die SKI manuell einzugeben.",
       "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
@@ -233,9 +240,9 @@
       "title": "Experimentell"
     },
     "ext": {
-      "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
-      "titleAdd": "Verbrauchszähler hinzufügen",
-      "titleEdit": "Verbrauchszähler bearbeiten"
+      "description": "Erfasst Zähler, die nicht für Regelung oder Anzeige verwendet werden (Unterverteilungen, alternative Netz- oder PV-Zähler, ...). Ihre Daten werden geloggt und wie andere Zähler exportiert.",
+      "titleAdd": "Zusätzlichen Zähler hinzufügen",
+      "titleEdit": "Zusätzlichen Zähler bearbeiten"
     },
     "form": {
       "danger": "Achtung",
@@ -436,6 +443,7 @@
     },
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
+      "addConsumer": "Verbraucher hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
       "addLoadpoint": "Wallbox oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
@@ -524,9 +532,9 @@
       "delete": "Löschen",
       "generic": "Generische Integrationen",
       "option": {
-        "aux": "Intelligenten Verbraucher hinzufügen",
+        "aux": "Selbstregelnden Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
-        "ext": "Regulären Verbraucher hinzufügen",
+        "consumer": "Regulären Verbraucher hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
@@ -722,6 +730,7 @@
     },
     "section": {
       "additionalMeter": "Zusätzliche Zähler",
+      "consumers": "Verbraucher",
       "general": "Allgemein",
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
@@ -1248,10 +1257,11 @@
       "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
       "group": {
         "battery": "Batterie",
+        "consumer": "Verbrauch",
         "forecast": "Vorhersage",
         "grid": "Netz",
         "loadpoint": "Laden & Heizen",
-        "meter": "Verbrauch",
+        "meter": "Weitere Zähler",
         "pv": "Erzeugung"
       },
       "otherConsumers": "Andere",
@@ -1525,7 +1535,7 @@
     },
     "groupBy": {
       "loadpoint": "Ladepunkt",
-      "none": "Gesamt",
+      "none": "Sonne",
       "vehicle": "Fahrzeug"
     },
     "loadpoint": "Ladepunkt",
@@ -1547,7 +1557,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Kosten",
-      "solar": "Sonne"
+      "solar": "Energie"
     },
     "vehicle": "Fahrzeug"
   },
