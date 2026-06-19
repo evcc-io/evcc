@@ -3,8 +3,8 @@ package keys
 const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
-	Consumers             = "consumers"
 	Circuits              = "circuits"
+	Consumers             = "consumers"
 	Currency              = "currency"
 	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"

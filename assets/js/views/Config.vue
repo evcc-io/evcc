@@ -87,7 +87,16 @@
 						v-for="meter in consumerMeters"
 						:key="meter.name"
 						:meter="meter"
-						:meter-type="meter.config?.['usage'] === 'charge' ? 'consumer' : 'aux'"
+						meter-type="consumer"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+					/>
+					<MeterCard
+						v-for="meter in auxMeters"
+						:key="meter.name"
+						:meter="meter"
+						meter-type="aux"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
@@ -717,10 +726,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		consumerMeters() {
-			return [
-				...this.getMetersByNames(this.site?.consumers),
-				...this.getMetersByNames(this.site?.aux),
-			];
+			return this.getMetersByNames(this.site?.consumers);
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
