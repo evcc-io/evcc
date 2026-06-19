@@ -84,8 +84,6 @@ render: |
   power:
     # cJSON Point 6000 — Battery Power (W, Float)
     # Positive = charging, negative = discharging (matches evcc convention).
-    # If the evcc UI shows the arrow backwards, the device returns the opposite sign.
-    # Fix by adding  scale: -1  under the power: block.
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[6000]}` }}
     method: POST
