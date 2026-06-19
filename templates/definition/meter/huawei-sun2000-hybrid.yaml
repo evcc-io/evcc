@@ -232,6 +232,13 @@ render: |
       {{- end }}
       type: holding
       decode: uint32nan
+    block:
+      {{- if eq .storageunit "2" }}
+      register: 37753
+      {{- else }}
+      register: 37066
+      {{- end }}
+      count: 4
     scale: 0.01
   returnenergy:
     source: modbus
@@ -245,6 +252,13 @@ render: |
       {{- end }}
       type: holding
       decode: uint32nan
+    block:
+      {{- if eq .storageunit "2" }}
+      register: 37753
+      {{- else }}
+      register: 37066
+      {{- end }}
+      count: 4
     scale: 0.01
   soc:
     source: modbus
