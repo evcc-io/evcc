@@ -16,7 +16,8 @@ CREATE TABLE `meters` (
 CREATE UNIQUE INDEX `meters_meter_ts` ON `meters`(`meter`, `ts`);
 
 -- entities (name = stable id, title = display label)
-INSERT INTO `entities` (id, `group`, name, title) VALUES (1, 'home', 'home', 'Home');
+-- home is a virtual entity; evcc resets its title to "home" on boot
+INSERT INTO `entities` (id, `group`, name, title) VALUES (1, 'home', 'home', 'home');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (2, 'grid', 'grid', 'Grid');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (3, 'battery', 'battery', 'Battery');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (4, 'pv', 'solar', 'Solar');
@@ -163,3 +164,10 @@ INSERT INTO `meters` VALUES (11, 1775728800, 0.3, 0);
 INSERT INTO `meters` VALUES (11, 1775729700, 0.3, 0);
 INSERT INTO `meters` VALUES (11, 1775730600, 0.3, 0);
 INSERT INTO `meters` VALUES (11, 1775731500, 0.3, 0);
+
+-- 2026-04-10 → additional meter with export. Import peak 2 kW, export 0.4 kW.
+-- Negative values must flip the axis to symmetric (bidirectional) ±2 kW.
+INSERT INTO `meters` VALUES (11, 1775815200, 0.5, 0.1);
+INSERT INTO `meters` VALUES (11, 1775816100, 0.5, 0.1);
+INSERT INTO `meters` VALUES (11, 1775817000, 0.5, 0.1);
+INSERT INTO `meters` VALUES (11, 1775817900, 0.5, 0.1);

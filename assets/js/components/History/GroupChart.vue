@@ -169,7 +169,12 @@ export default defineComponent({
 			return this.series.filter((s, i) => (s.paletteIndex ?? i) === idx);
 		},
 		isBidirectional(): boolean {
-			return BIDIRECTIONAL_GROUPS.has(this.group);
+			if (BIDIRECTIONAL_GROUPS.has(this.group)) return true;
+			// additional grid/battery meters can export
+			if (this.group === "meter") {
+				return this.series.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
+			}
+			return false;
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];

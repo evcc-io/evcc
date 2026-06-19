@@ -24,7 +24,7 @@ test.describe("api", () => {
     expect(data).toHaveLength(2);
 
     const grid = data.find((s: { title: string }) => s.title === "Grid");
-    const home = data.find((s: { title: string }) => s.title === "Home");
+    const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
 
@@ -47,7 +47,7 @@ test.describe("api", () => {
     expect(data).toHaveLength(2);
 
     const grid = data.find((s: { title: string }) => s.title === "Grid");
-    const home = data.find((s: { title: string }) => s.title === "Home");
+    const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
 
@@ -233,6 +233,12 @@ test.describe("additional meters", () => {
     // Explicit entity legend, no virtual "Others" (unlike the consumer group).
     await expect(additional.getByRole("button", { name: "Submeter 1.2 kWh" })).toBeVisible();
     await expect(additional.getByText("Others", { exact: true })).toBeHidden();
+  });
+
+  // 2026-04-10: same meter with export. Negatives flip the axis to symmetric.
+  test("bidirectional axis when data contains exports", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 10);
+    expect(await yAxis(chart(page, "meter"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
   });
 });
 
