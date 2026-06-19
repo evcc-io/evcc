@@ -41,6 +41,15 @@ func printPtr[T any](format string, v *T) string {
 	return fmt.Sprintf(format, *v)
 }
 
+// nonZero returns a pointer to v, or nil if v is the zero value
+func nonZero[T comparable](v T) *T {
+	var zero T
+	if v == zero {
+		return nil
+	}
+	return &v
+}
+
 func ptrValueEqual[T comparable](a, b *T) bool {
 	if (a == nil) != (b == nil) {
 		return false
