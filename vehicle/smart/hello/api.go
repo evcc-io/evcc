@@ -18,12 +18,14 @@ import (
 type API struct {
 	*request.Helper
 	identity *Identity
+	baseURI  string
 }
 
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		identity: identity,
+		baseURI:  ApiURI,
 	}
 
 	v.Client.Transport = &transport.Decorator{
@@ -54,6 +56,14 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
+// SetSeries selects the API host for the vehicle's platform.
+// Smart #5 (series HY) is served by the V2 host; #1/#3 (HX/HC) use V1.
+func (v *API) SetSeries(series string) {
+	if strings.HasPrefix(series, "HY") {
+		v.baseURI = ApiURIV2
+	}
+}
+
 func (v *API) request(method, path string, params url.Values, body io.Reader) (*http.Request, error) {
 	if body != nil {
 		b, err := io.ReadAll(body)
@@ -74,7 +84,7 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 		body.(*bytes.Reader).Seek(0, io.SeekStart)
 	}
 
-	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
+	uri := fmt.Sprintf("%s/%s?%s", v.baseURI, strings.TrimPrefix(path, "/"), params.Encode())
 	req, err := request.New(method, uri, body, map[string]string{
 		"x-api-signature-nonce": nonce,
 		"x-signature":           sign,
@@ -104,6 +114,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 		"userId":        {userID},
 	}
 
+	// vehicle list is fetched on V1: SetSeries runs only after this call
 	path := "/device-platform/user/vehicle/secure"
 	req, err := v.request(http.MethodGet, path, params, nil)
 	if err != nil {

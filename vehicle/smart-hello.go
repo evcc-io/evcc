@@ -58,9 +58,7 @@ func NewSmartHelloFromConfig(other map[string]any) (api.Vehicle, error) {
 		return v, err
 	}
 
-	if vehicle.ProprietaryPlatform != 0 {
-		return v, fmt.Errorf("unsupported vehicle platform: %s", vehicle.SeriesCodeVs)
-	}
+	api.SetSeries(vehicle.SeriesCodeVs)
 
 	v.Provider = hello.NewProvider(log, api, vehicle.VIN, cc.Cache)
 
