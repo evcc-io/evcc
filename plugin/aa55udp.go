@@ -78,6 +78,7 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 	if strings.HasPrefix(strings.ToLower(cc.Register.Type), "write") {
 		res, err := aa55.NewSetter(log, conn, cc.Id, cc.Register, cc.Scale, cc.Delay)
 		if err != nil {
+			_ = conn.Close()
 			return nil, fmt.Errorf("aa55udp: %w", err)
 		}
 		return res, nil
@@ -85,6 +86,7 @@ func NewAA55UDPFromConfig(ctx context.Context, other map[string]any) (Plugin, er
 
 	res, err := aa55.New(log, conn, cc.Id, cc.Register, cc.Block, cc.Scale, cc.Delay)
 	if err != nil {
+		_ = conn.Close()
 		return nil, fmt.Errorf("aa55udp: %w", err)
 	}
 
