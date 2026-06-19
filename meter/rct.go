@@ -295,8 +295,8 @@ func (m *RCT) totalEnergy() (float64, error) {
 		return (a + b) / 1000, err
 
 	case "battery":
-		val, err := m.queryFloat(rct.TotalEnergyBattOutWh)
-		return val / 1000, err
+		res, err := m.queryFloat(rct.TotalEnergyBattOutWh)
+		return res / 1000, err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
@@ -311,8 +311,8 @@ func (m *RCT) returnEnergy() (float64, error) {
 		return res / 1000, err
 
 	case "battery":
-		val, err := m.queryFloat(rct.TotalEnergyBattInWh)
-		return val / 1000, err
+		res, err := m.queryFloat(rct.TotalEnergyBattInWh)
+		return res / 1000, err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
