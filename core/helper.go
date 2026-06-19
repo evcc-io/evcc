@@ -41,15 +41,6 @@ func printPtr[T any](format string, v *T) string {
 	return fmt.Sprintf(format, *v)
 }
 
-// nonZero returns a pointer to v, or nil if v is the zero value
-func nonZero[T comparable](v T) *T {
-	var zero T
-	if v == zero {
-		return nil
-	}
-	return &v
-}
-
 func ptrValueEqual[T comparable](a, b *T) bool {
 	if (a == nil) != (b == nil) {
 		return false
@@ -102,4 +93,20 @@ func hemsCurtailed(hems api.HEMS) *bool {
 	}
 
 	return hems.Curtailed()
+}
+
+// nonZeroEnergy reports a zero lifetime energy reading as api.ErrNotAvailable.
+// Some inverters reset their total counter to 0 at night; this keeps the last value (#30951).
+func nonZeroEnergy(g func() (float64, error)) func() (float64, error) {
+	if g == nil {
+		panic("missing getter")
+	}
+
+	return func() (float64, error) {
+		f, err := g()
+		if err == nil && f == 0 {
+			return 0, api.ErrNotAvailable
+		}
+		return f, err
+	}
 }
