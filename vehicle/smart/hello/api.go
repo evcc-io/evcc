@@ -64,7 +64,7 @@ func (v *API) SetSeries(series string) {
 	}
 }
 
-func (v *API) request(base, method, path string, params url.Values, body io.Reader) (*http.Request, error) {
+func (v *API) request(method, path string, params url.Values, body io.Reader) (*http.Request, error) {
 	if body != nil {
 		b, err := io.ReadAll(body)
 		if err != nil {
@@ -84,7 +84,7 @@ func (v *API) request(base, method, path string, params url.Values, body io.Read
 		body.(*bytes.Reader).Seek(0, io.SeekStart)
 	}
 
-	uri := fmt.Sprintf("%s/%s?%s", base, strings.TrimPrefix(path, "/"), params.Encode())
+	uri := fmt.Sprintf("%s/%s?%s", v.baseURI, strings.TrimPrefix(path, "/"), params.Encode())
 	req, err := request.New(method, uri, body, map[string]string{
 		"x-api-signature-nonce": nonce,
 		"x-signature":           sign,
@@ -114,9 +114,9 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 		"userId":        {userID},
 	}
 
-	// vehicle list is fetched on V1 before the platform is known
+	// vehicle list is fetched on V1: SetSeries runs only after this call
 	path := "/device-platform/user/vehicle/secure"
-	req, err := v.request(ApiURI, http.MethodGet, path, params, nil)
+	req, err := v.request(http.MethodGet, path, params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (v *API) UpdateSession(vin string) error {
 	}
 
 	path := "/device-platform/user/session/update"
-	req, err := v.request(v.baseURI, http.MethodPost, path, params, request.MarshalJSON(data))
+	req, err := v.request(http.MethodPost, path, params, request.MarshalJSON(data))
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 	}
 
 	path := "/remote-control/vehicle/status/" + vin
-	req, err := v.request(v.baseURI, http.MethodGet, path, params, nil)
+	req, err := v.request(http.MethodGet, path, params, nil)
 	if err != nil {
 		return VehicleStatus{}, err
 	}
