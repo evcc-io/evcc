@@ -57,12 +57,11 @@ func NewSmartHelloFromConfig(other map[string]any) (api.Vehicle, error) {
 	if err != nil {
 		return v, err
 	}
-	cc.VIN = vehicle.VIN
 
 	log.DEBUG.Printf("vehicle %s: series %s, platform %d", vehicle.VIN, vehicle.SeriesCodeVs, vehicle.ProprietaryPlatform)
 	api.SetSeries(vehicle.SeriesCodeVs)
 
-	v.Provider = hello.NewProvider(log, api, cc.VIN, cc.Cache)
+	v.Provider = hello.NewProvider(log, api, vehicle.VIN, cc.Cache)
 
 	return v, nil
 }
