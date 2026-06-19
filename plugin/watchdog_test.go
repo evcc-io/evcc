@@ -22,7 +22,7 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 
 	var u atomic.Uint32
 
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		if !u.CompareAndSwap(0, 1) {
 			return errors.New("race")
 		}
@@ -63,7 +63,7 @@ func TestWatchdogDeferredUpdate(t *testing.T) {
 	}
 
 	var calls []int
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		calls = append(calls, i)
 		return nil
 	}, []int{1}) // 1 is reset value
@@ -108,7 +108,7 @@ func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
 	}
 
 	var calls []int
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		calls = append(calls, i)
 		return nil
 	}, []int{1}) // 1 is reset value
@@ -147,7 +147,7 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 	}
 
 	var calls []int
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		calls = append(calls, i)
 		return nil
 	}, []int{1}) // 1 is reset value
