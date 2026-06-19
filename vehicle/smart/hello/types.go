@@ -50,7 +50,10 @@ type AppToken struct {
 }
 
 type Vehicle struct {
-	VIN string
+	VIN                 string
+	SeriesCodeVs        string `json:"seriesCodeVs"`        // "HC11" (legacy), "HY11" (newer platform)
+	ModelName           string `json:"modelName"`           // e.g. "HY11_EUL_Pro+_RWD_000"
+	ProprietaryPlatform Int    `json:"proprietaryPlatform"` // 0: legacy tsp backend (supported), 1: newer platform (status endpoint returns 8063)
 }
 
 type VehicleStatus struct {

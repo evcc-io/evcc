@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/samber/lo"
 )
 
 // https://github.com/TA2k/ioBroker.smart-eq
@@ -85,7 +84,7 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 	return req, err
 }
 
-func (v *API) Vehicles() ([]string, error) {
+func (v *API) Vehicles() ([]Vehicle, error) {
 	var res struct {
 		Code    Int
 		Message string
@@ -116,11 +115,7 @@ func (v *API) Vehicles() ([]string, error) {
 		return nil, err
 	}
 
-	vehicles := lo.Map(res.Data.List, func(v Vehicle, _ int) string {
-		return v.VIN
-	})
-
-	return vehicles, err
+	return res.Data.List, err
 }
 
 func (v *API) UpdateSession(vin string) error {
