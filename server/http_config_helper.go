@@ -349,6 +349,10 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("integratedDevice", true, nil)
 	}
 
+	if hasFeature(instance, api.SwitchDevice) {
+		makeResult("switchDevice", true, nil)
+	}
+
 	if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
 		makeResult("icon", dev.Icon(), nil)
 	}

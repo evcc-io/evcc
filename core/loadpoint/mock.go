@@ -685,6 +685,20 @@ func (mr *MockAPIMockRecorder) GetTitle() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTitle", reflect.TypeOf((*MockAPI)(nil).GetTitle))
 }
 
+// GetUI mocks base method.
+func (m *MockAPI) GetUI() UIConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUI")
+	ret0, _ := ret[0].(UIConfig)
+	return ret0
+}
+
+// GetUI indicates an expected call of GetUI.
+func (mr *MockAPIMockRecorder) GetUI() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUI", reflect.TypeOf((*MockAPI)(nil).GetUI))
+}
+
 // GetVehicle mocks base method.
 func (m *MockAPI) GetVehicle() api.Vehicle {
 	m.ctrl.T.Helper()
@@ -1049,6 +1063,18 @@ func (m *MockAPI) SetTitle(arg0 string) {
 func (mr *MockAPIMockRecorder) SetTitle(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTitle", reflect.TypeOf((*MockAPI)(nil).SetTitle), arg0)
+}
+
+// SetUI mocks base method.
+func (m *MockAPI) SetUI(ui UIConfig) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUI", ui)
+}
+
+// SetUI indicates an expected call of SetUI.
+func (mr *MockAPIMockRecorder) SetUI(ui any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUI", reflect.TypeOf((*MockAPI)(nil).SetUI), ui)
 }
 
 // SetVehicle mocks base method.

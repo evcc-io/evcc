@@ -169,7 +169,7 @@ func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
 		g.wait(p.delay)
 	}
 
-	p.log.TRACE.Printf("send to %s: %x", p.conn.RemoteAddr(), packet)
+	p.log.TRACE.Printf("send %s: %x", p.conn.RemoteAddr(), packet)
 
 	if _, err := p.conn.Write(packet); err != nil {
 		return nil, fmt.Errorf("write: %w", err)
@@ -185,7 +185,7 @@ func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
 		return nil, fmt.Errorf("read: %w", err)
 	}
 
-	p.log.TRACE.Printf("recv from %s: %x", p.conn.RemoteAddr(), buf[:n])
+	p.log.TRACE.Printf("recv %s: %x", p.conn.RemoteAddr(), buf[:n])
 
 	return buf[:n], nil
 }
