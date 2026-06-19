@@ -193,6 +193,7 @@
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
       "solarForecast": "PV-Vorhersage",
+      "switchDevice": "Stromregelung",
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",

@@ -114,13 +114,7 @@
 								v-model="values.defaultMode"
 								type="Choice"
 								class="w-100"
-								:choice="[
-									{ key: '', name: '---' },
-									{ key: 'off', name: $t('main.mode.off') },
-									{ key: 'pv', name: $t('main.mode.pv') },
-									{ key: 'minpv', name: $t('main.mode.minpv') },
-									{ key: 'now', name: $t('main.mode.now') },
-								]"
+								:choice="defaultModeOptions"
 							/>
 						</FormRow>
 
@@ -306,7 +300,7 @@
 							/>
 						</FormRow>
 
-						<h6>
+						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
 							<small class="text-muted">{{
 								$t("config.loadpoint.electricalSubtitle")
@@ -314,6 +308,7 @@
 						</h6>
 
 						<FormRow
+							v-if="!chargerIsSwitchDevice"
 							id="chargerPower"
 							:label="$t('config.loadpoint.chargerTypeLabel')"
 							:help="
@@ -346,7 +341,10 @@
 							/>
 						</FormRow>
 
-						<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
+						<div
+							v-if="!chargerIsSwitchDevice && chargerPower === 'other'"
+							class="row ms-3 mb-5"
+						>
 							<FormRow
 								id="loadpointMinCurrent"
 								:label="$t('config.loadpoint.minCurrentLabel')"
@@ -634,6 +632,7 @@ import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
 import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal";
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
+	CHARGE_MODE,
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
@@ -645,6 +644,8 @@ import {
 } from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
+
+const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
 
 const defaultValues = {
 	id: undefined,
@@ -763,6 +764,9 @@ export default {
 		chargerIsIntegratedDevice() {
 			return this.chargerStatus.integratedDevice?.value || false;
 		},
+		chargerIsSwitchDevice() {
+			return this.chargerStatus.switchDevice?.value || false;
+		},
 		chargerIsHeating() {
 			return this.chargerStatus.heating?.value === true;
 		},
@@ -796,6 +800,12 @@ export default {
 				{ value: 1, name: this.$t("config.loadpoint.phases1p") },
 				{ value: 3, name: this.$t("config.loadpoint.phases3p") },
 			];
+		},
+		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
+			// empty option is provided by PropertyField placeholder
+			// switch devices have no current control, so minpv does not apply
+			const modes = this.chargerIsSwitchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
+			return modes.map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
 		},
 		showCircuit() {
 			return this.circuits.length > 0 || !!this.values.circuit;
