@@ -12,6 +12,7 @@ import {
 	forecastGrid,
 	forecastYAxis,
 	tooltipStyle,
+	tooltipTable,
 } from "../Forecast/echarts";
 import colors, { resolveColors, deviceColorMap, darken } from "@/colors";
 import store from "@/store";
@@ -414,6 +415,17 @@ export default defineComponent({
 				? (t: number) => this.fmtMonthNarrow(new Date(t))
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
+		// Column headers for bidirectional tooltips (grid: imported/exported,
+		// battery: charged/discharged). Null when the group has no direction labels.
+		directionHeaders(): string[] | null {
+			if (!this.isBidirectional) return null;
+			const energyKey = `main.history.direction.${this.group}.energy`;
+			const returnEnergyKey = `main.history.direction.${this.group}.returnEnergy`;
+			const energy = this.$t(energyKey);
+			const returnEnergy = this.$t(returnEnergyKey);
+			if (energy === energyKey || returnEnergy === returnEnergyKey) return null;
+			return [String(energy), String(returnEnergy)];
+		},
 		tooltipDateLabel(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
 				return (t) => this.fmtTimeSlot(new Date(t), 15 * 60 * 1000);
@@ -508,7 +520,7 @@ export default defineComponent({
 						const first = params.find((p) => p.dataIndex != null);
 						if (!first) return "";
 						const ts = cats[first.dataIndex];
-						const head = `<div>${ts != null ? tooltipDate(ts) : ""}</div>`;
+						const head = ts != null ? tooltipDate(ts) : "";
 						const formatValue = (v: number) => {
 							const watts = Math.abs(v) * 1000;
 							return this.period === PERIODS.DAY
@@ -540,31 +552,17 @@ export default defineComponent({
 						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
-						if (this.isBidirectional) {
-							const rows = indices
-								.map((i) => {
-									const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
-									const val = `<strong>${formatValue(t.energy)} / ${formatValue(t.returnEnergy)}</strong>`;
-									const name = nameByIdx.get(i) ?? "";
-									return showName
-										? `<div>${name}: ${val}</div>`
-										: `<div>${val}</div>`;
-								})
-								.join("");
-							return head + rows;
-						}
-
-						const rows = indices
-							.map((i) => {
-								const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
-								const val = `<strong>${formatValue(t.energy + t.returnEnergy)}</strong>`;
-								const name = nameByIdx.get(i) ?? "";
-								return showName
-									? `<div>${name}: ${val}</div>`
-									: `<div>${val}</div>`;
-							})
-							.join("");
-						return head + rows;
+						const rows = indices.map((i) => {
+							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+							const values = this.isBidirectional
+								? [formatValue(t.energy), formatValue(t.returnEnergy)]
+								: [formatValue(t.energy + t.returnEnergy)];
+							return {
+								name: showName ? (nameByIdx.get(i) ?? "") : undefined,
+								values,
+							};
+						});
+						return tooltipTable(head, rows, this.directionHeaders ?? undefined);
 					},
 				},
 				xAxis: {
