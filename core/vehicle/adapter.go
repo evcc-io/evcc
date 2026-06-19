@@ -173,3 +173,18 @@ func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
 
 	return nil
 }
+
+// GetManualSoc returns the manually set SoC (0 = not set)
+func (v *adapter) GetManualSoc() float64 {
+	if val, err := settings.Float(v.key() + keys.ManualSoc); err == nil {
+		return val
+	}
+	return 0
+}
+
+// SetManualSoc sets a manual SoC override (0 = clear)
+func (v *adapter) SetManualSoc(soc float64) {
+	v.log.DEBUG.Printf("set %s manual soc: %.1f", v.name, soc)
+	settings.SetFloat(v.key()+keys.ManualSoc, soc)
+	v.publish()
+}

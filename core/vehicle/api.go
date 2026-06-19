@@ -53,6 +53,11 @@ type API interface {
 	// SetPlanStrategy sets the plan strategy
 	SetPlanStrategy(api.PlanStrategy) error
 
+	// GetManualSoc returns the manually set SoC (0 = not set)
+	GetManualSoc() float64
+	// SetManualSoc sets a manual SoC override (0 = clear)
+	SetManualSoc(soc float64)
+
 	// // GetMinCurrent returns the min charging current
 	// GetMinCurrent() float64
 	// // SetMinCurrent sets the min charging current

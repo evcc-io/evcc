@@ -30,8 +30,38 @@
 			/>
 		</div>
 		<div class="details d-flex flex-wrap justify-content-between">
+			<div v-if="hasManualSoc" class="flex-grow-1" data-testid="manual-soc">
+				<small class="text-muted d-block">{{ $t("main.vehicle.manualSoc") }}</small>
+				<div class="d-flex align-items-center gap-1">
+					<input
+						type="number"
+						class="manual-soc-input form-control form-control-sm"
+						min="0"
+						max="100"
+						step="1"
+						:value="manualSocInput"
+						style="width: 4.5em"
+						@change="updateManualSoc"
+					/>
+					<span>%</span>
+					<button
+						v-if="vehicle?.manualSoc"
+						class="btn btn-sm btn-outline-secondary ms-1"
+						:title="$t('main.vehicle.manualSocClear')"
+						@click="clearManualSoc"
+					>
+						✕
+					</button>
+				</div>
+				<small v-if="estimatedCurrentSoc" class="text-muted">{{
+					estimatedCurrentSoc
+				}}</small>
+				<small v-if="range" class="text-muted">
+					· {{ fmtNumber(range, 0) }} {{ rangeUnit }}</small
+				>
+			</div>
 			<LabelAndValue
-				v-if="socBasedCharging"
+				v-else-if="socBasedCharging"
 				class="flex-grow-1"
 				:label="vehicleSocTitle"
 				:value="formattedSoc"
@@ -78,6 +108,7 @@
 </template>
 
 <script lang="ts">
+import api from "@/api";
 import collector from "@/mixins/collector.ts";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
@@ -189,6 +220,7 @@ export default defineComponent({
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
+			manualSocInput: this.vehicle?.manualSoc || 0,
 			statusOverride: undefined as VehicleStatus | undefined,
 			chargingPlanModal: this.$refs["chargingPlanModal"] as
 				| InstanceType<typeof ChargingPlanModal>
@@ -245,6 +277,12 @@ export default defineComponent({
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
 			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
+		estimatedCurrentSoc(): string | null {
+			if (!this.manualSocInput) return null;
+			const charged = this.socPerKwh * (this.chargedEnergy / 1e3);
+			const current = Math.min(100, Math.round(this.manualSocInput + charged));
+			return this.fmtPercentage(current);
+		},
 		chargingPlanDisabled() {
 			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
@@ -254,10 +292,19 @@ export default defineComponent({
 		smartFeedInPriorityDisabled() {
 			return this.chargingPlanDisabled;
 		},
+		manualSoc(): number {
+			return this.manualSocInput;
+		},
+		hasManualSoc(): boolean {
+			return this.vehicle?.features?.includes("ManualSoc") || false;
+		},
 	},
 	watch: {
 		effectiveLimitSoc() {
 			this.displayLimitSoc = this.effectiveLimitSoc;
+		},
+		"vehicle.manualSoc"(val: number) {
+			this.manualSocInput = val || 0;
 		},
 	},
 	methods: {
@@ -285,6 +332,20 @@ export default defineComponent({
 		},
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;
+		},
+		updateManualSoc(e: Event) {
+			const target = e.target as HTMLInputElement;
+			const soc = Math.max(0, Math.min(100, parseFloat(target.value) || 0));
+			this.manualSocInput = soc;
+			if (this.vehicle?.name) {
+				api.post(`vehicles/${this.vehicle.name}/manualsoc/${soc}`);
+			}
+		},
+		clearManualSoc() {
+			this.manualSocInput = 0;
+			if (this.vehicle?.name) {
+				api.delete(`vehicles/${this.vehicle.name}/manualsoc`);
+			}
 		},
 	},
 });

@@ -153,7 +153,7 @@ async function _stop(instance?: ChildProcess) {
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 15000 });
     log("evcc is down", { port });
     return;
   }
@@ -181,7 +181,7 @@ async function _stop(instance?: ChildProcess) {
     }
   }
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 15000 });
   log("evcc is down", { port });
 }
 

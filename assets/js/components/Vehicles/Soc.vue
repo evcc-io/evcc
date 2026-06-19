@@ -95,6 +95,8 @@ export default defineComponent({
 		chargedEnergy: { type: Number, default: 0 },
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
+		manualSoc: { type: Number, default: 0 },
+		socPerKwh: { type: Number, default: 0 },
 	},
 	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
 	data() {
@@ -109,10 +111,22 @@ export default defineComponent({
 		step() {
 			return this.heating ? 1 : 5;
 		},
+		effectiveSoc(): number {
+			if (this.vehicleSoc > 0) {
+				return this.vehicleSoc;
+			}
+			if (this.manualSoc > 0 && this.socPerKwh > 0) {
+				return Math.min(
+					100,
+					Math.round(this.manualSoc + this.socPerKwh * (this.chargedEnergy / 1e3))
+				);
+			}
+			return this.vehicleSoc;
+		},
 		vehicleSocDisplayWidth() {
 			if (this.socBasedCharging) {
-				if (this.vehicleSoc >= 0) {
-					return this.vehicleSoc;
+				if (this.effectiveSoc >= 0) {
+					return this.effectiveSoc;
 				}
 				return 100;
 			} else {
@@ -132,7 +146,7 @@ export default defineComponent({
 			return Math.max(this.planEnergy, this.limitEnergy, this.chargedEnergy / 1e3);
 		},
 		vehicleLimitSocActive() {
-			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
+			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.effectiveSoc;
 		},
 		planMarkerPosition(): number {
 			if (this.socBasedPlanning) {
@@ -186,14 +200,14 @@ export default defineComponent({
 					return null;
 				}
 				if (this.minSocNotReached) {
-					return this.minSoc - this.vehicleSoc;
+					return this.minSoc - this.effectiveSoc;
 				}
 				const limit = Math.min(
 					this.vehicleLimitSoc || 100,
 					Math.max(this.visibleLimitSoc, this.effectivePlanSoc || 0)
 				);
-				if (limit > this.vehicleSoc) {
-					return limit - this.vehicleSoc;
+				if (limit > this.effectiveSoc) {
+					return limit - this.effectiveSoc;
 				}
 			} else {
 				return 100 - this.vehicleSocDisplayWidth;

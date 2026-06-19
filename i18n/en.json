@@ -1386,6 +1386,8 @@
       "changeVehicle": "Change vehicle",
       "detectionActive": "Detecting vehicle…",
       "fallbackName": "Vehicle",
+      "manualSoc": "Manual SoC",
+      "manualSocClear": "Clear manual SoC",
       "moreActions": "More actions",
       "none": "No vehicle",
       "notReachable": "Vehicle was not reachable. Try restarting evcc.",

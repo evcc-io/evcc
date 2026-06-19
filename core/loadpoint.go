@@ -406,12 +406,8 @@ func (lp *Loadpoint) requestUpdate() {
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
-	var integrated bool
-
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
-		integrated = true
-
 		if mt, ok := api.Cap[api.Meter](charger); ok {
 			// preserve charger's capability registry and static interface
 			// implementations so that subsequent capability checks on
@@ -429,9 +425,9 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	}
 
 	// ensure charge rater exists
-	// measurement are obtained from separate charge meter if defined
-	// (https://github.com/evcc-io/evcc/issues/2469)
-	if rt, ok := api.Cap[api.ChargeRater](charger); ok && integrated {
+	// prefer charger's own ChargeRater (e.g. Easee SESSION_ENERGY via SignalR)
+	// over wrapper that relies on external meter's TotalEnergy
+	if rt, ok := api.Cap[api.ChargeRater](charger); ok {
 		lp.chargeRater = rt
 
 		// when restarting in the middle of charging session, use this as negative offset
@@ -1770,7 +1766,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
-		if f > lp.chargedAtStartup {
+		if f >= lp.chargedAtStartup {
 			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
 			if added > 0 {
 				lp.log.DEBUG.Printf("session energy: %.3fkWh", f)
@@ -1890,6 +1886,17 @@ func (lp *Loadpoint) publishSocAndRange() {
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
 	}
+
+	// apply manual SoC override if vehicle supports it
+	if v := lp.GetVehicle(); v != nil && lp.vehicleHasFeature(api.ManualSoc) {
+		vs := vehicle.Settings(lp.log, v)
+		if manualSoc := vs.GetManualSoc(); manualSoc > 0 {
+			lp.vehicleSoc = manualSoc
+			lp.log.DEBUG.Printf("vehicle soc (manual): %.0f%%", lp.vehicleSoc)
+		}
+		lp.publish(keys.ManualSoc, vs.GetManualSoc())
+	}
+
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
 	apiLimitSoc := 100
