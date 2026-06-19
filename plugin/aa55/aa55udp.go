@@ -15,8 +15,7 @@ import (
 // forcing a fresh read on the next cycle.
 const cacheTTL = 2 * time.Second
 
-// readTimeout bounds the wait for a response. The pacer holds the per-inverter
-// gate across the read, so keep it tight: the dongle replies well under 1s.
+// readTimeout bounds the wait for a response
 const readTimeout = 2 * time.Second
 
 // cache de-duplicates block reads across all AA55UDP instances so multiple
