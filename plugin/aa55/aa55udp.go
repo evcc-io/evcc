@@ -15,6 +15,10 @@ import (
 // forcing a fresh read on the next cycle.
 const cacheTTL = 2 * time.Second
 
+// readTimeout bounds the wait for a response. The pacer holds the per-inverter
+// gate across the read, so keep it tight: the dongle replies well under 1s.
+const readTimeout = 2 * time.Second
+
 // cache de-duplicates block reads across all AA55UDP instances so multiple
 // sources covering the same (host, block) share one UDP exchange per cycle.
 var cache = modbus.NewCache(cacheTTL)
@@ -262,7 +266,7 @@ func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
 		return nil, fmt.Errorf("write: %w", err)
 	}
 
-	if err := p.conn.SetReadDeadline(time.Now().Add(4 * time.Second)); err != nil {
+	if err := p.conn.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
 		return nil, fmt.Errorf("deadline: %w", err)
 	}
 
