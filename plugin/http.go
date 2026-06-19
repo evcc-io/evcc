@@ -110,7 +110,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 	}
 
 	if cache > 0 {
-		// remove cache-busting response headers so the configured cache takes effect
+		// remove cache-busting response headers
 		base = &transport.Modifier{
 			Modifier: func(resp *http.Response) error {
 				dropCacheBusting(resp, "Cache-Control")
