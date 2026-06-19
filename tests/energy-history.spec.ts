@@ -23,8 +23,8 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { title: string }) => s.title === "grid");
-    const home = data.find((s: { title: string }) => s.title === "home");
+    const grid = data.find((s: { title: string }) => s.title === "Grid");
+    const home = data.find((s: { title: string }) => s.title === "Home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
 
@@ -46,8 +46,8 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { title: string }) => s.title === "grid");
-    const home = data.find((s: { title: string }) => s.title === "home");
+    const grid = data.find((s: { title: string }) => s.title === "Grid");
+    const home = data.find((s: { title: string }) => s.title === "Home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
 
@@ -217,6 +217,22 @@ test.describe("consumption breakdown", () => {
     // Unfocus → axis returns to kW range, not stuck on 1000 W cap.
     await kitchen.click();
     await expect.poll(() => yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);
+  });
+});
+
+test.describe("additional meters", () => {
+  // 2026-04-09: single ext meter "Submeter" = 1.2 kWh, no home data.
+  test("standalone section without virtual Others", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 9);
+    const additional = section(page, "meter");
+    await expect(additional).toBeVisible();
+
+    // Total is the entity sum, not home-derived.
+    await expect(additional.getByRole("heading")).toContainText("1.2 kWh");
+
+    // Explicit entity legend, no virtual "Others" (unlike the consumer group).
+    await expect(additional.getByRole("button", { name: "Submeter 1.2 kWh" })).toBeVisible();
+    await expect(additional.getByText("Others", { exact: true })).toBeHidden();
   });
 });
 
