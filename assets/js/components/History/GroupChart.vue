@@ -13,7 +13,7 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 } from "../Forecast/echarts";
-import colors, { lighterColor, resolveColors, deviceColorMap } from "@/colors";
+import colors, { resolveColors, deviceColorMap, darken } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
@@ -48,16 +48,6 @@ export function stepAlpha(i: number, n: number): number {
 	const step = 0.2;
 	const minAlpha = 0.5;
 	return Math.max(minAlpha, 1 - (n - 1 - i) * step);
-}
-
-export function alphaColor(color: string, alpha: number): string {
-	const c = (color || "").trim().toLowerCase();
-	const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
-		.toString(16)
-		.padStart(2, "0");
-	if (c.length === 7) return c + a;
-	if (c.length === 9) return c.slice(0, 7) + a;
-	return c;
 }
 
 // Symmetric axis regardless of whether the period contains both directions.
@@ -95,6 +85,7 @@ export default defineComponent({
 		previousFocusedEntity: number | null;
 		previousPeriod: PERIODS;
 		previousSeriesKey: string;
+		activeSlot: number | null;
 	} {
 		return {
 			chart: null,
@@ -103,6 +94,7 @@ export default defineComponent({
 			previousFocusedEntity: this.focusedEntity as number | null,
 			previousPeriod: this.period as PERIODS,
 			previousSeriesKey: "",
+			activeSlot: null,
 		};
 	},
 	computed: {
@@ -205,8 +197,21 @@ export default defineComponent({
 		categoryKeys(): string[] {
 			return this.categoryTimestamps.map((t) => this.timestampKey(t));
 		},
+		// Which category slots carry a bar, so hover can skip empty slots.
+		slotsWithData(): boolean[] {
+			const index = new Map(this.categoryKeys.map((k, i) => [k, i]));
+			const has = new Array(this.categoryKeys.length).fill(false);
+			for (const s of this.visibleSeries) {
+				for (const slot of s.data) {
+					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
+					const idx = index.get(this.timestampKey(new Date(slot.start).getTime()));
+					if (idx !== undefined) has[idx] = true;
+				}
+			}
+			return has;
+		},
 		entryColors(): string[] {
-			// Picker groups color per entity; pv/battery use alpha steps of the group color.
+			// Picker groups color per entity; pv/battery use darker steps of the group color.
 			if (hasColorPicker(this.group)) {
 				const mutedColor = colors.muted || this.color;
 				const titles: string[] = [];
@@ -222,9 +227,7 @@ export default defineComponent({
 				});
 			}
 			if (this.series.length <= 1) return [this.color];
-			return this.series.map((_, i) =>
-				alphaColor(this.color, stepAlpha(i, this.series.length))
-			);
+			return this.series.map((_, i) => darken(this.color, stepAlpha(i, this.series.length)));
 		},
 		echartsSeries() {
 			const cats = this.categoryKeys;
@@ -305,10 +308,15 @@ export default defineComponent({
 				}
 			}
 
+			// hover dims all but the active slot (onChartMouseMove); silent stops single-segment highlight
+			const barEmphasis = {
+				silent: true,
+				emphasis: { focus: "self" },
+				blur: { itemStyle: { opacity: 0.25 } },
+			};
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
-				const returnEnergyColor =
-					(s.group === "grid" && colors.export) || lighterColor(c) || c;
+				const returnEnergyColor = (s.group === "grid" && colors.export) || c;
 				const energyValues = energyByEntity[i]!;
 				const returnEnergyValues = returnEnergyByEntity[i]!;
 				const energyName =
@@ -361,6 +369,7 @@ export default defineComponent({
 					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
+					...barEmphasis,
 				});
 				result.push({
 					id: `entity-${stableIdx}-returnEnergy`,
@@ -371,6 +380,7 @@ export default defineComponent({
 					itemStyle: { color: returnEnergyColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
+					...barEmphasis,
 				});
 			});
 
@@ -426,7 +436,12 @@ export default defineComponent({
 				grid: { ...forecastGrid(), left: 0, right: 36 },
 				tooltip: {
 					trigger: "axis",
-					axisPointer: { type: "shadow", shadowStyle: { color: "transparent" } },
+					// transparent shadow snaps to slots without a band; triggerEmphasis off (it hard-codes notBlur), we dim slots in onChartMouseMove
+					axisPointer: {
+						type: "shadow",
+						triggerEmphasis: false,
+						shadowStyle: { color: "transparent" },
+					},
 					...tooltipStyle(this.tooltipColor),
 					// Allow the tooltip to float above the 180px chart container instead
 					// of being clamped by `confine: true` — otherwise tall bars push the
@@ -663,6 +678,9 @@ export default defineComponent({
 		const el = this.$refs["chartEl"] as HTMLElement;
 		this.chart = markRaw(echarts.init(el));
 		this.chart.setOption((this as unknown as WithChartOption).chartOption);
+		const zr = this.chart.getZr();
+		zr.on("mousemove", this.onChartMouseMove);
+		zr.on("globalout", this.clearHighlight);
 		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
 		this.isMobile = this.mediaQuery.matches;
 		this.mediaQuery.addEventListener("change", this.onMediaChange);
@@ -676,6 +694,31 @@ export default defineComponent({
 	methods: {
 		resize() {
 			this.chart?.resize();
+		},
+		// highlight hovered slot, dim rest. manual because built-in axis highlight hard-codes notBlur
+		onChartMouseMove(e: { offsetX: number; offsetY: number }) {
+			if (!this.chart) return;
+			const point: [number, number] = [e.offsetX, e.offsetY];
+			if (!this.chart.containPixel({ gridIndex: 0 }, point)) {
+				this.clearHighlight();
+				return;
+			}
+			const grid = this.chart.convertFromPixel({ gridIndex: 0 }, point) as number[];
+			const slot = Math.round(grid[0]!);
+			if (slot === this.activeSlot) return;
+			// Skip empty slots, else hovering a gap would dim the whole chart.
+			if (!this.slotsWithData[slot]) {
+				this.clearHighlight();
+				return;
+			}
+			this.activeSlot = slot;
+			this.chart.dispatchAction({ type: "downplay" });
+			this.chart.dispatchAction({ type: "highlight", dataIndex: slot });
+		},
+		clearHighlight() {
+			if (this.activeSlot === null) return;
+			this.activeSlot = null;
+			this.chart?.dispatchAction({ type: "downplay" });
 		},
 		onMediaChange(e: MediaQueryListEvent) {
 			this.isMobile = e.matches;
