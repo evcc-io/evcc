@@ -50,8 +50,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	}
 
 	m, _ := NewConfigurable(powerG)
-	implement.May(m, implement.MeterEnergy(nonZeroEnergy(energyG)))
-	implement.May(m, implement.MeterReturnEnergy(nonZeroEnergy(returnG)))
+	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterReturnEnergy(returnG))
 
 	// dim/curtail
 	if err := cc.Dimmer.Implement(ctx, m); err != nil {
@@ -107,22 +107,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
 
 	return m, nil
-}
-
-// nonZeroEnergy reports a zero lifetime energy reading as api.ErrNotAvailable.
-// Some inverters reset their total counter to 0 (or NaN) at night; this keeps the last value (#30950).
-func nonZeroEnergy(g func() (float64, error)) func() (float64, error) {
-	if g == nil {
-		return nil
-	}
-
-	return func() (float64, error) {
-		f, err := g()
-		if err == nil && f == 0 {
-			return 0, api.ErrNotAvailable
-		}
-		return f, err
-	}
 }
 
 // NewConfigurable creates a new meter
