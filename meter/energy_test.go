@@ -1,4 +1,4 @@
-package measurement
+package meter
 
 import (
 	"errors"
