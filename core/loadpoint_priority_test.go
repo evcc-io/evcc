@@ -2,9 +2,8 @@ package core
 
 import (
 	"errors"
-	"time"
-
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
