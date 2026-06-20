@@ -300,6 +300,40 @@
 							/>
 						</FormRow>
 
+						<FormRow
+							v-if="showPriority"
+							id="loadpointParamPriorityStrategy"
+							:label="$t('config.loadpoint.priorityStrategyLabel')"
+							:help="$t('config.loadpoint.priorityStrategyHelp')"
+						>
+							<PropertyField
+								id="loadpointParamPriorityStrategy"
+								v-model="priorityStrategy"
+								type="Choice"
+								size="w-100"
+								class="me-2"
+								required
+								:choice="priorityStrategyOptions"
+							/>
+						</FormRow>
+
+						<FormRow
+							v-if="showPriority && priorityHysteresisAvailable"
+							id="loadpointParamPriorityHysteresis"
+							:label="$t('config.loadpoint.priorityHysteresisLabel')"
+							:help="$t('config.loadpoint.priorityHysteresisHelp')"
+						>
+							<PropertyField
+								id="loadpointParamPriorityHysteresis"
+								v-model="values.priorityHysteresis"
+								type="Float"
+								unit="%"
+								size="w-25 w-min-200"
+								class="me-2"
+								required
+							/>
+						</FormRow>
+
 						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
 							<small class="text-muted">{{
@@ -634,6 +668,7 @@ import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	CHARGE_MODE,
 	LOADPOINT_TYPE,
+	PRIORITY_STRATEGY,
 	type DeviceType,
 	type LoadpointType,
 	type ConfigCharger,
@@ -654,6 +689,8 @@ const defaultValues = {
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
+	priorityStrategy: "",
+	priorityHysteresis: 0,
 	defaultMode: "",
 	thresholds: {
 		enable: { delay: 1 * nsPerMin, threshold: 0 },
@@ -794,6 +831,34 @@ export default {
 			result[0]!.name = "0 (default)";
 			result[10]!.name = "10 (highest)";
 			return result;
+		},
+		priorityStrategy: {
+			// backend returns "" for the static strategy; map to/from the explicit "static" choice
+			get(): PRIORITY_STRATEGY {
+				return this.values.priorityStrategy || PRIORITY_STRATEGY.STATIC;
+			},
+			set(value: PRIORITY_STRATEGY) {
+				this.values.priorityStrategy = value;
+			},
+		},
+		priorityStrategyOptions(): { key: PRIORITY_STRATEGY; name: string }[] {
+			return [
+				{
+					key: PRIORITY_STRATEGY.STATIC,
+					name: this.$t("config.loadpoint.priorityStrategyStatic"),
+				},
+				{
+					key: PRIORITY_STRATEGY.SOC,
+					name: this.$t("config.loadpoint.priorityStrategySoc"),
+				},
+				{
+					key: PRIORITY_STRATEGY.DEFICIT,
+					name: this.$t("config.loadpoint.priorityStrategyDeficit"),
+				},
+			];
+		},
+		priorityHysteresisAvailable(): boolean {
+			return this.priorityStrategy !== PRIORITY_STRATEGY.STATIC;
 		},
 		phasesOptions() {
 			return [

@@ -249,6 +249,8 @@ export interface ConfigLoadpoint {
   title: string;
   defaultMode: string;
   priority: number;
+  priorityStrategy: PRIORITY_STRATEGY | "";
+  priorityHysteresis: number;
   phasesConfigured: number;
   minCurrent: number;
   maxCurrent: number;
