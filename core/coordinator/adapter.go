@@ -32,7 +32,7 @@ func (a *adapter) Acquire(v api.Vehicle) {
 }
 
 func (a *adapter) Release(v api.Vehicle) {
-	a.c.release(v)
+	a.c.release(a.lp, v)
 }
 
 func (a *adapter) IdentifyVehicleByStatus() api.Vehicle {

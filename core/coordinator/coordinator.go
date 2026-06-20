@@ -100,11 +100,18 @@ func (c *Coordinator) acquire(owner loadpoint.API, vehicle api.Vehicle) {
 	c.mu.Unlock()
 }
 
-func (c *Coordinator) release(vehicle api.Vehicle) {
+func (c *Coordinator) release(owner loadpoint.API, vehicle api.Vehicle) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	delete(c.tracked, vehicle)
+	// only release if the vehicle is still tracked by the releasing loadpoint.
+	// when a vehicle is transferred to another loadpoint, acquire() defers a
+	// SetVehicle(nil) on the previous owner; that owner's release must not wipe
+	// the entry the new owner just acquired (otherwise the vehicle ends up
+	// untracked and can be assigned to two loadpoints at once).
+	if o, ok := c.tracked[vehicle]; ok && o == owner {
+		delete(c.tracked, vehicle)
+	}
 }
 
 // availableDetectibleVehicles is the list of vehicles that are currently not

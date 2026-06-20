@@ -69,7 +69,48 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		if res != nil {
 			c.acquire(lp, res)
 		} else {
-			c.release(res)
+			c.release(lp, res)
 		}
+	}
+}
+
+// TestReleaseKeyedByOwner ensures that releasing a vehicle that has since been
+// transferred to another loadpoint does not wipe the new owner's tracking.
+//
+// acquire() transfers a vehicle by deferring SetVehicle(nil) on the previous
+// owner. That previous owner then releases the vehicle it still believes it
+// holds - but the vehicle is now owned by the new loadpoint. A non-owner
+// release must be a no-op, otherwise the vehicle ends up untracked and can be
+// acquired by two loadpoints at once.
+func TestReleaseKeyedByOwner(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	v := api.NewMockVehicle(ctrl)
+	v.EXPECT().GetTitle().Return("v").AnyTimes()
+
+	c := New(util.NewLogger("foo"), []api.Vehicle{v})
+
+	lp1 := loadpoint.NewMockAPI(ctrl)
+	lp2 := loadpoint.NewMockAPI(ctrl)
+
+	a1 := NewAdapter(lp1, c)
+	a2 := NewAdapter(lp2, c)
+
+	// model setActiveVehicle(nil): a loadpoint asked to drop its vehicle releases
+	// the vehicle it still holds. lp1 holds v, so its SetVehicle(nil) releases v.
+	lp1.EXPECT().SetVehicle(nil).Do(func(api.Vehicle) { a1.Release(v) }).AnyTimes()
+
+	// lp1 acquires v
+	a1.Acquire(v)
+	if o := c.Owner(v); o != loadpoint.API(lp1) {
+		t.Fatalf("expected v owned by lp1, got %v", o)
+	}
+
+	// lp2 takes v (cross-owner transfer). acquire defers lp1.SetVehicle(nil),
+	// which releases v on lp1's behalf - this must not undo lp2's ownership.
+	a2.Acquire(v)
+
+	if o := c.Owner(v); o != loadpoint.API(lp2) {
+		t.Errorf("v must stay owned by lp2 after transfer, got %v", o)
 	}
 }
