@@ -34,6 +34,11 @@ func (c *EEBus) Connect(connected bool) {
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
+	// deviceremoval fires support-update events with a nil entity
+	if entity == nil {
+		return
+	}
+
 	switch event {
 	// Monitoring Appliance
 	case mpc.UseCaseSupportUpdate, mgcp.UseCaseSupportUpdate:

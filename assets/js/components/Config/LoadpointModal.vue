@@ -114,13 +114,7 @@
 								v-model="values.defaultMode"
 								type="Choice"
 								class="w-100"
-								:choice="[
-									{ key: '', name: '---' },
-									{ key: 'off', name: $t('main.mode.off') },
-									{ key: 'pv', name: $t('main.mode.pv') },
-									{ key: 'minpv', name: $t('main.mode.minpv') },
-									{ key: 'now', name: $t('main.mode.now') },
-								]"
+								:choice="defaultModeOptions"
 							/>
 						</FormRow>
 
@@ -306,7 +300,7 @@
 							/>
 						</FormRow>
 
-						<h6>
+						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
 							<small class="text-muted">{{
 								$t("config.loadpoint.electricalSubtitle")
@@ -314,6 +308,7 @@
 						</h6>
 
 						<FormRow
+							v-if="!chargerIsSwitchDevice"
 							id="chargerPower"
 							:label="$t('config.loadpoint.chargerTypeLabel')"
 							:help="
@@ -346,7 +341,10 @@
 							/>
 						</FormRow>
 
-						<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
+						<div
+							v-if="!chargerIsSwitchDevice && chargerPower === 'other'"
+							class="row ms-3 mb-5"
+						>
 							<FormRow
 								id="loadpointMinCurrent"
 								:label="$t('config.loadpoint.minCurrentLabel')"
@@ -540,6 +538,49 @@
 								<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 							</div>
 						</div>
+
+						<div v-if="chargerIsHeating">
+							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
+							<p class="text-muted">
+								{{ $t("config.loadpoint.temperatureRangeHelp") }}
+							</p>
+							<div class="row">
+								<FormRow
+									id="loadpointMinTemp"
+									:label="$t('config.loadpoint.minTempLabel')"
+									class="col-sm-6 mb-sm-0"
+								>
+									<PropertyField
+										id="loadpointMinTemp"
+										v-model="values.ui.minTemp"
+										type="Float"
+										unit="°C"
+										size="w-25 w-min-200"
+										class="me-2"
+									/>
+								</FormRow>
+
+								<FormRow
+									id="loadpointMaxTemp"
+									:label="$t('config.loadpoint.maxTempLabel')"
+									class="col-sm-6 mb-sm-0"
+									:help="
+										values.ui.maxTemp <= values.ui.minTemp
+											? $t('config.loadpoint.maxTempHelp')
+											: undefined
+									"
+								>
+									<PropertyField
+										id="loadpointMaxTemp"
+										v-model="values.ui.maxTemp"
+										type="Float"
+										unit="°C"
+										size="w-25 w-min-200"
+										class="me-2"
+									/>
+								</FormRow>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -591,6 +632,7 @@ import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
 import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal";
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
+	CHARGE_MODE,
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
@@ -602,6 +644,8 @@ import {
 } from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
+
+const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
 
 const defaultValues = {
 	id: undefined,
@@ -618,6 +662,10 @@ const defaultValues = {
 	soc: {
 		poll: { mode: "charging", interval: 60 * nsPerMin },
 		estimate: true,
+	},
+	ui: {
+		minTemp: 0,
+		maxTemp: 100,
 	},
 	vehicle: "",
 	charger: "",
@@ -716,6 +764,9 @@ export default {
 		chargerIsIntegratedDevice() {
 			return this.chargerStatus.integratedDevice?.value || false;
 		},
+		chargerIsSwitchDevice() {
+			return this.chargerStatus.switchDevice?.value || false;
+		},
 		chargerIsHeating() {
 			return this.chargerStatus.heating?.value === true;
 		},
@@ -749,6 +800,12 @@ export default {
 				{ value: 1, name: this.$t("config.loadpoint.phases1p") },
 				{ value: 3, name: this.$t("config.loadpoint.phases3p") },
 			];
+		},
+		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
+			// empty option is provided by PropertyField placeholder
+			// switch devices have no current control, so minpv does not apply
+			const modes = this.chargerIsSwitchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
+			return modes.map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
 		},
 		showCircuit() {
 			return this.circuits.length > 0 || !!this.values.circuit;

@@ -39,7 +39,8 @@ export default {
 		meterType: {
 			type: String,
 			required: true,
-			validator: (value) => ["grid", "pv", "battery", "aux", "ext"].includes(value),
+			validator: (value) =>
+				["grid", "pv", "battery", "aux", "ext", "consumer"].includes(value),
 		},
 		hasError: {
 			type: Boolean,
@@ -77,11 +78,12 @@ export default {
 				battery: this.$t("config.devices.batteryStorage"),
 				aux: this.$t("config.devices.auxMeter"),
 				ext: this.$t("config.devices.extMeter"),
+				consumer: this.$t("config.devices.consumer"),
 			};
 			return titleMap[this.meterType];
 		},
 		isVehicleIcon() {
-			return this.meterType === "aux" || this.meterType === "ext";
+			return ["aux", "ext", "consumer"].includes(this.meterType);
 		},
 		iconComponent() {
 			const iconMap = {
@@ -92,13 +94,8 @@ export default {
 			return iconMap[this.meterType];
 		},
 		iconName() {
-			if (this.meterType === "aux") {
-				return this.meter.deviceIcon || "smartconsumer";
-			}
-			if (this.meterType === "ext") {
-				return this.meter.deviceIcon || "generic";
-			}
-			return null;
+			const defaults = { aux: "smartconsumer", consumer: "generic", ext: "meter" };
+			return this.meter.deviceIcon || defaults[this.meterType] || null;
 		},
 	},
 };

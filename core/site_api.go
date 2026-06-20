@@ -129,6 +129,22 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
+// GetConsumerMeterRefs returns the ConsumerMeterRef
+func (site *Site) GetConsumerMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ConsumerMetersRef
+}
+
+// SetConsumerMeterRefs sets the ConsumerMeterRef
+func (site *Site) SetConsumerMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ConsumerMetersRef = ref
+	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
 // GetExtMeterRefs returns the ExtMeterRef
 func (site *Site) GetExtMeterRefs() []string {
 	site.RLock()
