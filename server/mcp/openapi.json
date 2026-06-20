@@ -131,6 +131,14 @@
           "$ref": "#/components/schemas/Power"
         }
       },
+      "priorityStrategy": {
+        "in": "path",
+        "name": "strategy",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/PriorityStrategy"
+        }
+      },
       "soc": {
         "description": "SOC in %",
         "in": "path",
@@ -632,6 +640,15 @@
         "example": 3600,
         "minimum": 0,
         "type": "integer"
+      },
+      "PriorityStrategy": {
+        "description": "Priority strategy used to sub-order loadpoints of the same priority.",
+        "enum": [
+          "static",
+          "soc",
+          "deficit"
+        ],
+        "type": "string"
       },
       "Rate": {
         "description": "A charging interval",
@@ -2029,6 +2046,79 @@
           }
         },
         "summary": "Set priority",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/priorityhysteresis/{hysteresis}": {
+      "post": {
+        "description": "Set the soc-% deadband used when sub-ordering loadpoints of the same priority (0 = off).",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+        },
+        "operationId": "setLoadpointPriorityHysteresis",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "description": "Deadband in soc-% (0..99, 0 = off).",
+            "example": 5,
+            "in": "path",
+            "name": "hysteresis",
+            "required": true,
+            "schema": {
+              "maximum": 99,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/IntegerResult"
+          }
+        },
+        "summary": "Set priority hysteresis",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/prioritystrategy/{strategy}": {
+      "post": {
+        "description": "Set the strategy used to sub-order loadpoints of the same priority.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+        },
+        "operationId": "setLoadpointPriorityStrategy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/priorityStrategy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/PriorityStrategy"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set priority strategy",
         "tags": [
           "loadpoints"
         ]
