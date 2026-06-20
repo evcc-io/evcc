@@ -1328,6 +1328,20 @@
         "phases_3": "3 phase",
         "phases_3_hint": "({min} to {max})"
       },
+      "priority": {
+        "heading": "Priority"
+      },
+      "priorityHysteresis": {
+        "help": "Don't reorder loadpoints until the charge level gap exceeds this many percent. Prevents constant leapfrogging between cars. Set to 0 to disable.",
+        "label": "Hysteresis"
+      },
+      "priorityStrategy": {
+        "deficit": "Largest deficit",
+        "help": "How to order loadpoints of equal priority when distributing solar surplus.",
+        "label": "Strategy",
+        "soc": "Lower charge level first",
+        "static": "Static"
+      },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
       "title": "Settings {0}",

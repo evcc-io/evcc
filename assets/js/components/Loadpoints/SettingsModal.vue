@@ -124,6 +124,65 @@
 					</select>
 				</div>
 			</div>
+
+			<h6>
+				{{ $t("main.loadpointSettings.priority.heading") }}
+			</h6>
+			<div class="mb-3 row">
+				<label
+					:for="formId('prioritystrategy')"
+					class="col-sm-4 col-form-label pt-0 pt-sm-2"
+				>
+					{{ $t("main.loadpointSettings.priorityStrategy.label") }}
+				</label>
+				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+					<select
+						:id="formId('prioritystrategy')"
+						v-model="selectedPriorityStrategy"
+						class="form-select form-select-sm"
+						@change="setPriorityStrategy"
+					>
+						<option
+							v-for="{ value, name } in priorityStrategyOptions"
+							:key="value"
+							:value="value"
+						>
+							{{ name }}
+						</option>
+					</select>
+				</div>
+				<div class="col-sm-8 offset-sm-4 pe-0">
+					<small class="text-muted">
+						{{ $t("main.loadpointSettings.priorityStrategy.help") }}
+					</small>
+				</div>
+			</div>
+			<div v-if="priorityHysteresisAvailable" class="mb-3 row">
+				<label
+					:for="formId('priorityhysteresis')"
+					class="col-sm-4 col-form-label pt-0 pt-sm-2"
+				>
+					{{ $t("main.loadpointSettings.priorityHysteresis.label") }}
+				</label>
+				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+					<input
+						:id="formId('priorityhysteresis')"
+						v-model.number="selectedPriorityHysteresis"
+						class="form-control form-control-sm"
+						type="number"
+						min="0"
+						max="99"
+						step="1"
+						@change="setPriorityHysteresis"
+					/>
+					<span class="ms-2">%</span>
+				</div>
+				<div class="col-sm-8 offset-sm-4 pe-0">
+					<small class="text-muted">
+						{{ $t("main.loadpointSettings.priorityHysteresis.help") }}
+					</small>
+				</div>
+			</div>
 		</div>
 	</GenericModal>
 </template>
@@ -136,7 +195,14 @@ import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast, type UiLoadpoint } from "@/types/evcc";
+import {
+	PHASES,
+	CURRENCY,
+	SMART_COST_TYPE,
+	PRIORITY_STRATEGY,
+	type Forecast,
+	type UiLoadpoint,
+} from "@/types/evcc";
 import api from "@/api";
 
 const V = 230;
@@ -181,6 +247,8 @@ export default defineComponent({
 			selectedMaxCurrent: undefined as number | undefined,
 			selectedMinCurrent: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
+			selectedPriorityStrategy: PRIORITY_STRATEGY.STATIC as PRIORITY_STRATEGY,
+			selectedPriorityHysteresis: 0 as number,
 			isModalVisible: false,
 		};
 	},
@@ -244,6 +312,33 @@ export default defineComponent({
 		batteryBoostAvailable() {
 			return this.batteryConfigured;
 		},
+		priorityStrategy(): PRIORITY_STRATEGY {
+			// published state sends "" for the static (default) strategy
+			return this.loadpoint?.priorityStrategy || PRIORITY_STRATEGY.STATIC;
+		},
+		priorityHysteresis(): number {
+			return this.loadpoint?.priorityHysteresis ?? 0;
+		},
+		priorityStrategyOptions(): { value: PRIORITY_STRATEGY; name: string }[] {
+			return [
+				{
+					value: PRIORITY_STRATEGY.STATIC,
+					name: this.$t("main.loadpointSettings.priorityStrategy.static"),
+				},
+				{
+					value: PRIORITY_STRATEGY.SOC,
+					name: this.$t("main.loadpointSettings.priorityStrategy.soc"),
+				},
+				{
+					value: PRIORITY_STRATEGY.DEFICIT,
+					name: this.$t("main.loadpointSettings.priorityStrategy.deficit"),
+				},
+			];
+		},
+		priorityHysteresisAvailable(): boolean {
+			// hysteresis only affects soc/deficit sub-ordering, not static priority
+			return this.selectedPriorityStrategy !== PRIORITY_STRATEGY.STATIC;
+		},
 	},
 	watch: {
 		maxCurrent(value) {
@@ -255,6 +350,12 @@ export default defineComponent({
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
+		priorityStrategy(value) {
+			this.selectedPriorityStrategy = value;
+		},
+		priorityHysteresis(value) {
+			this.selectedPriorityHysteresis = value;
+		},
 	},
 	methods: {
 		open(loadpointId: string) {
@@ -262,6 +363,8 @@ export default defineComponent({
 			this.selectedPhases = this.phasesConfigured;
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
+			this.selectedPriorityStrategy = this.priorityStrategy;
+			this.selectedPriorityHysteresis = this.priorityHysteresis;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
 		},
@@ -285,6 +388,17 @@ export default defineComponent({
 		},
 		setBatteryBoostLimit(limit: number) {
 			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
+		},
+		setPriorityStrategy() {
+			api.post(this.apiPath("prioritystrategy") + "/" + this.selectedPriorityStrategy);
+		},
+		setPriorityHysteresis() {
+			const value = Math.min(
+				99,
+				Math.max(0, Math.round(this.selectedPriorityHysteresis || 0))
+			);
+			this.selectedPriorityHysteresis = value;
+			api.post(this.apiPath("priorityhysteresis") + "/" + value);
 		},
 		currentOption(current: number, isDefault: boolean, phases?: number) {
 			const kw = this.fmtPhasePower(current, phases);

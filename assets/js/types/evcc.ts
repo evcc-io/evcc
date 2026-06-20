@@ -343,6 +343,8 @@ export interface Loadpoint {
   planProjectedStart: string | null;
   planTime: string | null;
   priority: number;
+  priorityStrategy: PRIORITY_STRATEGY | "";
+  priorityHysteresis: number;
   pvAction: PV_ACTION;
   pvRemaining: number;
   sessionCo2PerKWh: number | null;
@@ -464,6 +466,12 @@ export enum PV_ACTION {
   INACTIVE = "inactive",
   ENABLE = "enable",
   DISABLE = "disable",
+}
+
+export enum PRIORITY_STRATEGY {
+  STATIC = "static",
+  SOC = "soc",
+  DEFICIT = "deficit",
 }
 
 export enum CHARGER_STATUS_REASON {
