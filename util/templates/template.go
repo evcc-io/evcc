@@ -25,6 +25,7 @@ type Template struct {
 	Capabilities []Capability   `json:",omitempty"`
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
+	Caveats      []Caveat       `json:",omitempty"` // known device limitations
 	Params       []Param        `json:",omitempty"`
 	Render       string         `json:"-"` // rendering template
 }

@@ -112,6 +112,33 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	suite.Equal(res3, 1.0, "Voltages")
 }
 
+func (suite *connTestSuite) TestConnectorEnergyOnlyNoTxn() {
+	// connected, no txn, only energy register reported (e.g. Mennekes ACU while idle)
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1000", Unit: types.UnitOfMeasureWh}
+	suite.conn.meterUpdated = suite.clock.Now()
+
+	// no power measurand but no running txn: report zero instead of ErrNotAvailable
+	res, err := suite.conn.CurrentPower()
+	suite.NoError(err, "CurrentPower")
+	suite.Equal(0.0, res, "CurrentPower")
+
+	// energy is still reported
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(1.0, res, "TotalEnergy")
+}
+
+func (suite *connTestSuite) TestConnectorEnergyOnlyRunningTxn() {
+	// connected, running txn, only energy register reported and no power yet
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1000", Unit: types.UnitOfMeasureWh}
+	suite.conn.meterUpdated = suite.clock.Now()
+	suite.conn.txnId = 1
+
+	// missing power during an active txn must still surface as not available
+	_, err := suite.conn.CurrentPower()
+	suite.Equal(api.ErrNotAvailable, err, "CurrentPower")
+}
+
 func (suite *connTestSuite) TestConnectorMeasurementsRunningTxnOutdated() {
 	// connected, running txn, no meter update since 1 hour
 	suite.addMeasurements()

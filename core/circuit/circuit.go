@@ -34,10 +34,10 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current   float64
-	power     float64
-	dimmed    *bool
-	curtailed *bool
+	current float64
+	power   float64
+
+	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -175,15 +175,11 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 	return nil
 }
 
-// Wrap wraps circuit with parent, keeping the original meter
-func (c *Circuit) Wrap(parent api.Circuit) error {
-	if parent == c {
-		return nil // wrap circuit with itself
-	}
-	if c.meter != nil {
-		parent.(*Circuit).meter = c.meter
-	}
-	return c.setParent(parent)
+// SetHEMS attaches the HEMS instance to the circuit. Valid on root circuit only.
+func (c *Circuit) SetHEMS(hems api.HEMS) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.hems = hems
 }
 
 // HasMeter returns the max power setting
@@ -193,7 +189,7 @@ func (c *Circuit) HasMeter() bool {
 	return c.meter != nil
 }
 
-// GetMaxPower returns the max power setting
+// GetMaxPower returns the configured max power setting.
 func (c *Circuit) GetMaxPower() float64 {
 	if c.getMaxPower != nil {
 		res, err := c.getMaxPower()
@@ -206,6 +202,23 @@ func (c *Circuit) GetMaxPower() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.maxPower
+}
+
+// effectiveMaxPower returns the configured max power clamped by the HEMS
+// consumption limit. Only the root circuit applies the HEMS clamp; non-root
+// callers walk up the parent chain via ValidatePower.
+func (c *Circuit) effectiveMaxPower() float64 {
+	maxPower := c.GetMaxPower()
+	if c.hems == nil {
+		return maxPower
+	}
+
+	hemsLimit := c.hems.MaxConsumptionPower()
+	if hemsLimit <= 0 {
+		return maxPower
+	}
+
+	return min(hemsLimit, maxPower)
 }
 
 // SetMaxPower sets the max power
@@ -349,7 +362,7 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	if maxPower := c.GetMaxPower(); maxPower != 0 {
+	if maxPower := c.effectiveMaxPower(); maxPower != 0 {
 		delta := max(0, new-old)
 		potential := maxPower - c.power
 
@@ -389,46 +402,4 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	}
 
 	return c.parent.ValidateCurrent(old, new)
-}
-
-func (c *Circuit) Dim(dim bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.dimmed = &dim
-}
-
-func (c *Circuit) Dimmed() *bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if c.dimmed != nil {
-		return c.dimmed
-	}
-
-	if c.parent == nil {
-		return nil
-	}
-
-	return c.parent.Dimmed()
-}
-
-func (c *Circuit) Curtail(curtail bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.curtailed = &curtail
-}
-
-func (c *Circuit) Curtailed() *bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if c.curtailed != nil {
-		return c.curtailed
-	}
-
-	if c.parent == nil {
-		return nil
-	}
-
-	return c.parent.Curtailed()
 }

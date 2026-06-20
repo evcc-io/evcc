@@ -1,0 +1,115 @@
+template: ovum-mira
+products:
+  - brand: OVUM
+    description:
+      generic: MIRA
+group: heating
+capabilities: ["meter", "dim"]
+requirements:
+  description:
+    de: |
+      Der Modbus-TCP-Server muss am Display unter „Einstellungen / Netzwerk“ aktiviert und der Modbus Login-Code deaktiviert (Wert 1) werden, da evcc die Login-Sequenz nicht durchführt.
+      Die PV-Statusquelle muss am Display auf „EMS“ und die PV-Datenquelle auf die Leistungsvorgabe gestellt werden.
+      Benötigt MIRA-Regler ab Softwareversion V1.1.3.
+    en: |
+      The Modbus TCP server must be enabled at the display under "Settings / Network" and the Modbus login code must be disabled (value 1) since evcc does not perform the login sequence.
+      The PV status source must be set to "EMS" and the PV data source to the power setpoint at the display.
+      Requires MIRA controller software V1.1.3 or later.
+params:
+  - name: host
+  - name: tempsource
+    type: choice
+    choice: ["warmwater", "buffer"]
+  - name: wpmid
+    type: int
+    default: 111
+    advanced: true
+    description:
+      de: Slave-ID Wärmepumpenmodul
+      en: Heat pump module slave id
+    help:
+      de: Modbus Slave-ID des Wärmepumpenmoduls (WPM 1 = 111 … WPM 8 = 118)
+      en: Modbus slave id of the heat pump module (WPM 1 = 111 … WPM 8 = 118)
+render: |
+  type: sgready
+  getmode:
+    source: map
+    values:
+      0: 2 # Neutral -> normal
+      1: 3 # Erhöhen -> boost
+      2: 1 # Reduzieren -> dim
+    get:
+      source: modbus
+      uri: {{ joinHostPort .host "502" }}
+      id: 110 # HSM
+      register:
+        address: 55070 # HSM_EMS_PVSTATUS
+        type: holding
+        encoding: int16
+  setmode:
+    source: map
+    values:
+      1: 2 # dim -> Reduzieren
+      2: 0 # normal -> Neutral
+      3: 1 # boost -> Erhöhen
+    set:
+      source: modbus
+      uri: {{ joinHostPort .host "502" }}
+      id: 110 # HSM
+      register:
+        address: 55070 # HSM_EMS_PVSTATUS
+        type: writesingle
+        encoding: int16
+  setmaxpower:
+    source: modbus
+    uri: {{ joinHostPort .host "502" }}
+    id: 110 # HSM
+    register:
+      address: 55076 # HSM_EMS_SOLLPOWER
+      type: writemultiple
+      encoding: int32
+  power:
+    source: modbus
+    uri: {{ joinHostPort .host "502" }}
+    id: {{ .wpmid }} # WPM
+    register:
+      address: 56021 # WPM_WP_PWR
+      type: holding
+      encoding: float32
+    scale: 1000 # kW -> W
+  {{- if eq .tempsource "warmwater" }}
+  temp:
+    source: modbus
+    uri: {{ joinHostPort .host "502" }}
+    id: 110 # HSM
+    register:
+      address: 55007 # WW_ACTUALTEMPO
+      type: holding
+      encoding: float32
+  limittemp:
+    source: modbus
+    uri: {{ joinHostPort .host "502" }}
+    id: 110 # HSM
+    register:
+      address: 55002 # WW_SOLL_PV
+      type: holding
+      encoding: int16
+  {{- end }}
+  {{- if eq .tempsource "buffer" }}
+  temp:
+    source: modbus
+    uri: {{ joinHostPort .host "502" }}
+    id: 110 # HSM
+    register:
+      address: 55026 # HPUF_PUOT
+      type: holding
+      encoding: float32
+  limittemp:
+    source: modbus
+    uri: {{ joinHostPort .host "502" }}
+    id: 110 # HSM
+    register:
+      address: 55021 # PUFFER_SOLL_PV
+      type: holding
+      encoding: int16
+  {{- end }}

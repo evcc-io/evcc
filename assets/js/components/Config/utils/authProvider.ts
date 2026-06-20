@@ -30,7 +30,12 @@ export const prepareAuthLogin = async (state: AuthState, providerId: string) => 
     state.loading = true;
     state.error = null;
 
-    const url = `providerauth/login?id=${encodeURIComponent(providerId)}`;
+    let url = `providerauth/login?id=${encodeURIComponent(providerId)}`;
+    // restore the config modal stack on callback
+    const returnTo = window.location.hash.split("?")[1];
+    if (returnTo) {
+      url += `&return=${encodeURIComponent(returnTo)}`;
+    }
     const { status, data } = await baseApi.get<ProviderLoginResponse>(url, {
       validateStatus: (code) => [200, 400].includes(code),
     });

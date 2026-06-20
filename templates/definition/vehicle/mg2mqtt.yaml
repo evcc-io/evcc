@@ -13,6 +13,7 @@ params:
   - name: vin
     required: true
   - preset: vehicle-common
+  - preset: vehicle-climater
   - name: timeout
     default: 1h
 render: |
@@ -62,3 +63,4 @@ render: |
           source: mqtt
           topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
           timeout: {{ .timeout }}
+  {{ include "vehicle-features" . }}

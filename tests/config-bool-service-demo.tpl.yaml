@@ -1,0 +1,17 @@
+template: bool-service-demo
+group: generic
+products:
+  - description:
+      generic: Bool Service Meter
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: insecure
+    type: bool
+    advanced: true
+  - name: entity
+    description:
+      generic: Entity
+    service: demo/insecure?insecure={insecure}
+render: |
+  type: custom

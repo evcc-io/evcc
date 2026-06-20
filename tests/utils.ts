@@ -17,18 +17,20 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
   await expect(modal).toHaveAttribute("aria-hidden", "true");
 }
 
-export async function editorClear(editor: Locator, iterations = 10): Promise<void> {
-  for (let i = 0; i < iterations; i++) {
-    await editor.locator(".view-line").nth(0).click();
-    await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 50 });
-    await editor.page().keyboard.press("Backspace", { delay: 50 });
-  }
+export async function editorClear(editor: Locator): Promise<void> {
+  const content = editor.locator(".cm-content");
+  // wait for the async content load, otherwise clearing races the arriving text
+  await expect(content).not.toHaveText("");
+  await content.click();
+  await editor.page().keyboard.press("ControlOrMeta+KeyA");
+  await editor.page().keyboard.press("Backspace");
+  await expect(content, "editor should be empty after clearing").toHaveText("");
 }
 
 export async function editorPaste(editor: Locator, page: Page, text: string): Promise<void> {
-  await editor.locator(".view-line").nth(0).click();
+  await editor.locator(".cm-content").click();
   await page.evaluate((text) => navigator.clipboard.writeText(text), text);
-  await page.keyboard.press("ControlOrMeta+KeyV", { delay: 100 });
+  await page.keyboard.press("ControlOrMeta+KeyV");
 }
 
 export enum LoadpointType {
