@@ -76,8 +76,7 @@ type deferredState[T comparable] struct {
 }
 
 // setter is the generic setter function for watchdogPlugin
-// it is currently not possible to write this as a method
-func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
+func (o *watchdogPlugin) setter[T comparable](set func(T) error, reset []T) func(T) error {
 	var state *deferredState[T]
 	var lastUpdated time.Time
 	var last *T
@@ -193,7 +192,7 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 		}
 	}
 
-	res := setter(o, set, reset)
+	res := o.setter(set, reset)
 	if o.initial != nil {
 		val, err := strconv.ParseInt(*o.initial, 10, 64)
 		if err != nil {
@@ -227,7 +226,7 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 		}
 	}
 
-	res := setter(o, set, reset)
+	res := o.setter(set, reset)
 	if o.initial != nil {
 		val, err := strconv.ParseFloat(*o.initial, 64)
 		if err != nil {
@@ -261,7 +260,7 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		reset = append(reset, val)
 	}
 
-	res := setter(o, set, reset)
+	res := o.setter(set, reset)
 	if o.initial != nil {
 		val, err := strconv.ParseBool(*o.initial)
 		if err != nil {

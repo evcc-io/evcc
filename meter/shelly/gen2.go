@@ -91,7 +91,7 @@ type gen2 struct {
 	emdata        func() (Gen2EMData, error)
 }
 
-func apiCall[T any](c *gen2, id int, method string) func() (T, error) {
+func (c *gen2) apiCall[T any](id int, method string) func() (T, error) {
 	return func() (T, error) {
 		var res T
 		if err := c.execCmd(id, method, &res); err != nil {
@@ -135,14 +135,14 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	}
 
 	if c.hasMethod("PM1.GetStatus") {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, channel, "PM1.GetStatus"), cache)
+		c.switchstatus = util.ResettableCached(c.apiCall[Gen2SwitchStatus](channel, "PM1.GetStatus"), cache)
 	} else {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.switchchannel, "Switch.GetStatus"), cache)
+		c.switchstatus = util.ResettableCached(c.apiCall[Gen2SwitchStatus](c.switchchannel, "Switch.GetStatus"), cache)
 	}
-	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
-	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, channel, "EM1Data.GetStatus"), cache)
-	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, channel, "EM.GetStatus"), cache)
-	c.emdata = util.Cached(apiCall[Gen2EMData](c, channel, "EMData.GetStatus"), cache)
+	c.em1status = util.Cached(c.apiCall[Gen2EM1Status](channel, "EM1.GetStatus"), cache)
+	c.em1data = util.Cached(c.apiCall[Gen2EM1Data](channel, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.Cached(c.apiCall[Gen2EMStatus](channel, "EM.GetStatus"), cache)
+	c.emdata = util.Cached(c.apiCall[Gen2EMData](channel, "EMData.GetStatus"), cache)
 
 	return c, nil
 }
