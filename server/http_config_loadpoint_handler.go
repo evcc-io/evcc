@@ -32,6 +32,8 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		Title:                    lp.GetTitle(),
 		DefaultMode:              string(lp.GetDefaultMode()),
 		Priority:                 lp.GetPriority(),
+		PriorityStrategy:         lp.GetPriorityStrategy(),
+		PriorityHysteresis:       lp.GetPriorityHysteresis(),
 		PhasesConfigured:         lp.GetPhasesConfigured(),
 		MinCurrent:               lp.GetMinCurrent(),
 		MaxCurrent:               lp.GetMaxCurrent(),
