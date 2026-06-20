@@ -32,6 +32,47 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
+// EffectivePriorityScore returns a sortable priority score used to rank loadpoints
+// when distributing surplus power. The integer part is the effective priority (the
+// tier); the fractional part in [0,1) orders loadpoints within the same tier
+// according to the configured priority strategy, so the sub-ordering never crosses
+// a priority boundary.
+//
+// A higher score wins. With the soc strategy a lower vehicle soc scores higher;
+// with the deficit strategy a larger gap to the limit soc scores higher. The
+// strategy sub-ordering only applies when a positive vehicle soc is known,
+// otherwise the score equals the plain effective priority.
+func (lp *Loadpoint) EffectivePriorityScore() float64 {
+	score := float64(lp.EffectivePriority())
+
+	soc := lp.GetSoc()
+	if soc <= 0 {
+		return score
+	}
+
+	switch lp.GetPriorityStrategy() {
+	case api.PrioritySoc:
+		score += priorityFraction(100 - soc)
+	case api.PriorityDeficit:
+		score += priorityFraction(float64(lp.EffectiveLimitSoc()) - soc)
+	}
+
+	return score
+}
+
+// priorityFraction maps a soc-based value to a [0,1) sub-ordering offset, kept
+// strictly below 1 so it can never bump a loadpoint into the next priority tier.
+func priorityFraction(v float64) float64 {
+	switch {
+	case v <= 0:
+		return 0
+	case v > 99:
+		return 0.99
+	default:
+		return v / 100
+	}
+}
+
 type plan struct {
 	Id    int
 	Start time.Time // last possible start time

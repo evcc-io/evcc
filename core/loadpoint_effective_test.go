@@ -17,6 +17,42 @@ func TestEffectiveLimitSoc(t *testing.T) {
 	assert.Equal(t, 100, lp.effectiveLimitSoc())
 }
 
+func TestEffectivePriorityScore(t *testing.T) {
+	tc := []struct {
+		strategy      api.PriorityStrategy
+		priority      int
+		soc, limitSoc float64
+		expected      float64
+	}{
+		// static: fractional part is always zero
+		{api.PriorityStatic, 0, 50, 0, 0},
+		{api.PriorityStatic, 2, 50, 0, 2},
+		// soc: lower soc scores higher within the tier
+		{api.PrioritySoc, 0, 20, 0, 0.80},
+		{api.PrioritySoc, 0, 80, 0, 0.20},
+		{api.PrioritySoc, 1, 20, 0, 1.80},
+		{api.PrioritySoc, 0, 100, 0, 0}, // full vehicle: no boost
+		{api.PrioritySoc, 0, 0, 0, 0},   // unknown soc: falls back to plain priority
+		// deficit: larger gap to the limit soc scores higher within the tier
+		{api.PriorityDeficit, 0, 50, 80, 0.30},
+		{api.PriorityDeficit, 0, 50, 0, 0.50}, // no limit set -> default 100
+		{api.PriorityDeficit, 0, 90, 80, 0},   // soc above limit: no boost
+		{api.PriorityDeficit, 0, 0, 80, 0},    // unknown soc: falls back to plain priority
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.priority = tc.priority
+		lp.priorityStrategy = tc.strategy
+		lp.vehicleSoc = tc.soc
+		lp.limitSoc = int(tc.limitSoc)
+
+		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(), 1e-9)
+	}
+}
+
 func TestEffectiveMinMaxCurrent(t *testing.T) {
 	tc := []struct {
 		chargerMin, chargerMax     float64

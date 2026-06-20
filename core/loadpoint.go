@@ -101,9 +101,10 @@ type Loadpoint struct {
 	ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
-	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
-	Title       string         `mapstructure:"title"`    // UI title
-	Priority    int            `mapstructure:"priority"` // Priority
+	DefaultMode      api.ChargeMode       `mapstructure:"mode"`             // Default charge mode, used for disconnect
+	Title            string               `mapstructure:"title"`            // UI title
+	Priority         int                  `mapstructure:"priority"`         // Priority
+	PriorityStrategy api.PriorityStrategy `mapstructure:"priorityStrategy"` // Priority strategy (static, soc, deficit)
 
 	// from yaml, deprecated
 	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
@@ -111,17 +112,18 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
-	title                    string   // UI title
-	priority                 int      // Priority
-	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
-	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
-	phasesConfigured         int      // Charger configured phase mode 0/1/3
-	limitSoc                 int      // Session limit for soc
-	limitEnergy              float64  // Session limit for energy
-	smartCostLimit           *float64 // always charge if consumption cost is below this value
-	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
-	batteryBoost             int      // battery boost state
-	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
+	title                    string               // UI title
+	priority                 int                  // Priority
+	priorityStrategy         api.PriorityStrategy // Priority strategy (static, soc, deficit)
+	minCurrent               float64              // PV mode: start current	Min+PV mode: min current
+	maxCurrent               float64              // Max allowed current. Physically ensured by the charger
+	phasesConfigured         int                  // Charger configured phase mode 0/1/3
+	limitSoc                 int                  // Session limit for soc
+	limitEnergy              float64              // Session limit for energy
+	smartCostLimit           *float64             // always charge if consumption cost is below this value
+	smartFeedInPriorityLimit *float64             // prevent charging if feed-in cost is above this value
+	batteryBoost             int                  // battery boost state
+	batteryBoostLimit        int                  // battery boost soc limit (0-100, 100=disabled)
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -217,6 +219,12 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 
 	if lp.Priority > 0 {
 		lp.setPriority(lp.Priority)
+	}
+
+	if ps, err := api.PriorityStrategyString(string(lp.PriorityStrategy)); err != nil {
+		return lp, err
+	} else {
+		lp.priorityStrategy = ps
 	}
 
 	if lp.CircuitRef != "" {

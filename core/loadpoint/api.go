@@ -57,6 +57,8 @@ type API interface {
 	GetPriority() int
 	// SetPriority sets the priority
 	SetPriority(int)
+	// GetPriorityStrategy returns the priority strategy
+	GetPriorityStrategy() api.PriorityStrategy
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
 	// SetMinCurrent sets the min charging current
@@ -98,6 +100,8 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
+	// EffectivePriorityScore returns the sortable priority score (tier + strategy sub-ordering)
+	EffectivePriorityScore() float64
 	// EffectiveLimitSoc returns the effective session limit soc
 	EffectiveLimitSoc() int
 	// EffectivePlanId returns the effective plan id

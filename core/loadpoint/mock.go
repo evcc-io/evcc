@@ -165,6 +165,20 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
 }
 
+// EffectivePriorityScore mocks base method.
+func (m *MockAPI) EffectivePriorityScore() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectivePriorityScore")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// EffectivePriorityScore indicates an expected call of EffectivePriorityScore.
+func (mr *MockAPIMockRecorder) EffectivePriorityScore() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriorityScore", reflect.TypeOf((*MockAPI)(nil).EffectivePriorityScore))
+}
+
 // GetBatteryBoost mocks base method.
 func (m *MockAPI) GetBatteryBoost() int {
 	m.ctrl.T.Helper()
@@ -557,6 +571,20 @@ func (m *MockAPI) GetPriority() int {
 func (mr *MockAPIMockRecorder) GetPriority() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriority", reflect.TypeOf((*MockAPI)(nil).GetPriority))
+}
+
+// GetPriorityStrategy mocks base method.
+func (m *MockAPI) GetPriorityStrategy() api.PriorityStrategy {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPriorityStrategy")
+	ret0, _ := ret[0].(api.PriorityStrategy)
+	return ret0
+}
+
+// GetPriorityStrategy indicates an expected call of GetPriorityStrategy.
+func (mr *MockAPIMockRecorder) GetPriorityStrategy() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriorityStrategy", reflect.TypeOf((*MockAPI)(nil).GetPriorityStrategy))
 }
 
 // GetRemainingDuration mocks base method.

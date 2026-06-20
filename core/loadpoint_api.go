@@ -228,6 +228,13 @@ func (lp *Loadpoint) GetPriority() int {
 	return lp.priority
 }
 
+// GetPriorityStrategy returns the loadpoint priority strategy
+func (lp *Loadpoint) GetPriorityStrategy() api.PriorityStrategy {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.priorityStrategy
+}
+
 // setPriority sets the loadpoint priority (no mutex)
 func (lp *Loadpoint) setPriority(prio int) {
 	lp.priority = prio
