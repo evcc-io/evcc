@@ -14,10 +14,11 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
-	conn    *modbus.Connection
-	enabled bool
-	curr    uint16
-	base    uint16
+	conn       *modbus.Connection
+	enabled    bool
+	curr       uint16
+	base       uint16
+	laststatus api.ChargeStatus
 }
 
 const (
@@ -34,6 +35,7 @@ const (
 	openwbRegPhaseTarget  = 10180
 	openwbRegPhaseTrigger = 10181
 	openwbRegHeartbeat    = 10190
+	openwbRegResetRfid    = 10197
 	openwbRegCpTrigger    = 10198
 )
 
@@ -90,10 +92,11 @@ func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint1
 	conn.Logger(log.TRACE)
 
 	wb := &OpenWB20{
-		Caps: implement.New(),
-		conn: conn,
-		curr: 6 * 100,
-		base: (connector - 1) * 100,
+		Caps:       implement.New(),
+		conn:       conn,
+		curr:       6 * 100,
+		base:       (connector - 1) * 100,
+		laststatus: api.StatusNone,
 	}
 
 	return wb, nil
@@ -102,13 +105,18 @@ func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint1
 // Status implements the api.Charger interface
 func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
+		wb.laststatus = api.StatusC
 		return api.StatusC, err
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegPlugged, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
+		wb.laststatus = api.StatusB
 		return api.StatusB, err
 	}
-
+	if wb.laststatus != api.StatusA {
+		wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1) // Reset RFID on disconnect
+	}
+	wb.laststatus = api.StatusA
 	return api.StatusA, nil
 }
 
