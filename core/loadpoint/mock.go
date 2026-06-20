@@ -1047,6 +1047,30 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockAPI)(nil).SetPriority), arg0)
 }
 
+// SetPriorityHysteresis mocks base method.
+func (m *MockAPI) SetPriorityHysteresis(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPriorityHysteresis", arg0)
+}
+
+// SetPriorityHysteresis indicates an expected call of SetPriorityHysteresis.
+func (mr *MockAPIMockRecorder) SetPriorityHysteresis(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriorityHysteresis", reflect.TypeOf((*MockAPI)(nil).SetPriorityHysteresis), arg0)
+}
+
+// SetPriorityStrategy mocks base method.
+func (m *MockAPI) SetPriorityStrategy(arg0 api.PriorityStrategy) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPriorityStrategy", arg0)
+}
+
+// SetPriorityStrategy indicates an expected call of SetPriorityStrategy.
+func (mr *MockAPIMockRecorder) SetPriorityStrategy(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriorityStrategy", reflect.TypeOf((*MockAPI)(nil).SetPriorityStrategy), arg0)
+}
+
 // SetSmartCostLimit mocks base method.
 func (m *MockAPI) SetSmartCostLimit(limit *float64) {
 	m.ctrl.T.Helper()

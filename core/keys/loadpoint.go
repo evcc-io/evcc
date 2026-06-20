@@ -2,30 +2,32 @@ package keys
 
 const (
 	// loadpoint settings
-	Name              = "name"             // loadpoint name (config identifier)
-	Title             = "title"            // loadpoint title
-	Mode              = "mode"             // charge mode
-	DefaultMode       = "defaultMode"      // default charge mode
-	Charger           = "charger"          // charger ref
-	Meter             = "meter"            // meter ref
-	Circuit           = "circuit"          // circuit ref
-	DefaultVehicle    = "vehicle"          // default vehicle ref
-	Priority          = "priority"         // priority
-	MinCurrent        = "minCurrent"       // min current
-	MaxCurrent        = "maxCurrent"       // max current
-	MinSoc            = "minSoc"           // min soc
-	MinSocNotReached  = "minSocNotReached" // min soc not reached
-	LimitSoc          = "limitSoc"         // limit soc
-	LimitEnergy       = "limitEnergy"      // limit energy
-	Soc               = "soc"
-	Thresholds        = "thresholds"
-	UI                = "ui" // display-only ui settings (json)
-	EnableThreshold   = "enableThreshold"
-	DisableThreshold  = "disableThreshold"
-	EnableDelay       = "enableDelay"
-	DisableDelay      = "disableDelay"
-	BatteryBoost      = "batteryBoost"
-	BatteryBoostLimit = "batteryBoostLimit"
+	Name               = "name"               // loadpoint name (config identifier)
+	Title              = "title"              // loadpoint title
+	Mode               = "mode"               // charge mode
+	DefaultMode        = "defaultMode"        // default charge mode
+	Charger            = "charger"            // charger ref
+	Meter              = "meter"              // meter ref
+	Circuit            = "circuit"            // circuit ref
+	DefaultVehicle     = "vehicle"            // default vehicle ref
+	Priority           = "priority"           // priority
+	PriorityStrategy   = "priorityStrategy"   // priority strategy (static, soc, deficit)
+	PriorityHysteresis = "priorityHysteresis" // priority sub-ordering deadband in soc-% (0 = off)
+	MinCurrent         = "minCurrent"         // min current
+	MaxCurrent         = "maxCurrent"         // max current
+	MinSoc             = "minSoc"             // min soc
+	MinSocNotReached   = "minSocNotReached"   // min soc not reached
+	LimitSoc           = "limitSoc"           // limit soc
+	LimitEnergy        = "limitEnergy"        // limit energy
+	Soc                = "soc"
+	Thresholds         = "thresholds"
+	UI                 = "ui" // display-only ui settings (json)
+	EnableThreshold    = "enableThreshold"
+	DisableThreshold   = "disableThreshold"
+	EnableDelay        = "enableDelay"
+	DisableDelay       = "disableDelay"
+	BatteryBoost       = "batteryBoost"
+	BatteryBoostLimit  = "batteryBoostLimit"
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
 	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)

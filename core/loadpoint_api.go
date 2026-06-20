@@ -260,6 +260,53 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	}
 }
 
+// setPriorityStrategy sets the loadpoint priority strategy (no mutex)
+func (lp *Loadpoint) setPriorityStrategy(strategy api.PriorityStrategy) {
+	lp.priorityStrategy = strategy
+	lp.publish(keys.PriorityStrategy, lp.priorityStrategy)
+	lp.settings.SetString(keys.PriorityStrategy, string(lp.priorityStrategy))
+}
+
+// SetPriorityStrategy sets the loadpoint priority strategy
+func (lp *Loadpoint) SetPriorityStrategy(strategy api.PriorityStrategy) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	normalized, err := api.PriorityStrategyString(string(strategy))
+	if err != nil {
+		lp.log.ERROR.Printf("invalid priority strategy: %s", string(strategy))
+		return
+	}
+
+	lp.log.DEBUG.Printf("set priority strategy: %s", normalized)
+	if lp.priorityStrategy != normalized {
+		lp.setPriorityStrategy(normalized)
+	}
+}
+
+// setPriorityHysteresis sets the loadpoint priority sub-ordering deadband (no mutex)
+func (lp *Loadpoint) setPriorityHysteresis(hysteresis int) {
+	lp.priorityHysteresis = hysteresis
+	lp.publish(keys.PriorityHysteresis, lp.priorityHysteresis)
+	lp.settings.SetInt(keys.PriorityHysteresis, int64(lp.priorityHysteresis))
+}
+
+// SetPriorityHysteresis sets the loadpoint priority sub-ordering deadband in soc-%
+func (lp *Loadpoint) SetPriorityHysteresis(hysteresis int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if hysteresis < 0 || hysteresis > 99 {
+		lp.log.ERROR.Printf("invalid priority hysteresis: %d (must be 0..99)", hysteresis)
+		return
+	}
+
+	lp.log.DEBUG.Println("set priority hysteresis:", hysteresis)
+	if lp.priorityHysteresis != hysteresis {
+		lp.setPriorityHysteresis(hysteresis)
+	}
+}
+
 // GetPhases returns the enabled phases
 func (lp *Loadpoint) GetPhases() int {
 	lp.RLock()
