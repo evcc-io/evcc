@@ -18,7 +18,7 @@ params:
       en: API version
       de: API-Version
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-generic-online-functions
 render: |
   type: custom
   {{ include "vehicle-common" . }}

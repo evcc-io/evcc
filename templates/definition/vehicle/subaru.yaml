@@ -7,7 +7,7 @@ requirements:
     en: Requires Subaru Connected Services Account
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-generic-online-functions
   - name: vin
     example: JF...
 render: |
