@@ -235,6 +235,13 @@ func (lp *Loadpoint) GetPriorityStrategy() api.PriorityStrategy {
 	return lp.priorityStrategy
 }
 
+// GetPriorityHysteresis returns the priority sub-ordering deadband in soc-%
+func (lp *Loadpoint) GetPriorityHysteresis() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.priorityHysteresis
+}
+
 // setPriority sets the loadpoint priority (no mutex)
 func (lp *Loadpoint) setPriority(prio int) {
 	lp.priority = prio

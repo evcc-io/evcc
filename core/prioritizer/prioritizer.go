@@ -2,6 +2,7 @@ package prioritizer
 
 import (
 	"fmt"
+	"math"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -33,13 +34,19 @@ func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API, rates api.R
 func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 	score := lp.EffectivePriorityScore()
 
+	// hysteresis deadband (soc-% -> score fraction): only outrank another loadpoint
+	// when ahead by more than the band, so near-equal soc loadpoints tie and converge
+	// instead of leapfrogging each other as their soc crosses. capped below 1.0 so it
+	// never weakens cross-tier (integer priority) ordering.
+	band := math.Min(float64(lp.GetPriorityHysteresis())/100, 0.99)
+
 	var (
 		reduceBy float64
 		msg      string
 	)
 
 	for lp, power := range p.demand {
-		if lp.EffectivePriorityScore() < score && power > 0 {
+		if score-lp.EffectivePriorityScore() > band && power > 0 {
 			reduceBy += power
 			msg += fmt.Sprintf("%.0fW from %s at prio %.2f, ", power, lp.GetTitle(), lp.EffectivePriorityScore())
 		}

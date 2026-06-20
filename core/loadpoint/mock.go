@@ -573,6 +573,20 @@ func (mr *MockAPIMockRecorder) GetPriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriority", reflect.TypeOf((*MockAPI)(nil).GetPriority))
 }
 
+// GetPriorityHysteresis mocks base method.
+func (m *MockAPI) GetPriorityHysteresis() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPriorityHysteresis")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetPriorityHysteresis indicates an expected call of GetPriorityHysteresis.
+func (mr *MockAPIMockRecorder) GetPriorityHysteresis() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriorityHysteresis", reflect.TypeOf((*MockAPI)(nil).GetPriorityHysteresis))
+}
+
 // GetPriorityStrategy mocks base method.
 func (m *MockAPI) GetPriorityStrategy() api.PriorityStrategy {
 	m.ctrl.T.Helper()

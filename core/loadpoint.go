@@ -101,10 +101,11 @@ type Loadpoint struct {
 	ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
-	DefaultMode      api.ChargeMode       `mapstructure:"mode"`             // Default charge mode, used for disconnect
-	Title            string               `mapstructure:"title"`            // UI title
-	Priority         int                  `mapstructure:"priority"`         // Priority
-	PriorityStrategy api.PriorityStrategy `mapstructure:"priorityStrategy"` // Priority strategy (static, soc, deficit)
+	DefaultMode        api.ChargeMode       `mapstructure:"mode"`               // Default charge mode, used for disconnect
+	Title              string               `mapstructure:"title"`              // UI title
+	Priority           int                  `mapstructure:"priority"`           // Priority
+	PriorityStrategy   api.PriorityStrategy `mapstructure:"priorityStrategy"`   // Priority strategy (static, soc, deficit)
+	PriorityHysteresis int                  `mapstructure:"priorityHysteresis"` // Priority sub-ordering deadband in soc-% (0 = off)
 
 	// from yaml, deprecated
 	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
@@ -115,6 +116,7 @@ type Loadpoint struct {
 	title                    string               // UI title
 	priority                 int                  // Priority
 	priorityStrategy         api.PriorityStrategy // Priority strategy (static, soc, deficit)
+	priorityHysteresis       int                  // Priority sub-ordering deadband in soc-% (0 = off)
 	minCurrent               float64              // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64              // Max allowed current. Physically ensured by the charger
 	phasesConfigured         int                  // Charger configured phase mode 0/1/3
@@ -226,6 +228,11 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	} else {
 		lp.priorityStrategy = ps
 	}
+
+	if lp.PriorityHysteresis < 0 || lp.PriorityHysteresis > 99 {
+		return lp, fmt.Errorf("invalid priority hysteresis: %d (must be 0..99)", lp.PriorityHysteresis)
+	}
+	lp.priorityHysteresis = lp.PriorityHysteresis
 
 	if lp.CircuitRef != "" {
 		dev, err := config.Circuits().ByName(lp.CircuitRef)

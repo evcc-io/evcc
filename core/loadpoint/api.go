@@ -59,6 +59,8 @@ type API interface {
 	SetPriority(int)
 	// GetPriorityStrategy returns the priority strategy
 	GetPriorityStrategy() api.PriorityStrategy
+	// GetPriorityHysteresis returns the priority sub-ordering deadband in soc-%
+	GetPriorityHysteresis() int
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
 	// SetMinCurrent sets the min charging current
