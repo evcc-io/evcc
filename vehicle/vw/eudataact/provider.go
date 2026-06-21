@@ -81,9 +81,8 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	// battery_level_HV.value is authoritative when flagged valid; check it first
-	// as battery_state_report.soc can be ambiguous within a single dataset
-	if data[FieldHvBatteryLevelState].Value == hvBatteryLevelValid {
+	// use battery_level_HV.value when its state reports valid
+	if s, ok := data[FieldHvBatteryLevelState]; ok && s.Value == hvBatteryLevelValid {
 		if p, ok := data[FieldHvBatteryLevelValue]; ok {
 			return strconv.ParseFloat(p.Value, 64)
 		}
