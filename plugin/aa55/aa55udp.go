@@ -8,11 +8,15 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	gridx "github.com/grid-x/modbus"
 )
 
 // cacheTTL serves all sources within one poll cycle (well under 1s) while
 // forcing a fresh read on the next cycle.
 const cacheTTL = 2 * time.Second
+
+// readTimeout bounds the wait for a response
+const readTimeout = 2 * time.Second
 
 // cache de-duplicates block reads across all AA55UDP instances so multiple
 // sources covering the same (host, block) share one UDP exchange per cycle.
@@ -38,6 +42,11 @@ type AA55UDP struct {
 	scale    float64
 	cacheKey string        // precomputed cache key (remoteAddr/pdu); empty disables caching
 	delay    time.Duration // minimum gap between sends to the inverter (0 disables)
+
+	// write mode (set by NewSetter)
+	id       byte
+	reg      modbus.Register
+	writable bool
 }
 
 // readConfig holds the resolved read mode configuration.
@@ -109,8 +118,89 @@ func New(log *util.Logger, conn *net.UDPConn, id int, reg modbus.Register, block
 	return ap, nil
 }
 
+// NewSetter constructs a write-mode AA55UDP for a single holding register.
+// The register type must be a write type (writesingle/writemultiple).
+func NewSetter(log *util.Logger, conn *net.UDPConn, id int, reg modbus.Register, scale float64, delay time.Duration) (*AA55UDP, error) {
+	if id < 0 || id > 255 {
+		return nil, fmt.Errorf("id must be 0-255, got %d", id)
+	}
+	if err := reg.Error(); err != nil {
+		return nil, err
+	}
+	return &AA55UDP{
+		log:      log,
+		conn:     conn,
+		scale:    scale,
+		delay:    delay,
+		id:       byte(id),
+		reg:      reg,
+		writable: true,
+	}, nil
+}
+
+// FloatSetter implements the evcc plugin.FloatSetter interface.
+func (p *AA55UDP) FloatSetter(_ string) (func(float64) error, error) {
+	return p.writeFunc()
+}
+
+// IntSetter implements the evcc plugin.IntSetter interface.
+func (p *AA55UDP) IntSetter(_ string) (func(int64) error, error) {
+	set, err := p.writeFunc()
+	if err != nil {
+		return nil, err
+	}
+	return func(val int64) error {
+		return set(float64(val))
+	}, nil
+}
+
+// writeFunc builds the register writer derived from the register's func code.
+func (p *AA55UDP) writeFunc() (func(float64) error, error) {
+	fc, err := p.reg.FuncCode()
+	if err != nil {
+		return nil, err
+	}
+	encode, err := p.reg.EncodeFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(val float64) error {
+		val *= p.scale
+
+		var pdu []byte
+		switch fc {
+		case gridx.FuncCodeWriteSingleRegister:
+			pdu = buildWriteSinglePDU(p.id, p.reg.Address, uint16(val))
+		case gridx.FuncCodeWriteMultipleRegisters:
+			b, err := encode(val)
+			if err != nil {
+				return err
+			}
+			pdu = buildWriteMultiplePDU(p.id, p.reg.Address, b)
+		default:
+			return fmt.Errorf("invalid func code: %d", fc)
+		}
+
+		raw, err := p.sendRecv(append(pdu, modbusCRC16(pdu)...))
+		if err != nil {
+			return err
+		}
+		if err := validateWriteResponse(raw, fc); err != nil {
+			return err
+		}
+
+		// a write invalidates cached reads for all sources of this inverter
+		cache.Clear()
+		return nil
+	}, nil
+}
+
 // FloatGetter implements the evcc plugin.FloatGetter interface.
 func (p *AA55UDP) FloatGetter() (func() (float64, error), error) {
+	if p.writable {
+		return nil, errors.New("register configured for write")
+	}
 	return p.query, nil
 }
 
@@ -175,7 +265,7 @@ func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
 		return nil, fmt.Errorf("write: %w", err)
 	}
 
-	if err := p.conn.SetReadDeadline(time.Now().Add(4 * time.Second)); err != nil {
+	if err := p.conn.SetReadDeadline(time.Now().Add(readTimeout)); err != nil {
 		return nil, fmt.Errorf("deadline: %w", err)
 	}
 
