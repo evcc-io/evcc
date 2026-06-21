@@ -41,10 +41,10 @@ func TestEffectivePriorityScore(t *testing.T) {
 		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 90, 80, 0, 0},   // soc above limit: no boost
 		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 0, 80, 0, 0},    // unknown soc: falls back to plain priority
 		// soc (energy): gap is scaled by capacity -> (100-soc)/100*capacity, /100 for the fraction
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 50, 0.40},  // 80% * 50kWh = 40kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 80, 0, 50, 0.10},  // 20% * 50kWh = 10kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 25, 0.20},  // 80% * 25kWh = 20kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 0, 0.80},   // capacity unknown: falls back to percent
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 50, 0.40}, // 80% * 50kWh = 40kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 80, 0, 50, 0.10}, // 20% * 50kWh = 10kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 25, 0.20}, // 80% * 25kWh = 20kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 0, 0.80}, // capacity unknown: falls back to percent
 		// deficit (energy): (limitSoc-soc)/100*capacity, /100 for the fraction
 		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 50, 0.15}, // 30% * 50kWh = 15kWh
 		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 0, 0.30},  // capacity unknown: falls back to percent
