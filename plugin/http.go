@@ -111,8 +111,8 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 
 	// defensive normalize, protects against clock-skew-induced false-fresh cache hits
 	base = &transport.Modifier{
-	    Modifier: clampResponseDate,
-	    Base:     base,
+		Modifier: clampResponseDate,
+		Base:     base,
 	}
 
 	if cache > 0 {
