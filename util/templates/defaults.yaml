@@ -606,7 +606,7 @@ presets:
       advanced: true
     - name: autodetectdisabled
       advanced: true
-  vehicle-generic-online-functions:
+  vehicle-online:
     - name: climaterdisabled
       advanced: true
     - name: autodetectdisabled

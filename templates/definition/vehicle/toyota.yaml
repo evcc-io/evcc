@@ -9,7 +9,7 @@ requirements:
       Requires Toyota Connected Services Account.
 params:
   - preset: vehicle-common
-  - preset: vehicle-generic-online-functions
+  - preset: vehicle-online
   - name: user
     required: true
   - name: password
