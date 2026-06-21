@@ -473,7 +473,7 @@ export enum PV_ACTION {
 }
 
 export enum PRIORITY_STRATEGY {
-  STATIC = "static",
+  NONE = "none",
   SOC = "soc",
   DEFICIT = "deficit",
 }

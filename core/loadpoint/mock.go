@@ -151,20 +151,6 @@ func (mr *MockAPIMockRecorder) EffectivePlanTime() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePlanTime", reflect.TypeOf((*MockAPI)(nil).EffectivePlanTime))
 }
 
-// EffectivePriority mocks base method.
-func (m *MockAPI) EffectivePriority() int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EffectivePriority")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// EffectivePriority indicates an expected call of EffectivePriority.
-func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
-}
-
 // EffectivePriorityScore mocks base method.
 func (m *MockAPI) EffectivePriorityScore(basis api.PriorityBasis) float64 {
 	m.ctrl.T.Helper()

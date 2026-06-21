@@ -271,7 +271,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 func (lp *Loadpoint) setPriorityStrategy(strategy api.PriorityStrategy) {
 	lp.priorityStrategy = strategy
 	lp.publish(keys.PriorityStrategy, lp.priorityStrategy)
-	lp.settings.SetString(keys.PriorityStrategy, string(lp.priorityStrategy))
+	lp.settings.SetString(keys.PriorityStrategy, strategy.String())
 }
 
 // SetPriorityStrategy sets the loadpoint priority strategy
@@ -279,15 +279,14 @@ func (lp *Loadpoint) SetPriorityStrategy(strategy api.PriorityStrategy) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	normalized, err := api.PriorityStrategyString(string(strategy))
-	if err != nil {
-		lp.log.ERROR.Printf("invalid priority strategy: %s", string(strategy))
+	if !strategy.IsAPriorityStrategy() {
+		lp.log.ERROR.Printf("invalid priority strategy: %d", strategy)
 		return
 	}
 
-	lp.log.DEBUG.Printf("set priority strategy: %s", normalized)
-	if lp.priorityStrategy != normalized {
-		lp.setPriorityStrategy(normalized)
+	lp.log.DEBUG.Printf("set priority strategy: %s", strategy)
+	if lp.priorityStrategy != strategy {
+		lp.setPriorityStrategy(strategy)
 	}
 }
 
@@ -295,7 +294,7 @@ func (lp *Loadpoint) SetPriorityStrategy(strategy api.PriorityStrategy) {
 func (lp *Loadpoint) setPriorityBasis(basis api.PriorityBasis) {
 	lp.priorityBasis = basis
 	lp.publish(keys.PriorityBasis, lp.priorityBasis)
-	lp.settings.SetString(keys.PriorityBasis, string(lp.priorityBasis))
+	lp.settings.SetString(keys.PriorityBasis, basis.String())
 }
 
 // SetPriorityBasis sets the loadpoint priority strategy basis
@@ -303,15 +302,14 @@ func (lp *Loadpoint) SetPriorityBasis(basis api.PriorityBasis) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	normalized, err := api.PriorityBasisString(string(basis))
-	if err != nil {
-		lp.log.ERROR.Printf("invalid priority basis: %s", string(basis))
+	if !basis.IsAPriorityBasis() {
+		lp.log.ERROR.Printf("invalid priority basis: %d", basis)
 		return
 	}
 
-	lp.log.DEBUG.Printf("set priority basis: %s", normalized)
-	if lp.priorityBasis != normalized {
-		lp.setPriorityBasis(normalized)
+	lp.log.DEBUG.Printf("set priority basis: %s", basis)
+	if lp.priorityBasis != basis {
+		lp.setPriorityBasis(basis)
 	}
 }
 

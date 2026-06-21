@@ -134,7 +134,6 @@ func TestPrioritizerEnergyBasisMixedCapacity(t *testing.T) {
 	// known capacity, lower soc -> percent score 0.80 (energy 0.40)
 	known := loadpoint.NewMockAPI(ctrl)
 	known.EXPECT().GetTitle().AnyTimes()
-	known.EXPECT().EffectivePriority().Return(0).AnyTimes()
 	known.EXPECT().GetPriorityBasis().Return(api.PriorityBasisEnergy).AnyTimes()
 	known.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
 	known.EXPECT().GetPriorityHysteresis().Return(0).AnyTimes()
@@ -143,7 +142,6 @@ func TestPrioritizerEnergyBasisMixedCapacity(t *testing.T) {
 	// unknown capacity, higher soc -> percent score 0.50
 	unknown := loadpoint.NewMockAPI(ctrl)
 	unknown.EXPECT().GetTitle().AnyTimes()
-	unknown.EXPECT().EffectivePriority().Return(0).AnyTimes()
 	unknown.EXPECT().GetPriorityBasis().Return(api.PriorityBasisEnergy).AnyTimes()
 	unknown.EXPECT().GetVehicle().Return(nil).AnyTimes()
 	unknown.EXPECT().GetPriorityHysteresis().Return(0).AnyTimes()

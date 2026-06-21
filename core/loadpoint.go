@@ -104,7 +104,7 @@ type Loadpoint struct {
 	DefaultMode        api.ChargeMode       `mapstructure:"mode"`               // Default charge mode, used for disconnect
 	Title              string               `mapstructure:"title"`              // UI title
 	Priority           int                  `mapstructure:"priority"`           // Priority
-	PriorityStrategy   api.PriorityStrategy `mapstructure:"priorityStrategy"`   // Priority strategy (static, soc, deficit)
+	PriorityStrategy   api.PriorityStrategy `mapstructure:"priorityStrategy"`   // Priority strategy (none, soc, deficit)
 	PriorityBasis      api.PriorityBasis    `mapstructure:"priorityBasis"`      // Priority strategy basis (percent, energy)
 	PriorityHysteresis int                  `mapstructure:"priorityHysteresis"` // Priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 
@@ -116,7 +116,7 @@ type Loadpoint struct {
 
 	title                    string               // UI title
 	priority                 int                  // Priority
-	priorityStrategy         api.PriorityStrategy // Priority strategy (static, soc, deficit)
+	priorityStrategy         api.PriorityStrategy // Priority strategy (none, soc, deficit)
 	priorityBasis            api.PriorityBasis    // Priority strategy basis (percent, energy)
 	priorityHysteresis       int                  // Priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 	minCurrent               float64              // PV mode: start current	Min+PV mode: min current
@@ -225,17 +225,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.setPriority(lp.Priority)
 	}
 
-	if ps, err := api.PriorityStrategyString(string(lp.PriorityStrategy)); err != nil {
-		return lp, err
-	} else {
-		lp.priorityStrategy = ps
-	}
-
-	if pb, err := api.PriorityBasisString(string(lp.PriorityBasis)); err != nil {
-		return lp, err
-	} else {
-		lp.priorityBasis = pb
-	}
+	// PriorityStrategy/PriorityBasis are validated at decode via their TextUnmarshaler
+	lp.priorityStrategy = lp.PriorityStrategy
+	lp.priorityBasis = lp.PriorityBasis
 
 	if lp.PriorityHysteresis < 0 || lp.PriorityHysteresis > 99 {
 		return lp, fmt.Errorf("invalid priority hysteresis: %d (must be 0..99)", lp.PriorityHysteresis)

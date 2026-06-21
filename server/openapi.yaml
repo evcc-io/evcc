@@ -1591,7 +1591,7 @@ components:
       description: "Priority strategy used to sub-order loadpoints of the same priority."
       type: string
       enum:
-        - "static"
+        - "none"
         - "soc"
         - "deficit"
     PriorityBasis:

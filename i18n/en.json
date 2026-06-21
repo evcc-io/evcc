@@ -411,8 +411,8 @@
       "priorityStrategyDeficit": "Largest deficit",
       "priorityStrategyHelp": "How to order loadpoints of equal priority when distributing solar surplus.",
       "priorityStrategyLabel": "Priority strategy",
+      "priorityStrategyNone": "None",
       "priorityStrategySoc": "Lower charge level first",
-      "priorityStrategyStatic": "Static",
       "save": "Save",
       "solarBehaviorCustomHelp": "Define your own enable and disable thresholds and delays.",
       "solarBehaviorDefaultHelp": "Start after {enableDelay} of sufficient surplus. Stop when there is not enough surplus for {disableDelay}.",
@@ -1346,8 +1346,8 @@
         "deficit": "Largest deficit",
         "help": "How to order loadpoints of equal priority when distributing solar surplus.",
         "label": "Strategy",
-        "soc": "Lower charge level first",
-        "static": "Static"
+        "none": "None",
+        "soc": "Lower charge level first"
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",

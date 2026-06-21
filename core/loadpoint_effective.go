@@ -12,7 +12,7 @@ import (
 
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
-	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
+	lp.publish(keys.EffectivePriority, lp.effectivePriority())
 	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
@@ -22,8 +22,9 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
-// EffectivePriority returns the effective priority
-func (lp *Loadpoint) EffectivePriority() int {
+// effectivePriority returns the effective priority tier. It is the integer part
+// of EffectivePriorityScore; the prioritizer derives the tier from the score.
+func (lp *Loadpoint) effectivePriority() int {
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetPriority(); ok {
 			return res
@@ -37,7 +38,7 @@ func (lp *Loadpoint) EffectivePriority() int {
 // priority strategy/basis (higher wins). Basis is passed in so the prioritizer can score a
 // whole tier on one scale, see Prioritizer.effectiveBasis.
 func (lp *Loadpoint) EffectivePriorityScore(basis api.PriorityBasis) float64 {
-	score := float64(lp.EffectivePriority())
+	score := float64(lp.effectivePriority())
 
 	soc := lp.GetSoc()
 	if soc <= 0 {

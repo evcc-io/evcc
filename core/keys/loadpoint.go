@@ -11,7 +11,7 @@ const (
 	Circuit            = "circuit"            // circuit ref
 	DefaultVehicle     = "vehicle"            // default vehicle ref
 	Priority           = "priority"           // priority
-	PriorityStrategy   = "priorityStrategy"   // priority strategy (static, soc, deficit)
+	PriorityStrategy   = "priorityStrategy"   // priority strategy (none, soc, deficit)
 	PriorityBasis      = "priorityBasis"      // priority strategy basis (percent, energy)
 	PriorityHysteresis = "priorityHysteresis" // priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 	MinCurrent         = "minCurrent"         // min current

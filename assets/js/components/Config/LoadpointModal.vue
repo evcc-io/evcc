@@ -852,9 +852,9 @@ export default {
 			return result;
 		},
 		priorityStrategy: {
-			// backend returns "" for the static strategy; map to/from the explicit "static" choice
+			// fall back to the none (default) strategy
 			get(): PRIORITY_STRATEGY {
-				return this.values.priorityStrategy || PRIORITY_STRATEGY.STATIC;
+				return this.values.priorityStrategy || PRIORITY_STRATEGY.NONE;
 			},
 			set(value: PRIORITY_STRATEGY) {
 				this.values.priorityStrategy = value;
@@ -863,8 +863,8 @@ export default {
 		priorityStrategyOptions(): { key: PRIORITY_STRATEGY; name: string }[] {
 			return [
 				{
-					key: PRIORITY_STRATEGY.STATIC,
-					name: this.$t("config.loadpoint.priorityStrategyStatic"),
+					key: PRIORITY_STRATEGY.NONE,
+					name: this.$t("config.loadpoint.priorityStrategyNone"),
 				},
 				{
 					key: PRIORITY_STRATEGY.SOC,
@@ -898,7 +898,7 @@ export default {
 			];
 		},
 		priorityHysteresisAvailable(): boolean {
-			return this.priorityStrategy !== PRIORITY_STRATEGY.STATIC;
+			return this.priorityStrategy !== PRIORITY_STRATEGY.NONE;
 		},
 		priorityHysteresisUnit(): string {
 			return this.priorityBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";

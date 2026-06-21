@@ -274,7 +274,7 @@ export default defineComponent({
 			selectedMaxCurrent: undefined as number | undefined,
 			selectedMinCurrent: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
-			selectedPriorityStrategy: PRIORITY_STRATEGY.STATIC as PRIORITY_STRATEGY,
+			selectedPriorityStrategy: PRIORITY_STRATEGY.NONE as PRIORITY_STRATEGY,
 			selectedPriorityBasis: PRIORITY_BASIS.PERCENT as PRIORITY_BASIS,
 			selectedPriorityHysteresis: 0 as number,
 			isModalVisible: false,
@@ -341,8 +341,8 @@ export default defineComponent({
 			return this.batteryConfigured;
 		},
 		priorityStrategy(): PRIORITY_STRATEGY {
-			// published state sends "" for the static (default) strategy
-			return this.loadpoint?.priorityStrategy || PRIORITY_STRATEGY.STATIC;
+			// fall back to the none (default) strategy
+			return this.loadpoint?.priorityStrategy || PRIORITY_STRATEGY.NONE;
 		},
 		priorityBasis(): PRIORITY_BASIS {
 			// published state sends "" for the percent (default) basis
@@ -354,8 +354,8 @@ export default defineComponent({
 		priorityStrategyOptions(): { value: PRIORITY_STRATEGY; name: string }[] {
 			return [
 				{
-					value: PRIORITY_STRATEGY.STATIC,
-					name: this.$t("main.loadpointSettings.priorityStrategy.static"),
+					value: PRIORITY_STRATEGY.NONE,
+					name: this.$t("main.loadpointSettings.priorityStrategy.none"),
 				},
 				{
 					value: PRIORITY_STRATEGY.SOC,
@@ -380,8 +380,8 @@ export default defineComponent({
 			];
 		},
 		priorityHysteresisAvailable(): boolean {
-			// hysteresis only affects soc/deficit sub-ordering, not static priority
-			return this.selectedPriorityStrategy !== PRIORITY_STRATEGY.STATIC;
+			// hysteresis only affects soc/deficit sub-ordering, not the none strategy
+			return this.selectedPriorityStrategy !== PRIORITY_STRATEGY.NONE;
 		},
 		priorityHysteresisUnit(): string {
 			return this.selectedPriorityBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";

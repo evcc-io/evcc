@@ -77,22 +77,22 @@ func TestSetPriorityStrategy(t *testing.T) {
 	// valid: soc
 	lp.SetPriorityStrategy(api.PrioritySoc)
 	assert.Equal(t, api.PrioritySoc, lp.GetPriorityStrategy())
-	assert.Equal(t, string(api.PrioritySoc), s.data[keys.PriorityStrategy], "soc must be persisted")
+	assert.Equal(t, api.PrioritySoc.String(), s.data[keys.PriorityStrategy], "soc must be persisted")
 
 	// valid: deficit
 	lp.SetPriorityStrategy(api.PriorityDeficit)
 	assert.Equal(t, api.PriorityDeficit, lp.GetPriorityStrategy())
-	assert.Equal(t, string(api.PriorityDeficit), s.data[keys.PriorityStrategy])
+	assert.Equal(t, api.PriorityDeficit.String(), s.data[keys.PriorityStrategy])
 
-	// "static" normalizes to the empty PriorityStatic value
-	lp.SetPriorityStrategy(api.PriorityStrategy("static"))
-	assert.Equal(t, api.PriorityStatic, lp.GetPriorityStrategy())
-	assert.Equal(t, string(api.PriorityStatic), s.data[keys.PriorityStrategy])
+	// valid: none (default)
+	lp.SetPriorityStrategy(api.PriorityNone)
+	assert.Equal(t, api.PriorityNone, lp.GetPriorityStrategy())
+	assert.Equal(t, api.PriorityNone.String(), s.data[keys.PriorityStrategy])
 
 	// invalid: rejected, state unchanged
 	lp.SetPriorityStrategy(api.PrioritySoc)
 	delete(s.data, keys.PriorityStrategy)
-	lp.SetPriorityStrategy(api.PriorityStrategy("bogus"))
+	lp.SetPriorityStrategy(api.PriorityStrategy(99))
 	assert.Equal(t, api.PrioritySoc, lp.GetPriorityStrategy(), "invalid strategy must not change state")
 	_, persisted := s.data[keys.PriorityStrategy]
 	assert.False(t, persisted, "invalid strategy must not be persisted")

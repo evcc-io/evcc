@@ -26,9 +26,9 @@ func TestEffectivePriorityScore(t *testing.T) {
 		capacity      float64 // vehicle capacity in kWh, 0 = no/unknown vehicle
 		expected      float64
 	}{
-		// static: fractional part is always zero
-		{api.PriorityStatic, api.PriorityBasisPercent, 0, 50, 0, 0, 0},
-		{api.PriorityStatic, api.PriorityBasisPercent, 2, 50, 0, 0, 2},
+		// none: fractional part is always zero
+		{api.PriorityNone, api.PriorityBasisPercent, 0, 50, 0, 0, 0},
+		{api.PriorityNone, api.PriorityBasisPercent, 2, 50, 0, 0, 2},
 		// soc (percent): lower soc scores higher within the tier
 		{api.PrioritySoc, api.PriorityBasisPercent, 0, 20, 0, 0, 0.80},
 		{api.PrioritySoc, api.PriorityBasisPercent, 0, 80, 0, 0, 0.20},

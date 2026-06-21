@@ -86,9 +86,9 @@ func (p *Prioritizer) effectiveBasis(lp loadpoint.API, candidates []loadpoint.AP
 		return lp.GetPriorityBasis()
 	}
 
-	tier := lp.EffectivePriority()
+	tier := priorityTier(lp)
 	for _, other := range candidates {
-		if other.EffectivePriority() != tier || other.GetPriorityBasis() != api.PriorityBasisEnergy {
+		if priorityTier(other) != tier || other.GetPriorityBasis() != api.PriorityBasisEnergy {
 			continue
 		}
 		if v := other.GetVehicle(); v == nil || v.Capacity() <= 0 {
@@ -97,4 +97,11 @@ func (p *Prioritizer) effectiveBasis(lp loadpoint.API, candidates []loadpoint.AP
 	}
 
 	return api.PriorityBasisEnergy
+}
+
+// priorityTier is the integer (cross-tier) part of a loadpoint's score. The
+// strategy sub-ordering lives in the fraction and is basis-independent, so any
+// basis yields the same tier.
+func priorityTier(lp loadpoint.API) int {
+	return int(math.Floor(lp.EffectivePriorityScore(api.PriorityBasisPercent)))
 }
