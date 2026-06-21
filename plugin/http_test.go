@@ -16,6 +16,7 @@ type httpHandler struct {
 	req          *http.Request
 	cnt          int
 	cacheBusting bool
+	dateSkew     time.Duration
 }
 
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -24,6 +25,10 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if h.cacheBusting {
 		w.Header().Set("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
+	}
+
+	if h.dateSkew != 0 {
+		w.Header().Set("Date", time.Now().Add(h.dateSkew).UTC().Format(http.TimeFormat))
 	}
 	_, _ = w.Write([]byte(h.val))
 	h.cnt++
@@ -119,4 +124,25 @@ func (suite *httpTestSuite) TestSetPath() {
 	suite.Require().NoError(err)
 	suite.Require().NoError(s("4711"))
 	suite.Require().Equal("/foo/bar/4711", suite.h.req.URL.String())
+}
+
+func (suite *httpTestSuite) TestNoCacheClockSkew() {
+	// no cache configured, no cache headers, response header date with +2s clock skew
+	// validate future value (currentAge<0) is not handled as fresh value from cache
+	suite.h.dateSkew = 2 * time.Second
+	defer func() { suite.h.dateSkew = 0 }()
+
+	uri := suite.srv.URL + "/foo/bar?baz=5"
+	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 0)
+	g, err := p.StringGetter()
+	suite.Require().NoError(err)
+
+	suite.h.cnt = 0
+	first, err := g()
+	suite.Require().NoError(err)
+	second, err := g()
+	suite.Require().NoError(err)
+
+	suite.Require().NotEqual(first, second)
+	suite.Require().Equal(2, suite.h.cnt)
 }
