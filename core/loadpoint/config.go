@@ -17,25 +17,27 @@ type StaticConfig struct {
 
 type DynamicConfig struct {
 	// dynamic config
-	Title                    string               `json:"title"`
-	DefaultMode              string               `json:"defaultMode"`
-	Priority                 int                  `json:"priority"`
-	PriorityStrategy         api.PriorityStrategy `json:"priorityStrategy"`
-	PriorityBasis            api.PriorityBasis    `json:"priorityBasis"`
-	PriorityHysteresis       int                  `json:"priorityHysteresis"`
-	PhasesConfigured         int                  `json:"phasesConfigured"`
-	MinCurrent               float64              `json:"minCurrent"`
-	MaxCurrent               float64              `json:"maxCurrent"`
-	SmartCostLimit           *float64             `json:"smartCostLimit"`
-	SmartFeedInPriorityLimit *float64             `json:"smartFeedInPriorityLimit"`
-	PlanEnergy               float64              `json:"planEnergy"`
-	PlanTime                 time.Time            `json:"planTime"`
-	PlanPrecondition_        int64                `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
-	BatteryBoostLimit        int                  `json:"batteryBoostLimit"`
-	LimitEnergy              float64              `json:"limitEnergy"`
-	LimitSoc                 int                  `json:"limitSoc"`
+	Title                    string    `json:"title"`
+	DefaultMode              string    `json:"defaultMode"`
+	Priority                 int       `json:"priority"`
+	PhasesConfigured         int       `json:"phasesConfigured"`
+	MinCurrent               float64   `json:"minCurrent"`
+	MaxCurrent               float64   `json:"maxCurrent"`
+	SmartCostLimit           *float64  `json:"smartCostLimit"`
+	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
+	PlanEnergy               float64   `json:"planEnergy"`
+	PlanTime                 time.Time `json:"planTime"`
+	PlanPrecondition_        int64     `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
+	BatteryBoostLimit        int       `json:"batteryBoostLimit"`
+	LimitEnergy              float64   `json:"limitEnergy"`
+	LimitSoc                 int       `json:"limitSoc"`
 
 	PlanStrategy api.PlanStrategy `json:"planStrategy"`
+
+	// priority sub-ordering within a tier (see api.PriorityStrategy)
+	PriorityStrategy   api.PriorityStrategy `json:"priorityStrategy"`
+	PriorityBasis      api.PriorityBasis    `json:"priorityBasis"`
+	PriorityHysteresis int                  `json:"priorityHysteresis"`
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`

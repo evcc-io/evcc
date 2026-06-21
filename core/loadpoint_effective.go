@@ -32,26 +32,10 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
-// EffectivePriorityScore returns a sortable priority score used to rank loadpoints
-// when distributing surplus power. The integer part is the effective priority (the
-// tier); the fractional part in [0,1) orders loadpoints within the same tier
-// according to the configured priority strategy, so the sub-ordering never crosses
-// a priority boundary.
-//
-// A higher score wins. With the soc strategy a lower vehicle soc scores higher;
-// with the deficit strategy a larger gap to the limit soc scores higher. The
-// strategy sub-ordering only applies when a positive vehicle soc is known,
-// otherwise the score equals the plain effective priority.
-//
-// With the energy basis the soc-% gap is scaled by the vehicle capacity, so
-// loadpoints are ranked by absolute energy (kWh) rather than percentage and a
-// smaller battery is not over-prioritized just because its percentage is lower.
-// When the vehicle capacity is unknown the score falls back to the percentage gap.
-//
-// The basis is passed in rather than read from the loadpoint so the prioritizer
-// can rank a whole priority tier on a single, consistent basis: a kWh fraction and
-// a percentage fraction live on different scales and must not be compared directly
-// (see Prioritizer.effectiveBasis).
+// EffectivePriorityScore ranks loadpoints for surplus distribution: the integer part is
+// the effective priority tier, the fractional part [0,1) sub-orders within the tier by the
+// priority strategy/basis (higher wins). Basis is passed in so the prioritizer can score a
+// whole tier on one scale, see Prioritizer.effectiveBasis.
 func (lp *Loadpoint) EffectivePriorityScore(basis api.PriorityBasis) float64 {
 	score := float64(lp.EffectivePriority())
 

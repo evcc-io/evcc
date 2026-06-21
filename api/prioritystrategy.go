@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding"
 	"fmt"
 	"strings"
 )
@@ -22,14 +23,6 @@ const (
 	PriorityDeficit PriorityStrategy = "deficit"
 )
 
-// String implements Stringer
-func (s PriorityStrategy) String() string {
-	if s == PriorityStatic {
-		return "static"
-	}
-	return string(s)
-}
-
 // PriorityStrategyString converts a string to PriorityStrategy
 func PriorityStrategyString(s string) (PriorityStrategy, error) {
 	switch strings.ToLower(strings.TrimSpace(s)) {
@@ -42,6 +35,14 @@ func PriorityStrategyString(s string) (PriorityStrategy, error) {
 	default:
 		return PriorityStatic, fmt.Errorf("invalid priority strategy: %s", s)
 	}
+}
+
+var _ encoding.TextUnmarshaler = (*PriorityStrategy)(nil)
+
+func (s *PriorityStrategy) UnmarshalText(text []byte) error {
+	var err error
+	*s, err = PriorityStrategyString(string(text))
+	return err
 }
 
 // PriorityBasis determines whether a priority strategy ranks loadpoints by soc
@@ -60,14 +61,6 @@ const (
 	PriorityBasisEnergy PriorityBasis = "energy"
 )
 
-// String implements Stringer
-func (b PriorityBasis) String() string {
-	if b == PriorityBasisPercent {
-		return "percent"
-	}
-	return string(b)
-}
-
 // PriorityBasisString converts a string to PriorityBasis
 func PriorityBasisString(s string) (PriorityBasis, error) {
 	switch strings.ToLower(strings.TrimSpace(s)) {
@@ -78,4 +71,12 @@ func PriorityBasisString(s string) (PriorityBasis, error) {
 	default:
 		return PriorityBasisPercent, fmt.Errorf("invalid priority basis: %s", s)
 	}
+}
+
+var _ encoding.TextUnmarshaler = (*PriorityBasis)(nil)
+
+func (b *PriorityBasis) UnmarshalText(text []byte) error {
+	var err error
+	*b, err = PriorityBasisString(string(text))
+	return err
 }
