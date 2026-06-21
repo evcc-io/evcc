@@ -14,7 +14,6 @@ service Auth {
 
 message AuthRequest {
 	string token = 1;
-	string machine_id = 2;
 }
 
 message AuthReply {
