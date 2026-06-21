@@ -22,8 +22,7 @@ params:
     usages: ["battery"]
   - preset: battery-params
   - name: maxchargepower
-    # config-time default from the inverter rated power (35001); user can override
-    service: modbus/read?address=35001&type=holding&encoding=uint16&resulttype=int&{modbus}
+    default: 10000
   - name: maxdischargepower
     default: 10000
   - name: minsoc
