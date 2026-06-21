@@ -918,9 +918,9 @@ call setLoadpointPriority {
 }
 ```
 
-## setLoadpointPriorityHysteresis
+## setLoadpointPriorityBasis
 
-Set the soc-% deadband used when sub-ordering loadpoints of the same priority (0 = off).
+Set whether the priority strategy ranks by soc percentage or by absolute energy (kWh).
 
 **Tags:** loadpoints
 
@@ -928,7 +928,29 @@ Set the soc-% deadband used when sub-ordering loadpoints of the same priority (0
 
 | Name | Type | Description |
 |------|------|-------------|
-| hysteresis | integer | Deadband in soc-% (0..99, 0 = off). |
+| basis | string | Whether the priority strategy ranks by soc percentage or by absolute energy (kWh). |
+| id | integer | Loadpoint index starting at 1 |
+
+**Example call:**
+
+```json
+call setLoadpointPriorityBasis {
+  "basis": "example",
+  "id": 123
+}
+```
+
+## setLoadpointPriorityHysteresis
+
+Set the deadband used when sub-ordering loadpoints of the same priority (soc-%, or kWh with the energy basis; 0 = off).
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| hysteresis | integer | Deadband in soc-% or kWh per basis (0..99, 0 = off). |
 | id | integer | Loadpoint index starting at 1 |
 
 **Example call:**

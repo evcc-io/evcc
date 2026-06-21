@@ -20,24 +20,40 @@ func TestEffectiveLimitSoc(t *testing.T) {
 func TestEffectivePriorityScore(t *testing.T) {
 	tc := []struct {
 		strategy      api.PriorityStrategy
+		basis         api.PriorityBasis
 		priority      int
 		soc, limitSoc float64
+		capacity      float64 // vehicle capacity in kWh, 0 = no/unknown vehicle
 		expected      float64
 	}{
 		// static: fractional part is always zero
-		{api.PriorityStatic, 0, 50, 0, 0},
-		{api.PriorityStatic, 2, 50, 0, 2},
-		// soc: lower soc scores higher within the tier
-		{api.PrioritySoc, 0, 20, 0, 0.80},
-		{api.PrioritySoc, 0, 80, 0, 0.20},
-		{api.PrioritySoc, 1, 20, 0, 1.80},
-		{api.PrioritySoc, 0, 100, 0, 0}, // full vehicle: no boost
-		{api.PrioritySoc, 0, 0, 0, 0},   // unknown soc: falls back to plain priority
-		// deficit: larger gap to the limit soc scores higher within the tier
-		{api.PriorityDeficit, 0, 50, 80, 0.30},
-		{api.PriorityDeficit, 0, 50, 0, 0.50}, // no limit set -> default 100
-		{api.PriorityDeficit, 0, 90, 80, 0},   // soc above limit: no boost
-		{api.PriorityDeficit, 0, 0, 80, 0},    // unknown soc: falls back to plain priority
+		{api.PriorityStatic, api.PriorityBasisPercent, 0, 50, 0, 0, 0},
+		{api.PriorityStatic, api.PriorityBasisPercent, 2, 50, 0, 0, 2},
+		// soc (percent): lower soc scores higher within the tier
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 20, 0, 0, 0.80},
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 80, 0, 0, 0.20},
+		{api.PrioritySoc, api.PriorityBasisPercent, 1, 20, 0, 0, 1.80},
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 100, 0, 0, 0}, // full vehicle: no boost
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 0, 0, 0, 0},   // unknown soc: falls back to plain priority
+		// deficit (percent): larger gap to the limit soc scores higher within the tier
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 80, 0, 0.30},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 0, 0, 0.50}, // no limit set -> default 100
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 90, 80, 0, 0},   // soc above limit: no boost
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 0, 80, 0, 0},    // unknown soc: falls back to plain priority
+		// soc (energy): gap is scaled by capacity -> (100-soc)/100*capacity, /100 for the fraction
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 50, 0.40},  // 80% * 50kWh = 40kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 80, 0, 50, 0.10},  // 20% * 50kWh = 10kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 25, 0.20},  // 80% * 25kWh = 20kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 0, 0.80},   // capacity unknown: falls back to percent
+		// deficit (energy): (limitSoc-soc)/100*capacity, /100 for the fraction
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 50, 0.15}, // 30% * 50kWh = 15kWh
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 0, 0.30},  // capacity unknown: falls back to percent
+		// Steve's case: a small second car is NOT over-prioritized under the energy basis.
+		// Percent basis would rank B (40%) above A (50%); energy basis ranks A (needs 37.5kWh) above B (15kWh).
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 50, 0, 75, 0.50}, // car A, percent
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 40, 0, 25, 0.60}, // car B, percent -> B wins
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 50, 0, 75, 0.375}, // car A, energy -> A wins
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 40, 0, 25, 0.15},  // car B, energy
 	}
 
 	for _, tc := range tc {
@@ -46,8 +62,17 @@ func TestEffectivePriorityScore(t *testing.T) {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.priority = tc.priority
 		lp.priorityStrategy = tc.strategy
+		lp.priorityBasis = tc.basis
 		lp.vehicleSoc = tc.soc
 		lp.limitSoc = int(tc.limitSoc)
+
+		if tc.capacity > 0 {
+			ctrl := gomock.NewController(t)
+			vehicle := api.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Capacity().Return(tc.capacity).AnyTimes()
+			vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+			lp.vehicle = vehicle
+		}
 
 		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(), 1e-9)
 	}

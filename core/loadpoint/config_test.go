@@ -29,6 +29,7 @@ func TestSplitConfigPriority(t *testing.T) {
 	payload := map[string]any{
 		"priority":           3,
 		"priorityStrategy":   "soc",
+		"priorityBasis":      "energy",
 		"priorityHysteresis": 5,
 	}
 
@@ -37,8 +38,10 @@ func TestSplitConfigPriority(t *testing.T) {
 
 	assert.Equal(t, 3, dynamic.Priority)
 	assert.Equal(t, api.PrioritySoc, dynamic.PriorityStrategy)
+	assert.Equal(t, api.PriorityBasisEnergy, dynamic.PriorityBasis)
 	assert.Equal(t, 5, dynamic.PriorityHysteresis)
 	assert.NotContains(t, other, "priority")
 	assert.NotContains(t, other, "priorityStrategy")
+	assert.NotContains(t, other, "priorityBasis")
 	assert.NotContains(t, other, "priorityHysteresis")
 }

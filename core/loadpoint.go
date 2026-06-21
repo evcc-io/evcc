@@ -105,7 +105,8 @@ type Loadpoint struct {
 	Title              string               `mapstructure:"title"`              // UI title
 	Priority           int                  `mapstructure:"priority"`           // Priority
 	PriorityStrategy   api.PriorityStrategy `mapstructure:"priorityStrategy"`   // Priority strategy (static, soc, deficit)
-	PriorityHysteresis int                  `mapstructure:"priorityHysteresis"` // Priority sub-ordering deadband in soc-% (0 = off)
+	PriorityBasis      api.PriorityBasis    `mapstructure:"priorityBasis"`      // Priority strategy basis (percent, energy)
+	PriorityHysteresis int                  `mapstructure:"priorityHysteresis"` // Priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 
 	// from yaml, deprecated
 	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
@@ -116,7 +117,8 @@ type Loadpoint struct {
 	title                    string               // UI title
 	priority                 int                  // Priority
 	priorityStrategy         api.PriorityStrategy // Priority strategy (static, soc, deficit)
-	priorityHysteresis       int                  // Priority sub-ordering deadband in soc-% (0 = off)
+	priorityBasis            api.PriorityBasis    // Priority strategy basis (percent, energy)
+	priorityHysteresis       int                  // Priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 	minCurrent               float64              // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64              // Max allowed current. Physically ensured by the charger
 	phasesConfigured         int                  // Charger configured phase mode 0/1/3
@@ -227,6 +229,12 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		return lp, err
 	} else {
 		lp.priorityStrategy = ps
+	}
+
+	if pb, err := api.PriorityBasisString(string(lp.PriorityBasis)); err != nil {
+		return lp, err
+	} else {
+		lp.priorityBasis = pb
 	}
 
 	if lp.PriorityHysteresis < 0 || lp.PriorityHysteresis > 99 {
@@ -367,6 +375,11 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.PriorityStrategy); err == nil {
 		if strategy, err := api.PriorityStrategyString(v); err == nil {
 			lp.setPriorityStrategy(strategy)
+		}
+	}
+	if v, err := lp.settings.String(keys.PriorityBasis); err == nil {
+		if basis, err := api.PriorityBasisString(v); err == nil {
+			lp.setPriorityBasis(basis)
 		}
 	}
 	if v, err := lp.settings.Int(keys.PriorityHysteresis); err == nil && v >= 0 && v <= 99 {
@@ -718,6 +731,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.Mode, lp.GetMode())
 	lp.publish(keys.Priority, lp.GetPriority())
 	lp.publish(keys.PriorityStrategy, lp.GetPriorityStrategy())
+	lp.publish(keys.PriorityBasis, lp.GetPriorityBasis())
 	lp.publish(keys.PriorityHysteresis, lp.GetPriorityHysteresis())
 	lp.publish(keys.MinCurrent, lp.GetMinCurrent())
 	lp.publish(keys.MaxCurrent, lp.GetMaxCurrent())

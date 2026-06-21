@@ -250,6 +250,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
 		{"priorityStrategy", setterFunc(api.PriorityStrategyString, pass(lp.SetPriorityStrategy))},
+		{"priorityBasis", setterFunc(api.PriorityBasisString, pass(lp.SetPriorityBasis))},
 		{"priorityHysteresis", intSetter(pass(lp.SetPriorityHysteresis))},
 		{"minCurrent", floatSetter(lp.SetMinCurrent)},
 		{"maxCurrent", floatSetter(lp.SetMaxCurrent)},

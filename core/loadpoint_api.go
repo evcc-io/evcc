@@ -235,6 +235,13 @@ func (lp *Loadpoint) GetPriorityStrategy() api.PriorityStrategy {
 	return lp.priorityStrategy
 }
 
+// GetPriorityBasis returns the loadpoint priority strategy basis
+func (lp *Loadpoint) GetPriorityBasis() api.PriorityBasis {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.priorityBasis
+}
+
 // GetPriorityHysteresis returns the priority sub-ordering deadband in soc-%
 func (lp *Loadpoint) GetPriorityHysteresis() int {
 	lp.RLock()
@@ -281,6 +288,30 @@ func (lp *Loadpoint) SetPriorityStrategy(strategy api.PriorityStrategy) {
 	lp.log.DEBUG.Printf("set priority strategy: %s", normalized)
 	if lp.priorityStrategy != normalized {
 		lp.setPriorityStrategy(normalized)
+	}
+}
+
+// setPriorityBasis sets the loadpoint priority strategy basis (no mutex)
+func (lp *Loadpoint) setPriorityBasis(basis api.PriorityBasis) {
+	lp.priorityBasis = basis
+	lp.publish(keys.PriorityBasis, lp.priorityBasis)
+	lp.settings.SetString(keys.PriorityBasis, string(lp.priorityBasis))
+}
+
+// SetPriorityBasis sets the loadpoint priority strategy basis
+func (lp *Loadpoint) SetPriorityBasis(basis api.PriorityBasis) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	normalized, err := api.PriorityBasisString(string(basis))
+	if err != nil {
+		lp.log.ERROR.Printf("invalid priority basis: %s", string(basis))
+		return
+	}
+
+	lp.log.DEBUG.Printf("set priority basis: %s", normalized)
+	if lp.priorityBasis != normalized {
+		lp.setPriorityBasis(normalized)
 	}
 }
 

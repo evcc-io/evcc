@@ -12,7 +12,8 @@ const (
 	DefaultVehicle     = "vehicle"            // default vehicle ref
 	Priority           = "priority"           // priority
 	PriorityStrategy   = "priorityStrategy"   // priority strategy (static, soc, deficit)
-	PriorityHysteresis = "priorityHysteresis" // priority sub-ordering deadband in soc-% (0 = off)
+	PriorityBasis      = "priorityBasis"      // priority strategy basis (percent, energy)
+	PriorityHysteresis = "priorityHysteresis" // priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 	MinCurrent         = "minCurrent"         // min current
 	MaxCurrent         = "maxCurrent"         // max current
 	MinSoc             = "minSoc"             // min soc

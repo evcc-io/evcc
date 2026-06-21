@@ -21,6 +21,7 @@ type DynamicConfig struct {
 	DefaultMode              string               `json:"defaultMode"`
 	Priority                 int                  `json:"priority"`
 	PriorityStrategy         api.PriorityStrategy `json:"priorityStrategy"`
+	PriorityBasis            api.PriorityBasis    `json:"priorityBasis"`
 	PriorityHysteresis       int                  `json:"priorityHysteresis"`
 	PhasesConfigured         int                  `json:"phasesConfigured"`
 	MinCurrent               float64              `json:"minCurrent"`
@@ -70,6 +71,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
 	lp.SetPriorityStrategy(payload.PriorityStrategy)
+	lp.SetPriorityBasis(payload.PriorityBasis)
 	lp.SetPriorityHysteresis(payload.PriorityHysteresis)
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)

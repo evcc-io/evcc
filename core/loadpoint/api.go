@@ -61,9 +61,13 @@ type API interface {
 	GetPriorityStrategy() api.PriorityStrategy
 	// SetPriorityStrategy sets the priority strategy
 	SetPriorityStrategy(api.PriorityStrategy)
-	// GetPriorityHysteresis returns the priority sub-ordering deadband in soc-%
+	// GetPriorityBasis returns the priority strategy basis (percent, energy)
+	GetPriorityBasis() api.PriorityBasis
+	// SetPriorityBasis sets the priority strategy basis (percent, energy)
+	SetPriorityBasis(api.PriorityBasis)
+	// GetPriorityHysteresis returns the priority sub-ordering deadband (soc-% or kWh per basis)
 	GetPriorityHysteresis() int
-	// SetPriorityHysteresis sets the priority sub-ordering deadband in soc-%
+	// SetPriorityHysteresis sets the priority sub-ordering deadband (soc-% or kWh per basis)
 	SetPriorityHysteresis(int)
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64

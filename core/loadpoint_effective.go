@@ -42,6 +42,11 @@ func (lp *Loadpoint) EffectivePriority() int {
 // with the deficit strategy a larger gap to the limit soc scores higher. The
 // strategy sub-ordering only applies when a positive vehicle soc is known,
 // otherwise the score equals the plain effective priority.
+//
+// With the energy basis the soc-% gap is scaled by the vehicle capacity, so
+// loadpoints are ranked by absolute energy (kWh) rather than percentage and a
+// smaller battery is not over-prioritized just because its percentage is lower.
+// When the vehicle capacity is unknown the score falls back to the percentage gap.
 func (lp *Loadpoint) EffectivePriorityScore() float64 {
 	score := float64(lp.EffectivePriority())
 
@@ -50,14 +55,37 @@ func (lp *Loadpoint) EffectivePriorityScore() float64 {
 		return score
 	}
 
+	// gap is the soc-% quantity the strategy ranks by (a larger gap scores higher)
+	var gap float64
 	switch lp.GetPriorityStrategy() {
 	case api.PrioritySoc:
-		score += priorityFraction(100 - soc)
+		gap = 100 - soc
 	case api.PriorityDeficit:
-		score += priorityFraction(float64(lp.EffectiveLimitSoc()) - soc)
+		gap = float64(lp.EffectiveLimitSoc()) - soc
+	default:
+		return score
 	}
 
-	return score
+	// energy basis: convert the soc-% gap into absolute kWh using the vehicle
+	// capacity, falling back to the percentage gap when capacity is unknown
+	if lp.GetPriorityBasis() == api.PriorityBasisEnergy {
+		if capacity := lp.vehicleCapacity(); capacity > 0 {
+			gap = gap / 100 * capacity
+		} else {
+			lp.log.DEBUG.Println("priority basis energy: unknown vehicle capacity, ranking by soc percentage")
+		}
+	}
+
+	return score + priorityFraction(gap)
+}
+
+// vehicleCapacity returns the active vehicle's usable capacity in kWh, or 0 if
+// no vehicle is active or its capacity is unknown.
+func (lp *Loadpoint) vehicleCapacity() float64 {
+	if v := lp.GetVehicle(); v != nil {
+		return v.Capacity()
+	}
+	return 0
 }
 
 // priorityFraction maps a soc-based value to a [0,1) sub-ordering offset, kept
