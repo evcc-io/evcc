@@ -49,7 +49,6 @@ params:
     service: auth/redirecturi
   - name: vin
     example: WF0FXX...
-    required: true
   - name: accessToken
     deprecated: true
   - name: refreshToken
