@@ -50,7 +50,7 @@ params:
     advanced: true
   - name: welcomecharge
     advanced: true
-  - preset: vehicle-generic-online-functions
+  - preset: vehicle-online
 render: |
   type: drivesomethinggreater
   brand: {{ .brand }}
