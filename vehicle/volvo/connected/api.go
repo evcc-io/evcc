@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -36,6 +37,19 @@ func NewAPI(log *util.Logger, vccapikey string, ts oauth2.TokenSource) *API {
 	}
 
 	return v
+}
+
+func (v *API) Vehicles() ([]string, error) {
+	var res struct {
+		Vehicles []Vehicle `json:"data"`
+	}
+
+	uri := fmt.Sprintf("%s/connected-vehicle/v2/vehicles", ApiURL)
+	err := v.GetJSON(uri, &res)
+
+	return lo.Map(res.Vehicles, func(v Vehicle, _ int) string {
+		return v.VIN
+	}), err
 }
 
 // Range provides range status api response
