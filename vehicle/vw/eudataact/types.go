@@ -110,7 +110,8 @@ const (
 	FieldBatteryStateReportSoc = "battery_state_report.soc"
 	FieldSoc                   = "state_of_charge"
 	FieldHvSoc                 = "hv_soc"
-	FieldHvBatteryLevel        = "battery_level_HV.value"
+	FieldHvBatteryLevelValue   = "battery_level_HV.value"
+	FieldHvBatteryLevelState   = "battery_level_HV.state"
 
 	// target soc
 	FieldTargetSoc = "settings.target_soc"
@@ -128,6 +129,10 @@ const (
 	// time
 	FieldRemainingTime = "remaining_charging_time"
 )
+
+// hvBatteryLevelValid is the battery_level_HV.state value that marks
+// battery_level_HV.value as a trustworthy SoC reading
+const hvBatteryLevelValid = "VALID"
 
 // knownKeys lists data point GUIDs that are indexed by their key instead of the
 // generic, non-unique DataFieldName they are delivered with
