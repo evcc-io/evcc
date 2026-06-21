@@ -1,8 +1,23 @@
-template: iammeter-2p
+template: iammeter-sp
 products:
   - brand: IAMMETER
     description:
-      generic: WEM2067
+      generic: WEM2067 (1p)
+  - brand: IAMMETER
+    description:
+      generic: WEM3080T (1p)
+  - brand: IAMMETER
+    description:
+      generic: WEM3046T (1p)
+  - brand: IAMMETER
+    description:
+      generic: WEM3050T (1p)
+requirements:
+  description:
+    de: |
+      Unterstützt alle Mehrkanal-Zähler von IAMMETER als einphasige Zähler.
+    en: |
+      Supports all IAMMETER multi-channel meters as single-phase meter.
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -11,8 +26,8 @@ params:
     default: 1
     required: true
     description:
-      de: Messkanal (1-2)
-      en: Meter channel (1-2)
+      de: Messkanal (1-3)
+      en: Meter channel (1-3)
   - name: cache
     default: 2s
 render: |
