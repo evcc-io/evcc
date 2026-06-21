@@ -212,13 +212,8 @@ func (v *API) SocStatus(vin string) (VehicleSocStatus, error) {
 		Data    VehicleSocStatus
 	}
 
-	userID, err := v.identity.UserID()
-	if err != nil {
-		return VehicleSocStatus{}, err
-	}
-
 	params := url.Values{
-		"userId": {userID},
+		"setting": {"charging"},
 	}
 
 	path := "/remote-control/vehicle/status/soc/" + vin

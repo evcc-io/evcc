@@ -86,5 +86,5 @@ var _ api.SocLimiter = (*Provider)(nil)
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.socStatusG()
-	return int64(res.VehicleChargingRatioLimit), err
+	return int64(res.Soc) / 10, err
 }

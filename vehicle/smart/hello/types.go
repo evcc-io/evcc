@@ -57,7 +57,7 @@ type Vehicle struct {
 }
 
 type VehicleSocStatus struct {
-	VehicleChargingRatioLimit Int `json:"vehicleChargingRatioLimit"`
+	Soc Int `json:"soc"` // charging target soc in tenths of a percent, e.g. 800 = 80%
 }
 
 type VehicleStatus struct {
