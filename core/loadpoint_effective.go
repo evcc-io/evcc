@@ -22,8 +22,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
-// effectivePriority returns the effective priority tier. It is the integer part
-// of EffectivePriorityScore; the prioritizer derives the tier from the score.
+// effectivePriority returns the effective priority tier (integer part of the score).
 func (lp *Loadpoint) effectivePriority() int {
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetPriority(); ok {

@@ -249,8 +249,8 @@ export interface ConfigLoadpoint {
   title: string;
   defaultMode: string;
   priority: number;
-  priorityStrategy: PRIORITY_STRATEGY | "";
-  priorityBasis: PRIORITY_BASIS | "";
+  priorityStrategy: PRIORITY_STRATEGY;
+  priorityBasis: PRIORITY_BASIS;
   priorityHysteresis: number;
   phasesConfigured: number;
   minCurrent: number;
@@ -346,8 +346,8 @@ export interface Loadpoint {
   planProjectedStart: string | null;
   planTime: string | null;
   priority: number;
-  priorityStrategy: PRIORITY_STRATEGY | "";
-  priorityBasis: PRIORITY_BASIS | "";
+  priorityStrategy: PRIORITY_STRATEGY;
+  priorityBasis: PRIORITY_BASIS;
   priorityHysteresis: number;
   pvAction: PV_ACTION;
   pvRemaining: number;

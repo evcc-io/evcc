@@ -707,8 +707,8 @@ const defaultValues = {
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
-	priorityStrategy: "",
-	priorityBasis: "",
+	priorityStrategy: PRIORITY_STRATEGY.NONE,
+	priorityBasis: PRIORITY_BASIS.PERCENT,
 	priorityHysteresis: 0,
 	defaultMode: "",
 	thresholds: {
