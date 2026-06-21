@@ -1,4 +1,5 @@
 template: iammeter-sp
+covers: ["iammeter-2p"]
 products:
   - brand: IAMMETER
     description:
