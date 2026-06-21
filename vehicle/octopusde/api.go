@@ -2,12 +2,36 @@ package octopusde
 
 import (
 	"context"
+	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
 	"github.com/evcc-io/evcc/util"
 )
+
+// jsonFloat is a float64 that unmarshals from either a JSON number or a JSON-encoded string.
+// The Octopus Kraken API serialises some numeric fields as quoted strings (e.g. "41.00").
+type jsonFloat float64
+
+func (f *jsonFloat) UnmarshalJSON(data []byte) error {
+	var v float64
+	if err := json.Unmarshal(data, &v); err == nil {
+		*f = jsonFloat(v)
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return err
+	}
+	*f = jsonFloat(v)
+	return nil
+}
 
 // API is the Octopus Energy Germany Kraken client for vehicle data. It reuses the
 // authenticated Kraken GraphQL client from the tariff implementation so the JWT
@@ -75,10 +99,10 @@ func (v *API) Accounts() ([]string, error) {
 // Pointers distinguish an absent value from a reported zero.
 type socStatus struct {
 	StateOfCharge struct {
-		Value *float64 `json:",string"`
+		Value *jsonFloat
 	}
 	StateOfChargeLimit struct {
-		UpperSocLimit *float64 `json:",string"`
+		UpperSocLimit *jsonFloat
 	}
 }
 
@@ -110,7 +134,7 @@ func (d Device) Soc() (float64, bool) {
 	if soc == nil {
 		return 0, false
 	}
-	return *soc, true
+	return float64(*soc), true
 }
 
 // TargetSoc returns the configured charge limit in percent, if any.
@@ -119,7 +143,7 @@ func (d Device) TargetSoc() (float64, bool) {
 	if limit == nil {
 		return 0, false
 	}
-	return *limit, true
+	return float64(*limit), true
 }
 
 // krakenDevices lists the SmartFlex devices of an account.

@@ -38,15 +38,25 @@ func TestDecodeDevices(t *testing.T) {
 				"deviceType": "CHARGE_POINTS",
 				"provider": "OCPP",
 				"status": {}
+			},
+			{
+				"id": "dev-4",
+				"name": "String Soc",
+				"deviceType": "ELECTRIC_VEHICLES",
+				"provider": "VOLKSWAGEN",
+				"status": {
+					"stateOfCharge": {"value": "41.00"},
+					"stateOfChargeLimit": null
+				}
 			}
 		]
 	}`)
 
 	var q krakenDevices
 	require.NoError(t, jsonutil.UnmarshalGraphQL(data, &q))
-	require.Len(t, q.Devices, 3)
+	require.Len(t, q.Devices, 4)
 
-	// vehicle with soc and target limit
+	// vehicle with soc and target limit (numeric values)
 	veh := q.Devices[0]
 	assert.Equal(t, "dev-1", veh.ID)
 	assert.Equal(t, "My Car", veh.Name)
@@ -68,5 +78,13 @@ func TestDecodeDevices(t *testing.T) {
 	// device without any state of charge
 	none := q.Devices[2]
 	_, ok = none.Soc()
+	assert.False(t, ok)
+
+	// vehicle with string-encoded soc (real Kraken API behaviour)
+	strVeh := q.Devices[3]
+	soc, ok = strVeh.Soc()
+	assert.True(t, ok)
+	assert.Equal(t, 41.0, soc)
+	_, ok = strVeh.TargetSoc()
 	assert.False(t, ok)
 }
