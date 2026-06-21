@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/samber/lo"
 )
 
 // https://github.com/TA2k/ioBroker.smart-eq
@@ -19,12 +18,14 @@ import (
 type API struct {
 	*request.Helper
 	identity *Identity
+	baseURI  string
 }
 
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		identity: identity,
+		baseURI:  ApiURI,
 	}
 
 	v.Client.Transport = &transport.Decorator{
@@ -55,6 +56,14 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
+// SetSeries selects the API host for the vehicle's platform.
+// Smart #5 (series HY) is served by the V2 host; #1/#3 (HX/HC) use V1.
+func (v *API) SetSeries(series string) {
+	if strings.HasPrefix(series, "HY") {
+		v.baseURI = ApiURIV2
+	}
+}
+
 func (v *API) request(method, path string, params url.Values, body io.Reader) (*http.Request, error) {
 	if body != nil {
 		b, err := io.ReadAll(body)
@@ -75,7 +84,7 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 		body.(*bytes.Reader).Seek(0, io.SeekStart)
 	}
 
-	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
+	uri := fmt.Sprintf("%s/%s?%s", v.baseURI, strings.TrimPrefix(path, "/"), params.Encode())
 	req, err := request.New(method, uri, body, map[string]string{
 		"x-api-signature-nonce": nonce,
 		"x-signature":           sign,
@@ -85,7 +94,7 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 	return req, err
 }
 
-func (v *API) Vehicles() ([]string, error) {
+func (v *API) Vehicles() ([]Vehicle, error) {
 	var res struct {
 		Code    Int
 		Message string
@@ -105,6 +114,7 @@ func (v *API) Vehicles() ([]string, error) {
 		"userId":        {userID},
 	}
 
+	// vehicle list is fetched on V1: SetSeries runs only after this call
 	path := "/device-platform/user/vehicle/secure"
 	req, err := v.request(http.MethodGet, path, params, nil)
 	if err != nil {
@@ -116,11 +126,7 @@ func (v *API) Vehicles() ([]string, error) {
 		return nil, err
 	}
 
-	vehicles := lo.Map(res.Data.List, func(v Vehicle, _ int) string {
-		return v.VIN
-	})
-
-	return vehicles, err
+	return res.Data.List, err
 }
 
 func (v *API) UpdateSession(vin string) error {
@@ -192,4 +198,34 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 	}
 
 	return res.Data.VehicleStatus, err
+}
+
+func (v *API) SocStatus(vin string) (VehicleSocStatus, error) {
+	if err := v.UpdateSession(vin); err != nil {
+		return VehicleSocStatus{}, fmt.Errorf("update session failed: %w", err)
+	}
+
+	var res struct {
+		Code    Int
+		Message string
+		Error   Error
+		Data    VehicleSocStatus
+	}
+
+	params := url.Values{
+		"setting": {"charging"},
+	}
+
+	path := "/remote-control/vehicle/status/soc/" + vin
+	req, err := v.request(http.MethodGet, path, params, nil)
+	if err != nil {
+		return VehicleSocStatus{}, err
+	}
+
+	err = v.DoJSON(req, &res)
+	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
+		return VehicleSocStatus{}, err
+	}
+
+	return res.Data, err
 }

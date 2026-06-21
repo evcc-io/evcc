@@ -119,6 +119,17 @@ export const lighterColor = (color: string | null) => setAlpha(color, "aa");
 
 export const fullColor = (color: string | null) => setAlpha(color, "ff");
 
+// Darken an opaque hex color: scale rgb toward black by `factor` (0-1), stays opaque.
+export function darken(color: string, factor: number): string {
+  if (!/^#[0-9a-f]{6}$/i.test(color)) return color;
+  const f = Math.max(0, Math.min(1, factor));
+  const channel = (o: number) =>
+    Math.round(parseInt(color.slice(o, o + 2), 16) * f)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${channel(1)}${channel(3)}${channel(5)}`;
+}
+
 export function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
   colors.text = style.getPropertyValue("--evcc-default-text");

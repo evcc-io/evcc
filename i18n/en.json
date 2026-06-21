@@ -120,6 +120,11 @@
       "title": "Load Management",
       "usableMeters": "Usable meter references"
     },
+    "consumer": {
+      "description": "Tracks smaller, non-controllable appliances (refrigerator, washing machine, ...). Gives you a better overview of your home consumption.",
+      "titleAdd": "Add Consumer Meter",
+      "titleEdit": "Edit Consumer Meter"
+    },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
       "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. The default of 30 seconds is a safe choice. Devices like vehicles, wallboxes and inverters typically need several seconds to adjust their behavior. If your components react quickly you can use lower values. We strongly recommend not going below 10 seconds. If you observe erratic control behavior or jumping power values choose a larger interval.",
@@ -188,6 +193,7 @@
       "singlePhase": "Single phase",
       "soc": "Charge",
       "solarForecast": "Solar forecast",
+      "switchDevice": "Current control",
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
@@ -235,9 +241,9 @@
       "title": "Experimental"
     },
     "ext": {
-      "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
-      "titleAdd": "Add Consumer Meter",
-      "titleEdit": "Edit Consumer Meter"
+      "description": "Tracks meters that are not used for regulation or shown in the UI (sub-distributions, alternative grid or solar meters, ...). Their data is logged and exported like other meters.",
+      "titleAdd": "Add Additional Meter",
+      "titleEdit": "Edit Additional Meter"
     },
     "form": {
       "danger": "Danger",
@@ -372,8 +378,11 @@
       "estimateLabel": "Interpolate charge level between API updates",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
+      "maxTempHelp": "Must be greater than minimum temperature.",
+      "maxTempLabel": "Maximum temperature",
       "minCurrentHelp": "Only go below 6 A if you know what you're doing.",
       "minCurrentLabel": "Minimum current",
+      "minTempLabel": "Minimum temperature",
       "noVehicles": "No vehicles are configured.",
       "option": {
         "charging": "Add charging point",
@@ -403,6 +412,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
+      "temperatureRangeHelp": "Display range for the temperature bar. Does not affect control.",
+      "temperatureRangeTitle": "Temperature range",
       "thresholdDisableDelayLabel": "Disable delay",
       "thresholdDisableHelpInvalid": "Please use a positive value.",
       "thresholdDisableHelpPositive": "Stop, when more than {power} is used from the grid for {delay}.",
@@ -437,6 +448,7 @@
     },
     "main": {
       "addAdditional": "Add additional meter",
+      "addConsumer": "Add consumer",
       "addGrid": "Add grid meter",
       "addLoadpoint": "Add charger or heater",
       "addPvBattery": "Add solar or battery",
@@ -527,7 +539,7 @@
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
-        "ext": "Add regular consumer",
+        "consumer": "Add regular consumer",
         "pv": "Add solar meter"
       },
       "save": "Save",
@@ -723,6 +735,7 @@
     },
     "section": {
       "additionalMeter": "Additional meters",
+      "consumers": "Consumers",
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
@@ -1249,10 +1262,11 @@
       "empty": "No history data available for this time range.",
       "group": {
         "battery": "Battery",
+        "consumer": "Consumption",
         "forecast": "Forecast",
         "grid": "Grid",
         "loadpoint": "Charging & Heating",
-        "meter": "Consumption",
+        "meter": "Additional meters",
         "pv": "Production"
       },
       "otherConsumers": "Others",

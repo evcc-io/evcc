@@ -8,7 +8,7 @@ requirements:
     de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `sensor.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
-  params: [uri]
+  params: [uri, insecure]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "aux", "charge"]
@@ -31,7 +31,7 @@ params:
       de: Leistungsentität
       en: Power Entity
     required: true
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_power"
     help:
       en: Entity ID for instantaneous power measurement in watts. The entity must provide numeric values only (e.g., "1234", not "1234 W").
@@ -40,7 +40,7 @@ params:
     description:
       de: Energieentität
       en: Energy Entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_energy"
     advanced: true
     help:
@@ -50,7 +50,7 @@ params:
     description:
       de: L1 Stromentität
       en: L1 Current Entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_current_l1"
     advanced: true
     help:
@@ -60,7 +60,7 @@ params:
     description:
       de: L2 Stromentität
       en: L2 Current Entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_current_l2"
     advanced: true
     help:
@@ -70,7 +70,7 @@ params:
     description:
       de: L3 Stromentität
       en: L3 Current Entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_current_l3"
     advanced: true
     help:
@@ -80,7 +80,7 @@ params:
     description:
       de: L1 Spannungsentität
       en: L1 Voltage Entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_voltage_l1"
     advanced: true
     help:
@@ -90,7 +90,7 @@ params:
     description:
       de: L2 Spannungsentität
       en: L2 Voltage Entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_voltage_l2"
     advanced: true
     help:
@@ -100,7 +100,7 @@ params:
     description:
       de: L3 Spannungsentität
       en: L3 Voltage Entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.house_voltage_l3"
     advanced: true
     help:
@@ -111,7 +111,7 @@ params:
     description:
       de: Batterieladestand
       en: Battery State of Charge
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.battery_soc"
     advanced: true
     help:
@@ -122,7 +122,7 @@ params:
     description:
       de: Normalbetrieb Skript
       en: Normal Mode Script
-    service: homeassistant/entities?uri={uri}&domain=script
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script
     example: "script.battery_normal"
     advanced: true
     help:
@@ -133,7 +133,7 @@ params:
     description:
       de: Halten Skript
       en: Hold Mode Script
-    service: homeassistant/entities?uri={uri}&domain=script
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script
     example: "script.battery_hold"
     advanced: true
     help:
@@ -144,18 +144,20 @@ params:
     description:
       de: Netzladung Skript
       en: Grid Charge Mode Script
-    service: homeassistant/entities?uri={uri}&domain=script
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script
     example: "script.battery_grid_charge"
     advanced: true
     help:
       en: Optional script to grid-charge the home battery.
       de: Optionales Skript um die Heimbatterie aus dem Netz zu laden.
+  - name: insecure
   - name: maxacpower
   - preset: battery-params
 render: |
   type: homeassistant
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
+  insecure: {{ .insecure }}
   power: {{ .power }}
   energy: {{ .energy }}
   currents:

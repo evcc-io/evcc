@@ -329,6 +329,14 @@ params:
     help:
       en: Ignore the vehicle's climater state for charge control, so charging stops at the SoC or energy limit even when the vehicle signals an active climater request.
       de: Klimatisierungsstatus des Fahrzeugs für die Ladesteuerung ignorieren, sodass der Ladevorgang am SoC- oder Energielimit endet, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
+  - name: autodetectdisabled
+    type: bool
+    description:
+      en: Exclude from auto detection
+      de: Von automatischer Erkennung ausschließen
+    help:
+      en: Ignore the vehicle for auto detection of connected vehicles
+      de: Das Fahrzeug von der automatischen Erkennung beim Anschließen eines Fahrzeugs ausschließen
   - name: heating
     type: bool
     description:
@@ -345,6 +353,12 @@ params:
     help:
       en: Integrated device. No charging sessions
       de: Fest angeschlossenes Gerät. Keine Ladevorgänge
+  - name: insecure
+    type: bool
+    advanced: true
+    description:
+      en: Accept self-signed certificates
+      de: Selbstsignierte Zertifikate akzeptieren
   - name: defaultmode
     type: int
     advanced: true
@@ -589,6 +603,8 @@ presets:
     - name: welcomecharge
       advanced: true
     - name: climaterdisabled
+      advanced: true
+    - name: autodetectdisabled
       advanced: true
   vehicle-climater:
     - name: climaterdisabled
