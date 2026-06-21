@@ -6,7 +6,7 @@ products:
       generic: WEM3080
   - brand: IAMMETER
     description:
-      generic: WEM2067 (1p)
+      generic: WEM2067
   - brand: IAMMETER
     description:
       generic: WEM3080T (1p)
