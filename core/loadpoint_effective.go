@@ -47,7 +47,12 @@ func (lp *Loadpoint) EffectivePriority() int {
 // loadpoints are ranked by absolute energy (kWh) rather than percentage and a
 // smaller battery is not over-prioritized just because its percentage is lower.
 // When the vehicle capacity is unknown the score falls back to the percentage gap.
-func (lp *Loadpoint) EffectivePriorityScore() float64 {
+//
+// The basis is passed in rather than read from the loadpoint so the prioritizer
+// can rank a whole priority tier on a single, consistent basis: a kWh fraction and
+// a percentage fraction live on different scales and must not be compared directly
+// (see Prioritizer.effectiveBasis).
+func (lp *Loadpoint) EffectivePriorityScore(basis api.PriorityBasis) float64 {
 	score := float64(lp.EffectivePriority())
 
 	soc := lp.GetSoc()
@@ -68,7 +73,7 @@ func (lp *Loadpoint) EffectivePriorityScore() float64 {
 
 	// energy basis: convert the soc-% gap into absolute kWh using the vehicle
 	// capacity, falling back to the percentage gap when capacity is unknown
-	if lp.GetPriorityBasis() == api.PriorityBasisEnergy {
+	if basis == api.PriorityBasisEnergy {
 		if capacity := lp.vehicleCapacity(); capacity > 0 {
 			gap = gap / 100 * capacity
 		} else {

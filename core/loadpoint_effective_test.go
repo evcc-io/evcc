@@ -74,7 +74,7 @@ func TestEffectivePriorityScore(t *testing.T) {
 			lp.vehicle = vehicle
 		}
 
-		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(), 1e-9)
+		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(tc.basis), 1e-9)
 	}
 }
 

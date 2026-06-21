@@ -32,7 +32,10 @@ func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API, rates api.R
 }
 
 func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
-	score := lp.EffectivePriorityScore()
+	// rank every candidate on a basis resolved per priority tier so the score
+	// fractions compared below share one scale (see effectiveBasis)
+	candidates := p.candidates(lp)
+	score := lp.EffectivePriorityScore(p.effectiveBasis(lp, candidates))
 
 	// hysteresis deadband (soc-% -> score fraction): only outrank another loadpoint
 	// when ahead by more than the band, so near-equal soc loadpoints tie and converge
@@ -45,10 +48,11 @@ func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 		msg      string
 	)
 
-	for lp, power := range p.demand {
-		if score-lp.EffectivePriorityScore() > band && power > 0 {
+	for other, power := range p.demand {
+		otherScore := other.EffectivePriorityScore(p.effectiveBasis(other, candidates))
+		if score-otherScore > band && power > 0 {
 			reduceBy += power
-			msg += fmt.Sprintf("%.0fW from %s at prio %.2f, ", power, lp.GetTitle(), lp.EffectivePriorityScore())
+			msg += fmt.Sprintf("%.0fW from %s at prio %.2f, ", power, other.GetTitle(), otherScore)
 		}
 	}
 
@@ -57,4 +61,40 @@ func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 	}
 
 	return reduceBy
+}
+
+// candidates returns the loadpoints that participate in ranking: the target plus
+// every loadpoint that has registered demand.
+func (p *Prioritizer) candidates(lp loadpoint.API) []loadpoint.API {
+	res := []loadpoint.API{lp}
+	for other := range p.demand {
+		if other != lp {
+			res = append(res, other)
+		}
+	}
+	return res
+}
+
+// effectiveBasis returns the priority basis to score lp with. The energy basis
+// ranks by absolute kWh while the percent basis ranks by soc-%; their fractions
+// are not comparable, so a whole priority tier must use a single basis. When any
+// energy-basis loadpoint in lp's tier has no known vehicle capacity (its energy
+// score would silently fall back to a percentage), the entire tier is ranked by
+// percent so configured and unconfigured vehicles are never mixed across scales.
+func (p *Prioritizer) effectiveBasis(lp loadpoint.API, candidates []loadpoint.API) api.PriorityBasis {
+	if lp.GetPriorityBasis() != api.PriorityBasisEnergy {
+		return lp.GetPriorityBasis()
+	}
+
+	tier := lp.EffectivePriority()
+	for _, other := range candidates {
+		if other.EffectivePriority() != tier || other.GetPriorityBasis() != api.PriorityBasisEnergy {
+			continue
+		}
+		if v := other.GetVehicle(); v == nil || v.Capacity() <= 0 {
+			return api.PriorityBasisPercent
+		}
+	}
+
+	return api.PriorityBasisEnergy
 }

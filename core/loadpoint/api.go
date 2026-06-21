@@ -110,8 +110,8 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
-	// EffectivePriorityScore returns the sortable priority score (tier + strategy sub-ordering)
-	EffectivePriorityScore() float64
+	// EffectivePriorityScore returns the sortable priority score (tier + strategy sub-ordering) for the given basis
+	EffectivePriorityScore(basis api.PriorityBasis) float64
 	// EffectiveLimitSoc returns the effective session limit soc
 	EffectiveLimitSoc() int
 	// EffectivePlanId returns the effective plan id
