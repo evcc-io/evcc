@@ -81,7 +81,14 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevel); p != nil {
+	// prefer battery_level_HV.value when the device flags it valid: a single
+	// dataset can carry conflicting battery_state_report.soc values
+	fields := []string{FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevelValue}
+	if data[FieldHvBatteryLevelState].Value == hvBatteryLevelValid {
+		fields = []string{FieldHvBatteryLevelValue, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc}
+	}
+
+	if p := lookup(data, fields...); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
