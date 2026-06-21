@@ -660,7 +660,7 @@
       "PriorityStrategy": {
         "description": "Priority strategy used to sub-order loadpoints of the same priority.",
         "enum": [
-          "static",
+          "none",
           "soc",
           "deficit"
         ],
