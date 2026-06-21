@@ -28,11 +28,6 @@ var brands = map[string]brand{
 	"Cupra":      {"f85e5b69-e3b2-43aa-9c0d-1b7d0e0b576f@apps_vw-dilab_com", "CUPRA"},
 }
 
-// Brands returns the supported brand names
-func Brands() []string {
-	return []string{"Volkswagen", "Audi", "Skoda", "Seat", "Cupra"}
-}
-
 // resolveBrand looks up a brand by name, case-insensitively
 func resolveBrand(name string) (brand, bool) {
 	for k, b := range brands {
