@@ -22,9 +22,11 @@ params:
     usages: ["battery"]
   - preset: battery-params
   - name: maxchargepower
-    default: 10000
+    service: modbus/read?address=47606&type=holding&encoding=uint16&{modbus}
+    required: true
   - name: maxdischargepower
-    default: 10000
+    service: modbus/read?address=47606&type=holding&encoding=uint16&{modbus}
+    required: true
   - name: minsoc
     default: 10
   - name: maxsoc
