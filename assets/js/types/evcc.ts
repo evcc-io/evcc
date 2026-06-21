@@ -250,6 +250,7 @@ export interface ConfigLoadpoint {
   defaultMode: string;
   priority: number;
   priorityStrategy: PRIORITY_STRATEGY | "";
+  priorityBasis: PRIORITY_BASIS | "";
   priorityHysteresis: number;
   phasesConfigured: number;
   minCurrent: number;
@@ -346,6 +347,7 @@ export interface Loadpoint {
   planTime: string | null;
   priority: number;
   priorityStrategy: PRIORITY_STRATEGY | "";
+  priorityBasis: PRIORITY_BASIS | "";
   priorityHysteresis: number;
   pvAction: PV_ACTION;
   pvRemaining: number;
@@ -474,6 +476,11 @@ export enum PRIORITY_STRATEGY {
   STATIC = "static",
   SOC = "soc",
   DEFICIT = "deficit",
+}
+
+export enum PRIORITY_BASIS {
+  PERCENT = "percent",
+  ENERGY = "energy",
 }
 
 export enum CHARGER_STATUS_REASON {

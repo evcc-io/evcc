@@ -158,6 +158,32 @@
 				</div>
 			</div>
 			<div v-if="priorityHysteresisAvailable" class="mb-3 row">
+				<label :for="formId('prioritybasis')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+					{{ $t("main.loadpointSettings.priorityBasis.label") }}
+				</label>
+				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+					<select
+						:id="formId('prioritybasis')"
+						v-model="selectedPriorityBasis"
+						class="form-select form-select-sm"
+						@change="setPriorityBasis"
+					>
+						<option
+							v-for="{ value, name } in priorityBasisOptions"
+							:key="value"
+							:value="value"
+						>
+							{{ name }}
+						</option>
+					</select>
+				</div>
+				<div class="col-sm-8 offset-sm-4 pe-0">
+					<small class="text-muted">
+						{{ $t("main.loadpointSettings.priorityBasis.help") }}
+					</small>
+				</div>
+			</div>
+			<div v-if="priorityHysteresisAvailable" class="mb-3 row">
 				<label
 					:for="formId('priorityhysteresis')"
 					class="col-sm-4 col-form-label pt-0 pt-sm-2"
@@ -175,7 +201,7 @@
 						step="1"
 						@change="setPriorityHysteresis"
 					/>
-					<span class="ms-2">%</span>
+					<span class="ms-2">{{ priorityHysteresisUnit }}</span>
 				</div>
 				<div class="col-sm-8 offset-sm-4 pe-0">
 					<small class="text-muted">
@@ -200,6 +226,7 @@ import {
 	CURRENCY,
 	SMART_COST_TYPE,
 	PRIORITY_STRATEGY,
+	PRIORITY_BASIS,
 	type Forecast,
 	type UiLoadpoint,
 } from "@/types/evcc";
@@ -248,6 +275,7 @@ export default defineComponent({
 			selectedMinCurrent: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
 			selectedPriorityStrategy: PRIORITY_STRATEGY.STATIC as PRIORITY_STRATEGY,
+			selectedPriorityBasis: PRIORITY_BASIS.PERCENT as PRIORITY_BASIS,
 			selectedPriorityHysteresis: 0 as number,
 			isModalVisible: false,
 		};
@@ -316,6 +344,10 @@ export default defineComponent({
 			// published state sends "" for the static (default) strategy
 			return this.loadpoint?.priorityStrategy || PRIORITY_STRATEGY.STATIC;
 		},
+		priorityBasis(): PRIORITY_BASIS {
+			// published state sends "" for the percent (default) basis
+			return this.loadpoint?.priorityBasis || PRIORITY_BASIS.PERCENT;
+		},
 		priorityHysteresis(): number {
 			return this.loadpoint?.priorityHysteresis ?? 0;
 		},
@@ -335,9 +367,24 @@ export default defineComponent({
 				},
 			];
 		},
+		priorityBasisOptions(): { value: PRIORITY_BASIS; name: string }[] {
+			return [
+				{
+					value: PRIORITY_BASIS.PERCENT,
+					name: this.$t("main.loadpointSettings.priorityBasis.percent"),
+				},
+				{
+					value: PRIORITY_BASIS.ENERGY,
+					name: this.$t("main.loadpointSettings.priorityBasis.energy"),
+				},
+			];
+		},
 		priorityHysteresisAvailable(): boolean {
 			// hysteresis only affects soc/deficit sub-ordering, not static priority
 			return this.selectedPriorityStrategy !== PRIORITY_STRATEGY.STATIC;
+		},
+		priorityHysteresisUnit(): string {
+			return this.selectedPriorityBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";
 		},
 	},
 	watch: {
@@ -353,6 +400,9 @@ export default defineComponent({
 		priorityStrategy(value) {
 			this.selectedPriorityStrategy = value;
 		},
+		priorityBasis(value) {
+			this.selectedPriorityBasis = value;
+		},
 		priorityHysteresis(value) {
 			this.selectedPriorityHysteresis = value;
 		},
@@ -364,6 +414,7 @@ export default defineComponent({
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
 			this.selectedPriorityStrategy = this.priorityStrategy;
+			this.selectedPriorityBasis = this.priorityBasis;
 			this.selectedPriorityHysteresis = this.priorityHysteresis;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
@@ -391,6 +442,9 @@ export default defineComponent({
 		},
 		setPriorityStrategy() {
 			api.post(this.apiPath("prioritystrategy") + "/" + this.selectedPriorityStrategy);
+		},
+		setPriorityBasis() {
+			api.post(this.apiPath("prioritybasis") + "/" + this.selectedPriorityBasis);
 		},
 		setPriorityHysteresis() {
 			const value = Math.min(

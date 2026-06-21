@@ -319,6 +319,23 @@
 
 						<FormRow
 							v-if="showPriority && priorityHysteresisAvailable"
+							id="loadpointParamPriorityBasis"
+							:label="$t('config.loadpoint.priorityBasisLabel')"
+							:help="$t('config.loadpoint.priorityBasisHelp')"
+						>
+							<PropertyField
+								id="loadpointParamPriorityBasis"
+								v-model="priorityBasis"
+								type="Choice"
+								size="w-100"
+								class="me-2"
+								required
+								:choice="priorityBasisOptions"
+							/>
+						</FormRow>
+
+						<FormRow
+							v-if="showPriority && priorityHysteresisAvailable"
 							id="loadpointParamPriorityHysteresis"
 							:label="$t('config.loadpoint.priorityHysteresisLabel')"
 							:help="$t('config.loadpoint.priorityHysteresisHelp')"
@@ -327,7 +344,7 @@
 								id="loadpointParamPriorityHysteresis"
 								v-model="values.priorityHysteresis"
 								type="Float"
-								unit="%"
+								:unit="priorityHysteresisUnit"
 								size="w-25 w-min-200"
 								class="me-2"
 								required
@@ -669,6 +686,7 @@ import {
 	CHARGE_MODE,
 	LOADPOINT_TYPE,
 	PRIORITY_STRATEGY,
+	PRIORITY_BASIS,
 	type DeviceType,
 	type LoadpointType,
 	type ConfigCharger,
@@ -690,6 +708,7 @@ const defaultValues = {
 	maxCurrent: 16,
 	priority: 0,
 	priorityStrategy: "",
+	priorityBasis: "",
 	priorityHysteresis: 0,
 	defaultMode: "",
 	thresholds: {
@@ -857,8 +876,32 @@ export default {
 				},
 			];
 		},
+		priorityBasis: {
+			// backend returns "" for the percent basis; map to/from the explicit "percent" choice
+			get(): PRIORITY_BASIS {
+				return this.values.priorityBasis || PRIORITY_BASIS.PERCENT;
+			},
+			set(value: PRIORITY_BASIS) {
+				this.values.priorityBasis = value;
+			},
+		},
+		priorityBasisOptions(): { key: PRIORITY_BASIS; name: string }[] {
+			return [
+				{
+					key: PRIORITY_BASIS.PERCENT,
+					name: this.$t("config.loadpoint.priorityBasisPercent"),
+				},
+				{
+					key: PRIORITY_BASIS.ENERGY,
+					name: this.$t("config.loadpoint.priorityBasisEnergy"),
+				},
+			];
+		},
 		priorityHysteresisAvailable(): boolean {
 			return this.priorityStrategy !== PRIORITY_STRATEGY.STATIC;
+		},
+		priorityHysteresisUnit(): string {
+			return this.priorityBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";
 		},
 		phasesOptions() {
 			return [
