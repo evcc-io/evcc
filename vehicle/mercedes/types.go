@@ -1,8 +1,6 @@
 package mercedes
 
 import (
-	"fmt"
-	"html"
 	"time"
 )
 
@@ -10,19 +8,6 @@ var Regions = map[string]string{
 	"apac":  "Asia-Pacific",
 	"ece":   "ECE",
 	"noram": "North-America",
-}
-
-type ErrorInfo struct {
-	ErrorCode    int
-	ErrorMessage string
-	ErrorDetails string
-}
-
-func (e ErrorInfo) Error() error {
-	if e.ErrorCode == 0 {
-		return nil
-	}
-	return fmt.Errorf("%s: %s", e.ErrorMessage, html.UnescapeString(e.ErrorDetails))
 }
 
 type PinRequest struct {

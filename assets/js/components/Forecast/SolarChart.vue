@@ -10,6 +10,7 @@ import {
 	FONT_FAMILY,
 	markPointLabel,
 	tooltipStyle,
+	tooltipTable,
 	forecastGrid,
 	forecastXAxes,
 	forecastYAxis,
@@ -83,7 +84,9 @@ export default defineComponent({
 						if (!p) return "";
 						const d = new Date(p.value[0]);
 						const time = `${this.weekdayShort(d)} ${this.fmtHourMinute(d)}`;
-						return `${time}<br/>${this.fmtW(p.value[1], POWER_UNIT.AUTO)}`;
+						return tooltipTable(time, [
+							{ values: [this.fmtW(p.value[1], POWER_UNIT.AUTO)] },
+						]);
 					},
 				},
 				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),

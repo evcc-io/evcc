@@ -36,7 +36,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
-		ts, err := s.update(log.TRACE, vin)
+		ts, err := s.update(vin)
 		if err != nil {
 			log.ERROR.Println(err)
 		} else if !ts.IsZero() {
@@ -81,7 +81,14 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevel); p != nil {
+	// use battery_level_HV.value when its state reports valid
+	if s, ok := data[FieldHvBatteryLevelState]; ok && s.Value == hvBatteryLevelValid {
+		if p, ok := data[FieldHvBatteryLevelValue]; ok {
+			return strconv.ParseFloat(p.Value, 64)
+		}
+	}
+
+	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevelValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
