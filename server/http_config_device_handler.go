@@ -282,7 +282,7 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// bound the value-probe phase so a blocking getter cannot stall the response
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
 	jsonWrite(w, testInstance(ctx, instance))
@@ -703,7 +703,7 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// bound the value-probe phase so a blocking getter cannot stall the response
-	probeCtx, probeCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	probeCtx, probeCancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer probeCancel()
 
 	jsonWrite(w, testInstance(probeCtx, instance))
