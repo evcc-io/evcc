@@ -606,8 +606,10 @@ presets:
       advanced: true
     - name: autodetectdisabled
       advanced: true
-  vehicle-climater:
+  vehicle-online:
     - name: climaterdisabled
+      advanced: true
+    - name: autodetectdisabled
       advanced: true
   charger-features:
     - name: heating

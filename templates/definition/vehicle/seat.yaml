@@ -5,7 +5,7 @@ products:
       generic: CupraConnect Gen3 (Ateca, Leon, Formentor, Tarraco)
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
 render: |
   type: drivesomethinggreater
   brand: Seat
