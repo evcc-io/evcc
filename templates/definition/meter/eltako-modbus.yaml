@@ -138,4 +138,3 @@ render: |
         decode: int32
       timeout: 2s
       scale: 0.01
-    
