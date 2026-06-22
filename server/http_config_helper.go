@@ -273,25 +273,39 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 		resMu.Unlock()
 	}
 
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
+	var wg sync.WaitGroup
+	probe := func(f func()) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			f()
+		}()
+	}
 
+	// probes run concurrently so a responsive getter still returns when another
+	// blocks; slow getters are abandoned once ctx expires (see below)
+	probe(func() {
 		if dev, ok := api.Cap[api.Meter](instance); ok {
 			val, err := dev.CurrentPower()
 			makeResult("power", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
 			val, err := dev.TotalEnergy()
 			makeResult("energy", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
 			val, err := dev.ReturnEnergy()
 			makeResult("returnEnergy", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.Battery](instance); ok {
 			val, err := dev.Soc()
 			key := "soc"
@@ -300,80 +314,114 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 			}
 			makeResult(key, val, err)
 		}
+	})
 
+	probe(func() {
 		if api.HasCap[api.BatteryController](instance) {
 			makeResult("controllable", true, nil)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.VehicleOdometer](instance); ok {
 			val, err := dev.Odometer()
 			makeResult("odometer", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
 			val := dev.Capacity()
 			makeResult("capacity", val, nil)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.PhaseCurrents](instance); ok {
 			i1, i2, i3, err := dev.Currents()
 			makeResult("phaseCurrents", []float64{i1, i2, i3}, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.PhaseVoltages](instance); ok {
 			u1, u2, u3, err := dev.Voltages()
 			makeResult("phaseVoltages", []float64{u1, u2, u3}, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.PhasePowers](instance); ok {
 			p1, p2, p3, err := dev.Powers()
 			makeResult("phasePowers", []float64{p1, p2, p3}, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.ChargeState](instance); ok {
 			val, err := dev.Status()
 			makeResult("chargeStatus", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.Charger](instance); ok {
 			val, err := dev.Enabled()
 			makeResult("enabled", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.ChargeRater](instance); ok {
 			val, err := dev.ChargedEnergy()
 			makeResult("chargedEnergy", val, err)
 		}
+	})
 
+	probe(func() {
 		if api.HasCap[api.PhaseSwitcher](instance) {
 			makeResult("phases1p3p", true, nil)
 		}
+	})
 
+	probe(func() {
 		if hasFeature(instance, api.Heating) {
 			makeResult("heating", true, nil)
 		}
+	})
 
+	probe(func() {
 		if hasFeature(instance, api.IntegratedDevice) {
 			makeResult("integratedDevice", true, nil)
 		}
+	})
 
+	probe(func() {
 		if hasFeature(instance, api.SwitchDevice) {
 			makeResult("switchDevice", true, nil)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
 			makeResult("icon", dev.Icon(), nil)
 		}
+	})
 
+	probe(func() {
 		if cc, ok := api.Cap[api.PhaseDescriber](instance); ok && cc.Phases() == 1 {
 			makeResult("singlePhase", true, nil)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.VehicleRange](instance); ok {
 			val, err := dev.Range()
 			makeResult("range", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.SocLimiter](instance); ok {
 			val, err := dev.GetLimitSoc()
 			key := "vehicleLimitSoc"
@@ -382,24 +430,32 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 			}
 			makeResult(key, val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.Dimmer](instance); ok {
 			val, err := dev.Dimmed()
 			makeResult("dimmed", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.Curtailer](instance); ok {
 			makeResult("curtailable", true, nil)
 			if val, err := dev.Curtailed(); err != nil || val {
 				makeResult("curtailed", true, err)
 			}
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.Identifier](instance); ok {
 			val, err := dev.Identify()
 			makeResult("identifier", val, err)
 		}
+	})
 
+	probe(func() {
 		if dev, ok := api.Cap[api.Tariff](instance); ok {
 			rates, err := dev.Rates()
 
@@ -430,6 +486,12 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 				}
 			}
 		}
+	})
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
 	}()
 
 	// bound the probe phase: on ctx.Done return collected results so far. A leaked
