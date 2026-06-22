@@ -1,0 +1,59 @@
+```yaml
+template: anker-solix-v1
+
+products:
+  - brand: Anker SOLIX
+    description:
+      generic: Wallbox V1
+
+capabilities: ["dim"]
+
+requirements:
+  description:
+    de: |
+      OCPP in der Anker-App aktivieren.
+
+      * OCPP-Backend: evcc
+      * URL: `ws://<evcc-host>:8887/`
+      * Protokoll: OCPP 1.6J / JSON / WebSocket im lokalen Netzwerk
+      * Keinen Pfad und keine Station-ID manuell an die URL anhängen.
+      * Die Wallbox registriert sich mit ihrer eigenen Station ID bei evcc.
+      * Diese Station ID wird in evcc als `stationid` verwendet.
+      * Anker Solar-/Smart-Charging in der App deaktivieren, damit evcc die Ladesteuerung übernimmt.
+      * Falls verfügbar, Autostart/Freies Laden am Ladepunkt aktivieren.
+
+    en: |
+      Enable OCPP in the Anker app.
+
+      * OCPP backend: evcc
+      * URL: `ws://<evcc-host>:8887/`
+      * Protocol: OCPP 1.6J / JSON / WebSocket on the local network
+      * Do not manually append a path or station ID to the URL.
+      * The charger registers with its own station ID in evcc.
+      * This station ID is used as `stationid` in evcc.
+      * Disable Anker solar/smart charging in the app so evcc controls charging.
+      * If available, enable autostart/free charging on the charger.
+
+  evcc: ["sponsorship", "skiptest"]
+
+caveats:
+  - description:
+      de: Dieses Template nutzt die bestehende generische OCPP-Unterstützung von evcc. Es ist keine native Anker-Cloud-Integration.
+      en: This template uses evcc's existing generic OCPP support. It is not a native Anker cloud integration.
+
+  - description:
+      de: Die OCPP-Stabilität hängt von der Anker-Firmware ab. Dieses Template überspringt das initiale ChangeAvailability-Kommando, da dieses bei einigen Anker SOLIX V1 Installationen Timeouts, Reconnects oder Reboots verursacht.
+      en: OCPP stability depends on Anker firmware. This template skips the initial ChangeAvailability command because it causes timeouts, reconnects, or reboots on some Anker SOLIX V1 installations.
+
+  - description:
+      de: Die Wallbox unterstützt nach aktuellem Teststand keine OCPP-gesteuerte Phasenumschaltung durch evcc. Einphasiges Laden kann abhängig von Firmware und Anker-Einstellung autonom durch die Wallbox erfolgen.
+      en: Based on current testing, the charger does not support OCPP-controlled phase switching by evcc. Single-phase charging may occur autonomously depending on firmware and Anker settings.
+
+params:
+  - preset: ocpp
+
+render: |
+  {{ include "ocpp" . }}
+  nochangeavailability: true
+  profilekindrelative: true
+```
