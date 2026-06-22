@@ -109,12 +109,6 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		base = transport.Insecure()
 	}
 
-	// defensive normalize, protects against clock-skew-induced false-fresh cache hits
-	base = &transport.Modifier{
-		Modifier: clampResponseDate,
-		Base:     base,
-	}
-
 	if cache > 0 {
 		// remove cache-busting response headers
 		base = &transport.Modifier{
@@ -305,19 +299,4 @@ func (p *HTTP) BoolSetter(param string) (func(bool) error, error) {
 	return func(val bool) error {
 		return p.set(param, val)
 	}, nil
-}
-
-func clampResponseDate(resp *http.Response) error {
-	h := resp.Header.Get("Date")
-	if h == "" {
-		return nil
-	}
-	date, err := http.ParseTime(h)
-	if err != nil {
-		return nil
-	}
-	if now := time.Now(); date.After(now) {
-		resp.Header.Set("Date", now.UTC().Format(http.TimeFormat))
-	}
-	return nil
 }
