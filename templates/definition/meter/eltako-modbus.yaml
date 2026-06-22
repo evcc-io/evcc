@@ -5,7 +5,7 @@ products:
       generic: DSZ15DZMOD
 params:
   - name: usage
-    choice: ["charge", "grid", "pv", "battery"]
+    choice: ["charge", "grid", "pv"]
   - name: host
   - name: port
     default: 502
