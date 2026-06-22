@@ -3,12 +3,6 @@ products:
   - brand: Eltako
     description:
       generic: DSZ15DZMOD
-requirements:
-  description:
-    de: |
-      Im Gateway (zB Eltako ZGW16-IP) müssen folgende Register aktiviert werden: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075 
-    en: |
-      In the settings of your gateway (eG Eltako ZGW16-IP) you need to activate the following registers: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075       
 params:
   - name: usage
     choice: ["charge", "grid", "pv", "battery"]
