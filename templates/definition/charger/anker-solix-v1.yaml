@@ -52,6 +52,10 @@ caveats:
 
 params:
   - preset: ocpp
+  - name: connecttimeout
+    default: 10m
+  - name: meterinterval
+    default: 10s
   - name: metervalues
     default: Energy.Active.Import.Register,Power.Active.Import,Current.Import
 
