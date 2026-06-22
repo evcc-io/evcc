@@ -18,7 +18,6 @@ requirements:
       Otherwise the vehicle cannot be put into sleep mode.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
 render: |
   type: custom
   {{ include "vehicle-common" . }}
