@@ -6,9 +6,19 @@ products:
 requirements:
   description:
     de: |
-      Getestet
+      Für die Nutzung des EcoFlow Stream Meters benötigen Sie:
+      - Einen gültigen Access Key von der EcoFlow Developer Console
+      - Den entsprechenden Secret Key
+      - Die Seriennummer des Hauptgerätes Ihres Stream Systems
+
+      Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
     en: |
-      Tested   
+      To use the EcoFlow Stream meter you need:
+      - A valid Access Key from the EcoFlow Developer Console
+      - The corresponding Secret Key
+      - The main device serial number of your Stream system
+
+      These credentials can be obtained through the EcoFlow Developer Console after registering your application.
 params:
   - name: usage
     choice: ["charge", "grid", "pv"]
