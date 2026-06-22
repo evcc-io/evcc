@@ -16,127 +16,114 @@ requirements:
 params:
   - name: usage
     choice: ["charge", "grid", "pv"]
-  - name: host
-  - name: port
-    default: 502
-  - name: meter_id
-    default: 1
-    description:
-      de: Modbus Slave-ID des spezifischen Zählers
-      en: Modbus slave id of the specific meter
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - name: timeout
+    default: 15s
 render: |
   type: custom
   power: # current power in W
     source: modbus
-    id: {{ .meter_id }}
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: 52
       type: input
       decode: int32
-    timeout: 2s
+
 
   energy: # meter in kWh
     source: modbus
-    id: {{ .meter_id }}
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: 72
       type: input
       decode: int32
-    timeout: 2s
     scale: 0.01
   returnenergy: # return meter in kWh
     source: modbus
-    id: {{ .meter_id }}
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
       address: 74
       type: input
       decode: int32
-    timeout: 2s
     scale: 0.01
     
   powers: # phase powers in W
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 12
         type: input
         decode: int32
-      timeout: 2s
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 14
         type: input
         decode: int32
-      timeout: 2s
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 16
         type: input
         decode: int32
-      timeout: 2s
       
   currents: # phase currents in A
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 6
         type: input
         decode: int32
-      timeout: 2s
       scale: 0.01
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 8
         type: input
         decode: int32
-      timeout: 2s
       scale: 0.01
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 10
         type: input
         decode: int32
-      timeout: 2s
       scale: 0.01
       
   voltages: # phase voltages in V
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 0
         type: input
         decode: int32
-      timeout: 2s
       scale: 0.01
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 2
         type: input
         decode: int32
-      timeout: 2s
       scale: 0.01
     - source: modbus
-      id: {{ .meter_id }}
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
       register:
         address: 4
         type: input
         decode: int32
-      timeout: 2s
       scale: 0.01
