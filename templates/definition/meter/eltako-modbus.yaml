@@ -10,9 +10,9 @@ requirements:
       
       Im Gateway müssen folgende Register aktiviert werden: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075
     en: |
-      Tested with the Modbus gateway Eltako ZGW16-IP.
+      Tested with Modbus gateway Eltako ZGW16-IP.
       
-      In the gateway settings you need to activate the following registers: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075
+      You need to activate the following registers in the gateway setting: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075
 params:
   - name: usage
     choice: ["charge", "grid", "pv"]
