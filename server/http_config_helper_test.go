@@ -1,8 +1,10 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/plugin/mqtt"
@@ -11,6 +13,30 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// blockingMeter is an api.Meter whose CurrentPower blocks until the test ends.
+type blockingMeter struct {
+	done chan struct{}
+}
+
+func (m blockingMeter) CurrentPower() (float64, error) {
+	<-m.done
+	return 0, nil
+}
+
+// TestInstanceBoundedByContext ensures testInstance returns promptly when a
+// getter blocks, bounded by the context deadline rather than the getter itself.
+func TestInstanceBoundedByContext(t *testing.T) {
+	done := make(chan struct{})
+	defer close(done)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	start := time.Now()
+	testInstance(ctx, blockingMeter{done: done})
+	require.Less(t, time.Since(start), 500*time.Millisecond, "testInstance must not wait for blocking getter")
+}
 
 func TestConfigReqUnmarshal(t *testing.T) {
 	var req configReq
