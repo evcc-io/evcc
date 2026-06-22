@@ -3,7 +3,7 @@ products:
   - brand: Zero Motorcycles
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
 render: |
   type: zero
   {{ include "vehicle-base" . }}

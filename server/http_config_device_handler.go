@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"time"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api/globalconfig"
@@ -280,7 +281,11 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonWrite(w, testInstance(instance))
+	// bound the value-probe phase so a blocking getter cannot stall the response
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	jsonWrite(w, testInstance(ctx, instance))
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
@@ -697,5 +702,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 	close(done)
 	defer cancel()
 
-	jsonWrite(w, testInstance(instance))
+	// bound the value-probe phase so a blocking getter cannot stall the response
+	probeCtx, probeCancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer probeCancel()
+
+	jsonWrite(w, testInstance(probeCtx, instance))
 }

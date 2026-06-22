@@ -81,7 +81,14 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevel); p != nil {
+	// use battery_level_HV.value when its state reports valid
+	if s, ok := data[FieldHvBatteryLevelState]; ok && s.Value == hvBatteryLevelValid {
+		if p, ok := data[FieldHvBatteryLevelValue]; ok {
+			return strconv.ParseFloat(p.Value, 64)
+		}
+	}
+
+	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevelValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
