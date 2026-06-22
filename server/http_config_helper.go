@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"maps"
 	"reflect"
 	"slices"
 	"strings"
@@ -255,7 +256,8 @@ func hasFeature(instance any, f api.Feature) bool {
 
 // testInstance tests the given instance similar to dump
 // TODO refactor together with dump
-func testInstance(instance any) map[string]testResult {
+func testInstance(ctx context.Context, instance any) map[string]testResult {
+	var resMu sync.Mutex
 	res := make(map[string]testResult)
 
 	makeResult := func(key string, val any, err error) {
@@ -266,160 +268,180 @@ func testInstance(instance any) map[string]testResult {
 			}
 			tr.Error = err.Error()
 		}
+		resMu.Lock()
 		res[key] = tr
+		resMu.Unlock()
 	}
 
-	if dev, ok := api.Cap[api.Meter](instance); ok {
-		val, err := dev.CurrentPower()
-		makeResult("power", val, err)
-	}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
 
-	if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
-		val, err := dev.TotalEnergy()
-		makeResult("energy", val, err)
-	}
-
-	if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
-		val, err := dev.ReturnEnergy()
-		makeResult("returnEnergy", val, err)
-	}
-
-	if dev, ok := api.Cap[api.Battery](instance); ok {
-		val, err := dev.Soc()
-		key := "soc"
-		if hasFeature(instance, api.Heating) {
-			key = "temp"
-		}
-		makeResult(key, val, err)
-	}
-
-	if api.HasCap[api.BatteryController](instance) {
-		makeResult("controllable", true, nil)
-	}
-
-	if dev, ok := api.Cap[api.VehicleOdometer](instance); ok {
-		val, err := dev.Odometer()
-		makeResult("odometer", val, err)
-	}
-
-	if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
-		val := dev.Capacity()
-		makeResult("capacity", val, nil)
-	}
-
-	if dev, ok := api.Cap[api.PhaseCurrents](instance); ok {
-		i1, i2, i3, err := dev.Currents()
-		makeResult("phaseCurrents", []float64{i1, i2, i3}, err)
-	}
-
-	if dev, ok := api.Cap[api.PhaseVoltages](instance); ok {
-		u1, u2, u3, err := dev.Voltages()
-		makeResult("phaseVoltages", []float64{u1, u2, u3}, err)
-	}
-
-	if dev, ok := api.Cap[api.PhasePowers](instance); ok {
-		p1, p2, p3, err := dev.Powers()
-		makeResult("phasePowers", []float64{p1, p2, p3}, err)
-	}
-
-	if dev, ok := api.Cap[api.ChargeState](instance); ok {
-		val, err := dev.Status()
-		makeResult("chargeStatus", val, err)
-	}
-
-	if dev, ok := api.Cap[api.Charger](instance); ok {
-		val, err := dev.Enabled()
-		makeResult("enabled", val, err)
-	}
-
-	if dev, ok := api.Cap[api.ChargeRater](instance); ok {
-		val, err := dev.ChargedEnergy()
-		makeResult("chargedEnergy", val, err)
-	}
-
-	if api.HasCap[api.PhaseSwitcher](instance) {
-		makeResult("phases1p3p", true, nil)
-	}
-
-	if hasFeature(instance, api.Heating) {
-		makeResult("heating", true, nil)
-	}
-
-	if hasFeature(instance, api.IntegratedDevice) {
-		makeResult("integratedDevice", true, nil)
-	}
-
-	if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
-		makeResult("icon", dev.Icon(), nil)
-	}
-
-	if cc, ok := api.Cap[api.PhaseDescriber](instance); ok && cc.Phases() == 1 {
-		makeResult("singlePhase", true, nil)
-	}
-
-	if dev, ok := api.Cap[api.VehicleRange](instance); ok {
-		val, err := dev.Range()
-		makeResult("range", val, err)
-	}
-
-	if dev, ok := api.Cap[api.SocLimiter](instance); ok {
-		val, err := dev.GetLimitSoc()
-		key := "vehicleLimitSoc"
-		if hasFeature(instance, api.Heating) {
-			key = "heaterTempLimit"
-		}
-		makeResult(key, val, err)
-	}
-
-	if dev, ok := api.Cap[api.Dimmer](instance); ok {
-		val, err := dev.Dimmed()
-		makeResult("dimmed", val, err)
-	}
-
-	if dev, ok := api.Cap[api.Curtailer](instance); ok {
-		makeResult("curtailable", true, nil)
-		if val, err := dev.Curtailed(); err != nil || val {
-			makeResult("curtailed", true, err)
-		}
-	}
-
-	if dev, ok := api.Cap[api.Identifier](instance); ok {
-		val, err := dev.Identify()
-		makeResult("identifier", val, err)
-	}
-
-	if dev, ok := api.Cap[api.Tariff](instance); ok {
-		rates, err := dev.Rates()
-
-		// Determine field names based on tariff type
-		var valueKey, ratesKey string
-		switch dev.Type() {
-		case api.TariffTypePriceDynamic, api.TariffTypePriceForecast:
-			valueKey = "price"
-			ratesKey = "priceRates"
-		case api.TariffTypeCo2:
-			valueKey = "co2"
-			ratesKey = "co2Rates"
-		case api.TariffTypeSolar:
-			valueKey = "power"
-			ratesKey = "solarRates"
-		default:
-			valueKey = "price"
+		if dev, ok := api.Cap[api.Meter](instance); ok {
+			val, err := dev.CurrentPower()
+			makeResult("power", val, err)
 		}
 
-		if err == nil && len(rates) > 0 {
-			// Get current rate value
-			if rate, err := rates.At(time.Now()); err == nil {
-				makeResult(valueKey, rate.Value, nil)
+		if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
+			val, err := dev.TotalEnergy()
+			makeResult("energy", val, err)
+		}
+
+		if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
+			val, err := dev.ReturnEnergy()
+			makeResult("returnEnergy", val, err)
+		}
+
+		if dev, ok := api.Cap[api.Battery](instance); ok {
+			val, err := dev.Soc()
+			key := "soc"
+			if hasFeature(instance, api.Heating) {
+				key = "temp"
 			}
+			makeResult(key, val, err)
+		}
 
-			if ratesKey != "" {
-				makeResult(ratesKey, rates, nil)
+		if api.HasCap[api.BatteryController](instance) {
+			makeResult("controllable", true, nil)
+		}
+
+		if dev, ok := api.Cap[api.VehicleOdometer](instance); ok {
+			val, err := dev.Odometer()
+			makeResult("odometer", val, err)
+		}
+
+		if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
+			val := dev.Capacity()
+			makeResult("capacity", val, nil)
+		}
+
+		if dev, ok := api.Cap[api.PhaseCurrents](instance); ok {
+			i1, i2, i3, err := dev.Currents()
+			makeResult("phaseCurrents", []float64{i1, i2, i3}, err)
+		}
+
+		if dev, ok := api.Cap[api.PhaseVoltages](instance); ok {
+			u1, u2, u3, err := dev.Voltages()
+			makeResult("phaseVoltages", []float64{u1, u2, u3}, err)
+		}
+
+		if dev, ok := api.Cap[api.PhasePowers](instance); ok {
+			p1, p2, p3, err := dev.Powers()
+			makeResult("phasePowers", []float64{p1, p2, p3}, err)
+		}
+
+		if dev, ok := api.Cap[api.ChargeState](instance); ok {
+			val, err := dev.Status()
+			makeResult("chargeStatus", val, err)
+		}
+
+		if dev, ok := api.Cap[api.Charger](instance); ok {
+			val, err := dev.Enabled()
+			makeResult("enabled", val, err)
+		}
+
+		if dev, ok := api.Cap[api.ChargeRater](instance); ok {
+			val, err := dev.ChargedEnergy()
+			makeResult("chargedEnergy", val, err)
+		}
+
+		if api.HasCap[api.PhaseSwitcher](instance) {
+			makeResult("phases1p3p", true, nil)
+		}
+
+		if hasFeature(instance, api.Heating) {
+			makeResult("heating", true, nil)
+		}
+
+		if hasFeature(instance, api.IntegratedDevice) {
+			makeResult("integratedDevice", true, nil)
+		}
+
+		if hasFeature(instance, api.SwitchDevice) {
+			makeResult("switchDevice", true, nil)
+		}
+
+		if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
+			makeResult("icon", dev.Icon(), nil)
+		}
+
+		if cc, ok := api.Cap[api.PhaseDescriber](instance); ok && cc.Phases() == 1 {
+			makeResult("singlePhase", true, nil)
+		}
+
+		if dev, ok := api.Cap[api.VehicleRange](instance); ok {
+			val, err := dev.Range()
+			makeResult("range", val, err)
+		}
+
+		if dev, ok := api.Cap[api.SocLimiter](instance); ok {
+			val, err := dev.GetLimitSoc()
+			key := "vehicleLimitSoc"
+			if hasFeature(instance, api.Heating) {
+				key = "heaterTempLimit"
+			}
+			makeResult(key, val, err)
+		}
+
+		if dev, ok := api.Cap[api.Dimmer](instance); ok {
+			val, err := dev.Dimmed()
+			makeResult("dimmed", val, err)
+		}
+
+		if dev, ok := api.Cap[api.Curtailer](instance); ok {
+			makeResult("curtailable", true, nil)
+			if val, err := dev.Curtailed(); err != nil || val {
+				makeResult("curtailed", true, err)
 			}
 		}
+
+		if dev, ok := api.Cap[api.Identifier](instance); ok {
+			val, err := dev.Identify()
+			makeResult("identifier", val, err)
+		}
+
+		if dev, ok := api.Cap[api.Tariff](instance); ok {
+			rates, err := dev.Rates()
+
+			// Determine field names based on tariff type
+			var valueKey, ratesKey string
+			switch dev.Type() {
+			case api.TariffTypePriceDynamic, api.TariffTypePriceForecast:
+				valueKey = "price"
+				ratesKey = "priceRates"
+			case api.TariffTypeCo2:
+				valueKey = "co2"
+				ratesKey = "co2Rates"
+			case api.TariffTypeSolar:
+				valueKey = "power"
+				ratesKey = "solarRates"
+			default:
+				valueKey = "price"
+			}
+
+			if err == nil && len(rates) > 0 {
+				// Get current rate value
+				if rate, err := rates.At(time.Now()); err == nil {
+					makeResult(valueKey, rate.Value, nil)
+				}
+
+				if ratesKey != "" {
+					makeResult(ratesKey, rates, nil)
+				}
+			}
+		}
+	}()
+
+	// bound the probe phase: on ctx.Done return collected results so far. A leaked
+	// getter goroutine keeps writing to res safely under resMu while we return a copy.
+	select {
+	case <-done:
+	case <-ctx.Done():
 	}
 
-	return res
+	resMu.Lock()
+	defer resMu.Unlock()
+	return maps.Clone(res)
 }
 
 // mergeMaskedAny similar to mergeMasked but for interfaces

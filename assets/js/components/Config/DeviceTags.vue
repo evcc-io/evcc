@@ -220,6 +220,9 @@ export default {
 					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
+				case "switchDevice":
+					// switch device means no current control
+					return this.$t(`config.deviceValue.${value ? "no" : "yes"}`);
 				case "price":
 				case "gridPrice":
 				case "feedinPrice":

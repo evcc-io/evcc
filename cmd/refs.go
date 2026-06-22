@@ -64,13 +64,14 @@ func collectSiteRefs(conf globalconfig.All) error {
 	references.meter = append(references.meter, refs.Meters.BatteryMetersRef...)
 	references.meter = append(references.meter, refs.Meters.ExtMetersRef...)
 	references.meter = append(references.meter, refs.Meters.AuxMetersRef...)
+	references.meter = append(references.meter, refs.Meters.ConsumerMetersRef...)
 
 	// append devices from settings
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
 		references.meter = append(references.meter, v)
 	}
 
-	for _, key := range []string{keys.PvMeters, keys.BatteryMeters, keys.ExtMeters, keys.AuxMeters} {
+	for _, key := range []string{keys.PvMeters, keys.BatteryMeters, keys.ExtMeters, keys.AuxMeters, keys.ConsumerMeters} {
 		if v, err := settings.String(key); err == nil && v != "" {
 			references.meter = append(references.meter, strings.Split(v, ",")...)
 		}
