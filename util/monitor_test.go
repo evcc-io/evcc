@@ -80,6 +80,6 @@ func TestMonitorGetContext(t *testing.T) {
 
 	start := time.Now()
 	_, err := m.GetContext(ctx)
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
 	assert.Less(t, time.Since(start), time.Second, "context must cancel the first-read wait")
 }
