@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"maps"
 	"reflect"
 	"slices"
 	"strings"
@@ -440,11 +441,7 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 
 	resMu.Lock()
 	defer resMu.Unlock()
-	out := make(map[string]testResult, len(res))
-	for k, v := range res {
-		out[k] = v
-	}
-	return out
+	return maps.Clone(res)
 }
 
 // mergeMaskedAny similar to mergeMasked but for interfaces
