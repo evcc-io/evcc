@@ -14,6 +14,15 @@ params:
   - name: host
   - name: schema
   - preset: battery-params
+  - name: chargeonhold
+    type: bool
+    default: false
+    description:
+      de: Laden im Haltemodus erzwingen
+      en: Force charging in hold mode
+    help:
+      de: Erzwingt das Laden der Batterie im Haltemodus um das Entladen zu verhindern.
+      en: Forces charging the battery in hold mode to prevent discharging.
 render: |
   type: custom
   power:
@@ -62,10 +71,20 @@ render: |
         headers:
         - content-type: application/json
         body: '{"ENERGY":{"SAFE_CHARGE_PROHIBIT":"u8_01"}}'  # self consumption
-    - case: 2 # hold (not implemented)
+    - case: 2 # hold (true hold not possible with SENEC, but we can prevent discharging by forcing charging)
       set:
-        source: error
-        error: ErrNotAvailable
+        {{- if .chargeonhold }}
+          source: http
+          uri: {{ .schema }}://{{ .host }}/lala.cgi
+          insecure: true
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01"}}'  # force charging to prevent discharging
+        {{- else }}
+          source: error
+          error: ErrNotAvailable
+        {{- end }}
     - case: 3 # charge
       set:
         source: http
