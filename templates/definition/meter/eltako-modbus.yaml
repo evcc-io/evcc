@@ -5,8 +5,10 @@ products:
       generic: DSZ15DZMOD
 requirements:
   description:
-    de: Getestet zusammen mit dem Modbus-Gateway von Eltako (ZGW16-IP). Im Gateway müssen folgende Register aktiviert werden: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075 
-    en: Tested with the Modbus gateway Eltako ZGW16-IP. In the gateway settings you need to activate the following registers: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075       
+    de: |
+      Getestet zusammen mit dem Modbus-Gateway von Eltako (ZGW16-IP). Im Gateway müssen folgende Register aktiviert werden: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075 
+    en: |
+      Tested with the Modbus gateway Eltako ZGW16-IP. In the gateway settings you need to activate the following registers: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075       
 params:
   - name: usage
     choice: ["charge", "grid", "pv", "battery"]
