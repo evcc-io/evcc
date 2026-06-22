@@ -166,7 +166,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		switch {
 		case strings.HasSuffix(upper, "_ACTIVE"):
 			status = api.StatusC
-		// the car reports finished if it's plugged in but not charging, e.g. if the charger is limited by evcc. Guard for not overriding a explicit charge status
+		// the car reports finished if it's plugged in but not charging
 		case strings.HasSuffix(upper, "_FINISHED"):
 			status = api.StatusB
 		}
