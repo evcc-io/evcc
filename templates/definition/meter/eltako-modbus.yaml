@@ -24,7 +24,7 @@ params:
       en: Modbus slave id of the specific meter
 render: |
   type: custom
-  power: # current power
+  power: # current power in W
     source: modbus
     id: {{ .meter_id }}
     uri: {{ joinHostPort .host .port }}
@@ -34,7 +34,7 @@ render: |
       decode: int32
     timeout: 2s
 
-  energy: # meter in kwh
+  energy: # meter in kWh
     source: modbus
     id: {{ .meter_id }}
     uri: {{ joinHostPort .host .port }}
@@ -44,7 +44,7 @@ render: |
       decode: int32
     timeout: 2s
     scale: 0.01
-  returnenergy: # meter in kwh
+  returnenergy: # return meter in kWh
     source: modbus
     id: {{ .meter_id }}
     uri: {{ joinHostPort .host .port }}
