@@ -11,10 +11,8 @@ import (
 type Accumulator struct {
 	clock             clock.Clock
 	updated           time.Time
-	energyMeter       *float64 // kWh, last accepted total
-	returnEnergyMeter *float64 // kWh, last accepted total
-	energyReset       *float64 // kWh, pending reset candidate (unconfirmed)
-	returnEnergyReset *float64 // kWh, pending reset candidate (unconfirmed)
+	energyMeter       *float64 // kWh
+	returnEnergyMeter *float64 // kWh
 	Energy            float64  `json:"energy"`       // kWh
 	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
 }
@@ -52,63 +50,36 @@ func (m *Accumulator) String() string {
 	return b.String()
 }
 
-// SetEnergyMeterTotal adds the difference to the last total meter value in kWh.
-//
-// A single reading below the last accepted total (e.g. a transient bad read or
-// a device sentinel decoded as 0) must not lower the baseline, otherwise the
-// next valid reading would inject a huge bogus delta. A genuine counter reset is
-// therefore only accepted once a second, strictly increasing reading confirms
-// the counter has resumed counting from a low base.
+// SetEnergyMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetEnergyMeterTotal(v float64) {
-	defer func() { m.updated = m.clock.Now() }()
+	defer func() {
+		m.updated = m.clock.Now()
+		m.energyMeter = new(v)
+	}()
 
 	if m.energyMeter == nil {
-		m.energyMeter = new(v)
 		return
 	}
 
 	if v >= *m.energyMeter {
 		m.Energy += v - *m.energyMeter
-		m.energyMeter = new(v)
-		m.energyReset = nil
-		return
 	}
-
-	// counter went backwards: keep the baseline and wait for confirmation
-	if m.energyReset != nil && v > *m.energyReset {
-		m.Energy += v - *m.energyReset
-		m.energyMeter = new(v)
-		m.energyReset = nil
-		return
-	}
-	m.energyReset = new(v)
 }
 
-// SetReturnEnergyMeterTotal adds the difference to the last total meter value in
-// kWh. See [Accumulator.SetEnergyMeterTotal] for the backward-jump handling.
+// SetReturnEnergyMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetReturnEnergyMeterTotal(v float64) {
-	defer func() { m.updated = m.clock.Now() }()
+	defer func() {
+		m.updated = m.clock.Now()
+		m.returnEnergyMeter = new(v)
+	}()
 
 	if m.returnEnergyMeter == nil {
-		m.returnEnergyMeter = new(v)
 		return
 	}
 
 	if v >= *m.returnEnergyMeter {
 		m.ReturnEnergy += v - *m.returnEnergyMeter
-		m.returnEnergyMeter = new(v)
-		m.returnEnergyReset = nil
-		return
 	}
-
-	// counter went backwards: keep the baseline and wait for confirmation
-	if m.returnEnergyReset != nil && v > *m.returnEnergyReset {
-		m.ReturnEnergy += v - *m.returnEnergyReset
-		m.returnEnergyMeter = new(v)
-		m.returnEnergyReset = nil
-		return
-	}
-	m.returnEnergyReset = new(v)
 }
 
 // AddEnergy adds the given energy in kWh to the energy total
