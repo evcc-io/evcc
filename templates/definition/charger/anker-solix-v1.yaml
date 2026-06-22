@@ -1,4 +1,3 @@
-```yaml
 template: anker-solix-v1
 
 products:
@@ -14,8 +13,9 @@ requirements:
       OCPP in der Anker-App aktivieren.
 
       * OCPP-Backend: evcc
-      * URL: `ws://<evcc-host>:8887/`
+      * Backend-URL / Central System: `ws://<evcc-host>:8887/`
       * Protokoll: OCPP 1.6J / JSON / WebSocket im lokalen Netzwerk
+      * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
       * Keinen Pfad und keine Station-ID manuell an die URL anhängen.
       * Die Wallbox registriert sich mit ihrer eigenen Station ID bei evcc.
       * Diese Station ID wird in evcc als `stationid` verwendet.
@@ -26,8 +26,9 @@ requirements:
       Enable OCPP in the Anker app.
 
       * OCPP backend: evcc
-      * URL: `ws://<evcc-host>:8887/`
+      * Backend URL / Central System: `ws://<evcc-host>:8887/`
       * Protocol: OCPP 1.6J / JSON / WebSocket on the local network
+      * No encryption, no authentication, no password
       * Do not manually append a path or station ID to the URL.
       * The charger registers with its own station ID in evcc.
       * This station ID is used as `stationid` in evcc.
@@ -51,9 +52,11 @@ caveats:
 
 params:
   - preset: ocpp
+  - name: metervalues
+    default: Energy.Active.Import.Register,Power.Active.Import,Current.Import
 
 render: |
   {{ include "ocpp" . }}
   nochangeavailability: true
   profilekindrelative: true
-```
+  remotestart: true
