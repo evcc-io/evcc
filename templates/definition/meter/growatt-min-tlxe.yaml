@@ -5,8 +5,6 @@ products:
       generic: MIN 3000TL-XE (and similar non-hybrid MIN series)
 capabilities: ["pv"]
 params:
-  - name: usage
-    default: pv
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |
