@@ -38,6 +38,34 @@ func TestInstanceBoundedByContext(t *testing.T) {
 	require.Less(t, time.Since(start), 500*time.Millisecond, "testInstance must not wait for blocking getter")
 }
 
+// slowPowerMeter blocks on CurrentPower but returns TotalEnergy immediately.
+type slowPowerMeter struct {
+	done chan struct{}
+}
+
+func (m slowPowerMeter) CurrentPower() (float64, error) {
+	<-m.done
+	return 0, nil
+}
+
+func (m slowPowerMeter) TotalEnergy() (float64, error) {
+	return 42, nil
+}
+
+// TestInstanceParallelProbes ensures a responsive getter returns even while a
+// sibling blocks; sequential probing would starve energy behind power.
+func TestInstanceParallelProbes(t *testing.T) {
+	done := make(chan struct{})
+	defer close(done)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	res := testInstance(ctx, slowPowerMeter{done: done})
+	require.Contains(t, res, "energy", "fast getter must return despite a blocking sibling")
+	require.NotContains(t, res, "power", "blocking getter must be abandoned")
+}
+
 func TestConfigReqUnmarshal(t *testing.T) {
 	var req configReq
 	require.NoError(t, json.Unmarshal([]byte(`{
