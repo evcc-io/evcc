@@ -3,6 +3,12 @@ products:
   - brand: Eltako
     description:
       generic: DSZ15DZMOD
+requirements:
+  description:
+    de: |
+      Getestet
+    en: |
+      Tested   
 params:
   - name: usage
     choice: ["charge", "grid", "pv"]
