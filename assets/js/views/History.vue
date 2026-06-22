@@ -116,16 +116,12 @@ import Header from "../components/Top/Header.vue";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import GroupChart, {
-	type HistorySeries,
-	alphaColor,
-	stepAlpha,
-} from "../components/History/GroupChart.vue";
+import GroupChart, { type HistorySeries, stepAlpha } from "../components/History/GroupChart.vue";
 import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
-import colors, { resolveColors, deviceColorMap } from "../colors";
+import colors, { resolveColors, deviceColorMap, darken } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
 import { handleDownloadClick } from "@/utils/native";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
@@ -422,7 +418,7 @@ export default defineComponent({
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
 				if (colorPicker) return palette[s.title] || baseColor;
-				return alphaColor(baseColor, stepAlpha(i, Math.max(n, 1)));
+				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
 				let sum = 0;

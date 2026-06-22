@@ -12,8 +12,9 @@ import {
 	forecastGrid,
 	forecastYAxis,
 	tooltipStyle,
+	tooltipTable,
 } from "../Forecast/echarts";
-import colors, { lighterColor, resolveColors, deviceColorMap } from "@/colors";
+import colors, { resolveColors, deviceColorMap, darken } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
@@ -48,16 +49,6 @@ export function stepAlpha(i: number, n: number): number {
 	const step = 0.2;
 	const minAlpha = 0.5;
 	return Math.max(minAlpha, 1 - (n - 1 - i) * step);
-}
-
-export function alphaColor(color: string, alpha: number): string {
-	const c = (color || "").trim().toLowerCase();
-	const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
-		.toString(16)
-		.padStart(2, "0");
-	if (c.length === 7) return c + a;
-	if (c.length === 9) return c.slice(0, 7) + a;
-	return c;
 }
 
 // Symmetric axis regardless of whether the period contains both directions.
@@ -95,6 +86,7 @@ export default defineComponent({
 		previousFocusedEntity: number | null;
 		previousPeriod: PERIODS;
 		previousSeriesKey: string;
+		activeSlot: number | null;
 	} {
 		return {
 			chart: null,
@@ -103,6 +95,7 @@ export default defineComponent({
 			previousFocusedEntity: this.focusedEntity as number | null,
 			previousPeriod: this.period as PERIODS,
 			previousSeriesKey: "",
+			activeSlot: null,
 		};
 	},
 	computed: {
@@ -205,8 +198,21 @@ export default defineComponent({
 		categoryKeys(): string[] {
 			return this.categoryTimestamps.map((t) => this.timestampKey(t));
 		},
+		// Which category slots carry a bar, so hover can skip empty slots.
+		slotsWithData(): boolean[] {
+			const index = new Map(this.categoryKeys.map((k, i) => [k, i]));
+			const has = new Array(this.categoryKeys.length).fill(false);
+			for (const s of this.visibleSeries) {
+				for (const slot of s.data) {
+					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
+					const idx = index.get(this.timestampKey(new Date(slot.start).getTime()));
+					if (idx !== undefined) has[idx] = true;
+				}
+			}
+			return has;
+		},
 		entryColors(): string[] {
-			// Picker groups color per entity; pv/battery use alpha steps of the group color.
+			// Picker groups color per entity; pv/battery use darker steps of the group color.
 			if (hasColorPicker(this.group)) {
 				const mutedColor = colors.muted || this.color;
 				const titles: string[] = [];
@@ -222,9 +228,7 @@ export default defineComponent({
 				});
 			}
 			if (this.series.length <= 1) return [this.color];
-			return this.series.map((_, i) =>
-				alphaColor(this.color, stepAlpha(i, this.series.length))
-			);
+			return this.series.map((_, i) => darken(this.color, stepAlpha(i, this.series.length)));
 		},
 		echartsSeries() {
 			const cats = this.categoryKeys;
@@ -305,10 +309,15 @@ export default defineComponent({
 				}
 			}
 
+			// hover dims all but the active slot (onChartMouseMove); silent stops single-segment highlight
+			const barEmphasis = {
+				silent: true,
+				emphasis: { focus: "self" },
+				blur: { itemStyle: { opacity: 0.25 } },
+			};
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
-				const returnEnergyColor =
-					(s.group === "grid" && colors.export) || lighterColor(c) || c;
+				const returnEnergyColor = (s.group === "grid" && colors.export) || c;
 				const energyValues = energyByEntity[i]!;
 				const returnEnergyValues = returnEnergyByEntity[i]!;
 				const energyName =
@@ -361,6 +370,7 @@ export default defineComponent({
 					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
+					...barEmphasis,
 				});
 				result.push({
 					id: `entity-${stableIdx}-returnEnergy`,
@@ -371,6 +381,7 @@ export default defineComponent({
 					itemStyle: { color: returnEnergyColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
+					...barEmphasis,
 				});
 			});
 
@@ -404,6 +415,17 @@ export default defineComponent({
 				? (t: number) => this.fmtMonthNarrow(new Date(t))
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
+		// Column headers for bidirectional tooltips (grid: imported/exported,
+		// battery: charged/discharged). Null when the group has no direction labels.
+		directionHeaders(): string[] | null {
+			if (!this.isBidirectional) return null;
+			const energyKey = `main.history.direction.${this.group}.energy`;
+			const returnEnergyKey = `main.history.direction.${this.group}.returnEnergy`;
+			const energy = this.$t(energyKey);
+			const returnEnergy = this.$t(returnEnergyKey);
+			if (energy === energyKey || returnEnergy === returnEnergyKey) return null;
+			return [String(energy), String(returnEnergy)];
+		},
 		tooltipDateLabel(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
 				return (t) => this.fmtTimeSlot(new Date(t), 15 * 60 * 1000);
@@ -426,7 +448,12 @@ export default defineComponent({
 				grid: { ...forecastGrid(), left: 0, right: 36 },
 				tooltip: {
 					trigger: "axis",
-					axisPointer: { type: "shadow", shadowStyle: { color: "transparent" } },
+					// transparent shadow snaps to slots without a band; triggerEmphasis off (it hard-codes notBlur), we dim slots in onChartMouseMove
+					axisPointer: {
+						type: "shadow",
+						triggerEmphasis: false,
+						shadowStyle: { color: "transparent" },
+					},
 					...tooltipStyle(this.tooltipColor),
 					// Allow the tooltip to float above the 180px chart container instead
 					// of being clamped by `confine: true` — otherwise tall bars push the
@@ -493,7 +520,7 @@ export default defineComponent({
 						const first = params.find((p) => p.dataIndex != null);
 						if (!first) return "";
 						const ts = cats[first.dataIndex];
-						const head = `<div>${ts != null ? tooltipDate(ts) : ""}</div>`;
+						const head = ts != null ? tooltipDate(ts) : "";
 						const formatValue = (v: number) => {
 							const watts = Math.abs(v) * 1000;
 							return this.period === PERIODS.DAY
@@ -525,31 +552,17 @@ export default defineComponent({
 						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
-						if (this.isBidirectional) {
-							const rows = indices
-								.map((i) => {
-									const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
-									const val = `<strong>${formatValue(t.energy)} / ${formatValue(t.returnEnergy)}</strong>`;
-									const name = nameByIdx.get(i) ?? "";
-									return showName
-										? `<div>${name}: ${val}</div>`
-										: `<div>${val}</div>`;
-								})
-								.join("");
-							return head + rows;
-						}
-
-						const rows = indices
-							.map((i) => {
-								const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
-								const val = `<strong>${formatValue(t.energy + t.returnEnergy)}</strong>`;
-								const name = nameByIdx.get(i) ?? "";
-								return showName
-									? `<div>${name}: ${val}</div>`
-									: `<div>${val}</div>`;
-							})
-							.join("");
-						return head + rows;
+						const rows = indices.map((i) => {
+							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+							const values = this.isBidirectional
+								? [formatValue(t.energy), formatValue(t.returnEnergy)]
+								: [formatValue(t.energy + t.returnEnergy)];
+							return {
+								name: showName ? (nameByIdx.get(i) ?? "") : undefined,
+								values,
+							};
+						});
+						return tooltipTable(head, rows, this.directionHeaders ?? undefined);
 					},
 				},
 				xAxis: {
@@ -663,6 +676,9 @@ export default defineComponent({
 		const el = this.$refs["chartEl"] as HTMLElement;
 		this.chart = markRaw(echarts.init(el));
 		this.chart.setOption((this as unknown as WithChartOption).chartOption);
+		const zr = this.chart.getZr();
+		zr.on("mousemove", this.onChartMouseMove);
+		zr.on("globalout", this.clearHighlight);
 		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
 		this.isMobile = this.mediaQuery.matches;
 		this.mediaQuery.addEventListener("change", this.onMediaChange);
@@ -676,6 +692,31 @@ export default defineComponent({
 	methods: {
 		resize() {
 			this.chart?.resize();
+		},
+		// highlight hovered slot, dim rest. manual because built-in axis highlight hard-codes notBlur
+		onChartMouseMove(e: { offsetX: number; offsetY: number }) {
+			if (!this.chart) return;
+			const point: [number, number] = [e.offsetX, e.offsetY];
+			if (!this.chart.containPixel({ gridIndex: 0 }, point)) {
+				this.clearHighlight();
+				return;
+			}
+			const grid = this.chart.convertFromPixel({ gridIndex: 0 }, point) as number[];
+			const slot = Math.round(grid[0]!);
+			if (slot === this.activeSlot) return;
+			// Skip empty slots, else hovering a gap would dim the whole chart.
+			if (!this.slotsWithData[slot]) {
+				this.clearHighlight();
+				return;
+			}
+			this.activeSlot = slot;
+			this.chart.dispatchAction({ type: "downplay" });
+			this.chart.dispatchAction({ type: "highlight", dataIndex: slot });
+		},
+		clearHighlight() {
+			if (this.activeSlot === null) return;
+			this.activeSlot = null;
+			this.chart?.dispatchAction({ type: "downplay" });
 		},
 		onMediaChange(e: MediaQueryListEvent) {
 			this.isMobile = e.matches;

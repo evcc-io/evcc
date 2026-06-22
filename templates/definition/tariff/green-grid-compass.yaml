@@ -42,7 +42,7 @@ render: |
     jq: |
       .measurements[0].measurementValues |  map({ 
         "start": .timestamp,
-        "end": (.timestamp | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime + 3600 | strftime("%FT%TZ")),
+        "end": (.timestamp | fromdateiso8601 + 3600 | todateiso8601),
         "value": .value
       }) | tostring
     cache: 1h
