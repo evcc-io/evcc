@@ -142,21 +142,43 @@ func TestSocFreshestField(t *testing.T) {
 	// first datasets carry both SoC fields at 57, the high-priority field winning
 	deliver(map[string]point{
 		FieldBatteryStateReportSoc: {Value: "57"},
-		FieldHvBatteryLevel:        {Value: "57.0"},
+		FieldHvBatteryLevelValue:   {Value: "57.0"},
 	})
 	deliver(map[string]point{
 		FieldBatteryStateReportSoc: {Value: "57"},
-		FieldHvBatteryLevel:        {Value: "57.0"},
+		FieldHvBatteryLevelValue:   {Value: "57.0"},
 	})
 
 	// later datasets only refresh the fallback field as the car charges
 	for _, v := range []string{"58.0", "59.0", "61.0"} {
-		deliver(map[string]point{FieldHvBatteryLevel: {Value: v}})
+		deliver(map[string]point{FieldHvBatteryLevelValue: {Value: v}})
 	}
 
 	soc, err := testProvider(data).Soc()
 	require.NoError(t, err)
 	assert.Equal(t, 61.0, soc, "the still-updating fallback wins over the stale high-priority field")
+}
+
+// TestSocHvBatteryLevelValid reproduces #31084: battery_level_HV.value (74) is
+// preferred over ambiguous battery_state_report.soc (45) only when state is VALID.
+func TestSocHvBatteryLevelValid(t *testing.T) {
+	raw := []dataPoint{
+		{DataFieldName: FieldBatteryStateReportSoc, Value: "74"},
+		{DataFieldName: FieldBatteryStateReportSoc, Value: "45"},
+		{DataFieldName: FieldBatteryStateReportSoc, Value: "45"},
+		{DataFieldName: FieldHvBatteryLevelValue, Value: "74.0"},
+	}
+
+	// without a VALID flag the ambiguous battery_state_report.soc still wins (45)
+	soc, err := testProvider(points(raw)).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 45.0, soc, "prior behaviour kept when HV level is not flagged valid")
+
+	// with battery_level_HV.state VALID, battery_level_HV.value (74) is preferred
+	valid := append(raw, dataPoint{DataFieldName: FieldHvBatteryLevelState, Value: hvBatteryLevelValid})
+	soc, err = testProvider(points(valid)).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 74.0, soc, "battery_level_HV.value wins when flagged VALID")
 }
 
 // TestPoints guards that a data point with a generic field name ("value") is

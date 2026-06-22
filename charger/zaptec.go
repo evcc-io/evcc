@@ -147,8 +147,17 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 		return nil, err
 	}
 
-	if err := c.testInstallationPermission(); err == nil || c.version == zaptec.ZaptecGo1_Pro {
+	inst, err := c.installation()
+	if err == nil || c.version == zaptec.ZaptecGo1_Pro {
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
+	}
+
+	// the Zaptec Go 2 switches phases via the installation's per-phase available current;
+	// 1p->3p only works when all phases are set equal, so warn about an inconsistent setting
+	if err == nil && c.version == zaptec.ZaptecGo2 {
+		if p1, p2, p3 := inst.AvailableCurrentPhase1, inst.AvailableCurrentPhase2, inst.AvailableCurrentPhase3; p2 != p1 || p3 != p1 {
+			c.log.WARN.Printf("installation available current is unequal across phases (%.3gA/%.3gA/%.3gA); phase switching back to 3p requires available current on all phases", p1, p2, p3)
+		}
 	}
 
 	return c, nil
@@ -415,11 +424,13 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) testInstallationPermission() error {
+func (c *Zaptec) installation() (zaptec.Installation, error) {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
-	return c.GetJSON(uri, &res)
+	err := c.GetJSON(uri, &res)
+
+	return res, err
 }
 
 func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {

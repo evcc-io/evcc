@@ -109,4 +109,24 @@ describe("formatJson", () => {
   ]
 }`);
   });
+
+  it("sorts template first inside nested config of array items", () => {
+    const obj = {
+      charger: [
+        {
+          config: { host: "192.168.1.1", template: "tesla" },
+          name: "db:1",
+          type: "template",
+          id: 1,
+        },
+      ],
+    };
+    const result = formatJson(obj, ["charger"]);
+
+    expect(result).toBe(`{
+  "charger": [
+    {"id":1,"name":"db:1","type":"template","config":{"template":"tesla","host":"192.168.1.1"}}
+  ]
+}`);
+  });
 });
