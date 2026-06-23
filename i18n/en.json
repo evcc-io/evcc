@@ -550,7 +550,7 @@
       "usage": {
         "aux": "Self-regulating consumer",
         "battery": "Battery",
-        "charge": "Consumer / Charger",
+        "charge": "Charger",
         "grid": "Grid",
         "label": "Usage",
         "pv": "Production"
