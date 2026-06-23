@@ -10,6 +10,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -32,6 +33,8 @@ const (
 
 var portalHost = strings.TrimPrefix(BaseURL, "https://")
 
+var ErrNotConfigured = errors.New("EU Data Act subscription not configured")
+
 // API is the EU Data Act portal client. It authenticates through the VW group
 // identity service and reads vehicle data from the portal's data delivery API.
 //
@@ -46,11 +49,35 @@ type API struct {
 	user, password string
 }
 
-// NewAPI creates an EU Data Act client and performs the initial login
+// apiKey identifies a portal account. All vehicles of the same brand and user
+// share one authenticated client.
+type apiKey struct {
+	brand brand
+	user  string
+}
+
+var (
+	apiMu  sync.Mutex
+	apiReg = make(map[apiKey]*API)
+)
+
+// NewAPI returns the EU Data Act client for the given brand and user, performing
+// the initial login on first use. Subsequent calls for the same brand and user
+// return the already authenticated client so that several vehicles of one
+// account share a single portal session instead of competing for it.
 func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 	b, ok := resolveBrand(brandName)
 	if !ok {
 		return nil, fmt.Errorf("unknown brand: %s", brandName)
+	}
+
+	key := apiKey{brand: b, user: user}
+
+	apiMu.Lock()
+	defer apiMu.Unlock()
+
+	if v, ok := apiReg[key]; ok {
+		return v, nil
 	}
 
 	v := &API{
@@ -64,6 +91,8 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 	if err := v.login(); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
+
+	apiReg[key] = v
 
 	return v, nil
 }
@@ -159,9 +188,23 @@ func (v *API) login() error {
 		return errors.New(resp.Status)
 	}
 
+	final := resp.Request.URL
+
+	// VW periodically interjects an optional marketing consent page after an
+	// otherwise successful login. Skip it without consenting (#29760).
+	if cb, err := vwidentity.MarketingConsentCallback(final); err != nil {
+		return err
+	} else if cb != nil {
+		resp, err = v.Get(cb.String())
+		if err != nil {
+			return err
+		}
+		resp.Body.Close()
+		final = resp.Request.URL
+	}
+
 	// a successful login lands on the portal; a remaining signin/consent url means
 	// the user has not completed the one-time browser consent and vehicle linking
-	final := resp.Request.URL
 	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") {
 		return api.UrlError(
 			fmt.Sprintf("login did not complete- open the portal and confirm consent: %s", final),
@@ -247,6 +290,9 @@ func (v *API) identifier(vin string) (string, error) {
 		Identifier string `json:"Identifier"`
 	}
 	if err := v.getJSON(uri, &res); err != nil {
+		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(404) {
+			err = ErrNotConfigured
+		}
 		return "", err
 	}
 

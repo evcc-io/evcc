@@ -10,11 +10,9 @@ import (
 )
 
 const (
-	// portalInterval is the cadence at which the portal delivers a new dataset
-	portalInterval = 15 * time.Minute
 	// portalLatency is the margin added to a dataset's timestamp before the
 	// following dataset is expected to be available for download
-	portalLatency = 30 * time.Second
+	portalLatency = time.Minute
 )
 
 // Provider implements the vehicle api on top of the EU Data Act dataset.
@@ -32,20 +30,19 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{}
-	s := newStore(api, vin)
+	s := sharedStore(api)
 
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
-		ts, err := s.update()
+		ts, err := s.update(vin)
 		if err != nil {
-			return nil, err
+			log.ERROR.Println(err)
+		} else if !ts.IsZero() {
+			time.AfterFunc(resetDelay(ts, cache), cached.Reset)
 		}
-		if !ts.IsZero() {
-			time.AfterFunc(resetDelay(ts, time.Now()), cached.Reset)
-		}
-		return s.snapshot(), nil
+		return s.snapshot(vin), nil
 	}, cache)
 
 	v.statusG = cached.Get
@@ -56,21 +53,23 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 // resetDelay returns the delay until the dataset following the one delivered at
 // ts is expected to be available. It never returns less than portalLatency so a
 // late or repeated dataset does not cause immediate re-polling.
-func resetDelay(ts, now time.Time) time.Duration {
-	if d := ts.Add(portalInterval + portalLatency).Sub(now); d > portalLatency {
+func resetDelay(ts time.Time, cache time.Duration) time.Duration {
+	if d := time.Until(ts.Add(cache + portalLatency)); d > portalLatency {
 		return d
 	}
 	return portalLatency
 }
 
-// lookup returns the first present, non-empty value among the given field names
+// lookup returns the freshest present value among the given field names (most to
+// least authoritative); the highest Seq wins, equal Seq keeps the priority order.
 func lookup(data map[string]point, fields ...string) *point {
+	var best *point
 	for _, f := range fields {
-		if v, ok := data[f]; ok {
-			return new(v)
+		if v, ok := data[f]; ok && (best == nil || v.Seq > best.Seq) {
+			best = new(v)
 		}
 	}
-	return nil
+	return best
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -82,7 +81,14 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldSoc, FieldHvSoc); p != nil {
+	// use battery_level_HV.value when its state reports valid
+	if s, ok := data[FieldHvBatteryLevelState]; ok && s.Value == hvBatteryLevelValid {
+		if p, ok := data[FieldHvBatteryLevelValue]; ok {
+			return strconv.ParseFloat(p.Value, 64)
+		}
+	}
+
+	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevelValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -98,7 +104,7 @@ func (v *Provider) Range() (int64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldRange, FieldRangePrimary); p != nil {
+	if p := lookup(data, FieldRangeSecondary, FieldRangePrimary, FieldRangeCombined, KeyRangeID3); p != nil {
 		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}
@@ -133,7 +139,7 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldOdometer); p != nil {
+	if p := lookup(data, FieldOdometer, FieldOdometerValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -151,12 +157,28 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, err
 	}
 
-	if p := lookup(data, FieldPlugState); p != nil && strings.EqualFold(p.Value, "connected") {
+	// block 1: explicit plug state
+	if p := lookup(data, FieldPlugState, FieldChargingPlug1ConnectionState); p != nil && strings.EqualFold(p.Value, "connected") {
 		status = api.StatusB
 	}
 
-	if p := lookup(data, FieldChargingState); p != nil && strings.EqualFold(p.Value, "charging") {
+	// block 2: flat charging_state field and the current_charge_state field
+	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
+		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
+			strings.EqualFold(p.Value, "conservationCharging") || strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
 		status = api.StatusC
+	}
+
+	// block 3: charging_scenario is the most explicit plug/charge signal
+	if p := lookup(data, FieldChargingScenario); p != nil && status != api.StatusC {
+		upper := strings.ToUpper(p.Value)
+		switch {
+		case strings.HasSuffix(upper, "_ACTIVE"):
+			status = api.StatusC
+		// the car reports finished if it's plugged in but not charging
+		case strings.HasSuffix(upper, "_FINISHED"):
+			status = api.StatusB
+		}
 	}
 
 	return status, nil

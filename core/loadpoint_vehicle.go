@@ -361,6 +361,11 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 // vehicleClimateActive checks if vehicle has active climate request
 func (lp *Loadpoint) vehicleClimateActive() bool {
+	// skip climater detection entirely if the vehicle opts out
+	if lp.vehicleHasFeature(api.ClimaterDisabled) {
+		return false
+	}
+
 	if cl, ok := api.Cap[api.VehicleClimater](lp.GetVehicle()); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {

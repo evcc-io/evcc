@@ -28,11 +28,6 @@ var brands = map[string]brand{
 	"Cupra":      {"f85e5b69-e3b2-43aa-9c0d-1b7d0e0b576f@apps_vw-dilab_com", "CUPRA"},
 }
 
-// Brands returns the supported brand names
-func Brands() []string {
-	return []string{"Volkswagen", "Audi", "Skoda", "Seat", "Cupra"}
-}
-
 // resolveBrand looks up a brand by name, case-insensitively
 func resolveBrand(name string) (brand, bool) {
 	for k, b := range brands {
@@ -80,17 +75,21 @@ type dataset struct {
 	CreatedOn time.Time `json:"createdOn"`
 }
 
-// dataPoint is a single data point as delivered in the dataset JSON document
+// dataPoint is a single data point as delivered in the dataset JSON document.
+// Key is the data point's unique GUID, used when DataFieldName is generic (e.g. "value").
 type dataPoint struct {
-	DataFieldName string `json:"dataFieldName"`
-	Value         string `json:"value"`
-	TimestampUtc  string `json:"timestampUtc"`
+	Key           string     `json:"key"`
+	DataFieldName string     `json:"dataFieldName"`
+	Value         string     `json:"value"`
+	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
-// point is a decoded data point: its value and the time it was recorded
+// point is a decoded data point: its value, the time it was recorded and the
+// delivery sequence of the dataset it last arrived in (higher Seq is newer).
 type point struct {
 	Value     string
 	Timestamp time.Time
+	Seq       uint64
 }
 
 // datasetFile is the JSON document contained in a dataset zip archive
@@ -101,16 +100,46 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
-	FieldSoc           = "state_of_charge"
-	FieldHvSoc         = "hv_soc"
-	FieldRange         = "cruising_range_combined"
-	FieldRangePrimary  = "cruising_range_primary_engine"
+	// status
+	FieldChargingState                = "charging_state"
+	FieldChargingPlug1ConnectionState = "charging_plug1_connectionstate"
+	FieldCurrentChargeState           = "charging_state_report.current_charge_state"
+	FieldChargingScenario             = "charging_state_report.charging_scenario"
+	FieldPlugState                    = "plug_state"
+
+	// soc
+	FieldBatteryStateReportSoc = "battery_state_report.soc"
+	FieldSoc                   = "state_of_charge"
+	FieldHvSoc                 = "hv_soc"
+	FieldHvBatteryLevelValue   = "battery_level_HV.value"
+	FieldHvBatteryLevelState   = "battery_level_HV.state"
+
+	// target soc
+	FieldTargetSoc = "settings.target_soc"
+
+	// range
+	FieldRangeCombined  = "cruising_range_combined"
+	FieldRangePrimary   = "cruising_range_primary_engine"
+	FieldRangeSecondary = "cruising_range_secondary_engine"
+	KeyRangeID3         = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 cruising range, delivered as "value"
+
+	// odo
 	FieldOdometer      = "mileage"
-	FieldChargingState = "charging_state"
-	FieldPlugState     = "plug_state"
-	FieldTargetSoc     = "settings.target_soc"
+	FieldOdometerValue = "mileage.value"
+
+	// time
 	FieldRemainingTime = "remaining_charging_time"
 )
+
+// hvBatteryLevelValid is the battery_level_HV.state value that marks
+// battery_level_HV.value as a trustworthy SoC reading
+const hvBatteryLevelValid = "VALID"
+
+// knownKeys lists data point GUIDs that are indexed by their key instead of the
+// generic, non-unique DataFieldName they are delivered with
+var knownKeys = map[string]struct{}{
+	KeyRangeID3: {},
+}
 
 // contentDatasets returns the datasets that actually carry content, with their
 // delivery time parsed into Timestamp and sorted from oldest to newest. The
@@ -135,8 +164,10 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into a map of data points keyed by the dotted data field name. On
-// duplicate field names the entry with the newest timestamp wins.
+// decodes it into the dataset's VIN and a map of data points keyed by the dotted
+// data field name. On duplicate field names the entry with the newest timestamp
+// wins. The VIN is returned so the caller can drop datasets that do not belong
+// to the requested vehicle.
 func parseDataset(b []byte) (map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
@@ -170,23 +201,40 @@ func parseDataset(b []byte) (map[string]point, error) {
 		return nil, err
 	}
 
-	res := make(map[string]point, len(ds.Data))
-	for _, p := range ds.Data {
-		if p.DataFieldName == "" {
-			continue
-		}
+	return points(ds.Data), nil
+}
 
-		ts, err := time.Parse(time.RFC3339, p.TimestampUtc)
-		if err != nil {
-			return nil, err
-		}
+// points indexes data points by field name (newest timestamp wins), and known
+// data points additionally by their unique key, as their name is not unique.
+func points(data []dataPoint) map[string]point {
+	res := make(map[string]point, len(data))
 
-		if cur, ok := res[p.DataFieldName]; ok && cur.Timestamp.After(ts) {
-			continue
+	set := func(name string, p point) {
+		if name == "" {
+			return
 		}
-
-		res[p.DataFieldName] = point{Value: p.Value, Timestamp: ts}
+		if cur, ok := res[name]; ok && cur.Timestamp.After(p.Timestamp) {
+			return
+		}
+		res[name] = p
 	}
 
-	return res, nil
+	for _, p := range data {
+		if p.Value == "" {
+			continue
+		}
+
+		var ts time.Time
+		if p.TimestampUtc != nil {
+			ts = *p.TimestampUtc
+		}
+		pt := point{Value: p.Value, Timestamp: ts}
+
+		set(p.DataFieldName, pt)
+		if _, ok := knownKeys[p.Key]; ok {
+			set(p.Key, pt)
+		}
+	}
+
+	return res
 }

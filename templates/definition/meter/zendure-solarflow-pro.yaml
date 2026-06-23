@@ -13,7 +13,6 @@ params:
   - name: capacity
     default: 1.92 # kWh
   - name: cache
-    advanced: true
     default: 1s
 render: |
   type: custom

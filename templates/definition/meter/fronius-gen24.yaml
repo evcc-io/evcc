@@ -33,7 +33,6 @@ params:
   - name: maxacpower
   - preset: battery-params
   - name: maxchargerate
-    advanced: true
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -56,6 +55,16 @@ render: |
       - 211:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    value:
+      - 201:TotWhExp
+      - 211:TotWhExp
+      - 203:TotWhExp
+      - 213:TotWhExp
     scale: 0.001
   currents:
     - source: sunspec
@@ -179,6 +188,12 @@ render: |
     id: 1
     value: 160:4:DCWH # mppt 4 (discharge)
     scale: 0.001
+  returnenergy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    value: 160:3:DCWH # mppt 3 (charge)
+    scale: 0.001
   soc:
     source: sunspec
     uri: {{ joinHostPort .host .port }}
@@ -248,5 +263,23 @@ render: |
             uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:OutWRte
+    - case: 4 # holdcharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:InWRte
   {{- include "battery-params" . }}
   {{- end }}
