@@ -1,0 +1,10 @@
+template: myalpine
+products:
+  - brand: Alpine
+params:
+  - preset: vehicle-base
+  - preset: vehicle-features
+render: |
+  type: myalpine
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

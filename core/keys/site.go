@@ -4,6 +4,7 @@ const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
 	Circuits              = "circuits"
+	Consumers             = "consumers"
 	Currency              = "currency"
 	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"
@@ -20,8 +21,6 @@ const (
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
 	Forecast              = "forecast"
-	SolarAccYield         = "solarAccYield"
-	SolarAccForecast      = "solarAccForecast"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
 	TariffCo2Loadpoints   = "tariffCo2Loadpoints"
@@ -33,11 +32,12 @@ const (
 	Vehicles              = "vehicles"
 
 	// meters
-	GridMeter     = "gridMeter"
-	PvMeters      = "pvMeters"
-	BatteryMeters = "batteryMeters"
-	ExtMeters     = "extMeters"
-	AuxMeters     = "auxMeters"
+	GridMeter      = "gridMeter"
+	PvMeters       = "pvMeters"
+	BatteryMeters  = "batteryMeters"
+	ExtMeters      = "extMeters"
+	AuxMeters      = "auxMeters"
+	ConsumerMeters = "consumerMeters"
 
 	// battery settings
 	BatteryDischargeControl = "batteryDischargeControl"
@@ -45,6 +45,10 @@ const (
 	BatteryGridChargeActive = "batteryGridChargeActive"
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
+
+	// optimizer
+	OptimizerChargingStrategy   = "optimizerChargingStrategy"
+	OptimizerChargingStrategies = "optimizerChargingStrategies"
 
 	// battery status
 	Battery     = "battery"

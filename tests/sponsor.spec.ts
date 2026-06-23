@@ -27,7 +27,7 @@ test.describe("sponsor token", () => {
     await sponsorEntry.getByRole("button", { name: "Edit" }).click();
 
     const modal = page.getByTestId("sponsor-modal");
-    const tokenInput = modal.getByRole("textbox", { name: "Your token" });
+    const tokenInput = modal.getByRole("textbox", { name: "Sponsor Token" });
 
     await expect(tokenInput).toHaveValue(SHORT_TOKEN);
     await expect(tokenInput).toHaveClass(/is-invalid/);
@@ -51,7 +51,7 @@ test.describe("sponsor token", () => {
     // Click change button to reveal textarea
     await modal.getByRole("button", { name: "Change token" }).click();
 
-    await expect(modal.getByRole("textbox", { name: "Enter your token" })).toBeVisible();
+    await expect(modal.getByRole("textbox", { name: "Your Sponsor Token" })).toBeVisible();
     await expect(modal.getByRole("button", { name: "Remove" })).toBeVisible();
   });
 
@@ -66,7 +66,7 @@ test.describe("sponsor token", () => {
       .click();
 
     const modal = page.getByTestId("sponsor-modal");
-    const textarea = modal.getByRole("textbox", { name: "Enter your token" });
+    const textarea = modal.getByRole("textbox", { name: "Your Sponsor Token" });
 
     await textarea.fill(EXPIRED_TOKEN);
     // Try to save to trigger validation

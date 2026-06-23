@@ -6,6 +6,7 @@ import (
 	"maps"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/server/service"
@@ -35,7 +36,14 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
-	return NewConnection(log, uri, "")
+	var insecure bool
+	if s := req.URL.Query().Get("insecure"); s != "" {
+		var err error
+		if insecure, err = strconv.ParseBool(s); err != nil {
+			return nil, err
+		}
+	}
+	return NewConnection(log, uri, "", insecure)
 }
 
 // domainsFromRequest parses the comma-separated "domain" query parameter.
@@ -128,6 +136,7 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 
 // jsonWrite writes a JSON response
 func jsonWrite(w http.ResponseWriter, data any) {
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
 

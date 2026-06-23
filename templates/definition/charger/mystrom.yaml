@@ -3,6 +3,7 @@ products:
   - brand: myStrom
     description:
       generic: Switch
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host

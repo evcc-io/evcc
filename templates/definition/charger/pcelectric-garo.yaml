@@ -3,6 +3,7 @@ products:
   - brand: PC Electric
     description:
       generic: Garo
+capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship"]
   description:

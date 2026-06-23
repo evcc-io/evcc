@@ -6,6 +6,24 @@
 #  source: mqtt
 #  topic: hems/limit/status # 0/false = normal, 1/true = limit active
 
+## external control via FNN Steuerbox
+
+#type: fnn
+#maxDimPower: 4200 # limit consumption to 4.2 kW while dimmed (W4)
+#maxCurtailPower: 10000 # installed PV power, base for curtailment steps (W3/S1/S2)
+#w4: # dim signal, plugin
+#  source: mqtt
+#  topic: hems/w4/status # 0/false = normal, 1/true = limit active
+#w3: # curtail to 0% signal, plugin
+#  source: mqtt
+#  topic: hems/w3/status
+#s2: # curtail to 30% signal, plugin
+#  source: mqtt
+#  topic: hems/s2/status
+#s1: # curtail to 60% signal, plugin
+#  source: mqtt
+#  topic: hems/s1/status
+
 ## external control via EEBus
 
 #type: eebus # general EEBus setup (cert gen) required

@@ -1,10 +1,18 @@
 template: hyundai-us
 products:
-  - brand: Hyundai (US)
+  - brand: Hyundai
     description:
-      generic: Bluelink
+      generic: Bluelink (US)
 params:
   - preset: vehicle-base
+  - preset: vehicle-online
+  - name: pin
+    required: true
+    help:
+      en: Required by Bluelink (US) to authorize remote commands.
+      de: Wird von Bluelink (US) benötigt, um Fernkommandos zu autorisieren.
 render: |
   type: hyundai-us
   {{ include "vehicle-base" . }}
+  pin: {{ quote .pin }}
+  {{ include "vehicle-features" . }}

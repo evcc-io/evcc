@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
@@ -222,14 +223,14 @@ NEXT:
 			}
 		}
 
-		props, err := customDevice(cc.Other)
+		typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
 
 		ctx := util.WithLogger(context.TODO(), log)
 
-		instance, err := circuit.NewFromConfig(ctx, cc.Type, props)
+		instance, err := circuit.NewFromConfig(ctx, typ, other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -295,23 +296,25 @@ func validateConfigurableCircuits(children []config.Config) error {
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name))) //nolint:govet
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
 
 	instance, err := newFromConf(ctx, cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 	}
 
+	// ctx lives for the device lifetime- only release it on failure
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
+
 	if e := h.Add(config.NewStaticDevice(cc, instance)); e != nil && err == nil {
 		err = &DeviceError{cc.Name, e}
 	}
 
-	// release resources
-	if err != nil {
-		cancel()
-	}
-
-	return err //nolint:govet
+	return err
 }
 
 // loggerForConfig creates a logger with sensible name for (custom) configurable device
@@ -325,16 +328,23 @@ func loggerForConfig(conf *config.Config) *util.Logger {
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf))) //nolint:govet
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf)))
 
-	props, err := customDevice(cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
 	}
 
+	// ctx lives for the device lifetime- only release it on failure
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
+
 	var instance T
 	if err == nil {
-		instance, err = newFromConf(ctx, cc.Type, props)
+		instance, err = newFromConf(ctx, typ, other)
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 		}
@@ -344,12 +354,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 		err = &DeviceError{cc.Name, e}
 	}
 
-	// release resources
-	if err != nil {
-		cancel()
-	}
-
-	return err //nolint:govet
+	return err
 }
 
 func configureMeters(static []config.Named, names ...string) error {
@@ -443,11 +448,11 @@ func configureChargers(static []config.Named, names ...string) error {
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
-	props, err := customDevice(cc.Other)
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 
 	var instance api.Vehicle
 	if err == nil {
-		instance, err = vehicle.NewFromConfig(ctx, cc.Type, props)
+		instance, err = vehicle.NewFromConfig(ctx, typ, other)
 	}
 
 	if err != nil {
@@ -791,15 +796,17 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 		return nil, nil
 	}
 
-	props, err := customDevice(conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
 
-	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
+	hems, err := hems.NewFromConfig(context.TODO(), typ, other, site)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring hems: %w", err)
 	}
+
+	site.SetHEMS(hems)
 
 	go hems.Run()
 
@@ -841,7 +848,18 @@ func configureMDNS(conf globalconfig.Network) error {
 
 // setup OCPP
 func configureOCPP(cfg *ocpp.Config, externalUrl string) {
+	if settings.Exists(keys.Ocpp) {
+		if err := settings.Json(keys.Ocpp, cfg); err != nil {
+			log.WARN.Printf("ocpp: failed to load settings: %v", err)
+		}
+	}
 	ocpp.Init(*cfg, externalUrl)
+
+	// Load proxy forwarding rules from DB if present.
+	var rules []ocpp.ForwarderRule
+	if err := settings.Json(keys.OcppForwarder, &rules); err == nil {
+		ocpp.ApplyForwarderRules(rules)
+	}
 }
 
 // setup EEBus
@@ -968,12 +986,12 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
 
-	props, err := customDevice(conf.Other)
+	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom tariff '%s': %w", name, err)
 	}
 
-	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
+	instance, err := tariff.NewFromConfig(ctx, typ, other)
 	if err != nil {
 		if _, ok := errors.AsType[*util.ConfigError](err); ok {
 			return nil, err
@@ -1301,14 +1319,30 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 	return site, nil
 }
 
+func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*util.Logger) coresettings.Settings) (*core.Loadpoint, error) {
+	log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(idx), idx)
+
+	collector, err := metrics.NewCollector(metrics.Loadpoint, name, "")
+	if err != nil {
+		return nil, err
+	}
+
+	lp, err := core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+	if err != nil {
+		return lp, err
+	}
+
+	return lp, nil
+}
+
 func configureLoadpoints(conf globalconfig.All) error {
 	for id, cc := range conf.Loadpoints {
-		cc.Name = "lp-" + strconv.Itoa(id+1)
+		idx := id + 1
+		cc.Name = "lp-" + strconv.Itoa(idx)
 
-		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
-		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
-
-		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
+		instance, err := newLoadpoint(idx, cc.Name, cc.Other, func(*util.Logger) coresettings.Settings {
+			return coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", idx))
+		})
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
@@ -1326,19 +1360,16 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 	for _, conf := range configurable {
 		cc := conf.Named()
-
-		id := len(config.Loadpoints().Devices())
-		name := "lp-" + strconv.Itoa(id+1)
-		log := util.NewLoggerWithLoadpoint(name, id+1)
-
-		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
+		idx := len(config.Loadpoints().Devices()) + 1
 
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+		instance, err := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+			return coresettings.NewConfigSettingsAdapter(log, &conf)
+		})
 		if err != nil {
 			err = &DeviceError{cc.Name, err}
 		}
@@ -1388,4 +1419,9 @@ func isExperimental() bool {
 func isOptimizer() bool {
 	b, _ := settings.Bool(keys.Optimizer)
 	return b
+}
+
+// isMcp returns if MCP service is enabled
+func isMcp() bool {
+	return isExperimental()
 }

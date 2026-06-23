@@ -15,7 +15,7 @@ products:
   - brand: SolarEdge
     description:
       generic: Home EV Charger
-capabilities: ["1p3p", "mA", "rfid"]
+capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   evcc: ["sponsorship"]
   description:
@@ -26,7 +26,6 @@ params:
     choice: ["tcpip"]
     id: 255
   - name: welcomecharge
-    advanced: true
 render: |
   type: keba-modbus
   {{- include "modbus" . }}

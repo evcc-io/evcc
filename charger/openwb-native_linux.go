@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb/native"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -24,6 +25,7 @@ type openWbGpioLines struct {
 // OpenWbNative charger implementation
 type OpenWbNative struct {
 	api.Charger
+	implement.Caps
 	log         *util.Logger
 	rfId        native.RfIdContainer
 	cpWait      time.Duration
@@ -41,8 +43,6 @@ type gpioAction struct {
 func init() {
 	registry.AddCtx("openwb-native", NewOpenWbNativeFromConfig)
 }
-
-//go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t api.ChargerEx,api.PhaseSwitcher,api.Identifier
 
 // NewOpenWbNativeFromConfig creates an OpenWbNative charger from generic config
 func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -87,25 +87,20 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 
 	wb := &OpenWbNative{
 		Charger:     evse,
+		Caps:        implement.New(),
 		log:         log,
 		cpWait:      cpWait,
 		connector:   connector,
 		chargeState: api.StatusNone,
 	}
 
-	var (
-		phases1p3p       func(int) error
-		identify         func() (string, error)
-		maxCurrentMillis func(float64) error
-	)
-
 	if ex, ok := api.Cap[api.ChargerEx](evse); ok {
-		maxCurrentMillis = ex.MaxCurrentMillis
+		implement.May(wb, implement.ChargerEx(ex.MaxCurrentMillis))
 	}
 
 	// configure special external hardware features
 	if hasPhases1p3p {
-		phases1p3p = wb.phases1p3p
+		implement.May(wb, implement.PhaseSwitcher(wb.phases1p3p))
 	}
 
 	if rfIdVidPid != "" {
@@ -113,8 +108,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		if err != nil {
 			return nil, err
 		}
-
-		identify = wb.identify
+		implement.May(wb, implement.Identifier(wb.identify))
 	}
 
 	// initialize GPIO lines and set pins to output
@@ -141,7 +135,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		wb.gpio.ph3.Close()
 	}()
 
-	return decorateOpenWbNative(wb, maxCurrentMillis, phases1p3p, identify), nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

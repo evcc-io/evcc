@@ -1,0 +1,26 @@
+# expired sponsor token
+sponsortoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJldmNjLmlvIiwic3ViIjoidHJpYWwiLCJleHAiOjE3NTQ5OTI4MDAsImlhdCI6MTc1MzY5NjgwMCwic3BlIjp0cnVlLCJzcmMiOiJtYSJ9.XKa5DHT-icCM9awcX4eS8feW0J_KIjsx2IxjcRRQOcQ
+
+site:
+  title: Redact Test
+  meters:
+    pv: shelly_pv
+
+loadpoints:
+  - title: Carport
+    charger: charger
+
+chargers:
+  - name: charger
+    type: template
+    template: demo-charger
+
+meters:
+  # local device with credentials to verify redaction
+  - name: shelly_pv
+    type: template
+    template: shelly-1pm
+    usage: pv
+    host: localhost
+    user: test@example.org
+    password: none

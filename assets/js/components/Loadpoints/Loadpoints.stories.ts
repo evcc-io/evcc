@@ -1,6 +1,6 @@
 import Loadpoints from "./Loadpoints.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
-import { SMART_COST_TYPE } from "@/types/evcc";
+import { CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
 
 // Create LoadpointCompact structure for the Loadpoints component
 const createLoadpoint = (opts: any = {}) => {
@@ -84,7 +84,7 @@ const baseArgs = {
   tariffGrid: 0.144,
   tariffCo2: 252,
   tariffFeedIn: 0.08,
-  currency: "EUR",
+  currency: CURRENCY.EUR,
   gridConfigured: true,
   pvConfigured: true,
   batteryConfigured: true,

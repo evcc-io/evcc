@@ -19,6 +19,7 @@ import {
 	Chart as ChartJS,
 	CategoryScale,
 	LinearScale,
+	LineController,
 	LineElement,
 	PointElement,
 	Title,
@@ -40,6 +41,7 @@ const tension = 0;
 ChartJS.register(
 	CategoryScale,
 	LinearScale,
+	LineController,
 	LineElement,
 	PointElement,
 	Title,
@@ -194,7 +196,7 @@ export default defineComponent({
 						position: "left",
 						title: {
 							display: true,
-							text: `Price (${this.pricePerKWhUnit(this.currency, false)})`,
+							text: this.pricePerKWhUnit(this.currency, false),
 						},
 						grid: {
 							drawOnChartArea: true,
@@ -223,8 +225,9 @@ export default defineComponent({
 		getPriceDatasets() {
 			const datasets: any[] = [];
 
-			// Convert prices from raw format (€/Wh) to proper format (€/kWh) - same as table
-			const convertPrice = (price: number): number => price * 1000;
+			// Convert raw price (currency/Wh) to the display unit per kWh (e.g. ct/kWh)
+			const factor = this.pricePerKWhDisplayFactor(this.currency);
+			const convertPrice = (price: number): number => price * 1000 * factor;
 
 			// Grid Import Price (solid line, price color)
 			datasets.push({
@@ -265,12 +268,10 @@ export default defineComponent({
 			return datasets;
 		},
 		formatPrice(price: number): string {
-			// Use the exact same logic as the data table: fmtPricePerKWh(value * 1000, currency, false, false)
-			// But since we already multiplied by 1000 in the dataset, we use the value directly
-			// and add the unit manually to match the tooltip format
-			const formattedValue = this.fmtPricePerKWh(price, this.currency, false, false);
-			const unit = this.pricePerKWhUnit(this.currency, false);
-			return `${formattedValue} ${unit}`;
+			// price is already in display unit (see convertPrice); undo the factor so the
+			// formatter re-applies it and appends the matching unit
+			const factor = this.pricePerKWhDisplayFactor(this.currency);
+			return this.fmtPricePerKWh(price / factor, this.currency);
 		},
 
 		formatTimeRange(index: number): string {

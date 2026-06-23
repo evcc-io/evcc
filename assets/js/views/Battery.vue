@@ -8,7 +8,7 @@
 						{{ $t("batterySettings.usageTab") }}
 					</h3>
 					<BatteryUsageSettings style="max-width: 950px" v-bind="batteryUsageProps" />
-					<template v-if="gridChargePossible">
+					<template v-if="gridChargeVisible">
 						<hr class="my-5" />
 						<h3 class="fw-normal my-4 mt-5">
 							{{ $t("batterySettings.gridChargeTab") }}
@@ -61,13 +61,19 @@ export default defineComponent({
 				devices.some(({ controllable }) => controllable) && this.state.smartCostAvailable
 			);
 		},
+		gridChargeLimit() {
+			return this.state.batteryGridChargeLimit ?? null;
+		},
+		gridChargeVisible() {
+			return this.gridChargePossible || this.gridChargeLimit !== null;
+		},
 		gridChargeTariff() {
 			const { forecast, smartCostType } = this.state;
 			return smartCostType === SMART_COST_TYPE.CO2 ? forecast?.co2 : forecast?.grid;
 		},
 		smartCostLimitProps() {
 			return {
-				currentLimit: this.state.batteryGridChargeLimit ?? null,
+				currentLimit: this.gridChargeLimit,
 				lastLimit: settings.lastBatterySmartCostLimit,
 				smartCostType: this.state.smartCostType,
 				currency: this.state.currency,

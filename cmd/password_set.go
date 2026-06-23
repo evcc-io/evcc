@@ -25,7 +25,7 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 
 	// setup persistence
 	if err := configureDatabase(conf.Database); err != nil {
-		log.FATAL.Fatal(err)
+		fatalDatabase(err)
 	}
 
 	prompt := &survey.Password{
@@ -40,7 +40,9 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 
 	if password == "" {
 		log.FATAL.Fatal("password cannot be empty")
+	} else if err := auth.New().SetAdminPassword(password); err != nil {
+		log.FATAL.Fatal(err)
 	} else {
-		auth.New().SetAdminPassword(password)
+		persistPasswordSettings()
 	}
 }

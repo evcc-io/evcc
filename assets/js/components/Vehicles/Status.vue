@@ -104,6 +104,7 @@ export default defineComponent({
 		effectivePlanTime: String,
 		enabled: Boolean,
 		heating: Boolean,
+		continuous: Boolean,
 		minSoc: { type: Number, default: 0 },
 		minSocNotReached: Boolean,
 		phaseAction: { type: String, default: "" },
@@ -202,32 +203,19 @@ export default defineComponent({
 			if (this.statusOverrideActive && this.statusOverride) {
 				return this.statusOverride.message;
 			}
-			const t = (key: string) => {
-				if (this.heating) {
-					// check for special heating status translation
-					const name = `main.heatingStatus.${key}`;
-					if (this.$te(name, DEFAULT_LOCALE)) {
-						return this.$t(name);
-					}
-				}
-				return this.$t(`main.vehicleStatus.${key}`);
-			};
+			const t = (key: string) => this.translateStatus(key);
 
-			if (!this.connected) {
-				return t("disconnected");
-			}
+			if (!this.connected) return t("disconnected");
 
 			if (this.enabled && !this.charging) {
-				if (this.vehicleLimitReached) {
-					return t("finished");
-				}
-				if (this.chargerStatusReason === REASON_AUTH) {
-					return t("waitForAuthorization");
-				}
+				if (this.vehicleLimitReached) return t("finished");
+				if (this.chargerStatusReason === REASON_AUTH) return t("waitForAuthorization");
 				return t("waitForVehicle");
 			}
 
 			if (this.charging) {
+				// continuous devices may run without enable - show normal operation
+				if (this.continuous && !this.enabled) return t("connected");
 				return t("charging");
 			}
 
@@ -419,6 +407,18 @@ export default defineComponent({
 		if (this.statusTimeout) clearTimeout(this.statusTimeout);
 	},
 	methods: {
+		translateStatus(key: string) {
+			// priority: continuous > heating > vehicle (default)
+			if (this.continuous) {
+				const k = `main.continuousStatus.${key}`;
+				if (this.$te(k, DEFAULT_LOCALE)) return this.$t(k);
+			}
+			if (this.heating) {
+				const k = `main.heatingStatus.${key}`;
+				if (this.$te(k, DEFAULT_LOCALE)) return this.$t(k);
+			}
+			return this.$t(`main.vehicleStatus.${key}`);
+		},
 		openLoadpointSettings() {
 			this.$emit("open-loadpoint-settings");
 		},

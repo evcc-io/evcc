@@ -6,3 +6,24 @@ updates:
       interval: "monthly"
     labels:
       - "infrastructure"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "infrastructure"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # 0 disables version-update PRs; the entry still labels security updates
+    open-pull-requests-limit: 0
+    labels:
+      - "infrastructure"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
+    labels:
+      - "infrastructure"

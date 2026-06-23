@@ -3,7 +3,7 @@ products:
   - brand: openWB
     description:
       generic: Embedded software replacement
-capabilities: ["1p3p", "rfid", "mA"]
+capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:
     de: |
@@ -136,8 +136,6 @@ params:
     default: 10s
     advanced: true
   - name: connector
-    type: int
-    default: 1
 render: |
   type: openwb-native
   phases1p3p: {{ .phases1p3p }}

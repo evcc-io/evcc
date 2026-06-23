@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/samber/lo"
 )
 
@@ -19,8 +21,6 @@ type circuitStruct struct {
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
 	MaxCurrent float64  `json:"maxCurrent,omitempty"`
-	Dimmed     bool     `json:"dimmed"`
-	Curtailed  bool     `json:"curtailed"`
 }
 
 // publishCircuits returns a list of circuit titles
@@ -44,8 +44,6 @@ func (site *Site) publishCircuits() {
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),
-			Dimmed:     instance.Dimmed(),
-			Curtailed:  instance.Curtailed(),
 		}
 
 		if instance.GetMaxCurrent() > 0 {
@@ -58,60 +56,66 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
-func (site *Site) dimMeters(dim bool) error {
-	var errs error
+func (site *Site) dimMeters(dim *bool) error {
+	if dim == nil {
+		return nil
+	}
 
+	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
 		m, ok := api.Cap[api.Dimmer](dev.Instance())
 		if !ok {
 			continue
 		}
 
-		if dimmed, err := m.Dimmed(); err == nil {
-			if dim == dimmed {
+		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
+			if *dim == dimmed {
 				continue
 			}
 		} else {
 			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", dev.Config().Name, err))
+				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
 			}
 			continue
 		}
 
-		if err := m.Dim(dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, dim)
+		if err := m.Dim(*dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), *dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", dev.Config().Name, err))
+			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
 		}
 	}
 
 	return errs
 }
 
-func (site *Site) curtailPV(curtail bool) error {
-	var errs error
+func (site *Site) curtailPV(curtail *bool) error {
+	if curtail == nil {
+		return nil
+	}
 
+	var errs error
 	for _, dev := range site.pvMeters {
 		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
 		}
 
-		if curtailed, err := m.Curtailed(); err == nil {
-			if curtail == curtailed {
+		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
+			if *curtail == curtailed {
 				continue
 			}
 		} else {
 			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", dev.Config().Name, err))
+				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
 			}
 			continue
 		}
 
-		if err := m.Curtail(curtail); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %t", dev.Config().Name, curtail)
+		if err := m.Curtail(*curtail); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %t", deviceTitleOrName(dev), *curtail)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", dev.Config().Name, err))
+			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
 		}
 	}
 

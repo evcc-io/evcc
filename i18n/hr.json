@@ -131,8 +131,6 @@
       "feedinPrice": "Cijena predaje u mrežu opskrbljivača",
       "gridPrice": "Cijena uvoza",
       "heaterTempLimit": "Ograničenje grijača",
-      "hemsActiveLimit": "Ograničenje aktivnosti",
-      "hemsType": "Komunikacija",
       "identifier": "RFID-identifikator",
       "no": "ne",
       "odometer": "Brojilo kilometara",
@@ -157,10 +155,6 @@
       "A": "A (nije povezano)",
       "B": "B (povezano)",
       "C": "C (punjenje)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "putem EEBus",
-      "relay": "putem Relay"
     },
     "devices": {
       "auxMeter": "Pametni potrošač",
@@ -639,32 +633,13 @@
       "validate": "provjeri"
     },
     "vehicle": {
-      "cancel": "Odustani",
-      "chargingSettings": "Postavke punjenja",
-      "defaultMode": "Zadani način rada",
-      "defaultModeHelp": "Način punjenja koji se primjenjuje kada se vozilo spoji.",
-      "delete": "Izbriši",
       "generic": "Druge integracije",
-      "identifiers": "RFID identifikatori",
-      "identifiersHelp": "Popis RFID zapisa za identifikaciju vozila. Jedan unos po retku. Trenutni identifikator može se pronaći na odgovarajućoj točki punjenja na preglednoj stranici.",
-      "maximumCurrent": "Maksimalna struja",
-      "maximumCurrentHelp": "Vrijednost mora biti veća od minimalne struje.",
-      "maximumPhases": "Maksimalni broj faza",
-      "maximumPhasesHelp": "S koliko faza se ovo vozilo može puniti? Koristi se za izračun potrebnog minimalnog solarnog viška i planiranje trajanja punjenja.",
-      "maximumPower": "Maksimalna snaga punjenja",
-      "maximumPowerHelp": "Maksimalna snaga koju vozilo može potrošiti",
-      "minimumCurrent": "Minimalna struja",
-      "minimumCurrentHelp": "Ne postavljajte na manje od 6A, osim ako jako dobro znate što radite.",
       "online": "Vozila s mrežnim API-jem",
       "primary": "Opće integracije",
-      "priority": "Prioritet",
-      "priorityHelp": "Veći prioritet znači da ovo vozilo dobiva prednost pri korištenju solarnog viška.",
-      "save": "Spremi",
       "scooter": "Skuter",
       "template": "Proizvođač",
       "titleAdd": "Dodaj vozilo",
-      "titleEdit": "Uredi vozilo",
-      "validateSave": "Provjeri i spremi"
+      "titleEdit": "Uredi vozilo"
     }
   },
   "footer": {
@@ -921,9 +896,9 @@
       "battery": "Baterija",
       "batteryCharge": "Punjenje baterije",
       "batteryDischarge": "Pražnjenje baterije",
+      "batteryDischargeHold": "Baterija (zaključano)",
       "batteryGridChargeActive": "punjenje putem mreže je aktivno",
       "batteryGridChargeLimit": "punjene putem mreže kada",
-      "batteryHold": "Baterija (zaključano)",
       "batteryTooltip": "{energy} od {total} ({soc})",
       "forecastTooltip": "predviđanje: današnja preostala solarna proizvodnja",
       "gridImport": "Korištenje mreže",
@@ -943,7 +918,6 @@
       "waitForVehicle": "Spremno. Čeka se grijač…"
     },
     "hemsWarning": {
-      "description": "Punjenje je smanjeno da se ne prekorači {limit}.",
       "title": "Externo ograničenje:"
     },
     "loadpoint": {

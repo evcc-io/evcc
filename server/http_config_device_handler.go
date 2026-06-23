@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"time"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api/globalconfig"
@@ -272,15 +273,28 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		if errors.Is(err, config.ErrNotFound) {
+			jsonError(w, http.StatusNotFound, err)
+			return
+		}
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	jsonWrite(w, testInstance(instance))
+	// bound the value-probe phase so a blocking getter cannot stall the response
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	jsonWrite(w, testInstance(ctx, instance))
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
-	instance, err := newFromConf(ctx, req.Type, req.Other)
+	typ, other, err := config.CustomDevice(req.Type, req.Other)
+	if err != nil && !force {
+		return nil, err
+	}
+
+	instance, err := newFromConf(ctx, typ, other)
 	if err != nil && !force {
 		return nil, err
 	}
@@ -616,7 +630,12 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(ctx, req.Type, req.Other)
+		typ, other, err := config.CustomDevice(req.Type, req.Other)
+		if err != nil {
+			var zero T
+			return zero, err
+		}
+		return newFromConf(ctx, typ, other)
 	}
 
 	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
@@ -683,5 +702,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 	close(done)
 	defer cancel()
 
-	jsonWrite(w, testInstance(instance))
+	// bound the value-probe phase so a blocking getter cannot stall the response
+	probeCtx, probeCancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer probeCancel()
+
+	jsonWrite(w, testInstance(probeCtx, instance))
 }

@@ -3,10 +3,9 @@
 		<Notifications
 			:notifications="notifications"
 			:loadpoints="loadpoints"
-			:class="experimental ? 'd-flex align-items-center' : ''"
+			class="d-flex align-items-center"
 		/>
-		<TopNavigation v-if="!experimental" v-bind="topNavigation" @auth-required="openAuthModal" />
-		<Savings v-if="experimental" v-bind="savings" />
+		<Savings v-bind="savings" />
 		<AuthProviderModal :provider="authProvider" />
 	</div>
 </template>
@@ -14,24 +13,20 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import Modal from "bootstrap/js/dist/modal";
-import Navigation from "./Navigation.vue";
 import Notifications from "./Notifications.vue";
 import AuthProviderModal from "./AuthProviderModal.vue";
 import Savings from "../Savings/Savings.vue";
 import type { Provider } from "./types";
 import type { Notification } from "@/types/evcc";
-import collector from "@/mixins/collector";
 import store from "@/store";
 
 export default defineComponent({
 	name: "TopNavigationArea",
 	components: {
-		TopNavigation: Navigation,
 		Notifications,
 		AuthProviderModal,
 		Savings,
 	},
-	mixins: [collector],
 	props: {
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
@@ -42,12 +37,6 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		experimental(): boolean {
-			return store.state?.experimental || false;
-		},
-		topNavigation(): any {
-			return this.collectProps(Navigation, store.state);
-		},
 		savings() {
 			return {
 				sponsor: store.state.sponsor,

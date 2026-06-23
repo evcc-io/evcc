@@ -6,7 +6,7 @@ products:
   - brand: KEBA
     description:
       generic: KeContact P40 Pro
-capabilities: ["mA", "rfid", "1p3p"]
+capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   evcc: ["sponsorship"]
   description:
@@ -25,7 +25,6 @@ params:
     choice: ["tcpip"]
     id: 255
   - name: welcomecharge
-    advanced: true
 render: |
   type: keba-modbus
   {{- include "modbus" . }}

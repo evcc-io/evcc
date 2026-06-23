@@ -5,8 +5,10 @@ requirements:
   evcc: ["skiptest"]
 params:
   - preset: vehicle-base
+  - preset: vehicle-online
   - name: vin
     example: LPSVS...
 render: |
-  type: polestar
+  type: polestar-grpc
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

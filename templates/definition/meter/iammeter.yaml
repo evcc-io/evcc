@@ -1,4 +1,5 @@
 template: iammeter
+deprecated: true
 products:
   - brand: IAMMETER
     description:

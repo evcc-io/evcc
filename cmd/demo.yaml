@@ -272,4 +272,3 @@ tariffs:
     type: template
     template: demo-co2-forecast
     base: 350
-    variation: 0.4
