@@ -17,7 +17,7 @@ params:
     port: 502
     id: 1
   - name: get_powers_per_phase
-    default: "no"
+    default: "false"
     advanced: true
     description:
       de: Leistung der einzelnen Phasen abrufen
