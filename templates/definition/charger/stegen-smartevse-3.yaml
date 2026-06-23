@@ -99,7 +99,7 @@ render: |
     topic: {{ .topic }}/EVCurrentL3
     timeout: 30s
     scale: 0.1
-  {{- if ne .phases1p3p "false" }}
+  {{- if .phases1p3p }}
   phases1p3p:
     source: mqtt
     topic: {{ .topic }}/Set/EnableC2
