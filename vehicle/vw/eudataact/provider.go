@@ -157,13 +157,28 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, err
 	}
 
+	// block 1: explicit plug state
 	if p := lookup(data, FieldPlugState, FieldChargingPlug1ConnectionState); p != nil && strings.EqualFold(p.Value, "connected") {
 		status = api.StatusB
 	}
 
+	// block 2: flat charging_state field and the current_charge_state field
 	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
-		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV")) {
+		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
+			strings.EqualFold(p.Value, "conservationCharging") || strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
 		status = api.StatusC
+	}
+
+	// block 3: charging_scenario is the most explicit plug/charge signal
+	if p := lookup(data, FieldChargingScenario); p != nil && status != api.StatusC {
+		upper := strings.ToUpper(p.Value)
+		switch {
+		case strings.HasSuffix(upper, "_ACTIVE"):
+			status = api.StatusC
+		// the car reports finished if it's plugged in but not charging
+		case strings.HasSuffix(upper, "_FINISHED"):
+			status = api.StatusB
+		}
 	}
 
 	return status, nil
