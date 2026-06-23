@@ -1,0 +1,53 @@
+template: pvnode-v2
+products:
+  - brand: pvnode V2 API
+requirements:
+  description:
+    en: |
+      [pvnode V2 API](https://pvnode.com) provides 15-minute PV production forecasts via REST API Version 2 with site ID and easy configuration via web app.
+      An API key is required (free plan available with +1 day forecast).
+      **Attention**: The free plan only allows 40 queries per month. These queries must be from only one location (lat, lon). Location is saved on first request and can not be changed afterwards, otherwise a 403 response is sent.
+    de: |
+      [pvnode V2 API](https://pvnode.com) liefert 15-Minuten PV Vorhersagen per REST API Version 2 mit Standort-ID und leichter Konfiguration über Web-App
+      Ein API-Key ist erforderlich (kostenloser Plan mit +1 Tag Vorhersage verfügbar).
+      **Achtung**: Mit dem kostenlosen Plan sind lediglich 40 Abfragen/Monat erlaubt. Diese Abfragen dürfen nur von einem Standort (lat, lon) sein. Der Standort wird bei der ersten Abfrage gespeichert und kann danach nicht mehr angepasst werden, andernfalls wird eine 403 Antwort gesendet.
+  evcc: ["skiptest"]
+group: solar
+
+params:
+  - name: site_id
+    description:
+      en: Site ID
+      de: Standort-ID
+    required: true
+  - name: apikey
+    description:
+      en: pvnode API key
+      de: pvnode API Key
+    required: true
+  - name: forecast_days
+    description:
+      en: Forecast days (free plan = 1).
+      de: Vorhersagetage (Free Plan = 1).
+    type: int
+    default: 1
+    advanced: true
+
+render: |
+  type: custom
+  tariff: solar
+  features: ["cacheable"]
+  forecast:
+    source: http
+    uri: https://api.pvnode.com/v2/forecast/{{ .site_id }}?forecast_days={{ .forecast_days }}&past_days=0
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    jq: |
+      [.values[] |
+        {
+          start: (.timestamp + "Z"),
+          end:   (.timestamp + "Z" | fromdateiso8601 + 900 | todateiso8601 ),
+          value: (.pv_power | round )
+        }
+      ] | tostring
