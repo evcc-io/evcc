@@ -11,7 +11,7 @@ export interface ModalEntry {
 }
 
 export interface ModalResult {
-  action: "added" | "updated" | "removed" | "cancelled";
+  action: "added" | "updated" | "removed" | "converted" | "cancelled";
   name?: string;
   id?: number;
   type?: string;
