@@ -324,6 +324,7 @@ export interface Loadpoint {
   effectivePlanTime: string | null;
   effectivePlanStrategy: PlanStrategy;
   effectivePriority: number;
+  effectivePriorityScore: number;
   enableDelay: number;
   enableThreshold: number;
   enabled: boolean;

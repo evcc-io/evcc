@@ -13,6 +13,7 @@ import (
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePriority, lp.effectivePriority())
+	lp.publish(keys.EffectivePriorityScore, lp.EffectivePriorityScore(lp.GetPriorityBasis()))
 	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
