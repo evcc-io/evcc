@@ -62,6 +62,8 @@
 				:limit-soc="displayLimitSoc"
 				:range-per-soc="rangePerSoc"
 				:heating="heating"
+				:min-temp="ui?.minTemp ?? 0"
+				:max-temp="ui?.maxTemp ?? 100"
 				@limit-soc-updated="limitSocUpdated"
 			/>
 			<LimitEnergySelect
@@ -95,6 +97,7 @@ import {
 	type Forecast,
 	type VehicleStatus,
 	type Vehicle,
+	type LoadpointUi,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
@@ -172,6 +175,7 @@ export default defineComponent({
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
 		minSocNotReached: Boolean,
+		ui: Object as PropType<LoadpointUi>,
 		capacity: Number,
 		range: Number,
 		rangePerSoc: Number,

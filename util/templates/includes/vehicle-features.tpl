@@ -1,5 +1,5 @@
 {{ define "vehicle-features" }}
-{{- if or .basefeatures (eq .coarsecurrent "true") (eq .welcomecharge "true") (eq .streaming "true") (eq .climaterdisabled "true") }}
+{{- if or .basefeatures (eq .coarsecurrent "true") (eq .welcomecharge "true") (eq .streaming "true") (eq .climaterdisabled "true") (eq .autodetectdisabled "true") }}
 features:
 {{- range .basefeatures }}
 - {{ . }}
@@ -15,6 +15,9 @@ features:
 {{- end }}
 {{- if eq .climaterdisabled "true" }}
 - climaterdisabled
+{{- end }}
+{{- if eq .autodetectdisabled "true" }}
+- autodetectdisabled
 {{- end }}
 {{- end }}
 {{- end }}

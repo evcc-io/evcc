@@ -36,7 +36,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 
 	var cached util.Cacheable[map[string]point]
 	cached = util.ResettableCached(func() (map[string]point, error) {
-		ts, err := s.update(log.TRACE, vin)
+		ts, err := s.update(vin)
 		if err != nil {
 			log.ERROR.Println(err)
 		} else if !ts.IsZero() {
@@ -81,7 +81,14 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevel); p != nil {
+	// use battery_level_HV.value when its state reports valid
+	if s, ok := data[FieldHvBatteryLevelState]; ok && s.Value == hvBatteryLevelValid {
+		if p, ok := data[FieldHvBatteryLevelValue]; ok {
+			return strconv.ParseFloat(p.Value, 64)
+		}
+	}
+
+	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevelValue); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -150,13 +157,28 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, err
 	}
 
+	// block 1: explicit plug state
 	if p := lookup(data, FieldPlugState, FieldChargingPlug1ConnectionState); p != nil && strings.EqualFold(p.Value, "connected") {
 		status = api.StatusB
 	}
 
+	// block 2: flat charging_state field and the current_charge_state field
 	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
-		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV")) {
+		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
+			strings.EqualFold(p.Value, "conservationCharging") || strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
 		status = api.StatusC
+	}
+
+	// block 3: charging_scenario is the most explicit plug/charge signal
+	if p := lookup(data, FieldChargingScenario); p != nil && status != api.StatusC {
+		upper := strings.ToUpper(p.Value)
+		switch {
+		case strings.HasSuffix(upper, "_ACTIVE"):
+			status = api.StatusC
+		// the car reports finished if it's plugged in but not charging
+		case strings.HasSuffix(upper, "_FINISHED"):
+			status = api.StatusB
+		}
 	}
 
 	return status, nil

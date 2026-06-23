@@ -89,9 +89,24 @@ var Instance *EEBus
 func GetStatus() any {
 	return struct {
 		Ski string `json:"ski"`
+		QR  string `json:"qr,omitempty"`
 	}{
 		Ski: Ski(),
+		QR:  qrCode(),
 	}
+}
+
+// qrCode returns the SHIP installation QR code text per EEBus SHIP installation
+// requirements, or empty if unavailable
+func qrCode() string {
+	if Instance == nil {
+		return ""
+	}
+	qr, err := Instance.service.QRCodeText()
+	if err != nil {
+		return ""
+	}
+	return qr
 }
 
 func NewServer(other Config) (*EEBus, error) {

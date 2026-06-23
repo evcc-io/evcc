@@ -130,7 +130,10 @@ async function _start(config?: string, flags: string | string[] = []) {
     steamLog.end();
   });
   try {
-    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 90000 });
+    // wait for apiReady so tests don't race a half-started backend
+    const jq = encodeURIComponent(".apiReady|select(.)");
+    const ready = `${baseUrl().replace(/^http/, "http-get")}/api/state?jq=${jq}`;
+    await waitOn({ resources: [ready], log: LOG_ENABLED, timeout: 90000 });
   } catch (error) {
     instance.kill("SIGKILL");
     console.error(logPrefix(), `evcc startup failed: ${error}`);

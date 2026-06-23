@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"slices"
 	"strings"
 	"time"
@@ -27,11 +26,6 @@ var brands = map[string]brand{
 	"Skoda":      {"3ea88bf9-1d4e-4a68-b3ad-4098c1f1d246@apps_vw-dilab_com", "SKODA"},
 	"Seat":       {"f85e5b69-e3b2-43aa-9c0d-1b7d0e0b576f@apps_vw-dilab_com", "SEAT"},
 	"Cupra":      {"f85e5b69-e3b2-43aa-9c0d-1b7d0e0b576f@apps_vw-dilab_com", "CUPRA"},
-}
-
-// Brands returns the supported brand names
-func Brands() []string {
-	return []string{"Volkswagen", "Audi", "Skoda", "Seat", "Cupra"}
 }
 
 // resolveBrand looks up a brand by name, case-insensitively
@@ -110,13 +104,15 @@ const (
 	FieldChargingState                = "charging_state"
 	FieldChargingPlug1ConnectionState = "charging_plug1_connectionstate"
 	FieldCurrentChargeState           = "charging_state_report.current_charge_state"
+	FieldChargingScenario             = "charging_state_report.charging_scenario"
 	FieldPlugState                    = "plug_state"
 
 	// soc
 	FieldBatteryStateReportSoc = "battery_state_report.soc"
 	FieldSoc                   = "state_of_charge"
 	FieldHvSoc                 = "hv_soc"
-	FieldHvBatteryLevel        = "battery_level_HV.value"
+	FieldHvBatteryLevelValue   = "battery_level_HV.value"
+	FieldHvBatteryLevelState   = "battery_level_HV.state"
 
 	// target soc
 	FieldTargetSoc = "settings.target_soc"
@@ -134,6 +130,10 @@ const (
 	// time
 	FieldRemainingTime = "remaining_charging_time"
 )
+
+// hvBatteryLevelValid is the battery_level_HV.state value that marks
+// battery_level_HV.value as a trustworthy SoC reading
+const hvBatteryLevelValid = "VALID"
 
 // knownKeys lists data point GUIDs that are indexed by their key instead of the
 // generic, non-unique DataFieldName they are delivered with
@@ -168,7 +168,7 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 // data field name. On duplicate field names the entry with the newest timestamp
 // wins. The VIN is returned so the caller can drop datasets that do not belong
 // to the requested vehicle.
-func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
+func parseDataset(b []byte) (map[string]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -195,8 +195,6 @@ func parseDataset(log *log.Logger, b []byte) (map[string]point, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println(raw)
 
 	var ds datasetFile
 	if err := json.Unmarshal(raw, &ds); err != nil {
