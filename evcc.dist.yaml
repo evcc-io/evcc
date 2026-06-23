@@ -10,6 +10,14 @@ network:
 
 interval: 30s # control cycle interval. Interval <30s can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval
 
+# OCPP server configuration
+# ocpp:
+#   port: 8887
+#   # dateTimeGranularity controls the precision of OCPP dateTime values sent by evcc.
+#   # Use milliseconds for chargers that require a fractional-second component.
+#   # Supported values: seconds, milliseconds
+#   dateTimeGranularity: seconds
+
 # database configuration for persisting charge sessions and settings
 # database:
 #   type: sqlite

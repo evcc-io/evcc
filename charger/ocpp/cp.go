@@ -40,6 +40,15 @@ type CP struct {
 	bootNotificationRequestC chan *core.BootNotificationRequest
 	BootNotificationResult   *core.BootNotificationRequest
 
+	// bootSession increments for every WebSocket transport connection. It lets
+	// delayed boot timers ignore stale work from prior connections.
+	bootSession uint64
+
+	// triggeredBootNotificationSession is set when evcc requested BootNotification
+	// only to complete the current transport-session handshake. The matching
+	// BootNotification must not be treated as a physical charger reboot.
+	triggeredBootNotificationSession uint64
+
 	connectors map[int]*Connector
 }
 
@@ -153,21 +162,21 @@ func (cp *CP) onTransportConnect() {
 	defer cp.mu.Unlock()
 
 	cp.stopBootTimer()
-	cp.bootTimer = time.AfterFunc(Timeout, cp.onBootTimeout)
+	cp.bootSession++
+	session := cp.bootSession
+	cp.triggeredBootNotificationSession = 0
+	cp.bootTimer = time.AfterFunc(Timeout, func() {
+		cp.onBootTimeout(session)
+	})
 
 	// Proactively trigger BootNotification after a short delay.
 	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
 	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
 	// Connected() check which would fail at this point.
 	time.AfterFunc(TriggerBootDelay, func() {
-		cp.mu.RLock()
-		// If BootNotification already arrived or timer was cancelled (disconnect),
-		// there is nothing to do.
-		if cp.bootTimer == nil || cp.BootNotificationResult != nil {
-			cp.mu.RUnlock()
+		if !cp.prepareTriggerBootNotification(session) {
 			return
 		}
-		cp.mu.RUnlock()
 
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
@@ -175,26 +184,56 @@ func (cp *CP) onTransportConnect() {
 			cp.id,
 			func(conf *remotetrigger.TriggerMessageConfirmation, err error) {
 				if err != nil {
+					cp.clearTriggeredBootNotification(session)
 					cp.log.ERROR.Printf("trigger BootNotification response error: %v", err)
+				} else if conf == nil || conf.Status != remotetrigger.TriggerMessageStatusAccepted {
+					cp.clearTriggeredBootNotification(session)
 				}
 			},
 			core.BootNotificationFeatureName,
 			func(request *remotetrigger.TriggerMessageRequest) {},
 		); err != nil {
+			cp.clearTriggeredBootNotification(session)
 			cp.log.ERROR.Printf("failed to trigger BootNotification: %v", err)
 		}
 	})
 }
 
-// onBootTimeout is called when the BootNotification wait timer expires.
-func (cp *CP) onBootTimeout() {
+// prepareTriggerBootNotification reports whether a TriggerMessage(BootNotification)
+// should be sent for the current transport session.
+func (cp *CP) prepareTriggerBootNotification(session uint64) bool {
 	cp.mu.Lock()
-	if cp.bootTimer == nil {
+	defer cp.mu.Unlock()
+
+	if cp.bootSession != session || cp.bootTimer == nil {
+		return false
+	}
+
+	// This BootNotification is used to establish readiness for the new transport
+	// session. It must not be interpreted as a physical reboot by MonitorReboot.
+	cp.triggeredBootNotificationSession = session
+	return true
+}
+
+func (cp *CP) clearTriggeredBootNotification(session uint64) {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	if cp.triggeredBootNotificationSession == session {
+		cp.triggeredBootNotificationSession = 0
+	}
+}
+
+// onBootTimeout is called when the BootNotification wait timer expires.
+func (cp *CP) onBootTimeout(session uint64) {
+	cp.mu.Lock()
+	if cp.bootSession != session || cp.bootTimer == nil {
 		// timer was cancelled by disconnect or BootNotification
 		cp.mu.Unlock()
 		return
 	}
 	cp.bootTimer = nil
+	cp.triggeredBootNotificationSession = 0
 	cp.mu.Unlock()
 
 	cp.log.DEBUG.Printf("boot notification timeout, proceeding")

@@ -16,12 +16,23 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/security"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
+const (
+	// DateTimeGranularitySeconds serializes OCPP dateTime values without fractional seconds.
+	DateTimeGranularitySeconds = "seconds"
+	// DateTimeGranularityMilliseconds serializes OCPP dateTime values with millisecond precision.
+	DateTimeGranularityMilliseconds = "milliseconds"
+)
+
+const dateTimeGranularityMillisecondsLayout = "2006-01-02T15:04:05.000Z"
+
 type Config struct {
-	Port int `json:"port"`
+	Port                int    `json:"port"`
+	DateTimeGranularity string `json:"dateTimeGranularity,omitempty" mapstructure:"dateTimeGranularity"`
 }
 
 // ForwarderRule maps a station ID (or "*" for all chargers) to an upstream OCPP server URL.
@@ -43,11 +54,12 @@ func (r ForwarderRule) Redacted() ForwarderRule {
 }
 
 var (
-	once        sync.Once
-	instance    *CS
-	port        = 8887
-	boundPort   int
-	externalUrl string
+	once                sync.Once
+	instance            *CS
+	port                = 8887
+	boundPort           int
+	dateTimeGranularity = DateTimeGranularitySeconds
+	externalUrl         string
 )
 
 // Forwarder hooks, nil unless the forwarder is built in (set once in init()
@@ -126,12 +138,28 @@ func ExternalUrl() string {
 
 // CurrentConfig returns the current runtime OCPP configuration.
 func CurrentConfig() Config {
-	return Config{Port: port}
+	return Config{Port: port, DateTimeGranularity: dateTimeGranularity}
+}
+
+func configureDateTimeGranularity(granularity string) {
+	switch strings.ToLower(granularity) {
+	case "", DateTimeGranularitySeconds:
+		dateTimeGranularity = DateTimeGranularitySeconds
+		types.DateTimeFormat = time.RFC3339
+	case DateTimeGranularityMilliseconds:
+		dateTimeGranularity = DateTimeGranularityMilliseconds
+		types.DateTimeFormat = dateTimeGranularityMillisecondsLayout
+	default:
+		dateTimeGranularity = DateTimeGranularitySeconds
+		types.DateTimeFormat = time.RFC3339
+		util.NewLogger("ocpp").WARN.Printf("unsupported dateTimeGranularity %q, using %s", granularity, DateTimeGranularitySeconds)
+	}
 }
 
 // Init initializes the OCPP server
 func Init(cfg Config, networkExternalUrl string) {
 	port = cfg.Port
+	configureDateTimeGranularity(cfg.DateTimeGranularity)
 	externalUrl = networkExternalUrl
 }
 
