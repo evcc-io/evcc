@@ -1,7 +1,6 @@
 package eudataact
 
 import (
-	"log"
 	"maps"
 	"slices"
 	"sync"
@@ -29,6 +28,7 @@ type vehicleState struct {
 	identifier string
 	data       map[string]point
 	after      time.Time
+	seq        uint64 // delivery counter, incremented per merged dataset
 }
 
 var (
@@ -74,7 +74,7 @@ func (s *store) state(vin string) *vehicleState {
 // merged and merges them into the vehicle's map oldest to newest. It returns the
 // newest dataset's delivery time (used to schedule the next poll).
 // On first poll latest maxBackfill content datasets are downloaded.
-func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
+func (s *store) update(vin string) (time.Time, error) {
 	v := s.state(vin)
 
 	v.mu.Lock()
@@ -116,7 +116,7 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 			return newest, err
 		}
 
-		data, err := parseDataset(log, b)
+		data, err := parseDataset(b)
 		if err != nil {
 			return newest, err
 		}
@@ -127,7 +127,8 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 			v.after = d.CreatedOn
 		}
 
-		merge(v.data, data)
+		v.seq++
+		merge(v.data, data, v.seq)
 
 		if !initial {
 			logData(s.api.log, data)
@@ -187,8 +188,11 @@ func pending(content []dataset, after time.Time) []dataset {
 	return res
 }
 
-// merge lets src (the newer dataset) win per field. The portal's per-field
-// timestampUtc is unreliable, so delivery order decides, not the timestamp.
-func merge(dst, src map[string]point) {
-	maps.Copy(dst, src)
+// merge lets src (the newer dataset) win per field and stamps each field with
+// seq, the dataset's delivery sequence (timestampUtc is unreliable).
+func merge(dst, src map[string]point, seq uint64) {
+	for k, p := range src {
+		p.Seq = seq
+		dst[k] = p
+	}
 }

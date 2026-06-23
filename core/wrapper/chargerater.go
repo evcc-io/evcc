@@ -145,7 +145,7 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
 		f, err := m.TotalEnergy()
 		if err != nil {
-			return 0, fmt.Errorf("charge total import: %v", err)
+			return 0, fmt.Errorf("charge total import: %w", err)
 		}
 
 		// late-latch baseline if StartCharge could not read TotalEnergy

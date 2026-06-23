@@ -6,7 +6,7 @@ products:
       generic: MyŠkoda
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: timeout
 render: |
   type: skoda

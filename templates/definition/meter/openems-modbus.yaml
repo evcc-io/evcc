@@ -115,13 +115,11 @@ params:
       en: active battery control (Modbus/TCP Write Access)
     usages: ["battery"]
   - name: watchdog
-    type: duration
     default: 60s
     description:
       de: Batteriesteuerung API-Timeout
       en: battery control API timeout
     usages: ["battery"]
-    advanced: true
   - preset: battery-params
 render: |
   type: custom

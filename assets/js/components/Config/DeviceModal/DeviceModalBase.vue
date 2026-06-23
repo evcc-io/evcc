@@ -56,7 +56,7 @@
 
 					<div v-if="authRequired">
 						<PropertyEntry
-							v-for="param in authParams"
+							v-for="param in authNormalParams"
 							:id="`${deviceType}Param${param.Name}`"
 							:key="param.Name"
 							v-bind="param"
@@ -64,6 +64,19 @@
 							:service-values="serviceValues[param.Name]"
 							:currency="currency"
 						/>
+						<PropertyCollapsible v-if="authAdvancedParams.length">
+							<template #advanced>
+								<PropertyEntry
+									v-for="param in authAdvancedParams"
+									:id="`${deviceType}Param${param.Name}`"
+									:key="param.Name"
+									v-bind="param"
+									v-model="values[param.Name]"
+									:service-values="serviceValues[param.Name]"
+									:currency="currency"
+								/>
+							</template>
+						</PropertyCollapsible>
 
 						<div v-if="auth.code">
 							<hr class="my-5" />
@@ -169,7 +182,11 @@
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
-				/>
+				>
+					<template #after-test>
+						<slot name="after-test" :values="values"></slot>
+					</template>
+				</DeviceModalActions>
 			</template>
 		</form>
 	</GenericModal>
@@ -341,6 +358,12 @@ export default defineComponent({
 			const { params = [] } = this.template?.Auth ?? {};
 			return this.templateParams.filter((p) => params.includes(p.Name));
 		},
+		authNormalParams() {
+			return this.authParams.filter((p: TemplateParam) => !p.Advanced && !p.Deprecated);
+		},
+		authAdvancedParams() {
+			return this.authParams.filter((p: TemplateParam) => p.Advanced || p.Deprecated);
+		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
 		},
@@ -440,7 +463,13 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
+			const authParamNames: string[] = this.template?.Auth?.params ?? [];
+			return (
+				authParamNames.length > 0 &&
+				this.templateParams
+					.filter((p: TemplateParam) => authParamNames.includes(p.Name) && p.Required)
+					.some((p: TemplateParam) => !this.values[p.Name])
+			);
 		},
 		authValues() {
 			const params = this.template?.Auth?.params ?? [];

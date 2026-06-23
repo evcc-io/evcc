@@ -163,6 +163,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"optimize":                {"POST", "/optimize", getHandler(site.Optimize)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 		"devicecolors":            {"PUT", "/devicecolors", updateDeviceColor(site)},
+
+		"optimizerchargingstrategy": {"POST", "/optimizerchargingstrategy/{value:[a-z_]+}", stringHandler(site.SetOptimizerChargingStrategy, site.GetOptimizerChargingStrategy)},
 	}
 
 	for _, r := range routes {

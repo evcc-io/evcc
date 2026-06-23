@@ -11,19 +11,21 @@ import (
 func siteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
-			Title   string   `json:"title"`
-			Grid    string   `json:"grid"`
-			PV      []string `json:"pv"`
-			Battery []string `json:"battery"`
-			Aux     []string `json:"aux"`
-			Ext     []string `json:"ext"`
+			Title     string   `json:"title"`
+			Grid      string   `json:"grid"`
+			PV        []string `json:"pv"`
+			Battery   []string `json:"battery"`
+			Aux       []string `json:"aux"`
+			Ext       []string `json:"ext"`
+			Consumers []string `json:"consumers"`
 		}{
-			Title:   site.GetTitle(),
-			Grid:    site.GetGridMeterRef(),
-			PV:      site.GetPVMeterRefs(),
-			Battery: site.GetBatteryMeterRefs(),
-			Aux:     site.GetAuxMeterRefs(),
-			Ext:     site.GetExtMeterRefs(),
+			Title:     site.GetTitle(),
+			Grid:      site.GetGridMeterRef(),
+			PV:        site.GetPVMeterRefs(),
+			Battery:   site.GetBatteryMeterRefs(),
+			Aux:       site.GetAuxMeterRefs(),
+			Ext:       site.GetExtMeterRefs(),
+			Consumers: site.GetConsumerMeterRefs(),
 		}
 
 		jsonWrite(w, res)
@@ -44,12 +46,13 @@ func validateRefs(w http.ResponseWriter, refs []string) bool {
 func updateSiteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload struct {
-			Title   *string
-			Grid    *string
-			PV      *[]string
-			Battery *[]string
-			Aux     *[]string
-			Ext     *[]string
+			Title     *string
+			Grid      *string
+			PV        *[]string
+			Battery   *[]string
+			Aux       *[]string
+			Ext       *[]string
+			Consumers *[]string
 		}
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
@@ -103,6 +106,15 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			}
 
 			site.SetExtMeterRefs(*payload.Ext)
+			setConfigDirty()
+		}
+
+		if payload.Consumers != nil {
+			if !validateRefs(w, *payload.Consumers) {
+				return
+			}
+
+			site.SetConsumerMeterRefs(*payload.Consumers)
 			setConfigDirty()
 		}
 
