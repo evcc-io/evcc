@@ -121,7 +121,6 @@ params:
       de: Die vzlogger Kanal uuid für Spannung in Phase 3 (OBIS Code 72.7.0)
       en: The vzlogger channel uuid for voltage on phase 3 (OBIS Code 72.7.0)
   - name: cache
-    advanced: true
     default: 1s
 render: |
   type: custom

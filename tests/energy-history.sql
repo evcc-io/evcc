@@ -2,6 +2,7 @@ CREATE TABLE `entities` (
   `id` integer,
   `group` text,
   `name` text,
+  `title` text,
   PRIMARY KEY (`id`)
 );
 CREATE UNIQUE INDEX `entities_group_name` ON `entities`(`group`, `name`);
@@ -14,17 +15,19 @@ CREATE TABLE `meters` (
 );
 CREATE UNIQUE INDEX `meters_meter_ts` ON `meters`(`meter`, `ts`);
 
--- entities
-INSERT INTO `entities` VALUES (1, 'home', 'home');
-INSERT INTO `entities` VALUES (2, 'grid', 'grid');
-INSERT INTO `entities` VALUES (3, 'battery', 'battery');
-INSERT INTO `entities` VALUES (4, 'pv', 'solar');
-INSERT INTO `entities` VALUES (5, 'meter', 'Kitchen');
-INSERT INTO `entities` VALUES (6, 'meter', 'Office');
-INSERT INTO `entities` VALUES (7, 'pv', 'pv-east');
-INSERT INTO `entities` VALUES (8, 'pv', 'pv-west');
-INSERT INTO `entities` VALUES (9, 'forecast', 'forecast');
-INSERT INTO `entities` VALUES (10, 'battery', 'battery-2');
+-- entities (name = stable id, title = display label)
+-- home is a virtual entity; evcc resets its title to "home" on boot
+INSERT INTO `entities` (id, `group`, name, title) VALUES (1, 'home', 'home', 'home');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (2, 'grid', 'grid', 'Grid');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (3, 'battery', 'battery', 'Battery');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (4, 'pv', 'solar', 'Solar');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (5, 'consumer', 'kitchen', 'Kitchen');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (6, 'consumer', 'office', 'Office');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (7, 'pv', 'pv-east', 'PV East');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (8, 'pv', 'pv-west', 'PV West');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (9, 'forecast', 'forecast', 'Forecast');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (10, 'battery', 'battery-2', 'Battery 2');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (11, 'meter', 'submeter', 'Submeter');
 
 -- =====================================================================
 -- API test data: 2026-03-24/25 (existing). Used by the JSON-shape tests.
@@ -154,3 +157,17 @@ INSERT INTO `meters` VALUES (10, 1775645100, 0, 0.2);
 INSERT INTO `meters` VALUES (3, 1781517600, 1.4, 1.0);
 INSERT INTO `meters` VALUES (3, 1781604000, 1.4, 1.0);
 INSERT INTO `meters` VALUES (3, 1781690400, 1.4, 1.0);
+
+-- 2026-04-09 → additional meter (ext) standalone chart. Single entity 1.2 kWh,
+-- not home-combined, so no virtual "Others" series.
+INSERT INTO `meters` VALUES (11, 1775728800, 0.3, 0);
+INSERT INTO `meters` VALUES (11, 1775729700, 0.3, 0);
+INSERT INTO `meters` VALUES (11, 1775730600, 0.3, 0);
+INSERT INTO `meters` VALUES (11, 1775731500, 0.3, 0);
+
+-- 2026-04-10 → additional meter with export. Import peak 2 kW, export 0.4 kW.
+-- Negative values must flip the axis to symmetric (bidirectional) ±2 kW.
+INSERT INTO `meters` VALUES (11, 1775815200, 0.5, 0.1);
+INSERT INTO `meters` VALUES (11, 1775816100, 0.5, 0.1);
+INSERT INTO `meters` VALUES (11, 1775817000, 0.5, 0.1);
+INSERT INTO `meters` VALUES (11, 1775817900, 0.5, 0.1);

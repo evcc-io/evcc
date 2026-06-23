@@ -41,9 +41,7 @@ params:
   - name: maxdischargepower
     service: modbus/read?address=1040&type=holding&encoding=float32s&resulttype=int&{modbus}
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
 render: |
   {{- if eq .usage "pv" }}
   type: custom
@@ -65,7 +63,7 @@ render: |
     register:
       address: 1056 # total DC PV energy (sum), Wh
       type: holding
-      decode: float32s
+      encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
     scale: 0.001 # Wh -> kWh
   maxacpower: {{ .maxacpower }} # W
   {{- end }}

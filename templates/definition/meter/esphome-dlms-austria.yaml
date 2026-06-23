@@ -15,7 +15,6 @@ params:
   - name: usage
     choice: ["grid"]
   - name: host
-    required: true
   - name: timeout
     default: 10s
     advanced: true
