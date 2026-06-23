@@ -16,6 +16,16 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 1
+  - name: get_powers_per_phase
+    default: "no"
+    advanced: true
+    description:
+      de: Leistung der einzelnen Phasen abrufen
+      en: Get power of single phases
+    help:
+      de: Die Leistungswerte der einzelnen Phasen werden für die Steuerung nicht benötigt, können jedoch durch evcc abgerufen und angezeigt werden.
+      en: The power values of the single phases aren't needed for control purposes, but evcc can retrieve and display them.
+    type: bool
 render: |
   type: custom
   power: # current power in W
@@ -41,6 +51,7 @@ render: |
       type: input
       decode: int32
     scale: 0.01
+  {{ if eq .get_powers_per_phase "true" }}
   powers: # phase powers in W
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -60,6 +71,7 @@ render: |
         address: 16
         type: input
         decode: int32
+  {{ end }}
   currents: # phase currents in A
     - source: modbus
       {{- include "modbus" . | indent 4 }}
