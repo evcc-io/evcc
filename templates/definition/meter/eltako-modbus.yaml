@@ -6,13 +6,9 @@ products:
 requirements:
   description:
     de: |
-      Getestet zusammen mit dem Modbus-Gateway von Eltako (ZGW16-IP).
-
-      Im Gateway müssen folgende Register aktiviert werden: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075
+      Wird das Gateway von Eltako verwendet (ZGW16-IP) müssen folgende Register aktiviert werden: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075
     en: |
-      Tested with Modbus gateway Eltako ZGW16-IP.
-
-      You need to activate the following registers in the gateway setting: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075
+      If you use the modbus gateway from Eltako (ZGW16-IP), you need to activate the following registers in the gateway setting: 30001, 30003, 30005, 30007, 30009, 30011, 30013, 30015, 30017, 30053, 30073, 30075
 params:
   - name: usage
     choice: ["charge", "grid", "pv"]
@@ -20,24 +16,18 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 1
-  - name: timeout
-    default: 15s
 render: |
   type: custom
   power: # current power in W
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 52
       type: input
       decode: int32
-
-
   energy: # meter in kWh
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 72
       type: input
@@ -46,40 +36,33 @@ render: |
   returnenergy: # return meter in kWh
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 74
       type: input
       decode: int32
     scale: 0.01
-    
   powers: # phase powers in W
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 12
         type: input
         decode: int32
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 14
         type: input
         decode: int32
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 16
         type: input
         decode: int32
-      
   currents: # phase currents in A
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 6
         type: input
@@ -87,7 +70,6 @@ render: |
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 8
         type: input
@@ -95,17 +77,14 @@ render: |
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 10
         type: input
         decode: int32
       scale: 0.01
-      
   voltages: # phase voltages in V
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 0
         type: input
@@ -113,7 +92,6 @@ render: |
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 2
         type: input
@@ -121,7 +99,6 @@ render: |
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       register:
         address: 4
         type: input
