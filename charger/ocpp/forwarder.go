@@ -384,15 +384,18 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
 			sc.pendingChargerCalls[msgID] = struct{}{}
 			sc.pendingChargerCallsMu.Unlock()
 		}
-		if err := conn.Write(context.Background(), websocket.MessageText, frame); err != nil {
-			forwarderLog.ERROR.Printf("forwarder: write buffered frame to upstream for %s: %v", id, err)
+		writeCtx, writeCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		writeErr := conn.Write(writeCtx, websocket.MessageText, frame)
+		writeCancel()
+		if writeErr != nil {
+			forwarderLog.ERROR.Printf("forwarder: write buffered frame to upstream for %s: %v", id, writeErr)
 			conn.CloseNow()
 			sidecarsMu.Lock()
 			if sidecars[id] == sc {
 				delete(sidecars, id)
 			}
 			sidecarsMu.Unlock()
-			recordForwarderError(id, err.Error())
+			recordForwarderError(id, writeErr.Error())
 			notifyUpdated()
 			return false
 		}
