@@ -138,15 +138,15 @@ func TestSeriesCSV_SocTempColumns(t *testing.T) {
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	t1 := t0.Add(15 * time.Minute)
 
-	slot := func(t time.Time, soc, temp *float64) Slot {
+	slot := func(t time.Time, socTemp *float64) Slot {
 		s := mkSlot(t, 1, 0)
-		s.Soc, s.Temp = soc, temp
+		s.SocTemp = socTemp
 		return s
 	}
 
 	series := SeriesCSV{
-		{Group: Battery, Title: "bat", Data: []Slot{slot(t0, new(90.0), nil), slot(t1, new(80.0), nil)}},
-		{Group: Loadpoint, Title: "heater", Data: []Slot{slot(t0, nil, new(45.0)), slot(t1, nil, new(46.0))}},
+		{Group: Battery, Title: "bat", Data: []Slot{slot(t0, new(90.0)), slot(t1, new(80.0))}},
+		{Group: Loadpoint, Title: "heater", IsTemp: true, Data: []Slot{slot(t0, new(45.0)), slot(t1, new(46.0))}},
 		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2, 0), mkSlot(t1, 3, 0)}},
 	}
 
@@ -168,8 +168,8 @@ func TestQueryEnergySoc(t *testing.T) {
 	require.NoError(t, db.Instance.Create(&e).Error)
 
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
-	require.NoError(t, persist(e, base, 1, 0, new(80.0), nil))
-	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0), nil))
+	require.NoError(t, persist(e, base, 1, 0, new(80.0)))
+	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0)))
 
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(time.Hour).UTC()
@@ -179,12 +179,12 @@ func TestQueryEnergySoc(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Len(t, res[0].Data, 1)
-	require.Equal(t, 80.0, *res[0].Data[0].Soc)
-	require.Nil(t, res[0].Data[0].Temp)
+	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
+	require.False(t, res[0].IsTemp) // battery: value is soc
 
 	// grouped sums omit the per-entity snapshot
 	res, err = QueryEnergy(from, to, "hour", true)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
-	require.Nil(t, res[0].Data[0].Soc)
+	require.Nil(t, res[0].Data[0].SocTemp)
 }

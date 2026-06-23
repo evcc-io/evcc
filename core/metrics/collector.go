@@ -68,6 +68,16 @@ func (e *entity) updateTitle(title string) error {
 	return db.Instance.Model(e).UpdateColumn("title", title).Error
 }
 
+// updateIsTemp refreshes the entity's stored is_temp flag if it changed
+func (e *entity) updateIsTemp(isTemp bool) error {
+	if e.IsTemp == isTemp {
+		return nil
+	}
+
+	e.IsTemp = isTemp
+	return db.Instance.Model(e).UpdateColumn("is_temp", isTemp).Error
+}
+
 // UpdateTitle refreshes the collector entity's stored title if it changed.
 func (c *Collector) UpdateTitle(title string) error {
 	return c.entity.updateTitle(title)
@@ -103,23 +113,18 @@ func (c *Collector) process(fun func()) error {
 
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
-	c.accu.Soc = nil
-	c.accu.Temp = nil
+	c.accu.SocTemp = nil
 	return nil
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.Soc, c.accu.Temp)
+	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp)
 }
 
-// SetSoc records the slot-start soc. Call after AddEnergy so a boundary reading lands in the new slot.
-func (c *Collector) SetSoc(value float64) {
-	c.accu.setSoc(value)
-}
-
-// SetTemp records the slot-start temperature (heating chargers), like SetSoc.
-func (c *Collector) SetTemp(value float64) {
-	c.accu.setTemp(value)
+// SetSocTemp records the slot-start soc (temperature when isTemp). Call after AddEnergy.
+func (c *Collector) SetSocTemp(value float64, isTemp bool) error {
+	c.accu.setSocTemp(value)
+	return c.entity.updateIsTemp(isTemp)
 }
 
 func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {

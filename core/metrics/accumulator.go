@@ -15,21 +15,13 @@ type Accumulator struct {
 	returnEnergyMeter *float64 // kWh
 	Energy            float64  `json:"energy"`       // kWh
 	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
-	Soc               *float64 `json:"soc,omitempty"`
-	Temp              *float64 `json:"temp,omitempty"`
+	SocTemp           *float64 `json:"socTemp,omitempty"`
 }
 
-// setSoc keeps the first soc reading per slot.
-func (m *Accumulator) setSoc(value float64) {
-	if m.Soc == nil {
-		m.Soc = &value
-	}
-}
-
-// setTemp keeps the first temperature reading per slot.
-func (m *Accumulator) setTemp(value float64) {
-	if m.Temp == nil {
-		m.Temp = &value
+// setSocTemp keeps the first reading per slot.
+func (m *Accumulator) setSocTemp(value float64) {
+	if m.SocTemp == nil {
+		m.SocTemp = &value
 	}
 }
 
