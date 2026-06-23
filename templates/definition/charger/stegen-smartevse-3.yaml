@@ -31,11 +31,6 @@ requirements:
       - MQTT-Broker global in evcc.yaml konfigurieren
       - Phasenumschaltung wird ueber den Parameter `phases1p3p` aktiviert
 params:
-  - name: host
-    description:
-      en: SmartEVSE IP address or hostname
-      de: IP-Adresse oder Hostname des SmartEVSE
-    example: "192.168.1.100"
   - name: topic
     description:
       en: MQTT topic prefix (e.g. SmartEVSE-8088)
