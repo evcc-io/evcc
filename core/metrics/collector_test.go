@@ -309,3 +309,56 @@ func TestCreateEntityRefreshesTitle(t *testing.T) {
 	require.NoError(t, db.Instance.Model(new(entity)).Where("\"group\" = ? AND name = ?", "grid", "grid").Count(&count).Error)
 	require.EqualValues(t, 1, count, "must not duplicate existing rows")
 }
+
+// a meter regrouped to consumer keeps its id and history via in-place relabel
+func TestCreateEntityReconcilesExtToConsumer(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	// ext meter with a persisted history slot
+	ext, err := createEntity(Meter, "db:5", "Fridge")
+	require.NoError(t, err)
+	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0))
+
+	// reconfigured as consumer: same row relabeled, history intact
+	con, err := createEntity(Consumer, "db:5", "Fridge")
+	require.NoError(t, err)
+	require.Equal(t, ext.Id, con.Id, "must reuse the existing row")
+	require.Equal(t, Consumer, con.Group)
+
+	var stored entity
+	require.NoError(t, db.Instance.First(&stored, ext.Id).Error)
+	require.Equal(t, Consumer, stored.Group, "group must be persisted")
+
+	// no duplicate entity for the name
+	var entities int64
+	require.NoError(t, db.Instance.Model(new(entity)).Where("name = ?", "db:5").Count(&entities).Error)
+	require.EqualValues(t, 1, entities)
+
+	// history row still attached to the (now consumer) entity
+	var meters int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ?", ext.Id).Count(&meters).Error)
+	require.EqualValues(t, 1, meters)
+}
+
+// an existing consumer row blocks the relabel, leaving the meter row untouched
+func TestCreateEntityReconcileGuard(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	meterRow, err := createEntity(Meter, "db:7", "")
+	require.NoError(t, err)
+
+	// pre-existing consumer row blocks the in-place relabel
+	conRow := entity{Group: Consumer, Name: "db:7"}
+	require.NoError(t, db.Instance.Create(&conRow).Error)
+
+	got, err := createEntity(Consumer, "db:7", "")
+	require.NoError(t, err)
+	require.Equal(t, conRow.Id, got.Id, "must reuse existing consumer row")
+
+	// meter row untouched
+	var stored entity
+	require.NoError(t, db.Instance.First(&stored, meterRow.Id).Error)
+	require.Equal(t, Meter, stored.Group)
+}

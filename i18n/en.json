@@ -534,6 +534,10 @@
     },
     "meter": {
       "cancel": "Cancel",
+      "convertToConsumer": {
+        "confirm": "Converts this \"additional meter\" to a \"consumer\".",
+        "link": "Convert to consumer"
+      },
       "delete": "Delete",
       "generic": "Generic integrations",
       "option": {
