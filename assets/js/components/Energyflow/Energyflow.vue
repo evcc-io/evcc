@@ -197,9 +197,9 @@
 								@details-clicked="toggleCo2"
 								@toggle="toggleConsumers"
 							>
-								<template v-if="consumers.length > 0" #expanded>
+								<template v-if="allConsumers.length > 0" #expanded>
 									<EnergyflowEntry
-										v-for="(c, index) in consumers"
+										v-for="(c, index) in allConsumers"
 										:key="index"
 										:name="c.title || c.name"
 										:power="c.power"
@@ -256,6 +256,7 @@
 								:power="batteryCharge"
 								:powerUnit="powerUnit"
 								:iconProps="{
+									hold: batteryChargeHold,
 									soc: batterySoc,
 									gridCharge: batteryGridChargeActive,
 								}"
@@ -375,6 +376,7 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
+		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		pvPower: { type: Number, default: 0 },
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
@@ -445,13 +447,20 @@ export default defineComponent({
 			return this.chargePower(this.batteryPower);
 		},
 		batteryChargeLabel() {
-			return this.$t("main.energyflow.batteryCharge");
+			return this.$t(
+				`main.energyflow.battery${this.batteryChargeHold ? "ChargeHold" : "Charge"}`
+			);
 		},
 		batteryDischargeLabel() {
-			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
+			return this.$t(
+				`main.energyflow.battery${this.batteryHold ? "DischargeHold" : "Discharge"}`
+			);
 		},
 		batteryHold() {
 			return this.batteryMode === "hold";
+		},
+		batteryChargeHold() {
+			return this.batteryMode === "holdcharge";
 		},
 		consumption() {
 			return this.homePower + this.batteryCharge + this.loadpointsPower;
@@ -581,8 +590,8 @@ export default defineComponent({
 				count: this.activeLoadpointsCount,
 			});
 		},
-		consumers() {
-			return [...this.aux, ...this.ext];
+		allConsumers() {
+			return [...this.consumers, ...this.aux];
 		},
 		batteryForecastHighest(): BatteryForecastPoint | undefined {
 			return this.battery?.forecast?.highest;

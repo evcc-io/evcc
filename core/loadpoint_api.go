@@ -127,6 +127,12 @@ func (lp *Loadpoint) setTitle(title string) {
 	lp.title = title
 	lp.publish(keys.Title, lp.title)
 	lp.settings.SetString(keys.Title, lp.title)
+
+	if lp.chargeEnergy != nil {
+		if err := lp.chargeEnergy.UpdateTitle(title); err != nil {
+			lp.log.ERROR.Printf("update title: %v", err)
+		}
+	}
 }
 
 // GetStatus returns the charging status
@@ -458,6 +464,29 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 
 	// apply immediately
 	lp.setSocConfig(soc)
+}
+
+// GetUI returns the display-only ui settings
+func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.ui
+}
+
+func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
+	lp.ui = ui
+	lp.publish(keys.UI, ui)
+	lp.settings.SetJson(keys.UI, ui)
+}
+
+// SetUI sets the display-only ui settings. Not used in control logic.
+func (lp *Loadpoint) SetUI(ui loadpoint.UIConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set ui config: %+v", ui)
+
+	lp.setUI(ui)
 }
 
 // GetThresholds returns the PV mode threshold settings

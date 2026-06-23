@@ -81,6 +81,33 @@
 					/>
 				</div>
 
+				<h2 class="my-4 mt-5">{{ $t("config.section.consumers") }}</h2>
+				<div class="p-0 config-list">
+					<MeterCard
+						v-for="meter in consumerMeters"
+						:key="meter.name"
+						:meter="meter"
+						meter-type="consumer"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+					/>
+					<MeterCard
+						v-for="meter in auxMeters"
+						:key="meter.name"
+						:meter="meter"
+						meter-type="aux"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+					/>
+					<NewDeviceButton
+						data-testid="add-consumer"
+						:title="$t('config.main.addConsumer')"
+						@click="openModal('meter', { choices: ['consumer', 'aux'] })"
+					/>
+				</div>
+
 				<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
 				<div class="p-0 config-list">
 					<MeterCard
@@ -129,15 +156,6 @@
 				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
 				<div class="p-0 config-list">
 					<MeterCard
-						v-for="meter in auxMeters"
-						:key="meter.name"
-						:meter="meter"
-						meter-type="aux"
-						:has-error="hasDeviceError('meter', meter.name)"
-						:tags="deviceTags('meter', meter.name)"
-						@edit="(type, id) => openModal('meter', { type, id })"
-					/>
-					<MeterCard
 						v-for="meter in extMeters"
 						:key="meter.name"
 						:meter="meter"
@@ -147,8 +165,9 @@
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<NewDeviceButton
+						data-testid="add-additional"
 						:title="$t('config.main.addAdditional')"
-						@click="openModal('meter', { choices: ['aux', 'ext'] })"
+						@click="openModal('meter', { type: 'ext' })"
 					/>
 				</div>
 
@@ -649,6 +668,7 @@ export default defineComponent({
 				title: "",
 				aux: null as string[] | null,
 				ext: null as string[] | null,
+				consumers: null as string[] | null,
 			} as SiteConfig,
 			deviceValueTimeout: null as Timeout,
 			deviceValues: {
@@ -704,6 +724,9 @@ export default defineComponent({
 		extMeters() {
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
+		},
+		consumerMeters() {
+			return this.getMetersByNames(this.site?.consumers);
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -805,7 +828,7 @@ export default defineComponent({
 					value: status.maxConsumptionPower,
 					warning: true,
 				};
-			} else {
+			} else if (status.dimmed !== undefined) {
 				result["dimmed"] = { value: status.dimmed };
 			}
 			if (status.curtailed && status.maxProductionPower !== undefined) {
@@ -813,7 +836,7 @@ export default defineComponent({
 					value: status.maxProductionPower,
 					warning: true,
 				};
-			} else {
+			} else if (status.curtailed !== undefined) {
 				result["curtailed"] = { value: status.curtailed };
 			}
 
@@ -1066,6 +1089,22 @@ export default defineComponent({
 						this.site.ext.push(name);
 						this.saveSite(type);
 						break;
+					case "consumer":
+						if (!this.site.consumers) this.site.consumers = [];
+						this.site.consumers.push(name);
+						this.saveSite("consumers");
+						break;
+				}
+			}
+
+			// Converted: move ext meter to consumers (history is reconciled on restart)
+			if (result.action === "converted") {
+				const name = this.meters.find((m) => m.id === result.id)?.name;
+				if (name) {
+					const ext = (this.site.ext || []).filter((n) => n !== name);
+					const consumers = [...(this.site.consumers || []), name];
+					await api.put("/config/site", { ext, consumers });
+					await this.loadSite();
 				}
 			}
 

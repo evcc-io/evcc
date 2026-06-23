@@ -18,10 +18,9 @@ requirements:
       Otherwise the vehicle cannot be put into sleep mode.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const

@@ -154,8 +154,13 @@ func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.Ent
 
 	res, err := update(entity)
 	if err != nil {
-		// announced but not provided
-		return zero, eebus.WrapError(err)
+		// scenario announced but no usable value yet
+		if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrDataInvalid) {
+			err = api.ErrNotAvailable
+		}
+		return zero, err
 	}
 
 	return res, nil

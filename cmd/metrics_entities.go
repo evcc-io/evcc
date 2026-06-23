@@ -30,14 +30,13 @@ func runMetricsEntities(cmd *cobra.Command, args []string) {
 	}
 
 	metricsSortCanonical(entities)
-	title := metricsEntityTitle()
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(tw, "group\tname\ttitle\tslots\tfirst\tlast")
 
 	for _, e := range entities {
 		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t%s\n",
-			e.Group, e.Name, title(e.Group, e.Name), e.Slots,
+			e.Group, e.Name, e.Title, e.Slots,
 			metricsFormatDate(e.First), metricsFormatDate(e.Last))
 	}
 

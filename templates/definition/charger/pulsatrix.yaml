@@ -6,7 +6,6 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: host #IP address or hostname (can be found on 3rd page of SECC display)
-    required: true
     help:
       en: Shown on 3rd page of SECC display
       de: Wird auf der dritten Displayseite des SECC angezeigt

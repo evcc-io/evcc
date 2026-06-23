@@ -170,9 +170,6 @@ func ForwarderRules() []ForwarderRule {
 	return forwarderRules
 }
 
-// StartForwarder is a no-op; hooks fire on every charger connection.
-func StartForwarder() {}
-
 // actionsRelayedToUpstream lists actions for which upstream is the authoritative
 // Central System: evcc's handler is bypassed and upstream's reply relayed back.
 var actionsRelayedToUpstream = map[string]bool{

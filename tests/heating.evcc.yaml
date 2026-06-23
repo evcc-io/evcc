@@ -48,4 +48,4 @@ chargers:
       source: js
       script: |
         55
-    features: [integrateddevice, heating]
+    features: [integrateddevice, heating, switchdevice]

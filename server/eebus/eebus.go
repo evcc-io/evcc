@@ -91,9 +91,24 @@ var Instance *EEBus
 func GetStatus() any {
 	return struct {
 		Ski string `json:"ski"`
+		QR  string `json:"qr,omitempty"`
 	}{
 		Ski: Ski(),
+		QR:  qrCode(),
 	}
+}
+
+// qrCode returns the SHIP installation QR code text per EEBus SHIP installation
+// requirements, or empty if unavailable
+func qrCode() string {
+	if Instance == nil {
+		return ""
+	}
+	qr, err := Instance.service.QRCodeText()
+	if err != nil {
+		return ""
+	}
+	return qr
 }
 
 func NewServer(other Config) (*EEBus, error) {
@@ -362,15 +377,18 @@ func (c *EEBus) ServicePairingDetailUpdate(identity shipapi.ServiceIdentity, det
 	}
 }
 
-// SHIP Pairing Service events: evcc trusts remote services by their configured
-// SKI via RegisterRemoteService and does not use SHIP Pairing, so these are no-ops
+// SHIP Pairing Service events: evcc trusts remote services by configured SKI via
+// RegisterRemoteService and does not use SHIP Pairing; logged for visibility only
 func (c *EEBus) ServiceAutoTrusted(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity) {
+	c.log.INFO.Printf("service trusted: %s", identity.SKI)
 }
 
 func (c *EEBus) ServiceAutoTrustFailed(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason error) {
+	c.log.INFO.Printf("service trust failed: %s: %v", identity.SKI, reason)
 }
 
 func (c *EEBus) ServiceAutoTrustRemoved(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason string) {
+	c.log.INFO.Printf("service trust removed: %s: %s", identity.SKI, reason)
 }
 
 // EEBUS Logging interface

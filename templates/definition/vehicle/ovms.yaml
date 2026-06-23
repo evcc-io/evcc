@@ -9,7 +9,7 @@ requirements:
     en: Support for all vehicles via ODB2 adapter in the vehicle. More info at [api.openvehicles.com](http://api.openvehicles.com/).
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: user
     required: true
   - name: password

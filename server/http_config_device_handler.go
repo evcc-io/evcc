@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"time"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api/globalconfig"
@@ -22,9 +23,9 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
-	"github.com/evcc-io/evcc/util/yaml"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
+	"go.yaml.in/yaml/v4"
 )
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
@@ -272,11 +273,19 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
+		if errors.Is(err, config.ErrNotFound) {
+			jsonError(w, http.StatusNotFound, err)
+			return
+		}
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	jsonWrite(w, testInstance(instance))
+	// bound the value-probe phase so a blocking getter cannot stall the response
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	jsonWrite(w, testInstance(ctx, instance))
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
@@ -693,5 +702,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 	close(done)
 	defer cancel()
 
-	jsonWrite(w, testInstance(instance))
+	// bound the value-probe phase so a blocking getter cannot stall the response
+	probeCtx, probeCancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer probeCancel()
+
+	jsonWrite(w, testInstance(probeCtx, instance))
 }

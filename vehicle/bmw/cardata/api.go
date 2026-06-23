@@ -32,7 +32,7 @@ var requiredKeys = []string{
 	"vehicle.vehicle.travelledDistance",
 }
 
-const requiredVersion = "v4"
+const requiredVersion = "v5"
 
 type API struct {
 	*request.Helper

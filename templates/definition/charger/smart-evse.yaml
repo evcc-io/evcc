@@ -16,7 +16,6 @@ params:
   - name: host
   - name: cache
     default: 1s
-    advanced: true
   - name: chargeMode
     default: normal
     advanced: true
