@@ -44,15 +44,15 @@ func TestConfigureDateTimeGranularity(t *testing.T) {
 
 	ts := types.NewDateTime(time.Date(2026, 6, 23, 12, 45, 9, 404_000_000, time.UTC))
 
-	configureDateTimeGranularity(DateTimeGranularitySeconds)
+	configureDateTimeGranularity("seconds")
 	b, err := json.Marshal(ts)
 	require.NoError(t, err)
 	require.JSONEq(t, `"2026-06-23T12:45:09Z"`, string(b))
-	require.Equal(t, DateTimeGranularitySeconds, CurrentConfig().DateTimeGranularity)
+	require.Equal(t, "seconds", CurrentConfig().DateTimeGranularity)
 
-	configureDateTimeGranularity(DateTimeGranularityMilliseconds)
+	configureDateTimeGranularity("milliseconds")
 	b, err = json.Marshal(ts)
 	require.NoError(t, err)
 	require.JSONEq(t, `"2026-06-23T12:45:09.404Z"`, string(b))
-	require.Equal(t, DateTimeGranularityMilliseconds, CurrentConfig().DateTimeGranularity)
+	require.Equal(t, "milliseconds", CurrentConfig().DateTimeGranularity)
 }

@@ -21,14 +21,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
-const (
-	// DateTimeGranularitySeconds serializes OCPP dateTime values without fractional seconds.
-	DateTimeGranularitySeconds = "seconds"
-	// DateTimeGranularityMilliseconds serializes OCPP dateTime values with millisecond precision.
-	DateTimeGranularityMilliseconds = "milliseconds"
-)
-
-const dateTimeGranularityMillisecondsLayout = "2006-01-02T15:04:05.000Z"
+const dateTimeFormatMilliseconds = "2006-01-02T15:04:05.000Z"
 
 type Config struct {
 	Port                int    `json:"port"`
@@ -58,7 +51,7 @@ var (
 	instance            *CS
 	port                = 8887
 	boundPort           int
-	dateTimeGranularity = DateTimeGranularitySeconds
+	dateTimeGranularity = "seconds"
 	externalUrl         string
 )
 
@@ -143,16 +136,16 @@ func CurrentConfig() Config {
 
 func configureDateTimeGranularity(granularity string) {
 	switch strings.ToLower(granularity) {
-	case "", DateTimeGranularitySeconds:
-		dateTimeGranularity = DateTimeGranularitySeconds
+	case "", "seconds":
+		dateTimeGranularity = "seconds"
 		types.DateTimeFormat = time.RFC3339
-	case DateTimeGranularityMilliseconds:
-		dateTimeGranularity = DateTimeGranularityMilliseconds
-		types.DateTimeFormat = dateTimeGranularityMillisecondsLayout
+	case "milliseconds":
+		dateTimeGranularity = "milliseconds"
+		types.DateTimeFormat = dateTimeFormatMilliseconds
 	default:
-		dateTimeGranularity = DateTimeGranularitySeconds
+		dateTimeGranularity = "seconds"
 		types.DateTimeFormat = time.RFC3339
-		util.NewLogger("ocpp").WARN.Printf("unsupported dateTimeGranularity %q, using %s", granularity, DateTimeGranularitySeconds)
+		util.NewLogger("ocpp").WARN.Printf("unsupported dateTimeGranularity %q, using seconds", granularity)
 	}
 }
 
