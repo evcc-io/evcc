@@ -3,7 +3,6 @@ products:
   - brand: Growatt
     description:
       generic: MIN 3000TL-XE (and similar non-hybrid MIN series)
-capabilities: ["pv"]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
