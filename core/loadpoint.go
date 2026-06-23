@@ -786,10 +786,18 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
-		if lp.enabled = enabled; enabled {
+		if enabled {
+			lp.enabled = enabled
+
 			// sync a defined current for use by pv mode without taking a charging decision
 			if ctrl, ok := lp.chargeController.(*CurrentController); ok {
-				_ = ctrl.setLimit(ctrl.effectiveMinCurrent())
+				if err := ctrl.setMinCurrent(); err != nil {
+					lp.log.ERROR.Printf("set min current: %v", err)
+				}
+			} else if minPower := lp.EffectiveMinPower(); minPower > 0 {
+				if err := lp.chargeController.SetPower(minPower); err != nil {
+					lp.log.ERROR.Printf("set power: %v", err)
+				}
 			}
 		}
 	} else {

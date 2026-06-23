@@ -77,6 +77,10 @@ func (lp *CurrentController) roundedCurrent(current float64) float64 {
 	return current
 }
 
+func (lp *CurrentController) setMinCurrent() error {
+	return lp.setLimit(lp.effectiveMinCurrent())
+}
+
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *CurrentController) setLimit(current float64) error {
 	current = lp.roundedCurrent(current)
