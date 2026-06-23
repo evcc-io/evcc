@@ -36,6 +36,9 @@ const (
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
 
+	flagPower            = "power"
+	flagPowerDescription = "Set maximum power"
+
 	flagPhases            = "phases"
 	flagPhasesDescription = "Set usable phases (1 or 3)"
 
