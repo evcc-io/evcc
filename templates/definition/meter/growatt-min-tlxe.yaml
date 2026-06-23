@@ -10,7 +10,7 @@ render: |
   type: custom
   power:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 35
       type: input
@@ -18,7 +18,7 @@ render: |
     scale: 0.1
   energy:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 55
       type: input
