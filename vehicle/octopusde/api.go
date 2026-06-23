@@ -72,13 +72,13 @@ func (v *API) Accounts() ([]string, error) {
 }
 
 // socStatus holds the live state-of-charge values reported for a SmartFlex device.
-// The scalar tag defers decoding to json, so json.Number takes bare or quoted numbers.
+// json.Number decodes both bare and quoted numbers (Kraken serialises soc as "41.00").
 type socStatus struct {
 	StateOfCharge struct {
-		Value *json.Number `scalar:"true"`
+		Value *json.Number
 	}
 	StateOfChargeLimit struct {
-		UpperSocLimit *json.Number `scalar:"true"`
+		UpperSocLimit *json.Number
 	}
 }
 
