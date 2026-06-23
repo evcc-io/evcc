@@ -3,35 +3,12 @@ package octopusde
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
 	"github.com/evcc-io/evcc/util"
 )
-
-// jsonFloat is a float64 that unmarshals from either a JSON number or a JSON-encoded string.
-// The Octopus Kraken API serialises some numeric fields as quoted strings (e.g. "41.00").
-type jsonFloat float64
-
-func (f *jsonFloat) UnmarshalJSON(data []byte) error {
-	var v float64
-	if err := json.Unmarshal(data, &v); err == nil {
-		*f = jsonFloat(v)
-		return nil
-	}
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-	v, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return err
-	}
-	*f = jsonFloat(v)
-	return nil
-}
 
 // API is the Octopus Energy Germany Kraken client for vehicle data. It reuses the
 // authenticated Kraken GraphQL client from the tariff implementation so the JWT
@@ -95,14 +72,13 @@ func (v *API) Accounts() ([]string, error) {
 }
 
 // socStatus holds the live state-of-charge values reported for a SmartFlex device.
-// Vehicles and charge points expose the same shape via distinct interface types.
-// Pointers distinguish an absent value from a reported zero.
+// json.Number decodes both bare and quoted numbers (Kraken serialises soc as "41.00").
 type socStatus struct {
 	StateOfCharge struct {
-		Value *jsonFloat
+		Value *json.Number
 	}
 	StateOfChargeLimit struct {
-		UpperSocLimit *jsonFloat
+		UpperSocLimit *json.Number
 	}
 }
 
@@ -128,22 +104,23 @@ func (d Device) soc() socStatus {
 	return d.Status.ChargePoint
 }
 
-// Soc returns the battery state of charge in percent, if reported.
-func (d Device) Soc() (float64, bool) {
-	soc := d.soc().StateOfCharge.Value
-	if soc == nil {
+// parseNumber returns the float value of a reported json.Number, if present and valid.
+func parseNumber(n *json.Number) (float64, bool) {
+	if n == nil {
 		return 0, false
 	}
-	return float64(*soc), true
+	f, err := n.Float64()
+	return f, err == nil
+}
+
+// Soc returns the battery state of charge in percent, if reported.
+func (d Device) Soc() (float64, bool) {
+	return parseNumber(d.soc().StateOfCharge.Value)
 }
 
 // TargetSoc returns the configured charge limit in percent, if any.
 func (d Device) TargetSoc() (float64, bool) {
-	limit := d.soc().StateOfChargeLimit.UpperSocLimit
-	if limit == nil {
-		return 0, false
-	}
-	return float64(*limit), true
+	return parseNumber(d.soc().StateOfChargeLimit.UpperSocLimit)
 }
 
 // krakenDevices lists the SmartFlex devices of an account.
