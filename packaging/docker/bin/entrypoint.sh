@@ -97,7 +97,27 @@ else
 		# fix a custom database directory if EVCC_DATABASE_DSN points elsewhere
 		[ -n "$EVCC_DATABASE_DSN" ] && chown -R "$PUID:$PGID" "$(dirname "$EVCC_DATABASE_DSN")" 2> /dev/null || true
 
-		RUNAS="su-exec $PUID:$PGID"
+		# join the group(s) owning mounted serial devices (Modbus RTU, P1/SML readers);
+		# --device keeps the host owner (often root:dialout), so non-root needs the group
+		DEVICE_GIDS="$EVCC_DEVICE_GIDS"
+		for dev in /dev/ttyUSB* /dev/ttyACM* /dev/ttyAMA* /dev/serial/by-id/*; do
+			[ -e "$dev" ] || continue
+			DEVICE_GIDS="$DEVICE_GIDS $(stat -c '%g' "$dev")"
+		done
+		for gid in $DEVICE_GIDS; do
+			[ "$gid" = "$PGID" ] && continue
+			grp=$(getent group "$gid" | cut -d: -f1)
+			if [ -z "$grp" ]; then
+				grp="evccdev$gid"
+				addgroup -g "$gid" "$grp" 2> /dev/null || true
+			fi
+			addgroup evcc "$grp" 2> /dev/null || true
+			echo "Serial: granting access to device group ${grp} (gid ${gid})"
+		done
+
+		# no explicit gid: su-exec uid:gid wipes supplementary groups (setgroups), the
+		# uid-only form keeps them via getgrouplist; primary gid stays PGID from passwd
+		RUNAS="su-exec $PUID"
 	else
 		# started via docker's own `user:`, already non-root: keep HOME on /root so
 		# ~/.evcc/evcc.db still resolves to the mount (no passwd entry sets it here)
