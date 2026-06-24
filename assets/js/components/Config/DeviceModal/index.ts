@@ -3,6 +3,16 @@ import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
+// config write needs the admin password (script plugin)
+export const ADMIN_PASSWORD_REQUIRED = 428;
+
+const allowAdminPasswordRequired = (status: number) =>
+  (status >= 200 && status < 300) || status === ADMIN_PASSWORD_REQUIRED;
+
+function adminPasswordHeader(adminPassword = ""): Record<string, string> {
+  return adminPassword ? { "X-Admin-Password": adminPassword } : {};
+}
+
 export type Product = {
   group: string;
   name: string;
@@ -189,17 +199,25 @@ export const fetchServiceValues = async (
 };
 
 export function createDeviceUtils(deviceType: DeviceType) {
-  function test(id: number | undefined, data: any) {
+  function test(id: number | undefined, data: any, adminPassword = "") {
     let url = `config/test/${deviceType}`;
     if (id !== undefined) {
       url += `/merge/${id}`;
     }
-    return api.post(url, data);
+    const opts = {
+      headers: adminPasswordHeader(adminPassword),
+      validateStatus: allowAdminPasswordRequired,
+    };
+    return api.post(url, data, opts);
   }
 
-  function update(id: number, data: any, force = false) {
-    const params = { force };
-    return api.put(`config/devices/${deviceType}/${id}`, data, { params });
+  function update(id: number, data: any, force = false, adminPassword = "") {
+    const opts = {
+      headers: adminPasswordHeader(adminPassword),
+      validateStatus: allowAdminPasswordRequired,
+      params: { force },
+    };
+    return api.put(`config/devices/${deviceType}/${id}`, data, opts);
   }
 
   function remove(id: number) {
@@ -211,10 +229,13 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
-  async function create(data: any, force = false) {
-    const params = { force };
-    const response = await api.post(`config/devices/${deviceType}`, data, { params });
-    return response.data;
+  function create(data: any, force = false, adminPassword = "") {
+    const opts = {
+      headers: adminPasswordHeader(adminPassword),
+      validateStatus: allowAdminPasswordRequired,
+      params: { force },
+    };
+    return api.post(`config/devices/${deviceType}`, data, opts);
   }
 
   async function loadProducts(lang?: string, usage?: string) {
