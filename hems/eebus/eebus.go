@@ -26,6 +26,7 @@ type EEBus struct {
 	passthrough func(bool) error
 	publishFunc func()
 
+	connected     bool
 	status        status
 	statusUpdated time.Time
 
@@ -291,7 +292,36 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 	}
 }
 
+// Connect tracks the live connection state and signals the connector so that
+// Wait() unblocks on the first connect. It shadows the embedded Connector's
+// promoted method.
+func (c *EEBus) Connect(connected bool) {
+	c.mux.Lock()
+	c.connected = connected
+	c.mux.Unlock()
+
+	if c.Connector != nil {
+		c.Connector.Connect(connected)
+	}
+}
+
 var _ api.HEMS = (*EEBus)(nil)
+
+// Connected implements api.HEMS, reporting whether the EEBus connection to the
+// Steuerbox is currently active.
+func (c *EEBus) Connected() *bool {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return new(c.connected)
+}
+
+// Failsafe implements api.HEMS, reporting whether evcc is currently operating
+// in failsafe mode.
+func (c *EEBus) Failsafe() *bool {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return new(c.status == StatusFailsafe)
+}
 
 // Dimmed implements api.HEMS, derived from consumptionLimitActivated.
 func (c *EEBus) Dimmed() *bool {

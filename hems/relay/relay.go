@@ -136,6 +136,16 @@ func (c *Relay) setConsumptionLimit(limit float64) error {
 
 var _ api.HEMS = (*Relay)(nil)
 
+// Connected implements api.HEMS. Relay has no EEBus connection, so no statement.
+func (c *Relay) Connected() *bool {
+	return nil
+}
+
+// Failsafe implements api.HEMS. Relay has no failsafe concept, so no statement.
+func (c *Relay) Failsafe() *bool {
+	return nil
+}
+
 // Dimmed implements api.HEMS, derived from the active consumption limit.
 func (c *Relay) Dimmed() *bool {
 	c.mu.Lock()
