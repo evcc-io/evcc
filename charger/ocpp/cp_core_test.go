@@ -254,12 +254,30 @@ func TestTriggeredBootNotificationDoesNotNotifyRebootMonitor(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, cp.Connected())
 	assert.False(t, cp.bootTriggered, "flag should be consumed")
+	require.NotNil(t, cp.BootNotificationResult)
+	assert.Equal(t, "Triggered", cp.BootNotificationResult.ChargePointModel, "cached metadata should be refreshed")
 
 	select {
 	case req := <-cp.bootNotificationRequestC:
 		t.Fatalf("triggered BootNotification should not notify reboot monitor, got %s", req.ChargePointModel)
 	default:
 	}
+}
+
+// TestBootTimeoutClearsTriggeredFlag ensures a solicited BootNotification that never
+// arrives does not leak the bootTriggered flag past the connection: the boot timeout
+// must clear it so the next connection's spontaneous boot is treated as a reboot.
+func TestBootTimeoutClearsTriggeredFlag(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+	cp.bootTriggered = true
+
+	timer := time.AfterFunc(time.Hour, func() {})
+	cp.bootTimer = timer
+	cp.onBootTimeout(timer)
+
+	assert.False(t, cp.bootTriggered, "flag must be cleared on boot timeout")
+	assert.True(t, cp.Connected())
 }
 
 func TestSpontaneousBootNotificationNotifiesRebootMonitor(t *testing.T) {
