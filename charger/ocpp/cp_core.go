@@ -22,8 +22,6 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 
 	cp.mu.Lock()
 	cp.BootNotificationResult = request
-	// A BootNotification evcc solicited to complete the connection handshake is
-	// not a charger reboot and must not trigger setup reinitialization.
 	triggered := cp.bootTriggered
 	cp.bootTriggered = false
 	cp.stopBootTimer()

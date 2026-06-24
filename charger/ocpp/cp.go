@@ -22,10 +22,11 @@ type CP struct {
 
 	id string
 
-	connected bool
-	bootTimer *time.Timer // timeout for BootNotification wait after WebSocket connect
-	connectC  chan struct{}
-	meterC    chan struct{}
+	connected     bool
+	bootTimer     *time.Timer // timeout for BootNotification wait after WebSocket connect
+	bootTriggered bool
+	connectC      chan struct{}
+	meterC        chan struct{}
 
 	// configuration properties
 	PhaseSwitching          bool
@@ -39,11 +40,6 @@ type CP struct {
 	meterValuesSample        string
 	bootNotificationRequestC chan *core.BootNotificationRequest
 	BootNotificationResult   *core.BootNotificationRequest
-
-	// bootTriggered is set while evcc has requested a BootNotification (via
-	// TriggerMessage) to complete the current connection handshake. The matching
-	// BootNotification must not be treated as a physical charger reboot.
-	bootTriggered bool
 
 	connectors map[int]*Connector
 }
