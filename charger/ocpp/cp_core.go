@@ -21,8 +21,12 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	}
 
 	cp.mu.Lock()
+	prev := cp.BootNotificationResult
 	cp.BootNotificationResult = request
-	triggered := cp.bootTriggered
+	// A BootNotification evcc solicited to complete the connection handshake is
+	// not a charger reboot - unless its content changed (e.g. a new firmware
+	// version), which means the charger actually restarted and setup must re-run.
+	triggered := cp.bootTriggered && prev != nil && *prev == *request
 	cp.bootTriggered = false
 	cp.stopBootTimer()
 	cp.mu.Unlock()

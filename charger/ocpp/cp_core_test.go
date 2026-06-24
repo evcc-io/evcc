@@ -243,24 +243,56 @@ func TestMonitorRebootOnlyOnce(t *testing.T) {
 func TestTriggeredBootNotificationDoesNotNotifyRebootMonitor(t *testing.T) {
 	log := util.NewLogger("test")
 	cp := NewChargePoint(log, "test-cp")
-	// metadata from a previous connection plus a solicited (triggered) BootNotification
-	cp.BootNotificationResult = &core.BootNotificationRequest{ChargePointModel: "Cached"}
+	boot := core.BootNotificationRequest{
+		ChargePointModel:  "Model",
+		ChargePointVendor: "TestVendor",
+		FirmwareVersion:   "1.0.0",
+	}
+	// unchanged metadata from a previous connection plus a solicited boot
+	cached := boot
+	cp.BootNotificationResult = &cached
 	cp.bootTriggered = true
 
-	_, err := cp.OnBootNotification(&core.BootNotificationRequest{
-		ChargePointModel:  "Triggered",
-		ChargePointVendor: "TestVendor",
-	})
+	current := boot
+	_, err := cp.OnBootNotification(&current)
 	require.NoError(t, err)
 	assert.True(t, cp.Connected())
 	assert.False(t, cp.bootTriggered, "flag should be consumed")
-	require.NotNil(t, cp.BootNotificationResult)
-	assert.Equal(t, "Triggered", cp.BootNotificationResult.ChargePointModel, "cached metadata should be refreshed")
+	assert.Equal(t, &current, cp.BootNotificationResult, "metadata should be refreshed")
 
 	select {
 	case req := <-cp.bootNotificationRequestC:
-		t.Fatalf("triggered BootNotification should not notify reboot monitor, got %s", req.ChargePointModel)
+		t.Fatalf("unchanged triggered BootNotification should not notify reboot monitor, got %s", req.ChargePointModel)
 	default:
+	}
+}
+
+// TestTriggeredBootNotificationWithChangedIdentityNotifiesRebootMonitor covers a
+// charger that actually restarted (e.g. firmware update) but whose boot arrives as
+// a solicited one: the changed content must still trigger a setup re-initialization.
+func TestTriggeredBootNotificationWithChangedIdentityNotifiesRebootMonitor(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+	cp.BootNotificationResult = &core.BootNotificationRequest{
+		ChargePointModel:  "Model",
+		ChargePointVendor: "TestVendor",
+		FirmwareVersion:   "1.0.0",
+	}
+	cp.bootTriggered = true
+
+	_, err := cp.OnBootNotification(&core.BootNotificationRequest{
+		ChargePointModel:  "Model",
+		ChargePointVendor: "TestVendor",
+		FirmwareVersion:   "1.1.0", // updated firmware
+	})
+	require.NoError(t, err)
+	assert.True(t, cp.Connected())
+
+	select {
+	case req := <-cp.bootNotificationRequestC:
+		assert.Equal(t, "1.1.0", req.FirmwareVersion)
+	default:
+		t.Fatal("changed triggered BootNotification should notify reboot monitor")
 	}
 }
 
