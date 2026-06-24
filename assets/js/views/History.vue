@@ -59,7 +59,7 @@
 						<span class="d-block no-wrap text-truncate">
 							{{ $t(`main.history.group.${group}`) }}
 						</span>
-						<small class="d-block no-wrap text-truncate">
+						<small v-if="groupTotalLabel(group)" class="d-block no-wrap text-truncate">
 							{{ groupTotalLabel(group) }}
 						</small>
 					</h3>
@@ -447,6 +447,8 @@ export default defineComponent({
 			return focused !== null && focused !== i;
 		},
 		groupTotalLabel(group: string): string {
+			// Additional meters can be import, export, or consumption, so no meaningful sum.
+			if (group === "meter") return "";
 			// Consumption total comes from `home` (overall consumption),
 			// not the sum of explicit meter entities.
 			const list =
