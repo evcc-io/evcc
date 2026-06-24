@@ -13,7 +13,7 @@ render: |
     source: http
     uri: http://{{ .host }}/api/livedata/status
     jq: .total.Power.v
-energy:
-  source: http
-  uri: http://{{ .host }}/api/livedata/status
-  jq: 'if all(.inverters[]; .radio_stats.rssi > -127) then .total.YieldTotal.v else empty end'
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/livedata/status
+    jq: 'if all(.inverters[]; .radio_stats.rssi > -127) then .total.YieldTotal.v else empty end'
