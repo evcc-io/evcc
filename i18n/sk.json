@@ -135,7 +135,7 @@
     },
     "currency": {
       "description": "Používa sa na formátovanie cien energií, nákladov a úspor na základe vášho tarifu.",
-      "example": "Vaša cena za nabíjanie bola {cena}. Ušetrili ste {amount}.",
+      "example": "Vaša cena za nabíjanie bola {price}. Ušetrili ste {amount}.",
       "label": "Mena",
       "title": "Mena"
     },
@@ -253,7 +253,7 @@
     },
     "general": {
       "applyAndClose": "Použiť a zatvoriť",
-      "authPerform": "Pripojte sa k {poskytateľ}",
+      "authPerform": "Pripojte sa k {provider}",
       "authPerformHint": "Otvorí sa v novej karte. Pre pokračovanie sa vráťte sem.",
       "authPrepare": "Pripraviť spojenie",
       "cancel": "Zrušiť",
@@ -293,7 +293,7 @@
       "telemetry": "Telemetria",
       "templateLoading": "Načítava...",
       "title": "Názov",
-      "typeDeprecated": "Typ '{typ}' je zastaraný a bude odstránený v budúcej verzii. Prosím skontrolujte changelog a znovu vytvorte toto zariadenie.",
+      "typeDeprecated": "Typ '{type}' je zastaraný a bude odstránený v budúcej verzii. Prosím skontrolujte changelog a znovu vytvorte toto zariadenie.",
       "validateSave": "Overiť a uložiť"
     },
     "grid": {
@@ -312,7 +312,7 @@
       "description": "Obmedzenie výkonu externými systémami (napr. §14a EnWG, §9 EEG rozhranie alebo vyšší systém riadenia energie). Spolupracuje s funkciou riadenia zaťaženia.",
       "downloadCsv": "Stiahnuť CSV",
       "eventsRecorded": "Zaznamenané {count} sieťové obmedzenia udalostí.",
-      "lastEvent": "Najnovšie {time Ago}.",
+      "lastEvent": "Najnovšie {timeAgo}.",
       "title": "Externý limit"
     },
     "icon": {
@@ -486,7 +486,7 @@
           "titleDefault": "Auto pripojené"
         },
         "disconnect": {
-          "messageDefault": "Auto odpojené po {pripojenýDuration}",
+          "messageDefault": "Auto odpojené po {connectedDuration}",
           "title": "Keď sa auto odpojí",
           "titleDefault": "Odpojenie auta"
         },
@@ -501,7 +501,7 @@
           "titleDefault": "Plán prekročený"
         },
         "soc": {
-          "messageDefault": "Batéria nabitá na {vozidlo Soc}%",
+          "messageDefault": "Batéria nabitá na {vehicleSoc}%",
           "title": "Aktualizácia stavu nabitia",
           "titleDefault": "Stav nabitia aktualizovaný"
         },
@@ -511,7 +511,7 @@
           "titleDefault": "Nabíjanie sa začalo"
         },
         "stop": {
-          "messageDefault": "Nabíjanie dokončené {charged Energy} kWh za {chargeDuration}.",
+          "messageDefault": "Nabíjanie dokončené {chargedEnergy} kWh za {chargeDuration}.",
           "title": "Keď sa nabíjanie zastaví",
           "titleDefault": "Nabíjanie ukončené"
         }
@@ -948,7 +948,7 @@
       "tabTitle": "Live komunita"
     },
     "savings": {
-      "co2Saved": "{hodnota} ušetrené",
+      "co2Saved": "{value} ušetrené",
       "co2Title": "CO₂ emisie",
       "configurePriceCo2": "Naučte sa, ako nakonfigurovať cenu a údaje CO₂.",
       "footerLong": "{percent} slnečnej energie",
@@ -963,7 +963,7 @@
       },
       "indicatorLabel": "Informácie o hlavičke",
       "modalTitle": "Prehľad energie nabíjania",
-      "moneySaved": "{hodnota} ušetrené",
+      "moneySaved": "{value} ušetrené",
       "percentGrid": "{grid} kWh sieť",
       "percentSelf": "{self} kWh solár",
       "percentTitle": "Solárna energia",
