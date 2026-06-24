@@ -41,4 +41,9 @@ func TestDateTimeFormatHasFractionalSeconds(t *testing.T) {
 	b, err := json.Marshal(ts)
 	require.NoError(t, err)
 	require.JSONEq(t, `"2026-06-23T12:45:09.404Z"`, string(b))
+
+	// the emitted format must round-trip back to the same instant
+	var got types.DateTime
+	require.NoError(t, json.Unmarshal(b, &got))
+	require.True(t, ts.Equal(got.Time), "round-trip mismatch: %s != %s", ts, got)
 }
