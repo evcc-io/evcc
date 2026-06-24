@@ -179,6 +179,13 @@
 					@remove="handleRemove"
 					@test="testManually"
 				>
+					<template #before-test>
+						<AdminPasswordPrompt
+							v-if="adminPasswordRequired"
+							v-model:password="adminPasswordValue"
+							:invalid="adminPasswordInvalid"
+						/>
+					</template>
 					<template #after-test>
 						<slot name="after-test" :values="values"></slot>
 					</template>
@@ -207,6 +214,7 @@ import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
 import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
+import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
@@ -223,6 +231,7 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	fetchServiceValues,
+	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
 
@@ -244,6 +253,7 @@ export default defineComponent({
 		YamlEntry,
 		AuthCodeDisplay,
 		AuthConnectButton,
+		AdminPasswordPrompt,
 	},
 	props: {
 		deviceType: { type: String as PropType<DeviceType>, required: true },
@@ -313,6 +323,9 @@ export default defineComponent({
 			test: initialTestState(),
 			serviceValues: {} as Record<string, string[]>,
 			serviceValuesTimer: null as Timeout | null,
+			adminPasswordValue: "",
+			adminPasswordRequired: false,
+			adminPasswordInvalid: false,
 		};
 	},
 	computed: {
@@ -546,9 +559,14 @@ export default defineComponent({
 				if (this.test.isError || this.test.isSuccess) {
 					this.test = initialTestState();
 				}
+				this.adminPasswordRequired = false;
+				this.adminPasswordInvalid = false;
 				this.updateServiceValues();
 			},
 			deep: true,
+		},
+		adminPasswordValue() {
+			this.adminPasswordInvalid = false;
 		},
 		authValues: {
 			handler() {
@@ -699,22 +717,35 @@ export default defineComponent({
 
 			this.saving = true;
 			try {
-				const { name } = await this.device.create(this.apiData, force);
+				const res = await this.device.create(this.apiData, force, this.adminPasswordValue);
+				this.applyAdminPasswordState(res.status);
+				if (res.status === ADMIN_PASSWORD_REQUIRED) {
+					this.saving = false;
+					return;
+				}
 				this.saving = false;
 				this.succeeded = true;
 				await sleep(500);
-				this.$emit("added", name);
-				await closeModal({ action: "added", name });
+				this.$emit("added", res.data.name);
+				await closeModal({ action: "added", name: res.data.name });
 			} catch (e) {
-				handleError(e, "create failed");
 				this.saving = false;
+				handleError(e, "create failed");
 			}
 		},
 		async testManually() {
 			await performTest(this.test, this.testDevice, this.$refs["form"] as HTMLFormElement);
 		},
 		async testDevice() {
-			return this.device.test(this.id, this.apiData);
+			const res = await this.device.test(this.id, this.apiData, this.adminPasswordValue);
+			this.applyAdminPasswordState(res.status);
+			return res;
+		},
+		// reveal the admin password field when required, flag it invalid if a password was already sent
+		applyAdminPasswordState(status: number) {
+			this.adminPasswordRequired = status === ADMIN_PASSWORD_REQUIRED;
+			this.adminPasswordInvalid =
+				status === ADMIN_PASSWORD_REQUIRED && !!this.adminPasswordValue;
 		},
 		async update(force = false) {
 			if (this.test.isUnknown && !force) {
@@ -729,16 +760,26 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				await this.device.update(this.id!, this.apiData, force);
+				const res = await this.device.update(
+					this.id!,
+					this.apiData,
+					force,
+					this.adminPasswordValue
+				);
+				this.applyAdminPasswordState(res.status);
+				if (res.status === ADMIN_PASSWORD_REQUIRED) {
+					this.saving = false;
+					return;
+				}
 				this.saving = false;
 				this.succeeded = true;
 				await sleep(500);
 				this.$emit("updated");
 				await closeModal({ action: "updated" });
 			} catch (e) {
+				this.saving = false;
 				console.error("update failed", e);
 				handleError(e, "update failed");
-				this.saving = false;
 			}
 		},
 		async remove() {
@@ -752,6 +793,8 @@ export default defineComponent({
 		},
 		handleOpen() {
 			this.isModalVisible = true;
+			this.adminPasswordRequired = false;
+			this.adminPasswordInvalid = false;
 		},
 		handleClose() {
 			this.$emit("close");
