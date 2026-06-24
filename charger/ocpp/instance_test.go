@@ -1,8 +1,13 @@
 package ocpp
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
@@ -27,4 +32,13 @@ func TestExternalUrl(t *testing.T) {
 			t.Errorf("ExternalUrl(%q) = %q, want %q", tt.input, result, tt.expected)
 		}
 	}
+}
+
+func TestDateTimeFormatHasFractionalSeconds(t *testing.T) {
+	require.Equal(t, dateTimeFormat, types.DateTimeFormat)
+
+	ts := types.NewDateTime(time.Date(2026, 6, 23, 12, 45, 9, 404_000_000, time.UTC))
+	b, err := json.Marshal(ts)
+	require.NoError(t, err)
+	require.JSONEq(t, `"2026-06-23T12:45:09.404Z"`, string(b))
 }
