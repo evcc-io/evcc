@@ -362,17 +362,31 @@ func runRoot(cmd *cobra.Command, args []string) {
 		} else if hemsInstance != nil {
 			// republish when HEMS state updates
 			hemsInstance.SetUpdated(func() {
+				// connection/failsafe are an optional EEBus-specific capability;
+				// other HEMS implementations omit them
+				var connected, failsafe *bool
+				if s, ok := hemsInstance.(interface {
+					Connected() *bool
+					Failsafe() *bool
+				}); ok {
+					connected, failsafe = s.Connected(), s.Failsafe()
+				}
+
 				valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
 					Config: struct {
 						Configured bool `json:"configured"`
 					}{hemsInstance != nil},
 					YamlSource: yamlSource.hems,
 					Status: struct {
+						Connected           *bool    `json:"connected,omitempty"`
+						Failsafe            *bool    `json:"failsafe,omitempty"`
 						Dimmed              *bool    `json:"dimmed,omitempty"`
 						Curtailed           *bool    `json:"curtailed,omitempty"`
 						MaxConsumptionPower float64  `json:"maxConsumptionPower,omitempty"`
 						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
 					}{
+						Connected:           connected,
+						Failsafe:            failsafe,
 						Dimmed:              hemsInstance.Dimmed(),
 						Curtailed:           hemsInstance.Curtailed(),
 						MaxConsumptionPower: hemsInstance.MaxConsumptionPower(),

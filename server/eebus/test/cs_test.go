@@ -52,6 +52,9 @@ func TestEEBus(t *testing.T) {
 
 	go hems.Run()
 
+	// NewEEBus only returns after the connection is established
+	require.Equal(t, new(true), hems.Connected(), "hems connected")
+
 	// wait for DataUpdateLimit which signals that limit descriptions and data are available
 	require.Eventually(t, func() bool {
 		return len(box.remoteEntity(lpc.DataUpdateLimit)) > 0
