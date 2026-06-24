@@ -375,7 +375,7 @@ func TestCreateEntityReconcilesExtToConsumer(t *testing.T) {
 	// ext meter with a persisted history slot
 	ext, err := createEntity(Meter, "db:5", "Fridge")
 	require.NoError(t, err)
-	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil, nil))
+	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil))
 
 	// reconfigured as consumer: same row relabeled, history intact
 	con, err := createEntity(Consumer, "db:5", "Fridge")
