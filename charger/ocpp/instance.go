@@ -21,10 +21,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
-// dateTimeFormat fixes the OCPP dateTime serialization to RFC3339 with a
-// fractional-second component for all chargers. Sub-second precision is valid
-// RFC3339/ISO8601 and is required by some chargers (e.g. Webasto/Ampure NEXT)
-// that reject timestamps without it, while remaining compatible with all others.
+// dateTimeFormat sets the OCPP dateTime serialization to RFC3339 with fractional seconds
 const dateTimeFormat = "2006-01-02T15:04:05.000Z07:00"
 
 func init() {
