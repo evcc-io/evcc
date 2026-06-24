@@ -2,7 +2,7 @@ template: ocpp-hager
 products:
   - brand: Hager
     description:
-      generic: Witty One (OCPP)
+      generic: Witty One
 capabilities: ["rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
@@ -12,4 +12,3 @@ params:
     default: Energy.Active.Import.Register,Power.Active.Import,Current.Offered,Power.Offered,Current.Import
 render: |
   {{ include "ocpp" . }}
-  remotestart: true
