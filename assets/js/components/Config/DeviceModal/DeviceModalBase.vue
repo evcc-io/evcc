@@ -343,7 +343,8 @@ export default defineComponent({
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			const filtered = params.filter(
+			const editableParams = params.filter((p) => !p.Fixed);
+			const filtered = editableParams.filter(
 				(p) =>
 					!this.customFields.includes(p.Name) &&
 					(p.Usages ? p.Usages.includes(this.deviceType as any) : true)
@@ -351,7 +352,7 @@ export default defineComponent({
 
 			// Allow parent to customize parameter filtering (passes all params for full control)
 			if (this.filterTemplateParams) {
-				return this.filterTemplateParams(params);
+				return this.filterTemplateParams(editableParams);
 			}
 
 			return filtered;

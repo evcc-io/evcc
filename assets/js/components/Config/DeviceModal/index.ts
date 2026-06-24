@@ -42,6 +42,7 @@ export type TemplateParam = {
   Choice?: string[];
   Service?: string;
   Usages?: TemplateParamUsage[];
+  Fixed?: boolean;
 };
 
 export type ParamService = {
