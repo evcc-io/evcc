@@ -55,12 +55,7 @@ export function stepAlpha(i: number, n: number): number {
 const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
 
 // Multiple entities stack into one bar; grid and meter render side-by-side.
-const STACKED_GROUPS: ReadonlySet<string> = new Set([
-	"loadpoint",
-	"consumer",
-	"pv",
-	"battery",
-]);
+const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
 
 // Round up to a nice number (5-tick symmetric axis: -L, -L/2, 0, L/2, L).
 function niceCeil(v: number): number {
