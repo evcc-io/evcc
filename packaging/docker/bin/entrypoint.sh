@@ -92,7 +92,10 @@ else
 		# reuse the group that already owns PGID (e.g. gid 100 = users on Synology),
 		# otherwise addgroup -g fails and evcc would silently get a different gid
 		grp=$(getent group "$PGID" | cut -d: -f1)
-		[ -z "$grp" ] && { grp=evcc; addgroup -g "$PGID" evcc; }
+		[ -z "$grp" ] && {
+			grp=evcc
+			addgroup -g "$PGID" evcc
+		}
 		getent passwd evcc > /dev/null 2>&1 || adduser -D -H -h /root -u "$PUID" -G "$grp" evcc 2> /dev/null || adduser -D -H -h /root -G "$grp" evcc
 
 		mkdir -p "$DATA_DIR"
