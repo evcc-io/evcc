@@ -3,11 +3,18 @@ products:
   - brand: Huawei
     description:
       generic: EMMA
+capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    advanced: true
+    usages: ["pv"]
   - preset: battery-params
 render: |
   type: custom
@@ -120,6 +127,53 @@ render: |
       type: holding
       decode: uint64nan
     scale: 0.01
+  curtail:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .curtailpercent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 40109 # Maximum Feed Grid Power (0-100 %)
+              type: writesingle
+              encoding: uint16
+            scale: 10
+        - source: const
+          value: 7 # Power-limited grid connection (%)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 40100 # Active power control mode
+              type: writesingle
+              encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Unlimited 
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 40100 # Active power control mode
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40100 # Active power control mode (0=no curtailment)
+      type: holding
+      decode: uint16
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
