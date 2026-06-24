@@ -40,6 +40,11 @@ type CP struct {
 	bootNotificationRequestC chan *core.BootNotificationRequest
 	BootNotificationResult   *core.BootNotificationRequest
 
+	// bootTriggered is set while evcc has requested a BootNotification (via
+	// TriggerMessage) to complete the current connection handshake. The matching
+	// BootNotification must not be treated as a physical charger reboot.
+	bootTriggered bool
+
 	connectors map[int]*Connector
 }
 
@@ -153,21 +158,34 @@ func (cp *CP) onTransportConnect() {
 	defer cp.mu.Unlock()
 
 	cp.stopBootTimer()
-	cp.bootTimer = time.AfterFunc(Timeout, cp.onBootTimeout)
+	cp.bootTriggered = false
 
-	// Proactively trigger BootNotification after a short delay.
-	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
-	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
-	// Connected() check which would fail at this point.
+	// The timer pointer itself identifies this connection: stopBootTimer or a
+	// later onTransportConnect replaces it, so delayed callbacks below detect a
+	// stale connection by finding cp.bootTimer no longer equal to their timer.
+	var timer *time.Timer
+	timer = time.AfterFunc(Timeout, func() {
+		cp.onBootTimeout(timer)
+	})
+	cp.bootTimer = timer
+
+	// Proactively trigger BootNotification after a short delay. This helps
+	// chargers that don't send it spontaneously (e.g. Wallbox FW 6.x) or stay
+	// silent on a reconnect because they already consider themselves accepted
+	// (e.g. Webasto NEXT). The TriggerMessage is sent directly via the OCPP
+	// instance, bypassing the Connected() check which would fail at this point.
 	time.AfterFunc(TriggerBootDelay, func() {
-		cp.mu.RLock()
-		// If BootNotification already arrived or timer was cancelled (disconnect),
-		// there is nothing to do.
-		if cp.bootTimer == nil || cp.BootNotificationResult != nil {
-			cp.mu.RUnlock()
+		cp.mu.Lock()
+		// Nothing to do if this connection is gone (disconnect or new connect) or
+		// the BootNotification already arrived (both clear/replace bootTimer).
+		if cp.bootTimer != timer {
+			cp.mu.Unlock()
 			return
 		}
-		cp.mu.RUnlock()
+		// Mark the solicited BootNotification so OnBootNotification treats it as a
+		// handshake rather than a physical reboot.
+		cp.bootTriggered = true
+		cp.mu.Unlock()
 
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
@@ -187,14 +205,16 @@ func (cp *CP) onTransportConnect() {
 }
 
 // onBootTimeout is called when the BootNotification wait timer expires.
-func (cp *CP) onBootTimeout() {
+func (cp *CP) onBootTimeout(timer *time.Timer) {
 	cp.mu.Lock()
-	if cp.bootTimer == nil {
-		// timer was cancelled by disconnect or BootNotification
+	if cp.bootTimer != timer {
+		// timer was cancelled by disconnect/BootNotification or superseded by a
+		// newer connection
 		cp.mu.Unlock()
 		return
 	}
 	cp.bootTimer = nil
+	cp.bootTriggered = false
 	cp.mu.Unlock()
 
 	cp.log.DEBUG.Printf("boot notification timeout, proceeding")

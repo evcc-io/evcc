@@ -239,3 +239,44 @@ func TestMonitorRebootOnlyOnce(t *testing.T) {
 	require.Eventually(t, func() bool { return callCount.Load() == 1 }, time.Second, 10*time.Millisecond,
 		"setup should be called exactly once")
 }
+
+func TestTriggeredBootNotificationDoesNotNotifyRebootMonitor(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+	// metadata from a previous connection plus a solicited (triggered) BootNotification
+	cp.BootNotificationResult = &core.BootNotificationRequest{ChargePointModel: "Cached"}
+	cp.bootTriggered = true
+
+	_, err := cp.OnBootNotification(&core.BootNotificationRequest{
+		ChargePointModel:  "Triggered",
+		ChargePointVendor: "TestVendor",
+	})
+	require.NoError(t, err)
+	assert.True(t, cp.Connected())
+	assert.False(t, cp.bootTriggered, "flag should be consumed")
+
+	select {
+	case req := <-cp.bootNotificationRequestC:
+		t.Fatalf("triggered BootNotification should not notify reboot monitor, got %s", req.ChargePointModel)
+	default:
+	}
+}
+
+func TestSpontaneousBootNotificationNotifiesRebootMonitor(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+
+	_, err := cp.OnBootNotification(&core.BootNotificationRequest{
+		ChargePointModel:  "Rebooted",
+		ChargePointVendor: "TestVendor",
+	})
+	require.NoError(t, err)
+	assert.True(t, cp.Connected())
+
+	select {
+	case req := <-cp.bootNotificationRequestC:
+		assert.Equal(t, "Rebooted", req.ChargePointModel)
+	default:
+		t.Fatal("spontaneous BootNotification should notify reboot monitor")
+	}
+}
