@@ -38,37 +38,43 @@ render: |
   energy:
     source: modbus
     uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    id: 247
     register:
-      address: 30562 # Accumulated import energy
+      address: 30216 # Accumulated grid import energy
       type: holding
       decode: uint64
     scale: 0.01
-  currents:
+  returnenergy:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: 247
+    register:
+      address: 30220 # Accumulated grid export energy
+      type: holding
+      decode: uint64
+    scale: 0.01
+  powers:
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      id: 247
       register:
-        address: 31017 # Phase A current
+        address: 30052 # Grid sensor Phase A active power
         type: holding
         decode: int32
-      scale: 0.01
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      id: 247
       register:
-        address: 31019 # Phase B current
+        address: 30054 # Grid sensor Phase B active power
         type: holding
         decode: int32
-      scale: 0.01
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      id: 247
       register:
-        address: 31021 # Phase C current
+        address: 30056 # Grid sensor Phase C active power
         type: holding
         decode: int32
-      scale: 0.01
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
