@@ -8,6 +8,8 @@
 			@test="$emit('test')"
 		/>
 
+		<slot name="after-test"></slot>
+
 		<div class="mt-4 d-flex justify-content-between">
 			<button
 				v-if="isDeletable"

@@ -85,6 +85,18 @@
 				/>
 			</FormRow>
 		</template>
+
+		<template #after-test>
+			<button
+				v-if="canConvertToConsumer"
+				type="button"
+				class="btn btn-link text-muted"
+				tabindex="0"
+				@click="convertToConsumer"
+			>
+				{{ $t("config.meter.convertToConsumer.link") }}
+			</button>
+		</template>
 	</DeviceModalBase>
 </template>
 
@@ -105,7 +117,7 @@ import {
 } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import defaultMeterYaml from "./defaultYaml/meter.yaml?raw";
-import { getModal, replaceModal } from "@/configModal";
+import { getModal, replaceModal, closeModal } from "@/configModal";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -192,6 +204,9 @@ export default defineComponent({
 		isNew(): boolean {
 			return this.id === undefined;
 		},
+		canConvertToConsumer(): boolean {
+			return !this.isNew && this.selectedType === "ext" && this.extMeterUsage === "charge";
+		},
 		extMeterUsageOptions() {
 			return ["charge", "aux", "grid", "pv", "battery"].map((key) => ({
 				name: this.$t(`config.meter.usage.${key}`),
@@ -269,6 +284,11 @@ export default defineComponent({
 			const type = this.selectedType;
 			const result = { action, name, type };
 			this.$emit("changed", result);
+		},
+		async convertToConsumer() {
+			if (!window.confirm(this.$t("config.meter.convertToConsumer.confirm"))) return;
+			this.$emit("changed", { action: "converted", type: "ext", id: this.id });
+			await closeModal();
 		},
 		handleClose() {
 			this.extMeterUsage = "charge";

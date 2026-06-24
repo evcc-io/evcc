@@ -178,7 +178,11 @@
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
-				/>
+				>
+					<template #after-test>
+						<slot name="after-test" :values="values"></slot>
+					</template>
+				</DeviceModalActions>
 			</template>
 		</form>
 	</GenericModal>
