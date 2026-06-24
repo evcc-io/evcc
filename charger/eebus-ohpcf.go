@@ -109,6 +109,11 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 // OHPCF events are only emitted for compatible compressor entities, so any of
 // them identifies the remote entity to control.
 func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
+	// device/entity removal fires the use case update event with a nil entity
+	if entity == nil {
+		return
+	}
+
 	switch event {
 	case ohpcf.UseCaseSupportUpdate,
 		ohpcf.DataUpdateRequestedPowerEstimate,
