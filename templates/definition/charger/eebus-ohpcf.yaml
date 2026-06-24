@@ -1,0 +1,15 @@
+template: eebus-ohpcf
+products:
+  - description:
+      de: EEBUS Wärmepumpe (OHPCF)
+      en: EEBUS heat pump (OHPCF)
+group: generic
+capabilities: ["meter"]
+params:
+  - preset: eebus
+render: |
+  type: eebus-ohpcf
+  ski: {{ .ski }}
+  {{ if .ip }}ip: {{ .ip }}{{ end }}
+  features:
+    - integrateddevice
