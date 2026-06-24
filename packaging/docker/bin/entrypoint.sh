@@ -100,6 +100,7 @@ else
 
 		mkdir -p "$DATA_DIR"
 		chown -R "$PUID:$PGID" "$DATA_DIR"
+		chmod -R u+rwX "$DATA_DIR"
 		# fix a custom database directory if EVCC_DATABASE_DSN points elsewhere
 		[ -n "$EVCC_DATABASE_DSN" ] && chown -R "$PUID:$PGID" "$(dirname "$EVCC_DATABASE_DSN")" 2> /dev/null || true
 
