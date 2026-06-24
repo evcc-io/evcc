@@ -48,8 +48,11 @@ func TestEEBus(t *testing.T) {
 	box.remoteEventC = eventC
 
 	// no hems.Run(): the run loop applies limits via the nil site and is not needed here
-	_, err = hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
+	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
 	require.NoError(t, err, "hems")
+
+	// NewEEBus only returns after the connection is established
+	require.Equal(t, new(true), hems.Connected(), "hems connected")
 
 	// wait for DataUpdateLimit which signals that limit descriptions and data are available
 	require.Eventually(t, func() bool {

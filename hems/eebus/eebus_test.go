@@ -63,6 +63,39 @@ func assertProductionLimit(t *testing.T, c *EEBus, active bool) {
 	assert.Equal(t, active, *percent < 100)
 }
 
+// TestConnected verifies the api.HEMS Connected() statement tracks the
+// connect/disconnect callbacks. The embedded connector is left nil here;
+// Connect is nil-safe and the real connector path is covered end-to-end by
+// the controlbox test in server/eebus.
+func TestConnected(t *testing.T) {
+	c := newTestEEBus(t)
+
+	assert.Equal(t, new(false), c.Connected(), "not connected initially")
+
+	c.Connect(true)
+	assert.Equal(t, new(true), c.Connected(), "connected after Connect(true)")
+
+	c.Connect(false)
+	assert.Equal(t, new(false), c.Connected(), "disconnected after Connect(false)")
+}
+
+// TestFailsafe verifies the api.HEMS Failsafe() statement tracks the internal
+// status as it transitions across run().
+func TestFailsafe(t *testing.T) {
+	c := newTestEEBus(t)
+
+	assert.Equal(t, new(false), c.Failsafe(), "normal initially")
+
+	// heartbeat never Set -> missing heartbeat enters failsafe
+	require.NoError(t, c.run())
+	assert.Equal(t, new(true), c.Failsafe(), "failsafe on missing heartbeat")
+
+	// heartbeat returns -> leaves failsafe
+	c.heartbeat.Set(struct{}{})
+	require.NoError(t, c.run())
+	assert.Equal(t, new(false), c.Failsafe(), "normal after heartbeat returns")
+}
+
 // TestRun_HeartbeatLost_EntersFailsafe verifies the LPC-911/LPP-911 transition:
 // a missing heartbeat in the normal state must apply the configured failsafe
 // consumption and production limits.
