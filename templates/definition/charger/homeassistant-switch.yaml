@@ -11,7 +11,7 @@ requirements:
     de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `switch.*`, `sensor.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
-  params: [uri]
+  params: [uri, insecure]
 params:
   - name: uri
     description:
@@ -27,24 +27,26 @@ params:
     deprecated: true
   - name: home
     deprecated: true
+  - name: insecure
   - name: switch
     description:
       de: Entity ID des schaltbaren Geräts
       en: Entity ID of the switch device
-    service: homeassistant/entities?uri={uri}&domain=switch
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=switch
     example: switch.smartsocket
     required: true
   - name: power
     description:
       de: Entity ID für Leistungsmessung
       en: Entity ID for power measurement
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: sensor.smartsocket_power
   - preset: switchsocket
 render: |
   type: homeassistant-switch
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
+  insecure: {{ .insecure }}
   enable: {{ .switch }}
   power: {{ .power }}
   {{ include "switchsocket" . }}

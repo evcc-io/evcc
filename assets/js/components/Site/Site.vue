@@ -128,6 +128,7 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
+		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
@@ -175,6 +176,9 @@ export default defineComponent({
 		},
 		gridPower() {
 			return this.grid?.power || 0;
+		},
+		experimental() {
+			return store.state?.experimental;
 		},
 		energyflow() {
 			return this.collectProps(Energyflow);

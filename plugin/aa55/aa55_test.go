@@ -1,13 +1,10 @@
 package aa55
 
 import (
-	"encoding/binary"
 	"encoding/hex"
-	"math"
-	"sync"
-	"sync/atomic"
 	"testing"
 
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -84,6 +81,33 @@ func TestBuildPDU_SoC(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// write PDUs
+// ---------------------------------------------------------------------------
+
+func TestBuildWriteSinglePDU(t *testing.T) {
+	// EMSPowerMode (47511 = 0xB997) := 1
+	got := buildWriteSinglePDU(0xF7, 47511, 1)
+	assert.Equal(t, []byte{0xf7, 0x06, 0xb9, 0x97, 0x00, 0x01}, got)
+}
+
+func TestBuildWriteMultiplePDU(t *testing.T) {
+	// EMSPowerSet (47512 = 0xB998) := 10000 (0x2710), one register
+	got := buildWriteMultiplePDU(0xF7, 47512, []byte{0x27, 0x10})
+	assert.Equal(t, []byte{0xf7, 0x10, 0xb9, 0x98, 0x00, 0x01, 0x02, 0x27, 0x10}, got)
+}
+
+func TestValidateWriteResponse(t *testing.T) {
+	// echoed function code → accepted
+	require.NoError(t, validateWriteResponse([]byte{0xAA, 0x55, 0xF7, 0x06, 0xb9, 0x97, 0x00, 0x01}, 0x06))
+	// high bit set → inverter rejected the write
+	require.Error(t, validateWriteResponse([]byte{0xAA, 0x55, 0xF7, 0x86, 0x02}, 0x06))
+	// wrong function code
+	require.Error(t, validateWriteResponse([]byte{0xAA, 0x55, 0xF7, 0x03, 0x00}, 0x06))
+	// bad magic
+	require.Error(t, validateWriteResponse([]byte{0xFF, 0x55, 0xF7, 0x06}, 0x06))
+}
+
+// ---------------------------------------------------------------------------
 // stripHeader
 // ---------------------------------------------------------------------------
 
@@ -108,107 +132,6 @@ func TestStripHeader_Short(t *testing.T) {
 	_, err := stripHeader([]byte{0xAA, 0x55, 0x7F, 0x03, 0x10, 0x01, 0x02})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "short")
-}
-
-// ---------------------------------------------------------------------------
-// decodeAt
-// ---------------------------------------------------------------------------
-
-func TestDecodeAt_Int32BE_Positive(t *testing.T) {
-	payload := make([]byte, 4)
-	binary.BigEndian.PutUint32(payload, uint32(int32(1972)))
-	v, err := decodeAt(payload, 0, "int32be")
-	require.NoError(t, err)
-	assert.InDelta(t, 1972.0, v, 0)
-}
-
-func TestDecodeAt_Int32BE_Negative(t *testing.T) {
-	payload := make([]byte, 4)
-	v32 := int32(-2512)
-	binary.BigEndian.PutUint32(payload, uint32(v32))
-	v, err := decodeAt(payload, 0, "int32be")
-	require.NoError(t, err)
-	assert.InDelta(t, -2512.0, v, 0)
-}
-
-func TestDecodeAt_Uint32BE(t *testing.T) {
-	payload := make([]byte, 4)
-	binary.BigEndian.PutUint32(payload, 43513)
-	v, err := decodeAt(payload, 0, "uint32be")
-	require.NoError(t, err)
-	assert.InDelta(t, 43513.0, v, 0)
-}
-
-func TestDecodeAt_Uint16BE(t *testing.T) {
-	payload := make([]byte, 2)
-	binary.BigEndian.PutUint16(payload, 68)
-	v, err := decodeAt(payload, 0, "uint16be")
-	require.NoError(t, err)
-	assert.InDelta(t, 68.0, v, 0)
-}
-
-func TestDecodeAt_Int16BE_Negative(t *testing.T) {
-	payload := make([]byte, 2)
-	v16 := int16(-300)
-	binary.BigEndian.PutUint16(payload, uint16(v16))
-	v, err := decodeAt(payload, 0, "int16be")
-	require.NoError(t, err)
-	assert.InDelta(t, -300.0, v, 0)
-}
-
-func TestDecodeAt_Float32BE(t *testing.T) {
-	payload := make([]byte, 4)
-	binary.BigEndian.PutUint32(payload, math.Float32bits(123.456))
-	v, err := decodeAt(payload, 0, "float32be")
-	require.NoError(t, err)
-	assert.InDelta(t, 123.456, v, 0.001)
-}
-
-func TestDecodeAt_Uint32NAN_Normal(t *testing.T) {
-	payload := make([]byte, 4)
-	binary.BigEndian.PutUint32(payload, 8310) // e.g. 83.10 W string power
-	v, err := decodeAt(payload, 0, "uint32nan")
-	require.NoError(t, err)
-	assert.InDelta(t, 8310.0, v, 0)
-}
-
-func TestDecodeAt_Uint32NAN_Disconnected(t *testing.T) {
-	payload := make([]byte, 4)
-	binary.BigEndian.PutUint32(payload, 0xFFFFFFFF) // disconnected string sentinel
-	v, err := decodeAt(payload, 0, "uint32nan")
-	require.NoError(t, err)
-	assert.InDelta(t, 0.0, v, 0) // must return 0, not 4.3GW
-}
-
-func TestDecodeAt_TooShort(t *testing.T) {
-	_, err := decodeAt([]byte{0x00}, 0, "int32be")
-	require.Error(t, err)
-}
-
-func TestDecodeAt_UnknownType(t *testing.T) {
-	_, err := decodeAt(make([]byte, 4), 0, "float32")
-	require.Error(t, err)
-}
-
-// ---------------------------------------------------------------------------
-// validateDecode / decodeSize
-// ---------------------------------------------------------------------------
-
-func TestValidateDecode_OK(t *testing.T) {
-	for _, d := range []string{"int32be", "uint32be", "uint32nan", "int16be", "uint16be", "float32be"} {
-		assert.NoError(t, validateDecode(d), d)
-	}
-}
-
-func TestValidateDecode_Reject(t *testing.T) {
-	assert.Error(t, validateDecode("float32"))
-	assert.Error(t, validateDecode(""))
-}
-
-func TestDecodeSize(t *testing.T) {
-	assert.Equal(t, 4, decodeSize("int32be"))
-	assert.Equal(t, 4, decodeSize("uint32nan"))
-	assert.Equal(t, 2, decodeSize("uint16be"))
 }
 
 // ---------------------------------------------------------------------------
@@ -245,138 +168,63 @@ func TestModbusCRC16_KnownValue(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestDT_Power_GW3000DNS30(t *testing.T) {
-	assertBlockOffset(t, capGW3000DNS30, 54, "int32be", 1.0, 1972.0)
+	assertBlockOffset(t, capGW3000DNS30, 54, "int32", 1.0, 1972.0)
 }
 
 func TestDT_Power_GW17K(t *testing.T) {
-	assertBlockOffset(t, capGW17kDT, 54, "int32be", 1.0, 12470.0)
+	assertBlockOffset(t, capGW17kDT, 54, "int32", 1.0, 12470.0)
 }
 
 func TestDT_Power_GW20KAU(t *testing.T) {
-	assertBlockOffset(t, capGW20kAUDT, 54, "int32be", 1.0, 4957.0)
+	assertBlockOffset(t, capGW20kAUDT, 54, "int32", 1.0, 4957.0)
 }
 
 func TestDT_Energy_GW17K(t *testing.T) {
-	assertBlockOffset(t, capGW17kDT, 90, "uint32be", 0.1, 29984.4)
+	assertBlockOffset(t, capGW17kDT, 90, "uint32", 0.1, 29984.4)
 }
 
 func TestDT_Energy_GW6000(t *testing.T) {
-	assertBlockOffset(t, capGW6000DT, 90, "uint32be", 0.1, 13350.2)
+	assertBlockOffset(t, capGW6000DT, 90, "uint32", 0.1, 13350.2)
 }
 
 func TestDT_Energy_GW20KAU(t *testing.T) {
-	assertBlockOffset(t, capGW20kAUDT, 90, "uint32be", 0.1, 4304.8)
+	assertBlockOffset(t, capGW20kAUDT, 90, "uint32", 0.1, 4304.8)
 }
 
 func TestET_PV_GW10K(t *testing.T) {
-	assertBlockOffset(t, capGW10kET, 74, "int32be", 1.0, 831.0)
+	assertBlockOffset(t, capGW10kET, 74, "int32", 1.0, 831.0)
 }
 
 func TestET_Grid_GW10K_TinyExport(t *testing.T) {
-	assertBlockOffset(t, capGW10kET, 78, "int32be", 1.0, -3.0)
+	assertBlockOffset(t, capGW10kET, 78, "int32", 1.0, -3.0)
 }
 
 func TestET_Grid_GW25K_Importing(t *testing.T) {
-	assertBlockOffset(t, capGW25kET, 78, "int32be", 1.0, 1511.0)
+	assertBlockOffset(t, capGW25kET, 78, "int32", 1.0, 1511.0)
 }
 
 func TestET_Grid_GW29K9_Exporting(t *testing.T) {
-	assertBlockOffset(t, capGW29k9ET, 78, "int32be", 1.0, -5403.0)
+	assertBlockOffset(t, capGW29k9ET, 78, "int32", 1.0, -5403.0)
 }
 
 func TestET_Battery_GW10K_Charging(t *testing.T) {
-	assertBlockOffset(t, capGW10kET, 164, "int32be", 1.0, -2512.0)
+	assertBlockOffset(t, capGW10kET, 164, "int32", 1.0, -2512.0)
 }
 
 func TestET_Energy_GW10K(t *testing.T) {
-	assertBlockOffset(t, capGW10kET, 182, "uint32be", 0.1, 6085.3)
+	assertBlockOffset(t, capGW10kET, 182, "uint32", 0.1, 6085.3)
 }
 
 func TestET_Energy_GW25K(t *testing.T) {
-	assertBlockOffset(t, capGW25kET, 182, "uint32be", 0.1, 160.3)
+	assertBlockOffset(t, capGW25kET, 182, "uint32", 0.1, 160.3)
 }
 
 func TestET_SoC_GW10K(t *testing.T) {
-	assertBlockOffset(t, capGW10kETBattery, 14, "uint16be", 1.0, 68.0)
+	assertBlockOffset(t, capGW10kETBattery, 14, "uint16", 1.0, 68.0)
 }
 
 func TestET_SoC_GW25K(t *testing.T) {
-	assertBlockOffset(t, capGW25kETBattery, 14, "uint16be", 1.0, 100.0)
-}
-
-// ---------------------------------------------------------------------------
-// Cache
-// ---------------------------------------------------------------------------
-
-func TestCache_GetMiss(t *testing.T) {
-	c := newResponseCache()
-	_, ok := c.get([]byte("nope"))
-	assert.False(t, ok)
-}
-
-func TestCache_PutGet(t *testing.T) {
-	c := newResponseCache()
-	c.put([]byte("k"), []byte{1, 2, 3})
-	got, ok := c.get([]byte("k"))
-	require.True(t, ok)
-	assert.Equal(t, []byte{1, 2, 3}, got)
-}
-
-// TestCache_FetchSingleFlight verifies that concurrent fetches for the same key
-// collapse into a single load (one UDP exchange), all observe the same payload,
-// and the cache is left warm for subsequent reads.
-func TestCache_FetchSingleFlight(t *testing.T) {
-	c := newResponseCache()
-	key := []byte("10.0.0.1:8899/f703891c007d")
-	want := []byte{0xde, 0xad, 0xbe, 0xef}
-
-	var calls atomic.Int32
-	var once sync.Once
-	entered := make(chan struct{})
-	release := make(chan struct{})
-	load := func() ([]byte, error) {
-		calls.Add(1)
-		once.Do(func() { close(entered) })
-		<-release // hold the flight open while followers pile up
-		return want, nil
-	}
-
-	const n = 8
-	var wg sync.WaitGroup
-	payloads := make([][]byte, n)
-
-	wg.Go(func() {
-		got, _, err := c.fetch(key, load)
-		assert.NoError(t, err)
-		payloads[0] = got
-	})
-
-	<-entered // ensure the flight is open before followers join
-
-	for i := 1; i < n; i++ {
-		wg.Go(func() {
-			got, _, err := c.fetch(key, load)
-			assert.NoError(t, err)
-			payloads[i] = got
-		})
-	}
-
-	close(release)
-	wg.Wait()
-
-	assert.Equal(t, int32(1), calls.Load(), "concurrent reads of the same block must share one exchange")
-	for i := range n {
-		assert.Equal(t, want, payloads[i])
-	}
-
-	// cache is now warm: a subsequent read hits without loading again
-	got, ok, err := c.fetch(key, func() ([]byte, error) {
-		t.Fatal("must not load on warm cache")
-		return nil, nil
-	})
-	require.NoError(t, err)
-	assert.True(t, ok)
-	assert.Equal(t, want, got)
+	assertBlockOffset(t, capGW25kETBattery, 14, "uint16", 1.0, 100.0)
 }
 
 // ---------------------------------------------------------------------------
@@ -394,7 +242,11 @@ func assertBlockOffset(t *testing.T, capHex string, offset int, decode string, s
 	t.Helper()
 	payload, err := stripHeader(mustHex(t, capHex))
 	require.NoError(t, err)
-	v, err := decodeAt(payload, offset, decode)
+	reg := modbus.Register{Type: "holding", Decode: decode}
+	length, err := reg.Length()
 	require.NoError(t, err)
+	fn, err := reg.DecodeFunc()
+	require.NoError(t, err)
+	v := fn(payload[offset : offset+int(length)*2])
 	assert.InDelta(t, expected, v*scale, 0.05)
 }

@@ -18,25 +18,19 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
 }
 
 export async function editorClear(editor: Locator): Promise<void> {
-  const firstLine = editor.locator(".view-line").nth(0);
-  const content = editor.locator(".view-lines");
+  const content = editor.locator(".cm-content");
   // wait for the async content load, otherwise clearing races the arriving text
-  await expect(firstLine).not.toHaveText("");
-  // retry until the editor is verified empty, keystrokes are dropped while monaco initializes
-  const deadline = Date.now() + 10_000;
-  do {
-    await firstLine.click();
-    await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 50 });
-    await editor.page().keyboard.press("Backspace", { delay: 50 });
-    if ((await content.textContent())?.trim() === "") return;
-  } while (Date.now() < deadline);
+  await expect(content).not.toHaveText("");
+  await content.click();
+  await editor.page().keyboard.press("ControlOrMeta+KeyA");
+  await editor.page().keyboard.press("Backspace");
   await expect(content, "editor should be empty after clearing").toHaveText("");
 }
 
 export async function editorPaste(editor: Locator, page: Page, text: string): Promise<void> {
-  await editor.locator(".view-line").nth(0).click();
+  await editor.locator(".cm-content").click();
   await page.evaluate((text) => navigator.clipboard.writeText(text), text);
-  await page.keyboard.press("ControlOrMeta+KeyV", { delay: 100 });
+  await page.keyboard.press("ControlOrMeta+KeyV");
 }
 
 export enum LoadpointType {

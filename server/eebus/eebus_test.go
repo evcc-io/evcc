@@ -6,6 +6,7 @@ import (
 
 	eebusapi "github.com/enbility/eebus-go/api"
 	eebusmocks "github.com/enbility/eebus-go/mocks"
+	shipapi "github.com/enbility/ship-go/api"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
@@ -40,13 +41,13 @@ var _ Device = (*mockDevice)(nil)
 
 // TestUnregisterDevice_MutexNotHeldDuringShipCall is the regression guard
 // for issue #28942. It asserts that c.mux is NOT held at the point
-// UnregisterRemoteSKI is called. The pre-fix code held c.mux across that
+// UnregisterRemoteService is called. The pre-fix code held c.mux across that
 // cross-layer call, and ship-go's synchronous HandleConnectionClosed
 // callback chain re-entered connect(ski, false) on the same goroutine,
 // which then deadlocked on c.mux.Lock() (Go mutexes are non-reentrant).
 //
 // The assertion uses a goroutine that tries to briefly acquire c.mux from
-// inside the mock's UnregisterRemoteSKI implementation; if the lock is
+// inside the mock's UnregisterRemoteService implementation; if the lock is
 // held, the acquisition times out and the test fails.
 func TestUnregisterDevice_MutexNotHeldDuringShipCall(t *testing.T) {
 	dev := &mockDevice{}
@@ -56,7 +57,7 @@ func TestUnregisterDevice_MutexNotHeldDuringShipCall(t *testing.T) {
 	}
 
 	service := eebusmocks.NewServiceInterface(t)
-	service.EXPECT().UnregisterRemoteSKI("aabbcc").Run(func(string) {
+	service.EXPECT().UnregisterRemoteService(shipapi.NewServiceIdentity("aabbcc", "", "")).Run(func(shipapi.ServiceIdentity) {
 		acquired := make(chan struct{})
 		go func() {
 			c.mux.Lock()

@@ -9,7 +9,7 @@ requirements:
     de: Verbinden Sie Ihr Tesla-Fahrzeug über die TeslaFi-API. TeslaFi ist ein Tesla-Datenlogger-Service, der HTTP-API-Zugriff auf Fahrzeugdaten bietet. Holen Sie sich Ihren API-Schlüssel aus den TeslaFi-Kontoeinstellungen.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: apikey
     required: true
   - name: vin

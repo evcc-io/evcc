@@ -55,7 +55,7 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-nodata")).toHaveCount(0);
     await expect(page.getByRole("table")).toBeVisible();
     await expect(page.getByTestId("sessions-head")).toHaveCount(1);
-    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(9);
+    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(10);
 
     await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
     await expect(page.getByTestId("sessions-foot-energy")).toBeVisible();
@@ -77,10 +77,6 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-foot-chargeDuration")).toBeVisible();
     await expect(page.getByTestId("sessions-foot-chargeDuration")).toHaveText("1:30");
 
-    await page
-      .getByTestId("sessions-head-chargeDuration")
-      .getByRole("combobox")
-      .selectOption("⌀ Power");
     await expect(page.getByTestId("sessions-head-avgPower")).toContainText("⌀ PowerkW");
     await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible();
     await expect(page.getByTestId("sessions-foot-avgPower")).toHaveText("10.0");
@@ -252,11 +248,12 @@ test.describe("columns desktop", async () => {
     await expect(page.getByTestId("sessions-head-co2")).toBeVisible();
   });
   test("select odometer column if it has values", async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 800 });
     await page.goto("/#/sessions?year=2023&month=3");
     await expect(
-      page.getByTestId("sessions-head-co2").locator("option[value=odometer]")
+      page.getByTestId("sessions-head-avgPrice").locator("option[value=odometer]")
     ).toHaveCount(1);
-    await page.getByTestId("sessions-head-co2").getByRole("combobox").selectOption("odometer");
+    await page.getByTestId("sessions-head-avgPrice").getByRole("combobox").selectOption("odometer");
     await expect(page.getByTestId("sessions-head-odometer")).toBeVisible();
     await expect(page.getByTestId("sessions-entry").nth(0)).toContainText("12,345");
     await expect(page.getByTestId("sessions-foot-odometer")).toHaveText("");

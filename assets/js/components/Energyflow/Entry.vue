@@ -21,7 +21,7 @@
 						<div class="flex-shrink-1 flex-grow-0 d-flex text-truncate">
 							<span class="text-truncate"> {{ name }} </span>
 						</div>
-						<shopicon-regular-arrowdropdown
+						<DropdownIcon
 							class="expand-icon flex-shrink-0 flex-grow-0"
 							:class="{ 'expand-icon--expanded': expanded }"
 						/>
@@ -73,18 +73,18 @@
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
-import "@h2d2/shopicons/es/regular/arrowdropdown";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import BatteryIcon from "./BatteryIcon.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 import ForecastIcon from "../MaterialIcon/Forecast.vue";
+import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
 	name: "EnergyflowEntry",
-	components: { BatteryIcon, AnimatedNumber, VehicleIcon, ForecastIcon },
+	components: { BatteryIcon, AnimatedNumber, VehicleIcon, ForecastIcon, DropdownIcon },
 	mixins: [formatter],
 	props: {
 		name: { type: String },
