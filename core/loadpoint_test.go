@@ -76,6 +76,10 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 
 	Voltage = 230 // V
 
+	if lp.charger != nil && lp.chargeController == nil {
+		lp.configureChargeController()
+	}
+
 	if charger, ok := lp.charger.(*api.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
 		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
@@ -339,9 +343,9 @@ func TestPVHysteresis(t *testing.T) {
 				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
 
 				lp.enabled = tc.enabled
-				current := lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false)
+				power := lp.pvTargetPower(currentController(lp), api.ModePV, se.site, 0, false, false)
 
-				if current != se.current {
+				if current := powerToCurrent(power, phases); current != se.current {
 					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
 				}
 			}
@@ -372,10 +376,10 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
-	current := lp.pvMaxCurrent(api.ModePV, sitePower, 0, false, false)
+	power := lp.pvTargetPower(currentController(lp), api.ModePV, sitePower, 0, false, false)
 
-	if current != 0 {
-		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", current)
+	if power != 0 {
+		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", power)
 	}
 
 	ctrl.Finish()
@@ -732,16 +736,21 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 		switcher := api.NewMockPhaseSwitcher(ctrl)
 		switcher.EXPECT().Phases1p3p(1)
 
+		plainCharger := api.NewMockCharger(ctrl)
+		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil).AnyTimes()
+		plainCharger.EXPECT().Enable(false).Return(nil).AnyTimes()
+
 		charger := struct {
 			*api.MockCharger
 			*api.MockPhaseSwitcher
 		}{
-			api.NewMockCharger(ctrl), switcher,
+			plainCharger, switcher,
 		}
 
 		Voltage = 100
 		lp := &Loadpoint{
 			log:         util.NewLogger("foo"),
+			bus:         evbus.New(),
 			wakeUpTimer: NewTimer(),
 			clock:       clock,
 			charger:     charger,
@@ -758,7 +767,9 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 
 		for step, se := range tc.series {
 			clock.Set(start.Add(se.delay))
-			assert.Equal(t, se.current, lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false), step)
+			power := lp.pvTargetPower(currentController(lp), api.ModePV, se.site, 0, false, false)
+			assert.Equal(t, se.current*Voltage, power, step) // expected at min reachable phases (1p)
+			assert.NoError(t, currentController(lp).SetPower(power), step)
 		}
 
 		ctrl.Finish()

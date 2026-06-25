@@ -67,8 +67,9 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 			lp.vehicle = vehicle
 		}
 
-		assert.Equal(t, tc.effectiveMin, lp.effectiveMinCurrent(), "min")
-		assert.Equal(t, tc.effectiveMax, lp.effectiveMaxCurrent(), "max")
+		cc := currentController(lp)
+		assert.Equal(t, tc.effectiveMin, cc.effectiveMinCurrent(), "min")
+		assert.Equal(t, tc.effectiveMax, cc.effectiveMaxCurrent(), "max")
 	}
 }
 

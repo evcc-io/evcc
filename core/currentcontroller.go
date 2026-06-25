@@ -1,0 +1,193 @@
+package core
+
+import (
+	"errors"
+	"fmt"
+	"math"
+	"reflect"
+
+	"github.com/evcc-io/evcc/api"
+)
+
+type CurrentController struct {
+	*Loadpoint
+}
+
+func newCurrentController(lp *Loadpoint) *CurrentController {
+	return &CurrentController{Loadpoint: lp}
+}
+
+// SetPower sets the charger to the given power target (0 disables).
+// A positive target is clamped to the effective limits: a positive setpoint
+// expresses that charging shall happen, hence a target below the feasible
+// minimum charges at minimum power.
+func (lp *CurrentController) SetPower(power float64) error {
+	// fixed phase configuration must match active phases before setting current
+	if lp.connected() && lp.scalePhasesRequired() {
+		err := lp.enforcePhases()
+		if errors.Is(err, api.ErrNotAvailable) {
+			// the charger cannot switch phases right now (e.g. EEBus charger
+			// with an ISO 15118 vehicle). Adopt the configured phase count so
+			// the switch is not re-attempted on every cycle (issue #29974).
+			lp.SetPhases(lp.phasesConfigured)
+			err = nil
+		}
+		return err
+	}
+
+	// surplus tracking: reconcile phases for the current surplus
+	// TODO pass surplus explicitly once the controller owns its state
+	surplusTracking := lp.surplus != nil
+	if surplusTracking {
+		surplus := *lp.surplus
+		lp.surplus = nil
+
+		if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
+			lp.pvScalePhases(surplus, lp.effectiveMinCurrent(), lp.effectiveMaxCurrent())
+		}
+	}
+
+	if power <= 0 {
+		return lp.setLimit(0)
+	}
+
+	// full envelope requested: scale up phases if possible
+	if power >= lp.effectiveMaxPower() {
+		return lp.fastCharging()
+	}
+
+	// bottom envelope requested: scale down phases if possible. surplus-tracking
+	// targets are excluded as their phase scaling is subject to hysteresis above.
+	if !surplusTracking && power <= lp.reachableMinPower() {
+		return lp.minCharging()
+	}
+
+	current := powerToCurrent(power, lp.ActivePhases())
+	current = min(max(current, lp.effectiveMinCurrent()), lp.effectiveMaxCurrent())
+
+	return lp.setLimit(current)
+}
+
+// roundedCurrent rounds current down to full amps if charger or vehicle require it
+func (lp *CurrentController) roundedCurrent(current float64) float64 {
+	// full amps only?
+	if lp.coarseCurrent() {
+		current = math.Trunc(current)
+	}
+	return current
+}
+
+func (lp *CurrentController) setMinCurrent() error {
+	return lp.setLimit(lp.effectiveMinCurrent())
+}
+
+// setLimit applies charger current limits and enables/disables accordingly
+func (lp *CurrentController) setLimit(current float64) error {
+	current = lp.roundedCurrent(current)
+
+	// apply circuit limits
+	if lp.circuit != nil {
+		var actualCurrent float64
+		if lp.chargeCurrents != nil {
+			actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+		} else if lp.charging() {
+			actualCurrent = lp.offeredCurrent
+		}
+
+		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
+
+		activePhases := lp.ActivePhases()
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
+		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+
+		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+	}
+
+	// https://github.com/evcc-io/evcc/issues/16309
+	effMinCurrent := lp.effectiveMinCurrent()
+	if effMaxCurrent := lp.effectiveMaxCurrent(); effMinCurrent > effMaxCurrent {
+		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
+	}
+
+	// set current
+	if current != lp.offeredCurrent && current >= effMinCurrent {
+		var err error
+		if charger, ok := api.Cap[api.ChargerEx](lp.charger); ok {
+			err = charger.MaxCurrentMillis(current)
+		} else {
+			var ctrl api.CurrentController
+			if c, ok := api.Cap[api.CurrentController](lp.charger); ok {
+				ctrl = c
+			} else if rv := reflect.Indirect(reflect.ValueOf(lp.charger)); rv.IsValid() && rv.Kind() == reflect.Struct {
+				for i := range rv.NumField() {
+					if field := rv.Field(i); field.CanInterface() {
+						if c, ok := api.Cap[api.CurrentController](field.Interface()); ok {
+							ctrl = c
+							break
+						}
+					}
+				}
+			}
+
+			if ctrl != nil {
+				err = ctrl.MaxCurrent(int64(current))
+			} else {
+				err = api.ErrNotAvailable
+			}
+		}
+
+		if err != nil {
+			v := lp.GetVehicle()
+			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) {
+				// https://github.com/evcc-io/evcc/issues/8254
+				// wakeup vehicle
+				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
+				if err := vv.WakeUp(); err != nil {
+					return fmt.Errorf("wake-up vehicle: %w", err)
+				}
+			}
+
+			return fmt.Errorf("set charge current limit %.3gA: %w", current, err)
+		}
+
+		lp.log.DEBUG.Printf("set charge current limit: %.3gA", current)
+		lp.offeredCurrent = current
+		lp.bus.Publish(evChargeCurrent, current)
+	}
+
+	// set enabled/disabled
+	if enabled := current >= effMinCurrent; enabled != lp.enabled {
+		if err := lp.charger.Enable(enabled); err != nil {
+			v := lp.GetVehicle()
+			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) {
+				// https://github.com/evcc-io/evcc/issues/8254
+				// wakeup vehicle
+				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
+				if err := vv.WakeUp(); err != nil {
+					return fmt.Errorf("wake-up vehicle: %w", err)
+				}
+			}
+
+			return fmt.Errorf("charger %s: %w", status[enabled], err)
+		}
+
+		lp.setAndPublishEnabled(enabled)
+		lp.chargerSwitched = lp.clock.Now()
+
+		// ensure we always re-set current when enabling charger
+		if !enabled {
+			lp.offeredCurrent = 0
+		}
+
+		lp.bus.Publish(evChargeCurrent, current)
+
+		// start/stop vehicle wake-up timer
+		if enabled {
+			lp.startWakeUpTimer()
+		} else {
+			lp.stopWakeUpTimer()
+		}
+	}
+
+	return nil
+}

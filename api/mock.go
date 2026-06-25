@@ -69,20 +69,6 @@ func (mr *MockChargerMockRecorder) Enabled() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enabled", reflect.TypeOf((*MockCharger)(nil).Enabled))
 }
 
-// MaxCurrent mocks base method.
-func (m *MockCharger) MaxCurrent(current int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MaxCurrent", current)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// MaxCurrent indicates an expected call of MaxCurrent.
-func (mr *MockChargerMockRecorder) MaxCurrent(current any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaxCurrent", reflect.TypeOf((*MockCharger)(nil).MaxCurrent), current)
-}
-
 // Status mocks base method.
 func (m *MockCharger) Status() (ChargeStatus, error) {
 	m.ctrl.T.Helper()
