@@ -84,9 +84,11 @@ type dataPoint struct {
 	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
-// point is a decoded data point: its value, the time it was recorded and the
-// delivery sequence of the dataset it last arrived in (higher Seq is newer).
+// point is a decoded data point: its unique GUID (Key), delivered field Name,
+// value, record time and dataset delivery sequence (higher Seq is newer).
 type point struct {
+	Key       string
+	Name      string
 	Value     string
 	Timestamp time.Time
 	Seq       uint64
@@ -228,7 +230,7 @@ func points(data []dataPoint) map[string]point {
 		if p.TimestampUtc != nil {
 			ts = *p.TimestampUtc
 		}
-		pt := point{Value: p.Value, Timestamp: ts}
+		pt := point{Key: p.Key, Name: p.DataFieldName, Value: p.Value, Timestamp: ts}
 
 		set(p.DataFieldName, pt)
 		if _, ok := knownKeys[p.Key]; ok {
