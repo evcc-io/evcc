@@ -51,6 +51,11 @@
     "hex": "Hex color"
   },
   "config": {
+    "adminPassword": {
+      "description": "The script plugin executes a system-level command that runs with the permissions of the evcc process. Re-enter your admin password to continue.",
+      "invalid": "Invalid password. Please try again.",
+      "title": "Potentially dangerous operation"
+    },
     "apiKey": {
       "description": "Give scripts and automation tasks like scheduled backups secure access without sharing your admin password.",
       "exampleLabel": "Try it: download a backup with curl",
@@ -1260,6 +1265,10 @@
         "grid": {
           "energy": "imported",
           "returnEnergy": "exported"
+        },
+        "meter": {
+          "energy": "Energy",
+          "returnEnergy": "Energy (reverse)"
         }
       },
       "downloadCsv": "Download CSV",

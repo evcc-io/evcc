@@ -61,7 +61,6 @@ export default {
 <style scoped>
 .editor {
 	border: 1px solid var(--bs-border-color);
-	min-height: 150px;
 }
 .editor-loading {
 	padding: 0.5rem 0.75rem;

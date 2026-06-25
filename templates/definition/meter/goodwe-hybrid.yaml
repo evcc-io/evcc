@@ -85,6 +85,37 @@ render: |
         register: 36017
         count: 10
       scale: -1
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36052 # Meter Voltage R, V
+        type: holding
+        decode: uint16nan
+      block: # 36052-36057
+        register: 36052
+        count: 6
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36053 # Meter Voltage S, V
+        type: holding
+        decode: uint16nan
+      block: # 36052-36057
+        register: 36052
+        count: 6
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36054 # Meter Voltage T, V
+        type: holding
+        decode: uint16nan
+      block: # 36052-36057
+        register: 36052
+        count: 6
+      scale: 0.1
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -92,9 +123,9 @@ render: |
         address: 36055 # Meter Current R, A
         type: holding
         decode: uint16nan
-      block: # 36055-36057
-        register: 36055
-        count: 3
+      block: # 36052-36057
+        register: 36052
+        count: 6
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -102,9 +133,9 @@ render: |
         address: 36056 # Meter Current S, A
         type: holding
         decode: uint16nan
-      block: # 36055-36057
-        register: 36055
-        count: 3
+      block: # 36052-36057
+        register: 36052
+        count: 6
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -112,9 +143,9 @@ render: |
         address: 36057 # Meter Current T, A
         type: holding
         decode: uint16nan
-      block: # 36055-36057
-        register: 36055
-        count: 3
+      block: # 36052-36057
+        register: 36052
+        count: 6
       scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}

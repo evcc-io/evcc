@@ -41,4 +41,8 @@ When a rule sets `ReadOnly`, upstream may observe but cannot control the charger
 
 Frames that arrive from a charger before its sidecar finishes dialling are buffered (`pendingMsgs`) and flushed in order once the sidecar connects, so early messages such as `BootNotification` still reach upstream. If the dial fails or upstream drops mid-session, any buffered or in-flight relay Calls are answered to the charger with a `CallError` so it is not left hanging, and the failure is surfaced to the UI via `forwarderErrors`.
 
+When the upstream connection fails while the charger stays connected, the sidecar is re-dialled automatically with exponential backoff (`runUpstreamSidecar`, 5s up to 5min; a successful session resets the backoff). Between attempts the relay actions fall back to evcc's local handler, so charging continues but upstream misses those transactions. The reconnect loop ends when the charger disconnects, the rule is removed, or its connection parameters change (`ApplyForwarderRules` dials its own sidecar in that case).
+
+The last `BootNotification` of each connected charger is cached (`lastBoot`). When a sidecar connects mid-session (after an upstream reconnect or a rule added at runtime) and the pending buffer does not already carry a boot frame, the cached frame is replayed to upstream with a fresh message id, since many backends expect a boot before accepting transactions. Upstream's reply to the replay is discarded; evcc answered the charger's original boot long ago.
+
 Rules can be changed at runtime through `ApplyForwarderRules`. Sidecars for removed rules are closed, rules with changed connection parameters are re-dialled, and rules for chargers that are not connected are test-dialled to surface unreachable hosts immediately.
