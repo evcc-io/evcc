@@ -1265,6 +1265,10 @@
         "grid": {
           "energy": "imported",
           "returnEnergy": "exported"
+        },
+        "meter": {
+          "energy": "Energy",
+          "returnEnergy": "Energy (reverse)"
         }
       },
       "downloadCsv": "Download CSV",

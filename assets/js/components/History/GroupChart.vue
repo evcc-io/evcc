@@ -54,6 +54,9 @@ export function stepAlpha(i: number, n: number): number {
 // Symmetric axis regardless of whether the period contains both directions.
 const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
 
+// Multiple entities stack into one bar; grid and meter render side-by-side.
+const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
+
 // Round up to a nice number (5-tick symmetric axis: -L, -L/2, 0, L/2, L).
 function niceCeil(v: number): number {
 	if (v <= 0) return 0;
@@ -104,19 +107,33 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
+		stackEntities(): boolean {
+			return STACKED_GROUPS.has(this.group);
+		},
 		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
 		// clipped. Bidirectional: pos/neg separately.
 		axisPeak(): number {
 			const factor = this.valueFactor;
+			// Stacked groups: sum entities per slot. Unstacked (grid, meter): max per entity.
 			const peak = (series: HistorySeries[], pick: (slot: HistorySlot) => number) => {
-				const sums = new Map<string, number>();
-				for (const s of series) {
-					for (const slot of s.data) {
-						sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
+				if (this.stackEntities) {
+					const sums = new Map<string, number>();
+					for (const s of series) {
+						for (const slot of s.data) {
+							sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
+						}
 					}
+					let max = 0;
+					for (const v of sums.values()) if (v > max) max = v;
+					return max;
 				}
 				let max = 0;
-				for (const v of sums.values()) if (v > max) max = v;
+				for (const s of series) {
+					for (const slot of s.data) {
+						const v = pick(slot) * factor;
+						if (v > max) max = v;
+					}
+				}
 				return max;
 			};
 			if (this.isBidirectional) {
@@ -269,13 +286,6 @@ export default defineComponent({
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
 			// echarts can animate value transitions instead of redrawing from zero.
-			// Groups with multiple entities stack them; grid keeps bars side-by-side.
-			const stackEntities =
-				this.group === "loadpoint" ||
-				this.group === "consumer" ||
-				this.group === "meter" ||
-				this.group === "pv" ||
-				this.group === "battery";
 			// Build value arrays per entity first so we can determine, per slot,
 			// which entity is the *visible* top/bottom of the stack — that one
 			// gets the rounded cap even if higher-index entities are zero/null.
@@ -327,13 +337,10 @@ export default defineComponent({
 				const returnEnergyName = this.directionLabel(s, "returnEnergy");
 				// Same stack name for import and export means they share one x slot
 				// (positive values stack up, negative stack down, no width penalty).
-				const stackName = stackEntities ? `group-${this.group}` : `entity-${i}`;
-				// For non-stacked groups every bar is its own cap. For stacked groups
-				// the cap moves to the topmost non-zero entity per slot, so when the
-				// last entity is empty at a given slot the next-lower one still gets
-				// the rounded top. A focused entity is rendered solo → always caps.
-				// Stable identity for focus comparison: paletteIndex when set
-				// (filtered groups), otherwise plain array index.
+				const stackName = this.stackEntities ? `group-${this.group}` : `entity-${i}`;
+				// Rounded cap goes on the visible top/bottom per slot: non-stacked bars
+				// always cap; stacked groups cap the topmost non-zero entity so an empty
+				// top entity doesn't drop the rounding; a focused entity is solo.
 				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
 					| number
@@ -342,7 +349,7 @@ export default defineComponent({
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
-						!stackEntities ||
+						!this.stackEntities ||
 						topEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
 					if (!isTop) return v;
@@ -355,7 +362,7 @@ export default defineComponent({
 				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
-						!stackEntities ||
+						!this.stackEntities ||
 						topReturnEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
 					if (!isBottom) return v;
@@ -416,7 +423,8 @@ export default defineComponent({
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
 		// Column headers for bidirectional tooltips (grid: imported/exported,
-		// battery: charged/discharged). Null when the group has no direction labels.
+		// battery: charged/discharged, meter: energy/reverse). Null when the group
+		// has no direction labels.
 		directionHeaders(): string[] | null {
 			if (!this.isBidirectional) return null;
 			const energyKey = `main.history.direction.${this.group}.energy`;

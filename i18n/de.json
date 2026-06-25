@@ -1266,6 +1266,10 @@
         "grid": {
           "energy": "bezogen",
           "returnEnergy": "eingespeist"
+        },
+        "meter": {
+          "energy": "Energie",
+          "returnEnergy": "Energie (rückwärts)"
         }
       },
       "downloadCsv": "CSV herunterladen",
