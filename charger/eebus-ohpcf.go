@@ -12,7 +12,6 @@ import (
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
@@ -31,7 +30,6 @@ type EEBusOHPCF struct {
 
 	mux        sync.RWMutex
 	log        *util.Logger
-	lp         loadpoint.API
 	compressor spineapi.EntityRemoteInterface
 	mpcEntity  spineapi.EntityRemoteInterface
 	enabled    bool
@@ -185,14 +183,6 @@ func ohpcfStatus(state ucapi.CompressorPowerConsumptionStateType) api.ChargeStat
 	}
 }
 
-// ohpcfEnabled reports whether the optional consumption has been committed.
-// scheduled is treated as enabled (we asked it to run) so that the loadpoint
-// does not re-issue the command while the compressor spins up to running.
-func ohpcfEnabled(state ucapi.CompressorPowerConsumptionStateType) bool {
-	return state == ucapi.CompressorPowerConsumptionStateScheduled ||
-		state == ucapi.CompressorPowerConsumptionStateRunning
-}
-
 var _ api.Charger = (*EEBusOHPCF)(nil)
 
 // Status implements the api.Charger interface
@@ -210,47 +200,22 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 	return ohpcfStatus(state), nil
 }
 
-// Enabled implements the api.Charger interface
+// Enabled reports the commanded on/off intent; Status reflects the actual
+// compressor state.
 func (c *EEBusOHPCF) Enabled() (bool, error) {
-	entity, ok := c.connectedCompressor()
-	if !ok {
+	if _, ok := c.connectedCompressor(); !ok {
 		return false, errNotConnected
 	}
 
-	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
-	if err != nil {
-		return c.lastEnabled(), nil
-	}
-
-	return ohpcfEnabled(state), nil
+	return c.lastEnabled(), nil
 }
 
-// Enable implements the api.Charger interface.
-// It records the on/off intent and pauses/aborts the optional consumption on
-// disable. The actual start is deferred to MaxCurrent, which schedules the
-// process once the available surplus power covers the compressor's request.
+// Enable schedules or resumes the optional consumption when on, pauses or
+// aborts it when off.
 func (c *EEBusOHPCF) Enable(enable bool) error {
 	c.setEnabled(enable)
 
-	entity, ok := c.connectedCompressor()
-	if !ok {
-		return errNotConnected
-	}
-
-	if enable {
-		return nil
-	}
-
-	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
-	if err != nil {
-		return nil
-	}
-
-	if ohpcfControlAction(state, false) == ohpcfStop {
-		return c.stop(entity)
-	}
-
-	return nil
+	return c.apply()
 }
 
 type ohpcfAction int
@@ -262,12 +227,10 @@ const (
 	ohpcfStop
 )
 
-// ohpcfControlAction decides which control command to issue given the current
-// process state and whether the available surplus power is sufficient. It only
-// returns an action when a state transition is required, so repeated calls with
-// an unchanged state issue no further commands.
-func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, sufficient bool) ohpcfAction {
-	if sufficient {
+// ohpcfControlAction returns the command needed to reach the desired on/off
+// state; it returns an action only on a state transition, so repeats are no-ops.
+func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable bool) ohpcfAction {
+	if enable {
 		switch state {
 		case ucapi.CompressorPowerConsumptionStateAvailable:
 			return ohpcfSchedule
@@ -302,56 +265,27 @@ func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 	return api.ErrNotAvailable
 }
 
-// MaxCurrent implements the api.Charger interface.
-// The compressor cannot be modulated (OHPCF has no power setpoint), but the
-// loadpoint's allotted current still tells us how much surplus power is
-// available. Once that covers the compressor's requested power, the optional
-// consumption is scheduled to start now; otherwise it is paused.
-func (c *EEBusOHPCF) MaxCurrent(current int64) error {
+// MaxCurrent implements the api.Charger interface. OHPCF is on/off and cannot
+// be modulated, so the offered current is ignored.
+func (c *EEBusOHPCF) MaxCurrent(int64) error {
+	return c.apply()
+}
+
+// apply issues the command to align the optional consumption with the on/off
+// intent. It is idempotent: ohpcfControlAction only acts on a state transition.
+func (c *EEBusOHPCF) apply() error {
 	entity, ok := c.connectedCompressor()
 	if !ok {
 		return errNotConnected
 	}
 
-	if !c.lastEnabled() {
-		return nil
-	}
-
-	available := float64(current) * voltage * float64(c.phases())
-
-	return c.applyAvailablePower(entity, available)
-}
-
-// phases returns the loadpoint's active phases, defaulting to single phase
-func (c *EEBusOHPCF) phases() int {
-	c.mux.RLock()
-	lp := c.lp
-	c.mux.RUnlock()
-
-	if lp != nil {
-		if p := lp.GetPhases(); p > 0 {
-			return p
-		}
-	}
-
-	return 1
-}
-
-// applyAvailablePower schedules or pauses the optional consumption depending on
-// whether the available surplus power covers the compressor's requested power.
-func (c *EEBusOHPCF) applyAvailablePower(entity spineapi.EntityRemoteInterface, available float64) error {
-	requested, err := c.cem.OHPCF.RequestedPowerMax(entity)
-	if err != nil {
-		// no power request announced yet, nothing to schedule
-		return nil
-	}
-
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
 	if err != nil {
+		// no process state announced yet, nothing to control
 		return nil
 	}
 
-	switch ohpcfControlAction(state, available >= requested) {
+	switch ohpcfControlAction(state, c.lastEnabled()) {
 	case ohpcfSchedule:
 		_, err = c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, time.Now(), nil)
 	case ohpcfResume:
@@ -361,16 +295,6 @@ func (c *EEBusOHPCF) applyAvailablePower(entity spineapi.EntityRemoteInterface, 
 	}
 
 	return err
-}
-
-var _ loadpoint.Controller = (*EEBusOHPCF)(nil)
-
-// LoadpointControl implements the loadpoint.Controller interface
-func (c *EEBusOHPCF) LoadpointControl(lp loadpoint.API) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	c.lp = lp
 }
 
 var _ api.Meter = (*EEBusOHPCF)(nil)

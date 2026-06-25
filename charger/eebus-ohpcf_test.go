@@ -3,6 +3,7 @@ package charger
 import (
 	"testing"
 
+	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,4 +23,27 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 
 	require.ErrorIs(t, c.Enable(true), errNotConnected)
 	require.ErrorIs(t, c.MaxCurrent(16), errNotConnected)
+}
+
+// on/off control: enable schedules/resumes, disable stops, and an already
+// running/scheduled process issues no further command.
+func TestOHPCFControlAction(t *testing.T) {
+	tc := []struct {
+		state  ucapi.CompressorPowerConsumptionStateType
+		enable bool
+		want   ohpcfAction
+	}{
+		{ucapi.CompressorPowerConsumptionStateAvailable, true, ohpcfSchedule},
+		{ucapi.CompressorPowerConsumptionStatePaused, true, ohpcfResume},
+		{ucapi.CompressorPowerConsumptionStateScheduled, true, ohpcfNone},
+		{ucapi.CompressorPowerConsumptionStateRunning, true, ohpcfNone},
+		{ucapi.CompressorPowerConsumptionStateRunning, false, ohpcfStop},
+		{ucapi.CompressorPowerConsumptionStateScheduled, false, ohpcfStop},
+		{ucapi.CompressorPowerConsumptionStateAvailable, false, ohpcfNone},
+		{ucapi.CompressorPowerConsumptionStatePaused, false, ohpcfNone},
+	}
+
+	for _, tc := range tc {
+		assert.Equal(t, tc.want, ohpcfControlAction(tc.state, tc.enable), "%v enable=%v", tc.state, tc.enable)
+	}
 }
