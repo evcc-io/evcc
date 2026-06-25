@@ -5,12 +5,12 @@ requirements:
   description:
     en: |
       [pvnode V2 API](https://pvnode.com) provides 15-minute PV production forecasts via REST API Version 2 with site ID and easy configuration via web app.
-      An API key is required (free plan available with +1 day forecast).
-      **Attention**: The free plan only allows 40 queries per month. These queries must be from only one location (lat, lon). Location is saved on first request and can not be changed afterwards, otherwise a 403 response is sent.
+      An API key is required (free plan available).
+      **Attention**: The free plan only allows one fixed site with forecasts for today & tomorrow and only one update per day and 250 cached queries.
     de: |
       [pvnode V2 API](https://pvnode.com) liefert 15-Minuten PV Vorhersagen per REST API Version 2 mit Standort-ID und leichter Konfiguration über Web-App
-      Ein API-Key ist erforderlich (kostenloser Plan mit +1 Tag Vorhersage verfügbar).
-      **Achtung**: Mit dem kostenlosen Plan sind lediglich 40 Abfragen/Monat erlaubt. Diese Abfragen dürfen nur von einem Standort (lat, lon) sein. Der Standort wird bei der ersten Abfrage gespeichert und kann danach nicht mehr angepasst werden, andernfalls wird eine 403 Antwort gesendet.
+      Ein API-Key ist erforderlich (kostenloser Plan möglich)
+      **Achtung**: Mit dem kostenlosen Plan ist nur ein Standort (fest) möglich mit einer Prognose für Heute & Morgen und nur einem Update pro Tag und 250 gecached Abfragen.
   evcc: ["skiptest"]
 group: solar
 
@@ -27,10 +27,13 @@ params:
     required: true
   - name: forecast_days
     description:
-      en: Forecast days (free plan = 1).
-      de: Vorhersagetage (Free Plan = 1).
+      en: Forecast days
+      de: Vorhersagetage
+    help:
+      en: The free plan of pvnode only allows 2 forecast day.
+      de: Der kostenlose Plan von pvnode erlaubt nur 2 Vorhersagetag.
     type: int
-    default: 1
+    default: 2
     advanced: true
 
 render: |
