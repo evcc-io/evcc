@@ -141,12 +141,10 @@ var knownKeys = map[string]struct{}{
 	KeyRangeID3: {},
 }
 
-// contentDatasets returns the datasets that actually carry content, with their
-// delivery time parsed into Timestamp and sorted from oldest to newest. The
+// contentDatasets returns the content datasets, sorted oldest to newest. The
 // portal emits "..._no_content_found.zip" placeholders while the vehicle is
-// asleep, which are skipped. An error is returned when a content dataset's
-// timestamp cannot be parsed.
-func contentDatasets(list []dataset) ([]dataset, error) {
+// asleep; those are skipped.
+func contentDatasets(list []dataset) []dataset {
 	content := make([]dataset, 0, len(list))
 	for _, d := range list {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
@@ -160,7 +158,7 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 		return a.CreatedOn.Compare(b.CreatedOn)
 	})
 
-	return content, nil
+	return content
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and

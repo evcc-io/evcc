@@ -93,10 +93,7 @@ func (s *store) update(vin string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	content, err := contentDatasets(list)
-	if err != nil {
-		return time.Time{}, err
-	}
+	content := contentDatasets(list)
 
 	var newest time.Time
 	for _, d := range list {
