@@ -3,7 +3,7 @@ products:
   - description:
       de: EEBUS Wärmepumpe (OHPCF)
       en: EEBUS heat pump (OHPCF)
-group: generic
+group: heating
 capabilities: ["meter"]
 params:
   - preset: eebus
@@ -12,4 +12,5 @@ render: |
   ski: {{ .ski }}
   {{ if .ip }}ip: {{ .ip }}{{ end }}
   features:
+    - heating
     - integrateddevice

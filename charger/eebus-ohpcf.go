@@ -54,7 +54,7 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		Ip    string
 	}{
 		embed: embed{
-			Features_: []api.Feature{api.IntegratedDevice},
+			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
 	}
 
