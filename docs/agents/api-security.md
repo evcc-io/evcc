@@ -88,10 +88,20 @@ achieves the same effect (the previous key stops working immediately).
 | State / read-only / basic charging control   | Public    |                                    |
 | Set or update admin password                 | Public    | admin password                     |
 | Configuration                                | Secure    |                                    |
+| Configuration embedding a script plugin       | Critical  | api key or admin password          |
 | System: logs, cache, shutdown                | Secure    |                                    |
 | API key status                               | Secure    |                                    |
 | System: backup / restore / reset             | Critical  | api key or admin password          |
 | API key regenerate                           | Critical  | admin password                     |
+
+Device test, create, and update (`/api/config/test/{class}` and `/api/config/devices/{class}`)
+instantiate a config immediately, so a `script` plugin in the payload runs a shell command on the
+server. Because that command could read credentials a session is not otherwise allowed to see (for
+example the contents of the database), these requests are treated as Critical when the config embeds
+a script plugin, at any nesting depth. A session caller must supply the admin password in the
+`X-Admin-Password` header; an API-key caller passes without it. The `go` (yaegi) and `js` (otto)
+plugins are excluded: their interpreters are sandboxed to pure computation and cannot read files,
+spawn processes, or open network connections.
 
 **Public** endpoints accept any caller. **Secure** endpoints require a
 valid session (cookie or API key). **Critical** endpoints require extra

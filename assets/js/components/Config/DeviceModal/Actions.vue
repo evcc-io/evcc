@@ -1,5 +1,7 @@
 <template>
 	<div>
+		<slot name="before-test"></slot>
+
 		<TestResult
 			v-if="testState"
 			v-bind="testState"

@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
@@ -336,7 +337,7 @@ func HemsStatus(configured bool) globalconfig.ConfigStatus {
 }
 
 // newDeviceHandler creates a new device by class
-func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
+func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -349,6 +350,10 @@ func newDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request
 		req, err := decodeDeviceConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if !requireCriticalConfigAuth(w, r, authObject, req) {
 			return
 		}
 
@@ -429,7 +434,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 }
 
 // updateDeviceHandler updates database device's configuration by class
-func updateDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
+func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -448,6 +453,10 @@ func updateDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 		req, err := decodeDeviceConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if !requireCriticalConfigAuth(w, r, authObject, req) {
 			return
 		}
 
@@ -697,7 +706,7 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 }
 
 // testConfigHandler tests a configuration by class
-func testConfigHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
+func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -720,6 +729,10 @@ func testConfigHandler(site site.API) func(w http.ResponseWriter, r *http.Reques
 		req, err := decodeDeviceConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if !requireCriticalConfigAuth(w, r, authObject, req) {
 			return
 		}
 

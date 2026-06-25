@@ -23,7 +23,7 @@ params:
     unit: W
     advanced: true
     description:
-      en: Failsafe consumption limit of controllable loads (LPC)
+      en: Failsafe consumption limit (Pmin, LPC)
       de: Failsafe-Bezugsgrenze der SteuVE (Pmin)
     help:
       en: Failsafe minimum consumption power (Pmin) for controllable loads applied when the heartbeat from the control box is lost; it is overwritten by the control box once it transmits its own failsafe values. (Default 4.2 kW)

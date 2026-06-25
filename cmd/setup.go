@@ -900,11 +900,16 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 			log.WARN.Printf("ocpp: failed to load settings: %v", err)
 		}
 	}
-	ocpp.Init(*cfg, externalUrl)
+	ocpp.NewServer(*cfg, externalUrl)
 
 	// Load proxy forwarding rules from DB if present.
 	var rules []ocpp.ForwarderRule
-	if err := settings.Json(keys.OcppForwarder, &rules); err == nil {
+	if err := settings.Json(keys.OcppForwarder, &rules); err == nil && len(rules) > 0 {
+		// the forwarder relays through the central system; abort if it failed to start
+		if _, err := ocpp.Instance(); err != nil {
+			log.ERROR.Printf("ocpp: forwarder disabled: %v", err)
+			return
+		}
 		ocpp.ApplyForwarderRules(rules)
 	}
 }
@@ -932,13 +937,12 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 	}
 
-	var err error
-	if eebus.Instance, err = eebus.NewServer(*conf); err != nil {
+	srv, err := eebus.NewServer(*conf)
+	if err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	eebus.Instance.Run()
-	shutdown.Register(eebus.Instance.Shutdown)
+	shutdown.Register(srv.Shutdown)
 
 	return nil
 }

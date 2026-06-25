@@ -2,7 +2,6 @@ package eebus
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
@@ -63,7 +62,7 @@ type Limits struct {
 // NewFromConfig creates an EEBus HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
-		Ski, Ip     string
+		Ski         string
 		Limits      `mapstructure:",squash"`
 		Passthrough *plugin.Config
 		Interval    time.Duration
@@ -92,20 +91,21 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		return nil, err
 	}
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Limits, passthroughS, site, cc.Interval)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, site, cc.Interval)
 }
 
 // NewEEBus creates EEBus HEMS
-func NewEEBus(ctx context.Context, ski, ip string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
 	c := &EEBus{
 		log:         util.NewLogger("eebus"),
 		site:        site,
 		passthrough: passthrough,
-		cs:          eebus.Instance.ControllableSystem(),
+		cs:          inst.ControllableSystem(),
 		Connector:   eebus.NewConnector(),
 		heartbeat:   util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:    interval,
@@ -119,12 +119,12 @@ func NewEEBus(ctx context.Context, ski, ip string, limits Limits, passthrough fu
 	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
 	c.heartbeat.Set(struct{}{})
 
-	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
+	if err := inst.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
 	}
 
 	if err := c.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 

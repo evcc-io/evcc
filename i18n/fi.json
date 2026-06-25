@@ -120,6 +120,11 @@
       "title": "Kuormanhallinta",
       "usableMeters": "Käytettävissä olevat mittarit"
     },
+    "consumer": {
+      "description": "Seuraa pienempiä, ei-hallittuja kodinkoneita (jääkaappi, pesukone, ...). Antaa sinulle paremman yleiskuvan kodin kulutuksesta.",
+      "titleAdd": "Lisää kulutusmittari",
+      "titleEdit": "Muokkaa kulutusmittaria"
+    },
     "control": {
       "description": "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä.",
       "descriptionInterval": "Päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja ja säätää lataustehoa. Oletus 30 s on turvallinen asetus. Ajoneuvot, latauslaitteet ja invertterit tyypillisesti tarvitsevat useita sekunteja toimintansa säätämiseen. Jos laitteesi reagoivat nopeasti, voit määrittää lyhyemmän aikajakson. Suosittelemme vahvasti, että alle 10 s jaksoa ei määritettäisi. Jos kohtaat virheellistä toimitaa tai hyppiviä tehoarvoja, suosittelemme pidentämään aikaväliä.",
@@ -188,6 +193,7 @@
       "singlePhase": "Yksivaiheinen",
       "soc": "Lataus",
       "solarForecast": "Aurinkosääennuste",
+      "switchDevice": "Virran hallinta",
       "temp": "Lämpötila",
       "topic": "Aihe",
       "url": "URL",
@@ -220,6 +226,8 @@
       "interfacesHelp": "Rajaa verkkoyhteyksiä, joita EEBus voi käyttää, jotta vältytään kommunikointiongelmilta. Jätä tyhjäksi käyttääksesi kaikki verkkoyhteyksiä. Yksi laite per rivi.",
       "port": "Portti",
       "portHelp": "Käytettävä porttinumero.",
+      "qr": "Parituskoodi",
+      "qrExplain": "Skannaa toisesta EEBus-laitteesta asennuksen aikana parittaaksesi automaattisesti ilman SKI:n käsinsyöttämistä.",
       "removeConfirm": "Kaikki EEBus-asetukset poistetaan. Uudet sertifikaatit ja tunnisteet generoidaan seuraavan järjetestelmän käynnistyksessä. Oletko varma?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Pysyvä laitteen tunnistetieto EEBus-yhteydessä laitteen yksilöimiseksi.",
@@ -403,6 +411,7 @@
       "solarBehaviorLabel": "Aurinkoenergia",
       "solarModeCustom": "muokattu",
       "solarModeMaximum": "maksimi PV",
+      "temperatureRangeTitle": "Lämpötila-alue",
       "thresholdDisableDelayLabel": "Poista viive käytöstä",
       "thresholdDisableHelpInvalid": "Käytä positiivista arvoa.",
       "thresholdDisableHelpPositive": "Lopeta, kun verkosta käytetään enemmän kuin {power}, {delay} ajaksi.",
@@ -437,6 +446,7 @@
     },
     "main": {
       "addAdditional": "Lisää lisämittari",
+      "addConsumer": "Lisää kuluttaja",
       "addGrid": "Lisää verkkomittari",
       "addLoadpoint": "Lisää latauslaite tai lämmitin",
       "addPvBattery": "Lisää aurinkovoimala tai akusto",
@@ -522,6 +532,10 @@
     },
     "meter": {
       "cancel": "Peruuta",
+      "convertToConsumer": {
+        "confirm": "Muuntaa tämän \"ylimääräisen mittarin\" \"kuluttajaksi\".",
+        "link": "Muunna kuluttajaksi"
+      },
       "delete": "Poista",
       "generic": "Yleiset integraatiot",
       "option": {
@@ -731,6 +745,7 @@
     },
     "section": {
       "additionalMeter": "Ylimääräiset mittarit",
+      "consumers": "Kuluttajat",
       "general": "Yleinen",
       "grid": "Sähköverkko",
       "integrations": "Integraatiot",
@@ -1221,6 +1236,7 @@
     "energyflow": {
       "battery": "Akku",
       "batteryCharge": "Akunlataus",
+      "batteryChargeHold": "Akku (lataus lukittuna)",
       "batteryDischarge": "Akku purkautuu",
       "batteryDischargeHold": "Akku (lukittu)",
       "batteryForecastEmpty": "Varaus loppuu",
@@ -1271,7 +1287,7 @@
         "forecast": "Ennuste",
         "grid": "Sähköverkko",
         "loadpoint": "Lataus & lämmitys",
-        "meter": "Kulutus",
+        "meter": "Lisämittarit",
         "pv": "Tuotanto"
       },
       "otherConsumers": "Muut",
@@ -1545,7 +1561,7 @@
     },
     "groupBy": {
       "loadpoint": "Latauspiste",
-      "none": "Yhteensä",
+      "none": "Aurinkovoima",
       "vehicle": "Ajoneuvo"
     },
     "loadpoint": "Latauspiste",

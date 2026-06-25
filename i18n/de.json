@@ -51,6 +51,11 @@
     "hex": "Hex-Farbe"
   },
   "config": {
+    "adminPassword": {
+      "description": "Das Skript-Plugin führt einen Befehl auf Systemebene aus, der mit den Rechten des evcc-Prozesses läuft. Gib dein Administrator-Passwort erneut ein, um fortzufahren.",
+      "invalid": "Ungültiges Passwort. Bitte versuche es erneut.",
+      "title": "Potenziell gefährliche Aktion"
+    },
     "apiKey": {
       "description": "Gibt Skripten und Automatisierungsaufgaben wie geplanten Backups sicheren Zugriff, ohne dein Administrator-Passwort zu teilen.",
       "exampleLabel": "Ausprobieren: Backup mit curl herunterladen",
@@ -1265,6 +1270,10 @@
         "grid": {
           "energy": "bezogen",
           "returnEnergy": "eingespeist"
+        },
+        "meter": {
+          "energy": "Energie",
+          "returnEnergy": "Energie (rückwärts)"
         }
       },
       "downloadCsv": "CSV herunterladen",
