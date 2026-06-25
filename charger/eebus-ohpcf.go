@@ -25,6 +25,7 @@ import (
 // enabling the charger schedules or resumes the optional consumption, disabling
 // it pauses or aborts the running process.
 type EEBusOHPCF struct {
+	*embed
 	cem *eebus.CustomerEnergyManagement
 	ma  *eebus.MonitoringAppliance
 
@@ -47,26 +48,32 @@ func init() {
 
 // NewEEBusOHPCFFromConfig creates an EEBus OHPCF charger from generic config
 func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	var cc struct {
-		Ski string
-		Ip  string
+	cc := struct {
+		embed `mapstructure:",squash"`
+		Ski   string
+		Ip    string
+	}{
+		embed: embed{
+			Features_: []api.Feature{api.IntegratedDevice},
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBusOHPCF(ctx, cc.Ski, cc.Ip)
+	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip)
 }
 
 // NewEEBusOHPCF creates an EEBus OHPCF charger, registers it with the EEBus
 // instance and waits for the connection.
-func NewEEBusOHPCF(ctx context.Context, ski, ip string) (api.Charger, error) {
+func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string) (api.Charger, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBusOHPCF{
+		embed:     embed,
 		log:       util.NewLogger("eebus-ohpcf"),
 		cem:       eebus.Instance.CustomerEnergyManagement(),
 		ma:        eebus.Instance.MonitoringAppliance(),
