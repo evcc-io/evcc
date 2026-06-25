@@ -1,18 +1,18 @@
 template: relay
 products:
   - description:
-      generic: GPIO relay
+      generic: GPIO relay (LPC)
 params:
   - name: maxpower
     type: float
     unit: W
     required: true
     description:
-      en: Maximum power
-      de: Maximale Leistung
+      en: Limited consumption power
+      de: Limitierte Verbrauchsleistung
     help:
-      en: Power cap applied to the root circuit while the relay signal is active
-      de: Leistungsbegrenzung des Hauptstromkreises, während das Relaissignal aktiv ist
+      en: Power limit applied to the root circuit while the limit is active.
+      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist.
   - name: gpiopin
     type: int
     required: true
