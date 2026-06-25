@@ -3,6 +3,7 @@ package charger
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -253,16 +255,46 @@ func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable 
 // it aborts the process.
 func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 	if pausable, err := c.cem.OHPCF.ConsumptionIsPausable(entity); err == nil && pausable {
-		_, err := c.cem.OHPCF.PausePowerConsumptionProcess(entity, nil)
-		return err
+		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+			return c.cem.OHPCF.PausePowerConsumptionProcess(entity, cb)
+		})
 	}
 
 	if stoppable, err := c.cem.OHPCF.ConsumptionIsStoppable(entity); err == nil && stoppable {
-		_, err := c.cem.OHPCF.AbortPowerConsumptionProcess(entity, nil)
-		return err
+		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+			return c.cem.OHPCF.AbortPowerConsumptionProcess(entity, cb)
+		})
 	}
 
 	return api.ErrNotAvailable
+}
+
+// ohpcfWriteTimeout bounds how long a control write waits for its result.
+const ohpcfWriteTimeout = 10 * time.Second
+
+// await runs a control write and waits for the heat pump's result, returning an
+// error if the write is rejected or no result arrives within the timeout.
+func (c *EEBusOHPCF) await(write func(func(model.ResultDataType)) (*model.MsgCounterType, error)) error {
+	res := make(chan model.ResultDataType, 1)
+
+	if _, err := write(func(r model.ResultDataType) { res <- r }); err != nil {
+		return err
+	}
+
+	select {
+	case r := <-res:
+		if r.ErrorNumber != nil && *r.ErrorNumber != 0 {
+			err := fmt.Errorf("write rejected: %d", *r.ErrorNumber)
+			if r.Description != nil {
+				err = fmt.Errorf("%w (%s)", err, *r.Description)
+			}
+			c.log.ERROR.Println(err)
+			return err
+		}
+		return nil
+	case <-time.After(ohpcfWriteTimeout):
+		return errors.New("write result timeout")
+	}
 }
 
 // MaxCurrent implements the api.Charger interface. OHPCF is on/off and cannot
@@ -287,14 +319,18 @@ func (c *EEBusOHPCF) apply() error {
 
 	switch ohpcfControlAction(state, c.lastEnabled()) {
 	case ohpcfSchedule:
-		_, err = c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, time.Now(), nil)
+		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, time.Now(), cb)
+		})
 	case ohpcfResume:
-		_, err = c.cem.OHPCF.ResumePowerConsumptionProcess(entity, nil)
+		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+			return c.cem.OHPCF.ResumePowerConsumptionProcess(entity, cb)
+		})
 	case ohpcfStop:
-		err = c.stop(entity)
+		return c.stop(entity)
 	}
 
-	return err
+	return nil
 }
 
 var _ api.Meter = (*EEBusOHPCF)(nil)
