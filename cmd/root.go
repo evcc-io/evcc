@@ -206,17 +206,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 		cs, ocppErr := ocpp.Instance()
 		if ocppErr != nil {
 			log.ERROR.Println("ocpp:", ocppErr)
-		}
-		cs.SetUpdated(func() {
-			// republish when OCPP state updates
-			valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
-				Config: ocpp.CurrentConfig(),
-				Status: ocpp.GetStatus(),
-			}}
-		})
-		log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
-		if ocpp.ExternalUrl() != "" {
-			log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+		} else {
+			cs.SetUpdated(func() {
+				// republish when OCPP state updates
+				valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+					Config: ocpp.CurrentConfig(),
+					Status: ocpp.GetStatus(),
+				}}
+			})
+			log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+			if ocpp.ExternalUrl() != "" {
+				log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+			}
 		}
 		// register the callback even with no rules so runtime additions are pushed
 		ocpp.SetForwarderUpdated(func() {

@@ -27,7 +27,7 @@ function ocppPort() {
 
 export function eebusPort() {
   const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
-  return 4712 + index;
+  return 13000 + index;
 }
 
 function logPrefix() {

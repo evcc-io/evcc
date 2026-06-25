@@ -150,7 +150,7 @@ func NewServer(cfg Config, networkExternalUrl string) {
 
 	cs := ocpp16.NewCentralSystem(endpoint, server)
 
-	instance = &CS{
+	inst := &CS{
 		log:           log,
 		regs:          make(map[string]*registration),
 		CentralSystem: cs,
@@ -158,17 +158,20 @@ func NewServer(cfg Config, networkExternalUrl string) {
 		dispatcher:    dispatcher,
 	}
 
-	instance.txnId.Store(time.Now().UTC().Unix())
+	inst.txnId.Store(time.Now().UTC().Unix())
 
-	ocppj.SetLogger(instance)
+	ocppj.SetLogger(inst)
 
-	cs.SetCoreHandler(instance)
-	cs.SetSecurityHandler(instance)
-	cs.SetFirmwareManagementHandler(instance)
-	cs.SetNewChargePointHandler(instance.NewChargePoint)
-	cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
+	cs.SetCoreHandler(inst)
+	cs.SetSecurityHandler(inst)
+	cs.SetFirmwareManagementHandler(inst)
+	cs.SetNewChargePointHandler(inst.NewChargePoint)
+	cs.SetChargePointDisconnectedHandler(inst.ChargePointDisconnected)
 
-	started = sync.OnceValue(instance.listen)
+	// wire the start memo before publishing instance, so Instance() never sees
+	// a non-nil instance with a nil started
+	started = sync.OnceValue(inst.listen)
+	instance = inst
 }
 
 // listen starts the central system and blocks until it has bound its port.
