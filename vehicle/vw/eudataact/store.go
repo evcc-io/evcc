@@ -2,7 +2,6 @@ package eudataact
 
 import (
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -153,17 +152,9 @@ func (s *store) snapshot(vin string) []point {
 	return slices.Clone(v.data)
 }
 
-// logData logs every data point at DEBUG level, sorted by name then key, with
-// its value and own timestamp in local time.
+// logData logs every data point at DEBUG level in arrival order, with its value
+// and own timestamp in local time.
 func logData(log *util.Logger, data []point) {
-	data = slices.Clone(data)
-	slices.SortFunc(data, func(a, b point) int {
-		if c := strings.Compare(a.Name, b.Name); c != 0 {
-			return c
-		}
-		return strings.Compare(a.Key, b.Key)
-	})
-
 	for _, p := range data {
 		log.DEBUG.Printf("recv %s %s: %s (%s)", p.Key, p.Name, p.Value, p.Timestamp.Local().Format("2006-01-02 15:04:05"))
 	}
