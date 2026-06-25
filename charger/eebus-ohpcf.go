@@ -189,7 +189,7 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
-		return api.StatusA, nil
+		return api.StatusNone, errors.New("not connected")
 	}
 
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
