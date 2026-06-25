@@ -29,7 +29,7 @@ const (
 	flagCustomCssDescription = "Additional user-defined CSS file for custom styling. No compatibility guarantees."
 
 	flagBatteryMode                = "battery-mode"
-	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
+	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge, holdcharge)"
 	flagBatteryModeWait            = "battery-mode-wait"
 	flagBatteryModeWaitDescription = "Wait given duration during which potential watchdogs are active"
 

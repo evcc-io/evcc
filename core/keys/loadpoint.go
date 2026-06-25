@@ -2,6 +2,7 @@ package keys
 
 const (
 	// loadpoint settings
+	Name              = "name"             // loadpoint name (config identifier)
 	Title             = "title"            // loadpoint title
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode
@@ -18,6 +19,7 @@ const (
 	LimitEnergy       = "limitEnergy"      // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
+	UI                = "ui" // display-only ui settings (json)
 	EnableThreshold   = "enableThreshold"
 	DisableThreshold  = "disableThreshold"
 	EnableDelay       = "enableDelay"

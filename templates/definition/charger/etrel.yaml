@@ -6,7 +6,7 @@ products:
   - brand: Sonnen
     description:
       generic: sonnenCharger
-capabilities: ["mA", "meter"]
+capabilities: ["mA", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
   description:

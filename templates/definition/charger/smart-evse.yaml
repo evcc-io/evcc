@@ -3,7 +3,7 @@ products:
   - brand: Stegen
     description:
       generic: Smart Evse v3 / v3.5
-capabilities: ["mA", "rfid", "1p3p"]
+capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:
     de: |
@@ -16,7 +16,6 @@ params:
   - name: host
   - name: cache
     default: 1s
-    advanced: true
   - name: chargeMode
     default: normal
     advanced: true

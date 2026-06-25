@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -59,6 +60,7 @@ var (
 // Vestel is an api.Charger implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Vestel struct {
+	implement.Caps
 	log     *util.Logger
 	conn    *modbus.Connection
 	enabled bool
@@ -68,8 +70,6 @@ type Vestel struct {
 func init() {
 	registry.AddCtx("vestel", NewVestelFromConfig)
 }
-
-//go:generate go tool decorate -f decorateVestel -b *Vestel -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.Identifier
 
 // NewVestelFromConfig creates a Vestel charger from generic config
 func NewVestelFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -99,23 +99,18 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Vestel{
+		Caps:    implement.New(),
 		log:     log,
 		conn:    conn,
 		current: 6,
 	}
 
-	var (
-		phasesS func(int) error
-		phasesG func() (int, error)
-	)
 	if b, err := wb.conn.ReadInputRegisters(vestelRegNumberPhases, 1); err == nil && binary.BigEndian.Uint16(b) == 1 {
-		phasesS = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	// compare firmware version to determine if RFID is available
-	var identify func() (string, error)
-
 	b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read firmware version: %w", err)
@@ -127,7 +122,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		if v, err := version.NewSemver(fw); err == nil {
 			if v.GreaterThanOrEqual(version.Must(version.NewSemver("3.156.0"))) {
 				// firmware >= v3.156.0 supports RFID according to https://github.com/evcc-io/evcc/issues/21359
-				identify = wb.identify
+				implement.Has(wb, implement.Identifier(wb.identify))
 			}
 		} else {
 			log.WARN.Printf("failed to parse firmware version %q: %v", string(b), err)
@@ -150,7 +145,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 	go wb.heartbeat(ctx, timeout)
 
-	return decorateVestel(wb, phasesS, phasesG, identify), nil
+	return wb, nil
 }
 
 func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {

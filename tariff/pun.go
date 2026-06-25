@@ -86,7 +86,9 @@ func (t *Pun) run(done chan error) {
 			return res, backoffPermanentError(err)
 		}, bo())
 		if err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println(err)
 			continue
 		}
@@ -100,7 +102,9 @@ func (t *Pun) run(done chan error) {
 			return res, backoffPermanentError(err)
 		}, bo())
 		if err != nil && !errors.Is(err, ErrPunDataNotAvailable) {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println(err)
 			continue
 		}

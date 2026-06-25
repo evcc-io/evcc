@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/spf13/cast"
@@ -15,6 +16,7 @@ import (
 
 // EcoFlow represents the EcoFlow  meter
 type EcoFlow struct {
+	implement.Caps
 	usage  string
 	serial string
 	cache  time.Duration
@@ -70,27 +72,16 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	m, err := NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache)
-	if err != nil {
-		return nil, err
-	}
-
-	if cc.Usage == "battery" {
-		return decorateMeterBattery(
-			m, nil, m.soc, cc.batteryCapacity.Decorator(),
-			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
-		), nil
-	}
-
-	return m, nil
+	return NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewEcoFlow constructs the EcoFlow struct
 func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
-	power, soc string, cache time.Duration) (*EcoFlow, error) {
+	power, soc string, cache time.Duration, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*EcoFlow, error) {
 	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
 
 	m := &EcoFlow{
+		Caps:   implement.New(),
 		serial: serial,
 		usage:  usage,
 		cache:  cache,
@@ -103,6 +94,13 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 	}
 
 	m.dataG = util.Cached(m.getData, cache)
+
+	if usage == "battery" {
+		implement.Has(m, implement.Battery(m.soc))
+		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.May(m, implement.BatterySocLimiter(batterySocLimits))
+		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
+	}
 
 	return m, nil
 }

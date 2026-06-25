@@ -4,12 +4,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/goodwe"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
 type goodWeWiFi struct {
+	implement.Caps
 	usage    string
 	inverter *util.Monitor[goodwe.Inverter]
 }
@@ -17,8 +19,6 @@ type goodWeWiFi struct {
 func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
-
-//go:generate go tool decorate -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t api.Battery,api.BatteryCapacity
 
 // TODO deprecated
 
@@ -50,21 +50,17 @@ func NewGoodWeWiFi(uri, usage string, capacity func() float64, timeout time.Dura
 	}
 
 	res := &goodWeWiFi{
+		Caps:     implement.New(),
 		usage:    usage,
 		inverter: inverter,
 	}
 
-	// decorate battery
-	var (
-		batterySoc      func() (float64, error)
-		batteryCapacity func() float64
-	)
 	if usage == "battery" {
-		batterySoc = res.batterySoc
-		batteryCapacity = capacity
+		implement.Has(res, implement.Battery(res.batterySoc))
+		implement.May(res, implement.BatteryCapacity(capacity))
 	}
 
-	return decorateGoodWeWifi(res, batterySoc, batteryCapacity), nil
+	return res, nil
 }
 
 func (m *goodWeWiFi) CurrentPower() (float64, error) {

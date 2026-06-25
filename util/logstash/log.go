@@ -29,13 +29,19 @@ type logger struct {
 	mu   sync.RWMutex
 	data *ring.Ring
 	size int
+	// length mirrors data.Len() so Write avoids an O(n) ring.Len() call on every
+	// log line (see Write). Invariant: any code that changes the number of nodes
+	// in data must keep length in sync.
+	length int
 }
 
 func New(size int) *logger {
-	return &logger{
+	l := &logger{
 		data: ring.New(1),
 		size: size,
 	}
+	l.length = l.data.Len() // keep length in sync with the initial ring
+	return l
 }
 
 var _ io.Writer = (*logger)(nil)
@@ -47,9 +53,14 @@ func (l *logger) Write(p []byte) (n int, err error) {
 	if !strings.HasPrefix(string(p), "[cache ]") {
 		l.data.Value = element(string(p))
 
-		// dynamically grow the ring
-		if l.data.Len() < l.size {
+		// dynamically grow the ring until it reaches the configured size.
+		// Track the length in O(1) instead of calling ring.Len(), which walks
+		// the whole ring on every write — once the ring is full (size 10000)
+		// that is 10000 pointer chases per log line and dominates CPU on weak
+		// hardware (e.g. Victron Venus OS / ARMv7) under verbose trace logging.
+		if l.length < l.size {
 			l.data.Link(ring.New(1))
+			l.length++
 		}
 
 		l.data = l.data.Next()

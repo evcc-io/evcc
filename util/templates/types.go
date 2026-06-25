@@ -59,17 +59,6 @@ var (
 )
 
 const (
-	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
-	CapabilityMilliAmps      = "mA"              // Granular current control support
-	CapabilityRFID           = "rfid"            // RFID support
-	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
-	CapabilityBatteryControl = "battery-control" // Battery control support
-	CapabilityMeter          = "meter"           // Built-in energy meter support
-)
-
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter}
-
-const (
 	RequirementSponsorship = "sponsorship" // Sponsorship is required
 	RequirementSkipTest    = "skiptest"    // Template should be rendered but not tested
 )
@@ -187,6 +176,25 @@ func (r Requirements) MarshalJSON() ([]byte, error) {
 type Requirements struct {
 	EVCC        []string     // EVCC requirements, e.g. sponsorship
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
+}
+
+// Caveat documents a known device limitation
+type Caveat struct {
+	Description TextLanguage // localized description of the limitation
+	Link        string       `json:",omitempty"` // optional URL with more details
+}
+
+func (c Caveat) MarshalJSON() ([]byte, error) {
+	mu.Lock()
+	custom := struct {
+		Description string `json:",omitempty"`
+		Link        string `json:",omitempty"`
+	}{
+		Description: c.Description.String(encoderLanguage),
+		Link:        c.Link,
+	}
+	mu.Unlock()
+	return json.Marshal(custom)
 }
 
 // Param is a proxy template parameter

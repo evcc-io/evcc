@@ -6,22 +6,25 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
 
 type Generation interface {
-	CurrentPower() (float64, error)
 	Enabled() (bool, error)
 	Enable(bool) error
-	TotalEnergy() (float64, error)
+	api.Meter
+	api.MeterEnergy
+	api.MeterReturnEnergy
+	IsThreePhase() bool
 }
 
 type Phases interface {
-	Currents() (float64, float64, float64, error)
-	Voltages() (float64, float64, float64, error)
-	Powers() (float64, float64, float64, error)
+	api.PhaseCurrents
+	api.PhaseVoltages
+	api.PhasePowers
 }
 
 // Connection is the Shelly connection
@@ -53,7 +56,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		return nil, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 
-	model := strings.Split(resp.Type+resp.Model, "-")[0]
+	model, _, _ := strings.Cut(resp.Type+resp.Model, "-")
 
 	client.Transport = request.NewTripper(log, transport.Insecure())
 

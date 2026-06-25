@@ -22,10 +22,27 @@ The following describes each possible element in a yaml file
 
 Each product contains:
 
-- `brand`: an optional brand description of the product
-- `description`: an optional description e.g. of the product model. Expects `generic`, `de`, `en`: an optional description of the product
+- `brand`: company that makes the product or offers the service. No regions, variants, or API names — those, if required for clarity, belong in `description`.
+- `description`: product, service, model, or API name. Expects `generic`, `de`, `en`.
 
-Either `brand`, or `description` need to be set.
+Either `brand` or `description` needs to be set. Examples by device class:
+
+- Vehicles — `brand` is the make, `description` the connected service:
+  - `brand: Hyundai`, `description.generic: Bluelink`
+  - `brand: Hyundai`, `description.generic: Bluelink (US)`
+- Chargers — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABL`, `description.generic: eMH1`
+  - `brand: ABL`, `description.generic: eMH2`
+  - `brand: Alfen`, `description.generic: Eve`
+- Meters — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABB`, `description.generic: A43`
+  - `brand: my-PV`, `description.generic: AC ELWA 2`
+- Tariffs — `brand` is the service provider, `description` the API variant:
+  - `brand: Electricity Maps`, `description.generic: Commercial API`
+  - `brand: Electricity Maps`, `description.generic: Free API`
+- Generic integrations (OSS tools, community projects): omit `brand`, put the project name in `description.generic`, set `group: generic`. Keep upstream casing (e.g. `TeslaFi`, `ioBroker.bmw`, `mg2mqtt`).
+
+Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
 
 ## `group`
 
@@ -82,6 +99,30 @@ en: |
   Set the backend URL to `ws://<evcc-host>:8887/`.
 
   **Attention**: Token is only valid for 2 minutes.
+```
+
+## `caveats`
+
+`caveats` documents known limitations or unreliable behaviour of a device that otherwise works. This is distinct from `requirements.description`, which covers setup steps the user must perform.
+
+It is a list, so a device can have multiple caveats. Each entry has a language-specific `description` (`de`, `en`) and a `link`.
+
+Guidelines:
+
+- Add **one entry per distinct problem** (e.g. "unreliable meter" and "occasional reboots" are two entries); don't list the same problem twice.
+- Keep descriptions **as concise as possible** while still understandable.
+- Use **factual wording** describing the observed behaviour.
+- Always add a `link` to the single issue or discussion that best documents the problem, so the situation can be re-verified later. It is technically optional, but omitting it should be a rare exception.
+- The `description` follows the same Markdown formatting rules as `requirements.description` above.
+
+Example:
+
+```yaml
+caveats:
+  - description:
+      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+      en: Phase switching occasionally disables itself.
+    link: https://github.com/evcc-io/evcc/issues/21708
 ```
 
 ## `auth`

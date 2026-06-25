@@ -13,6 +13,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -29,6 +30,7 @@ type minMax struct {
 }
 
 type EEBus struct {
+	implement.Caps
 	cem *eebus.CustomerEnergyManagement
 	ev  spineapi.EntityRemoteInterface
 
@@ -69,8 +71,6 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy)
 }
 
-//go:generate go tool decorate -f decorateEEBus -b *EEBus -r api.Charger -t api.Meter,api.PhaseCurrents,api.ChargeRater
-
 // newEEBus creates and initializes a raw *EEBus charger.
 // It registers the device with the EEBus instance and waits for the connection.
 func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
@@ -79,6 +79,7 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 	}
 
 	c := &EEBus{
+		Caps:    implement.New(),
 		log:     util.NewLogger("eebus"),
 		current: 6,
 		cem:     eebus.Instance.CustomerEnergyManagement(),
@@ -113,11 +114,11 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bo
 	}
 
 	if hasMeter {
-		var energyG func() (float64, error)
+		implement.Has(c, implement.Meter(c.currentPower))
+		implement.Has(c, implement.PhaseCurrents(c.currents))
 		if hasChargedEnergy {
-			energyG = c.chargedEnergy
+			implement.Has(c, implement.ChargeRater(c.chargedEnergy))
 		}
-		return decorateEEBus(c, c.currentPower, c.currents, energyG), nil
 	}
 
 	return c, nil

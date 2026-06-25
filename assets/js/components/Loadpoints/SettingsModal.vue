@@ -10,7 +10,7 @@
 	>
 		<div class="container">
 			<SmartCostLimit
-				:current-limit="loadpoint?.smartCostLimit || null"
+				:current-limit="loadpoint?.smartCostLimit ?? null"
 				:last-limit="loadpoint?.lastSmartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
@@ -22,7 +22,7 @@
 				class="mt-2 mb-4"
 			/>
 			<SmartFeedInPriority
-				:current-limit="loadpoint?.smartFeedInPriorityLimit || null"
+				:current-limit="loadpoint?.smartFeedInPriorityLimit ?? null"
 				:last-limit="loadpoint?.lastSmartFeedInPriorityLimit"
 				:currency="currency"
 				:loadpoint-id="id"
@@ -81,7 +81,7 @@
 				</div>
 			</div>
 
-			<div class="mb-3 row">
+			<div v-if="!switchDevice" class="mb-3 row">
 				<label :for="formId('maxcurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.maxCurrent.label") }}
 				</label>
@@ -193,6 +193,9 @@ export default defineComponent({
 		},
 		minCurrent() {
 			return this.loadpoint?.minCurrent;
+		},
+		switchDevice() {
+			return this.loadpoint?.chargerFeatureSwitchDevice;
 		},
 		batteryBoostLimit() {
 			return this.loadpoint?.batteryBoostLimit;

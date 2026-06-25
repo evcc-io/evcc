@@ -8,11 +8,13 @@ import (
 
 	comlynx "github.com/PanterSoft/comlynx-go"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 )
 
 // DanfossTLX is a PV meter for Danfoss TripleLynx TLX inverters via ComLynx RS485.
 type DanfossTLX struct {
+	implement.Caps
 	conn          *comlynx.Client
 	powerFallback bool // some TLX variants don't support aggregate power; sum per-phase instead
 }
@@ -79,7 +81,10 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		log.DEBUG.Printf("discovered inverter at %s", addr)
 	}
 
-	m := &DanfossTLX{conn: conn}
+	m := &DanfossTLX{
+		Caps: implement.New(),
+		conn: conn,
+	}
 
 	// probe capabilities
 	_, aggregatePowerErr := conn.Read(comlynx.ParamGridPowerTotal)
@@ -97,29 +102,26 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		}
 	}
 
-	// build decorator functions based on capabilities
-	var totalEnergy func() (float64, error)
 	if hasEnergy == nil {
-		totalEnergy = m.totalEnergy
+		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
-
-	var voltages, currents, powers func() (float64, float64, float64, error)
 	if hasVoltages == nil {
-		voltages = m.phaseVoltages
+		implement.Has(m, implement.PhaseVoltages(m.phaseVoltages))
 	}
 	if hasCurrents == nil {
-		currents = m.phaseCurrents
+		implement.Has(m, implement.PhaseCurrents(m.phaseCurrents))
 	}
 	if hasPowers == nil {
-		powers = m.phasePowers
+		implement.Has(m, implement.PhasePowers(m.phasePowers))
 	}
+	implement.May(m, implement.MaxACPowerGetter(maxACPower))
 
 	go func() {
 		<-ctx.Done()
 		_ = conn.Close()
 	}()
 
-	return decorateMeter(m, totalEnergy, currents, voltages, powers, maxACPower), nil
+	return m, nil
 }
 
 func (m *DanfossTLX) CurrentPower() (float64, error) {

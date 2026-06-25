@@ -97,13 +97,9 @@ render: |
       type: input
       address: 33057 # Total DC output power (PV Power)
       decode: uint32
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 33029 # Total energy generation
-      type: input
-      decode: uint32
+  # energy (33029 Total energy generation) intentionally omitted: the register
+  # has 1 kWh resolution, so the 15min energy history quantizes to 4 kW steps.
+  # History is integrated from power instead (see issue #30407).
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -129,13 +125,9 @@ render: |
         scale: 2
       - source: const
         value: -1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 33165 # Battery total discharge energy
-      type: input
-      decode: uint32
+  # energy (33165 Battery total discharge energy) intentionally omitted: the
+  # register has 1 kWh resolution, so the 15min energy history quantizes to 4 kW
+  # steps. History is integrated from power instead (see issue #30407).
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}

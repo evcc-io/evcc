@@ -25,7 +25,6 @@ params:
   - name: password
     required: true
   - name: ain
-    required: true
     service: fritz/devices?uri={uri}&user={user}&password={password}
   - name: firmware82
     advanced: true
@@ -39,6 +38,7 @@ params:
   - name: unit
     advanced: true
     type: int
+    default: 1
     description:
       de: Einheit
       en: Unit

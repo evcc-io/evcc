@@ -6,12 +6,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/tasmota"
 	"github.com/evcc-io/evcc/util"
 )
 
 // Tasmota meter implementation
 type Tasmota struct {
+	implement.Caps
 	conn  *tasmota.Connection
 	usage string
 }
@@ -20,8 +22,6 @@ type Tasmota struct {
 func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
-
-//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Meter -t api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
 
 // NewTasmotaFromConfig creates a Tasmota meter from generic config
 func NewTasmotaFromConfig(other map[string]any) (api.Meter, error) {
@@ -52,6 +52,7 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 	}
 
 	c := &Tasmota{
+		Caps:  implement.New(),
 		conn:  conn,
 		usage: usage,
 	}
@@ -65,7 +66,13 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 	}
 
 	if hasPhases || len(channels) == 3 {
-		return decorateTasmota(c, c.voltages, c.currents, c.powers), nil
+		implement.Has(c, implement.PhaseVoltages(c.voltages))
+		implement.Has(c, implement.PhaseCurrents(c.currents))
+		implement.Has(c, implement.PhasePowers(c.powers))
+	}
+
+	if _, err := c.conn.ReturnEnergy(); err == nil {
+		implement.Has(c, implement.MeterReturnEnergy(c.returnEnergy))
 	}
 
 	return c, nil
@@ -91,6 +98,11 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
+}
+
+// returnEnergy implements the api.MeterReturnEnergy interface
+func (c *Tasmota) returnEnergy() (float64, error) {
+	return c.conn.ReturnEnergy()
 }
 
 // powers implements the api.PhasePowers interface

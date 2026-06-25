@@ -3,6 +3,7 @@ products:
   - brand: Home Assistant
     description:
       generic: Charger
+capabilities: ["dim"]
 group: generic
 requirements:
   description:
@@ -10,7 +11,7 @@ requirements:
     de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Wallbox-Entitäten und Services (z.B. `sensor.*`, `switch.*`, `number.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
-  params: [uri]
+  params: [uri, insecure]
 params:
   - name: uri
     description:
@@ -22,11 +23,12 @@ params:
       de: " " # overwrite default
     service: homeassistant/instances
     required: true
+  - name: insecure
   - name: status
     description:
       de: Ladestatus-Sensor
       en: Charging status sensor
-    service: homeassistant/entities?uri={uri}&domain=sensor,binary_sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,binary_sensor
     example: "sensor.charger_status"
     required: true
     help:
@@ -36,7 +38,7 @@ params:
     description:
       de: Aktivierungsstatus-Sensor
       en: Enabled status sensor
-    service: homeassistant/entities?uri={uri}&domain=sensor,binary_sensor,switch
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,binary_sensor,switch
     example: "binary_sensor.charger_enabled"
     required: true
     help:
@@ -46,7 +48,7 @@ params:
     description:
       de: Aktivierungsschalter
       en: Enable switch
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=switch,input_boolean
     example: "switch.charger_enable"
     required: true
     help:
@@ -56,7 +58,7 @@ params:
     description:
       de: Maximale Stromstärke-Entität [A]
       en: Maximum current entity [A]
-    service: homeassistant/entities?uri={uri}&domain=number,input_number
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number
     example: "number.charger_max_current"
     required: true
     help:
@@ -66,7 +68,7 @@ params:
     description:
       de: Leistungsentität
       en: Power entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_power"
     advanced: true
     help:
@@ -76,7 +78,7 @@ params:
     description:
       de: Energieentität
       en: Energy entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_energy"
     advanced: true
     help:
@@ -86,7 +88,7 @@ params:
     description:
       de: L1 Stromentität
       en: L1 current entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_current_l1"
     advanced: true
     help:
@@ -96,7 +98,7 @@ params:
     description:
       de: L2 Stromentität
       en: L2 current entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_current_l2"
     advanced: true
     help:
@@ -106,7 +108,7 @@ params:
     description:
       de: L3 Stromentität
       en: L3 current entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_current_l3"
     advanced: true
     help:
@@ -116,7 +118,7 @@ params:
     description:
       de: L1 Spannungsentität
       en: L1 voltage entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_voltage_l1"
     advanced: true
     help:
@@ -126,7 +128,7 @@ params:
     description:
       de: L2 Spannungsentität
       en: L2 voltage entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_voltage_l2"
     advanced: true
     help:
@@ -136,7 +138,7 @@ params:
     description:
       de: L3 Spannungsentität
       en: L3 voltage entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_voltage_l3"
     advanced: true
     help:
@@ -151,7 +153,7 @@ params:
     description:
       de: Phasenumschaltungs-Entität
       en: Phase switching entity
-    service: homeassistant/entities?uri={uri}&domain=select,input_select
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=select,input_select
     example: "select.charger_phases"
     advanced: true
     help:
@@ -161,6 +163,7 @@ params:
 render: |
   type: homeassistant
   uri: {{ .uri }}
+  insecure: {{ .insecure }}
   status: {{ .status }}
   enabled: {{ .enabled }}
   enable: {{ .enable }}

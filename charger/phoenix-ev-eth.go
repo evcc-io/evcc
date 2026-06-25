@@ -28,6 +28,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -35,6 +36,7 @@ import (
 )
 
 type PhoenixEVEth struct {
+	implement.Caps
 	conn     *modbus.Connection
 	isWallbe bool
 }
@@ -61,8 +63,6 @@ const (
 func init() {
 	registry.AddCtx("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
-
-//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -92,38 +92,30 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixEVEth{
+		Caps: implement.New(),
 		conn: conn,
 	}
 
-	var (
-		currentPower     func() (float64, error)
-		totalEnergy      func() (float64, error)
-		currents         func() (float64, float64, float64, error)
-		voltages         func() (float64, float64, float64, error)
-		maxCurrentMillis func(float64) error
-		identify         func() (string, error)
-	)
-
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
-		currents = wb.currents
-		voltages = wb.voltages
+		implement.May(wb, implement.Meter(wb.currentPower))
+		implement.May(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.May(wb, implement.PhaseCurrents(wb.currents))
+		implement.May(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
 	// check card reader enabled
 	if b, err := wb.conn.ReadCoils(phxRegCardEnabled, 1); err == nil && b[0] == 1 {
-		identify = wb.identify
+		implement.May(wb, implement.Identifier(wb.identify))
 	}
 
 	// check presence of extended Wallbe firmware
 	if b, err := wb.conn.ReadHoldingRegisters(phxRegMaxCurrent, 1); err == nil && encoding.Uint16(b) >= 60 {
 		wb.isWallbe = true
-		maxCurrentMillis = wb.maxCurrentMillis
+		implement.May(wb, implement.ChargerEx(wb.maxCurrentMillis))
 	}
 
-	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), nil
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

@@ -5,7 +5,7 @@ products:
       generic: "FRITZ!Smart Energy 250"
 params:
   - name: usage
-    choice: ["grid"]
+    choice: ["grid", "pv"]
   - name: uri
     default: https://fritz.box
   - name: user
@@ -13,11 +13,11 @@ params:
   - name: password
     required: true
   - name: ain
-    required: true
     service: fritz/devices?uri={uri}&user={user}&password={password}
   - name: unit
     advanced: true
     type: int
+    default: 1
     description:
       de: Einheit
       en: Unit

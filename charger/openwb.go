@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/plugin/mqtt"
@@ -19,6 +20,7 @@ func init() {
 
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
+	implement.Caps
 	current       int64
 	enabled       bool
 	statusG       func() (string, error)
@@ -29,8 +31,6 @@ type OpenWB struct {
 	wakeupS       func(int64) error
 	authS         func(string) error
 }
-
-//go:generate go tool decorate -f decorateOpenWB -b *OpenWB -r api.Charger -t api.PhaseSwitcher,api.Battery
 
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]any) (api.Charger, error) {
@@ -145,6 +145,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	c := &OpenWB{
+		Caps:          implement.New(),
 		currentS:      currentS,
 		statusG:       statusG,
 		currentPowerG: currentPowerG,
@@ -171,7 +172,6 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 
 	// optional capabilities
 
-	var phases func(int) error
 	if p1p3 {
 		phasesTopic := openwb.SlavePhasesTopic
 		if id == 2 {
@@ -184,20 +184,20 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 			return nil, err
 		}
 
-		phases = func(phases int) error {
+		implement.Has(c, implement.PhaseSwitcher(func(phases int) error {
 			return phasesS(int64(phases))
-		}
+		}))
 	}
 
-	var soc func() (float64, error)
 	if dc {
-		soc, err = to.FloatGetter(mq(openwb.VehicleSocTopic))
+		soc, err := to.FloatGetter(mq(openwb.VehicleSocTopic))
 		if err != nil {
 			return nil, err
 		}
+		implement.Has(c, implement.Battery(soc))
 	}
 
-	return decorateOpenWB(c, phases, soc), nil
+	return c, nil
 }
 
 func (m *OpenWB) Enable(enable bool) error {

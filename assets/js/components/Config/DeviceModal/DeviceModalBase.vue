@@ -52,7 +52,7 @@
 
 					<div v-if="authRequired">
 						<PropertyEntry
-							v-for="param in authParams"
+							v-for="param in authNormalParams"
 							:id="`${deviceType}Param${param.Name}`"
 							:key="param.Name"
 							v-bind="param"
@@ -60,6 +60,19 @@
 							:service-values="serviceValues[param.Name]"
 							:currency="currency"
 						/>
+						<PropertyCollapsible v-if="authAdvancedParams.length">
+							<template #advanced>
+								<PropertyEntry
+									v-for="param in authAdvancedParams"
+									:id="`${deviceType}Param${param.Name}`"
+									:key="param.Name"
+									v-bind="param"
+									v-model="values[param.Name]"
+									:service-values="serviceValues[param.Name]"
+									:currency="currency"
+								/>
+							</template>
+						</PropertyCollapsible>
 
 						<div v-if="auth.code">
 							<hr class="my-5" />
@@ -168,7 +181,18 @@
 					@remove="handleRemove"
 					@test="testManually"
 					@disable="handleDisable"
-				/>
+				>
+					<template #before-test>
+						<AdminPasswordPrompt
+							v-if="adminPasswordRequired"
+							v-model:password="adminPasswordValue"
+							:invalid="adminPasswordInvalid"
+						/>
+					</template>
+					<template #after-test>
+						<slot name="after-test" :values="values"></slot>
+					</template>
+				</DeviceModalActions>
 			</template>
 		</form>
 	</GenericModal>
@@ -193,6 +217,7 @@ import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
 import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
+import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
@@ -209,6 +234,7 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	fetchServiceValues,
+	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
 
@@ -230,6 +256,7 @@ export default defineComponent({
 		YamlEntry,
 		AuthCodeDisplay,
 		AuthConnectButton,
+		AdminPasswordPrompt,
 	},
 	props: {
 		deviceType: { type: String as PropType<DeviceType>, required: true },
@@ -300,6 +327,9 @@ export default defineComponent({
 			test: initialTestState(),
 			serviceValues: {} as Record<string, string[]>,
 			serviceValuesTimer: null as Timeout | null,
+			adminPasswordValue: "",
+			adminPasswordRequired: false,
+			adminPasswordInvalid: false,
 		};
 	},
 	computed: {
@@ -333,6 +363,12 @@ export default defineComponent({
 		authParams() {
 			const { params = [] } = this.template?.Auth ?? {};
 			return this.templateParams.filter((p) => params.includes(p.Name));
+		},
+		authNormalParams() {
+			return this.authParams.filter((p: TemplateParam) => !p.Advanced && !p.Deprecated);
+		},
+		authAdvancedParams() {
+			return this.authParams.filter((p: TemplateParam) => p.Advanced || p.Deprecated);
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
@@ -439,7 +475,13 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
+			const authParamNames: string[] = this.template?.Auth?.params ?? [];
+			return (
+				authParamNames.length > 0 &&
+				this.templateParams
+					.filter((p: TemplateParam) => authParamNames.includes(p.Name) && p.Required)
+					.some((p: TemplateParam) => !this.values[p.Name])
+			);
 		},
 		authValues() {
 			const params = this.template?.Auth?.params ?? [];
@@ -522,9 +564,19 @@ export default defineComponent({
 		},
 		values: {
 			handler() {
+				// a prior test result no longer matches the edited config:
+				// revert "Save anyway" back to "Validate & save"
+				if (this.test.isError || this.test.isSuccess) {
+					this.test = initialTestState();
+				}
+				this.adminPasswordRequired = false;
+				this.adminPasswordInvalid = false;
 				this.updateServiceValues();
 			},
 			deep: true,
+		},
+		adminPasswordValue() {
+			this.adminPasswordInvalid = false;
 		},
 		authValues: {
 			handler() {
@@ -678,22 +730,35 @@ export default defineComponent({
 
 			this.saving = true;
 			try {
-				const { name } = await this.device.create(this.apiData, force);
+				const res = await this.device.create(this.apiData, force, this.adminPasswordValue);
+				this.applyAdminPasswordState(res.status);
+				if (res.status === ADMIN_PASSWORD_REQUIRED) {
+					this.saving = false;
+					return;
+				}
 				this.saving = false;
 				this.succeeded = true;
 				await sleep(500);
-				this.$emit("added", name);
-				await closeModal({ action: "added", name });
+				this.$emit("added", res.data.name);
+				await closeModal({ action: "added", name: res.data.name });
 			} catch (e) {
-				handleError(e, "create failed");
 				this.saving = false;
+				handleError(e, "create failed");
 			}
 		},
 		async testManually() {
 			await performTest(this.test, this.testDevice, this.$refs["form"] as HTMLFormElement);
 		},
 		async testDevice() {
-			return this.device.test(this.id, this.apiData);
+			const res = await this.device.test(this.id, this.apiData, this.adminPasswordValue);
+			this.applyAdminPasswordState(res.status);
+			return res;
+		},
+		// reveal the admin password field when required, flag it invalid if a password was already sent
+		applyAdminPasswordState(status: number) {
+			this.adminPasswordRequired = status === ADMIN_PASSWORD_REQUIRED;
+			this.adminPasswordInvalid =
+				status === ADMIN_PASSWORD_REQUIRED && !!this.adminPasswordValue;
 		},
 		async update(force = false) {
 			if (this.test.isUnknown && !force) {
@@ -702,23 +767,32 @@ export default defineComponent({
 					this.testDevice,
 					this.$refs["form"] as HTMLFormElement
 				);
-				console.log("test result", success);
 				if (!success) {
 					return;
 				}
 			}
 			this.saving = true;
 			try {
-				await this.device.update(this.id!, this.apiData, force);
+				const res = await this.device.update(
+					this.id!,
+					this.apiData,
+					force,
+					this.adminPasswordValue
+				);
+				this.applyAdminPasswordState(res.status);
+				if (res.status === ADMIN_PASSWORD_REQUIRED) {
+					this.saving = false;
+					return;
+				}
 				this.saving = false;
 				this.succeeded = true;
 				await sleep(500);
 				this.$emit("updated");
 				await closeModal({ action: "updated" });
 			} catch (e) {
+				this.saving = false;
 				console.error("update failed", e);
 				handleError(e, "update failed");
-				this.saving = false;
 			}
 		},
 		async remove() {
@@ -737,6 +811,8 @@ export default defineComponent({
 		},
 		handleOpen() {
 			this.isModalVisible = true;
+			this.adminPasswordRequired = false;
+			this.adminPasswordInvalid = false;
 		},
 		handleClose() {
 			this.$emit("close");

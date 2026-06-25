@@ -15,7 +15,7 @@ products:
   - brand: ChargeLine
     description:
       generic: Business Wallbox
-capabilities: ["mA", "1p3p", "meter"]
+capabilities: ["mA", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
   description:

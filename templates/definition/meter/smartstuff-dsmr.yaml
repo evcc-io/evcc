@@ -1,0 +1,82 @@
+template: dsmrlogger-v2
+products:
+  - brand: Smartstuff
+    description:
+      generic: DSMR P1 Dongle
+requirements:
+  description:
+    generic: "[Smartstuff API](https://docs.smart-stuff.nl/dsmr-api/geavanceerd/api-overzicht) REST-API version"
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/api/v2/sm/actual
+  {{- end }}
+  type: custom
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
+      - content-type: application/json
+    jq: >
+      ((.power_delivered | .value // 0) * 1000)
+      - ((.power_returned | .value // 0) * 1000)
+
+  voltages: # phase voltages in V
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .voltage_l1 | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .voltage_l2 | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .voltage_l3 | .value
+
+  currents: # phase currents in A
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .current_l1 | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .current_l2 | .value
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: .current_l3 | .value
+
+  powers:
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: >
+        ((.power_delivered_l1 | .value) * 1000)
+        - ((.power_returned_l1 | .value) * 1000)
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: >
+        ((.power_delivered_l2 | .value) * 1000)
+        - ((.power_returned_l2 | .value) * 1000)
+    - source: http
+      uri: {{ include "uri" . }}
+      headers:
+        - content-type: application/json
+      jq: >
+        ((.power_delivered_l3 | .value) * 1000)
+        - ((.power_returned_l3 | .value) * 1000)
