@@ -291,9 +291,7 @@ export default defineComponent({
 		if (this.modbus) {
 			this.setConnectionAndProtocolByModbus(this.modbus);
 		} else {
-			// new device: derive protocol from template capabilities so that
-			// rs485-only templates (e.g. evse-din via RS485/Ethernet adapter)
-			// default to Modbus RTU (rs485tcpip) instead of native Modbus TCP
+			// new device: rs485-only templates default to RTU, not native TCP
 			this.setProtocolByCapabilities(this.capabilities);
 		}
 		this.$emit("update:modbus", this.selectedModbus);
