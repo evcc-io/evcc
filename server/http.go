@@ -323,7 +323,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		} {
 			other, struc := fun()
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
-			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, other, struc)}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, other, struc, auth)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteHandler(key)}
 		}
 
