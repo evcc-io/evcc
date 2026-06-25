@@ -26,7 +26,6 @@ params:
     choice: ["grid", "pv", "aux"]
   - name: host
   - name: cache
-    advanced: true
     default: 1s
 render: |
   {{- define "uri" -}}

@@ -9,11 +9,9 @@ requirements:
 group: generic
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
-    advanced: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}

@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/templates"
 	"github.com/spf13/cobra"
 )
 
@@ -60,54 +57,11 @@ func metricsFormatDate(t time.Time) string {
 	return t.Local().Format("2006-01-02")
 }
 
-// metricsEntityTitle resolves human-readable titles for metric entities. Titles
-// exist only for configured loadpoints and meters; virtual entities (home,
-// forecast) have none. The returned function maps an entity to its title, or an
-// empty string when no title is configured.
-func metricsEntityTitle() func(group, name string) string {
-	// loadpoints are addressed as lp-<n>, numbered yaml-first then database,
-	// mirroring configureLoadpoints
-	loadpoints := make(map[string]string)
-	idx := 0
-	addLoadpoint := func(n config.Named) {
-		idx++
-		if t, ok := n.Property("title").(string); ok && t != "" {
-			loadpoints["lp-"+strconv.Itoa(idx)] = t
-		}
+// metricsEntityLabel returns the display label for an entity: the title stored
+// in the entities table (the single source of truth), or the name as fallback.
+func metricsEntityLabel(e metrics.EntityInfo) string {
+	if e.Title != "" {
+		return e.Title
 	}
-	for _, lp := range conf.Loadpoints {
-		addLoadpoint(lp)
-	}
-	if devices, err := config.ConfigurationsByClass(templates.Loadpoint); err == nil {
-		for _, dev := range devices {
-			addLoadpoint(dev.Named())
-		}
-	}
-
-	// meter entities are addressed by their device ref; the title comes from the
-	// device configuration
-	meters := make(map[string]string)
-	for _, m := range conf.Meters {
-		if t, ok := m.Property("title").(string); ok && t != "" {
-			meters[m.Name] = t
-		}
-	}
-	if devices, err := config.ConfigurationsByClass(templates.Meter); err == nil {
-		for _, dev := range devices {
-			if dev.Title != "" {
-				meters[config.NameForID(dev.ID)] = dev.Title
-			}
-		}
-	}
-
-	return func(group, name string) string {
-		switch group {
-		case metrics.Loadpoint:
-			return loadpoints[name]
-		case metrics.Grid, metrics.PV, metrics.Battery, metrics.Meter:
-			return meters[name]
-		default:
-			return ""
-		}
-	}
+	return e.Name
 }

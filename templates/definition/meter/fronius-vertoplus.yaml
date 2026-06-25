@@ -19,7 +19,6 @@ params:
     usages: ["grid"]
   - name: maxacpower
   - name: maxchargerate
-    advanced: true
   - preset: battery-params
 render: |
   type: custom

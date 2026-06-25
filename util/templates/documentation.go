@@ -89,6 +89,12 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		return 0
 	})
 
+	type caveatDoc struct{ Description, Link string }
+	var caveats []caveatDoc
+	for _, c := range t.Caveats {
+		caveats = append(caveats, caveatDoc{c.Description.String(lang), c.Link})
+	}
+
 	data := map[string]any{
 		"Template":               t.Template,
 		"ProductIdentifier":      product.Identifier(),
@@ -99,6 +105,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		"Countries":              t.Countries,
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),
+		"Caveats":                caveats,
 		"Params":                 filteredParams,
 		"AdvancedParams":         hasAdvancedParams,
 		"Usages":                 t.Usages(),

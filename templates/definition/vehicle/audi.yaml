@@ -3,7 +3,7 @@ covers: ["etron"]
 products:
   - brand: Audi
     description:
-      generic: myAudi
+      generic: EU Data Act
 params:
   - preset: vehicle-base
   - name: vin
@@ -13,4 +13,4 @@ render: |
   type: drivesomethinggreater
   brand: Audi
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "streaming")) .) }}

@@ -5,7 +5,7 @@ requirements:
   evcc: ["skiptest"]
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: vin
     example: LPSVS...
 render: |
