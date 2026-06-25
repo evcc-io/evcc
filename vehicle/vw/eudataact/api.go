@@ -268,7 +268,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 
 	// the response is either a bare array or wrapped in {"vehicles": [...]}
 	var arr []Vehicle
-	if err := json.Unmarshal(b, &arr); err == nil && len(arr) > 0 {
+	if err := json.Unmarshal(b, &arr); err == nil && len(b) > 0 {
 		return arr, nil
 	}
 

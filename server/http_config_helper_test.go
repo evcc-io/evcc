@@ -210,6 +210,40 @@ func TestMergeMaskedFiltersBehavior(t *testing.T) {
 	assert.NotContains(t, result, "outdatedField")
 }
 
+func TestConfigHasCriticalPlugin(t *testing.T) {
+	tc := []struct {
+		name string
+		yaml string
+		want bool
+	}{
+		{"script top level", "power:\n  source: script\n  cmd: echo 1", true},
+		{"script case insensitive", "power:\n  Source: SCRIPT\n  cmd: echo 1", true},
+		{"script nested in calc", "power:\n  source: calc\n  add:\n    - source: const\n      value: 1\n    - source: script\n      cmd: echo 1", true},
+		{"script nested in sequence set", "power:\n  source: sequence\n  set:\n    - source: script\n      cmd: echo 1", true},
+		{"script nested in js transformation", "power:\n  source: js\n  script: x\n  in:\n    - name: x\n      type: float\n      source: script\n      cmd: echo 1", true},
+		{"js without script", "power:\n  source: js\n  script: \"x = 1\"", false},
+		{"go without script", "power:\n  source: go\n  script: \"return 1\"", false},
+		{"http without script", "power:\n  source: http\n  uri: http://localhost", false},
+		{"plain template", "power: 100", false},
+		{"script in yaml list", "- name: main\n  getmaxcurrent:\n    source: script\n    cmd: echo 1", true},
+		{"benign yaml list", "- name: main\n  maxcurrent: 16", false},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, configHasCriticalPlugin(configReq{Yaml: tc.yaml}))
+		})
+	}
+
+	// non-yaml custom config carried in Other
+	assert.True(t, configHasCriticalPlugin(configReq{
+		Other: map[string]any{"power": map[string]any{"source": "script", "cmd": "echo 1"}},
+	}))
+	assert.False(t, configHasCriticalPlugin(configReq{
+		Other: map[string]any{"template": "tesla"},
+	}))
+}
+
 func TestFilterValidTemplateParams(t *testing.T) {
 	conf := map[string]any{
 		"template":      "generic",

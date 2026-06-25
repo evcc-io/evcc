@@ -51,6 +51,21 @@
     "hex": "Hex-färg"
   },
   "config": {
+    "apiKey": {
+      "description": "Ge skript och automatiseringsuppgifter, som schemalagda säkerhetskopior, säker åtkomst utan att dela ditt administratörslösenord.",
+      "exampleLabel": "Pröva: ladda hem en backup med curl",
+      "generate": "Generera API-nyckel",
+      "generateConfirm": "Skriv ditt admin-lösenord för att generera en ny API-nyckel.",
+      "keyLabel": "API-nyckel",
+      "regenerate": "Generera ny API-nyckel",
+      "regenerateConfirm": "Skriv ditt admin-lösenord för att generera API-nyckel.",
+      "regenerateLink": "Generera ny",
+      "regenerateWarning": "Om du genereraren ny kommer den befintliga nyckeln att bli ogiltig och all automatisering som använder den slutar fungera. Vill du fortsätta?",
+      "revealSuccess": "Din nya API-nyckel är färdig att använda.",
+      "revealTitle": "API-nyckel skapad",
+      "shownOnce": "Den här nyckeln visas endast en gång. Spara den på ett säkert ställe – du kan inte återställa den i efterhand.",
+      "title": "API-nyckel"
+    },
     "aux": {
       "description": "Enhet som anpassar sin förbrukning baserat på tillgängligt överskott (ex. smarta varmvattenberedare). Evcc förväntar sig att denna enhet reducerar sin förbrukning om det är nödvändigt.",
       "titleAdd": "Lägg till enhet som själv anpassar förbrukning",
@@ -105,6 +120,11 @@
       "title": "Belastningshantering",
       "usableMeters": "Mätarreferenser som kan användas"
     },
+    "consumer": {
+      "description": "Spårar mindre apparater som inte kan styras (kylskåp, tvättmaskin, ...). Det ger dig en bättre helhetsbild av din hemförbrukning.",
+      "titleAdd": "Lägg till förbrukningsmätare",
+      "titleEdit": "Ändra förbrukningsmätare"
+    },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
       "descriptionInterval": "Uppdateringscykel i sekunder. Definierar hur ofta evcc läser mätardata och justerar laddeffekt. Standardvärdet på 30 sekunder är ett tryggt val. Enheter som fordon, laddboxar och växelriktare behöver vanligtvis flera sekunder för att anpassa sitt beteende. Om dina komponenter reagerar snabbt kan du använda lägre värden. Vi rekommenderar starkt att inte gå under 10 sekunder. Om du observerar ostadigt reglerbeteende eller hoppande effektvärden, välj ett större intervall.",
@@ -140,8 +160,11 @@
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
+      "curtailLimit": "Gräns för inmatning",
+      "curtailable": "Kan begränsas",
       "curtailed": "Inmatning begränsad",
       "detected": "Upptäckt",
+      "dimLimit": "Förbrukningsgräns",
       "dimmed": "Förbrukning begränsad",
       "enabled": "Aktiverad",
       "energy": "Energi",
@@ -164,11 +187,13 @@
       "power": "Effekt",
       "powerRange": "Kraft",
       "price": "Pris",
+      "productionLimited": "Produktion begränsad",
       "range": "Räckvidd",
       "returnEnergy": "Energi (retur)",
       "singlePhase": "En-fas",
       "soc": "Laddnivå",
       "solarForecast": "Solprognos",
+      "switchDevice": "Effektreglering",
       "temp": "Temperatur",
       "topic": "Ämne",
       "url": "URL",
@@ -201,6 +226,8 @@
       "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBus kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
       "port": "Port",
       "portHelp": "Port som ska användas.",
+      "qr": "Kopplingskod",
+      "qrExplain": "Skanna från en annan EEBus-enhet vid installationen för automatisk parkoppling – du behöver då inte ange SKI manuellt.",
       "removeConfirm": "All EEBus konfiguration kommer raderas. Nya certifikat och id kommer att genereras vid nästa start. Är du säker?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhets-id för identifiering i EEBus-nätverket.",
@@ -352,8 +379,11 @@
       "estimateLabel": "Interpolera laddningsnivå mellan API uppdateringar",
       "maxCurrentHelp": "Måste vara högre än minimi strömstyrka.",
       "maxCurrentLabel": "Maximal strömstyrka",
+      "maxTempHelp": "Måste vara högre än minimitemeratur.",
+      "maxTempLabel": "Maximum temperatur",
       "minCurrentHelp": "Ange endast under 6 A om du vet vad du gör.",
       "minCurrentLabel": "Minimum strömstyrka",
+      "minTempLabel": "Minimum temperatur",
       "noVehicles": "Inga fordon är konfigurerade.",
       "option": {
         "charging": "Lägg till laddplats",
@@ -384,6 +414,8 @@
       "solarBehaviorLabel": "Solöverskott",
       "solarModeCustom": "egen",
       "solarModeMaximum": "maximal solenergi",
+      "temperatureRangeHelp": "Visningsområde för temperatur-stapel. Påverkar ej styrning.",
+      "temperatureRangeTitle": "Temperatur-område",
       "thresholdDisableDelayLabel": "Stäng av fördröjning",
       "thresholdDisableHelpInvalid": "Ange ett positivt värde.",
       "thresholdDisableHelpPositive": "Sluta när mer än {power} används från elnätet i {delay} .",
@@ -418,6 +450,7 @@
     },
     "main": {
       "addAdditional": "Lägg till ytterligare mätare",
+      "addConsumer": "Lägg till förbrukare",
       "addGrid": "Lägg till elmätare",
       "addLoadpoint": "Lägg till laddare eller värmekälla",
       "addPvBattery": "Lägg till solceller eller batteri",
@@ -616,6 +649,11 @@
       "url": "Server URL",
       "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
+    "ocppforwarder": {
+      "status": "Status",
+      "upstreamStationId": "Stations-ID",
+      "username": "Användarnamn"
+    },
     "optimizer": {
       "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning. Beräknar och visualiserar för närvarande endast. Styr ännu inga enheter.",
       "enable": "Aktivera optimerare",
@@ -691,6 +729,14 @@
       "services": "Tjänster",
       "system": "System",
       "vehicles": "Fordon"
+    },
+    "security": {
+      "authDisabledHint": "Autentisering är inaktiverad. Hantering av inloggningsuppgifter är inte tillgänglig.",
+      "description": "Hantera autentisering och inloggningsuppgifter för denna instans.",
+      "passwordDescription": "Uppdatera lösenordet som används för att logga in i konfigurerings-UI.",
+      "passwordTitle": "Admin lösenord",
+      "title": "Säkerhet",
+      "updatePassword": "Uppdatera lösenord"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -1167,6 +1213,7 @@
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteri laddas",
+      "batteryChargeHold": "Batteri (laddning blockerad)",
       "batteryDischarge": "Batteri laddas ur",
       "batteryDischargeHold": "Batteri (låst)",
       "batteryForecastEmpty": "Tom",
@@ -1195,6 +1242,8 @@
       "waitForVehicle": "Redo att värma…"
     },
     "hemsWarning": {
+      "consumption": "Förbrukning",
+      "feedIn": "Inmatning",
       "title": "Extern begränsning:"
     },
     "history": {
@@ -1212,6 +1261,7 @@
       "empty": "Ingen data för aktuell tidsperiod tillgänglig.",
       "group": {
         "battery": "Batteri",
+        "consumer": "Förbrukning",
         "forecast": "Prognos",
         "grid": "Nät",
         "loadpoint": "Laddning & uppvärmning",

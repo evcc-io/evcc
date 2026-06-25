@@ -543,8 +543,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20260609133612-a18fb7d50aeb h1:qpSpkXp+U9oEbrBFMfbGwKLW4UE+XOWVEMm7ShrirP0=
-github.com/volkszaehler/mbmd v0.0.0-20260609133612-a18fb7d50aeb/go.mod h1:hx00iJeEiVti6jY7HwLIiShGWdjAAxY7vDdhx/Ys1ys=
+github.com/volkszaehler/mbmd v0.0.0-20260623211432-fb8f9c22f121 h1:eDW8HHhwxp1HQQu9uNPMs7TUKZQkTKhe5LkBfhQ+bZA=
+github.com/volkszaehler/mbmd v0.0.0-20260623211432-fb8f9c22f121/go.mod h1:hx00iJeEiVti6jY7HwLIiShGWdjAAxY7vDdhx/Ys1ys=
 github.com/warthog618/go-gpiocdev v0.9.1 h1:pwHPaqjJfhCipIQl78V+O3l9OKHivdRDdmgXYbmhuCI=
 github.com/warthog618/go-gpiocdev v0.9.1/go.mod h1:dN3e3t/S2aSNC+hgigGE/dBW8jE1ONk9bDSEYfoPyl8=
 github.com/warthog618/go-gpiosim v0.1.1 h1:MRAEv+T+itmw+3GeIGpQJBfanUVyg0l3JCTwHtwdre4=
