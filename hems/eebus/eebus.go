@@ -2,7 +2,6 @@ package eebus
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
@@ -89,15 +88,16 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 
 // NewEEBus creates EEBus HEMS
 func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
 	c := &EEBus{
 		log:         util.NewLogger("eebus"),
 		site:        site,
 		passthrough: passthrough,
-		cs:          eebus.Instance.ControllableSystem(),
+		cs:          inst.ControllableSystem(),
 		Connector:   eebus.NewConnector(),
 		heartbeat:   util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:    interval,
@@ -111,12 +111,12 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
 	c.heartbeat.Set(struct{}{})
 
-	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
+	if err := inst.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
 	}
 
 	if err := c.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
