@@ -26,7 +26,7 @@ const (
 // timestamp plus portalInterval and a latency margin), so the map is updated as
 // soon as the portal delivers a new dataset.
 type Provider struct {
-	statusG func() (map[string]point, error)
+	statusG func() ([]point, error)
 }
 
 // NewProvider creates a vehicle api provider
@@ -34,8 +34,8 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 	v := &Provider{}
 	s := sharedStore(api)
 
-	var cached util.Cacheable[map[string]point]
-	cached = util.ResettableCached(func() (map[string]point, error) {
+	var cached util.Cacheable[[]point]
+	cached = util.ResettableCached(func() ([]point, error) {
 		ts, err := s.update(vin)
 		if err != nil {
 			log.ERROR.Println(err)
@@ -62,11 +62,11 @@ func resetDelay(ts time.Time, cache time.Duration) time.Duration {
 
 // lookup returns the freshest present value among the given field names (most to
 // least authoritative); the highest Seq wins, equal Seq keeps the priority order.
-func lookup(data map[string]point, fields ...string) *point {
+func lookup(data []point, fields ...string) *point {
 	var best *point
 	for _, f := range fields {
-		if v, ok := data[f]; ok && (best == nil || v.Seq > best.Seq) {
-			best = new(v)
+		if p := find(data, f); p != nil && (best == nil || p.Seq > best.Seq) {
+			best = p
 		}
 	}
 	return best
@@ -82,8 +82,8 @@ func (v *Provider) Soc() (float64, error) {
 	}
 
 	// use battery_level_HV.value when its state reports valid
-	if s, ok := data[FieldHvBatteryLevelState]; ok && s.Value == hvBatteryLevelValid {
-		if p, ok := data[FieldHvBatteryLevelValue]; ok {
+	if s := lookup(data, FieldHvBatteryLevelState); s != nil && s.Value == hvBatteryLevelValid {
+		if p := lookup(data, FieldHvBatteryLevelValue); p != nil {
 			return strconv.ParseFloat(p.Value, 64)
 		}
 	}
