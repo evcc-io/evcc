@@ -122,9 +122,11 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	if err != nil {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
-	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+	timeout := 10 * time.Second
+	if u := binary.BigEndian.Uint16(b); u >= 2 {
+		timeout = time.Duration(u) * time.Second
 	}
+	go wb.heartbeat(ctx, timeout/2)
 
 	if phases {
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
@@ -379,7 +381,7 @@ func (wb *DaheimLaden) Diagnose() {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCommTimeout, 1); err == nil {
-		fmt.Printf("\tConnection Timeout:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tCommunication Timeout:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCurrentLimit, 1); err == nil {
 		fmt.Printf("\tCurrent Limit:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
