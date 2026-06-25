@@ -32,8 +32,10 @@
 						:name="loadpoint.name"
 						:editable="!!loadpoint.id"
 						:error="hasDeviceError('loadpoint', loadpoint.name)"
+						:disabled="!!loadpoint.disable"
 						data-testid="loadpoint"
 						@edit="openModal('loadpoint', { id: loadpoint.id })"
+						@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 					>
 						<template #tags>
 							<DeviceTags :tags="loadpointTags(loadpoint)" />
@@ -64,8 +66,10 @@
 						:name="vehicle.name"
 						:editable="vehicle.id >= 0"
 						:error="hasDeviceError('vehicle', vehicle.name)"
+						:disabled="!!vehicle.deviceDisable"
 						data-testid="vehicle"
 						@edit="openModal('vehicle', { id: vehicle.id })"
+						@enable="handleDisable('vehicle', vehicle.id, false)"
 					>
 						<template #icon>
 							<VehicleIcon :name="vehicle.config?.icon" />
@@ -91,6 +95,7 @@
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<MeterCard
 						v-for="meter in auxMeters"
@@ -100,6 +105,7 @@
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<NewDeviceButton
 						data-testid="add-consumer"
@@ -118,6 +124,7 @@
 						:has-error="hasDeviceError('meter', gridMeter.name)"
 						:tags="deviceTags('meter', gridMeter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', gridMeter.id, false)"
 					/>
 					<NewDeviceButton
 						v-else
@@ -137,6 +144,7 @@
 						:tags="deviceTags('meter', meter.name)"
 						:banner="meterBanner(meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<MeterCard
 						v-for="meter in batteryMeters"
@@ -146,6 +154,7 @@
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<NewDeviceButton
 						:title="$t('config.main.addPvBattery')"
@@ -163,6 +172,7 @@
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<NewDeviceButton
 						data-testid="add-additional"
@@ -200,6 +210,7 @@
 						:tags="deviceTags('tariff', gridTariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'grid', id: gridTariff.id })"
+						@enable="handleDisable('tariff', gridTariff.id, false)"
 					/>
 					<TariffCard
 						v-if="feedInTariff"
@@ -209,6 +220,7 @@
 						:tags="deviceTags('tariff', feedInTariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'feedIn', id: feedInTariff.id })"
+						@enable="handleDisable('tariff', feedInTariff.id, false)"
 					/>
 					<NewDeviceButton
 						v-if="possibleTariffTypes.length"
@@ -223,6 +235,7 @@
 						:tags="deviceTags('tariff', co2Tariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'co2', id: co2Tariff.id })"
+						@enable="handleDisable('tariff', co2Tariff.id, false)"
 					/>
 					<TariffCard
 						v-for="tariff in solarTariffs"
@@ -233,6 +246,7 @@
 						:tags="deviceTags('tariff', tariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'solar', id: tariff.id })"
+						@enable="handleDisable('tariff', tariff.id, false)"
 					/>
 					<TariffCard
 						v-if="plannerTariff"
@@ -242,6 +256,7 @@
 						:tags="deviceTags('tariff', plannerTariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'planner', id: plannerTariff.id })"
+						@enable="handleDisable('tariff', plannerTariff.id, false)"
 					/>
 					<NewDeviceButton
 						v-if="possibleForecastTypes.length"
@@ -444,9 +459,18 @@
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
+					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
 				/>
-				<VehicleModal :is-sponsor="isSponsor" @vehicle-changed="vehicleChanged" />
-				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
+				<VehicleModal
+					:is-sponsor="isSponsor"
+					@vehicle-changed="vehicleChanged"
+					@disable="({ id, disable }) => handleDisable('vehicle', id, disable)"
+				/>
+				<MeterModal
+					:is-sponsor="isSponsor"
+					@changed="meterChanged"
+					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
+				/>
 				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
@@ -458,7 +482,11 @@
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
 				<MessengerModal @changed="messengerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
-				<TariffModal :currency="currency" @changed="tariffChanged" />
+				<TariffModal
+					:currency="currency"
+					@changed="tariffChanged"
+					@disable="({ id, disable }) => handleDisable('tariff', id, disable)"
+				/>
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
@@ -519,6 +547,7 @@ import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
 import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
+import { createDeviceUtils } from "../components/Config/DeviceModal";
 import { openModal, type ModalResult } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
@@ -982,6 +1011,30 @@ export default defineComponent({
 		isUnconfigured(tags: DeviceTags): boolean {
 			return tags["configured"]?.value === false;
 		},
+		async handleDisable(deviceClass: DeviceType, id: number, disable: boolean) {
+			const promptKey = disable
+				? "config.general.confirmDisable"
+				: "config.general.confirmEnable";
+			if (!window.confirm(this.$t(promptKey))) return;
+			const refresh: Partial<Record<DeviceType, () => void>> = {
+				meter: () => this.meterChanged({ action: "updated" }),
+				tariff: () => this.tariffChanged({ action: "updated" }),
+				vehicle: () => this.vehicleChanged(),
+				loadpoint: () => this.loadpointChanged(),
+			};
+			try {
+				if (deviceClass === "loadpoint") {
+					const { data } = await api.get(`config/loadpoints/${id}`);
+					await api.put(`config/loadpoints/${id}`, { ...data, disable });
+				} else {
+					await createDeviceUtils(deviceClass).disable(id, disable);
+				}
+				refresh[deviceClass]?.();
+				await this.loadDirty();
+			} catch (e) {
+				console.error("disable failed", e);
+			}
+		},
 		handleVisibilityChange() {
 			this.isPageVisible = document.visibilityState === "visible";
 			if (this.isPageVisible) {
@@ -1206,6 +1259,7 @@ export default defineComponent({
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {
+						if (device.deviceDisable) continue;
 						if (this.isComponentMounted && this.isPageVisible) {
 							await this.updateDeviceValue(type as DeviceType, device.name);
 						}

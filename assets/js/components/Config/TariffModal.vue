@@ -13,6 +13,7 @@
 		@added="handleAdded"
 		@updated="handleUpdated"
 		@removed="handleRemoved"
+		@disable="$emit('disable', $event)"
 		@close="handleClose"
 	>
 		<template #pre-content>
@@ -85,7 +86,7 @@ export default defineComponent({
 	props: {
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 	},
-	emits: ["changed", "close"],
+	emits: ["changed", "disable", "close"],
 	data() {
 		return {
 			initialValues,
