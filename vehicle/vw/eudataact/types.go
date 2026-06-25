@@ -238,10 +238,7 @@ func points(data []dataPoint) []point {
 // find returns the data point identified by id, matched by Key first and Name
 // second, or nil if none is present.
 func find(data []point, id string) *point {
-	if i := slices.IndexFunc(data, func(p point) bool { return p.Key == id }); i >= 0 {
-		return &data[i]
-	}
-	if i := slices.IndexFunc(data, func(p point) bool { return p.Name == id }); i >= 0 {
+	if i := slices.IndexFunc(data, func(p point) bool { return p.Key == id || p.Name == id }); i >= 0 {
 		return &data[i]
 	}
 	return nil
