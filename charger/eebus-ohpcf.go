@@ -68,31 +68,32 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 // NewEEBusOHPCF creates an EEBus OHPCF charger, registers it with the EEBus
 // instance and waits for the connection.
 func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string) (api.Charger, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
 	c := &EEBusOHPCF{
 		embed:     embed,
 		log:       util.NewLogger("eebus-ohpcf"),
-		cem:       eebus.Instance.CustomerEnergyManagement(),
-		ma:        eebus.Instance.MonitoringAppliance(),
+		cem:       inst.CustomerEnergyManagement(),
+		ma:        inst.MonitoringAppliance(),
 		connector: eebus.NewConnector(),
 	}
 
-	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
+	if err := inst.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
 	if err := c.connector.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 	}()
 
 	return c, nil
