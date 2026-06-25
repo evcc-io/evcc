@@ -47,7 +47,7 @@ func TestEEBus(t *testing.T) {
 	eventC := make(chan api.EventType, 16)
 	box.remoteEventC = eventC
 
-	hems, err := hems.NewEEBus(t.Context(), box.ski, "", eebus.Limits{}, nil, nil, time.Second)
+	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
 	require.NoError(t, err, "hems")
 
 	go hems.Run()
