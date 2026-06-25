@@ -26,13 +26,14 @@ export default defineComponent({
 		mode: String,
 		pvPossible: Boolean,
 		smartCostAvailable: Boolean,
+		switchDevice: Boolean,
 	},
 	emits: ["updated"],
 
 	computed: {
 		modes(): CHARGE_MODE[] {
 			if (this.pvPossible) {
-				return [OFF, PV, MINPV, NOW];
+				return this.switchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
 			}
 			if (this.smartCostAvailable) {
 				return [OFF, PV, NOW];

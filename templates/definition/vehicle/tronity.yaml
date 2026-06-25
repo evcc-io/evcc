@@ -7,7 +7,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: clientid
     description:
       generic: Tronity API Client ID

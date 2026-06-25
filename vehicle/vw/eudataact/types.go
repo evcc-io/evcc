@@ -28,11 +28,6 @@ var brands = map[string]brand{
 	"Cupra":      {"f85e5b69-e3b2-43aa-9c0d-1b7d0e0b576f@apps_vw-dilab_com", "CUPRA"},
 }
 
-// Brands returns the supported brand names
-func Brands() []string {
-	return []string{"Volkswagen", "Audi", "Skoda", "Seat", "Cupra"}
-}
-
 // resolveBrand looks up a brand by name, case-insensitively
 func resolveBrand(name string) (brand, bool) {
 	for k, b := range brands {
@@ -89,9 +84,11 @@ type dataPoint struct {
 	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
-// point is a decoded data point: its value, the time it was recorded and the
-// delivery sequence of the dataset it last arrived in (higher Seq is newer).
+// point is a decoded data point: its unique GUID (Key), delivered field Name,
+// value, record time and dataset delivery sequence (higher Seq is newer).
 type point struct {
+	Key       string
+	Name      string
 	Value     string
 	Timestamp time.Time
 	Seq       uint64
@@ -109,13 +106,15 @@ const (
 	FieldChargingState                = "charging_state"
 	FieldChargingPlug1ConnectionState = "charging_plug1_connectionstate"
 	FieldCurrentChargeState           = "charging_state_report.current_charge_state"
+	FieldChargingScenario             = "charging_state_report.charging_scenario"
 	FieldPlugState                    = "plug_state"
 
 	// soc
 	FieldBatteryStateReportSoc = "battery_state_report.soc"
 	FieldSoc                   = "state_of_charge"
 	FieldHvSoc                 = "hv_soc"
-	FieldHvBatteryLevel        = "battery_level_HV.value"
+	FieldHvBatteryLevelValue   = "battery_level_HV.value"
+	FieldHvBatteryLevelState   = "battery_level_HV.state"
 
 	// target soc
 	FieldTargetSoc = "settings.target_soc"
@@ -133,6 +132,10 @@ const (
 	// time
 	FieldRemainingTime = "remaining_charging_time"
 )
+
+// hvBatteryLevelValid is the battery_level_HV.state value that marks
+// battery_level_HV.value as a trustworthy SoC reading
+const hvBatteryLevelValid = "VALID"
 
 // knownKeys lists data point GUIDs that are indexed by their key instead of the
 // generic, non-unique DataFieldName they are delivered with
@@ -227,7 +230,7 @@ func points(data []dataPoint) map[string]point {
 		if p.TimestampUtc != nil {
 			ts = *p.TimestampUtc
 		}
-		pt := point{Value: p.Value, Timestamp: ts}
+		pt := point{Key: p.Key, Name: p.DataFieldName, Value: p.Value, Timestamp: ts}
 
 		set(p.DataFieldName, pt)
 		if _, ok := knownKeys[p.Key]; ok {
