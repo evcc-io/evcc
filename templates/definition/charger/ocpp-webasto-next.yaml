@@ -1,0 +1,40 @@
+template: ocpp-webasto-next
+products:
+  - brand: Ampure
+    description:
+      generic: NEXT (OCPP)
+  - brand: Webasto
+    description:
+      generic: NEXT (OCPP)
+capabilities: ["mA", "rfid", "dim"]
+requirements:
+  description:
+    de: |
+      Die Webasto/Ampure NEXT muss als OCPP 1.6J Ladepunkt konfiguriert werden.
+
+      Voraussetzungen:
+      * Modbus/HEMS in der Wallbox deaktivieren (ModBusMode = 0). Aktives Modbus/HEMS kann OCPP-Fehler CB26/CB27 verursachen.
+      * In der evcc OCPP-Serverkonfiguration `dateTimeGranularity: milliseconds` setzen, z.B.:
+        ```yaml
+        ocpp:
+          port: 8887
+          dateTimeGranularity: milliseconds
+        ```
+      * Backend-URL (Central System) in der Wallbox: `ws://<evcc-host>:8887/`
+    en: |
+      Configure the Webasto/Ampure NEXT as an OCPP 1.6J charge point.
+
+      Requirements:
+      * Disable Modbus/HEMS in the charger (ModBusMode = 0). Active Modbus/HEMS may cause OCPP errors CB26/CB27.
+      * Set `dateTimeGranularity: milliseconds` in the evcc OCPP server configuration, e.g.:
+        ```yaml
+        ocpp:
+          port: 8887
+          dateTimeGranularity: milliseconds
+        ```
+      * Backend URL (Central System) in the charger: `ws://<evcc-host>:8887/`
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
