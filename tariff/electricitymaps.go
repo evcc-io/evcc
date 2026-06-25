@@ -88,7 +88,9 @@ func (t *ElectricityMaps) run(done chan error) {
 				err = errors.New(res.Error)
 			}
 
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue

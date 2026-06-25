@@ -95,11 +95,11 @@
 							data-testid="column"
 							@change="selectColumnPosition(index, $event.target.value)"
 						>
-							<span class="text-decoration-underline">
+							<span class="text-decoration-underline d-block text-truncate">
 								{{ $t(`sessions.${column.name}`) }}
 							</span>
 						</CustomSelect>
-						<span v-else>
+						<span v-else class="d-block text-truncate">
 							{{ $t(`sessions.${column.name}`) }}
 						</span>
 						<div class="text-gray fw-normal">{{ column.unit }}</div>
@@ -173,11 +173,11 @@ import type { Session, Column } from "./types";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
-	sm: 2,
-	md: 3,
-	lg: 4,
-	xl: 5,
-	xxl: 6,
+	sm: 3,
+	md: 4,
+	lg: 7,
+	xl: 8,
+	xxl: 9,
 };
 
 export default defineComponent({

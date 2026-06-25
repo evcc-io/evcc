@@ -28,18 +28,16 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
-		URI        string
-		Token_     string   `mapstructure:"token"` // TODO deprecated
-		Home_      string   `mapstructure:"home"`  // TODO deprecated
-		Status     string   // required - sensor for charge status
-		Enabled    string   // required - sensor for enabled state
-		Enable     string   // required - switch/input_boolean for enable/disable
-		MaxCurrent string   // required - number entity for setting max current
-		Power      string   // optional - power sensor
-		Energy     string   // optional - energy sensor
-		Currents   []string // optional - current sensors for L1, L2, L3
-		Voltages   []string // optional - voltage sensors for L1, L2, L3
-		Phases     string   // optional - select entity for 1p/3p phase switching
+		homeassistant.Config `mapstructure:",squash"`
+		Status               string   // required - sensor for charge status
+		Enabled              string   // required - sensor for enabled state
+		Enable               string   // required - switch/input_boolean for enable/disable
+		MaxCurrent           string   // required - number entity for setting max current
+		Power                string   // optional - power sensor
+		Energy               string   // optional - energy sensor
+		Currents             []string // optional - current sensors for L1, L2, L3
+		Voltages             []string // optional - voltage sensors for L1, L2, L3
+		Phases               string   // optional - select entity for 1p/3p phase switching
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -61,7 +59,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 
 	log := util.NewLogger("ha-charger")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
+	conn, err := cc.Config.NewConnection(log)
 	if err != nil {
 		return nil, err
 	}

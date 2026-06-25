@@ -1374,6 +1374,7 @@ components:
         - normal
         - hold
         - charge
+        - holdcharge
     ChangePassword:
       type: object
       properties:
@@ -1905,9 +1906,9 @@ components:
             properties:
               result:
                 type: integer
-                description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge"
+                description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
                 minimum: 0
-                maximum: 3
+                maximum: 4
   securitySchemes:
     cookieAuth:
       type: apiKey

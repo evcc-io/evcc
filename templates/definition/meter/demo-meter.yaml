@@ -17,6 +17,13 @@ params:
       en: Power
     unit: W
     type: int
+  - name: curtailable
+    description:
+      de: Abregelbar
+      en: Curtailable
+    type: bool
+    advanced: true
+    usages: ["pv"]
   - name: energy
     description:
       de: Zählerstand
@@ -53,6 +60,18 @@ render: |
   power:
     source: const
     value: {{ .power }}
+  {{- if .curtailable }}
+  curtail:
+    source: js
+    vm: shared
+    script: |
+      demoMeterCurtailed = curtail;
+  curtailed:
+    source: js
+    vm: shared
+    script: |
+      typeof demoMeterCurtailed !== "undefined" && demoMeterCurtailed
+  {{- end }}
   {{- if .energy }}
   energy:
     source: const
