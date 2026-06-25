@@ -320,7 +320,8 @@ func (c *EEBusOHPCF) apply() error {
 	switch ohpcfControlAction(state, c.lastEnabled()) {
 	case ohpcfSchedule:
 		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
-			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, time.Now(), cb)
+			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
+			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, 0, cb)
 		})
 	case ohpcfResume:
 		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
