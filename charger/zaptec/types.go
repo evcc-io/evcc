@@ -85,8 +85,11 @@ type SessionPriority struct {
 }
 
 type Installation struct {
-	Id         string  `json:"id"`
-	MaxCurrent float64 `json:"maxCurrent"`
+	Id                     string  `json:"id"`
+	MaxCurrent             float64 `json:"maxCurrent"`
+	AvailableCurrentPhase1 float64 `json:"availableCurrentPhase1"`
+	AvailableCurrentPhase2 float64 `json:"availableCurrentPhase2"`
+	AvailableCurrentPhase3 float64 `json:"availableCurrentPhase3"`
 }
 
 type UpdateInstallation struct {

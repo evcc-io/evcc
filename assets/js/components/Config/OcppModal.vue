@@ -23,52 +23,40 @@
 			<hr class="my-4" />
 
 			<!-- No chargers message -->
-			<div
-				v-if="connectedStations.length === 0 && detectedStations.length === 0"
-				class="text-muted"
-			>
+			<div v-if="entries.length === 0" class="text-muted">
 				{{ $t("config.ocpp.noChargers") }}
 			</div>
 
-			<!-- Connection status -->
-			<div v-if="connectedStations.length > 0">
-				<h6 class="mb-3">{{ $t("config.ocpp.connectionStatus") }}</h6>
-				<p class="text-muted small mb-3">{{ $t("config.ocpp.connectionStatusHelp") }}</p>
+			<!-- Stations -->
+			<div v-else>
+				<h6 class="mb-3">{{ $t("config.ocpp.stations") }}</h6>
+				<p class="text-muted small mb-3">{{ $t("config.ocpp.stationsHelp") }}</p>
 
-				<ul class="list-group stations-list mb-4">
+				<ul class="list-unstyled d-flex flex-column gap-3 mb-0">
 					<li
-						v-for="station in connectedStations"
-						:key="station.id"
-						class="list-group-item d-flex justify-content-between align-items-center"
+						v-for="entry in entries"
+						:key="entry.id"
+						class="station-bar border rounded d-flex align-items-center gap-3 px-3 py-3"
+						data-testid="ocpp-station"
 					>
-						<code>{{ station.id }}</code>
-						<span
-							class="badge"
-							:class="statusBadgeClass(station.status)"
-							:title="$t(`config.ocpp.status.${station.status}`)"
-							data-bs-toggle="tooltip"
-						>
-							{{ $t(`config.ocpp.status.${station.status}`) }}
-						</span>
-					</li>
-				</ul>
-			</div>
-
-			<!-- Detected chargers -->
-			<div v-if="detectedStations.length > 0">
-				<h6 class="mb-3">{{ $t("config.ocpp.detectedChargers") }}</h6>
-				<p class="text-muted small mb-3">{{ $t("config.ocpp.detectedHelp") }}</p>
-
-				<ul class="list-group stations-list">
-					<li
-						v-for="station in detectedStations"
-						:key="station.id"
-						class="list-group-item d-flex justify-content-between align-items-center"
-					>
-						<code>{{ station.id }}</code>
-						<span class="badge bg-secondary">
-							{{ $t(`config.ocpp.status.${station.status}`) }}
-						</span>
+						<StatusIndicator
+							class="flex-shrink-0"
+							:variant="statusVariant(entry.status)"
+							:tooltip="$t(`config.ocpp.status.${entry.status}`)"
+						/>
+						<div class="station-identity text-truncate">
+							<div v-if="entry.title" class="fw-bold fs-6 text-truncate">
+								{{ entry.title }}
+							</div>
+							<code class="text-muted" :class="entry.title ? 'small' : 'fs-6'">{{
+								entry.id
+							}}</code>
+						</div>
+						<OcppForwarderButton
+							:station-id="entry.id"
+							:rule="entry.rule"
+							:error="entry.error"
+						/>
 					</li>
 				</ul>
 			</div>
@@ -81,8 +69,25 @@ import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import FormRow from "./FormRow.vue";
 import Markdown from "./Markdown.vue";
-import type { Ocpp, OcppStationStatus } from "@/types/evcc";
+import OcppForwarderButton from "./OcppForwarderButton.vue";
+import StatusIndicator from "./StatusIndicator.vue";
+import type {
+	Ocpp,
+	OcppForwarderRule,
+	OcppForwarderSession,
+	OcppStationStatus,
+} from "@/types/evcc";
+import { OCPP_STATION_STATUS } from "@/types/evcc";
 import { getOcppUrl, getOcppUrlWithStationId } from "@/utils/ocpp";
+import store from "@/store";
+
+type StationEntry = {
+	id: string;
+	status: OcppStationStatus["status"];
+	title?: string;
+	rule?: OcppForwarderRule;
+	error?: string;
+};
 
 export default defineComponent({
 	name: "OcppModal",
@@ -90,46 +95,74 @@ export default defineComponent({
 		GenericModal,
 		FormRow,
 		Markdown,
+		OcppForwarderButton,
+		StatusIndicator,
 	},
 	props: {
 		ocpp: {
 			type: Object as PropType<Ocpp>,
 			default: () => ({ config: { port: 0 }, status: { stations: [] } }),
 		},
+		stationTitles: {
+			type: Object as PropType<Record<string, string>>,
+			default: () => ({}),
+		},
 	},
 	computed: {
-		status() {
-			return this.ocpp.status;
-		},
-		stations() {
-			return this.status.stations;
-		},
 		ocppUrl(): string {
 			return getOcppUrl(this.ocpp);
 		},
 		ocppUrlWithStationId(): string {
 			return getOcppUrlWithStationId(this.ocpp);
 		},
-		connectedStations(): OcppStationStatus[] {
-			return this.stations.filter(
-				(s) => s.status === "connected" || s.status === "configured"
-			);
+		rules(): OcppForwarderRule[] {
+			return store.state?.ocppforwarder?.config || [];
 		},
-		detectedStations(): OcppStationStatus[] {
-			return this.stations.filter((s) => s.status === "unknown");
+		sessions(): OcppForwarderSession[] {
+			return store.state?.ocppforwarder?.status || [];
+		},
+		// merge of published stations and configured forwarder rules, keyed by id.
+		// a rule without a matching station is shown as "unknown".
+		entries(): StationEntry[] {
+			const byId = new Map<string, StationEntry>();
+			const published = new Set<string>();
+			for (const station of this.ocpp.status.stations) {
+				byId.set(station.id, {
+					id: station.id,
+					status: station.status,
+					title: this.stationTitles[station.id],
+				});
+				published.add(station.id);
+			}
+			for (const rule of this.rules) {
+				if (rule.stationId === "*") continue;
+				const entry = byId.get(rule.stationId) || {
+					id: rule.stationId,
+					status: OCPP_STATION_STATUS.UNKNOWN,
+					title: this.stationTitles[rule.stationId],
+				};
+				entry.rule = rule;
+				entry.error = this.sessions.find((s) => s.chargerId === rule.stationId)?.error;
+				byId.set(rule.stationId, entry);
+			}
+			// published stations first, then rule-only entries; each sorted by id
+			const byIdAlpha = (a: StationEntry, b: StationEntry) => a.id.localeCompare(b.id);
+			const all = [...byId.values()];
+			return [
+				...all.filter((e) => published.has(e.id)).sort(byIdAlpha),
+				...all.filter((e) => !published.has(e.id)).sort(byIdAlpha),
+			];
 		},
 	},
 	methods: {
-		statusBadgeClass(status: string): string {
+		statusVariant(status: string): "success" | "warning" | "muted" {
 			switch (status) {
 				case "connected":
-					return "bg-success";
+					return "success";
 				case "configured":
-					return "bg-warning";
-				case "unknown":
-					return "bg-secondary";
+					return "warning";
 				default:
-					return "bg-secondary";
+					return "muted";
 			}
 		},
 	},
@@ -142,7 +175,12 @@ export default defineComponent({
 	padding-left: 0;
 }
 
-.list-group-item code {
-	font-size: 0.9rem;
+.station-bar {
+	--bs-border-color: var(--bs-gray-light);
+}
+
+/* min-width:0 lets the identity actually truncate */
+.station-identity {
+	min-width: 0;
 }
 </style>

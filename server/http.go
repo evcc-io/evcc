@@ -163,6 +163,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"optimize":                {"POST", "/optimize", getHandler(site.Optimize)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 		"devicecolors":            {"PUT", "/devicecolors", updateDeviceColor(site)},
+
+		"optimizerchargingstrategy": {"POST", "/optimizerchargingstrategy/{value:[a-z_]+}", stringHandler(site.SetOptimizerChargingStrategy, site.GetOptimizerChargingStrategy)},
 	}
 
 	for _, r := range routes {
@@ -296,11 +298,11 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
 			"evccyaml":           {"GET", "/evcc.yaml", configYamlHandler(configFile)},
-			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
-			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
+			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler(auth)},
+			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler(auth)},
 			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
-			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
-			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler(auth)},
+			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler(auth)},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
@@ -338,6 +340,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
 		}
+
+		// ocpp forwarder rules apply at runtime and republish via the ocpp package
+		routes["updateocppforwarder"] = route{Method: "POST", Pattern: "/ocppforwarder", HandlerFunc: updateOcppForwarderHandler}
 
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)

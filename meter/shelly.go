@@ -14,7 +14,7 @@ import (
 // Shelly meter considering usage
 type Shelly struct {
 	implement.Caps
-	shelly.Connection
+	conn  *shelly.Connection
 	usage string
 }
 
@@ -45,7 +45,14 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	if phases, ok := c.Connection.Generation.(shelly.Phases); ok {
+	// Three-phase Shelly energy meters count each phase separately (non-balanced),
+	// making their totals unsuitable for bidirectional grid metering.
+	if !(c.usage == "grid" && c.conn.IsThreePhase()) {
+		implement.Has(c, implement.MeterEnergy(c.conn.TotalEnergy))
+		implement.Has(c, implement.MeterReturnEnergy(c.conn.ReturnEnergy))
+	}
+
+	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
 		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
 		implement.Has(c, implement.PhaseCurrents(phases.Currents))
 		implement.Has(c, implement.PhasePowers(phases.Powers))
@@ -61,9 +68,9 @@ func NewShelly(uri, user, password, usage string, channel int, cache time.Durati
 		return nil, err
 	}
 	c := &Shelly{
-		Caps:       implement.New(),
-		Connection: *conn,
-		usage:      usage,
+		Caps:  implement.New(),
+		conn:  conn,
+		usage: usage,
 	}
 	return c, nil
 }
@@ -72,7 +79,7 @@ var _ api.Meter = (*Shelly)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Shelly) CurrentPower() (float64, error) {
-	power, err := c.Connection.CurrentPower()
+	power, err := c.conn.CurrentPower()
 	if err != nil {
 		return 0, err
 	}

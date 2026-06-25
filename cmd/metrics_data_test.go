@@ -56,31 +56,25 @@ func TestMetricsSelectEntities(t *testing.T) {
 	entities := []metrics.EntityInfo{
 		{Group: metrics.Grid, Name: "grid"},
 		{Group: metrics.PV, Name: "pv1"},
-		{Group: metrics.Loadpoint, Name: "lp-1"},
-	}
-	title := func(group, name string) string {
-		if group == metrics.Loadpoint && name == "lp-1" {
-			return "Carport"
-		}
-		return ""
+		{Group: metrics.Loadpoint, Name: "lp-1", Title: "Carport"},
 	}
 
-	// explicit selectors match by name or title and preserve argument order
-	res, err := metricsSelectEntities(entities, []string{"Carport", "grid"}, "", title)
+	// explicit selectors match by name or stored title and preserve argument order
+	res, err := metricsSelectEntities(entities, []string{"Carport", "grid"}, "")
 	require.NoError(t, err)
 	require.Equal(t, []string{"lp-1", "grid"}, []string{res[0].Name, res[1].Name})
 
 	// unknown selector errors
-	_, err = metricsSelectEntities(entities, []string{"bogus"}, "", title)
+	_, err = metricsSelectEntities(entities, []string{"bogus"}, "")
 	require.Error(t, err)
 
 	// no selectors: all entities in canonical group order (pv before grid)
-	res, err = metricsSelectEntities(entities, nil, "", title)
+	res, err = metricsSelectEntities(entities, nil, "")
 	require.NoError(t, err)
 	require.Equal(t, metrics.PV, res[0].Group)
 
 	// empty group errors
-	_, err = metricsSelectEntities(entities, nil, metrics.Battery, title)
+	_, err = metricsSelectEntities(entities, nil, metrics.Battery)
 	require.Error(t, err)
 }
 
@@ -89,27 +83,21 @@ func TestMetricsWriteTable(t *testing.T) {
 	h1 := h0.Add(time.Hour)
 
 	selected := []metrics.EntityInfo{
-		{Group: metrics.Loadpoint, Name: "lp-1"},
+		{Group: metrics.Loadpoint, Name: "lp-1", Title: "Carport"},
 		{Group: metrics.Grid, Name: "grid"},
 	}
 	byEntity := map[string]metrics.Series{
-		metrics.Loadpoint + "/lp-1": {Group: metrics.Loadpoint, Name: "lp-1", Data: []metrics.Slot{
+		metrics.Loadpoint + "/Carport": {Group: metrics.Loadpoint, Title: "Carport", Data: []metrics.Slot{
 			{Start: h0, Energy: 1.84},
 		}},
-		metrics.Grid + "/grid": {Group: metrics.Grid, Name: "grid", Data: []metrics.Slot{
+		metrics.Grid + "/grid": {Group: metrics.Grid, Title: "grid", Data: []metrics.Slot{
 			{Start: h0, Energy: 0.412},
 			{Start: h1, Energy: 0.38, ReturnEnergy: 0.05},
 		}},
 	}
-	title := func(group, name string) string {
-		if group == metrics.Loadpoint {
-			return "Carport"
-		}
-		return ""
-	}
 
 	var buf bytes.Buffer
-	metricsWriteTable(&buf, selected, byEntity, title, "hour")
+	metricsWriteTable(&buf, selected, byEntity, "hour")
 
 	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 	require.Len(t, lines, 3) // header + 2 rows

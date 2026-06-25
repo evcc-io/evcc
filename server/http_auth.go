@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -66,9 +67,13 @@ func updatePasswordHandler(authObject auth.Auth) http.HandlerFunc {
 	}
 }
 
-// apiKeyFromRequest returns the API key from the Authorization: Bearer header, or "" if absent
+// apiKeyFromRequest returns the API key from the Authorization: Bearer header, or "" if absent.
+// A non-Bearer Authorization header (e.g. Basic auth injected by a reverse proxy) is ignored.
 func apiKeyFromRequest(r *http.Request) string {
-	token, _ := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	token, found := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if !found {
+		return ""
+	}
 	return token
 }
 
@@ -80,12 +85,17 @@ func jwtFromCookie(r *http.Request) string {
 	return ""
 }
 
-// validateAuth accepts a valid API key from the Authorization header, or a valid session JWT from the auth cookie
+// validateAuth accepts a valid API key from the Authorization header, or a valid session JWT from the auth cookie.
+// Any single valid credential grants access, so evcc coexists with a reverse proxy that injects its own
+// Authorization header or with clients that forward an unrelated bearer token.
 func validateAuth(authObject auth.Auth, r *http.Request) bool {
-	if key := apiKeyFromRequest(r); key != "" {
-		return authObject.ValidateApiKey(key)
+	if key := apiKeyFromRequest(r); key != "" && authObject.ValidateApiKey(key) {
+		return true
 	}
-	return authObject.ValidateJwtToken(jwtFromCookie(r))
+	if jwt := jwtFromCookie(r); jwt != "" && authObject.ValidateJwtToken(jwt) {
+		return true
+	}
+	return false
 }
 
 // requireAdminPassword passes when --disable-auth is set or the supplied password matches.
@@ -230,6 +240,21 @@ func regenerateApiKeyHandler(authObject auth.Auth) http.HandlerFunc {
 
 		jsonWrite(w, map[string]string{"key": key})
 	}
+}
+
+// requireCriticalConfigAuth guards script-plugin configs: API key passes; session users must supply the admin password.
+func requireCriticalConfigAuth(w http.ResponseWriter, r *http.Request, authObject auth.Auth, req configReq) bool {
+	if authObject.GetAuthMode() == auth.Disabled || !configHasCriticalPlugin(req) {
+		return true
+	}
+	if key := apiKeyFromRequest(r); key != "" && authObject.ValidateApiKey(key) {
+		return true
+	}
+	if !authObject.IsAdminPasswordValid(r.Header.Get("X-Admin-Password")) {
+		jsonError(w, http.StatusPreconditionRequired, errors.New("admin password required"))
+		return false
+	}
+	return true
 }
 
 // ensureDbAuth guards /db/ endpoints: API key Bearer passes directly;

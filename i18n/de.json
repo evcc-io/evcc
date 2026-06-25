@@ -51,6 +51,11 @@
     "hex": "Hex-Farbe"
   },
   "config": {
+    "adminPassword": {
+      "description": "Das Skript-Plugin führt einen Befehl auf Systemebene aus, der mit den Rechten des evcc-Prozesses läuft. Gib dein Administrator-Passwort erneut ein, um fortzufahren.",
+      "invalid": "Ungültiges Passwort. Bitte versuche es erneut.",
+      "title": "Potenziell gefährliche Aktion"
+    },
     "apiKey": {
       "description": "Gibt Skripten und Automatisierungsaufgaben wie geplanten Backups sicheren Zugriff, ohne dein Administrator-Passwort zu teilen.",
       "exampleLabel": "Ausprobieren: Backup mit curl herunterladen",
@@ -120,6 +125,11 @@
       "title": "Lastmanagement",
       "usableMeters": "Verwendbare Zählerreferenzen"
     },
+    "consumer": {
+      "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Hausverbrauch.",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
+    },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
       "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
@@ -155,8 +165,11 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "curtailLimit": "Einspeiselimit",
+      "curtailable": "Abregelbar",
       "curtailed": "Einspeisung begrenzt",
       "detected": "Erkannt",
+      "dimLimit": "Verbrauchslimit",
       "dimmed": "Verbrauch begrenzt",
       "enabled": "Ladebereit",
       "energy": "Energie",
@@ -165,8 +178,6 @@
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
-      "hemsActiveLimit": "Aktives Limit",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
       "max": "max",
@@ -181,11 +192,13 @@
       "power": "Leistung",
       "powerRange": "Leistung",
       "price": "Preis",
+      "productionLimited": "Erzeugung begrenzt",
       "range": "Reichweite",
       "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
       "solarForecast": "PV-Vorhersage",
+      "switchDevice": "Stromregelung",
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
@@ -196,10 +209,6 @@
       "A": "A (nicht verbunden)",
       "B": "B (verbunden)",
       "C": "C (lädt)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
@@ -222,6 +231,8 @@
       "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
       "port": "Port",
       "portHelp": "Der zu verwendende Port.",
+      "qr": "Kopplungscode",
+      "qrExplain": "Während der Installation von einem anderen EEBus-Gerät scannen, um automatisch zu koppeln, ohne die SKI manuell einzugeben.",
       "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
@@ -235,9 +246,9 @@
       "title": "Experimentell"
     },
     "ext": {
-      "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
-      "titleAdd": "Verbrauchszähler hinzufügen",
-      "titleEdit": "Verbrauchszähler bearbeiten"
+      "description": "Erfasst Zähler, die nicht für Regelung oder Anzeige verwendet werden (Unterverteilungen, alternative Netz- oder PV-Zähler, ...). Ihre Daten werden geloggt und wie andere Zähler exportiert.",
+      "titleAdd": "Zusätzlichen Zähler hinzufügen",
+      "titleEdit": "Zusätzlichen Zähler bearbeiten"
     },
     "form": {
       "danger": "Achtung",
@@ -373,8 +384,11 @@
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
+      "maxTempHelp": "Muss größer als die Mindesttemperatur sein.",
+      "maxTempLabel": "Maximaltemperatur",
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
       "minCurrentLabel": "Minimaler Strom",
+      "minTempLabel": "Mindesttemperatur",
       "noVehicles": "Keine Fahrzeuge konfiguriert.",
       "option": {
         "charging": "Ladepunkt hinzufügen",
@@ -404,6 +418,8 @@
       "solarBehaviorLabel": "PV-Überschuss",
       "solarModeCustom": "manuell",
       "solarModeMaximum": "nur Sonne",
+      "temperatureRangeHelp": "Anzeigebereich für den Temperaturbalken. Beeinflusst die Regelung nicht.",
+      "temperatureRangeTitle": "Temperaturbereich",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
       "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
@@ -438,6 +454,7 @@
     },
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
+      "addConsumer": "Verbraucher hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
       "addLoadpoint": "Wallbox oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
@@ -523,12 +540,16 @@
     },
     "meter": {
       "cancel": "Abbrechen",
+      "convertToConsumer": {
+        "confirm": "Wandelt diesen \"zusätzlichen Zähler\" in einen \"Verbraucher\" um.",
+        "link": "In Verbraucher umwandeln"
+      },
       "delete": "Löschen",
       "generic": "Generische Integrationen",
       "option": {
-        "aux": "Intelligenten Verbraucher hinzufügen",
+        "aux": "Selbstregelnden Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
-        "ext": "Regulären Verbraucher hinzufügen",
+        "consumer": "Regulären Verbraucher hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
@@ -539,7 +560,7 @@
       "usage": {
         "aux": "Intelligenter Verbraucher",
         "battery": "Batterie",
-        "charge": "Verbraucher / Ladegerät",
+        "charge": "Ladegerät",
         "grid": "Netzanschluss",
         "label": "Verwendung",
         "pv": "Erzeugung"
@@ -618,13 +639,12 @@
       "warningUrlPath": "Die URL benötigt normalerweise keinen Pfad. Bist du dir sicher?"
     },
     "ocpp": {
-      "connectedChargers": "Verbundene Wallboxen",
-      "connectionStatus": "Konfigurierte Station-IDs",
-      "connectionStatusHelp": "Verbindungsstatus der konfigurierten Wallboxen.",
-      "detectedChargers": "Erkannte Station-IDs",
-      "detectedHelp": "Diese Wallboxen haben versucht, sich mit evcc zu verbinden. Um eine Wallbox zu verwenden, erstelle einen Ladepunkt mit ihrer Station-ID.",
+      "forwardingConfigured": "Weiterleitung konfiguriert",
+      "forwardingError": "Weiterleitungsfehler",
+      "forwardingOff": "Keine Weiterleitung konfiguriert",
       "noChargers": "Keine OCPP-Wallboxen erkannt.",
-      "noStations": "Keine Stationen verbunden",
+      "stations": "Station-IDs",
+      "stationsHelp": "Konfigurierte und erkannte OCPP-Wallboxen. Zusätzlich zur lokalen Steuerung kannst du eine Nachrichtenweiterleitung an einen externen Server (z. B. für die Abrechnung) konfigurieren.",
       "status": {
         "configured": "Nicht verbunden",
         "connected": "Verbunden",
@@ -633,6 +653,30 @@
       "title": "OCPP Server",
       "url": "Server-URL",
       "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Leite die OCPP-Nachrichten dieser Wallbox zusätzlich zu evcc an einen externen Server weiter (Abrechnungsplattform, Netzbetreiber usw.).",
+      "editTitle": "OCPP-Weiterleitung",
+      "labelCaCert": "Serverzertifikat (CA)",
+      "labelCheckInsecure": "Selbstsignierte Zertifikate erlauben",
+      "labelInsecure": "Zertifikatsprüfung",
+      "password": "Passwort",
+      "passwordHelp": "Für HTTP-Basic-Auth am Upstream-Server.",
+      "readOnly": {
+        "check": "Befehle vom Upstream-Server blockieren",
+        "help": {
+          "false": "Der Upstream kann über evcc Befehle an die Wallbox senden.",
+          "true": "Der Upstream empfängt alle Wallbox-Nachrichten, kann aber keine Befehle senden. evcc behält die alleinige Kontrolle."
+        },
+        "label": "Upstream-Befehle"
+      },
+      "status": "Status",
+      "upstreamStationId": "Station-ID",
+      "upstreamStationIdHelp": "Wallbox-Kennung, die an den Upstream-Server gesendet wird.",
+      "upstreamUrl": "Upstream-Server-URL",
+      "upstreamUrlHelp": "OCPP-WebSocket-URL des externen Servers.",
+      "username": "Benutzername",
+      "usernameHelp": "Für HTTP-Basic-Auth am Upstream-Server."
     },
     "optimizer": {
       "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
@@ -701,6 +745,7 @@
     },
     "section": {
       "additionalMeter": "Zusätzliche Zähler",
+      "consumers": "Verbraucher",
       "general": "Allgemein",
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
@@ -1179,14 +1224,15 @@
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie laden",
+      "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
+      "batteryDischargeHold": "Batterie (Entladesperre)",
       "batteryForecastEmpty": "Leer",
       "batteryForecastFull": "Voll",
       "batteryForecastNextHigh": "Hoch",
       "batteryForecastNextLow": "Tief",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
-      "batteryHold": "Batterie (gesperrt)",
       "batteryTooltip": "{energy} von {total} ({soc})",
       "forecast": "Vorhersage",
       "forecastTooltip": "Vorhersage: verbleibende PV-Produktion heute",
@@ -1207,8 +1253,9 @@
       "waitForVehicle": "Bereit zum Heizen …"
     },
     "hemsWarning": {
-      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
-      "title": "Externe Begrenzung:"
+      "consumption": "Verbrauch",
+      "feedIn": "Einspeisung",
+      "title": "Externe Begrenzung aktiv"
     },
     "history": {
       "direction": {
@@ -1219,16 +1266,21 @@
         "grid": {
           "energy": "bezogen",
           "returnEnergy": "eingespeist"
+        },
+        "meter": {
+          "energy": "Energie",
+          "returnEnergy": "Energie (rückwärts)"
         }
       },
       "downloadCsv": "CSV herunterladen",
       "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
       "group": {
         "battery": "Batterie",
+        "consumer": "Verbrauch",
         "forecast": "Vorhersage",
         "grid": "Netz",
         "loadpoint": "Laden & Heizen",
-        "meter": "Verbrauch",
+        "meter": "Weitere Zähler",
         "pv": "Erzeugung"
       },
       "otherConsumers": "Andere",
@@ -1502,7 +1554,7 @@
     },
     "groupBy": {
       "loadpoint": "Ladepunkt",
-      "none": "Gesamt",
+      "none": "Sonne",
       "vehicle": "Fahrzeug"
     },
     "loadpoint": "Ladepunkt",
@@ -1524,7 +1576,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Kosten",
-      "solar": "Sonne"
+      "solar": "Energie"
     },
     "vehicle": "Fahrzeug"
   },

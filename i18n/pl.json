@@ -105,6 +105,11 @@
       "title": "Zarządzanie obciążeniem",
       "usableMeters": "Użyteczne odniesienia licznikowe"
     },
+    "consumer": {
+      "description": "Monitoruje mniejsze, niesterowalne urządzenia (lodówkę, pralkę itp.). Zapewnia lepszy przegląd zużycia energii w domu.",
+      "titleAdd": "Dodaj licznik konsumencki",
+      "titleEdit": "Edytuj licznik konsumencki"
+    },
     "control": {
       "description": "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz.",
       "descriptionInterval": "Cykl aktualizacji w sekundach. Określa, jak często evcc odczytuje dane z licznika i dostosowuje naliczanie opłat. Domyślna wartość 30 sekund jest bezpiecznym wyborem. Urządzenia takie jak pojazdy, stacje ładowania i falowniki zazwyczaj potrzebują kilku sekund, aby dostosować swoje działanie. Jeśli komponenty reagują szybko, można użyć niższych wartości. Zdecydowanie zalecamy, aby nie schodzić poniżej 10 sekund. Jeśli zauważysz nieregularne działanie sterowania lub skoki wartości mocy, wybierz większy interwał.",
@@ -149,8 +154,6 @@
       "forecast": "Prognoza",
       "gridPrice": "Cena z sieci",
       "heaterTempLimit": "Limit podgrzewacza",
-      "hemsActiveLimit": "Limit aktywny",
-      "hemsType": "Komunikacja",
       "identifier": "Identyfikator RFID",
       "max": "maks",
       "messengers": "Usługi",
@@ -178,10 +181,6 @@
       "A": "A (niepodłączony)",
       "B": "B (podłączony)",
       "C": "C (ładowanie)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "przez EEBus",
-      "relay": "przez Relay"
     },
     "devices": {
       "auxMeter": "Inteligentne urządzenie konsumujące",
@@ -218,8 +217,8 @@
     },
     "ext": {
       "description": "Rejestruje wartości energii niekontrolowanych odbiorników (np. lodówka, pralka itp.) do celów statystycznych. Liczniki te mogą być również wykorzystywane do zarządzania obciążeniem (np. poddystrybucja).",
-      "titleAdd": "Dodaj licznik konsumencki",
-      "titleEdit": "Edytuj licznik konsumencki"
+      "titleAdd": "Dodaj dodatkowy licznik",
+      "titleEdit": "Edytuj dodatkowy licznik"
     },
     "form": {
       "danger": "Niebezpieczeństwo",
@@ -443,6 +442,7 @@
       "description": "Otrzymuj powiadomienia o swoich sesjach ładowania.",
       "event": {
         "asleep": {
+          "messageDefault": "Ładowanie wstrzymane, pojazd {vehicleName} nie ładuje się.",
           "title": "Podczas oczekiwania na pojazd",
           "titleDefault": "Pojazd uśpiony"
         },
@@ -837,7 +837,7 @@
       "greenShareSub2": "słońce i magazyn energii",
       "power": "Moc ładowania",
       "powerSub1": "{activeClients} z {totalClients} uczestników",
-      "powerSub2": "ładuje się…",
+      "powerSub2": "ładuje się.",
       "tabTitle": "Dane społeczności"
     },
     "savings": {
@@ -1077,11 +1077,11 @@
       "battery": "Akumulator",
       "batteryCharge": "Ładowanie magazynu energii",
       "batteryDischarge": "Rozładowywanie magazynu energii",
+      "batteryDischargeHold": "Magazyn energii (chroniony)",
       "batteryForecastEmpty": "Pusty",
       "batteryForecastFull": "Pełny",
       "batteryGridChargeActive": "Ładowanie z sieci: aktywne",
       "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
-      "batteryHold": "Magazyn energii (chroniony)",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecast": "Prognoza",
       "forecastTooltip": "prognoza: pozostała na dziś produkcja energii słonecznej",
@@ -1099,11 +1099,37 @@
       "charging": "Grzeje…",
       "connected": "Oczekuje.",
       "vehicleLimit": "Limit podgrzewacza",
-      "waitForVehicle": "Gotowe. Czekam na podgrzewacz…"
+      "waitForVehicle": "Gotowe do grzania…"
     },
     "hemsWarning": {
-      "description": "Obniżenie poboru energii, nieprzekraczające {limit}.",
-      "title": "Limit zewnętrzny:"
+      "consumption": "Konsumpcja",
+      "feedIn": "Do sieci",
+      "title": "Limit zewnętrzny aktywny"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "naładowane",
+          "returnEnergy": "rozładowane"
+        },
+        "grid": {
+          "energy": "zaimportowane",
+          "returnEnergy": "wyeksportowane"
+        }
+      },
+      "downloadCsv": "Pobierz CSV",
+      "empty": "Brak dostępnych danych historycznych dla tego przedziału czasu.",
+      "group": {
+        "battery": "Magazyn energii",
+        "consumer": "Konsumpcja",
+        "forecast": "Prognoza",
+        "grid": "Sieć",
+        "loadpoint": "Ładowanie i ogrzewania",
+        "meter": "Dodatkowe liczniki",
+        "pv": "Produkcja"
+      },
+      "otherConsumers": "Inne",
+      "title": "Historia"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
@@ -1296,6 +1322,7 @@
     "updatePassword": "Aktualizuj hasło"
   },
   "session": {
+    "addOdometer": "Dodaj wartość",
     "cancel": "Anuluj",
     "co2": "CO₂",
     "date": "Okres",
@@ -1305,7 +1332,8 @@
     "meterstart": "Licznik początek",
     "meterstop": "Licznik koniec",
     "odometer": "Przebieg",
-    "price": "Cena",
+    "price": "Koszt",
+    "soc": "Poziom naładowania pojazdu",
     "started": "Zaczęło się",
     "title": "Sesja ładowania"
   },
@@ -1344,8 +1372,10 @@
       "meterstart": "Licznik początek (kWh)",
       "meterstop": "Licznik zakończenie (kWh)",
       "odometer": "Przebieg (km)",
-      "price": "Cena",
+      "price": "Koszt",
       "priceperkwh": "Cena/kWh",
+      "socend": "Końcowy poziom naładowania (%)",
+      "socstart": "Początkowy poziom naładowania (%)",
       "solarpercentage": "Słońce (%)",
       "vehicle": "Pojazd"
     },
@@ -1361,18 +1391,20 @@
     "group": {
       "co2": "Emisje",
       "grid": "Sieć",
-      "price": "Cena",
+      "price": "Koszt",
       "self": "Słońce"
     },
     "groupBy": {
       "loadpoint": "Punkt obciążenia",
-      "none": "Wszystko",
+      "none": "Słońce",
       "vehicle": "Pojazd"
     },
     "loadpoint": "Punkt obciążenia",
     "noData": "Brak sesji ładowania w tym miesiącu.",
+    "odometer": "Przebieg",
     "overview": "Przegląd",
     "period": {
+      "day": "Dzień",
       "month": "Miesiąc",
       "total": "Wszystko",
       "year": "Rok"
@@ -1385,8 +1417,8 @@
     "total": "Razem",
     "type": {
       "co2": "CO₂",
-      "price": "Cena",
-      "solar": "Słońce"
+      "price": "Koszt",
+      "solar": "Energia"
     },
     "vehicle": "Pojazd"
   },

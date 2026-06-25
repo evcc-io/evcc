@@ -9,7 +9,6 @@ import (
 	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/ship-go/cert"
 	"github.com/enbility/spine-go/model"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/hems/eebus"
 	hems "github.com/evcc-io/evcc/hems/eebus"
 	server "github.com/evcc-io/evcc/server/eebus"
@@ -20,8 +19,6 @@ import (
 const remotePort = 9001
 
 func TestEEBus(t *testing.T) {
-	t.Skip()
-
 	util.LogLevel("error", map[string]string{"eebus": "trace"})
 
 	certificate, err := cert.CreateCertificate("Demo", "Demo", "DE", "Demo-Server-01")
@@ -47,20 +44,21 @@ func TestEEBus(t *testing.T) {
 	box, err := createControlbox(t.Context(), server.Ski(), remotePort)
 	require.NoError(t, err, "controlbox")
 
-	eventC := make(chan api.EventType, 1)
+	eventC := make(chan api.EventType, 16)
 	box.remoteEventC = eventC
 
-	gridcontrol, err := circuit.New(util.NewLogger("gridcontrol"), "gridcontrol", 0, 0, nil, time.Minute)
-	require.NoError(t, err)
-
-	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, gridcontrol, time.Second)
+	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
 	require.NoError(t, err, "hems")
 
 	go hems.Run()
 
-	<-eventC
+	// wait for DataUpdateLimit which signals that limit descriptions and data are available
+	require.Eventually(t, func() bool {
+		return len(box.remoteEntity(lpc.DataUpdateLimit)) > 0
+	}, 30*time.Second, 100*time.Millisecond, "waiting for lpc.DataUpdateLimit")
+
 	t.Log(box.remoteEntities)
-	srvEntity := box.remoteEntity(lpc.UseCaseSupportUpdate)[0]
+	srvEntity := box.remoteEntity(lpc.DataUpdateLimit)[0]
 
 	_, err = box.uclpc.WriteConsumptionLimit(srvEntity, ucapi.LoadLimit{
 		IsActive: true,

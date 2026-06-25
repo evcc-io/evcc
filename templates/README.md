@@ -101,6 +101,30 @@ en: |
   **Attention**: Token is only valid for 2 minutes.
 ```
 
+## `caveats`
+
+`caveats` documents known limitations or unreliable behaviour of a device that otherwise works. This is distinct from `requirements.description`, which covers setup steps the user must perform.
+
+It is a list, so a device can have multiple caveats. Each entry has a language-specific `description` (`de`, `en`) and a `link`.
+
+Guidelines:
+
+- Add **one entry per distinct problem** (e.g. "unreliable meter" and "occasional reboots" are two entries); don't list the same problem twice.
+- Keep descriptions **as concise as possible** while still understandable.
+- Use **factual wording** describing the observed behaviour.
+- Always add a `link` to the single issue or discussion that best documents the problem, so the situation can be re-verified later. It is technically optional, but omitting it should be a rare exception.
+- The `description` follows the same Markdown formatting rules as `requirements.description` above.
+
+Example:
+
+```yaml
+caveats:
+  - description:
+      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+      en: Phase switching occasionally disables itself.
+    link: https://github.com/evcc-io/evcc/issues/21708
+```
+
 ## `auth`
 
 `auth` defines OAuth authentication configuration for devices that require user authorization. When specified, the UI OAuth flow and token management are handled automatically. The auth endpoint is called when all required parameters are filled and is re-called on every parameter change.
