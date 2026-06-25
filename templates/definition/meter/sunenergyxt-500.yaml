@@ -64,7 +64,7 @@ render: |
     uri: http://{{ .host }}/read
     cache: {{ .cache }}
     timeout: {{ .timeout }}
-    jq: .state.reported.PB
+    jq: .state.reported.BP
   soc:
     source: http
     uri: http://{{ .host }}/read
