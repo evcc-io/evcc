@@ -38,6 +38,9 @@ type EEBusOHPCF struct {
 	connector *eebus.Connector
 }
 
+// errNotConnected is returned whenever the compressor entity is not (yet) available.
+var errNotConnected = errors.New("not connected")
+
 func init() {
 	registry.AddCtx("eebus-ohpcf", NewEEBusOHPCFFromConfig)
 }
@@ -189,7 +192,7 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
-		return api.StatusNone, errors.New("not connected")
+		return api.StatusNone, errNotConnected
 	}
 
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
@@ -204,7 +207,7 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 func (c *EEBusOHPCF) Enabled() (bool, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
-		return c.lastEnabled(), nil
+		return false, errNotConnected
 	}
 
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
@@ -223,7 +226,11 @@ func (c *EEBusOHPCF) Enable(enable bool) error {
 	c.setEnabled(enable)
 
 	entity, ok := c.connectedCompressor()
-	if !ok || enable {
+	if !ok {
+		return errNotConnected
+	}
+
+	if enable {
 		return nil
 	}
 
@@ -295,7 +302,11 @@ func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 // consumption is scheduled to start now; otherwise it is paused.
 func (c *EEBusOHPCF) MaxCurrent(current int64) error {
 	entity, ok := c.connectedCompressor()
-	if !ok || !c.lastEnabled() {
+	if !ok {
+		return errNotConnected
+	}
+
+	if !c.lastEnabled() {
 		return nil
 	}
 
