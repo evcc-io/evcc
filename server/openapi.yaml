@@ -572,7 +572,7 @@ paths:
             schema:
               $ref: "#/components/schemas/PlanStrategy"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -1212,7 +1212,7 @@ paths:
             schema:
               $ref: "#/components/schemas/PlanStrategy"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
@@ -1401,12 +1401,10 @@ components:
           odometer:
             $ref: "#/components/schemas/Odometer"
           meterStart:
-            nullable: true
-            type: "number"
+            type: ["number", "null"]
             description: Meter reading at start of charging session
           meterStop:
-            nullable: true
-            type: "number"
+            type: ["number", "null"]
             description: Meter reading at end of charging session
           chargedEnergy:
             type: number
@@ -1504,7 +1502,8 @@ components:
       externalDocs:
         url: https://docs.evcc.io/en/docs/reference/configuration/log#log
       type: string
-      example: DEBUG
+      examples:
+        - DEBUG
       enum:
         - FATAL
         - ERROR
@@ -1521,8 +1520,7 @@ components:
         - "minpv"
         - "pv"
     Odometer:
-      nullable: true
-      type: "number"
+      type: ["number", "null"]
       description: Vehicle odometer reading in kilometers
     Password:
       description: Admin password
@@ -1530,7 +1528,8 @@ components:
     Phases:
       description: "Number of phases. (0: auto, 1: 1-phase, 3: 3-phase)"
       type: string
-      example: "3"
+      examples:
+        - "3"
       enum:
         - "0"
         - "1"
@@ -1869,8 +1868,7 @@ components:
             properties:
               result:
                 description: Value is always null
-                nullable: true
-                type: "object"
+                type: ["object", "null"]
     BlankResponse:
       description: Success - Blank response
     SuccessResult:

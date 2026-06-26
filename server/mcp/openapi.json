@@ -269,8 +269,10 @@
               "properties": {
                 "result": {
                   "description": "Value is always null",
-                  "nullable": true,
-                  "type": "object"
+                  "type": [
+                    "object",
+                    "null"
+                  ]
                 }
               },
               "type": "object"
@@ -405,13 +407,17 @@
             },
             "meterStart": {
               "description": "Meter reading at start of charging session",
-              "nullable": true,
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "meterStop": {
               "description": "Meter reading at end of charging session",
-              "nullable": true,
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "odometer": {
               "$ref": "#/components/schemas/Odometer"
@@ -552,7 +558,9 @@
           "DEBUG",
           "TRACE"
         ],
-        "example": "DEBUG",
+        "examples": [
+          "DEBUG"
+        ],
         "externalDocs": {
           "url": "https://docs.evcc.io/en/docs/reference/configuration/log#log"
         },
@@ -570,8 +578,10 @@
       },
       "Odometer": {
         "description": "Vehicle odometer reading in kilometers",
-        "nullable": true,
-        "type": "number"
+        "type": [
+          "number",
+          "null"
+        ]
       },
       "Password": {
         "description": "Admin password",
@@ -584,7 +594,9 @@
           "1",
           "3"
         ],
-        "example": "3",
+        "examples": [
+          "3"
+        ],
         "type": "string"
       },
       "PlanRates": {
