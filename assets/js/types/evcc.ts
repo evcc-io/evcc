@@ -289,6 +289,11 @@ export enum LENGTH_UNIT {
   MILES = "mi",
 }
 
+export enum TIME_FORMAT {
+  H12 = "12",
+  H24 = "24",
+}
+
 export interface Loadpoint {
   name: string;
   batteryBoost: boolean;
