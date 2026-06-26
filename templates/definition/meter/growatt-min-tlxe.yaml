@@ -8,7 +8,6 @@ params:
     choice: ["rs485", "tcpip"]
 render: |
   type: custom
-  usage: {{ .usage }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
