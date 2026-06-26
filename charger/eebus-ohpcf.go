@@ -30,11 +30,15 @@ type EEBusOHPCF struct {
 	cem *eebus.CustomerEnergyManagement
 	ma  *eebus.MonitoringAppliance
 
-	mux        sync.RWMutex
+	ctx     context.Context
+	reboost time.Duration
+
+	mu         sync.RWMutex
 	log        *util.Logger
 	compressor spineapi.EntityRemoteInterface
 	mpcEntity  spineapi.EntityRemoteInterface
 	enabled    bool
+	reboosting bool
 
 	connector *eebus.Connector
 }
@@ -49,25 +53,27 @@ func init() {
 // NewEEBusOHPCFFromConfig creates an EEBus OHPCF charger from generic config
 func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed `mapstructure:",squash"`
-		Ski   string
-		Ip    string
+		embed   `mapstructure:",squash"`
+		Ski     string
+		Ip      string
+		Reboost time.Duration
 	}{
 		embed: embed{
 			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
 		},
+		Reboost: 10 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip)
+	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip, cc.Reboost)
 }
 
 // NewEEBusOHPCF creates an EEBus OHPCF charger, registers it with the EEBus
 // instance and waits for the connection.
-func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string) (api.Charger, error) {
+func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost time.Duration) (api.Charger, error) {
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
@@ -79,6 +85,8 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string) (api.Charg
 		cem:       inst.CustomerEnergyManagement(),
 		ma:        inst.MonitoringAppliance(),
 		connector: eebus.NewConnector(),
+		ctx:       ctx,
+		reboost:   reboost,
 	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
@@ -109,8 +117,8 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 		return
 	}
 
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.compressor = nil
 	c.mpcEntity = nil
@@ -133,38 +141,38 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		ohpcf.DataUpdateConsumptionState,
 		ohpcf.DataUpdateMinimalRunDuration,
 		ohpcf.DataUpdateMinimalPauseDuration:
-		c.mux.Lock()
+		c.mu.Lock()
 		c.compressor = entity
-		c.mux.Unlock()
+		c.mu.Unlock()
 
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
-		c.mux.Lock()
+		c.mu.Lock()
 		// use most specific selector
 		if c.mpcEntity == nil || len(entity.Address().Entity) < len(c.mpcEntity.Address().Entity) {
 			c.mpcEntity = entity
 		}
-		c.mux.Unlock()
+		c.mu.Unlock()
 	}
 }
 
 func (c *EEBusOHPCF) connectedCompressor() (spineapi.EntityRemoteInterface, bool) {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	return c.compressor, c.compressor != nil
 }
 
 func (c *EEBusOHPCF) setEnabled(enabled bool) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.enabled = enabled
 }
 
 func (c *EEBusOHPCF) lastEnabled() bool {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	return c.enabled
 }
@@ -213,12 +221,58 @@ func (c *EEBusOHPCF) Enabled() (bool, error) {
 	return c.lastEnabled(), nil
 }
 
-// Enable schedules or resumes the optional consumption when on, pauses or
-// aborts it when off.
+// Enable schedules/resumes the optional consumption when on, pauses/aborts it
+// when off; while on a reboost loop reschedules newly announced consumption.
 func (c *EEBusOHPCF) Enable(enable bool) error {
 	c.setEnabled(enable)
 
+	if enable {
+		c.startReboost()
+	}
+
 	return c.apply()
+}
+
+// startReboost launches the reboost loop, unless one is already running or no
+// reboost interval is configured.
+func (c *EEBusOHPCF) startReboost() {
+	if c.reboost <= 0 {
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.reboosting {
+		return
+	}
+
+	c.reboosting = true
+	go c.reboostLoop()
+}
+
+// reboostLoop reschedules a freshly announced optional consumption after each
+// reboost interval; it exits when the charger is disabled or the context ends.
+func (c *EEBusOHPCF) reboostLoop() {
+	defer func() {
+		c.mu.Lock()
+		c.reboosting = false
+		c.mu.Unlock()
+	}()
+
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+		case <-time.After(c.reboost):
+			if !c.lastEnabled() {
+				return
+			}
+			if err := c.apply(); err != nil {
+				c.log.DEBUG.Printf("reboost: %v", err)
+			}
+		}
+	}
 }
 
 type ohpcfAction int
@@ -363,9 +417,9 @@ var _ api.Meter = (*EEBusOHPCF)(nil)
 // CurrentPower implements the api.Meter interface and reports the heat pump's
 // measured power consumption via the MPC use case.
 func (c *EEBusOHPCF) CurrentPower() (float64, error) {
-	c.mux.RLock()
+	c.mu.RLock()
 	entity := c.mpcEntity
-	c.mux.RUnlock()
+	c.mu.RUnlock()
 
 	if entity == nil || !c.ma.MaMPCInterface.IsScenarioAvailableAtEntity(entity, eebus.MPCPower) {
 		return 0, api.ErrNotAvailable
