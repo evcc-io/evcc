@@ -23,8 +23,8 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cli/browser v1.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
-	github.com/coder/websocket v1.8.14
-	github.com/coreos/go-oidc/v3 v3.18.0
+	github.com/coder/websocket v1.8.15
+	github.com/coreos/go-oidc/v3 v3.19.0
 	github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
@@ -33,7 +33,7 @@ require (
 	github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c
 	github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260503092507-6199c7ad3baf
-	github.com/evcc-io/optimizer v0.0.0-20260531165648-b5cbfebdaa65
+	github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae
 	github.com/fatih/structs v1.1.0
@@ -43,7 +43,7 @@ require (
 	github.com/go-telegram/bot v1.21.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/godbus/dbus/v5 v5.2.2
-	github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c
+	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.6.0
@@ -82,10 +82,10 @@ require (
 	github.com/philippseith/signalr v0.8.0
 	github.com/prometheus-community/pro-bing v0.9.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/prometheus/common v0.68.1
+	github.com/prometheus/common v0.69.0
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.53.0
-	github.com/sandrolain/httpcache v1.4.0
+	github.com/sandrolain/httpcache v1.4.1
 	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.4
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
@@ -99,14 +99,14 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260609133612-a18fb7d50aeb
+	github.com/volkszaehler/mbmd v0.0.0-20260623211432-fb8f9c22f121
 	github.com/warthog618/go-gpiocdev v0.9.1
 	gitlab.com/bboehmke/sunny v0.17.0
 	go.bug.st/serial v1.7.1
 	go.uber.org/mock v0.6.0
-	go.yaml.in/yaml/v4 v4.0.0-rc.5.0.20260613141257-7afcb0919cb5
+	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/crypto v0.53.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260609182332-5f2de1a9f1e2
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260618162219-0b316e7ee409
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976
 	golang.org/x/net v0.56.0
 	golang.org/x/oauth2 v0.36.0
@@ -116,7 +116,7 @@ require (
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
-	modernc.org/sqlite v1.52.0
+	modernc.org/sqlite v1.53.0
 )
 
 require (
@@ -243,7 +243,7 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.30.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.72.3 // indirect
+	modernc.org/libc v1.73.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )

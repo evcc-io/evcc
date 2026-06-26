@@ -199,3 +199,33 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 
 	return res.Data.VehicleStatus, err
 }
+
+func (v *API) SocStatus(vin string) (VehicleSocStatus, error) {
+	if err := v.UpdateSession(vin); err != nil {
+		return VehicleSocStatus{}, fmt.Errorf("update session failed: %w", err)
+	}
+
+	var res struct {
+		Code    Int
+		Message string
+		Error   Error
+		Data    VehicleSocStatus
+	}
+
+	params := url.Values{
+		"setting": {"charging"},
+	}
+
+	path := "/remote-control/vehicle/status/soc/" + vin
+	req, err := v.request(http.MethodGet, path, params, nil)
+	if err != nil {
+		return VehicleSocStatus{}, err
+	}
+
+	err = v.DoJSON(req, &res)
+	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
+		return VehicleSocStatus{}, err
+	}
+
+	return res.Data, err
+}

@@ -5,7 +5,7 @@ products:
       generic: Bluelink (US)
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: pin
     required: true
     help:

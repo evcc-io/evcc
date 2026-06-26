@@ -120,6 +120,11 @@
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
     },
+    "consumer": {
+      "description": "Overvåger mindre enheder, som ikke kan styres, f.eks. køleskab, vaskemaskine osv. Giver et bedre overblik over dit samlede forbrug i hjemmet.",
+      "titleAdd": "Tilføj forbrugsmåler",
+      "titleEdit": "Juster forbrugsmåler"
+    },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
       "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
@@ -188,6 +193,7 @@
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
       "solarForecast": "Sol prognose",
+      "switchDevice": "Strømstyring",
       "temp": "Temperatur",
       "topic": "Emne",
       "url": "URL",
@@ -220,6 +226,8 @@
       "interfacesHelp": "Begræns de netværksgrænseflader, som EEBus skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
       "port": "Port",
       "portHelp": "Porten, der skal bruges.",
+      "qr": "koblingskode",
+      "qrExplain": "Skan fra en anden EEBus-enhed under installationen for automatisk parring uden manuel indtastning af SKI.",
       "removeConfirm": "Hele EEBus-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBus-netværket.",
@@ -233,9 +241,9 @@
       "title": "Eksperimentel"
     },
     "ext": {
-      "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
-      "titleAdd": "Tilføj forbrugsmåler",
-      "titleEdit": "Rediger forbrugsmåler"
+      "description": "Overvåger målere, der ikke bruges til regulering eller vises i grænsefladen (undermålere, alternative net- eller solmålere osv.). Data logges og eksporteres ligesom for øvrige målere.",
+      "titleAdd": "Tilføj ekstra måler",
+      "titleEdit": "Rediger ekstra måler"
     },
     "form": {
       "danger": "Pas på",
@@ -371,8 +379,11 @@
       "estimateLabel": "Interpoler opladningsniveauet mellem API-opdateringer",
       "maxCurrentHelp": "Skal være større end minimum strømstyrken.",
       "maxCurrentLabel": "Maksimal strømstyrke",
+      "maxTempHelp": "Skal være højere end minimums temperaturen.",
+      "maxTempLabel": "Maksimum temperatur",
       "minCurrentHelp": "Brug kun lavere end 6 A, hvis du er sikker på hvad du gør.",
       "minCurrentLabel": "Minimum strømstyrke",
+      "minTempLabel": "Minimums temperatur",
       "noVehicles": "Ingen køretøjer er konfigureret.",
       "option": {
         "charging": "\"Tilføj ladepunkt",
@@ -403,6 +414,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "egen",
       "solarModeMaximum": "max solenergi",
+      "temperatureRangeHelp": "Visningsområde for temperaturbjælken. Påvirker ikke styringen.",
+      "temperatureRangeTitle": "Temperatur område",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
       "thresholdDisableHelpInvalid": "Brug en positiv værdi.",
       "thresholdDisableHelpPositive": "Stop, når der bruges mere end {power} fra elnettet i {delay}.",
@@ -437,6 +450,7 @@
     },
     "main": {
       "addAdditional": "Tilføj en ekstra måler",
+      "addConsumer": "Tilføj forbrugsenhed",
       "addGrid": "Tilføj måler til elnet",
       "addLoadpoint": "Tilføj lader eller varmelegeme",
       "addPvBattery": "Tilføj solpanel eller batteri",
@@ -527,6 +541,7 @@
       "option": {
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
+        "consumer": "Tilføj standardforbrugsenhed",
         "ext": "Tilføj almindelig forbrugsenhed",
         "pv": "Tilføj en solenergimåler"
       },
@@ -731,6 +746,7 @@
     },
     "section": {
       "additionalMeter": "Tilføj ekstra målere",
+      "consumers": "Forbrugsenheder",
       "general": "Generelle",
       "grid": "Elnettet",
       "integrations": "Integrationer",
@@ -1222,6 +1238,7 @@
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
+      "batteryChargeHold": "Batteri (opladning blokeret)",
       "batteryDischarge": "Batteriet aflades",
       "batteryDischargeHold": "Batteri (låst)",
       "batteryForecastEmpty": "Tømt",
@@ -1269,10 +1286,11 @@
       "empty": "Ingen historik i dette tidsinterval.",
       "group": {
         "battery": "Batteri",
+        "consumer": "Forbrug",
         "forecast": "Prognose",
         "grid": "Elnet",
         "loadpoint": "Opladning og opvarmning",
-        "meter": "Forbrug",
+        "meter": "Ekstra målere",
         "pv": "Produktion"
       },
       "otherConsumers": "Andet",
@@ -1546,7 +1564,7 @@
     },
     "groupBy": {
       "loadpoint": "Opladnings punkt",
-      "none": "Total",
+      "none": "Sol",
       "vehicle": "Køretøj"
     },
     "loadpoint": "Ladepunkt",
@@ -1568,7 +1586,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Omkostning",
-      "solar": "Sol"
+      "solar": "Energi"
     },
     "vehicle": "Køretøj"
   },

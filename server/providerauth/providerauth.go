@@ -52,7 +52,9 @@ func Register(name string, handler api.AuthProvider) (chan<- bool, error) {
 		return nil, err
 	}
 
-	onlineC := make(chan bool)
+	// buffered + non-blocking send (see OAuth.setOnline): the value is only a
+	// signal and the handler re-reads live state, so coalescing is lossless.
+	onlineC := make(chan bool, 1)
 
 	go func() {
 		for range onlineC {
