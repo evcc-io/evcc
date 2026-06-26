@@ -109,6 +109,7 @@ func (a *Handler) interactiveProvider(id string) (api.InteractiveAuthProvider, e
 func (a *Handler) challenge(id string) (*api.AuthChallenge, error) {
 	ip, err := a.interactiveProvider(id)
 	if err != nil {
+		a.log.ERROR.Println(err)
 		return nil, err
 	}
 	return ip.Challenge(), nil
@@ -117,6 +118,7 @@ func (a *Handler) challenge(id string) (*api.AuthChallenge, error) {
 func (a *Handler) submit(id string, values map[string]string) (*api.AuthChallenge, bool, error) {
 	ip, err := a.interactiveProvider(id)
 	if err != nil {
+		a.log.ERROR.Println(err)
 		return nil, false, err
 	}
 
@@ -124,6 +126,7 @@ func (a *Handler) submit(id string, values map[string]string) (*api.AuthChalleng
 	// via the provider's own online channel (which feeds back into updateC)
 	challenge, err := ip.Submit(values)
 	if err != nil {
+		a.log.ERROR.Printf("%s: %v", id, err)
 		return nil, false, err
 	}
 
