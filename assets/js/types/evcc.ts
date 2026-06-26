@@ -249,6 +249,9 @@ export interface ConfigLoadpoint {
   title: string;
   defaultMode: string;
   priority: number;
+  priorityStrategy: PRIORITY_STRATEGY;
+  priorityBasis: PRIORITY_BASIS;
+  priorityHysteresis: number;
   phasesConfigured: number;
   minCurrent: number;
   maxCurrent: number;
@@ -321,6 +324,7 @@ export interface Loadpoint {
   effectivePlanTime: string | null;
   effectivePlanStrategy: PlanStrategy;
   effectivePriority: number;
+  effectivePriorityScore: number;
   enableDelay: number;
   enableThreshold: number;
   enabled: boolean;
@@ -343,6 +347,9 @@ export interface Loadpoint {
   planProjectedStart: string | null;
   planTime: string | null;
   priority: number;
+  priorityStrategy: PRIORITY_STRATEGY;
+  priorityBasis: PRIORITY_BASIS;
+  priorityHysteresis: number;
   pvAction: PV_ACTION;
   pvRemaining: number;
   sessionCo2PerKWh: number | null;
@@ -464,6 +471,17 @@ export enum PV_ACTION {
   INACTIVE = "inactive",
   ENABLE = "enable",
   DISABLE = "disable",
+}
+
+export enum PRIORITY_STRATEGY {
+  NONE = "none",
+  SOC = "soc",
+  DEFICIT = "deficit",
+}
+
+export enum PRIORITY_BASIS {
+  PERCENT = "percent",
+  ENERGY = "energy",
 }
 
 export enum CHARGER_STATUS_REASON {

@@ -220,6 +220,9 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
+			"priorityStrategy":          {"POST", "/prioritystrategy/{value:[a-z]+}", handler(eapi.PriorityStrategyString, pass(lp.SetPriorityStrategy), lp.GetPriorityStrategy)},
+			"priorityBasis":             {"POST", "/prioritybasis/{value:[a-z]+}", handler(eapi.PriorityBasisString, pass(lp.SetPriorityBasis), lp.GetPriorityBasis)},
+			"priorityHysteresis":        {"POST", "/priorityhysteresis/{value:[0-9]+}", intHandler(pass(lp.SetPriorityHysteresis), lp.GetPriorityHysteresis)},
 			"batteryBoost":              {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
 			"batteryBoostLimit":         {"POST", "/batteryboostlimit/{value:[0-9]+}", intHandler(pass(lp.SetBatteryBoostLimit), lp.GetBatteryBoostLimit)},
 		}

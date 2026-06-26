@@ -228,6 +228,27 @@ func (lp *Loadpoint) GetPriority() int {
 	return lp.priority
 }
 
+// GetPriorityStrategy returns the loadpoint priority strategy
+func (lp *Loadpoint) GetPriorityStrategy() api.PriorityStrategy {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.priorityStrategy
+}
+
+// GetPriorityBasis returns the loadpoint priority strategy basis
+func (lp *Loadpoint) GetPriorityBasis() api.PriorityBasis {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.priorityBasis
+}
+
+// GetPriorityHysteresis returns the priority sub-ordering deadband in soc-%
+func (lp *Loadpoint) GetPriorityHysteresis() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.priorityHysteresis
+}
+
 // setPriority sets the loadpoint priority (no mutex)
 func (lp *Loadpoint) setPriority(prio int) {
 	lp.priority = prio
@@ -243,6 +264,75 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	lp.log.DEBUG.Println("set priority:", prio)
 	if lp.priority != prio {
 		lp.setPriority(prio)
+	}
+}
+
+// setPriorityStrategy sets the loadpoint priority strategy (no mutex)
+func (lp *Loadpoint) setPriorityStrategy(strategy api.PriorityStrategy) {
+	lp.priorityStrategy = strategy
+	lp.publish(keys.PriorityStrategy, lp.priorityStrategy)
+	lp.settings.SetString(keys.PriorityStrategy, strategy.String())
+}
+
+// SetPriorityStrategy sets the loadpoint priority strategy
+func (lp *Loadpoint) SetPriorityStrategy(strategy api.PriorityStrategy) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if !strategy.IsAPriorityStrategy() {
+		lp.log.ERROR.Printf("invalid priority strategy: %d", strategy)
+		return
+	}
+
+	lp.log.DEBUG.Printf("set priority strategy: %s", strategy)
+	if lp.priorityStrategy != strategy {
+		lp.setPriorityStrategy(strategy)
+	}
+}
+
+// setPriorityBasis sets the loadpoint priority strategy basis (no mutex)
+func (lp *Loadpoint) setPriorityBasis(basis api.PriorityBasis) {
+	lp.priorityBasis = basis
+	lp.publish(keys.PriorityBasis, lp.priorityBasis)
+	lp.settings.SetString(keys.PriorityBasis, basis.String())
+}
+
+// SetPriorityBasis sets the loadpoint priority strategy basis
+func (lp *Loadpoint) SetPriorityBasis(basis api.PriorityBasis) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if !basis.IsAPriorityBasis() {
+		lp.log.ERROR.Printf("invalid priority basis: %d", basis)
+		return
+	}
+
+	lp.log.DEBUG.Printf("set priority basis: %s", basis)
+	if lp.priorityBasis != basis {
+		lp.setPriorityBasis(basis)
+	}
+}
+
+// setPriorityHysteresis sets the loadpoint priority sub-ordering deadband (no mutex)
+func (lp *Loadpoint) setPriorityHysteresis(hysteresis int) {
+	lp.priorityHysteresis = hysteresis
+	lp.publish(keys.PriorityHysteresis, lp.priorityHysteresis)
+	lp.settings.SetInt(keys.PriorityHysteresis, int64(lp.priorityHysteresis))
+}
+
+// SetPriorityHysteresis sets the loadpoint priority sub-ordering deadband in soc-%
+func (lp *Loadpoint) SetPriorityHysteresis(hysteresis int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if hysteresis < 0 || hysteresis > 99 {
+		lp.log.ERROR.Printf("invalid priority hysteresis: %d (must be 0..99)", hysteresis)
+		return
+	}
+
+	lp.log.DEBUG.Println("set priority hysteresis:", hysteresis)
+	if lp.priorityHysteresis != hysteresis {
+		lp.setPriorityHysteresis(hysteresis)
 	}
 }
 
