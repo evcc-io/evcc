@@ -4,8 +4,6 @@ products:
     description:
       generic: MIN 3000TL-XE (and similar MIN series)
 params:
-  - name: usage
-    choice: ["pv"]
   - name: modbus
     choice: ["rs485", "tcpip"]
 render: |
