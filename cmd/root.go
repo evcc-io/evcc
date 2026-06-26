@@ -237,6 +237,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// value cache
 	cache := util.NewParamCache()
+	util.SetDefaultParamCache(cache) // expose in-process for plugins (e.g. state source)
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
 	// create web server

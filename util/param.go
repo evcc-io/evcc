@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/evcc-io/evcc/util/encode"
 )
@@ -46,6 +47,33 @@ func NewParamCache() *ParamCache {
 	return &ParamCache{
 		val: make(map[string]Param),
 	}
+}
+
+// defaultParamCache is the process-wide value cache (the same store that backs
+// /api/state), registered once at startup in cmd/root.go.
+//
+// It is intentionally a package-level singleton rather than a threaded dependency:
+// the cache is a genuine process singleton, and its only in-process readers are
+// plugins (e.g. the state source) instantiated deep in the template/registry chain
+// - passing a reference down would touch every device constructor across all device
+// types for no functional gain. Access is lock-free and nil-safe (no value before
+// registration, e.g. in CLI subcommands or tests).
+var defaultParamCache atomic.Pointer[ParamCache]
+
+// SetDefaultParamCache registers the process-wide value cache. Called once at
+// startup; tests use it to set/reset the cache.
+func SetDefaultParamCache(c *ParamCache) {
+	defaultParamCache.Store(c)
+}
+
+// DefaultParamCacheValue returns the cached value for key, or nil if no cache is
+// registered or the key is unknown.
+func DefaultParamCacheValue(key string) any {
+	c := defaultParamCache.Load()
+	if c == nil {
+		return nil
+	}
+	return c.Get(key).Val
 }
 
 // Run adds input channel's values to cache
