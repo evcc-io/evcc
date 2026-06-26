@@ -74,9 +74,9 @@ render: |
       address: 37113 # Grid import/export power
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -1
   energy:
     source: modbus
@@ -86,9 +86,9 @@ render: |
       address: 37121 # Active energy imported from the grid
       type: holding
       decode: uint32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: 0.01
   returnenergy:
     source: modbus
@@ -98,9 +98,9 @@ render: |
       address: 37119 # Active energy exported to the grid
       type: holding
       decode: uint32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: 0.01
   currents:
   - source: modbus
@@ -110,9 +110,9 @@ render: |
       address: 37107 # Huawei phase A grid current
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -121,9 +121,9 @@ render: |
       address: 37109 # Huawei phase B grid current
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -132,10 +132,78 @@ render: |
       address: 37111 # Huawei phase C grid current
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -0.01
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37101 # Huawei phase A grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37103 # Huawei phase B grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37105 # Huawei phase C grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37132 # Huawei phase A grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37134 # Huawei phase B grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37136 # Huawei phase C grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:

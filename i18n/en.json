@@ -51,6 +51,11 @@
     "hex": "Hex color"
   },
   "config": {
+    "adminPassword": {
+      "description": "The script plugin executes a system-level command that runs with the permissions of the evcc process. Re-enter your admin password to continue.",
+      "invalid": "Invalid password. Please try again.",
+      "title": "Potentially dangerous operation"
+    },
     "apiKey": {
       "description": "Give scripts and automation tasks like scheduled backups secure access without sharing your admin password.",
       "exampleLabel": "Try it: download a backup with curl",
@@ -193,6 +198,7 @@
       "singlePhase": "Single phase",
       "soc": "Charge",
       "solarForecast": "Solar forecast",
+      "switchDevice": "Current control",
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
@@ -377,8 +383,11 @@
       "estimateLabel": "Interpolate charge level between API updates",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
+      "maxTempHelp": "Must be greater than minimum temperature.",
+      "maxTempLabel": "Maximum temperature",
       "minCurrentHelp": "Only go below 6 A if you know what you're doing.",
       "minCurrentLabel": "Minimum current",
+      "minTempLabel": "Minimum temperature",
       "noVehicles": "No vehicles are configured.",
       "option": {
         "charging": "Add charging point",
@@ -408,6 +417,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
+      "temperatureRangeHelp": "Display range for the temperature bar. Does not affect control.",
+      "temperatureRangeTitle": "Temperature range",
       "thresholdDisableDelayLabel": "Disable delay",
       "thresholdDisableHelpInvalid": "Please use a positive value.",
       "thresholdDisableHelpPositive": "Stop, when more than {power} is used from the grid for {delay}.",
@@ -528,6 +539,10 @@
     },
     "meter": {
       "cancel": "Cancel",
+      "convertToConsumer": {
+        "confirm": "Converts this \"additional meter\" to a \"consumer\".",
+        "link": "Convert to consumer"
+      },
       "delete": "Delete",
       "generic": "Generic integrations",
       "option": {
@@ -544,7 +559,7 @@
       "usage": {
         "aux": "Self-regulating consumer",
         "battery": "Battery",
-        "charge": "Consumer / Charger",
+        "charge": "Charger",
         "grid": "Grid",
         "label": "Usage",
         "pv": "Production"
@@ -1250,6 +1265,10 @@
         "grid": {
           "energy": "imported",
           "returnEnergy": "exported"
+        },
+        "meter": {
+          "energy": "Energy",
+          "returnEnergy": "Energy (reverse)"
         }
       },
       "downloadCsv": "Download CSV",

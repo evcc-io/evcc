@@ -1,5 +1,6 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
+import escapeHtml from "@/utils/escapeHtml";
 import type { ForecastSlot } from "./types";
 import { BarChart, LineChart } from "echarts/charts";
 import {
@@ -108,6 +109,40 @@ export function tooltipStyle(
       color: colors.background,
     },
   };
+}
+
+export interface TooltipRow {
+  name?: string;
+  values: string[];
+}
+
+// Shared tooltip: bold date headline, non-bold rows, optional name + value columns.
+export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[]): string {
+  const hasName = rows.some((r) => r.name != null);
+  const valueCols = Math.max(1, ...rows.map((r) => r.values.length));
+  const colCount = (hasName ? 1 : 0) + valueCols;
+  // No name col + two value cols: first col left-aligned, second right-aligned.
+  // Otherwise: lone value centers, multiple/named columns right-align.
+  const valClsFn = (i: number): string => {
+    if (!hasName && valueCols > 1 && i === 0) return "fw-normal text-start";
+    if (hasName || valueCols > 1) return "fw-normal text-end ps-3";
+    return "fw-normal text-center";
+  };
+  const headerRow = headers?.length
+    ? `<tr>${hasName ? "<td></td>" : ""}${headers
+        .map((h, i) => `<td class="${valClsFn(i)}">${h}</td>`)
+        .join("")}</tr>`
+    : "";
+  const body = rows
+    .map((r) => {
+      const nameTd = hasName
+        ? `<td class="fw-normal text-start">${escapeHtml(r.name ?? "")}</td>`
+        : "";
+      const valTds = r.values.map((v, i) => `<td class="${valClsFn(i)}">${v}</td>`).join("");
+      return `<tr>${nameTd}${valTds}</tr>`;
+    })
+    .join("");
+  return `<table class="lh-sm"><thead><tr><th colspan="${colCount}" class="fw-bold text-center">${head}</th></tr></thead><tbody>${headerRow}${body}</tbody></table>`;
 }
 
 export function forecastGrid() {

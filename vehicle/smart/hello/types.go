@@ -56,6 +56,10 @@ type Vehicle struct {
 	ProprietaryPlatform Int    `json:"proprietaryPlatform"` // 0: legacy tsp backend (supported), 1: newer platform (status endpoint returns 8063)
 }
 
+type VehicleSocStatus struct {
+	Soc Int `json:"soc"` // charging target soc in tenths of a percent, e.g. 800 = 80%
+}
+
 type VehicleStatus struct {
 	BasicVehicleStatus struct {
 		UsageMode    Int    `json:"usageMode"`    // "0",

@@ -15,6 +15,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -23,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -102,7 +104,7 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 			pendingMu.Lock()
 			pendingMsgs[r.StationID] = nil
 			pendingMu.Unlock()
-			go dialUpstreamSidecar(r.StationID, r)
+			go runUpstreamSidecar(r.StationID, r)
 		} else {
 			go validateUpstream(r.StationID, r)
 		}
@@ -111,19 +113,13 @@ func ApplyForwarderRules(rules []ForwarderRule) {
 	notifyUpdated()
 }
 
-// validateUpstream test-dials a rule's upstream and records/clears the error so
-// the UI reflects unreachable hosts.
-func validateUpstream(id string, rule ForwarderRule) {
-	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
-	upstreamPath := rule.upstreamPath(id)
-
+// dialUpstream opens a websocket connection to the rule's upstream server for the given charger.
+func dialUpstream(id string, rule ForwarderRule) (*websocket.Conn, error) {
 	tlsConfig := &tls.Config{InsecureSkipVerify: rule.Insecure}
 	if rule.CaCert != "" {
 		caCertPool := x509.NewCertPool()
 		if ok := caCertPool.AppendCertsFromPEM([]byte(rule.CaCert)); !ok {
-			recordForwarderError(id, "invalid CA certificate")
-			notifyUpdated()
-			return
+			return nil, errors.New("invalid CA certificate")
 		}
 		tlsConfig.RootCAs = caCertPool
 	}
@@ -134,12 +130,20 @@ func validateUpstream(id string, rule ForwarderRule) {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	conn, _, err := websocket.Dial(ctx, upstreamBase+upstreamPath, &websocket.DialOptions{
+	defer cancel()
+
+	conn, _, err := websocket.Dial(ctx, strings.TrimRight(rule.UpstreamURL, "/")+rule.upstreamPath(id), &websocket.DialOptions{
 		Subprotocols: []string{"ocpp1.6"},
 		HTTPHeader:   header,
 		HTTPClient:   &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
 	})
-	cancel()
+	return conn, err
+}
+
+// validateUpstream test-dials a rule's upstream and records/clears the error so
+// the UI reflects unreachable hosts.
+func validateUpstream(id string, rule ForwarderRule) {
+	conn, err := dialUpstream(id, rule)
 
 	// a charger may have connected meanwhile; its sidecar is authoritative
 	sidecarsMu.Lock()
@@ -170,9 +174,6 @@ func ForwarderRules() []ForwarderRule {
 	return forwarderRules
 }
 
-// StartForwarder is a no-op; hooks fire on every charger connection.
-func StartForwarder() {}
-
 // actionsRelayedToUpstream lists actions for which upstream is the authoritative
 // Central System: evcc's handler is bypassed and upstream's reply relayed back.
 var actionsRelayedToUpstream = map[string]bool{
@@ -193,10 +194,9 @@ func init() {
 
 // sidecar holds an upstream connection for a single charger.
 type sidecar struct {
-	chargerID   string
-	upstreamURL string
-	rule        ForwarderRule // rule used to dial; detects param changes
-	conn        *websocket.Conn
+	chargerID string
+	rule      ForwarderRule // rule used to dial; detects param changes
+	conn      *websocket.Conn
 
 	// message IDs of upstream-initiated Calls; the charger's reply is routed back to upstream
 	pendingUpstreamCallsMu sync.Mutex
@@ -226,7 +226,57 @@ var (
 	// on connect so BootNotification reaches upstream
 	pendingMu   sync.Mutex
 	pendingMsgs = make(map[string][][]byte)
+
+	// last BootNotification per connected charger, replayed to upstream when a
+	// sidecar (re)connects mid-session so upstream sees a boot before transactions
+	bootMu   sync.Mutex
+	lastBoot = make(map[string][]byte)
 )
+
+// reconnect backoff bounds; variables for testing
+var (
+	reconnectInitialDelay = 5 * time.Second
+	reconnectMaxDelay     = 5 * time.Minute
+)
+
+// runUpstreamSidecar dials a charger's upstream sidecar and re-dials with
+// exponential backoff for as long as the charger stays connected and the rule
+// remains in effect.
+func runUpstreamSidecar(id string, rule ForwarderRule) {
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(reconnectInitialDelay),
+		backoff.WithMaxInterval(reconnectMaxDelay),
+		backoff.WithMaxElapsedTime(0),
+	)
+
+	for {
+		if !dialUpstreamSidecar(id, rule) {
+			delay := bo.NextBackOff()
+			forwarderLog.DEBUG.Printf("forwarder: reconnecting upstream for %s in %v", id, delay)
+			time.Sleep(delay)
+			continue
+		}
+
+		bo.Reset()
+
+		if current, ok := resolveRule(id); !ok || current.UpstreamURL == "" || !current.sameConnection(rule) {
+			return
+		}
+
+		sidecarsMu.Lock()
+		connected := connectedChargers[id]
+		_, active := sidecars[id]
+		sidecarsMu.Unlock()
+
+		if !connected || active {
+			return
+		}
+
+		pendingMu.Lock()
+		pendingMsgs[id] = nil
+		pendingMu.Unlock()
+	}
+}
 
 // resolveRule returns the forwarding rule for chargerID, or the "*" fallback.
 func resolveRule(chargerID string) (ForwarderRule, bool) {
@@ -264,50 +314,22 @@ func onChargerConnect(ch ws.Channel) {
 	pendingMsgs[id] = nil
 	pendingMu.Unlock()
 
-	go dialUpstreamSidecar(id, rule)
+	go runUpstreamSidecar(id, rule)
 }
 
-func dialUpstreamSidecar(id string, rule ForwarderRule) {
-	upstreamBase := strings.TrimRight(rule.UpstreamURL, "/")
-	upstreamPath := rule.upstreamPath(id)
-
-	var header http.Header
-	if rule.Username != "" || rule.Password != "" {
-		header = authHeader(rule.Username, rule.Password)
-	}
-
-	tlsConfig := &tls.Config{InsecureSkipVerify: rule.Insecure}
-	if rule.CaCert != "" {
-		caCertPool := x509.NewCertPool()
-		if ok := caCertPool.AppendCertsFromPEM([]byte(rule.CaCert)); !ok {
-			forwarderLog.WARN.Printf("forwarder: failed to parse CA cert for %s; forwarding disabled", id)
-			recordForwarderError(id, "invalid CA certificate")
-			notifyUpdated()
-			drainPendingWithErrors(id, nil)
-			return
-		}
-		tlsConfig.RootCAs = caCertPool
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	conn, _, err := websocket.Dial(ctx, upstreamBase+upstreamPath, &websocket.DialOptions{
-		Subprotocols: []string{"ocpp1.6"},
-		HTTPHeader:   header,
-		HTTPClient:   &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}},
-	})
-	cancel()
+func dialUpstreamSidecar(id string, rule ForwarderRule) bool {
+	conn, err := dialUpstream(id, rule)
 	if err != nil {
-		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v; forwarding disabled", id, err)
+		forwarderLog.WARN.Printf("forwarder: dial upstream for %s: %v", id, err)
 		recordForwarderError(id, err.Error())
 		notifyUpdated()
 		drainPendingWithErrors(id, nil)
-		return
+		return false
 	}
 	conn.SetReadLimit(-1) // no limit; OCPP frames can be large
 
 	sc := &sidecar{
 		chargerID:            id,
-		upstreamURL:          upstreamBase,
 		rule:                 rule,
 		conn:                 conn,
 		pendingUpstreamCalls: make(map[string]struct{}),
@@ -317,11 +339,34 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 	// install sidecar and drain the pending buffer
 	sidecarsMu.Lock()
 	pendingMu.Lock()
+	old := sidecars[id]
 	sidecars[id] = sc
 	buffered := pendingMsgs[id]
 	delete(pendingMsgs, id)
 	pendingMu.Unlock()
 	sidecarsMu.Unlock()
+
+	// a concurrent dial may have installed a sidecar meanwhile; this one wins
+	if old != nil {
+		old.conn.CloseNow()
+	}
+
+	// replay the charger's BootNotification (with a fresh message id) when the
+	// buffer doesn't already carry one, i.e. the sidecar (re)connects mid-session;
+	// upstream's reply is discarded as evcc has long answered the charger
+	if !slices.ContainsFunc(buffered, func(frame []byte) bool {
+		msgType, _, action, err := parseOCPPFrame(frame)
+		return err == nil && msgType == ocppj.CALL && action == "BootNotification"
+	}) {
+		bootMu.Lock()
+		boot := lastBoot[id]
+		bootMu.Unlock()
+		if boot != nil {
+			if frame, err := withMessageID(boot, fmt.Sprintf("evcc-boot-%d", time.Now().UnixNano())); err == nil {
+				buffered = append([][]byte{frame}, buffered...)
+			}
+		}
+	}
 
 	// flush buffered Calls; register relay actions so upstream's reply routes back.
 	// CallResults/Errors are skipped: evcc already answered them.
@@ -336,12 +381,20 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 			sc.pendingChargerCalls[msgID] = struct{}{}
 			sc.pendingChargerCallsMu.Unlock()
 		}
-		if err := conn.Write(context.Background(), websocket.MessageText, frame); err != nil {
-			forwarderLog.ERROR.Printf("forwarder: write buffered frame to upstream for %s: %v", id, err)
+		writeCtx, writeCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		writeErr := conn.Write(writeCtx, websocket.MessageText, frame)
+		writeCancel()
+		if writeErr != nil {
+			forwarderLog.ERROR.Printf("forwarder: write buffered frame to upstream for %s: %v", id, writeErr)
 			conn.CloseNow()
-			recordForwarderError(id, err.Error())
+			sidecarsMu.Lock()
+			if sidecars[id] == sc {
+				delete(sidecars, id)
+			}
+			sidecarsMu.Unlock()
+			recordForwarderError(id, writeErr.Error())
 			notifyUpdated()
-			return
+			return false
 		}
 		flushed++
 	}
@@ -352,9 +405,11 @@ func dialUpstreamSidecar(id string, rule ForwarderRule) {
 
 	clearForwarderError(id)
 	notifyUpdated()
-	forwarderLog.INFO.Printf("forwarder: %s → %s", id, upstreamBase+upstreamPath)
+	forwarderLog.INFO.Printf("forwarder: %s → %s", id, strings.TrimRight(rule.UpstreamURL, "/")+rule.upstreamPath(id))
 
-	sc.readFromUpstream(rule.ReadOnly)
+	sc.readFromUpstream()
+
+	return true
 }
 
 // drainPendingWithErrors discards charger id's pending buffer, sending a CallError
@@ -365,7 +420,10 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 	delete(pendingMsgs, id)
 	pendingMu.Unlock()
 
-	cs := Instance()
+	cs, err := Instance()
+	if err != nil {
+		return
+	}
 
 	for _, frame := range buffered {
 		msgType, msgID, action, err := parseOCPPFrame(frame)
@@ -406,10 +464,13 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 func onChargerDisconnect(ch ws.Channel) {
 	id := ch.ID()
 
-	// discard pending buffer
+	// discard pending buffer and cached boot frame
 	pendingMu.Lock()
 	delete(pendingMsgs, id)
 	pendingMu.Unlock()
+	bootMu.Lock()
+	delete(lastBoot, id)
+	bootMu.Unlock()
 
 	sidecarsMu.Lock()
 	delete(connectedChargers, id)
@@ -440,6 +501,13 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 	msgType, msgID, action, err := parseOCPPFrame(data)
 	if err != nil {
 		return false
+	}
+
+	// remember the charger's boot frame for replay on sidecar (re)connect
+	if msgType == ocppj.CALL && action == "BootNotification" {
+		bootMu.Lock()
+		lastBoot[id] = slices.Clone(data)
+		bootMu.Unlock()
 	}
 
 	sidecarsMu.Lock()
@@ -509,7 +577,7 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 // readFromUpstream relays frames from upstream: Calls are injected into the
 // charger (reply routed back), responses to bypassed charger Calls are relayed
 // to the charger, others discarded. Calls are rejected in read-only mode.
-func (sc *sidecar) readFromUpstream(readOnly bool) {
+func (sc *sidecar) readFromUpstream() {
 	defer func() {
 		sidecarsMu.Lock()
 		if sidecars[sc.chargerID] == sc {
@@ -521,6 +589,12 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 		sc.conn.CloseNow()
 		notifyUpdated()
 	}()
+
+	cs, err := Instance()
+	if err != nil {
+		forwarderLog.ERROR.Printf("forwarder: central system unavailable for %s: %v", sc.chargerID, err)
+		return
+	}
 
 	for {
 		_, msg, err := sc.conn.Read(context.Background())
@@ -544,7 +618,8 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 
 		switch msgType {
 		case ocppj.CALL:
-			if readOnly {
+			// resolve the current rule so a runtime ReadOnly toggle applies live
+			if rule, ok := resolveRule(sc.chargerID); ok && rule.ReadOnly {
 				forwarderLog.DEBUG.Printf("forwarder: blocking upstream call %s in read-only session %s", msgID, sc.chargerID)
 				errFrame, _ := (&ocppj.CallError{
 					MessageTypeId:    ocppj.CALL_ERROR,
@@ -579,7 +654,7 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 			sc.pendingUpstreamCalls[msgID] = struct{}{}
 			sc.pendingUpstreamCallsMu.Unlock()
 
-			if err := Instance().Write(sc.chargerID, msg); err != nil {
+			if err := cs.Write(sc.chargerID, msg); err != nil {
 				forwarderLog.ERROR.Printf("forwarder: inject upstream call into charger %s: %v", sc.chargerID, err)
 			}
 
@@ -594,7 +669,7 @@ func (sc *sidecar) readFromUpstream(readOnly bool) {
 
 			if isChargerCall {
 				// relay to charger; its handler was bypassed and it awaits this reply
-				if err := Instance().Write(sc.chargerID, msg); err != nil {
+				if err := cs.Write(sc.chargerID, msg); err != nil {
 					forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
 				}
 				continue
@@ -725,6 +800,23 @@ func extractMeterValueSampleInterval(msg []byte) (time.Duration, bool) {
 		return 0, false
 	}
 	return time.Duration(secs) * time.Second, true
+}
+
+// withMessageID returns a copy of a raw OCPP frame with its message id replaced.
+func withMessageID(frame []byte, msgID string) ([]byte, error) {
+	var parts []json.RawMessage
+	if err := json.Unmarshal(frame, &parts); err != nil {
+		return nil, err
+	}
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("invalid OCPP frame")
+	}
+	id, err := json.Marshal(msgID)
+	if err != nil {
+		return nil, err
+	}
+	parts[1] = id
+	return json.Marshal(parts)
 }
 
 // parseOCPPFrame extracts the message type, id and (for Calls) action from a raw frame.

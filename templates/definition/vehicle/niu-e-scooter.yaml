@@ -5,7 +5,7 @@ products:
       generic: E-Scooter
 group: scooter
 params:
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: title
   - name: icon
     default: scooter

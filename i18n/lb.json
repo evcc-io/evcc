@@ -518,7 +518,7 @@
       "usage": {
         "aux": "Intelligente Verbraucher",
         "battery": "Batterie",
-        "charge": "Verbraucher / Luedgerät",
+        "charge": "Luedgerät",
         "grid": "Réseau",
         "label": "Benotzung",
         "pv": "Productioun"

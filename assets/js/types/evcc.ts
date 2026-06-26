@@ -270,6 +270,12 @@ export interface ConfigLoadpoint {
     };
     estimate: boolean;
   };
+  ui: LoadpointUi;
+}
+
+export interface LoadpointUi {
+  minTemp: number;
+  maxTemp: number;
 }
 
 export enum SMART_COST_TYPE {
@@ -281,6 +287,11 @@ export enum SMART_COST_TYPE {
 export enum LENGTH_UNIT {
   KM = "km",
   MILES = "mi",
+}
+
+export enum TIME_FORMAT {
+  H12 = "12",
+  H24 = "24",
 }
 
 export interface Loadpoint {
@@ -361,6 +372,7 @@ export interface Loadpoint {
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
   batteryBoostLimit: number;
+  ui?: LoadpointUi;
 }
 
 export interface UiLoadpoint extends Loadpoint {

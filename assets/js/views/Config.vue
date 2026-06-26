@@ -1097,6 +1097,17 @@ export default defineComponent({
 				}
 			}
 
+			// Converted: move ext meter to consumers (history is reconciled on restart)
+			if (result.action === "converted") {
+				const name = this.meters.find((m) => m.id === result.id)?.name;
+				if (name) {
+					const ext = (this.site.ext || []).filter((n) => n !== name);
+					const consumers = [...(this.site.consumers || []), name];
+					await api.put("/config/site", { ext, consumers });
+					await this.loadSite();
+				}
+			}
+
 			// Removed: reload site config
 			if (result.action === "removed") {
 				await this.loadSite();

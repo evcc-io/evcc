@@ -100,8 +100,10 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		externalPower: externalPower,
 	}
 
-	if usage == "grid" {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+	implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+
+	if usage != "pv" {
+		implement.Has(m, implement.MeterReturnEnergy(m.returnEnergy))
 	}
 
 	if usage == "pv" {
@@ -187,12 +189,20 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
+				})
+
+				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(0))
 				})
 
 			case api.BatteryHold:
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
 				eg.Go(func() error {
@@ -210,6 +220,19 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+				})
+
+			case api.BatteryHoldCharge:
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 			default:
@@ -293,23 +316,24 @@ func (m *RCT) totalEnergy() (float64, error) {
 		return (a + b) / 1000, err
 
 	case "battery":
-		var eg errgroup.Group
-		var in, out float64
+		res, err := m.queryFloat(rct.TotalEnergyBattOutWh)
+		return res / 1000, err
 
-		eg.Go(func() error {
-			var err error
-			in, err = m.queryFloat(rct.TotalEnergyBattInWh)
-			return err
-		})
+	default:
+		return 0, fmt.Errorf("invalid usage: %s", m.usage)
+	}
+}
 
-		eg.Go(func() error {
-			var err error
-			out, err = m.queryFloat(rct.TotalEnergyBattOutWh)
-			return err
-		})
+// returnEnergy implements the api.MeterReturnEnergy interface
+func (m *RCT) returnEnergy() (float64, error) {
+	switch m.usage {
+	case "grid":
+		res, err := m.queryFloat(rct.TotalEnergyGridFeedInWh)
+		return -res / 1000, err
 
-		err := eg.Wait()
-		return (in - out) / 1000, err
+	case "battery":
+		res, err := m.queryFloat(rct.TotalEnergyBattInWh)
+		return res / 1000, err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
