@@ -2,161 +2,204 @@ package porsche
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
-// Provider is an api.Vehicle implementation for Porsche PHEV cars
+// Provider implements the evcc vehicle interfaces on top of the PPA API.
 type Provider struct {
-	statusG    func() (StatusResponse, error)
-	emobilityG func() (EmobilityResponse, error)
-	wakeup     func() error
+	api     *API
+	mu      sync.Mutex
+	vin     string
+	statusG func() (StatusResponse, error)
 }
 
-// NewProvider creates a vehicle api provider
-func NewProvider(log *util.Logger, connect *API, emobility *EmobilityAPI, vin, carModel string, cache time.Duration) *Provider {
-	impl := &Provider{
-		statusG: util.Cached(func() (StatusResponse, error) {
-			return connect.Status(vin)
-		}, cache),
+// NewProvider creates a Porsche Connect vehicle data provider. If vin is empty
+// it is resolved lazily from the account's vehicle list on first use (the first
+// vehicle is used), so the user does not have to enter it manually.
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+	v := &Provider{
+		api: api,
+		vin: vin,
+	}
+	v.statusG = util.Cached(v.status, cache)
+	return v
+}
 
-		emobilityG: util.Cached(func() (EmobilityResponse, error) {
-			if carModel != "" {
-				return emobility.Status(vin, carModel)
-			}
-			return EmobilityResponse{}, api.ErrNotAvailable
-		}, cache),
+func (v *Provider) status() (StatusResponse, error) {
+	vin, err := v.resolveVIN()
+	if err != nil {
+		return StatusResponse{}, err
+	}
+	return v.api.Status(vin)
+}
 
-		wakeup: func() error {
-			return connect.WakeUp(vin)
-		},
+// resolveVIN returns the configured VIN. If none was configured it auto-detects
+// the vehicle, but only when the account holds exactly one - with multiple
+// vehicles the VIN is ambiguous, so the user must set it explicitly (the error
+// lists the available VINs). The result is cached for subsequent calls.
+func (v *Provider) resolveVIN() (string, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if v.vin != "" {
+		return v.vin, nil
 	}
 
-	return impl
+	vehicles, err := v.api.Vehicles()
+	if err != nil {
+		return "", err
+	}
+
+	switch len(vehicles) {
+	case 0:
+		return "", errors.New("no vehicles found on Porsche account")
+	case 1:
+		v.vin = vehicles[0].VIN
+		return v.vin, nil
+	default:
+		vins := make([]string, len(vehicles))
+		for i, veh := range vehicles {
+			vins[i] = veh.VIN
+		}
+		return "", fmt.Errorf("multiple vehicles found, set vin to one of: %s", strings.Join(vins, ", "))
+	}
 }
 
 var _ api.Battery = (*Provider)(nil)
 
-// Soc implements the api.Vehicle interface
+// Soc implements the api.Battery interface (high-voltage battery level).
 func (v *Provider) Soc() (float64, error) {
-	res3, err := v.emobilityG()
-	if err == nil && res3.BatteryChargeStatus != nil {
-		return float64(res3.BatteryChargeStatus.StateOfChargeInPercentage), nil
+	res, err := v.statusG()
+	if err != nil {
+		return 0, err
 	}
 
-	res2, err := v.statusG()
-	if err == nil {
-		return res2.BatteryLevel.Value, nil
+	var bl batteryLevel
+	if !res.decode("BATTERY_LEVEL", &bl) {
+		return 0, api.ErrNotAvailable
 	}
-
-	return 0, err
-}
-
-var _ api.VehicleRange = (*Provider)(nil)
-
-// Range implements the api.VehicleRange interface
-func (v *Provider) Range() (int64, error) {
-	res3, err := v.emobilityG()
-	if err == nil && res3.BatteryChargeStatus != nil {
-		return res3.BatteryChargeStatus.RemainingERange.ValueInKilometers, nil
-	}
-
-	res2, err := v.statusG()
-	if err == nil {
-		return int64(res2.RemainingRanges.ElectricalRange.Distance.Value), nil
-	}
-
-	return 0, err
-}
-
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res2, err := v.emobilityG()
-	if err == nil {
-		if res2.BatteryChargeStatus == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		return time.Now().Add(time.Duration(res2.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
-	}
-
-	return time.Time{}, err
+	return bl.Percent, nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
 
-// Status implements the api.ChargeState interface
+// Status implements the api.ChargeState interface.
+//
+// The PPA API has no explicit "plugged" flag; we derive the EVSE status from
+// CHARGING_SUMMARY.status and the live charging power. Observed status values:
+// "NOT_PLUGGED" (disconnected), "CHARGING_COMPLETED" (plugged, done), "CHARGING"
+// (charging). We treat any "not plugged"-style status as disconnected and any
+// remaining plugged state (completed/paused/error) as connected.
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	res2, err := v.emobilityG()
-	if err == nil {
-		if res2.BatteryChargeStatus == nil {
-			return api.StatusNone, api.ErrNotAvailable
-		}
-
-		switch res2.BatteryChargeStatus.PlugState {
-		case "DISCONNECTED":
-			return api.StatusA, nil
-		case "CONNECTED":
-			// ignore if the car is connected to a DC charging station
-			if res2.BatteryChargeStatus.ChargingInDCMode {
-				return api.StatusA, nil
-			}
-			switch res2.BatteryChargeStatus.ChargingState {
-			case "OFF", "COMPLETED":
-				return api.StatusB, nil
-			case "ON", "CHARGING":
-				return api.StatusC, nil
-			default:
-				return api.StatusNone, errors.New("emobility - invalid status: " + res2.BatteryChargeStatus.ChargingState)
-			}
-		}
+	res, err := v.statusG()
+	if err != nil {
+		return api.StatusNone, err
 	}
 
-	return api.StatusNone, err
+	var rate chargingRate
+	res.decode("CHARGING_RATE", &rate)
+
+	var summary chargingSummary
+	if !res.decode("CHARGING_SUMMARY", &summary) {
+		return api.StatusNone, api.ErrNotAvailable
+	}
+
+	status := strings.ToUpper(summary.Status)
+
+	switch {
+	case status == "CHARGING" || rate.ChargingPower > 0:
+		return api.StatusC, nil
+	case strings.Contains(status, "NOT_PLUGGED"),
+		strings.Contains(status, "UNPLUGGED"),
+		strings.Contains(status, "DISCONNECTED"):
+		return api.StatusA, nil
+	default:
+		// plugged but not charging (e.g. CHARGING_COMPLETED, NOT_CHARGING, ERROR)
+		return api.StatusB, nil
+	}
 }
 
-var _ api.VehicleClimater = (*Provider)(nil)
+var _ api.VehicleRange = (*Provider)(nil)
 
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (bool, error) {
-	res2, err := v.emobilityG()
-	if err == nil {
-		if res2.BatteryChargeStatus == nil {
-			return false, api.ErrNotAvailable
-		}
-
-		switch res2.DirectClimatisation.ClimatisationState {
-		case "OFF":
-			return false, nil
-		case "ON":
-			return true, nil
-		default:
-			return false, errors.New("emobility - unknown climate state: " + res2.DirectClimatisation.ClimatisationState)
-		}
+// Range implements the api.VehicleRange interface (electric range).
+func (v *Provider) Range() (int64, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return 0, err
 	}
 
-	return false, err
+	var r rangeValue
+	if !res.decode("E_RANGE", &r) {
+		return 0, api.ErrNotAvailable
+	}
+	return int64(r.Kilometers), nil
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
-// Odometer implements the api.VehicleOdometer interface
+// Odometer implements the api.VehicleOdometer interface.
 func (v *Provider) Odometer() (float64, error) {
-	res2, err := v.statusG()
-	if err == nil {
-		return res2.Mileage.Value, nil
+	res, err := v.statusG()
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	var m rangeValue
+	if !res.decode("MILEAGE", &m) {
+		return 0, api.ErrNotAvailable
+	}
+	return m.Kilometers, nil
 }
 
-var _ api.Resurrector = (*Provider)(nil)
+var _ api.VehicleClimater = (*Provider)(nil)
 
-// WakeUp implements the api.Resurrector interface
-func (v *Provider) WakeUp() error {
-	return v.wakeup()
+// Climater implements the api.VehicleClimater interface.
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return false, err
+	}
+
+	var c climatizerState
+	if !res.decode("CLIMATIZER_STATE", &c) {
+		return false, api.ErrNotAvailable
+	}
+	return c.IsOn, nil
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface.
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	var g gpsLocation
+	if !res.decode("GPS_LOCATION", &g) {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	lat, lng, ok := strings.Cut(g.Location, ",")
+	if !ok {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	latF, err := strconv.ParseFloat(strings.TrimSpace(lat), 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	lngF, err := strconv.ParseFloat(strings.TrimSpace(lng), 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	return latF, lngF, nil
 }

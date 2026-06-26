@@ -15,6 +15,18 @@ var instance *Handler
 type AuthProvider struct {
 	ID            string `json:"id"`
 	Authenticated bool   `json:"authenticated"`
+	Interactive   bool   `json:"interactive,omitempty"` // credential form instead of redirect/device flow
+}
+
+// Challenge returns the initial interactive-login challenge for the provider.
+func Challenge(id string) (*api.AuthChallenge, error) {
+	return instance.challenge(id)
+}
+
+// Submit processes interactive-login field values for the provider and returns
+// the next challenge, or done=true when authentication succeeded.
+func Submit(id string, values map[string]string) (challenge *api.AuthChallenge, done bool, err error) {
+	return instance.submit(id, values)
 }
 
 func init() {

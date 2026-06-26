@@ -7,10 +7,18 @@
     "authorizationSuccessful": "Authorization Successful",
     "buttonConnect": "Connect to {provider}",
     "buttonDisconnect": "Disconnect",
+    "captchaHint": "Enter the characters shown in the image below.",
     "confirmLogout": "Are you sure you want to disconnect {title}?",
     "connect": "connect",
     "disconnect": "disconnect",
+    "field": {
+      "captcha": "Captcha",
+      "email": "Email",
+      "password": "Password"
+    },
+    "interactiveSubmit": "Continue",
     "loggedOut": "Successfully logged out",
+    "loginFailed": "Login failed. Please check your details and try again.",
     "logoutFailed": "Failed to logout",
     "modalDescriptionLogin": "Complete the authorization process to establish connection with {provider}.",
     "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
