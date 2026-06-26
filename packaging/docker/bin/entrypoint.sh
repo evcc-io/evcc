@@ -79,12 +79,64 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 		exec env EVCC_DATABASE_DSN="${DB_PATH}" evcc
 	fi
 else
+	PUID="${PUID:-1000}"
+	PGID="${PGID:-1000}"
+	DATA_DIR="/root/.evcc" # documented mount path, kept for compatibility
+	RUNAS=""
+
+	# When started as root, repair ownership of the database directory and drop
+	# privileges so the long-lived evcc process does not run as root. The evcc
+	# user's home is set to /root so ~/.evcc/evcc.db keeps resolving to the
+	# existing mount (su-exec sets HOME from the passwd entry, not the env).
+	if [ "$(id -u)" = "0" ]; then
+		# reuse the group that already owns PGID (e.g. gid 100 = users on Synology),
+		# otherwise addgroup -g fails and evcc would silently get a different gid
+		grp=$(getent group "$PGID" | cut -d: -f1)
+		[ -z "$grp" ] && {
+			grp=evcc
+			addgroup -g "$PGID" evcc
+		}
+		getent passwd evcc > /dev/null 2>&1 || adduser -D -H -h /root -u "$PUID" -G "$grp" evcc 2> /dev/null || adduser -D -H -h /root -G "$grp" evcc
+
+		mkdir -p "$DATA_DIR"
+		chown -R "$PUID:$PGID" "$DATA_DIR"
+		chmod -R u+rwX "$DATA_DIR"
+		# fix a custom database directory if EVCC_DATABASE_DSN points elsewhere
+		[ -n "$EVCC_DATABASE_DSN" ] && chown -R "$PUID:$PGID" "$(dirname "$EVCC_DATABASE_DSN")" 2> /dev/null || true
+
+		# join the group(s) owning mounted serial devices (Modbus RTU, P1/SML readers);
+		# --device keeps the host owner (often root:dialout), so non-root needs the group
+		DEVICE_GIDS="$EVCC_DEVICE_GIDS"
+		for dev in /dev/ttyUSB* /dev/ttyACM* /dev/ttyAMA* /dev/serial/by-id/*; do
+			[ -e "$dev" ] || continue
+			DEVICE_GIDS="$DEVICE_GIDS $(stat -c '%g' "$dev")"
+		done
+		for gid in $DEVICE_GIDS; do
+			[ "$gid" = "$PGID" ] && continue
+			grp=$(getent group "$gid" | cut -d: -f1)
+			if [ -z "$grp" ]; then
+				grp="evccdev$gid"
+				addgroup -g "$gid" "$grp" 2> /dev/null || true
+			fi
+			addgroup evcc "$grp" 2> /dev/null || true
+			echo "Serial: granting access to device group ${grp} (gid ${gid})"
+		done
+
+		# no explicit gid: su-exec uid:gid wipes supplementary groups (setgroups), the
+		# uid-only form keeps them via getgrouplist; primary gid stays PGID from passwd
+		RUNAS="su-exec $PUID"
+	else
+		# started via docker's own `user:`, already non-root: keep HOME on /root so
+		# ~/.evcc/evcc.db still resolves to the mount (no passwd entry sets it here)
+		RUNAS="env HOME=/root"
+	fi
+
 	if [ "$1" = 'evcc' ]; then
 		shift
-		exec evcc "$@"
+		exec $RUNAS evcc "$@"
 	elif expr "$1" : '-.*' > /dev/null; then
-		exec evcc "$@"
+		exec $RUNAS evcc "$@"
 	else
-		exec "$@"
+		exec $RUNAS "$@"
 	fi
 fi
