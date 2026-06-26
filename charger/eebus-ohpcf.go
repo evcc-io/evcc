@@ -335,6 +335,29 @@ func (c *EEBusOHPCF) apply() error {
 	return nil
 }
 
+var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
+
+// GetMinMaxPower implements the api.PowerLimiter interface, reporting the
+// announced optional consumption (estimate..max) or ErrNotAvailable if none.
+func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
+	entity, ok := c.connectedCompressor()
+	if !ok {
+		return 0, 0, errNotConnected
+	}
+
+	estimate, err := c.cem.OHPCF.RequestedPowerEstimate(entity)
+	if err != nil {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	maxPower, err := c.cem.OHPCF.RequestedPowerMax(entity)
+	if err != nil {
+		maxPower = estimate
+	}
+
+	return estimate, maxPower, nil
+}
+
 var _ api.Meter = (*EEBusOHPCF)(nil)
 
 // CurrentPower implements the api.Meter interface and reports the heat pump's
