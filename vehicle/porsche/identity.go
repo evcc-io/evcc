@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -23,8 +21,8 @@ import (
 const subject = "porsche"
 
 var (
-	mu         sync.Mutex
-	identities = make(map[string]*Identity)
+	mu       sync.Mutex
+	identity *Identity
 )
 
 // Identity is the Porsche Connect auth provider. It implements both
@@ -55,8 +53,8 @@ func NewIdentity(ctx context.Context, log *util.Logger, seed *oauth2.Token) (*Id
 	mu.Lock()
 	defer mu.Unlock()
 
-	if o := identities[subject]; o != nil {
-		return o, nil
+	if identity != nil {
+		return identity, nil
 	}
 
 	// inject X-Client-ID on all token-endpoint calls (exchange + refresh)
@@ -93,7 +91,7 @@ func NewIdentity(ctx context.Context, log *util.Logger, seed *oauth2.Token) (*Id
 	o.onlineC = onlineC
 	o.setOnline(o.token.Valid())
 
-	identities[subject] = o
+	identity = o
 	return o, nil
 }
 
@@ -108,8 +106,13 @@ func (o *Identity) Token() (*oauth2.Token, error) {
 	if o.token.Valid() {
 		return o.token, nil
 	}
+	if o.token.RefreshToken == "" {
+		return nil, api.LoginRequiredError(subject)
+	}
 
-	token, err := o.refresh(o.token.RefreshToken)
+	// oauth2 handles the refresh via o.ctx's client, which injects the required
+	// X-Client-ID header (same path as the initial code exchange)
+	token, err := o.oc.TokenSource(o.ctx, &oauth2.Token{RefreshToken: o.token.RefreshToken}).Token()
 	if err != nil {
 		return nil, err
 	}
@@ -200,45 +203,6 @@ func (o *Identity) setOnline(online bool) {
 	case o.onlineC <- online:
 	default:
 	}
-}
-
-// refresh exchanges the refresh token for a new access token.
-func (o *Identity) refresh(refreshToken string) (*oauth2.Token, error) {
-	if refreshToken == "" {
-		return nil, api.LoginRequiredError(subject)
-	}
-
-	data := url.Values{
-		"client_id":     {ClientID},
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {refreshToken},
-	}
-
-	req, err := request.New(http.MethodPost, OAuthURI+"/oauth/token", strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": request.FormContent,
-		"Accept":       request.JSONContent,
-		"X-Client-ID":  XClientID,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var res struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int    `json:"expires_in"`
-		TokenType    string `json:"token_type"`
-	}
-	if err := request.NewHelper(o.log).DoJSON(req, &res); err != nil {
-		return nil, err
-	}
-
-	return &oauth2.Token{
-		AccessToken:  res.AccessToken,
-		RefreshToken: res.RefreshToken,
-		TokenType:    res.TokenType,
-		Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
-	}, nil
 }
 
 // headerRoundTripper adds the X-Client-ID header required by the Porsche token

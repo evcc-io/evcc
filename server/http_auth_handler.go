@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/evcc-io/evcc/api"
@@ -16,13 +17,14 @@ type authChallengeResponse struct {
 }
 
 // authChallengeHandler returns the initial credential form for an interactive
-// auth provider (e.g. email + password).
+// auth provider (e.g. email + password). The detailed error is logged by
+// providerauth; the client only sees a stable message.
 func authChallengeHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	challenge, err := providerauth.Challenge(id)
 	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
+		jsonError(w, http.StatusBadRequest, errors.New("interactive login unavailable"))
 		return
 	}
 
@@ -30,19 +32,21 @@ func authChallengeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // authSubmitHandler processes user-provided values for an interactive auth
-// provider, returning the next challenge (e.g. a captcha) or completion.
+// provider, returning the next challenge (e.g. a captcha) or completion. The
+// detailed error is logged by providerauth; the client only sees a stable
+// message so backend internals are not exposed.
 func authSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
 	var values map[string]string
 	if err := jsonDecoder(r.Body).Decode(&values); err != nil {
-		jsonError(w, http.StatusBadRequest, err)
+		jsonError(w, http.StatusBadRequest, errors.New("invalid request"))
 		return
 	}
 
 	challenge, done, err := providerauth.Submit(id, values)
 	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
+		jsonError(w, http.StatusBadRequest, errors.New("login failed - please check your details and try again"))
 		return
 	}
 

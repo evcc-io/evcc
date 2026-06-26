@@ -64,11 +64,15 @@ func (v *Provider) resolveVIN() (string, error) {
 		v.vin = vehicles[0].VIN
 		return v.vin, nil
 	default:
-		vins := make([]string, len(vehicles))
+		list := make([]string, len(vehicles))
 		for i, veh := range vehicles {
-			vins[i] = veh.VIN
+			if veh.ModelName != "" {
+				list[i] = fmt.Sprintf("%s (%s)", veh.VIN, veh.ModelName)
+			} else {
+				list[i] = veh.VIN
+			}
 		}
-		return "", fmt.Errorf("multiple vehicles found, set vin to one of: %s", strings.Join(vins, ", "))
+		return "", fmt.Errorf("multiple vehicles found, set vin to one of: %s", strings.Join(list, ", "))
 	}
 }
 
