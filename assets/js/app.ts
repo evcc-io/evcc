@@ -79,15 +79,16 @@ applyUrlSettings();
 
 const i18n = setupI18n();
 const head = createHead();
+const router = setupRouter(i18n.global);
 
 app.use(i18n);
-app.use(setupRouter(i18n.global));
+app.use(router);
 app.use(head);
 app.mixin(VueHeadMixin);
 window.app = app.mount("#app");
 
 watchThemeChanges();
-appDetection();
+appDetection(router);
 
 if (window.evcc.customCss === "true") {
   const link = document.createElement("link");
