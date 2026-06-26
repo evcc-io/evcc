@@ -60,11 +60,12 @@ export default defineComponent({
 				([, value]) => value.id === this.authProviderId
 			);
 			if (!entry) return null;
-			const [title, { id, authenticated }] = entry;
+			const [title, { id, authenticated, interactive }] = entry;
 			return {
 				id,
 				title,
 				authenticated,
+				interactive,
 			};
 		},
 	},

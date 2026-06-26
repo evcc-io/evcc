@@ -239,6 +239,32 @@ type AuthProvider interface {
 	DisplayName() string
 }
 
+// AuthField describes a single input of an interactive authentication step.
+type AuthField struct {
+	Name string `json:"name"` // stable identifier, e.g. "email", "password", "captcha"
+	Type string `json:"type"` // input type, e.g. "email", "password", "text"
+}
+
+// AuthChallenge is one step of an interactive (credential-based) login: a set
+// of fields to collect from the user, optionally accompanied by an image such
+// as a captcha. A nil challenge signals that authentication is complete.
+type AuthChallenge struct {
+	Image  string      `json:"image,omitempty"` // optional data URI (e.g. captcha)
+	Fields []AuthField `json:"fields"`
+}
+
+// InteractiveAuthProvider is implemented by AuthProviders that authenticate via
+// a server-side credential form (with optional follow-up challenges like a
+// captcha) instead of an OAuth redirect or device flow.
+type InteractiveAuthProvider interface {
+	AuthProvider
+	// Challenge returns the initial fields to collect (e.g. email and password).
+	Challenge() *AuthChallenge
+	// Submit processes the user-provided values and returns the next challenge
+	// (e.g. a captcha), or nil when authentication succeeded.
+	Submit(values map[string]string) (*AuthChallenge, error)
+}
+
 // IconDescriber optionally provides an icon
 type IconDescriber interface {
 	Icon() string

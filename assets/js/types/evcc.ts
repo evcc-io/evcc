@@ -29,7 +29,20 @@ declare global {
 }
 
 /** Status of configured vehicle authentication providers, keyed by provider name. */
-export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
+export type AuthProviders = Record<
+  string,
+  { id: string; authenticated: boolean; interactive?: boolean }
+>;
+
+export interface AuthField {
+  name: string;
+  type: string;
+}
+
+export interface AuthChallenge {
+  image?: string;
+  fields: AuthField[];
+}
 
 export type DeviceColors = Record<string, string>;
 /** Color assigned to a device for consistent UI display. */
