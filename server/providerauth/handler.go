@@ -60,9 +60,11 @@ func (a *Handler) run(paramC chan<- util.Param) {
 
 		res := make(map[string]*AuthProvider)
 		for id, provider := range a.providers {
+			_, interactive := provider.(api.InteractiveAuthProvider)
 			res[provider.DisplayName()] = &AuthProvider{
 				ID:            id,
 				Authenticated: provider.Authenticated(),
+				Interactive:   interactive,
 			}
 		}
 
@@ -84,6 +86,48 @@ func (a *Handler) register(name string, handler api.AuthProvider) (chan<- string
 	a.providers[name] = handler
 
 	return a.updateC, nil
+}
+
+// interactiveProvider looks up a registered interactive auth provider by id.
+func (a *Handler) interactiveProvider(id string) (api.InteractiveAuthProvider, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	provider, ok := a.providers[id]
+	if !ok {
+		return nil, fmt.Errorf("invalid id: %s", id)
+	}
+
+	ip, ok := provider.(api.InteractiveAuthProvider)
+	if !ok {
+		return nil, fmt.Errorf("provider does not support interactive login: %s", id)
+	}
+
+	return ip, nil
+}
+
+func (a *Handler) challenge(id string) (*api.AuthChallenge, error) {
+	ip, err := a.interactiveProvider(id)
+	if err != nil {
+		return nil, err
+	}
+	return ip.Challenge(), nil
+}
+
+func (a *Handler) submit(id string, values map[string]string) (*api.AuthChallenge, bool, error) {
+	ip, err := a.interactiveProvider(id)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// not holding a.mu here: Submit performs network I/O and signals auth status
+	// via the provider's own online channel (which feeds back into updateC)
+	challenge, err := ip.Submit(values)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return challenge, challenge == nil, nil
 }
 
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {

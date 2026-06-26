@@ -1,4 +1,34 @@
-import { baseApi } from "@/api";
+import api, { baseApi } from "@/api";
+import type { AuthChallenge } from "@/types/evcc";
+
+// Interactive (credential-based) auth: fetch the initial form, then submit
+// values step by step (a step may return a follow-up challenge like a captcha).
+
+export const fetchAuthChallenge = async (providerId: string): Promise<AuthChallenge> => {
+  const { data } = await api.get(`config/auth/${encodeURIComponent(providerId)}/challenge`);
+  return data.challenge;
+};
+
+export type AuthSubmitResult = {
+  authenticated: boolean;
+  challenge?: AuthChallenge;
+  error?: string;
+};
+
+export const submitAuthChallenge = async (
+  providerId: string,
+  values: Record<string, string>
+): Promise<AuthSubmitResult> => {
+  const { status, data } = await api.post(
+    `config/auth/${encodeURIComponent(providerId)}/submit`,
+    values,
+    { validateStatus: (code) => [200, 400].includes(code) }
+  );
+  if (status === 400) {
+    return { authenticated: false, error: data?.error };
+  }
+  return { authenticated: !!data.authenticated, challenge: data.challenge };
+};
 
 export type AuthState = {
   ok: boolean;
