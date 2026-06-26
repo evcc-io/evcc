@@ -84,12 +84,23 @@ type dataPoint struct {
 	TimestampUtc  *time.Time `json:"timestampUtc"`
 }
 
-// point is a decoded data point: its value, the time it was recorded and the
-// delivery sequence of the dataset it last arrived in (higher Seq is newer).
+// point is a decoded data point: its unique GUID (Key), delivered field Name,
+// value, record time and dataset delivery sequence (higher Seq is newer).
 type point struct {
+	Key       string
+	Name      string
 	Value     string
 	Timestamp time.Time
 	Seq       uint64
+}
+
+// id is the point's deduplication and lookup identity: its unique GUID when
+// present, otherwise the (possibly non-unique) field name.
+func (p point) id() string {
+	if p.Key != "" {
+		return p.Key
+	}
+	return p.Name
 }
 
 // datasetFile is the JSON document contained in a dataset zip archive
@@ -135,18 +146,10 @@ const (
 // battery_level_HV.value as a trustworthy SoC reading
 const hvBatteryLevelValid = "VALID"
 
-// knownKeys lists data point GUIDs that are indexed by their key instead of the
-// generic, non-unique DataFieldName they are delivered with
-var knownKeys = map[string]struct{}{
-	KeyRangeID3: {},
-}
-
-// contentDatasets returns the datasets that actually carry content, with their
-// delivery time parsed into Timestamp and sorted from oldest to newest. The
+// contentDatasets returns the content datasets, sorted oldest to newest. The
 // portal emits "..._no_content_found.zip" placeholders while the vehicle is
-// asleep, which are skipped. An error is returned when a content dataset's
-// timestamp cannot be parsed.
-func contentDatasets(list []dataset) ([]dataset, error) {
+// asleep; those are skipped.
+func contentDatasets(list []dataset) []dataset {
 	content := make([]dataset, 0, len(list))
 	for _, d := range list {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
@@ -160,15 +163,12 @@ func contentDatasets(list []dataset) ([]dataset, error) {
 		return a.CreatedOn.Compare(b.CreatedOn)
 	})
 
-	return content, nil
+	return content
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into the dataset's VIN and a map of data points keyed by the dotted
-// data field name. On duplicate field names the entry with the newest timestamp
-// wins. The VIN is returned so the caller can drop datasets that do not belong
-// to the requested vehicle.
-func parseDataset(b []byte) (map[string]point, error) {
+// decodes it into its data points.
+func parseDataset(b []byte) ([]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -204,37 +204,42 @@ func parseDataset(b []byte) (map[string]point, error) {
 	return points(ds.Data), nil
 }
 
-// points indexes data points by field name (newest timestamp wins), and known
-// data points additionally by their unique key, as their name is not unique.
-func points(data []dataPoint) map[string]point {
-	res := make(map[string]point, len(data))
+// points decodes data points, keeping the newest entry per id (see point.id).
+func points(data []dataPoint) []point {
+	var res []point
 
-	set := func(name string, p point) {
-		if name == "" {
-			return
-		}
-		if cur, ok := res[name]; ok && cur.Timestamp.After(p.Timestamp) {
-			return
-		}
-		res[name] = p
-	}
-
-	for _, p := range data {
-		if p.Value == "" {
+	for _, dp := range data {
+		if dp.Value == "" {
 			continue
 		}
 
 		var ts time.Time
-		if p.TimestampUtc != nil {
-			ts = *p.TimestampUtc
+		if dp.TimestampUtc != nil {
+			ts = *dp.TimestampUtc
 		}
-		pt := point{Value: p.Value, Timestamp: ts}
+		p := point{Key: dp.Key, Name: dp.DataFieldName, Value: dp.Value, Timestamp: ts}
+		if p.id() == "" {
+			continue
+		}
 
-		set(p.DataFieldName, pt)
-		if _, ok := knownKeys[p.Key]; ok {
-			set(p.Key, pt)
+		if e := find(res, p.id()); e != nil {
+			// newest wins; on equal timestamps the later entry wins
+			if !e.Timestamp.After(p.Timestamp) {
+				*e = p
+			}
+			continue
 		}
+		res = append(res, p)
 	}
 
 	return res
+}
+
+// find returns the data point identified by id, matched by Key first and Name
+// second, or nil if none is present.
+func find(data []point, id string) *point {
+	if i := slices.IndexFunc(data, func(p point) bool { return p.Key == id || p.Name == id }); i >= 0 {
+		return &data[i]
+	}
+	return nil
 }

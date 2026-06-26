@@ -528,6 +528,39 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 	}
 }
 
+var criticalPluginSources = []string{"script"}
+
+func configHasCriticalPlugin(req configReq) bool {
+	if req.Yaml != "" {
+		// any, not map: global yaml configs (circuits) are a list
+		var m any
+		if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil {
+			return false // malformed yaml already rejected by decodeDeviceConfig
+		}
+		return valueHasCriticalSource(m)
+	}
+	return valueHasCriticalSource(req.Other)
+}
+
+func valueHasCriticalSource(v any) bool {
+	switch t := v.(type) {
+	case map[string]any:
+		for k, val := range t {
+			if strings.EqualFold(k, "source") {
+				if s, ok := val.(string); ok && slices.Contains(criticalPluginSources, strings.ToLower(strings.TrimSpace(s))) {
+					return true
+				}
+			}
+			if valueHasCriticalSource(val) {
+				return true
+			}
+		}
+	case []any:
+		return slices.ContainsFunc(t, valueHasCriticalSource)
+	}
+	return false
+}
+
 // decodeDeviceConfig extracts device configuration and yaml details
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
