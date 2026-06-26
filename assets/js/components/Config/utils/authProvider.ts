@@ -7,6 +7,7 @@ export type AuthState = {
   providerUrl: string | null;
   code: string | null;
   expiry: Date | null;
+  credentialsRequired: boolean;
 };
 
 export type ProviderLoginResponse = {
@@ -23,6 +24,7 @@ export const initialAuthState = (): AuthState => ({
   providerUrl: null,
   code: null,
   expiry: null,
+  credentialsRequired: false,
 });
 
 export const prepareAuthLogin = async (state: AuthState, providerId: string) => {
