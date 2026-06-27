@@ -75,10 +75,12 @@ func (t *Tunnel) run() {
 			bo.Reset()
 		}
 
-		wait := bo.NextBackOff()
+		var wait time.Duration
 		// rejected credentials will not self-heal; retry slowly
 		if errors.Is(err, errCredentialsRejected) {
 			wait = configRetryInterval
+		} else {
+			wait = bo.NextBackOff()
 		}
 
 		select {
