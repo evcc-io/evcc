@@ -39,11 +39,38 @@
     "legendTopAutostart": "Iniciar automaticamente",
     "legendTopName": "Carregamento de veículos com a bateria",
     "legendTopSubline": "quando a bateria da casa está acima de {soc}.",
+    "legendTopSublineAbove": "quando acima de {soc}",
+    "legendTopSublineDisabled": "é {soc}.",
+    "legendTopSublineDisabledState": "desativado",
     "modalTitle": "Bateria da Casa",
     "noBattery": "Não há baterias configuradas.",
     "usageTab": "Gestão da bateria"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Cor hexadecimal"
+  },
   "config": {
+    "adminPassword": {
+      "description": "O plugin de script executa um comando ao nível do sistema que é executado com as permissões do processo evcc. Introduza novamente a sua palavra-passe de administrador para continuar.",
+      "invalid": "Palavra-passe inválida. Por favor, tente novamente.",
+      "title": "Operação potencialmente perigosa"
+    },
+    "apiKey": {
+      "description": "Conceda acesso seguro a scripts e tarefas de automatização, como cópias de segurança programadas, sem partilhar a sua palavra-passe de administrador.",
+      "exampleLabel": "Experimenta: faz o download de uma cópia de segurança com o curl",
+      "generate": "Gerar chave API",
+      "generateConfirm": "Introduza a sua palavra-passe de administrador para gerar uma nova chave API.",
+      "keyLabel": "Chave API",
+      "regenerate": "Regenerar chave da API",
+      "regenerateConfirm": "Introduza a sua palavra-passe de administrador para regenerar a chave API.",
+      "regenerateLink": "Regenerar",
+      "regenerateWarning": "A regeneração invalidará a chave existente e qualquer automação que a utilize deixará de funcionar. Deseja continuar?",
+      "revealSuccess": "A sua nova chave API está pronta a utilizar.",
+      "revealTitle": "Chave API criada",
+      "shownOnce": "Esta chave é apresentada apenas uma vez. Guarde-a num local seguro. Não será possível recuperá-la posteriormente.",
+      "title": "Chave API"
+    },
     "aux": {
       "description": "Equipamento capaz de ajustar o seu consumo baseado no excedente disponível (como caldeiras inteligentes). O evcc assume que esse equipamento reduz o seu consumo automaticamente, se necessário.",
       "titleAdd": "Adicionar Equipamento com capacidade de auto-ajuste de consumos",
@@ -98,6 +125,11 @@
       "title": "Gestão de Cargas",
       "usableMeters": "Referências dos contadores utilizáveis"
     },
+    "consumer": {
+      "description": "Monitoriza os aparelhos mais pequenos e não controláveis (frigorífico, máquina de lavar roupa, ...). Proporciona-lhe uma melhor visão geral do consumo da sua casa.",
+      "titleAdd": "Adicionar contador de consumo",
+      "titleEdit": "Editar contador de consumo"
+    },
     "control": {
       "description": "Normalmente funciona com os valores padrão. Mude-os apenas se sabe o que está a fazer.",
       "descriptionInterval": "Ciclo de atualização em segundos. Define a frequência com que o evcc lê os dados do medidor e ajusta a cobrança. O padrão de 30 segundos é uma escolha segura. Dispositivos como veículos, wallboxes e inversores normalmente precisam de vários segundos para ajustar o seu comportamento. Se os seus componentes reagem rapidamente, pode usar valores mais baixos. Recomendamos fortemente não ir abaixo de 10 segundos. Se observar um comportamento de controlo irregular ou valores de potência instáveis, escolha um intervalo maior.",
@@ -133,8 +165,11 @@
       "currency": "Moeda",
       "current": "Corrente",
       "currentRange": "Corrente",
+      "curtailLimit": "Limite de injeção na rede",
+      "curtailable": "Sujeito a restrições",
       "curtailed": "Limitação da injeção na rede",
       "detected": "Detectado",
+      "dimLimit": "Limite de consumo",
       "dimmed": "Consumo limitado",
       "enabled": "Ativado",
       "energy": "Energia",
@@ -157,10 +192,13 @@
       "power": "Energia em tempo real",
       "powerRange": "Potência",
       "price": "Preço",
+      "productionLimited": "Produção limitada",
       "range": "Autonomia",
+      "returnEnergy": "Energia (inversa)",
       "singlePhase": "Monofásico",
       "soc": "Carga",
       "solarForecast": "Previsão solar",
+      "switchDevice": "Controlo de corrente",
       "temp": "Temperatura",
       "topic": "Topic",
       "url": "URL",
@@ -193,6 +231,8 @@
       "interfacesHelp": "Limitar as interfaces que o EEBus pode usar para evitar problemas de comunicação. Deixar em branco para usar todas as interfaces. Um entrada por linha.",
       "port": "Porta",
       "portHelp": "Porta a usar.",
+      "qr": "Código de emparelhamento",
+      "qrExplain": "Durante a instalação, procure outro dispositivo EEBus para emparelhar automaticamente, sem ter de introduzir manualmente o SKI.",
       "removeConfirm": "Toda a configuração EEBus será eliminada. Serão gerados novos certificados e identificadores na próxima inicialização. Tem a certeza?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Identificador permanente do dispositivo a ser usado dentro da rede EEBus.",
@@ -206,9 +246,9 @@
       "title": "Experimental"
     },
     "ext": {
-      "description": "Regista os valores de energia dos consumidores não controlados (por exemplo, frigorífico, máquina de lavar roupa, etc.) para fins estatísticos. Estes medidores também podem ser utilizados para a gestão de carga (por exemplo, subdistribuição).",
-      "titleAdd": "Adicionar contador de consumo",
-      "titleEdit": "Editar Contador de consumo"
+      "description": "Monitoriza os contadores que não são utilizados para fins de regulação nem são apresentados na interface do utilizador (subdistribuições, contadores alternativos da rede ou contadores solares, etc.). Os seus dados são registados e exportados tal como os de outros contadores.",
+      "titleAdd": "Adicionar contador adicional",
+      "titleEdit": "Editar contador adicional"
     },
     "form": {
       "danger": "Perigo",
@@ -231,6 +271,7 @@
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
       "customOption": "Dispositivo definido pelo utilizador",
       "delete": "Apagar",
+      "dismiss": "Ignorar",
       "docsLink": "Ver documentação.",
       "dragHandle": "Arrastar",
       "dragItem": "Arrastável: {title}",
@@ -343,6 +384,8 @@
       "estimateLabel": "Interpolar o nível de carga entre actualizações da API",
       "maxCurrentHelp": "Deve ser superior à Corrente mínima.",
       "maxCurrentLabel": "Corrente máxima",
+      "maxTempHelp": "Tem de ser superior à temperatura mínima.",
+      "maxTempLabel": "Temperatura máxima",
       "minCurrentHelp": "Defina apenas abaixo dos 6 A, se souber o que está a fazer.",
       "minCurrentLabel": "Corrente mínima",
       "noVehicles": "Nenhum veículo configurado.",
