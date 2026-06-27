@@ -51,6 +51,11 @@
     "hex": "Hex spalva"
   },
   "config": {
+    "adminPassword": {
+      "description": "Scenarijaus įskiepis vykdo sistemos lygio komandą, kuri veikia su evcc proceso leidimais. Norėdami tęsti, dar kartą įveskite administratoriaus slaptažodį.",
+      "invalid": "Neteisingas slaptažodis. Bandykite dar kartą.",
+      "title": "Galimai pavojingas veiksmas"
+    },
     "apiKey": {
       "description": "Suteikite saugią prieigą nebendrindami administratoriaus slaptažodžio scenarijams ir automatizavimo užduotims, pvz., suplanuotoms atsarginėms kopijoms.",
       "exampleLabel": "Išbandykite: atsisiųskite atsarginę kopiją naudodami curl",
@@ -122,7 +127,7 @@
     },
     "consumer": {
       "description": "Seka mažesnius, nevaldomus prietaisus (šaldytuvą, skalbimo mašiną ir kt.). Suteikia geresnį supratimą apie jūsų namų suvartojimą.",
-      "titleAdd": "Pridėkite Vartotojo Skaitiklį",
+      "titleAdd": "Pridėti Vartotojo Skaitiklį",
       "titleEdit": "Redaguoti Vartotojo Skaitiklį"
     },
     "control": {
@@ -1284,6 +1289,10 @@
         "grid": {
           "energy": "iš tinklo",
           "returnEnergy": "į tinklą"
+        },
+        "meter": {
+          "energy": "Energija iš tinklo",
+          "returnEnergy": "Energija (patiekta į tinklą)"
         }
       },
       "downloadCsv": "Parsisiųsti CSV failą",
