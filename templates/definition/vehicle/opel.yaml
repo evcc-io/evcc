@@ -7,7 +7,7 @@ requirements:
       Nach dem Anlegen erscheint in der Konfiguration eine Opel-Anmeldung.
       Melde dich dort mit deiner MyOpel-E-Mail und deinem Passwort an.
     en: |
-      After adding the vehicle a Opel login appears in the configuration.
+      After adding the vehicle an Opel login appears in the configuration.
       Sign in there with your MyOpel email and password.
 params:
   - preset: vehicle-common
