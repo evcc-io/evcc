@@ -2,6 +2,7 @@ package psa
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,17 +11,42 @@ import (
 
 // Provider is an api.Vehicle implementation for PSA cars
 type Provider struct {
+	mu      sync.Mutex
+	vid     string
+	vehicle func() (string, error)
 	statusG func() (Status, error)
 }
 
-// NewProvider creates a vehicle api provider
-func NewProvider(api *API, vid string, cache time.Duration) *Provider {
-	impl := &Provider{
-		statusG: util.Cached(func() (Status, error) {
-			return api.Status(vid)
-		}, cache),
+// NewProvider creates a vehicle api provider. The PSA vehicle id is resolved
+// lazily on first use (via the vehicle resolver), so the vehicle can be built
+// before the account is authenticated via the browser login.
+func NewProvider(api *API, vehicle func() (string, error), cache time.Duration) *Provider {
+	v := &Provider{
+		vehicle: vehicle,
 	}
-	return impl
+	v.statusG = util.Cached(func() (Status, error) {
+		vid, err := v.vehicleID()
+		if err != nil {
+			return Status{}, err
+		}
+		return api.Status(vid)
+	}, cache)
+	return v
+}
+
+// vehicleID resolves and caches the PSA vehicle id on first successful call.
+func (v *Provider) vehicleID() (string, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	if v.vid == "" {
+		vid, err := v.vehicle()
+		if err != nil {
+			return "", err
+		}
+		v.vid = vid
+	}
+	return v.vid, nil
 }
 
 var _ api.Battery = (*Provider)(nil)
