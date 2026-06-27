@@ -1,0 +1,84 @@
+# Used API docs for SunEnergyXT 500 Series: https://d1skj1m2vbh93t.cloudfront.net/Balcony+energy+storage/Hybrid+energy+storage+system+500+series/SunEnergyXT-500er-Serie-Lokale-API.pdf
+template: sunenergyxt-500
+products:
+  - brand: SunEnergyXT
+    description:
+      generic: SunEnergyXT 500
+  - brand: SunEnergyXT
+    description:
+      generic: SunEnergyXT 500 PRO
+requirements:
+  description:
+    en: |
+      The battery's local mode must be enabled in the manufacturer's app.
+      Furthermore, the device's IP address must be set to a fixed, permanent IP address in the router.
+      If the `grid` mode is used, an external meter (e.g., Shelly) must be connected to the battery to measure the grid connection point (via the manufacturer's app).
+    de: |
+      Der lokale Modus der Batterie muss in der Hersteller-App aktiviert werden.
+      Des Weiteren muss die IP-Adresse des Geräts im Router auf eine feste, dauerhafte IP-Adresse eingestellt werden.
+      Wenn der `grid` Modus verwendet wird, muss mit der Batterie ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst (dieser wird über die Hersteller-App hinzugefügt).
+caveats:
+  - description:
+      de: |
+        Aktuell muss jeder Kopfspeicher einzeln in EVCC angelegt werden.
+        Mehrere Kopfspeicher in ein System zu verbinden, ist vom Hersteller angekündigt, jedoch softwareseitig noch nicht umgesetzt.
+      en: |
+        Currently, each head storage must be individually added in EVCC.
+        Connecting multiple head storages into one system has been announced by the manufacturer but is not yet implemented on the software side.
+    # link:
+params:
+  - name: usage
+    type: choice
+    choice: ["grid", "pv", "battery"]
+    required: true
+  - name: host
+    required: true
+  - name: maxacpower
+    default: 800.0
+  - preset: battery-params
+  - name: capacity
+    default: 4.8
+  - name: maxchargepower
+    default: 2400.0
+  - name: maxdischargepower
+    default: 800.0
+  - name: cache
+    advanced: true
+    default: 1s
+  - name: timeout
+    advanced: true
+    default: 10s
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.GP
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.BP
+    scale: -1
+  soc:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.SC
+  {{- include "battery-params" . }}
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.PV
+  {{- end }}
