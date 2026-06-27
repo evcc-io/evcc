@@ -21,26 +21,34 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	}
 
 	cp.mu.Lock()
+	prev := cp.BootNotificationResult
 	cp.BootNotificationResult = request
+	// A BootNotification evcc solicited to complete the connection handshake is
+	// not a charger reboot - unless its content changed (e.g. a new firmware
+	// version), which means the charger actually restarted and setup must re-run.
+	triggered := cp.bootTriggered && prev != nil && *prev == *request
+	cp.bootTriggered = false
 	cp.stopBootTimer()
 	cp.mu.Unlock()
 
 	// mark charge point as ready for communication
 	cp.connect(true)
 
-	// Notify the reboot monitor (and the initial Setup). The channel is
-	// buffered (size 1) and coalescing: if an older notification is still
-	// queued, drop it so the consumer always re-initializes against the most
-	// recent BootNotification. This matters when a charge point reboot-loops
-	// (e.g. issue #30113) faster than the monitor consumes notifications, or
-	// before the monitor has started at all - the channel must never overflow.
-	select {
-	case <-cp.bootNotificationRequestC:
-	default:
-	}
-	select {
-	case cp.bootNotificationRequestC <- request:
-	default:
+	if !triggered {
+		// Notify the reboot monitor (and the initial Setup). The channel is
+		// buffered (size 1) and coalescing: if an older notification is still
+		// queued, drop it so the consumer always re-initializes against the most
+		// recent BootNotification. This matters when a charge point reboot-loops
+		// (e.g. issue #30113) faster than the monitor consumes notifications, or
+		// before the monitor has started at all - the channel must never overflow.
+		select {
+		case <-cp.bootNotificationRequestC:
+		default:
+		}
+		select {
+		case cp.bootNotificationRequestC <- request:
+		default:
+		}
 	}
 
 	return res, nil

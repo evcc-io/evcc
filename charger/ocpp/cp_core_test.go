@@ -239,3 +239,94 @@ func TestMonitorRebootOnlyOnce(t *testing.T) {
 	require.Eventually(t, func() bool { return callCount.Load() == 1 }, time.Second, 10*time.Millisecond,
 		"setup should be called exactly once")
 }
+
+func TestTriggeredBootNotificationDoesNotNotifyRebootMonitor(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+	boot := core.BootNotificationRequest{
+		ChargePointModel:  "Model",
+		ChargePointVendor: "TestVendor",
+		FirmwareVersion:   "1.0.0",
+	}
+	// unchanged metadata from a previous connection plus a solicited boot
+	cached := boot
+	cp.BootNotificationResult = &cached
+	cp.bootTriggered = true
+
+	current := boot
+	_, err := cp.OnBootNotification(&current)
+	require.NoError(t, err)
+	assert.True(t, cp.Connected())
+	assert.False(t, cp.bootTriggered, "flag should be consumed")
+	assert.Equal(t, &current, cp.BootNotificationResult, "metadata should be refreshed")
+
+	select {
+	case req := <-cp.bootNotificationRequestC:
+		t.Fatalf("unchanged triggered BootNotification should not notify reboot monitor, got %s", req.ChargePointModel)
+	default:
+	}
+}
+
+// TestTriggeredBootNotificationWithChangedIdentityNotifiesRebootMonitor covers a
+// charger that actually restarted (e.g. firmware update) but whose boot arrives as
+// a solicited one: the changed content must still trigger a setup re-initialization.
+func TestTriggeredBootNotificationWithChangedIdentityNotifiesRebootMonitor(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+	cp.BootNotificationResult = &core.BootNotificationRequest{
+		ChargePointModel:  "Model",
+		ChargePointVendor: "TestVendor",
+		FirmwareVersion:   "1.0.0",
+	}
+	cp.bootTriggered = true
+
+	_, err := cp.OnBootNotification(&core.BootNotificationRequest{
+		ChargePointModel:  "Model",
+		ChargePointVendor: "TestVendor",
+		FirmwareVersion:   "1.1.0", // updated firmware
+	})
+	require.NoError(t, err)
+	assert.True(t, cp.Connected())
+
+	select {
+	case req := <-cp.bootNotificationRequestC:
+		assert.Equal(t, "1.1.0", req.FirmwareVersion)
+	default:
+		t.Fatal("changed triggered BootNotification should notify reboot monitor")
+	}
+}
+
+// TestBootTimeoutClearsTriggeredFlag ensures a solicited BootNotification that never
+// arrives does not leak the bootTriggered flag past the connection: the boot timeout
+// must clear it so the next connection's spontaneous boot is treated as a reboot.
+func TestBootTimeoutClearsTriggeredFlag(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+	cp.bootTriggered = true
+
+	timer := time.AfterFunc(time.Hour, func() {})
+	cp.bootTimer = timer
+	cp.onBootTimeout(timer)
+
+	assert.False(t, cp.bootTriggered, "flag must be cleared on boot timeout")
+	assert.True(t, cp.Connected())
+}
+
+func TestSpontaneousBootNotificationNotifiesRebootMonitor(t *testing.T) {
+	log := util.NewLogger("test")
+	cp := NewChargePoint(log, "test-cp")
+
+	_, err := cp.OnBootNotification(&core.BootNotificationRequest{
+		ChargePointModel:  "Rebooted",
+		ChargePointVendor: "TestVendor",
+	})
+	require.NoError(t, err)
+	assert.True(t, cp.Connected())
+
+	select {
+	case req := <-cp.bootNotificationRequestC:
+		assert.Equal(t, "Rebooted", req.ChargePointModel)
+	default:
+		t.Fatal("spontaneous BootNotification should notify reboot monitor")
+	}
+}
