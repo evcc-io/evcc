@@ -22,8 +22,6 @@ github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWso
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/WulfgarW/sensonet v0.0.7 h1:WkrZF7UNoQVyQIvpaUPqZfKTvHfFXTRmSF/zMQKJo+Q=
 github.com/WulfgarW/sensonet v0.0.7/go.mod h1:GNOik1nTPswwtZ4bLpIRglEn9dNgEG79iOhVUq4IKgA=
-github.com/andig/eebus-go v0.0.0-20260625162943-a9cecc2a97b9 h1:Zn/HL2XZcuCU+BspRdtyEbG2v6GTwUky4NftFmMOXrU=
-github.com/andig/eebus-go v0.0.0-20260625162943-a9cecc2a97b9/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=
 github.com/andig/go-powerwall v0.3.0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20260523125438-3accc276abc0 h1:i34M/0yMHLaDJP6CQ3KMpeKVD+n9XrV5nPb3tdMKFF8=
@@ -146,6 +144,8 @@ github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885 h1:nBqjAPONpI/
 github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885/go.mod h1:ddWZU5BQGyzRGF20Z7rUKFFzbCp+cfu9mZgYtOMW/fM=
 github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6 h1:XOYvxKtT1oxT37w/5oEiRLuPbm9FuJPt3fiYhX0h8Po=
 github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6/go.mod h1:BszP9qFV14mPXgyIREbgIdQtWxbAj3OKqvK02HihMoM=
+github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6 h1:ax+dfxmeF/hN3IIUXFnDw3y3BE7pr0m/699k08+Q9sM=
+github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea h1:F6eyC8V8wvc3ranlsR4coAls+OPBkVvxyX0a2VqdlPc=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b h1:5vFr7wOwoi5ylybUnxxBk1U3FRF2+3Sf0sKx8thxw18=
