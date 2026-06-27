@@ -52,8 +52,8 @@ func TestPublishSocAndRange(t *testing.T) {
 	}
 
 	// populate channels
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	assert.Empty(t, lp.socUpdated)
 
@@ -168,8 +168,8 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 		}
 
 		// populate channels
-		x, y, z := createChannels(t)
-		attachChannels(lp, x, y, z)
+		x, y := createChannels(t)
+		attachChannels(lp, x, y)
 
 		test := func(t *testing.T) {
 			assert.Equal(t, tc.socPoll, lp.vehicleSocPollAllowed())
@@ -286,8 +286,8 @@ func TestDefaultVehicle(t *testing.T) {
 	lp.defaultVehicle = dflt
 
 	// populate channels
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	title := func(v api.Vehicle) string {
 		if v == nil {
@@ -345,8 +345,8 @@ func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	lp.DefaultMode = api.ModePV
 	lp.setMode(api.ModeOff)
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
+	x, y := createChannels(t)
+	attachChannels(lp, x, y)
 
 	lp.evVehicleDisconnectHandler()
 
