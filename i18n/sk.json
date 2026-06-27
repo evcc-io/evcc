@@ -51,6 +51,11 @@
     "hex": "hexadecimálna farba"
   },
   "config": {
+    "adminPassword": {
+      "description": "Skriptový doplnok vykoná príkaz na systémovej úrovni, ktorý sa spustí s oprávneniami procesu evcc. Pre pokračovanie znova zadajte heslo správcu.",
+      "invalid": "Neplatné heslo. Skúste prosím znova.",
+      "title": "Potenciálne nebezpečná operácia"
+    },
     "apiKey": {
       "description": "Poskytnite skriptom a automatizačným úlohám, ako sú plánované zálohy, zabezpečený prístup bez zdieľania hesla správcu.",
       "exampleLabel": "Vyskúšajte to: stiahnite si zálohu pomocou curl",
@@ -253,7 +258,7 @@
     },
     "general": {
       "applyAndClose": "Použiť a zatvoriť",
-      "authPerform": "Pripojte sa k {provider}",
+      "authPerform": "Pripojte sa s {provider}",
       "authPerformHint": "Otvorí sa v novej karte. Pre pokračovanie sa vráťte sem.",
       "authPrepare": "Pripraviť spojenie",
       "cancel": "Zrušiť",
@@ -1031,6 +1036,182 @@
       "constant": "CO₂ intenzita",
       "lowestHour": "Najčistejšia hodina",
       "range": "Rozsah"
+    },
+    "empty": {
+      "co2": "Zistite, kedy je energia zo siete vo vašom regióne čistá. Plány nabíjania sa optimalizujú pre nízke emisie a vypočítajú úspory CO₂.",
+      "price": "Konfigurujte svoj dynamický tarif elektrickej energie na automatické optimalizovanie plánov nabíjania a vypočtov úspory.",
+      "setup": "Nastavenie tarifov a prognóz",
+      "solar": "Pozrite si očakávanú produkciu solárnej energie na dnes a nasledujúce dni. V budúcnosti sa použije aj na automatickú optimalizáciu nabíjania."
+    },
+    "hideLine": "skrytá čiara",
+    "modalTitle": "Predpoveď",
+    "price": {
+      "average": "Priemer",
+      "constant": "Cena",
+      "lowestHour": "Najlacnejšia hodina",
+      "range": "Rozsah"
+    },
+    "priceZoom": "priblížiť",
+    "showLine": "zobraziť riadok",
+    "solar": {
+      "dayAfterTomorrow": "Pozajtra",
+      "partly": "čiastočne",
+      "remaining": "zostávajúce",
+      "today": "Dnes",
+      "tomorrow": "Zajtra"
+    },
+    "solarAdjust": "Upraviť prognózu solárnej energie na základe skutočných údajov o produkcii {percent}.",
+    "solarAdjustMedium": "úprava skutočných údajov",
+    "solarAdjustShort": "prispôsobiť",
+    "type": {
+      "co2": "CO₂ Emisie",
+      "price": "Cena zo siete",
+      "solar": "Solárna výroba"
+    }
+  },
+  "general": {
+    "note": "Poznámka:"
+  },
+  "header": {
+    "about": "O nás",
+    "blog": "Blog",
+    "docs": "Dokumentácia",
+    "github": "GitHub",
+    "logout": "Odhlásiť",
+    "nativeSettings": "Zmeniť Server",
+    "needHelp": "Potrebujete pomoc?",
+    "sessions": "Nabíjacie Sedenia"
+  },
+  "help": {
+    "discussionsButton": "Diskusie na GitHube",
+    "documentationButton": "Dokumentácia",
+    "issueButton": "Nahlásiť problém",
+    "issueDescription": "Zaznamenali ste zvláštne alebo nesprávne správanie?",
+    "logsButton": "Zobraziť záznamy",
+    "logsDescription": "Skontrolujte protokoly, či neobsahujú chyby.",
+    "modalTitle": "Potrebujete pomoc?",
+    "primaryActions": "Niečo nefunguje tak, ako má? Toto sú dobré miesta, kde môžete získať pomoc.",
+    "restart": {
+      "cancel": "Zrušiť",
+      "confirm": "Áno, reštartovať!",
+      "description": "Za normálnych okolností by reštartovanie nemalo byť potrebné. Ak potrebujete evcc pravidelne reštartovať, zvážte nahlásenie chyby.",
+      "disclaimer": "Poznámka: Služba evcc sa ukončí a bude sa spoliehať na to, že operačný systém reštartuje službu.",
+      "modalTitle": "Naozaj chcete reštartovať?"
+    },
+    "restartButton": "Restart",
+    "restartDescription": "Skúsili ste to vypnúť a znova zapnúť?",
+    "secondaryActions": "Stále neviete vyriešiť svoj problém? Tu je niekoľko ďalších, ale náročnejších možností."
+  },
+  "issue": {
+    "additional": {
+      "description": "Priložte konfiguráciu a protokoly, ktoré nám pomôžu problém rýchlo zreprodukovať. Odporúčame zdieľať čo najviac údajov. Stav zvyčajne nie je potrebný.",
+      "include": "zahrnúť",
+      "lines": "riadky",
+      "logs": "Protokoly",
+      "logsDescription": "Nedávne záznamy v denníku, ktoré môžu pomôcť identifikovať problém.",
+      "showDetails": "zobraziť podrobnosti",
+      "source": "Zdroj",
+      "state": "Stav",
+      "stateDescription": "Kompletný stav behu vrátane informácií o nabíjacom bode, zariadení a energii. Zahrňte iba na požiadanie.",
+      "title": "Ďalšie informácie",
+      "uiConfig": "Konfigurácia (UI)",
+      "uiConfigDescription": "Konfigurácie nastavení vykonané cez webové rozhranie.",
+      "yamlConfig": "Konfigurácia (YAML)",
+      "yamlConfigDescription": "Váš kompletný konfiguračný súbor."
+    },
+    "additionalContext": "Dodatočný kontext",
+    "additionalContextPlaceholder": "Akékoľvek ďalšie informácie, ktoré by mohli byť užitočné...\n- Podrobnosti o konfigurácii\n- Čo ste vyskúšali\n- Podrobnosti o prostredí",
+    "createButtonDiscussion": "Začnite diskusiu na GitHube...",
+    "createButtonIssue": "Vytvoriť problém na GitHube...",
+    "description": "Vaša inštalácia nefunguje podľa očakávaní? Použite túto stránku na získanie pomoci alebo nahlásenie problémov. Poskytnite dostatok podrobností, aby sme problém pochopili a zreprodukovali, pričom váš popis musí byť stručný, jasný a ľahko pochopiteľný.",
+    "helpType": {
+      "discussion": "Potrebujem pomoc s nastavením",
+      "discussionDescription": "Komunitné diskusie poskytujú odpovede.",
+      "issue": "Našiel chybu",
+      "issueDescription": "Som si istý, že niečo je pokazené a musí byť opravené.",
+      "title": "O akom probléme hovoríme?"
+    },
+    "issueDescription": "Popis",
+    "issueTitle": "Názov",
+    "stepsToReproduce": "Kroky k reprodukcii",
+    "subTitleDiscussion": "Opíšte svoj problém",
+    "subTitleIssue": "Popíšte problém",
+    "summary": {
+      "confirmationButtonDiscussion": "Začnite diskusiu na GitHube",
+      "confirmationButtonIssue": "Vytvoriť problém na GitHube",
+      "copied": "Skopírované!",
+      "copyButton": "Skopírovať ďalšie informácie",
+      "instructions": "Vzhľadom na obmedzenia veľkosti URL adresy na GitHube ide o dvojkrokový proces:",
+      "singleStepDescription": "Kliknite na tlačidlo nižšie a otvorí sa GitHub s predvyplneným formulárom s podrobnosťami o vašom probléme. Citlivé údaje boli automaticky odstránené, ale pred zdieľaním ich prosím ešteraz skontrolujte.",
+      "step1Description": "-Kliknite na tlačidlo nižšie na vytvorenie bežního záznamu na GitHube s vaším názvom, popisom a podrobnosťami.",
+      "step2Description": "Po vytvorení záznamu sa vráťte sem a skopírujte nižšie uvedené dodatočné informácie a vložte ich do GitHub formulára. Citlivé údaje boli odstránené, ale pred zdieľaním ich prosím ešteraz skontrolujte.",
+      "stepOneDiscussion": "Krok 1: Vytvorenie bežnej diskusie",
+      "stepOneIssue": "Krok 1: Vytvorenie bežného problému",
+      "stepTwo": "Krok 2: Skopírovať ďalšie informácie",
+      "title": "Zhrnutie problému na GitHube"
+    },
+    "system": "Systém",
+    "timezone": "Časové pásmo",
+    "title": "Nahlásiť problém",
+    "version": "Verzia"
+  },
+  "log": {
+    "areaLabel": "Filtrovať podľa oblasti",
+    "areas": "Všetky oblasti",
+    "download": "Stiahnuť kompletný protokol",
+    "levelLabel": "Filter podľa úrovne protokolu",
+    "nAreas": "{count} oblasti",
+    "noResults": "Žiadne zodpovedajúce položky denníka.",
+    "search": "Vyhľadávanie",
+    "selectAll": "vybrať všetko",
+    "showAll": "Zobraziť všetky položky",
+    "title": "Protokoly",
+    "update": "Automatická aktualizácia"
+  },
+  "loginModal": {
+    "cancel": "Zrušiť",
+    "demoMode": "Prihlásenie nie je podporované v demo režime.",
+    "iframeHint": "Otvoriť evcc na novej karte.",
+    "iframeIssue": "Vaše heslo je správne, ale zdá sa, že váš prehliadač vymazal overovací súbor cookie. Môže sa to stať, ak spustíte evcc v iframe cez HTTP.",
+    "invalid": "Heslo je neplatné.",
+    "login": "Prihlásenie",
+    "password": "Heslo Správcu",
+    "reset": "Reset hesla?",
+    "title": "Overenie"
+  },
+  "main": {
+    "chargingPlan": {
+      "active": "Aktívny",
+      "addRepeatingPlan": "Pridať opakujúci sa plán",
+      "arrivalTab": "Príchod",
+      "day": "Deň",
+      "departureTab": "Odchod",
+      "goal": "Cieľ nabíjania",
+      "modalTitle": "Nabíjací plán",
+      "none": "žiadny",
+      "optimization": {
+        "cheapest": "najlacnejší",
+        "continuous": "nepretržitý",
+        "label": "Optimalizácia"
+      },
+      "planNumber": "Plán {number}",
+      "precondition": {
+        "description": "Nabíjať batériu {duration} pred odchodom na predkondicionovanie.",
+        "label": "Neskoré nabíjanie",
+        "optionAll": "všetko",
+        "optionNo": "nie"
+      },
+      "remove": "Odstrániť",
+      "repeating": "opakujúce sa",
+      "repeatingPlans": "Opakujúce sa plány",
+      "selectAll": "Vybrať všetko",
+      "strategySettings": "Nastavenie stratégie",
+      "time": "Čas",
+      "title": "Plán",
+      "titleMinSoc": "Minimálne nabitie",
+      "titleTargetCharge": "Odchod",
+      "unsavedChanges": "Existujú neuložené zmeny. Uložiť teraz?",
+      "update": "Použiť"
     }
   }
 }
