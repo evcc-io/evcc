@@ -11,6 +11,7 @@ testdata/**/*
 *.json
 !i18n/*.json
 !.devcontainer/devcontainer.json
+!vehicle/vw/eudataact/datadictionary.json
 *.yaml
 !templates/**/*.yaml
 !templates/**/*-schema.json
