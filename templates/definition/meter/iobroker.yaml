@@ -2,6 +2,7 @@ template: iobroker
 products:
   - brand: ioBroker
 group: generic
+capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   evcc: ["skiptest"]
   description:
@@ -31,18 +32,22 @@ params:
     description:
       de: Leistung
       en: Power
+    example: "e3dc-rscp.0.EMS.POWER_GRID"
     unit: W
     type: string
+    required: true
   - name: soc
     description:
       de: Ladestand
       en: State of Charge
+    example: "e3dc-rscp.0.EMS.BAT_SOC"
     unit: "%"
     type: string
   - name: energy
     description:
       de: Zählerstand
       en: Meter reading
+    example: "shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower"
     unit: kWh
     type: string
     advanced: true
@@ -50,6 +55,7 @@ params:
     description:
       de: L1 Stromstärke
       en: L1 current
+    example: "shelly.0.SHEM-3%238CAAB561991E%231.Emeter0.Current"
     unit: A
     type: string
     advanced: true
@@ -57,6 +63,7 @@ params:
     description:
       de: L2 Stromstärke
       en: L2 current
+    example: "shelly.0.SHEM-3%238CAAB561991E%231.Emeter1.Current"
     unit: A
     type: string
     advanced: true
@@ -64,7 +71,83 @@ params:
     description:
       de: L3 Stromstärke
       en: L3 current
+    example: "shelly.0.SHEM-3%238CAAB561991E%231.Emeter2.Current"
     unit: A
+    type: string
+    advanced: true
+  - name: voltageL1
+    description:
+      de: L1 Spannung
+      en: L1 voltage
+    example: "shelly.0.SHEM-3%238CAAB561991E%231.Emeter0.Voltage"
+    unit: V
+    type: string
+    advanced: true
+  - name: voltageL2
+    description:
+      de: L2 Spannung
+      en: L2 voltage
+    example: "shelly.0.SHEM-3%238CAAB561991E%231.Emeter1.Voltage"
+    unit: V
+    type: string
+    advanced: true
+  - name: voltageL3
+    description:
+      de: L3 Spannung
+      en: L3 voltage
+    example: "shelly.0.SHEM-3%238CAAB561991E%231.Emeter2.Voltage"
+    unit: V
+    type: string
+    advanced: true
+  - name: batterymode
+    usages: [battery]
+    description:
+      de: Batteriemodus
+      en: battery mode
+    help:
+      de: |
+        Setzt den gewünschten Batteriemodus
+        1: Normal, 2: Hold, 
+        3: Charge, 4: Holdcharge
+      en: |
+        Sets the target battery mode
+        1: Normal, 2: Hold, 
+        3: Charge, 4: Holdcharge
+    example: "0_userdata.0.Meter.batterymode"
+    type: string
+    advanced: true
+  - name: maxacpower
+    usages: [pv]
+  - name: curtail
+    usages: [pv]
+    description:
+      de: Abregeln (schreiben)
+      en: Curtail (write)
+    example: "0_userdata.0.Meter.Curtailed"
+    type: string
+    advanced: true
+  - name: curtailed
+    usages: [pv]
+    description:
+      de: Abgeregelt (lesen)
+      en: Curtailed (read)
+    example: "0_userdata.0.Meter.Curtailed"
+    type: string
+    advanced: true
+  - name: dim
+    usages: ["grid", "battery", "charge"]
+    description:
+      de: Verbrauch Begrenzen (schreiben)
+      en: Limit consumption (write)
+    type: string
+    advanced: true
+    example: "0_userdata.0.Meter.Dimmed"
+  - name: dimmed
+    usages: ["grid", "battery", "charge"]
+    description:
+      de: Verbrauch Begrenzt (lesen)
+      en: consumption limited (read)
+    example: "0_userdata.0.Meter.Dimmed"
     type: string
     advanced: true
   - preset: battery-params
@@ -73,7 +156,7 @@ params:
   - name: maxsoc
   - name: maxchargepower
   - name: maxdischargepower
-  - name: maxacpower
+
 render: |
   type: custom
   {{- if .power }}
@@ -118,6 +201,46 @@ render: |
         password: {{ .password }}
       {{- end }}
   {{- end }}
+  {{- if .voltageL1 }}
+  voltages:
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .voltageL1 }}/plain
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- if .voltageL2 }}
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .voltageL2 }}/plain
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- end }}
+    {{- if .voltageL3 }}
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .voltageL3 }}/plain
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
   {{- if .currentL1 }}
   currents:
     - source: http
@@ -157,4 +280,80 @@ render: |
         password: {{ .password }}
       {{- end }}
     {{- end }}
+  {{- end }}
+  {{- if .dim }}
+  dim:
+     source: http
+     headers:
+       - accept: text/plain;charset=UTF-8
+     uri: {{ .uri }}/rest-api/v1/state/{{ .dim }}?value=${dim}    
+     cache: {{ .cache }}
+     {{- if .user }}
+     auth:
+       type: basic
+       user: {{ .user }}
+       password: {{ .password }}
+     {{- end }}
+  {{- end }}
+  {{- if .dimmed }}
+  dimmed:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .dimmed }}/plain
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+    cache: {{ .cache }}
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }}
+  {{- if .curtail }}
+  curtail:
+     source: http
+     headers:
+       - accept: text/plain;charset=UTF-8
+     uri: {{ .uri }}/rest-api/v1/state/{{ .curtail }}?value=${curtail}    
+     cache: {{ .cache }}
+     {{- if .user }}
+     auth:
+       type: basic
+       user: {{ .user }}
+       password: {{ .password }}
+     {{- end }}
+  {{- end }}
+  {{- if .curtailed }}
+  curtailed:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .curtailed }}/plain
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+    cache: {{ .cache }}
+  {{- end }} 
+  {{- end }} # usage PV
+  {{- if eq .usage "battery" }}
+  {{- if .batterymode }}
+  batterymode: 
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .batterymode }}?value=${batterymode}    
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- include "battery-params" . }}
   {{- end }}
