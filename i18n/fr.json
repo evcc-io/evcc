@@ -51,6 +51,11 @@
     "hex": "Couleur héxa"
   },
   "config": {
+    "adminPassword": {
+      "description": "Le plugin de script exécute une commande au niveau du système qui s'exécute avec les droits du processus evcc. Saisissez à nouveau votre mot de passe administrateur pour continuer.",
+      "invalid": "Mot de passe incorrect. Veuillez réessayer.",
+      "title": "Opération potentiellement dangereuse"
+    },
     "apiKey": {
       "description": "Donner à des scripts ou des automatisations tel qu’une sauvegarde planifiée un accès sécurisé sans partagé votre mot de passe d’admin.",
       "exampleLabel": "Essaie : télécharge un backup avec curl",
@@ -120,6 +125,11 @@
       "title": "Gestion de la charge",
       "usableMeters": "Références des compteurs utilisables"
     },
+    "consumer": {
+      "description": "Permet de suivre la consommation des petits appareils électroménagers non contrôlables (réfrigérateur, lave-linge, etc.). Vous offre une meilleure vue d'ensemble de la consommation de votre foyer.",
+      "titleAdd": "Ajouter un compteur de consommation",
+      "titleEdit": "Modifier le compteur de consommation"
+    },
     "control": {
       "description": "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites.",
       "descriptionInterval": "Cycle de mise à jour en secondes. Définit la fréquence à laquelle evcc lit les données du compteur et ajuste la charge. La valeur par défaut de 30 secondes est un choix sûr. Les appareils tels que les véhicules, les chargeurs et les onduleurs ont généralement besoin de plusieurs secondes pour ajuster leur comportement. Si vos composants réagissent rapidement, vous pouvez utiliser des valeurs plus faibles. Nous vous recommandons vivement de ne pas descendre en dessous de 10 secondes. Si vous observez un comportement de contrôle erratique ou des valeurs de puissance instables, choisissez un intervalle plus long.",
@@ -188,6 +198,7 @@
       "singlePhase": "Monophasé",
       "soc": "Charge",
       "solarForecast": "Prévision solaire",
+      "switchDevice": "Contrôle du courant",
       "temp": "Température",
       "topic": "Sujet",
       "url": "URL",
@@ -220,6 +231,8 @@
       "interfacesHelp": "Limiter les interfaces réseaux utilisées par EEBus afin de limiter des problèmes de communication. Laissez le champ vide pour utiliser toutes les interfaces. Une entrée par ligne.",
       "port": "Port",
       "portHelp": "Le port a utiliser.",
+      "qr": "Code de couplage",
+      "qrExplain": "Scannez un autre appareil EEBus pendant l'installation pour effectuer le couplage automatiquement, sans avoir à saisir manuellement le code SKI.",
       "removeConfirm": "Toutes les configurations EEBus seront supprimées. De nouveaux certificats et identifiants seront générés au prochain démarrage. Êtes-vous sûr ?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Identifiant permanent de l'appareil, le désignant sur le réseau EEBus.",
@@ -233,9 +246,9 @@
       "title": "Expérimental"
     },
     "ext": {
-      "description": "Enregistre les valeurs de consommateurs non contrôlés (par ex. réfrigérateur, machine à laver, etc) à des fins statistiques. Ces compteurs peuvent aussi être utilisés pour de la gestion de charge (par ex. sous-distribution).",
-      "titleAdd": "Ajouter un compteur de consommateur",
-      "titleEdit": "Modifier le compteur de consommateur"
+      "description": "Permet de suivre les compteurs qui ne sont pas utilisés à des fins de régulation ou qui n'apparaissent pas dans l'interface utilisateur (sous-réseaux, compteurs de réseau alternatif ou solaires, etc.). Leurs données sont enregistrées et exportées comme celles des autres compteurs.",
+      "titleAdd": "Ajouter un compteur supplémentaire",
+      "titleEdit": "Modifier un compteur supplémentaire"
     },
     "form": {
       "danger": "Attention",
@@ -371,8 +384,11 @@
       "estimateLabel": "Interpoler le niveau de charge entre deux mises à jour via l’API",
       "maxCurrentHelp": "Doit être supérieur au courant minimum.",
       "maxCurrentLabel": "Courant maximum",
+      "maxTempHelp": "Doit être supérieure à la température minimale.",
+      "maxTempLabel": "Température maximale",
       "minCurrentHelp": "Allez en dessous de 6 A seulement si vous savez ce que vous faîtes.",
       "minCurrentLabel": "Courant minimum",
+      "minTempLabel": "Température minimale",
       "noVehicles": "Aucun véhicule configuré.",
       "option": {
         "charging": "Ajouter un point de charge",
@@ -403,6 +419,8 @@
       "solarBehaviorLabel": "Solaire",
       "solarModeCustom": "personnalisé",
       "solarModeMaximum": "mode solaire maximum",
+      "temperatureRangeHelp": "Plage d'affichage de la barre de température. N'a aucune incidence sur le contrôle.",
+      "temperatureRangeTitle": "Plage de températures",
       "thresholdDisableDelayLabel": "Délai de désactivation",
       "thresholdDisableHelpInvalid": "Veuillez entrer une valeur positive.",
       "thresholdDisableHelpPositive": "Arrêter lorsque plus de {power} est utilisé depuis le réseau depuis {delay}.",
@@ -437,6 +455,7 @@
     },
     "main": {
       "addAdditional": "Ajouter un compteur supplémentaire",
+      "addConsumer": "Ajouter un consommateur",
       "addGrid": "Ajouter un compteur pour le réseau",
       "addLoadpoint": "Ajouter chargeur ou chauffage",
       "addPvBattery": "Ajouter du solaire ou une batterie",
@@ -522,11 +541,16 @@
     },
     "meter": {
       "cancel": "Annuler",
+      "convertToConsumer": {
+        "confirm": "Convertit ce « compteur supplémentaire » en « consommateur ».",
+        "link": "Convertir en consommateur"
+      },
       "delete": "Supprimer",
       "generic": "Intégrations génériques",
       "option": {
         "aux": "Ajouter un consommateur auto-regulé",
         "battery": "Ajouter un compteur de batterie",
+        "consumer": "Ajouter un consommateur régulier",
         "ext": "Ajouter un consommateur régulier",
         "pv": "Ajouter un compteur solaire"
       },
@@ -538,7 +562,7 @@
       "usage": {
         "aux": "Consommateur auto-régulé",
         "battery": "Batterie",
-        "charge": "Consommateur / Chargeur",
+        "charge": "Chargeur",
         "grid": "Réseau électrique",
         "label": "Utilisation",
         "pv": "Production"
@@ -750,6 +774,7 @@
     },
     "section": {
       "additionalMeter": "Compteurs supplémentaires",
+      "consumers": "Consommateurs",
       "general": "Général",
       "grid": "Réseau électrique",
       "integrations": "Intégrations",
@@ -1240,6 +1265,7 @@
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie en charge",
+      "batteryChargeHold": "Batterie (verrouillage de charge)",
       "batteryDischarge": "Décharge de la batterie",
       "batteryDischargeHold": "Batterie (verrouillée)",
       "batteryForecastEmpty": "Vide",
@@ -1281,16 +1307,21 @@
         "grid": {
           "energy": "importée",
           "returnEnergy": "exportée"
+        },
+        "meter": {
+          "energy": "Énergie",
+          "returnEnergy": "Énergie (inversée)"
         }
       },
       "downloadCsv": "Télécharger en CSV",
       "empty": "Pas de données historiques pour cette intervalle de temps.",
       "group": {
         "battery": "Batterie",
+        "consumer": "Consommation",
         "forecast": "Prévisions",
         "grid": "Réseau",
         "loadpoint": "Chargement & Chauffage",
-        "meter": "Consommation",
+        "meter": "Compteurs supplémentaires",
         "pv": "Production"
       },
       "otherConsumers": "Autres",
@@ -1564,7 +1595,7 @@
     },
     "groupBy": {
       "loadpoint": "Point de charge",
-      "none": "Total",
+      "none": "Solaire",
       "vehicle": "Véhicule"
     },
     "loadpoint": "Point de charge",
@@ -1586,7 +1617,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Coût",
-      "solar": "Solaire"
+      "solar": "Énergie"
     },
     "vehicle": "Véhicule"
   },

@@ -51,6 +51,11 @@
     "hex": "Hex farve"
   },
   "config": {
+    "adminPassword": {
+      "description": "Script-pluginet udfører en kommando på systemniveau, som kører med de samme rettigheder som evcc-processen. Indtast din administratoradgangskode igen for at fortsætte.",
+      "invalid": "Ugyldig adgangskode. Prøv igen.",
+      "title": "Potentielt farlig handling"
+    },
     "apiKey": {
       "description": "Giv scripts og automatiseringsopgaver, såsom planlagte sikkerhedskopier, sikker adgang uden at dele din administratoradgangskode.",
       "exampleLabel": "Prøv det: Hent en backup med curl",
@@ -536,6 +541,10 @@
     },
     "meter": {
       "cancel": "Afbryd",
+      "convertToConsumer": {
+        "confirm": "Konverterer denne \"ekstra måler\" til en \"forbrugsenhed\".",
+        "link": "Konverter til forbrugsenhed"
+      },
       "delete": "Slet",
       "generic": "Generiske integrationer",
       "option": {
@@ -553,7 +562,7 @@
       "usage": {
         "aux": "Selvregulerende forbrugsenhed",
         "battery": "Batteri",
-        "charge": "Forbrugsenhed/Lader",
+        "charge": "Lader",
         "grid": "Elnet",
         "label": "Brug",
         "pv": "Produktion"
