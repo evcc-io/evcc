@@ -10,6 +10,7 @@ import (
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
+	"github.com/enbility/eebus-go/usecases/ma/mdt"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
@@ -37,6 +38,7 @@ type EEBusOHPCF struct {
 	log        *util.Logger
 	compressor spineapi.EntityRemoteInterface
 	mpcEntity  spineapi.EntityRemoteInterface
+	dhwEntity  spineapi.EntityRemoteInterface
 	enabled    bool
 	reboosting bool
 
@@ -122,6 +124,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 
 	c.compressor = nil
 	c.mpcEntity = nil
+	c.dhwEntity = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -152,6 +155,12 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		if c.mpcEntity == nil || len(entity.Address().Entity) < len(c.mpcEntity.Address().Entity) {
 			c.mpcEntity = entity
 		}
+		c.mu.Unlock()
+
+	// Monitoring Appliance MDT provides the DHW temperature
+	case mdt.UseCaseSupportUpdate, mdt.DataUpdateTemperature:
+		c.mu.Lock()
+		c.dhwEntity = entity
 		c.mu.Unlock()
 	}
 }
@@ -431,4 +440,25 @@ func (c *EEBusOHPCF) CurrentPower() (float64, error) {
 	}
 
 	return power, nil
+}
+
+var _ api.Battery = (*EEBusOHPCF)(nil)
+
+// Soc implements the api.Battery interface and reports the heat pump's domestic
+// hot water temperature in °C via the MDT use case.
+func (c *EEBusOHPCF) Soc() (float64, error) {
+	c.mu.RLock()
+	entity := c.dhwEntity
+	c.mu.RUnlock()
+
+	if entity == nil || !c.ma.MaMDTInterface.IsScenarioAvailableAtEntity(entity, eebus.MDTTemperature) {
+		return 0, api.ErrNotAvailable
+	}
+
+	temp, err := c.ma.MaMDTInterface.Temperature(entity, model.UnitOfMeasurementTypedegC)
+	if err != nil {
+		return 0, eebus.WrapError(err)
+	}
+
+	return temp, nil
 }
