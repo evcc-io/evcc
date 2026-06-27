@@ -287,6 +287,8 @@ type Circuit interface {
 // HEMS exposes the runtime state of the home energy management system.
 type HEMS interface {
 	SetUpdated(func())
+	Connected() *bool             // nil = no statement
+	Failsafe() *bool              // nil = no statement
 	Dimmed() *bool                // nil = no statement
 	Curtailed() *bool             // nil = no statement
 	MaxConsumptionPower() float64 // 0 = no limit

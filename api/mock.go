@@ -1172,6 +1172,20 @@ func (m *MockHEMS) EXPECT() *MockHEMSMockRecorder {
 	return m.recorder
 }
 
+// Connected mocks base method.
+func (m *MockHEMS) Connected() *bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Connected")
+	ret0, _ := ret[0].(*bool)
+	return ret0
+}
+
+// Connected indicates an expected call of Connected.
+func (mr *MockHEMSMockRecorder) Connected() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connected", reflect.TypeOf((*MockHEMS)(nil).Connected))
+}
+
 // Curtailed mocks base method.
 func (m *MockHEMS) Curtailed() *bool {
 	m.ctrl.T.Helper()
@@ -1198,6 +1212,20 @@ func (m *MockHEMS) Dimmed() *bool {
 func (mr *MockHEMSMockRecorder) Dimmed() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimmed", reflect.TypeOf((*MockHEMS)(nil).Dimmed))
+}
+
+// Failsafe mocks base method.
+func (m *MockHEMS) Failsafe() *bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Failsafe")
+	ret0, _ := ret[0].(*bool)
+	return ret0
+}
+
+// Failsafe indicates an expected call of Failsafe.
+func (mr *MockHEMSMockRecorder) Failsafe() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Failsafe", reflect.TypeOf((*MockHEMS)(nil).Failsafe))
 }
 
 // MaxConsumptionPower mocks base method.

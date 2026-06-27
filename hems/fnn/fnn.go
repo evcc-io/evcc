@@ -225,6 +225,16 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 
 var _ api.HEMS = (*Fnn)(nil)
 
+// Connected implements api.HEMS. FNN has no EEBus connection, so no statement.
+func (c *Fnn) Connected() *bool {
+	return nil
+}
+
+// Failsafe implements api.HEMS. FNN has no failsafe concept, so no statement.
+func (c *Fnn) Failsafe() *bool {
+	return nil
+}
+
 // Dimmed implements api.HEMS.
 func (c *Fnn) Dimmed() *bool {
 	if c.w4 == nil {

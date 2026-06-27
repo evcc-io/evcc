@@ -15,4 +15,8 @@ func TestFnn(t *testing.T) {
 	require.Nil(t, fnn.Curtailed())
 	// require.NoError(t, fnn.runDim())
 	// require.Equal(t, new(true), fnn.Dimmed())
+
+	// Connected/Failsafe are EEBus-specific; FNN makes no statement
+	require.Nil(t, fnn.Connected())
+	require.Nil(t, fnn.Failsafe())
 }
