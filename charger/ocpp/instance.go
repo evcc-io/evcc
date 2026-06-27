@@ -17,9 +17,17 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/security"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
+
+// dateTimeFormat sets the OCPP dateTime serialization to RFC3339 with fractional seconds
+const dateTimeFormat = "2006-01-02T15:04:05.000Z07:00"
+
+func init() {
+	types.DateTimeFormat = dateTimeFormat
+}
 
 type Config struct {
 	Port int `json:"port"`
