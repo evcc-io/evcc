@@ -32,9 +32,9 @@
     "disclaimerHint": "Piezīme:",
     "disclaimerText": "Šie iestatījumi ietekmē tikai saules enerģijas režīmu. Uzlādes uzvedība tiek attiecīgi pielāgota.",
     "gridChargeTab": "Tīkla uzlāde",
-    "legendBottomName": "Prioritizēt mājas akumulatora uzlādi",
+    "legendBottomName": "Dot priekšroku mājas akumulatora uzlādei",
     "legendBottomSubline": "līdz tas sasniedz {soc}.",
-    "legendMiddleName": "Prioritizēt transportlīdzekļa uzlādi",
+    "legendMiddleName": "Dot priekšroku transportlīdzekļa uzlādei",
     "legendMiddleSubline": "kad mājas akumulators ir virs {soc}.",
     "legendTopAutostart": "Sākt automātiski",
     "legendTopName": "Ar akumulatoru atbalstīta uzlāde",
@@ -51,6 +51,11 @@
     "hex": "Hex krāsa"
   },
   "config": {
+    "adminPassword": {
+      "description": "Skripta spraudnis izpilda sistēmas līmeņa komandu, kas darbojas ar evcc procesa atļaujām. Atkārtoti ievadiet administratora paroli, lai turpinātu.",
+      "invalid": "Nederīga parole. Lūdzu, mēģiniet vēlreiz.",
+      "title": "Potenciāli bīstama darbība"
+    },
     "apiKey": {
       "description": "Dodiet skriptiem un automatizācijas uzdevumiem drošu piekļuvi bez administratora paroles koplietošanas.",
       "exampleLabel": "Izmēģiniet: lejupielādējiet rezerves kopiju ar curl",
@@ -534,6 +539,10 @@
     },
     "meter": {
       "cancel": "Atcelt",
+      "convertToConsumer": {
+        "confirm": "Pārveido šo \"papildu skaitītāju\" par \"patērētāju\".",
+        "link": "Pievienot patērētāju"
+      },
       "delete": "Dzēst",
       "generic": "Vispārīgās integrācijas",
       "option": {
@@ -551,7 +560,7 @@
       "usage": {
         "aux": "Pašregulējošs patērētājs",
         "battery": "Akumulators",
-        "charge": "Patērētājs / lādētājs",
+        "charge": "Lādētājs",
         "grid": "Tīkls",
         "label": "Lietojums",
         "pv": "Ražošana"
@@ -1257,6 +1266,10 @@
         "grid": {
           "energy": "importēts",
           "returnEnergy": "eksportēts"
+        },
+        "meter": {
+          "energy": "Enerģija",
+          "returnEnergy": "Enerģija (atpakaļvirzienā)"
         }
       },
       "downloadCsv": "Lejupielādēt CSV",
@@ -1637,7 +1650,7 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Apturētais laiks",
-    "description": "Aptur uzlādi augstu cenu laikā, lai prioritizētu izdevīgu atdevi tīklā.",
+    "description": "Aptur uzlādi augstu cenu laikā, lai dotu priekšroku izdevīgai atdevei tīklā.",
     "priceLabel": "Atdeves likme",
     "priceLimit": "Atdeves ierobežojums",
     "resetWarning": "Nav konfigurēts dinamisks atdeves tarifs. Tomēr joprojām ir ierobežojums {limit}. Rediģēt konfigurāciju?",
