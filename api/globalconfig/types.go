@@ -166,12 +166,13 @@ func (c Messaging) IsConfigured() bool {
 }
 
 type Tariffs struct {
-	Currency string
-	Grid     config.Typed
-	FeedIn   config.Typed
-	Co2      config.Typed
-	Planner  config.Typed
-	Solar    []config.Typed
+	Currency    string
+	Grid        config.Typed
+	FeedIn      config.Typed
+	Co2         config.Typed
+	Planner     config.Typed
+	Solar       []config.Typed
+	Temperature config.Typed
 }
 
 func (c Tariffs) IsConfigured() bool {
@@ -179,20 +180,21 @@ func (c Tariffs) IsConfigured() bool {
 }
 
 type TariffRefs struct {
-	Grid    string   `json:"grid"`
-	FeedIn  string   `json:"feedIn"`
-	Co2     string   `json:"co2"`
-	Planner string   `json:"planner"`
-	Solar   []string `json:"solar"`
+	Grid        string   `json:"grid"`
+	FeedIn      string   `json:"feedIn"`
+	Co2         string   `json:"co2"`
+	Planner     string   `json:"planner"`
+	Solar       []string `json:"solar"`
+	Temperature string   `json:"temperature"`
 }
 
 func (refs TariffRefs) IsConfigured() bool {
-	return refs.Grid != "" || refs.FeedIn != "" || refs.Co2 != "" || refs.Planner != "" || len(refs.Solar) > 0
+	return refs.Grid != "" || refs.FeedIn != "" || refs.Co2 != "" || refs.Planner != "" || len(refs.Solar) > 0 || refs.Temperature != ""
 }
 
 func (refs TariffRefs) Used() iter.Seq[string] {
 	return func(yield func(string) bool) {
-		for _, ref := range append([]string{refs.Grid, refs.FeedIn, refs.Co2, refs.Planner}, refs.Solar...) {
+		for _, ref := range append([]string{refs.Grid, refs.FeedIn, refs.Co2, refs.Planner, refs.Temperature}, refs.Solar...) {
 			if ref != "" {
 				if !yield(ref) {
 					return

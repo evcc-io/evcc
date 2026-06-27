@@ -267,7 +267,8 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	}
 
 	lp.configureChargerType(lp.charger)
-	// add collector
+
+	// add collector after configureChargerType which may create chargeMeter from charger capabilities
 	if lp.chargeMeter != nil {
 		lp.chargeEnergy = collector
 	}
