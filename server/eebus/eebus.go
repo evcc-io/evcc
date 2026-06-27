@@ -17,12 +17,14 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	"github.com/enbility/eebus-go/usecases/cem/evsecc"
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
+	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
 	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
 	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	eglpp "github.com/enbility/eebus-go/usecases/eg/lpp"
+	"github.com/enbility/eebus-go/usecases/ma/mdt"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
@@ -47,6 +49,7 @@ type CustomerEnergyManagement struct {
 	EvSoc  ucapi.CemEVSOCInterface
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
+	OHPCF  ucapi.CemOHPCFInterface
 }
 
 // Controllable System
@@ -59,6 +62,7 @@ type ControllableSystem struct {
 type MonitoringAppliance struct {
 	ucapi.MaMGCPInterface
 	ucapi.MaMPCInterface
+	ucapi.MaMDTInterface
 }
 
 // Energy Guard
@@ -200,12 +204,14 @@ func NewServer(other Config) (*EEBus, error) {
 			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
 			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
 			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+			OHPCF:  ohpcf.NewOHPCF(localEntity, c.ucCallback),
 		}
 
 		// monitoring appliance to meters
 		c.ma = MonitoringAppliance{
 			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
 			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
+			MaMDTInterface:  mdt.NewMDT(localEntity, c.ucCallback),
 		}
 	}
 
@@ -240,8 +246,9 @@ func NewServer(other Config) (*EEBus, error) {
 		c.cem.EvseCC, c.cem.EvCC,
 		c.cem.EvCem, c.cem.OpEV,
 		c.cem.OscEV, c.cem.EvSoc,
+		c.cem.OHPCF,
 		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
-		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
+		c.ma.MaMGCPInterface, c.ma.MaMPCInterface, c.ma.MaMDTInterface,
 		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
 	} {
 		c.service.AddUseCase(uc)
