@@ -24,14 +24,16 @@
 				</optgroup>
 			</template>
 		</select>
-		<input
-			v-else
-			:id="`${deviceType}Template`"
-			type="text"
-			:value="productName || $t('config.general.customOption')"
-			disabled
-			class="form-control w-100"
-		/>
+		<div v-else class="d-flex gap-2 align-items-stretch">
+			<input
+				:id="`${deviceType}Template`"
+				type="text"
+				:value="productName || $t('config.general.customOption')"
+				disabled
+				class="form-control"
+			/>
+			<slot name="action" />
+		</div>
 	</FormRow>
 </template>
 

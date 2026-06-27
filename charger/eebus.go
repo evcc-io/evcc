@@ -2,7 +2,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evcc"
 	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -74,33 +74,34 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 // newEEBus creates and initializes a raw *EEBus charger.
 // It registers the device with the EEBus instance and waits for the connection.
 func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
 	c := &EEBus{
 		Caps:    implement.New(),
 		log:     util.NewLogger("eebus"),
 		current: 6,
-		cem:     eebus.Instance.CustomerEnergyManagement(),
+		cem:     inst.CustomerEnergyManagement(),
 	}
 
 	c.connector = eebus.NewConnector()
 	c.minMaxG = util.Cached(c.minMax, time.Second)
 
-	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
+	if err := inst.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
 	if err := c.connector.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 	}()
 
 	return c, nil
@@ -344,7 +345,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// always set overload protection limits (obligation)
-	if _, err := c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
+	if _, err := c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, c.callbackResult("opEV limits")); err != nil {
 		return err
 	}
 
@@ -394,8 +395,24 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		limits = append(limits, limit)
 	}
 
-	if _, err := c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
+	if _, err := c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, c.callbackResult("oscEV limits")); err != nil {
 		c.log.DEBUG.Println("failed to write OSCEV limits:", err)
+	}
+}
+
+// callbackResult logs a rejected eebus write; a successful result is ignored.
+func (c *EEBus) callbackResult(msg string) func(model.ResultDataType) {
+	return func(result model.ResultDataType) {
+		if result.ErrorNumber == nil || *result.ErrorNumber == 0 {
+			return
+		}
+
+		if result.Description != nil {
+			c.log.ERROR.Printf("%s: write rejected: %d (%s)", msg, *result.ErrorNumber, *result.Description)
+			return
+		}
+
+		c.log.ERROR.Printf("%s: write rejected: %d", msg, *result.ErrorNumber)
 	}
 }
 

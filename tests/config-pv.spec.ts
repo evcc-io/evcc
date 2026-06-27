@@ -23,13 +23,15 @@ test.describe("pv meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Add solar meter" }).click();
     await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await meterModal.getByLabel("Power optional").fill("5000");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(meterModal.getByLabel("Minimum charge")).not.toBeVisible(); // battery usage only
     await expect(meterModal.getByLabel("Maximum AC power of the hybrid inverter")).toBeVisible(); // pv usage only
+    await meterModal.getByLabel("Power optional").fill("5000");
+    await expect(meterModal.getByLabel("Power optional")).toHaveValue("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");

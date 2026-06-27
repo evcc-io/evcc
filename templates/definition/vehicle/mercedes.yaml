@@ -9,7 +9,7 @@ requirements:
       Requires `access` and `refresh` tokens. Documentation here: https://tinyurl.com/mbapi2020helptoken.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: user
     required: true
   - name: region
@@ -19,10 +19,8 @@ params:
     default: EMEA
   - name: accessToken
     required: true
-    mask: true
   - name: refreshToken
     required: true
-    mask: true
   - name: vin
     example: V...
   - name: cache

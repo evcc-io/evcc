@@ -165,3 +165,36 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 	require.NoError(t, set(4))
 	require.Equal(t, []int{1, 3, 2, 4}, calls, "Value 4 should be set immediately (no delay)")
 }
+
+func TestWatchdogResetStopsInflightTick(t *testing.T) {
+	// Switching to the reset value must stop the watchdog: an in-flight tick
+	// must not re-assert the old value after the reset value was written.
+	for iter := range 200 {
+		p := &watchdogPlugin{
+			log:     util.NewLogger("test"),
+			timeout: 2 * time.Millisecond,
+			clock:   clock.New(),
+		}
+
+		var sawReset, stale atomic.Bool
+
+		set := setter(p, func(v int) error {
+			if v == 1 {
+				sawReset.Store(true)
+				// hold the lock so an in-flight tick queues behind the reset
+				time.Sleep(2 * time.Millisecond)
+			} else if sawReset.Load() {
+				stale.Store(true)
+			}
+			return nil
+		}, []int{1})
+
+		require.NoError(t, set(2)) // non-reset: starts the watchdog
+		time.Sleep(3 * time.Millisecond)
+
+		require.NoError(t, set(1)) // reset: must stop the watchdog
+		time.Sleep(5 * time.Millisecond)
+
+		require.Falsef(t, stale.Load(), "iter %d: watchdog re-asserted old value after reset", iter)
+	}
+}

@@ -7,16 +7,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestAA55UDPFromConfig_Block verifies that the nested block map decodes and a
-// target register that fits within the block is accepted (block-read mode).
+// TestAA55UDPFromConfig_Block verifies the modbus.Register and nested block map
+// decode, with the count (2 registers) derived from the int32 decode width.
 func TestAA55UDPFromConfig_Block(t *testing.T) {
 	_, err := NewAA55UDPFromConfig(context.Background(), map[string]any{
 		"host":     "127.0.0.1",
 		"id":       247,
-		"register": 35139,
-		"count":    2,
+		"register": map[string]any{"address": 35139, "decode": "int32"},
 		"block":    map[string]any{"register": 35100, "count": 125},
-		"decode":   "int32be",
 	})
 	require.NoError(t, err)
 }
@@ -27,10 +25,8 @@ func TestAA55UDPFromConfig_BlockRejectsOutOfRange(t *testing.T) {
 	_, err := NewAA55UDPFromConfig(context.Background(), map[string]any{
 		"host":     "127.0.0.1",
 		"id":       247,
-		"register": 36017, // outside READ 125 @ 35100
-		"count":    2,
+		"register": map[string]any{"address": 36017, "decode": "float32"}, // outside READ 125 @ 35100
 		"block":    map[string]any{"register": 35100, "count": 125},
-		"decode":   "float32be",
 	})
 	require.Error(t, err)
 }
@@ -39,9 +35,7 @@ func TestAA55UDPFromConfig_BlockRejectsOutOfRange(t *testing.T) {
 func TestAA55UDPFromConfig_Register(t *testing.T) {
 	_, err := NewAA55UDPFromConfig(context.Background(), map[string]any{
 		"host":     "127.0.0.1",
-		"register": 30127,
-		"count":    2,
-		"decode":   "int32be",
+		"register": map[string]any{"address": 30127, "decode": "int32"},
 	})
 	require.NoError(t, err)
 }

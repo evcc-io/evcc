@@ -1,0 +1,21 @@
+template: ocpp-hager
+products:
+  - brand: Hager
+    description:
+      generic: witty one
+  - brand: Hager
+    description:
+      generic: witty plus
+  - brand: Hager
+    description:
+      generic: witty pro
+  - brand: Hager
+    description:
+      generic: witty park 2
+capabilities: ["rfid", "dim"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

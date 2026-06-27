@@ -105,6 +105,11 @@
       "title": "Zarządzanie obciążeniem",
       "usableMeters": "Użyteczne odniesienia licznikowe"
     },
+    "consumer": {
+      "description": "Monitoruje mniejsze, niesterowalne urządzenia (lodówkę, pralkę itp.). Zapewnia lepszy przegląd zużycia energii w domu.",
+      "titleAdd": "Dodaj licznik konsumencki",
+      "titleEdit": "Edytuj licznik konsumencki"
+    },
     "control": {
       "description": "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz.",
       "descriptionInterval": "Cykl aktualizacji w sekundach. Określa, jak często evcc odczytuje dane z licznika i dostosowuje naliczanie opłat. Domyślna wartość 30 sekund jest bezpiecznym wyborem. Urządzenia takie jak pojazdy, stacje ładowania i falowniki zazwyczaj potrzebują kilku sekund, aby dostosować swoje działanie. Jeśli komponenty reagują szybko, można użyć niższych wartości. Zdecydowanie zalecamy, aby nie schodzić poniżej 10 sekund. Jeśli zauważysz nieregularne działanie sterowania lub skoki wartości mocy, wybierz większy interwał.",
@@ -212,8 +217,8 @@
     },
     "ext": {
       "description": "Rejestruje wartości energii niekontrolowanych odbiorników (np. lodówka, pralka itp.) do celów statystycznych. Liczniki te mogą być również wykorzystywane do zarządzania obciążeniem (np. poddystrybucja).",
-      "titleAdd": "Dodaj licznik konsumencki",
-      "titleEdit": "Edytuj licznik konsumencki"
+      "titleAdd": "Dodaj dodatkowy licznik",
+      "titleEdit": "Edytuj dodatkowy licznik"
     },
     "form": {
       "danger": "Niebezpieczeństwo",
@@ -437,6 +442,7 @@
       "description": "Otrzymuj powiadomienia o swoich sesjach ładowania.",
       "event": {
         "asleep": {
+          "messageDefault": "Ładowanie wstrzymane, pojazd {vehicleName} nie ładuje się.",
           "title": "Podczas oczekiwania na pojazd",
           "titleDefault": "Pojazd uśpiony"
         },
@@ -1093,10 +1099,37 @@
       "charging": "Grzeje…",
       "connected": "Oczekuje.",
       "vehicleLimit": "Limit podgrzewacza",
-      "waitForVehicle": "Gotowe. Czekam na podgrzewacz…"
+      "waitForVehicle": "Gotowe do grzania…"
     },
     "hemsWarning": {
-      "title": "Limit zewnętrzny:"
+      "consumption": "Konsumpcja",
+      "feedIn": "Do sieci",
+      "title": "Limit zewnętrzny aktywny"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "naładowane",
+          "returnEnergy": "rozładowane"
+        },
+        "grid": {
+          "energy": "zaimportowane",
+          "returnEnergy": "wyeksportowane"
+        }
+      },
+      "downloadCsv": "Pobierz CSV",
+      "empty": "Brak dostępnych danych historycznych dla tego przedziału czasu.",
+      "group": {
+        "battery": "Magazyn energii",
+        "consumer": "Konsumpcja",
+        "forecast": "Prognoza",
+        "grid": "Sieć",
+        "loadpoint": "Ładowanie i ogrzewania",
+        "meter": "Dodatkowe liczniki",
+        "pv": "Produkcja"
+      },
+      "otherConsumers": "Inne",
+      "title": "Historia"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",
@@ -1363,7 +1396,7 @@
     },
     "groupBy": {
       "loadpoint": "Punkt obciążenia",
-      "none": "Wszystko",
+      "none": "Słońce",
       "vehicle": "Pojazd"
     },
     "loadpoint": "Punkt obciążenia",
@@ -1385,7 +1418,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Koszt",
-      "solar": "Słońce"
+      "solar": "Energia"
     },
     "vehicle": "Pojazd"
   },
