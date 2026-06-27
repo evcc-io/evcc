@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
@@ -30,7 +31,8 @@ type CS struct {
 	regs        map[string]*registration // guarded by mu mutex
 	txnId       atomic.Int64
 	publishFunc func()
-	server      ws.Server // raw server, used by the forwarder to write frames
+	server      ws.Server              // raw server, used by the forwarder to write frames
+	dispatcher  ocppj.ServerDispatcher // request dispatcher, timeout set at start
 }
 
 // Write sends a raw OCPP frame to the charger with the given station ID.

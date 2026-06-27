@@ -312,3 +312,5 @@ Structure PR descriptions in this order. No headlines. Be concise.
    ```
 
 Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers, no generator footers.
+
+Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.
