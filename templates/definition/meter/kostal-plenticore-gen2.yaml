@@ -12,7 +12,7 @@ caveats:
         Nur ein System kann und darf auf den Wechselrichter zugreifen!
       en: |
         Only a single system may access the inverter!
-    link: https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
+    link: https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore
 requirements:
   description:
     de: |
