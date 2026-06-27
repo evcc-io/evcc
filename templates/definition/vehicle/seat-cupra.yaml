@@ -26,10 +26,6 @@ requirements:
       Data is refreshed roughly every 15 minutes.
 params:
   - preset: vehicle-base
-  - name: coarsecurrent
-    advanced: true
-  - name: welcomecharge
-    advanced: true
   - preset: vehicle-online
 render: |
   type: drivesomethinggreater

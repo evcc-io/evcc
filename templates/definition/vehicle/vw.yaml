@@ -35,10 +35,6 @@ params:
     example: WVWZZZ...
   - name: timeout
     deprecated: true
-  - name: coarsecurrent
-    advanced: true
-  - name: welcomecharge
-    advanced: true
   - preset: vehicle-online
 render: |
   type: drivesomethinggreater

@@ -46,10 +46,6 @@ params:
     description:
       de: Marke
       en: Brand
-  - name: coarsecurrent
-    advanced: true
-  - name: welcomecharge
-    advanced: true
   - preset: vehicle-online
 render: |
   type: drivesomethinggreater
