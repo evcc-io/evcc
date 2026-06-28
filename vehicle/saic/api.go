@@ -78,9 +78,7 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 	var res requests.Answer[requests.ChargeStatus]
 	_, err = doRequest(v, req, &res)
 	if err == nil {
-		v.request = ConcurrentRequest{
-			Result: res.Data,
-		}
+		v.request.Result = res.Data
 		v.request.Status.Store(StatValid)
 	} else if err != api.ErrMustRetry {
 		v.request.Status.Store(StatInvalid)
