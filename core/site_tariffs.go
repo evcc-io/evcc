@@ -152,6 +152,15 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		}
 	}
 
+	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {
+		c := site.collectors[metrics.Temperature]
+		if err := c.AddEnergy(nil, nil, 0); err != nil {
+			site.log.ERROR.Printf("temperature collector: %v", err)
+		} else if err := c.SetSocTemp(r.Value, true); err != nil {
+			site.log.ERROR.Printf("temperature collector soc_temp: %v", err)
+		}
+	}
+
 	if scale := site.solarScale(); scale != 1 {
 		res.Scale = &scale
 	}
