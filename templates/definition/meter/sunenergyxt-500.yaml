@@ -57,6 +57,7 @@ render: |
     cache: {{ .cache }}
     timeout: {{ .timeout }}
     jq: .state.reported.GP
+    scale: -1
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
