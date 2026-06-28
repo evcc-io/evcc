@@ -32,6 +32,22 @@ func TestPresets(t *testing.T) {
 	}, tmpl.Params)
 }
 
+func TestPredefinedNameRendered(t *testing.T) {
+	// "name" is a predefined template property, so a template can self-reference
+	// its own device name (e.g. to select its entry from a published state array)
+	// without a manual index/reference. Lock this contract.
+	tmpl := &Template{Render: "key: {{ .name }}"}
+
+	b, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{"name": "mydevice"})
+	require.NoError(t, err)
+	assert.Equal(t, "key: mydevice", string(b))
+
+	// real-world device name (db:ID) flows through too
+	b, _, err = tmpl.RenderResult(RenderModeInstance, map[string]any{"name": "db:42"})
+	require.NoError(t, err)
+	assert.Contains(t, string(b), "db:42")
+}
+
 func TestRequiredString(t *testing.T) {
 	tmpl := &Template{
 		Params: []Param{

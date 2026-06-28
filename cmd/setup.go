@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"regexp"
 	"slices"
@@ -295,10 +296,29 @@ func validateConfigurableCircuits(children []config.Config) error {
 
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
+// withDeviceName exposes the device's own name to its template via the predefined
+// "name" property, so a template can self-reference instead of requiring a manual
+// index/reference - e.g. select its own entry from a published state array. Returns
+// a copy; the input map is not modified.
+//
+// Only applied to template devices: native/custom device configs are decoded
+// strictly (ErrorUnused), so an extra key would be rejected as invalid.
+func withDeviceName(typ string, other map[string]any, name string) map[string]any {
+	if typ != "template" {
+		return other
+	}
+	res := maps.Clone(other)
+	if res == nil {
+		res = make(map[string]any)
+	}
+	res["name"] = name
+	return res
+}
+
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
 
-	instance, err := newFromConf(ctx, cc.Type, cc.Other)
+	instance, err := newFromConf(ctx, cc.Type, withDeviceName(cc.Type, cc.Other, cc.Name))
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 	}
@@ -344,7 +364,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 
 	var instance T
 	if err == nil {
-		instance, err = newFromConf(ctx, typ, other)
+		instance, err = newFromConf(ctx, typ, withDeviceName(typ, other, cc.Name))
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 		}
