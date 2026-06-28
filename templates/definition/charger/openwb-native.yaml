@@ -81,7 +81,7 @@ requirements:
           - SDM630/SDM72 (template: eastron) with ID 105 or ID 106 for the Duo's second connector (e.g. openWB SE).
           - ABB B23 (template: abb-ab) with ID 201
       - Be aware of the limitations of the openWB SE HW regarding maximum allowed currents, see https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se.
-        EVCC does not limit the current to the allowed maximum, so please configure the maximum current in EVCC accordingly.
+        evcc does not limit the current to the allowed maximum, so please configure the maximum current in evcc accordingly.
 
       Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
