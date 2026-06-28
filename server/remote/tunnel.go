@@ -19,8 +19,6 @@ import (
 // bad registration token or sponsor token
 var errCredentialsRejected = errors.New("remote access rejected")
 
-const configRetryInterval = 15 * time.Minute
-
 const minUptime = 5 * time.Second
 
 // Tunnel manages a WebSocket+yamux tunnel to the cloud proxy.
@@ -70,23 +68,20 @@ func (t *Tunnel) run() {
 			t.log.ERROR.Printf("tunnel: %v", err)
 		}
 
+		// rejected credentials will not self-heal; a new token requires a restart
+		if errors.Is(err, errCredentialsRejected) {
+			return
+		}
+
 		// reset backoff only after a session that stayed connected
 		if ok {
 			bo.Reset()
 		}
 
-		var wait time.Duration
-		// rejected credentials will not self-heal; retry slowly
-		if errors.Is(err, errCredentialsRejected) {
-			wait = configRetryInterval
-		} else {
-			wait = bo.NextBackOff()
-		}
-
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(wait):
+		case <-time.After(bo.NextBackOff()):
 		}
 	}
 }
