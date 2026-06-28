@@ -74,7 +74,7 @@ requirements:
       - Configure evcc according to the manual. There are multiple distinct Hardware versions, which differ regarding the built-in modbus
         adapters and charge meters.
         - A single or multiple Modbus adapters are found at `/dev/ttyUSB0`, `/dev/ttyUSB1` (some Duo) or `/dev/ttyACM0` (e.g. openWB SE). 
-          Some Duo's contain two Modbus adapters, some just one. openWB SE 
+          Some Duo's contain two Modbus adapters, some just one.
         - The EVSE for the first connector has the ID 1, the second one ID 2. The openWB SE uses ID 11 and ID 12 instead.
         - The different possible charge meters are:
           - Bernecker Engineering MPM3PM (template: mpm3pm) with ID 5 or ID 6 for the Duo's second connector.
