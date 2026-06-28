@@ -30,8 +30,9 @@ requirements:
           - Bernecker Engineering MPM3PM (template: mpm3pm) mit ID 5 oder ID 6 für den zweiten Ladepunkt bei der Duo.
           - SDM630/SDM72 (template: eastron) mit ID 105 oder ID 106 für den zweiten Ladepunkt bei der Duo (u.a. openWB SE).
           - ABB B23 (template: abb-ab) mit ID 201
-      - Beachte die Beschränkungen der openWB SE-Hardware bezüglich der maximal zulässigen Ströme; siehe https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se.
-        EVCC begrenzt den Strom nicht auf den zulässigen Maximalwert, daher bitte den maximalen Strom in EVCC entsprechend konfigurieren.
+      - Die openWB SE-Hardware limitiert die maximal zulässigen Ströme abhängig von der Anzahl der aktivenPhasen; 
+        siehe https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se. evcc selbst begrenzt den Strom *nicht* auf 
+        den zulässigen Maximalwert, daher bitte den maximalen Strom in evcc entsprechend konfigurieren.
 
       Zusätzlich für die Anzeige von evcc im Display (Achtung dann können auch Unbefugte laden!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
@@ -80,8 +81,9 @@ requirements:
           - Bernecker Engineering MPM3PM (template: mpm3pm) with ID 5 or ID 6 for the Duo's second connector.
           - SDM630/SDM72 (template: eastron) with ID 105 or ID 106 for the Duo's second connector (e.g. openWB SE).
           - ABB B23 (template: abb-ab) with ID 201
-      - Be aware of the limitations of the openWB SE HW regarding maximum allowed currents, see https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se.
-        evcc does not limit the current to the allowed maximum, so please configure the maximum current in evcc accordingly.
+      - The openWB SE Hardware limits the maximum allowed currents depending on the number of active phases, 
+        see https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se. evcc by itself does not enforce these current limits, 
+        so please ensure to configure the maximum current in evcc accordingly.
 
       Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
