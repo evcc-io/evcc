@@ -201,24 +201,16 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 			case api.BatteryHold:
-				// Use the current SoC as both min and max target so the inverter has no
-				// reason to charge or discharge. Writing MaxSoc here would cause the inverter
-				// to charge the battery from the grid when use_grid_power_enable is true.
-				currentSoC, err := m.queryFloat(rct.BatterySoC)
-				if err != nil {
-					return err
-				}
-
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocMax, floatVal(currentSoC))
+					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(currentSoC))
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
 				eg.Go(func() error {
