@@ -38,7 +38,7 @@ export interface InfluxConfig {
 }
 
 export interface HemsConfig {
-  type: string;
+  configured: boolean;
 }
 
 export interface HemsStatus {
@@ -221,6 +221,10 @@ export enum ConfigType {
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
 
+export interface ConfigHems extends Entity {
+  deviceProduct?: string;
+}
+
 // Configuration-specific types for device setup/configuration contexts
 export interface ConfigCharger extends Omit<Entity, "type"> {
   deviceProduct: string;
@@ -270,6 +274,12 @@ export interface ConfigLoadpoint {
     };
     estimate: boolean;
   };
+  ui: LoadpointUi;
+}
+
+export interface LoadpointUi {
+  minTemp: number;
+  maxTemp: number;
 }
 
 export enum SMART_COST_TYPE {
@@ -281,6 +291,11 @@ export enum SMART_COST_TYPE {
 export enum LENGTH_UNIT {
   KM = "km",
   MILES = "mi",
+}
+
+export enum TIME_FORMAT {
+  H12 = "12",
+  H24 = "24",
 }
 
 export interface Loadpoint {
@@ -361,6 +376,7 @@ export interface Loadpoint {
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
   batteryBoostLimit: number;
+  ui?: LoadpointUi;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -709,7 +725,14 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger" | "tariff";
+export type DeviceType =
+  | "charger"
+  | "meter"
+  | "vehicle"
+  | "loadpoint"
+  | "messenger"
+  | "tariff"
+  | "hems";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";

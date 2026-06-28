@@ -26,7 +26,7 @@ const (
 // timestamp plus portalInterval and a latency margin), so the map is updated as
 // soon as the portal delivers a new dataset.
 type Provider struct {
-	statusG func() (map[string]point, error)
+	statusG func() ([]point, error)
 }
 
 // NewProvider creates a vehicle api provider
@@ -34,8 +34,8 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 	v := &Provider{}
 	s := sharedStore(api)
 
-	var cached util.Cacheable[map[string]point]
-	cached = util.ResettableCached(func() (map[string]point, error) {
+	var cached util.Cacheable[[]point]
+	cached = util.ResettableCached(func() ([]point, error) {
 		ts, err := s.update(vin)
 		if err != nil {
 			log.ERROR.Println(err)
@@ -62,11 +62,11 @@ func resetDelay(ts time.Time, cache time.Duration) time.Duration {
 
 // lookup returns the freshest present value among the given field names (most to
 // least authoritative); the highest Seq wins, equal Seq keeps the priority order.
-func lookup(data map[string]point, fields ...string) *point {
+func lookup(data []point, fields ...string) *point {
 	var best *point
 	for _, f := range fields {
-		if v, ok := data[f]; ok && (best == nil || v.Seq > best.Seq) {
-			best = new(v)
+		if p := find(data, f); p != nil && (best == nil || p.Seq > best.Seq) {
+			best = p
 		}
 	}
 	return best
@@ -81,7 +81,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldBatteryStateReportSoc, FieldSoc, FieldHvSoc, FieldHvBatteryLevel); p != nil {
+	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -150,13 +150,28 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return status, err
 	}
 
+	// block 1: explicit plug state
 	if p := lookup(data, FieldPlugState, FieldChargingPlug1ConnectionState); p != nil && strings.EqualFold(p.Value, "connected") {
 		status = api.StatusB
 	}
 
+	// block 2: flat charging_state field and the current_charge_state field
 	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
-		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV")) {
+		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
+			strings.EqualFold(p.Value, "conservationCharging") || strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
 		status = api.StatusC
+	}
+
+	// block 3: charging_scenario is the most explicit plug/charge signal
+	if p := lookup(data, FieldChargingScenario); p != nil && status != api.StatusC {
+		upper := strings.ToUpper(p.Value)
+		switch {
+		case strings.HasSuffix(upper, "_ACTIVE"):
+			status = api.StatusC
+		// the car reports finished if it's plugged in but not charging
+		case strings.HasSuffix(upper, "_FINISHED"):
+			status = api.StatusB
+		}
 	}
 
 	return status, nil

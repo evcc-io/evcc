@@ -11,7 +11,7 @@ requirements:
       Anstelle des Passworts muss in das Passwort-Feld ein `refresh_token` eingetragen werden ([Anleitung](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)).
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - preset: vehicle-language
 render: |
   type: genesis

@@ -41,6 +41,14 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 
 // createEntity ensures the entity row exists and refreshes its title.
 func createEntity(group, name, title string) (entity, error) {
+	// keep history when a meter is regrouped "meter" -> "consumer" (aux, ext convert)
+	if group == Consumer {
+		var prev entity
+		if db.Instance.Where(`"group" = ? AND name = ?`, Meter, name).Limit(1).Find(&prev).RowsAffected > 0 {
+			db.Instance.Model(&prev).UpdateColumn("group", Consumer)
+		}
+	}
+
 	e := entity{Group: group, Name: name}
 
 	if err := db.Instance.Where(&e).Attrs(entity{Title: title}).FirstOrCreate(&e).Error; err != nil {
@@ -58,6 +66,16 @@ func (e *entity) updateTitle(title string) error {
 
 	e.Title = title
 	return db.Instance.Model(e).UpdateColumn("title", title).Error
+}
+
+// updateIsTemp refreshes the entity's stored is_temp flag if it changed
+func (e *entity) updateIsTemp(isTemp bool) error {
+	if e.IsTemp == isTemp {
+		return nil
+	}
+
+	e.IsTemp = isTemp
+	return db.Instance.Model(e).UpdateColumn("is_temp", isTemp).Error
 }
 
 // UpdateTitle refreshes the collector entity's stored title if it changed.
@@ -95,12 +113,18 @@ func (c *Collector) process(fun func()) error {
 
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
-
+	c.accu.SocTemp = nil
 	return nil
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy)
+	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp)
+}
+
+// SetSocTemp records the slot-start soc (temperature when isTemp). Call after AddEnergy.
+func (c *Collector) SetSocTemp(value float64, isTemp bool) error {
+	c.accu.setSocTemp(value)
+	return c.entity.updateIsTemp(isTemp)
 }
 
 func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {

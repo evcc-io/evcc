@@ -11,9 +11,9 @@ import (
 )
 
 // testProvider returns a provider serving the given static data
-func testProvider(data map[string]point) *Provider {
+func testProvider(data []point) *Provider {
 	return &Provider{
-		statusG: func() (map[string]point, error) {
+		statusG: func() ([]point, error) {
 			return data, nil
 		},
 	}
@@ -31,15 +31,60 @@ func TestStatusPlugStates(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		data := map[string]point{
-			FieldPlugState:     {Value: tc.plug},
-			FieldChargingState: {Value: tc.charge},
+		data := []point{
+			{Name: FieldPlugState, Value: tc.plug},
+			{Name: FieldChargingState, Value: tc.charge},
 		}
 		p := testProvider(data)
 
 		status, err := p.Status()
 		require.NoError(t, err)
 		assert.Equal(t, tc.expected, status, "plug=%q charge=%q", tc.plug, tc.charge)
+	}
+}
+
+func TestStatusConservationCharging(t *testing.T) {
+	tc := []struct {
+		field    string
+		value    string
+		expected api.ChargeStatus
+	}{
+		{FieldChargingState, "conservationCharging", api.StatusC},
+		{FieldCurrentChargeState, "CHARGE_STATE_CONSERVATION_CHARGING", api.StatusC},
+	}
+
+	for _, tc := range tc {
+		data := []point{{Name: tc.field, Value: tc.value}}
+		p := testProvider(data)
+
+		status, err := p.Status()
+		require.NoError(t, err)
+		assert.Equal(t, tc.expected, status, "field=%q value=%q", tc.field, tc.value)
+	}
+}
+
+func TestStatusChargingScenario(t *testing.T) {
+	tc := []struct {
+		scenario string
+		expected api.ChargeStatus
+	}{
+		{"CHARGING_SCENARIO_IMMEDIATELY_CHARGING_FINISHED", api.StatusB},
+		{"CHARGING_SCENARIO_OPTIMISED_CHARGING_FINISHED", api.StatusB},
+		{"CHARGING_SCENARIO_CHARGING_TO_DEPARTURE_TIME_FINISHED", api.StatusB},
+		{"CHARGING_SCENARIO_IMMEDIATELY_CHARGING_ACTIVE", api.StatusC},
+		{"CHARGING_SCENARIO_CHARGING_TO_DEPARTURE_TIME_ACTIVE", api.StatusC},
+		{"CHARGING_SCENARIO_OFF", api.StatusA},
+		// case-insensitivity: mixed-case value should behave like its uppercased equivalent
+		{"Charging_Scenario_Off", api.StatusA},
+	}
+
+	for _, tc := range tc {
+		data := []point{{Name: FieldChargingScenario, Value: tc.scenario}}
+		p := testProvider(data)
+
+		status, err := p.Status()
+		require.NoError(t, err)
+		assert.Equal(t, tc.expected, status, "scenario=%q", tc.scenario)
 	}
 }
 
@@ -90,20 +135,20 @@ func TestMerge(t *testing.T) {
 	t0 := time.Date(2026, 5, 31, 7, 0, 0, 0, time.UTC)
 	t1 := time.Date(2026, 5, 31, 8, 0, 0, 0, time.UTC)
 
-	dst := map[string]point{
-		FieldSoc:      {Value: "70", Timestamp: t1},
-		FieldOdometer: {Value: "100", Timestamp: t1},
+	dst := []point{
+		{Name: FieldSoc, Value: "70", Timestamp: t1},
+		{Name: FieldOdometer, Value: "100", Timestamp: t1},
 	}
-	src := map[string]point{
-		FieldSoc:            {Value: "80", Timestamp: t0},  // newer dataset wins despite older capture
-		FieldRangeSecondary: {Value: "200", Timestamp: t1}, // new field -> added
+	src := []point{
+		{Name: FieldSoc, Value: "80", Timestamp: t0},             // newer dataset wins despite older capture
+		{Name: FieldRangeSecondary, Value: "200", Timestamp: t1}, // new field -> added
 	}
 
-	merge(dst, src, 1)
+	dst = merge(dst, src, 1)
 
-	assert.Equal(t, "80", dst[FieldSoc].Value, "newer dataset wins, even with an older timestampUtc")
-	assert.Equal(t, "100", dst[FieldOdometer].Value, "field absent from src is retained")
-	assert.Equal(t, "200", dst[FieldRangeSecondary].Value, "new field added")
+	assert.Equal(t, "80", find(dst, FieldSoc).Value, "newer dataset wins, even with an older timestampUtc")
+	assert.Equal(t, "100", find(dst, FieldOdometer).Value, "field absent from src is retained")
+	assert.Equal(t, "200", find(dst, FieldRangeSecondary).Value, "new field added")
 }
 
 // TestMergeDeliveryOrder guards the case where the portal stamps fresh values
@@ -115,7 +160,7 @@ func TestMergeDeliveryOrder(t *testing.T) {
 		return ts
 	}
 
-	data := map[string]point{}
+	var data []point
 	// datasets in delivery order; capture timestamps go backwards as SoC rises
 	for i, d := range []struct{ value, capture string }{
 		{"60", "2026-06-13 14:03:37"}, // delivered 14:10
@@ -123,51 +168,52 @@ func TestMergeDeliveryOrder(t *testing.T) {
 		{"66", "2026-06-13 13:03:16"}, // delivered 15:11
 		{"75", "2026-06-13 13:52:11"}, // delivered 16:54
 	} {
-		merge(data, map[string]point{FieldSoc: {Value: d.value, Timestamp: parse(d.capture)}}, uint64(i+1))
+		data = merge(data, []point{{Name: FieldSoc, Value: d.value, Timestamp: parse(d.capture)}}, uint64(i+1))
 	}
 
-	assert.Equal(t, "75", data[FieldSoc].Value, "the newest delivered SoC wins")
+	assert.Equal(t, "75", find(data, FieldSoc).Value, "the newest delivered SoC wins")
 }
 
 // TestSocFreshestField reproduces issue #30877: a higher-priority SoC field that
 // stops being delivered must not shadow a lower-priority field that keeps rising.
 func TestSocFreshestField(t *testing.T) {
-	data := map[string]point{}
+	var data []point
 	var seq uint64
-	deliver := func(fields map[string]point) {
+	deliver := func(fields []point) {
 		seq++
-		merge(data, fields, seq)
+		data = merge(data, fields, seq)
 	}
 
 	// first datasets carry both SoC fields at 57, the high-priority field winning
-	deliver(map[string]point{
-		FieldBatteryStateReportSoc: {Value: "57"},
-		FieldHvBatteryLevel:        {Value: "57.0"},
+	deliver([]point{
+		{Name: FieldHvBatteryLevelValue, Value: "57.0"},
+		{Name: FieldSoc, Value: "57"},
 	})
-	deliver(map[string]point{
-		FieldBatteryStateReportSoc: {Value: "57"},
-		FieldHvBatteryLevel:        {Value: "57.0"},
+	deliver([]point{
+		{Name: FieldHvBatteryLevelValue, Value: "57.0"},
+		{Name: FieldSoc, Value: "57"},
 	})
 
-	// later datasets only refresh the fallback field as the car charges
-	for _, v := range []string{"58.0", "59.0", "61.0"} {
-		deliver(map[string]point{FieldHvBatteryLevel: {Value: v}})
+	// later datasets only refresh the lower-priority field as the car charges
+	for _, v := range []string{"58", "59", "61"} {
+		deliver([]point{{Name: FieldSoc, Value: v}})
 	}
 
 	soc, err := testProvider(data).Soc()
 	require.NoError(t, err)
-	assert.Equal(t, 61.0, soc, "the still-updating fallback wins over the stale high-priority field")
+	assert.Equal(t, 61.0, soc, "the still-updating field wins over the stale higher-priority field")
 }
 
 // TestPoints guards that a data point with a generic field name ("value") is
-// indexed by its unique key while the name stays indexed (and thus logged).
+// stored once yet found by both its unique key and its name.
 func TestPoints(t *testing.T) {
 	data := points([]dataPoint{
 		{Key: KeyRangeID3, DataFieldName: "value", Value: "317"},
 		{DataFieldName: FieldOdometer, Value: "22164"},
 	})
 
-	assert.Equal(t, "317", data[KeyRangeID3].Value, "ID.3 range indexed by key")
-	assert.Equal(t, "317", data["value"].Value, "field name remains indexed")
-	assert.Equal(t, "22164", data[FieldOdometer].Value, "named field indexed by name")
+	require.Len(t, data, 2, "ID.3 range stored once, not duplicated under key and name")
+	assert.Equal(t, "317", find(data, KeyRangeID3).Value, "found by key")
+	assert.Equal(t, "317", find(data, "value").Value, "found by generic name")
+	assert.Equal(t, "22164", find(data, FieldOdometer).Value, "named field found by name")
 }

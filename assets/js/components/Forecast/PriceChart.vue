@@ -11,6 +11,7 @@ import {
 	FONT_FAMILY,
 	markPointLabel,
 	tooltipStyle,
+	tooltipTable,
 	forecastGrid,
 	forecastXAxes,
 	forecastYAxis,
@@ -104,23 +105,16 @@ export default defineComponent({
 						if (!p) return "";
 						const d = new Date(p.value[0]);
 						const time = `${vThis.weekdayShort(d)} ${vThis.fmtHourMinute(d)}`;
-						const lines = [time];
 						const showLabels = params.length > 1;
 						const labels = [
 							vThis.$t("main.energyflow.gridImport"),
 							vThis.$t("main.energyflow.pvExport"),
 						];
-						for (const s of params) {
-							const price = vThis.fmtPricePerKWh(
-								s.value[1],
-								vThis.currency,
-								true,
-								true
-							);
-							const label = showLabels ? `${labels[s.seriesIndex]}: ` : "";
-							lines.push(`${label}${price}`);
-						}
-						return lines.join("<br/>");
+						const rows = params.map((s) => ({
+							name: showLabels ? labels[s.seriesIndex] : undefined,
+							values: [vThis.fmtPricePerKWh(s.value[1], vThis.currency, true, true)],
+						}));
+						return tooltipTable(time, rows);
 					},
 				},
 				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),

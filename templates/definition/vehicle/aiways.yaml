@@ -3,7 +3,7 @@ products:
   - brand: Aiways
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: vin
     required: true
 render: |
