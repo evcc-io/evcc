@@ -9,6 +9,24 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 71
+  - name: cert
+    description:
+      de: Client-Zertifikat (PEM) für Modbus über TLS
+      en: Client certificate (PEM) for Modbus over TLS
+    help:
+      de: Nur nötig, wenn im KSEM TLS aktiviert ist (Port 802). Das Zertifikat muss im KSEM akzeptiert werden.
+      en: Only needed if TLS is enabled in the KSEM (port 802). The certificate must be accepted in the KSEM.
+    advanced: true
+  - name: key
+    description:
+      de: Privater Schlüssel (PEM)
+      en: Private key (PEM)
+    advanced: true
+  - name: cacert
+    description:
+      de: Server-CA-Zertifikat (PEM, optional)
+      en: Server CA certificate (PEM, optional)
+    advanced: true
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter

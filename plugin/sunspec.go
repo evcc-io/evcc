@@ -48,7 +48,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := modbus.NewConnectionFromSettings(ctx, cc.Settings)
 	if err != nil {
 		return nil, err
 	}
