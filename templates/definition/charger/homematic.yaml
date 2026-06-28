@@ -48,7 +48,6 @@ params:
       de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
     example: HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1
   - name: cache
-    advanced: true
     default: 1s
     description:
       en: XML-RPC API cache duration

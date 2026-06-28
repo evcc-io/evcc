@@ -9,10 +9,10 @@
 		</GeneralConfigEntry>
 
 		<GeneralConfigEntry
-			test-id="generalconfig-password"
-			:label="$t('config.general.password')"
-			text="*******"
-			@edit="openModal('passwordupdate')"
+			test-id="generalconfig-security"
+			:label="$t('config.security.title')"
+			:text="$t(`config.general.${authDisabled ? 'off' : 'on'}`)"
+			@edit="openModal('security')"
 		/>
 
 		<GeneralConfigEntry
@@ -79,6 +79,9 @@ export default {
 	},
 	emits: ["site-changed"],
 	computed: {
+		authDisabled() {
+			return store.state?.authDisabled === true;
+		},
 		title() {
 			return store.state?.siteTitle || "";
 		},

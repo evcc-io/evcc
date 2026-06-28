@@ -2,6 +2,8 @@ package charger
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -22,10 +24,20 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const (
-	ocppTestUrl            = "ws://localhost:8887"
-	ocppTestConnectTimeout = 10 * time.Second
-)
+const ocppTestConnectTimeout = 10 * time.Second
+
+// ocppTestUrl is derived from the actual bound port in SetupSuite: the central
+// system binds an ephemeral port to avoid bind failures when the fixed default
+// port is already in use on the CI runner.
+var ocppTestUrl string
+
+func TestMain(m *testing.M) {
+	// bind the OCPP central system to an ephemeral port so this test binary
+	// does not contend with the charger/ocpp package test binary for the fixed
+	// default port when both run in parallel under `go test ./...`
+	ocpp.NewServer(ocpp.Config{Port: 0}, "")
+	os.Exit(m.Run())
+}
 
 func TestOcpp(t *testing.T) {
 	suite.Run(t, new(ocppTestSuite))
@@ -45,12 +57,17 @@ func (suite *ocppTestSuite) SetupSuite() {
 	ocpp.TriggerBootDelay = 100 * time.Millisecond
 
 	// setup cs so we can overwrite logger afterwards
-	_ = ocpp.Instance()
+	cs, err := ocpp.Instance()
+	suite.Require().NoError(err, "instance")
+	suite.NotNil(cs)
+
 	suite.logger = &ocppLogger{t: suite.T()}
 	ocppj.SetLogger(suite.logger)
 
+	suite.Require().NotZero(ocpp.Port(), "central system did not bind")
+	ocppTestUrl = fmt.Sprintf("ws://localhost:%d", ocpp.Port())
+
 	suite.clock = clock.NewMock()
-	suite.NotNil(ocpp.Instance())
 }
 
 func (suite *ocppTestSuite) TearDownSuite() {
@@ -58,9 +75,12 @@ func (suite *ocppTestSuite) TearDownSuite() {
 }
 
 func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client) {
-	// Buffered generously: handlers in ocpp_test_handler.go dispatch sends via
-	// `go func() { triggerC <- … }()`, so a small buffer leaks one extra
-	// goroutine per concurrent trigger until the drain catches up.
+	// Buffered generously: the handlers in ocpp_test_handler.go send to
+	// triggerC synchronously (via defer) on the charge point's WebSocket
+	// read-loop goroutine. If that send blocks, the read loop cannot deliver
+	// the CALL_RESULT for the CP→CS request the drain goroutine is waiting
+	// on, deadlocking the test. The buffer keeps the send from blocking
+	// until the drain catches up.
 	handler := &ChargePointHandler{
 		triggerC: make(chan remotetrigger.MessageTrigger, 16),
 	}
@@ -79,8 +99,9 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 
 	// let cs handle the trigger messages; exit on done so we do not leak a
 	// drain goroutine into subsequent subtests on the shared ocpp.Instance().
-	// Cannot close triggerC because the async senders in ocpp_test_handler.go
-	// would panic on `send on closed channel`.
+	// triggerC is deliberately left open: the handlers in ocpp_test_handler.go
+	// send to it from the charge point's read loop, which we do not synchronize
+	// with on shutdown, so closing it could panic on `send on closed channel`.
 	done := make(chan struct{})
 	finished := make(chan struct{})
 	go func() {
@@ -146,7 +167,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP(suite.T().Context(), "test-1", 1, "", "", 0, false, false, false, true, ocppTestConnectTimeout)
+	c1, err := NewOCPP(suite.T().Context(), "test-1", 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -195,7 +216,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp2.IsConnected())
 
 	// 2nd charge point - local
-	c2, err := NewOCPP(suite.T().Context(), "test-2", 1, "", "", 0, false, false, false, true, ocppTestConnectTimeout)
+	c2, err := NewOCPP(suite.T().Context(), "test-2", 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	{
@@ -237,7 +258,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP(suite.T().Context(), "test-3", 1, "", "", 0, false, false, false, false, ocppTestConnectTimeout)
+	c1, err := NewOCPP(suite.T().Context(), "test-3", 1, "", "", 0, false, false, false, false, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -284,7 +305,7 @@ func (suite *ocppTestSuite) TestTimeout() {
 	})
 
 	// 1st charge point- local
-	_, err := NewOCPP(suite.T().Context(), "test-4", 1, "", "", 0, false, false, false, false, ocppTestConnectTimeout)
+	_, err := NewOCPP(suite.T().Context(), "test-4", 1, "", "", 0, false, false, false, false, false, ocppTestConnectTimeout)
 
 	suite.Require().NoError(err)
 }

@@ -1,4 +1,5 @@
 template: stroomprijsprognose
+deprecated: true
 products:
   - brand: stroomprijsprognose.nl
 requirements:
@@ -15,13 +16,7 @@ params:
     choice: ["DE", "NL", "BE", "DK1", "DK2", "FR"]
     required: true
   - name: currency
-    default: EUR
-    type: choice
-    description:
-      en: Currency
-      de: Währung
     choice: ["EUR", "DKK"]
-    required: true
   - name: horizon
     default: 120
     type: int
@@ -38,4 +33,4 @@ render: |
   {{ include "tariff-features" . }}
   forecast:
     source: http
-    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}
+    uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}

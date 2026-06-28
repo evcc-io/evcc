@@ -20,8 +20,8 @@ params:
   - preset: vehicle-common
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
-  features: ["offline"]
+  {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const
     value: 0

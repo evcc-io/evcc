@@ -3,7 +3,7 @@ covers: ["id"]
 products:
   - brand: Volkswagen
     description:
-      generic: We Connect ID
+      generic: EU Data Act
 requirements:
   description:
     de: e-Golf, e-Up, ID Familie
@@ -13,10 +13,10 @@ params:
   - name: vin
     example: WVWZZZ...
   - name: timeout
-    default: 10s
+    deprecated: true
   - preset: vehicle-features
 render: |
-  type: vw
+  type: drivesomethinggreater
+  brand: Volkswagen
   {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
-  timeout: {{ .timeout }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "streaming")) .) }}

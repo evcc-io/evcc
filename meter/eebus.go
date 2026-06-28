@@ -77,8 +77,7 @@ func init() {
 // NewEEBusFromConfig creates an EEBus meter from generic config
 func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
-		Ski      string
-		Ip       string
+		Ski, Ip  string
 		Usage    *templates.Usage
 		Timeout_ time.Duration `mapstructure:"timeout"` // TODO deprecated
 	}
@@ -93,11 +92,12 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, e
 // NewEEBus creates an EEBus meter
 // Uses MGCP only when usage="grid", otherwise uses MPC (default)
 func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.Meter, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
-	ma := eebus.Instance.MonitoringAppliance()
+	ma := inst.MonitoringAppliance()
 
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
@@ -113,25 +113,25 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
 		ma:        ma,
-		eg:        eebus.Instance.EnergyGuard(),
+		eg:        inst.EnergyGuard(),
 		mm:        mm,
 		scenarios: scenarios,
 		connector: eebus.NewConnector(),
 	}
 
-	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
+	if err := inst.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
 	if err := c.connector.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 	}()
 
 	// monitoring appliance
@@ -154,8 +154,10 @@ func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.Ent
 
 	res, err := update(entity)
 	if err != nil {
-		// announced but not provided
-		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
+		// scenario announced but no usable value yet
+		if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrDataInvalid) {
 			err = api.ErrNotAvailable
 		}
 		return zero, err
@@ -188,10 +190,6 @@ func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemo
 
 	res, err := eebusReadValue(c.mm, c.maEntity, scenario, update)
 	if err != nil {
-		// announced but not provided
-		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
-			err = api.ErrNotAvailable
-		}
 		return 0, 0, 0, err
 	}
 

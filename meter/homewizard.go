@@ -70,6 +70,13 @@ func (c *HomeWizard) Currents() (float64, float64, float64, error) {
 	return c.conn.Currents()
 }
 
+var _ api.PhasePowers = (*HomeWizard)(nil)
+
+// Powers implements the api.PhasePowers interface
+func (c *HomeWizard) Powers() (float64, float64, float64, error) {
+	return c.conn.Powers()
+}
+
 var _ api.PhaseVoltages = (*HomeWizard)(nil)
 
 // Voltages implements the api.PhaseVoltages interface

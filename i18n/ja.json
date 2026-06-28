@@ -146,8 +146,6 @@
       "forecast": "予測",
       "gridPrice": "電気料金",
       "heaterTempLimit": "ヒーターリミット",
-      "hemsActiveLimit": "アクティブリミット",
-      "hemsType": "コミュニケーション",
       "identifier": "RFID-識別子",
       "loginBlocked": "ログイン試行回数の上限に達しました",
       "max": "最大",
@@ -176,10 +174,6 @@
       "A": "A（未接続）",
       "B": "B（接続済み）",
       "C": "C（充電中）"
-    },
-    "deviceValueHemsType": {
-      "eebus": "EEBus経由",
-      "relay": "リレー経由"
     },
     "devices": {
       "auxMeter": "スマート機器",
@@ -1172,13 +1166,13 @@
       "battery": "バッテリー",
       "batteryCharge": "蓄電池充電中",
       "batteryDischarge": "蓄電池放電中",
+      "batteryDischargeHold": "蓄電池 (制限中)",
       "batteryForecastEmpty": "{time} 以降 残量ゼロ",
       "batteryForecastFull": "{time} 以降 満充電",
       "batteryForecastNextHigh": "次の最高値",
       "batteryForecastNextLow": "次の最低値",
       "batteryGridChargeActive": "系統充電: アクティブ",
       "batteryGridChargeLimit": "系統充電: 条件待ち",
-      "batteryHold": "蓄電池 (制限中)",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecast": "予測",
       "forecastTooltip": "予測: 本日の残り太陽光発電量",
@@ -1199,7 +1193,6 @@
       "waitForVehicle": "加熱開始を待機中…"
     },
     "hemsWarning": {
-      "description": "{limit} を超えないよう出力を抑制しています。",
       "title": "外部システム制限:"
     },
     "history": {

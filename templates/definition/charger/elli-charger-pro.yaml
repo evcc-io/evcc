@@ -30,6 +30,11 @@ requirements:
       The identification of a vehicle using the RFID card is not possible.
 
       Important: A mostly flawless functionality can only be provided with an external energy meter and no usage of CT coils, due to sosftware bugs of the Wallbox.  Using a LAN connection is highly recommended.
+caveats:
+  - description:
+      de: "Viele bekannte EEBUS-Firmware-Fehler, die der Hersteller nicht behebt: Ladewerte können unzuverlässig sein und die Verbindung bricht häufig ab. Ein externer Zähler ist erforderlich."
+      en: "Many known EEBUS firmware bugs that the manufacturer will not fix: charging measurements can be unreliable and the connection drops frequently. An external meter is required."
+    link: https://github.com/evcc-io/evcc/discussions/15367
 params:
   - preset: eebus
   - name: ip

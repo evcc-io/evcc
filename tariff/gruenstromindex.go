@@ -75,7 +75,9 @@ func (t *GrünStromIndex) run(done chan error) {
 		}
 
 		if err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue

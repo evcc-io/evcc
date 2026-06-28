@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/stretchr/testify/require"
 )
@@ -21,11 +22,11 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	t1 := t0.Add(15 * time.Minute)
 
 	series := SeriesCSV{
-		{Group: PV, Name: "pv", Data: []Slot{mkSlot(t0, 2.5, 0), mkSlot(t1, 3.0, 0)}},
-		{Group: Battery, Name: "battery-home", Data: []Slot{mkSlot(t0, 0, 0.7800), mkSlot(t1, 0.5300, 0)}},
-		{Group: Battery, Name: "battery-garage", Data: []Slot{mkSlot(t0, 0, 1.2500), mkSlot(t1, 0, 0)}},
-		{Group: Grid, Name: "grid", Data: []Slot{mkSlot(t0, 0, 0.4123), mkSlot(t1, 0.1, 0)}},
-		{Group: Home, Name: "home", Data: []Slot{mkSlot(t0, 0.3661, 0), mkSlot(t1, 0.4, 0)}},
+		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2.5, 0), mkSlot(t1, 3.0, 0)}},
+		{Group: Battery, Title: "battery-home", Data: []Slot{mkSlot(t0, 0, 0.7800), mkSlot(t1, 0.5300, 0)}},
+		{Group: Battery, Title: "battery-garage", Data: []Slot{mkSlot(t0, 0, 1.2500), mkSlot(t1, 0, 0)}},
+		{Group: Grid, Title: "grid", Data: []Slot{mkSlot(t0, 0, 0.4123), mkSlot(t1, 0.1, 0)}},
+		{Group: Home, Title: "home", Data: []Slot{mkSlot(t0, 0.3661, 0), mkSlot(t1, 0.4, 0)}},
 	}
 
 	var buf bytes.Buffer
@@ -42,13 +43,13 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	header := rows[0]
 	expected := []string{
 		"time.start", "time.end",
-		"pv.pv.energy.Wh",
+		"pv.energy.Wh",
 		"battery.battery-garage.energy.Wh", "battery.battery-garage.returnEnergy.Wh",
 		"battery.battery-home.energy.Wh", "battery.battery-home.returnEnergy.Wh",
-		"grid.grid.energy.Wh", "grid.grid.returnEnergy.Wh",
-		"home.home.energy.Wh",
+		"grid.energy.Wh", "grid.returnEnergy.Wh",
+		"home.energy.Wh",
 	}
-	require.Equal(t, expected, header, "header order: GROUP_ORDER, alphabetical entities; returnEnergy only for grid/battery")
+	require.Equal(t, expected, header, "single-entity groups omit the title level; multi-entity groups include the title")
 
 	// time.end = time.start + slot length (15 min in mkSlot)
 	require.Equal(t, t0.Local().Format("2006-01-02 15:04:05"), rows[1][0])
@@ -68,7 +69,7 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 func TestSeriesCSV_GermanLocale(t *testing.T) {
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	series := SeriesCSV{
-		{Group: PV, Name: "pv", Data: []Slot{mkSlot(t0, 2.5, 0)}},
+		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2.5, 0)}},
 	}
 
 	var buf bytes.Buffer
@@ -91,8 +92,8 @@ func TestSeriesCSV_MissingSlotIsEmpty(t *testing.T) {
 	// Two entities, second one only has data for the first timestamp → second
 	// timestamp must produce an empty cell rather than 0.000.
 	series := SeriesCSV{
-		{Group: PV, Name: "a", Data: []Slot{mkSlot(t0, 1, 0), mkSlot(t1, 2, 0)}},
-		{Group: PV, Name: "b", Data: []Slot{mkSlot(t0, 3, 0)}},
+		{Group: PV, Title: "a", Data: []Slot{mkSlot(t0, 1, 0), mkSlot(t1, 2, 0)}},
+		{Group: PV, Title: "b", Data: []Slot{mkSlot(t0, 3, 0)}},
 	}
 
 	var buf bytes.Buffer
@@ -119,7 +120,7 @@ func TestSeriesCSV_BatteryHasReturnEnergyColumn(t *testing.T) {
 	// returnEnergy column.
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	series := SeriesCSV{
-		{Group: Battery, Name: "bat", Data: []Slot{mkSlot(t0, 0.5, 0)}},
+		{Group: Battery, Title: "bat", Data: []Slot{mkSlot(t0, 0.5, 0)}},
 	}
 
 	var buf bytes.Buffer
@@ -131,4 +132,59 @@ func TestSeriesCSV_BatteryHasReturnEnergyColumn(t *testing.T) {
 	require.Equal(t, []string{"time.start", "time.end", "battery.bat.energy.Wh", "battery.bat.returnEnergy.Wh"}, rows[0])
 	require.Equal(t, "500", rows[1][2])
 	require.Equal(t, "0", rows[1][3])
+}
+
+func TestSeriesCSV_SocTempColumns(t *testing.T) {
+	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
+	t1 := t0.Add(15 * time.Minute)
+
+	slot := func(t time.Time, socTemp *float64) Slot {
+		s := mkSlot(t, 1, 0)
+		s.SocTemp = socTemp
+		return s
+	}
+
+	series := SeriesCSV{
+		{Group: Battery, Title: "bat", Data: []Slot{slot(t0, new(90.0)), slot(t1, new(80.0))}},
+		{Group: Loadpoint, Title: "heater", IsTemp: true, Data: []Slot{slot(t0, new(45.0)), slot(t1, new(46.0))}},
+		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2, 0), mkSlot(t1, 3, 0)}},
+	}
+
+	var buf bytes.Buffer
+	require.NoError(t, series.WriteCsv(context.Background(), &buf))
+	out := buf.String()
+
+	require.Contains(t, out, "battery.bat.soc.pct")
+	require.Contains(t, out, "loadpoint.heater.temp.degC")
+	require.NotContains(t, out, "battery.bat.temp")
+	require.NotContains(t, out, "pv.soc")
+}
+
+func TestQueryEnergySoc(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	e := entity{Id: 2, Name: "bat", Group: Battery}
+	require.NoError(t, db.Instance.Create(&e).Error)
+
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
+	require.NoError(t, persist(e, base, 1, 0, new(80.0)))
+	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0)))
+
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(time.Hour).UTC()
+
+	// hourly bucket reports the first slot's snapshot, not an average
+	res, err := QueryEnergy(from, to, "hour", false)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Len(t, res[0].Data, 1)
+	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
+	require.False(t, res[0].IsTemp) // battery: value is soc
+
+	// grouped sums omit the per-entity snapshot
+	res, err = QueryEnergy(from, to, "hour", true)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Nil(t, res[0].Data[0].SocTemp)
 }

@@ -10,15 +10,16 @@ import (
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
-// importProfile returns a 15min average meter profile in Wh. The profile
+// energyProfile returns a 15min average meter profile in Wh. The profile
 // is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
-func importProfile(entity entity, from time.Time) (*[96]float64, error) {
+func energyProfile(entity entity, from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(energy) AS energy
+	// COALESCE guards against legacy rows with NULL energy
+	rows, err := db.Query(`SELECT min(ts) AS ts, COALESCE(avg(energy), 0) AS energy
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')

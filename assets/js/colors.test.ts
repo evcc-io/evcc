@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import colors, { dimColor, lighterColor, fullColor, resolveColors } from "./colors";
+import colors, {
+  dimColor,
+  lighterColor,
+  fullColor,
+  darken,
+  resolveColors,
+  deviceColorMap,
+} from "./colors";
 import type { DeviceColors } from "./types/evcc";
 
 describe("setAlpha helpers", () => {
@@ -26,8 +33,21 @@ describe("setAlpha helpers", () => {
   });
 });
 
+describe("darken", () => {
+  it("scales rgb toward black by factor, staying opaque", () => {
+    expect(darken("#ffffff", 0.5)).toBe("#808080");
+    expect(darken("#0fde41", 1)).toBe("#0fde41");
+    expect(darken("#0fde41", 0)).toBe("#000000");
+  });
+
+  it("clamps factor and ignores non-6-digit hex", () => {
+    expect(darken("#abcdef", 2)).toBe("#abcdef");
+    expect(darken("rgb(1,2,3)", 0.5)).toBe("rgb(1,2,3)");
+  });
+});
+
 describe("resolveColors", () => {
-  const palette = colors.palette; // 18 entries
+  const palette = colors.palette;
 
   it("returns empty map for empty ids", () => {
     expect(resolveColors([], {})).toEqual({});
@@ -86,5 +106,22 @@ describe("resolveColors", () => {
     palette.forEach((c, i) => expect(res[`o${i}`]).toBe(c));
     // free list empty → falls back to wrap-around on palette
     expect(res["extra"]).toBe(palette[0]);
+  });
+});
+
+describe("deviceColorMap", () => {
+  it("returns empty map for undefined", () => {
+    expect(deviceColorMap(undefined)).toEqual({});
+  });
+  it("returns empty map for empty list", () => {
+    expect(deviceColorMap([])).toEqual({});
+  });
+  it("converts list of entries to title→color map", () => {
+    expect(
+      deviceColorMap([
+        { title: "WP-SG+", color: "#2563EB" },
+        { title: "Heizung", color: "#DC2626" },
+      ])
+    ).toEqual({ "WP-SG+": "#2563EB", Heizung: "#DC2626" });
   });
 });

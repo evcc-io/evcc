@@ -4,7 +4,14 @@
     "authCodeHelp": "Kopeeri see kood ja kasuta teda järgmises sammus. Kehtivus {duration}.",
     "authorizationFailed": "Autoriseerimine ei õnnestunud",
     "authorizationRequired": "Autoriseerimine on vajalik",
-    "authorizationSuccessful": "Autoriseerimine õnnestus"
+    "authorizationSuccessful": "Autoriseerimine õnnestus",
+    "buttonConnect": "Ühenda teenusepakkujaga {provider}",
+    "buttonDisconnect": "Katkesta ühendus",
+    "confirmLogout": "Kas oled kindel, et soovid katkestada {title} ühenduse?",
+    "connect": "ühenda",
+    "disconnect": "katkesta ühendus",
+    "loggedOut": "Väljalogimine õnnestus",
+    "logoutFailed": "Väljalogimine ei õnnestunud"
   },
   "batterySettings": {
     "batteryLevel": "Akutase",
@@ -78,8 +85,6 @@
       "forecast": "Ennustus",
       "gridPrice": "Võrguhind",
       "heaterTempLimit": "Soojenduse piir",
-      "hemsActiveLimit": "Aktiivne piir",
-      "hemsType": "Suhtlusviis",
       "identifier": "RFID-tunnus",
       "loginBlocked": "Sisselogimiste piir on käes",
       "max": "enim",

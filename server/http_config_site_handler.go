@@ -18,7 +18,8 @@ func siteHandler(site site.API) http.HandlerFunc {
 			Battery     []string          `json:"battery"`
 			Aux         []string          `json:"aux"`
 			Ext         []string          `json:"ext"`
-			GeoLocation types.GeoLocation `json:"geoLocation"`
+			Consumers   []string          `json:"consumers"`
+      GeoLocation types.GeoLocation `json:"geoLocation"`
 		}{
 			Title:       site.GetTitle(),
 			Grid:        site.GetGridMeterRef(),
@@ -26,7 +27,8 @@ func siteHandler(site site.API) http.HandlerFunc {
 			Battery:     site.GetBatteryMeterRefs(),
 			Aux:         site.GetAuxMeterRefs(),
 			Ext:         site.GetExtMeterRefs(),
-			GeoLocation: site.GetGeoLocation(),
+			Consumers:   site.GetConsumerMeterRefs(),
+      GeoLocation: site.GetGeoLocation(),
 		}
 
 		jsonWrite(w, res)
@@ -53,7 +55,8 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			Battery     *[]string
 			Aux         *[]string
 			Ext         *[]string
-			GeoLocation *types.GeoLocation
+			Consumers   *[]string
+      GeoLocation *types.GeoLocation
 		}
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
@@ -111,6 +114,15 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			}
 
 			site.SetExtMeterRefs(*payload.Ext)
+			setConfigDirty()
+		}
+
+		if payload.Consumers != nil {
+			if !validateRefs(w, *payload.Consumers) {
+				return
+			}
+
+			site.SetConsumerMeterRefs(*payload.Consumers)
 			setConfigDirty()
 		}
 

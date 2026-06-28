@@ -29,18 +29,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ocpp"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
-	"github.com/samber/lo"
 )
 
 // OCPP charger implementation
 type OCPP struct {
 	implement.Caps
-	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
 	phases  int
@@ -49,7 +46,6 @@ type OCPP struct {
 
 	stackLevelZero      bool
 	profileKindRelative bool
-	lp                  loadpoint.API
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -75,10 +71,11 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		AutoStart        bool                       // TODO deprecated
 		NoStop           bool                       // TODO deprecated
 
-		ForcePowerCtrl      bool
-		StackLevelZero      *bool
-		ProfileKindRelative bool
-		RemoteStart         bool
+		ForcePowerCtrl       bool
+		StackLevelZero       *bool
+		ProfileKindRelative  bool
+		RemoteStart          bool
+		NoChangeAvailability *bool
 	}{
 		Connector:      1,
 		MeterInterval:  10 * time.Second,
@@ -91,11 +88,12 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
 	profileKindRelative := cc.ProfileKindRelative
+	noChangeAvailability := cc.NoChangeAvailability != nil && *cc.NoChangeAvailability
 
 	c, err := NewOCPP(ctx,
 		cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		cc.ForcePowerCtrl, stackLevelZero, profileKindRelative, cc.RemoteStart,
+		cc.ForcePowerCtrl, stackLevelZero, profileKindRelative, cc.RemoteStart, noChangeAvailability,
 		cc.ConnectTimeout)
 	if err != nil {
 		return c, err
@@ -129,8 +127,6 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
-	implement.Has(c, implement.CurrentGetter(c.getMaxCurrent))
-
 	return c, nil
 }
 
@@ -138,14 +134,19 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 func NewOCPP(ctx context.Context,
 	id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
-	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart bool,
+	forcePowerCtrl, stackLevelZero, profileKindRelative, remoteStart, noChangeAvailability bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
-	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
+	log := util.NewLogger(fmt.Sprintf("%s-%d", cmp.Or(id, "ocpp"), connector))
 
-	cp, err := ocpp.Instance().RegisterChargepoint(id,
+	cs, err := ocpp.Instance()
+	if err != nil {
+		return nil, err
+	}
+
+	cp, err := cs.RegisterChargepoint(id,
 		func() *ocpp.CP {
-			return ocpp.NewChargePoint(log, id)
+			return ocpp.NewChargePoint(log, cs, id)
 		},
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -158,7 +159,7 @@ func NewOCPP(ctx context.Context,
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl, noChangeAvailability)
 		},
 	)
 	if err != nil {
@@ -170,7 +171,7 @@ func NewOCPP(ctx context.Context,
 	}
 
 	if remoteStart {
-		idTag = lo.CoalesceOrEmpty(idTag, cp.IdTag, defaultIdTag)
+		idTag = cmp.Or(idTag, cp.IdTag, defaultIdTag)
 	}
 
 	conn, err := ocpp.NewConnector(ctx, log, connector, cp, idTag, meterInterval)
@@ -180,7 +181,6 @@ func NewOCPP(ctx context.Context,
 
 	c := &OCPP{
 		Caps:                implement.New(),
-		log:                 log,
 		cp:                  cp,
 		conn:                conn,
 		stackLevelZero:      stackLevelZero,
@@ -193,7 +193,7 @@ func NewOCPP(ctx context.Context,
 
 	// monitor for charger reboots and re-run setup (once per CP, not per connector)
 	cp.MonitorReboot(ctx, func() error {
-		return c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+		return c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl, noChangeAvailability)
 	})
 
 	return c, conn.Initialized()
@@ -350,9 +350,11 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	return res
 }
 
-// getMaxCurrent returns the current the charge point is set to offer.
+var _ api.CurrentGetter = (*OCPP)(nil)
+
+// GetMaxCurrent returns the current the charge point is set to offer.
 // Prefers the Current.Offered measurand, falls back to the last confirmed charging profile limit.
-func (c *OCPP) getMaxCurrent() (float64, error) {
+func (c *OCPP) GetMaxCurrent() (float64, error) {
 	if c.cp.HasMeasurement(types.MeasurandCurrentOffered) {
 		if v, err := c.conn.GetMaxCurrent(); err == nil || !errors.Is(err, api.ErrNotAvailable) {
 			return v, err
@@ -437,11 +439,4 @@ func (c *OCPP) Diagnose() {
 			fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
 		}
 	}
-}
-
-var _ loadpoint.Controller = (*OCPP)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (c *OCPP) LoadpointControl(lp loadpoint.API) {
-	c.lp = lp
 }
