@@ -119,11 +119,9 @@ const (
 	FieldPlugState                    = "plug_state"
 
 	// soc
-	FieldBatteryStateReportSoc = "battery_state_report.soc"
-	FieldSoc                   = "state_of_charge"
-	FieldHvSoc                 = "hv_soc"
-	FieldHvBatteryLevelValue   = "battery_level_HV.value"
-	FieldHvBatteryLevelState   = "battery_level_HV.state"
+	FieldSoc                 = "state_of_charge"
+	FieldHvSoc               = "hv_soc"
+	FieldHvBatteryLevelValue = "battery_level_HV.value"
 
 	// target soc
 	FieldTargetSoc = "settings.target_soc"
@@ -141,10 +139,6 @@ const (
 	// time
 	FieldRemainingTime = "remaining_charging_time"
 )
-
-// hvBatteryLevelValid is the battery_level_HV.state value that marks
-// battery_level_HV.value as a trustworthy SoC reading
-const hvBatteryLevelValid = "VALID"
 
 // contentDatasets returns the content datasets, sorted oldest to newest. The
 // portal emits "..._no_content_found.zip" placeholders while the vehicle is

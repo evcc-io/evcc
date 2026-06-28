@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/stretchr/testify/require"
 )
@@ -131,4 +132,59 @@ func TestSeriesCSV_BatteryHasReturnEnergyColumn(t *testing.T) {
 	require.Equal(t, []string{"time.start", "time.end", "battery.bat.energy.Wh", "battery.bat.returnEnergy.Wh"}, rows[0])
 	require.Equal(t, "500", rows[1][2])
 	require.Equal(t, "0", rows[1][3])
+}
+
+func TestSeriesCSV_SocTempColumns(t *testing.T) {
+	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
+	t1 := t0.Add(15 * time.Minute)
+
+	slot := func(t time.Time, socTemp *float64) Slot {
+		s := mkSlot(t, 1, 0)
+		s.SocTemp = socTemp
+		return s
+	}
+
+	series := SeriesCSV{
+		{Group: Battery, Title: "bat", Data: []Slot{slot(t0, new(90.0)), slot(t1, new(80.0))}},
+		{Group: Loadpoint, Title: "heater", IsTemp: true, Data: []Slot{slot(t0, new(45.0)), slot(t1, new(46.0))}},
+		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2, 0), mkSlot(t1, 3, 0)}},
+	}
+
+	var buf bytes.Buffer
+	require.NoError(t, series.WriteCsv(context.Background(), &buf))
+	out := buf.String()
+
+	require.Contains(t, out, "battery.bat.soc.pct")
+	require.Contains(t, out, "loadpoint.heater.temp.degC")
+	require.NotContains(t, out, "battery.bat.temp")
+	require.NotContains(t, out, "pv.soc")
+}
+
+func TestQueryEnergySoc(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	e := entity{Id: 2, Name: "bat", Group: Battery}
+	require.NoError(t, db.Instance.Create(&e).Error)
+
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
+	require.NoError(t, persist(e, base, 1, 0, new(80.0)))
+	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0)))
+
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(time.Hour).UTC()
+
+	// hourly bucket reports the first slot's snapshot, not an average
+	res, err := QueryEnergy(from, to, "hour", false)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Len(t, res[0].Data, 1)
+	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
+	require.False(t, res[0].IsTemp) // battery: value is soc
+
+	// grouped sums omit the per-entity snapshot
+	res, err = QueryEnergy(from, to, "hour", true)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Nil(t, res[0].Data[0].SocTemp)
 }

@@ -8,11 +8,16 @@ import (
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/config"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
+
+func init() {
+	config.AddCtx("eebus", NewFromConfig)
+}
 
 type EEBus struct {
 	mux sync.RWMutex
@@ -63,7 +68,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		Interval    time.Duration
 	}{
 		Limits: Limits{
-			ContractualConsumptionNominalMax:    24800,
+			// contractual max power at the grid connection point reported to the control box
+			// (EEBus LPC, EMS device type). Default: standard 3x35A x 230V house connection.
+			// This is the connection capacity, not the SteuVE Pmin (see failsafe limit below).
+			ContractualConsumptionNominalMax:    24150, // 3 * 35A * 230V
 			FailsafeConsumptionActivePowerLimit: 4200,
 
 			ProductionNominalMax:               0,
