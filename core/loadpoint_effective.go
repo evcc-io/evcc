@@ -12,7 +12,8 @@ import (
 
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
-	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
+	lp.publish(keys.EffectivePriority, lp.effectivePriority())
+	lp.publish(keys.EffectivePriorityScore, lp.EffectivePriorityScore(lp.GetPriorityBasis()))
 	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
@@ -22,14 +23,72 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
-// EffectivePriority returns the effective priority
-func (lp *Loadpoint) EffectivePriority() int {
+// effectivePriority returns the effective priority tier (integer part of the score).
+func (lp *Loadpoint) effectivePriority() int {
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetPriority(); ok {
 			return res
 		}
 	}
 	return lp.GetPriority()
+}
+
+// EffectivePriorityScore ranks loadpoints for surplus distribution: the integer part is
+// the effective priority tier, the fractional part [0,1) sub-orders within the tier by the
+// priority strategy/basis (higher wins). Basis is passed in so the prioritizer can score a
+// whole tier on one scale, see Prioritizer.effectiveBasis.
+func (lp *Loadpoint) EffectivePriorityScore(basis api.PriorityBasis) float64 {
+	score := float64(lp.effectivePriority())
+
+	soc := lp.GetSoc()
+	if soc <= 0 {
+		return score
+	}
+
+	// gap is the soc-% quantity the strategy ranks by (a larger gap scores higher)
+	var gap float64
+	switch lp.GetPriorityStrategy() {
+	case api.PrioritySoc:
+		gap = 100 - soc
+	case api.PriorityDeficit:
+		gap = float64(lp.EffectiveLimitSoc()) - soc
+	default:
+		return score
+	}
+
+	// energy basis: convert the soc-% gap into absolute kWh using the vehicle
+	// capacity, falling back to the percentage gap when capacity is unknown
+	if basis == api.PriorityBasisEnergy {
+		if capacity := lp.vehicleCapacity(); capacity > 0 {
+			gap = gap / 100 * capacity
+		} else {
+			lp.log.DEBUG.Println("priority basis energy: unknown vehicle capacity, ranking by soc percentage")
+		}
+	}
+
+	return score + priorityFraction(gap)
+}
+
+// vehicleCapacity returns the active vehicle's usable capacity in kWh, or 0 if
+// no vehicle is active or its capacity is unknown.
+func (lp *Loadpoint) vehicleCapacity() float64 {
+	if v := lp.GetVehicle(); v != nil {
+		return v.Capacity()
+	}
+	return 0
+}
+
+// priorityFraction maps a soc-based value to a [0,1) sub-ordering offset, kept
+// strictly below 1 so it can never bump a loadpoint into the next priority tier.
+func priorityFraction(v float64) float64 {
+	switch {
+	case v <= 0:
+		return 0
+	case v > 99:
+		return 0.99
+	default:
+		return v / 100
+	}
 }
 
 type plan struct {
