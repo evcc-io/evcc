@@ -106,3 +106,13 @@ func decodeNaN64(f func(b []byte) float64, nan ...uint64) func(b []byte) float64
 		return f(b)
 	}
 }
+
+func decodeNaN64lsw(f func(b []byte) float64, nan ...uint64) func(b []byte) float64 {
+	return func(b []byte) float64 {
+		u := uint64LswFirst(b)
+		if slices.Contains(nan, u) {
+			return 0
+		}
+		return f(b)
+	}
+}
