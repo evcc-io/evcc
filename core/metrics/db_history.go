@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"slices"
 	"sort"
 	"strconv"
 	"time"
@@ -20,6 +21,7 @@ type Slot struct {
 	End          time.Time `json:"end"`
 	Energy       float64   `json:"energy"`
 	ReturnEnergy float64   `json:"returnEnergy"`
+	SocTemp      *float64  `json:"socTemp,omitempty"`
 }
 
 // roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
@@ -29,9 +31,10 @@ func roundEnergy(v float64) float64 {
 
 // Series represents an energy series for one title group or one entity group.
 type Series struct {
-	Title string `json:"title,omitempty"`
-	Group string `json:"group"`
-	Data  []Slot `json:"data"`
+	Title  string `json:"title,omitempty"`
+	Group  string `json:"group"`
+	IsTemp bool   `json:"isTemp,omitempty"` // socTemp values are temperature, not soc
+	Data   []Slot `json:"data"`
 }
 
 // SeriesCSV wraps a slice of Series for CSV export.
@@ -80,13 +83,21 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 		Start        SqlTime
 		Energy       float64
 		ReturnEnergy float64
+		SocTemp      *float64
+		IsTemp       bool
+	}
+
+	// soc_temp reports the bucket's first slot; omitted for grouped sums
+	socCols := `, m.soc_temp AS soc_temp, e.is_temp AS is_temp`
+	if grouped {
+		socCols = ``
 	}
 
 	tx := db.Instance.Table("meters m").
 		Select(selectTitle + `, e."group",
 			MIN(m.ts) AS start,
 			COALESCE(SUM(m.energy), 0) AS energy,
-			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
+			COALESCE(SUM(m.return_energy), 0) AS return_energy` + socCols).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
@@ -106,7 +117,7 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 	var res []Series
 	for _, r := range rows {
 		if n := len(res); n == 0 || res[n-1].Title != r.Title || res[n-1].Group != r.Group {
-			res = append(res, Series{Title: r.Title, Group: r.Group})
+			res = append(res, Series{Title: r.Title, Group: r.Group, IsTemp: r.IsTemp})
 		}
 
 		s := &res[len(res)-1]
@@ -115,6 +126,7 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 			End:          addDuration(time.Time(r.Start)),
 			Energy:       roundEnergy(r.Energy),
 			ReturnEnergy: roundEnergy(r.ReturnEnergy),
+			SocTemp:      r.SocTemp,
 		})
 	}
 
@@ -126,6 +138,18 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 // single energy column.
 func hasReturnEnergy(group string) bool {
 	return group == Grid || group == Battery
+}
+
+func seriesHasSocTemp(s *Series) bool {
+	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.SocTemp != nil })
+}
+
+// formatSocTemp renders a soc/temp value rounded to 0.1, empty when unset.
+func formatSocTemp(v *float64) string {
+	if v == nil {
+		return ""
+	}
+	return strconv.FormatFloat(math.Round(*v*10)/10, 'f', -1, 64)
 }
 
 // WriteCsv emits a wide-table CSV with columns
@@ -175,6 +199,7 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 	type col struct {
 		series       *Series
 		returnEnergy bool
+		socTemp      bool
 	}
 	cols := []col{{}, {}}
 	tsSet := make(map[int64]time.Time)
@@ -205,6 +230,14 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 			if hasReturnEnergy(g) {
 				header = append(header, p+".returnEnergy.Wh")
 				cols = append(cols, col{series: e, returnEnergy: true})
+			}
+			if seriesHasSocTemp(e) {
+				unit := ".soc.pct"
+				if e.IsTemp {
+					unit = ".temp.degC"
+				}
+				header = append(header, p+unit)
+				cols = append(cols, col{series: e, socTemp: true})
 			}
 			for _, slot := range e.Data {
 				tsSet[slot.Start.UnixNano()] = slot.Start
@@ -254,11 +287,14 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 				row[i] = ""
 				continue
 			}
-			v := slot.Energy
-			if c.returnEnergy {
-				v = slot.ReturnEnergy
+			switch {
+			case c.socTemp:
+				row[i] = formatSocTemp(slot.SocTemp)
+			case c.returnEnergy:
+				row[i] = strconv.FormatInt(int64(math.Round(slot.ReturnEnergy*1000)), 10)
+			default:
+				row[i] = strconv.FormatInt(int64(math.Round(slot.Energy*1000)), 10)
 			}
-			row[i] = strconv.FormatInt(int64(math.Round(v*1000)), 10)
 		}
 		if err := ww.Write(row); err != nil {
 			return err

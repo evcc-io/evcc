@@ -717,6 +717,9 @@ func (site *Site) updateBatteryMeters() {
 		if err := c.AddEnergy(mm[i].ReturnEnergy, mm[i].Energy, -mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist battery %d energy: %v", i+1, err)
 		}
+		if mm[i].Soc != nil {
+			c.SetSocTemp(*mm[i].Soc, false)
+		}
 	}
 
 	site.publish(keys.Battery, site.battery)
