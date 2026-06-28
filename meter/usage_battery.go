@@ -74,3 +74,25 @@ func (m *batterySocLimits) LimitController(socG func() (float64, error), limitSo
 		}
 	}
 }
+
+type batterySetpoint struct {
+	holding bool
+}
+
+// SetpointController returns an api.BatteryHoldPower implementation that holds the battery by
+// writing the active load to a grid setpoint override (setS, positive = grid import) so the
+// load is supplied from grid and the battery is left to its normal behavior. It is called
+// every control cycle while hold is active; a power of 0 clears the override.
+func (m *batterySetpoint) SetpointController(setS func(float64) error) func(float64) error {
+	return func(power float64) error {
+		if power > 0 {
+			m.holding = true
+			return setS(power)
+		}
+		if m.holding {
+			m.holding = false
+			return setS(0)
+		}
+		return nil
+	}
+}
