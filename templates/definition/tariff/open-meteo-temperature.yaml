@@ -8,7 +8,20 @@ requirements:
   evcc: ["skiptest"]
 group: solar
 params:
-  - preset: forecast-base
+  - name: latitude
+    description:
+      en: Latitude
+      de: Breitengrad
+    type: float
+    example: 48.694
+    required: true
+  - name: longitude
+    description:
+      en: Longitude
+      de: Längengrad
+    type: float
+    example: 9.112
+    required: true
   - name: interval
     default: 1h
     advanced: true
