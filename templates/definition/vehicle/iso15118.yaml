@@ -18,6 +18,8 @@ requirements:
       Otherwise the vehicle cannot be put into sleep mode.
 params:
   - preset: vehicle-common
+  - name: climaterdisabled
+    deprecated: true
 render: |
   type: custom
   {{ include "vehicle-common" . }}

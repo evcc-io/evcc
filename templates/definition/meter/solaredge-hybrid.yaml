@@ -130,7 +130,7 @@ render: |
     register:
       address: 0xE176 # Battery 1 Lifetime Export Energy Counter (discharged)
       type: holding
-      decode: uint64s
+      decode: uint64snan
     scale: 0.001
   returnenergy:
     source: modbus
@@ -138,7 +138,7 @@ render: |
     register:
       address: 0xE17A # Battery 1 Lifetime Import Energy Counter (charged)
       type: holding
-      decode: uint64s
+      decode: uint64snan
     scale: 0.001
   batterymode:
     source: watchdog

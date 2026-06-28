@@ -12,6 +12,8 @@ params:
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
+  - name: climaterdisabled
+    deprecated: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
