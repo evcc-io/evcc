@@ -2,6 +2,7 @@ package eebus
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
@@ -45,6 +46,20 @@ func (c Config) Redacted() any {
 			Private: util.Masked(c.Certificate.Private),
 		},
 	}
+}
+
+// normalizeInterfaces splits comma-separated entries and trims whitespace,
+// so both a YAML list and a comma-separated string (e.g. EVCC_EEBUS_INTERFACES=eth0,eth1) work.
+func normalizeInterfaces(ifaces []string) []string {
+	var res []string
+	for _, s := range ifaces {
+		for p := range strings.SplitSeq(s, ",") {
+			if p = strings.TrimSpace(p); p != "" {
+				res = append(res, p)
+			}
+		}
+	}
+	return res
 }
 
 func createShipID() string {

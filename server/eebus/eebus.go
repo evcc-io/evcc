@@ -167,7 +167,7 @@ func NewServer(other Config) (*EEBus, error) {
 	// for backward compatibility
 	configuration.SetAlternateMdnsServiceName(DeviceCode)
 	configuration.SetAlternateIdentifier(serial)
-	configuration.SetInterfaces(cc.Interfaces)
+	configuration.SetInterfaces(normalizeInterfaces(cc.Interfaces))
 
 	ski, err := SkiFromCert(certificate)
 	if err != nil {
