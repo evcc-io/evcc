@@ -14,6 +14,8 @@ params:
   - name: welcomecharge
   - name: climaterdisabled
     deprecated: true
+  - name: autodetectdisabled
+    deprecated: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}

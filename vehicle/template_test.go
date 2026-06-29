@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -39,4 +40,26 @@ func TestTemplates(t *testing.T) {
 			t.Error(err)
 		}
 	})
+}
+
+// universalVehicleFeatures render via the shared vehicle-features include, so a
+// stored config may carry them; dropping the param breaks reload (discussion #31291).
+var universalVehicleFeatures = []string{"climaterdisabled", "autodetectdisabled"}
+
+func TestVehicleFeatureParamsConsistent(t *testing.T) {
+	for _, tmpl := range templates.ByClass(templates.Vehicle, templates.WithDeprecated()) {
+		if !strings.Contains(tmpl.Render, "vehicle-features") {
+			continue
+		}
+
+		for _, feat := range universalVehicleFeatures {
+			values := tmpl.Defaults(templates.RenderModeUnitTest)
+			values["template"] = tmpl.Template
+			values[feat] = true
+
+			if _, _, err := tmpl.RenderResult(templates.RenderModeInstance, values); err != nil {
+				t.Errorf("%s: feature %q must stay a declared param: %v", tmpl.Template, feat, err)
+			}
+		}
+	}
 }
