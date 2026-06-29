@@ -162,7 +162,14 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 	// re-publish vehicle settings
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
-	lp.unpublishVehicle()
+
+	// only reset published vehicle data when the active vehicle actually changed.
+	// vehicleDefaultOrDetect re-assigns the same default vehicle on every reconnect
+	// to refresh the soc estimator (#27359); zeroing a still-valid soc there makes
+	// vehicleSoc/vehicleRange flap to 0 while charging until the next soc read.
+	if from != to {
+		lp.unpublishVehicle()
+	}
 
 	// publish effective values
 	lp.PublishEffectiveValues()
