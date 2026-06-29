@@ -9,10 +9,16 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/config"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
+
+func init() {
+	config.AddCtx("fnn", NewFromConfig)
+	config.AddCtx("fnn-3", NewFromConfig)
+}
 
 // NewFromConfig creates an FNN HEMS from generic config.
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {

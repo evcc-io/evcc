@@ -25,6 +25,11 @@ function ocppPort() {
   return 12000 + index;
 }
 
+export function eebusPort() {
+  const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
+  return 13000 + index;
+}
+
 function logPrefix() {
   return `[worker:${process.env["TEST_WORKER_INDEX"]}]`;
 }
@@ -105,19 +110,21 @@ async function _start(config?: string, flags: string | string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   const ocpp = ocppPort();
+  const eebus = eebusPort();
 
   log(`wait until port ${port} is available`);
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
-  log(`starting evcc on ports ${port} (HTTP) and ${ocpp} (OCPP)`);
+  log(`starting evcc on ports ${port} (HTTP), ${ocpp} (OCPP) and ${eebus} (EEBus)`);
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
-  log("starting evcc", { config, port, ocpp, additionalFlags });
+  log("starting evcc", { config, port, ocpp, eebus, additionalFlags });
   const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
     env: {
       ...process.env,
       EVCC_NETWORK_PORT: port.toString(),
       EVCC_OCPP_PORT: ocpp.toString(),
+      EVCC_EEBUS_PORT: eebus.toString(),
       EVCC_DATABASE_DSN: dbPath(),
     },
     stdio: ["pipe", "pipe", "pipe"],

@@ -51,6 +51,11 @@
     "hex": "Hex-Farbe"
   },
   "config": {
+    "adminPassword": {
+      "description": "Das Skript-Plugin führt einen Befehl auf Systemebene aus, der mit den Rechten des evcc-Prozesses läuft. Gib dein Administrator-Passwort erneut ein, um fortzufahren.",
+      "invalid": "Ungültiges Passwort. Bitte versuche es erneut.",
+      "title": "Potenziell gefährliche Aktion"
+    },
     "apiKey": {
       "description": "Gibt Skripten und Automatisierungsaufgaben wie geplanten Backups sicheren Zugriff, ohne dein Administrator-Passwort zu teilen.",
       "exampleLabel": "Ausprobieren: Backup mit curl herunterladen",
@@ -303,6 +308,7 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
+      "changeConfirm": "Bestehende Konfiguration wird gelöscht. Fortfahren?",
       "csv": {
         "created": "Startzeit",
         "finished": "Endzeit",
@@ -310,10 +316,13 @@
         "limitpower": "Limit (kW)",
         "type": "Typ"
       },
-      "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen.",
+      "customOption": "Benutzerdefinierte Integration",
+      "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
       "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
-      "lastEvent": "Zuletzt {timeAgo}.",
+      "integrations": "Integrationen",
+      "lastEvent": "Letzter Eintrag {timeAgo}.",
+      "template": "Integration",
       "title": "Externe Begrenzung"
     },
     "icon": {
@@ -535,6 +544,10 @@
     },
     "meter": {
       "cancel": "Abbrechen",
+      "convertToConsumer": {
+        "confirm": "Wandelt diesen \"zusätzlichen Zähler\" in einen \"Verbraucher\" um.",
+        "link": "In Verbraucher umwandeln"
+      },
       "delete": "Löschen",
       "generic": "Generische Integrationen",
       "option": {
@@ -551,7 +564,7 @@
       "usage": {
         "aux": "Intelligenter Verbraucher",
         "battery": "Batterie",
-        "charge": "Verbraucher / Ladegerät",
+        "charge": "Ladegerät",
         "grid": "Netzanschluss",
         "label": "Verwendung",
         "pv": "Erzeugung"
@@ -1257,6 +1270,10 @@
         "grid": {
           "energy": "bezogen",
           "returnEnergy": "eingespeist"
+        },
+        "meter": {
+          "energy": "Energie",
+          "returnEnergy": "Energie (rückwärts)"
         }
       },
       "downloadCsv": "CSV herunterladen",

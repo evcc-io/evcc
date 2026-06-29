@@ -1,0 +1,72 @@
+template: hemspro-eebus
+products:
+  - brand: Awatt Electronic
+    description:
+      generic: HEMS PRO (EEBus)
+params:
+  - preset: eebus
+  - name: ski
+    help:
+      en: SKI of the FNN control box (shown in its web interface)
+      de: SKI der FNN-Steuerbox (im Webinterface der Steuerbox einsehbar)
+  - name: consumptionnominalmax
+    type: float
+    unit: W
+    advanced: true
+    description:
+      en: Max. consumption power (grid connection)
+      de: Max. Bezugsleistung (Netzanschluss)
+    help:
+      en: Contractual maximum power of the grid connection point reported to the control box. This is the connection capacity agreed with the grid operator, NOT the minimum consumption power (Pmin) of the control box. Default 24.15 kVA (3x35A).
+      de: Vertragliche Gesamtmaximalleistung des Netzanschlusspunkts, die der Steuerbox gemeldet wird. Dies ist die mit dem Netzbetreiber vereinbarte Anschlusskapazität, NICHT die SteuVE-Mindestleistung (Pmin). Standard 24,15 kVA (3x35A).
+  - name: failsafeconsumptionpower
+    type: float
+    unit: W
+    advanced: true
+    description:
+      en: Failsafe consumption limit (Pmin, LPC)
+      de: Failsafe-Bezugsgrenze der SteuVE (Pmin)
+    help:
+      en: Failsafe minimum consumption power (Pmin) for controllable loads applied when the heartbeat from the control box is lost; it is overwritten by the control box once it transmits its own failsafe values. (Default 4.2 kW)
+      de: Verbleibende Mindestbezugsleistung (Pmin) für steuerbare Verbrauchseinrichtungen, die bei ausbleibendem Heartbeat der Steuerbox angewendet wird. Dies ist die per GZF berechnete Mindestbezugsleistung nach BK6-22-300; wird von der Steuerbox überschrieben, sobald diese eigene Failsafe-Werte überträgt. (Standard 4,2 kW nach § 14a EnWG)
+  - name: productionnominalmax
+    type: float
+    unit: W
+    advanced: true
+    description:
+      en: Installed generator power (Wp)
+      de: Installierte Generatorleistung (Wp)
+    help:
+      en: Rated generator/module power (Wp) of the installation.
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+  - name: failsafeproductionpower
+    type: float
+    unit: W
+    advanced: true
+    description:
+      en: Failsafe production limit (LPP)
+      de: Failsafe-Einspeisebegrenzung
+    help:
+      en: Remaining maximum feed-in power applied when the heartbeat from the control box is lost. Initial value; it is overwritten by the control box once it transmits its own failsafe values.
+      de: Verbleibende maximale Einspeiseleistung, die bei verlorenem Heartbeat der Steuerbox angewendet wird. Initialwert; wird von der Steuerbox überschrieben, sobald diese eigene Failsafe-Werte überträgt.
+  - name: failsafeduration
+    type: duration
+    advanced: true
+    description:
+      en: Failsafe minimum duration
+      de: Failsafe-Mindestdauer
+    help:
+      en: Minimum time the failsafe limit stays active once entered. Initial value (default 2h); the control box overwrites it once it transmits its own value.
+      de: Mindestdauer, für die der Failsafe-Wert nach Aktivierung gehalten wird. Initialwert (Standard 2h); wird von der Steuerbox überschrieben, sobald diese einen eigenen Wert überträgt.
+render: |
+  type: eebus
+  ski: {{ .ski }}
+  contractualconsumptionnominalmax: {{ .consumptionnominalmax }}
+  failsafeconsumptionactivepowerlimit: {{ .failsafeconsumptionpower }}
+  productionnominalmax: {{ .productionnominalmax }}
+  failsafeproductionactivepowerlimit: {{ .failsafeproductionpower }}
+  failsafedurationminimum: {{ .failsafeduration }}
+  passthrough:
+    source: gpio
+    pin: 19
+    function: write

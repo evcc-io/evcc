@@ -319,6 +319,20 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
+						:title="$t('config.hems.title')"
+						editable
+						:error="hasClassError('hems')"
+						:unconfigured="isUnconfigured(hemsTags)"
+						data-testid="hems"
+						@edit="openModal('hems')"
+					>
+						<template #icon><HemsIcon /></template>
+						<template #tags>
+							<p v-if="hemsLabel" class="my-2 fw-bold">{{ hemsLabel }}</p>
+							<DeviceTags :tags="hemsTags" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
 						:title="$t('config.modbusproxy.title')"
 						editable
 						:error="hasClassError('modbusproxy')"
@@ -329,19 +343,6 @@
 						<template #icon><ModbusProxyIcon /></template>
 						<template #tags>
 							<DeviceTags :tags="modbusproxyTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
-						:title="$t('config.hems.title')"
-						editable
-						:error="hasClassError('hems')"
-						:unconfigured="isUnconfigured(hemsTags)"
-						data-testid="hems"
-						@edit="openModal('hems')"
-					>
-						<template #icon><HemsIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="hemsTags" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -452,7 +453,11 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :yamlSource="hems?.yamlSource" @changed="loadDirty" />
+				<HemsModal
+					:id="hemsDevices[0]?.id"
+					:yamlSource="hems?.yamlSource"
+					@changed="hemsChanged"
+				/>
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
@@ -551,6 +556,7 @@ import type {
 	ConfigVehicle,
 	ConfigCircuit,
 	ConfigMessenger,
+	ConfigHems,
 	ConfigLoadpoint,
 	ConfigMeter,
 	Timeout,
@@ -562,7 +568,7 @@ import type {
 	Notification,
 	Remote,
 } from "@/types/evcc";
-import { CURRENCY } from "@/types/evcc";
+import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -653,6 +659,7 @@ export default defineComponent({
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
+			hemsDevices: [] as ConfigHems[],
 			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
 			tariffRefs: {
 				grid: "",
@@ -814,11 +821,10 @@ export default defineComponent({
 			return store.state?.hems;
 		},
 		hemsTags(): DeviceTags {
-			const type = this.hems?.config?.type;
-			const status = store.state?.hems?.status;
-			if (!type && !status) {
+			if (this.hemsDevices.length === 0 && !this.hems?.config?.configured) {
 				return { configured: { value: false } };
 			}
+			const status = store.state?.hems?.status;
 			if (!status) {
 				return { configured: { value: true } };
 			}
@@ -841,6 +847,13 @@ export default defineComponent({
 			}
 
 			return result;
+		},
+		hemsLabel(): string {
+			const dev = this.hemsDevices[0];
+			if (!dev) return "";
+			if (dev.deviceProduct) return dev.deviceProduct;
+			if (dev.type === ConfigType.Custom) return this.$t("config.hems.customOption");
+			return "";
 		},
 		remote(): Remote | undefined {
 			return store.state?.remote;
@@ -1000,6 +1013,7 @@ export default defineComponent({
 			await this.loadMessengers();
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadHems();
 			await this.loadDirty();
 			this.updateValues();
 		},
@@ -1025,6 +1039,9 @@ export default defineComponent({
 		},
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
+		},
+		async loadHems() {
+			this.hemsDevices = (await this.loadConfig("devices/hems")) || [];
 		},
 		async loadCircuits() {
 			this.circuits = (await this.loadConfig("devices/circuit")) || [];
@@ -1097,6 +1114,17 @@ export default defineComponent({
 				}
 			}
 
+			// Converted: move ext meter to consumers (history is reconciled on restart)
+			if (result.action === "converted") {
+				const name = this.meters.find((m) => m.id === result.id)?.name;
+				if (name) {
+					const ext = (this.site.ext || []).filter((n) => n !== name);
+					const consumers = [...(this.site.consumers || []), name];
+					await api.put("/config/site", { ext, consumers });
+					await this.loadSite();
+				}
+			}
+
 			// Removed: reload site config
 			if (result.action === "removed") {
 				await this.loadSite();
@@ -1111,6 +1139,10 @@ export default defineComponent({
 			await this.loadChargers();
 			await this.loadDirty();
 			this.updateValues();
+		},
+		async hemsChanged() {
+			await this.loadHems();
+			await this.loadDirty();
 		},
 		async loadpointChanged() {
 			await this.loadLoadpoints();
