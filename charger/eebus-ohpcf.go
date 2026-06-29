@@ -186,21 +186,13 @@ func (c *EEBusOHPCF) lastEnabled() bool {
 	return c.enabled
 }
 
-// ohpcfStatus maps the compressor power consumption process state to a charge status.
-// running is active consumption (C), available/scheduled/paused mean the
-// flexibility is present but not consuming (B), everything else (completed,
-// stopped/aborted, no data) means there is nothing to control (A).
+// ohpcfStatus maps the compressor process state to a charge status: running is
+// consuming (C), any other connected state is standby (B). Disconnected (A) is handled in Status.
 func ohpcfStatus(state ucapi.CompressorPowerConsumptionStateType) api.ChargeStatus {
-	switch state {
-	case ucapi.CompressorPowerConsumptionStateRunning:
+	if state == ucapi.CompressorPowerConsumptionStateRunning {
 		return api.StatusC
-	case ucapi.CompressorPowerConsumptionStateAvailable,
-		ucapi.CompressorPowerConsumptionStateScheduled,
-		ucapi.CompressorPowerConsumptionStatePaused:
-		return api.StatusB
-	default:
-		return api.StatusA
 	}
+	return api.StatusB
 }
 
 var _ api.Charger = (*EEBusOHPCF)(nil)
@@ -214,7 +206,8 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
 	if err != nil {
-		return api.StatusA, nil
+		// connected but no flexibility announced yet: standby, not disconnected
+		return api.StatusB, nil
 	}
 
 	return ohpcfStatus(state), nil

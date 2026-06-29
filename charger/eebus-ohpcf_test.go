@@ -25,6 +25,26 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 	require.ErrorIs(t, c.MaxCurrent(16), errNotConnected)
 }
 
+// status mapping: running is C, every other connected state (incl. completed
+// and stopped after a boost) is standby B, never disconnected.
+func TestOHPCFStatus(t *testing.T) {
+	tc := []struct {
+		state ucapi.CompressorPowerConsumptionStateType
+		want  api.ChargeStatus
+	}{
+		{ucapi.CompressorPowerConsumptionStateRunning, api.StatusC},
+		{ucapi.CompressorPowerConsumptionStateAvailable, api.StatusB},
+		{ucapi.CompressorPowerConsumptionStateScheduled, api.StatusB},
+		{ucapi.CompressorPowerConsumptionStatePaused, api.StatusB},
+		{ucapi.CompressorPowerConsumptionStateCompleted, api.StatusB},
+		{ucapi.CompressorPowerConsumptionStateStopped, api.StatusB},
+	}
+
+	for _, tc := range tc {
+		assert.Equal(t, tc.want, ohpcfStatus(tc.state), "%v", tc.state)
+	}
+}
+
 // on/off control: enable schedules/resumes, disable stops, and an already
 // running/scheduled process issues no further command.
 func TestOHPCFControlAction(t *testing.T) {
