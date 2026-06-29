@@ -82,6 +82,11 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 	// Check if vehicle is at the charger (trying to use geofencing)
 	atHome, err := c.isVehicleAtHome(vehicle)
 	if err != nil {
+		// vehicle asleep: position unavailable, assume previously known location is still valid
+		// and report as connected so loadpoint can trigger wake-up via Enable()
+		if errors.Is(err, api.ErrAsleep) {
+			return api.StatusB, nil
+		}
 		return api.StatusA, err
 	}
 
@@ -104,6 +109,11 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 
 	status, err := v.Status()
 	if err != nil {
+		// vehicle asleep: report as connected (StatusB) so loadpoint's setLimit/Enable
+		// path can trigger wake-up via the existing Resurrector logic
+		if errors.Is(err, api.ErrAsleep) {
+			return api.StatusB, nil
+		}
 		return api.StatusNone, err
 	}
 
