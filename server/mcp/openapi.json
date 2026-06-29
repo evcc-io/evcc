@@ -2821,6 +2821,67 @@
         ]
       }
     },
+    "/vehicles/{name}/mode": {
+      "delete": {
+        "description": "Resets the vehicle charge mode to keep the last selected mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "deleteVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Reset charge mode",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode/{mode}": {
+      "post": {
+        "description": "Sets the charge mode applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "setVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/mode"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "mode": {
+                      "$ref": "#/components/schemas/Mode"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set charge mode",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
     "/vehicles/{name}/plan/repeating": {
       "post": {
         "description": "Updates the repeating charging plan.",

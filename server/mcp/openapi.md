@@ -1178,6 +1178,26 @@ call getTariffInfo {
 }
 ```
 
+## deleteVehicleMode
+
+Resets the vehicle charge mode to keep the last selected mode.
+
+**Tags:** vehicles
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | Vehicle name |
+
+**Example call:**
+
+```json
+call deleteVehicleMode {
+  "name": "example"
+}
+```
+
 ## deleteVehicleSocPlan
 
 Delete the charging plan
@@ -1217,6 +1237,28 @@ Vehicle will be fast-charged until this SoC is reached.
 call setVehicleMinSoc {
   "name": "example",
   "soc": 123.45
+}
+```
+
+## setVehicleMode
+
+Sets the charge mode applied when this vehicle becomes active on a loadpoint.
+
+**Tags:** vehicles
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| mode | string | Charging mode. |
+| name | string | Vehicle name |
+
+**Example call:**
+
+```json
+call setVehicleMode {
+  "mode": "example",
+  "name": "example"
 }
 ```
 

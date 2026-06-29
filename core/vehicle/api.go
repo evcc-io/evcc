@@ -15,10 +15,10 @@ type API interface {
 	// Name returns the vehicle name
 	Name() string
 
-	// // GetMode returns the charge mode
-	// GetMode() api.ChargeMode
-	// // SetMode sets the charge mode
-	// SetMode(api.ChargeMode)
+	// GetMode returns the charge mode
+	GetMode() api.ChargeMode
+	// SetMode sets the charge mode
+	SetMode(api.ChargeMode)
 	// // GetPhases returns the phases
 	// GetPhases() int
 	// // SetPhases sets the phases
