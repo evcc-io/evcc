@@ -1,4 +1,4 @@
-# Used API docs for SunEnergyXT 500 Series: https://d1skj1m2vbh93t.cloudfront.net/Balcony+energy+storage/Hybrid+energy+storage+system+500+series/SunEnergyXT-500er-Serie-Lokale-API.pdf
+# Used API docs for SunEnergyXT 500 Series: https://github.com/SunEnergyXT/SunEnergyXT-500-Series/blob/main/API.en.md
 template: sunenergyxt-500
 products:
   - brand: SunEnergyXT
