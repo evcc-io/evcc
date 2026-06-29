@@ -143,7 +143,7 @@ render: |
         uri: http://{{ .host }}/write
         headers:
           - Content-Type: application/json
-        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower }}}}'
+        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}}}'
   {{- include "battery-params" . }}
   {{- end }}
   {{- if eq .usage "pv" }}
