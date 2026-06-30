@@ -205,11 +205,22 @@ func TestSocFreshestField(t *testing.T) {
 }
 
 func TestSocBatteryStateReportField(t *testing.T) {
-	data := []point{{Name: FieldBatteryStateReportSoc, Value: "36"}}
+	data := []point{{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "36"}}
 
 	soc, err := testProvider(data).Soc()
 	require.NoError(t, err)
 	assert.Equal(t, 36.0, soc)
+}
+
+func TestSocBatteryStateReportOnlyFallbackField(t *testing.T) {
+	data := []point{
+		{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "36"},
+		{Name: FieldHvBatteryLevelValue, Value: "40"},
+	}
+
+	soc, err := testProvider(data).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 40.0, soc)
 }
 
 // TestPoints guards that a data point with a generic field name ("value") is
