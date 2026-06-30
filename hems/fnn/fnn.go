@@ -106,8 +106,8 @@ type Fnn struct {
 	smartgridConsumptionID uint
 	smartgridProductionID  uint
 
-	consumptionLimit float64
-	productionLimit  *float64
+	consumptionLimit   float64
+	productionFraction *float64
 
 	interval time.Duration
 }
@@ -195,17 +195,26 @@ func (c *Fnn) setProductionLimit(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	// active := frac < 1.0
+
+	// c.productionLimit = nil
+	// if active {
+	// 	c.productionLimit = new(c.maxCurtailPower * frac)
+	// }
+
+	// limit := 0.0
+	// if c.productionLimit != nil {
+	// 	limit = *c.productionLimit
+	// }
+
 	active := frac < 1.0
 
-	c.productionLimit = nil
+	c.productionFraction = nil
 	if active {
-		c.productionLimit = new(c.maxCurtailPower * frac)
+		c.productionFraction = new(frac)
 	}
 
-	limit := 0.0
-	if c.productionLimit != nil {
-		limit = *c.productionLimit
-	}
+	limit := frac * c.maxCurtailPower
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionID, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
@@ -243,14 +252,15 @@ func (c *Fnn) Dimmed() *bool {
 }
 
 // Curtailed implements api.HEMS.
-func (c *Fnn) Curtailed() *bool {
-	if c.w3 == nil {
+func (c *Fnn) Curtailed() *float64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.productionFraction == nil {
 		return nil
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return new(c.productionLimit != nil)
+	return new(*c.productionFraction * c.maxCurtailPower)
 }
 
 // MaxConsumptionPower implements api.HEMS.
@@ -264,9 +274,9 @@ func (c *Fnn) MaxConsumptionPower() float64 {
 func (c *Fnn) MaxProductionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.productionLimit == nil {
+	if c.productionFraction == nil {
 		return nil
 	}
 
-	return new(*c.productionLimit)
+	return new(*c.productionFraction * c.maxCurtailPower)
 }

@@ -309,10 +309,15 @@ func (c *EEBus) Dimmed() *bool {
 }
 
 // Curtailed implements api.HEMS, derived from productionLimitActivated.
-func (c *EEBus) Curtailed() *bool {
+func (c *EEBus) Curtailed() *float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return new(!c.productionLimitActivated.IsZero())
+
+	if c.productionLimitActivated.IsZero() {
+		return nil
+	}
+
+	c.productionLimit.Value / c.ProductionNominalMax
 }
 
 // MaxConsumptionPower implements api.HEMS, returning the consumption cap
