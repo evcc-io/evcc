@@ -285,6 +285,13 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	})
 
 	wg.Go(func() {
+		if dev, ok := api.Cap[api.MeterDetails](instance); ok {
+			val, err := dev.Details()
+			makeResult("details", val, err)
+		}
+	})
+
+	wg.Go(func() {
 		if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
 			val, err := dev.TotalEnergy()
 			makeResult("energy", val, err)

@@ -1,0 +1,26 @@
+template: quatt
+products:
+  - brand: Quatt
+    description:
+      generic: Hybrid Heat Pump
+group: heating
+params:
+  - name: usage
+    choice: ["charge"]
+  - name: host
+  - name: port
+    default: 8080
+  - name: heatpumps
+    deprecated: true
+  - name: unit
+    deprecated: true
+render: |
+  type: quatt
+  host: {{ .host }}
+  port: {{ .port }}
+  {{- if .heatpumps }}
+  heatpumps: {{ .heatpumps }}
+  {{- end }}
+  {{- if .unit }}
+  unit: {{ .unit }}
+  {{- end }}

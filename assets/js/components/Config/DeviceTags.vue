@@ -14,6 +14,16 @@
 					{{ fmtDeviceValue(entry) }}
 				</div>
 			</span>
+			<div v-if="detailsEntries.length" class="details">
+				<div
+					v-for="(entry, index) in detailsEntries"
+					:key="index"
+					:data-testid="`device-tag-details-${index}`"
+					class="small evcc-gray"
+				>
+					{{ entry }}
+				</div>
+			</div>
 			<table v-if="hasPhaseEntries" class="table table-borderless table-sm my-0">
 				<thead>
 					<tr>
@@ -76,6 +86,8 @@ const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
+const DETAIL_TAGS = ["details"];
+
 const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates"];
 
 export default {
@@ -98,6 +110,7 @@ export default {
 					([name]) =>
 						!HIDDEN_TAGS.includes(name) &&
 						!PHASE_TAGS.includes(name) &&
+						!DETAIL_TAGS.includes(name) &&
 						!FORECAST_TAGS.includes(name)
 				)
 				.map(([name, { value, error, warning, muted }]) => {
@@ -114,6 +127,10 @@ export default {
 		},
 		hasPhaseEntries() {
 			return this.phaseEntries.length > 0;
+		},
+		detailsEntries() {
+			const details = this.tags?.details?.value;
+			return Array.isArray(details) ? details : [];
 		},
 		ratesEntry() {
 			if (!this.tags) return null;
@@ -298,6 +315,11 @@ export default {
 	display: grid;
 	grid-template-columns: 1fr;
 	grid-gap: 0.5rem;
+}
+.details {
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-gap: 0.25rem;
 }
 .label {
 	min-width: 4rem;
