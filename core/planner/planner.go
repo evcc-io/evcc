@@ -155,7 +155,10 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	rates = clampRates(rates, now, targetTime)
 
 	// check if rate coverage is sufficient for planning
-	if len(rates) == 0 || rates[len(rates)-1].End.Sub(rates[0].Start) < requiredDuration {
+	// use summed slot duration, not the wall-clock span, so a series with gaps
+	// (missing/stale slots) correctly falls back to simplePlan instead of
+	// returning a plan shorter than requiredDuration
+	if len(rates) == 0 || Duration(rates) < requiredDuration {
 		return simplePlan
 	}
 
