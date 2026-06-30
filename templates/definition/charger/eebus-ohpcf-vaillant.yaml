@@ -1,9 +1,9 @@
-template: eebus-ohpcf
+template: eebus-ohpcf-vaillant
 products:
-  - description:
-      de: EEBUS Wärmepumpe (OHPCF)
-      en: EEBUS heat pump (OHPCF)
-group: heatinggeneric
+  - brand: Vaillant
+    description:
+      generic: EEBus
+group: heating
 capabilities: ["meter"]
 params:
   - preset: eebus
