@@ -21,6 +21,13 @@ type quattMeter struct {
 	data func() (quattFeed, error)
 }
 
+const (
+	quattUnitAuto  = ""
+	quattUnitHP1   = "hp1"
+	quattUnitHP2   = "hp2"
+	quattUnitTotal = "total"
+)
+
 type quattFeed struct {
 	Boiler struct {
 		FlameOn *bool `json:"otFbFlameOn"`
@@ -49,12 +56,11 @@ type quattQC struct {
 
 func NewQuattFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
-		URI       string
-		Host      string
-		Port      int
-		Unit      string
-		HeatPumps int
-		Cache     time.Duration
+		URI   string
+		Host  string
+		Port  int
+		Unit  string
+		Cache time.Duration
 	}{
 		Port:  8080,
 		Cache: time.Second,
@@ -62,6 +68,10 @@ func NewQuattFromConfig(other map[string]any) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.Unit != quattUnitAuto && cc.Unit != quattUnitHP1 && cc.Unit != quattUnitHP2 && cc.Unit != quattUnitTotal {
+		return nil, fmt.Errorf("invalid unit: %s", cc.Unit)
 	}
 
 	uri := cc.URI
@@ -97,11 +107,11 @@ func (m *quattMeter) CurrentPower() (float64, error) {
 	}
 
 	switch m.unit {
-	case "hp1":
+	case quattUnitHP1:
 		return heatPumpPower(feed.HP1), nil
-	case "hp2":
+	case quattUnitHP2:
 		return heatPumpPower(feed.HP2), nil
-	case "total":
+	case quattUnitTotal:
 		return heatPumpPower(feed.HP1) + heatPumpPower(feed.HP2), nil
 	default:
 		if feed.HP2 != nil {
@@ -120,7 +130,7 @@ func (m *quattMeter) Details() ([]string, error) {
 	}
 
 	hp := feed.HP1
-	if m.unit == "hp2" {
+	if m.unit == quattUnitHP2 {
 		hp = feed.HP2
 	}
 
@@ -135,7 +145,7 @@ func (m *quattMeter) Details() ([]string, error) {
 		details = append(details, "Flame: "+flameStatus(feed.Boiler.FlameOn))
 	}
 
-	if m.unit == "total" || feed.HP2 != nil {
+	if m.unit == quattUnitTotal || feed.HP2 != nil {
 		details = appendHeatPumpDetails(details, "HP1", feed.HP1)
 		details = appendHeatPumpDetails(details, "HP2", feed.HP2)
 		return details, nil
