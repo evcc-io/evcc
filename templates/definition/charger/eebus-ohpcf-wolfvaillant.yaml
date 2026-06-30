@@ -6,6 +6,12 @@ products:
   - brand: Wolf
     description:
       generic: FHA-Monoblock (EEBus)
+  - brand: Wolf
+    description:
+      generic: EEBus
+  - brand: Vaillant
+    description:
+      generic: aroTHERM plus VWL 75/6 (EEBus)
   - brand: Vaillant
     description:
       generic: EEBus
