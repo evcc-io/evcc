@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -238,30 +237,18 @@ func (c *EEBus) Dimmed() (bool, error) {
 
 // Dim implements the api.Dimmer interface
 func (c *EEBus) Dim(dim bool) error {
-	// Sets or removes the consumption power limit
-
-	// TODO: change api.Dimmer to make limit configurable
-	// For now, we use a fixed safe limit of 0W
-	limit := 0.0
-
-	var value float64
-	if dim {
-		value = limit
-	}
-
 	c.mu.Lock()
-	defer c.mu.Unlock()
+	entity := c.egLpcEntity
+	c.mu.Unlock()
 
-	if c.egLpcEntity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCLimit) {
+	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
 		return api.ErrNotAvailable
 	}
 
-	_, err := c.eg.EgLPCInterface.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
-		Value:    value,
-		IsActive: dim,
-	}, c.callbackResult("consumption limit"))
-
-	return err
+	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
+	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
+	})
 }
 
 var _ api.Curtailer = (*EEBus)(nil)
@@ -282,47 +269,16 @@ func (c *EEBus) Curtailed() (bool, error) {
 
 // Curtail implements the api.Curtailer interface
 func (c *EEBus) Curtail(curtail bool) error {
-	// Sets or removes the production power limit
-
-	// TODO: change api.Curtailer to make limit configurable
-	// For now, we use a fixed safe limit of 0W
-	limit := 0.0
-
-	var value float64
-	if curtail {
-		value = limit
-	}
-
 	c.mu.Lock()
-	defer c.mu.Unlock()
+	entity := c.egLppEntity
+	c.mu.Unlock()
 
-	if c.egLppEntity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(c.egLppEntity, eebus.LPPLimit) {
+	if entity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(entity, eebus.LPPLimit) {
 		return api.ErrNotAvailable
 	}
 
-	_, err := c.eg.EgLPPInterface.WriteProductionLimit(c.egLppEntity, ucapi.LoadLimit{
-		Value:    value,
-		IsActive: curtail,
-	}, c.callbackResult("production limit"))
-
-	return err
-}
-
-func (c *EEBus) callbackResult(typ string) func(result model.ResultDataType) {
-	return func(result model.ResultDataType) {
-		sb := new(strings.Builder)
-
-		if result.ErrorNumber != nil {
-			fmt.Fprint(sb, *result.ErrorNumber)
-		}
-		if result.Description != nil {
-			if sb.Len() > 0 {
-				fmt.Print(sb, ":")
-			}
-			fmt.Print(sb, *result.Description)
-		}
-		if sb.Len() > 0 {
-			c.log.ERROR.Printf("%s: %s", typ, sb.String())
-		}
-	}
+	// TODO: change api.Curtailer to make the limit configurable; use a fixed 0W safe limit for now
+	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: curtail}, cb)
+	})
 }
