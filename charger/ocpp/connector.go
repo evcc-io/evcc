@@ -31,7 +31,8 @@ type Connector struct {
 	txnId int
 	idTag string
 
-	remoteIdTag string
+	remoteIdTag   string
+	remoteStarted bool // guards RemoteStartTransaction to once per auth cycle
 
 	meterInterval time.Duration
 }
