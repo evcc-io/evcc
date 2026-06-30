@@ -33,6 +33,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		Soc                *plugin.Config // optional
 		LimitSoc           *plugin.Config // optional
 		BatteryMode        *plugin.Config // optional
+		Setpoint           *plugin.Config // optional
 	}{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
@@ -91,6 +92,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 			implement.Has(m, implement.BatteryController(func(mode api.BatteryMode) error {
 				return modeS(int64(mode))
 			}))
+
+		case cc.Setpoint != nil:
+			setS, err := cc.Setpoint.FloatSetter(ctx, "setpoint")
+			if err != nil {
+				return nil, fmt.Errorf("battery setpoint: %w", err)
+			}
+
+			implement.Has(m, implement.BatteryHoldPower((&batterySetpoint{}).SetpointController(setS)))
 		}
 
 		return m, nil

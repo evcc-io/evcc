@@ -22,7 +22,7 @@ func (site *Site) hasBatteryControl() bool {
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
-		if api.HasCap[api.BatteryController](meter) {
+		if api.HasCap[api.BatteryController](meter) || api.HasCap[api.BatteryHoldPower](meter) {
 			return true
 		}
 	}
@@ -70,6 +70,31 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 			}
 		} else {
 			site.log.ERROR.Println("battery mode:", err)
+		}
+	}
+
+	// power-based hold for batteries that support it (e.g. Victron grid setpoint override).
+	// Unlike the mode hold above, this is (re-)applied every cycle to track the charge power.
+	active, holdPower := site.dischargeControlPower(rate)
+	site.applyBatteryHoldPower(active, holdPower)
+}
+
+// applyBatteryHoldPower pushes the active discharge-control power to batteries that support an
+// explicit power-based hold (api.BatteryHoldPower). When inactive, 0 is sent to clear the hold.
+func (site *Site) applyBatteryHoldPower(active bool, power float64) {
+	for _, dev := range site.batteryMeters {
+		ctrl, ok := api.Cap[api.BatteryHoldPower](dev.Instance())
+		if !ok {
+			continue
+		}
+
+		var p float64
+		if active {
+			p = power
+		}
+
+		if err := ctrl.SetBatteryHoldPower(p); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			site.log.ERROR.Println("battery hold power:", err)
 		}
 	}
 }
@@ -202,17 +227,28 @@ func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
-func (site *Site) dischargeControlActive(rate api.Rate) bool {
+// dischargeControlPower reports whether battery discharge control is active and the total
+// charge power of the loadpoints driving it (the power to be covered from grid).
+func (site *Site) dischargeControlPower(rate api.Rate) (bool, float64) {
 	if !site.GetBatteryDischargeControl() {
-		return false
+		return false, 0
 	}
+
+	var active bool
+	var power float64
 
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
-			return true
+			active = true
+			power += lp.GetChargePower()
 		}
 	}
 
-	return false
+	return active, power
+}
+
+func (site *Site) dischargeControlActive(rate api.Rate) bool {
+	active, _ := site.dischargeControlPower(rate)
+	return active
 }

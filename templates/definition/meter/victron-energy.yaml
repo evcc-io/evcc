@@ -24,6 +24,16 @@ params:
     help:
       de: "Kann im VRM Portal oder im RemoteUI ausgelesen werden."
       en: "Can be read out in VRM portal or via remoteUI."
+  - name: batterycontrol
+    description:
+      en: Battery hold method
+      de: Batterie-Haltemethode
+    choice: ["limitsoc", "gridsetpoint"]
+    default: limitsoc
+    usages: ["battery"]
+    help:
+      en: "limitsoc holds the battery via min-SOC. gridsetpoint holds it via the ESS grid setpoint override (hub4 /Overrides/Setpoint) by importing the charge power from grid - use this with Dynamic ESS, where setting min-SOC interferes."
+      de: "limitsoc hält die Batterie über Min-SOC. gridsetpoint hält sie über den ESS-Grid-Setpoint-Override (hub4 /Overrides/Setpoint), indem die Ladeleistung aus dem Netz bezogen wird - empfohlen mit Dynamic ESS, wo das Setzen von Min-SOC stört."
   - preset: battery-params
 render: |
   type: custom
@@ -153,6 +163,16 @@ render: |
       address: 843 # Soc
       type: input
       decode: uint16
+  {{- if eq .batterycontrol "gridsetpoint" }}
+  setpoint:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: 100 # com.victronenergy.hub4 /Overrides/Setpoint
+    register:
+      address: 2716 # grid setpoint override (W, positive = grid import); 0 clears
+      type: writemultiple
+      encoding: int32
+  {{- else }}
   limitsoc:
     source: convert
     convert: float2int
@@ -165,5 +185,6 @@ render: |
         type: writesingle
         decode: uint16
       scale: 10
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

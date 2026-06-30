@@ -90,6 +90,13 @@ type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
 
+// BatteryHoldPower optionally holds the battery by importing active load (e.g. EV charging)
+// from the grid instead of an SOC/mode hold. It is called every control cycle while hold is
+// active; a power of 0 clears the hold.
+type BatteryHoldPower interface {
+	SetBatteryHoldPower(power float64) error
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
