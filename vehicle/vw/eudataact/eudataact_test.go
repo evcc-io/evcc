@@ -204,6 +204,14 @@ func TestSocFreshestField(t *testing.T) {
 	assert.Equal(t, 61.0, soc, "the still-updating field wins over the stale higher-priority field")
 }
 
+func TestSocBatteryStateReportField(t *testing.T) {
+	data := []point{{Name: FieldBatteryStateReportSoc, Value: "36"}}
+
+	soc, err := testProvider(data).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 36.0, soc)
+}
+
 // TestPoints guards that a data point with a generic field name ("value") is
 // stored once yet found by both its unique key and its name.
 func TestPoints(t *testing.T) {

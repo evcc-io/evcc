@@ -119,9 +119,10 @@ const (
 	FieldPlugState                    = "plug_state"
 
 	// soc
-	FieldSoc                 = "state_of_charge"
-	FieldHvSoc               = "hv_soc"
-	FieldHvBatteryLevelValue = "battery_level_HV.value"
+	FieldSoc                   = "state_of_charge"
+	FieldBatteryStateReportSoc = "battery_state_report.soc"
+	FieldHvSoc                 = "hv_soc"
+	FieldHvBatteryLevelValue   = "battery_level_HV.value"
 
 	// target soc
 	FieldTargetSoc = "settings.target_soc"
