@@ -49,7 +49,7 @@ type EEBus struct {
 }
 
 func init() {
-	registry.AddCtx("eebus", NewEEBusFromConfig)
+	registry.AddCtx("eebus-evse", NewEEBusFromConfig)
 }
 
 // NewEEBusFromConfig creates an EEBus charger from generic config

@@ -1,9 +1,21 @@
-template: eebus-ohpcf
+template: eebus-ohpcf-wolfvaillant
 products:
-  - description:
-      de: EEBUS Wärmepumpe (OHPCF)
-      en: EEBUS heat pump (OHPCF)
-group: heatinggeneric
+  - brand: Wolf
+    description:
+      generic: CHA-Monoblock (07, 10, 16/20, 20/24 with EEBus)
+  - brand: Wolf
+    description:
+      generic: FHA-Monoblock (EEBus)
+  - brand: Wolf
+    description:
+      generic: EEBus
+  - brand: Vaillant
+    description:
+      generic: aroTHERM plus (EEBus)
+  - brand: Vaillant
+    description:
+      generic: EEBus
+group: heating
 capabilities: ["meter", "dim"]
 params:
   - preset: eebus

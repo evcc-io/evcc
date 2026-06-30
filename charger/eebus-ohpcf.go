@@ -10,6 +10,7 @@ import (
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
+	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mdt"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
@@ -30,17 +31,19 @@ type EEBusOHPCF struct {
 	*embed
 	cem *eebus.CustomerEnergyManagement
 	ma  *eebus.MonitoringAppliance
+	eg  *eebus.EnergyGuard
 
 	ctx     context.Context
 	reboost time.Duration
 
-	mu         sync.RWMutex
-	log        *util.Logger
-	compressor spineapi.EntityRemoteInterface
-	mpcEntity  spineapi.EntityRemoteInterface
-	dhwEntity  spineapi.EntityRemoteInterface
-	enabled    bool
-	reboosting bool
+	mu          sync.RWMutex
+	log         *util.Logger
+	compressor  spineapi.EntityRemoteInterface
+	mpcEntity   spineapi.EntityRemoteInterface
+	dhwEntity   spineapi.EntityRemoteInterface
+	egLpcEntity spineapi.EntityRemoteInterface
+	enabled     bool
+	reboosting  bool
 
 	connector *eebus.Connector
 }
@@ -86,6 +89,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		log:       util.NewLogger("eebus-ohpcf"),
 		cem:       inst.CustomerEnergyManagement(),
 		ma:        inst.MonitoringAppliance(),
+		eg:        inst.EnergyGuard(),
 		connector: eebus.NewConnector(),
 		ctx:       ctx,
 		reboost:   reboost,
@@ -125,6 +129,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 	c.compressor = nil
 	c.mpcEntity = nil
 	c.dhwEntity = nil
+	c.egLpcEntity = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -161,6 +166,15 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	case mdt.UseCaseSupportUpdate, mdt.DataUpdateTemperature:
 		c.mu.Lock()
 		c.dhwEntity = entity
+		c.mu.Unlock()
+
+	// Energy Guard LPC carries the §14a/LPC consumption limit
+	case lpc.UseCaseSupportUpdate:
+		c.mu.Lock()
+		// use most specific selector
+		if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
+			c.egLpcEntity = entity
+		}
 		c.mu.Unlock()
 	}
 }
@@ -358,6 +372,50 @@ func (c *EEBusOHPCF) await(write func(func(model.ResultDataType)) (*model.MsgCou
 // be modulated, so the offered current is ignored.
 func (c *EEBusOHPCF) MaxCurrent(int64) error {
 	return c.apply()
+}
+
+var _ api.Dimmer = (*EEBusOHPCF)(nil)
+
+// Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
+// consumption limit is currently active on the heat pump.
+func (c *EEBusOHPCF) Dimmed() (bool, error) {
+	c.mu.RLock()
+	entity := c.egLpcEntity
+	c.mu.RUnlock()
+
+	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
+		return false, api.ErrNotAvailable
+	}
+
+	limit, err := c.eg.EgLPCInterface.ConsumptionLimit(entity)
+	if err != nil {
+		// scenario announced but no usable value yet
+		if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrDataInvalid) {
+			return false, api.ErrNotAvailable
+		}
+		return false, err
+	}
+
+	return limit.IsActive && limit.Value > 0, nil
+}
+
+// Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
+// limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
+func (c *EEBusOHPCF) Dim(dim bool) error {
+	c.mu.RLock()
+	entity := c.egLpcEntity
+	c.mu.RUnlock()
+
+	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
+		return api.ErrNotAvailable
+	}
+
+	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
+	return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
+	})
 }
 
 // apply issues the command to align the optional consumption with the on/off
