@@ -1,4 +1,4 @@
-template: eebus-ohpcf-wolf
+template: eebus-ohpcf-wolfvaillant
 products:
   - brand: Wolf
     description:
@@ -6,6 +6,9 @@ products:
   - brand: Wolf
     description:
       generic: FHA-Monoblock (EEBus)
+  - brand: Vaillant
+    description:
+      generic: EEBus
 group: heating
 capabilities: ["meter"]
 params:
