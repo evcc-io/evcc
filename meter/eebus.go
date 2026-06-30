@@ -237,6 +237,17 @@ func (c *EEBus) Dimmed() (bool, error) {
 
 // Dim implements the api.Dimmer interface
 func (c *EEBus) Dim(dim bool) error {
+	// Sets or removes the consumption power limit
+
+	// TODO: change api.Dimmer to make limit configurable
+	// For now, we use a fixed safe limit of 0W
+	limit := 0.0
+
+	var value float64
+	if dim {
+		value = limit
+	}
+
 	c.mu.Lock()
 	entity := c.egLpcEntity
 	c.mu.Unlock()
@@ -245,9 +256,8 @@ func (c *EEBus) Dim(dim bool) error {
 		return api.ErrNotAvailable
 	}
 
-	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
 	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
 	})
 }
 
@@ -269,6 +279,17 @@ func (c *EEBus) Curtailed() (bool, error) {
 
 // Curtail implements the api.Curtailer interface
 func (c *EEBus) Curtail(curtail bool) error {
+	// Sets or removes the production power limit
+
+	// TODO: change api.Curtailer to make limit configurable
+	// For now, we use a fixed safe limit of 0W
+	limit := 0.0
+
+	var value float64
+	if curtail {
+		value = limit
+	}
+
 	c.mu.Lock()
 	entity := c.egLppEntity
 	c.mu.Unlock()
@@ -277,8 +298,7 @@ func (c *EEBus) Curtail(curtail bool) error {
 		return api.ErrNotAvailable
 	}
 
-	// TODO: change api.Curtailer to make the limit configurable; use a fixed 0W safe limit for now
 	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: curtail}, cb)
+		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
 	})
 }
