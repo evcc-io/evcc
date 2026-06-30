@@ -23,6 +23,21 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 
 	require.ErrorIs(t, c.Enable(true), errNotConnected)
 	require.ErrorIs(t, c.MaxCurrent(16), errNotConnected)
+	require.ErrorIs(t, c.Dim(true), errNotConnected)
+}
+
+// a §14a/LPC dim overrides the on/off intent: the compressor is only driven on
+// when enabled and not dimmed.
+func TestOHPCFDimGate(t *testing.T) {
+	c := &EEBusOHPCF{enabled: true}
+	assert.True(t, c.controlEnable())
+
+	c.dimmed = true
+	assert.False(t, c.controlEnable(), "dim overrides enable")
+
+	dimmed, err := c.Dimmed()
+	require.NoError(t, err)
+	assert.True(t, dimmed)
 }
 
 // status mapping: running is C, every other connected state (incl. completed

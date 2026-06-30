@@ -40,6 +40,7 @@ type EEBusOHPCF struct {
 	mpcEntity  spineapi.EntityRemoteInterface
 	dhwEntity  spineapi.EntityRemoteInterface
 	enabled    bool
+	dimmed     bool
 	reboosting bool
 
 	connector *eebus.Connector
@@ -184,6 +185,14 @@ func (c *EEBusOHPCF) lastEnabled() bool {
 	defer c.mu.RUnlock()
 
 	return c.enabled
+}
+
+// controlEnable is the effective on/off intent: a §14a/LPC dim overrides enable.
+func (c *EEBusOHPCF) controlEnable() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.enabled && !c.dimmed
 }
 
 // ohpcfStatus maps the compressor process state to a charge status: running is
@@ -360,6 +369,26 @@ func (c *EEBusOHPCF) MaxCurrent(int64) error {
 	return c.apply()
 }
 
+var _ api.Dimmer = (*EEBusOHPCF)(nil)
+
+// Dimmed implements the api.Dimmer interface, reporting the active §14a/LPC dim state.
+func (c *EEBusOHPCF) Dimmed() (bool, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.dimmed, nil
+}
+
+// Dim implements the api.Dimmer interface. A §14a/LPC consumption limit pauses
+// or aborts the optional consumption; releasing it resumes per the on/off intent.
+func (c *EEBusOHPCF) Dim(dim bool) error {
+	c.mu.Lock()
+	c.dimmed = dim
+	c.mu.Unlock()
+
+	return c.apply()
+}
+
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
 func (c *EEBusOHPCF) apply() error {
@@ -374,7 +403,7 @@ func (c *EEBusOHPCF) apply() error {
 		return nil
 	}
 
-	switch ohpcfControlAction(state, c.lastEnabled()) {
+	switch ohpcfControlAction(state, c.controlEnable()) {
 	case ohpcfSchedule:
 		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
 			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
