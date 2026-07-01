@@ -82,7 +82,7 @@ func (cc *Curtailer) Implement(ctx context.Context, i implement.Caps) error {
 
 	if curtailS != nil {
 		setPercent := func(percent int) error { return curtailS(int64(percent)) }
-		implement.May(i, implement.Curtailer(setPercent, curtailedG))
+		implement.May(i, implement.Curtailer(curtailedG, setPercent))
 	}
 
 	return nil
