@@ -1,47 +1,49 @@
 package vehicle
 
 import (
-	"strings"
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/psa"
+	"golang.org/x/oauth2"
 )
 
 // https://github.com/TA2k/ioBroker.psa
 
 func init() {
-	registry.Add("citroen", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("citroen", "clientsB2CCitroen", other)
+	registry.AddCtx("citroen", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "citroen", "clientsB2CCitroen", "Citroën", other)
 	})
-	registry.Add("ds", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("ds", "clientsB2CDS", other)
+	registry.AddCtx("ds", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "ds", "clientsB2CDS", "DS", other)
 	})
-	registry.Add("opel", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("opel", "clientsB2COpel", other)
+	registry.AddCtx("opel", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "opel", "clientsB2COpel", "Opel", other)
 	})
-	registry.Add("peugeot", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("peugeot", "clientsB2CPeugeot", other)
+	registry.AddCtx("peugeot", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newPSA(ctx, "peugeot", "clientsB2CPeugeot", "Peugeot", other)
 	})
 }
 
-// PSA is an api.Vehicle implementation for PSA cars
+// PSA is an api.Vehicle implementation for PSA cars. Authentication happens in
+// the browser via evcc's provider-auth (see vehicle/psa).
 type PSA struct {
 	*embed
 	*psa.Provider // provides the api implementations
 }
 
 // newPSA creates a new vehicle
-func newPSA(brand, realm string, other map[string]any) (api.Vehicle, error) {
+func newPSA(ctx context.Context, brand, realm, displayName string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		VIN      string
-		User     string
-		Password string `mapstructure:"password"`
-		Country  string
 		Tokens   Tokens
 		Cache    time.Duration
+		User     string // deprecated
+		Password string // deprecated
+		Country  string // deprecated
 	}{
 		Cache: interval,
 	}
@@ -50,42 +52,35 @@ func newPSA(brand, realm string, other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" {
-		return nil, api.ErrMissingCredentials
+	log := util.NewLogger(brand)
+
+	// optional seed token from a legacy `evcc token` config (web login is the default)
+	var seed *oauth2.Token
+	if token, err := cc.Tokens.Token(); err == nil {
+		seed = token
 	}
 
-	token, err := cc.Tokens.Token()
+	oc := psa.Oauth2Config(brand, "")
+	identity, err := psa.NewIdentity(ctx, log, brand, realm, displayName, oc, seed)
 	if err != nil {
 		return nil, err
+	}
+
+	api := psa.NewAPI(log, identity, realm, oc.ClientID)
+
+	// resolve the vehicle lazily so the vehicle can be built (and the auth
+	// provider registered) before the account is authenticated
+	vehicle := func() (string, error) {
+		vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v psa.Vehicle) (string, error) {
+			return v.VIN, nil
+		})
+		return vehicle.ID, err
 	}
 
 	v := &PSA{
-		embed: &cc.embed,
+		embed:    &cc.embed,
+		Provider: psa.NewProvider(api, vehicle, cc.Cache),
 	}
 
-	log := util.NewLogger(brand)
-	log.Redact(cc.User, cc.Tokens.Access, cc.Tokens.Refresh)
-
-	oc := psa.Oauth2Config(brand, strings.ToLower(cc.Country))
-	identity, err := psa.NewIdentity(log, brand, cc.User, oc, token)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO still needed?
-	api := psa.NewAPI(log, identity, realm, oc.ClientID)
-
-	vehicle, err := ensureVehicleEx(
-		cc.VIN, api.Vehicles,
-		func(v psa.Vehicle) (string, error) {
-			return v.VIN, nil
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	v.Provider = psa.NewProvider(api, vehicle.ID, cc.Cache)
-
-	return v, err
+	return v, nil
 }

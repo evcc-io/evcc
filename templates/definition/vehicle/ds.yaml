@@ -4,31 +4,33 @@ products:
 requirements:
   description:
     de: |
-      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
+      Nach dem Anlegen erscheint in der Konfiguration eine DS-Anmeldung.
+      Melde dich dort mit deiner MyDS-E-Mail und deinem Passwort an.
     en: |
-      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
+      After adding the vehicle a DS login appears in the configuration.
+      Sign in there with your MyDS email and password.
 params:
   - preset: vehicle-common
   - preset: vehicle-online
   - name: user
-    required: true
+    deprecated: true
   - name: password
     deprecated: true
   - name: accessToken
-    required: true
+    deprecated: true
   - name: refreshToken
-    required: true
+    deprecated: true
   - name: vin
+    help:
+      de: Optional - leer lassen zur automatischen Erkennung (nur bei einem Fahrzeug im Konto; bei mehreren bitte VIN angeben).
+      en: Optional - leave empty to auto-detect (only with a single vehicle in the account; set the VIN if you have several).
     example: V...
   - name: cache
     default: 15m
+    advanced: true
 render: |
   type: ds
   vin: {{ .vin }}
-  user: {{ .user }}
-  tokens:
-    access: {{ .accessToken }}
-    refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
   {{ include "vehicle-features" . }}
