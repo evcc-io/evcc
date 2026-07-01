@@ -53,14 +53,16 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		System          string
 		HeatingZone     int
 		HeatingSetpoint float32
+		Reboost         time.Duration
 		Cache           time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice, api.SwitchDevice},
 		},
-		Realm: sensonet.REALM_GERMANY,
-		Cache: time.Minute,
+		Realm:   sensonet.REALM_GERMANY,
+		Reboost: 15 * time.Minute,
+		Cache:   time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -127,7 +129,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 					select {
 					case <-wwCtx.Done():
 						return
-					case <-time.After(15 * time.Minute):
+					case <-time.After(cc.Reboost):
 						if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
 							log.ERROR.Println("hot water boost:", err)
 						}
