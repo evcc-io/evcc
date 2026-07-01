@@ -108,7 +108,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 	if usage == "pv" {
 		curtail := func(percent int) error {
-			percent = max(0, min(100, percent))
 			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(float64(percent)/100))
 		}
 
