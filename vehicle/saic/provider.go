@@ -54,7 +54,7 @@ func (v *Provider) Soc() (float64, error) {
 
 	val := res.ChrgMgmtData.BmsPackSOCDsp
 	if val > 1000 {
-		// v.status.Reset()
+		v.status.Reset()
 		return float64(val), fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
 	}
 
@@ -104,8 +104,9 @@ func (v *Provider) Range() (int64, error) {
 		return 0, err
 	}
 	val := res.RvsChargeStatus.FuelRangeElec
-	if val < 10 {
+	if val < 10 || val > 10000 {
 		// Ok, 0 would be possible, but it's more likely that it's an invalid answer.
+		v.status.Reset()
 		return 0, api.ErrMustRetry
 	}
 	return val / 10, nil
