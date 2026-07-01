@@ -280,18 +280,11 @@ func (c *EEBus) Curtailed() (bool, error) {
 	return limit.IsActive && limit.Value <= 0, nil
 }
 
-// Curtail implements the api.Curtailer interface
-func (c *EEBus) Curtail(curtail bool) error {
-	// Sets or removes the production power limit
-
-	// TODO: change api.Curtailer to make limit configurable
-	// For now, we use a fixed safe limit of 0W
-	limit := 0.0
-
-	var value float64
-	if curtail {
-		value = limit
-	}
+// SetCurtailPercent implements the api.Curtailer interface
+func (c *EEBus) SetCurtailPercent(percent int) error {
+	// ponytail: no nominal production power available, so any curtailment
+	// (<100%) applies a fixed 0W limit rather than a proportional value
+	curtail := percent < 100
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -301,7 +294,7 @@ func (c *EEBus) Curtail(curtail bool) error {
 	}
 
 	_, err := c.eg.EgLPPInterface.WriteProductionLimit(c.egLppEntity, ucapi.LoadLimit{
-		Value:    value,
+		Value:    0,
 		IsActive: curtail,
 	}, c.callbackResult("production limit"))
 

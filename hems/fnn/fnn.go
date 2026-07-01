@@ -195,18 +195,6 @@ func (c *Fnn) setProductionLimit(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// active := frac < 1.0
-
-	// c.productionLimit = nil
-	// if active {
-	// 	c.productionLimit = new(c.maxCurtailPower * frac)
-	// }
-
-	// limit := 0.0
-	// if c.productionLimit != nil {
-	// 	limit = *c.productionLimit
-	// }
-
 	active := frac < 1.0
 
 	c.productionFraction = nil
@@ -251,16 +239,21 @@ func (c *Fnn) Dimmed() *bool {
 	return new(c.consumptionLimit > 0)
 }
 
-// Curtailed implements api.HEMS.
-func (c *Fnn) Curtailed() *float64 {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.productionFraction == nil {
+// CurtailedPercent implements api.HEMS, returning the allowed production percent.
+func (c *Fnn) CurtailedPercent() *int {
+	if c.w3 == nil {
 		return nil
 	}
 
-	return new(*c.productionFraction * c.maxCurtailPower)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	percent := 100
+	if c.productionFraction != nil {
+		percent = int(*c.productionFraction * 100)
+	}
+
+	return &percent
 }
 
 // MaxConsumptionPower implements api.HEMS.
