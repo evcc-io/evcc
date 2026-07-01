@@ -26,7 +26,7 @@ var ErrInvalidData = errors.New("invalid data received")
 
 // DayAheadPricesRequest constructs a new DayAheadPricesRequest.
 func DayAheadPricesRequest(domain string, duration time.Duration) *http.Request {
-	now := time.Now().Truncate(time.Hour)
+	now := time.Now().UTC().Truncate(time.Hour)
 
 	params := url.Values{
 		"DocumentType": {string(ProcessTypeDayAhead)},
@@ -52,13 +52,16 @@ type Rate struct {
 // GetTsPriceData accepts a set of TimeSeries data entries, and
 // returns a sorted array of Rate based on the timestamp of each data entry.
 func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) {
-	var res []Rate
+	// ENTSO-E may publish multiple TimeSeries for the same interval, distinguished by
+	// classificationSequence position; keep only the lowest position per interval.
+	type interval struct {
+		start, end time.Time
+	}
+
+	best := make(map[interval]TimeSeriesPeriod)
+	position := make(map[interval]int)
 
 	for _, ts := range ts {
-		if ts.ClassificationSequenceAttributeInstanceComponentPosition > 1 {
-			continue
-		}
-
 		if unit := ts.PriceMeasureUnitName; unit != "MWH" {
 			return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
 		}
@@ -68,13 +71,23 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) 
 				continue
 			}
 
-			data, err := ExtractPeriodPriceData(&period)
-			if err != nil {
-				return nil, err
-			}
+			key := interval{period.TimeInterval.Start.Time, period.TimeInterval.End.Time}
 
-			res = append(res, data...)
+			if pos, ok := position[key]; !ok || ts.ClassificationSequenceAttributeInstanceComponentPosition < pos {
+				best[key] = period
+				position[key] = ts.ClassificationSequenceAttributeInstanceComponentPosition
+			}
 		}
+	}
+
+	var res []Rate
+	for _, period := range best {
+		data, err := ExtractPeriodPriceData(&period)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, data...)
 	}
 
 	if len(res) == 0 {
