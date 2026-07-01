@@ -78,15 +78,16 @@ func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, 
 	}
 
 	return &Fnn{
-		log:             util.NewLogger("fnn"),
-		site:            site,
-		maxDimPower:     maxDimPower,
-		maxCurtailPower: maxCurtailPower,
-		s1:              s1G,
-		s2:              s2G,
-		w3:              w3G,
-		w4:              w4G,
-		interval:        interval,
+		log:               util.NewLogger("fnn"),
+		site:              site,
+		maxDimPower:       maxDimPower,
+		maxCurtailPower:   maxCurtailPower,
+		s1:                s1G,
+		s2:                s2G,
+		w3:                w3G,
+		w4:                w4G,
+		productionPercent: 100,
+		interval:          interval,
 	}, nil
 }
 
@@ -106,8 +107,8 @@ type Fnn struct {
 	smartgridConsumptionID uint
 	smartgridProductionID  uint
 
-	consumptionLimit   float64
-	productionFraction *float64
+	consumptionLimit  float64
+	productionPercent int // allowed production percent (0..100), 100 = uncurtailed
 
 	interval time.Duration
 }
@@ -143,12 +144,12 @@ func (c *Fnn) runCurtail() error {
 	}
 
 	rules := []struct {
-		get  func() (bool, error)
-		frac float64
+		get     func() (bool, error)
+		percent int
 	}{
-		{get: c.w3, frac: 0.0},
-		{get: c.s2, frac: 0.3},
-		{get: c.s1, frac: 0.6},
+		{get: c.w3, percent: 0},
+		{get: c.s2, percent: 30},
+		{get: c.s1, percent: 60},
 	}
 
 	for _, rule := range rules {
@@ -162,12 +163,12 @@ func (c *Fnn) runCurtail() error {
 		}
 
 		if active {
-			return c.setProductionLimit(rule.frac)
+			return c.setProductionLimit(rule.percent)
 		}
 	}
 
 	// 100%
-	return c.setProductionLimit(1.0)
+	return c.setProductionLimit(100)
 }
 
 // runDim evaluates the dimming rule and applies the dim limit.
@@ -191,20 +192,16 @@ func (c *Fnn) runDim() error {
 }
 
 // setProductionLimit applies the curtailment limit.
-func (c *Fnn) setProductionLimit(frac float64) error {
+func (c *Fnn) setProductionLimit(percent int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	active := frac < 1.0
-
-	c.productionFraction = nil
-	if active {
-		c.productionFraction = new(frac)
-	}
+	active := percent < 100
+	c.productionPercent = percent
 
 	limit := 0.0
 	if active {
-		limit = frac * c.maxCurtailPower
+		limit = float64(percent) / 100 * c.maxCurtailPower
 	}
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionID, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
@@ -251,11 +248,7 @@ func (c *Fnn) CurtailedPercent() *int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	percent := 100
-	if c.productionFraction != nil {
-		percent = int(*c.productionFraction * 100)
-	}
-
+	percent := c.productionPercent
 	return &percent
 }
 
@@ -270,9 +263,9 @@ func (c *Fnn) MaxConsumptionPower() float64 {
 func (c *Fnn) MaxProductionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.productionFraction == nil {
+	if c.productionPercent >= 100 {
 		return nil
 	}
 
-	return new(*c.productionFraction * c.maxCurtailPower)
+	return new(float64(c.productionPercent) / 100 * c.maxCurtailPower)
 }
