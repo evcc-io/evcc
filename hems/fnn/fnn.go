@@ -202,7 +202,10 @@ func (c *Fnn) setProductionLimit(frac float64) error {
 		c.productionFraction = new(frac)
 	}
 
-	limit := frac * c.maxCurtailPower
+	limit := 0.0
+	if active {
+		limit = frac * c.maxCurtailPower
+	}
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionID, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)

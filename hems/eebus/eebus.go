@@ -323,8 +323,8 @@ func (c *EEBus) CurtailedPercent() *int {
 
 	percent := 100
 	if !c.productionLimitActivated.IsZero() {
-		// production limits are negative watts
-		percent = int(-c.productionLimit.Value / c.productionNominalMax * 100)
+		// production limits are negative watts; clamp as the control box may report a limit beyond nominal
+		percent = max(0, min(100, int(-c.productionLimit.Value/c.productionNominalMax*100)))
 	}
 
 	return &percent
