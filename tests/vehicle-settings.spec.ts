@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalVisible, expectModalHidden } from "./utils";
 import {
@@ -104,7 +104,7 @@ test.describe("limitSoc", async () => {
 });
 
 test.describe("minSoc and limitSoc", async () => {
-  test("disabled for offline vehicles", async ({ page }) => {
+  test("hidden for offline vehicles", async ({ page }) => {
     await page.goto("/");
 
     // switch to offline vehicle
@@ -112,19 +112,64 @@ test.describe("minSoc and limitSoc", async () => {
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     await page.getByRole("link", { name: "Arrival" }).click();
-    await expect(page.getByRole("combobox", { name: "Min. charge %" })).toBeDisabled();
-    await expect(page.getByRole("combobox", { name: "Default limit" })).toBeDisabled();
+    await expect(page.getByRole("combobox", { name: "Min. charge %" })).not.toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Default limit" })).not.toBeVisible();
   });
 
-  test("disabled for guest vehicles", async ({ page }) => {
+  test("no tabs for guest vehicles", async ({ page }) => {
     await page.goto("/");
 
-    // switch to offline vehicle
+    // switch to guest vehicle (no known vehicle)
     await page.getByTestId("change-vehicle").locator("select").selectOption("Guest vehicle");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+    await expectModalVisible(modal);
+    await expect(modal.getByRole("link", { name: "Departure" })).toHaveCount(0);
+    await expect(modal.getByRole("link", { name: "Arrival" })).toHaveCount(0);
+  });
+});
+
+test.describe("default mode", async () => {
+  async function setDefaultMode(page: Page, option: string) {
+    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+    await expectModalVisible(modal);
+    await modal.getByRole("link", { name: "Arrival" }).click();
+    await modal.getByRole("combobox", { name: "Default mode" }).selectOption(option);
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+  }
+
+  test("apply and restart", async ({ page }) => {
+    await page.goto("/");
+
+    await setDefaultMode(page, "Fast");
+    await page.waitForLoadState("networkidle");
+
+    await restart(simulatorConfig());
+    await page.reload();
+
+    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     await page.getByRole("link", { name: "Arrival" }).click();
-    await expect(page.getByRole("combobox", { name: "Min. charge %" })).toBeDisabled();
-    await expect(page.getByRole("combobox", { name: "Default limit" })).toBeDisabled();
+    await expect(page.getByRole("combobox", { name: "Default mode" })).toHaveValue("now");
+  });
+
+  test("applied on vehicle switch", async ({ page }) => {
+    await page.goto("/");
+    const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
+    const changeVehicle = page.getByTestId("change-vehicle").locator("select");
+
+    // per-vehicle default modes
+    await setDefaultMode(page, "Solar");
+    await changeVehicle.selectOption("grüner Honda e");
+    await setDefaultMode(page, "Fast");
+
+    // switching vehicles applies the vehicle's default mode
+    await changeVehicle.selectOption("blauer e-Golf");
+    await expect(mode.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+
+    await changeVehicle.selectOption("grüner Honda e");
+    await expect(mode.getByRole("button", { name: "Fast" })).toHaveClass(/active/);
   });
 });

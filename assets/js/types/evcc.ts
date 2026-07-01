@@ -669,6 +669,7 @@ export interface BatteryMeter extends Meter {
 
 export interface Vehicle {
   name: string;
+  mode?: CHARGE_MODE | "";
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;

@@ -1321,7 +1321,6 @@
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
       "default": "default",
-      "disclaimerHint": "Note:",
       "limitSoc": {
         "description": "Charging limit that is used when this vehicle is connected.",
         "label": "Default limit"
@@ -1336,7 +1335,6 @@
         "description": "The vehicle gets „fast” charged to {0} in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days.",
         "label": "Min. charge %"
       },
-      "onlyForSocBasedCharging": "These options are only available for vehicles with known charging level.",
       "phasesConfigured": {
         "label": "Phases",
         "no1p3pSupport": "How is your charger connected?",

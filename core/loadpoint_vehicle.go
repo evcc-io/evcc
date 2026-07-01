@@ -148,7 +148,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
 
-		if mode, ok := v.OnIdentified().GetMode(); ok {
+		// vehicle mode overrides the yaml onIdentify action
+		mode, ok := v.OnIdentified().GetMode()
+		if m := vehicle.Settings(lp.log, v).GetMode(); m != "" {
+			mode, ok = m, true
+		}
+		if ok && mode != "" {
 			lp.SetMode(mode)
 		}
 
