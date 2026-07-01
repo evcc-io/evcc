@@ -9,17 +9,13 @@ export default {
   },
 } as Meta<typeof BatteryIcon>;
 
-const Template: StoryFn<typeof BatteryIcon> = (args) => {
-  const story = () => ({
-    components: { BatteryIcon },
-    setup() {
-      return { args };
-    },
-    template: '<BatteryIcon v-bind="args" />',
-  });
-  story.args = args;
-  return story;
-};
+const Template: StoryFn<typeof BatteryIcon> = (args) => ({
+  components: { BatteryIcon },
+  setup() {
+    return { args };
+  },
+  template: '<BatteryIcon v-bind="args" />',
+});
 
 export const Empty = Template.bind({});
 Empty.args = { soc: 0 };
