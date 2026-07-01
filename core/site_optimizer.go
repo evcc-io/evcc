@@ -130,9 +130,11 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 	charge := float64(res.ChargingPower[0]) / slotHours
 	discharge := float64(res.DischargingPower[0]) / slotHours
 
-	s := batterySuggestion{Charge: charge, Discharge: discharge}
+	var s batterySuggestion
 
 	if detail.Type == batteryTypeBattery {
+		// TODO add {Charge: charge, Discharge: discharge} once battery api supports it
+
 		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
 		switch {
 		case charge > suggestionThreshold && gridImporting:
