@@ -437,7 +437,15 @@ func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
 
 	maxPower, err := c.cem.OHPCF.RequestedPowerMax(entity)
 	if err != nil {
+		if estimate == 0 {
+			return 0, 0, api.ErrNotAvailable
+		}
+
 		maxPower = estimate
+	}
+
+	if estimate == 0 && maxPower > 0 {
+		estimate = maxPower
 	}
 
 	return estimate, maxPower, nil
