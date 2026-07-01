@@ -88,6 +88,13 @@ params:
     help:
       de: Wartezeit, nach der Boost erneut gestartet wird.
       en: Wait time after which Boost is started again.
+  - name: hysteresis
+    type: float
+    unit: °C
+    advanced: true
+    description:
+      de: Reboost Hysterese
+      en: Reboost Hysteresis
   - name: phases
     deprecated: true
 render: |
@@ -101,3 +108,4 @@ render: |
   heatingzone: {{ .zone }}
   heatingsetpoint: {{ .setpoint }}
   reboost: {{ .reboost }}
+  hysteresis: {{ .hysteresis }}
