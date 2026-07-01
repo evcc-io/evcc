@@ -104,7 +104,7 @@ func (site *Site) curtailPV(percent *int) error {
 		}
 
 		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			if curtail != curtailed {
+			if curtail == curtailed {
 				continue
 			}
 		} else {
