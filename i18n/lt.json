@@ -68,7 +68,7 @@
     },
     "aux": {
       "description": "Įrenginys, kuris koreguoja savo suvartojimą pagal esamą energijos perteklių (pvz., išmanieji vandens šildytuvai). evcc tikisi, kad šis įrenginys prireikus sumažins energijos suvartojimą.",
-      "titleAdd": "Pridėti Savireguliuojantį vartotoją",
+      "titleAdd": "Pridėti Savireguliuojantį Vartotoją",
       "titleEdit": "Redaguoti Savireguliuojantį vartotoją"
     },
     "battery": {
@@ -119,6 +119,11 @@
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
       "title": "Apkrovos valdymas",
       "usableMeters": "Galimi skaitikliai"
+    },
+    "consumer": {
+      "description": "Seka mažesnius, nevaldomus prietaisus (šaldytuvą, skalbimo mašiną ir kt.). Suteikia geresnį supratimą apie jūsų namų suvartojimą.",
+      "titleAdd": "Pridėkite Vartotojo Skaitiklį",
+      "titleEdit": "Redaguoti Vartotojo Skaitiklį"
     },
     "control": {
       "description": "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote.",
@@ -188,6 +193,7 @@
       "singlePhase": "Vienfazis",
       "soc": "Įkrova",
       "solarForecast": "Saulės prognozė",
+      "switchDevice": "Srovės valdymas",
       "temp": "Temperatūra",
       "topic": "Tema",
       "url": "URL",
@@ -220,6 +226,8 @@
       "interfacesHelp": "Apribokite tinklo sąsajas, kurias turėtų naudoti EEBus, kad išvengtumėte ryšio problemų. Palikite lauką tuščią, jei norite naudoti visas sąsajas. Vienas įrašas vienoje eilutėje.",
       "port": "EEBus prievadas",
       "portHelp": "Naudojamas prievadas.",
+      "qr": "Poravimo kodas",
+      "qrExplain": "Diegimo metu nuskaitykite iš kito EEBus įrenginio, kad susietumėte automatiškai, nereikės įvesti SKI rankiniu būdu.",
       "removeConfirm": "Visa EEBus konfigūracija bus pašalinta. Kitą kartą paleidus bus sugeneruoti nauji sertifikatai ir identifikatoriai. Ar tikrai tęsti?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Nuolatinis įrenginio identifikatorius, skirtas identifikuoti EEBus tinkle.",
@@ -233,9 +241,9 @@
       "title": "Eksperimentinės"
     },
     "ext": {
-      "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
-      "titleAdd": "Pridėti vartojančio įrenginio skaitiklį",
-      "titleEdit": "Redaguoti vartojančio įrenginio skaitiklį"
+      "description": "Stebi skaitiklius, kurie nenaudojami reguliavimui arba nerodomi vartotojo sąsajoje (paskirstymo spintų, alternatyvūs tinklo ar saulės skaitikliai, ...). Jų duomenys registruojami ir eksportuojami kaip ir kitų skaitiklių.",
+      "titleAdd": "Pridėti Papildomą Skaitiklį",
+      "titleEdit": "Redaguoti Papildomą Skaitiklį"
     },
     "form": {
       "danger": "Pavojus",
@@ -290,7 +298,7 @@
       "validateSave": "Patikrinti ir išsaugoti"
     },
     "grid": {
-      "title": "Tinklo skaitiklis",
+      "title": "Įvado skaitiklis",
       "titleAdd": "Pridėti tinklo skaitiklį",
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
@@ -371,8 +379,11 @@
       "estimateLabel": "Interpoliuoti įkrovos lygį tarp API naujinimų",
       "maxCurrentHelp": "Turi būti didesnė nei minimali srovė.",
       "maxCurrentLabel": "Max srovė",
+      "maxTempHelp": "Temperatūra turi būti aukštesnė už minimalią.",
+      "maxTempLabel": "Maksimali temperatūra",
       "minCurrentHelp": "Tik jei žinote, ką darote, leiskite žemiau 6 A.",
       "minCurrentLabel": "Min srovė",
+      "minTempLabel": "Minimali temperatūra",
       "noVehicles": "Nėra sukonfigūruotų automobilių.",
       "option": {
         "charging": "Pridėti įkrovimo vietą",
@@ -403,6 +414,8 @@
       "solarBehaviorLabel": "Saulės",
       "solarModeCustom": "pritaikytas",
       "solarModeMaximum": "saulės maksimumas",
+      "temperatureRangeHelp": "Temperatūros juostos rodymo diapazonas. Neturi įtakos valdymui.",
+      "temperatureRangeTitle": "Temperatūros diapazonas",
       "thresholdDisableDelayLabel": "Išjungimo delsa",
       "thresholdDisableHelpInvalid": "Prašome naudoti teigiamą vertę.",
       "thresholdDisableHelpPositive": "Sustoti, kai iš tinklo ilgiau nei {delay} naudojama daugiau nei {power}.",
@@ -437,6 +450,7 @@
     },
     "main": {
       "addAdditional": "Pridėti papildomą skaitiklį",
+      "addConsumer": "Pridėti vartotoją",
       "addGrid": "Pridėti tinklo skaitiklį",
       "addLoadpoint": "Pridėti įkroviklį arba šildytuvą",
       "addPvBattery": "Pridėti saulės elektrinę arba kaupiklį",
@@ -522,11 +536,16 @@
     },
     "meter": {
       "cancel": "Atšaukti",
+      "convertToConsumer": {
+        "confirm": "Šį \"papildomą skaitiklį\" paverčia \"vartotoju\".",
+        "link": "Konvertuoti į vartotoją"
+      },
       "delete": "Ištrinti",
       "generic": "Paprastos integracijos",
       "option": {
         "aux": "Pridėti savireguliuojantį vartotoją",
         "battery": "Pridėti kaupiklio skaitiklį",
+        "consumer": "Pridėkite įprastą vartotoją",
         "ext": "Pridėti paprastą vartojantį įrenginį",
         "pv": "Pridėti saulės elektrinės skaitiklį"
       },
@@ -538,7 +557,7 @@
       "usage": {
         "aux": "Savireguliuojantis įrenginys",
         "battery": "Kaupiklis",
-        "charge": "Vartotojas / Įkroviklis",
+        "charge": "Įkroviklis",
         "grid": "Įvadas",
         "label": "Naudojimas",
         "pv": "Gamyba"
@@ -699,9 +718,9 @@
     },
     "remote": {
       "active": "Aktyvus",
-      "addClient": "Pridėti vartotoją",
+      "addClient": "Pridėti klientą",
       "addClientDescription": "Įgaliojimai saugomi ir tikrinami tik lokaliai, jūsų evcc egzemplioriuje.",
-      "addClientTitle": "Pridėti nutolusį vartotoją",
+      "addClientTitle": "Pridėti Nutolusį Vartotoją",
       "clientCreated": "Vartotojas sukurtas",
       "clients": "Vartotojai",
       "confirmDelete": "Ištrinti vartotoją?",
@@ -731,6 +750,7 @@
     },
     "section": {
       "additionalMeter": "Papildomi skaitikliai",
+      "consumers": "Vartotojai",
       "general": "Pagrindiniai",
       "grid": "Elektros tinklas",
       "integrations": "Integracijos",
@@ -1270,10 +1290,11 @@
       "empty": "Šio laikotarpio istorijos duomenų nėra.",
       "group": {
         "battery": "Kaupiklis",
+        "consumer": "Vartojimas",
         "forecast": "Prognozė",
         "grid": "Tinklas",
         "loadpoint": "Įkrovimas ir Šildymas",
-        "meter": "Suvartojimas",
+        "meter": "Papildomi skaitikliai",
         "pv": "Gamyba"
       },
       "otherConsumers": "Kiti",
@@ -1547,7 +1568,7 @@
     },
     "groupBy": {
       "loadpoint": "Įkroviklis",
-      "none": "Suma",
+      "none": "Saulės",
       "vehicle": "Automobilis"
     },
     "loadpoint": "Įkroviklis",
@@ -1569,7 +1590,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Išlaidos",
-      "solar": "Saulės"
+      "solar": "Energija"
     },
     "vehicle": "Automobilis"
   },

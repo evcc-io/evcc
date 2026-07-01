@@ -16,6 +16,11 @@ import (
 	"github.com/hashicorp/yamux"
 )
 
+// bad registration token or sponsor token
+var errCredentialsRejected = errors.New("remote access rejected")
+
+const minUptime = 5 * time.Second
+
 // Tunnel manages a WebSocket+yamux tunnel to the cloud proxy.
 type Tunnel struct {
 	tunnelURL     string
@@ -63,7 +68,12 @@ func (t *Tunnel) run() {
 			t.log.ERROR.Printf("tunnel: %v", err)
 		}
 
-		// reset backoff after successful connection
+		// rejected credentials will not self-heal; a new token requires a restart
+		if errors.Is(err, errCredentialsRejected) {
+			return
+		}
+
+		// reset backoff only after a session that stayed connected
 		if ok {
 			bo.Reset()
 		}
@@ -77,13 +87,24 @@ func (t *Tunnel) run() {
 }
 
 func (t *Tunnel) connect(ctx context.Context) (bool, error) {
-	conn, _, err := websocket.Dial(ctx, t.tunnelURL, &websocket.DialOptions{
+	conn, resp, err := websocket.Dial(ctx, t.tunnelURL, &websocket.DialOptions{
 		HTTPHeader: http.Header{
 			"Authorization":   []string{"Bearer " + t.token},
 			"X-Sponsor-Token": []string{sponsor.Token},
 		},
 	})
 	if err != nil {
+		// rejected before the websocket upgrade; resp carries the HTTP status
+		if resp != nil {
+			switch resp.StatusCode {
+			case http.StatusConflict:
+				return false, errors.New("another evcc instance is already connected with these credentials")
+			case http.StatusUnauthorized:
+				return false, fmt.Errorf("%w (access revoked or sponsor token missing)", errCredentialsRejected)
+			case http.StatusForbidden:
+				return false, fmt.Errorf("%w (sponsor token invalid or expired)", errCredentialsRejected)
+			}
+		}
 		return false, fmt.Errorf("websocket dial: %w", err)
 	}
 
@@ -99,6 +120,7 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 	}
 
 	t.changeState(session, nil)
+	start := time.Now()
 
 	// accept streams from the proxy
 	srv := &http.Server{
@@ -109,7 +131,8 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 		t.changeState(nil, err)
 	}
 
-	return true, nil
+	// only a sustained connection resets backoff; an instant close keeps backing off
+	return time.Since(start) >= minUptime, nil
 }
 
 func (t *Tunnel) changeState(session *yamux.Session, err error) {

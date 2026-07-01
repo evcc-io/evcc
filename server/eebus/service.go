@@ -16,8 +16,8 @@ func init() {
 
 func getServices(w http.ResponseWriter, req *http.Request) {
 	var res []string
-	if Instance != nil {
-		for _, s := range Instance.RemoteServices() {
+	if instance != nil {
+		for _, s := range instance.RemoteServices() {
 			res = append(res, s.Ski)
 		}
 	}

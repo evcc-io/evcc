@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -77,8 +76,7 @@ func init() {
 // NewEEBusFromConfig creates an EEBus meter from generic config
 func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
-		Ski      string
-		Ip       string
+		Ski, Ip  string
 		Usage    *templates.Usage
 		Timeout_ time.Duration `mapstructure:"timeout"` // TODO deprecated
 	}
@@ -93,11 +91,12 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, e
 // NewEEBus creates an EEBus meter
 // Uses MGCP only when usage="grid", otherwise uses MPC (default)
 func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.Meter, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
-	ma := eebus.Instance.MonitoringAppliance()
+	ma := inst.MonitoringAppliance()
 
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
@@ -113,25 +112,25 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	c := &EEBus{
 		log:       util.NewLogger("eebus-" + useCase),
 		ma:        ma,
-		eg:        eebus.Instance.EnergyGuard(),
+		eg:        inst.EnergyGuard(),
 		mm:        mm,
 		scenarios: scenarios,
 		connector: eebus.NewConnector(),
 	}
 
-	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
+	if err := inst.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
 	if err := c.connector.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 	}()
 
 	// monitoring appliance
@@ -250,18 +249,16 @@ func (c *EEBus) Dim(dim bool) error {
 	}
 
 	c.mu.Lock()
-	defer c.mu.Unlock()
+	entity := c.egLpcEntity
+	c.mu.Unlock()
 
-	if c.egLpcEntity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCLimit) {
+	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
 		return api.ErrNotAvailable
 	}
 
-	_, err := c.eg.EgLPCInterface.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
-		Value:    value,
-		IsActive: dim,
-	}, c.callbackResult("consumption limit"))
-
-	return err
+	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
+	})
 }
 
 var _ api.Curtailer = (*EEBus)(nil)
@@ -294,35 +291,14 @@ func (c *EEBus) Curtail(curtail bool) error {
 	}
 
 	c.mu.Lock()
-	defer c.mu.Unlock()
+	entity := c.egLppEntity
+	c.mu.Unlock()
 
-	if c.egLppEntity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(c.egLppEntity, eebus.LPPLimit) {
+	if entity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(entity, eebus.LPPLimit) {
 		return api.ErrNotAvailable
 	}
 
-	_, err := c.eg.EgLPPInterface.WriteProductionLimit(c.egLppEntity, ucapi.LoadLimit{
-		Value:    value,
-		IsActive: curtail,
-	}, c.callbackResult("production limit"))
-
-	return err
-}
-
-func (c *EEBus) callbackResult(typ string) func(result model.ResultDataType) {
-	return func(result model.ResultDataType) {
-		sb := new(strings.Builder)
-
-		if result.ErrorNumber != nil {
-			fmt.Fprint(sb, *result.ErrorNumber)
-		}
-		if result.Description != nil {
-			if sb.Len() > 0 {
-				fmt.Print(sb, ":")
-			}
-			fmt.Print(sb, *result.Description)
-		}
-		if sb.Len() > 0 {
-			c.log.ERROR.Printf("%s: %s", typ, sb.String())
-		}
-	}
+	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
+	})
 }

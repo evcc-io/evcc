@@ -17,12 +17,14 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	"github.com/enbility/eebus-go/usecases/cem/evsecc"
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
+	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
 	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
 	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	eglpp "github.com/enbility/eebus-go/usecases/eg/lpp"
+	"github.com/enbility/eebus-go/usecases/ma/mdt"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
@@ -47,6 +49,7 @@ type CustomerEnergyManagement struct {
 	EvSoc  ucapi.CemEVSOCInterface
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
+	OHPCF  ucapi.CemOHPCFInterface
 }
 
 // Controllable System
@@ -59,6 +62,7 @@ type ControllableSystem struct {
 type MonitoringAppliance struct {
 	ucapi.MaMGCPInterface
 	ucapi.MaMPCInterface
+	ucapi.MaMDTInterface
 }
 
 // Energy Guard
@@ -84,14 +88,33 @@ type EEBus struct {
 	clients map[string][]Device
 }
 
-var Instance *EEBus
+var (
+	instance *EEBus
+	started  func() error // memoized service start; set in NewServer, runs once
+)
+
+// Instance returns the eebus server, starting the service once on first call
+// (OCPP pattern). Returns an error if eebus is unconfigured or start fails.
+func Instance() (*EEBus, error) {
+	if instance == nil {
+		return nil, errors.New("eebus not configured")
+	}
+	if err := started(); err != nil {
+		return nil, err
+	}
+	return instance, nil
+}
 
 func GetStatus() any {
+	var ski string
+	if instance != nil {
+		ski = instance.Ski()
+	}
 	return struct {
 		Ski string `json:"ski"`
 		QR  string `json:"qr,omitempty"`
 	}{
-		Ski: Ski(),
+		Ski: ski,
 		QR:  qrCode(),
 	}
 }
@@ -99,10 +122,10 @@ func GetStatus() any {
 // qrCode returns the SHIP installation QR code text per EEBus SHIP installation
 // requirements, or empty if unavailable
 func qrCode() string {
-	if Instance == nil {
+	if instance == nil {
 		return ""
 	}
-	qr, err := Instance.service.QRCodeText()
+	qr, err := instance.service.QRCodeText()
 	if err != nil {
 		return ""
 	}
@@ -181,12 +204,14 @@ func NewServer(other Config) (*EEBus, error) {
 			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
 			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
 			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+			OHPCF:  ohpcf.NewOHPCF(localEntity, c.ucCallback),
 		}
 
 		// monitoring appliance to meters
 		c.ma = MonitoringAppliance{
 			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
 			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
+			MaMDTInterface:  mdt.NewMDT(localEntity, c.ucCallback),
 		}
 	}
 
@@ -221,14 +246,23 @@ func NewServer(other Config) (*EEBus, error) {
 		c.cem.EvseCC, c.cem.EvCC,
 		c.cem.EvCem, c.cem.OpEV,
 		c.cem.OscEV, c.cem.EvSoc,
+		c.cem.OHPCF,
 		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
-		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
+		c.ma.MaMGCPInterface, c.ma.MaMPCInterface, c.ma.MaMDTInterface,
 		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
 
+	started = sync.OnceValue(c.service.Start)
+	instance = c
+
 	return c, nil
+}
+
+// Ski returns the local service SKI.
+func (c *EEBus) Ski() string {
+	return c.ski
 }
 
 func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
@@ -294,10 +328,6 @@ func (c *EEBus) RemoteServices() []shipapi.RemoteMdnsService {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	return c.remoteServices
-}
-
-func (c *EEBus) Run() {
-	c.service.Start()
 }
 
 func (c *EEBus) Shutdown() {
