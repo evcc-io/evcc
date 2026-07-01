@@ -837,11 +837,7 @@ export default defineComponent({
 			} else if (status.dimmed !== undefined) {
 				result["dimmed"] = { value: status.dimmed };
 			}
-			if (
-				status.curtailed !== undefined &&
-				status.curtailed < 100 &&
-				status.maxProductionPower !== undefined
-			) {
+			if ((status.curtailed ?? 100) < 100 && status.maxProductionPower !== undefined) {
 				result["curtailLimit"] = {
 					value: status.maxProductionPower,
 					warning: true,
