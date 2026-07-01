@@ -159,12 +159,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
 
-			if skipBoost() {
-				return nil
-			}
-
-			if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
-				return err
+			if !skipBoost() {
+				if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+					return err
+				}
 			}
 
 			var wwCtx context.Context
