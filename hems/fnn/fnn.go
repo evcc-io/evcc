@@ -120,7 +120,8 @@ func (c *Fnn) SetUpdated(f func()) {
 
 // Run starts the FNN control loop.
 func (c *Fnn) Run() {
-	for range time.Tick(c.interval) {
+	// run immediately, then on every tick
+	for tick := time.Tick(c.interval); ; <-tick {
 		if err := c.runCurtail(); err != nil {
 			c.log.ERROR.Println(err)
 		}
