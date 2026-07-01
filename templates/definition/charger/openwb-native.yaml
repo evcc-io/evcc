@@ -23,13 +23,16 @@ requirements:
       - evcc nach Anleitung installieren.
       - Notwendige Gruppen zum Zugriff auf die Hardware für user evcc setzen (als root): `usermod -a -G gpio,dialout,input evcc`
       - evcc konfigurieren. Es gibt unterschiedliche Hardware Versionen, die bezüglich der verbauten Modbus Adapter und Wallbox Zähler variieren.
-        - Der oder die Modbus Adapter sind entweder auf `/dev/ttyUSB0`, `/dev/ttyUSB1` (manche Duo) oder `/dev/ttyACM0` zu finden. 
+        - Der oder die Modbus Adapter sind entweder auf `/dev/ttyUSB0`, `/dev/ttyUSB1` (manche Duo) oder `/dev/ttyACM0` (u.a. openWB SE) zu finden. 
           Manche Duo's haben zwei Modbus Adapter, manche nur einen.
-        - Die EVSE für den ersten Ladepunkt hat immer die ID 1, die für den zweiten ID 2.
+        - Die EVSE für den ersten Ladepunkt hat die ID 1, die für den zweiten ID 2. Bei der openWB SE abweichend die ID 11 bzw. 12.
         - Die verschiedenen möglichen Zähler sind:
           - Bernecker Engineering MPM3PM (template: mpm3pm) mit ID 5 oder ID 6 für den zweiten Ladepunkt bei der Duo.
-          - SDM630/SDM72 (template: eastron) mit ID 105 oder ID 106 für den zweiten Ladepunkt bei der Duo.
+          - SDM630/SDM72 (template: eastron) mit ID 105 oder ID 106 für den zweiten Ladepunkt bei der Duo (u.a. openWB SE).
           - ABB B23 (template: abb-ab) mit ID 201
+      - Die openWB SE-Hardware limitiert die maximal zulässigen Ströme abhängig von der Anzahl der aktivenPhasen; 
+        siehe https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se. evcc selbst begrenzt den Strom *nicht* auf 
+        den zulässigen Maximalwert, daher bitte den maximalen Strom in evcc entsprechend konfigurieren.
 
       Zusätzlich für die Anzeige von evcc im Display (Achtung dann können auch Unbefugte laden!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
@@ -71,13 +74,16 @@ requirements:
       - Add the groups required for user evcc to access the hardware: `usermod -a -G gpio,dialout,input evcc`
       - Configure evcc according to the manual. There are multiple distinct Hardware versions, which differ regarding the built-in modbus
         adapters and charge meters.
-        - A single or multiple Modbus adapters are found at `/dev/ttyUSB0`, `/dev/ttyUSB1` (some Duo) or `/dev/ttyACM0`. 
+        - A single or multiple Modbus adapters are found at `/dev/ttyUSB0`, `/dev/ttyUSB1` (some Duo) or `/dev/ttyACM0` (e.g. openWB SE). 
           Some Duo's contain two Modbus adapters, some just one.
-        - The EVSE for the first connector has always the ID 1, the one for the second ID 2.
+        - The EVSE for the first connector has the ID 1, the second one ID 2. The openWB SE uses ID 11 and ID 12 instead.
         - The different possible charge meters are:
           - Bernecker Engineering MPM3PM (template: mpm3pm) with ID 5 or ID 6 for the Duo's second connector.
-          - SDM630/SDM72 (template: eastron) with ID 105 or ID 106 for the Duo's second connector.
+          - SDM630/SDM72 (template: eastron) with ID 105 or ID 106 for the Duo's second connector (e.g. openWB SE).
           - ABB B23 (template: abb-ab) with ID 201
+      - The openWB SE Hardware limits the maximum allowed currents depending on the number of active phases, 
+        see https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se. evcc by itself does not enforce these current limits, 
+        so please ensure to configure the maximum current in evcc accordingly.
 
       Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
