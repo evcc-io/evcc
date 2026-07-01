@@ -89,10 +89,12 @@ func (site *Site) dimMeters(dim *bool) error {
 	return errs
 }
 
-func (site *Site) curtailPV(curtail *bool) error {
-	if curtail == nil {
+func (site *Site) curtailPV(percent *int) error {
+	if percent == nil {
 		return nil
 	}
+
+	curtail := *percent < 100
 
 	var errs error
 	for _, dev := range site.pvMeters {
@@ -102,7 +104,7 @@ func (site *Site) curtailPV(curtail *bool) error {
 		}
 
 		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			if *curtail == curtailed {
+			if curtail == curtailed {
 				continue
 			}
 		} else {
@@ -112,8 +114,8 @@ func (site *Site) curtailPV(curtail *bool) error {
 			continue
 		}
 
-		if err := m.Curtail(*curtail); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %t", deviceTitleOrName(dev), *curtail)
+		if err := m.SetCurtailPercent(*percent); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %d%%", deviceTitleOrName(dev), *percent)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
 		}

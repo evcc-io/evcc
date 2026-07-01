@@ -210,8 +210,8 @@ type Dimmer interface {
 
 // Curtailer provides EEG §9 curtailment
 type Curtailer interface {
-	Curtailed() (bool, error)
-	Curtail(bool) error
+	Curtailed() (bool, error)    // curtailed if production is limited to less than nominal (<100%)
+	SetCurtailPercent(int) error // limit production to the given percent of nominal (0..100, 100 = uncurtailed)
 }
 
 // ChargeController allows to start/stop the charging session on the vehicle side
@@ -293,7 +293,7 @@ type Circuit interface {
 type HEMS interface {
 	SetUpdated(func())
 	Dimmed() *bool                // nil = no statement
-	Curtailed() *bool             // nil = no statement
+	CurtailedPercent() *int       // allowed production percent (0..100), nil = no statement
 	MaxConsumptionPower() float64 // 0 = no limit
 	MaxProductionPower() *float64 // nil = no limit
 }
