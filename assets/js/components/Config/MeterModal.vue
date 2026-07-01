@@ -225,17 +225,22 @@ export default defineComponent({
 			replaceModal("meter", { id: this.id, type: type as MeterType });
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
+			const visibleProducts =
+				this.selectedType === "ext"
+					? products.filter((p) => p.template !== "quatt")
+					: products;
+
 			return [
 				{
 					label: "generic",
 					options: [
-						...products.filter((p) => p.group === "generic"),
+						...visibleProducts.filter((p) => p.group === "generic"),
 						customTemplateOption(this.$t("config.general.customOption")),
 					],
 				},
 				{
 					label: "specific",
-					options: products.filter((p) => p.group !== "generic"),
+					options: visibleProducts.filter((p) => p.group !== "generic"),
 				},
 			];
 		},

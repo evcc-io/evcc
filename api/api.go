@@ -26,6 +26,11 @@ type MeterReturnEnergy interface {
 	ReturnEnergy() (float64, error)
 }
 
+// MeterDetails provides additional read-only meter information for display.
+type MeterDetails interface {
+	Details() ([]string, error)
+}
+
 // PhaseCurrents provides per-phase current A
 type PhaseCurrents interface {
 	Currents() (float64, float64, float64, error)
