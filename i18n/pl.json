@@ -184,7 +184,7 @@
     },
     "devices": {
       "auxMeter": "Inteligentne urządzenie konsumujące",
-      "batteryStorage": "Magazyn energii",
+      "batteryStorage": "Magazynowanie energii",
       "consumer": "Konsumenci",
       "solarSystem": "System PV"
     },
@@ -1510,5 +1510,12 @@
     "lineErrorLink": "wiersz {0}",
     "restartButton": "Restartuj",
     "title": "Błąd uruchamiania"
+  },
+  "tabBar": {
+    "battery": "Magazyn energii",
+    "charge": "Obciążenie",
+    "forecast": "Prognoza",
+    "more": "Więcej",
+    "sessions": "Sesje"
   }
 }

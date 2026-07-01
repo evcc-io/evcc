@@ -19,6 +19,45 @@
     "successCloseTab": "Dabar galite uždaryti šį skirtuką.",
     "title": "Autorizacijos būsena"
   },
+  "battery": {
+    "card": {
+      "charging": "Įkrauna",
+      "discharging": "Iškrauna",
+      "energy": "Energija",
+      "ofTotal": "iš {total}",
+      "power": "Galia",
+      "soc": "Akumuliatoriaus įkrova"
+    },
+    "combined": "Sudėta",
+    "config": {
+      "buffer": "Kaupiklio energija, viršijanti {soc}, gali būti naudojama įkrovikliams palaikyti ir saulės energijos režime atidėti įkrovimo išjungimą. Saulės energijos įkrovimas pradedamas automatiškai {start}.",
+      "bufferNone": "Kaupiklio energija nenaudojama automobilio įkrovimui. Norėdami įjungti šią funkciją, nustatykite mažesnę nei {soc} reikšmę.",
+      "bufferStart": {
+        "above": "kai kaupiklio įkrovos lygis viršija {soc}",
+        "full": "kai kaupiklis pilnas",
+        "never": "tik esant pakankamam pertekliui"
+      },
+      "bufferTitle": "Kaupiklis kaip įkrovimo buferis",
+      "discharge": "Neleiskite iškrauti kaupiklio greituoju režimu ir planuojamo įkrovimo metu.",
+      "priority": "Kaupiklis turi prioritetą, kol jo įkrova yra mažesnė nei {soc}. Po to įkrovikliai gauna perteklių.",
+      "priorityNone": "Saulės energijos perteklius patenka tiesiai į įkroviklius. Nustatykite reikšmę, didesnę nei {soc}, kad pirmenybė būtų teikiama kaupikliui.",
+      "priorityTitle": "Kur pirmiausia nukeliaus perteklius?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Įkrovimas iš tinklo",
+        "hold": "Iškrovimas blokuojamas",
+        "holdcharge": "Įkrovimas pristabdytas",
+        "normal": "Pagal saulės energijos perteklių"
+      },
+      "empty": "tuščia",
+      "full": "pilna",
+      "highest": "Daugiausia ({value})",
+      "lowest": "Mažiausia ({value})",
+      "suggestion": "Siūloma",
+      "title": "Optimizatorius"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Kaupiklio įkrova",
     "bufferStart": {
@@ -51,6 +90,11 @@
     "hex": "Hex spalva"
   },
   "config": {
+    "adminPassword": {
+      "description": "Scenarijaus įskiepis vykdo sistemos lygio komandą, kuri veikia su evcc proceso leidimais. Norėdami tęsti, dar kartą įveskite administratoriaus slaptažodį.",
+      "invalid": "Neteisingas slaptažodis. Bandykite dar kartą.",
+      "title": "Galimai pavojingas veiksmas"
+    },
     "apiKey": {
       "description": "Suteikite saugią prieigą nebendrindami administratoriaus slaptažodžio scenarijams ir automatizavimo užduotims, pvz., suplanuotoms atsarginėms kopijoms.",
       "exampleLabel": "Išbandykite: atsisiųskite atsarginę kopiją naudodami curl",
@@ -122,7 +166,7 @@
     },
     "consumer": {
       "description": "Seka mažesnius, nevaldomus prietaisus (šaldytuvą, skalbimo mašiną ir kt.). Suteikia geresnį supratimą apie jūsų namų suvartojimą.",
-      "titleAdd": "Pridėkite Vartotojo Skaitiklį",
+      "titleAdd": "Pridėti Vartotojo Skaitiklį",
       "titleEdit": "Redaguoti Vartotojo Skaitiklį"
     },
     "control": {
@@ -303,6 +347,7 @@
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
     "hems": {
+      "changeConfirm": "Dabartinė konfigūracija bus ištrinta. Tęsti?",
       "csv": {
         "created": "Sukurta",
         "finished": "Baigta",
@@ -310,10 +355,14 @@
         "limitpower": "Limitas (kW)",
         "type": "Tipas"
       },
-      "description": "Galios ribojimas išorinėmis sistemomis (pvz., §14a EnWG, §9 EEG sąsaja arba aukštesnio lygio energijos valdymo sistema). Veikia kartu su apkrovos valdymo funkcija.",
+      "customOption": "Vartotojo sukurta integracija",
+      "description": "Galios ribojimas išorinėmis sistemomis (pvz., §14a EnWG, §9 EEG sąsaja arba aukštesnio lygio energijos valdymo sistema). Veikia kartu su apkrovos valdymo funkcija. Kai kuriems inverteriams taip pat galima apriboti gamybos galią, ji nustatoma kiekvieno inverterio konfigūracijoje.",
       "downloadCsv": "Atsisiųsti CSV failą",
       "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
+      "generic": "Standartinės integracijos",
+      "integrations": "Integracijos",
       "lastEvent": "Naujausias {timeAgo}.",
+      "template": "Integracija",
       "title": "Išorinė riba"
     },
     "icon": {
@@ -1284,6 +1333,10 @@
         "grid": {
           "energy": "iš tinklo",
           "returnEnergy": "į tinklą"
+        },
+        "meter": {
+          "energy": "Energija iš tinklo",
+          "returnEnergy": "Energija (patiekta į tinklą)"
         }
       },
       "downloadCsv": "Parsisiųsti CSV failą",

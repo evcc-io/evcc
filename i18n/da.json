@@ -51,6 +51,11 @@
     "hex": "Hex farve"
   },
   "config": {
+    "adminPassword": {
+      "description": "Script-pluginet udfører en kommando på systemniveau, som kører med de samme rettigheder som evcc-processen. Indtast din administratoradgangskode igen for at fortsætte.",
+      "invalid": "Ugyldig adgangskode. Prøv igen.",
+      "title": "Potentielt farlig handling"
+    },
     "apiKey": {
       "description": "Giv scripts og automatiseringsopgaver, såsom planlagte sikkerhedskopier, sikker adgang uden at dele din administratoradgangskode.",
       "exampleLabel": "Prøv det: Hent en backup med curl",
@@ -303,6 +308,7 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
+      "changeConfirm": "Eksisterende konfiguration slettes. Fortsæt?",
       "csv": {
         "created": "Oprettet",
         "finished": "Afsluttet",
@@ -310,10 +316,14 @@
         "limitpower": "Grænse (kW)",
         "type": "Type"
       },
-      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen.",
+      "customOption": "Brugerdefineret integration",
+      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen. Begrænsning af solproduktionen understøttes også for udvalgte enheder. Den faktiske begrænsningsgrænse skal konfigureres for hver enkelt inverter.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "generic": "Generelle integrationer",
+      "integrations": "Integrationer",
       "lastEvent": "Sidst {timeAgo}.",
+      "template": "Integration",
       "title": "Ekstern grænse"
     },
     "icon": {
@@ -536,6 +546,10 @@
     },
     "meter": {
       "cancel": "Afbryd",
+      "convertToConsumer": {
+        "confirm": "Konverterer denne \"ekstra måler\" til en \"forbrugsenhed\".",
+        "link": "Konverter til forbrugsenhed"
+      },
       "delete": "Slet",
       "generic": "Generiske integrationer",
       "option": {
@@ -553,7 +567,7 @@
       "usage": {
         "aux": "Selvregulerende forbrugsenhed",
         "battery": "Batteri",
-        "charge": "Forbrugsenhed/Lader",
+        "charge": "Lader",
         "grid": "Elnet",
         "label": "Brug",
         "pv": "Produktion"
@@ -1280,6 +1294,10 @@
         "grid": {
           "energy": "importeret",
           "returnEnergy": "eksporteret"
+        },
+        "meter": {
+          "energy": "Energi",
+          "returnEnergy": "Energi (eksport)"
         }
       },
       "downloadCsv": "Download CSV",
