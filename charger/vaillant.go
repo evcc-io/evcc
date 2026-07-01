@@ -111,6 +111,39 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		systemId: systemId,
 	}
 
+	// skipBoost reports whether the (re-)boost can be skipped because the measured
+	// temperature is already within the hysteresis band below the loadpoint limit
+	skipBoost := func() bool {
+		if res.lp == nil || cc.Hysteresis <= 0 {
+			return false
+		}
+
+		bat, ok := api.Cap[api.Battery](res)
+		if !ok {
+			return false
+		}
+
+		temp, err := bat.Soc()
+		if err != nil {
+			if !errors.Is(err, api.ErrNotAvailable) {
+				log.ERROR.Printf("temp: %v", err)
+			}
+			return false
+		}
+
+		limit := res.lp.GetLimitSoc()
+		if limit <= 0 {
+			return false
+		}
+
+		if hysteresis := float64(limit) - cc.Hysteresis; temp >= hysteresis {
+			log.ERROR.Printf("temp: %.1f below hysteresis of %.1f", temp, hysteresis)
+			return true
+		}
+
+		return false
+	}
+
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
@@ -124,6 +157,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		case Boost:
 			if heating {
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
+			}
+
+			if skipBoost() {
+				return nil
 			}
 
 			if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
@@ -140,19 +177,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 					case <-wwCtx.Done():
 						return
 					case <-time.After(cc.Reboost):
-						if lp := res.lp; lp != nil && cc.Hysteresis > 0 {
-							if bat, ok := api.Cap[api.Battery](res); ok {
-								if temp, err := bat.Soc(); err == nil {
-									if limit := res.lp.GetLimitSoc(); limit > 0 {
-										if hysteresis := float64(limit) - cc.Hysteresis; temp >= hysteresis {
-											log.ERROR.Printf("temp: %.1f below hysteresis of %.1f", temp, hysteresis)
-											continue
-										}
-									}
-								} else if !errors.Is(err, api.ErrNotAvailable) {
-									log.ERROR.Printf("temp: %v", err)
-								}
-							}
+						if skipBoost() {
+							continue
 						}
 
 						if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
