@@ -137,7 +137,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		}
 
 		if hysteresis := float64(limit) - cc.Hysteresis; temp >= hysteresis {
-			log.ERROR.Printf("temp: %.1f below hysteresis of %.1f", temp, hysteresis)
+			log.DEBUG.Printf("temp: %.1f below hysteresis of %.1f", temp, hysteresis)
 			return true
 		}
 
