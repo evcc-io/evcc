@@ -51,6 +51,9 @@
     "hex": "Hex barva"
   },
   "config": {
+    "adminPassword": {
+      "invalid": "Neplatné heslo. Zkuste to prosím znovu."
+    },
     "apiKey": {
       "description": "Předává skriptům a automatizacím bezpečný přístup bez poskytování admin hesla.",
       "exampleLabel": "Zkuste to: stáhněte si zálohu curl",
@@ -60,6 +63,8 @@
       "regenerate": "Znovu vygenerovat API klíč",
       "regenerateConfirm": "Zadejte heslo správce k obnovení API klíče.",
       "regenerateLink": "Regenerovat",
+      "revealSuccess": "Váš nový API klíč je připraven k použití.",
+      "revealTitle": "API klíč vytvořen",
       "shownOnce": "Tento klíč je zobrazen pouze jednou. Uchovávejte někde v bezpečí. Nemůžete ho později načíst.",
       "title": "API klíč"
     },
@@ -153,8 +158,10 @@
       "current": "Proud",
       "currentRange": "Proud",
       "curtailLimit": "Limit dodávky energie",
+      "curtailable": "Omezitelné",
       "curtailed": "Limitováno výkupem energie",
       "detected": "Detekováno",
+      "dimLimit": "Limit spotřeby",
       "dimmed": "Spotřeba snížena",
       "enabled": "Zapnuto",
       "energy": "Energie",
@@ -302,7 +309,9 @@
       "description": "Omezení výkonu externími systémy (např. §14a EnWG, §9 EEG rozhraní nebo nadřazený systém řízení energie). Spolupracuje s funkcí řízení zátěže.",
       "downloadCsv": "Stáhnout CSV",
       "eventsRecorded": "Zaznamenáno {count} událostí omezení mřížky.",
+      "integrations": "Integrace",
       "lastEvent": "Nejnovější {timeAgo}.",
+      "template": "Integrace",
       "title": "Vnější limit"
     },
     "icon": {
@@ -368,6 +377,7 @@
       "estimateLabel": "Odhadovat úroveň nabití vozu mezi aktualizacemi z API",
       "maxCurrentHelp": "Musí být větší než nastavený minimální proud.",
       "maxCurrentLabel": "Maximální proud",
+      "maxTempHelp": "Musí být vyšší než minimální teplota.",
       "maxTempLabel": "Maximální teplota",
       "minCurrentHelp": "Nastavení nižší než 6 A využijte pouze, pokud víte, co děláte.",
       "minCurrentLabel": "Minimální proud",
@@ -524,6 +534,10 @@
     },
     "meter": {
       "cancel": "Zrušit",
+      "convertToConsumer": {
+        "confirm": "Konvertuje tento „další měřič“ na „spotřebitele“.",
+        "link": "Konvertovat na spotřebič"
+      },
       "delete": "Smazat",
       "generic": "Obecné integrace",
       "option": {
