@@ -80,6 +80,7 @@ type Site struct {
 	bufferStartSoc          float64  // start charging on battery above this Soc
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
+	smartFeedInDisableLimit *float64 // disable feed-in at or below tariff limit
 
 	// optimizer settings
 	optimizerChargingStrategy string // optimizer grid charging strategy
@@ -101,6 +102,7 @@ type Site struct {
 	batteryMode              api.BatteryMode    // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode    // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time          // Battery mode timer for external control
+	smartFeedInDisableActive bool               // Smart feed-in disable active
 }
 
 // MetersConfig contains the site's meter configuration
@@ -155,6 +157,16 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
 			telemetry.Persist(log)
+		})
+	}
+
+	if site.smartFeedInDisableAvailable() {
+		shutdown.Register(func() {
+			if site.SmartFeedInDisableActive() {
+				if err := site.setFeedInDisable(false); err != nil {
+					site.log.ERROR.Printf("smart feed-in disable: %v", err)
+				}
+			}
 		})
 	}
 
@@ -1080,15 +1092,7 @@ func (site *Site) update(lp updater) {
 	// smart grid charging
 	rate, err := consumption.At(time.Now())
 	if consumption != nil && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(consumption) > 0 {
-			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
-				consumption[0].Start.Local().Format(time.RFC3339),
-				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
-			)
-		}
-
-		site.log.WARN.Println("planner:", msg)
+		site.log.WARN.Printf("planner: %v", err)
 	}
 
 	// update battery after reading meters to ensure that (modbus) connection is open
@@ -1121,6 +1125,7 @@ func (site *Site) prepare() {
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
+	site.publish(keys.SmartFeedInDisableAvailable, site.smartFeedInDisableAvailable())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {
