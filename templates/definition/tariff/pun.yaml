@@ -16,7 +16,6 @@ params:
     description:
       de: Marktzone
       en: Market zone
-    default: PUN
     help:
       de: Italienische Strommarktzone. Wenn keine Zone angegeben wird, wird der nationale Einheitspreis (PUN) verwendet.
       en: Italian electricity market zone. If no zone is specified, the national unit price (PUN) is used.
