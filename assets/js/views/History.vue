@@ -47,22 +47,15 @@
 					</div>
 				</div>
 
-				<section
+				<Card
 					v-for="group in visibleGroups"
 					:key="group"
-					class="history-tile mb-4"
+					:title="$t(`main.history.group.${group}`)"
+					:subtitle="groupTotalLabel(group)"
+					edge-to-edge
+					class="mb-4"
 					:data-testid="`history-section-${group}`"
 				>
-					<h3
-						class="fw-normal my-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden history-tile-title"
-					>
-						<span class="d-block no-wrap text-truncate">
-							{{ $t(`main.history.group.${group}`) }}
-						</span>
-						<small v-if="groupTotalLabel(group)" class="d-block no-wrap text-truncate">
-							{{ groupTotalLabel(group) }}
-						</small>
-					</h3>
 					<GroupChart
 						v-if="displayFrom && displayTo && displayPeriod"
 						:group="group"
@@ -93,7 +86,7 @@
 						:device-colors="deviceColors"
 						@focus="onLegendFocus(group, $event)"
 					/>
-				</section>
+				</Card>
 				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
 					<a
 						:href="csvLink"
@@ -113,6 +106,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
@@ -121,7 +115,7 @@ import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
-import colors, { resolveColors, deviceColorMap, darken } from "../colors";
+import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
 import { handleDownloadClick } from "@/utils/native";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
@@ -138,6 +132,7 @@ export default defineComponent({
 	name: "History",
 	components: {
 		TopHeader: Header,
+		Card,
 		PeriodSelector,
 		DateNavigator,
 		PeriodHeader,
@@ -159,7 +154,6 @@ export default defineComponent({
 			displayTo: null as Date | null,
 			displayPeriod: null as PERIODS | null,
 			loading: true,
-			interval: null as ReturnType<typeof setInterval> | null,
 			startDate: new Date(2020, 0, 1),
 			focusedEntity: {} as Record<string, number | null>,
 		};
@@ -170,6 +164,9 @@ export default defineComponent({
 	computed: {
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
+		},
+		historyUpdated(): string | undefined {
+			return store.state.historyUpdated;
 		},
 		effectivePeriod(): PERIODS {
 			return this.period && HISTORY_PERIODS.includes(this.period)
@@ -337,6 +334,9 @@ export default defineComponent({
 		offline(offline) {
 			if (!offline) this.fetchData();
 		},
+		historyUpdated() {
+			this.fetchData();
+		},
 		rawSeries() {
 			// Drop focused entries whose paletteIndex no longer matches any entity
 			// in the new data (e.g. a loadpoint was filtered out after a period
@@ -356,10 +356,6 @@ export default defineComponent({
 	},
 	mounted() {
 		this.fetchData();
-		this.interval = setInterval(() => this.fetchData(), 15 * 60 * 1e3);
-	},
-	unmounted() {
-		if (this.interval) clearInterval(this.interval);
 	},
 	methods: {
 		groupColor,
@@ -418,6 +414,7 @@ export default defineComponent({
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
 				if (colorPicker) return palette[s.title] || baseColor;
+				if (group === "battery") return batteryColor(s.paletteIndex ?? i);
 				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
@@ -543,6 +540,7 @@ export default defineComponent({
 <style scoped>
 .history-tile {
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 	padding: 1.25rem 1rem 1.75rem;
 }
 .empty-container {
@@ -580,9 +578,6 @@ export default defineComponent({
 .history-csv-link:focus {
 	color: var(--evcc-default-text);
 	text-decoration: underline;
-}
-.history-tile-title {
-	margin: 0 0 0.5rem;
 }
 @media (max-width: 575.98px) {
 	/* edge-to-edge on mobile: cancel the container's px-4 padding */

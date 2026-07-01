@@ -58,8 +58,15 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
+// EnergyFilter narrows QueryEnergy to matching entities. Empty fields are ignored.
+type EnergyFilter struct {
+	Group string
+	Name  string
+	Title string
+}
+
 // QueryEnergy returns aggregated energy data, per title or per group.
-func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...EnergyFilter) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
 
 	format, ok := aggregateFormats[aggregate]
@@ -107,6 +114,19 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 	}
 	if !to.IsZero() {
 		tx = tx.Where("m.ts < ?", to.Unix())
+	}
+
+	if len(filter) > 0 {
+		f := filter[0]
+		if f.Group != "" {
+			tx = tx.Where(`e."group" = ?`, f.Group)
+		}
+		if f.Name != "" {
+			tx = tx.Where("e.name = ?", f.Name)
+		}
+		if f.Title != "" {
+			tx = tx.Where("e.title = ?", f.Title)
+		}
 	}
 
 	var rows []row
