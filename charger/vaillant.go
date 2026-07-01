@@ -144,7 +144,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 							if bat, ok := api.Cap[api.Battery](res); ok {
 								if temp, err := bat.Soc(); err == nil {
 									if limit := res.lp.GetLimitSoc(); limit > 0 {
-										if temp >= float64(limit)-cc.Hysteresis {
+										if hysteresis := float64(limit) - cc.Hysteresis; temp >= hysteresis {
+											log.ERROR.Printf("temp: %.1f below hysteresis of %.1f", temp, hysteresis)
 											continue
 										}
 									}
