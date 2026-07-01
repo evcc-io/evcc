@@ -104,9 +104,7 @@ func (site *Site) curtailPV(percent *int) error {
 		}
 
 		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			// skip redundant writes only when already uncurtailed and no curtailment wanted;
-			// while curtailing we always re-apply since the device state carries no exact fraction
-			if !curtail && !curtailed {
+			if curtail != curtailed {
 				continue
 			}
 		} else {
