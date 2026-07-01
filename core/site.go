@@ -717,6 +717,9 @@ func (site *Site) updateBatteryMeters() {
 		if err := c.AddEnergy(mm[i].ReturnEnergy, mm[i].Energy, -mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist battery %d energy: %v", i+1, err)
 		}
+		if mm[i].Soc != nil {
+			c.SetSocTemp(*mm[i].Soc, false)
+		}
 	}
 
 	site.publish(keys.Battery, site.battery)
@@ -841,8 +844,9 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid energy (import); nil when the device has no MeterEnergy capability or the read fails
+	// ignore spurious zero readings (NaN-derived or nightly reset, #30950)
 	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
-		if f, err := energyMeter.TotalEnergy(); err == nil {
+		if f, err := nonZeroEnergy(energyMeter.TotalEnergy()); err == nil {
 			mm.Energy = &f
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			site.log.ERROR.Printf("grid energy: %v", err)
@@ -850,8 +854,9 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid return energy (export); nil when the device has no MeterReturnEnergy capability or the read fails
+	// ignore spurious zero readings as above
 	if returnEnergyMeter, ok := api.Cap[api.MeterReturnEnergy](site.gridMeter); ok {
-		if f, err := returnEnergyMeter.ReturnEnergy(); err == nil {
+		if f, err := nonZeroEnergy(returnEnergyMeter.ReturnEnergy()); err == nil {
 			mm.ReturnEnergy = &f
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			site.log.ERROR.Printf("grid return energy: %v", err)
