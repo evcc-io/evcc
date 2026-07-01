@@ -369,7 +369,13 @@ export default defineComponent({
 		},
 		authParams() {
 			const { params = [] } = this.template?.Auth ?? {};
-			return this.templateParams.filter((p) => params.includes(p.Name));
+			const all = this.templateParams.filter((p) => params.includes(p.Name));
+			if (this.auth.credentialsRequired) {
+				// All auth params are required once credentials are explicitly needed.
+				return all.map((p) => ({ ...p, Required: true }));
+			}
+			// Hide optional auth params (e.g. password) until the check tells us they're needed.
+			return all.filter((p) => p.Required);
 		},
 		authNormalParams() {
 			return this.authParams.filter((p: TemplateParam) => !p.Advanced && !p.Deprecated);
@@ -494,6 +500,20 @@ export default defineComponent({
 				{} as Record<string, any>
 			);
 		},
+		// Only the required (identity) auth params — used to detect identity changes.
+		requiredAuthValues() {
+			const { params = [] } = this.template?.Auth ?? {};
+			const requiredNames = params.filter(
+				(name: string) => this.templateParams.find((p) => p.Name === name)?.Required
+			);
+			return requiredNames.reduce(
+				(acc: Record<string, any>, name: string) => {
+					acc[name] = this.values[name];
+					return acc;
+				},
+				{} as Record<string, any>
+			);
+		},
 	},
 	watch: {
 		isModalVisible(visible) {
@@ -590,13 +610,26 @@ export default defineComponent({
 			},
 			deep: true,
 		},
+		// When identity (required) auth params change, do a full reset so the
+		// optional params (e.g. password) are re-hidden until the check runs again.
+		requiredAuthValues: {
+			handler() {
+				if (this.authRequired) {
+					this.resetAuthStatus(true);
+				}
+			},
+			deep: true,
+		},
 		adminPasswordValue() {
 			this.adminPasswordInvalid = false;
 		},
+		// When any other auth value changes (e.g. password being typed), do a
+		// partial reset: clear ok/error/loading but keep credentialsRequired so
+		// the password field stays visible.
 		authValues: {
 			handler() {
 				if (this.authRequired) {
-					this.resetAuthStatus();
+					this.resetAuthStatus(false);
 				}
 			},
 			deep: true,
@@ -684,11 +717,18 @@ export default defineComponent({
 			}
 			this.loadingTemplate = false;
 		},
-		resetAuthStatus() {
-			this.auth = initialAuthState();
+		resetAuthStatus(fullReset = true) {
+			if (fullReset) {
+				this.auth = initialAuthState();
+			} else {
+				// Partial reset: preserve credentialsRequired so the password field stays visible.
+				this.auth.ok = false;
+				this.auth.loading = false;
+				this.auth.error = null;
+			}
 		},
 		async checkAuthStatus() {
-			this.resetAuthStatus();
+			this.resetAuthStatus(true);
 
 			// no auth required
 			if (!this.template?.Auth) return;
@@ -713,6 +753,9 @@ export default defineComponent({
 				// login already exists
 				this.auth.error = null;
 				this.auth.ok = true;
+			} else if (result.credentialsRequired) {
+				// password needs to be provided; show the password field
+				this.auth.credentialsRequired = true;
 			} else if (result.authId) {
 				await this.prepareAuthLogin(result.authId);
 			} else {

@@ -88,6 +88,7 @@ export type AuthCheckResponse = {
   success: boolean;
   error?: string;
   authId?: string;
+  credentialsRequired?: boolean;
 };
 
 export function handleError(e: any, msg: string) {
@@ -280,7 +281,12 @@ export function createDeviceUtils(deviceType: DeviceType) {
       }
       // auth error, user has to perform login
       if (status === 400) {
-        return { success: false, error: data?.error, authId: data?.loginRequired };
+        return {
+          success: false,
+          error: data?.error,
+          authId: data?.loginRequired,
+          credentialsRequired: data?.credentialsRequired,
+        };
       }
     } catch (error) {
       return { success: false, error: (error as any).message };

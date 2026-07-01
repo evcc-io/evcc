@@ -31,6 +31,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -77,6 +78,17 @@ type Easee struct {
 	obsTime         map[easee.ObservationID]time.Time
 	lastObsReceived time.Time
 	startDone       func()
+
+	// templateCleanup, when set, is called by NewFromTemplateConfig with the outer
+	// template-level config map so deprecated credential params can be removed.
+	templateCleanup func(map[string]any)
+}
+
+// cleanTemplateConfig implements templateConfigCleaner.
+func (c *Easee) cleanTemplateConfig(m map[string]any) {
+	if c.templateCleanup != nil {
+		c.templateCleanup(m)
+	}
 }
 
 func init() {
@@ -86,11 +98,17 @@ func init() {
 // NewEaseeFromConfig creates a Easee charger from generic config
 func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		User      string
-		Password  string
+		User_     string `mapstructure:"user"`     // TODO deprecated
+		Password_ string `mapstructure:"password"` // TODO deprecated
 		Charger   string
 		Timeout   time.Duration
 		Authorize bool
+		// Auth allows referencing a shared Easee account instead of embedding
+		// credentials directly. Example: auth: {source: easee, user: u, password: p}
+		Auth struct {
+			Source string
+			Other  map[string]any `mapstructure:",remain"`
+		}
 	}{
 		Timeout: request.Timeout,
 	}
@@ -99,16 +117,77 @@ func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
+	var (
+		ts  oauth2.TokenSource
+		err error
+	)
+
+	source := cc.Auth.Source
+	params := cc.Auth.Other
+	if source == "" {
+		source = "easee"
 	}
 
-	return NewEasee(ctx, cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
+	if params == nil {
+		params = make(map[string]any)
+	}
+
+	if _, exists := params["user"]; !exists && cc.User_ != "" {
+		params["user"] = cc.User_
+	}
+
+	if _, exists := params["password"]; !exists && cc.Password_ != "" {
+		params["password"] = cc.Password_
+	}
+
+	ts, err = auth.NewFromConfig(ctx, source, params)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := NewEasee(ctx, ts, cc.Charger, cc.Timeout, cc.Authorize)
+	if err != nil {
+		return nil, err
+	}
+
+	// If credentials are now persisted, remove password from the stored config so
+	// secrets are not kept unnecessarily. The user (email) identifier is retained.
+	effectiveUser, _ := params["user"].(string)
+	if effectiveUser == "" {
+		effectiveUser = cc.User_
+	}
+
+	attachEaseeCleanup(c, source, cc.Auth.Source, effectiveUser, other)
+
+	return c, nil
 }
 
-// NewEasee creates Easee charger
-func NewEasee(ctx context.Context, user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
-	log := util.NewLogger("easee").Redact(user, password)
+// attachEaseeCleanup removes the persisted password from the config once a
+// token has been stored so the secret is not kept beyond the initial login.
+// For the non-template path it mutates other directly; for the template path
+// it defers the cleanup via templateCleanup to be called by NewFromTemplateConfig.
+func attachEaseeCleanup(c *Easee, source, authSource, effectiveUser string, other map[string]any) {
+	if source != "easee" || effectiveUser == "" || !easee.HasPersistedAuth(effectiveUser) {
+		return
+	}
+
+	cleanup := func(m map[string]any) {
+		delete(m, "password")
+	}
+
+	if authSource == "" {
+		// Non-template path: `other` is the map that will be stored in the DB.
+		cleanup(other)
+	} else {
+		// Template path: `other` is the rendered inner map; the outer DB map is
+		// passed to cleanTemplateConfig by NewFromTemplateConfig.
+		c.templateCleanup = cleanup
+	}
+}
+
+// NewEasee creates an Easee charger using the provided token source.
+func NewEasee(ctx context.Context, ts oauth2.TokenSource, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
+	log := util.NewLogger("easee")
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
@@ -130,11 +209,6 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	c.Client.Timeout = timeout
 
 	c.dispatcher = easee.NewCommandDispatcher(c.Helper, log, timeout)
-
-	ts, err := easee.TokenSource(log, user, password)
-	if err != nil {
-		return nil, err
-	}
 
 	// replace client transport with authenticated transport
 	c.Client.Transport = &oauth2.Transport{

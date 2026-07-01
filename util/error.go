@@ -10,10 +10,11 @@ import (
 // ErrorAsJson returns an error as json-formattable struct
 func ErrorAsJson(err error) any {
 	res := struct {
-		Error         string `json:"error"`
-		Line          int    `json:"line,omitempty"`
-		LoginRequired string `json:"loginRequired,omitempty"`
-		URI           string `json:"uri,omitempty"`
+		Error               string `json:"error"`
+		Line                int    `json:"line,omitempty"`
+		LoginRequired       string `json:"loginRequired,omitempty"`
+		CredentialsRequired bool   `json:"credentialsRequired,omitempty"`
+		URI                 string `json:"uri,omitempty"`
 	}{
 		Error: err.Error(),
 		Line:  yamlErrorLine(err),
@@ -21,6 +22,10 @@ func ErrorAsJson(err error) any {
 
 	if ae, ok := errors.AsType[*api.ErrLoginRequired](err); ok {
 		res.LoginRequired = ae.ProviderAuth
+	}
+
+	if errors.Is(err, api.ErrCredentialsRequired) {
+		res.CredentialsRequired = true
 	}
 
 	if ue, ok := errors.AsType[*api.ErrUrl](err); ok {
