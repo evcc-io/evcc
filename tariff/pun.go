@@ -28,6 +28,7 @@ var romeLocation *time.Location
 
 type Pun struct {
 	*embed
+	zone string
 	log  *util.Logger
 	data *util.Monitor[api.Rates]
 }
@@ -37,10 +38,15 @@ type NewDataSet struct {
 	Prezzi  []Prezzo `xml:"Prezzi"`
 }
 
+type Zone struct {
+	XMLName xml.Name
+	Value   string `xml:",chardata"`
+}
+
 type Prezzo struct {
 	Data string `xml:"Data"`
 	Ora  string `xml:"Ora"`
-	PUN  string `xml:"PUN"`
+	Zones []Zone `xml:",any"`
 }
 
 type Rate struct {
@@ -57,7 +63,12 @@ func init() {
 }
 
 func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
-	var cc embed
+	var cc struct {
+		embed `mapstructure:",squash"`
+		Zone string
+	}
+
+	logger := util.NewLogger("pun")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -68,8 +79,9 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 	}
 
 	t := &Pun{
-		log:   util.NewLogger("pun"),
-		embed: &cc,
+		log:   logger,
+		zone:  cc.Zone,
+		embed: &cc.embed,
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
@@ -213,7 +225,25 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			date = date.AddDate(0, 0, -1)
 		}
 
-		price, err := strconv.ParseFloat(strings.ReplaceAll(p.PUN, ",", "."), 64)
+		var zone string
+		if t.zone != "" {
+			zone = t.zone
+		} else {
+			zone = "PUN"
+		}
+
+		var rawPrice string
+		for _, z := range p.Zones {
+			if strings.ToUpper(strings.TrimSpace(z.XMLName.Local)) == zone {
+				rawPrice = z.Value
+				break
+			}
+		}
+		if rawPrice == "" {
+			return nil, fmt.Errorf("zone %s not found for hour %s", zone, p.Ora)
+		}
+
+		price, err := strconv.ParseFloat(strings.ReplaceAll(rawPrice, ",", "."), 64)
 		if err != nil {
 			return nil, fmt.Errorf("parse price: %w", err)
 		}
