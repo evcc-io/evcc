@@ -148,6 +148,16 @@ func (t *Pun) Type() api.TariffType {
 	return api.TariffTypePriceForecast
 }
 
+func (t *Pun) priceForZone(p Prezzo) (float64, error) {
+	for _, z := range p.Zones {
+		if strings.ToUpper(strings.TrimSpace(z.XMLName.Local)) == t.zone {
+			price, err := strconv.ParseFloat(strings.ReplaceAll(z.Value, ",", "."), 64)
+			return price, err
+		}
+	}
+	return 0, fmt.Errorf("zone %s not found for hour %s", t.zone, p.Ora)
+}
+
 func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	client := request.NewClient(t.log)
 	client.Jar, _ = cookiejar.New(nil)
@@ -230,18 +240,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			date = date.AddDate(0, 0, -1)
 		}
 
-		var rawPrice string
-		for _, z := range p.Zones {
-			if strings.ToUpper(strings.TrimSpace(z.XMLName.Local)) == t.zone {
-				rawPrice = z.Value
-				break
-			}
-		}
-		if rawPrice == "" {
-			return nil, fmt.Errorf("zone %s not found for hour %s", t.zone, p.Ora)
-		}
-
-		price, err := strconv.ParseFloat(strings.ReplaceAll(rawPrice, ",", "."), 64)
+		price, err := t.priceForZone(p)
 		if err != nil {
 			return nil, fmt.Errorf("parse price: %w", err)
 		}
