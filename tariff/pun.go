@@ -78,9 +78,14 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	var zone = strings.ToUpper(strings.TrimSpace(cc.Zone))
+	if cc.Zone == "" {
+		zone = "PUN"
+	}
+
 	t := &Pun{
 		log:   logger,
-		zone:  cc.Zone,
+		zone:  zone,
 		embed: &cc.embed,
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -225,22 +230,15 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			date = date.AddDate(0, 0, -1)
 		}
 
-		var zone string
-		if t.zone != "" {
-			zone = t.zone
-		} else {
-			zone = "PUN"
-		}
-
 		var rawPrice string
 		for _, z := range p.Zones {
-			if strings.ToUpper(strings.TrimSpace(z.XMLName.Local)) == zone {
+			if strings.ToUpper(strings.TrimSpace(z.XMLName.Local)) == t.zone {
 				rawPrice = z.Value
 				break
 			}
 		}
 		if rawPrice == "" {
-			return nil, fmt.Errorf("zone %s not found for hour %s", zone, p.Ora)
+			return nil, fmt.Errorf("zone %s not found for hour %s", t.zone, p.Ora)
 		}
 
 		price, err := strconv.ParseFloat(strings.ReplaceAll(rawPrice, ",", "."), 64)
