@@ -1,0 +1,48 @@
+template: open-meteo-temperature
+products:
+  - brand: Open-Meteo Temperature
+requirements:
+  description:
+    en: Free Weather API [open-meteo.com](https://open-meteo.com) for outdoor temperature data in 15-minute intervals. Open-Meteo is an open-source weather API and offers free access for non-commercial use. No API key required.
+    de: Freie Wetter-API [open-meteo.com](https://open-meteo.com) für Außentemperaturdaten in 15-Minuten-Intervallen. Open-Meteo ist eine Open-Source-Wetter-API und bietet kostenlosen Zugriff für nicht-kommerzielle Nutzung. Kein API-Schlüssel erforderlich.
+  evcc: ["skiptest"]
+group: solar
+params:
+  - name: latitude
+    description:
+      en: Latitude
+      de: Breitengrad
+    type: float
+    required: true
+    help:
+      en: Geographic latitude in decimal degrees (e.g., 48.1 for Munich)
+      de: Geografischer Breitengrad in Dezimalgrad (z.B. 48.1 für München)
+  - name: longitude
+    description:
+      en: Longitude
+      de: Längengrad
+    type: float
+    required: true
+    help:
+      en: Geographic longitude in decimal degrees (e.g., 11.6 for Munich)
+      de: Geografischer Längengrad in Dezimalgrad (z.B. 11.6 für München)
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  tariff: temperature
+  forecast:
+    source: http
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .latitude }}&longitude={{ .longitude }}&minutely_15=temperature_2m&past_days=7&forecast_days=3&timezone=UTC
+    jq: |
+      [ .minutely_15.time as $times
+        | .minutely_15.temperature_2m as $temps
+        | range(0; ($times | length))
+        | {
+            start: ($times[.] + ":00Z"),
+            end: (($times[.] + ":00Z" | fromdateiso8601) + 900 | todateiso8601),
+            value: $temps[.]
+          }
+      ] | tostring
+  interval: {{ .interval }}

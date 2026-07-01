@@ -973,10 +973,17 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	for _, lp := range site.loadpoints {
+	for i, lp := range site.loadpoints {
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
+
+			// track heating loadpoint energy
+			if lp.chargeEnergy != nil {
+				if err := lp.chargeEnergy.AddEnergy(nil, nil, power); err != nil {
+					site.log.ERROR.Printf("persist loadpoint %d consumption: %v", i, err)
+				}
+			}
 
 			mu.Lock()
 			sum += power
