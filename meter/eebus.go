@@ -279,8 +279,6 @@ func (c *EEBus) Curtailed() (bool, error) {
 
 // SetCurtailPercent implements the api.Curtailer interface
 func (c *EEBus) SetCurtailPercent(percent int) error {
-	// ponytail: no nominal production power available, so any curtailment
-	// (<100%) applies a fixed 0W limit rather than a proportional value
 	curtail := percent < 100
 
 	c.mu.Lock()
@@ -291,7 +289,16 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		return api.ErrNotAvailable
 	}
 
+	// derive a proportional production limit from the producer's nominal power
+	// (limits are negative watts); fall back to a safe 0W limit if unavailable
+	var value float64
+	if curtail {
+		if nominal, err := c.eg.EgLPPInterface.ProductionNominalMax(entity); err == nil && nominal > 0 {
+			value = -float64(percent) / 100 * nominal
+		}
+	}
+
 	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: curtail}, cb)
+		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
 	})
 }
