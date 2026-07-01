@@ -44,8 +44,8 @@ type Zone struct {
 }
 
 type Prezzo struct {
-	Data string `xml:"Data"`
-	Ora  string `xml:"Ora"`
+	Data  string `xml:"Data"`
+	Ora   string `xml:"Ora"`
 	Zones []Zone `xml:",any"`
 }
 
@@ -65,7 +65,7 @@ func init() {
 func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed `mapstructure:",squash"`
-		Zone string
+		Zone  string
 	}
 
 	logger := util.NewLogger("pun")
