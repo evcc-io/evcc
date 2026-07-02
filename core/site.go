@@ -93,14 +93,15 @@ type Site struct {
 	collectors map[string]*metrics.Collector // keyed by meter ref
 
 	// cached state
-	gridPower                float64            // Grid power
-	pvPower                  float64            // PV power
-	excessDCPower            float64            // PV excess DC charge power (hybrid only)
-	auxPower                 float64            // Aux power
-	battery                  types.BatteryState // Battery cached and published state
-	batteryMode              api.BatteryMode    // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode    // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time          // Battery mode timer for external control
+	gridPower                float64                     // Grid power
+	pvPower                  float64                     // PV power
+	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
+	auxPower                 float64                     // Aux power
+	battery                  types.BatteryState          // Battery cached and published state
+	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
+	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
 }
 
 // MetersConfig contains the site's meter configuration
@@ -517,6 +518,16 @@ func (site *Site) Publish(key string, val any) {
 	site.publish(key, val)
 }
 
+// publishLoadpoint sends a value into the given loadpoint's state
+func (site *Site) publishLoadpoint(id int, key string, val any) {
+	// test helper
+	if site.valueChan == nil {
+		return
+	}
+
+	site.valueChan <- util.Param{Loadpoint: &id, Key: key, Val: val}
+}
+
 // clearPlanLocks clears locked plan goals for all loadpoints
 func (site *Site) clearPlanLocks() {
 	for _, lp := range site.Loadpoints() {
@@ -723,6 +734,15 @@ func (site *Site) updateBatteryMeters() {
 		if mm[i].Soc != nil {
 			c.SetSocTemp(*mm[i].Soc, false)
 		}
+	}
+
+	site.publishBattery()
+}
+
+// publishBattery applies the optimizer suggestions and publishes the battery state
+func (site *Site) publishBattery() {
+	for i, d := range site.battery.Devices {
+		site.battery.Devices[i].Suggestion = site.batterySuggestion(d.Name)
 	}
 
 	site.publish(keys.Battery, site.battery)

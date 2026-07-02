@@ -41,8 +41,21 @@ export const Multiple = Template.bind({});
 Multiple.args = {
   battery: {
     ...battery([
-      device({ title: "Sungrow", soc: 76, power: 800, capacity: 13.5, controllable: true }),
-      device({ title: "Anker", soc: 40, power: -1200, capacity: 7.5 }),
+      device({
+        title: "Sungrow",
+        soc: 76,
+        power: 800,
+        capacity: 13.5,
+        controllable: true,
+        suggestion: { action: "hold" },
+      }),
+      device({
+        title: "Anker",
+        soc: 40,
+        power: -1200,
+        capacity: 7.5,
+        suggestion: { action: "normal" },
+      }),
     ]),
     soc: 63,
   },
@@ -51,11 +64,21 @@ Multiple.args = {
 // single battery: optimizer gets its own card, showing suggestion + high + low
 export const WithForecast = Template.bind({});
 WithForecast.args = {
-  battery: battery([device({ title: "Battery", soc: 62, power: 900, capacity: 10 })], {
-    highest: { soc: 100, time: "2026-07-01T16:30:00+02:00" },
-    lowest: { soc: 12, time: "2026-07-02T06:00:00+02:00" },
-  }),
-  suggestion: { action: "charge" },
+  battery: battery(
+    [
+      device({
+        title: "Battery",
+        soc: 62,
+        power: 900,
+        capacity: 10,
+        suggestion: { action: "charge" },
+      }),
+    ],
+    {
+      highest: { soc: 100, time: "2026-07-01T16:30:00+02:00" },
+      lowest: { soc: 12, time: "2026-07-02T06:00:00+02:00" },
+    }
+  ),
 };
 
 // forecast is a site-aggregate value, so it lands on the combined card

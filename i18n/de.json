@@ -45,10 +45,10 @@
     },
     "optimizer": {
       "action": {
-        "charge": "Netzladen",
-        "hold": "Entladung gesperrt",
-        "holdcharge": "Laden pausiert",
-        "normal": "PV-Überschuss folgen"
+        "charge": "Aus dem Netz laden",
+        "hold": "Entladung sperren",
+        "holdcharge": "Laden sperren",
+        "normal": "Normaler Betrieb"
       },
       "empty": "leer",
       "full": "voll",
@@ -1484,6 +1484,8 @@
       "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
       "scale1p": "Reduziere gleich auf 1-phasiges Laden.",
       "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
+      "suggestionChargeTooltip": "Der Optimizer empfiehlt, jetzt zu laden.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Laden zu pausieren.",
       "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
       "targetChargePlanned": "Ladeplan startet in {duration}.",
       "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",
