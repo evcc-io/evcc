@@ -47,10 +47,17 @@ render: |
       type: bearer
       token: {{ .apikey }}
     jq: |
+      def localTimeToIso8601:
+        # Removes fractional seconds if present, Parses YYYY-MM-DDTHH:MM:SS as local time, Converts via epoch, Formats as UTC ISO8601
+        sub("\\.[0-9]+"; "")
+        | strptime("%FT%T")
+        | mktime
+        | strftime("%Y-%m-%dT%H:%M:%SZ");
+
       [.values[] |
         {
-          start: (.timestamp + "Z"),
-          end:   (.timestamp + "Z" | fromdateiso8601 + 900 | todateiso8601 ),
+          start: (.timestamp | localTimeToIso8601),
+          end:   (.timestamp | localTimeToIso8601 | fromdateiso8601 + 900 | todateiso8601),
           value: (.pv_power | round )
         }
       ] | tostring
