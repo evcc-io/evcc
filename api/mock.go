@@ -1212,18 +1212,18 @@ func (m *MockHEMS) EXPECT() *MockHEMSMockRecorder {
 	return m.recorder
 }
 
-// Curtailed mocks base method.
-func (m *MockHEMS) Curtailed() *bool {
+// CurtailedPercent mocks base method.
+func (m *MockHEMS) CurtailedPercent() *int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Curtailed")
-	ret0, _ := ret[0].(*bool)
+	ret := m.ctrl.Call(m, "CurtailedPercent")
+	ret0, _ := ret[0].(*int)
 	return ret0
 }
 
-// Curtailed indicates an expected call of Curtailed.
-func (mr *MockHEMSMockRecorder) Curtailed() *gomock.Call {
+// CurtailedPercent indicates an expected call of CurtailedPercent.
+func (mr *MockHEMSMockRecorder) CurtailedPercent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Curtailed", reflect.TypeOf((*MockHEMS)(nil).Curtailed))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CurtailedPercent", reflect.TypeOf((*MockHEMS)(nil).CurtailedPercent))
 }
 
 // Dimmed mocks base method.

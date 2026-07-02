@@ -149,9 +149,9 @@ func (c *Relay) Dimmed() *bool {
 	return new(c.limit != nil)
 }
 
-// Curtailed implements api.HEMS. Relay does not curtail production and
+// CurtailedPercent implements api.HEMS. Relay does not curtail production and
 // hence makes no statement.
-func (c *Relay) Curtailed() *bool {
+func (c *Relay) CurtailedPercent() *int {
 	return nil
 }
 

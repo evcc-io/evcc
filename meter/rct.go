@@ -107,12 +107,8 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	}
 
 	if usage == "pv" {
-		curtail := func(b bool) error {
-			var r float64
-			if !b {
-				r = 1.0
-			}
-			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(r))
+		curtail := func(percent int) error {
+			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(float64(percent)/100))
 		}
 
 		curtailed := func() (bool, error) {
@@ -120,7 +116,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return r != 1, err
 		}
 
-		implement.Has(m, implement.Curtailer(curtail, curtailed))
+		implement.Has(m, implement.Curtailer(curtailed, curtail))
 		implement.May(m, implement.MaxACPowerGetter(maxACPower))
 	}
 

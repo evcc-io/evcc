@@ -16,6 +16,7 @@ const (
 	testFailsafeConsumption = 4200.0
 	testFailsafeProduction  = 1000.0
 	testFailsafeDuration    = 2 * time.Hour
+	testProductionNominal   = 2000.0
 )
 
 // stubSite implements site.API for testing — only GetGridPower is exercised;
@@ -43,6 +44,7 @@ func newTestEEBus(t *testing.T) *EEBus {
 		failsafeConsumptionLimit: testFailsafeConsumption,
 		failsafeProductionLimit:  &failsafeProduction,
 		failsafeDuration:         testFailsafeDuration,
+		productionNominalMax:     testProductionNominal,
 	}
 }
 
@@ -56,7 +58,9 @@ func assertConsumptionLimit(t *testing.T, c *EEBus, limit float64) {
 // assertProductionLimit checks the HEMS production state through the api.HEMS surface.
 func assertProductionLimit(t *testing.T, c *EEBus, active bool) {
 	t.Helper()
-	assert.Equal(t, new(active), c.Curtailed())
+	percent := c.CurtailedPercent()
+	require.NotNil(t, percent)
+	assert.Equal(t, active, *percent < 100)
 }
 
 // TestRun_HeartbeatLost_EntersFailsafe verifies the LPC-911/LPP-911 transition:

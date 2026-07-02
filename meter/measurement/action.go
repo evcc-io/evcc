@@ -53,11 +53,11 @@ type Curtailer struct {
 }
 
 func (cc *Curtailer) Configure(ctx context.Context) (
-	func(bool) error,
+	func(int64) error,
 	func() (bool, error),
 	error,
 ) {
-	curtailS, err := cc.Curtail.BoolSetter(ctx, "curtail")
+	curtailS, err := cc.Curtail.IntSetter(ctx, "curtail")
 	if err != nil {
 		return nil, nil, fmt.Errorf("curtail: %w", err)
 	}
@@ -80,7 +80,10 @@ func (cc *Curtailer) Implement(ctx context.Context, i implement.Caps) error {
 		return err
 	}
 
-	implement.May(i, implement.Curtailer(curtailS, curtailedG))
+	if curtailS != nil {
+		setPercent := func(percent int) error { return curtailS(int64(percent)) }
+		implement.May(i, implement.Curtailer(curtailedG, setPercent))
+	}
 
 	return nil
 }
