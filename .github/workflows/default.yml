@@ -109,10 +109,9 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-test-v2-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-test-
-            ${{ runner.os }}-go-
+            ${{ runner.os }}-go-test-v2-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
