@@ -54,11 +54,13 @@ func (v *API) store(res requests.ChargeStatus) {
 	v.result, v.valid, v.running = res, true, false
 }
 
-// last returns the last valid response, or ErrMustRetry until one is available
+// last returns a stored response exactly once, then ErrMustRetry until a new
+// one arrives - so upstream keeps polling instead of reusing a stale value.
 func (v *API) last() (requests.ChargeStatus, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 	if v.valid {
+		v.valid = false
 		return v.result, nil
 	}
 	return v.result, api.ErrMustRetry
@@ -234,5 +236,5 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	}
 
 	v.store(res.Data)
-	return res.Data, nil
+	return v.last()
 }
