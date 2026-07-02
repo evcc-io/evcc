@@ -2,7 +2,7 @@ template: bkw
 products:
   - brand: BKW
     description:
-      de: Dynamische Abnahmeverguetung
+      de: Dynamische Abnahmevergütung
       en: Dynamic feed-in remuneration
 requirements:
   evcc: ["skiptest"]
