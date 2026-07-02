@@ -52,7 +52,7 @@ export default defineComponent({
 	props: {
 		title: { type: String, default: "" },
 		soc: { type: Number, default: 0 },
-		power: { type: Number, default: 0 }, // W, + charging / - discharging
+		power: { type: Number, default: 0 }, // W, + discharging / - charging
 		capacity: { type: Number, default: 0 }, // kWh, 0 = unspecified
 		color: { type: String, default: "" },
 		suggestion: { type: Object as PropType<BatterySuggestion | null>, default: null },
@@ -79,7 +79,7 @@ export default defineComponent({
 			if (abs < 50) {
 				return { label: this.$t("battery.card.power"), value };
 			}
-			return this.power > 0
+			return this.power < 0
 				? { label: this.$t("battery.card.charging"), value }
 				: { label: this.$t("battery.card.discharging"), value };
 		},
