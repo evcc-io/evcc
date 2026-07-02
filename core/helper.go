@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/evcc-io/evcc/api"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 )
 
@@ -83,7 +84,7 @@ func hemsDimmed(hems api.HEMS) *bool {
 		return nil
 	}
 
-	return hems.Dimmed()
+	return hemsapi.Dimmed(hems)
 }
 
 // hemsCurtailed returns the HEMS curtail percent, nil-safe

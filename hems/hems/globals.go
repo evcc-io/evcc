@@ -10,12 +10,3 @@ func Dimmed(hems api.HEMS) *bool {
 
 	return new(*dimmed > 0)
 }
-
-func Curtailed(hems api.HEMS) *bool {
-	percent := hems.CurtailedPercent()
-	if percent == nil {
-		return nil
-	}
-
-	return new(*percent < 100)
-}
