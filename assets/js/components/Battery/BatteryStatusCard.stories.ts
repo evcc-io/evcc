@@ -10,7 +10,7 @@ export default {
   argTypes: {
     title: { control: "text" },
     soc: { control: { type: "range", min: 0, max: 100 } },
-    power: { control: "number", description: "W, + charging / - discharging" },
+    power: { control: "number", description: "W, + discharging / - charging" },
     capacity: { control: "number", description: "kWh, 0 = unspecified" },
     color: { control: "color" },
   },
@@ -28,7 +28,7 @@ const Narrow: StoryFn<typeof BatteryStatusCard> = (args) => ({
 const base = { title: "Sungrow", capacity: 13.5, color: "#0BA631" };
 
 export const Charging = Narrow.bind({});
-Charging.args = { ...base, soc: 76, power: 800 };
+Charging.args = { ...base, soc: 76, power: -800 };
 
 export const Discharging = Narrow.bind({});
 Discharging.args = {
@@ -37,7 +37,7 @@ Discharging.args = {
   capacity: 7.5,
   color: "#7FC41B",
   soc: 40,
-  power: -1200,
+  power: 1200,
 };
 
 export const Idle = Narrow.bind({});
