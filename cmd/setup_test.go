@@ -36,24 +36,31 @@ func TestYamlOff(t *testing.T) {
 	}
 }
 
-func TestEEBusSKIMismatchDetection(t *testing.T) {
-	// realistic error string produced by ship-go's cert.SkiFromCertificate
-	shipGoErr := fmt.Errorf("%w (subject: CN=EVCC_HEMS_01,OU=,O=EVCC,C=DE, SKI: 0bae4a2cd7b1be3bc0f9ad285bc99a8919572574, expected: f337e022eb15020eeddee7bcafebabecafebabec)",
+func TestWrapEEBusStartError(t *testing.T) {
+	// realistic error from issue https://github.com/evcc-io/evcc/issues/31043
+	skiErr := fmt.Errorf("%w (subject: CN=EVCC_HEMS_01,OU=,O=EVCC,C=DE, SKI: 0bae4a2cd7b1be3bc0f9ad285bc99a8919572574, expected: f337e022eb15020eeddee7bcafebabecafebabec)",
 		shipapi.ErrInvalidSKI)
 
 	tests := []struct {
-		name string
-		err  error
-		want bool
+		name     string
+		err      error
+		wantHint bool
 	}{
-		{"nil error", nil, false},
-		{"unrelated error", errors.New("something went wrong"), false},
-		{"ship-go wrapped invalid SKI", shipGoErr, true},
+		{"SKI mismatch (ship-go wrapped)", skiErr, true},
+		{"unrelated error", errors.New("port already in use"), false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := errors.Is(tt.err, shipapi.ErrInvalidSKI); got != tt.want {
-				t.Errorf("errors.Is(%v, ErrInvalidSKI) = %v, want %v", tt.err, got, tt.want)
+			got := wrapEEBusStartError(tt.err)
+			if got == nil {
+				t.Fatal("expected non-nil error")
+			}
+			if !errors.Is(got, tt.err) {
+				t.Errorf("wrapped error does not preserve underlying cause: %v", got)
+			}
+			hasHint := strings.Contains(got.Error(), "invalid Subject Key Identifier")
+			if hasHint != tt.wantHint {
+				t.Errorf("hint present = %v, want %v; error was:\n%s", hasHint, tt.wantHint, got)
 			}
 		})
 	}
