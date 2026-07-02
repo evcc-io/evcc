@@ -1,0 +1,86 @@
+template: ibc-homeone
+products:
+  - brand: IBC Solar
+    description:
+      generic: HomeOne Hybrid Inverter
+requirements:
+  description:
+    en: |
+      Modbus TCP runs on the inverter's Ethernet port (RJ45-7), not the dongle.
+      Grid usage reads the external smart meter connected to the inverter.
+    de: |
+      Modbus TCP läuft am Ethernet-Port des Wechselrichters (RJ45-7), nicht am Dongle.
+      Die Netz-Nutzung liest den am Wechselrichter angeschlossenen Smart Meter aus.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    port: 502
+    id: 3
+  - name: maxacpower
+  - preset: battery-params
+# Register addresses are the documented ADDR(DEC) minus the leading reference digit minus 1
+# (e.g. input register 31601 -> 1600, meter register 360039 -> 60038).
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 60038 # 360039 external meter L1 power (S32, W, positive = import)
+        type: input
+        decode: int32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 60040 # 360041 external meter L2 power (S32, W)
+        type: input
+        decode: int32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 60042 # 360043 external meter L3 power (S32, W)
+        type: input
+        decode: int32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1600 # 31601 PV total power (U32, W)
+      type: input
+      decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1604 # 31605 PV E-Total (U32, 0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1618 # 31619 battery power (S32, W, positive = discharging)
+      type: input
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1621 # 31622 battery SOC (U16, 0.01 %)
+      type: input
+      decode: uint16
+    scale: 0.01
+  {{- include "battery-params" . }}
+  {{- end }}
