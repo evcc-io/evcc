@@ -169,7 +169,7 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case 1, 4, 5: // connect, pause, finish
 		return api.StatusB, nil
-	case 2, 3: // start, charging
+	case 2, 3, 9: // start, charging, auto phase switch in progress
 		return api.StatusC, nil
 	default: // fault, locked, reserved
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
@@ -183,10 +183,10 @@ func (wb *FoxESSEVC) Enabled() (bool, error) {
 		return false, err
 	}
 
-	// enabled when charger is starting (2) or charging (3)
+	// enabled when charger is starting (2), charging (3), or switching phases (9)
 	s := binary.BigEndian.Uint16(b)
 
-	return s == 2 || s == 3, nil
+	return s == 2 || s == 3 || s == 9, nil
 }
 
 // Enable implements the api.Charger interface
