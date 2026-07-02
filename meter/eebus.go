@@ -231,8 +231,9 @@ func (c *EEBus) Dimmed() (bool, error) {
 		return false, err
 	}
 
-	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
+	// an active limit means dimmed; the applied limit value is 0W, so a
+	// value-based check would never report the dimmed state and never release it
+	return limit.IsActive, nil
 }
 
 // Dim implements the api.Dimmer interface

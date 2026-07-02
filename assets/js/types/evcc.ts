@@ -118,6 +118,7 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
+  historyUpdated?: string; // ISO timestamp, bumped each 15min metrics persist
   siteTitle?: string;
   deviceColors?: DeviceColorEntry[];
   vehicles: Record<string, Vehicle>;

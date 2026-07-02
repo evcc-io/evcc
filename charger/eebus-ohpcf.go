@@ -369,7 +369,9 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 		return false, err
 	}
 
-	return limit.IsActive && limit.Value > 0, nil
+	// an active limit means dimmed; the applied §14a limit value is 0W, so a
+	// value-based check would never report the dimmed state and never release it
+	return limit.IsActive, nil
 }
 
 // Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
