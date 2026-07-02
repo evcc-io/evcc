@@ -21,6 +21,8 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"math"
+	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -35,7 +37,11 @@ import (
 // FoxESSEVC charger implementation
 type FoxESSEVC struct {
 	implement.Caps
-	conn *modbus.Connection
+	log     *util.Logger
+	conn    *modbus.Connection
+	mu      sync.Mutex
+	current uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
+	pbox    bool   // phase-cutting box present; uses current register instead of power
 }
 
 const (
@@ -52,6 +58,7 @@ const (
 	// read/write registers (write with 0x10)
 	foxRegWorkMode     = 0x3000 // work mode
 	foxRegMaxCurrent   = 0x3001 // max charging current, 0.1A
+	foxRegMaxPower     = 0x3002 // max charging power, 0.1kW
 	foxRegTimeValidity = 0x3005 // command validity window, seconds
 
 	// write-only registers (write with 0x06)
@@ -102,7 +109,9 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 
 	wb := &FoxESSEVC{
 		Caps: implement.New(),
+		log:  log,
 		conn: conn,
+		pbox: pbox,
 	}
 
 	// take control of the charger and keep the command window at its maximum
@@ -214,7 +223,29 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	return wb.writeReg(foxRegMaxCurrent, uint16(10*current))
+	var reg uint16
+	var val uint16
+
+	if wb.pbox {
+		// PBOX present: use current setpoint directly
+		reg = foxRegMaxCurrent
+		val = uint16(10 * current)
+	} else {
+		// Auto phase switching: convert to power setpoint so the charger can
+		// decide phase count itself. P = sqrt(3) * 400V * I, scaled to 0.1kW.
+		reg = foxRegMaxPower
+		val = uint16(math.Sqrt(3) * 400 * current / 100)
+	}
+
+	if err := wb.writeReg(reg, val); err != nil {
+		return err
+	}
+
+	wb.mu.Lock()
+	wb.current = val
+	wb.mu.Unlock()
+
+	return nil
 }
 
 var _ api.Meter = (*FoxESSEVC)(nil)
