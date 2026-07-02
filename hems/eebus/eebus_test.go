@@ -51,8 +51,9 @@ func newTestEEBus(t *testing.T) *EEBus {
 // assertConsumptionLimit checks the HEMS consumption state through the api.HEMS surface.
 func assertConsumptionLimit(t *testing.T, c *EEBus, limit float64) {
 	t.Helper()
-	assert.Equal(t, new(limit > 0), c.Dimmed())
-	assert.Equal(t, limit, c.MaxConsumptionPower())
+	power := c.MaxConsumptionPower()
+	require.NotNil(t, power)
+	assert.Equal(t, limit, *power)
 }
 
 // assertProductionLimit checks the HEMS production state through the api.HEMS surface.
