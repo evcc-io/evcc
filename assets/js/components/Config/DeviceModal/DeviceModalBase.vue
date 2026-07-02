@@ -11,7 +11,7 @@
 		@visibilitychange="handleVisibilityChange"
 	>
 		<template #header-actions>
-			<DeviceInfoButton v-if="id" :id="id" />
+			<DeviceInfoButton v-if="id && !hideInfo" :id="id" />
 		</template>
 		<form ref="form" class="container mx-0 px-0">
 			<slot name="pre-content" :values="values"></slot>
@@ -30,7 +30,11 @@
 					:product-name="productName"
 					:groups="computedTemplateOptions"
 					@change="handleTemplateChange"
-				/>
+				>
+					<template v-if="$slots['template-action']" #action>
+						<slot name="template-action" />
+					</template>
+				</TemplateSelector>
 
 				<p v-if="showDeprecatedWarning" class="text-danger">
 					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
@@ -299,11 +303,18 @@ export default defineComponent({
 		externalTemplate: String as PropType<string | null>,
 		// Optional: hide template fields, e.g. because ocpp step was not completed
 		hideTemplateFields: { type: Boolean, default: false },
+		// Optional: keep modal open after a remove (singletons want to re-enter create mode)
+		keepOpenOnRemove: { type: Boolean, default: false },
+		// Optional: hide the bottom-right delete button (e.g. when delete is offered inline)
+		hideDelete: { type: Boolean, default: false },
+		// Optional: hide the info button in the header (e.g. for singleton devices like hems)
+		hideInfo: { type: Boolean, default: false },
 	},
 	emits: [
 		"added",
 		"updated",
 		"removed",
+		"open",
 		"close",
 		"template-changed",
 		"update:externalTemplate",
@@ -435,7 +446,7 @@ export default defineComponent({
 			return this.id === undefined;
 		},
 		isDeletable() {
-			return !this.isNew;
+			return !this.isNew && !this.hideDelete;
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -499,6 +510,20 @@ export default defineComponent({
 					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
 					this.applyDefaults();
 				}
+			}
+		},
+		id(newVal, oldVal) {
+			if (!this.isModalVisible) return;
+			// id arrived after open (async lookup) → load existing device
+			if (newVal !== undefined && oldVal === undefined) {
+				this.loadConfiguration();
+				return;
+			}
+			// id removed while modal stays open → reset to create mode
+			if (newVal === undefined && oldVal !== undefined) {
+				this.reset();
+				this.templateName = null;
+				this.succeeded = false;
 			}
 		},
 		templateName(newValue, oldValue) {
@@ -786,6 +811,9 @@ export default defineComponent({
 			try {
 				await this.device.remove(this.id!);
 				this.$emit("removed");
+				if (this.keepOpenOnRemove) {
+					return;
+				}
 				await closeModal({ action: "removed" });
 			} catch (e) {
 				handleError(e, "remove failed");
@@ -793,6 +821,7 @@ export default defineComponent({
 		},
 		handleOpen() {
 			this.isModalVisible = true;
+			this.$emit("open");
 			this.adminPasswordRequired = false;
 			this.adminPasswordInvalid = false;
 		},

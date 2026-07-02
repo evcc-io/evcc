@@ -19,6 +19,45 @@
     "successCloseTab": "You can now close this tab.",
     "title": "Authorization Status"
   },
+  "battery": {
+    "card": {
+      "charging": "Charging",
+      "discharging": "Discharging",
+      "energy": "Energy",
+      "ofTotal": "of {total}",
+      "power": "Power",
+      "soc": "Battery level"
+    },
+    "combined": "Combined",
+    "config": {
+      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in solar mode. Start solar charging automatically {start}.",
+      "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support.",
+      "bufferStart": {
+        "above": "once the battery is above {soc}",
+        "full": "once the battery is full",
+        "never": "only with enough surplus"
+      },
+      "bufferTitle": "Battery as charging buffer",
+      "discharge": "Prevent home battery discharge in fast mode and during planned charging.",
+      "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
+      "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
+      "priorityTitle": "Where does the surplus go first?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Grid charging",
+        "hold": "Discharge locked",
+        "holdcharge": "Charging paused",
+        "normal": "Following solar surplus"
+      },
+      "empty": "empty",
+      "full": "full",
+      "highest": "Highest ({value})",
+      "lowest": "Lowest ({value})",
+      "suggestion": "Suggestion",
+      "title": "Optimizer"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Battery level",
     "bufferStart": {
@@ -307,6 +346,7 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
+      "changeConfirm": "Existing configuration will be deleted. Continue?",
       "csv": {
         "created": "Created",
         "finished": "Finished",
@@ -314,10 +354,14 @@
         "limitpower": "Limit (kW)",
         "type": "Type"
       },
-      "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature.",
+      "customOption": "User-defined integration",
+      "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature. Curtailing solar production is also supported for selected devices. The actual curtailment limit must be set on each inverter configuration.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Recorded {count} grid limitation events.",
+      "generic": "Generic integrations",
+      "integrations": "Integrations",
       "lastEvent": "Most recent {timeAgo}.",
+      "template": "Integration",
       "title": "External Limit"
     },
     "icon": {

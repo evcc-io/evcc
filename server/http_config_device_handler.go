@@ -12,11 +12,14 @@ import (
 	"time"
 
 	"dario.cat/mergo"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -77,6 +80,9 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Hems:
+		res, err = devicesConfig(class, config.Hems(), hidePrivate)
 
 	case templates.Tariff:
 		res, err = devicesConfig(class, config.Tariffs(), hidePrivate)
@@ -204,6 +210,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Circuit:
 		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
 
+	case templates.Hems:
+		res, err = deviceConfig(class, id, config.Hems(), hidePrivate)
+
 	case templates.Tariff:
 		res, err = deviceConfig(class, id, config.Tariffs(), hidePrivate)
 
@@ -266,6 +275,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
 
+	case templates.Hems:
+		err = api.ErrNotAvailable
+
 	case templates.Tariff:
 		instance, err = deviceStatus(name, config.Tariffs())
 
@@ -308,8 +320,24 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 	return &conf, h.Add(config.NewConfigurableDevice(&conf, instance))
 }
 
+// newHemsFactory adapts hems.NewFromConfig to the generic newFromConfFunc signature.
+func newHemsFactory(site site.API) newFromConfFunc[hemsapi.API] {
+	return func(ctx context.Context, typ string, other map[string]any) (hemsapi.API, error) {
+		return hems.NewFromConfig(ctx, typ, other, site)
+	}
+}
+
+// HemsStatus returns the publish payload for the configured flag.
+func HemsStatus(configured bool) globalconfig.ConfigStatus {
+	return globalconfig.ConfigStatus{
+		Config: struct {
+			Configured bool `json:"configured"`
+		}{configured},
+	}
+}
+
 // newDeviceHandler creates a new device by class
-func newDeviceHandler(authObject auth.Auth) http.HandlerFunc {
+func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -347,6 +375,13 @@ func newDeviceHandler(authObject auth.Auth) http.HandlerFunc {
 		case templates.Circuit:
 			conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
+		case templates.Hems:
+			if existing, _ := config.ConfigurationByClass(templates.Hems); existing != nil {
+				err = errors.New("hems already configured")
+			} else {
+				conf, err = newDevice(ctx, class, req, newHemsFactory(site), config.Hems(), force)
+			}
+
 		case templates.Tariff:
 			conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
 
@@ -364,6 +399,10 @@ func newDeviceHandler(authObject auth.Auth) http.HandlerFunc {
 		close(done)
 
 		setConfigDirty()
+
+		if class == templates.Hems {
+			site.Publish(keys.Hems, HemsStatus(true))
+		}
 
 		res := struct {
 			ID   int    `json:"id"`
@@ -395,7 +434,7 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 }
 
 // updateDeviceHandler updates database device's configuration by class
-func updateDeviceHandler(authObject auth.Auth) http.HandlerFunc {
+func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -437,6 +476,9 @@ func updateDeviceHandler(authObject auth.Auth) http.HandlerFunc {
 
 		case templates.Circuit:
 			err = updateDevice(ctx, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
+
+		case templates.Hems:
+			err = updateDevice(ctx, id, class, req, newHemsFactory(site), config.Hems(), force)
 
 		case templates.Tariff:
 			err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -612,6 +654,9 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				}
 			}
 
+		case templates.Hems:
+			err = deleteDevice(id, config.Hems())
+
 		case templates.Tariff:
 			err = deleteDevice(id, config.Tariffs())
 
@@ -629,6 +674,10 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
+		}
+
+		if class == templates.Hems {
+			site.Publish(keys.Hems, HemsStatus(false))
 		}
 
 		res := struct {
@@ -657,7 +706,7 @@ func testConfig[T any](ctx context.Context, id int, class templates.Class, req c
 }
 
 // testConfigHandler tests a configuration by class
-func testConfigHandler(authObject auth.Auth) http.HandlerFunc {
+func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -702,6 +751,9 @@ func testConfigHandler(authObject auth.Auth) http.HandlerFunc {
 
 		case templates.Circuit:
 			instance, err = testConfig(ctx, id, class, req, circuit.NewFromConfig, config.Circuits())
+
+		case templates.Hems:
+			instance, err = testConfig(ctx, id, class, req, newHemsFactory(site), config.Hems())
 
 		case templates.Tariff:
 			instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())

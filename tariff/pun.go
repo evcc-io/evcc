@@ -28,6 +28,7 @@ var romeLocation *time.Location
 
 type Pun struct {
 	*embed
+	zone string
 	log  *util.Logger
 	data *util.Monitor[api.Rates]
 }
@@ -37,10 +38,15 @@ type NewDataSet struct {
 	Prezzi  []Prezzo `xml:"Prezzi"`
 }
 
+type Zone struct {
+	XMLName xml.Name
+	Value   string `xml:",chardata"`
+}
+
 type Prezzo struct {
-	Data string `xml:"Data"`
-	Ora  string `xml:"Ora"`
-	PUN  string `xml:"PUN"`
+	Data  string `xml:"Data"`
+	Ora   string `xml:"Ora"`
+	Zones []Zone `xml:",any"`
 }
 
 type Rate struct {
@@ -57,7 +63,12 @@ func init() {
 }
 
 func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
-	var cc embed
+	var cc struct {
+		embed `mapstructure:",squash"`
+		Zone  string
+	}
+
+	logger := util.NewLogger("pun")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -67,9 +78,15 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	var zone = strings.ToUpper(strings.TrimSpace(cc.Zone))
+	if cc.Zone == "" {
+		zone = "PUN"
+	}
+
 	t := &Pun{
-		log:   util.NewLogger("pun"),
-		embed: &cc,
+		log:   logger,
+		zone:  zone,
+		embed: &cc.embed,
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
@@ -129,6 +146,16 @@ func (t *Pun) Rates() (api.Rates, error) {
 // Type implements the api.Tariff interface
 func (t *Pun) Type() api.TariffType {
 	return api.TariffTypePriceForecast
+}
+
+func (t *Pun) priceForZone(p Prezzo) (float64, error) {
+	for _, z := range p.Zones {
+		if strings.ToUpper(strings.TrimSpace(z.XMLName.Local)) == t.zone {
+			price, err := strconv.ParseFloat(strings.ReplaceAll(z.Value, ",", "."), 64)
+			return price, err
+		}
+	}
+	return 0, fmt.Errorf("zone %s not found for hour %s", t.zone, p.Ora)
 }
 
 func (t *Pun) getData(day time.Time) (api.Rates, error) {
@@ -213,7 +240,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			date = date.AddDate(0, 0, -1)
 		}
 
-		price, err := strconv.ParseFloat(strings.ReplaceAll(p.PUN, ",", "."), 64)
+		price, err := t.priceForZone(p)
 		if err != nil {
 			return nil, fmt.Errorf("parse price: %w", err)
 		}

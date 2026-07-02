@@ -39,7 +39,7 @@ const (
 	RisSdkVersionEMEA          = "4.4.2"
 	RisApplicationVersionAPAC  = "1.65.0"
 	RisSdkVersionAPAC          = "4.4.2"
-	RisApplicationVersionNORAM = "3.65.0"
+	RisApplicationVersionNORAM = "3.65.1"
 	RisSdkVersionNORAM         = "4.4.2"
 	RisOsVersion               = "26.3"
 	RisOsName                  = "ios"
@@ -103,7 +103,7 @@ func mbheaders(includeAuthServerHeader bool, region string) map[string]string {
 		headers["Ris-Sdk-Version"] = RisSdkVersionNORAM
 		headers["Ris-Application-Version"] = RisApplicationVersionNORAM
 		headers["X-Applicationname"] = XApplicationNameNORAM
-		headers["User-Agent"] = fmt.Sprintf(UserAgent, RisApplicationVersionEMEA, "ece", RisOsName, RisOsVersion)
+		headers["User-Agent"] = fmt.Sprintf(UserAgent, RisApplicationVersionNORAM, "ece", RisOsName, RisOsVersion)
 	}
 
 	if includeAuthServerHeader {
