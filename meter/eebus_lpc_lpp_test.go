@@ -152,6 +152,21 @@ func TestLPP_EGMessages_ProductionLimit(t *testing.T) {
 	}
 }
 
+// A rejected write (NACK) must surface as an error, not silent success.
+func TestLPP_Curtail_WriteRejected(t *testing.T) {
+	c, _, lpp, entity := newEGMeter(t)
+	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
+	lpp.EXPECT().
+		WriteProductionLimit(entity, mock.Anything, mock.Anything).
+		Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType)) {
+			n := model.ErrorNumberType(7)
+			cb(model.ResultDataType{ErrorNumber: &n})
+		}).
+		Return(new(model.MsgCounterType), nil)
+
+	assert.Error(t, c.Curtail(true))
+}
+
 // Curtail is gated the same way as Dim.
 func TestLPP_Curtail_Gating(t *testing.T) {
 	t.Run("scenario_not_announced", func(t *testing.T) {

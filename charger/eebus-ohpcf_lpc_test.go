@@ -117,6 +117,25 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 	}
 }
 
+// Dimmed is gated like Dim: no announced LPC scenario, or no connected entity → ErrNotAvailable.
+func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
+	t.Run("scenario_not_announced", func(t *testing.T) {
+		c, lpc, entity := newOHPCFEGCharger(t)
+		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
+
+		_, err := c.Dimmed()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+
+	t.Run("entity_not_connected", func(t *testing.T) {
+		c, _, _ := newOHPCFEGCharger(t)
+		c.egLpcEntity = nil
+
+		_, err := c.Dimmed()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+}
+
 // Dimmed discards a non-normal limit value (LPC-TS-008) as ErrNotAvailable.
 func TestOHPCF_LPC_Dimmed_Discard(t *testing.T) {
 	for _, badErr := range []error{eebusapi.ErrDataInvalid, eebusapi.ErrDataNotAvailable, eebusapi.ErrMetadataNotAvailable} {
