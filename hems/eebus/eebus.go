@@ -41,9 +41,9 @@ type EEBus struct {
 	failsafeConsumptionLimit  float64
 
 	smartgridProductionId    uint
-	productionLimit          ucapi.LoadLimit
+	productionLimit          ucapi.LoadLimit // feed-in limit (NOT production despite its name)
 	productionLimitActivated time.Time
-	failsafeProductionLimit  *float64
+	failsafeProductionLimit  *float64 // feed-in limit (NOT production despite its name)
 	productionNominalMax     float64
 
 	heartbeat *util.Value[struct{}]
