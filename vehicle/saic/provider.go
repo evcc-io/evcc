@@ -54,8 +54,8 @@ func (v *Provider) Soc() (float64, error) {
 
 	val := res.ChrgMgmtData.BmsPackSOCDsp
 	if val > 1000 {
-		// v.status.Reset()
-		return float64(val), fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
+		v.status.Reset()
+		return 0, fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
 	}
 
 	return float64(val) / 10.0, nil
