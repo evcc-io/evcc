@@ -19,8 +19,8 @@ params:
     description:
       generic: Web API Security Token
     help:
-      de: "So bekommst du den Token: [transparencyplatform.zendesk.com](https://transparencyplatform.zendesk.com/hc/en-us/articles/12845911031188-How-to-get-security-token). Nach Freischaltung abrufbar unter [transparency.entsoe.eu](https://transparency.entsoe.eu/myAccount/webApiAccess)"
-      en: "How to get the token: [transparencyplatform.zendesk.com](https://transparencyplatform.zendesk.com/hc/en-us/articles/12845911031188-How-to-get-security-token). Once approved, retrieve it at [transparency.entsoe.eu](https://transparency.entsoe.eu/myAccount/webApiAccess)"
+      de: "Anleitung zur Token-Beantragung siehe [transparencyplatform.zendesk.com](https://transparencyplatform.zendesk.com/hc/en-us/articles/12845911031188-How-to-get-security-token). Nach Freischaltung abrufbar unter [transparency.entsoe.eu](https://transparency.entsoe.eu/myAccount/webApiAccess)"
+      en: "Instructions for obtaining the token at [transparencyplatform.zendesk.com](https://transparencyplatform.zendesk.com/hc/en-us/articles/12845911031188-How-to-get-security-token). Available after approval at [transparency.entsoe.eu](https://transparency.entsoe.eu/myAccount/webApiAccess)"
   - name: domain
     type: choice
     required: true
