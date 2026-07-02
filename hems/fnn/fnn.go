@@ -108,7 +108,7 @@ type Fnn struct {
 	smartgridProductionID  uint
 
 	consumptionLimit  float64
-	productionPercent int // allowed production percent (0..100), 100 = uncurtailed
+	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
 
 	interval time.Duration
 }

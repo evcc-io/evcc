@@ -293,7 +293,7 @@ type Circuit interface {
 type HEMS interface {
 	SetUpdated(func())
 	Dimmed() *bool                // nil = no statement
-	CurtailedPercent() *int       // allowed production percent (0..100), nil = no statement
+	CurtailedPercent() *int       // allowed feed-in percent of nominal production power (0..100), nil = no statement
 	MaxConsumptionPower() float64 // 0 = no limit
 	MaxProductionPower() *float64 // nil = no limit
 }

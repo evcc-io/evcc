@@ -43,7 +43,7 @@ export interface HemsConfig {
 
 export interface HemsStatus {
   dimmed?: boolean;
-  curtailed?: number; // allowed production percent (0..100 integer), <100 = curtailed
+  curtailed?: number; // allowed feed-in percent (0..100 integer), <100 = curtailed
   maxConsumptionPower?: number;
   maxProductionPower?: number;
 }

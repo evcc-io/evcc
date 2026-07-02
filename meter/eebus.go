@@ -289,7 +289,7 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		return api.ErrNotAvailable
 	}
 
-	// derive a proportional production limit from the producer's nominal power
+	// derive a proportional feed-in limit from the producer's nominal power
 	// (limits are negative watts); fall back to a safe 0W limit if unavailable
 	var value float64
 	if curtail {
