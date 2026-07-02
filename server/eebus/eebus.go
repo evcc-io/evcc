@@ -187,7 +187,7 @@ func NewServer(other Config) (*EEBus, error) {
 	c.service = service.NewService(configuration, c)
 	c.service.SetLogging(c)
 	if err := c.service.Setup(); err != nil {
-		return nil, err
+		return nil, WrapStartError(err)
 	}
 
 	localDevice := c.service.LocalDevice()

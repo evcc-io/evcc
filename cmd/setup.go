@@ -939,7 +939,7 @@ func configureEEBus(conf *eebus.Config) error {
 
 	srv, err := eebus.NewServer(*conf)
 	if err != nil {
-		return fmt.Errorf("failed configuring eebus: %w", eebus.WrapStartError(err))
+		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
 	shutdown.Register(srv.Shutdown)
