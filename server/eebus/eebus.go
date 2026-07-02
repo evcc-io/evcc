@@ -187,7 +187,23 @@ func NewServer(other Config) (*EEBus, error) {
 	c.service = service.NewService(configuration, c)
 	c.service.SetLogging(c)
 	if err := c.service.Setup(); err != nil {
-		return nil, wrapStartError(err)
+		if errors.Is(err, shipapi.ErrInvalidSKI) {
+			const hint = "The stored EEBUS certificate has an invalid Subject Key Identifier (SKI).\n" +
+				"The most common cause is a multi-year-old certificate whose SKI format is no longer accepted\n" +
+				"by the stricter validation introduced in evcc 0.309.2 — see\n" +
+				"https://github.com/evcc-io/evcc/issues/31366 for context.\n" +
+				"To fix this, delete the EEBUS configuration and generate a new certificate:\n" +
+				"  1. Open the evcc UI at Configuration > Services > EEBUS and remove the existing configuration, or\n" +
+				"     delete the EEBUS section from your evcc.yaml.\n" +
+				"  2. Generate a new certificate via the UI, or follow https://docs.evcc.io/de/reference/configuration/eebus/ for evcc.yaml.\n" +
+				"  3. Re-pair each EEBUS device (wallbox, heat pump, etc.) with the new SKI.\n" +
+				"§14a-EnWG users: do NOT run steps 1–3 on your production system yet. Stay on evcc < 0.309.2\n" +
+				"with the old certificate; generate a new one on the side only to send its SKI to your\n" +
+				"metering point operator for acceptance (this can take weeks). See\n" +
+				"https://docs.evcc.io/de/features/external-control/ for the §14a feature."
+			return nil, fmt.Errorf("%w\n\n%s", err, hint)
+		}
+		return nil, err
 	}
 
 	localDevice := c.service.LocalDevice()
