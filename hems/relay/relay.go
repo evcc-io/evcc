@@ -142,13 +142,6 @@ func (c *Relay) setConsumptionLimit(limit float64) error {
 
 var _ api.HEMS = (*Relay)(nil)
 
-// Dimmed implements api.HEMS, derived from the active consumption limit.
-func (c *Relay) Dimmed() *bool {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return new(c.limit != nil)
-}
-
 // CurtailedPercent implements api.HEMS. Relay does not curtail production and
 // hence makes no statement.
 func (c *Relay) CurtailedPercent() *int {
@@ -156,13 +149,13 @@ func (c *Relay) CurtailedPercent() *int {
 }
 
 // MaxConsumptionPower implements api.HEMS, returning the active wattage cap.
-func (c *Relay) MaxConsumptionPower() float64 {
+func (c *Relay) MaxConsumptionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.limit == nil {
-		return 0
+		return nil
 	}
-	return *c.limit
+	return new(*c.limit)
 }
 
 // MaxProductionPower implements api.HEMS. Scaffolding only.

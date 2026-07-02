@@ -229,17 +229,6 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 
 var _ api.HEMS = (*Fnn)(nil)
 
-// Dimmed implements api.HEMS.
-func (c *Fnn) Dimmed() *bool {
-	if c.w4 == nil {
-		return nil
-	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return new(c.consumptionLimit > 0)
-}
-
 // CurtailedPercent implements api.HEMS, returning the allowed production percent.
 func (c *Fnn) CurtailedPercent() *int {
 	if c.w3 == nil {
@@ -249,15 +238,18 @@ func (c *Fnn) CurtailedPercent() *int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	percent := c.productionPercent
-	return &percent
+	return new(c.productionPercent)
 }
 
 // MaxConsumptionPower implements api.HEMS.
-func (c *Fnn) MaxConsumptionPower() float64 {
+func (c *Fnn) MaxConsumptionPower() *float64 {
+	if c.w4 == nil {
+		return nil
+	}
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.consumptionLimit
+	return new(c.consumptionLimit)
 }
 
 // MaxProductionPower implements api.HEMS.

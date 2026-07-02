@@ -303,13 +303,6 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 
 var _ api.HEMS = (*EEBus)(nil)
 
-// Dimmed implements api.HEMS, derived from consumptionLimitActivated.
-func (c *EEBus) Dimmed() *bool {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-	return new(!c.consumptionLimitActivated.IsZero())
-}
-
 // CurtailedPercent implements api.HEMS, converting the active LPP production
 // limit to an allowed production percent via the configured nominal production power.
 func (c *EEBus) CurtailedPercent() *int {
@@ -333,16 +326,16 @@ func (c *EEBus) CurtailedPercent() *int {
 // MaxConsumptionPower implements api.HEMS, returning the consumption cap
 // currently in effect: failsafe limit while in failsafe, otherwise the
 // EG-supplied LPC limit when active, or 0 when no limit applies.
-func (c *EEBus) MaxConsumptionPower() float64 {
+func (c *EEBus) MaxConsumptionPower() *float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 	if c.consumptionLimitActivated.IsZero() {
-		return 0
+		return new(0.0)
 	}
 	if c.status == StatusFailsafe {
-		return c.failsafeConsumptionLimit
+		return new(c.failsafeConsumptionLimit)
 	}
-	return c.consumptionLimit.Value
+	return new(c.consumptionLimit.Value)
 }
 
 // MaxProductionPower implements api.HEMS. Scaffolding only — EEBus does not
