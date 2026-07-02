@@ -1,0 +1,27 @@
+template: modbus-foxess
+products:
+  - brand: FoxESS
+    description:
+      generic: AC EV Charger (Modbus)
+capabilities: ["mA", "rfid", "meter", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: pbox
+    type: bool
+    advanced: true
+    description:
+      de: Phasenumschaltbox (PBOX) angeschlossen
+      en: Phase switching box (PBOX) connected
+    help:
+      de: Aktivieren, wenn eine externe Phasenumschaltbox angeschlossen ist. Nur dann kann evcc zwischen ein- und dreiphasigem Laden umschalten.
+      en: Enable when an external phase switching box is connected. Only then can evcc switch between single- and three-phase charging.
+render: |
+  type: modbus-foxess
+  {{- include "modbus" . }}
+  {{- if eq .pbox "true" }}
+  pbox: true
+  {{- end }}
