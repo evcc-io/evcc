@@ -46,8 +46,8 @@
     "optimizer": {
       "action": {
         "charge": "Aus dem Netz laden",
-        "hold": "Entladung sperren",
-        "holdcharge": "Laden sperren",
+        "hold": "Entladen verhindern",
+        "holdcharge": "Laden verhindern",
         "normal": "Normaler Betrieb"
       },
       "empty": "leer",
