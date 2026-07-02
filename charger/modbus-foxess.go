@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"math"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -122,6 +123,10 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 		return nil, fmt.Errorf("time validity: %w", err)
 	}
 
+	// the charger goes to fallback current if no setpoint is received within the
+	// time validity window, so we must re-send the setpoint periodically
+	go wb.heartbeat(ctx)
+
 	// phase switching is only available with an external phase-cutting box
 	if pbox {
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
@@ -139,6 +144,37 @@ func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
 	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
 
 	return err
+}
+
+// heartbeat re-sends the current setpoint to keep the charger from reverting
+// to its fallback current when the time validity window expires
+func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
+	for tick := time.Tick(foxTimeValidity / 2 * time.Second); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		wb.mu.Lock()
+		cur := wb.current
+		pbox := wb.pbox
+		wb.mu.Unlock()
+
+		if cur == 0 {
+			continue
+		}
+
+		var err error
+		if pbox {
+			err = wb.writeReg(foxRegMaxCurrent, cur)
+		} else {
+			err = wb.writeReg(foxRegMaxPower, cur)
+		}
+		if err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // readUint32 reads two consecutive registers as a big-endian uint32
