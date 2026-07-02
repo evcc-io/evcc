@@ -26,14 +26,15 @@ var ErrInvalidData = errors.New("invalid data received")
 
 // DayAheadPricesRequest constructs a new DayAheadPricesRequest.
 func DayAheadPricesRequest(domain string, duration time.Duration) *http.Request {
-	now := time.Now().UTC().Truncate(time.Hour)
+	now := time.Now().Truncate(time.Hour)
 
 	params := url.Values{
 		"DocumentType": {string(ProcessTypeDayAhead)},
 		"In_Domain":    {domain},
 		"Out_Domain":   {domain},
-		"PeriodStart":  {now.Format(numericDateFormat)},
-		"PeriodEnd":    {now.Add(duration).Format(numericDateFormat)},
+		// PeriodStart/PeriodEnd must be UTC: the numeric date format carries no timezone.
+		"PeriodStart": {now.UTC().Format(numericDateFormat)},
+		"PeriodEnd":   {now.Add(duration).UTC().Format(numericDateFormat)},
 	}
 
 	uri := BaseURI + "?" + params.Encode()
