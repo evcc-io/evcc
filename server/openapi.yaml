@@ -1319,24 +1319,55 @@ paths:
           schema:
             type: string
             format: date-time
+            example: "2026-07-01T00:00:00Z"
         - name: to
           in: query
           description: End time (RFC3339)
           schema:
             type: string
             format: date-time
+            example: "2026-07-02T00:00:00Z"
         - name: aggregate
           in: query
           description: "Aggregation interval. Examples: 15m, 1h, day, month"
           schema:
             type: string
             default: 15m
+            example: 1h
         - name: grouped
           in: query
           description: Group results by loadpoint
           schema:
             type: boolean
             default: false
+            example: false
+        - name: group
+          in: query
+          description: Filter by entity group
+          schema:
+            type: string
+            example: battery
+            enum:
+              - forecast
+              - battery
+              - grid
+              - pv
+              - home
+              - loadpoint
+              - meter
+              - consumer
+        - name: name
+          in: query
+          description: Filter by entity name
+          schema:
+            type: string
+            example: db:8
+        - name: title
+          in: query
+          description: Filter by entity title
+          schema:
+            type: string
+            example: Battery
         - name: format
           in: query
           description: Response format
@@ -1346,11 +1377,13 @@ paths:
               - json
               - csv
             default: json
+            example: json
         - name: lang
           in: query
           description: Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header.
           schema:
             type: string
+            example: de
       responses:
         "200":
           description: Energy history data

@@ -16,15 +16,6 @@ func Copy(q url.Values) url.Values {
 	return res
 }
 
-// Merge copies multiple from url values into to
-func Merge(to url.Values, from ...url.Values) {
-	for _, vv := range from {
-		for k, v := range vv {
-			to[k] = append(to[k], v...)
-		}
-	}
-}
-
 // Require verifies that url contains the required non-nil values
 func Require(q url.Values, keys ...string) error {
 	for _, k := range keys {

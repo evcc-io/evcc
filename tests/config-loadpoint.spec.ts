@@ -508,6 +508,45 @@ power:
     await expect(chargerEditor).toContainText("value: 'C'");
     await expect(chargerEditor).toContainText("value: 11000");
   });
+
+  test("user-defined switch socket (pool pump)", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    // add loadpoint
+    await newLoadpoint(page, "Pool pump");
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByRole("button", { name: "Add charger" }).click();
+
+    const chargerModal = page.getByTestId("charger-modal");
+    await expectModalVisible(chargerModal);
+    await chargerModal.getByLabel("Manufacturer").selectOption("User-defined switch socket");
+    await page.waitForLoadState("networkidle");
+    await expect(chargerModal.getByTestId("yaml-editor")).toContainText("switchdevice");
+
+    const result = chargerModal.getByTestId("test-result");
+    await result.getByRole("link", { name: "validate" }).click();
+    await expect(result).toContainText("Status: successful");
+    await expect(result).toContainText(["Power", "11.0 kW"].join(""));
+    await expect(result).toContainText(["Current control", "no"].join(""));
+
+    await chargerModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
+
+    const modeSelect = lpModal.getByLabel("Default mode");
+    await expect(modeSelect.getByRole("option", { name: "Solar", exact: true })).toHaveCount(1);
+    await expect(modeSelect.getByRole("option", { name: "Min+Solar" })).toHaveCount(0);
+
+    await expect(lpModal.getByText("Electrics")).toHaveCount(0);
+    await expect(lpModal.getByText("Charger type", { exact: true })).toHaveCount(0);
+
+    // create
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
+    await expect(page.getByTestId("loadpoint")).toContainText("Pool pump");
+  });
 });
 
 test.describe("heating loadpoint", async () => {
