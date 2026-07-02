@@ -321,20 +321,26 @@ Returns aggregated energy history data. Aggregate granularity defaults to 15 min
 | aggregate | string | Aggregation interval. Examples: 15m, 1h, day, month |
 | format | string | Response format |
 | from | string | Start time (RFC3339) |
+| group | string | Filter by entity group |
 | grouped | boolean | Group results by loadpoint |
 | lang | string | Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header. |
+| name | string | Filter by entity name |
+| title | string | Filter by entity title |
 | to | string | End time (RFC3339) |
 
 **Example call:**
 
 ```json
 call getEnergyHistory {
-  "aggregate": "15m",
+  "aggregate": "1h",
   "format": "json",
-  "from": "example",
+  "from": "2026-07-01T00:00:00Z",
+  "group": "battery",
   "grouped": false,
-  "lang": "example",
-  "to": "example"
+  "lang": "de",
+  "name": "db:8",
+  "title": "Battery",
+  "to": "2026-07-02T00:00:00Z"
 }
 ```
 

@@ -172,6 +172,54 @@ func TestQueryEnergyMultipleSeries(t *testing.T) {
 	require.InDelta(t, 11+21, byGroup[PV].Data[1].ReturnEnergy, 0.001)
 }
 
+func TestQueryEnergyFilter(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	eGrid := entity{Id: 2, Name: Grid, Group: Grid}
+	require.NoError(t, db.Instance.Create(&eGrid).Error)
+	ePv := entity{Id: 4, Name: "pv1", Group: PV}
+	require.NoError(t, db.Instance.Create(&ePv).Error)
+	eBat := entity{Id: 6, Name: "db:8", Group: Battery, Title: "Anker"}
+	require.NoError(t, db.Instance.Create(&eBat).Error)
+
+	loc := time.Now().Location()
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
+	for i := range 2 {
+		ts := base.Add(time.Duration(i) * time.Hour)
+		require.NoError(t, persist(eGrid, ts, float64(1+i), 0, nil))
+		require.NoError(t, persist(ePv, ts, 0, float64(10+i), nil))
+		require.NoError(t, persist(eBat, ts, float64(5+i), 0, nil))
+	}
+
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(3 * time.Hour).UTC()
+
+	// group filter
+	res, err := QueryEnergy(from, to, "hour", false, EnergyFilter{Group: Battery})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, Battery, res[0].Group)
+	require.Equal(t, "Anker", res[0].Title)
+
+	// name filter
+	res, err = QueryEnergy(from, to, "hour", false, EnergyFilter{Name: "pv1"})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, PV, res[0].Group)
+
+	// title filter
+	res, err = QueryEnergy(from, to, "hour", false, EnergyFilter{Title: "Anker"})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, Battery, res[0].Group)
+
+	// no filter fields set: all series
+	res, err = QueryEnergy(from, to, "hour", false, EnergyFilter{})
+	require.NoError(t, err)
+	require.Len(t, res, 3)
+}
+
 func TestUpdateProfile(t *testing.T) {
 	clock := clock.NewMock()
 
