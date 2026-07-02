@@ -110,6 +110,10 @@ type requestDetails struct {
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
+// errOptimizerNotReady means battery measurements aren't available yet (e.g. at
+// startup); the slot gate is left open so the next cycle retries.
+var errOptimizerNotReady = errors.New("battery measurements not ready")
+
 func (site *Site) optimizerUpdateAsync() {
 	if !mu.TryLock() {
 		return
@@ -123,11 +127,16 @@ func (site *Site) optimizerUpdateAsync() {
 	var err error
 
 	defer func() {
-		optimizerUpdated = time.Now()
-
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
 		}
+
+		// not ready yet: keep the gate open for an immediate retry next cycle
+		if errors.Is(err, errOptimizerNotReady) {
+			return
+		}
+
+		optimizerUpdated = time.Now()
 
 		if err != nil {
 			site.log.ERROR.Println("optimizer:", err)
@@ -258,9 +267,13 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
 	}
 
-	// empty request- all loadpoints disabled
 	if len(req.Batteries) == 0 {
-		return nil
+		// meters configured but measurements not in yet: retry instead of
+		// consuming the slot gate
+		if len(site.batteryMeters) > 0 {
+			return errOptimizerNotReady
+		}
+		return nil // nothing to optimize
 	}
 
 	httpClient := request.NewClient(site.log)

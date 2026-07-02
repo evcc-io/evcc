@@ -136,8 +136,6 @@ github.com/eclipse/paho.golang v0.23.0 h1:KHgl2wz6EJo7cMBmkuhpt7C576vP+kpPv7jjvS
 github.com/eclipse/paho.golang v0.23.0/go.mod h1:nQRhTkoZv8EAiNs5UU0/WdQIx2NrnWUpL9nsGJTQN04=
 github.com/eclipse/paho.mqtt.golang v1.5.1 h1:/VSOv3oDLlpqR2Epjn1Q7b2bSTplJIeV2ISgCl2W7nE=
 github.com/eclipse/paho.mqtt.golang v1.5.1/go.mod h1:1/yJCneuyOoCOzKSsOTUc0AJfpsItBGWvYpBLimhArU=
-github.com/enbility/eebus-go v0.7.1-0.20260520155652-11bc53084557 h1:YQvO8wiUG1OEjFAkKtLTrCFze8KpG7YZ1TwrQKj9H54=
-github.com/enbility/eebus-go v0.7.1-0.20260520155652-11bc53084557/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a h1:foChWb8lhzqa6lWDRs6COYMdp649YlUirFP8GqoT0JQ=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a/go.mod h1:H64mhYcAQUGUUnVqMdZQf93kPecH4M79xwH95Lddt3U=
 github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c h1:ZNYyr/SDaAMHi6ubJqWuoId8QUu5V4xXWCIRf7VnfCY=
@@ -146,6 +144,8 @@ github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885 h1:nBqjAPONpI/
 github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885/go.mod h1:ddWZU5BQGyzRGF20Z7rUKFFzbCp+cfu9mZgYtOMW/fM=
 github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6 h1:XOYvxKtT1oxT37w/5oEiRLuPbm9FuJPt3fiYhX0h8Po=
 github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6/go.mod h1:BszP9qFV14mPXgyIREbgIdQtWxbAj3OKqvK02HihMoM=
+github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6 h1:ax+dfxmeF/hN3IIUXFnDw3y3BE7pr0m/699k08+Q9sM=
+github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea h1:F6eyC8V8wvc3ranlsR4coAls+OPBkVvxyX0a2VqdlPc=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b h1:5vFr7wOwoi5ylybUnxxBk1U3FRF2+3Sf0sKx8thxw18=

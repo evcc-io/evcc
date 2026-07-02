@@ -1,0 +1,26 @@
+template: eebus-ohpcf
+products:
+  - description:
+      de: EEBUS Wärmepumpe (OHPCF)
+      en: EEBUS heat pump (OHPCF)
+group: heatinggeneric
+capabilities: ["meter", "dim"]
+params:
+  - preset: eebus
+  - name: reboost
+    type: duration
+    default: 10m
+    advanced: true
+    description:
+      de: Reboost-Intervall
+      en: Reboost interval
+    help:
+      de: Wartezeit, nach der eine neu angekündigte optionale Leistungsaufnahme erneut eingeplant wird.
+      en: Wait time after which a newly announced optional power consumption is scheduled again.
+render: |
+  type: eebus-ohpcf
+  {{ include "eebus" . }}
+  reboost: {{ .reboost }}
+  features:
+    - heating
+    - integrateddevice
