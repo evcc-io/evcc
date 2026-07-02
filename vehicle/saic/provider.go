@@ -105,7 +105,7 @@ func (v *Provider) Range() (int64, error) {
 	}
 
 	val := res.RvsChargeStatus.FuelRangeElec
-	if val < 10 || val > 1000 {
+	if val < 10 || val > 10000 {
 		v.status.Reset()
 		return 0, fmt.Errorf("invalid raw range value: %d: %w", val, api.ErrMustRetry)
 	}
