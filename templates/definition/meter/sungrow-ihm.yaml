@@ -12,6 +12,16 @@ params:
     comset: "8N1"
     id: 247
     port: 502
+  - name: maxacpower
+    usages: ["pv"]
+    service: modbus/read?address=8144&type=input&encoding=uint32&scale=100&{modbus} # Register 8145 (Total rated active power, 0.1kW)
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    advanced: true
+    example: 70
+    usages: ["pv"]
   - preset: battery-params
 render: |
   {{- if eq .usage "grid" }}
@@ -29,6 +39,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 8175 # Register 8176 (Import energy at the grid meter)
+      type: input
+      decode: uint32s
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8177 # Register 8178 (Export energy at the grid meter)
       type: input
       decode: uint32s
     scale: 0.1
@@ -84,6 +102,56 @@ render: |
       type: input
       decode: int32s
     scale: 10
+  maxacpower: {{ .maxacpower }} # W
+  {{- if .curtailpercent }}
+  curtail:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .curtailpercent }} # percent
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 8030 # Register 8031 (Feed-in limitation ratio, 0-1000 = 0.1%)
+              type: writesingle
+              decode: int16
+            scale: 10
+        - source: const
+          value: 1 # Enable feed-in limitation
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 8027 # Register 8028 (Feed-in limitation)
+              type: writesingle
+              decode: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Disable feed-in limitation
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 8027 # Register 8028 (Feed-in limitation)
+            type: writesingle
+            decode: uint16
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 8027 # Register 8028 (Feed-in limitation, 1=on)
+      type: holding
+      decode: uint16
+  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
