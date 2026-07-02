@@ -108,7 +108,7 @@ type Fnn struct {
 	smartgridProductionID  uint
 
 	consumptionLimit  float64
-	productionPercent int // allowed production percent (0..100), 100 = uncurtailed
+	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
 
 	interval time.Duration
 }
@@ -121,7 +121,8 @@ func (c *Fnn) SetUpdated(f func()) {
 
 // Run starts the FNN control loop.
 func (c *Fnn) Run() {
-	for range time.Tick(c.interval) {
+	// run immediately, then on every tick
+	for tick := time.Tick(c.interval); ; <-tick {
 		if err := c.runCurtail(); err != nil {
 			c.log.ERROR.Println(err)
 		}

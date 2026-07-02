@@ -1,0 +1,58 @@
+interval: 0.1s
+
+site:
+  title: Battery Experimental
+  meters:
+    grid: grid
+    pv: pv
+    battery:
+      - battery1
+      - battery2
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: const
+      value: 1000
+  - name: pv
+    type: custom
+    power:
+      source: const
+      value: 2000
+  - name: battery1
+    type: custom
+    power:
+      source: const
+      value: -800
+    soc:
+      source: const
+      value: 76
+    capacity: 13.5
+    batterymode:
+      source: js
+      vm: shared
+      script: |
+        1
+  - name: battery2
+    type: custom
+    power:
+      source: const
+      value: 1200
+    soc:
+      source: const
+      value: 40
+    capacity: 7.5
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.2
+    zones:
+      - hours: 5-7
+        price: 0.45
+      - hours: 11-14
+        price: 0.05
+      - hours: 17-21
+        price: 0.5

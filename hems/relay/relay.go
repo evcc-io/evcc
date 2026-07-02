@@ -88,7 +88,8 @@ func (c *Relay) SetUpdated(f func()) {
 }
 
 func (c *Relay) Run() {
-	for range time.Tick(c.interval) {
+	// run immediately, then on every tick
+	for tick := time.Tick(c.interval); ; <-tick {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}

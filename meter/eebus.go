@@ -231,8 +231,9 @@ func (c *EEBus) Dimmed() (bool, error) {
 		return false, err
 	}
 
-	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
+	// an active limit means dimmed; the applied limit value is 0W, so a
+	// value-based check would never report the dimmed state and never release it
+	return limit.IsActive, nil
 }
 
 // Dim implements the api.Dimmer interface
@@ -289,7 +290,7 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		return api.ErrNotAvailable
 	}
 
-	// derive a proportional production limit from the producer's nominal power
+	// derive a proportional feed-in limit from the producer's nominal power
 	// (limits are negative watts); fall back to a safe 0W limit if unavailable
 	var value float64
 	if curtail {
