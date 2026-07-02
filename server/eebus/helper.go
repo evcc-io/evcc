@@ -19,7 +19,7 @@ func WrapError(err error) error {
 	return err
 }
 
-func WrapStartError(err error) error {
+func wrapStartError(err error) error {
 	if errors.Is(err, shipapi.ErrInvalidSKI) {
 		const hint = "The stored EEBUS certificate has an invalid Subject Key Identifier (SKI).\n" +
 			"The most common cause is a multi-year-old certificate whose SKI format is no longer accepted\n" +
