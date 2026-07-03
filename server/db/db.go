@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/libtnb/sqlite"
+	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
 	sqlite3 "modernc.org/sqlite"
 	sqlite3lib "modernc.org/sqlite/lib"
@@ -32,13 +33,9 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// Split database path and connection parameters
 		dbPath, params, _ := strings.Cut(dsn, "?")
 
-		file := dbPath
-		if after, ok := strings.CutPrefix(dbPath, "~/"); ok {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return nil, err
-			}
-			file = filepath.Join(home, after)
+		file, err := homedir.Expand(dbPath)
+		if err != nil {
+			return nil, err
 		}
 
 		if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {
