@@ -67,6 +67,11 @@ var DefaultSchema = MeterSchema{
 	},
 }
 
+// WARP4 only: vehicle data read via ISO 15118; soc is null while unknown
+type EvState struct {
+	Soc *float64 `json:"soc"`
+}
+
 type ChargeTrackerCurrentCharge struct {
 	AuthorizationInfo struct {
 		TagType int    `json:"tag_type"`

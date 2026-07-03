@@ -1,0 +1,29 @@
+template: tinkerforge-warp4-ws
+products:
+  - { brand: TinkerForge, description: { generic: WARP4 Smart } }
+  - { brand: TinkerForge, description: { generic: WARP4 Pro } }
+capabilities: ["iso151182", "mA", "rfid", "1p3p", "dim"]
+requirements:
+  description:
+    de: Falls notwendig wird die WARP-eigene automatische Phasenumschaltung von EVCC beim Verbinden mit der Wallbox deaktiviert. Für das Auslesen des Fahrzeug-SoC muss "SoC auslesen" in der ISO 15118-Konfiguration der Wallbox aktiviert sein.
+    en: If necessary, WARP's own automatic phase switching will be deactivated by EVCC when connecting to the wallbox. Reading the vehicle SoC requires "Read SoC" to be enabled in the wallbox's ISO 15118 configuration.
+  evcc: ["skiptest"]
+params:
+  - name: uri
+    required: true
+  - name: user
+  - name: password
+  - name: energyMeterIndex
+    advanced: true
+    default: 0
+    description:
+      generic: Energy Meter Index
+    help:
+      de: Index des in der Warp konfigurierten Meters dessen Werte genutzt werden sollen.
+      en: Index of the meter configured in the WARP charger whose values should be used.
+render: |
+  type: warp-ws
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  energyMeterIndex: {{ .energyMeterIndex }}

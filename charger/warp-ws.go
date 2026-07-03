@@ -55,6 +55,9 @@ type WarpWS struct {
 	// nfc
 	chargeTracker warp.ChargeTrackerCurrentCharge
 
+	// ev (WARP4, ISO 15118)
+	evState *warp.EvState
+
 	// power manager
 	pmState          *warp.PmState
 	pmLowLevelState  *warp.PmLowLevelState
@@ -104,6 +107,11 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		implement.Has(w, implement.Identifier(w.identify))
 	}
 
+	// Feature: EV (WARP4): vehicle soc read via ISO 15118
+	if w.hasEvState() {
+		implement.Has(w, implement.Battery(w.soc))
+	}
+
 	// Feature: Phase Switching
 	// only setup phase switching methods if power manager endpoint is set
 	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
@@ -141,7 +149,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	if err != nil {
 		return nil, err
 	}
-	if typ == "warp3" || (typ == "warp2" && emURI != "") {
+	if typ == "warp3" || typ == "warp4" || (typ == "warp2" && emURI != "") {
 		enabled, err := w.disablePhaseAutoSwitch()
 		if err != nil {
 			return nil, err
@@ -284,6 +292,8 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	switch topic {
 	case "charge_tracker/current_charge":
 		err = json.Unmarshal(payload, &w.chargeTracker)
+	case "ev/state":
+		err = json.Unmarshal(payload, &w.evState)
 	case "evse/external_current":
 		err = json.Unmarshal(payload, &w.evse.ExternalCurrent)
 	case "evse/user_current":
@@ -437,6 +447,30 @@ func (w *WarpWS) identify() (string, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return w.chargeTracker.AuthorizationInfo.TagId, nil
+}
+
+// hasEvState probes the ev/state api provided by WARP4 devices
+func (w *WarpWS) hasEvState() bool {
+	var res warp.EvState
+	if err := w.GetJSON(fmt.Sprintf("%s/ev/state", w.URI), &res); err != nil {
+		return false
+	}
+
+	w.mu.Lock()
+	w.evState = &res
+	w.mu.Unlock()
+
+	return true
+}
+
+// soc implements the api.Battery interface
+func (w *WarpWS) soc() (float64, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	if w.evState == nil || w.evState.Soc == nil {
+		return 0, api.ErrNotAvailable
+	}
+	return *w.evState.Soc, nil
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
