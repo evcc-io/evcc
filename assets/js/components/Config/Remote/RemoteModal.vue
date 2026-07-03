@@ -196,7 +196,7 @@ export default defineComponent({
 			}
 			try {
 				this.error = null;
-				await api.delete("config/remote/clients", { params: { username } });
+				await api.delete(`config/remote/clients/${encodeURIComponent(username)}`);
 				await this.loadClients();
 			} catch (err) {
 				this.handleError(err);

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/remote"
+	"github.com/gorilla/mux"
 )
 
 // remoteClientsHandler returns the list of remote tunnel clients.
@@ -49,10 +50,9 @@ func createRemoteClientHandler(r *remote.Remote) http.HandlerFunc {
 }
 
 // deleteRemoteClientHandler removes a tunnel client by username.
-// Username is passed as a query parameter to allow arbitrary characters.
 func deleteRemoteClientHandler(r *remote.Remote) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		username := req.URL.Query().Get("username")
+		username := mux.Vars(req)["username"]
 		if err := r.DeleteClient(username); err != nil {
 			jsonError(w, http.StatusNotFound, err)
 			return

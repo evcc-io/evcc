@@ -77,9 +77,10 @@ func (r *Remote) CreateClient(username string, expiresIn time.Duration) (Client,
 	if username == "" {
 		return Client{}, "", errors.New("username required")
 	}
-	// RFC 7617: ":" is the basic-auth separator; reject control chars too.
+	// RFC 7617: ":" is the basic-auth separator; "/" would break the DELETE
+	// route's path parameter; reject control chars too.
 	for _, r := range username {
-		if r == ':' || r < 0x20 || r == 0x7f {
+		if r == ':' || r == '/' || r < 0x20 || r == 0x7f {
 			return Client{}, "", errors.New("username contains invalid characters")
 		}
 	}

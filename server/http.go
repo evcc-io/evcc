@@ -311,7 +311,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"remote":             {"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)},
 			"remoteclients":      {"GET", "/remote/clients", remoteClientsHandler(remoteAccess)},
 			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},
-			"deleteremoteclient": {"DELETE", "/remote/clients", deleteRemoteClientHandler(remoteAccess)},
+			"deleteremoteclient": {"DELETE", "/remote/clients/{username}", deleteRemoteClientHandler(remoteAccess)},
 		}
 
 		// yaml handlers
