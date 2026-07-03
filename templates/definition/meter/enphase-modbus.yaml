@@ -16,12 +16,6 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
-  - name: curtailpercent
-    description:
-      en: Active power limit in percent
-      de: Wirkleistungsbegrenzung in Prozent
-    advanced: true
-    usages: ["pv"]
 render: |
   type: custom
   # sunspec model 701 (DER AC Measurement)
