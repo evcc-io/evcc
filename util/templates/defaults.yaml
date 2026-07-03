@@ -62,6 +62,11 @@ params:
       de: Zugangspasswort des Dienstes
       en: Service account password
     mask: true
+  - name: email
+    description:
+      de: E-Mail-Adresse
+      en: Email address
+    example: "user@example.com"
   - name: capacity
     unit: kWh
     description:
@@ -606,8 +611,10 @@ presets:
       advanced: true
     - name: autodetectdisabled
       advanced: true
-  vehicle-climater:
+  vehicle-online:
     - name: climaterdisabled
+      advanced: true
+    - name: autodetectdisabled
       advanced: true
   charger-features:
     - name: heating

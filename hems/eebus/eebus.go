@@ -2,18 +2,22 @@ package eebus
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/config"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
+
+func init() {
+	config.AddCtx("eebus", NewFromConfig)
+}
 
 type EEBus struct {
 	mux sync.RWMutex
@@ -37,9 +41,10 @@ type EEBus struct {
 	failsafeConsumptionLimit  float64
 
 	smartgridProductionId    uint
-	productionLimit          ucapi.LoadLimit
+	productionLimit          ucapi.LoadLimit // feed-in limit (NOT production despite its name)
 	productionLimitActivated time.Time
-	failsafeProductionLimit  *float64
+	failsafeProductionLimit  *float64 // feed-in limit (NOT production despite its name)
+	productionNominalMax     float64
 
 	heartbeat *util.Value[struct{}]
 	interval  time.Duration
@@ -64,7 +69,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		Interval    time.Duration
 	}{
 		Limits: Limits{
-			ContractualConsumptionNominalMax:    24800,
+			// contractual max power at the grid connection point reported to the control box
+			// (EEBus LPC, EMS device type). Default: standard 3x35A x 230V house connection.
+			// This is the connection capacity, not the SteuVE Pmin (see failsafe limit below).
+			ContractualConsumptionNominalMax:    24150, // 3 * 35A * 230V
 			FailsafeConsumptionActivePowerLimit: 4200,
 
 			ProductionNominalMax:               0,
@@ -89,15 +97,16 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 
 // NewEEBus creates EEBus HEMS
 func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
+	inst, err := eebus.Instance()
+	if err != nil {
+		return nil, err
 	}
 
 	c := &EEBus{
 		log:         util.NewLogger("eebus"),
 		site:        site,
 		passthrough: passthrough,
-		cs:          eebus.Instance.ControllableSystem(),
+		cs:          inst.ControllableSystem(),
 		Connector:   eebus.NewConnector(),
 		heartbeat:   util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:    interval,
@@ -105,18 +114,19 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
 		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
+		productionNominalMax:     limits.ProductionNominalMax,
 	}
 
 	// simulate a received heartbeat
 	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
 	c.heartbeat.Set(struct{}{})
 
-	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
+	if err := inst.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
 	}
 
 	if err := c.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
@@ -300,11 +310,24 @@ func (c *EEBus) Dimmed() *bool {
 	return new(!c.consumptionLimitActivated.IsZero())
 }
 
-// Curtailed implements api.HEMS, derived from productionLimitActivated.
-func (c *EEBus) Curtailed() *bool {
+// CurtailedPercent implements api.HEMS, converting the active LPP production
+// limit to an allowed production percent via the configured nominal production power.
+func (c *EEBus) CurtailedPercent() *int {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return new(!c.productionLimitActivated.IsZero())
+
+	// without a nominal reference the W limit cannot be expressed as a percent
+	if c.productionNominalMax <= 0 {
+		return nil
+	}
+
+	percent := 100
+	if !c.productionLimitActivated.IsZero() {
+		// production limits are negative watts
+		percent = int(-c.productionLimit.Value / c.productionNominalMax * 100)
+	}
+
+	return &percent
 }
 
 // MaxConsumptionPower implements api.HEMS, returning the consumption cap

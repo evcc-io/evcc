@@ -106,6 +106,11 @@ func (o *watchdogPlugin) setter[T comparable](set func(T) error, reset []T) func
 				o.mu.Lock()
 				defer o.mu.Unlock()
 
+				// a reset may have cancelled us while we waited for the lock
+				if ctx.Err() != nil {
+					return nil
+				}
+
 				if err := set(val); err != nil {
 					return err
 				}
