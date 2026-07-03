@@ -8,7 +8,26 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 )
 
-const ringBufferKey = "eebus.pairing.ringbuffer"
+const (
+	ringBufferKey    = "eebus.pairing.ringbuffer"
+	trustedDeviceKey = "eebus.pairing.trusted"
+)
+
+// trustedDevice returns the persisted identity of the device paired via the
+// SHIP Pairing Service, if any
+func trustedDevice() (shipapi.ServiceIdentity, bool) {
+	var identity shipapi.ServiceIdentity
+	if err := settings.Json(trustedDeviceKey, &identity); err != nil {
+		return shipapi.ServiceIdentity{}, false
+	}
+	return identity, !identity.IsZero()
+}
+
+// storeTrustedDevice persists the identity of the device paired via the
+// SHIP Pairing Service; a zero identity removes the pairing
+func storeTrustedDevice(identity shipapi.ServiceIdentity) error {
+	return settings.SetJson(trustedDeviceKey, identity)
+}
 
 // pairing builds the SHIP Pairing Service config (listener mode) and a ring
 // buffer from the hex secret. An empty secret disables SHIP pairing.

@@ -20,6 +20,10 @@ test.describe("eebus", async () => {
     await expect(modal.getByLabel("SHIP-ID")).not.toBeEmpty();
     await expect(modal.getByLabel("SKI")).not.toBeEmpty();
 
+    // no devices paired via SHIP Pairing Service
+    await expect(modal.getByRole("heading", { name: "Paired devices" })).toBeVisible();
+    await expect(modal.getByText("No paired devices.")).toBeVisible();
+
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(modal.getByLabel("Port")).toHaveValue(String(eebusPort()));
     await expect(modal.getByLabel("Interfaces")).toBeVisible();
