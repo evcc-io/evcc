@@ -20,6 +20,9 @@ test.describe("eebus", async () => {
     await expect(modal.getByLabel("SHIP-ID")).not.toBeEmpty();
     await expect(modal.getByLabel("SKI")).not.toBeEmpty();
 
+    // pairing QR code is displayed
+    await expect(modal.getByAltText("Pairing code")).toBeVisible();
+
     // no devices paired via SHIP Pairing Service
     await expect(modal.getByRole("heading", { name: "Paired devices" })).toBeVisible();
     await expect(modal.getByText("No paired devices.")).toBeVisible();
