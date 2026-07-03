@@ -270,7 +270,7 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		// Auto phase switching: convert to power setpoint so the charger can
 		// decide phase count itself. P = sqrt(3) * 400V * I, scaled to 0.1kW.
 		reg = foxRegMaxPower
-		val = uint16(math.Sqrt(3) * 400 * current / 100)
+		val = uint16(3 * 230 * current / 100)
 	}
 
 	if err := wb.writeReg(reg, val); err != nil {
