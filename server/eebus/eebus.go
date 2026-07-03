@@ -283,7 +283,11 @@ func NewServer(other Config) (*EEBus, error) {
 
 	// re-establish trust for devices paired via the SHIP Pairing Service
 	if pairingConfig != nil {
-		c.paired = trustedDevices()
+		identities, err := trustedDevices()
+		if err != nil {
+			c.log.ERROR.Printf("loading paired devices: %v", err)
+		}
+		c.paired = identities
 		for _, identity := range c.paired {
 			c.service.RegisterRemoteService(identity)
 		}

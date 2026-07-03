@@ -2,6 +2,7 @@ package eebus
 
 import (
 	"encoding/hex"
+	"errors"
 	"sync"
 
 	shipapi "github.com/enbility/ship-go/api"
@@ -15,12 +16,13 @@ const (
 
 // trustedDevices returns the persisted identities of devices paired via the
 // SHIP Pairing Service
-func trustedDevices() []shipapi.ServiceIdentity {
+func trustedDevices() ([]shipapi.ServiceIdentity, error) {
 	var identities []shipapi.ServiceIdentity
-	if err := settings.Json(trustedDeviceKey, &identities); err != nil {
-		return nil
+	err := settings.Json(trustedDeviceKey, &identities)
+	if errors.Is(err, settings.ErrNotFound) {
+		err = nil
 	}
-	return identities
+	return identities, err
 }
 
 // storeTrustedDevices persists the identities of devices paired via the
@@ -61,7 +63,10 @@ func (r *ringBuffer) LoadRingBuffer() ([]shipapi.DigestEntry, int, error) {
 	var s ringBufferState
 	if err := settings.Json(ringBufferKey, &s); err != nil {
 		// no data yet is not an error
-		return nil, 0, nil
+		if errors.Is(err, settings.ErrNotFound) {
+			return nil, 0, nil
+		}
+		return nil, 0, err
 	}
 	return s.Entries, s.NextIndex, nil
 }
