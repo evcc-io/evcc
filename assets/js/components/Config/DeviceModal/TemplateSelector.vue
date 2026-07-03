@@ -17,7 +17,7 @@
 					<option
 						v-for="option in group.options"
 						:key="option.name"
-						:value="option.template"
+						:value="optionKey(option)"
 					>
 						{{ option.name }}
 					</option>
@@ -69,23 +69,41 @@ export default defineComponent({
 		disabled: Boolean,
 	},
 	emits: ["update:modelValue", "change"],
+	data() {
+		return {
+			// product-level selection (`template\tname`); the template alone is ambiguous
+			// since multiple products may share the same template
+			selection: null as string | null,
+		};
+	},
 	computed: {
 		modelProxy: {
-			get() {
-				return this.modelValue;
+			get(): string | null {
+				if (this.selection?.split("\t")[0] === this.modelValue) {
+					return this.selection;
+				}
+				// template set externally: select its first product
+				const match = this.allOptions.find((o) => o.template === this.modelValue);
+				return match ? this.optionKey(match) : null;
 			},
 			set(value: string) {
-				this.$emit("update:modelValue", value);
+				this.selection = value;
+				this.$emit("update:modelValue", value.split("\t")[0]);
 			},
+		},
+		allOptions(): TemplateOption[] {
+			return (this.groups ?? []).flatMap((g) => g.options ?? []);
 		},
 	},
 	methods: {
+		optionKey(option: TemplateOption): string {
+			return `${option.template}\t${option.name}`;
+		},
 		changed(e: Event) {
 			this.$emit("change", e);
 		},
 		getProductName() {
-			const select = this.$refs["select"] as HTMLSelectElement;
-			return select.options[select.selectedIndex]?.text || "";
+			return this.modelProxy?.split("\t")[1] || "";
 		},
 	},
 });
