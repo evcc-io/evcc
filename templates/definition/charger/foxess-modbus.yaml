@@ -1,4 +1,4 @@
-template: modbus-foxess
+template: foxess-modbus
 products:
   - brand: FoxESS
     description:
@@ -20,7 +20,7 @@ params:
       de: Aktivieren, wenn eine externe Phasenumschaltbox angeschlossen ist. Nur dann kann evcc zwischen ein- und dreiphasigem Laden umschalten.
       en: Enable when an external phase switching box is connected. Only then can evcc switch between single- and three-phase charging.
 render: |
-  type: modbus-foxess
+  type: foxess-modbus
   {{- include "modbus" . }}
   {{- if eq .pbox "true" }}
   pbox: true

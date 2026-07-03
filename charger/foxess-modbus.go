@@ -72,7 +72,7 @@ const (
 )
 
 func init() {
-	registry.AddCtx("modbus-foxess", NewFoxESSEVCFromConfig)
+	registry.AddCtx("foxess-modbus", NewFoxESSEVCFromConfig)
 }
 
 // NewFoxESSEVCFromConfig creates a FoxESS EV charger from generic config
@@ -104,7 +104,7 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("modbus-foxess")
+	log := util.NewLogger("foxess-modbus")
 	conn.Logger(log.TRACE)
 
 	wb := &FoxESSEVC{
