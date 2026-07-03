@@ -9,6 +9,16 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
   description:
     generic: "[library.e.abb.com](https://library.e.abb.com/public/8f07987a3a284da6bf4e4f8f53cd6502/ABB_Terra_AC_Charger_OCPP1.6_ImplementationOverview%20_v1.8_FW1.6.6.pdf)"
+      Setup Guide:
+      * Select **ABB Terra AC (OCPP)** when adding the charger in evcc.
+      * Configure the charger to use the OCPP Server URL displayed by evcc.
+      * Enable **Start remote transaction on vehicle connection**.
+      * Save the charger configuration.
+      Validation:
+      * During the initial setup, validation may fail with `chargeStatus: timeout`.
+      * If this happens, save the configuration anyway and allow the charger to reconnect.
+      * If the charger does not reconnect automatically, restart evcc and wait for the charger to establish a new OCPP connection.
+      * Once connected, the Station ID will be detected automatically and the charger should become available in evcc.
 params:
   - preset: ocpp
 render: |
