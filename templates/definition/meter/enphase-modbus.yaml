@@ -50,60 +50,42 @@ render: |
       {{- include "modbus" . | indent 4 }}
       value: 701:VL3
   curtail:
-    source: ifelse
-    if:
-      source: convert
-      convert: bool2int
-      set:
-        source: sequence
-        set:
-          - source: const
-            value: {{ .curtailpercent }}
+    source: sequence
+    set:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 40311 # Limit maximum active power percent value.
+        type: writesingle
+        encoding: uint16
+    - source: switch
+      switch:
+        - case: 100 # Uncurtailed
+          set:
+            source: const
+            value: 0 # Limit disabled
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 40311
+                address: 40310 # Limit maximum active power percent enable.
                 type: writesingle
                 encoding: uint16
-          - source: const
-            value: 1
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40310
-                type: writesingle
-                encoding: bool16
-    else:
-      source: convert
-      convert: bool2int
-      set:
-        source: sequence
+      default:
+        source: const
+        value: 1 # Limit enabled
         set:
-          - source: const
-            value: 100
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40311
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40310
-                type: writesingle
-                encoding: bool16
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 40310 # Limit maximum active power percent enable.
+            type: writesingle
+            encoding: uint16
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 40310
+      address: 40310 # Limit maximum active power percent enable (0 = no curtailment).
       type: holding
       decode: uint16
   {{- end }}
