@@ -150,9 +150,10 @@ func TestShipPairing(t *testing.T) {
 	}, 30*time.Second, 100*time.Millisecond, "waiting for lpc.DataUpdateLimit")
 
 	// trusted device identity is persisted
-	var identity shipapi.ServiceIdentity
-	require.NoError(t, settings.Json("eebus.pairing.trusted", &identity), "trusted device not persisted")
-	require.NotEmpty(t, identity.SKI, "paired device ski not persisted")
+	var identities []shipapi.ServiceIdentity
+	require.NoError(t, settings.Json("eebus.pairing.trusted", &identities), "trusted device not persisted")
+	require.Len(t, identities, 1, "trusted device not persisted")
+	require.NotEmpty(t, identities[0].SKI, "paired device ski not persisted")
 
 	// restart evcc- the paired device must reconnect without re-pairing
 	inst.Shutdown()
@@ -160,10 +161,19 @@ func TestShipPairing(t *testing.T) {
 	_, err = server.NewServer(conf)
 	require.NoError(t, err, "server restart")
 
-	_, err = server.Instance()
+	inst, err = server.Instance()
 	require.NoError(t, err, "instance restart")
 
 	ctx2, cancel2 := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel2()
 	require.NoError(t, <-connectHems(ctx2), "paired device not reconnected after restart")
+
+	// remove the individual pairing- trust is revoked and persisted state cleared
+	pairings := inst.Pairings()
+	require.Len(t, pairings, 1)
+	require.True(t, inst.RemovePairing(pairings[0].ShipID), "pairing not removed")
+	require.Empty(t, inst.Pairings())
+
+	require.NoError(t, settings.Json("eebus.pairing.trusted", &identities))
+	require.Empty(t, identities, "removed pairing still persisted")
 }

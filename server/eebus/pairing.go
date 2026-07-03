@@ -13,20 +13,20 @@ const (
 	trustedDeviceKey = "eebus.pairing.trusted"
 )
 
-// trustedDevice returns the persisted identity of the device paired via the
-// SHIP Pairing Service, if any
-func trustedDevice() (shipapi.ServiceIdentity, bool) {
-	var identity shipapi.ServiceIdentity
-	if err := settings.Json(trustedDeviceKey, &identity); err != nil {
-		return shipapi.ServiceIdentity{}, false
+// trustedDevices returns the persisted identities of devices paired via the
+// SHIP Pairing Service
+func trustedDevices() []shipapi.ServiceIdentity {
+	var identities []shipapi.ServiceIdentity
+	if err := settings.Json(trustedDeviceKey, &identities); err != nil {
+		return nil
 	}
-	return identity, !identity.IsZero()
+	return identities
 }
 
-// storeTrustedDevice persists the identity of the device paired via the
-// SHIP Pairing Service; a zero identity removes the pairing
-func storeTrustedDevice(identity shipapi.ServiceIdentity) error {
-	return settings.SetJson(trustedDeviceKey, identity)
+// storeTrustedDevices persists the identities of devices paired via the
+// SHIP Pairing Service
+func storeTrustedDevices(identities []shipapi.ServiceIdentity) error {
+	return settings.SetJson(trustedDeviceKey, identities)
 }
 
 // pairing builds the SHIP Pairing Service config (listener mode) and a ring

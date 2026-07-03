@@ -70,7 +70,7 @@
 							type="button"
 							class="btn btn-sm btn-outline-secondary border-0"
 							:aria-label="$t('config.eebus.removePairing')"
-							@click="removePairing"
+							@click="removePairing(pairing)"
 						>
 							<shopicon-regular-trash
 								size="s"
@@ -228,12 +228,14 @@ export default {
 				this.pairings = [];
 			}
 		},
-		async removePairing() {
+		async removePairing(pairing: EebusPairing) {
 			if (!window.confirm(this.$t("config.eebus.removePairingConfirm"))) {
 				return;
 			}
 			try {
-				await api.delete("config/service/eebus/pairings");
+				await api.delete("config/service/eebus/pairings", {
+					params: { id: pairing.shipID || pairing.ski },
+				});
 			} finally {
 				await this.loadPairings();
 			}

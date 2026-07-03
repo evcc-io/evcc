@@ -31,17 +31,19 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 func getPairings(w http.ResponseWriter, req *http.Request) {
 	res := []shipapi.ServiceIdentity{}
 	if instance != nil {
-		if paired := instance.Paired(); paired != nil {
-			res = append(res, *paired)
-		}
+		res = append(res, instance.Pairings()...)
 	}
 	json.NewEncoder(w).Encode(res)
 }
 
-// deletePairings removes the SHIP Pairing Service pairing and revokes trust
+// deletePairings removes a single pairing identified by the id query parameter (ship id or ski)
 func deletePairings(w http.ResponseWriter, req *http.Request) {
-	if instance != nil {
-		instance.RemovePairing()
+	id := req.URL.Query().Get("id")
+	if id == "" || instance == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-	w.WriteHeader(http.StatusOK)
+	if !instance.RemovePairing(id) {
+		w.WriteHeader(http.StatusNotFound)
+	}
 }

@@ -85,8 +85,8 @@ type EEBus struct {
 
 	ski string
 
-	paired    shipapi.ServiceIdentity // device paired via SHIP Pairing Service
-	connected map[string]bool         // connection state per ski
+	paired    []shipapi.ServiceIdentity // devices paired via SHIP Pairing Service
+	connected map[string]bool           // connection state per ski
 
 	clients map[string][]Device
 }
@@ -110,19 +110,19 @@ func Instance() (*EEBus, error) {
 
 func GetStatus() any {
 	var ski string
-	var paired *shipapi.ServiceIdentity
+	var pairings []shipapi.ServiceIdentity
 	if instance != nil {
 		ski = instance.Ski()
-		paired = instance.Paired()
+		pairings = instance.Pairings()
 	}
 	return struct {
-		Ski    string                   `json:"ski"`
-		QR     string                   `json:"qr,omitempty"`
-		Paired *shipapi.ServiceIdentity `json:"paired,omitempty"`
+		Ski      string                    `json:"ski"`
+		QR       string                    `json:"qr,omitempty"`
+		Pairings []shipapi.ServiceIdentity `json:"pairings,omitempty"`
 	}{
-		Ski:    ski,
-		QR:     qrCode(),
-		Paired: paired,
+		Ski:      ski,
+		QR:       qrCode(),
+		Pairings: pairings,
 	}
 }
 
@@ -281,10 +281,12 @@ func NewServer(other Config) (*EEBus, error) {
 		c.service.AddUseCase(uc)
 	}
 
-	// re-establish trust for a device paired via the SHIP Pairing Service
-	if identity, ok := trustedDevice(); ok && pairingConfig != nil {
-		c.paired = identity
-		c.service.RegisterRemoteService(identity)
+	// re-establish trust for devices paired via the SHIP Pairing Service
+	if pairingConfig != nil {
+		c.paired = trustedDevices()
+		for _, identity := range c.paired {
+			c.service.RegisterRemoteService(identity)
+		}
 	}
 
 	started = sync.OnceValue(c.service.Start)
@@ -298,56 +300,70 @@ func (c *EEBus) Ski() string {
 	return c.ski
 }
 
-// Paired returns the identity of the device paired via the SHIP Pairing Service, if any
-func (c *EEBus) Paired() *shipapi.ServiceIdentity {
+// Pairings returns the identities of devices paired via the SHIP Pairing Service
+func (c *EEBus) Pairings() []shipapi.ServiceIdentity {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-
-	if c.paired.IsZero() {
-		return nil
-	}
-	paired := c.paired
-	return &paired
+	return slices.Clone(c.paired)
 }
 
-// RemovePairing removes the SHIP-paired device and revokes its trust
-func (c *EEBus) RemovePairing() {
+// RemovePairing removes a single pairing identified by ship id or ski and revokes its trust
+func (c *EEBus) RemovePairing(id string) bool {
 	c.mux.Lock()
-	identity := c.paired
-	if !identity.IsZero() {
-		c.setPaired(shipapi.ServiceIdentity{})
+	idx := slices.IndexFunc(c.paired, func(i shipapi.ServiceIdentity) bool {
+		return (i.ShipID != "" && i.ShipID == id) || (i.SKI != "" && i.SKI == id)
+	})
+	var identity shipapi.ServiceIdentity
+	if idx >= 0 {
+		identity = c.paired[idx]
+		c.paired = slices.Delete(c.paired, idx, idx+1)
+		c.persistPairings()
 	}
 	c.mux.Unlock()
 
-	if !identity.IsZero() {
-		// release mutex before cross-layer call, see UnregisterDevice
-		c.service.UnregisterRemoteService(identity)
-	}
-}
-
-// setPaired updates and persists the SHIP-paired device identity (mux must be held)
-func (c *EEBus) setPaired(identity shipapi.ServiceIdentity) {
-	c.paired = identity
-	if err := storeTrustedDevice(identity); err != nil {
-		c.log.ERROR.Printf("persisting paired device: %v", err)
-	}
-}
-
-// pairedMatch reports whether identity refers to the SHIP-paired device (mux must be held)
-func (c *EEBus) pairedMatch(identity shipapi.ServiceIdentity) bool {
-	if c.paired.IsZero() {
+	if idx < 0 {
 		return false
 	}
-	return (identity.Fingerprint != "" && identity.Fingerprint == c.paired.Fingerprint) ||
-		(identity.ShipID != "" && identity.ShipID == c.paired.ShipID) ||
-		(identity.SKI != "" && identity.SKI == c.paired.SKI)
+
+	// release mutex before cross-layer call, see UnregisterDevice
+	c.service.UnregisterRemoteService(identity)
+	return true
+}
+
+// persistPairings stores the current pairings (mux must be held)
+func (c *EEBus) persistPairings() {
+	if err := storeTrustedDevices(c.paired); err != nil {
+		c.log.ERROR.Printf("persisting pairings: %v", err)
+	}
+}
+
+// pairedIndex returns the index of the pairing matching identity, or -1 (mux must be held)
+func (c *EEBus) pairedIndex(identity shipapi.ServiceIdentity) int {
+	return slices.IndexFunc(c.paired, func(i shipapi.ServiceIdentity) bool {
+		return (identity.Fingerprint != "" && identity.Fingerprint == i.Fingerprint) ||
+			(identity.ShipID != "" && identity.ShipID == i.ShipID) ||
+			(identity.SKI != "" && identity.SKI == i.SKI)
+	})
+}
+
+// upsertPairing adds or updates a pairing and persists it (mux must be held)
+func (c *EEBus) upsertPairing(identity shipapi.ServiceIdentity) {
+	if idx := c.pairedIndex(identity); idx >= 0 {
+		if c.paired[idx] == identity {
+			return
+		}
+		c.paired[idx] = identity
+	} else {
+		c.paired = append(c.paired, identity)
+	}
+	c.persistPairings()
 }
 
 // clientsFor returns the devices registered for ski, including devices registered
-// without ski when ski is the SHIP-paired device (mux must be held)
+// without ski when ski is a SHIP-paired device (mux must be held)
 func (c *EEBus) clientsFor(ski string) []Device {
 	res := c.clients[ski]
-	if ski != "" && ski == c.paired.SKI {
+	if ski != "" && slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool { return i.SKI == ski }) {
 		res = append(slices.Clone(res), c.clients[""]...)
 	}
 	return res
@@ -377,11 +393,13 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	c.clients[ski] = append(c.clients[ski], device)
 
 	// the remote service may already be connected
-	remote := ski
-	if remote == "" {
-		remote = c.paired.SKI
+	connected := c.connected[ski]
+	if ski == "" {
+		connected = slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool {
+			return i.SKI != "" && c.connected[i.SKI]
+		})
 	}
-	if remote != "" && c.connected[remote] {
+	if connected {
 		device.Connect(true)
 	}
 
@@ -460,9 +478,9 @@ func (c *EEBus) connect(identity shipapi.ServiceIdentity, connected bool) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	// learn the ski of the device paired via the SHIP Pairing Service
-	if c.pairedMatch(identity) && c.paired.SKI != identity.SKI {
-		c.setPaired(identity)
+	// learn the ski of a device paired via the SHIP Pairing Service
+	if c.pairedIndex(identity) >= 0 {
+		c.upsertPairing(identity)
 	}
 
 	c.connected[identity.SKI] = connected
@@ -496,8 +514,8 @@ func (c *EEBus) ServiceUpdated(identity shipapi.ServiceIdentity) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if c.pairedMatch(identity) {
-		c.setPaired(identity)
+	if c.pairedIndex(identity) >= 0 {
+		c.upsertPairing(identity)
 	}
 }
 
@@ -525,7 +543,7 @@ func (c *EEBus) ServiceAutoTrusted(service eebusapi.ServiceInterface, identity s
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	c.setPaired(identity)
+	c.upsertPairing(identity)
 }
 
 func (c *EEBus) ServiceAutoTrustFailed(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason error) {
@@ -538,8 +556,9 @@ func (c *EEBus) ServiceAutoTrustRemoved(service eebusapi.ServiceInterface, ident
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if c.pairedMatch(identity) {
-		c.setPaired(shipapi.ServiceIdentity{})
+	if idx := c.pairedIndex(identity); idx >= 0 {
+		c.paired = slices.Delete(c.paired, idx, idx+1)
+		c.persistPairings()
 	}
 }
 

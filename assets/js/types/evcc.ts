@@ -591,7 +591,7 @@ export type EebusConfig = {
 export type EebusStatus = {
   ski: string;
   qr?: string;
-  paired?: EebusPairing;
+  pairings?: EebusPairing[];
 };
 
 export type EebusPairing = {
