@@ -12,7 +12,7 @@ func init() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /services", getServices)
 	mux.HandleFunc("GET /pairings", getPairings)
-	mux.HandleFunc("DELETE /pairings", deletePairings)
+	mux.HandleFunc("DELETE /pairings/{id}", deletePairing)
 
 	service.Register("eebus", mux)
 }
@@ -36,14 +36,9 @@ func getPairings(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-// deletePairings removes a single pairing identified by the id query parameter (ship id or ski)
-func deletePairings(w http.ResponseWriter, req *http.Request) {
-	id := req.URL.Query().Get("id")
-	if id == "" || instance == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if !instance.RemovePairing(id) {
+// deletePairing removes a single pairing identified by ship id or ski
+func deletePairing(w http.ResponseWriter, req *http.Request) {
+	if instance == nil || !instance.RemovePairing(req.PathValue("id")) {
 		w.WriteHeader(http.StatusNotFound)
 	}
 }

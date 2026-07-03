@@ -233,9 +233,8 @@ export default {
 				return;
 			}
 			try {
-				await api.delete("config/service/eebus/pairings", {
-					params: { id: pairing.shipID || pairing.ski },
-				});
+				const id = encodeURIComponent(pairing.shipID || pairing.ski);
+				await api.delete(`config/service/eebus/pairings/${id}`);
 			} finally {
 				await this.loadPairings();
 			}
