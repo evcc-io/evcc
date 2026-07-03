@@ -48,9 +48,9 @@ func (r *wsReader) Read(p []byte) (int, error) {
 			return 0, err
 		}
 
-		// The P1 telegram is streamed as text frames; skip any other frame
-		// type so metadata or binary frames are not fed to the DSMR parser.
-		if msgType != websocket.MessageText {
+		// The P1 telegram may be streamed as text or binary frames, depending on
+		// the dongle firmware. Skip control or metadata frames.
+		if msgType != websocket.MessageText && msgType != websocket.MessageBinary {
 			continue
 		}
 

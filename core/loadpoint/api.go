@@ -141,6 +141,11 @@ type API interface {
 	// SetSocConfig sets the soc poll settings
 	SetSocConfig(soc SocConfig)
 
+	// GetUI returns the display-only ui settings
+	GetUI() UIConfig
+	// SetUI sets the display-only ui settings
+	SetUI(ui UIConfig)
+
 	// GetThresholds returns the PV mode threshold settings
 	GetThresholds() ThresholdsConfig
 	// SetThresholds sets the PV mode threshold settings

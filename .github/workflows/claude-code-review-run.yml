@@ -1,0 +1,137 @@
+name: Claude Code Review (run)
+
+# Stage 2 (privileged): triggered when the "Claude Code Review" workflow above
+# completes. workflow_run executes in the base-repo context, so it has access
+# to secrets and id-token even for PRs from forks. This is what makes reviewing
+# external contributors' PRs possible.
+#
+# Security: the triggering workflow file is fork-controlled, so the uploaded
+# artifact is untrusted. We validate the PR number is purely numeric before
+# using it, and we only check out the base ref (never the PR head into the
+# workspace root) so untrusted code is never executed here. See
+# https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+on:
+  workflow_run:
+    workflows: ["Claude Code Review"]
+    types: [completed]
+
+jobs:
+  gate:
+    # Only react to PR runs that finished successfully.
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      number: ${{ steps.read.outputs.number }}
+      found: ${{ steps.check.outputs.found }}
+    steps:
+      - name: Check for PR-number artifact
+        id: check
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
+        with:
+          script: |
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            core.setOutput('found', data.artifacts.some(a => a.name === 'pr-number') ? 'true' : 'false');
+
+      - name: Download PR number
+        if: steps.check.outputs.found == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4
+        with:
+          name: pr-number
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read and validate PR number
+        id: read
+        if: steps.check.outputs.found == 'true'
+        run: |
+          num="$(cat pr-number.txt)"
+          # Artifact comes from the fork-controlled trigger workflow — never trust it blindly.
+          if ! [[ "$num" =~ ^[0-9]+$ ]]; then
+            echo "Refusing to proceed: PR number is not numeric ($num)" >&2
+            exit 1
+          fi
+          echo "number=$num" >> "$GITHUB_OUTPUT"
+
+  claude-review:
+    needs: gate
+    if: needs.gate.outputs.found == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # post the review on the PR
+      issues: read
+      id-token: write
+      statuses: write # mirror the review result onto the PR head commit
+    concurrency:
+      group: claude-review-run-${{ needs.gate.outputs.number }}
+      cancel-in-progress: true
+    steps:
+      # workflow_run runs are detached and never show up in the PR's checks, so
+      # publish a commit status on the PR head SHA. This surfaces a "Claude Code
+      # Review" check next to the regular CI jobs.
+      - name: Report review pending
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.workflow_run.head_sha,
+              context: 'Claude Code Review',
+              state: 'pending',
+              description: 'Review in progress',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+      # Default checkout (base ref) only — do NOT check out the untrusted PR head.
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: review
+        continue-on-error: true # always report status below, even on failure
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Provided explicitly so the review can post on fork PRs; also required
+          # for allowed_non_write_users to take effect.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Review PRs from external contributors who lack write access. The diff
+          # is fetched read-only and never executed; the subprocess env is scrubbed.
+          allowed_non_write_users: "*"
+          # review dependency bumps opened by Dependabot
+          allowed_bots: "dependabot[bot]"
+          plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
+          plugins: "code-review@claude-code-plugins"
+          prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ needs.gate.outputs.number }}"
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://code.claude.com/docs/en/cli-reference for available options
+
+      - name: Report review result
+        if: always()
+        env:
+          OUTCOME: ${{ steps.review.outcome }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
+        with:
+          script: |
+            const ok = process.env.OUTCOME === 'success';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.workflow_run.head_sha,
+              context: 'Claude Code Review',
+              state: ok ? 'success' : 'failure',
+              description: ok ? 'Review complete' : 'Review failed',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            if (!ok) core.setFailed('Claude Code Review failed');

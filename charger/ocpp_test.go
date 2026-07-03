@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 	// bind the OCPP central system to an ephemeral port so this test binary
 	// does not contend with the charger/ocpp package test binary for the fixed
 	// default port when both run in parallel under `go test ./...`
-	ocpp.Init(ocpp.Config{Port: 0}, "")
+	ocpp.NewServer(ocpp.Config{Port: 0}, "")
 	os.Exit(m.Run())
 }
 
@@ -57,7 +57,10 @@ func (suite *ocppTestSuite) SetupSuite() {
 	ocpp.TriggerBootDelay = 100 * time.Millisecond
 
 	// setup cs so we can overwrite logger afterwards
-	_ = ocpp.Instance()
+	cs, err := ocpp.Instance()
+	suite.Require().NoError(err, "instance")
+	suite.NotNil(cs)
+
 	suite.logger = &ocppLogger{t: suite.T()}
 	ocppj.SetLogger(suite.logger)
 
@@ -65,7 +68,6 @@ func (suite *ocppTestSuite) SetupSuite() {
 	ocppTestUrl = fmt.Sprintf("ws://localhost:%d", ocpp.Port())
 
 	suite.clock = clock.NewMock()
-	suite.NotNil(ocpp.Instance())
 }
 
 func (suite *ocppTestSuite) TearDownSuite() {

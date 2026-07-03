@@ -12,7 +12,7 @@ func TestFnn(t *testing.T) {
 		return true, nil
 	}, 0)
 	require.NoError(t, err)
-	require.Nil(t, fnn.Curtailed())
+	require.Nil(t, fnn.CurtailedPercent())
 	// require.NoError(t, fnn.runDim())
 	// require.Equal(t, new(true), fnn.Dimmed())
 }

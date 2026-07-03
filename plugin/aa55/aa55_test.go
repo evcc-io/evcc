@@ -81,6 +81,33 @@ func TestBuildPDU_SoC(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// write PDUs
+// ---------------------------------------------------------------------------
+
+func TestBuildWriteSinglePDU(t *testing.T) {
+	// EMSPowerMode (47511 = 0xB997) := 1
+	got := buildWriteSinglePDU(0xF7, 47511, 1)
+	assert.Equal(t, []byte{0xf7, 0x06, 0xb9, 0x97, 0x00, 0x01}, got)
+}
+
+func TestBuildWriteMultiplePDU(t *testing.T) {
+	// EMSPowerSet (47512 = 0xB998) := 10000 (0x2710), one register
+	got := buildWriteMultiplePDU(0xF7, 47512, []byte{0x27, 0x10})
+	assert.Equal(t, []byte{0xf7, 0x10, 0xb9, 0x98, 0x00, 0x01, 0x02, 0x27, 0x10}, got)
+}
+
+func TestValidateWriteResponse(t *testing.T) {
+	// echoed function code → accepted
+	require.NoError(t, validateWriteResponse([]byte{0xAA, 0x55, 0xF7, 0x06, 0xb9, 0x97, 0x00, 0x01}, 0x06))
+	// high bit set → inverter rejected the write
+	require.Error(t, validateWriteResponse([]byte{0xAA, 0x55, 0xF7, 0x86, 0x02}, 0x06))
+	// wrong function code
+	require.Error(t, validateWriteResponse([]byte{0xAA, 0x55, 0xF7, 0x03, 0x00}, 0x06))
+	// bad magic
+	require.Error(t, validateWriteResponse([]byte{0xFF, 0x55, 0xF7, 0x06}, 0x06))
+}
+
+// ---------------------------------------------------------------------------
 // stripHeader
 // ---------------------------------------------------------------------------
 

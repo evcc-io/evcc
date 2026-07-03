@@ -16,7 +16,9 @@ requirements:
       A Tibber energy contract is not required, the vehicle must be connected in the Tibber account.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
+  - name: welcomecharge
+    advanced: true
   - name: clientid
   - name: clientsecret
   - name: redirecturi

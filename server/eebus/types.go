@@ -75,13 +75,19 @@ func DefaultConfig(conf *Config) (*Config, error) {
 		return nil, err
 	}
 
+	// preserve a configured port (e.g. EVCC_EEBUS_PORT), default otherwise
+	port := conf.Port
+	if port == 0 {
+		port = 4712
+	}
+
 	secret, err := CreatePairingSecret()
 	if err != nil {
 		return nil, err
 	}
 
 	res := Config{
-		Port:   4712,
+		Port:   port,
 		ShipID: createShipID(),
 		Secret: secret,
 		Certificate: Certificate{
@@ -91,12 +97,4 @@ func DefaultConfig(conf *Config) (*Config, error) {
 	}
 
 	return &res, nil
-}
-
-// Ski returns the EEbus server SKI
-func Ski() string {
-	if Instance == nil {
-		return ""
-	}
-	return Instance.ski
 }
