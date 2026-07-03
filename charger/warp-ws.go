@@ -102,14 +102,15 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		implement.Has(w, implement.PhaseVoltages(w.voltages))
 	}
 
-	// Feature: NFC
-	if w.hasFeature(warp.FeatureNfc) {
-		implement.Has(w, implement.Identifier(w.identify))
+	// Feature: EV (WARP4): vehicle soc and mac read via ISO 15118
+	hasEv := w.hasEvState()
+	if hasEv {
+		implement.Has(w, implement.Battery(w.soc))
 	}
 
-	// Feature: EV (WARP4): vehicle soc read via ISO 15118
-	if w.hasEvState() {
-		implement.Has(w, implement.Battery(w.soc))
+	// Feature: NFC
+	if w.hasFeature(warp.FeatureNfc) || hasEv {
+		implement.Has(w, implement.Identifier(w.identify))
 	}
 
 	// Feature: Phase Switching
@@ -443,9 +444,13 @@ func (w *WarpWS) voltages() (float64, float64, float64, error) {
 	return w.meter.Voltages[0], w.meter.Voltages[1], w.meter.Voltages[2], nil
 }
 
+// identify prefers the vehicle mac read via ISO 15118 over the RFID tag
 func (w *WarpWS) identify() (string, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+	if w.evState != nil && w.evState.Mac != "" {
+		return w.evState.Mac, nil
+	}
 	return w.chargeTracker.AuthorizationInfo.TagId, nil
 }
 

@@ -67,9 +67,10 @@ var DefaultSchema = MeterSchema{
 	},
 }
 
-// WARP4 only: vehicle data read via ISO 15118; soc is null while unknown
+// WARP4 only: vehicle data read via ISO 15118; soc is null and mac is empty while unknown
 type EvState struct {
 	Soc *float64 `json:"soc"`
+	Mac string   `json:"mac"`
 }
 
 type ChargeTrackerCurrentCharge struct {
