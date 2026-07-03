@@ -5,24 +5,24 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 )
 
-func (lp *CurrentController) PublishEffectiveValues() {
-	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
-	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
+func (c *CurrentController) PublishEffectiveValues() {
+	c.lp.publish(keys.EffectiveMinCurrent, c.effectiveMinCurrent())
+	c.lp.publish(keys.EffectiveMaxCurrent, c.effectiveMaxCurrent())
 }
 
 // effectiveMinCurrent returns the effective min current
-func (lp *CurrentController) effectiveMinCurrent() float64 {
-	lpMin := lp.getMinCurrent()
+func (c *CurrentController) effectiveMinCurrent() float64 {
+	lpMin := c.lp.getMinCurrent()
 	var vehicleMin, chargerMin float64
 
-	if v := lp.GetVehicle(); v != nil {
+	if v := c.lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMinCurrent(); ok {
 			vehicleMin = res
 		}
 	}
 
-	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
-		if res, _, err := c.GetMinMaxCurrent(); err == nil {
+	if cl, ok := api.Cap[api.CurrentLimiter](c.lp.charger); ok {
+		if res, _, err := cl.GetMinMaxCurrent(); err == nil {
 			chargerMin = res
 		}
 	}
@@ -38,17 +38,17 @@ func (lp *CurrentController) effectiveMinCurrent() float64 {
 }
 
 // effectiveMaxCurrent returns the effective max current
-func (lp *CurrentController) effectiveMaxCurrent() float64 {
-	maxCurrent := lp.getMaxCurrent()
+func (c *CurrentController) effectiveMaxCurrent() float64 {
+	maxCurrent := c.lp.getMaxCurrent()
 
-	if v := lp.GetVehicle(); v != nil {
+	if v := c.lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
 			maxCurrent = min(maxCurrent, res)
 		}
 	}
 
-	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
-		if _, res, err := c.GetMinMaxCurrent(); err == nil && res > 0 {
+	if cl, ok := api.Cap[api.CurrentLimiter](c.lp.charger); ok {
+		if _, res, err := cl.GetMinMaxCurrent(); err == nil && res > 0 {
 			maxCurrent = min(maxCurrent, res)
 		}
 	}
@@ -57,44 +57,44 @@ func (lp *CurrentController) effectiveMaxCurrent() float64 {
 }
 
 // effectiveMinPower returns the effective min power for the minimum active phases
-func (lp *CurrentController) effectiveMinPower() float64 {
-	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
+func (c *CurrentController) effectiveMinPower() float64 {
+	return Voltage * c.effectiveMinCurrent() * float64(c.lp.minActivePhases())
 }
 
 // activeMinPower returns the min power at the currently active phases
-func (lp *CurrentController) activeMinPower() float64 {
-	return currentToPower(lp.effectiveMinCurrent(), lp.ActivePhases())
+func (c *CurrentController) activeMinPower() float64 {
+	return currentToPower(c.effectiveMinCurrent(), c.lp.ActivePhases())
 }
 
 // activeMaxPower returns the max power at the currently active phases
-func (lp *CurrentController) activeMaxPower() float64 {
-	return currentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())
+func (c *CurrentController) activeMaxPower() float64 {
+	return currentToPower(c.effectiveMaxCurrent(), c.lp.ActivePhases())
 }
 
 // reachableMinPower returns the min power taking an immediate or pending
 // phase scale-down into account
-func (lp *CurrentController) reachableMinPower() float64 {
-	phases := lp.ActivePhases()
-	if lp.hasPhaseSwitching() && lp.phasesConfigured < 3 && phases > 1 {
+func (c *CurrentController) reachableMinPower() float64 {
+	phases := c.lp.ActivePhases()
+	if c.lp.hasPhaseSwitching() && c.lp.phasesConfigured < 3 && phases > 1 {
 		phases = 1
 	}
-	return currentToPower(lp.effectiveMinCurrent(), phases)
+	return currentToPower(c.effectiveMinCurrent(), phases)
 }
 
 // effectivePower returns the currently effective charging power
-func (lp *CurrentController) effectivePower() float64 {
+func (c *CurrentController) effectivePower() float64 {
 	// for slow-acting heating devices, only take actually consumed power into account
-	if lp.chargerHasFeature(api.IntegratedDevice) {
-		return lp.chargePower
+	if c.lp.chargerHasFeature(api.IntegratedDevice) {
+		return c.lp.chargePower
 	}
-	return currentToPower(lp.effectiveCurrent(), lp.ActivePhases())
+	return currentToPower(c.effectiveCurrent(), c.lp.ActivePhases())
 }
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
-func (lp *CurrentController) effectiveMaxPower() float64 {
-	res := Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
-	if lp.vehicle != nil {
-		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
+func (c *CurrentController) effectiveMaxPower() float64 {
+	res := Voltage * c.effectiveMaxCurrent() * float64(c.lp.maxActivePhases())
+	if c.lp.vehicle != nil {
+		if maxPower, ok := c.lp.vehicle.OnIdentified().GetMaxPower(); ok {
 			return min(maxPower, res)
 		}
 	}

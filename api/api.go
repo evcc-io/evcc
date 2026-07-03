@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
+//go:generate go tool mockgen -package api -destination mock.go -mock_names CurrentCharger=MockCharger github.com/evcc-io/evcc/api CurrentCharger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -106,6 +106,12 @@ type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
+}
+
+// CurrentCharger combines Charger and CurrentController; the typical AC charger, used for mock generation
+type CurrentCharger interface {
+	Charger
+	CurrentController
 }
 
 // ChargerEx provides milli-amp precision charger current control
