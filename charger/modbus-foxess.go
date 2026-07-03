@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"math"
 	"sync"
 	"time"
 
@@ -116,10 +115,10 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 	}
 
 	// take control of the charger and keep the command window at its maximum
-	if err := wb.writeReg(foxRegWorkMode, foxWorkModeControlled); err != nil {
+	if err := wb.ensureReg(foxRegWorkMode, foxWorkModeControlled); err != nil {
 		return nil, fmt.Errorf("work mode: %w", err)
 	}
-	if err := wb.writeReg(foxRegTimeValidity, foxTimeValidity); err != nil {
+	if err := wb.ensureReg(foxRegTimeValidity, foxTimeValidity); err != nil {
 		return nil, fmt.Errorf("time validity: %w", err)
 	}
 
@@ -144,6 +143,23 @@ func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
 	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
 
 	return err
+}
+
+// ensureReg writes a value to a read/write register and verifies the result.
+// If the write is rejected (e.g. because the register already holds the value),
+// it reads back the register and succeeds if the value matches.
+func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
+	if err := wb.writeReg(reg, val); err != nil {
+		b, readErr := wb.conn.ReadHoldingRegisters(reg, 1)
+		if readErr != nil {
+			return err
+		}
+		if binary.BigEndian.Uint16(b) != val {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // heartbeat re-sends the current setpoint to keep the charger from reverting
