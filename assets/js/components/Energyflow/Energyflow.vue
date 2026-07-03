@@ -616,7 +616,7 @@ export default defineComponent({
 		batteryMode() {
 			this.$nextTick(this.updateHeight);
 		},
-		activeLoadpointsCount() {
+		loadpoints() {
 			this.$nextTick(this.updateHeight);
 		},
 	},

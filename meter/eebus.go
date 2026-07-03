@@ -231,8 +231,9 @@ func (c *EEBus) Dimmed() (bool, error) {
 		return false, err
 	}
 
-	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
+	// an active limit means dimmed; the applied limit value is 0W, so a
+	// value-based check would never report the dimmed state and never release it
+	return limit.IsActive, nil
 }
 
 // Dim implements the api.Dimmer interface
@@ -277,18 +278,9 @@ func (c *EEBus) Curtailed() (bool, error) {
 	return limit.IsActive && limit.Value <= 0, nil
 }
 
-// Curtail implements the api.Curtailer interface
-func (c *EEBus) Curtail(curtail bool) error {
-	// Sets or removes the production power limit
-
-	// TODO: change api.Curtailer to make limit configurable
-	// For now, we use a fixed safe limit of 0W
-	limit := 0.0
-
-	var value float64
-	if curtail {
-		value = limit
-	}
+// SetCurtailPercent implements the api.Curtailer interface
+func (c *EEBus) SetCurtailPercent(percent int) error {
+	curtail := percent < 100
 
 	c.mu.Lock()
 	entity := c.egLppEntity
@@ -296,6 +288,15 @@ func (c *EEBus) Curtail(curtail bool) error {
 
 	if entity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(entity, eebus.LPPLimit) {
 		return api.ErrNotAvailable
+	}
+
+	// derive a proportional feed-in limit from the producer's nominal power
+	// (limits are negative watts); fall back to a safe 0W limit if unavailable
+	var value float64
+	if curtail {
+		if nominal, err := c.eg.EgLPPInterface.ProductionNominalMax(entity); err == nil && nominal > 0 {
+			value = -float64(percent) / 100 * nominal
+		}
 	}
 
 	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
