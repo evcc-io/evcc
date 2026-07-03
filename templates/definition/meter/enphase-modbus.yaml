@@ -16,6 +16,9 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: maxacpower
+    service: modbus/read?address=40227&type=holding&encoding=uint16&scale=1&{modbus}
+    usages: ["pv"]
 render: |
   type: custom
   # sunspec model 701 (DER AC Measurement)
@@ -88,4 +91,5 @@ render: |
       address: 40310 # Limit maximum active power percent enable (0 = no curtailment).
       type: holding
       decode: uint16
+  maxacpower: {{ .maxacpower }}
   {{- end }}
