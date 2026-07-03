@@ -55,12 +55,9 @@ render: |
   curtail:
     source: sequence
     set:
-    - source: modbus
+    - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      register:
-        address: 40311 # Limit maximum active power percent value.
-        type: writesingle
-        encoding: uint16
+      value: 704:WMaxLimPct
     - source: switch
       switch:
         - case: 100 # Uncurtailed
@@ -68,22 +65,16 @@ render: |
             source: const
             value: 0 # Limit disabled
             set:
-              source: modbus
+              source: sunspec
               {{- include "modbus" . | indent 12 }}
-              register:
-                address: 40310 # Limit maximum active power percent enable.
-                type: writesingle
-                encoding: uint16
+	      value: 704:WMaxLimPctEna
       default:
         source: const
         value: 1 # Limit enabled
         set:
-          source: modbus
+          source: sunspec
           {{- include "modbus" . | indent 8 }}
-          register:
-            address: 40310 # Limit maximum active power percent enable.
-            type: writesingle
-            encoding: uint16
+          value: 704:WMaxLimPctEna
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
