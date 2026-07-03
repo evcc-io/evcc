@@ -4,98 +4,14 @@ import (
 	"testing"
 	"time"
 
-	evopt "github.com/andig/evopt/client"
-	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/jinzhu/now"
+	"github.com/evcc-io/evcc/util"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
-
-func TestSqliteTimestamp(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-
-	clock := clock.NewMock()
-	clock.Add(time.Hour)
-	metrics.Persist(clock.Now(), 0)
-
-	db, err := db.Instance.DB()
-	require.NoError(t, err)
-
-	var (
-		ts  metrics.SqlTime
-		val float64
-	)
-
-	for _, sql := range []string{
-		`SELECT ts, val FROM meters`,
-		`SELECT min(ts), val FROM meters`,
-		`SELECT unixepoch(ts), val FROM meters`,
-		`SELECT unixepoch(min(ts)), val FROM meters`,
-		`SELECT min(ts) AS ts, avg(val) AS val
-			FROM meters
-			GROUP BY strftime("%H:%M", ts)
-			ORDER BY ts`,
-	} {
-		require.NoError(t, db.QueryRow(sql).Scan(&ts, &val))
-		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
-	}
-
-	require.NoError(t, db.QueryRow(`SELECT ts, val FROM meters WHERE ts >= ?`, clock.Now()).Scan(&ts, &val))
-	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
-}
-
-func TestUpdateHouseholdProfile(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-
-	// make sure test data added starting 00:00 local time
-	clock := clock.NewMock()
-	clock.Set(now.With(clock.Now()).BeginningOfDay())
-
-	// 2 days of data
-	// day 1:   0 ...  95
-	// day 2:  96 ... 181
-	for i := range 4 * 2 * 24 {
-		metrics.Persist(clock.Now(), float64(i))
-		clock.Add(15 * time.Minute)
-	}
-
-	{
-		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
-
-		prof, err := metrics.Profile(from)
-		require.NoError(t, err)
-
-		var expected [96]float64
-		for i := range expected {
-			if i < 48 {
-				expected[i] = float64(48+i+144+i) / 2
-				continue
-			}
-			expected[i] = float64(96 - 48 + i)
-		}
-
-		require.Equal(t, expected, *prof, "partial profile: expected %v, got %v", expected, *prof)
-	}
-
-	{
-		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
-
-		prof, err := metrics.Profile(from)
-		require.NoError(t, err)
-
-		var expected [96]float64
-		for i := range expected {
-			expected[i] = float64(0+96+2*i) / 2
-		}
-
-		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
-	}
-}
 
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -111,67 +27,139 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
-func TestBatteryForecastTotals(t *testing.T) {
-	site := new(Site)
+func TestAsTimestamps(t *testing.T) {
+	// now is 10 minutes into a 15-minute slot
+	now := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
 
-	req := []evopt.BatteryConfig{
-		{SMax: 80},
-		{SMax: 80},
-	}
+	// dt[0]=300 means first event is 300s (5min) before end of current slot
+	// dt[1..] just mark subsequent slot boundaries
+	dt := []int{60 * 5, 60 * 15, 60 * 15}
 
-	const zero = -1
+	got := asTimestamps(dt, now)
 
+	// current slot: 12:00–12:15
+	// first timestamp: 12:15 - 5min = 12:10
+	// subsequent: 12:15, 12:30
+	assert.Equal(t, []time.Time{
+		time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 12, 30, 0, 0, time.UTC),
+	}, got)
+}
+
+func TestBatteryForecastSocExtremes(t *testing.T) {
 	for _, tc := range []struct {
-		name        string
-		bat1, bat2  []float32
-		full, empty int
+		name      string
+		req       []optimizer.BatteryConfig
+		soc       [][]float32
+		high, low *batteryForecastSlot
 	}{
 		{
-			"never full",
-			[]float32{0, 0},
-			[]float32{0, 0},
-			zero, 0,
+			"no home battery",
+			[]optimizer.BatteryConfig{{SMax: 80}}, // SCapacity unset → vehicle
+			[][]float32{{1000, 2000}},
+			nil, nil,
 		},
 		{
-			"never empty",
-			[]float32{100, 100},
-			[]float32{100, 100},
-			0, zero,
+			"single home battery rising — reaches full",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{200, 500, 1000}},
+			&batteryForecastSlot{slot: 2, soc: 100, limit: true},
+			&batteryForecastSlot{slot: 0, soc: 20, limit: false},
 		},
 		{
-			"first full then empty",
-			[]float32{100, 0},
-			[]float32{100, 0},
-			0, 1,
+			"single home battery falling — reaches empty",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{900, 500, 0}},
+			&batteryForecastSlot{slot: 0, soc: 90, limit: false},
+			&batteryForecastSlot{slot: 2, soc: 0, limit: true},
 		},
 		{
-			"first full finally empty",
-			[]float32{100, 100, 0},
-			[]float32{100, 0, 0},
-			0, 2,
+			"single home battery — local extremes (no limit reached)",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 900, SMin: 100}},
+			[][]float32{{500, 800, 200}},
+			&batteryForecastSlot{slot: 1, soc: 80, limit: false},
+			&batteryForecastSlot{slot: 2, soc: 20, limit: false},
 		},
 		{
-			"first empty then full",
-			[]float32{0, 100},
-			[]float32{0, 100},
-			1, 0,
+			"two home batteries aggregated",
+			[]optimizer.BatteryConfig{
+				{SCapacity: 1000, SMax: 1000},
+				{SCapacity: 1000, SMax: 1000},
+			},
+			[][]float32{
+				{200, 400, 1000},
+				{800, 400, 1000},
+			},
+			&batteryForecastSlot{slot: 2, soc: 100, limit: true},
+			&batteryForecastSlot{slot: 1, soc: 40, limit: false},
 		},
 		{
-			"first empty finally full",
-			[]float32{0, 100, 100},
-			[]float32{0, 0, 100},
-			2, 0,
+			"vehicle and home battery — vehicle ignored",
+			[]optimizer.BatteryConfig{
+				{SMax: 80},                    // vehicle
+				{SCapacity: 1000, SMax: 1000}, // home
+			},
+			[][]float32{
+				{0, 0, 80},
+				{200, 500, 900},
+			},
+			&batteryForecastSlot{slot: 2, soc: 90, limit: false},
+			&batteryForecastSlot{slot: 0, soc: 20, limit: false},
+		},
+		{
+			"first slot at SMax wins for highest",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{1000, 1000, 500}},
+			&batteryForecastSlot{slot: 0, soc: 100, limit: true},
+			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
+		},
+		{
+			"near SMax is not full",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{500, 999, 800}},
+			&batteryForecastSlot{slot: 1, soc: 99.9, limit: false},
+			&batteryForecastSlot{slot: 0, soc: 50, limit: false},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := []evopt.BatteryResult{
-				{StateOfCharge: tc.bat1},
-				{StateOfCharge: tc.bat2},
+			resp := make([]optimizer.BatteryResult, len(tc.soc))
+			for i, s := range tc.soc {
+				resp[i] = optimizer.BatteryResult{StateOfCharge: s}
 			}
 
-			full, empty := site.batteryForecastFullAndEmptySlots(req, resp)
-			assert.Equal(t, tc.full, full, "full")
-			assert.Equal(t, tc.empty, empty, "empty")
+			high, low := batteryForecastSocExtremes(tc.req, resp)
+
+			if tc.high == nil {
+				assert.Nil(t, high, "high")
+			} else {
+				require.NotNil(t, high, "high")
+				assert.Equal(t, tc.high.slot, high.slot, "high.slot")
+				assert.InDelta(t, tc.high.soc, high.soc, 1e-3, "high.soc")
+				assert.Equal(t, tc.high.limit, high.limit, "high.limit")
+			}
+			if tc.low == nil {
+				assert.Nil(t, low, "low")
+			} else {
+				require.NotNil(t, low, "low")
+				assert.Equal(t, tc.low.slot, low.slot, "low.slot")
+				assert.InDelta(t, tc.low.soc, low.soc, 1e-3, "low.soc")
+				assert.Equal(t, tc.low.limit, low.limit, "low.limit")
+			}
 		})
 	}
+}
+func TestOptimizerChargingStrategy(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// default when unset
+	assert.Equal(t, defaultOptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
+
+	// invalid value rejected, strategy unchanged
+	require.Error(t, site.SetOptimizerChargingStrategy("bogus"))
+	assert.Equal(t, defaultOptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
+
+	// valid change is applied (re-trigger is gated on sponsor/enabled, not unit-tested here)
+	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
+	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
 }

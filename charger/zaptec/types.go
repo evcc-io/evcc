@@ -85,14 +85,18 @@ type SessionPriority struct {
 }
 
 type Installation struct {
-	Id         string  `json:"id"`
-	MaxCurrent float64 `json:"maxCurrent"`
+	Id                     string  `json:"id"`
+	MaxCurrent             float64 `json:"maxCurrent"`
+	AvailableCurrentPhase1 float64 `json:"availableCurrentPhase1"`
+	AvailableCurrentPhase2 float64 `json:"availableCurrentPhase2"`
+	AvailableCurrentPhase3 float64 `json:"availableCurrentPhase3"`
 }
 
 type UpdateInstallation struct {
-	AvailableCurrentPhase1 *float64 `json:"availableCurrentPhase1,omitempty"`
-	AvailableCurrentPhase2 *float64 `json:"availableCurrentPhase2,omitempty"`
-	AvailableCurrentPhase3 *float64 `json:"availableCurrentPhase3,omitempty"`
+	AvailableCurrentPhase1       *float64 `json:"availableCurrentPhase1,omitempty"`
+	AvailableCurrentPhase2       *float64 `json:"availableCurrentPhase2,omitempty"`
+	AvailableCurrentPhase3       *float64 `json:"availableCurrentPhase3,omitempty"`
+	ThreeToOnePhaseSwitchCurrent *float64 `json:"threeToOnePhaseSwitchCurrent,omitempty"`
 }
 
 type CapabilitiesResponse struct {

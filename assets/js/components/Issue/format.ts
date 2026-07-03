@@ -1,3 +1,26 @@
+function sortedEntries(obj: object): [string, any][] {
+  const firstKeys = ["id", "name", "type", "template"];
+  return Object.entries(obj).sort(([a], [b]) => {
+    const ai = firstKeys.indexOf(a);
+    const bi = firstKeys.indexOf(b);
+    if (ai >= 0 || bi >= 0) {
+      return (ai >= 0 ? ai : Infinity) - (bi >= 0 ? bi : Infinity);
+    }
+    return a.localeCompare(b);
+  });
+}
+
+// recursively reorder keys so priority keys (e.g. template) stay first at every nesting level
+function sortedDeep(value: any): any {
+  if (Array.isArray(value)) {
+    return value.map(sortedDeep);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(sortedEntries(value).map(([k, v]) => [k, sortedDeep(v)]));
+  }
+  return value;
+}
+
 export function formatJson(obj: any, expandKeys: string[] = []): string {
   if (!obj || typeof obj !== "object") {
     return JSON.stringify(obj, null, 2);
@@ -5,7 +28,7 @@ export function formatJson(obj: any, expandKeys: string[] = []): string {
 
   const lines: string[] = [];
 
-  for (const [key, value] of Object.entries(obj)) {
+  for (const [key, value] of sortedEntries(obj)) {
     let valueStr: string;
 
     // Check if this key should be expanded (only if not empty)
@@ -19,20 +42,20 @@ export function formatJson(obj: any, expandKeys: string[] = []): string {
           valueStr = "[]";
         } else {
           const arrayItems = value.map((item) => {
-            const itemStr = JSON.stringify(item);
+            const itemStr = JSON.stringify(sortedDeep(item));
             return `    ${itemStr.replace(/\\n/g, "\n")}`;
           });
           valueStr = `[\n${arrayItems.join(",\n")}\n  ]`;
         }
       } else {
         // Object expansion
-        const objEntries = Object.entries(value);
+        const objEntries = sortedEntries(value);
         if (objEntries.length === 0) {
           // Keep empty objects compact
           valueStr = "{}";
         } else {
           const objItems = objEntries.map(([k, v]) => {
-            const itemStr = JSON.stringify(v);
+            const itemStr = JSON.stringify(sortedDeep(v));
             return `    ${JSON.stringify(k)}: ${itemStr.replace(/\\n/g, "\n")}`;
           });
           valueStr = `{\n${objItems.join(",\n")}\n  }`;
@@ -40,7 +63,7 @@ export function formatJson(obj: any, expandKeys: string[] = []): string {
       }
     } else {
       // Single line for everything else
-      valueStr = JSON.stringify(value).replace(/\\n/g, "\n");
+      valueStr = JSON.stringify(sortedDeep(value)).replace(/\\n/g, "\n");
     }
 
     lines.push(`  ${JSON.stringify(key)}: ${valueStr}`);

@@ -63,13 +63,15 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .tile-icon {
 	width: 40px;
 	flex: 0 0 auto;
 }
 
 /* breakpoint lg */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.tile-icon {
 		width: 70px;
 	}

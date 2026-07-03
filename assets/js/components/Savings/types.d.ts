@@ -10,4 +10,3 @@ export interface LiveCommunityData {
   chargeEnergy: number;
   greenEnergy: number;
 }
-export type Period = "30d" | "365d" | "thisYear" | "total";

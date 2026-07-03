@@ -37,6 +37,14 @@ render: |
       type: holding
       decode: uint32
     scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 16 # 0x10 Total energy feed to grid (Grid)
+      type: holding
+      decode: uint32
+    scale: 0.01
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -110,10 +118,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 16 # 0x10 Total energy feed to Grid (Grid Meter)
+      address: 1086 # 0x43E Inverter Total PV Energy
       type: holding
       decode: uint32
-    scale: 0.01
+    scale: 0.1
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -129,6 +137,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 290 # 0x122 Battery discharge energy
+      type: holding
+      decode: uint32
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 288 # 0x120 Battery charge energy
       type: holding
       decode: uint32
     scale: 0.1

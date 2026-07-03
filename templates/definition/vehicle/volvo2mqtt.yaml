@@ -6,10 +6,11 @@ products:
 group: generic
 requirements:
   description:
-    en: Requires MQTT broker configuration and a volvo2mqtt installation https://github.com/Dielee/volvo2mqtt
-    de: Erforderlich ist eine konfigurierte MQTT Broker-Konfiguration und eine volvo2mqtt-Installation https://github.com/Dielee/volvo2mqtt.
+    en: Requires MQTT broker configuration and a volvo2mqtt installation [github.com/Dielee/volvo2mqtt](https://github.com/Dielee/volvo2mqtt)
+    de: Erforderlich ist eine konfigurierte MQTT Broker-Konfiguration und eine volvo2mqtt-Installation [github.com/Dielee/volvo2mqtt](https://github.com/Dielee/volvo2mqtt).
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: vin
     required: true
   - name: timeout
@@ -25,3 +26,4 @@ render: |
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_electric_range/state
     timeout: {{ .timeout }}
+  {{ include "vehicle-features" . }}

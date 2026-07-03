@@ -20,7 +20,6 @@ params:
     default: 7979
   - preset: battery-params
   - name: cache
-    advanced: true
     default: 5s
 render: |
   type: custom
@@ -115,6 +114,6 @@ render: |
                   - source: http
                     method: PUT
                     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C24
-                    body: {{ if .maxchargepower }}{{ .maxchargepower }}{{ else }}99000{{ end }}
+                    body: {{ or .maxchargepower 99000 }}
   {{- include "battery-params" . }}
   {{- end }}

@@ -10,6 +10,8 @@ servers:
 tags:
   - name: auth
   - name: battery
+  - name: db
+  - name: experimental
   - name: general
   - name: loadpoints
   - name: sessions
@@ -98,6 +100,72 @@ paths:
                 enum:
                   - "true"
                   - "false"
+  /auth/apikey:
+    get:
+      operationId: getApiKeyStatus
+      summary: API key status
+      description: |
+        Reports whether an API key has been generated. The key itself is
+        only returned once at creation time (POST), never on subsequent
+        reads.
+      tags:
+        - auth
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: regenerateApiKey
+      summary: Generate or rotate the API key
+      description: |
+        Generates a fresh API key, replacing any existing one. The
+        returned key is shown only once; store it immediately.
+
+        Even when the request is authenticated via API key (Bearer), the
+        admin password must be supplied in the request body to prevent a
+        leaked key from rotating itself. The password check is skipped
+        when the server is started with `--disable-auth`.
+      tags:
+        - auth
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  $ref: "#/components/schemas/Password"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: The new API key (cleartext, shown once).
+                    example: evcc_aB3xYz7k0Pq2sN5mWtR4
+        "401":
+          description: Invalid admin password
+        "403":
+          description: Forbidden in demo mode
   /batterydischargecontrol/{enable}:
     post:
       operationId: setBatteryDischargeControl
@@ -192,7 +260,7 @@ paths:
     post:
       operationId: setLoadpointBatteryBoost
       summary: Set battery boost
-      description: "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit."
+      description: "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled)."
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/battery#battery-boost
       tags:
@@ -296,8 +364,8 @@ paths:
   /loadpoints/{id}/limitsoc/{soc}:
     post:
       operationId: setLoadpointSocLimit
-      summary: Update limit SoC
-      description: "Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions."
+      summary: Update session SoC limit
+      description: "Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again."
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/limit
       tags:
@@ -696,8 +764,8 @@ paths:
       - $ref: "#/components/parameters/id"
     put:
       operationId: updateSession
-      summary: Update vehicle of charging session
-      description: "Update vehicle of charging session."
+      summary: Update charging session
+      description: "Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value."
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/sessions
       tags:
@@ -713,6 +781,8 @@ paths:
                   $ref: "#/components/schemas/VehicleName"
                 loadpoint:
                   $ref: "#/components/schemas/LoadpointName"
+                odometer:
+                  $ref: "#/components/schemas/Odometer"
       responses:
         "200":
           description: Success
@@ -894,6 +964,7 @@ paths:
         url: https://docs.evcc.io/en/docs/reference/configuration/log
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       parameters:
@@ -938,6 +1009,7 @@ paths:
       description: "Returns a list of all log areas (e.g. `lp-1`, `site`, `db`)."
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       responses:
@@ -959,6 +1031,7 @@ paths:
       description: "Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching."
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       responses:
@@ -973,6 +1046,7 @@ paths:
       description: "Shut down instance. There is no reboot command. We expect the underlying system (docker, systemd, etc.) to restart the evcc instance once it's terminated."
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       responses:
@@ -1147,6 +1221,181 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/PlanStrategy"
+  /db/backup:
+    get:
+      operationId: downloadBackup
+      summary: Download database backup
+      description: "Downloads the SQLite database as a backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt."
+      tags:
+        - db
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/adminPassword"
+      responses:
+        "200":
+          description: SQLite database file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /db/restore:
+    post:
+      operationId: restoreBackup
+      summary: Restore database backup
+      description: "Restores the database from a previously downloaded backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful restore."
+      tags:
+        - db
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/adminPassword"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: SQLite database backup file
+      responses:
+        "204":
+          description: Restore successful, instance is restarting
+        "400":
+          description: Invalid file or missing fields
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /db/reset:
+    post:
+      operationId: resetDatabase
+      summary: Reset database
+      description: "Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset."
+      tags:
+        - db
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/adminPassword"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessions:
+                  type: boolean
+                  description: Delete all charging sessions
+                settings:
+                  type: boolean
+                  description: Delete all settings, configs, and meters
+      responses:
+        "204":
+          description: Reset successful, instance is restarting
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /history/energy:
+    get:
+      operationId: getEnergyHistory
+      summary: Energy history
+      description: "Returns aggregated energy history data. Aggregate granularity defaults to 15 minutes. Supports CSV export."
+      tags:
+        - experimental
+      parameters:
+        - name: from
+          in: query
+          description: Start time (RFC3339)
+          schema:
+            type: string
+            format: date-time
+            example: "2026-07-01T00:00:00Z"
+        - name: to
+          in: query
+          description: End time (RFC3339)
+          schema:
+            type: string
+            format: date-time
+            example: "2026-07-02T00:00:00Z"
+        - name: aggregate
+          in: query
+          description: "Aggregation interval. Examples: 15m, 1h, day, month"
+          schema:
+            type: string
+            default: 15m
+            example: 1h
+        - name: grouped
+          in: query
+          description: Group results by loadpoint
+          schema:
+            type: boolean
+            default: false
+            example: false
+        - name: group
+          in: query
+          description: Filter by entity group
+          schema:
+            type: string
+            example: battery
+            enum:
+              - forecast
+              - battery
+              - grid
+              - pv
+              - home
+              - loadpoint
+              - meter
+              - consumer
+        - name: name
+          in: query
+          description: Filter by entity name
+          schema:
+            type: string
+            example: db:8
+        - name: title
+          in: query
+          description: Filter by entity title
+          schema:
+            type: string
+            example: Battery
+        - name: format
+          in: query
+          description: Response format
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+            default: json
+            example: json
+        - name: lang
+          in: query
+          description: Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header.
+          schema:
+            type: string
+            example: de
+      responses:
+        "200":
+          description: Energy history data
+          content:
+            application/json:
+              schema:
+                type: object
+            text/csv:
+              schema:
+                type: string
+        "400":
+          description: Invalid parameters or database offline
 components:
   schemas:
     BatteryMode:
@@ -1158,6 +1407,7 @@ components:
         - normal
         - hold
         - charge
+        - holdcharge
     ChangePassword:
       type: object
       properties:
@@ -1182,9 +1432,7 @@ components:
           vehicle:
             $ref: "#/components/schemas/VehicleName"
           odometer:
-            nullable: true
-            type: "number"
-            description: Vehicle odometer reading in kilometers
+            $ref: "#/components/schemas/Odometer"
           meterStart:
             nullable: true
             type: "number"
@@ -1305,6 +1553,10 @@ components:
         - "now"
         - "minpv"
         - "pv"
+    Odometer:
+      nullable: true
+      type: "number"
+      description: Vehicle odometer reading in kilometers
     Password:
       description: Admin password
       type: string
@@ -1415,7 +1667,6 @@ components:
       description: Timestamp in RFC3339 format
       type: string
       format: date-time
-      example: 2025-07-19T12:30:00.000Z
     VehicleName:
       externalDocs:
         url: https://docs.evcc.io/en/docs/reference/configuration/vehicles#name
@@ -1442,6 +1693,12 @@ components:
         minimum: 0
         maximum: 6
   parameters:
+    adminPassword:
+      name: X-Admin-Password
+      in: header
+      description: Admin password (required for session auth, not needed for API key)
+      schema:
+        $ref: "#/components/schemas/Password"
     id:
       name: id
       description: Loadpoint index starting at 1
@@ -1682,11 +1939,17 @@ components:
             properties:
               result:
                 type: integer
-                description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge"
+                description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
                 minimum: 0
-                maximum: 3
+                maximum: 4
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
       name: auth
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Long-lived API key (prefixed `evcc_`, managed via /auth/apikey).
+        Grants access to /api/db/* without requiring the X-Admin-Password header.

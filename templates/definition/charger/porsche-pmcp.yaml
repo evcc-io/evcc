@@ -3,10 +3,10 @@ products:
   - brand: Porsche
     description:
       generic: Mobile Charger Plus
-requirements:
-  evcc: ["eebus"]
+capabilities: ["meter", "dim"]
 params:
   - preset: eebus
 render: |
+  type: eebus-evse
   {{ include "eebus" . }}
   meter: true

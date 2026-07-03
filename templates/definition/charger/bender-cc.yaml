@@ -12,6 +12,9 @@ products:
       generic: AMTRON Professional
   - brand: Mennekes
     description:
+      generic: AMTRON Professional Twincharge
+  - brand: Mennekes
+    description:
       generic: AMEDIO Professional
   - brand: Mennekes
     description:
@@ -61,17 +64,22 @@ products:
   - brand: SMA
     description:
       generic: EV Charger Business
-capabilities: ["rfid", "1p3p"]
+capabilities: ["rfid", "1p3p", "dim"]
 requirements:
   description:
     de: |
       Der 'Modbus TCP Server für Energiemanagement-Systeme' muss aktiviert sein. 'Registersatz' darf NICHT auf 'Phoenix' oder 'TQ-DM100' eingestellt sein. Die dritte Auswahlmöglichkeit 'Ebee', 'Bender', 'MENNEKES' etc. ist richtig. 'UID Übertragung erlauben' muss aktiviert sein. 
 
-      Für Phasenumschaltung ist mindestens Firmware 5.33 notwendig. Das 'SEMP interface' muss aktiviert sein, der 'SEMP Charging Mode' muss auf 'Surplus Charging' stehen. 'Software function to use phase switching' muss auf SEMP konfiguriert sein.
+      Für Phasenumschaltung ist mindestens Firmware 5.33 notwendig. Das 'SEMP interface' muss aktiviert sein, der 'SEMP Charging Mode' muss auf 'Surplus Charging' stehen. 'Software function to use phase switching' muss auf SEMP konfiguriert sein. 
+
+      Bei Ladestationen mit zwei Ladepunkten (z.B. AMEDIO, Twincharge) sind die Ladepunkte separat anzulegen, wobei Ladepunkt 1 = Port 502 und Ladepunkt 2 = Port 503 zu setzen ist.
     en: |
       The 'Modbus TCP Server' must be enabled. The setting 'Register Address Set' must NOT be set to 'Phoenix' or 'TQ-DM100'. Use the third selection labeled 'Ebee', 'Bender', 'MENNEKES' etc. Set 'Allow UID Disclose' to On.
 
       Firmware 5.33 or higher is required for phase switching. The 'SEMP interface' must be enabled, the 'SEMP Charging Mode' must be set to 'Surplus Charging'. Set 'Software function to use phase switching' to SEMP.
+
+      For charging stations with two charging points (e.g. AMEDIO, Twincharge), each charging point must be configured separately. Set charging point 1 to Port 502 and charging point 2 to Port 503.
+
   evcc: ["sponsorship"]
 params:
   - name: modbus

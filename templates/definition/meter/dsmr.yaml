@@ -7,18 +7,14 @@ params:
   - name: host
   - name: port
     default: 1502 # required to avoid rendering `uri: :` for test which leads to error
+  - name: timeout
+    advanced: true
+    default: 15s
   - name: energy
-    description:
-      de: OBIS Kennzahl für Energieverbrauch
-      en: OBIS code for energy consumption
-    help:
-      de: Typischerweise 1-0:1.8.0, bei Mehrtarifzählern 1-0:1.8.1 oder 1-0:1.8.2
-      en: Typically 1-0:1.8.0 or 1-0:1.8.1/1-0:1.8.2 with multiple tariffs
+    deprecated: true
     advanced: true
     type: string
 render: |
   type: dsmr
-  uri: {{ .host }}:{{ .port }}
-  {{- if .energy }}
-  energy: {{ .energy }}
-  {{- end }}
+  uri: {{ joinHostPort .host .port }}
+  timeout: {{ .timeout }}

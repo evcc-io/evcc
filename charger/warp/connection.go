@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/icholy/digest"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 type Connection struct {
@@ -24,11 +24,7 @@ func NewConnection(log *util.Logger, uri, user, pass string) *Connection {
 	}
 
 	if c.Username != "" && c.Password != "" {
-		c.Client.Transport = &digest.Transport{
-			Username:  c.Username,
-			Password:  c.Password,
-			Transport: c.Client.Transport,
-		}
+		c.Client.Transport = digest.NewTransport(c.Username, c.Password, c.Client.Transport)
 	}
 
 	return c

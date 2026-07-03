@@ -9,18 +9,23 @@ import (
 	"github.com/evcc-io/evcc/vehicle/toyota"
 )
 
-// Toyota is an api.Vehicle implementation for Toyota cars
+// Toyota is an api.Vehicle implementation for Toyota/Lexus cars
 type Toyota struct {
 	*embed
 	*toyota.Provider
 }
 
 func init() {
-	registry.Add("toyota", NewToyotaFromConfig)
+	registry.Add("toyota", func(other map[string]any) (api.Vehicle, error) {
+		return newToyotaFromConfig("toyota", "T", other)
+	})
+	registry.Add("lexus", func(other map[string]any) (api.Vehicle, error) {
+		return newToyotaFromConfig("lexus", "L", other)
+	})
 }
 
-// NewToyotaFromConfig creates a new vehicle
-func NewToyotaFromConfig(other map[string]any) (api.Vehicle, error) {
+// newToyotaFromConfig creates a new vehicle
+func newToyotaFromConfig(brand, brandCode string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -41,15 +46,15 @@ func NewToyotaFromConfig(other map[string]any) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("toyota").Redact(cc.User, cc.Password, cc.VIN)
-	identity := toyota.NewIdentity(log)
+	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
+	identity := toyota.NewIdentity(log, brandCode)
 
 	err := identity.Login(cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := toyota.NewAPI(log, identity)
+	api := toyota.NewAPI(log, identity, brandCode)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 	if err == nil {

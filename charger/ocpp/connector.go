@@ -63,7 +63,7 @@ func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag s
 
 	var ok bool
 	// apply cached status if available
-	instance.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
+	cp.cs.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
 		if _, err := cp.OnStatusNotification(status); err == nil {
 			ok = true
 		}
@@ -80,6 +80,8 @@ func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag s
 }
 
 func (conn *Connector) TestClock(clock clock.Clock) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
 	conn.clock = clock
 }
 
@@ -303,6 +305,12 @@ func (conn *Connector) CurrentPower() (float64, error) {
 		if res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, suffix); found {
 			return res[0] + res[1] + res[2], err
 		}
+	}
+
+	// no power measurand: chargers that only report energy while idle (e.g. Mennekes ACU)
+	// never send power outside a transaction, so report zero as nothing is charging
+	if conn.txnId == 0 {
+		return 0, nil
 	}
 
 	return 0, api.ErrNotAvailable

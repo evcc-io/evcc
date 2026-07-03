@@ -51,30 +51,28 @@ func NewMeterFromConfig(ctx context.Context, other map[string]any) (Plugin, erro
 var _ FloatGetter = (*meterPlugin)(nil)
 
 func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
-	err := fmt.Errorf("unsupported method: %s", o.method.String())
-
-	switch o.method {
-	case Energy:
-		if _, ok := o.meter.(api.MeterEnergy); !ok {
-			return nil, err
-		}
-	case Soc:
-		if _, ok := o.meter.(api.Battery); !ok {
-			return nil, err
-		}
-	}
-
 	return func() (float64, error) {
 		switch o.method {
 		case Energy:
-			f, err := o.meter.(api.MeterEnergy).TotalEnergy()
-			return f * o.scale, err
+			if m, ok := api.Cap[api.MeterEnergy](o.meter); ok {
+				f, err := m.TotalEnergy()
+				return f * o.scale, err
+			}
+		case ReturnEnergy:
+			if m, ok := api.Cap[api.MeterReturnEnergy](o.meter); ok {
+				f, err := m.ReturnEnergy()
+				return f * o.scale, err
+			}
 		case Soc:
-			f, err := o.meter.(api.Battery).Soc()
-			return f * o.scale, err
-		default:
+			if m, ok := api.Cap[api.Battery](o.meter); ok {
+				f, err := m.Soc()
+				return f * o.scale, err
+			}
+		case Power:
 			f, err := o.meter.CurrentPower()
 			return f * o.scale, err
 		}
+
+		return 0, fmt.Errorf("unsupported method: %s", o.method.String())
 	}, nil
 }

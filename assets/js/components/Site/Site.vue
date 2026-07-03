@@ -12,7 +12,7 @@
 				</h1>
 				<TopNavigationArea :notifications="notifications" />
 			</div>
-			<HemsWarning :circuits="circuits" />
+			<HemsWarning :status="hems?.status" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
@@ -66,11 +66,11 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:batteryMode="batteryMode"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
@@ -81,7 +81,6 @@ import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
-import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
@@ -93,11 +92,13 @@ import type {
 	CURRENCY,
 	Forecast,
 	Notification,
-	Circuit,
+	ConfigStatus,
+	HemsConfig,
+	HemsStatus,
 	SMART_COST_TYPE,
-	Sponsor,
 	FatalError,
 	EvOpt,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import store from "@/store";
 import type { Grid } from "./types";
@@ -107,7 +108,6 @@ export default defineComponent({
 	components: {
 		Loadpoints,
 		Energyflow,
-		Footer,
 		HemsWarning,
 		TopNavigationArea,
 		WelcomeIcons,
@@ -128,10 +128,11 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
+		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
-		batteryGridChargeLimit: { type: Number, default: null },
+		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
-		batteryMode: String,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
@@ -141,7 +142,6 @@ export default defineComponent({
 		vehicles: Object,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
-		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -150,20 +150,12 @@ export default defineComponent({
 		tariffPriceLoadpoints: Number,
 		tariffCo2Loadpoints: Number,
 
-		availableVersion: String,
-		releaseNotes: String,
-		hasUpdater: Boolean,
-		uploadMessage: String,
-		uploadProgress: Number,
-		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
-		circuits: Object as PropType<Record<string, Circuit>>,
-		telemetry: Boolean,
-		experimental: Boolean,
+		hems: Object as PropType<ConfigStatus<HemsConfig, HemsStatus>>,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
@@ -185,6 +177,9 @@ export default defineComponent({
 		gridPower() {
 			return this.grid?.power || 0;
 		},
+		experimental() {
+			return store.state?.experimental;
+		},
 		energyflow() {
 			return this.collectProps(Energyflow);
 		},
@@ -195,27 +190,6 @@ export default defineComponent({
 		showParkingLot() {
 			// work in progess
 			return false;
-		},
-		footer() {
-			return {
-				version: {
-					installed: window.evcc.version,
-					commit: window.evcc.commit,
-					available: this.availableVersion,
-					releaseNotes: this.releaseNotes,
-					hasUpdater: this.hasUpdater,
-					uploadMessage: this.uploadMessage,
-					uploadProgress: this.uploadProgress,
-				},
-				savings: {
-					sponsor: this.sponsor,
-					statistics: this.statistics,
-					co2Configured: this.tariffCo2 !== undefined,
-					priceConfigured: this.tariffGrid !== undefined,
-					currency: this.currency,
-					telemetry: this.telemetry,
-				},
-			};
 		},
 		hasFatalError() {
 			return this.fatal.length > 0;

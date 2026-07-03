@@ -141,10 +141,14 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
+func isNilOrEmtpy(val any) bool {
+	return val == nil || val == ""
+}
+
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
-	if err != nil {
-		return "", err
+	if err != nil || isNilOrEmtpy(res) {
+		return "", api.ErrNotAvailable
 	}
 
 	return cast.ToStringE(res)
@@ -152,8 +156,8 @@ func (v *Provider) String(key string) (string, error) {
 
 func (v *Provider) Int(key string) (int64, error) {
 	res, err := v.any(key)
-	if err != nil {
-		return 0, err
+	if err != nil || isNilOrEmtpy(res) {
+		return 0, api.ErrNotAvailable
 	}
 
 	return cast.ToInt64E(res)
@@ -161,8 +165,8 @@ func (v *Provider) Int(key string) (int64, error) {
 
 func (v *Provider) Float(key string) (float64, error) {
 	res, err := v.any(key)
-	if err != nil {
-		return 0, err
+	if err != nil || isNilOrEmtpy(res) {
+		return 0, api.ErrNotAvailable
 	}
 
 	return cast.ToFloat64E(res)
@@ -172,7 +176,10 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	return v.Float("vehicle.drivetrain.batteryManagement.header")
+	if res, err := v.Float("vehicle.drivetrain.batteryManagement.header"); err == nil {
+		return res, nil
+	}
+	return v.Float("vehicle.powertrain.electric.battery.stateOfCharge.displayed")
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -193,7 +200,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	// mqtt, while hvStatus might only be available through rest
 	// (https://github.com/evcc-io/evcc/pull/26235)
 	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
-	if err != nil || cs == "" {
+	if err != nil {
 		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
 	}
 
@@ -212,14 +219,20 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeRemaining")
-	return time.Now().Add(time.Duration(res) * time.Minute), err
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Now().Add(time.Duration(res) * time.Minute), nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	return v.Int("vehicle.drivetrain.electricEngine.kombiRemainingElectricRange")
+	if res, err := v.Int("vehicle.drivetrain.electricEngine.kombiRemainingElectricRange"); err == nil {
+		return res, nil
+	}
+	return v.Int("vehicle.drivetrain.lastRemainingRange")
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -243,7 +256,7 @@ func (v *Provider) Climater() (bool, error) {
 	activeStates := []string{"HEATING", "COOLING", "VENTILATION", "DEFROST"}
 
 	res, err := v.String("vehicle.cabin.hvac.preconditioning.status.comfortState")
-	if err == nil && res != "" {
+	if err == nil {
 		return slices.Contains(activeStates, strings.TrimPrefix(strings.ToUpper(res), "COMFORT_")), nil
 	}
 
@@ -252,4 +265,21 @@ func (v *Provider) Climater() (bool, error) {
 	}
 
 	return false, err
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	lat, err := v.Float("vehicle.cabin.infotainment.navigation.currentLocation.latitude")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	lon, err := v.Float("vehicle.cabin.infotainment.navigation.currentLocation.longitude")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return lat, lon, nil
 }

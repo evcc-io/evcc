@@ -1,8 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 
-const wsPattern = /\/ws\?/;
-
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
@@ -14,7 +12,7 @@ test.afterEach(async () => {
 });
 
 test("show loadpoint with connect websocket", async ({ page }) => {
-  await page.routeWebSocket(wsPattern, (ws) => {
+  await page.routeWebSocket("/ws", (ws) => {
     const server = ws.connectToServer();
     ws.onMessage((message) => {
       server.send(message);
@@ -30,7 +28,7 @@ test("show loadpoint with connect websocket", async ({ page }) => {
 });
 
 test("show no config screen while startup", async ({ page }) => {
-  await page.routeWebSocket(wsPattern, () => {
+  await page.routeWebSocket("/ws", () => {
     // connect, but don't send any messages
   });
   await page.goto("/");
@@ -38,7 +36,7 @@ test("show no config screen while startup", async ({ page }) => {
 });
 
 test("show offline when websocket is closed", async ({ page }) => {
-  await page.routeWebSocket(wsPattern, (ws) => {
+  await page.routeWebSocket("/ws", (ws) => {
     ws.close();
   });
   await page.goto("/");

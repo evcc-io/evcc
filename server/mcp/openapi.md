@@ -26,6 +26,15 @@ call changePassword {
 }
 ```
 
+## getApiKeyStatus
+
+Reports whether an API key has been generated. The key itself is
+only returned once at creation time (POST), never on subsequent
+reads.
+
+
+**Tags:** auth
+
 ## getAuthStatus
 
 Whether the current user is logged in.
@@ -58,6 +67,33 @@ Logout and delete authorization cookie
 
 **Tags:** auth
 
+## regenerateApiKey
+
+Generates a fresh API key, replacing any existing one. The
+returned key is shown only once; store it immediately.
+
+Even when the request is authenticated via API key (Bearer), the
+admin password must be supplied in the request body to prevent a
+leaked key from rotating itself. The password check is skipped
+when the server is started with `--disable-auth`.
+
+
+**Tags:** auth
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call regenerateApiKey {
+  "requestBody": "..."
+}
+```
+
 ## disableExternalBatteryControl
 
 Default evcc control behavior is restored
@@ -86,7 +122,7 @@ Prevent home battery discharge during vehicle fast charging.
 
 ```json
 call setBatteryDischargeControl {
-  "enable": "example"
+  "enable": "true"
 }
 ```
 
@@ -126,7 +162,7 @@ Set battery buffer SoC.
 
 ```json
 call setBufferSoc {
-  "soc": 123.45
+  "soc": 60
 }
 ```
 
@@ -146,7 +182,7 @@ Set battery buffer start SoC.
 
 ```json
 call setBufferStartSoc {
-  "soc": 123.45
+  "soc": 60
 }
 ```
 
@@ -166,7 +202,7 @@ Directly controls the mode of all controllable batteries. evcc behavior like 'pr
 
 ```json
 call setExternalBatteryMode {
-  "batteryMode": "example"
+  "batteryMode": "normal"
 }
 ```
 
@@ -186,7 +222,7 @@ Set battery priority SoC.
 
 ```json
 call setPrioritySoc {
-  "soc": 123.45
+  "soc": 60
 }
 ```
 
@@ -206,7 +242,105 @@ Set grid connection operating point.
 
 ```json
 call setResidualPower {
-  "power": 123.45
+  "power": 2500
+}
+```
+
+## downloadBackup
+
+Downloads the SQLite database as a backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+
+**Example call:**
+
+```json
+call downloadBackup {
+  "X-Admin-Password": "example"
+}
+```
+
+## resetDatabase
+
+Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call resetDatabase {
+  "X-Admin-Password": "example",
+  "requestBody": "..."
+}
+```
+
+## restoreBackup
+
+Restores the database from a previously downloaded backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful restore.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+
+**Example call:**
+
+```json
+call restoreBackup {
+  "X-Admin-Password": "example"
+}
+```
+
+## getEnergyHistory
+
+Returns aggregated energy history data. Aggregate granularity defaults to 15 minutes. Supports CSV export.
+
+**Tags:** experimental
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| aggregate | string | Aggregation interval. Examples: 15m, 1h, day, month |
+| format | string | Response format |
+| from | string | Start time (RFC3339) |
+| group | string | Filter by entity group |
+| grouped | boolean | Group results by loadpoint |
+| lang | string | Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header. |
+| name | string | Filter by entity name |
+| title | string | Filter by entity title |
+| to | string | End time (RFC3339) |
+
+**Example call:**
+
+```json
+call getEnergyHistory {
+  "aggregate": "1h",
+  "format": "json",
+  "from": "2026-07-01T00:00:00Z",
+  "group": "battery",
+  "grouped": false,
+  "lang": "de",
+  "name": "db:8",
+  "title": "Battery",
+  "to": "2026-07-02T00:00:00Z"
 }
 ```
 
@@ -299,8 +433,8 @@ Assigns vehicle to loadpoint.
 
 ```json
 call assignLoadpointVehicle {
-  "id": 123,
-  "name": "example"
+  "id": 1,
+  "name": "vehicle_1"
 }
 ```
 
@@ -320,7 +454,7 @@ Delete charging plan. Only available when a vehicle without SoC is connected.
 
 ```json
 call deleteLoadpointEnergyPlan {
-  "id": 123
+  "id": 1
 }
 ```
 
@@ -340,7 +474,7 @@ Delete cost or emission limit for fast-charging with grid energy.
 
 ```json
 call deleteLoadpointSmartCostLimit {
-  "id": 123
+  "id": 1
 }
 ```
 
@@ -360,7 +494,7 @@ Delete limit for feed-in priority optimization.
 
 ```json
 call deleteLoadpointSmartFeedInPriorityLimit {
-  "id": 123
+  "id": 1
 }
 ```
 
@@ -380,7 +514,7 @@ Returns the current charging plan for this loadpoint.
 
 ```json
 call getLoadpointPlan {
-  "id": 123
+  "id": 1
 }
 ```
 
@@ -402,8 +536,8 @@ Simulate charging plan based on energy goal. Does not alter the actual charging 
 
 ```json
 call previewLoadpointEnergyPlan {
-  "energy": 123.45,
-  "id": 123,
+  "energy": 25.5,
+  "id": 1,
   "timestamp": "example"
 }
 ```
@@ -428,11 +562,15 @@ Simulate repeating charging plan and return the result. Does not alter the actua
 
 ```json
 call previewLoadpointRepeatingPlan {
-  "hourMinuteTime": "example",
-  "id": 123,
-  "soc": 123.45,
-  "timezone": "example",
-  "weekdays": "..."
+  "hourMinuteTime": "12:30",
+  "id": 1,
+  "soc": 60,
+  "timezone": "Europe/Berlin",
+  "weekdays": [
+    1,
+    3,
+    4
+  ]
 }
 ```
 
@@ -454,8 +592,8 @@ Simulate charging plan based on SoC goal. Does not alter the actual charging pla
 
 ```json
 call previewLoadpointSocPlan {
-  "id": 123,
-  "soc": 123.45,
+  "id": 1,
+  "soc": 60,
   "timestamp": "example"
 }
 ```
@@ -476,13 +614,13 @@ Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.
 
 ```json
 call removeLoadpointVehicle {
-  "id": 123
+  "id": 1
 }
 ```
 
 ## setLoadpointBatteryBoost
 
-Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit.
+Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled).
 
 **Tags:** loadpoints
 
@@ -497,8 +635,8 @@ Enable or disable battery boost. When active, the maximum available home battery
 
 ```json
 call setLoadpointBatteryBoost {
-  "enable": "example",
-  "id": 123
+  "enable": "true",
+  "id": 1
 }
 ```
 
@@ -519,8 +657,8 @@ Set the SoC limit for battery boost. Home battery will be used to support chargi
 
 ```json
 call setLoadpointBatteryBoostLimit {
-  "id": 123,
-  "soc": 123.45
+  "id": 1,
+  "soc": 60
 }
 ```
 
@@ -541,8 +679,8 @@ Delay before charging stops in solar mode.
 
 ```json
 call setLoadpointDisableDelay {
-  "delay": 123,
-  "id": 123
+  "delay": 60,
+  "id": 1
 }
 ```
 
@@ -563,8 +701,8 @@ Specifies the grid draw power to stop charging in solar mode.
 
 ```json
 call setLoadpointDisableThreshold {
-  "id": 123,
-  "threshold": 123.45
+  "id": 1,
+  "threshold": 2500
 }
 ```
 
@@ -585,8 +723,8 @@ Delay before charging starts in solar mode.
 
 ```json
 call setLoadpointEnableDelay {
-  "delay": 123,
-  "id": 123
+  "delay": 60,
+  "id": 1
 }
 ```
 
@@ -607,8 +745,8 @@ Specifies the available surplus power to start charging in solar mode.
 
 ```json
 call setLoadpointEnableThreshold {
-  "id": 123,
-  "threshold": 123.45
+  "id": 1,
+  "threshold": 2500
 }
 ```
 
@@ -629,8 +767,8 @@ Updates the energy limit of the loadpoint. Only available for guest vehicles and
 
 ```json
 call setLoadpointEnergyLimit {
-  "energy": 123.45,
-  "id": 123
+  "energy": 25.5,
+  "id": 1
 }
 ```
 
@@ -652,8 +790,8 @@ Create charging plan with fixed time and energy target. Only available when a ve
 
 ```json
 call setLoadpointEnergyPlan {
-  "energy": 123.45,
-  "id": 123,
+  "energy": 25.5,
+  "id": 1,
   "timestamp": "example"
 }
 ```
@@ -675,8 +813,8 @@ Updates the maximum current of the loadpoint.
 
 ```json
 call setLoadpointMaxCurrent {
-  "current": 123.45,
-  "id": 123
+  "current": 16,
+  "id": 1
 }
 ```
 
@@ -697,8 +835,8 @@ Updates the minimum current of the loadpoint.
 
 ```json
 call setLoadpointMinCurrent {
-  "current": 123.45,
-  "id": 123
+  "current": 16,
+  "id": 1
 }
 ```
 
@@ -719,8 +857,8 @@ Changes the charging behavior of the loadpoint.
 
 ```json
 call setLoadpointMode {
-  "id": 123,
-  "mode": "example"
+  "id": 1,
+  "mode": "off"
 }
 ```
 
@@ -741,8 +879,8 @@ Updates the allowed phases of the loadpoint. Selects the desired phase mode for 
 
 ```json
 call setLoadpointPhases {
-  "id": 123,
-  "phases": "example"
+  "id": 1,
+  "phases": "3"
 }
 ```
 
@@ -763,7 +901,7 @@ Updates the charging plan strategy for the loadpoint.
 
 ```json
 call setLoadpointPlanStrategy {
-  "id": 123,
+  "id": 1,
   "requestBody": "..."
 }
 ```
@@ -785,7 +923,7 @@ Set loadpoint priority.
 
 ```json
 call setLoadpointPriority {
-  "id": 123,
+  "id": 1,
   "priority": 123
 }
 ```
@@ -808,7 +946,7 @@ Set cost or emission limit for fast-charging with grid energy.
 ```json
 call setLoadpointSmartCostLimit {
   "cost": 123.45,
-  "id": 123
+  "id": 1
 }
 ```
 
@@ -830,13 +968,13 @@ Set limit for feed-in priority optimization.
 ```json
 call setLoadpointSmartFeedInPriorityLimit {
   "cost": 123.45,
-  "id": 123
+  "id": 1
 }
 ```
 
 ## setLoadpointSocLimit
 
-Updates the SoC limit of the loadpoint. Requires a connected vehicle with known SoC. Limit is maintained across charging sessions.
+Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again.
 
 **Tags:** loadpoints
 
@@ -851,8 +989,8 @@ Updates the SoC limit of the loadpoint. Requires a connected vehicle with known 
 
 ```json
 call setLoadpointSocLimit {
-  "id": 123,
-  "soc": 123.45
+  "id": 1,
+  "soc": 60
 }
 ```
 
@@ -872,7 +1010,7 @@ Starts the automatic vehicle detection process.
 
 ```json
 call startLoadpointVehicleDetection {
-  "id": 123
+  "id": 1
 }
 ```
 
@@ -892,7 +1030,7 @@ Delete charging session.
 
 ```json
 call deleteSession {
-  "id": 123
+  "id": 1
 }
 ```
 
@@ -913,8 +1051,8 @@ Returns a list of HEMS grid limitation events.
 
 ```json
 call getGridSessions {
-  "format": "example",
-  "lang": "example"
+  "format": "csv",
+  "lang": "de"
 }
 ```
 
@@ -937,16 +1075,16 @@ Returns a list of charging sessions.
 
 ```json
 call getSessions {
-  "format": "example",
-  "lang": "example",
-  "month": 123,
-  "year": 123
+  "format": "csv",
+  "lang": "de",
+  "month": 2,
+  "year": 2025
 }
 ```
 
 ## updateSession
 
-Update vehicle of charging session.
+Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value.
 
 **Tags:** sessions
 
@@ -961,7 +1099,7 @@ Update vehicle of charging session.
 
 ```json
 call updateSession {
-  "id": 123,
+  "id": 1,
   "requestBody": "..."
 }
 ```
@@ -997,10 +1135,14 @@ Returns the latest log lines.
 
 ```json
 call getSystemLogs {
-  "areas": "...",
+  "areas": [
+    "lp-1",
+    "site",
+    "db"
+  ],
   "count": 123,
-  "format": "example",
-  "level": "example"
+  "format": "txt",
+  "level": "DEBUG"
 }
 ```
 
@@ -1020,7 +1162,7 @@ Enable or disable telemetry. Note: Telemetry requires sponsorship.
 
 ```json
 call setTelemetryStatus {
-  "enable": "example"
+  "enable": "true"
 }
 ```
 
@@ -1046,7 +1188,7 @@ Returns the prices or emission values for the upcoming hours
 
 ```json
 call getTariffInfo {
-  "type": "example"
+  "type": "grid"
 }
 ```
 
@@ -1066,7 +1208,7 @@ Delete the charging plan
 
 ```json
 call deleteVehicleSocPlan {
-  "name": "example"
+  "name": "vehicle_1"
 }
 ```
 
@@ -1087,8 +1229,8 @@ Vehicle will be fast-charged until this SoC is reached.
 
 ```json
 call setVehicleMinSoc {
-  "name": "example",
-  "soc": 123.45
+  "name": "vehicle_1",
+  "soc": 60
 }
 ```
 
@@ -1109,7 +1251,7 @@ Updates the charging plan strategy for the vehicle.
 
 ```json
 call setVehiclePlanStrategy {
-  "name": "example",
+  "name": "vehicle_1",
   "requestBody": "..."
 }
 ```
@@ -1131,8 +1273,8 @@ Charging will stop when this SoC is reached.
 
 ```json
 call setVehicleSocLimit {
-  "name": "example",
-  "soc": 123.45
+  "name": "vehicle_1",
+  "soc": 60
 }
 ```
 
@@ -1154,8 +1296,8 @@ Create charging plan with fixed time and SoC target.
 
 ```json
 call setVehicleSocPlan {
-  "name": "example",
-  "soc": 123.45,
+  "name": "vehicle_1",
+  "soc": 60,
   "timestamp": "example"
 }
 ```
@@ -1177,7 +1319,7 @@ Updates the repeating charging plan.
 
 ```json
 call updateVehicleRepeatingPlans {
-  "name": "example",
+  "name": "vehicle_1",
   "requestBody": "..."
 }
 ```

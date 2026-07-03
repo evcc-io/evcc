@@ -25,6 +25,7 @@ type Ostrom struct {
 	*embed
 	*request.Helper
 	log          *util.Logger
+	env          string
 	zip          string
 	contractType string
 	cityId       int // Required for the Fair tariff types
@@ -42,7 +43,7 @@ func init() {
 func ensureContractEx(cid int64, contracts []ostrom.Contract) (ostrom.Contract, error) {
 	var zero ostrom.Contract
 
-	if cid != -1 {
+	if cid != 0 {
 		// cid defined
 		for _, contract := range contracts {
 			if cid == contract.Id {
@@ -58,13 +59,15 @@ func ensureContractEx(cid int64, contracts []ostrom.Contract) (ostrom.Contract, 
 }
 
 func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
-	var cc struct {
+	cc := struct {
 		ClientId     string
 		ClientSecret string
+		Environment  string
 		Contract     int64
+	}{
+		Environment: "production",
 	}
 
-	cc.Contract = -1
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -78,6 +81,7 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t := &Ostrom{
 		log:    log,
+		env:    cc.Environment,
 		basic:  basic,
 		Helper: request.NewHelper(log),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
@@ -100,8 +104,13 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 	t.contractType = contract.Product
 	t.zip = contract.Address.Zip
 
+	tariffType, err := t.tariffType()
+	if err != nil {
+		return nil, err
+	}
+
 	done := make(chan error)
-	if t.Type() == api.TariffTypePriceStatic {
+	if tariffType == api.TariffTypePriceStatic {
 		t.cityId, err = t.getCityId()
 		if err != nil {
 			return nil, err
@@ -118,10 +127,26 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 	return t, nil
 }
 
+func (t *Ostrom) apiUri(path string) string {
+	uri := ostrom.URI_API_PRODUCTION
+	if t.env == "sandbox" {
+		uri = ostrom.URI_API_SANDBOX
+	}
+	return uri + path
+}
+
+func (t *Ostrom) authUri(path string) string {
+	uri := ostrom.URI_AUTH_PRODUCTION
+	if t.env == "sandbox" {
+		uri = ostrom.URI_AUTH_SANDBOX
+	}
+	return uri + path
+}
+
 func (t *Ostrom) getContracts() ([]ostrom.Contract, error) {
 	var res ostrom.Contracts
 
-	uri := ostrom.URI_API + "/contracts"
+	uri := t.apiUri("/contracts")
 	err := t.GetJSON(uri, &res)
 	return res.Data, err
 }
@@ -159,7 +184,7 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 }
 
 func (t *Ostrom) refreshToken() (*oauth2.Token, error) {
-	uri := ostrom.URI_AUTH + "/oauth2/token"
+	uri := t.authUri("/oauth2/token")
 	data := url.Values{"grant_type": {"client_credentials"}}
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Authorization": t.basic,
@@ -182,7 +207,9 @@ func (t *Ostrom) runStatic(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		price, err := t.getFixedPrice()
 		if err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println(err)
 			continue
 		}
@@ -220,11 +247,13 @@ func (t *Ostrom) run(done chan error) {
 			"zip":        {t.zip},
 		}
 
-		uri := fmt.Sprintf("%s/spot-prices?%s", ostrom.URI_API, params.Encode())
+		uri := t.apiUri(fmt.Sprintf("/spot-prices?%s", params.Encode()))
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println(err)
 			continue
 		}
@@ -253,14 +282,23 @@ func (t *Ostrom) Rates() (api.Rates, error) {
 	return res, err
 }
 
+// tariffType returns the tariff type for the current contract, or an error for unknown contract types.
+func (t *Ostrom) tariffType() (api.TariffType, error) {
+	switch t.contractType {
+	case ostrom.PRODUCT_DYNAMIC, ostrom.PRODUCT_DYNAMIC_V2:
+		return api.TariffTypePriceForecast, nil
+	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
+		return api.TariffTypePriceStatic, nil
+	default:
+		return 0, fmt.Errorf("invalid contract type: %s", t.contractType)
+	}
+}
+
 // Type implements the api.Tariff interface
 func (t *Ostrom) Type() api.TariffType {
-	switch t.contractType {
-	case ostrom.PRODUCT_DYNAMIC:
-		return api.TariffTypePriceForecast
-	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
-		return api.TariffTypePriceStatic
-	default:
-		panic("invalid contract type: " + t.contractType)
+	tariffType, err := t.tariffType()
+	if err != nil {
+		panic(err.Error())
 	}
+	return tariffType
 }

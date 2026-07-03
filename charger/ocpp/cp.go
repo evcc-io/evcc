@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -15,6 +16,7 @@ import (
 
 type CP struct {
 	mu          sync.RWMutex
+	cs          *CS // central system this charge point is registered with
 	log         *util.Logger
 	onceConnect sync.Once
 	onceMonitor sync.Once
@@ -42,8 +44,9 @@ type CP struct {
 	connectors map[int]*Connector
 }
 
-func NewChargePoint(log *util.Logger, id string) *CP {
+func NewChargePoint(log *util.Logger, cs *CS, id string) *CP {
 	return &CP{
+		cs:  cs,
 		log: log,
 		id:  id,
 
@@ -142,12 +145,47 @@ func (cp *CP) connect(connect bool) {
 // onTransportConnect is called when the WebSocket connection is established.
 // Instead of marking the CP as connected immediately, it waits for the
 // BootNotification handshake to complete (or a timeout to expire).
+//
+// Some chargers (e.g. Wallbox Pulsar Pro FW 6.x) do not send BootNotification
+// spontaneously on connect. For these chargers, we proactively trigger it
+// after a short delay, which typically yields a response within 1 second
+// instead of waiting for the full timeout.
 func (cp *CP) onTransportConnect() {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
 	cp.stopBootTimer()
 	cp.bootTimer = time.AfterFunc(Timeout, cp.onBootTimeout)
+
+	// Proactively trigger BootNotification after a short delay.
+	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
+	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
+	// Connected() check which would fail at this point.
+	time.AfterFunc(TriggerBootDelay, func() {
+		cp.mu.RLock()
+		// If BootNotification already arrived or timer was cancelled (disconnect),
+		// there is nothing to do.
+		if cp.bootTimer == nil || cp.BootNotificationResult != nil {
+			cp.mu.RUnlock()
+			return
+		}
+		cp.mu.RUnlock()
+
+		cp.log.DEBUG.Printf("proactively triggering BootNotification")
+
+		if err := cp.cs.TriggerMessage(
+			cp.id,
+			func(conf *remotetrigger.TriggerMessageConfirmation, err error) {
+				if err != nil {
+					cp.log.ERROR.Printf("trigger BootNotification response error: %v", err)
+				}
+			},
+			core.BootNotificationFeatureName,
+			func(request *remotetrigger.TriggerMessageRequest) {},
+		); err != nil {
+			cp.log.ERROR.Printf("failed to trigger BootNotification: %v", err)
+		}
+	})
 }
 
 // onBootTimeout is called when the BootNotification wait timer expires.

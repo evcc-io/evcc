@@ -1,0 +1,192 @@
+template: marstek-venus-d
+products:
+  - brand: Marstek
+    description:
+      generic: Venus D
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 115200
+    comset: 8N1
+  - preset: battery-params
+  - name: capacity
+    default: 2.56
+    help:
+      de: Basisgerät 2.56 kWh, jede Erweiterung zzgl. 2.56 kWh
+      en: Base unit 2.56 kWh, each extension plus 2.56 kWh
+  - name: minsoc
+    default: 11
+  - name: maxsoc
+    default: 100
+  - name: maxchargepower
+    default: 2200
+  - name: work_mode_normal
+    default: 1
+    advanced: true
+    description:
+      en: Work mode for Normal state
+      de: Work mode für Normal-Modus
+    help:
+      en: 0=manual, 1=anti-feed, 2=trade mode.
+      de: 0=manuell, 1=Eigenverbrauch, 2=AI-Optimierung.
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30037 # MPPT1 power (W)
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30038 # MPPT2 power (W)
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30039 # MPPT3 power (W)
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30040 # MPPT4 power (W)
+        type: holding
+        decode: uint16
+      scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30001 # Battery power (W)
+      type: holding
+      decode: int16
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 33002 # Total energy discharged from battery (kWh)
+      type: holding
+      decode: uint32
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32104 # Battery SOC (%)
+      type: holding
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        # Enable RS485 Control Mode
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        # Set User Work Mode
+        - source: const
+          value: {{ .work_mode_normal }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43000 # User Work Mode
+              type: writesingle
+              decode: uint16
+        # Disable RS485 Control Mode
+        - source: const
+          value: 21947
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Disabled
+              type: writesingle
+              decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        # Enable RS485 Control Mode
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        # Set Force Charge/Discharge to Stop
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42010 # Force Charge/Discharge = Stop
+              type: writesingle
+              decode: uint16
+    # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        # Enable RS485 Control Mode
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        # Set Force Charge/Discharge to Charge
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42010 # Force Charge/Discharge = Charge
+              type: writesingle
+              decode: uint16
+        # Set Forcible Charge Power
+        - source: const
+          value: {{ .maxchargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42020 # Forcible Charge Power
+              type: writesingle
+              decode: uint16
+    # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
+  {{- include "battery-params" . }}
+  {{- end }}

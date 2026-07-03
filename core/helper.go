@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 
@@ -50,7 +51,7 @@ func ptrValueEqual[T comparable](a, b *T) bool {
 
 // hasFeature returns true if features are supported and given feature present
 func hasFeature(a any, f api.Feature) bool {
-	c, ok := a.(api.FeatureDescriber)
+	c, ok := api.Cap[api.FeatureDescriber](a)
 	return ok && slices.Contains(c.Features(), f)
 }
 
@@ -64,12 +65,7 @@ func deviceProperties[T any](dev config.Device[T]) config.Properties {
 
 // deviceTitleOrName returns device title or name
 func deviceTitleOrName[T any](dev config.Device[T]) string {
-	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
-		if title := d.Properties().Title; title != "" {
-			return title
-		}
-	}
-	return dev.Config().Name
+	return cmp.Or(deviceProperties(dev).Title, dev.Config().Name)
 }
 
 // circuitMaxPower returns a circuits power limit
@@ -81,20 +77,28 @@ func circuitMaxPower(circuit api.Circuit) float64 {
 	return circuit.GetMaxPower()
 }
 
-// circuitDimmed returns a circuits dim status
-func circuitDimmed(circuit api.Circuit) bool {
-	if circuit == nil {
-		return false
+// hemsDimmed returns the HEMS dim status, nil-safe
+func hemsDimmed(hems api.HEMS) *bool {
+	if hems == nil {
+		return nil
 	}
 
-	return circuit.Dimmed()
+	return hems.Dimmed()
 }
 
-// circuitCurtailed returns a circuit's curtail status
-func circuitCurtailed(circuit api.Circuit) bool {
-	if circuit == nil {
-		return false
+// hemsCurtailed returns the HEMS curtail percent, nil-safe
+func hemsCurtailed(hems api.HEMS) *int {
+	if hems == nil {
+		return nil
 	}
 
-	return circuit.Curtailed()
+	return hems.CurtailedPercent()
+}
+
+// nonZeroEnergy reports a zero lifetime energy reading as api.ErrNotAvailable.
+func nonZeroEnergy(f float64, err error) (float64, error) {
+	if err == nil && f == 0 {
+		return 0, api.ErrNotAvailable
+	}
+	return f, err
 }

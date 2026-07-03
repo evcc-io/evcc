@@ -1,29 +1,28 @@
 template: ford-connect
 deprecated: true
 products:
-  - brand: Ford (Legacy FordConnect)
+  - brand: Ford
+    description:
+      generic: FordConnect (Legacy)
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: clientid
     description:
       generic: FordConnect API Client ID
     help:
-      de: Einrichtung unter https://developer.ford.com
-      en: Setup at https://developer.ford.com
-    required: true
+      de: Einrichtung unter [developer.ford.com](https://developer.ford.com)
+      en: Setup at [developer.ford.com](https://developer.ford.com)
   - name: clientsecret
     description:
       generic: FordConnect API Client Secret
     help:
-      de: Einrichtung unter https://developer.ford.com
-      en: Setup at https://developer.ford.com
-    required: true
+      de: Einrichtung unter [developer.ford.com](https://developer.ford.com)
+      en: Setup at [developer.ford.com](https://developer.ford.com)
   - name: accessToken
     required: true
-    mask: true
   - name: refreshToken
     required: true
-    mask: true
   - name: vin
     example: WF0FXX...
   - name: cache
@@ -39,3 +38,4 @@ render: |
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
+  {{ include "vehicle-features" . }}

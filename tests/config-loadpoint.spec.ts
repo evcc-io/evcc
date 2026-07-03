@@ -103,6 +103,7 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByLabel("Charge status").selectOption("A");
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
 
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -156,7 +157,7 @@ test.describe("charging loadpoint", async () => {
     // second loadpoint: increase priority
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByLabel("Priority")).toHaveValue("0 (default)");
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("0");
     await lpModal.getByLabel("Priority").selectOption("1");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -182,7 +183,7 @@ test.describe("charging loadpoint", async () => {
     // check priorities
     await page.getByTestId("loadpoint").nth(1).getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByLabel("Priority")).toHaveValue("0 (default)");
+    await expect(lpModal.getByLabel("Priority")).toHaveValue("0");
   });
 
   test("vehicle", async ({ page }) => {
@@ -419,7 +420,7 @@ test.describe("charging loadpoint", async () => {
       "status: # charger status (A: not connected, B: connected, C: charging)"
     );
 
-    await editorClear(chargerEditor, 20);
+    await editorClear(chargerEditor);
     await editorPaste(
       chargerEditor,
       page,
@@ -458,7 +459,7 @@ power:
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
     const meterEditor = meterModal.getByTestId("yaml-editor");
-    await editorClear(meterEditor, 20);
+    await editorClear(meterEditor);
     await editorPaste(
       meterEditor,
       page,
@@ -506,6 +507,45 @@ power:
     await page.waitForLoadState("networkidle");
     await expect(chargerEditor).toContainText("value: 'C'");
     await expect(chargerEditor).toContainText("value: 11000");
+  });
+
+  test("user-defined switch socket (pool pump)", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    // add loadpoint
+    await newLoadpoint(page, "Pool pump");
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByRole("button", { name: "Add charger" }).click();
+
+    const chargerModal = page.getByTestId("charger-modal");
+    await expectModalVisible(chargerModal);
+    await chargerModal.getByLabel("Manufacturer").selectOption("User-defined switch socket");
+    await page.waitForLoadState("networkidle");
+    await expect(chargerModal.getByTestId("yaml-editor")).toContainText("switchdevice");
+
+    const result = chargerModal.getByTestId("test-result");
+    await result.getByRole("link", { name: "validate" }).click();
+    await expect(result).toContainText("Status: successful");
+    await expect(result).toContainText(["Power", "11.0 kW"].join(""));
+    await expect(result).toContainText(["Current control", "no"].join(""));
+
+    await chargerModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
+
+    const modeSelect = lpModal.getByLabel("Default mode");
+    await expect(modeSelect.getByRole("option", { name: "Solar", exact: true })).toHaveCount(1);
+    await expect(modeSelect.getByRole("option", { name: "Min+Solar" })).toHaveCount(0);
+
+    await expect(lpModal.getByText("Electrics")).toHaveCount(0);
+    await expect(lpModal.getByText("Charger type", { exact: true })).toHaveCount(0);
+
+    // create
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
+    await expect(page.getByTestId("loadpoint")).toContainText("Pool pump");
   });
 });
 
@@ -576,7 +616,7 @@ test.describe("heating loadpoint", async () => {
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
 
     const editor = modal.getByTestId("yaml-editor");
-    await editorClear(editor, 20);
+    await editorClear(editor);
     await editorPaste(
       editor,
       page,

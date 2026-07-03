@@ -155,9 +155,17 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 		}
 	}
 
-	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
 		if res, _, err := c.GetMinMaxCurrent(); err == nil {
 			chargerMin = res
+		}
+	}
+
+	// power-limited chargers (e.g. EEBus OHPCF heat pump) report their demand in
+	// W; convert to per-phase current so the PV enable gate covers it
+	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
+		if res, _, err := c.GetMinMaxPower(); err == nil && res > 0 {
+			chargerMin = res / (Voltage * float64(lp.minActivePhases()))
 		}
 	}
 
@@ -181,9 +189,15 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 		}
 	}
 
-	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil && res > 0 {
 			maxCurrent = min(maxCurrent, res)
+		}
+	}
+
+	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
+		if _, res, err := c.GetMinMaxPower(); err == nil && res > 0 {
+			maxCurrent = min(maxCurrent, res/(Voltage*float64(lp.maxActivePhases())))
 		}
 	}
 

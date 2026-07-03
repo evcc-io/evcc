@@ -1,5 +1,5 @@
 <template>
-	<div class="editor-container" :style="{ height: computedHeight }">
+	<div class="editor-container">
 		<YamlEditor
 			v-if="!hidden"
 			v-model="localValue"
@@ -28,11 +28,6 @@ export default {
 			localValue: this.modelValue,
 		};
 	},
-	computed: {
-		computedHeight() {
-			return Math.max(150, (this.localValue || "").split("\n").length * 18) + 22 + "px";
-		},
-	},
 	watch: {
 		modelValue: {
 			handler(newVal) {
@@ -53,14 +48,6 @@ export default {
 
 <style scoped>
 .editor-container {
-	width: 100%;
 	overflow: hidden;
-	margin: 0 -1rem 0 -1.25rem;
-}
-/* reset margins on lg */
-@media (min-width: 992px) {
-	.editor-container {
-		margin: 0;
-	}
 }
 </style>

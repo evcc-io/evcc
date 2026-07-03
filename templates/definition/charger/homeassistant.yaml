@@ -3,6 +3,7 @@ products:
   - brand: Home Assistant
     description:
       generic: Charger
+capabilities: ["dim"]
 group: generic
 requirements:
   description:
@@ -10,7 +11,7 @@ requirements:
     de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Wallbox-Entitäten und Services (z.B. `sensor.*`, `switch.*`, `number.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
-  params: [uri]
+  params: [uri, insecure]
 params:
   - name: uri
     description:
@@ -22,51 +23,52 @@ params:
       de: " " # overwrite default
     service: homeassistant/instances
     required: true
+  - name: insecure
   - name: status
     description:
       de: Ladestatus-Sensor
       en: Charging status sensor
-    service: homeassistant/entities?uri={uri}&domain=sensor,binary_sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,binary_sensor
     example: "sensor.charger_status"
     required: true
     help:
-      en: Entity ID for charging status (A=ready, B=connected, C=charging, F=error)
-      de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden, F=fehler)
+      en: Entity ID for charging status (A=ready, B=connected, C=charging)
+      de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden)
   - name: enabled
     description:
       de: Aktivierungsstatus-Sensor
       en: Enabled status sensor
-    service: homeassistant/entities?uri={uri}&domain=sensor,binary_sensor,switch
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,binary_sensor,switch
     example: "binary_sensor.charger_enabled"
     required: true
     help:
-      en: Entity ID for enabled state (sensor, binary_sensor or switch with on/off or true/false state)
-      de: Entitäts-ID für Aktivierungsstatus (sensor, binary_sensor oder switch mit on/off oder true/false Zustand)
+      en: Entity ID for enabled state (`sensor`, `binary_sensor` or `switch` with `on`/`off` or `true`/`false` state)
+      de: Entitäts-ID für Aktivierungsstatus (`sensor`, `binary_sensor` oder `switch` mit `on`/`off` oder `true`/`false` Zustand)
   - name: enable
     description:
       de: Aktivierungsschalter
       en: Enable switch
-    service: homeassistant/entities?uri={uri}&domain=switch,input_boolean
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=switch,input_boolean
     example: "switch.charger_enable"
     required: true
     help:
-      en: Entity ID for enable/disable control (switch or input_boolean)
-      de: Entitäts-ID für Aktivierungs-/Deaktivierungs-Steuerung (switch oder input_boolean)
+      en: Entity ID for enable/disable control (`switch` or `input_boolean`)
+      de: Entitäts-ID für Aktivierungs-/Deaktivierungs-Steuerung (`switch` oder `input_boolean`)
   - name: setMaxCurrent
     description:
       de: Maximale Stromstärke-Entität [A]
       en: Maximum current entity [A]
-    service: homeassistant/entities?uri={uri}&domain=number,input_number
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=number,input_number
     example: "number.charger_max_current"
     required: true
     help:
-      en: Entity ID for setting maximum current in amperes (number or input_number entity)
-      de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (number oder input_number Entität)
+      en: Entity ID for setting maximum current in amperes (`number` or `input_number` entity)
+      de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (`number` oder `input_number` Entität)
   - name: power
     description:
       de: Leistungsentität
       en: Power entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_power"
     advanced: true
     help:
@@ -76,7 +78,7 @@ params:
     description:
       de: Energieentität
       en: Energy entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_energy"
     advanced: true
     help:
@@ -86,7 +88,7 @@ params:
     description:
       de: L1 Stromentität
       en: L1 current entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_current_l1"
     advanced: true
     help:
@@ -96,7 +98,7 @@ params:
     description:
       de: L2 Stromentität
       en: L2 current entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_current_l2"
     advanced: true
     help:
@@ -106,7 +108,7 @@ params:
     description:
       de: L3 Stromentität
       en: L3 current entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_current_l3"
     advanced: true
     help:
@@ -116,7 +118,7 @@ params:
     description:
       de: L1 Spannungsentität
       en: L1 voltage entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_voltage_l1"
     advanced: true
     help:
@@ -126,7 +128,7 @@ params:
     description:
       de: L2 Spannungsentität
       en: L2 voltage entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_voltage_l2"
     advanced: true
     help:
@@ -136,15 +138,32 @@ params:
     description:
       de: L3 Spannungsentität
       en: L3 voltage entity
-    service: homeassistant/entities?uri={uri}&domain=sensor
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
     example: "sensor.charger_voltage_l3"
     advanced: true
     help:
       en: Entity ID for L3 voltage measurement in volts
       de: Entitäts-ID für L3 Spannungsmessung in Volt
+
+  # cannot uses phases as it has type int
+  - name: phases
+    deprecated: true
+
+  - name: phaseswitch
+    description:
+      de: Phasenumschaltungs-Entität
+      en: Phase switching entity
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=select,input_select
+    example: "select.charger_phases"
+    advanced: true
+    help:
+      en: Entity ID for 1p/3p phase switching (select entity with options "1" and "3")
+      de: Entitäts-ID für 1p/3p Phasenumschaltung (Select-Entität mit Optionen "1" und "3")
+  - preset: charger-features
 render: |
   type: homeassistant
   uri: {{ .uri }}
+  insecure: {{ .insecure }}
   status: {{ .status }}
   enabled: {{ .enabled }}
   enable: {{ .enable }}
@@ -163,3 +182,5 @@ render: |
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
   {{- end }}
+  phases: {{ .phaseswitch }}
+  {{ include "charger-features" . }}
