@@ -67,7 +67,7 @@ render: |
             set:
               source: sunspec
               {{- include "modbus" . | indent 12 }}
-	      value: 704:WMaxLimPctEna
+              value: 704:WMaxLimPctEna
       default:
         source: const
         value: 1 # Limit enabled
