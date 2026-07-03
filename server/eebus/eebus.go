@@ -110,19 +110,15 @@ func Instance() (*EEBus, error) {
 
 func GetStatus() any {
 	var ski string
-	var pairings []shipapi.ServiceIdentity
 	if instance != nil {
 		ski = instance.Ski()
-		pairings = instance.Pairings()
 	}
 	return struct {
-		Ski      string                    `json:"ski"`
-		QR       string                    `json:"qr,omitempty"`
-		Pairings []shipapi.ServiceIdentity `json:"pairings,omitempty"`
+		Ski string `json:"ski"`
+		QR  string `json:"qr,omitempty"`
 	}{
-		Ski:      ski,
-		QR:       qrCode(),
-		Pairings: pairings,
+		Ski: ski,
+		QR:  qrCode(),
 	}
 }
 

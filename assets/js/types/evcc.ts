@@ -591,15 +591,11 @@ export type EebusConfig = {
 export type EebusStatus = {
   ski: string;
   qr?: string;
-  pairings?: EebusPairing[];
 };
 
 export type EebusPairing = {
   ski: string;
-  fingerprint: string;
   shipID: string;
-  pairingType: number;
-  ipv4?: string;
 };
 
 export type ModbusProxy = {
