@@ -645,7 +645,7 @@ render: |
                   out
       - source: watchdog
         timeout: 30s
-        reset: 1
+        reset: [1, 2, 4]
         set:
           source: switch
           switch:
