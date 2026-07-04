@@ -16,8 +16,6 @@ params:
     deprecated: true
   - name: autodetectdisabled
     deprecated: true
-  - name: wakeupdisabled
-    deprecated: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}

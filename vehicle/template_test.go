@@ -53,6 +53,11 @@ func TestVehicleFeatureParamsConsistent(t *testing.T) {
 		}
 
 		for _, feat := range onlineVehicleFeatures {
+			// not every template ever offered every feature (e.g. wakeupdisabled is new)
+			if i, _ := tmpl.ParamByName(feat); i < 0 {
+				continue
+			}
+
 			values := tmpl.Defaults(templates.RenderModeUnitTest)
 			values["template"] = tmpl.Template
 			values[feat] = true
