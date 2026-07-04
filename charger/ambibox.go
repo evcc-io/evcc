@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
@@ -37,7 +36,6 @@ import (
 // device/evCharger/{id}/…: evcc subscribes to the published state and publishes
 // to the control topics.
 type Ambibox struct {
-	implement.Caps
 	log    *util.Logger
 	client *mqtt.Client
 	base   string
@@ -48,7 +46,8 @@ type Ambibox struct {
 	replugG       func() (bool, error)
 	sessionStateG func() (string, error)
 	powerG        func() (float64, error)
-	energyG       func() (float64, error)
+	energyImpG    func() (float64, error)
+	energyExpG    func() (float64, error)
 	energySessG   func() (float64, error)
 	socG          func() (float64, error)
 	phasesG       func() (int64, error)
@@ -88,21 +87,7 @@ func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	wb, err := NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.Timeout)
-	if err != nil {
-		return nil, err
-	}
-
-	// optional device measurements
-	implement.May(wb, implement.Meter(wb.currentPower))
-	implement.May(wb, implement.MeterEnergy(wb.totalEnergy))
-	implement.May(wb, implement.ChargeRater(wb.chargedEnergy))
-	implement.May(wb, implement.PhaseCurrents(wb.currents))
-	implement.May(wb, implement.PhaseVoltages(wb.voltages))
-	implement.May(wb, implement.Battery(wb.soc))
-	implement.May(wb, implement.Resurrector(wb.wakeUp))
-
-	return wb, nil
+	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.Timeout)
 }
 
 // NewAmbibox creates an Ambibox charger
@@ -115,7 +100,6 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (
 	}
 
 	wb := &Ambibox{
-		Caps:   implement.New(),
 		log:    log,
 		client: client,
 		base:   fmt.Sprintf("%s/%s", topic, id),
@@ -144,7 +128,10 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (
 	if wb.powerG, err = floatG("powerAc", timeout); err != nil {
 		return nil, err
 	}
-	if wb.energyG, err = floatG("energyAcImport", 0); err != nil {
+	if wb.energyImpG, err = floatG("energyAcImport", 0); err != nil {
+		return nil, err
+	}
+	if wb.energyExpG, err = floatG("energyAcExport", 0); err != nil {
 		return nil, err
 	}
 	if wb.energySessG, err = floatG("energyAcImportSession", 0); err != nil {
@@ -182,7 +169,7 @@ func (wb *Ambibox) publish(sub string, retained bool, payload string) {
 
 // targetWatts converts a charging current (AC) into the Ambibox targetPower (DC)
 // setpoint (negative = charge), based on measured voltage and active phases.
-func (wb *Ambibox) targetWatts(currentA float64) float64 {
+func (wb *Ambibox) targetWatts(current float64) float64 {
 	phases := 3
 	if p, err := wb.phasesG(); err == nil && p >= 1 && p <= 3 {
 		phases = int(p)
@@ -197,7 +184,7 @@ func (wb *Ambibox) targetWatts(currentA float64) float64 {
 		sum += v
 	}
 
-	return -currentA * sum
+	return -current * sum
 }
 
 // setTargetPhaseCurrent publishes the targetPower setpoint for the given current.
@@ -224,16 +211,10 @@ func (wb *Ambibox) Status() (api.ChargeStatus, error) {
 	}
 
 	// vehicle connected: distinguish charging (C) from connected-only (B)
-	charging := false
 	if s, err := wb.sessionStateG(); err == nil && s == "CHARGE_LOOP" {
-		charging = true
-	} else if p, err := wb.powerG(); err == nil && p > 50 {
-		charging = true
-	}
-
-	if charging {
 		return api.StatusC, nil
 	}
+
 	return api.StatusB, nil
 }
 
@@ -282,30 +263,48 @@ func (wb *Ambibox) MaxCurrentMillis(current float64) error {
 	return nil
 }
 
-// currentPower implements the api.Meter interface
-func (wb *Ambibox) currentPower() (float64, error) {
+var _ api.Meter = (*Ambibox)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *Ambibox) CurrentPower() (float64, error) {
 	return wb.powerG()
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *Ambibox) totalEnergy() (float64, error) {
-	f, err := wb.energyG()
+var _ api.MeterEnergy = (*Ambibox)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *Ambibox) TotalEnergy() (float64, error) {
+	f, err := wb.energyImpG()
 	return f / 1e3, err
 }
 
-// chargedEnergy implements the api.ChargeRater interface
-func (wb *Ambibox) chargedEnergy() (float64, error) {
+var _ api.MeterReturnEnergy = (*Ambibox)(nil)
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (wb *Ambibox) ReturnEnergy() (float64, error) {
+	f, err := wb.energyExpG()
+	return f / 1e3, err
+}
+
+var _ api.ChargeRater = (*Ambibox)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Ambibox) ChargedEnergy() (float64, error) {
 	f, err := wb.energySessG()
 	return f / 1e3, err
 }
 
-// currents implements the api.PhaseCurrents interface
-func (wb *Ambibox) currents() (float64, float64, float64, error) {
+var _ api.PhaseCurrents = (*Ambibox)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *Ambibox) Currents() (float64, float64, float64, error) {
 	return wb.phaseValues(wb.currG)
 }
 
-// voltages implements the api.PhaseVoltages interface
-func (wb *Ambibox) voltages() (float64, float64, float64, error) {
+var _ api.PhaseVoltages = (*Ambibox)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *Ambibox) Voltages() (float64, float64, float64, error) {
 	return wb.phaseValues(wb.voltG)
 }
 
@@ -321,13 +320,17 @@ func (wb *Ambibox) phaseValues(g [3]func() (float64, error)) (float64, float64, 
 	return res[0], res[1], res[2], nil
 }
 
-// soc implements the api.Battery interface
-func (wb *Ambibox) soc() (float64, error) {
+var _ api.Battery = (*Ambibox)(nil)
+
+// Soc implements the api.Battery interface
+func (wb *Ambibox) Soc() (float64, error) {
 	return wb.socG()
 }
 
-// wakeUp implements the api.Resurrector interface
-func (wb *Ambibox) wakeUp() error {
+var _ api.Resurrector = (*Ambibox)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (wb *Ambibox) WakeUp() error {
 	wb.publish("wakeUp", false, strconv.FormatBool(true))
 	return nil
 }
