@@ -43,6 +43,7 @@ type WarpWS struct {
 
 	// capabilities
 	features []string
+	warpType string
 
 	// evse
 	evse       warp.Evse
@@ -103,7 +104,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	// Feature: EV (WARP4): vehicle soc and mac read via ISO 15118
-	hasEv := w.hasEvState()
+	hasEv := w.warpType == "warp4"
 	if hasEv {
 		implement.Has(w, implement.Battery(w.soc))
 	}
@@ -150,6 +151,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	if err != nil {
 		return nil, err
 	}
+	w.warpType = typ
 	if typ == "warp3" || typ == "warp4" || (typ == "warp2" && emURI != "") {
 		enabled, err := w.disablePhaseAutoSwitch()
 		if err != nil {
@@ -454,28 +456,14 @@ func (w *WarpWS) identify() (string, error) {
 	return w.chargeTracker.AuthorizationInfo.TagId, nil
 }
 
-// hasEvState probes the ev/state api provided by WARP4 devices
-func (w *WarpWS) hasEvState() bool {
-	var res warp.EvState
-	if err := w.GetJSON(fmt.Sprintf("%s/ev/state", w.URI), &res); err != nil {
-		return false
-	}
-
-	w.mu.Lock()
-	w.evState = &res
-	w.mu.Unlock()
-
-	return true
-}
-
 // soc implements the api.Battery interface
 func (w *WarpWS) soc() (float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	if w.evState == nil || w.evState.Soc == nil {
-		return 0, api.ErrNotAvailable
+	if w.evState != nil && w.evState.Soc != nil {
+		return *w.evState.Soc, nil
 	}
-	return *w.evState.Soc, nil
+	return 0, api.ErrNotAvailable
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
