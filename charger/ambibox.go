@@ -41,19 +41,20 @@ type Ambibox struct {
 	base   string
 
 	// state getters (device publishes, evcc subscribes)
-	connectedG    func() (bool, error)
-	evConnectedG  func() (bool, error)
-	replugG       func() (bool, error)
-	sessionStateG func() (string, error)
-	powerG        func() (float64, error)
-	energyImpG    func() (float64, error)
-	energyExpG    func() (float64, error)
-	energySessG   func() (float64, error)
-	socG          func() (float64, error)
-	phasesG       func() (int64, error)
-	currG         [3]func() (float64, error)
-	voltG         [3]func() (float64, error)
-	targetPowerG  func() (float64, error) // read-back of the published control setpoint
+	connectedG     func() (bool, error)
+	evConnectedG   func() (bool, error)
+	replugG        func() (bool, error)
+	sessionStateG  func() (string, error)
+	powerG         func() (float64, error)
+	energyImpG     func() (float64, error)
+	energyExpG     func() (float64, error)
+	energySessImpG func() (float64, error)
+	energySessExpG func() (float64, error)
+	socG           func() (float64, error)
+	phasesG        func() (int64, error)
+	currG          [3]func() (float64, error)
+	voltG          [3]func() (float64, error)
+	targetPowerG   func() (float64, error) // read-back of the published control setpoint
 
 	// last requested current in A, restored when charging is (re-)enabled
 	current float64
@@ -112,6 +113,12 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (
 	floatG := func(sub string, to time.Duration) (func() (float64, error), error) {
 		return plugin.NewMqtt(log, client, wb.topic(sub), to).FloatGetter()
 	}
+	intG := func(sub string, to time.Duration) (func() (int64, error), error) {
+		return plugin.NewMqtt(log, client, wb.topic(sub), to).IntGetter()
+	}
+	stringG := func(sub string, to time.Duration) (func() (string, error), error) {
+		return plugin.NewMqtt(log, client, wb.topic(sub), to).StringGetter()
+	}
 
 	if wb.connectedG, err = boolG("connected", timeout); err != nil {
 		return nil, err
@@ -122,7 +129,7 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (
 	if wb.replugG, err = boolG("replugRequired", 0); err != nil {
 		return nil, err
 	}
-	if wb.sessionStateG, err = plugin.NewMqtt(log, client, wb.topic("sessionState"), timeout).StringGetter(); err != nil {
+	if wb.sessionStateG, err = stringG("sessionState", timeout); err != nil {
 		return nil, err
 	}
 	if wb.powerG, err = floatG("powerAc", timeout); err != nil {
@@ -134,7 +141,11 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (
 	if wb.energyExpG, err = floatG("energyAcExport", 0); err != nil {
 		return nil, err
 	}
-	if wb.energySessG, err = floatG("energyAcImportSession", 0); err != nil {
+	if wb.energySessImpG, err = floatG("energyAcImportSession", 0); err != nil {
+		return nil, err
+	}
+	// no matching interface for exported session energy yet
+	if wb.energySessExpG, err = floatG("energyAcExportSession", 0); err != nil {
 		return nil, err
 	}
 	if wb.socG, err = floatG("soc", 0); err != nil {
@@ -143,7 +154,7 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (
 	if wb.targetPowerG, err = floatG("targetPower", timeout); err != nil {
 		return nil, err
 	}
-	if wb.phasesG, err = plugin.NewMqtt(log, client, wb.topic("numberPhases"), 0).IntGetter(); err != nil {
+	if wb.phasesG, err = intG("numberPhases", 0); err != nil {
 		return nil, err
 	}
 	for i := range 3 {
@@ -168,7 +179,7 @@ func (wb *Ambibox) publish(sub string, retained bool, payload string) {
 }
 
 // targetWatts converts a charging current (AC) into the Ambibox targetPower (DC)
-// setpoint (negative = charge), based on measured voltage and active phases.
+// setpoint (negative = charge), based on measured voltage and active phases on AC side.
 func (wb *Ambibox) targetWatts(current float64) float64 {
 	phases := 3
 	if p, err := wb.phasesG(); err == nil && p >= 1 && p <= 3 {
@@ -290,7 +301,7 @@ var _ api.ChargeRater = (*Ambibox)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Ambibox) ChargedEnergy() (float64, error) {
-	f, err := wb.energySessG()
+	f, err := wb.energySessImpG()
 	return f / 1e3, err
 }
 
