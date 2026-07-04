@@ -54,7 +54,9 @@ Note: The official website of the manufacturer or service provider is the refere
 
 **Possible Values**:
 
-- `iso151182`: If the charger supports communicating via ISO15118-2
+- `iso15118-2`: If the charger supports communicating via ISO 15118-2
+- `iso15118-20`: If the charger supports communicating via ISO 15118-20
+- `din70121`: If the charger supports communicating via DIN 70121
 - `rfid`: If the charger supports RFID
 - `1p3p`: If the charger supports 1P/3P-phase switching
 - `smahems`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now

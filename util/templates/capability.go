@@ -6,7 +6,11 @@ type Capability int
 const (
 	_ Capability = iota
 	// ISO 15118-2 support
-	CapabilityISO151182 // iso151182
+	CapabilityISO151182 // iso15118-2
+	// ISO 15118-20 support
+	CapabilityISO1511820 // iso15118-20
+	// DIN 70121 support
+	CapabilityDIN70121 // din70121
 	// granular current control support
 	CapabilityMilliAmps // mA
 	// RFID support
