@@ -175,6 +175,10 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
+	if lp.vehicleHasFeature(api.WakeUpDisabled) {
+		return
+	}
+
 	// wake up charger or vehicle. First wakeupAttemptsLeft will be odd.
 	charger, chargerCanWakeUp := api.Cap[api.Resurrector](lp.charger)
 	vehicle, vehicleCanWakeUp := api.Cap[api.Resurrector](lp.GetVehicle())
