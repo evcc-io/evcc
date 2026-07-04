@@ -643,6 +643,8 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
+      # normal/hold/holdcharge (1,2,4) already stopped 47100 above; only charge
+      # (3, excluded from reset) needs it periodically reasserted here
       - source: watchdog
         timeout: 30s
         reset: [1, 2, 4]
