@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	shipapi "github.com/enbility/ship-go/api"
 	"github.com/evcc-io/evcc/server/service"
 )
 
@@ -27,9 +26,9 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-// getPairings returns the devices paired via the SHIP Pairing Service
+// getPairings returns all trusted devices, tagged by how trust was established
 func getPairings(w http.ResponseWriter, req *http.Request) {
-	res := []shipapi.ServiceIdentity{}
+	res := []PairingInfo{}
 	if instance != nil {
 		res = append(res, instance.Pairings()...)
 	}

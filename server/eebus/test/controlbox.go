@@ -60,8 +60,11 @@ func newControlbox(pairing *shipapi.PairingConfig, port int) (*controlbox, error
 		ski: ski,
 	}
 
+	// unique per instance: a shared serial collides on ShipID when multiple controlboxes run concurrently
+	serial := ski[:8]
+
 	configuration, err := api.NewConfiguration(
-		"Demo", "Demo", "ControlBox", "123456789",
+		"Demo", "Demo", "ControlBox", serial,
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
 		model.DeviceTypeTypeElectricitySupplySystem,
 		[]model.EntityTypeType{model.EntityTypeTypeGridGuard},
@@ -69,7 +72,7 @@ func newControlbox(pairing *shipapi.PairingConfig, port int) (*controlbox, error
 	if err != nil {
 		return nil, err
 	}
-	configuration.SetAlternateIdentifier("Demo-ControlBox-123456789")
+	configuration.SetAlternateIdentifier("Demo-ControlBox-" + serial)
 
 	h.myService = service.NewService(configuration, h)
 	// h.myService.SetLogging(h)

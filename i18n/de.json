@@ -264,10 +264,12 @@
         "public": "Öffentliches Zertifikat",
         "title": "Zertifikate"
       },
+      "configuredDevices": "Konfigurierte Geräte",
       "description": "Konfiguration zur Kommunikation mit EEBus-kompatiblen Geräten wie Wallboxen oder dem Steuergerät des Netzbetreibers. Alle notwendigen Initialisierungen und die Zertifikatsgenerierung erfolgen automatisch beim ersten Start.",
       "descriptionAdvanced": "Keine Änderungen erforderlich. Bei Änderung ist Neukoppelung aller Geräte erforderlich.",
       "interfaces": "Schnittstellen",
       "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
+      "noConfiguredDevices": "Keine per SKI konfigurierten Geräte.",
       "noPairings": "Keine gekoppelten Geräte.",
       "pairings": "Gekoppelte Geräte",
       "port": "Port",

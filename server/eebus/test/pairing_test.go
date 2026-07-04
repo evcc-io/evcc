@@ -88,15 +88,25 @@ func createPairingControlbox(ctx context.Context, qr string, port int) (*control
 	return h, err
 }
 
-// connectHems creates the hems consumer for the SHIP-paired device (no configured SKI)
+// connectHems creates the hems consumer for ski (empty ski = SHIP-paired device)
 // and returns the connect result asynchronously
-func connectHems(ctx context.Context) <-chan error {
+func connectHems(ctx context.Context, ski string) <-chan error {
 	errC := make(chan error, 1)
 	go func() {
-		_, err := hems.NewEEBus(ctx, "", hems.Limits{}, nil, nil, time.Second)
+		_, err := hems.NewEEBus(ctx, ski, hems.Limits{}, nil, nil, time.Second)
 		errC <- err
 	}()
 	return errC
+}
+
+// findPairing returns the first pairing matching source
+func findPairing(pairings []server.PairingInfo, source server.PairingSource) (server.PairingInfo, bool) {
+	for _, p := range pairings {
+		if p.Source == source {
+			return p, true
+		}
+	}
+	return server.PairingInfo{}, false
 }
 
 func TestShipPairing(t *testing.T) {
@@ -137,7 +147,7 @@ func TestShipPairing(t *testing.T) {
 	// consumer for the SHIP-paired controlbox must connect once pairing completes
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel()
-	hemsC := connectHems(ctx)
+	hemsC := connectHems(ctx, "")
 
 	box, err := createPairingControlbox(t.Context(), qr, freePort(t))
 	require.NoError(t, err, "controlbox")
@@ -166,13 +176,32 @@ func TestShipPairing(t *testing.T) {
 
 	ctx2, cancel2 := context.WithTimeout(t.Context(), time.Minute)
 	defer cancel2()
-	require.NoError(t, <-connectHems(ctx2), "paired device not reconnected after restart")
+	require.NoError(t, <-connectHems(ctx2, ""), "paired device not reconnected after restart")
+
+	// a device trusted by configured SKI must be listed too, tagged accordingly,
+	// and must not be removable via RemovePairing
+	box2, err := createControlbox(t.Context(), inst.Ski(), freePort(t))
+	require.NoError(t, err, "ski-configured controlbox")
+
+	ctx3, cancel3 := context.WithTimeout(t.Context(), time.Minute)
+	defer cancel3()
+	require.NoError(t, <-connectHems(ctx3, box2.ski), "ski-configured device not connected")
+
+	pairings := inst.Pairings()
+	require.Len(t, pairings, 2)
+
+	pairedEntry, ok := findPairing(pairings, server.PairingSourcePaired)
+	require.True(t, ok, "paired entry missing")
+	skiEntry, ok := findPairing(pairings, server.PairingSourceSki)
+	require.True(t, ok, "ski entry missing")
+	require.Equal(t, box2.ski, skiEntry.SKI)
+
+	require.False(t, inst.RemovePairing(skiEntry.SKI), "ski-configured pairing must not be removable")
+	require.Len(t, inst.Pairings(), 2)
 
 	// remove the individual pairing- trust is revoked and persisted state cleared
-	pairings := inst.Pairings()
-	require.Len(t, pairings, 1)
-	require.True(t, inst.RemovePairing(pairings[0].ShipID), "pairing not removed")
-	require.Empty(t, inst.Pairings())
+	require.True(t, inst.RemovePairing(pairedEntry.ShipID), "pairing not removed")
+	require.Len(t, inst.Pairings(), 1)
 
 	require.NoError(t, settings.Json("eebus.pairing.trusted", &identities))
 	require.Empty(t, identities, "removed pairing still persisted")

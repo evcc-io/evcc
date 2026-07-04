@@ -596,6 +596,7 @@ export type EebusStatus = {
 export type EebusPairing = {
   ski: string;
   shipID: string;
+  source: "paired" | "ski";
 };
 
 export type ModbusProxy = {

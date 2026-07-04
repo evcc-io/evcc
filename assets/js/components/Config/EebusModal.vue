@@ -52,7 +52,7 @@
 			<div v-if="status.ski" class="mb-4">
 				<h6 class="mb-3">{{ $t("config.eebus.pairings") }}</h6>
 				<div
-					v-for="pairing in pairings"
+					v-for="pairing in pairedDevices"
 					:key="pairing.shipID || pairing.ski"
 					data-testid="eebus-pairing"
 					class="mb-2"
@@ -63,7 +63,10 @@
 						<div class="flex-grow-1 fw-semibold text-truncate">
 							{{ pairing.shipID || pairing.ski }}
 						</div>
-						<small v-if="pairing.ski" class="text-muted ms-2 me-2 text-truncate">
+						<small
+							v-if="pairing.shipID && pairing.ski"
+							class="text-muted ms-2 me-2 text-truncate"
+						>
 							{{ pairing.ski }}
 						</small>
 						<button
@@ -79,8 +82,28 @@
 						</button>
 					</div>
 				</div>
-				<div v-if="!pairings.length" class="text-muted small mb-2">
+				<div v-if="!pairedDevices.length" class="text-muted small mb-2">
 					{{ $t("config.eebus.noPairings") }}
+				</div>
+			</div>
+			<div v-if="status.ski" class="mb-4">
+				<h6 class="mb-3">{{ $t("config.eebus.configuredDevices") }}</h6>
+				<div
+					v-for="pairing in configuredDevices"
+					:key="pairing.ski"
+					data-testid="eebus-configured-device"
+					class="mb-2"
+				>
+					<div
+						class="d-flex align-items-center justify-content-between py-2 ps-3 pe-2 border rounded"
+					>
+						<div class="flex-grow-1 fw-semibold text-truncate">
+							{{ pairing.ski }}
+						</div>
+					</div>
+				</div>
+				<div v-if="!configuredDevices.length" class="text-muted small mb-2">
+					{{ $t("config.eebus.noConfiguredDevices") }}
 				</div>
 			</div>
 			<PropertyCollapsible v-if="!fromYaml">
@@ -198,6 +221,12 @@ export default {
 	computed: {
 		fromYaml(): boolean {
 			return this.yamlSource === "file";
+		},
+		pairedDevices(): EebusPairing[] {
+			return this.pairings.filter((p) => p.source === "paired");
+		},
+		configuredDevices(): EebusPairing[] {
+			return this.pairings.filter((p) => p.source === "ski");
 		},
 	},
 	watch: {

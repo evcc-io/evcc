@@ -300,11 +300,45 @@ func (c *EEBus) Ski() string {
 	return c.ski
 }
 
-// Pairings returns the identities of devices paired via the SHIP Pairing Service
-func (c *EEBus) Pairings() []shipapi.ServiceIdentity {
+// PairingSource identifies how trust for a device was established
+type PairingSource string
+
+const (
+	PairingSourcePaired PairingSource = "paired" // trusted via SHIP Pairing Service, removable
+	PairingSourceSki    PairingSource = "ski"    // trusted by configured SKI, not removable here
+)
+
+// PairingInfo describes a trusted device, regardless of how trust was established
+type PairingInfo struct {
+	shipapi.ServiceIdentity
+	Source PairingSource `json:"source"`
+}
+
+// Pairings returns all trusted devices, tagged by how trust was established
+func (c *EEBus) Pairings() []PairingInfo {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	return slices.Clone(c.paired)
+
+	res := make([]PairingInfo, 0, len(c.paired)+len(c.clients))
+	for _, identity := range c.paired {
+		res = append(res, PairingInfo{ServiceIdentity: identity, Source: PairingSourcePaired})
+	}
+
+	for ski := range c.clients {
+		if ski == "" || c.pairedIndex(shipapi.NewServiceIdentity(ski, "", "")) >= 0 {
+			continue
+		}
+		res = append(res, PairingInfo{
+			ServiceIdentity: shipapi.NewServiceIdentity(ski, "", ""),
+			Source:          PairingSourceSki,
+		})
+	}
+
+	slices.SortFunc(res, func(a, b PairingInfo) int {
+		return strings.Compare(a.SKI+a.ShipID, b.SKI+b.ShipID)
+	})
+
+	return res
 }
 
 // RemovePairing removes a single pairing identified by ship id or ski and revokes its trust
