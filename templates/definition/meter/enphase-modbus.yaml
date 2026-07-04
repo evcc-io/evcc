@@ -65,26 +65,26 @@ render: |
   curtail:
     source: sequence
     set:
-    - source: sunspec
-      {{- include "modbus" . | indent 4 }}
-      value: 704:WMaxLimPct
-    - source: switch
-      switch:
-        - case: 100 # Uncurtailed
-          set:
-            source: const
-            value: 0 # Limit disabled
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
             set:
-              source: sunspec
-              {{- include "modbus" . | indent 12 }}
-              value: 704:WMaxLimPctEna
-      default:
-        source: const
-        value: 1 # Limit enabled
-        set:
-          source: sunspec
-          {{- include "modbus" . | indent 8 }}
-          value: 704:WMaxLimPctEna
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value: 704:WMaxLimPctEna
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 704:WMaxLimPctEna
   curtailed:
     source: modbus
     {{- include "modbus" . | indent 2 }}
