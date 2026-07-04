@@ -102,9 +102,8 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		implement.Has(w, implement.PhaseVoltages(w.voltages))
 	}
 
-	// Feature: EV (WARP4): vehicle soc and mac read via ISO 15118;
-	// not announced in info/features, hence probing the api
-	hasEv := w.hasEvState()
+	// Feature: EV (WARP4): vehicle soc and mac read via ISO 15118
+	hasEv := w.hasFeature(warp.FeatureEv)
 	if hasEv {
 		implement.Has(w, implement.Battery(w.soc))
 	}
@@ -453,12 +452,6 @@ func (w *WarpWS) identify() (string, error) {
 		return w.evState.Mac, nil
 	}
 	return w.chargeTracker.AuthorizationInfo.TagId, nil
-}
-
-// hasEvState probes the ev/state api provided by WARP4 devices
-func (w *WarpWS) hasEvState() bool {
-	var res warp.EvState
-	return w.GetJSON(fmt.Sprintf("%s/ev/state", w.URI), &res) == nil
 }
 
 // soc implements the api.Battery interface

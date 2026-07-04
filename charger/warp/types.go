@@ -1,6 +1,7 @@
 package warp
 
 const (
+	FeatureEv             = "ev"
 	FeatureMeter          = "meter"
 	FeatureMeters         = "meters"
 	FeatureMeterAllValues = "meter_all_values"
