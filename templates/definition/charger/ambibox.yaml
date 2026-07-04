@@ -1,0 +1,20 @@
+template: ambibox
+products:
+  - brand: Ambibox
+    description:
+      generic: ambiCHARGE Home
+capabilities: ["iso151182", "mA", "meter"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - preset: mqtt
+  - name: topic
+    default: device/evCharger
+  - name: id
+    required: true
+    example: "1"
+render: |
+  type: ambibox
+  {{- include "mqtt" . }}
+  topic: {{ .topic }}
+  id: {{ .id }}
