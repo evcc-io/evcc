@@ -72,6 +72,29 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 	}
 }
 
+func TestEffectivePowerLimiter(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	phases := float64(lp.minActivePhases()) // == maxActivePhases for default lp
+
+	powerLimiter := api.NewMockPowerLimiter(ctrl)
+	// min 10A, max 12A worth of power across all phases
+	powerLimiter.EXPECT().GetMinMaxPower().Return(230*phases*10, 230*phases*12, nil).AnyTimes()
+
+	lp.charger = struct {
+		api.Charger
+		api.PowerLimiter
+	}{
+		Charger:      api.NewMockCharger(ctrl),
+		PowerLimiter: powerLimiter,
+	}
+
+	assert.Equal(t, 10.0, lp.effectiveMinCurrent(), "min")
+	assert.Equal(t, 12.0, lp.effectiveMaxCurrent(), "max")
+}
+
 func TestNextPlan(t *testing.T) {
 	clock := clock.NewMock()
 

@@ -7,6 +7,9 @@ import {
   GridComponent,
   TooltipComponent,
   MarkPointComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
+  GraphicComponent,
   AxisPointerComponent,
 } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
@@ -18,6 +21,9 @@ echarts.use([
   TooltipComponent,
   AxisPointerComponent,
   MarkPointComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
+  GraphicComponent,
   SVGRenderer,
 ]);
 
@@ -121,11 +127,16 @@ export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[
   const hasName = rows.some((r) => r.name != null);
   const valueCols = Math.max(1, ...rows.map((r) => r.values.length));
   const colCount = (hasName ? 1 : 0) + valueCols;
-  // lone value centers under the date; multiple columns line up right
-  const valCls = hasName || valueCols > 1 ? "fw-normal text-end ps-3" : "fw-normal text-center";
+  // No name col + two value cols: first col left-aligned, second right-aligned.
+  // Otherwise: lone value centers, multiple/named columns right-align.
+  const valClsFn = (i: number): string => {
+    if (!hasName && valueCols > 1 && i === 0) return "fw-normal text-start";
+    if (hasName || valueCols > 1) return "fw-normal text-end ps-3";
+    return "fw-normal text-center";
+  };
   const headerRow = headers?.length
     ? `<tr>${hasName ? "<td></td>" : ""}${headers
-        .map((h) => `<td class="fw-normal text-end ps-3">${h}</td>`)
+        .map((h, i) => `<td class="${valClsFn(i)}">${h}</td>`)
         .join("")}</tr>`
     : "";
   const body = rows
@@ -133,7 +144,7 @@ export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[
       const nameTd = hasName
         ? `<td class="fw-normal text-start">${escapeHtml(r.name ?? "")}</td>`
         : "";
-      const valTds = r.values.map((v) => `<td class="${valCls}">${v}</td>`).join("");
+      const valTds = r.values.map((v, i) => `<td class="${valClsFn(i)}">${v}</td>`).join("");
       return `<tr>${nameTd}${valTds}</tr>`;
     })
     .join("");

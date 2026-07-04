@@ -18,4 +18,5 @@ const (
 	WelcomeCharge              // vehicle
 	ClimaterDisabled           // vehicle - ignore climater state for charge control
 	AutodetectDisabled         // vehicle - do not try to identify vehicle by status
+	WakeUpDisabled             // vehicle - do not send wake-up calls
 )
