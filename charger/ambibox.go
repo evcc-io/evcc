@@ -31,14 +31,11 @@ import (
 )
 
 // Ambibox is the Ambibox ambiCHARGE Home charger implementation.
-// It talks to the wallbox via the standardized Ambibox MQTT device interface
-// (Ipc 0.4.0-pre, section "2.4 EV Charger"). All topics live below the prefix
-// device/evCharger/{id}/…: evcc subscribes to the published state and publishes
-// to the control topics.
 type Ambibox struct {
-	log    *util.Logger
-	client *mqtt.Client
-	base   string
+	log     *util.Logger
+	client  *mqtt.Client
+	base    string
+	current float64
 
 	// state getters (device publishes, evcc subscribes)
 	connectedG     func() (bool, error)
@@ -56,9 +53,6 @@ type Ambibox struct {
 	currG          [3]func() (float64, error)
 	voltG          [3]func() (float64, error)
 	targetPowerG   func() (float64, error) // read-back of the published control setpoint
-
-	// last requested current in A, restored when charging is (re-)enabled
-	current float64
 }
 
 func init() {
