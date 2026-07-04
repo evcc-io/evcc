@@ -646,6 +646,7 @@ render: |
       - source: watchdog
         timeout: 30s
         reset: [1, 2, 4]
+        # only charging (3) needs periodic reassertion of 47100
         set:
           source: const
           value: 1 # charge
