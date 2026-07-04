@@ -27,6 +27,16 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 701:W
+  powers:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:WL1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:WL2
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 701:WL3
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
