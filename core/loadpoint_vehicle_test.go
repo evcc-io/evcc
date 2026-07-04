@@ -353,18 +353,11 @@ func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	assert.Equal(t, api.ModeOff, lp.GetMode(), "integrated device disconnect must not reset mode")
 }
 
-type fakeResurrector struct{ woken *bool }
-
-func (f fakeResurrector) WakeUp() error {
-	*f.woken = true
-	return nil
-}
-
-func TestWakeUpVehicleDisabled(t *testing.T) {
+func TestStartWakeUpTimerDisabled(t *testing.T) {
 	for _, tc := range []struct {
-		name     string
-		features []api.Feature
-		wantWoke bool
+		name        string
+		features    []api.Feature
+		wantRunning bool
 	}{
 		{"enabled", nil, true},
 		{"disabled", []api.Feature{api.WakeUpDisabled}, false},
@@ -372,24 +365,18 @@ func TestWakeUpVehicleDisabled(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
-			var woken bool
-			v := api.NewMockVehicle(ctrl)
-			v.EXPECT().Features().Return(tc.features).AnyTimes()
-			vehicle := struct {
-				*api.MockVehicle
-				fakeResurrector
-			}{v, fakeResurrector{&woken}}
+			vehicle := api.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Features().Return(tc.features).AnyTimes()
 
 			lp := &Loadpoint{
 				log:         util.NewLogger("foo"),
 				vehicle:     vehicle,
 				wakeUpTimer: NewTimer(),
 			}
-			lp.wakeUpTimer.wakeupAttemptsLeft = 1 // odd -> vehicle branch
 
-			lp.wakeUpVehicle()
+			lp.startWakeUpTimer()
 
-			assert.Equal(t, tc.wantWoke, woken)
+			assert.Equal(t, tc.wantRunning, lp.wakeUpTimer.Running())
 		})
 	}
 }
