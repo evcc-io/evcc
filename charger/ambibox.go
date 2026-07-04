@@ -51,6 +51,7 @@ type Ambibox struct {
 	energySessImpG func() (float64, error)
 	energySessExpG func() (float64, error)
 	socG           func() (float64, error)
+	capacityG      func() (float64, error)
 	phasesG        func() (int64, error)
 	currG          [3]func() (float64, error)
 	voltG          [3]func() (float64, error)
@@ -149,6 +150,9 @@ func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (
 		return nil, err
 	}
 	if wb.socG, err = floatG("soc", 0); err != nil {
+		return nil, err
+	}
+	if wb.capacityG, err = floatG("capacity", 0); err != nil {
 		return nil, err
 	}
 	if wb.targetPowerG, err = floatG("targetPower", timeout); err != nil {
@@ -336,6 +340,17 @@ var _ api.Battery = (*Ambibox)(nil)
 // Soc implements the api.Battery interface
 func (wb *Ambibox) Soc() (float64, error) {
 	return wb.socG()
+}
+
+var _ api.BatteryCapacity = (*Ambibox)(nil)
+
+// Capacity implements the api.BatteryCapacity interface
+func (wb *Ambibox) Capacity() float64 {
+	f, err := wb.capacityG()
+	if err != nil {
+		return 0
+	}
+	return f / 1e3
 }
 
 var _ api.Resurrector = (*Ambibox)(nil)
