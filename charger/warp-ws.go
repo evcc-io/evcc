@@ -43,7 +43,6 @@ type WarpWS struct {
 
 	// capabilities
 	features []string
-	hasEv    bool
 
 	// evse
 	evse       warp.Evse
@@ -103,13 +102,15 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		implement.Has(w, implement.PhaseVoltages(w.voltages))
 	}
 
-	// Feature: EV (WARP4): vehicle soc and mac read via ISO 15118
-	if w.hasEv {
+	// Feature: EV (WARP4): vehicle soc and mac read via ISO 15118;
+	// not announced in info/features, hence probing the api
+	hasEv := w.hasEvState()
+	if hasEv {
 		implement.Has(w, implement.Battery(w.soc))
 	}
 
 	// Feature: NFC
-	if w.hasFeature(warp.FeatureNfc) || w.hasEv {
+	if w.hasFeature(warp.FeatureNfc) || hasEv {
 		implement.Has(w, implement.Identifier(w.identify))
 	}
 
@@ -158,14 +159,6 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		if enabled {
 			w.log.WARN.Println("disabled WARP phase auto switching")
 		}
-	}
-
-	// WARP4: probe the ev/state api providing vehicle data read via ISO 15118;
-	// no locking needed, the websocket goroutines are not started yet
-	var ev warp.EvState
-	if err := w.GetJSON(fmt.Sprintf("%s/ev/state", w.URI), &ev); err == nil {
-		w.evState = &ev
-		w.hasEv = true
 	}
 
 	wsURI, err := parseURI(w.URI)
@@ -460,6 +453,12 @@ func (w *WarpWS) identify() (string, error) {
 		return w.evState.Mac, nil
 	}
 	return w.chargeTracker.AuthorizationInfo.TagId, nil
+}
+
+// hasEvState probes the ev/state api provided by WARP4 devices
+func (w *WarpWS) hasEvState() bool {
+	var res warp.EvState
+	return w.GetJSON(fmt.Sprintf("%s/ev/state", w.URI), &res) == nil
 }
 
 // soc implements the api.Battery interface
