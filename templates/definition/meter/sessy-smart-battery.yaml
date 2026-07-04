@@ -14,7 +14,7 @@ params:
   - name: password
     required: true
   - name: cache
-    default: 1
+    default: 1s
   - preset: battery-params
   - name: capacity
     default: 5
