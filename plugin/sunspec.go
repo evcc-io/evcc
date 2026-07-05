@@ -127,12 +127,15 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	return nil, fmt.Errorf("sunspec model not found: %v", ops)
 }
 
+// recoverToError converts a panic into *err, for sunspec point access that panics on type mismatch.
+func recoverToError(err *error) {
+	if r := recover(); r != nil {
+		*err = fmt.Errorf("panic: %v", r)
+	}
+}
+
 func (m *ModbusSunspec) floatGetter() (f float64, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
-		}
-	}()
+	defer recoverToError(&err)
 
 	res, err := m.device.QueryPoint(
 		m.conn,
@@ -174,45 +177,48 @@ var _ BoolGetter = (*ModbusSunspec)(nil)
 // Reads the point directly since FloatGetter's ScaledValue panics on enum/bitfield points.
 func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
 	return func() (res bool, err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic: %v", r)
-			}
-		}()
+		defer recoverToError(&err)
 
 		_, point, err := m.blockPoint()
 		if err != nil {
 			return false, err
 		}
 
-		var val int64
-		switch point.Type() {
-		case typelabel.Bitfield16:
-			val = int64(point.Bitfield16())
-		case typelabel.Bitfield32:
-			val = int64(point.Bitfield32())
-		case typelabel.Enum16:
-			val = int64(point.Enum16())
-		case typelabel.Enum32:
-			val = int64(point.Enum32())
-		case typelabel.Int16:
-			val = int64(point.Int16())
-		case typelabel.Int32:
-			val = int64(point.Int32())
-		case typelabel.Int64:
-			val = point.Int64()
-		case typelabel.Uint16:
-			val = int64(point.Uint16())
-		case typelabel.Uint32:
-			val = int64(point.Uint32())
-		case typelabel.Uint64:
-			val = int64(point.Uint64())
-		default:
-			return false, fmt.Errorf("model %d block %d point %s: unsupported bool type %s", m.op.Model, m.op.Block, m.op.Point, point.Type())
+		val, err := pointInt64(point)
+		if err != nil {
+			return false, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
 		}
 
 		return sunspecBool(val, m.mask), nil
 	}, nil
+}
+
+// pointInt64 reads a sunspec point's raw (unscaled) value as int64.
+func pointInt64(point sunspec.Point) (int64, error) {
+	switch point.Type() {
+	case typelabel.Bitfield16:
+		return int64(point.Bitfield16()), nil
+	case typelabel.Bitfield32:
+		return int64(point.Bitfield32()), nil
+	case typelabel.Enum16:
+		return int64(point.Enum16()), nil
+	case typelabel.Enum32:
+		return int64(point.Enum32()), nil
+	case typelabel.Int16:
+		return int64(point.Int16()), nil
+	case typelabel.Int32:
+		return int64(point.Int32()), nil
+	case typelabel.Int64:
+		return point.Int64(), nil
+	case typelabel.Uint16:
+		return int64(point.Uint16()), nil
+	case typelabel.Uint32:
+		return int64(point.Uint32()), nil
+	case typelabel.Uint64:
+		return int64(point.Uint64()), nil
+	default:
+		return 0, fmt.Errorf("unsupported type: %s", point.Type())
+	}
 }
 
 func sunspecBool(val int64, mask uint64) bool {
@@ -223,11 +229,7 @@ func sunspecBool(val int64, mask uint64) bool {
 }
 
 func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
-		}
-	}()
+	defer recoverToError(&err)
 
 	block, point, err = m.device.QueryPointAny(
 		m.conn,
@@ -254,11 +256,7 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 	typ := point.Type()
 
 	return func(val float64) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic: %v", r)
-			}
-		}()
+		defer recoverToError(&err)
 
 		val = val * m.scale
 		switch typ {
@@ -284,11 +282,7 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 	typ := point.Type()
 
 	return func(val int64) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic: %v", r)
-			}
-		}()
+		defer recoverToError(&err)
 
 		val = int64(float64(val) * m.scale)
 
