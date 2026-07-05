@@ -293,7 +293,7 @@ type Circuit interface {
 type HEMS interface {
 	SetUpdated(func())
 	CurtailedPercent() *int        // allowed feed-in percent of nominal production power (0..100), nil = no statement
-	MaxProductionPower() *float64  // nil = limiting undefined, else current limit (0 = none)
+	MaxProductionPower() *float64  // nil = limiting undefined, else current limit
 	MaxConsumptionPower() *float64 // nil = limiting undefined, else current limit (0 = none)
 }
 
