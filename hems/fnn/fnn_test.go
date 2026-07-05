@@ -28,6 +28,8 @@ func TestFnn(t *testing.T) {
 // TestFnnNilWhenNotConfigured verifies "nil = limiting undefined": nil unless
 // the relay input is configured, else valid right after NewFnn returns.
 func TestFnnNilWhenNotConfigured(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
 	unconfigured, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, nil, 0)
 	require.NoError(t, err)
 	require.Nil(t, unconfigured.MaxConsumptionPower())
@@ -41,21 +43,4 @@ func TestFnnNilWhenNotConfigured(t *testing.T) {
 	require.Equal(t, 0.0, *configured.MaxConsumptionPower())
 	require.NotNil(t, configured.MaxProductionPower())
 	require.Equal(t, 0.0, *configured.MaxProductionPower())
-}
-
-// TestFnnEdgeTriggered verifies a limit is only applied on a genuine
-// transition, not every steady-state tick (a fresh pointer would prove a re-run).
-func TestFnnEdgeTriggered(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-
-	on := func() (bool, error) { return true, nil }
-	fnn, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, on, 0)
-	require.NoError(t, err)
-
-	require.NoError(t, fnn.runDim())
-	first := fnn.consumptionLimit
-	require.NotNil(t, first)
-
-	require.NoError(t, fnn.runDim())
-	require.Same(t, first, fnn.consumptionLimit, "setConsumptionLimit must not re-run on an unchanged tick")
 }

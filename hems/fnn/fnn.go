@@ -146,7 +146,7 @@ func (c *Fnn) Run() {
 	}
 }
 
-// runCurtail applies the curtailment limit, but only on a change (edge-triggered).
+// runCurtail evaluates curtailment rules and applies the appropriate limit.
 // No-op if no curtail input is configured.
 func (c *Fnn) runCurtail() error {
 	if c.w3 == nil {
@@ -162,7 +162,6 @@ func (c *Fnn) runCurtail() error {
 		{get: c.s1, percent: 60},
 	}
 
-	percent := 100
 	for _, rule := range rules {
 		if rule.get == nil {
 			continue
@@ -174,23 +173,15 @@ func (c *Fnn) runCurtail() error {
 		}
 
 		if active {
-			percent = rule.percent
-			break
+			return c.setProductionLimit(rule.percent)
 		}
 	}
 
-	c.mu.Lock()
-	changed := percent != c.productionPercent
-	c.mu.Unlock()
-
-	if !changed {
-		return nil
-	}
-
-	return c.setProductionLimit(percent)
+	// 100%
+	return c.setProductionLimit(100)
 }
 
-// runDim applies the dim limit, but only on a change (edge-triggered).
+// runDim evaluates the dimming rule and applies the dim limit.
 // No-op if dim input is not configured.
 func (c *Fnn) runDim() error {
 	if c.w4 == nil {
@@ -207,18 +198,10 @@ func (c *Fnn) runDim() error {
 		limit = c.maxDimPower
 	}
 
-	c.mu.Lock()
-	changed := active != (c.consumptionLimit != nil)
-	c.mu.Unlock()
-
-	if !changed {
-		return nil
-	}
-
 	return c.setConsumptionLimit(limit)
 }
 
-// setProductionLimit applies the curtailment limit. Called only on a change.
+// setProductionLimit applies the curtailment limit.
 func (c *Fnn) setProductionLimit(percent int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -238,7 +221,7 @@ func (c *Fnn) setProductionLimit(percent int) error {
 	return nil
 }
 
-// setConsumptionLimit applies the dimming limit. Called only on a change.
+// setConsumptionLimit applies the dimming limit.
 func (c *Fnn) setConsumptionLimit(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()

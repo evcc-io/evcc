@@ -116,14 +116,6 @@ func (c *Relay) run() error {
 		limit = c.maxPower
 	}
 
-	c.mu.Lock()
-	changed := active != (c.limit != nil)
-	c.mu.Unlock()
-
-	if !changed {
-		return nil
-	}
-
 	if err := c.setConsumptionLimit(limit); err != nil {
 		return err
 	}
