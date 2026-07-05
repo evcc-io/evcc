@@ -65,7 +65,12 @@
 					</IconSelectGroup>
 				</div>
 
-				<Card :title="historyTitle" :subtitle="historySubTitle" edge-to-edge class="mb-4">
+				<Card
+					:title="historyTitle"
+					:subtitle="historySubTitle"
+					edge-to-edge
+					class="box-pull-out mb-4"
+				>
 					<EnergyHistoryChart
 						v-if="activeType === types.SOLAR"
 						:sessions="currentSessions"
@@ -85,58 +90,65 @@
 						:period="period"
 					/>
 				</Card>
-				<div v-if="showExtraCharts" class="extra-charts row align-items-start">
-					<div class="col-12 col-lg-6 mb-4">
-						<Card :title="firstExtraTitle" edge-to-edge>
-							<div v-if="activeType === types.SOLAR">
-								<SolarYearChart
-									v-if="showSolarYearChart"
-									:period="period"
-									:sessions="currentSessions"
-								/>
-								<SolarGroupedChart
+				<div v-if="showExtraCharts" class="box-pull-out">
+					<div class="row align-items-start">
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="firstExtraTitle" edge-to-edge>
+								<div v-if="activeType === types.SOLAR">
+									<SolarYearChart
+										v-if="showSolarYearChart"
+										:period="period"
+										:sessions="currentSessions"
+									/>
+									<SolarGroupedChart
+										v-else
+										:sessions="currentSessions"
+										:color-mappings="colorMappings"
+										:device-colors="deviceColors"
+										:group-by="selectedGroupWithoutNone"
+									/>
+								</div>
+								<AvgCostGroupedChart
 									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:suggested-max-price="suggestedMaxAvgCost"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
+						</div>
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="secondExtraTitle" edge-to-edge>
+								<EnergyGroupedChart
+									v-if="activeType === types.SOLAR"
 									:sessions="currentSessions"
 									:color-mappings="colorMappings"
 									:device-colors="deviceColors"
 									:group-by="selectedGroupWithoutNone"
 								/>
-							</div>
-							<AvgCostGroupedChart
-								v-else
-								:sessions="currentTypeSessions"
-								:color-mappings="colorMappings"
-								:device-colors="deviceColors"
-								:suggested-max-price="suggestedMaxAvgCost"
-								:group-by="selectedGroupWithoutNone"
-								:cost-type="activeType"
-								:currency="currency"
-							/>
-						</Card>
-					</div>
-					<div class="col-12 col-lg-6 mb-4">
-						<Card :title="secondExtraTitle" edge-to-edge>
-							<EnergyGroupedChart
-								v-if="activeType === types.SOLAR"
-								:sessions="currentSessions"
-								:color-mappings="colorMappings"
-								:device-colors="deviceColors"
-								:group-by="selectedGroupWithoutNone"
-							/>
-							<CostGroupedChart
-								v-else
-								:sessions="currentTypeSessions"
-								:color-mappings="colorMappings"
-								:device-colors="deviceColors"
-								:group-by="selectedGroupWithoutNone"
-								:cost-type="activeType"
-								:currency="currency"
-							/>
-						</Card>
+								<CostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
+						</div>
 					</div>
 				</div>
 
-				<Card v-if="showTable" :title="$t('sessions.overview')" edge-to-edge class="mb-4">
+				<Card
+					v-if="showTable"
+					:title="$t('sessions.overview')"
+					edge-to-edge
+					class="box-pull-out mb-4"
+				>
 					<SessionTable
 						:sessions="currentSessions"
 						:vehicleFilter="vehicleFilter"
@@ -710,14 +722,4 @@ export default defineComponent({
 
 <style scoped>
 @import "../../css/breakpoints.css";
-
-/* side-by-side cards: pull only the outer edges */
-@media (--lg-and-up) {
-	.extra-charts > div:first-child :deep(.evcc-card) {
-		margin-right: 0;
-	}
-	.extra-charts > div:last-child :deep(.evcc-card) {
-		margin-left: 0;
-	}
-}
 </style>

@@ -3,7 +3,7 @@
 		<BatteryStatusCards class="mb-4 box-pull-out" :battery="state.battery" />
 
 		<BatteryHistoryCard
-			class="mb-4"
+			class="mb-4 box-pull-out"
 			:batteries="chartBatteries"
 			:now="now"
 			:kwh-available="kWhAvailable"

@@ -1,7 +1,7 @@
 <template>
 	<div class="container px-4 safe-area-inset">
 		<TopHeader title="Optimize Debug 🧪" />
-		<Card edge-to-edge class="mt-4 mb-4">
+		<Card edge-to-edge class="box-pull-out mt-4 mb-4">
 			<OptimizeHeader
 				:updated="evopt?.updated"
 				:status="evopt?.res?.status"
@@ -18,7 +18,7 @@
 		<div class="row">
 			<main class="col-12">
 				<div v-if="evopt">
-					<Card title="Result: Charging Plan" edge-to-edge class="mb-4">
+					<Card title="Result: Charging Plan" edge-to-edge class="box-pull-out mb-4">
 						<ChargeChart
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
@@ -29,7 +29,7 @@
 						/>
 					</Card>
 
-					<Card title="Result: SoC Projection" edge-to-edge class="mb-4">
+					<Card title="Result: SoC Projection" edge-to-edge class="box-pull-out mb-4">
 						<SocChart
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
@@ -39,7 +39,7 @@
 						/>
 					</Card>
 
-					<Card title="Input: Grid Prices" edge-to-edge class="mb-4">
+					<Card title="Input: Grid Prices" edge-to-edge class="box-pull-out mb-4">
 						<PriceChart
 							:evopt="evopt"
 							:timestamp="evopt.details.timestamp[0]"
@@ -51,7 +51,7 @@
 						title="Input: Battery"
 						:subtitle="batteryEfficiencySubtitle"
 						edge-to-edge
-						class="mb-4"
+						class="box-pull-out mb-4"
 					>
 						<BatteryConfigurationTable
 							:batteries="evopt.req.batteries"
@@ -60,7 +60,7 @@
 						/>
 					</Card>
 
-					<Card title="Time Series" edge-to-edge class="mb-4">
+					<Card title="Time Series" edge-to-edge class="box-pull-out mb-4">
 						<TimeSeriesDataTable
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
@@ -71,7 +71,7 @@
 						/>
 					</Card>
 
-					<Card title="Raw Data" edge-to-edge class="mb-4">
+					<Card title="Raw Data" edge-to-edge class="box-pull-out mb-4">
 						<div class="mb-4">
 							<p class="mb-2">Request:</p>
 							<div class="position-relative">

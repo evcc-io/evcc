@@ -46,7 +46,7 @@
 					v-if="forecast.solar"
 					:title="$t('forecast.type.solar')"
 					edge-to-edge
-					class="mb-4"
+					class="box-pull-out mb-4"
 				>
 					<template v-if="showSolarAdjust" #actions>
 						<div class="form-check form-switch mb-0 text-nowrap">
@@ -81,7 +81,7 @@
 					v-if="forecast.grid"
 					:title="$t('forecast.type.price')"
 					edge-to-edge
-					class="mb-4"
+					class="box-pull-out mb-4"
 					:style="isGridStatic ? { order: 1 } : undefined"
 				>
 					<template #actions>
@@ -124,7 +124,7 @@
 					v-if="forecast.co2"
 					:title="$t('forecast.type.co2')"
 					edge-to-edge
-					class="mb-4"
+					class="box-pull-out mb-4"
 				>
 					<div class="chart-edge">
 						<Co2Chart
@@ -307,6 +307,13 @@ export default defineComponent({
 	.chart-edge {
 		margin-left: -1.5rem;
 		margin-right: -1.5rem;
+	}
+}
+@media (min-width: 576px) {
+	/* compensate the card border so the chart width fits without scrolling on wide screens */
+	.chart-edge {
+		margin-left: -1px;
+		margin-right: -1px;
 	}
 }
 </style>

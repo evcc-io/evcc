@@ -53,7 +53,7 @@
 					:title="$t(`main.history.group.${group}`)"
 					:subtitle="groupTotalLabel(group)"
 					edge-to-edge
-					class="mb-4"
+					class="box-pull-out mb-4"
 					:data-testid="`history-section-${group}`"
 				>
 					<GroupChart
