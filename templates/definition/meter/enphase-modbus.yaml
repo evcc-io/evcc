@@ -76,11 +76,8 @@ render: |
             {{- include "modbus" . | indent 10 }}
             value: 704:WMaxLimPctEna
   curtailed:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40310 # Limit maximum active power percent enable (0 = no curtailment).
-      type: holding
-      decode: uint16
+    value: 704:WMaxLimPctEna
   maxacpower: {{ .maxacpower }}
   {{- end }}
