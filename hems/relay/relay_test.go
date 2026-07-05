@@ -15,15 +15,12 @@ type stubSite struct {
 
 func (s *stubSite) GetGridPower() float64 { return 0 }
 
-// TestRelayNoLimitContract verifies api.HEMS's "nil = limiting undefined" contract: nil
-// before the first run, then a definite value (0 = no limit) from then on.
-func TestRelayNoLimitContract(t *testing.T) {
-	c := &Relay{w1: func() (bool, error) { return false, nil }}
-
-	require.Nil(t, c.MaxConsumptionPower())
-	require.Nil(t, c.MaxProductionPower())
-
-	require.NoError(t, c.run())
+// TestRelayNoNilState verifies MaxConsumptionPower is always determinable (w1
+// is mandatory) — NewRelay reads it once so the state is valid immediately.
+func TestRelayNoNilState(t *testing.T) {
+	off := func() (bool, error) { return false, nil }
+	c, err := NewRelay(&stubSite{}, off, nil, 1000, 0)
+	require.NoError(t, err)
 
 	require.NotNil(t, c.MaxConsumptionPower())
 	require.Equal(t, 0.0, *c.MaxConsumptionPower())

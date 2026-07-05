@@ -77,7 +77,7 @@ func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, 
 		return nil, errors.New("cannot have w4 without power limit")
 	}
 
-	return &Fnn{
+	c := &Fnn{
 		log:               util.NewLogger("fnn"),
 		site:              site,
 		maxDimPower:       maxDimPower,
@@ -88,7 +88,17 @@ func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, 
 		w4:                w4G,
 		productionPercent: 100,
 		interval:          interval,
-	}, nil
+	}
+
+	// read the relays once synchronously so limits are valid as soon as NewFnn returns
+	if err := c.runCurtail(); err != nil {
+		return nil, err
+	}
+	if err := c.runDim(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 // Fnn implements the FNN HEMS logic for curtailment and dimming.
@@ -108,9 +118,7 @@ type Fnn struct {
 	smartgridProductionID  uint
 
 	consumptionLimit  *float64
-	consumptionKnown  bool // true once setConsumptionLimit has run at least once
-	productionPercent int  // allowed feed-in percent (0..100), 100 = uncurtailed
-	productionKnown   bool // true once setProductionLimit has run at least once
+	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
 
 	interval time.Duration
 }
@@ -121,10 +129,9 @@ func (c *Fnn) SetUpdated(f func()) {
 	c.publishFunc = f
 }
 
-// Run starts the FNN control loop.
+// Run starts the FNN control loop. NewFnn already ran the first pass.
 func (c *Fnn) Run() {
-	// run immediately, then on every tick
-	for tick := time.Tick(c.interval); ; <-tick {
+	for range time.Tick(c.interval) {
 		if err := c.runCurtail(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -174,7 +181,6 @@ func (c *Fnn) runCurtail() error {
 
 	c.mu.Lock()
 	changed := percent != c.productionPercent
-	c.productionKnown = true
 	c.mu.Unlock()
 
 	if !changed {
@@ -203,7 +209,6 @@ func (c *Fnn) runDim() error {
 
 	c.mu.Lock()
 	changed := active != (c.consumptionLimit != nil)
-	c.consumptionKnown = true
 	c.mu.Unlock()
 
 	if !changed {
@@ -273,9 +278,6 @@ func (c *Fnn) MaxConsumptionPower() *float64 {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.consumptionKnown {
-		return nil
-	}
 	if c.consumptionLimit == nil {
 		return new(0.0)
 	}
@@ -284,11 +286,12 @@ func (c *Fnn) MaxConsumptionPower() *float64 {
 
 // MaxProductionPower implements api.HEMS.
 func (c *Fnn) MaxProductionPower() *float64 {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.productionKnown {
+	if c.w3 == nil {
 		return nil
 	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.productionPercent >= 100 {
 		return new(0.0)
 	}

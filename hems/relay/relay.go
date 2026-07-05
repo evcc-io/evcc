@@ -30,7 +30,6 @@ type Relay struct {
 
 	smartgridID uint
 	limit       *float64
-	limitKnown  bool // true once setConsumptionLimit has run at least once
 	maxPower    float64
 	interval    time.Duration
 }
@@ -79,6 +78,11 @@ func NewRelay(site site.API, w1 func() (bool, error), passthrough func(bool) err
 		return nil, errors.New("missing power limit")
 	}
 
+	// read the relay once synchronously so the limit is valid as soon as NewRelay returns
+	if err := c.run(); err != nil {
+		return nil, err
+	}
+
 	return c, nil
 }
 
@@ -88,9 +92,9 @@ func (c *Relay) SetUpdated(f func()) {
 	c.publishFunc = f
 }
 
+// Run starts the relay control loop. NewRelay already ran the first pass.
 func (c *Relay) Run() {
-	// run immediately, then on every tick
-	for tick := time.Tick(c.interval); ; <-tick {
+	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -114,7 +118,6 @@ func (c *Relay) run() error {
 
 	c.mu.Lock()
 	changed := active != (c.limit != nil)
-	c.limitKnown = true
 	c.mu.Unlock()
 
 	if !changed {
@@ -162,9 +165,6 @@ func (c *Relay) CurtailedPercent() *int {
 func (c *Relay) MaxConsumptionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.limitKnown {
-		return nil
-	}
 	if c.limit == nil {
 		return new(0.0)
 	}

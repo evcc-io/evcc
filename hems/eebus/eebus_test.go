@@ -7,6 +7,7 @@ import (
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,6 +41,7 @@ func newTestEEBus(t *testing.T) *EEBus {
 	return &EEBus{
 		log:                      util.NewLogger("test"),
 		site:                     &stubSite{},
+		Connector:                eebus.NewConnector(),
 		heartbeat:                util.NewValue[struct{}](time.Hour),
 		failsafeConsumptionLimit: testFailsafeConsumption,
 		failsafeProductionLimit:  &failsafeProduction,
@@ -65,16 +67,15 @@ func assertProductionLimit(t *testing.T, c *EEBus, active bool) {
 	assert.Equal(t, active, *percent < 100)
 }
 
-// TestEEBusNoLimitContract verifies api.HEMS's "nil = limiting undefined" contract: nil
-// before run() has ever completed, then a definite value (0 = no limit).
+// TestEEBusNoLimitContract verifies api.HEMS's "nil = limiting undefined" contract:
+// nil until the controlbox/EnergyGuard first connects, then 0 = no limit.
 func TestEEBusNoLimitContract(t *testing.T) {
 	c := newTestEEBus(t)
 
 	require.Nil(t, c.MaxConsumptionPower())
 	require.Nil(t, c.MaxProductionPower())
 
-	c.heartbeat.Set(struct{}{})
-	require.NoError(t, c.run())
+	c.Connect(true)
 
 	assertConsumptionLimit(t, c, 0)
 	assertProductionLimit(t, c, false)
