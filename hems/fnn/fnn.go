@@ -107,8 +107,7 @@ type Fnn struct {
 	smartgridConsumptionID uint
 	smartgridProductionID  uint
 
-	consumptionLimit  float64
-	consumptionActive bool
+	consumptionLimit  *float64
 	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
 
 	interval time.Duration
@@ -219,8 +218,10 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 	defer c.mu.Unlock()
 
 	active := limit > 0
-	c.consumptionLimit = limit
-	c.consumptionActive = active
+	c.consumptionLimit = nil
+	if active {
+		c.consumptionLimit = &limit
+	}
 
 	if err := smartgrid.UpdateSession(&c.smartgridConsumptionID, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
@@ -251,10 +252,10 @@ func (c *Fnn) MaxConsumptionPower() *float64 {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.consumptionActive {
+	if c.consumptionLimit == nil {
 		return nil
 	}
-	return new(c.consumptionLimit)
+	return new(*c.consumptionLimit)
 }
 
 // MaxProductionPower implements api.HEMS.
