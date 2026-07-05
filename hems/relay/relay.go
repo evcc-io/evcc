@@ -30,6 +30,7 @@ type Relay struct {
 
 	smartgridID uint
 	limit       *float64
+	limitKnown  bool // true once setConsumptionLimit has run at least once
 	maxPower    float64
 	interval    time.Duration
 }
@@ -111,6 +112,15 @@ func (c *Relay) run() error {
 		limit = c.maxPower
 	}
 
+	c.mu.Lock()
+	changed := active != (c.limit != nil)
+	c.limitKnown = true
+	c.mu.Unlock()
+
+	if !changed {
+		return nil
+	}
+
 	if err := c.setConsumptionLimit(limit); err != nil {
 		return err
 	}
@@ -152,8 +162,11 @@ func (c *Relay) CurtailedPercent() *int {
 func (c *Relay) MaxConsumptionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.limit == nil {
+	if !c.limitKnown {
 		return nil
+	}
+	if c.limit == nil {
+		return new(0.0)
 	}
 	return new(*c.limit)
 }

@@ -49,14 +49,10 @@ func newTestEEBus(t *testing.T) *EEBus {
 }
 
 // assertConsumptionLimit checks the HEMS consumption state through the api.HEMS
-// surface. limit == 0 asserts the "no limit" (nil) contract.
+// surface. Once run() has executed, MaxConsumptionPower is always known (non-nil).
 func assertConsumptionLimit(t *testing.T, c *EEBus, limit float64) {
 	t.Helper()
 	power := c.MaxConsumptionPower()
-	if limit == 0 {
-		require.Nil(t, power)
-		return
-	}
 	require.NotNil(t, power)
 	assert.Equal(t, limit, *power)
 }
@@ -69,13 +65,19 @@ func assertProductionLimit(t *testing.T, c *EEBus, active bool) {
 	assert.Equal(t, active, *percent < 100)
 }
 
-// TestEEBusNoLimitContract verifies api.HEMS's "nil = no limit" contract holds
-// for a freshly-constructed EEBus before any limit has ever been received.
+// TestEEBusNoLimitContract verifies api.HEMS's "nil = limiting undefined" contract: nil
+// before run() has ever completed, then a definite value (0 = no limit).
 func TestEEBusNoLimitContract(t *testing.T) {
 	c := newTestEEBus(t)
 
 	require.Nil(t, c.MaxConsumptionPower())
 	require.Nil(t, c.MaxProductionPower())
+
+	c.heartbeat.Set(struct{}{})
+	require.NoError(t, c.run())
+
+	assertConsumptionLimit(t, c, 0)
+	assertProductionLimit(t, c, false)
 }
 
 // TestRun_HeartbeatLost_EntersFailsafe verifies the LPC-911/LPP-911 transition:
@@ -180,4 +182,22 @@ func TestRun_ConsumptionLimitReleasedEarly(t *testing.T) {
 	c.consumptionLimit.IsActive = false
 	require.NoError(t, c.run())
 	assertConsumptionLimit(t, c, 0)
+}
+
+// TestEEBusEdgeTriggered verifies that applying a limit (passthrough) only
+// happens on a genuine transition, not on every steady-state run().
+func TestEEBusEdgeTriggered(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+
+	calls := 0
+	c.passthrough = func(bool) error { calls++; return nil }
+	c.consumptionLimit = ucapi.LoadLimit{Value: 3000, IsActive: true, Duration: time.Hour}
+
+	require.NoError(t, c.run())
+	require.NoError(t, c.run())
+	require.NoError(t, c.run())
+
+	require.Equal(t, 1, calls, "passthrough must fire once on the edge, not every tick")
+	assertConsumptionLimit(t, c, 3000)
 }

@@ -108,7 +108,9 @@ type Fnn struct {
 	smartgridProductionID  uint
 
 	consumptionLimit  *float64
-	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
+	consumptionKnown  bool // true once setConsumptionLimit has run at least once
+	productionPercent int  // allowed feed-in percent (0..100), 100 = uncurtailed
+	productionKnown   bool // true once setProductionLimit has run at least once
 
 	interval time.Duration
 }
@@ -137,7 +139,7 @@ func (c *Fnn) Run() {
 	}
 }
 
-// runCurtail evaluates curtailment rules and applies the appropriate limit.
+// runCurtail applies the curtailment limit, but only on a change (edge-triggered).
 // No-op if no curtail input is configured.
 func (c *Fnn) runCurtail() error {
 	if c.w3 == nil {
@@ -153,6 +155,7 @@ func (c *Fnn) runCurtail() error {
 		{get: c.s1, percent: 60},
 	}
 
+	percent := 100
 	for _, rule := range rules {
 		if rule.get == nil {
 			continue
@@ -164,15 +167,24 @@ func (c *Fnn) runCurtail() error {
 		}
 
 		if active {
-			return c.setProductionLimit(rule.percent)
+			percent = rule.percent
+			break
 		}
 	}
 
-	// 100%
-	return c.setProductionLimit(100)
+	c.mu.Lock()
+	changed := percent != c.productionPercent
+	c.productionKnown = true
+	c.mu.Unlock()
+
+	if !changed {
+		return nil
+	}
+
+	return c.setProductionLimit(percent)
 }
 
-// runDim evaluates the dimming rule and applies the dim limit.
+// runDim applies the dim limit, but only on a change (edge-triggered).
 // No-op if dim input is not configured.
 func (c *Fnn) runDim() error {
 	if c.w4 == nil {
@@ -189,10 +201,19 @@ func (c *Fnn) runDim() error {
 		limit = c.maxDimPower
 	}
 
+	c.mu.Lock()
+	changed := active != (c.consumptionLimit != nil)
+	c.consumptionKnown = true
+	c.mu.Unlock()
+
+	if !changed {
+		return nil
+	}
+
 	return c.setConsumptionLimit(limit)
 }
 
-// setProductionLimit applies the curtailment limit.
+// setProductionLimit applies the curtailment limit. Called only on a change.
 func (c *Fnn) setProductionLimit(percent int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -212,7 +233,7 @@ func (c *Fnn) setProductionLimit(percent int) error {
 	return nil
 }
 
-// setConsumptionLimit applies the dimming limit.
+// setConsumptionLimit applies the dimming limit. Called only on a change.
 func (c *Fnn) setConsumptionLimit(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -252,8 +273,11 @@ func (c *Fnn) MaxConsumptionPower() *float64 {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.consumptionLimit == nil {
+	if !c.consumptionKnown {
 		return nil
+	}
+	if c.consumptionLimit == nil {
+		return new(0.0)
 	}
 	return new(*c.consumptionLimit)
 }
@@ -262,8 +286,11 @@ func (c *Fnn) MaxConsumptionPower() *float64 {
 func (c *Fnn) MaxProductionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.productionPercent >= 100 {
+	if !c.productionKnown {
 		return nil
+	}
+	if c.productionPercent >= 100 {
+		return new(0.0)
 	}
 
 	return new(float64(c.productionPercent) / 100 * c.maxCurtailPower)

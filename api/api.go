@@ -293,8 +293,8 @@ type Circuit interface {
 type HEMS interface {
 	SetUpdated(func())
 	CurtailedPercent() *int        // allowed feed-in percent of nominal production power (0..100), nil = no statement
-	MaxProductionPower() *float64  // nil = no limit
-	MaxConsumptionPower() *float64 // nil = no limit
+	MaxProductionPower() *float64  // nil = limiting undefined, else current limit (0 = none)
+	MaxConsumptionPower() *float64 // nil = limiting undefined, else current limit (0 = none)
 }
 
 // Redactor is an interface to redact sensitive data

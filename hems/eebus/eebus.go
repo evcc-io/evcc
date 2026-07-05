@@ -38,11 +38,13 @@ type EEBus struct {
 	smartgridConsumptionId    uint
 	consumptionLimit          ucapi.LoadLimit // LPC-041
 	consumptionLimitActivated time.Time
+	consumptionKnown          bool // true once run() has completed at least once
 	failsafeConsumptionLimit  float64
 
 	smartgridProductionId    uint
 	productionLimit          ucapi.LoadLimit // feed-in limit (NOT production despite its name)
 	productionLimitActivated time.Time
+	productionKnown          bool     // true once run() has completed at least once
 	failsafeProductionLimit  *float64 // feed-in limit (NOT production despite its name)
 	productionNominalMax     float64
 
@@ -187,6 +189,10 @@ func (c *EEBus) run() error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
+	// a completed cycle means both limits are now known, even if unchanged
+	c.consumptionKnown = true
+	c.productionKnown = true
+
 	c.log.TRACE.Println("status:", c.status)
 
 	_, heartbeatErr := c.heartbeat.Get()
@@ -323,13 +329,16 @@ func (c *EEBus) CurtailedPercent() *int {
 	return &percent
 }
 
-// MaxConsumptionPower implements api.HEMS: failsafe limit while in failsafe,
-// else the EG-supplied LPC limit when active, else nil (no limit).
+// MaxConsumptionPower implements api.HEMS: nil while limiting is undefined,
+// else failsafe limit in failsafe, else the active EG-supplied LPC limit, else 0.
 func (c *EEBus) MaxConsumptionPower() *float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	if c.consumptionLimitActivated.IsZero() {
+	if !c.consumptionKnown {
 		return nil
+	}
+	if c.consumptionLimitActivated.IsZero() {
+		return new(0.0)
 	}
 	if c.status == StatusFailsafe {
 		return new(c.failsafeConsumptionLimit)
@@ -342,8 +351,11 @@ func (c *EEBus) MaxConsumptionPower() *float64 {
 func (c *EEBus) MaxProductionPower() *float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	if c.productionLimitActivated.IsZero() {
+	if !c.productionKnown {
 		return nil
+	}
+	if c.productionLimitActivated.IsZero() {
+		return new(0.0)
 	}
 	if c.status == StatusFailsafe {
 		return c.failsafeProductionLimit
