@@ -1208,7 +1208,7 @@ Resets the vehicle charge mode to keep the last selected mode.
 
 ```json
 call deleteVehicleMode {
-  "name": "example"
+  "name": "vehicle_1"
 }
 ```
 
@@ -1271,8 +1271,8 @@ Sets the charge mode applied when this vehicle becomes active on a loadpoint.
 
 ```json
 call setVehicleMode {
-  "mode": "example",
-  "name": "example"
+  "mode": "off",
+  "name": "vehicle_1"
 }
 ```
 
