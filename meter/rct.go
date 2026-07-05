@@ -24,7 +24,37 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
-	rSocStrategy  *uint8          // remembers overwritten soc strategy value
+
+	mu           sync.Mutex
+	rSocStrategy *uint8 // remembers overwritten soc strategy value
+}
+
+// takeRSocStrategy atomically returns and clears the saved soc strategy, or nil
+// if none is saved (e.g. BatteryNormal applied twice in a row).
+func (m *RCT) takeRSocStrategy() *uint8 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	s := m.rSocStrategy
+	m.rSocStrategy = nil
+	return s
+}
+
+// setRSocStrategyIfAbsent saves strategy unless a value is already saved.
+func (m *RCT) setRSocStrategyIfAbsent(strategy uint8) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.rSocStrategy == nil {
+		m.rSocStrategy = &strategy
+	}
+}
+
+// hasRSocStrategy reports whether a soc strategy is currently saved
+func (m *RCT) hasRSocStrategy() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.rSocStrategy != nil
 }
 
 var (
@@ -161,12 +191,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 
 				// read soc strategy to reset afterwards
-				if m.rSocStrategy == nil {
+				if !m.hasRSocStrategy() {
 					strategy, err := m.queryUint8(rct.PowerMngSocStrategy)
 					if err != nil {
 						return err
 					}
-					m.rSocStrategy = &strategy
+					m.setRSocStrategyIfAbsent(strategy)
 				}
 			}
 
@@ -174,11 +204,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			switch mode {
 			case api.BatteryNormal:
-				eg.Go(func() error {
-					err := m.conn.Write(rct.PowerMngSocStrategy, []byte{*m.rSocStrategy})
-					m.rSocStrategy = nil
-					return err
-				})
+				if strategy := m.takeRSocStrategy(); strategy != nil {
+					eg.Go(func() error {
+						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
+					})
+				}
 
 				eg.Go(func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
