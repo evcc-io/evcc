@@ -7,34 +7,41 @@ products:
 requirements:
   description:
     en: |
-      Register map from the vendor's [AISWEI Modbus documentation](https://github.com/evcc-io/evcc/discussions/17680) (Solplanet inverters are built by AISWEI).
+      Based on the vendor's [AISWEI Modbus documentation](https://github.com/evcc-io/evcc/discussions/17680) (Solplanet inverters are built by AISWEI).
 
       **Attention**: users report that the network dongle does not expose Modbus TCP directly (connection refused/reset), only the undocumented HTTP/JSON API on port 8484. Use an RS485 connection (directly or via a serial-to-TCP/USB adapter) unless your dongle's firmware has since added native Modbus TCP support.
 
-      Battery charge/discharge control is not implemented yet: the vendor documents the required registers, but the exact power sign convention (charge vs. discharge) is not stated and needs field verification on real hardware before it can be added safely.
+      Battery charge/discharge control is supported and has been confirmed working against real hardware ([source](https://github.com/evcc-io/evcc/pull/31480#issuecomment-4887359149)).
     de: |
-      Registerkarte aus der [AISWEI Modbus-Dokumentation](https://github.com/evcc-io/evcc/discussions/17680) des Herstellers (Solplanet-Wechselrichter werden von AISWEI gefertigt).
+      Basierend auf der [AISWEI Modbus-Dokumentation](https://github.com/evcc-io/evcc/discussions/17680) des Herstellers (Solplanet-Wechselrichter werden von AISWEI gefertigt).
 
       **Achtung**: Nutzer berichten, dass der Netzwerk-Dongle kein Modbus TCP anbietet (Verbindung wird abgelehnt/zurückgesetzt), sondern nur die undokumentierte HTTP/JSON-API auf Port 8484. Nutze eine RS485-Verbindung (direkt oder über einen Seriell-zu-TCP/USB-Adapter), außer die Firmware deines Dongles unterstützt inzwischen natives Modbus TCP.
 
-      Eine aktive Batteriesteuerung (Laden/Halten) ist noch nicht umgesetzt: der Hersteller dokumentiert die nötigen Register, aber die genaue Vorzeichenkonvention (Laden vs. Entladen) ist nicht dokumentiert und muss erst an echter Hardware verifiziert werden.
+      Die Batterie-Lade-/Entladesteuerung wird unterstützt und wurde an echter Hardware verifiziert ([Quelle](https://github.com/evcc-io/evcc/pull/31480#issuecomment-4887359149)).
   evcc: ["skiptest"]
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485"]
-  - name: timeout
-    default: 15s
-  - name: capacity
-    usages: ["battery"]
+  - preset: battery-params
+  - name: maxchargepower
+    required: true
+    example: 5000
+  - name: maxdischargepower
+    required: true
+    example: 5000
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 100
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 35016 # Total system power (S32, W)
@@ -46,7 +53,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35018 # Import Wh since last reset (U32, 0.1 kWh)
       type: holding
@@ -58,7 +64,6 @@ render: |
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35020 # Export Wh since last reset (U32, 0.1 kWh)
       type: holding
@@ -70,7 +75,6 @@ render: |
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35005 # Phase 1 current (U16, 0.1 A)
       type: holding
@@ -81,7 +85,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35006 # Phase 2 current (U16, 0.1 A)
       type: holding
@@ -92,7 +95,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35007 # Phase 3 current (U16, 0.1 A)
       type: holding
@@ -104,7 +106,6 @@ render: |
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35001 # Phase 1 line to neutral volts (U16, 0.1 V)
       type: holding
@@ -115,7 +116,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35002 # Phase 2 line to neutral volts (U16, 0.1 V)
       type: holding
@@ -126,7 +126,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 35003 # Phase 3 line to neutral volts (U16, 0.1 V)
       type: holding
@@ -140,7 +139,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 31601 # PV total power (U32, W)
@@ -152,7 +150,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 31605 # PV E-Total (U32, 0.1 kWh)
       type: holding
@@ -166,7 +163,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 31619 # BMS1 battery power (S32, W, sign convention unverified)
@@ -178,7 +174,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 31622 # BMS1 battery SOC (U16, 0.01 %)
       type: holding
@@ -187,5 +182,63 @@ render: |
       register: 31617
       count: 6
     scale: 0.01
-  capacity: {{ .capacity }} # kWh, no capacity register documented
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: const
+        value: 2 # normal operation
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 1103 # battery power control mode
+            type: writesingle
+            decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 4 # manual power control
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1103 # battery power control mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # setpoint 0 W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1152 # battery power setpoint, W, positive discharge/negative charge
+              type: writesingle
+              decode: int16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 4 # manual power control
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1103 # battery power control mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: -{{ .maxchargepower }} # negative setpoint charges
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1152 # battery power setpoint, W, positive discharge/negative charge
+              type: writesingle
+              decode: int16
+  {{- include "battery-params" . }}
   {{- end }}
