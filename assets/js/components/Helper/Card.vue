@@ -1,5 +1,5 @@
 <template>
-	<section class="evcc-card p-3 p-sm-4" :class="{ 'evcc-card--edge': edgeToEdge }">
+	<section class="evcc-card round-box p-3 p-sm-4" :class="{ 'evcc-card--edge': edgeToEdge }">
 		<div
 			v-if="hasHeader"
 			class="evcc-card-header d-flex align-items-center gap-3 flex-wrap mb-3"
@@ -57,11 +57,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.evcc-card {
-	background: var(--evcc-box);
-	border: 1px solid var(--bs-border-color-translucent);
-	border-radius: 1rem;
-}
 .evcc-card-subtitle {
 	color: var(--evcc-gray);
 }
@@ -69,9 +64,10 @@ export default defineComponent({
 	.evcc-card--edge {
 		margin-left: -1.5rem;
 		margin-right: -1.5rem;
-		border-left: none;
-		border-right: none;
+		border-width: 1px 0;
 		border-radius: 0;
+		padding-left: 1.5rem !important;
+		padding-right: 1.5rem !important;
 	}
 }
 </style>
