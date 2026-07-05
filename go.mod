@@ -264,4 +264,4 @@ replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20
 
 replace github.com/enbility/eebus-go => github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6
 
-replace github.com/enbility/ship-go => github.com/evcc-io/ship-go v0.6.1-0.20260705131745-4344b9692368
+replace github.com/enbility/ship-go => github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307

@@ -154,8 +154,8 @@ github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657 h1:pZW9CGsXsJNHQ
 github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
 github.com/evcc-io/rct v0.2.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
-github.com/evcc-io/ship-go v0.6.1-0.20260705131745-4344b9692368 h1:a3FD3XOj9hNJPypUdkJahAehSN6lIEgreDW5cNNLv68=
-github.com/evcc-io/ship-go v0.6.1-0.20260705131745-4344b9692368/go.mod h1:EvRFx83phCwPQrOuWw2CX5t0c6mcFVzIk6gQEz4Lijg=
+github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307 h1:vSYO9pNyjpiuxpUF8rdUR7fAvjnEqnkJaSdd2qLWSgk=
+github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307/go.mod h1:EvRFx83phCwPQrOuWw2CX5t0c6mcFVzIk6gQEz4Lijg=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae h1:0ihqBMBjkekSlwD3ZYQIiYite6ZAln9ze60evOE6FkQ=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae/go.mod h1:L8AR3E7/MbbvCgnrtzsT6YsgQJtN5gk/LumR1gDBeJM=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
