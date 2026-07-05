@@ -19,6 +19,45 @@
     "successCloseTab": "Du kannst diesen Tab jetzt schließen.",
     "title": "Autorisierungsstatus"
   },
+  "battery": {
+    "card": {
+      "charging": "Lädt",
+      "discharging": "Entlädt",
+      "energy": "Energie",
+      "ofTotal": "von {total}",
+      "power": "Leistung",
+      "soc": "Ladestand"
+    },
+    "combined": "Gesamt",
+    "config": {
+      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im PV-Modus hinaus. PV-Ladung automatisch starten {start}.",
+      "bufferNone": "Hausspeicherenergie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
+      "bufferStart": {
+        "above": "ab einem Speicherstand von {soc}",
+        "full": "erst, wenn der Speicher voll ist",
+        "never": "nur mit genug Überschuss"
+      },
+      "bufferTitle": "Batterie als Ladepuffer",
+      "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
+      "priority": "Hausspeicher hat Vorrang, solange er unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
+      "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um den Hausspeicher zu bevorzugen.",
+      "priorityTitle": "Wohin geht der Überschuss zuerst?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Netzladen",
+        "hold": "Entladung gesperrt",
+        "holdcharge": "Laden pausiert",
+        "normal": "PV-Überschuss folgen"
+      },
+      "empty": "leer",
+      "full": "voll",
+      "highest": "Höchststand ({value})",
+      "lowest": "Tiefststand ({value})",
+      "suggestion": "Vorschlag",
+      "title": "Optimizer"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Ladestand der Batterie",
     "bufferStart": {
@@ -225,15 +264,21 @@
         "public": "Öffentliches Zertifikat",
         "title": "Zertifikate"
       },
+      "configuredDevices": "Konfigurierte Geräte",
       "description": "Konfiguration zur Kommunikation mit EEBus-kompatiblen Geräten wie Wallboxen oder dem Steuergerät des Netzbetreibers. Alle notwendigen Initialisierungen und die Zertifikatsgenerierung erfolgen automatisch beim ersten Start.",
       "descriptionAdvanced": "Keine Änderungen erforderlich. Bei Änderung ist Neukoppelung aller Geräte erforderlich.",
       "interfaces": "Schnittstellen",
       "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
+      "noConfiguredDevices": "Keine per SKI konfigurierten Geräte.",
+      "noPairings": "Keine gekoppelten Geräte.",
+      "pairings": "Gekoppelte Geräte",
       "port": "Port",
       "portHelp": "Der zu verwendende Port.",
       "qr": "Kopplungscode",
       "qrExplain": "Während der Installation von einem anderen EEBus-Gerät scannen, um automatisch zu koppeln, ohne die SKI manuell einzugeben.",
       "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
+      "removePairing": "Kopplung entfernen",
+      "removePairingConfirm": "Die Verbindung zum Gerät wird getrennt und es muss neu gekoppelt werden. Bist du sicher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
       "shipidHelp": "Diese SHIP-ID ist mit den unten stehenden Zertifikaten verknüpft.",

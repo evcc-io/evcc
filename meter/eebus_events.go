@@ -62,7 +62,7 @@ func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// use most specific selector
+	// prefer the shallowest (device-level) entity
 	if c.maEntity == nil || len(entity.Address().Entity) < len(c.maEntity.Address().Entity) {
 		c.maEntity = entity
 	}
@@ -76,7 +76,7 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// use most specific selector
+	// prefer the shallowest (device-level) entity
 	if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
 		c.egLpcEntity = entity
 	}
@@ -90,7 +90,7 @@ func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// use most specific selector
+	// prefer the shallowest (device-level) entity
 	if c.egLppEntity == nil || len(entity.Address().Entity) < len(c.egLppEntity.Address().Entity) {
 		c.egLppEntity = entity
 	}

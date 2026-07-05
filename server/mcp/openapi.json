@@ -1351,6 +1351,7 @@
             "in": "query",
             "name": "from",
             "schema": {
+              "example": "2026-07-01T00:00:00Z",
               "format": "date-time",
               "type": "string"
             }
@@ -1360,6 +1361,7 @@
             "in": "query",
             "name": "to",
             "schema": {
+              "example": "2026-07-02T00:00:00Z",
               "format": "date-time",
               "type": "string"
             }
@@ -1370,6 +1372,7 @@
             "name": "aggregate",
             "schema": {
               "default": "15m",
+              "example": "1h",
               "type": "string"
             }
           },
@@ -1379,7 +1382,45 @@
             "name": "grouped",
             "schema": {
               "default": false,
+              "example": false,
               "type": "boolean"
+            }
+          },
+          {
+            "description": "Filter by entity group",
+            "in": "query",
+            "name": "group",
+            "schema": {
+              "enum": [
+                "forecast",
+                "battery",
+                "grid",
+                "pv",
+                "home",
+                "loadpoint",
+                "meter",
+                "consumer"
+              ],
+              "example": "battery",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity name",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "example": "db:8",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity title",
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "example": "Battery",
+              "type": "string"
             }
           },
           {
@@ -1392,6 +1433,7 @@
                 "json",
                 "csv"
               ],
+              "example": "json",
               "type": "string"
             }
           },
@@ -1400,6 +1442,7 @@
             "in": "query",
             "name": "lang",
             "schema": {
+              "example": "de",
               "type": "string"
             }
           }

@@ -19,6 +19,45 @@
     "successCloseTab": "You can now close this tab.",
     "title": "Authorization Status"
   },
+  "battery": {
+    "card": {
+      "charging": "Charging",
+      "discharging": "Discharging",
+      "energy": "Energy",
+      "ofTotal": "of {total}",
+      "power": "Power",
+      "soc": "Battery level"
+    },
+    "combined": "Combined",
+    "config": {
+      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in solar mode. Start solar charging automatically {start}.",
+      "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support.",
+      "bufferStart": {
+        "above": "once the battery is above {soc}",
+        "full": "once the battery is full",
+        "never": "only with enough surplus"
+      },
+      "bufferTitle": "Battery as charging buffer",
+      "discharge": "Prevent home battery discharge in fast mode and during planned charging.",
+      "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
+      "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
+      "priorityTitle": "Where does the surplus go first?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Grid charging",
+        "hold": "Discharge locked",
+        "holdcharge": "Charging paused",
+        "normal": "Following solar surplus"
+      },
+      "empty": "empty",
+      "full": "full",
+      "highest": "Highest ({value})",
+      "lowest": "Lowest ({value})",
+      "suggestion": "Suggestion",
+      "title": "Optimizer"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Battery level",
     "bufferStart": {
@@ -225,15 +264,21 @@
         "public": "Public certificate",
         "title": "Certificates"
       },
+      "configuredDevices": "Configured devices",
       "description": "Configuration that enables evcc to communicate with EEBus compatible devices like chargers or a control unit of your grid operator. All relevant initialization and certificate generation is done automatically on first start.",
       "descriptionAdvanced": "No changes required. Only perform changes if you really know what you're doing. If you change either the SHIP-id or the certificates, you'll need to pair your devices again.",
       "interfaces": "Interfaces",
       "interfacesHelp": "Limit the network interfaces that EEBus should use to avoid communication problems. Leave the field blank to use all interfaces. One entry per line.",
+      "noConfiguredDevices": "No devices configured by SKI.",
+      "noPairings": "No paired devices.",
+      "pairings": "Paired devices",
       "port": "Port",
       "portHelp": "The port to be used.",
       "qr": "Pairing code",
       "qrExplain": "Scan from another EEBus device during installation to pair automatically, without entering the SKI manually.",
       "removeConfirm": "All EEBus configuration will be removed. New certificates and identifiers will be generated on next start. Are you sure?",
+      "removePairing": "Remove pairing",
+      "removePairingConfirm": "The device will be disconnected and must be paired again. Are you sure?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent device identifier for identification in the EEBus network.",
       "shipidHelp": "This SHIP-ID is linked to the certificates below.",

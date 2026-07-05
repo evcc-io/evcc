@@ -7,6 +7,9 @@ import {
   GridComponent,
   TooltipComponent,
   MarkPointComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
+  GraphicComponent,
   AxisPointerComponent,
 } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
@@ -18,6 +21,9 @@ echarts.use([
   TooltipComponent,
   AxisPointerComponent,
   MarkPointComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
+  GraphicComponent,
   SVGRenderer,
 ]);
 

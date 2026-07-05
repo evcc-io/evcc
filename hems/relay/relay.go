@@ -88,7 +88,8 @@ func (c *Relay) SetUpdated(f func()) {
 }
 
 func (c *Relay) Run() {
-	for range time.Tick(c.interval) {
+	// run immediately, then on every tick
+	for tick := time.Tick(c.interval); ; <-tick {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -148,9 +149,9 @@ func (c *Relay) Dimmed() *bool {
 	return new(c.limit != nil)
 }
 
-// Curtailed implements api.HEMS. Relay does not curtail production and
+// CurtailedPercent implements api.HEMS. Relay does not curtail production and
 // hence makes no statement.
-func (c *Relay) Curtailed() *bool {
+func (c *Relay) CurtailedPercent() *int {
 	return nil
 }
 

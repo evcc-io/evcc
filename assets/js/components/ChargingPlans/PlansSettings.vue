@@ -79,7 +79,6 @@ import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import api from "@/api";
 import deepEqual from "@/utils/deepEqual";
-import convertRates from "@/utils/convertRates";
 import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
 import type { Vehicle, CURRENCY, Forecast } from "@/types/evcc";
@@ -153,8 +152,11 @@ export default defineComponent({
 			return this.collectProps(Warnings);
 		},
 		chargingPlanPreviewProps(): any {
-			const forecastSlots = this.forecast?.planner || [];
-			const rates = convertRates(forecastSlots);
+			const rates = (this.forecast?.planner || []).map(({ start, end, value }) => ({
+				start: new Date(start),
+				end: new Date(end),
+				value,
+			}));
 			const { duration, plan, power, planTime } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;

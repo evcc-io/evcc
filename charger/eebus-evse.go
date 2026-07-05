@@ -49,7 +49,7 @@ type EEBus struct {
 }
 
 func init() {
-	registry.AddCtx("eebus", NewEEBusFromConfig)
+	registry.AddCtx("eebus-evse", NewEEBusFromConfig)
 }
 
 // NewEEBusFromConfig creates an EEBus charger from generic config
@@ -345,7 +345,9 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// always set overload protection limits (obligation)
-	if _, err := c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, c.callbackResult("opEV limits")); err != nil {
+	if err := eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, cb)
+	}); err != nil {
 		return err
 	}
 
@@ -395,24 +397,10 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		limits = append(limits, limit)
 	}
 
-	if _, err := c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, c.callbackResult("oscEV limits")); err != nil {
+	if err := eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, cb)
+	}); err != nil {
 		c.log.DEBUG.Println("failed to write OSCEV limits:", err)
-	}
-}
-
-// callbackResult logs a rejected eebus write; a successful result is ignored.
-func (c *EEBus) callbackResult(msg string) func(model.ResultDataType) {
-	return func(result model.ResultDataType) {
-		if result.ErrorNumber == nil || *result.ErrorNumber == 0 {
-			return
-		}
-
-		if result.Description != nil {
-			c.log.ERROR.Printf("%s: write rejected: %d (%s)", msg, *result.ErrorNumber, *result.Description)
-			return
-		}
-
-		c.log.ERROR.Printf("%s: write rejected: %d", msg, *result.ErrorNumber)
 	}
 }
 

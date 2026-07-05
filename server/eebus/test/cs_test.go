@@ -47,10 +47,9 @@ func TestEEBus(t *testing.T) {
 	eventC := make(chan api.EventType, 16)
 	box.remoteEventC = eventC
 
-	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
+	// no hems.Run(): the run loop applies limits via the nil site and is not needed here
+	_, err = hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
 	require.NoError(t, err, "hems")
-
-	go hems.Run()
 
 	// wait for DataUpdateLimit which signals that limit descriptions and data are available
 	require.Eventually(t, func() bool {

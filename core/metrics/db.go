@@ -125,13 +125,23 @@ func SetupSchema() error {
 	return db.Instance.AutoMigrate(new(meter))
 }
 
+// OnPersist, if set, is called with the slot start after a slot is written.
+var OnPersist func(slot time.Time)
+
 // persist stores a completed 15min slot
 func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64) error {
-	return db.Instance.Create(&meter{
+	slot := ts.Truncate(tariff.SlotDuration)
+	if err := db.Instance.Create(&meter{
 		Meter:        entity.Id,
-		Timestamp:    ts.Truncate(tariff.SlotDuration).Unix(),
+		Timestamp:    slot.Unix(),
 		Energy:       energy,
 		ReturnEnergy: returnEnergy,
 		SocTemp:      socTemp,
-	}).Error
+	}).Error; err != nil {
+		return err
+	}
+	if OnPersist != nil {
+		OnPersist(slot)
+	}
+	return nil
 }
