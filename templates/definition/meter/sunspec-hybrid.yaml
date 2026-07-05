@@ -5,6 +5,7 @@ products:
       de: SunSpec Hybridwechselrichter
       en: SunSpec Hybrid Inverter
 group: generic
+capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -106,6 +107,33 @@ render: |
         {{- include "modbus" . | indent 6 }}
         value: 160:2:DCWH # mppt 2
         scale: 0.001
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value: 704:WMaxLimPctEna
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 704:WMaxLimPctEna
+  curtailed:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 704:WMaxLimPctEna
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
