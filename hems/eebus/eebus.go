@@ -323,14 +323,13 @@ func (c *EEBus) CurtailedPercent() *int {
 	return &percent
 }
 
-// MaxConsumptionPower implements api.HEMS, returning the consumption cap
-// currently in effect: failsafe limit while in failsafe, otherwise the
-// EG-supplied LPC limit when active, or 0 when no limit applies.
+// MaxConsumptionPower implements api.HEMS: failsafe limit while in failsafe,
+// else the EG-supplied LPC limit when active, else nil (no limit).
 func (c *EEBus) MaxConsumptionPower() *float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 	if c.consumptionLimitActivated.IsZero() {
-		return new(0.0)
+		return nil
 	}
 	if c.status == StatusFailsafe {
 		return new(c.failsafeConsumptionLimit)

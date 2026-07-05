@@ -87,7 +87,7 @@ func hemsDimmed(hems api.HEMS) *bool {
 	return hemsapi.Dimmed(hems)
 }
 
-// hemsCurtailed returns the HEMS curtail percent, nil-safe
+// hemsCurtailed returns whether HEMS curtailment is active, nil-safe
 func hemsCurtailed(hems api.HEMS) *bool {
 	if hems == nil {
 		return nil

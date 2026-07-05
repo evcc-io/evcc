@@ -48,10 +48,15 @@ func newTestEEBus(t *testing.T) *EEBus {
 	}
 }
 
-// assertConsumptionLimit checks the HEMS consumption state through the api.HEMS surface.
+// assertConsumptionLimit checks the HEMS consumption state through the api.HEMS
+// surface. limit == 0 asserts the "no limit" (nil) contract.
 func assertConsumptionLimit(t *testing.T, c *EEBus, limit float64) {
 	t.Helper()
 	power := c.MaxConsumptionPower()
+	if limit == 0 {
+		require.Nil(t, power)
+		return
+	}
 	require.NotNil(t, power)
 	assert.Equal(t, limit, *power)
 }
@@ -62,6 +67,15 @@ func assertProductionLimit(t *testing.T, c *EEBus, active bool) {
 	percent := c.CurtailedPercent()
 	require.NotNil(t, percent)
 	assert.Equal(t, active, *percent < 100)
+}
+
+// TestEEBusNoLimitContract verifies api.HEMS's "nil = no limit" contract holds
+// for a freshly-constructed EEBus before any limit has ever been received.
+func TestEEBusNoLimitContract(t *testing.T) {
+	c := newTestEEBus(t)
+
+	require.Nil(t, c.MaxConsumptionPower())
+	require.Nil(t, c.MaxProductionPower())
 }
 
 // TestRun_HeartbeatLost_EntersFailsafe verifies the LPC-911/LPP-911 transition:
