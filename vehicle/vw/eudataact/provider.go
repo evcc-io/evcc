@@ -156,9 +156,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	// block 2: flat charging_state field and the current_charge_state field
-	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
-		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
-			strings.EqualFold(p.Value, "conservationCharging") || strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
+	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil && strings.Contains(strings.ToUpper(p.Value), "CHARGING") {
 		status = api.StatusC
 	}
 
