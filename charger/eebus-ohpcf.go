@@ -63,7 +63,8 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		Reboost time.Duration
 	}{
 		embed: embed{
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Icon_:     "heatpump",
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice, api.SwitchDevice},
 		},
 		Reboost: 10 * time.Minute,
 	}
