@@ -39,10 +39,15 @@ func acquireLine(chip string, pin int, output bool) (*sharedLine, error) {
 
 	if sl, ok := lines[key]; ok {
 		if output && !sl.isOutput {
-			if err := sl.line.Reconfigure(gpiocdev.AsOutput(0)); err != nil {
+			sl.mu.Lock()
+			err := sl.line.Reconfigure(gpiocdev.AsOutput(0))
+			if err == nil {
+				sl.isOutput = true
+			}
+			sl.mu.Unlock()
+			if err != nil {
 				return nil, fmt.Errorf("failed to reconfigure GPIO: %w", err)
 			}
-			sl.isOutput = true
 		}
 		return sl, nil
 	}
