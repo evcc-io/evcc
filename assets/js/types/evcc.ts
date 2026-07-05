@@ -593,6 +593,12 @@ export type EebusStatus = {
   qr?: string;
 };
 
+export type EebusPairing = {
+  ski: string;
+  shipID: string;
+  source: "paired" | "ski";
+};
+
 export type ModbusProxy = {
   port: number;
   readonly: MODBUS_PROXY_READONLY;
