@@ -210,7 +210,13 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MaxSoc/100))
+					// hold at current SoC (not MaxSoc): otherwise the gap between current
+					// and target SoC lets the inverter charge from the grid (#31280)
+					soc, err := m.queryFloat(rct.BatterySoC)
+					if err != nil {
+						return err
+					}
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(soc))
 				})
 
 				eg.Go(func() error {
