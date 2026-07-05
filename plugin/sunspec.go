@@ -22,6 +22,7 @@ type ModbusSunspec struct {
 	device *sunsdev.SunSpec
 	op     modbus.SunSpecOperation
 	scale  float64
+	mask   uint64
 }
 
 func init() {
@@ -34,6 +35,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		modbus.Settings `mapstructure:",squash"`
 		Value           []string
 		Scale           float64
+		BitMask         string
 		Delay           time.Duration
 		ConnectDelay    time.Duration
 		Timeout         time.Duration
@@ -43,6 +45,14 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	var mask uint64
+	if cc.BitMask != "" {
+		var err error
+		if mask, err = modbus.DecodeMask(cc.BitMask); err != nil {
+			return nil, err
+		}
 	}
 
 	modbus.Lock()
@@ -104,6 +114,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		conn:   conn,
 		device: device,
 		scale:  cc.Scale,
+		mask:   mask,
 	}
 
 	for _, op := range ops {
@@ -155,6 +166,60 @@ func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
 		res, err := g()
 		return int64(math.Round(res)), err
 	}, err
+}
+
+var _ BoolGetter = (*ModbusSunspec)(nil)
+
+// BoolGetter treats any non-zero raw value as true, ANDing an optional bitmask in first.
+// Reads the point directly since FloatGetter's ScaledValue panics on enum/bitfield points.
+func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
+	return func() (res bool, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+
+		_, point, err := m.blockPoint()
+		if err != nil {
+			return false, err
+		}
+
+		var val int64
+		switch point.Type() {
+		case typelabel.Bitfield16:
+			val = int64(point.Bitfield16())
+		case typelabel.Bitfield32:
+			val = int64(point.Bitfield32())
+		case typelabel.Enum16:
+			val = int64(point.Enum16())
+		case typelabel.Enum32:
+			val = int64(point.Enum32())
+		case typelabel.Int16:
+			val = int64(point.Int16())
+		case typelabel.Int32:
+			val = int64(point.Int32())
+		case typelabel.Int64:
+			val = point.Int64()
+		case typelabel.Uint16:
+			val = int64(point.Uint16())
+		case typelabel.Uint32:
+			val = int64(point.Uint32())
+		case typelabel.Uint64:
+			val = int64(point.Uint64())
+		default:
+			return false, fmt.Errorf("model %d block %d point %s: unsupported bool type %s", m.op.Model, m.op.Block, m.op.Point, point.Type())
+		}
+
+		return sunspecBool(val, m.mask), nil
+	}, nil
+}
+
+func sunspecBool(val int64, mask uint64) bool {
+	if mask != 0 {
+		return uint64(val)&mask != 0
+	}
+	return val != 0
 }
 
 func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
