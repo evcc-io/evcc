@@ -186,7 +186,7 @@ func TestSyncChargerPhasesByMeasurement(t *testing.T) {
 		{1, 1, 1},
 		{1, 3, 3},
 		{3, 0, 3},
-		{3, 1, 3}, // ignore
+		{3, 1, 1}, // force
 		{3, 3, 3},
 	}
 

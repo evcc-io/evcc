@@ -884,7 +884,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 			// use measured phase currents for active phases as fallback if charger does not provide phases
 			if !isPg || errors.Is(err, api.ErrNotAvailable) {
-				if chargerPhases > phases {
+				if chargerPhases > 0 && chargerPhases != phases {
 					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
 					lp.SetPhases(chargerPhases)
 				}
