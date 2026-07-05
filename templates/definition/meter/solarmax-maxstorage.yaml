@@ -140,14 +140,23 @@ render: |
           source: sequence
           set:
           - source: const
-            value: {{ .maxchargepower }} # W, positive = charge (Vorgabe Batterieleistung)
+            value: {{ .maxchargepower }} # W, max charge power
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 140
                 type: writemultiple
-                encoding: int32s
+                decode: int16
+          - source: const
+            value: 0 # W, block discharge while forcing charge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 141
+                type: writemultiple
+                decode: int16
           - source: random
             set:
               source: modbus
