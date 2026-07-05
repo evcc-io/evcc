@@ -289,6 +289,15 @@ func limitActive(t *time.Time) bool {
 	return t != nil && !t.IsZero()
 }
 
+// activatedAt returns now if active, else a known-but-zero timestamp.
+func activatedAt(active bool) *time.Time {
+	if active {
+		t := time.Now()
+		return &t
+	}
+	return new(time.Time)
+}
+
 func (c *EEBus) setStatus(status status) {
 	c.status = status
 	c.statusUpdated = time.Now()
@@ -296,13 +305,7 @@ func (c *EEBus) setStatus(status status) {
 
 func (c *EEBus) setConsumptionLimit(limit float64) {
 	active := limit > 0
-
-	now := time.Now()
-	if active {
-		c.consumptionLimitActivated = &now
-	} else {
-		c.consumptionLimitActivated = new(time.Time)
-	}
+	c.consumptionLimitActivated = activatedAt(active)
 
 	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
@@ -316,12 +319,7 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 }
 
 func (c *EEBus) setProductionLimit(limit float64, active bool) {
-	now := time.Now()
-	if active {
-		c.productionLimitActivated = &now
-	} else {
-		c.productionLimitActivated = new(time.Time)
-	}
+	c.productionLimitActivated = activatedAt(active)
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
