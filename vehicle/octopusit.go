@@ -10,8 +10,9 @@ import (
 	"github.com/evcc-io/evcc/vehicle/octopuskraken"
 )
 
-// OctopusDe is an api.Vehicle implementation for the Octopus Energy Germany Kraken API
-type OctopusDe struct {
+// OctopusIt is an api.Vehicle implementation for Octopus Energy Italy, reusing
+// the Germany implementation's Kraken API client.
+type OctopusIt struct {
 	*embed
 	*octopuskraken.API
 	account  string
@@ -21,11 +22,11 @@ type OctopusDe struct {
 }
 
 func init() {
-	registry.Add("octopus-de", NewOctopusDeFromConfig)
+	registry.Add("octopus-it", NewOctopusItFromConfig)
 }
 
-// NewOctopusDeFromConfig creates a new vehicle
-func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
+// NewOctopusItFromConfig creates a new vehicle
+func NewOctopusItFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed         `mapstructure:",squash"`
 		Email         string
@@ -45,14 +46,14 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("octopus-de").Redact(cc.Email, cc.Password)
+	log := util.NewLogger("octopus-it").Redact(cc.Email, cc.Password)
 
-	api, err := octopuskraken.NewAPI(log, octopuskraken.BaseURI, cc.Email, cc.Password)
+	api, err := octopuskraken.NewAPI(log, octopuskraken.ItBaseURI, cc.Email, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	v := &OctopusDe{
+	v := &OctopusIt{
 		embed:   &cc.embed,
 		API:     api,
 		account: cc.AccountNumber,
@@ -66,7 +67,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
 
 // status fetches the live state of the configured device, resolving the account
 // and matching device on first use.
-func (v *OctopusDe) status() (octopuskraken.Device, error) {
+func (v *OctopusIt) status() (octopuskraken.Device, error) {
 	account, err := v.Account(v.account)
 	if err != nil {
 		return octopuskraken.Device{}, err
@@ -100,7 +101,7 @@ func (v *OctopusDe) status() (octopuskraken.Device, error) {
 }
 
 // Soc implements the api.Vehicle interface
-func (v *OctopusDe) Soc() (float64, error) {
+func (v *OctopusIt) Soc() (float64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
@@ -114,10 +115,10 @@ func (v *OctopusDe) Soc() (float64, error) {
 	return soc, nil
 }
 
-var _ api.SocLimiter = (*OctopusDe)(nil)
+var _ api.SocLimiter = (*OctopusIt)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
-func (v *OctopusDe) GetLimitSoc() (int64, error) {
+func (v *OctopusIt) GetLimitSoc() (int64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
