@@ -31,7 +31,6 @@ params:
   - name: productionnominalmax
     type: float
     unit: W
-    advanced: true
     description:
       en: Installed generator power (Wp)
       de: Installierte Generatorleistung (Wp)
