@@ -37,7 +37,7 @@
 					<div
 						v-for="i in 3"
 						:key="i"
-						class="history-tile history-tile-skeleton mb-4"
+						class="history-tile history-tile-skeleton box-pull-out mb-4"
 						aria-hidden="true"
 					></div>
 				</div>

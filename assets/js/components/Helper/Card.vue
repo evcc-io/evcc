@@ -70,4 +70,11 @@ export default defineComponent({
 		padding-right: 1.5rem !important;
 	}
 }
+/* sm and up: pull the card into the container padding so content aligns with the page header */
+@media (min-width: 576px) {
+	.evcc-card--edge {
+		margin-left: -1.5rem;
+		margin-right: -1.5rem;
+	}
+}
 </style>

@@ -85,7 +85,7 @@
 						:period="period"
 					/>
 				</Card>
-				<div v-if="showExtraCharts" class="row align-items-start">
+				<div v-if="showExtraCharts" class="extra-charts row align-items-start">
 					<div class="col-12 col-lg-6 mb-4">
 						<Card :title="firstExtraTitle" edge-to-edge>
 							<div v-if="activeType === types.SOLAR">
@@ -710,4 +710,14 @@ export default defineComponent({
 
 <style scoped>
 @import "../../css/breakpoints.css";
+
+/* side-by-side cards: pull only the outer edges */
+@media (--lg-and-up) {
+	.extra-charts > div:first-child :deep(.evcc-card) {
+		margin-right: 0;
+	}
+	.extra-charts > div:last-child :deep(.evcc-card) {
+		margin-left: 0;
+	}
+}
 </style>

@@ -748,6 +748,14 @@ html.app .modal-dialog {
 	padding: 1rem;
 }
 
+/* pull boxes into the container padding so box content aligns with the page header */
+@media (min-width: 576px) {
+	.box-pull-out {
+		margin-left: -1.5rem;
+		margin-right: -1.5rem;
+	}
+}
+
 .round-box--error {
 	box-shadow: 0 0 0.5rem var(--bs-danger);
 	border: 1px solid var(--bs-danger);
