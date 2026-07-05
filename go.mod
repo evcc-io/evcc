@@ -263,3 +263,5 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
 
 replace github.com/enbility/eebus-go => github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6
+
+replace github.com/enbility/ship-go => github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307
