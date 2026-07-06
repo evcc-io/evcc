@@ -640,19 +640,38 @@ render: |
                   if limit < rated { out = limit }
                   out
       # normal/hold/holdcharge (1,2,4) already stopped 47100 above; only charge
-      # (3, excluded from reset) needs it periodically reasserted here
+      # (3, excluded from reset) needs it periodically reasserted here.
+      # set: must no-op for 1/2/4 - it fires immediately on every call (not just
+      # on the recurring reset-suppressed tick), so a bare write here would
+      # re-assert 47100=1 right after the switch above just cleared it to 0.
       - source: watchdog
         timeout: 30s
         reset: [1, 2, 4]
         set:
-          source: const
-          value: 1 # charge
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47100 # Forcible charge/discharge
-              type: writesingle
-              encoding: uint16
+          source: switch
+          switch:
+            - case: 1 # normal
+              set:
+                source: sleep
+                duration: 0s
+            - case: 2 # hold
+              set:
+                source: sleep
+                duration: 0s
+            - case: 3 # charge
+              set:
+                source: const
+                value: 1 # charge
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+            - case: 4 # holdcharge
+              set:
+                source: sleep
+                duration: 0s
   {{- include "battery-params" . }}
   {{- end }}
