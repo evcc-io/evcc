@@ -52,7 +52,7 @@ const (
 	flagDiagnoseDescription = "Diagnose"
 
 	flagCurtail            = "curtail"
-	flagCurtailDescription = "Curtail (0/1 to switch, only available if supported by device)"
+	flagCurtailDescription = "Curtail feed-in to percent (0-100, only available if supported by device)"
 
 	flagDim            = "dim"
 	flagDimDescription = "Dim (0/1 to switch, only available if supported by device)"

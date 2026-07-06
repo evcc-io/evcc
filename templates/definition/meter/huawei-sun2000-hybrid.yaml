@@ -37,6 +37,7 @@ params:
       en: Active power limit in percent
     advanced: true
     usages: ["pv"]
+    deprecated: true # curtailment now applies the HEMS-distributed percent directly
   - name: storageunit
   - name: forceaccharging
     default: false
@@ -226,38 +227,33 @@ render: |
     scale: 0.01
   maxacpower: {{ .maxacpower }}
   curtail:
-    source: ifelse
-    if:
-      source: convert
-      convert: bool2int
-      set:
-        source: sequence
-        set:
-        - source: const
-          value: {{ .curtailpercent }}
+    source: sequence
+    set:
+    # allowed feed-in power as percent of nominal (0-100 %)
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 47418 # Maximum Feed Grid Power (0-100 %)
+        type: writesingle
+        encoding: uint16
+      scale: 10
+    # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
+    - source: switch
+      switch:
+        - case: 100 # uncurtailed
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47418 # Maximum Feed Grid Power (0-100 %)
-              type: writesingle
-              encoding: uint16
-            scale: 10
-        - source: const
-          value: 7 # Power-limited grid connection (%)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47415 # Active power control mode
-              type: writesingle
-              encoding: uint16
-    else:
-      source: convert
-      convert: bool2int
-      set:
+            source: const
+            value: 0 # Unlimited
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47415 # Active power control mode
+                type: writesingle
+                encoding: uint16
+      default:
         source: const
-        value: 0 # Unlimited 
+        value: 7 # Power-limited grid connection (%)
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}

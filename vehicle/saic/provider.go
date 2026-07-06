@@ -54,8 +54,8 @@ func (v *Provider) Soc() (float64, error) {
 
 	val := res.ChrgMgmtData.BmsPackSOCDsp
 	if val > 1000 {
-		// v.status.Reset()
-		return float64(val), fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
+		v.status.Reset()
+		return 0, fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
 	}
 
 	return float64(val) / 10.0, nil
@@ -103,11 +103,13 @@ func (v *Provider) Range() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	val := res.RvsChargeStatus.FuelRangeElec
-	if val < 10 {
-		// Ok, 0 would be possible, but it's more likely that it's an invalid answer.
-		return 0, api.ErrMustRetry
+	if val < 10 || val > 10000 {
+		v.status.Reset()
+		return 0, fmt.Errorf("invalid raw range value: %d: %w", val, api.ErrMustRetry)
 	}
+
 	return val / 10, nil
 }
 
@@ -127,19 +129,16 @@ var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
-	result := 0
 	res, err := v.status.Get()
 	if err != nil {
 		return 0, err
 	}
 
-	index := res.ChrgMgmtData.BmsOnBdChrgTrgtSOCDspCmd
-
-	if index <= Target100 {
-		result = TargetSocVals[res.ChrgMgmtData.BmsOnBdChrgTrgtSOCDspCmd]
+	if res.ChrgMgmtData.BmsOnBdChrgTrgtSOCDspCmd <= Target100 {
+		return int64(TargetSocVals[res.ChrgMgmtData.BmsOnBdChrgTrgtSOCDspCmd]), nil
 	}
 
-	return int64(result), err
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.Resurrector = (*Provider)(nil)
