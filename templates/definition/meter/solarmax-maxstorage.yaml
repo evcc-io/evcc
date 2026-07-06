@@ -6,8 +6,8 @@ products:
 capabilities: ["battery-control"]
 requirements:
   description:
-    de: Für Batteriesteuerung muss über den Solarmax Support die Funktion "Connectivity+" freigeschaltet werden. Verfügbar ab Software 3.4.4. Ohne Freischaltung bleibt die Funktion ohne Wirkung. Netzladung ist generell nicht verfügbar.
-    en: For batter control, the "Connectivity+" function must be activated via the Solarmax support. Available from software version 3.4.4. Without activation, the function remains without effect. Grid charging is generally not available.
+    de: Für Batteriesteuerung muss über den Solarmax Support die Funktion "Connectivity+" freigeschaltet werden. Verfügbar ab Software 3.4.4. Ohne Freischaltung bleibt die Funktion ohne Wirkung.
+    en: For batter control, the "Connectivity+" function must be activated via the Solarmax support. Available from software version 3.4.4. Without activation, the function remains without effect.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -16,6 +16,9 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    service: modbus/read?address=130&type=input&encoding=uint32&{modbus}
+    required: true
   # battery control
   - name: watchdog
     default: 60s
@@ -132,9 +135,35 @@ render: |
                 address: 142
                 type: writemultiple
                 decode: int16
-      - case: 3 # charge (not implemented)
+      - case: 3 # charge
         set:
-          source: error
-          error: ErrNotAvailable
+          source: sequence
+          set:
+          - source: const
+            value: {{ .maxchargepower }} # W, max charge power
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 140
+                type: writemultiple
+                decode: int16
+          - source: const
+            value: 0 # W, block discharge while forcing charge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 141
+                type: writemultiple
+                decode: int16
+          - source: random
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 142
+                type: writemultiple
+                decode: int16
   {{- include "battery-params" . }}
   {{- end }}
