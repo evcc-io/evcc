@@ -344,26 +344,6 @@ call getEnergyHistory {
 }
 ```
 
-## getState
-
-Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data.
-
-**Tags:** general
-
-**Arguments:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| jq | string | Filter the state with JQ |
-
-**Example call:**
-
-```json
-call getState {
-  "jq": "example"
-}
-```
-
 ## removeGlobalSmartCostLimit
 
 Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.
@@ -1101,6 +1081,26 @@ Update vehicle, loadpoint or odometer of a charging session. Only provided field
 call updateSession {
   "id": 1,
   "requestBody": "..."
+}
+```
+
+## state
+
+Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data.
+
+**Tags:** state
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| jq | string | Filter the state with JQ |
+
+**Example call:**
+
+```json
+call state {
+  "jq": "example"
 }
 ```
 

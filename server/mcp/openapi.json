@@ -4745,7 +4745,7 @@
     "/state": {
       "get": {
         "description": "Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data.",
-        "operationId": "getState",
+        "operationId": "state",
         "parameters": [
           {
             "description": "Filter the state with JQ",
@@ -4780,7 +4780,7 @@
         },
         "summary": "System state",
         "tags": [
-          "general"
+          "state"
         ]
       }
     },
@@ -5231,6 +5231,9 @@
     }
   },
   "tags": [
+    {
+      "name": "state"
+    },
     {
       "name": "auth"
     },
