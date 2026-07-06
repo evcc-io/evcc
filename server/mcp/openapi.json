@@ -1177,10 +1177,8 @@
           },
           "chargerIcon": {
             "description": "Charger icon name for UI display.",
-            "type": [
-              "string",
-              "null"
-            ]
+            "nullable": true,
+            "type": "string"
           },
           "chargerPhases1p3p": {
             "description": "Charger supports automatic switching between 1-phase and 3-phase charging.",
@@ -1191,15 +1189,13 @@
             "type": "boolean"
           },
           "chargerStatusReason": {
-            "anyOf": [
+            "allOf": [
               {
                 "$ref": "#/components/schemas/ChargerStatusReason"
-              },
-              {
-                "type": "null"
               }
             ],
-            "description": "Reason why the charger is waiting, like a pending authorization or a required disconnect."
+            "description": "Reason why the charger is waiting, like a pending authorization or a required disconnect.",
+            "nullable": true
           },
           "charging": {
             "description": "A vehicle is connected and charging.",
@@ -1247,10 +1243,8 @@
           "effectivePlanTime": {
             "description": "Target time of the currently applied charging plan.",
             "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
+            "nullable": true,
+            "type": "string"
           },
           "effectivePriority": {
             "description": "Currently applied priority.",
@@ -1315,18 +1309,12 @@
             "type": "number"
           },
           "plan": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Rate"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Time slots of the current charging plan."
+            "description": "Time slots of the current charging plan.",
+            "items": {
+              "$ref": "#/components/schemas/Rate"
+            },
+            "nullable": true,
+            "type": "array"
           },
           "planActive": {
             "description": "The current time slot is an active charging slot of the plan.",
@@ -1343,18 +1331,14 @@
           "planProjectedEnd": {
             "description": "Projected end of the charging plan. End of the last planned slot.",
             "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
+            "nullable": true,
+            "type": "string"
           },
           "planProjectedStart": {
             "description": "Projected start of the charging plan. Start of the earliest planned slot.",
             "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
+            "nullable": true,
+            "type": "string"
           },
           "planStrategy": {
             "$ref": "#/components/schemas/PlanStrategy"
@@ -1362,10 +1346,8 @@
           "planTime": {
             "description": "Target time of the charging plan.",
             "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
+            "nullable": true,
+            "type": "string"
           },
           "priority": {
             "description": "Priority for surplus distribution. Higher number means higher priority.",
@@ -1380,10 +1362,8 @@
           },
           "sessionCo2PerKWh": {
             "description": "Average CO₂ emissions of the current charging session in g/kWh.",
-            "type": [
-              "number",
-              "null"
-            ]
+            "nullable": true,
+            "type": "number"
           },
           "sessionEnergy": {
             "description": "Energy charged in the current charging session in kWh.",
@@ -1391,17 +1371,13 @@
           },
           "sessionPrice": {
             "description": "Total cost of the current charging session in the configured currency.",
-            "type": [
-              "number",
-              "null"
-            ]
+            "nullable": true,
+            "type": "number"
           },
           "sessionPricePerKWh": {
             "description": "Average energy price of the current charging session per kWh in the configured currency.",
-            "type": [
-              "number",
-              "null"
-            ]
+            "nullable": true,
+            "type": "number"
           },
           "sessionSolarPercentage": {
             "description": "Share of solar energy in the current charging session in %.",
@@ -1413,18 +1389,14 @@
           },
           "smartCostLimit": {
             "description": "Price or emission limit for fast charging with grid energy.",
-            "type": [
-              "number",
-              "null"
-            ]
+            "nullable": true,
+            "type": "number"
           },
           "smartCostNextStart": {
             "description": "Start of the next fast charging period with cheap or clean grid energy.",
             "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
+            "nullable": true,
+            "type": "string"
           },
           "smartFeedInPriorityActive": {
             "description": "Charging pause for prioritized feed-in is currently active.",
@@ -1432,18 +1404,14 @@
           },
           "smartFeedInPriorityLimit": {
             "description": "Feed-in rate limit above which charging is paused.",
-            "type": [
-              "number",
-              "null"
-            ]
+            "nullable": true,
+            "type": "number"
           },
           "smartFeedInPriorityNextStart": {
             "description": "Start of the next charging pause for prioritized feed-in.",
             "format": "date-time",
-            "type": [
-              "string",
-              "null"
-            ]
+            "nullable": true,
+            "type": "string"
           },
           "title": {
             "description": "Loadpoint title for UI display.",
@@ -1454,10 +1422,8 @@
           },
           "vehicleClimaterActive": {
             "description": "Climater of the connected vehicle is active.",
-            "type": [
-              "boolean",
-              "null"
-            ]
+            "nullable": true,
+            "type": "boolean"
           },
           "vehicleDetectionActive": {
             "description": "Automatic vehicle detection is running.",
@@ -2436,10 +2402,8 @@
           },
           "batteryGridChargeLimit": {
             "description": "Price or emission limit for charging the home battery from grid.",
-            "type": [
-              "number",
-              "null"
-            ]
+            "nullable": true,
+            "type": "number"
           },
           "batteryMode": {
             "$ref": "#/components/schemas/BatteryMode"
@@ -2561,29 +2525,21 @@
             "$ref": "#/components/schemas/GenericConfigStatus"
           },
           "messagingEvents": {
-            "anyOf": [
+            "allOf": [
               {
                 "$ref": "#/components/schemas/MessagingEvents"
-              },
-              {
-                "type": "null"
               }
             ],
-            "description": "Configured notification messages per event type."
+            "description": "Configured notification messages per event type.",
+            "nullable": true
           },
           "modbusproxy": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/ModbusProxy"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Modbus proxy configuration."
+            "description": "Modbus proxy configuration.",
+            "items": {
+              "$ref": "#/components/schemas/ModbusProxy"
+            },
+            "nullable": true,
+            "type": "array"
           },
           "mqtt": {
             "$ref": "#/components/schemas/MqttConfig"
@@ -2672,9 +2628,7 @@
           },
           "system": {
             "description": "Operating system and architecture.",
-            "examples": [
-              "linux/amd64"
-            ],
+            "example": "linux/amd64",
             "type": "string"
           },
           "tariffCo2": {
@@ -2718,9 +2672,7 @@
           },
           "timezone": {
             "description": "Server time zone abbreviation and UTC offset.",
-            "examples": [
-              "CEST +02:00"
-            ],
+            "example": "CEST +02:00",
             "type": "string"
           },
           "vehicles": {
@@ -2904,18 +2856,12 @@
             "$ref": "#/components/schemas/PlanStrategy"
           },
           "repeatingPlans": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/RepeatingPlan"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Repeating charging plans."
+            "description": "Repeating charging plans.",
+            "items": {
+              "$ref": "#/components/schemas/RepeatingPlan"
+            },
+            "nullable": true,
+            "type": "array"
           },
           "title": {
             "description": "Vehicle title for UI display.",

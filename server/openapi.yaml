@@ -1627,13 +1627,11 @@ components:
         system:
           description: Operating system and architecture.
           type: string
-          examples:
-            - linux/amd64
+          example: linux/amd64
         timezone:
           description: Server time zone abbreviation and UTC offset.
           type: string
-          examples:
-            - CEST +02:00
+          example: CEST +02:00
         battery:
           $ref: "#/components/schemas/Battery"
           description: Aggregated home battery state.
@@ -1740,19 +1738,18 @@ components:
           description: Remote access configuration and connection status.
         modbusproxy:
           description: Modbus proxy configuration.
-          anyOf:
-            - type: array
-              items:
-                $ref: "#/components/schemas/ModbusProxy"
-            - type: "null"
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/ModbusProxy"
         messaging:
           $ref: "#/components/schemas/GenericConfigStatus"
           description: Messaging services configuration. Structure depends on configuration.
         messagingEvents:
           description: Configured notification messages per event type.
-          anyOf:
+          nullable: true
+          allOf:
             - $ref: "#/components/schemas/MessagingEvents"
-            - type: "null"
         interval:
           description: Update interval of the control loop in seconds.
           type: number
@@ -1775,9 +1772,8 @@ components:
           type: boolean
         batteryGridChargeLimit:
           description: Price or emission limit for charging the home battery from grid.
-          type:
-            - number
-            - "null"
+          type: number
+          nullable: true
         batteryGridChargeActive:
           description: Home battery is currently charged from grid.
           type: boolean
@@ -2353,9 +2349,8 @@ components:
           type: boolean
         chargerIcon:
           description: Charger icon name for UI display.
-          type:
-            - string
-            - "null"
+          type: string
+          nullable: true
         chargerPhases1p3p:
           description: Charger supports automatic switching between 1-phase and 3-phase charging.
           type: boolean
@@ -2364,9 +2359,9 @@ components:
           type: boolean
         chargerStatusReason:
           description: Reason why the charger is waiting, like a pending authorization or a required disconnect.
-          anyOf:
+          nullable: true
+          allOf:
             - $ref: "#/components/schemas/ChargerStatusReason"
-            - type: "null"
         charging:
           description: A vehicle is connected and charging.
           type: boolean
@@ -2399,9 +2394,8 @@ components:
           type: number
         effectivePlanTime:
           description: Target time of the currently applied charging plan.
-          type:
-            - string
-            - "null"
+          type: string
+          nullable: true
           format: date-time
         effectivePlanStrategy:
           $ref: "#/components/schemas/PlanStrategy"
@@ -2453,11 +2447,10 @@ components:
           type: number
         plan:
           description: Time slots of the current charging plan.
-          anyOf:
-            - type: array
-              items:
-                $ref: "#/components/schemas/Rate"
-            - type: "null"
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/Rate"
         planActive:
           description: The current time slot is an active charging slot of the plan.
           type: boolean
@@ -2472,21 +2465,18 @@ components:
           description: Charging plan strategy.
         planProjectedEnd:
           description: Projected end of the charging plan. End of the last planned slot.
-          type:
-            - string
-            - "null"
+          type: string
+          nullable: true
           format: date-time
         planProjectedStart:
           description: Projected start of the charging plan. Start of the earliest planned slot.
-          type:
-            - string
-            - "null"
+          type: string
+          nullable: true
           format: date-time
         planTime:
           description: Target time of the charging plan.
-          type:
-            - string
-            - "null"
+          type: string
+          nullable: true
           format: date-time
         priority:
           description: Priority for surplus distribution. Higher number means higher priority.
@@ -2499,22 +2489,19 @@ components:
           type: number
         sessionCo2PerKWh:
           description: Average CO₂ emissions of the current charging session in g/kWh.
-          type:
-            - number
-            - "null"
+          type: number
+          nullable: true
         sessionEnergy:
           description: Energy charged in the current charging session in kWh.
           type: number
         sessionPrice:
           description: Total cost of the current charging session in the configured currency.
-          type:
-            - number
-            - "null"
+          type: number
+          nullable: true
         sessionPricePerKWh:
           description: Average energy price of the current charging session per kWh in the configured currency.
-          type:
-            - number
-            - "null"
+          type: number
+          nullable: true
         sessionSolarPercentage:
           description: Share of solar energy in the current charging session in %.
           type: number
@@ -2523,37 +2510,32 @@ components:
           type: boolean
         smartCostLimit:
           description: Price or emission limit for fast charging with grid energy.
-          type:
-            - number
-            - "null"
+          type: number
+          nullable: true
         smartCostNextStart:
           description: Start of the next fast charging period with cheap or clean grid energy.
-          type:
-            - string
-            - "null"
+          type: string
+          nullable: true
           format: date-time
         smartFeedInPriorityActive:
           description: Charging pause for prioritized feed-in is currently active.
           type: boolean
         smartFeedInPriorityLimit:
           description: Feed-in rate limit above which charging is paused.
-          type:
-            - number
-            - "null"
+          type: number
+          nullable: true
         smartFeedInPriorityNextStart:
           description: Start of the next charging pause for prioritized feed-in.
-          type:
-            - string
-            - "null"
+          type: string
+          nullable: true
           format: date-time
         title:
           description: Loadpoint title for UI display.
           type: string
         vehicleClimaterActive:
           description: Climater of the connected vehicle is active.
-          type:
-            - boolean
-            - "null"
+          type: boolean
+          nullable: true
         vehicleDetectionActive:
           description: Automatic vehicle detection is running.
           type: boolean
@@ -3300,11 +3282,10 @@ components:
           description: Charging plan with a fixed target time and SoC or energy goal.
         repeatingPlans:
           description: Repeating charging plans.
-          anyOf:
-            - type: array
-              items:
-                $ref: "#/components/schemas/RepeatingPlan"
-            - type: "null"
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/RepeatingPlan"
         planStrategy:
           $ref: "#/components/schemas/PlanStrategy"
           description: Charging plan strategy.

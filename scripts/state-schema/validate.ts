@@ -47,10 +47,29 @@ function coverage(
   }
 }
 
+// openapi uses `nullable: true`, json schema expects explicit null in the type
+function expandNullable(node: any): void {
+  if (Array.isArray(node)) {
+    node.forEach(expandNullable);
+  } else if (node && typeof node === "object") {
+    if (node.nullable === true) {
+      delete node.nullable;
+      if (typeof node.type === "string") {
+        node.type = [node.type, "null"];
+      } else if (Array.isArray(node.allOf)) {
+        node.anyOf = [...node.allOf, { type: "null" }];
+        delete node.allOf;
+      }
+    }
+    Object.values(node).forEach(expandNullable);
+  }
+}
+
 // validate a /api/state payload against the State schema in server/openapi.yaml
 export function validateState(payload: any): { errors: string[]; undocumented: string[] } {
   const doc = parse(readFileSync(OPENAPI_PATH, "utf8"));
   const schemas: Record<string, AnySchema> = doc.components.schemas;
+  expandNullable(schemas);
 
   const ajv = new Ajv2020({ strict: false, allErrors: true });
   const validateFn = ajv.compile({

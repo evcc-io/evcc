@@ -93,6 +93,34 @@ function reachableDefs(
   return keep;
 }
 
+// convert json-schema null unions to `nullable: true`, the 3.0 style used across openapi.yaml
+// (kin-openapi, which validates the spec in CI, does not support 3.1 type arrays)
+function normalizeNullables(schema: AnySchema): void {
+  walk(schema, (node) => {
+    if (Array.isArray(node.type) && node.type.includes("null")) {
+      const rest = node.type.filter((t: string) => t !== "null");
+      if (rest.length !== 1) throw new Error(`unsupported type union ${node.type}`);
+      node.type = rest[0];
+      node.nullable = true;
+    }
+    if (Array.isArray(node.anyOf) && node.anyOf.some((b: AnySchema) => b.type === "null")) {
+      const rest = node.anyOf.filter((b: AnySchema) => b.type !== "null");
+      delete node.anyOf;
+      node.nullable = true;
+      if (rest.length === 1 && !rest[0].$ref) {
+        Object.assign(node, rest[0]);
+      } else {
+        node.allOf = rest;
+      }
+    }
+    // openapi 3.0 uses a singular example
+    if (Array.isArray(node.examples)) {
+      node.example = node.examples[0];
+      delete node.examples;
+    }
+  });
+}
+
 // point $refs at the final openapi component names
 function rewriteRefs(schema: AnySchema, finalNames: Map<string, string>): void {
   walk(schema, (node) => {
@@ -128,6 +156,9 @@ export function buildSchemas(): StateSchemas {
   rewriteRefs(root, finalNames);
   Object.values(defs).forEach((schema) => rewriteRefs(schema, finalNames));
 
+  normalizeNullables(root);
+  Object.values(defs).forEach(normalizeNullables);
+
   const result: Record<string, Schema> = { [ROOT]: root };
   for (const [name, schema] of Object.entries(defs)
     .map(([name, schema]) => [finalNames.get(name)!, schema] as const)
@@ -151,13 +182,16 @@ const KEY_ORDER = [
   "$ref",
   "description",
   "type",
+  "nullable",
   "enum",
   "format",
+  "example",
   "items",
   "properties",
   "required",
   "additionalProperties",
   "anyOf",
+  "allOf",
 ];
 
 // stable key order for readable yaml diffs, property order itself is preserved
