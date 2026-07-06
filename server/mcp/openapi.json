@@ -110,7 +110,7 @@
         "name": "mode",
         "required": true,
         "schema": {
-          "$ref": "#/components/schemas/Mode"
+          "$ref": "#/components/schemas/ChargeMode"
         }
       },
       "phases": {
@@ -360,8 +360,161 @@
       }
     },
     "schemas": {
+      "AuthProviders": {
+        "additionalProperties": {
+          "properties": {
+            "authenticated": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "authenticated"
+          ],
+          "type": "object"
+        },
+        "description": "Status of configured vehicle authentication providers, keyed by provider name.",
+        "type": "object"
+      },
+      "Battery": {
+        "description": "Home battery state. Aggregated across all battery meters.",
+        "properties": {
+          "capacity": {
+            "description": "Total battery capacity in kWh.",
+            "type": "number"
+          },
+          "devices": {
+            "description": "Measurement data per battery meter.",
+            "items": {
+              "$ref": "#/components/schemas/BatteryMeter"
+            },
+            "type": "array"
+          },
+          "energy": {
+            "description": "Total battery energy in kWh.",
+            "type": "number"
+          },
+          "forecast": {
+            "$ref": "#/components/schemas/BatteryForecast"
+          },
+          "power": {
+            "description": "Current battery power in W. Positive means discharging, negative means charging.",
+            "type": "number"
+          },
+          "soc": {
+            "description": "Charge level in %. Weighted by capacity across all batteries.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "power",
+          "capacity",
+          "soc"
+        ],
+        "type": "object"
+      },
+      "BatteryForecast": {
+        "description": "Projected home battery charge levels based on the solar and price forecast.",
+        "properties": {
+          "highest": {
+            "$ref": "#/components/schemas/BatteryForecastPoint"
+          },
+          "lowest": {
+            "$ref": "#/components/schemas/BatteryForecastPoint"
+          }
+        },
+        "type": "object"
+      },
+      "BatteryForecastPoint": {
+        "description": "A projected home battery charge level at a point in time.",
+        "properties": {
+          "limit": {
+            "description": "The projection hits the upper or lower battery limit.",
+            "type": "boolean"
+          },
+          "soc": {
+            "description": "Projected charge level in %.",
+            "type": "number"
+          },
+          "time": {
+            "description": "Time of the projected charge level.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "soc",
+          "time"
+        ],
+        "type": "object"
+      },
+      "BatteryMeter": {
+        "description": "Measurement data of a single home battery meter.",
+        "properties": {
+          "capacity": {
+            "description": "Battery capacity in kWh.",
+            "type": "number"
+          },
+          "controllable": {
+            "description": "Battery supports external control of its operation mode.",
+            "type": "boolean"
+          },
+          "currents": {
+            "description": "Current per phase in A.",
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "energy": {
+            "description": "Total energy in kWh.",
+            "type": "number"
+          },
+          "icon": {
+            "description": "Meter icon name for UI display.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Unique device name of the meter.",
+            "type": "string"
+          },
+          "power": {
+            "description": "Current power in W.",
+            "type": "number"
+          },
+          "powers": {
+            "description": "Power per phase in W.",
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "returnEnergy": {
+            "description": "Total exported energy in kWh.",
+            "type": "number"
+          },
+          "soc": {
+            "description": "Charge level in %.",
+            "type": "number"
+          },
+          "title": {
+            "description": "Meter title for UI display.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capacity",
+          "controllable",
+          "power",
+          "soc"
+        ],
+        "type": "object"
+      },
       "BatteryMode": {
-        "description": "Battery mode",
+        "description": "Battery operation mode.",
         "enum": [
           "unknown",
           "normal",
@@ -369,8 +522,25 @@
           "charge",
           "holdcharge"
         ],
-        "example": "normal",
         "type": "string"
+      },
+      "Certificate": {
+        "description": "A TLS certificate key pair.",
+        "properties": {
+          "private": {
+            "description": "Private key in PEM format. Redacted.",
+            "type": "string"
+          },
+          "public": {
+            "description": "Public certificate in PEM format.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "public",
+          "private"
+        ],
+        "type": "object"
       },
       "ChangePassword": {
         "properties": {
@@ -382,6 +552,25 @@
           }
         },
         "type": "object"
+      },
+      "ChargeMode": {
+        "description": "Charging mode.",
+        "enum": [
+          "off",
+          "now",
+          "minpv",
+          "pv"
+        ],
+        "type": "string"
+      },
+      "ChargerStatusReason": {
+        "description": "Reason why the charger is waiting.",
+        "enum": [
+          "unknown",
+          "waitingforauthorization",
+          "disconnectrequired"
+        ],
+        "type": "string"
       },
       "ChargingSessions": {
         "description": "Charging sessions",
@@ -424,6 +613,71 @@
         },
         "type": "array"
       },
+      "Circuit": {
+        "description": "A load management circuit limiting power and current of its assigned loadpoints.",
+        "properties": {
+          "current": {
+            "description": "Current in A.",
+            "type": "number"
+          },
+          "icon": {
+            "description": "Circuit icon name for UI display.",
+            "type": "string"
+          },
+          "maxCurrent": {
+            "description": "Maximum allowed current in A.",
+            "type": "number"
+          },
+          "maxPower": {
+            "description": "Maximum allowed power in W.",
+            "type": "number"
+          },
+          "parent": {
+            "description": "Name of the parent circuit.",
+            "type": "string"
+          },
+          "power": {
+            "description": "Current power in W.",
+            "type": "number"
+          },
+          "title": {
+            "description": "Circuit title for UI display.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "power"
+        ],
+        "type": "object"
+      },
+      "Currency": {
+        "description": "Currency in ISO 4217 format.",
+        "enum": [
+          "AUD",
+          "BGN",
+          "BRL",
+          "CAD",
+          "CHF",
+          "CNY",
+          "CZK",
+          "EUR",
+          "GBP",
+          "HUF",
+          "ILS",
+          "JPY",
+          "NZD",
+          "NOK",
+          "PLN",
+          "RON",
+          "USD",
+          "DKK",
+          "SEK",
+          "ZAR",
+          "TRY",
+          "MYR"
+        ],
+        "type": "string"
+      },
       "Current": {
         "description": "Electric current in A",
         "example": 16,
@@ -435,11 +689,217 @@
         "example": 60,
         "type": "integer"
       },
+      "DeviceColorEntry": {
+        "description": "Color assigned to a device for consistent UI display.",
+        "properties": {
+          "color": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "color"
+        ],
+        "type": "object"
+      },
+      "Eebus": {
+        "description": "EEBus integration configuration and status.",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/EebusConfig"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EebusStatus"
+          },
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "enum": [
+              "file",
+              "db"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "EebusConfig": {
+        "description": "EEBus integration configuration.",
+        "properties": {
+          "certificate": {
+            "$ref": "#/components/schemas/Certificate"
+          },
+          "interfaces": {
+            "description": "Network interfaces the EEBus service uses.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "port": {
+            "description": "Port the EEBus service listens on.",
+            "type": "number"
+          },
+          "shipid": {
+            "description": "SHIP id.",
+            "type": "string"
+          },
+          "uri": {
+            "description": "URI the EEBus service listens on.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "port",
+          "shipid"
+        ],
+        "type": "object"
+      },
+      "EebusStatus": {
+        "description": "EEBus runtime status.",
+        "properties": {
+          "qr": {
+            "description": "QR code payload for pairing.",
+            "type": "string"
+          },
+          "ski": {
+            "description": "SKI (subject key identifier) used for pairing.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ski"
+        ],
+        "type": "object"
+      },
       "Energy": {
         "description": "Energy in kWh",
         "example": 25.5,
         "minimum": 0,
         "type": "number"
+      },
+      "EnergyByDay": {
+        "description": "Expected solar production energy of a day.",
+        "properties": {
+          "complete": {
+            "description": "Forecast data covers the whole day.",
+            "type": "boolean"
+          },
+          "energy": {
+            "description": "Expected production energy in kWh.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "energy",
+          "complete"
+        ],
+        "type": "object"
+      },
+      "FatalError": {
+        "description": "A fatal startup error.",
+        "properties": {
+          "class": {
+            "description": "Device class the error originates from, like meter or charger.",
+            "type": "string"
+          },
+          "device": {
+            "description": "Name of the device that caused the error.",
+            "type": "string"
+          },
+          "error": {
+            "description": "Error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "type": "object"
+      },
+      "Forecast": {
+        "description": "Price, CO₂ and solar production forecasts.",
+        "properties": {
+          "co2": {
+            "description": "CO₂ emission forecast in g/kWh per time slot.",
+            "items": {
+              "$ref": "#/components/schemas/ForecastSlot"
+            },
+            "type": "array"
+          },
+          "feedin": {
+            "description": "Feed-in rate forecast. Rate per kWh in the configured currency per time slot.",
+            "items": {
+              "$ref": "#/components/schemas/ForecastSlot"
+            },
+            "type": "array"
+          },
+          "grid": {
+            "description": "Grid price forecast. Price per kWh in the configured currency per time slot.",
+            "items": {
+              "$ref": "#/components/schemas/ForecastSlot"
+            },
+            "type": "array"
+          },
+          "planner": {
+            "description": "Charging cost forecast used by the plan optimizer per time slot.",
+            "items": {
+              "$ref": "#/components/schemas/ForecastSlot"
+            },
+            "type": "array"
+          },
+          "solar": {
+            "$ref": "#/components/schemas/SolarDetails"
+          }
+        },
+        "type": "object"
+      },
+      "ForecastSlot": {
+        "description": "A forecast value for a time slot.",
+        "properties": {
+          "end": {
+            "description": "End of the time slot.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "start": {
+            "description": "Start of the time slot.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "value": {
+            "description": "Forecast value of the time slot. Unit depends on the forecast type.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "value"
+        ],
+        "type": "object"
+      },
+      "GenericConfigStatus": {
+        "description": "Configuration and runtime status of an integration. Structure depends on configuration.",
+        "properties": {
+          "config": {
+            "description": "Static configuration."
+          },
+          "status": {
+            "description": "Runtime status."
+          },
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "enum": [
+              "file",
+              "db"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "GridSessions": {
         "description": "Grid limitation sessions",
@@ -495,6 +955,61 @@
         },
         "type": "array"
       },
+      "Hems": {
+        "description": "Home energy management system integration.",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/HemsConfig"
+          },
+          "status": {
+            "$ref": "#/components/schemas/HemsStatus"
+          },
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "enum": [
+              "file",
+              "db"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "HemsConfig": {
+        "description": "Home energy management system configuration.",
+        "properties": {
+          "configured": {
+            "description": "A home energy management system is configured.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "configured"
+        ],
+        "type": "object"
+      },
+      "HemsStatus": {
+        "description": "Current external limits imposed by the home energy management system.",
+        "properties": {
+          "curtailed": {
+            "description": "Allowed feed-in in %. Values below 100 mean production is curtailed.",
+            "type": "number"
+          },
+          "dimmed": {
+            "description": "Consumption is currently limited.",
+            "type": "boolean"
+          },
+          "maxConsumptionPower": {
+            "description": "Maximum allowed consumption power in W.",
+            "type": "number"
+          },
+          "maxProductionPower": {
+            "description": "Maximum allowed production power in W.",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
       "HourMinuteTime": {
         "description": "Time in `HH:MM` format",
         "example": "12:30",
@@ -516,12 +1031,577 @@
         "minimum": 1,
         "type": "integer"
       },
+      "InfluxConfig": {
+        "description": "InfluxDB integration configuration.",
+        "properties": {
+          "database": {
+            "description": "Database name (InfluxDB 1.x) or bucket (InfluxDB 2.x).",
+            "type": "string"
+          },
+          "insecure": {
+            "description": "Skip TLS certificate verification.",
+            "type": "boolean"
+          },
+          "org": {
+            "description": "Organization (InfluxDB 2.x).",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password (InfluxDB 1.x). Redacted.",
+            "type": "string"
+          },
+          "token": {
+            "description": "Access token (InfluxDB 2.x). Redacted.",
+            "type": "string"
+          },
+          "url": {
+            "description": "InfluxDB server URL.",
+            "type": "string"
+          },
+          "user": {
+            "description": "Username (InfluxDB 1.x).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "database",
+          "org"
+        ],
+        "type": "object"
+      },
+      "Loadpoint": {
+        "description": "A charging location with a charger, an optional dedicated meter and an optional vehicle.",
+        "properties": {
+          "batteryBoost": {
+            "description": "Battery boost is active. When enabled, home battery power is used for fast charging.",
+            "type": "boolean"
+          },
+          "batteryBoostLimit": {
+            "description": "SoC limit for battery boost in %.",
+            "type": "number"
+          },
+          "chargeCurrents": {
+            "description": "Charging current per phase in A.",
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "chargeDuration": {
+            "description": "Duration of the current charging session in seconds.",
+            "type": "number"
+          },
+          "chargePower": {
+            "description": "Current charging power in W.",
+            "type": "number"
+          },
+          "chargeRemainingDuration": {
+            "description": "Estimated remaining charging time in seconds.",
+            "type": "number"
+          },
+          "chargeRemainingEnergy": {
+            "description": "Estimated remaining energy in kWh.",
+            "type": "number"
+          },
+          "chargeTotalImport": {
+            "description": "Total energy imported by the charge meter in kWh.",
+            "type": "number"
+          },
+          "chargeVoltages": {
+            "description": "Charging voltage per phase in V.",
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "chargedEnergy": {
+            "description": "Energy charged in the current charging session in kWh.",
+            "type": "number"
+          },
+          "chargerFeatureAutodetectDisabled": {
+            "description": "The connected vehicle is not identified automatically by its status.",
+            "type": "boolean"
+          },
+          "chargerFeatureAverage": {
+            "description": "Values are averaged.",
+            "type": "boolean"
+          },
+          "chargerFeatureCacheable": {
+            "description": "Values are cached.",
+            "type": "boolean"
+          },
+          "chargerFeatureClimaterDisabled": {
+            "description": "The climater state of the connected vehicle is ignored for charge control.",
+            "type": "boolean"
+          },
+          "chargerFeatureCoarseCurrent": {
+            "description": "Charger only supports full ampere steps for current control.",
+            "type": "boolean"
+          },
+          "chargerFeatureContinuous": {
+            "description": "Charger is a heating device where disabled means normal operation.",
+            "type": "boolean"
+          },
+          "chargerFeatureHeating": {
+            "description": "Charger is a heating device. SoC values represent temperature in degrees.",
+            "type": "boolean"
+          },
+          "chargerFeatureIntegratedDevice": {
+            "description": "Charger is an always-connected device without vehicles and charging sessions, like a heat pump.",
+            "type": "boolean"
+          },
+          "chargerFeatureOffline": {
+            "description": "The connected vehicle only provides data while charging.",
+            "type": "boolean"
+          },
+          "chargerFeatureRetryable": {
+            "description": "Vehicle API calls are retried on failure.",
+            "type": "boolean"
+          },
+          "chargerFeatureStreaming": {
+            "description": "The connected vehicle pushes data updates instead of being polled.",
+            "type": "boolean"
+          },
+          "chargerFeatureSwitchDevice": {
+            "description": "Charger is a switchable device without current control, like a heat pump or switch socket.",
+            "type": "boolean"
+          },
+          "chargerFeatureWakeUpDisabled": {
+            "description": "No wake-up calls are sent to the connected vehicle.",
+            "type": "boolean"
+          },
+          "chargerFeatureWelcomeCharge": {
+            "description": "The connected vehicle may need a short welcome charge to start communicating.",
+            "type": "boolean"
+          },
+          "chargerIcon": {
+            "description": "Charger icon name for UI display.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "chargerPhases1p3p": {
+            "description": "Charger supports automatic switching between 1-phase and 3-phase charging.",
+            "type": "boolean"
+          },
+          "chargerSinglePhase": {
+            "description": "Charger is physically connected with a single phase.",
+            "type": "boolean"
+          },
+          "chargerStatusReason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChargerStatusReason"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Reason why the charger is waiting, like a pending authorization or a required disconnect."
+          },
+          "charging": {
+            "description": "A vehicle is connected and charging.",
+            "type": "boolean"
+          },
+          "connected": {
+            "description": "A vehicle is connected to the charger.",
+            "type": "boolean"
+          },
+          "connectedDuration": {
+            "description": "Duration since the vehicle was connected, in seconds.",
+            "type": "number"
+          },
+          "disableDelay": {
+            "description": "Delay before charging stops in solar mode, in seconds.",
+            "type": "number"
+          },
+          "disableThreshold": {
+            "description": "Grid draw power above which charging stops in solar mode, in W.",
+            "type": "number"
+          },
+          "effectiveLimitSoc": {
+            "description": "Currently applied SoC limit in %.",
+            "type": "number"
+          },
+          "effectiveMaxCurrent": {
+            "description": "Currently applied maximum charging current in A.",
+            "type": "number"
+          },
+          "effectiveMinCurrent": {
+            "description": "Currently applied minimum charging current in A.",
+            "type": "number"
+          },
+          "effectivePlanId": {
+            "description": "Id of the currently applied charging plan. Zero if no plan is active.",
+            "type": "number"
+          },
+          "effectivePlanSoc": {
+            "description": "SoC goal in % of the currently applied charging plan.",
+            "type": "number"
+          },
+          "effectivePlanStrategy": {
+            "$ref": "#/components/schemas/PlanStrategy"
+          },
+          "effectivePlanTime": {
+            "description": "Target time of the currently applied charging plan.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "effectivePriority": {
+            "description": "Currently applied priority.",
+            "type": "number"
+          },
+          "enableDelay": {
+            "description": "Delay before charging starts in solar mode, in seconds.",
+            "type": "number"
+          },
+          "enableThreshold": {
+            "description": "Available surplus power above which charging starts in solar mode, in W.",
+            "type": "number"
+          },
+          "enabled": {
+            "description": "Charger is currently allowed to charge.",
+            "type": "boolean"
+          },
+          "limitEnergy": {
+            "description": "Session energy limit in kWh. Zero means no limit.",
+            "type": "number"
+          },
+          "limitSoc": {
+            "description": "Session SoC limit in %. Zero means no limit.",
+            "type": "number"
+          },
+          "maxCurrent": {
+            "description": "Maximum charging current in A.",
+            "type": "number"
+          },
+          "minCurrent": {
+            "description": "Minimum charging current in A.",
+            "type": "number"
+          },
+          "minSocNotReached": {
+            "description": "Vehicle SoC is below the configured minimum SoC.",
+            "type": "boolean"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ChargeMode"
+          },
+          "name": {
+            "description": "Unique loadpoint identifier used in API routes and configuration.",
+            "type": "string"
+          },
+          "offeredCurrent": {
+            "description": "Current offered to the vehicle in A.",
+            "type": "number"
+          },
+          "phaseAction": {
+            "$ref": "#/components/schemas/PhaseAction"
+          },
+          "phaseRemaining": {
+            "description": "Remaining time until the pending phase switching action executes, in seconds.",
+            "type": "number"
+          },
+          "phasesActive": {
+            "description": "Number of phases expected to be used for charging.",
+            "type": "number"
+          },
+          "phasesConfigured": {
+            "description": "Configured phase mode. 0 is automatic switching, 1 and 3 select a fixed phase count.",
+            "type": "number"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Rate"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Time slots of the current charging plan."
+          },
+          "planActive": {
+            "description": "The current time slot is an active charging slot of the plan.",
+            "type": "boolean"
+          },
+          "planEnergy": {
+            "description": "Energy goal of the charging plan in kWh.",
+            "type": "number"
+          },
+          "planOverrun": {
+            "description": "Duration in seconds the charging plan is projected to miss its target time.",
+            "type": "number"
+          },
+          "planProjectedEnd": {
+            "description": "Projected end of the charging plan. End of the last planned slot.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "planProjectedStart": {
+            "description": "Projected start of the charging plan. Start of the earliest planned slot.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "planStrategy": {
+            "$ref": "#/components/schemas/PlanStrategy"
+          },
+          "planTime": {
+            "description": "Target time of the charging plan.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority": {
+            "description": "Priority for surplus distribution. Higher number means higher priority.",
+            "type": "number"
+          },
+          "pvAction": {
+            "$ref": "#/components/schemas/PvAction"
+          },
+          "pvRemaining": {
+            "description": "Remaining time until the pending charge start or stop action executes, in seconds.",
+            "type": "number"
+          },
+          "sessionCo2PerKWh": {
+            "description": "Average CO₂ emissions of the current charging session in g/kWh.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sessionEnergy": {
+            "description": "Energy charged in the current charging session in kWh.",
+            "type": "number"
+          },
+          "sessionPrice": {
+            "description": "Total cost of the current charging session in the configured currency.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sessionPricePerKWh": {
+            "description": "Average energy price of the current charging session per kWh in the configured currency.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "sessionSolarPercentage": {
+            "description": "Share of solar energy in the current charging session in %.",
+            "type": "number"
+          },
+          "smartCostActive": {
+            "description": "Fast charging with cheap or clean grid energy is currently active.",
+            "type": "boolean"
+          },
+          "smartCostLimit": {
+            "description": "Price or emission limit for fast charging with grid energy.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "smartCostNextStart": {
+            "description": "Start of the next fast charging period with cheap or clean grid energy.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "smartFeedInPriorityActive": {
+            "description": "Charging pause for prioritized feed-in is currently active.",
+            "type": "boolean"
+          },
+          "smartFeedInPriorityLimit": {
+            "description": "Feed-in rate limit above which charging is paused.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "smartFeedInPriorityNextStart": {
+            "description": "Start of the next charging pause for prioritized feed-in.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "description": "Loadpoint title for UI display.",
+            "type": "string"
+          },
+          "ui": {
+            "$ref": "#/components/schemas/LoadpointUi"
+          },
+          "vehicleClimaterActive": {
+            "description": "Climater of the connected vehicle is active.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "vehicleDetectionActive": {
+            "description": "Automatic vehicle detection is running.",
+            "type": "boolean"
+          },
+          "vehicleLimitSoc": {
+            "description": "SoC limit configured in the vehicle itself, in %.",
+            "type": "number"
+          },
+          "vehicleName": {
+            "description": "Unique name of the connected vehicle. Empty for guest vehicles.",
+            "type": "string"
+          },
+          "vehicleOdometer": {
+            "description": "Odometer reading of the connected vehicle in km.",
+            "type": "number"
+          },
+          "vehicleRange": {
+            "description": "Range of the connected vehicle in km.",
+            "type": "number"
+          },
+          "vehicleSoc": {
+            "description": "Charge level of the connected vehicle in %. Temperature in degrees for heating devices.",
+            "type": "number"
+          },
+          "vehicleTitle": {
+            "description": "Title of the connected vehicle for UI display.",
+            "type": "string"
+          },
+          "vehicleWelcomeActive": {
+            "description": "A short welcome charge is active to enable vehicle communication.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "batteryBoost",
+          "chargeDuration",
+          "chargePower",
+          "chargedEnergy",
+          "chargerFeatureAutodetectDisabled",
+          "chargerFeatureAverage",
+          "chargerFeatureCacheable",
+          "chargerFeatureClimaterDisabled",
+          "chargerFeatureCoarseCurrent",
+          "chargerFeatureContinuous",
+          "chargerFeatureHeating",
+          "chargerFeatureIntegratedDevice",
+          "chargerFeatureOffline",
+          "chargerFeatureRetryable",
+          "chargerFeatureStreaming",
+          "chargerFeatureSwitchDevice",
+          "chargerFeatureWakeUpDisabled",
+          "chargerFeatureWelcomeCharge",
+          "chargerIcon",
+          "chargerPhases1p3p",
+          "chargerSinglePhase",
+          "charging",
+          "connected",
+          "connectedDuration",
+          "disableDelay",
+          "disableThreshold",
+          "effectiveLimitSoc",
+          "effectiveMaxCurrent",
+          "effectiveMinCurrent",
+          "effectivePlanId",
+          "effectivePlanSoc",
+          "effectivePlanTime",
+          "effectivePlanStrategy",
+          "effectivePriority",
+          "enableDelay",
+          "enableThreshold",
+          "enabled",
+          "limitEnergy",
+          "limitSoc",
+          "maxCurrent",
+          "minCurrent",
+          "minSocNotReached",
+          "mode",
+          "offeredCurrent",
+          "phaseAction",
+          "phaseRemaining",
+          "phasesActive",
+          "phasesConfigured",
+          "plan",
+          "planActive",
+          "planEnergy",
+          "planOverrun",
+          "planStrategy",
+          "planProjectedEnd",
+          "planProjectedStart",
+          "planTime",
+          "priority",
+          "pvAction",
+          "pvRemaining",
+          "sessionCo2PerKWh",
+          "sessionEnergy",
+          "sessionPrice",
+          "sessionPricePerKWh",
+          "sessionSolarPercentage",
+          "smartCostActive",
+          "smartCostLimit",
+          "smartCostNextStart",
+          "smartFeedInPriorityActive",
+          "smartFeedInPriorityLimit",
+          "smartFeedInPriorityNextStart",
+          "title",
+          "vehicleClimaterActive",
+          "vehicleDetectionActive",
+          "vehicleLimitSoc",
+          "vehicleName",
+          "vehicleOdometer",
+          "vehicleRange",
+          "vehicleSoc",
+          "vehicleTitle",
+          "vehicleWelcomeActive",
+          "batteryBoostLimit"
+        ],
+        "type": "object"
+      },
       "LoadpointName": {
         "example": "Garage",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#title"
         },
         "type": "string"
+      },
+      "LoadpointUi": {
+        "description": "Display-only UI settings of a loadpoint.",
+        "properties": {
+          "maxTemp": {
+            "description": "Upper bound of the temperature scale for heating devices, in degrees.",
+            "type": "number"
+          },
+          "minTemp": {
+            "description": "Lower bound of the temperature scale for heating devices, in degrees.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "minTemp",
+          "maxTemp"
+        ],
+        "type": "object"
       },
       "LogArea": {
         "externalDocs": {
@@ -558,15 +1638,439 @@
         },
         "type": "string"
       },
-      "Mode": {
-        "description": "Charging mode.",
+      "MessagingEvent": {
+        "description": "A configured notification message.",
+        "properties": {
+          "disabled": {
+            "description": "Notifications for this event are disabled.",
+            "type": "boolean"
+          },
+          "msg": {
+            "description": "Message body template.",
+            "type": "string"
+          },
+          "title": {
+            "description": "Message title template.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "msg",
+          "disabled"
+        ],
+        "type": "object"
+      },
+      "MessagingEvents": {
+        "additionalProperties": false,
+        "description": "Configured notification messages, keyed by event type.",
+        "properties": {
+          "asleep": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "connect": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "disconnect": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "guest": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "planoverrun": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "soc": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "start": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "stop": {
+            "$ref": "#/components/schemas/MessagingEvent"
+          }
+        },
+        "required": [
+          "start",
+          "stop",
+          "connect",
+          "disconnect",
+          "soc",
+          "guest",
+          "asleep",
+          "planoverrun"
+        ],
+        "type": "object"
+      },
+      "Meter": {
+        "description": "Measurement data of a single meter.",
+        "properties": {
+          "currents": {
+            "description": "Current per phase in A.",
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "energy": {
+            "description": "Total energy in kWh.",
+            "type": "number"
+          },
+          "icon": {
+            "description": "Meter icon name for UI display.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Unique device name of the meter.",
+            "type": "string"
+          },
+          "power": {
+            "description": "Current power in W.",
+            "type": "number"
+          },
+          "powers": {
+            "description": "Power per phase in W.",
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "returnEnergy": {
+            "description": "Total exported energy in kWh.",
+            "type": "number"
+          },
+          "title": {
+            "description": "Meter title for UI display.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "power"
+        ],
+        "type": "object"
+      },
+      "ModbusBaudrate": {
+        "description": "Serial baud rate.",
         "enum": [
-          "off",
-          "now",
-          "minpv",
-          "pv"
+          1200,
+          9600,
+          19200,
+          38400,
+          57600,
+          115200
+        ],
+        "type": "number"
+      },
+      "ModbusComset": {
+        "description": "Serial communication parameters.",
+        "enum": [
+          "8N1",
+          "8E1",
+          "8N2"
         ],
         "type": "string"
+      },
+      "ModbusProxy": {
+        "description": "A Modbus proxy forwarding requests to a physical device.",
+        "properties": {
+          "port": {
+            "description": "Port the proxy listens on.",
+            "type": "number"
+          },
+          "readonly": {
+            "$ref": "#/components/schemas/ModbusProxyReadonly"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/ModbusProxySettings"
+          }
+        },
+        "required": [
+          "port",
+          "readonly",
+          "settings"
+        ],
+        "type": "object"
+      },
+      "ModbusProxyReadonly": {
+        "description": "How the Modbus proxy handles write requests.",
+        "enum": [
+          "false",
+          "true",
+          "deny"
+        ],
+        "type": "string"
+      },
+      "ModbusProxySettings": {
+        "description": "Connection settings of a Modbus device.",
+        "properties": {
+          "baudrate": {
+            "$ref": "#/components/schemas/ModbusBaudrate"
+          },
+          "comset": {
+            "$ref": "#/components/schemas/ModbusComset"
+          },
+          "device": {
+            "description": "Serial device path.",
+            "type": "string"
+          },
+          "rtu": {
+            "description": "Use RTU protocol over TCP.",
+            "type": "boolean"
+          },
+          "uri": {
+            "description": "Device address for TCP connections.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MqttConfig": {
+        "description": "MQTT integration configuration.",
+        "properties": {
+          "broker": {
+            "description": "Broker address.",
+            "type": "string"
+          },
+          "caCert": {
+            "description": "CA certificate for TLS connections.",
+            "type": "string"
+          },
+          "clientCert": {
+            "description": "Client certificate for TLS connections.",
+            "type": "string"
+          },
+          "clientID": {
+            "description": "MQTT client id.",
+            "type": "string"
+          },
+          "clientKey": {
+            "description": "Client key for TLS connections.",
+            "type": "string"
+          },
+          "insecure": {
+            "description": "Skip TLS certificate verification.",
+            "type": "boolean"
+          },
+          "password": {
+            "description": "Broker password. Redacted.",
+            "type": "string"
+          },
+          "topic": {
+            "description": "Root topic all values are published under.",
+            "type": "string"
+          },
+          "user": {
+            "description": "Broker username.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "broker",
+          "topic"
+        ],
+        "type": "object"
+      },
+      "Network": {
+        "description": "Network configuration.",
+        "properties": {
+          "externalUrl": {
+            "description": "Externally reachable URL.",
+            "type": "string"
+          },
+          "host": {
+            "description": "Hostname.",
+            "type": "string"
+          },
+          "internalUrl": {
+            "description": "URL in the local network.",
+            "type": "string"
+          },
+          "port": {
+            "description": "HTTP port.",
+            "type": "number"
+          },
+          "schema": {
+            "description": "URL schema, http or https.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host",
+          "port"
+        ],
+        "type": "object"
+      },
+      "Ocpp": {
+        "description": "OCPP server configuration and status.",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/OcppConfig"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OcppStatus"
+          }
+        },
+        "required": [
+          "config",
+          "status"
+        ],
+        "type": "object"
+      },
+      "OcppConfig": {
+        "description": "OCPP server configuration.",
+        "properties": {
+          "port": {
+            "description": "Port the OCPP server listens on.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "port"
+        ],
+        "type": "object"
+      },
+      "OcppConnectionStatus": {
+        "description": "Connection status of an OCPP station.",
+        "enum": [
+          "unknown",
+          "configured",
+          "connected"
+        ],
+        "type": "string"
+      },
+      "OcppForwarder": {
+        "description": "OCPP forwarder rules and upstream connection status.",
+        "properties": {
+          "config": {
+            "description": "Static configuration.",
+            "items": {
+              "$ref": "#/components/schemas/OcppForwarderRule"
+            },
+            "type": "array"
+          },
+          "status": {
+            "description": "Runtime status.",
+            "items": {
+              "$ref": "#/components/schemas/OcppForwarderSession"
+            },
+            "type": "array"
+          },
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "enum": [
+              "file",
+              "db"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "OcppForwarderRule": {
+        "description": "A rule forwarding an OCPP station to an upstream backend.",
+        "properties": {
+          "caCert": {
+            "description": "CA certificate for TLS connections.",
+            "type": "string"
+          },
+          "insecure": {
+            "description": "Skip TLS certificate verification.",
+            "type": "boolean"
+          },
+          "password": {
+            "description": "Password for upstream authentication. Redacted.",
+            "type": "string"
+          },
+          "readOnly": {
+            "description": "Only forward read operations to the station.",
+            "type": "boolean"
+          },
+          "stationId": {
+            "description": "Station id to forward.",
+            "type": "string"
+          },
+          "upstreamStationId": {
+            "description": "Station id used towards the upstream backend.",
+            "type": "string"
+          },
+          "upstreamUrl": {
+            "description": "URL of the upstream OCPP backend.",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for upstream authentication.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stationId",
+          "upstreamUrl"
+        ],
+        "type": "object"
+      },
+      "OcppForwarderSession": {
+        "description": "Connection status of an OCPP forwarder rule.",
+        "properties": {
+          "chargerId": {
+            "description": "Charger id.",
+            "type": "string"
+          },
+          "error": {
+            "description": "Last connection error.",
+            "type": "string"
+          },
+          "upstreamConnected": {
+            "description": "Connection to the upstream backend is established.",
+            "type": "boolean"
+          },
+          "upstreamUrl": {
+            "description": "URL of the upstream OCPP backend.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chargerId",
+          "upstreamUrl",
+          "upstreamConnected"
+        ],
+        "type": "object"
+      },
+      "OcppStationStatus": {
+        "description": "Connection status of an OCPP station.",
+        "properties": {
+          "id": {
+            "description": "Station id.",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OcppConnectionStatus"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "type": "object"
+      },
+      "OcppStatus": {
+        "description": "OCPP server status.",
+        "properties": {
+          "externalUrl": {
+            "description": "Externally reachable URL of the OCPP server.",
+            "type": "string"
+          },
+          "stations": {
+            "description": "Connection status per configured station.",
+            "items": {
+              "$ref": "#/components/schemas/OcppStationStatus"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "stations"
+        ],
+        "type": "object"
       },
       "Odometer": {
         "description": "Vehicle odometer reading in kilometers",
@@ -575,6 +2079,15 @@
       },
       "Password": {
         "description": "Admin password",
+        "type": "string"
+      },
+      "PhaseAction": {
+        "description": "Pending phase switching action in solar mode.",
+        "enum": [
+          "inactive",
+          "scale1p",
+          "scale3p"
+        ],
         "type": "string"
       },
       "Phases": {
@@ -607,18 +2120,21 @@
         "type": "object"
       },
       "PlanStrategy": {
-        "description": "Charging plan strategy configuration",
+        "description": "Charging plan strategy.",
         "properties": {
           "continuous": {
-            "description": "Force continuous planning",
+            "description": "Force continuous charging without gaps.",
             "type": "boolean"
           },
           "precondition": {
-            "description": "Precondition duration in seconds",
-            "minimum": 0,
-            "type": "integer"
+            "description": "Duration of uninterrupted charging directly before the target time, in seconds.",
+            "type": "number"
           }
         },
+        "required": [
+          "continuous",
+          "precondition"
+        ],
         "type": "object"
       },
       "Power": {
@@ -633,21 +2149,38 @@
         "minimum": 0,
         "type": "integer"
       },
+      "PvAction": {
+        "description": "Pending charge start or stop action in solar mode.",
+        "enum": [
+          "inactive",
+          "enable",
+          "disable"
+        ],
+        "type": "string"
+      },
       "Rate": {
-        "description": "A charging interval",
+        "description": "A time slot with an associated price or emission value.",
         "properties": {
           "end": {
-            "$ref": "#/components/schemas/Timestamp"
+            "description": "End of the time slot.",
+            "format": "date-time",
+            "type": "string"
           },
           "start": {
-            "$ref": "#/components/schemas/Timestamp"
+            "description": "Start of the time slot.",
+            "format": "date-time",
+            "type": "string"
           },
           "value": {
-            "description": "Cost",
-            "minimum": 0,
+            "description": "Price per kWh in the configured currency or emissions in g/kWh.",
             "type": "number"
           }
         },
+        "required": [
+          "start",
+          "end",
+          "value"
+        ],
         "type": "object"
       },
       "Rates": {
@@ -656,29 +2189,134 @@
         },
         "type": "array"
       },
-      "RepeatingPlan": {
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans#repeating-plans"
-        },
+      "Remote": {
+        "description": "Remote access configuration and connection status.",
         "properties": {
-          "active": {
-            "description": "Set plan active.",
-            "type": "boolean"
+          "config": {
+            "$ref": "#/components/schemas/RemoteConfig"
           },
-          "soc": {
-            "$ref": "#/components/schemas/Soc"
+          "status": {
+            "$ref": "#/components/schemas/RemoteStatus"
           },
-          "time": {
-            "$ref": "#/components/schemas/HourMinuteTime"
-          },
-          "tz": {
-            "$ref": "#/components/schemas/IANATimeZone"
-          },
-          "weekdays": {
-            "$ref": "#/components/schemas/Weekdays"
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "enum": [
+              "file",
+              "db"
+            ],
+            "type": "string"
           }
         },
         "type": "object"
+      },
+      "RemoteConfig": {
+        "description": "Remote access configuration.",
+        "properties": {
+          "enabled": {
+            "description": "Remote access is enabled.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "type": "object"
+      },
+      "RemoteStatus": {
+        "description": "Remote access connection status.",
+        "properties": {
+          "connected": {
+            "description": "Connection to the remote access server is established.",
+            "type": "boolean"
+          },
+          "lastSeen": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Last remote activity per client, keyed by username. RFC3339 timestamps.",
+            "type": "object"
+          },
+          "loginBlocked": {
+            "description": "Remote login attempts are currently blocked by the rate limiter.",
+            "type": "boolean"
+          },
+          "url": {
+            "description": "Remote access URL.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connected",
+          "loginBlocked"
+        ],
+        "type": "object"
+      },
+      "RepeatingPlan": {
+        "description": "A repeating charging plan.",
+        "properties": {
+          "active": {
+            "description": "Plan is active.",
+            "type": "boolean"
+          },
+          "soc": {
+            "description": "SoC goal in %.",
+            "type": "number"
+          },
+          "time": {
+            "description": "Target time in HH:MM format.",
+            "type": "string"
+          },
+          "tz": {
+            "description": "Time zone of the target time, like Europe/Berlin.",
+            "type": "string"
+          },
+          "weekdays": {
+            "description": "Weekdays the plan is active. 0 is Sunday, 6 is Saturday.",
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "weekdays",
+          "time",
+          "tz",
+          "soc",
+          "active"
+        ],
+        "type": "object"
+      },
+      "ShmConfig": {
+        "description": "SMA Home Manager configuration.",
+        "properties": {
+          "deviceId": {
+            "description": "SMA device id.",
+            "type": "string"
+          },
+          "deviceSerial": {
+            "description": "SMA device serial.",
+            "type": "string"
+          },
+          "vendorId": {
+            "description": "SMA vendor id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vendorId",
+          "deviceId"
+        ],
+        "type": "object"
+      },
+      "SmartCostType": {
+        "description": "Type of the smart charging limit.",
+        "enum": [
+          "co2",
+          "pricedynamic",
+          "priceforecast"
+        ],
+        "type": "string"
       },
       "Soc": {
         "description": "SOC in %",
@@ -687,42 +2325,609 @@
         "minimum": 0,
         "type": "number"
       },
+      "SolarDetails": {
+        "description": "Solar production forecast.",
+        "properties": {
+          "dayAfterTomorrow": {
+            "$ref": "#/components/schemas/EnergyByDay"
+          },
+          "scale": {
+            "description": "Correction factor applied to the forecast based on past production.",
+            "type": "number"
+          },
+          "timeseries": {
+            "description": "Expected production power over time.",
+            "items": {
+              "$ref": "#/components/schemas/TimeseriesEntry"
+            },
+            "type": "array"
+          },
+          "today": {
+            "$ref": "#/components/schemas/EnergyByDay"
+          },
+          "tomorrow": {
+            "$ref": "#/components/schemas/EnergyByDay"
+          }
+        },
+        "type": "object"
+      },
+      "Sponsor": {
+        "description": "Sponsorship status.",
+        "properties": {
+          "config": {
+            "description": "Static configuration."
+          },
+          "status": {
+            "$ref": "#/components/schemas/SponsorStatus"
+          },
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "enum": [
+              "file",
+              "db"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SponsorStatus": {
+        "description": "Sponsorship status.",
+        "properties": {
+          "expiresAt": {
+            "description": "Expiry time of the sponsor token.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresSoon": {
+            "description": "Sponsor token expires soon.",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Name of the sponsor.",
+            "type": "string"
+          },
+          "token": {
+            "description": "Sponsor token. Redacted.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "State": {
-        "description": "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases.",
+        "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. The overall structure is stable, details may change between releases.",
+        "properties": {
+          "apiReady": {
+            "description": "HTTP API is ready to accept requests.",
+            "type": "boolean"
+          },
+          "authDisabled": {
+            "description": "Authentication is disabled.",
+            "type": "boolean"
+          },
+          "authProviders": {
+            "$ref": "#/components/schemas/AuthProviders"
+          },
+          "aux": {
+            "description": "Auxiliary consumption meters. Their power is treated as available for charging.",
+            "items": {
+              "$ref": "#/components/schemas/Meter"
+            },
+            "type": "array"
+          },
+          "auxPower": {
+            "description": "Total power of all auxiliary meters in W.",
+            "type": "number"
+          },
+          "availableVersion": {
+            "description": "Latest available evcc version.",
+            "type": "string"
+          },
+          "battery": {
+            "$ref": "#/components/schemas/Battery"
+          },
+          "batteryDischargeControl": {
+            "description": "Home battery discharge is prevented during fast charging and planned charging.",
+            "type": "boolean"
+          },
+          "batteryGridChargeActive": {
+            "description": "Home battery is currently charged from grid.",
+            "type": "boolean"
+          },
+          "batteryGridChargeLimit": {
+            "description": "Price or emission limit for charging the home battery from grid.",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "batteryMode": {
+            "$ref": "#/components/schemas/BatteryMode"
+          },
+          "bufferSoc": {
+            "description": "Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.",
+            "type": "number"
+          },
+          "bufferStartSoc": {
+            "description": "Battery buffer start SoC in %. Solar charging starts automatically above this level.",
+            "type": "number"
+          },
+          "circuits": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Circuit"
+            },
+            "description": "Load management circuits, keyed by circuit name.",
+            "type": "object"
+          },
+          "config": {
+            "description": "Path of the evcc configuration file.",
+            "type": "string"
+          },
+          "consumers": {
+            "description": "Consumption meters of individual devices for monitoring purposes.",
+            "items": {
+              "$ref": "#/components/schemas/Meter"
+            },
+            "type": "array"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "database": {
+            "description": "Path of the evcc database.",
+            "type": "string"
+          },
+          "demoMode": {
+            "description": "Instance runs in demo mode.",
+            "type": "boolean"
+          },
+          "deviceColors": {
+            "description": "Colors assigned to devices for consistent UI display.",
+            "items": {
+              "$ref": "#/components/schemas/DeviceColorEntry"
+            },
+            "type": "array"
+          },
+          "eebus": {
+            "$ref": "#/components/schemas/Eebus"
+          },
+          "experimental": {
+            "description": "Experimental UI features are enabled.",
+            "type": "boolean"
+          },
+          "ext": {
+            "description": "Additional meters for monitoring purposes.",
+            "items": {
+              "$ref": "#/components/schemas/Meter"
+            },
+            "type": "array"
+          },
+          "fatal": {
+            "description": "Fatal startup errors.",
+            "items": {
+              "$ref": "#/components/schemas/FatalError"
+            },
+            "type": "array"
+          },
+          "forecast": {
+            "$ref": "#/components/schemas/Forecast"
+          },
+          "greenShareHome": {
+            "description": "Share of green energy in home consumption, between 0 and 1.",
+            "type": "number"
+          },
+          "greenShareLoadpoints": {
+            "description": "Share of green energy used for charging, between 0 and 1.",
+            "type": "number"
+          },
+          "grid": {
+            "$ref": "#/components/schemas/Meter"
+          },
+          "gridConfigured": {
+            "description": "A grid meter is configured.",
+            "type": "boolean"
+          },
+          "hems": {
+            "$ref": "#/components/schemas/Hems"
+          },
+          "historyUpdated": {
+            "description": "Time of the last energy history update.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "homePower": {
+            "description": "Home consumption power in W.",
+            "type": "number"
+          },
+          "influx": {
+            "$ref": "#/components/schemas/InfluxConfig"
+          },
+          "interval": {
+            "description": "Update interval of the control loop in seconds.",
+            "type": "number"
+          },
+          "loadpoints": {
+            "description": "Charging locations. One entry per configured loadpoint.",
+            "items": {
+              "$ref": "#/components/schemas/Loadpoint"
+            },
+            "type": "array"
+          },
+          "mcp": {
+            "description": "Built-in MCP server is enabled.",
+            "type": "boolean"
+          },
+          "messaging": {
+            "$ref": "#/components/schemas/GenericConfigStatus"
+          },
+          "messagingEvents": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MessagingEvents"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Configured notification messages per event type."
+          },
+          "modbusproxy": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ModbusProxy"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Modbus proxy configuration."
+          },
+          "mqtt": {
+            "$ref": "#/components/schemas/MqttConfig"
+          },
+          "network": {
+            "$ref": "#/components/schemas/Network"
+          },
+          "ocpp": {
+            "$ref": "#/components/schemas/Ocpp"
+          },
+          "ocppforwarder": {
+            "$ref": "#/components/schemas/OcppForwarder"
+          },
+          "optimizer": {
+            "description": "Battery optimizer is enabled.",
+            "type": "boolean"
+          },
+          "optimizerChargingStrategies": {
+            "description": "Available battery optimizer charging strategies.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "optimizerChargingStrategy": {
+            "description": "Selected battery optimizer charging strategy.",
+            "type": "string"
+          },
+          "prioritySoc": {
+            "description": "Battery priority SoC in %. Home battery is charged first while below this level.",
+            "type": "number"
+          },
+          "pv": {
+            "description": "Solar generation meters. One entry per configured pv meter.",
+            "items": {
+              "$ref": "#/components/schemas/Meter"
+            },
+            "type": "array"
+          },
+          "pvEnergy": {
+            "description": "Total solar generation energy in kWh.",
+            "type": "number"
+          },
+          "pvPower": {
+            "description": "Total solar generation power in W. Sum of all pv meters.",
+            "type": "number"
+          },
+          "remote": {
+            "$ref": "#/components/schemas/Remote"
+          },
+          "residualPower": {
+            "description": "Configured grid operating point in W. Positive values maintain grid import.",
+            "type": "number"
+          },
+          "setupRequired": {
+            "description": "Initial setup is required.",
+            "type": "boolean"
+          },
+          "shm": {
+            "$ref": "#/components/schemas/ShmConfig"
+          },
+          "siteTitle": {
+            "description": "Configured site title.",
+            "type": "string"
+          },
+          "smartCostAvailable": {
+            "description": "A dynamic grid price or CO₂ forecast is configured.",
+            "type": "boolean"
+          },
+          "smartCostType": {
+            "$ref": "#/components/schemas/SmartCostType"
+          },
+          "smartFeedInPriorityAvailable": {
+            "description": "A feed-in tariff with forecast is configured.",
+            "type": "boolean"
+          },
+          "sponsor": {
+            "$ref": "#/components/schemas/Sponsor"
+          },
+          "startupCompleted": {
+            "description": "Startup has completed.",
+            "type": "boolean"
+          },
+          "statistics": {
+            "$ref": "#/components/schemas/Statistics"
+          },
+          "system": {
+            "description": "Operating system and architecture.",
+            "examples": [
+              "linux/amd64"
+            ],
+            "type": "string"
+          },
+          "tariffCo2": {
+            "description": "Current grid CO₂ emissions in g/kWh.",
+            "type": "number"
+          },
+          "tariffCo2Home": {
+            "description": "Current CO₂ emissions of home consumption in g/kWh, taking the green energy share into account.",
+            "type": "number"
+          },
+          "tariffCo2Loadpoints": {
+            "description": "Current CO₂ emissions of charging in g/kWh, taking the green energy share into account.",
+            "type": "number"
+          },
+          "tariffFeedIn": {
+            "description": "Current feed-in rate per kWh in the configured currency.",
+            "type": "number"
+          },
+          "tariffGrid": {
+            "description": "Current grid energy price per kWh in the configured currency.",
+            "type": "number"
+          },
+          "tariffPriceHome": {
+            "description": "Current energy price of home consumption per kWh, taking the green energy share into account.",
+            "type": "number"
+          },
+          "tariffPriceLoadpoints": {
+            "description": "Current energy price of charging per kWh, taking the green energy share into account.",
+            "type": "number"
+          },
+          "tariffSolar": {
+            "description": "Current cost of solar generation per kWh in the configured currency.",
+            "type": "number"
+          },
+          "tariffs": {
+            "$ref": "#/components/schemas/GenericConfigStatus"
+          },
+          "telemetry": {
+            "description": "Telemetry is enabled.",
+            "type": "boolean"
+          },
+          "timezone": {
+            "description": "Server time zone abbreviation and UTC offset.",
+            "examples": [
+              "CEST +02:00"
+            ],
+            "type": "string"
+          },
+          "vehicles": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Vehicle"
+            },
+            "description": "Configured vehicles, keyed by vehicle name.",
+            "type": "object"
+          },
+          "version": {
+            "description": "Running evcc version.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loadpoints",
+          "forecast",
+          "vehicles"
+        ],
         "type": "object"
       },
       "StaticEnergyPlan": {
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans#energy-amount-plan"
-        },
+        "description": "Charging plan with an energy goal.",
         "properties": {
           "energy": {
-            "$ref": "#/components/schemas/Energy"
+            "description": "Energy goal in kWh.",
+            "type": "number"
           },
           "time": {
-            "$ref": "#/components/schemas/Timestamp"
+            "description": "Target time.",
+            "format": "date-time",
+            "type": "string"
           }
         },
+        "required": [
+          "energy",
+          "time"
+        ],
         "type": "object"
       },
+      "StaticPlan": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/StaticSocPlan"
+          },
+          {
+            "$ref": "#/components/schemas/StaticEnergyPlan"
+          }
+        ],
+        "description": "Charging plan with a fixed target time and a SoC or energy goal."
+      },
       "StaticSocPlan": {
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans#create-charging-plan"
-        },
+        "description": "Charging plan with a SoC goal.",
         "properties": {
           "soc": {
-            "$ref": "#/components/schemas/Soc"
+            "description": "SoC goal in %.",
+            "type": "number"
           },
           "time": {
-            "$ref": "#/components/schemas/Timestamp"
+            "description": "Target time.",
+            "format": "date-time",
+            "type": "string"
           }
         },
+        "required": [
+          "soc",
+          "time"
+        ],
+        "type": "object"
+      },
+      "Statistics": {
+        "description": "Charging statistics, keyed by time period.",
+        "properties": {
+          "30d": {
+            "$ref": "#/components/schemas/StatisticsData"
+          },
+          "365d": {
+            "$ref": "#/components/schemas/StatisticsData"
+          },
+          "thisYear": {
+            "$ref": "#/components/schemas/StatisticsData"
+          },
+          "total": {
+            "$ref": "#/components/schemas/StatisticsData"
+          }
+        },
+        "required": [
+          "30d",
+          "365d",
+          "thisYear",
+          "total"
+        ],
+        "type": "object"
+      },
+      "StatisticsData": {
+        "description": "Aggregated charging statistics for a time period.",
+        "properties": {
+          "avgCo2": {
+            "description": "Average CO₂ emissions in g/kWh.",
+            "type": "number"
+          },
+          "avgPrice": {
+            "description": "Average energy price per kWh in the configured currency.",
+            "type": "number"
+          },
+          "chargedKWh": {
+            "description": "Total charged energy in kWh.",
+            "type": "number"
+          },
+          "solarPercentage": {
+            "description": "Share of solar energy in %.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "avgCo2",
+          "avgPrice",
+          "chargedKWh",
+          "solarPercentage"
+        ],
+        "type": "object"
+      },
+      "TimeseriesEntry": {
+        "description": "A forecast value at a point in time.",
+        "properties": {
+          "ts": {
+            "description": "Time of the forecast value.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "val": {
+            "description": "Forecast power in W.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "val",
+          "ts"
+        ],
         "type": "object"
       },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
         "format": "date-time",
         "type": "string"
+      },
+      "Vehicle": {
+        "description": "A configured vehicle.",
+        "properties": {
+          "capacity": {
+            "description": "Usable battery capacity in kWh.",
+            "type": "number"
+          },
+          "features": {
+            "description": "Feature flags of the vehicle implementation.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "icon": {
+            "description": "Vehicle icon name for UI display.",
+            "type": "string"
+          },
+          "limitSoc": {
+            "description": "SoC limit in %. Charging stops when reached.",
+            "type": "number"
+          },
+          "minSoc": {
+            "description": "Minimum SoC in %. Vehicle is fast-charged until this level is reached.",
+            "type": "number"
+          },
+          "name": {
+            "description": "Unique vehicle name used in API routes and configuration.",
+            "type": "string"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/StaticPlan"
+          },
+          "planStrategy": {
+            "$ref": "#/components/schemas/PlanStrategy"
+          },
+          "repeatingPlans": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RepeatingPlan"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Repeating charging plans."
+          },
+          "title": {
+            "description": "Vehicle title for UI display.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "repeatingPlans",
+          "planStrategy",
+          "title"
+        ],
+        "type": "object"
       },
       "VehicleName": {
         "example": "vehicle_1",
@@ -1749,7 +3954,7 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/Mode"
+                      "$ref": "#/components/schemas/ChargeMode"
                     }
                   },
                   "type": "object"
@@ -2539,10 +4744,7 @@
     },
     "/state": {
       "get": {
-        "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.",
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/state"
-        },
+        "description": "Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data.",
         "operationId": "getState",
         "parameters": [
           {
@@ -2569,12 +4771,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/State"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/State"
                 }
               }
             },

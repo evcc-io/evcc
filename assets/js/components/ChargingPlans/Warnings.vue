@@ -21,8 +21,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import type { PlanWrapper } from "./types";
-import type { Tariff } from "@/types/evcc";
+import type { PlanWrapper, Tariff } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanWarnings",

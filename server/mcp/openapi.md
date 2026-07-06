@@ -196,13 +196,13 @@ Directly controls the mode of all controllable batteries. evcc behavior like 'pr
 
 | Name | Type | Description |
 |------|------|-------------|
-| batteryMode | string | Battery mode |
+| batteryMode | string | Battery operation mode. |
 
 **Example call:**
 
 ```json
 call setExternalBatteryMode {
-  "batteryMode": "normal"
+  "batteryMode": "unknown"
 }
 ```
 
@@ -346,7 +346,7 @@ call getEnergyHistory {
 
 ## getState
 
-Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.
+Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data.
 
 **Tags:** general
 
