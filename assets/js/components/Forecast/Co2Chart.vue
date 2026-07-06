@@ -22,7 +22,7 @@ import {
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { ForecastSlot } from "./types";
+import type { ForecastSlot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Co2Chart",
