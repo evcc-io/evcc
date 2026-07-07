@@ -10,8 +10,6 @@ requirements:
       For the AI LAN/WiFi dongle (V1, port 8484), which does not expose Modbus TCP/RTU directly. Reads use the dongle's undocumented `getdevdata.cgi` JSON endpoint, battery control tunnels raw Modbus-RTU frames through the equally undocumented `fdbg.cgi` endpoint ([background and more testers in discussion #17680](https://github.com/evcc-io/evcc/discussions/17680)).
 
       If the dongle exposes real Modbus (RS485, or TCP on a newer firmware), use the [solplanet-hybrid](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid.yaml) template instead - it supports a configurable charge power.
-
-      **Charging here is fixed at 5000 W.** The fdbg.cgi tunnel takes precomputed Modbus RTU frames including a CRC16 checksum; evcc has no way to compute one for an arbitrary configured wattage, so only the 5000 W frame confirmed working in the discussion is included.
     de: |
       Für den AI LAN/WiFi-Dongle (V1, Port 8484), der kein Modbus TCP/RTU anbietet. Messwerte kommen über die undokumentierte `getdevdata.cgi`-JSON-Schnittstelle des Dongles, die Batteriesteuerung nutzt einen Tunnel für rohe Modbus-RTU-Frames über die ebenfalls undokumentierte `fdbg.cgi`-Schnittstelle ([Hintergrund und weitere Tester in Diskussion #17680](https://github.com/evcc-io/evcc/discussions/17680)).
 
