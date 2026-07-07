@@ -327,13 +327,13 @@ func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable 
 func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 	if pausable, err := c.cem.OHPCF.ConsumptionIsPausable(entity); err == nil && pausable {
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-			return c.cem.OHPCF.PausePowerConsumptionProcess(entity, func(r model.ResultDataType) { cb(r, model.MsgCounterType(0)) })
+			return c.cem.OHPCF.PausePowerConsumptionProcess(entity, cb)
 		})
 	}
 
 	if stoppable, err := c.cem.OHPCF.ConsumptionIsStoppable(entity); err == nil && stoppable {
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-			return c.cem.OHPCF.AbortPowerConsumptionProcess(entity, func(r model.ResultDataType) { cb(r, model.MsgCounterType(0)) })
+			return c.cem.OHPCF.AbortPowerConsumptionProcess(entity, cb)
 		})
 	}
 
@@ -410,11 +410,11 @@ func (c *EEBusOHPCF) apply() error {
 	case ohpcfSchedule:
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
-			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, 0, func(r model.ResultDataType) { cb(r, model.MsgCounterType(0)) })
+			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, 0, cb)
 		})
 	case ohpcfResume:
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-			return c.cem.OHPCF.ResumePowerConsumptionProcess(entity, func(r model.ResultDataType) { cb(r, model.MsgCounterType(0)) })
+			return c.cem.OHPCF.ResumePowerConsumptionProcess(entity, cb)
 		})
 	case ohpcfStop:
 		return c.stop(entity)
