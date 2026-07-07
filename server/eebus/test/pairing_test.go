@@ -19,6 +19,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// connectTimeout bounds the retried consumer connect; several attempts must fit
+// so a flaky SHIP handshake (enbility/ship-go#85) can converge on CI runners.
+const connectTimeout = 3 * time.Minute
+
+// connectAttempt caps a single connect so a stuck SHIP handshake is abandoned
+// and retried with a fresh connector instead of burning the whole budget at once.
+const connectAttempt = 30 * time.Second
+
 // freePort returns a currently unused tcp port
 func freePort(t *testing.T) int {
 	t.Helper()
@@ -88,12 +96,20 @@ func createPairingControlbox(ctx context.Context, qr string, port int) (*control
 	return h, err
 }
 
-// connectHems creates the hems consumer for ski (empty ski = SHIP-paired device)
-// and returns the connect result asynchronously
+// connectHems creates the hems consumer for ski (empty ski = SHIP-paired device),
+// retrying the flaky SHIP handshake with a fresh connector until ctx expires.
 func connectHems(ctx context.Context, ski string) <-chan error {
 	errC := make(chan error, 1)
 	go func() {
-		_, err := hems.NewEEBus(ctx, ski, hems.Limits{}, nil, nil, time.Second)
+		var err error
+		for ctx.Err() == nil {
+			attemptCtx, cancel := context.WithTimeout(ctx, connectAttempt)
+			_, err = hems.NewEEBus(attemptCtx, ski, hems.Limits{}, nil, nil, time.Second)
+			cancel()
+			if err == nil {
+				break
+			}
+		}
 		errC <- err
 	}()
 	return errC
@@ -145,7 +161,7 @@ func TestShipPairing(t *testing.T) {
 	require.Contains(t, qr, "SPSEC:", "expected SHIP Pairing Service QR")
 
 	// consumer for the SHIP-paired controlbox must connect once pairing completes
-	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), connectTimeout)
 	defer cancel()
 	hemsC := connectHems(ctx, "")
 
@@ -174,7 +190,7 @@ func TestShipPairing(t *testing.T) {
 	inst, err = server.Instance()
 	require.NoError(t, err, "instance restart")
 
-	ctx2, cancel2 := context.WithTimeout(t.Context(), time.Minute)
+	ctx2, cancel2 := context.WithTimeout(t.Context(), connectTimeout)
 	defer cancel2()
 	require.NoError(t, <-connectHems(ctx2, ""), "paired device not reconnected after restart")
 
@@ -183,7 +199,7 @@ func TestShipPairing(t *testing.T) {
 	box2, err := createControlbox(t.Context(), inst.Ski(), freePort(t))
 	require.NoError(t, err, "ski-configured controlbox")
 
-	ctx3, cancel3 := context.WithTimeout(t.Context(), time.Minute)
+	ctx3, cancel3 := context.WithTimeout(t.Context(), connectTimeout)
 	defer cancel3()
 	require.NoError(t, <-connectHems(ctx3, box2.ski), "ski-configured device not connected")
 
