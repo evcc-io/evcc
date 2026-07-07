@@ -9,13 +9,13 @@ requirements:
     en: |
       Based on the vendor's [AISWEI Modbus documentation](https://github.com/evcc-io/evcc/discussions/17680) (Solplanet inverters are built by AISWEI).
 
-      **Attention**: users report that the network dongle does not expose Modbus TCP directly (connection refused/reset), only the undocumented HTTP/JSON API on port 8484. Use an RS485 connection (directly or via a serial-to-TCP/USB adapter) unless your dongle's firmware has since added native Modbus TCP support. If you only have that dongle, use the [solplanet-hybrid-http](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid-http.yaml) template instead.
+      **Attention**: users report that the network dongle does not expose Modbus TCP directly (connection refused/reset), only the undocumented HTTP/JSON API on port 8484. Use an RS485 connection (directly or via a serial-to-TCP/USB adapter) unless the dongle's firmware has since added native Modbus TCP support. If only that dongle is used, use the [solplanet-hybrid-http](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid-http.yaml) template instead.
 
       Battery charge/discharge control is supported and has been confirmed working against real hardware ([source](https://github.com/evcc-io/evcc/pull/31480#issuecomment-4887359149)).
     de: |
       Basierend auf der [AISWEI Modbus-Dokumentation](https://github.com/evcc-io/evcc/discussions/17680) des Herstellers (Solplanet-Wechselrichter werden von AISWEI gefertigt).
 
-      **Achtung**: Nutzer berichten, dass der Netzwerk-Dongle kein Modbus TCP anbietet (Verbindung wird abgelehnt/zurückgesetzt), sondern nur die undokumentierte HTTP/JSON-API auf Port 8484. Nutze eine RS485-Verbindung (direkt oder über einen Seriell-zu-TCP/USB-Adapter), außer die Firmware deines Dongles unterstützt inzwischen natives Modbus TCP. Falls du nur diesen Dongle hast, nutze stattdessen das [solplanet-hybrid-http](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid-http.yaml)-Template.
+      **Achtung**: Nutzer berichten, dass der Netzwerk-Dongle kein Modbus TCP anbietet (Verbindung wird abgelehnt/zurückgesetzt), sondern nur die undokumentierte HTTP/JSON-API auf Port 8484. Eine RS485-Verbindung verwenden (direkt oder über einen Seriell-zu-TCP/USB-Adapter), außer die Firmware des Dongles unterstützt inzwischen natives Modbus TCP. Falls nur dieser Dongle verwendet wird, stattdessen das [solplanet-hybrid-http](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid-http.yaml)-Template verwenden.
 
       Die Batterie-Lade-/Entladesteuerung wird unterstützt und wurde an echter Hardware verifiziert ([Quelle](https://github.com/evcc-io/evcc/pull/31480#issuecomment-4887359149)).
   evcc: ["skiptest"]

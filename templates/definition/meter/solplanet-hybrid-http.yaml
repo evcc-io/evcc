@@ -9,13 +9,13 @@ requirements:
     en: |
       For the AI LAN/WiFi dongle (V1, port 8484), which does not expose Modbus TCP/RTU directly. Reads use the dongle's undocumented `getdevdata.cgi` JSON endpoint, battery control tunnels raw Modbus-RTU frames through the equally undocumented `fdbg.cgi` endpoint ([background and more testers in discussion #17680](https://github.com/evcc-io/evcc/discussions/17680)).
 
-      If your dongle exposes real Modbus (RS485, or TCP on a newer firmware), use the [solplanet-hybrid](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid.yaml) template instead - it supports a configurable charge power.
+      If the dongle exposes real Modbus (RS485, or TCP on a newer firmware), use the [solplanet-hybrid](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid.yaml) template instead - it supports a configurable charge power.
 
       **Charging here is fixed at 5000 W.** The fdbg.cgi tunnel takes precomputed Modbus RTU frames including a CRC16 checksum; evcc has no way to compute one for an arbitrary configured wattage, so only the 5000 W frame confirmed working in the discussion is included.
     de: |
       Für den AI LAN/WiFi-Dongle (V1, Port 8484), der kein Modbus TCP/RTU anbietet. Messwerte kommen über die undokumentierte `getdevdata.cgi`-JSON-Schnittstelle des Dongles, die Batteriesteuerung nutzt einen Tunnel für rohe Modbus-RTU-Frames über die ebenfalls undokumentierte `fdbg.cgi`-Schnittstelle ([Hintergrund und weitere Tester in Diskussion #17680](https://github.com/evcc-io/evcc/discussions/17680)).
 
-      Falls dein Dongle echtes Modbus anbietet (RS485 oder TCP bei neuerer Firmware), nutze stattdessen das [solplanet-hybrid](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid.yaml)-Template - dort ist die Ladeleistung konfigurierbar.
+      Falls der Dongle echtes Modbus anbietet (RS485 oder TCP bei neuerer Firmware), stattdessen das [solplanet-hybrid](https://github.com/evcc-io/evcc/blob/master/templates/definition/meter/solplanet-hybrid.yaml)-Template verwenden - dort ist die Ladeleistung konfigurierbar.
 
       **Das Laden ist hier auf 5000 W fest eingestellt.** Der fdbg.cgi-Tunnel benötigt vorab berechnete Modbus-RTU-Frames inklusive CRC16-Prüfsumme; evcc kann diese nicht für eine beliebig konfigurierte Leistung berechnen, deshalb ist nur der in der Diskussion bestätigte 5000-W-Frame hinterlegt.
   evcc: ["skiptest"]
@@ -24,37 +24,31 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
-  - name: sn
-    description:
-      de: Seriennummer
-      en: Serial number
+  - name: serial
     required: true
-    help:
-      de: Seriennummer des Wechselrichters, zu finden in der Solplanet-App oder auf der Konfigurationsseite des Dongles
-      en: Inverter serial number, found in the Solplanet app or on the dongle's configuration page
   - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: http://{{ .host }}:8484/getdevdata.cgi?device=3&sn={{ .sn }}
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=3&sn={{ .serial }}
     jq: .pac # grid power, W
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .sn }}
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
     jq: .ppv # PV power, W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .sn }}
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
     jq: .pb # battery power, W
   soc:
     source: http
-    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .sn }}
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
     jq: .soc # battery SOC, %
   # batterymode disabled pending further verification - see discussion #17680
   # batterymode:
