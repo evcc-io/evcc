@@ -1,0 +1,29 @@
+template: tinkerforge-warp1-ws
+products:
+  - { brand: TinkerForge, description: { generic: WARP1 Smart } }
+  - { brand: TinkerForge, description: { generic: WARP1 Pro } }
+capabilities: ["mA", "dim"]
+requirements:
+  description:
+    de: Phasenumschaltung (1p/3p) ist beim WARP1 nicht möglich, auch nicht mit einem WARP Energy Manager, da keine CP-Trennung unterstützt wird. RFID steht nur zur Verfügung, wenn zusätzlich ein NFC Bricklet nachgerüstet wurde.
+    en: Phase switching (1p/3p) is not possible on the WARP1, not even with a WARP Energy Manager, since it does not support CP separation. RFID is only available if an NFC Bricklet has been retrofitted.
+  evcc: ["skiptest"]
+params:
+  - name: uri
+    required: true
+  - name: user
+  - name: password
+  - name: energyMeterIndex
+    advanced: true
+    default: 0
+    description:
+      generic: Energy Meter Index
+    help:
+      de: Index des in der Warp konfigurierten Meters dessen Werte genutzt werden sollen.
+      en: Index of the meter configured in the WARP charger whose values should be used.
+render: |
+  type: warp-ws
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  energyMeterIndex: {{ .energyMeterIndex }}

@@ -1,0 +1,29 @@
+template: tinkerforge-warp2-ws
+products:
+  - { brand: TinkerForge, description: { generic: WARP2 Smart } }
+  - { brand: TinkerForge, description: { generic: WARP2 Pro } }
+capabilities: ["mA", "rfid", "dim"]
+requirements:
+  description:
+    de: Phasenumschaltung (1p/3p) ist beim WARP2 nur mit einem zusätzlichen WARP Energy Manager möglich.
+    en: Phase switching (1p/3p) is only possible on the WARP2 with an additional WARP Energy Manager.
+  evcc: ["skiptest"]
+params:
+  - name: uri
+    required: true
+  - name: user
+  - name: password
+  - name: energyMeterIndex
+    advanced: true
+    default: 0
+    description:
+      generic: Energy Meter Index
+    help:
+      de: Index des in der Warp konfigurierten Meters dessen Werte genutzt werden sollen.
+      en: Index of the meter configured in the WARP charger whose values should be used.
+render: |
+  type: warp-ws
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  energyMeterIndex: {{ .energyMeterIndex }}

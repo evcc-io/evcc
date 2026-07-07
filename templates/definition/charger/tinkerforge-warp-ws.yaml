@@ -2,10 +2,6 @@ template: tinkerforge-warp-ws
 products:
   - { brand: TinkerForge, description: { generic: WARP3 Smart } }
   - { brand: TinkerForge, description: { generic: WARP3 Pro } }
-  - { brand: TinkerForge, description: { generic: WARP2 Smart } }
-  - { brand: TinkerForge, description: { generic: WARP2 Pro } }
-  - { brand: TinkerForge, description: { generic: WARP1 Smart } }
-  - { brand: TinkerForge, description: { generic: WARP1 Pro } }
 capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:
