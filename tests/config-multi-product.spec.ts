@@ -5,8 +5,8 @@ import { expectModalVisible, expectModalHidden } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 const flags = ["--disable-auth", "--template-type", "meter", "--template"];
-const templateFlags = [...flags, "tests/config-multi-product.tpl.yaml"];
-const renamedFlags = [...flags, "tests/config-multi-product-renamed.tpl.yaml"];
+const templateFlags = [...flags, "tests/config-multi-product-v1.tpl.yaml"];
+const renamedFlags = [...flags, "tests/config-multi-product-v2.tpl.yaml"];
 
 test.beforeEach(async () => {
   await start(undefined, undefined, templateFlags);
