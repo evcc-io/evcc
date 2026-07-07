@@ -10,13 +10,17 @@ import (
 // https://github.com/TA2k/ioBroker.smart-eq
 
 type Provider struct {
-	statusG func() (VehicleStatus, error)
+	statusG    func() (VehicleStatus, error)
+	socStatusG func() (VehicleSocStatus, error)
 }
 
 func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{
 		statusG: util.Cached(func() (VehicleStatus, error) {
 			return api.Status(vin)
+		}, cache),
+		socStatusG: util.Cached(func() (VehicleSocStatus, error) {
+			return api.SocStatus(vin)
 		}, cache),
 	}
 
@@ -75,4 +79,12 @@ var _ api.VehicleClimater = (*Provider)(nil)
 func (v *Provider) Climater() (bool, error) {
 	res, err := v.statusG()
 	return bool(res.AdditionalVehicleStatus.ClimateStatus.PreClimateActive || res.AdditionalVehicleStatus.ClimateStatus.Defrost), err
+}
+
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	res, err := v.socStatusG()
+	return int64(res.Soc) / 10, err
 }

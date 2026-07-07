@@ -120,7 +120,7 @@ func (a *API) Data(vehicleID string) (VehicleData, error) {
 	uri := fmt.Sprintf("https://api.%s/graphql", a.domain)
 
 	body := graphqlRequest{
-		Query:     `query($id: ID!) { vehicle(id: $id) { id chargePercentage { pct } odometer { odometer } rangeTotalKm { km } chargingState { enabled } }}`,
+		Query:     `query($id: ID!) { vehicle(id: $id) { id chargePercentage { pct } odometer { odometer } rangeTotalKm { km } }}`,
 		Variables: map[string]any{"id": vehicleID},
 	}
 

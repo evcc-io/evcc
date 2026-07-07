@@ -75,7 +75,7 @@ meters:
 # for documentation see https://docs.evcc.io/docs/devices/chargers
 chargers:
   - name: wallbe
-    type: wallbe # Wallbe charger
+    type: phoenix-ev-eth # Wallbe charger
     uri: 192.168.0.8:502 # ModBus address
   - name: keba
     type: ...

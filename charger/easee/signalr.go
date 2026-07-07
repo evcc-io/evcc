@@ -28,6 +28,25 @@ func (o *Observation) TypedValue() (any, error) {
 	}
 }
 
+type ChargingSessionStartData struct {
+	ID         int       `json:"Id"`
+	MeterValue float64   `json:"MeterValue"`
+	Start      time.Time `json:"Start"`
+	Auth       string    `json:"Auth"`
+	AuthReason int       `json:"AuthReason"`
+}
+
+type ChargingSessionData struct {
+	ID              int       `json:"Id"`
+	Start           time.Time `json:"Start"`
+	Stop            time.Time `json:"Stop"`
+	EnergyKwh       float64   `json:"EnergyKwh"`
+	MeterValueStart float64   `json:"MeterValueStart"`
+	MeterValueStop  float64   `json:"MeterValueStop"`
+	Auth            string    `json:"Auth"`
+	AuthReason      int       `json:"AuthReason"`
+}
+
 type SignalRCommandResponse struct {
 	SerialNumber string
 	ID           int

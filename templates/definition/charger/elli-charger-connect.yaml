@@ -15,9 +15,8 @@ products:
   - brand: Audi
     description:
       generic: Wallbox plus
-capabilities: ["mA"]
+capabilities: ["mA", "dim"]
 requirements:
-  evcc: ["eebus"]
   description:
     de: |
       Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
@@ -35,8 +34,14 @@ requirements:
       Important: A mostly flawless functionality can only be provided with an external energy meter and no usage of CT coils, due to sosftware bugs of the Wallbox. Using a LAN connection is highly recommended.
 
       Note: If you've added an energy meter to your charger please use the Pro or Connected+ integration.
+caveats:
+  - description:
+      de: "Viele bekannte EEBUS-Firmware-Fehler, die der Hersteller nicht behebt: Ladewerte fehlen oft oder sind veraltet und die Verbindung bricht häufig ab. Ein externer Zähler ist erforderlich."
+      en: "Many known EEBUS firmware bugs that the manufacturer will not fix: charging measurements are often missing or stale and the connection drops frequently. An external meter is required."
+    link: https://github.com/evcc-io/evcc/discussions/15367
 params:
   - preset: eebus
   - name: ip
 render: |
+  type: eebus-evse
   {{ include "eebus" . }}

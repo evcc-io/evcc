@@ -8,7 +8,7 @@
 		<p v-if="isError">
 			<strong>{{ $t("authProviders.authorizationFailed") }}</strong
 			><br />
-			{{ errorMessage }}
+			<code class="user-select-all">{{ errorMessage }}</code>
 		</p>
 		<p v-else>
 			<strong>{{ $t("authProviders.authorizationSuccessful") }}</strong

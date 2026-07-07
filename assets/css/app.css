@@ -54,6 +54,17 @@
 	--evcc-accent2: var(--evcc-darker-green);
 	--evcc-accent3: var(--evcc-darkest-green);
 
+	/* heating temperature bar: thermometer scale (cold -> hot) */
+	--evcc-temp-cold: #1b6fba;
+	--evcc-temp-warm: #ffa700;
+	--evcc-temp-hot: #e30022;
+	--evcc-heating-gradient: linear-gradient(
+		90deg,
+		var(--evcc-temp-cold) 5%,
+		var(--evcc-temp-warm) 20%,
+		var(--evcc-temp-warm) 40%,
+		var(--evcc-temp-hot) 95%
+	);
 	--evcc-transition-slow: 1000ms;
 	--evcc-transition-medium: 500ms;
 	--evcc-transition-fast: 250ms;
@@ -69,9 +80,6 @@
 	--bs-warning-border-subtle: color-mix(in srgb, var(--evcc-orange) 30%, transparent);
 	--bs-warning-text-emphasis: var(--evcc-orange);
 	--bs-danger-50: #dc354580;
-
-	--bs-danger: var(--evcc-red);
-	--bs-danger-rgb: var(--evcc-red-rgb);
 
 	--bs-danger: var(--evcc-red);
 	--bs-danger-rgb: var(--evcc-red-rgb);
@@ -94,7 +102,7 @@
 	--safe-area-inset-right: env(safe-area-inset-right, 0px);
 
 	--tab-bar-height: 3rem;
-	--bottom-space: 1.5px;
+	--bottom-space: calc(var(--tab-bar-height) + 1.5rem);
 	--tab-bar-background: var(--evcc-background);
 	--evcc-backdrop-blur: blur(20px);
 }
@@ -214,7 +222,7 @@ a:hover {
 }
 
 .btn {
-	--bs-btn-border-width: 2px;
+	--bs-btn-border-width: 1px;
 }
 
 .btn-reset {
@@ -830,6 +838,6 @@ input::-webkit-date-and-time-value {
 	transition: opacity var(--evcc-transition-fast) ease 0.2s;
 }
 
-.app--bottomtabs .sticky-bottom {
+.sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
 }

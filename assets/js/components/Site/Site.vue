@@ -1,18 +1,8 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div
-				class="d-flex justify-content-between align-items-center my-3 my-md-4"
-				data-testid="header"
-			>
-				<h1 class="d-block my-0">
-					<span v-if="!setupRequired">
-						{{ siteTitle || "evcc" }}
-					</span>
-				</h1>
-				<TopNavigationArea :notifications="notifications" />
-			</div>
-			<HemsWarning :circuits="circuits" />
+			<TopHeader :title="headerTitle" :notifications="notifications" />
+			<HemsWarning :status="hems?.status" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
@@ -71,15 +61,13 @@
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-if="!experimental" v-bind="footer" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import Footer from "../Footer/Footer.vue";
-import TopNavigationArea from "../Top/TopNavigationArea.vue";
+import TopHeader from "../Top/Header.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
@@ -94,9 +82,10 @@ import type {
 	CURRENCY,
 	Forecast,
 	Notification,
-	Circuit,
+	ConfigStatus,
+	HemsConfig,
+	HemsStatus,
 	SMART_COST_TYPE,
-	Sponsor,
 	FatalError,
 	EvOpt,
 	BATTERY_MODE,
@@ -107,11 +96,10 @@ import type { Grid } from "./types";
 export default defineComponent({
 	name: "Site",
 	components: {
-		Footer,
 		Loadpoints,
 		Energyflow,
 		HemsWarning,
-		TopNavigationArea,
+		TopHeader,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
@@ -130,6 +118,7 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
+		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
@@ -143,7 +132,6 @@ export default defineComponent({
 		vehicles: Object,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
-		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -152,23 +140,18 @@ export default defineComponent({
 		tariffPriceLoadpoints: Number,
 		tariffCo2Loadpoints: Number,
 
-		availableVersion: String,
-		releaseNotes: String,
-		hasUpdater: Boolean,
-		uploadMessage: String,
-		uploadProgress: Number,
-		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
-		circuits: Object as PropType<Record<string, Circuit>>,
-		telemetry: Boolean,
-		experimental: Boolean,
+		hems: Object as PropType<ConfigStatus<HemsConfig, HemsStatus>>,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
+		headerTitle() {
+			return this.setupRequired ? "" : this.siteTitle || "evcc";
+		},
 		loadpoints() {
 			return store.uiLoadpoints.value || [];
 		},
@@ -187,6 +170,9 @@ export default defineComponent({
 		gridPower() {
 			return this.grid?.power || 0;
 		},
+		experimental() {
+			return store.state?.experimental;
+		},
 		energyflow() {
 			return this.collectProps(Energyflow);
 		},
@@ -197,24 +183,6 @@ export default defineComponent({
 		showParkingLot() {
 			// work in progess
 			return false;
-		},
-		footer() {
-			return {
-				version: {
-					installed: window.evcc.version,
-					commit: window.evcc.commit,
-					available: this.availableVersion,
-				},
-				savings: {
-					sponsor: this.sponsor,
-					statistics: this.statistics,
-					co2Configured: this.tariffCo2 !== undefined,
-					currency: this.currency,
-					telemetry: this.telemetry,
-					forecast: this.forecast,
-					tariffGrid: this.tariffGrid,
-				},
-			};
 		},
 		hasFatalError() {
 			return this.fatal.length > 0;

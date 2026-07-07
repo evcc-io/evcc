@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -23,7 +24,7 @@ type Connection struct {
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
+func NewConnection(log *util.Logger, uri, home string, insecure bool) (*Connection, error) {
 	if home != "" {
 		log.WARN.Printf("using deprecated 'home' parameter '%s', please use 'uri' instead", home)
 	}
@@ -35,9 +36,15 @@ func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
 	c := &Connection{
 		Helper: request.NewHelper(log),
 		instance: &proxyInstance{
-			home: home,
-			uri:  util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+			home:     home,
+			uri:      util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+			insecure: insecure,
 		},
+	}
+
+	// override the transport to accept self-signed certificates
+	if insecure {
+		c.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	// Set up authentication headers
@@ -233,16 +240,28 @@ func domain(entity string) (string, error) {
 	return domain, nil
 }
 
-// CallSwitchService is a convenience method for switch services
+// CallSwitchService is a convenience method for switch-like services. The
+// service name depends on the entity domain: stateless button domains expose
+// only `press`, while switch-style domains use `turn_on` / `turn_off`.
 func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	domain, err := domain(entity)
 	if err != nil {
 		return err
 	}
 
-	service := "turn_off"
-	if turnOn {
-		service = "turn_on"
+	var service string
+	switch domain {
+	case "button", "input_button":
+		// Buttons are stateless — they only have a press action.
+		if !turnOn {
+			return fmt.Errorf("entity %s has no off action", entity)
+		}
+		service = "press"
+	default:
+		service = "turn_off"
+		if turnOn {
+			service = "turn_on"
+		}
 	}
 
 	data := map[string]any{

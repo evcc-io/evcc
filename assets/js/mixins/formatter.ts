@@ -22,6 +22,9 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   USD: "$",
   DKK: "kr",
   SEK: "kr",
+  ZAR: "R",
+  TRY: "₺",
+  MYR: "RM",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -39,6 +42,8 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   USD: "¢", // US cent
   DKK: "øre", // Danish øre
   SEK: "öre", // Swedish öre
+  ZAR: "c", // South African cent
+  TRY: "krş", // Türkiye kuruş
 };
 
 export enum POWER_UNIT {
@@ -236,6 +241,19 @@ export default defineComponent({
 
       return `${weekday} ${hour}`.trim();
     },
+    // relative day plus time, e.g. "heute 16:30", "morgen 5:00", "Freitag 12:15"
+    fmtDayTime(date: Date) {
+      const time = this.fmtHourMinute(date);
+      const startOfDay = (d: Date) => new Date(d).setHours(0, 0, 0, 0);
+      const days = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
+      if (days === 0 || days === 1) {
+        const day = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
+          numeric: "auto",
+        }).format(days, "day");
+        return `${day} ${time}`;
+      }
+      return `${this.weekdayLong(date)} ${time}`;
+    },
     fmtHourMinute(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         hour: "numeric",
@@ -278,6 +296,30 @@ export default defineComponent({
         day: "numeric",
         month: "short",
       }).format(date);
+    },
+    fmtDayMonthYear(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+    },
+    fmtDayMonthShort(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
+    fmtMonthNarrow(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        month: "narrow",
+      }).format(date);
+    },
+    // "HH:mm – HH:mm" honoring 12h/24h preference.
+    fmtTimeSlot(start: Date, durationMs: number) {
+      const end = new Date(start.getTime() + durationMs);
+      return `${this.fmtHourMinute(start)} – ${this.fmtHourMinute(end)}`;
     },
     fmtDurationUnit(value: number, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {

@@ -77,20 +77,6 @@ func (v *ConnectedCars) Soc() (float64, error) {
 	return res.ChargePercentage.Pct, nil
 }
 
-var _ api.ChargeState = (*ConnectedCars)(nil)
-
-// Status implements the api.ChargeState interface
-func (v *ConnectedCars) Status() (api.ChargeStatus, error) {
-	res, err := v.dataG()
-	if err != nil {
-		return api.StatusNone, err
-	}
-	if res.ChargingState != nil && res.ChargingState.Enabled {
-		return api.StatusC, nil
-	}
-	return api.StatusA, nil
-}
-
 var _ api.VehicleRange = (*ConnectedCars)(nil)
 
 // Range implements the api.VehicleRange interface

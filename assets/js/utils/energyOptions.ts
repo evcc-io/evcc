@@ -8,6 +8,7 @@ export function optionStep(maxEnergy: number) {
   if (maxEnergy < 10) return 0.5;
   if (maxEnergy < 25) return 1;
   if (maxEnergy < 50) return 2;
+  if (maxEnergy < 75) return 2.5;
   return 5;
 }
 
@@ -21,7 +22,7 @@ export function fmtEnergy(
     return zeroText;
   }
   const inKWh = step >= 0.1;
-  const digits = inKWh && step < 1 ? 1 : 0;
+  const digits = inKWh && !Number.isInteger(step) ? 1 : 0;
   return fmtWh(energy * 1e3, inKWh ? POWER_UNIT.KW : POWER_UNIT.W, true, digits);
 }
 

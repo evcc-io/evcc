@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 // E3DC Wallbox Charger (RSCP Protocol)
 //
 // REQUIREMENTS - Configure in E3DC portal for evcc control:
@@ -37,9 +54,11 @@ import (
 // E3dc charger implementation using RSCP protocol.
 // Communicates with the E3DC Hauskraftwerk via TCP connection.
 type E3dc struct {
-	log  *util.Logger // Logger instance for debug/warning output
-	conn *rscp.Client // RSCP client connection to E3DC system
-	id   uint8        // Wallbox index (0 = first wallbox, 1 = second, etc.)
+	mu    sync.Mutex   // serializes RSCP exchanges; rscp.Client is not reentrant
+	log   *util.Logger // Logger instance for debug/warning output
+	conn  *rscp.Client // RSCP client connection to E3DC system
+	id    uint8        // Wallbox index (0 = first wallbox, 1 = second, etc.)
+	retry func() error // recreates the RSCP client on connection errors
 }
 
 func init() {
@@ -125,6 +144,12 @@ func NewE3dc(ctx context.Context, cfg rscp.ClientConfig, id uint8) (*E3dc, error
 		id:   id,
 	}
 
+	wb.retry = func() (err error) {
+		wb.conn.Disconnect()
+		wb.conn, err = rscp.NewClient(cfg)
+		return err
+	}
+
 	// Check wallbox configuration and warn if not optimal for evcc control
 	if err := wb.checkConfiguration(); err != nil {
 		return nil, err
@@ -133,9 +158,25 @@ func NewE3dc(ctx context.Context, cfg rscp.ClientConfig, id uint8) (*E3dc, error
 	return wb, nil
 }
 
+// retrySend executes a single message request with one retry on error.
+// The E3DC Hauskraftwerk occasionally drops the RSCP socket (manifests as
+// "authentication error: EOF"). A fresh client recovers from this state.
+func (wb *E3dc) retrySend(msg rscp.Message) (*rscp.Message, error) {
+	res, err := wb.conn.Send(msg)
+	if err == nil {
+		return res, nil
+	}
+
+	if err := wb.retry(); err != nil {
+		return nil, err
+	}
+
+	return wb.conn.Send(msg)
+}
+
 // checkConfiguration verifies wallbox settings and adjusts them for evcc control
 func (wb *E3dc) checkConfiguration() error {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SUN_MODE_ACTIVE, nil),
 		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
@@ -174,7 +215,7 @@ func (wb *E3dc) checkConfiguration() error {
 
 // disableSunMode sends the command to disable sun mode
 func (wb *E3dc) disableSunMode() {
-	if _, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	if _, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SET_SUN_MODE_ACTIVE, false),
 	})); err != nil {
@@ -186,7 +227,7 @@ func (wb *E3dc) disableSunMode() {
 // Called before control commands (Enable, MaxCurrent) because the user could
 // re-enable sun mode in the E3DC portal at any time without restarting evcc.
 func (wb *E3dc) ensureSunModeDisabled() {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SUN_MODE_ACTIVE, nil),
 	}))
@@ -209,7 +250,7 @@ func (wb *E3dc) ensureSunModeDisabled() {
 func (wb *E3dc) disableAutoPhaseSwitch() {
 	// Note: WB_REQ_SET_AUTO_PHASE_SWITCH_ENABLED has wrong DataType in go-rscp (None instead of Bool)
 	// We must create the message with explicit DataType
-	if _, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	if _, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		{Tag: rscp.WB_REQ_SET_AUTO_PHASE_SWITCH_ENABLED, DataType: rscp.Bool, Value: false},
 	})); err != nil {
@@ -221,7 +262,7 @@ func (wb *E3dc) disableAutoPhaseSwitch() {
 // Called before phase switch commands because the user could re-enable it
 // in the E3DC portal at any time without restarting evcc.
 func (wb *E3dc) ensureAutoPhaseDisabled() {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
 	}))
@@ -252,7 +293,7 @@ func (wb *E3dc) ensureAutoPhaseDisabled() {
 // Used by Status() and Enabled() to determine charging state.
 func (wb *E3dc) getExternDataAlg() ([]byte, error) {
 	// RSCP request pattern: WB_REQ_DATA container with WB_INDEX + request tags
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_EXTERN_DATA_ALG, nil),
 	}))
@@ -286,6 +327,9 @@ func (wb *E3dc) getExternDataAlg() ([]byte, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *E3dc) Enabled() (bool, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	b, err := wb.getExternDataAlg()
 	if err != nil {
 		return false, err
@@ -298,9 +342,12 @@ func (wb *E3dc) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 // Controls charging by setting the abort flag (inverted logic: abort=false means enabled)
 func (wb *E3dc) Enable(enable bool) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	wb.ensureSunModeDisabled()
 
-	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	_, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SET_ABORT_CHARGING, !enable),
 	}))
@@ -311,6 +358,9 @@ func (wb *E3dc) Enable(enable bool) error {
 // Status implements the api.Charger interface
 // Returns the charging state by reading status flags from WB_EXTERN_DATA_ALG
 func (wb *E3dc) Status() (api.ChargeStatus, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	b, err := wb.getExternDataAlg()
 	if err != nil {
 		return api.StatusNone, err
@@ -339,9 +389,12 @@ func (wb *E3dc) Status() (api.ChargeStatus, error) {
 // MaxCurrent implements the api.Charger interface.
 // Sets the maximum charging current in Ampere (whole numbers only, 6-32A typical range).
 func (wb *E3dc) MaxCurrent(current int64) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	wb.ensureSunModeDisabled()
 
-	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	_, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SET_MAX_CHARGE_CURRENT, uint8(current)),
 	}))
@@ -354,6 +407,9 @@ var _ api.Meter = (*E3dc)(nil)
 // CurrentPower implements the api.Meter interface
 // Returns the total charging power by summing all three phases
 func (wb *E3dc) CurrentPower() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	p1, p2, p3, err := wb.powers()
 	if err != nil {
 		return 0, err
@@ -373,8 +429,11 @@ var _ api.MeterEnergy = (*E3dc)(nil)
 // The sum of both values matches the total energy shown in the E3DC portal.
 // Testing showed: DB_TEC (8319 kWh) + WB_ENERGY (699 kWh) = 9018 kWh ≈ Portal (9019 kWh)
 func (wb *E3dc) TotalEnergy() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	// Query both energy sources sequentially
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.DB_REQ_TEC_WALLBOX_VALUES, nil))
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.DB_REQ_TEC_WALLBOX_VALUES, nil))
 	if err != nil {
 		return 0, err
 	}
@@ -419,7 +478,7 @@ func (wb *E3dc) TotalEnergy() (float64, error) {
 	}
 
 	// Query WB_ENERGY_ALL for energy since last DB sync
-	res, err = wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	res, err = wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_ENERGY_ALL, nil),
 	}))
@@ -445,7 +504,7 @@ func (wb *E3dc) TotalEnergy() (float64, error) {
 // Used internally by CurrentPower() and Currents().
 // Returns (L1, L2, L3) power values - unused phases return 0.
 func (wb *E3dc) powers() (float64, float64, float64, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L1, nil),
 		*rscp.NewMessage(rscp.WB_REQ_PM_POWER_L2, nil),
@@ -506,7 +565,10 @@ var _ api.PhaseGetter = (*E3dc)(nil)
 // Returns the configured number of phases (1 or 3)
 // Note: WB_PM_ACTIVE_PHASES reports physical wiring, WB_NUMBER_PHASES reports actual configuration
 func (wb *E3dc) GetPhases() (int, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_NUMBER_PHASES, nil),
 	}))
@@ -532,7 +594,10 @@ var _ api.CurrentLimiter = (*E3dc)(nil)
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 // Returns the wallbox's hardware current limits (typically 6-32A)
 func (wb *E3dc) GetMinMaxCurrent() (float64, float64, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_LOWER_CURRENT_LIMIT, nil),
 		*rscp.NewMessage(rscp.WB_REQ_UPPER_CURRENT_LIMIT, nil),
@@ -564,7 +629,10 @@ var _ api.CurrentGetter = (*E3dc)(nil)
 // GetMaxCurrent implements the api.CurrentGetter interface
 // Returns the currently configured maximum charging current
 func (wb *E3dc) GetMaxCurrent() (float64, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_MAX_CHARGE_CURRENT, nil),
 	}))
@@ -589,7 +657,7 @@ func (wb *E3dc) GetMaxCurrent() (float64, error) {
 // Returns all session-related messages (energy, time, RFID, etc.).
 // If no vehicle is connected, returns only WB_INDEX with no session data.
 func (wb *E3dc) getSessionData() ([]rscp.Message, error) {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil))
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -621,6 +689,9 @@ var _ api.ChargeRater = (*E3dc)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 // Returns the energy charged in the current session from WB_SESSION_CHARGED_ENERGY
 func (wb *E3dc) ChargedEnergy() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_CHARGED_ENERGY)
 	if err != nil || !found {
 		return 0, err
@@ -639,6 +710,9 @@ var _ api.ChargeTimer = (*E3dc)(nil)
 // ChargeDuration implements the api.ChargeTimer interface
 // Returns the active charging duration from WB_SESSION_ACTIVE_CHARGE_TIME
 func (wb *E3dc) ChargeDuration() (time.Duration, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_ACTIVE_CHARGE_TIME)
 	if err != nil || !found {
 		return 0, err
@@ -658,6 +732,9 @@ var _ api.Identifier = (*E3dc)(nil)
 // Identify implements the api.Identifier interface
 // Returns the RFID tag ID from WB_SESSION_AUTH_DATA if a session is active
 func (wb *E3dc) Identify() (string, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_AUTH_DATA)
 	if err != nil || !found {
 		return "", err
@@ -672,6 +749,9 @@ var _ api.PhaseSwitcher = (*E3dc)(nil)
 // Switches between 1-phase and 3-phase charging
 // The wallbox handles the safe switching sequence internally (reduce current, switch, ramp up)
 func (wb *E3dc) Phases1p3p(phases int) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	if phases != 1 && phases != 3 {
 		return fmt.Errorf("invalid phases: %d (must be 1 or 3)", phases)
 	}
@@ -680,7 +760,7 @@ func (wb *E3dc) Phases1p3p(phases int) error {
 	wb.ensureAutoPhaseDisabled()
 
 	// Perform phase switch
-	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	_, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SET_NUMBER_PHASES, uint8(phases)),
 	}))
@@ -694,7 +774,10 @@ var _ api.Diagnosis = (*E3dc)(nil)
 // Outputs wallbox information for debugging via evcc's "evcc charger" command.
 // Shows device name, firmware, current limits, phase config, and status flags.
 func (wb *E3dc) Diagnose() {
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_DEVICE_NAME, nil),
 		*rscp.NewMessage(rscp.WB_REQ_FIRMWARE_VERSION, nil),
@@ -769,7 +852,7 @@ func (wb *E3dc) Diagnose() {
 // RSCP messages contain typed values that need to be extracted and validated.
 //
 // Typical usage pattern:
-//   1. Send request via wb.conn.Send()
+//   1. Send request via wb.retrySend()
 //   2. Parse response container via rscpContainer()
 //   3. Extract typed values via rscpFloat64(), rscpBool(), rscpString(), etc.
 // ===========================================================================

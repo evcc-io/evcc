@@ -19,6 +19,7 @@ const SAVINGS_REGION = "savings_region";
 const SAVINGS_INDICATOR = "savings_indicator";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
+const BATTERY_UNIT = "battery_unit";
 const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
@@ -27,13 +28,14 @@ const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
 const CONFIG_CARD_HEIGHTS = "config_card_heights";
+const LAST_ACKNOWLEDGED_VERSION = "last_acknowledged_version";
 
 function read(key: string) {
   return window.localStorage[key];
 }
 
 function save(key: string) {
-  return (value: string | null) => {
+  return (value: string | null | undefined) => {
     try {
       if (value) {
         window.localStorage[key] = value;
@@ -123,6 +125,7 @@ export interface Settings {
   savingsIndicator: string;
   sessionsGroup: string;
   sessionsType: string;
+  batteryUnit: string;
   solarAdjusted: boolean;
   priceZoom: boolean;
   hideFeedin: boolean;
@@ -132,6 +135,7 @@ export interface Settings {
   lastSocGoal: number | undefined;
   lastEnergyGoal: number | undefined;
   cardHeights: Record<string, number>;
+  lastAcknowledgedVersion: string | undefined;
 }
 
 const settings: Settings = reactive({
@@ -151,6 +155,7 @@ const settings: Settings = reactive({
   savingsIndicator: read(SAVINGS_INDICATOR),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
+  batteryUnit: read(BATTERY_UNIT),
   solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
@@ -160,6 +165,7 @@ const settings: Settings = reactive({
   lastSocGoal: readNumber(LAST_SOC_GOAL),
   lastEnergyGoal: readNumber(LAST_ENERGY_GOAL),
   cardHeights: readJSON(CONFIG_CARD_HEIGHTS),
+  lastAcknowledgedVersion: read(LAST_ACKNOWLEDGED_VERSION),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
@@ -178,6 +184,7 @@ watch(() => settings.savingsRegion, save(SAVINGS_REGION));
 watch(() => settings.savingsIndicator, save(SAVINGS_INDICATOR));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
+watch(() => settings.batteryUnit, save(BATTERY_UNIT));
 watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
@@ -187,6 +194,7 @@ watch(() => settings.lastTargetTime, save(LAST_TARGET_TIME));
 watch(() => settings.lastSocGoal, saveNumber(LAST_SOC_GOAL));
 watch(() => settings.lastEnergyGoal, saveNumber(LAST_ENERGY_GOAL));
 watch(() => settings.cardHeights, saveJSON(CONFIG_CARD_HEIGHTS), { deep: true });
+watch(() => settings.lastAcknowledgedVersion, save(LAST_ACKNOWLEDGED_VERSION));
 
 export default settings;
 

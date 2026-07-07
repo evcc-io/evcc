@@ -18,10 +18,14 @@ requirements:
       Otherwise the vehicle cannot be put into sleep mode.
 params:
   - preset: vehicle-common
+  - name: climaterdisabled
+    deprecated: true
+  - name: autodetectdisabled
+    deprecated: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
-  features: ["offline"]
+  {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const
     value: 0

@@ -1,36 +1,37 @@
 package db
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/glebarez/sqlite"
+	"github.com/libtnb/sqlite"
 	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
+	sqlite3 "modernc.org/sqlite"
+	sqlite3lib "modernc.org/sqlite/lib"
 )
 
 var (
 	Instance *gorm.DB
-	FilePath string // Store the actual SQLite file path
+	filePath string // Store the actual SQLite file path
 )
+
+func FilePath() string {
+	return filePath
+}
 
 func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
 
 	switch driver {
 	case "sqlite":
-
-		// Example DSNs:
-		//"path/to/database.db"
-		// "~/database.db",
-		// "database.db?cache=shared&journal_mode=WAL"
-		// ":memory:"
-
 		// Split database path and connection parameters
-		dbPath, connectionParams, _ := strings.Cut(dsn, "?")
+		dbPath, params, _ := strings.Cut(dsn, "?")
 
 		file, err := homedir.Expand(dbPath)
 		if err != nil {
@@ -42,20 +43,24 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		}
 
 		// Store the expanded file path for later use
-		FilePath = file
+		filePath = file
 
-		// Add busy_timeout pragma if not already present
-		if !strings.Contains(connectionParams, "_pragma=busy_timeout") {
-			// Append '&' if there are existing connection parameters
-			if len(connectionParams) > 0 {
-				connectionParams += "&"
+		// TODO WAL mode "journal_mode(WAL)", "synchronous(NORMAL)"
+		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
+			// add pragma if not already present
+			if short, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+short) {
+				continue
 			}
 
-			// Add busy_timeout pragma to connection parameters
-			connectionParams += "_pragma=busy_timeout(5000)"
+			// append '&' if there are existing connection parameters
+			if len(params) > 0 {
+				params += "&"
+			}
+
+			params += "_pragma=" + pragma
 		}
 
-		connectionStr := file + "?" + connectionParams
+		connectionStr := file + "?" + params
 
 		util.NewLogger("main").INFO.Println("using sqlite database:", connectionStr)
 
@@ -99,4 +104,59 @@ func Close() error {
 		return err
 	}
 	return db.Close()
+}
+
+// IsReadonly reports whether err indicates a database file that is not
+// writable by the current user. The code mask covers extended result codes.
+func IsReadonly(err error) bool {
+	var serr *sqlite3.Error
+	return errors.As(err, &serr) && serr.Code()&0xff == sqlite3lib.SQLITE_READONLY
+}
+
+type backuper interface {
+	NewBackup(string) (*sqlite3.Backup, error)
+	NewRestore(string) (*sqlite3.Backup, error)
+}
+
+func runWithBackuper(ctx context.Context, fun func(backuper) (*sqlite3.Backup, error)) error {
+	live, err := Instance.DB()
+	if err != nil {
+		return err
+	}
+
+	conn, err := live.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	return conn.Raw(func(driverConn any) error {
+		conn, ok := driverConn.(backuper)
+		if !ok {
+			return errors.New("invalid db type")
+		}
+
+		bck, err := fun(conn)
+		if err != nil {
+			return err
+		}
+
+		if _, err := bck.Step(-1); err != nil {
+			return err
+		}
+
+		return bck.Finish()
+	})
+}
+
+func Backup(ctx context.Context, target string) error {
+	return runWithBackuper(ctx, func(conn backuper) (*sqlite3.Backup, error) {
+		return conn.NewBackup(target)
+	})
+}
+
+func Restore(ctx context.Context, target string) error {
+	return runWithBackuper(ctx, func(conn backuper) (*sqlite3.Backup, error) {
+		return conn.NewRestore(target)
+	})
 }

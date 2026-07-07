@@ -32,7 +32,7 @@ test.describe("meter only", async () => {
     await expect(page.getByTestId("welcome-banner")).not.toBeVisible();
     await expect(page.getByTestId("grid").getByTestId("device-tag-power")).toContainText("1.0 kW");
 
-    await page.getByTestId("home-link").click();
+    await page.getByRole("link", { name: "Charge" }).click();
 
     await expect(page.locator("body")).not.toContainText("Hello aboard!");
     await expect(page.getByTestId("energyflow")).toBeVisible();

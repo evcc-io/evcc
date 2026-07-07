@@ -7,7 +7,12 @@ var Timeout = time.Minute // default request / response timeout on protocol leve
 // TriggerBootDelay defines how long to wait after WebSocket connect before
 // proactively triggering a BootNotification. This allows the connection to
 // stabilize and gives the charger a chance to send a spontaneous BootNotification.
+<<<<<<< HEAD
 const TriggerBootDelay = 5 * time.Second
+=======
+// It is a var so tests can shorten it.
+var TriggerBootDelay = 5 * time.Second
+>>>>>>> origin/master
 
 const (
 	// Core profile keys

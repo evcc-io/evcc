@@ -1,5 +1,5 @@
 <template>
-	<GenericModal id="aboutModal" :size="modalSize">
+	<GenericModal id="aboutModal" :size="modalSize" @opened="acknowledge">
 		<template #title>
 			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer"
 				><Logo class="about-logo"
@@ -132,8 +132,15 @@ import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/filled/heart";
 import Logo from "./Footer/Logo.vue";
 import api from "@/api";
+import settings from "@/settings";
 import { extractDomain } from "@/utils/extractDomain";
-import { isDevelopment, isNightly, getReleaseName, shortCommit } from "@/utils/version";
+import {
+	isDevelopment,
+	isNightly,
+	getReleaseName,
+	shortCommit,
+	isNewVersionAvailable,
+} from "@/utils/version";
 import { defineComponent } from "vue";
 
 const GITHUB_REPO = "https://github.com/evcc-io/evcc";
@@ -193,11 +200,7 @@ export default defineComponent({
 			return this.releaseNotes.replaceAll("<h2>Changelog</h2>", "");
 		},
 		newVersionAvailable() {
-			return (
-				this.availableVersion &&
-				!this.development &&
-				this.availableVersion !== this.installed
-			);
+			return isNewVersionAvailable(this.installed, this.availableVersion);
 		},
 	},
 	methods: {
@@ -212,6 +215,10 @@ export default defineComponent({
 		},
 		releaseNotesUrl(version?: string) {
 			return `${GITHUB_REPO}/releases/tag/${version}`;
+		},
+		acknowledge() {
+			if (!this.newVersionAvailable) return;
+			settings.lastAcknowledgedVersion = this.availableVersion!;
 		},
 	},
 });

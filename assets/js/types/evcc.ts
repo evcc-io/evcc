@@ -1,8 +1,6 @@
 import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
-export const GRID_CONTROL = "gridcontrol";
-
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -19,10 +17,14 @@ declare global {
   }
   interface Window {
     ReactNativeWebView?: WebView;
+    evccAppCapabilities?: string[];
   }
 }
 
 export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
+
+export type DeviceColors = Record<string, string>;
+export type DeviceColorEntry = { title: string; color: string };
 
 export interface MqttConfig {
   broker: string;
@@ -36,7 +38,14 @@ export interface InfluxConfig {
 }
 
 export interface HemsConfig {
-  type: string;
+  configured: boolean;
+}
+
+export interface HemsStatus {
+  dimmed?: boolean;
+  curtailed?: number; // allowed feed-in percent (0..100 integer), <100 = curtailed
+  maxConsumptionPower?: number;
+  maxProductionPower?: number;
 }
 
 export interface ShmConfig {
@@ -68,6 +77,7 @@ export interface State {
   experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
+  apiReady?: boolean;
   loadpoints: Loadpoint[];
   forecast: Forecast;
   currency?: CURRENCY;
@@ -75,10 +85,12 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  availableVersion?: string;
   system?: string;
   timezone?: string;
   battery?: Battery;
   batteryMode?: BATTERY_MODE;
+  grid?: Meter;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -89,7 +101,7 @@ export interface State {
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: ConfigStatus<HemsConfig, unknown>;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
@@ -106,14 +118,20 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
+  historyUpdated?: string; // ISO timestamp, bumped each 15min metrics persist
   siteTitle?: string;
+  deviceColors?: DeviceColorEntry[];
   vehicles: Record<string, Vehicle>;
   statistics?: Statistics;
   authDisabled?: boolean;
   config?: string;
   database?: string;
   ocpp?: Ocpp;
+  ocppforwarder?: ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]>;
   optimizer?: boolean;
+  optimizerChargingStrategy?: string;
+  optimizerChargingStrategies?: string[];
+  mcp?: boolean;
 }
 
 export interface ConfigStatus<C, S> {
@@ -126,6 +144,24 @@ export type YamlSource = "file" | "db" | undefined;
 
 export interface OcppConfig {
   port: number;
+}
+
+export interface OcppForwarderRule {
+  stationId: string;
+  upstreamUrl: string;
+  password?: string;
+  upstreamStationId?: string;
+  username?: string;
+  insecure?: boolean;
+  caCert?: string;
+  readOnly?: boolean;
+}
+
+export interface OcppForwarderSession {
+  chargerId: string;
+  upstreamUrl: string;
+  upstreamConnected: boolean;
+  error?: string;
 }
 
 export interface OcppStatus {
@@ -164,8 +200,6 @@ export interface Circuit {
   current?: number;
   maxPower?: number;
   maxCurrent?: number;
-  dimmed?: boolean;
-  curtailed?: boolean;
 }
 
 export interface Entity {
@@ -187,6 +221,10 @@ export enum ConfigType {
 
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
+
+export interface ConfigHems extends Entity {
+  deviceProduct?: string;
+}
 
 // Configuration-specific types for device setup/configuration contexts
 export interface ConfigCharger extends Omit<Entity, "type"> {
@@ -237,6 +275,12 @@ export interface ConfigLoadpoint {
     };
     estimate: boolean;
   };
+  ui: LoadpointUi;
+}
+
+export interface LoadpointUi {
+  minTemp: number;
+  maxTemp: number;
 }
 
 export enum SMART_COST_TYPE {
@@ -250,7 +294,13 @@ export enum LENGTH_UNIT {
   MILES = "mi",
 }
 
+export enum TIME_FORMAT {
+  H12 = "12",
+  H24 = "24",
+}
+
 export interface Loadpoint {
+  name: string;
   batteryBoost: boolean;
   chargeCurrents?: number[];
   chargeDuration: number;
@@ -260,8 +310,10 @@ export interface Loadpoint {
   chargeTotalImport?: number;
   chargeVoltages?: number[];
   chargedEnergy: number;
+  chargerFeatureContinuous: boolean;
   chargerFeatureHeating: boolean;
   chargerFeatureIntegratedDevice: boolean;
+  chargerFeatureSwitchDevice: boolean;
   chargerIcon: string | null;
   chargerPhases1p3p: boolean;
   chargerSinglePhase: boolean;
@@ -324,6 +376,8 @@ export interface Loadpoint {
   vehicleSoc: number;
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
+  batteryBoostLimit: number;
+  ui?: LoadpointUi;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -335,6 +389,18 @@ export interface UiLoadpoint extends Loadpoint {
   visible: boolean;
   lastSmartCostLimit: number | undefined;
   lastSmartFeedInPriorityLimit: number | undefined;
+  range: number;
+  vehicleRange: number;
+  vehicleSoc: number;
+  capacity: number;
+  vehicleKnown: boolean;
+  vehicleHasSoc: boolean;
+  socBasedCharging: boolean;
+  socBasedPlanning: boolean;
+  sessionInfo: SessionInfoKey | undefined;
+  rangePerSoc: number | undefined;
+  socPerKwh: number;
+  vehicleNotReachable: boolean;
 }
 
 export enum THEME {
@@ -363,6 +429,9 @@ export enum CURRENCY {
   USD = "USD",
   DKK = "DKK",
   SEK = "SEK",
+  ZAR = "ZAR",
+  TRY = "TRY",
+  MYR = "MYR",
 }
 
 export enum ICON_SIZE {
@@ -385,6 +454,7 @@ export enum BATTERY_MODE {
   NORMAL = "normal",
   HOLD = "hold",
   CHARGE = "charge",
+  HOLDCHARGE = "holdcharge",
 }
 
 export enum PHASES {
@@ -520,6 +590,13 @@ export type EebusConfig = {
 
 export type EebusStatus = {
   ski: string;
+  qr?: string;
+};
+
+export type EebusPairing = {
+  ski: string;
+  shipID: string;
+  source: "paired" | "ski";
 };
 
 export type ModbusProxy = {
@@ -564,15 +641,23 @@ export interface Notification {
 }
 
 export interface Meter {
+  name?: string;
   power: number;
   title?: string;
   icon?: string;
   energy?: number;
+  returnEnergy?: number;
 }
 
 export interface BatteryForecast {
-  full: string | null; // ISO 8601 datetime
-  empty: string | null; // ISO 8601 datetime
+  highest?: BatteryForecastPoint;
+  lowest?: BatteryForecastPoint;
+}
+
+export interface BatteryForecastPoint {
+  soc: number; // percent
+  time: string; // ISO 8601 datetime
+  limit?: boolean; // true when SMax (highest) or SMin (lowest) boundary reached
 }
 
 export interface Battery {
@@ -647,8 +732,15 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger" | "tariff";
-export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type DeviceType =
+  | "charger"
+  | "meter"
+  | "vehicle"
+  | "loadpoint"
+  | "messenger"
+  | "tariff"
+  | "hems";
+export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";
 
@@ -663,12 +755,14 @@ export interface SiteConfig {
   title: string;
   aux: string[] | null;
   ext: string[] | null;
+  consumers: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];
 
 // EvOpt interfaces matching OpenAPI spec exactly
 export interface EvOpt {
+  updated: string;
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;

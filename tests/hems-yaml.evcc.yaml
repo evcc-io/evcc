@@ -15,4 +15,4 @@ hems:
   maxPower: 4200
   limit:
     source: const
-    value: true
+    value: false # inactive: avoids recording a grid session so the locked modal shows no history

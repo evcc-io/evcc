@@ -39,11 +39,33 @@
     "legendTopAutostart": "Startar automatiskt",
     "legendTopName": "Fordonsladdning med batteristöd",
     "legendTopSubline": "när hemmabatteriet är över {soc}.",
+    "legendTopSublineAbove": "när över {soc}",
+    "legendTopSublineDisabled": "är {soc}.",
+    "legendTopSublineDisabledState": "avaktiverad",
     "modalTitle": "Hemmabatteri",
     "noBattery": "Inga batterier konfigurerade.",
     "usageTab": "Batterianvändning"
   },
+  "colors": {
+    "auto": "Bil",
+    "hex": "Hex-färg"
+  },
   "config": {
+    "apiKey": {
+      "description": "Ge skript och automatiseringsuppgifter, som schemalagda säkerhetskopior, säker åtkomst utan att dela ditt administratörslösenord.",
+      "exampleLabel": "Pröva: ladda hem en backup med curl",
+      "generate": "Generera API-nyckel",
+      "generateConfirm": "Skriv ditt admin-lösenord för att generera en ny API-nyckel.",
+      "keyLabel": "API-nyckel",
+      "regenerate": "Generera ny API-nyckel",
+      "regenerateConfirm": "Skriv ditt admin-lösenord för att generera API-nyckel.",
+      "regenerateLink": "Generera ny",
+      "regenerateWarning": "Om du genereraren ny kommer den befintliga nyckeln att bli ogiltig och all automatisering som använder den slutar fungera. Vill du fortsätta?",
+      "revealSuccess": "Din nya API-nyckel är färdig att använda.",
+      "revealTitle": "API-nyckel skapad",
+      "shownOnce": "Den här nyckeln visas endast en gång. Spara den på ett säkert ställe – du kan inte återställa den i efterhand.",
+      "title": "API-nyckel"
+    },
     "aux": {
       "description": "Enhet som anpassar sin förbrukning baserat på tillgängligt överskott (ex. smarta varmvattenberedare). Evcc förväntar sig att denna enhet reducerar sin förbrukning om det är nödvändigt.",
       "titleAdd": "Lägg till enhet som själv anpassar förbrukning",
@@ -98,6 +120,11 @@
       "title": "Belastningshantering",
       "usableMeters": "Mätarreferenser som kan användas"
     },
+    "consumer": {
+      "description": "Spårar mindre apparater som inte kan styras (kylskåp, tvättmaskin, ...). Det ger dig en bättre helhetsbild av din hemförbrukning.",
+      "titleAdd": "Lägg till förbrukningsmätare",
+      "titleEdit": "Ändra förbrukningsmätare"
+    },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
       "descriptionInterval": "Uppdateringscykel i sekunder. Definierar hur ofta evcc läser mätardata och justerar laddeffekt. Standardvärdet på 30 sekunder är ett tryggt val. Enheter som fordon, laddboxar och växelriktare behöver vanligtvis flera sekunder för att anpassa sitt beteende. Om dina komponenter reagerar snabbt kan du använda lägre värden. Vi rekommenderar starkt att inte gå under 10 sekunder. Om du observerar ostadigt reglerbeteende eller hoppande effektvärden, välj ett större intervall.",
@@ -113,6 +140,7 @@
       "title": "Valuta"
     },
     "deviceValue": {
+      "activeClients": "Aktiva klienter",
       "amount": "Belopp",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -126,13 +154,17 @@
       "chargedEnergy": "Laddad",
       "co2": "Elnät CO₂",
       "configured": "Konfigurerad",
+      "connected": "Ansluten",
       "connections": "Anslutningar",
       "controllable": "Kontrollerbar",
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
+      "curtailLimit": "Gräns för inmatning",
+      "curtailable": "Kan begränsas",
       "curtailed": "Inmatning begränsad",
       "detected": "Upptäckt",
+      "dimLimit": "Förbrukningsgräns",
       "dimmed": "Förbrukning begränsad",
       "enabled": "Aktiverad",
       "energy": "Energi",
@@ -141,9 +173,8 @@
       "forecast": "Prognos",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
-      "hemsActiveLimit": "Aktiv begränsning",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
+      "loginBlocked": "Inloggningsgräns nådd",
       "max": "max",
       "messengers": "Tjänster",
       "no": "nej",
@@ -156,10 +187,13 @@
       "power": "Effekt",
       "powerRange": "Kraft",
       "price": "Pris",
+      "productionLimited": "Produktion begränsad",
       "range": "Räckvidd",
+      "returnEnergy": "Energi (retur)",
       "singlePhase": "En-fas",
       "soc": "Laddnivå",
       "solarForecast": "Solprognos",
+      "switchDevice": "Effektreglering",
       "temp": "Temperatur",
       "topic": "Ämne",
       "url": "URL",
@@ -170,10 +204,6 @@
       "A": "A (ej ansluten)",
       "B": "B (ansluten)",
       "C": "C (laddar)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via relä"
     },
     "devices": {
       "auxMeter": "Smart förbrukare",
@@ -196,6 +226,8 @@
       "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBus kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
       "port": "Port",
       "portHelp": "Port som ska användas.",
+      "qr": "Kopplingskod",
+      "qrExplain": "Skanna från en annan EEBus-enhet vid installationen för automatisk parkoppling – du behöver då inte ange SKI manuellt.",
       "removeConfirm": "All EEBus konfiguration kommer raderas. Nya certifikat och id kommer att genereras vid nästa start. Är du säker?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhets-id för identifiering i EEBus-nätverket.",
@@ -225,6 +257,7 @@
       "authPerformHint": "Kommer att öppnas i en ny flik. Kom tillbaka hit för att fortsätta.",
       "authPrepare": "Förbered anslutning",
       "cancel": "Avbryt",
+      "change": "Ändra",
       "clear": "Rensa",
       "close": "Stäng",
       "confirmSave": "Det finns ej sparade ändringar. Spara nu?",
@@ -233,6 +266,7 @@
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
+      "dismiss": "Avvisa",
       "docsLink": "Se dokumentation.",
       "dragHandle": "Senarelägga",
       "dragItem": "Går att senarelägga: {title}",
@@ -339,14 +373,17 @@
       "defaultsHintLink": "Ändra inställningar",
       "delete": "Radera",
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
-      "electricalTitle": "Elektrisk",
+      "electricalTitle": "Elektricitet",
       "energyMeterHelp": "Extern mätare (Om laddaren inte har en integrerad mätare).",
       "energyMeterLabel": "Energimätare",
       "estimateLabel": "Interpolera laddningsnivå mellan API uppdateringar",
       "maxCurrentHelp": "Måste vara högre än minimi strömstyrka.",
       "maxCurrentLabel": "Maximal strömstyrka",
+      "maxTempHelp": "Måste vara högre än minimitemeratur.",
+      "maxTempLabel": "Maximum temperatur",
       "minCurrentHelp": "Ange endast under 6 A om du vet vad du gör.",
       "minCurrentLabel": "Minimum strömstyrka",
+      "minTempLabel": "Minimum temperatur",
       "noVehicles": "Inga fordon är konfigurerade.",
       "option": {
         "charging": "Lägg till laddplats",
@@ -377,6 +414,8 @@
       "solarBehaviorLabel": "Solöverskott",
       "solarModeCustom": "egen",
       "solarModeMaximum": "maximal solenergi",
+      "temperatureRangeHelp": "Visningsområde för temperatur-stapel. Påverkar ej styrning.",
+      "temperatureRangeTitle": "Temperatur-område",
       "thresholdDisableDelayLabel": "Stäng av fördröjning",
       "thresholdDisableHelpInvalid": "Ange ett positivt värde.",
       "thresholdDisableHelpPositive": "Sluta när mer än {power} används från elnätet i {delay} .",
@@ -411,6 +450,7 @@
     },
     "main": {
       "addAdditional": "Lägg till ytterligare mätare",
+      "addConsumer": "Lägg till förbrukare",
       "addGrid": "Lägg till elmätare",
       "addLoadpoint": "Lägg till laddare eller värmekälla",
       "addPvBattery": "Lägg till solceller eller batteri",
@@ -425,6 +465,13 @@
       "vehicles": "Mina fordon",
       "welcomeBannerText": "Börja med att skapa minst en **laddare**, **värmare**, **nät**, **solcell**, **batteri** eller **extra mätare**. Om du bara vill testa, välj en **demoenhet**.",
       "welcomeBannerTitle": "Låt oss konfigurera ditt system!"
+    },
+    "mcp": {
+      "description": "Exponerar en Model Context Protocol-server, vilket gör det möjligt för AI-assistenter som Claude att läsa status på ditt system och styra laddning.",
+      "exampleLabel": "Exempelvis: Claude CLI",
+      "restartHint": "Blir tillgänglig efter omstart.",
+      "title": "MCP server",
+      "url": "MCP slutpunkt"
     },
     "messaging": {
       "addMessenger": "Lägg till tjänst",
@@ -602,6 +649,17 @@
       "url": "Server URL",
       "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
+    "ocppforwarder": {
+      "status": "Status",
+      "upstreamStationId": "Stations-ID",
+      "username": "Användarnamn"
+    },
+    "optimizer": {
+      "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning. Beräknar och visualiserar för närvarande endast. Styr ännu inga enheter.",
+      "enable": "Aktivera optimerare",
+      "info": "Det kan ta några minuter innan optimeringsmenyn blir synlig. För nya installationer kan det ta upp till 24 timmar innan evcc har samlat in tillräckligt med data.",
+      "title": "Optimerare"
+    },
     "options": {
       "boolean": {
         "no": "nej",
@@ -629,6 +687,38 @@
       "titleAdd": "Lägg till solcellsmätare",
       "titleEdit": "Ändra solcellsmätare"
     },
+    "remote": {
+      "active": "Aktiv",
+      "addClient": "Lägg till klient",
+      "addClientDescription": "Inloggningsuppgifter lagras och verifieras endast lokalt på din evcc-instans.",
+      "addClientTitle": "Lägg till fjärklient",
+      "clientCreated": "Klient skapad",
+      "clients": "Klienter",
+      "confirmDelete": "Ta bort klient?",
+      "connected": "Ansluten",
+      "createClient": "Skapa klient",
+      "description": "Nå din evcc-installation från var som helst med evcc-mobilappen. Du behöver varken portvidarebefordran eller VPN.",
+      "deviceName": "Enhetsnamn",
+      "disconnected": "Frånkopplad",
+      "done": "Klar",
+      "enableLabel": "Aktivera fjärråtkomst",
+      "expiration": "Upphör",
+      "expirationNone": "Aldrig",
+      "expired": "utgången",
+      "expiresIn": "upphör {time}",
+      "lastActive": "activ {time}",
+      "loginBlocked": "Fjärrinloggningar blockeras i en minut efter för många misslyckade inloggningsförsök.",
+      "manualLogin": "Eller logga in manuellt på {url} i din webbläsare med dessa inloggningsuppgifter:",
+      "noClients": "Det finns inga klienter än. Ingen kan ansluta just nu.",
+      "password": "Lösenord",
+      "passwordOnce": "Det här lösenordet visas bara en gång. Skanna QR-koden eller kopiera den nu. Du kommer inte att kunna se den igen.",
+      "qrInstall": "Installera evcc-appen för {ios} eller {android}.",
+      "qrScan": "Skanna koden med din telefons kamera för att ansluta. Klicka på den om du redan använder din telefon.",
+      "removeClient": "Ta bort klient",
+      "title": "Fjärråtkomst",
+      "url": "Publik URL",
+      "username": "Användarnamn"
+    },
     "section": {
       "additionalMeter": "Ytterligare mätare",
       "general": "Allmänna inställningar",
@@ -639,6 +729,14 @@
       "services": "Tjänster",
       "system": "System",
       "vehicles": "Fordon"
+    },
+    "security": {
+      "authDisabledHint": "Autentisering är inaktiverad. Hantering av inloggningsuppgifter är inte tillgänglig.",
+      "description": "Hantera autentisering och inloggningsuppgifter för denna instans.",
+      "passwordDescription": "Uppdatera lösenordet som används för att logga in i konfigurerings-UI.",
+      "passwordTitle": "Admin lösenord",
+      "title": "Säkerhet",
+      "updatePassword": "Uppdatera lösenord"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -655,11 +753,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Licensnyckel",
+      "activationKeyHint": "Skickas med epost. Finns här {url}.",
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
-      "descriptionToken": "Sponsorer hittar sin token på {url}. För att komma igång erbjuder vi en {trialToken}.",
-      "enterYourToken": "Ange sponsor-token",
+      "descriptionToken": "Som GitHub-sponsor hittar du din token på {url}. För att komma igång erbjuder vi en {trialToken}.",
+      "email": "Epost",
+      "emailHint": "Epost du använt för {url}",
+      "enterYourToken": "Din sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
       "labelToken": "Sponsor-token",
@@ -670,7 +772,7 @@
       "tokenRequiredShort": "Ingen sponsor-token konfigurerad.",
       "trialToken": "Testtoken",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Din sponsor-token"
+      "yourToken": "Sponsor-token"
     },
     "system": {
       "backupRestore": {
@@ -761,7 +863,7 @@
       "type": {
         "co2": "CO₂ -prognos",
         "feedIn": "Exportpris",
-        "grid": "Elpris från nätet",
+        "grid": "Importpris från nätet",
         "planner": "Planering",
         "solar": "Sol"
       },
@@ -771,6 +873,7 @@
         "allMonths": "Alla månader",
         "allTimes": "Alla tider",
         "cancel": "Avbryt",
+        "charge": "Ladda",
         "days": "Dagar",
         "edit": "Ändra",
         "hours": "Timmar",
@@ -808,32 +911,13 @@
       "validate": "validerar"
     },
     "vehicle": {
-      "cancel": "Avbryt",
-      "chargingSettings": "Laddinställningar",
-      "defaultMode": "Standardläge",
-      "defaultModeHelp": "Laddläge när fordonet ansluts.",
-      "delete": "Radera",
       "generic": "Andra integrationer",
-      "identifiers": "RFID-identifiering",
-      "identifiersHelp": "Lista på RFID-strängar för att identifiera fordonet. Ett inlägg per rad. Aktuell identifierare hittas på respektive laddare på översiktssidan.",
-      "maximumCurrent": "Maximal ström",
-      "maximumCurrentHelp": "Måste vara högre än minimi-ström.",
-      "maximumPhases": "Maximalt antal faser",
-      "maximumPhasesHelp": "Hur många faser kan fordonet laddas med? Används för att räkna ut minsta solöverskott och tidsåtgång.",
-      "maximumPower": "Maximal laddeffekt",
-      "maximumPowerHelp": "Maximal effekt som fordonet kan ta emot",
-      "minimumCurrent": "Minimi ström",
-      "minimumCurrentHelp": "Ställ enbart under 6A om du är medveten om konsekvenserna.",
       "online": "Fordon med online API",
       "primary": "Generisk integration",
-      "priority": "Prioritet",
-      "priorityHelp": "Högre prioritet betyder att detta fordon får förtur till solöverskott.",
-      "save": "Spara",
       "scooter": "Scooter",
       "template": "Tillverkare",
       "titleAdd": "Lägg till fordon",
-      "titleEdit": "Ändra fordon",
-      "validateSave": "Bekräfta & spara"
+      "titleEdit": "Ändra fordon"
     }
   },
   "footer": {
@@ -846,7 +930,7 @@
       "greenShareSub2": "sol och batteri",
       "power": "Laddeffekt",
       "powerSub1": "{activeClients} av {totalClients} deltagare",
-      "powerSub2": "laddar…",
+      "powerSub2": "laddar.",
       "tabTitle": "Live community"
     },
     "savings": {
@@ -875,10 +959,10 @@
         "thisYear": "detta år",
         "total": "totalt"
       },
-      "periodLabel": "Period:",
+      "periodLabel": "Period",
       "priceTitle": "Energipris",
       "referenceGrid": "nät",
-      "referenceLabel": "Referensdata:",
+      "referenceLabel": "Referensdata",
       "sessionInfo": "Baserat på avslutade laddsessioner.",
       "tabTitle": "Mina uppgifter"
     },
@@ -922,7 +1006,9 @@
       "modalUpdateNow": "Installera nu",
       "modalUpdateStarted": "Starta den nya versionen av evcc…",
       "modalUpdateStatusStart": "Installationen har börjat:",
-      "openSource": "open source"
+      "modalViewOnGitHub": "Se på GitHub",
+      "openSource": "open source",
+      "poweredByOpenSource": "Powered by {0}."
     }
   },
   "forecast": {
@@ -934,8 +1020,12 @@
     },
     "empty": {
       "co2": "Se när elen i ditt område är ren. Laddningsscheman optimeras för låga utsläpp och CO₂-besparingar beräknas.",
-      "price": "Konfigurera rörligt elpris för att automatiskt optimera laddningsscheman och beräkna besparingar."
+      "price": "Konfigurera rörligt elpris för att automatiskt optimera laddningsscheman och beräkna besparingar.",
+      "setup": "Lägg till tariffer och prognoser",
+      "solar": "Förväntat solproduktion idag och imorgon. Kommer i framtiden även att användas för automatisk laddningsoptimering.",
+      "title": "Tariffer & prognoser"
     },
+    "hideLine": "göm graf",
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
@@ -943,18 +1033,22 @@
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
+    "priceZoom": "zooma in",
+    "showLine": "visa linje",
     "solar": {
       "dayAfterTomorrow": "I övermorgon",
       "partly": "delvis",
       "remaining": "återstående",
       "today": "Idag",
-      "tomorrow": "I morgon"
+      "tomorrow": "i morgon"
     },
     "solarAdjust": "Justera solprognosen baserat på verkliga produktionsvärden{percent}.",
+    "solarAdjustMedium": "Justera med verkliga data",
+    "solarAdjustShort": "justera",
     "type": {
-      "co2": "CO₂",
-      "price": "Pris",
-      "solar": "Sol"
+      "co2": "CO₂-utsläpp",
+      "price": "Nätpris",
+      "solar": "Solenergi produktion"
     }
   },
   "general": {
@@ -1111,17 +1205,25 @@
       "update": "Verkställ",
       "weekdays": "Dagar"
     },
+    "continuousStatus": {
+      "charging": "Boost aktiverad.",
+      "connected": "Normal drift.",
+      "waitForVehicle": "Boost önskad…"
+    },
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteri laddas",
+      "batteryChargeHold": "Batteri (laddning blockerad)",
       "batteryDischarge": "Batteri laddas ur",
-      "batteryForecastEmpty": "tom {time}",
-      "batteryForecastFull": "full {time}",
+      "batteryDischargeHold": "Batteri (låst)",
+      "batteryForecastEmpty": "Tom",
+      "batteryForecastFull": "Full",
+      "batteryForecastNextHigh": "Högsta",
+      "batteryForecastNextLow": "Lägsta",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
-      "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} av {total} ({soc})",
-      "forecast": "Prognos: ",
+      "forecast": "Prognos",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",
@@ -1137,11 +1239,37 @@
       "charging": "Värmer…",
       "connected": "Standby.",
       "vehicleLimit": "Värmarbegränsning",
-      "waitForVehicle": "Redo, väntar på värmekälla…"
+      "waitForVehicle": "Redo att värma…"
     },
     "hemsWarning": {
-      "description": "Reducerad laddning för att inte överskrida {limit}.",
+      "consumption": "Förbrukning",
+      "feedIn": "Inmatning",
       "title": "Extern begränsning:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "laddad",
+          "returnEnergy": "urladdad"
+        },
+        "grid": {
+          "energy": "importerad",
+          "returnEnergy": "exporterad"
+        }
+      },
+      "downloadCsv": "Ladda ner CSV",
+      "empty": "Ingen data för aktuell tidsperiod tillgänglig.",
+      "group": {
+        "battery": "Batteri",
+        "consumer": "Förbrukning",
+        "forecast": "Prognos",
+        "grid": "Nät",
+        "loadpoint": "Laddning & uppvärmning",
+        "meter": "Konsumtion",
+        "pv": "Produktion"
+      },
+      "otherConsumers": "Andra",
+      "title": "Historik"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",
@@ -1168,6 +1296,7 @@
         "once": "Boost är aktiverat för denna laddning.",
         "stateActive": "Batteriboost aktiv",
         "stateBelowLimit": "Batterinivå för låg för boost",
+        "stateHold": "Batteri låst",
         "stateReady": "Beredd för batteriboost"
       },
       "batteryUsage": "Hembatteri",
@@ -1269,7 +1398,7 @@
       "temp": "Temp.",
       "tempLimit": "Temp-gräns",
       "unknown": "Gästfordon",
-      "vehicleSoc": "Laddning"
+      "vehicleSoc": "Laddnivå"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Väntar på godkännande.",
@@ -1277,6 +1406,7 @@
       "batteryBoostBelowLimit": "Batterinivå för låg för boost.",
       "batteryBoostDisabled": "Batteriboost avaktiverad.",
       "batteryBoostEnabled": "Boost tills batteriet är på {limit}.",
+      "batteryBoostHold": "Batteri låst. Boost ej tillgänglig.",
       "charging": "Laddar…",
       "cheapEnergyCharging": "Billig energi är tillgänglig.",
       "cheapEnergyNextStart": "Billig energi om {duration}.",
@@ -1334,6 +1464,7 @@
     "updatePassword": "Ändra lösenord"
   },
   "session": {
+    "addOdometer": "Lägg till värde",
     "cancel": "Avbryt",
     "co2": "CO₂",
     "date": "Period",
@@ -1343,7 +1474,8 @@
     "meterstart": "Mätare start",
     "meterstop": "Mätare stopp",
     "odometer": "Mätarställning",
-    "price": "Pris",
+    "price": "Kostnad",
+    "soc": "Fordon SoC",
     "started": "Start-tid",
     "title": "Laddning"
   },
@@ -1351,6 +1483,7 @@
     "avgPower": "⌀-effekt",
     "avgPrice": "⌀-pris",
     "chargeDuration": "Laddtid",
+    "chargedSoc": "Ladda",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Pris {byGroup}",
@@ -1384,6 +1517,8 @@
       "odometer": "Mätarställning (km)",
       "price": "Kostnad",
       "priceperkwh": "Pris/kWh",
+      "socend": "SoC slut (%)",
+      "socstart": "SoC start (%)",
       "solarpercentage": "Sol (%)",
       "vehicle": "Fordon"
     },
@@ -1409,8 +1544,10 @@
     },
     "loadpoint": "Laddplats",
     "noData": "Inga laddningar denna månad.",
+    "odometer": "Mätarställning",
     "overview": "Överblick",
     "period": {
+      "day": "Dag",
       "month": "Månad",
       "total": "Total",
       "year": "År"
@@ -1516,5 +1653,13 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Starta om",
     "title": "Startfel"
+  },
+  "tabBar": {
+    "battery": "Batteri",
+    "charge": "Ladda",
+    "comingSoon": "Sida under uppbyggnad.",
+    "forecast": "Prognos",
+    "more": "Mer",
+    "sessions": "Laddningar"
   }
 }

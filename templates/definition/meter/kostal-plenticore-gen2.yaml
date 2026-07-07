@@ -2,20 +2,23 @@ template: kostal-plenticore-gen2
 products:
   - brand: Kostal
     description:
-      de: Plenticore Hybrid, inkl. Netzladung der Hausbatterie
-      en: Plenticore Hybrid, incl. grid charging of the house battery
+      de: Plenticore Hybrid
+      en: Plenticore Hybrid
 capabilities: ["battery-control"]
-covers: ["kostal-plenticore-hw0200"]
+covers: ["kostal-plenticore-hw0200", "kostal-plenticore"]
+caveats:
+  - description:
+      de: |
+        Nur ein System kann und darf auf den Wechselrichter zugreifen!
+      en: |
+        Only a single system may access the inverter!
+    link: https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. **_Ist grundsätzlich anwendbar für verschiedene Wechselrichter Generationen (G1/G2/G3)._**
-      **Das Netzladen der Batterie steht mit dieser Vorlage zur Verfügung, ist aktuell jedoch inkompatibel mit wenigen älteren Wechselrichtern - _sorgfältig testen_!**
-      _siehe auch https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
+      Anwendbar für verschiedene Wechselrichter Generationen (G1/G2/G3). Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein.
     en: |
-      Only a single system may access the inverter! For active battery control, the feature external battery control via modbus must be activated using installer access. **_Can basically be used for various inverter generations (G1/G2/G3)._**
-      **The function for grid charging the battery is available using this template, but is currently incompatible with some older inverters - _test carefully_!**
-      _see also https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
+      Compatible with various inverter generations (G1/G2/G3). For active battery control, the feature external battery control via Modbus must be activated using installer access.
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -47,9 +50,7 @@ params:
   - name: maxchargerate
     deprecated: true
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
 render: |
   {{- if eq .usage "pv" }}
   type: custom
@@ -66,10 +67,13 @@ render: |
       {{- include "modbus" . | indent 4 }}
       value: 160:3:DCW # string 3
   energy:
-    source: sunspec
+    source: modbus
     {{- include "modbus" . | indent 2 }}
-    value: 103:WH # total yield
-    scale: 0.001
+    register:
+      address: 1056 # total DC PV energy (sum), Wh
+      type: holding
+      encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+    scale: 0.001 # Wh -> kWh
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -128,5 +132,16 @@ render: |
           source: error
           error: ErrNotAvailable
           {{- end }}
+      - case: 4 # holdcharge
+        set:
+          source: const
+          value: 0 # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1038 # Battery max. charge power limit, absolute [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   {{- include "battery-params" . }}
   {{- end }}

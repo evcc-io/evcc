@@ -19,6 +19,7 @@ render: |
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import
+  returnenergy: Export
   currents:
     - CurrentL1
     - CurrentL2
@@ -30,6 +31,7 @@ render: |
   {{- else }}
   power: -Power
   energy: Export
+  returnenergy: Import
   currents:
     - -CurrentL1
     - -CurrentL2

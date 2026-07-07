@@ -60,7 +60,7 @@ type Discoverer struct {
 	conn    *sunny.Connection
 	devices map[uint32]*Device
 	mux     sync.RWMutex
-	done    uint32
+	done    atomic.Uint32
 }
 
 func (d *Discoverer) createDevice(device *sunny.Device) *Device {
@@ -100,7 +100,7 @@ func (d *Discoverer) run() {
 	close(devices)
 
 	// mark discover as done
-	atomic.AddUint32(&d.done, 1)
+	d.done.Add(1)
 }
 
 func (d *Discoverer) get(serial uint32, password string) *Device {
@@ -119,7 +119,7 @@ func (d *Discoverer) DeviceBySerial(serial uint32, password string) *Device {
 	start := time.Now()
 	for time.Since(start) < time.Second*3 {
 		// discover done -> return immediately regardless of result
-		if atomic.LoadUint32(&d.done) != 0 {
+		if d.done.Load() != 0 {
 			return d.get(serial, password)
 		}
 

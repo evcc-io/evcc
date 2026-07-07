@@ -40,9 +40,11 @@ params:
     advanced: true
   - name: interval
     deprecated: true
+  - preset: tariff-base
 
 render: |
   type: custom
+  {{ include "tariff-base" . }}
   forecast:
     source: js
     script: |

@@ -60,6 +60,10 @@ import { defineComponent } from "vue";
 import FormRow from "../FormRow.vue";
 import formatter from "@/mixins/formatter";
 
+const HOUR = 60 * 60;
+const DAY = 24 * HOUR;
+const YEAR = 365 * DAY;
+
 export default defineComponent({
 	name: "RemoteClientCreate",
 	components: { FormRow },
@@ -68,18 +72,17 @@ export default defineComponent({
 	data() {
 		return {
 			username: "",
-			expiresIn: 0,
+			expiresIn: YEAR,
 		};
 	},
 	computed: {
 		expirationOptions() {
-			const HOUR = 60 * 60;
-			const DAY = 24 * HOUR;
 			return [
-				{ value: 0, name: this.$t("config.remote.expirationNone") },
 				{ value: HOUR, name: this.fmtDurationParts({ hours: 1 }) },
 				{ value: DAY, name: this.fmtDurationParts({ days: 1 }) },
 				{ value: 7 * DAY, name: this.fmtDurationParts({ weeks: 1 }) },
+				{ value: YEAR, name: this.fmtDurationParts({ years: 1 }) },
+				{ value: 0, name: this.$t("config.remote.expirationNone") },
 			];
 		},
 	},
