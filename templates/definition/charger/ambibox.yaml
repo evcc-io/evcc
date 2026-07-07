@@ -7,14 +7,11 @@ capabilities: ["iso151182", "mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:
-  - preset: mqtt
-  - name: topic
-    default: device/evCharger
-  - name: id
-    required: true
-    example: "1"
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: connector
 render: |
   type: ambibox
-  {{- include "mqtt" . }}
-  topic: {{ .topic }}
-  id: {{ .id }}
+  {{- include "modbus" . }}
+  connector: {{ .connector }}

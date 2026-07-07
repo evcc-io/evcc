@@ -18,209 +18,189 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
+	"encoding/binary"
 	"fmt"
 	"math"
-	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/plugin"
-	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/volkszaehler/mbmd/encoding"
 )
 
 // Ambibox is the Ambibox ambiCHARGE Home charger implementation.
 type Ambibox struct {
-	log     *util.Logger
-	client  *mqtt.Client
-	base    string
-	current float64
-
-	// state getters (device publishes, evcc subscribes)
-	connectedG     func() (bool, error)
-	evConnectedG   func() (bool, error)
-	replugG        func() (bool, error)
-	sessionStateG  func() (string, error)
-	powerG         func() (float64, error)
-	energyImpG     func() (float64, error)
-	energyExpG     func() (float64, error)
-	energySessImpG func() (float64, error)
-	energySessExpG func() (float64, error)
-	socG           func() (float64, error)
-	capacityG      func() (float64, error)
-	phasesG        func() (int64, error)
-	currG          [3]func() (float64, error)
-	voltG          [3]func() (float64, error)
-	targetPowerG   func() (float64, error) // read-back of the published control setpoint
+	log         *util.Logger
+	conn        *modbus.Connection
+	mu          sync.Mutex
+	current     float64
+	inputBase   uint16
+	holdingBase uint16
+	input       func() ([]byte, error) // cached bulk read of the input register block
 }
 
+// input register offsets (relative to inputBase), 2 registers per value
+const (
+	ambiCurrentL1        = 4
+	ambiCurrentL2        = 6
+	ambiCurrentL3        = 8
+	ambiVoltageL1        = 12
+	ambiVoltageL2        = 14
+	ambiVoltageL3        = 16
+	ambiPowerAc          = 18  // int32
+	ambiEnergyImport     = 26  // float
+	ambiEnergyExport     = 28  // float
+	ambiNumberPhases     = 36  // uint32
+	ambiCapacity         = 48  // float
+	ambiSoc              = 54  // float
+	ambiSessionState     = 82  // uint32 (EvseState)
+	ambiEvConnected      = 84  // bool
+	ambiEnergyImportSess = 98  // float
+	ambiReplugRequired   = 102 // bool
+	ambiInputLength      = 104 // registers 0..103
+)
+
+// holding register offsets (relative to holdingBase), 2 registers per value
+const (
+	ambiTargetPower = 0 // int32 W (negative = charge)
+	ambiWakeUp      = 2 // uint32 (1 = wake up)
+)
+
+// EvseState enum values (session state)
+const (
+	ambiStateSessionSetup = iota
+	ambiStateAuthorization
+	ambiStateChargeParameterDiscovery
+	ambiStateCableCheck
+	ambiStatePreCharge
+	ambiStateChargeLoop
+	ambiStatePostCharge
+	ambiStatePaused
+	ambiStateStopped
+	ambiStateError
+)
+
 func init() {
-	registry.Add("ambibox", NewAmbiboxFromConfig)
+	registry.AddCtx("ambibox", NewAmbiboxFromConfig)
 }
 
 // NewAmbiboxFromConfig creates an Ambibox charger from configuration
-func NewAmbiboxFromConfig(other map[string]any) (api.Charger, error) {
+func NewAmbiboxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		mqtt.Config `mapstructure:",squash"`
-		Topic       string
-		ID          string
-		Timeout     time.Duration
+		modbus.TcpSettings `mapstructure:",squash"`
+		Connector          int
 	}{
-		Topic:   "device/evCharger",
-		Timeout: 30 * time.Second,
+		TcpSettings: modbus.TcpSettings{ID: 1},
+		Connector:   1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.ID == "" {
-		return nil, fmt.Errorf("missing id")
+	if cc.Connector < 1 || cc.Connector > 10 {
+		return nil, fmt.Errorf("invalid connector: %d", cc.Connector)
 	}
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
-	return NewAmbibox(cc.Config, cc.Topic, cc.ID, cc.Timeout)
+	return NewAmbibox(ctx, cc.URI, cc.ID, cc.Connector)
 }
 
 // NewAmbibox creates an Ambibox charger
-func NewAmbibox(mqttconf mqtt.Config, topic, id string, timeout time.Duration) (*Ambibox, error) {
-	log := util.NewLogger("ambibox")
-
-	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
+func NewAmbibox(ctx context.Context, uri string, id uint8, connector int) (*Ambibox, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
 
+	log := util.NewLogger("ambibox")
+	conn.Logger(log.TRACE)
+
 	wb := &Ambibox{
-		log:    log,
-		client: client,
-		base:   fmt.Sprintf("%s/%s", topic, id),
+		log:         log,
+		conn:        conn,
+		inputBase:   uint16(4000 + (connector-1)*200),
+		holdingBase: uint16(3000 + (connector-1)*100),
 	}
 
-	// core status topics use the configured timeout, slow-changing topics use none
-	boolG := func(sub string, to time.Duration) (func() (bool, error), error) {
-		return plugin.NewMqtt(log, client, wb.topic(sub), to).BoolGetter()
-	}
-	floatG := func(sub string, to time.Duration) (func() (float64, error), error) {
-		return plugin.NewMqtt(log, client, wb.topic(sub), to).FloatGetter()
-	}
-	intG := func(sub string, to time.Duration) (func() (int64, error), error) {
-		return plugin.NewMqtt(log, client, wb.topic(sub), to).IntGetter()
-	}
-	stringG := func(sub string, to time.Duration) (func() (string, error), error) {
-		return plugin.NewMqtt(log, client, wb.topic(sub), to).StringGetter()
-	}
-
-	if wb.connectedG, err = boolG("connected", timeout); err != nil {
-		return nil, err
-	}
-	if wb.evConnectedG, err = boolG("evConnected", timeout); err != nil {
-		return nil, err
-	}
-	if wb.replugG, err = boolG("replugRequired", 0); err != nil {
-		return nil, err
-	}
-	if wb.sessionStateG, err = stringG("sessionState", timeout); err != nil {
-		return nil, err
-	}
-	if wb.powerG, err = floatG("powerAc", timeout); err != nil {
-		return nil, err
-	}
-	if wb.energyImpG, err = floatG("energyAcImport", 0); err != nil {
-		return nil, err
-	}
-	if wb.energyExpG, err = floatG("energyAcExport", 0); err != nil {
-		return nil, err
-	}
-	if wb.energySessImpG, err = floatG("energyAcImportSession", 0); err != nil {
-		return nil, err
-	}
-	// no matching interface for exported session energy yet
-	if wb.energySessExpG, err = floatG("energyAcExportSession", 0); err != nil {
-		return nil, err
-	}
-	if wb.socG, err = floatG("soc", 0); err != nil {
-		return nil, err
-	}
-	if wb.capacityG, err = floatG("capacity", 0); err != nil {
-		return nil, err
-	}
-	if wb.targetPowerG, err = floatG("targetPower", timeout); err != nil {
-		return nil, err
-	}
-	if wb.phasesG, err = intG("numberPhases", 0); err != nil {
-		return nil, err
-	}
-	for i := range 3 {
-		if wb.currG[i], err = floatG(fmt.Sprintf("currentAc%d", i+1), 0); err != nil {
-			return nil, err
-		}
-		if wb.voltG[i], err = floatG(fmt.Sprintf("voltageAc%d", i+1), 0); err != nil {
-			return nil, err
-		}
-	}
+	// share a single bulk read of the input block across all decoders
+	wb.input = util.Cached(func() ([]byte, error) {
+		return wb.conn.ReadInputRegisters(wb.inputBase, ambiInputLength)
+	}, time.Second)
 
 	return wb, nil
 }
 
-func (wb *Ambibox) topic(sub string) string {
-	return wb.base + "/" + sub
+// decode helpers - byte offset in the input block is registerOffset*2
+func f32(b []byte, off int) float64 { return float64(encoding.Float32(b[off*2:])) }
+func i32(b []byte, off int) int32   { return encoding.Int32(b[off*2:]) }
+func u32(b []byte, off int) uint32  { return encoding.Uint32(b[off*2:]) }
+
+// writeRegister writes a 32-bit value to a holding register (2 registers)
+func (wb *Ambibox) writeRegister(offset uint16, value uint32) error {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, value)
+	_, err := wb.conn.WriteMultipleRegisters(wb.holdingBase+offset, 2, b)
+
+	return err
 }
 
-// publish publishes a plain scalar payload
-func (wb *Ambibox) publish(sub string, retained bool, payload string) {
-	wb.client.Publish(wb.topic(sub), retained, payload)
-}
-
-// targetWatts converts a charging current (AC) into the Ambibox targetPower (DC)
-// setpoint (negative = charge), based on measured voltage and active phases on AC side.
+// targetWatts converts a charging current (A) into the Ambibox targetPower
+// setpoint (DCW), based on measured voltage and active phases (VA).
 func (wb *Ambibox) targetWatts(current float64) float64 {
 	phases := 3
-	if p, err := wb.phasesG(); err == nil && p >= 1 && p <= 3 {
-		phases = int(p)
-	}
+	var v1, v2, v3 float64 = 230, 230, 230
 
-	var sum float64
-	for i := range phases {
-		v := 230.0
-		if m, err := wb.voltG[i](); err == nil && m > 0 {
-			v = m
+	if b, err := wb.input(); err == nil {
+		if p := u32(b, ambiNumberPhases); p >= 1 && p <= 3 {
+			phases = int(p)
 		}
-		sum += v
+		if v := f32(b, ambiVoltageL1); v > 0 {
+			v1 = v
+		}
+		if v := f32(b, ambiVoltageL2); v > 0 {
+			v2 = v
+		}
+		if v := f32(b, ambiVoltageL3); v > 0 {
+			v3 = v
+		}
 	}
 
-	return -current * sum
+	sum := []float64{v1, v2, v3}
+	var v float64
+	for i := 0; i < phases; i++ {
+		v += sum[i]
+	}
+
+	// negative = charge
+	return -current * v
 }
 
-// setTargetPhaseCurrent publishes the targetPower setpoint for the given current.
-// Published retained so it survives reconnects and can be read back via Enabled.
-func (wb *Ambibox) setTargetPhaseCurrent(current float64) {
-	power := math.Round(wb.targetWatts(current))
-	wb.publish("targetPower", true, strconv.FormatInt(int64(power), 10))
+// setTargetPhaseCurrent writes the targetPower setpoint for the given current
+func (wb *Ambibox) setTargetPhaseCurrent(current float64) error {
+	power := int32(math.Round(wb.targetWatts(current)))
+	return wb.writeRegister(ambiTargetPower, uint32(power))
 }
 
 // Status implements the api.Charger interface
 func (wb *Ambibox) Status() (api.ChargeStatus, error) {
-	if connected, err := wb.connectedG(); err != nil {
-		return api.StatusNone, err
-	} else if !connected {
-		return api.StatusNone, api.ErrTimeout
-	}
-
-	ev, err := wb.evConnectedG()
+	b, err := wb.input()
 	if err != nil {
 		return api.StatusNone, err
 	}
-	if !ev {
+
+	if u32(b, ambiEvConnected) == 0 {
 		return api.StatusA, nil
 	}
 
-	// vehicle connected: distinguish charging (C) from connected-only (B)
-	if s, err := wb.sessionStateG(); err == nil && s == "CHARGE_LOOP" {
+	if u32(b, ambiSessionState) == ambiStateChargeLoop {
 		return api.StatusC, nil
 	}
 
@@ -231,30 +211,42 @@ var _ api.StatusReasoner = (*Ambibox)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *Ambibox) StatusReason() (api.Reason, error) {
-	if replug, err := wb.replugG(); err == nil && replug {
+	b, err := wb.input()
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	if u32(b, ambiReplugRequired) != 0 {
 		return api.ReasonDisconnectRequired, nil
 	}
-	if s, err := wb.sessionStateG(); err == nil && s == "AUTHORIZATION" {
+	if u32(b, ambiSessionState) == ambiStateAuthorization {
 		return api.ReasonWaitingForAuthorization, nil
 	}
+
 	return api.ReasonUnknown, nil
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Ambibox) Enabled() (bool, error) {
-	power, err := wb.targetPowerG()
-	return power != 0, err
+	b, err := wb.conn.ReadHoldingRegisters(wb.holdingBase+ambiTargetPower, 2)
+	if err != nil {
+		return false, err
+	}
+
+	return encoding.Int32(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Ambibox) Enable(enable bool) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	var current float64
 	if enable {
 		current = wb.current
 	}
-	wb.setTargetPhaseCurrent(current)
 
-	return nil
+	return wb.setTargetPhaseCurrent(current)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -266,9 +258,14 @@ var _ api.ChargerEx = (*Ambibox)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Ambibox) MaxCurrentMillis(current float64) error {
-	wb.setTargetPhaseCurrent(current)
-	wb.current = current
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
 
+	if err := wb.setTargetPhaseCurrent(current); err != nil {
+		return err
+	}
+
+	wb.current = current
 	return nil
 }
 
@@ -276,81 +273,101 @@ var _ api.Meter = (*Ambibox)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Ambibox) CurrentPower() (float64, error) {
-	return wb.powerG()
+	b, err := wb.input()
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(i32(b, ambiPowerAc)), nil
 }
 
 var _ api.MeterEnergy = (*Ambibox)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Ambibox) TotalEnergy() (float64, error) {
-	f, err := wb.energyImpG()
-	return f / 1e3, err
+	b, err := wb.input()
+	if err != nil {
+		return 0, err
+	}
+
+	return f32(b, ambiEnergyImport) / 1e3, nil
 }
 
 var _ api.MeterReturnEnergy = (*Ambibox)(nil)
 
 // ReturnEnergy implements the api.MeterReturnEnergy interface
 func (wb *Ambibox) ReturnEnergy() (float64, error) {
-	f, err := wb.energyExpG()
-	return f / 1e3, err
+	b, err := wb.input()
+	if err != nil {
+		return 0, err
+	}
+
+	return f32(b, ambiEnergyExport) / 1e3, nil
 }
 
 var _ api.ChargeRater = (*Ambibox)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Ambibox) ChargedEnergy() (float64, error) {
-	f, err := wb.energySessImpG()
-	return f / 1e3, err
+	b, err := wb.input()
+	if err != nil {
+		return 0, err
+	}
+
+	return f32(b, ambiEnergyImportSess) / 1e3, nil
 }
 
 var _ api.PhaseCurrents = (*Ambibox)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Ambibox) Currents() (float64, float64, float64, error) {
-	return wb.phaseValues(wb.currG)
+	b, err := wb.input()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return f32(b, ambiCurrentL1), f32(b, ambiCurrentL2), f32(b, ambiCurrentL3), nil
 }
 
 var _ api.PhaseVoltages = (*Ambibox)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Ambibox) Voltages() (float64, float64, float64, error) {
-	return wb.phaseValues(wb.voltG)
-}
-
-func (wb *Ambibox) phaseValues(g [3]func() (float64, error)) (float64, float64, float64, error) {
-	var res [3]float64
-	for i, f := range g {
-		v, err := f()
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		res[i] = v
+	b, err := wb.input()
+	if err != nil {
+		return 0, 0, 0, err
 	}
-	return res[0], res[1], res[2], nil
+
+	return f32(b, ambiVoltageL1), f32(b, ambiVoltageL2), f32(b, ambiVoltageL3), nil
 }
 
 var _ api.Battery = (*Ambibox)(nil)
 
 // Soc implements the api.Battery interface
 func (wb *Ambibox) Soc() (float64, error) {
-	return wb.socG()
+	b, err := wb.input()
+	if err != nil {
+		return 0, err
+	}
+
+	return f32(b, ambiSoc), nil
 }
 
 var _ api.BatteryCapacity = (*Ambibox)(nil)
 
 // Capacity implements the api.BatteryCapacity interface
 func (wb *Ambibox) Capacity() float64 {
-	f, err := wb.capacityG()
+	b, err := wb.input()
 	if err != nil {
 		return 0
 	}
-	return f / 1e3
+
+	return f32(b, ambiCapacity) / 1e3
 }
 
 var _ api.Resurrector = (*Ambibox)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (wb *Ambibox) WakeUp() error {
-	wb.publish("wakeUp", false, strconv.FormatBool(true))
-	return nil
+	return wb.writeRegister(ambiWakeUp, 1)
 }
