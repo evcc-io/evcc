@@ -313,6 +313,7 @@ func (site *Site) GetGridPower() float64 {
 	return site.gridPower
 }
 
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()
@@ -348,6 +349,172 @@ func (site *Site) GetBatteryDischargeControl() bool {
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryDischargeControl
+}
+
+// GetBatterySolarControl returns whether evcc actively manages battery charge/discharge from solar
+func (site *Site) GetBatterySolarControl() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batterySolarControl
+}
+
+// SetBatterySolarControl enables/disables automatic battery mode management based on solar surplus
+func (site *Site) SetBatterySolarControl(val bool) error {
+	site.log.DEBUG.Println("set battery solar control:", val)
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batterySolarControl != val {
+		site.batterySolarControl = val
+		settings.SetBool(keys.BatterySolarControl, val)
+		site.publish(keys.BatterySolarControl, val)
+	}
+
+	return nil
+}
+
+// GetBatteryCalibrationCharge returns whether one-shot LFP calibration charge is active
+func (site *Site) GetBatteryCalibrationCharge() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryCalibrationCharge
+}
+
+// SetBatteryCalibrationCharge enables/disables the one-shot LFP calibration charge.
+// When active, maxSoc is bypassed and the battery charges to 100%. Auto-disables
+// when aggregate SoC reaches 99%. Not persisted — resets to false on restart.
+func (site *Site) SetBatteryCalibrationCharge(val bool) error {
+	site.log.DEBUG.Println("set battery calibration charge:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryCalibrationCharge != val {
+		site.batteryCalibrationCharge = val
+		site.publish(keys.BatteryCalibrationCharge, val)
+	}
+
+	return nil
+}
+
+// GetBatteryControlDeadBand returns the dead band threshold (W) for starting charge/discharge
+func (site *Site) GetBatteryControlDeadBand() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryControlDeadBand
+}
+
+// SetBatteryControlDeadBand sets the minimum surplus/deficit (W) required to start charging or discharging
+func (site *Site) SetBatteryControlDeadBand(val float64) error {
+	site.log.DEBUG.Println("set battery control dead band:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryControlDeadBand != val {
+		site.batteryControlDeadBand = val
+		settings.SetFloat(keys.BatteryControlDeadBand, val)
+		site.publish(keys.BatteryControlDeadBand, val)
+	}
+
+	return nil
+}
+
+func (site *Site) GetBatterySolarPool() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batterySolarPool
+}
+
+// SetBatterySolarPool switches between pool mode (equal distribution) and per-battery mode (tiered selection).
+// Resetting tier counters ensures the next per-battery activation starts fresh.
+func (site *Site) SetBatterySolarPool(val bool) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batterySolarPool != val {
+		site.batterySolarPool = val
+		site.batteryChargeTier = 0
+		site.batteryDischargeTier = 0
+		site.batteryChargeActive = nil
+		site.batteryDischargeActive = nil
+		settings.SetBool(keys.BatterySolarPool, val)
+		site.publish(keys.BatterySolarPool, val)
+	}
+
+	return nil
+}
+
+func (site *Site) GetBatterySolarTiering() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batterySolarTiering
+}
+
+func (site *Site) SetBatterySolarTiering(val bool) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batterySolarTiering != val {
+		site.batterySolarTiering = val
+		if !val {
+			site.batteryChargeTier = 0
+			site.batteryDischargeTier = 0
+			site.batteryChargeActive = nil
+			site.batteryDischargeActive = nil
+		}
+		settings.SetBool(keys.BatterySolarTiering, val)
+		site.publish(keys.BatterySolarTiering, val)
+	}
+
+	return nil
+}
+
+func (site *Site) GetBatterySolarSticky() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batterySolarSticky
+}
+
+func (site *Site) SetBatterySolarSticky(val bool) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batterySolarSticky != val {
+		site.batterySolarSticky = val
+		if !val {
+			site.batteryChargeActive = nil
+			site.batteryDischargeActive = nil
+		}
+		settings.SetBool(keys.BatterySolarSticky, val)
+		site.publish(keys.BatterySolarSticky, val)
+	}
+
+	return nil
+}
+
+func (site *Site) GetBatterySolarTapering() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batterySolarTapering
+}
+
+func (site *Site) SetBatterySolarTapering(val bool) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batterySolarTapering != val {
+		site.batterySolarTapering = val
+		settings.SetBool(keys.BatterySolarTapering, val)
+		site.publish(keys.BatterySolarTapering, val)
+	}
+
+	return nil
 }
 
 // SetBatteryDischargeControl sets the battery control mode (no discharge only)

@@ -68,6 +68,26 @@ func (i *iBatteryPowerLimiter) GetPowerLimits() (float64, float64) {
 	return i.batteryPowerLimiter0()
 }
 
+func BatteryPowerController(batteryPowerController0 func(float64) error, batteryPowerController1 func(float64) error) api.BatteryPowerController {
+	if batteryPowerController0 == nil || batteryPowerController1 == nil {
+		return nil
+	}
+	return &iBatteryPowerController{batteryPowerController0, batteryPowerController1}
+}
+
+type iBatteryPowerController struct {
+	batteryPowerController0 func(float64) error
+	batteryPowerController1 func(float64) error
+}
+
+func (i *iBatteryPowerController) SetBatteryChargePower(p0 float64) error {
+	return i.batteryPowerController0(p0)
+}
+
+func (i *iBatteryPowerController) SetBatteryDischargePower(p0 float64) error {
+	return i.batteryPowerController1(p0)
+}
+
 func BatterySocLimiter(batterySocLimiter0 func() (float64, float64)) api.BatterySocLimiter {
 	if batterySocLimiter0 == nil {
 		return nil

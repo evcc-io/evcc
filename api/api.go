@@ -88,6 +88,12 @@ type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
 
+// BatteryPowerController allows active control of battery charge/discharge power in watts.
+type BatteryPowerController interface {
+	SetBatteryChargePower(watts float64) error
+	SetBatteryDischargePower(watts float64) error
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
