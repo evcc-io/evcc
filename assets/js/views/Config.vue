@@ -679,7 +679,7 @@ export default defineComponent({
 				title: "",
 				aux: null as string[] | null,
 				ext: null as string[] | null,
-				consumers: null as string[] | null,
+				consumer: null as string[] | null,
 			} as SiteConfig,
 			deviceValueTimeout: null as Timeout,
 			deviceValues: {
@@ -737,7 +737,7 @@ export default defineComponent({
 			return this.getMetersByNames(names);
 		},
 		consumerMeters() {
-			return this.getMetersByNames(this.site?.consumers);
+			return this.getMetersByNames(this.site?.consumer);
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -1111,20 +1111,20 @@ export default defineComponent({
 						this.saveSite(type);
 						break;
 					case "consumer":
-						if (!this.site.consumers) this.site.consumers = [];
-						this.site.consumers.push(name);
-						this.saveSite("consumers");
+						if (!this.site.consumer) this.site.consumer = [];
+						this.site.consumer.push(name);
+						this.saveSite("consumer");
 						break;
 				}
 			}
 
-			// Converted: move ext meter to consumers (history is reconciled on restart)
+			// Converted: move ext meter to consumer (history is reconciled on restart)
 			if (result.action === "converted") {
 				const name = this.meters.find((m) => m.id === result.id)?.name;
 				if (name) {
 					const ext = (this.site.ext || []).filter((n) => n !== name);
-					const consumers = [...(this.site.consumers || []), name];
-					await api.put("/config/site", { ext, consumers });
+					const consumer = [...(this.site.consumer || []), name];
+					await api.put("/config/site", { ext, consumer });
 					await this.loadSite();
 				}
 			}

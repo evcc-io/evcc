@@ -105,12 +105,12 @@ type Site struct {
 
 // MetersConfig contains the site's meter configuration
 type MetersConfig struct {
-	GridMeterRef      string   `mapstructure:"grid"`      // Grid usage meter
-	PVMetersRef       []string `mapstructure:"pv"`        // PV meter
-	BatteryMetersRef  []string `mapstructure:"battery"`   // Battery charging meter
-	ExtMetersRef      []string `mapstructure:"ext"`       // Meters used only for monitoring
-	AuxMetersRef      []string `mapstructure:"aux"`       // Auxiliary meters
-	ConsumerMetersRef []string `mapstructure:"consumers"` // Consumer meters
+	GridMeterRef      string   `mapstructure:"grid"`     // Grid usage meter
+	PVMetersRef       []string `mapstructure:"pv"`       // PV meter
+	BatteryMetersRef  []string `mapstructure:"battery"`  // Battery charging meter
+	ExtMetersRef      []string `mapstructure:"ext"`      // Meters used only for monitoring
+	AuxMetersRef      []string `mapstructure:"aux"`      // Auxiliary meters
+	ConsumerMetersRef []string `mapstructure:"consumer"` // Consumer meters
 }
 
 // NewSiteFromConfig creates a new site
