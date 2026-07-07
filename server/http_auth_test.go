@@ -33,6 +33,7 @@ func TestRequireCriticalConfig(t *testing.T) {
 	const pw = "secret"
 	const key = "evcc_token"
 	scriptReq := configReq{Yaml: "power:\n  source: script\n  cmd: echo 1"}
+	scriptListReq := configReq{Yaml: "- name: main\n  getmaxcurrent:\n    source: script\n    cmd: echo 1"}
 	benignReq := configReq{Yaml: "power:\n  source: http\n  uri: http://localhost"}
 
 	base := fakeAuth{mode: auth.Enabled, password: pw, apiKey: key}
@@ -50,6 +51,8 @@ func TestRequireCriticalConfig(t *testing.T) {
 		{"session with wrong password rejected", scriptReq, map[string]string{"X-Admin-Password": "nope"}, auth.Enabled, false},
 		{"session with valid password passes", scriptReq, map[string]string{"X-Admin-Password": pw}, auth.Enabled, true},
 		{"valid api key passes without password", scriptReq, map[string]string{"Authorization": "Bearer " + key}, auth.Enabled, true},
+		{"yaml list with script rejected without password", scriptListReq, nil, auth.Enabled, false},
+		{"yaml list with script passes with password", scriptListReq, map[string]string{"X-Admin-Password": pw}, auth.Enabled, true},
 	}
 
 	for _, tc := range tc {

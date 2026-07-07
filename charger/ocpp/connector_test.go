@@ -26,7 +26,7 @@ type connTestSuite struct {
 func (suite *connTestSuite) SetupTest() {
 	// setup instance
 	Instance()
-	suite.cp = NewChargePoint(util.NewLogger("foo"), "abc")
+	suite.cp = NewChargePoint(util.NewLogger("foo"), instance, "abc")
 	suite.conn, _ = NewConnector(suite.T().Context(), util.NewLogger("foo"), 1, suite.cp, "", Timeout)
 
 	suite.clock = clock.NewMock()

@@ -353,6 +353,34 @@ func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	assert.Equal(t, api.ModeOff, lp.GetMode(), "integrated device disconnect must not reset mode")
 }
 
+func TestStartWakeUpTimerDisabled(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		features    []api.Feature
+		wantRunning bool
+	}{
+		{"enabled", nil, true},
+		{"disabled", []api.Feature{api.WakeUpDisabled}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			vehicle := api.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Features().Return(tc.features).AnyTimes()
+
+			lp := &Loadpoint{
+				log:         util.NewLogger("foo"),
+				vehicle:     vehicle,
+				wakeUpTimer: NewTimer(),
+			}
+
+			lp.startWakeUpTimer()
+
+			assert.Equal(t, tc.wantRunning, lp.wakeUpTimer.Running())
+		})
+	}
+}
+
 func TestReconnectVehicle(t *testing.T) {
 	tc := []struct {
 		name      string

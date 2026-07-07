@@ -27,7 +27,7 @@ func TestEEBus(t *testing.T) {
 	public, private, err := server.GetX509KeyPair(certificate)
 	require.NoError(t, err, "decode certificate")
 
-	srv, err := server.NewServer(server.Config{
+	_, err = server.NewServer(server.Config{
 		Certificate: server.Certificate{
 			Public:  public,
 			Private: private,
@@ -36,21 +36,20 @@ func TestEEBus(t *testing.T) {
 
 	require.NoError(t, err, "server")
 
-	server.Instance = srv
-	go srv.Run()
+	inst, err := server.Instance()
+	require.NoError(t, err, "instance")
 
-	require.NotEmpty(t, server.Ski(), "server ski")
+	require.NotEmpty(t, inst.Ski(), "server ski")
 
-	box, err := createControlbox(t.Context(), server.Ski(), remotePort)
+	box, err := createControlbox(t.Context(), inst.Ski(), remotePort)
 	require.NoError(t, err, "controlbox")
 
 	eventC := make(chan api.EventType, 16)
 	box.remoteEventC = eventC
 
-	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
+	// no hems.Run(): the run loop applies limits via the nil site and is not needed here
+	_, err = hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
 	require.NoError(t, err, "hems")
-
-	go hems.Run()
 
 	// wait for DataUpdateLimit which signals that limit descriptions and data are available
 	require.Eventually(t, func() bool {
@@ -63,7 +62,7 @@ func TestEEBus(t *testing.T) {
 	_, err = box.uclpc.WriteConsumptionLimit(srvEntity, ucapi.LoadLimit{
 		IsActive: true,
 		Value:    1,
-	}, func(result model.ResultDataType) {
+	}, func(result model.ResultDataType, _ model.MsgCounterType) {
 		t.Logf("lpc result: %v", result)
 	})
 

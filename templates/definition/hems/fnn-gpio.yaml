@@ -1,0 +1,83 @@
+template: fnn-gpio
+products:
+  - description:
+      generic: FNN-Steuerbox via GPIO (§ 14a EnWG, § 9 EEG)
+params:
+  - name: maxconsumptionpower
+    type: float
+    unit: W
+    required: true
+    description:
+      en: Guaranteed minimum power (Pmin)
+      de: Garantierte Mindestleistung (Pmin)
+    help:
+      en: Power limit applied to the root circuit while the limit is active.
+      de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist.
+  - name: w4pin
+    type: int
+    required: true
+    description:
+      en: W4 GPIO pin
+      de: W4 GPIO-Pin
+    help:
+      en: Input pin for the W4 signal (Dimmer for controllable loads)
+      de: Eingangspin für das W4-Signal (Dimmen der steuerbaren Verbrauchseinrichtungen)
+  - name: maxproductionpower
+    type: float
+    unit: W
+    required: true
+    description:
+      en: Installed generator power (Wp)
+      de: Installierte Generatorleistung (Wp)
+    help:
+      en: Rated generator/module power (Wp) of the installation.
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+  - name: w3pin
+    type: int
+    required: true
+    description:
+      en: W3 GPIO pin
+      de: W3 GPIO-Pin
+    help:
+      en: Input pin for the W3 signal (Zero export, 0%)
+      de: Eingangspin für das W3-Signal (Keine Netzeinspeisung, 0%)
+  - name: s1pin
+    type: int
+    description:
+      en: S1 GPIO pin
+      de: S1 GPIO-Pin
+    help:
+      en: Input pin for the S1 signal (60% export power limit)
+      de: Eingangspin für das S1-Signal (Reduzierung der Einspeiseleistung auf 60%)
+  - name: s2pin
+    type: int
+    description:
+      en: S2 GPIO pin
+      de: S2 GPIO-Pin
+    help:
+      en: Input pin for the S2 signal (30% export power limit)
+      de: Eingangspin für das S2-Signal (Reduzierung der Einspeiseleistung auf 30%)
+render: |
+  type: fnn
+  maxdimpower: {{ .maxconsumptionpower }}
+  w4:
+    source: gpio
+    pin: {{ .w4pin }}
+    function: read
+  maxcurtailpower: {{ .maxproductionpower }}
+  w3:
+    source: gpio
+    pin: {{ .w3pin }}
+    function: read
+  {{- if .s1pin }}
+  s1:
+    source: gpio
+    pin: {{ .s1pin }}
+    function: read
+  {{- end }}
+  {{- if .s2pin }}
+  s2:
+    source: gpio
+    pin: {{ .s2pin }}
+    function: read
+  {{- end }}

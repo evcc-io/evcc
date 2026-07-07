@@ -1,5 +1,10 @@
 <template>
-	<label class="root position-relative d-block" :for="id" role="button">
+	<label
+		class="root position-relative"
+		:class="inline ? 'd-inline-block align-baseline' : 'd-block'"
+		:for="id"
+		role="button"
+	>
 		<select :id="id" :value="selected" class="custom-select" tabindex="0" @change="change">
 			<option
 				v-for="{ name, value, count, disabled } in options"
@@ -24,6 +29,7 @@ export default defineComponent({
 		options: { type: Array as PropType<SelectOption<number | string>[]> },
 		selected: { type: [String, Number] },
 		id: { type: String },
+		inline: Boolean,
 	},
 	emits: ["change"],
 	methods: {

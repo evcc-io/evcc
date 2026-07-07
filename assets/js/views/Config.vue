@@ -16,6 +16,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig
+					class="box-pull-out"
 					:experimental="experimental"
 					:sponsor-error="hasClassError('sponsorship')"
 					@site-changed="siteChanged"
@@ -23,7 +24,7 @@
 
 				<WelcomeBanner v-if="setupRequired" />
 				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
 						:id="`loadpoint_${loadpoint.name}`"
@@ -55,7 +56,7 @@
 				</div>
 
 				<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="vehicle in vehicles"
 						:id="`vehicle_${vehicle.name}`"
@@ -82,7 +83,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.consumers") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in consumerMeters"
 						:key="meter.name"
@@ -109,7 +110,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-if="gridMeter"
 						:meter="gridMeter"
@@ -127,7 +128,7 @@
 					/>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in pvMeters"
 						:key="meter.name"
@@ -154,7 +155,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in extMeters"
 						:key="meter.name"
@@ -172,7 +173,7 @@
 				</div>
 
 				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
-				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
+				<div v-if="!!tariffsYamlSource" class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.tariff.title')"
 						:editable="tariffsYamlSource === 'db'"
@@ -191,7 +192,7 @@
 						</template>
 					</DeviceCard>
 				</div>
-				<div v-else class="p-0 config-list">
+				<div v-else class="p-0 config-list box-pull-out">
 					<TariffCard
 						v-if="gridTariff"
 						:tariff="gridTariff"
@@ -252,7 +253,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
 
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<AuthProvidersCard
 						:providers="authProviders"
 						data-testid="auth-providers"
@@ -319,6 +320,20 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
+						:title="$t('config.hems.title')"
+						editable
+						:error="hasClassError('hems')"
+						:unconfigured="isUnconfigured(hemsTags)"
+						data-testid="hems"
+						@edit="openModal('hems')"
+					>
+						<template #icon><HemsIcon /></template>
+						<template #tags>
+							<p v-if="hemsLabel" class="my-2 fw-bold">{{ hemsLabel }}</p>
+							<DeviceTags :tags="hemsTags" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
 						:title="$t('config.modbusproxy.title')"
 						editable
 						:error="hasClassError('modbusproxy')"
@@ -329,19 +344,6 @@
 						<template #icon><ModbusProxyIcon /></template>
 						<template #tags>
 							<DeviceTags :tags="modbusproxyTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
-						:title="$t('config.hems.title')"
-						editable
-						:error="hasClassError('hems')"
-						:unconfigured="isUnconfigured(hemsTags)"
-						data-testid="hems"
-						@edit="openModal('hems')"
-					>
-						<template #icon><HemsIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="hemsTags" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -373,7 +375,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.ocpp.title')"
 						editable
@@ -415,7 +417,10 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div data-testid="config-system" class="round-box p-4 d-flex gap-4 flex-wrap">
+				<div
+					data-testid="config-system"
+					class="round-box box-pull-out p-4 d-flex gap-4 flex-wrap"
+				>
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
@@ -452,7 +457,11 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :yamlSource="hems?.yamlSource" @changed="loadDirty" />
+				<HemsModal
+					:id="hemsDevices[0]?.id"
+					:yamlSource="hems?.yamlSource"
+					@changed="hemsChanged"
+				/>
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
@@ -551,6 +560,7 @@ import type {
 	ConfigVehicle,
 	ConfigCircuit,
 	ConfigMessenger,
+	ConfigHems,
 	ConfigLoadpoint,
 	ConfigMeter,
 	Timeout,
@@ -562,7 +572,7 @@ import type {
 	Notification,
 	Remote,
 } from "@/types/evcc";
-import { CURRENCY } from "@/types/evcc";
+import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -653,6 +663,7 @@ export default defineComponent({
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
+			hemsDevices: [] as ConfigHems[],
 			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
 			tariffRefs: {
 				grid: "",
@@ -814,11 +825,10 @@ export default defineComponent({
 			return store.state?.hems;
 		},
 		hemsTags(): DeviceTags {
-			const type = this.hems?.config?.type;
-			const status = store.state?.hems?.status;
-			if (!type && !status) {
+			if (this.hemsDevices.length === 0 && !this.hems?.config?.configured) {
 				return { configured: { value: false } };
 			}
+			const status = store.state?.hems?.status;
 			if (!status) {
 				return { configured: { value: true } };
 			}
@@ -831,16 +841,23 @@ export default defineComponent({
 			} else if (status.dimmed !== undefined) {
 				result["dimmed"] = { value: status.dimmed };
 			}
-			if (status.curtailed && status.maxProductionPower !== undefined) {
+			if ((status.curtailed ?? 100) < 100 && status.maxProductionPower !== undefined) {
 				result["curtailLimit"] = {
 					value: status.maxProductionPower,
 					warning: true,
 				};
 			} else if (status.curtailed !== undefined) {
-				result["curtailed"] = { value: status.curtailed };
+				result["curtailed"] = { value: status.curtailed < 100 };
 			}
 
 			return result;
+		},
+		hemsLabel(): string {
+			const dev = this.hemsDevices[0];
+			if (!dev) return "";
+			if (dev.deviceProduct) return dev.deviceProduct;
+			if (dev.type === ConfigType.Custom) return this.$t("config.hems.customOption");
+			return "";
 		},
 		remote(): Remote | undefined {
 			return store.state?.remote;
@@ -1000,6 +1017,7 @@ export default defineComponent({
 			await this.loadMessengers();
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadHems();
 			await this.loadDirty();
 			this.updateValues();
 		},
@@ -1025,6 +1043,9 @@ export default defineComponent({
 		},
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
+		},
+		async loadHems() {
+			this.hemsDevices = (await this.loadConfig("devices/hems")) || [];
 		},
 		async loadCircuits() {
 			this.circuits = (await this.loadConfig("devices/circuit")) || [];
@@ -1122,6 +1143,10 @@ export default defineComponent({
 			await this.loadChargers();
 			await this.loadDirty();
 			this.updateValues();
+		},
+		async hemsChanged() {
+			await this.loadHems();
+			await this.loadDirty();
 		},
 		async loadpointChanged() {
 			await this.loadLoadpoints();

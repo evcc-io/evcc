@@ -139,9 +139,14 @@ func NewOCPP(ctx context.Context,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", cmp.Or(id, "ocpp"), connector))
 
-	cp, err := ocpp.Instance().RegisterChargepoint(id,
+	cs, err := ocpp.Instance()
+	if err != nil {
+		return nil, err
+	}
+
+	cp, err := cs.RegisterChargepoint(id,
 		func() *ocpp.CP {
-			return ocpp.NewChargePoint(log, id)
+			return ocpp.NewChargePoint(log, cs, id)
 		},
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
