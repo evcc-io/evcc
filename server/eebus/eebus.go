@@ -578,6 +578,14 @@ func (c *EEBus) ServiceAutoTrusted(service eebusapi.ServiceInterface, identity s
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.upsertPairing(identity)
+
+	// the connection event may fire before trust is established, leaving consumers
+	// registered without ski unrouted; wake them now that the device is paired
+	if c.connected[identity.SKI] {
+		for _, client := range c.clientsFor(identity.SKI) {
+			client.Connect(true)
+		}
+	}
 }
 
 func (c *EEBus) ServiceAutoTrustFailed(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason error) {
