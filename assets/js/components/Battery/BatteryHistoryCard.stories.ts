@@ -68,9 +68,28 @@ function generateTimeline(from: number, to: number, seed: number): SocPoint[] {
 const TITLES = ["Sungrow", "Anker", "Fronius", "BYD"];
 const CAPACITIES = [13.5, 7.5, 10, 5];
 
-function buildBatteries(count: number, withForecast: boolean, now: number): BatterySeries[] {
+// pull socs toward a target around "now" so batteries end up clustered (overlapping badges)
+function convergeNear(pts: SocPoint[], target: number, now: number): SocPoint[] {
+  return pts.map(({ t, soc }) => {
+    const f = 1 - smoothstep(0, 6 * HOUR, Math.abs(t - now));
+    return { t, soc: soc + (target - soc) * f };
+  });
+}
+
+function buildBatteries(
+  count: number,
+  withForecast: boolean,
+  now: number,
+  targetSocs?: number[]
+): BatterySeries[] {
   return Array.from({ length: count }, (_, i) => {
-    const history = generateTimeline(now - 60 * HOUR, now, i);
+    let history = generateTimeline(now - 60 * HOUR, now, i);
+    let forecast = withForecast ? generateTimeline(now, now + 36 * HOUR, i) : [];
+    const target = targetSocs?.[i];
+    if (target != null) {
+      history = convergeNear(history, target, now);
+      forecast = convergeNear(forecast, target, now);
+    }
     const title = TITLES[i] ?? `Battery ${i + 1}`;
     return {
       id: title,
@@ -78,16 +97,23 @@ function buildBatteries(count: number, withForecast: boolean, now: number): Batt
       capacity: CAPACITIES[i] ?? 8,
       currentSoc: history.at(-1)?.soc ?? 50,
       history,
-      forecast: withForecast ? generateTimeline(now, now + 36 * HOUR, i) : [],
+      forecast,
     };
   });
 }
 
-function scenario(count: number, withForecast: boolean): StoryFn<typeof BatteryHistoryCard> {
+function scenario(
+  count: number,
+  withForecast: boolean,
+  targetSocs?: number[]
+): StoryFn<typeof BatteryHistoryCard> {
   return () => ({
     components: { BatteryHistoryCard },
     setup() {
-      return { batteries: buildBatteries(count, withForecast, NOW.getTime()), now: NOW };
+      return {
+        batteries: buildBatteries(count, withForecast, NOW.getTime(), targetSocs),
+        now: NOW,
+      };
     },
     template: `<div class="p-4" style="max-width: 900px">
       <BatteryHistoryCard :batteries="batteries" :now="now" kwh-available />
@@ -101,8 +127,12 @@ export const OneBatteryForecast = scenario(1, true);
 export const TwoBatteries = scenario(2, false);
 export const TwoBatteriesForecast = scenario(2, true);
 
-export const ThreeBatteries = scenario(3, false);
-export const ThreeBatteriesForecast = scenario(3, true);
+// clustered near empty: labels get pushed below the lowest dot, toward the grid bottom
+const EMPTY_SOCS = [7, 4, 2];
+export const ThreeBatteries = scenario(3, false, EMPTY_SOCS);
+export const ThreeBatteriesForecast = scenario(3, true, EMPTY_SOCS);
 
-export const FourBatteries = scenario(4, false);
-export const FourBatteriesForecast = scenario(4, true);
+// clustered socs: badges would overlap without label dodging
+const CLOSE_SOCS = [99, 98, 95, 93];
+export const FourBatteries = scenario(4, false, CLOSE_SOCS);
+export const FourBatteriesForecast = scenario(4, true, CLOSE_SOCS);

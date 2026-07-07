@@ -20,6 +20,9 @@ import type { SocPoint, BatterySeries } from "./types";
 type EChartsType = ReturnType<typeof echarts.init>;
 type Point = [number, number];
 
+const GRID = { top: 10, right: 36, bottom: 26, left: 0 };
+const BADGE_GAP = 24; // badge height (12px font + 2x4px padding) plus spacing
+
 export default defineComponent({
 	name: "BatteryHistoryChart",
 	mixins: [formatter],
@@ -179,7 +182,7 @@ export default defineComponent({
 				// no echarts animation; paging is driven manually via slideWindow
 				animation: false,
 				textStyle: { fontFamily: FONT_FAMILY },
-				grid: { top: 10, right: 36, bottom: 26, left: 0, borderWidth: 0 },
+				grid: { ...GRID, borderWidth: 0 },
 				tooltip: {
 					trigger: "axis",
 					axisPointer: {
@@ -427,7 +430,13 @@ export default defineComponent({
 			const elements: Record<string, unknown>[] = [];
 			if (this.nowInWindow) {
 				// badge sits to the left of the now point (matches the design, avoids clipping the right edge)
-				const badge = (px: number[], text: string, fill: string, textFill = "#fff") => {
+				const badge = (
+					px: number[],
+					text: string,
+					fill: string,
+					textFill = "#fff",
+					labelY = px[1]
+				) => {
 					elements.push({
 						type: "circle",
 						z: 10,
@@ -438,7 +447,7 @@ export default defineComponent({
 						type: "text",
 						z: 11,
 						x: px[0] - 9,
-						y: px[1],
+						y: labelY,
 						style: {
 							text,
 							fill: textFill,
@@ -452,11 +461,32 @@ export default defineComponent({
 					});
 				};
 				if (this.mode === "soc") {
+					const badges: { px: number[]; text: string; fill: string }[] = [];
 					this.batteries.forEach((b, i) => {
 						if (this.focused !== null && this.focused !== i) return;
 						const px = this.chart!.convertToPixel(finder, [this.now, b.currentSoc]);
-						if (px) badge(px, this.fmtPercentage(b.currentSoc), batteryColor(i));
+						if (px)
+							badges.push({
+								px,
+								text: this.fmtPercentage(b.currentSoc),
+								fill: batteryColor(i),
+							});
 					});
+					// push labels of near-equal socs downward so badges don't overlap;
+					// dots stay on the data point, only the text pill shifts
+					badges.sort((a, b) => a.px[1] - b.px[1]);
+					let minY = GRID.top + BADGE_GAP / 2;
+					const ys = badges.map((b) => {
+						const y = Math.max(b.px[1], minY);
+						minY = y + BADGE_GAP;
+						return y;
+					});
+					// batteries near empty push the stack past the grid, shift it back up
+					const bottom = this.chart.getHeight() - GRID.bottom - BADGE_GAP / 2;
+					const overflow = Math.max(0, (ys.at(-1) ?? 0) - bottom);
+					badges.forEach((b, i) =>
+						badge(b.px, b.text, b.fill, "#fff", ys[i]! - overflow)
+					);
 				} else {
 					// focused: that battery's energy (its band is the only one shown); else the total
 					const f = this.focused;
