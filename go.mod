@@ -10,13 +10,13 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/WulfgarW/sensonet v0.0.7
 	github.com/andig/go-powerwall v0.3.0
-	github.com/andig/gosunspec v0.0.0-20260523125438-3accc276abc0
+	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/aws/aws-sdk-go-v2 v1.42.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.25
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.24
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.34.4
+	github.com/aws/aws-sdk-go-v2 v1.42.1
+	github.com/aws/aws-sdk-go-v2/config v1.32.27
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.26
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.34.6
 	github.com/basgys/goxml2json v1.1.0
 	github.com/benbjohnson/clock v1.3.5
 	github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9
@@ -29,10 +29,10 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/enbility/eebus-go v0.7.1-0.20260520155652-11bc53084557
+	github.com/enbility/eebus-go v0.7.1-0.20260608105936-abdcf864d0cf
 	github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c
-	github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885
-	github.com/evcc-io/openapi-mcp v0.6.1-0.20260503092507-6199c7ad3baf
+	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
+	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
 	github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae
@@ -40,7 +40,7 @@ require (
 	github.com/getkin/kin-openapi v0.140.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.3
-	github.com/go-telegram/bot v1.21.0
+	github.com/go-telegram/bot v1.22.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
@@ -51,7 +51,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.15.0
 	github.com/gregdel/pushover v1.4.0
-	github.com/grid-x/modbus v0.0.0-20260527064858-ef3bed576432
+	github.com/grid-x/modbus v0.0.0-20260701064235-82e41c9acfb6
 	github.com/hashicorp/go-version v1.9.0
 	github.com/hashicorp/yamux v0.1.2
 	github.com/hasura/go-graphql-client v0.16.0
@@ -80,12 +80,12 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/philippseith/signalr v0.8.0
-	github.com/prometheus-community/pro-bing v0.9.0
+	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.69.0
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.53.0
-	github.com/sandrolain/httpcache v1.4.1
+	github.com/sandrolain/httpcache v1.4.2
 	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.4
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
@@ -106,16 +106,16 @@ require (
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/crypto v0.53.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260618162219-0b316e7ee409
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260630172432-7626c5025624
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976
 	golang.org/x/net v0.56.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.21.0
 	golang.org/x/text v0.38.0
-	golang.org/x/tools v0.46.0
-	google.golang.org/grpc v1.81.1
+	golang.org/x/tools v0.47.0
+	google.golang.org/grpc v1.82.0
 	google.golang.org/protobuf v1.36.11
-	gorm.io/gorm v1.31.1
+	gorm.io/gorm v1.31.2
 	modernc.org/sqlite v1.53.0
 )
 
@@ -125,17 +125,17 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.30 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.2.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.31.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.43.3 // indirect
-	github.com/aws/smithy-go v1.27.1 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.31 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.30 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.2.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.31.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.36.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.43.5 // indirect
+	github.com/aws/smithy-go v1.27.3 // indirect
 	github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
@@ -239,7 +239,7 @@ require (
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/tools/gopls v0.21.1 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
 	gopkg.in/go-playground/validator.v9 v9.30.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -261,3 +261,7 @@ tool (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
+
+replace github.com/enbility/eebus-go => github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6
+
+replace github.com/enbility/ship-go => github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307

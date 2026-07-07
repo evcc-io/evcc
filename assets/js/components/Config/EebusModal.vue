@@ -9,6 +9,7 @@
 		:no-buttons="fromYaml"
 		:confirm-remove="$t('config.eebus.removeConfirm')"
 		@changed="$emit('changed')"
+		@open="loadPairings"
 	>
 		<template #default="{ values }: { values: EebusConfig }">
 			<p v-if="fromYaml" class="text-muted">
@@ -48,6 +49,63 @@
 			>
 				<img :src="qrDataUrl" :alt="$t('config.eebus.qr')" class="qr-code" />
 			</FormRow>
+			<div v-if="status.ski" class="mb-4">
+				<h6 class="mb-3">{{ $t("config.eebus.pairings") }}</h6>
+				<div
+					v-for="pairing in pairedDevices"
+					:key="pairing.shipID || pairing.ski"
+					data-testid="eebus-pairing"
+					class="mb-2"
+				>
+					<div
+						class="d-flex align-items-center justify-content-between py-2 ps-3 pe-2 border rounded"
+					>
+						<div class="flex-grow-1 fw-semibold text-truncate">
+							{{ pairing.shipID || pairing.ski }}
+						</div>
+						<small
+							v-if="pairing.shipID && pairing.ski"
+							class="text-muted ms-2 me-2 text-truncate"
+						>
+							{{ pairing.ski }}
+						</small>
+						<button
+							type="button"
+							class="btn btn-sm btn-outline-secondary border-0"
+							:aria-label="$t('config.eebus.removePairing')"
+							@click="removePairing(pairing)"
+						>
+							<shopicon-regular-trash
+								size="s"
+								class="flex-shrink-0"
+							></shopicon-regular-trash>
+						</button>
+					</div>
+				</div>
+				<div v-if="!pairedDevices.length" class="text-muted small mb-2">
+					{{ $t("config.eebus.noPairings") }}
+				</div>
+			</div>
+			<div v-if="status.ski" class="mb-4">
+				<h6 class="mb-3">{{ $t("config.eebus.configuredDevices") }}</h6>
+				<div
+					v-for="pairing in configuredDevices"
+					:key="pairing.ski"
+					data-testid="eebus-configured-device"
+					class="mb-2"
+				>
+					<div
+						class="d-flex align-items-center justify-content-between py-2 ps-3 pe-2 border rounded"
+					>
+						<div class="flex-grow-1 fw-semibold text-truncate">
+							{{ pairing.ski }}
+						</div>
+					</div>
+				</div>
+				<div v-if="!configuredDevices.length" class="text-muted small mb-2">
+					{{ $t("config.eebus.noConfiguredDevices") }}
+				</div>
+			</div>
 			<PropertyCollapsible v-if="!fromYaml">
 				<template #advanced>
 					<div class="alert alert-danger">
@@ -127,8 +185,10 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import QRCode from "qrcode";
+import "@h2d2/shopicons/es/regular/trash";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { EebusConfig, EebusStatus, YamlSource } from "@/types/evcc";
+import type { EebusConfig, EebusPairing, EebusStatus, YamlSource } from "@/types/evcc";
+import api from "@/api";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
@@ -155,11 +215,18 @@ export default {
 	data() {
 		return {
 			qrDataUrl: null as string | null,
+			pairings: [] as EebusPairing[],
 		};
 	},
 	computed: {
 		fromYaml(): boolean {
 			return this.yamlSource === "file";
+		},
+		pairedDevices(): EebusPairing[] {
+			return this.pairings.filter((p) => p.source === "paired");
+		},
+		configuredDevices(): EebusPairing[] {
+			return this.pairings.filter((p) => p.source === "ski");
 		},
 	},
 	watch: {
@@ -181,6 +248,25 @@ export default {
 	methods: {
 		formId(s: string) {
 			return `eebus-${s}`;
+		},
+		async loadPairings() {
+			try {
+				const res = await api.get("config/service/eebus/pairings");
+				this.pairings = res.data || [];
+			} catch {
+				this.pairings = [];
+			}
+		},
+		async removePairing(pairing: EebusPairing) {
+			if (!window.confirm(this.$t("config.eebus.removePairingConfirm"))) {
+				return;
+			}
+			try {
+				const id = encodeURIComponent(pairing.shipID || pairing.ski);
+				await api.delete(`config/service/eebus/pairings/${id}`);
+			} finally {
+				await this.loadPairings();
+			}
 		},
 	},
 };

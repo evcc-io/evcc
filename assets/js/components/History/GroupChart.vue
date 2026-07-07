@@ -14,7 +14,7 @@ import {
 	tooltipStyle,
 	tooltipTable,
 } from "../Forecast/echarts";
-import colors, { resolveColors, deviceColorMap, darken } from "@/colors";
+import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
@@ -244,6 +244,9 @@ export default defineComponent({
 					return palette[s.title] || this.color;
 				});
 			}
+			if (this.group === "battery") {
+				return this.series.map((s, i) => batteryColor(s.paletteIndex ?? i));
+			}
 			if (this.series.length <= 1) return [this.color];
 			return this.series.map((_, i) => darken(this.color, stepAlpha(i, this.series.length)));
 		},
@@ -327,7 +330,9 @@ export default defineComponent({
 			};
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
-				const returnEnergyColor = (s.group === "grid" && colors.export) || c;
+				const returnEnergyColor =
+					(s.group === "grid" && colors.export) ||
+					(s.group === "battery" ? setAlpha(c, "cc") || c : c);
 				const energyValues = energyByEntity[i]!;
 				const returnEnergyValues = returnEnergyByEntity[i]!;
 				const energyName =
