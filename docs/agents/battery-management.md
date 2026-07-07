@@ -308,7 +308,9 @@ Why this is safe: the poke handler runs in the same goroutine as the scheduled t
 
 Limitation: the detector only accelerates charge↔discharge *flips*, not idle→active starts (the plan is idle when balanced and the fast loop bails early). Idle is transient with a residual-power setpoint, so idle→active still waits for the scheduled tick.
 
-**Verbose tracing**: at `TRACE` level (set the `site` log area to trace) the fast loop and main-loop battery decision emit per-tick diagnostics with no effect on `DEBUG` output — every fast tick (`dir/grid/batt/target/total/offset/ev`), stale-grid skips, parked state, crossing-dwell/backoff progress, and the main-loop decision inputs (`surplus/sitePower/threshold/soc/evPower`). Useful for seeing exactly why a flip did or didn't fire.
+**Dedicated log area**: all battery-control and fast-loop logging goes to the `battery` area (`batteryLog = util.NewLogger("battery")` in `core/site_battery.go`), separate from `site`, so it filters and level-controls independently (`levels: {battery: debug}` or `{battery: trace}`).
+
+**Verbose tracing**: at `TRACE` level (`levels: {battery: trace}`) the fast loop and main-loop battery decision emit per-tick diagnostics with no effect on `DEBUG` output — every fast tick (`dir/grid/batt/target/total/offset/ev`), stale-grid skips, parked state, crossing-dwell/backoff progress, and the main-loop decision inputs (`surplus/sitePower/threshold/soc/evPower`). Useful for seeing exactly why a flip did or didn't fire.
 
 **Safety rules**:
 - Direction flips are never *decided* by the fast loop — it clamps at 0 and either waits for the main loop or pokes it to re-decide sooner (above); the decision stays in the main loop

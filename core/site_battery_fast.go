@@ -31,7 +31,7 @@ const (
 	// main loop no longer re-commands active batteries every tick
 	fastLoopTierMargin = 50.0 // W of unmet demand beyond engaged capacity before the
 	// fast loop engages another battery (Marstek minimum effective power)
-	fastLoopShortfall     = 150.0 // W; engaged set delivering at least this far below the
+	fastLoopShortfall = 150.0 // W; engaged set delivering at least this far below the
 	// commanded total counts as under-delivery (a unit ACKs but can't physically deliver)
 	fastLoopShortfallDwell = 4 // consecutive under-delivering ticks (≈4s at 1s tick, longer
 	// than the inverter ramp) before engaging a standby, so normal ramp-up doesn't trip it
@@ -133,11 +133,11 @@ func (site *Site) batteryFastTick() {
 
 	plan := site.batteryPlan
 	if plan == nil {
-		site.log.TRACE.Print("solar power (fast): parked (no plan)")
+		batteryLog.TRACE.Print("solar power (fast): parked (no plan)")
 		return
 	}
 	if plan.direction == batteryPlanIdle || len(plan.entries) == 0 || time.Since(plan.created) > batteryPlanMaxAge {
-		site.log.TRACE.Printf("solar power (fast): parked (dir=%s, %d entries, plan age %s)",
+		batteryLog.TRACE.Printf("solar power (fast): parked (dir=%s, %d entries, plan age %s)",
 			batteryPlanDirectionString(plan.direction), len(plan.entries), time.Since(plan.created).Round(time.Second))
 		return
 	}
@@ -145,7 +145,7 @@ func (site *Site) batteryFastTick() {
 	gridPower, err := site.gridMeter.CurrentPower()
 	if err != nil {
 		// skip tick, next attempt in one period
-		site.log.DEBUG.Printf("solar power (fast): grid power: %v", err)
+		batteryLog.DEBUG.Printf("solar power (fast): grid power: %v", err)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (site *Site) batteryFastTick() {
 	// ticks cost a single TCP read.
 	firstTick := !plan.lastValid
 	if !firstTick && gridPower == plan.lastGrid {
-		site.log.TRACE.Printf("solar power (fast): stale grid %.0fW, skip", gridPower)
+		batteryLog.TRACE.Printf("solar power (fast): stale grid %.0fW, skip", gridPower)
 		site.batteryFastHeartbeat(plan)
 		return
 	}
@@ -183,7 +183,7 @@ func (site *Site) batteryFastTick() {
 	for i, e := range plan.entries {
 		if errs[i] != nil {
 			// any failed read: skip the tick, retry next period
-			site.log.DEBUG.Printf("solar power (fast): %s power: %v", e.name, errs[i])
+			batteryLog.DEBUG.Printf("solar power (fast): %s power: %v", e.name, errs[i])
 			return
 		}
 		battPower += powers[i]
@@ -196,7 +196,7 @@ func (site *Site) batteryFastTick() {
 	dGrid, dBatt := gridPower-plan.lastGrid, battPower-plan.lastBatt
 	plan.lastGrid, plan.lastBatt, plan.lastValid = gridPower, battPower, true
 	if !firstTick && math.Abs(dBatt) > fastLoopSkewThreshold && math.Abs(dGrid+dBatt) > fastLoopSkewThreshold {
-		site.log.DEBUG.Printf("solar power (fast): meters inconsistent (Δgrid %.0fW, Δbattery %.0fW), skipping tick", dGrid, dBatt)
+		batteryLog.DEBUG.Printf("solar power (fast): meters inconsistent (Δgrid %.0fW, Δbattery %.0fW), skipping tick", dGrid, dBatt)
 		return
 	}
 
@@ -213,7 +213,7 @@ func (site *Site) batteryFastTick() {
 	}
 	target = math.Max(plan.total+fastLoopGain*(target-plan.total), 0)
 
-	site.log.TRACE.Printf("solar power (fast): dir=%s grid=%.0fW batt=%.0fW target=%.0fW total=%.0fW off=%.0fW ev=%.0fW",
+	batteryLog.TRACE.Printf("solar power (fast): dir=%s grid=%.0fW batt=%.0fW target=%.0fW total=%.0fW off=%.0fW ev=%.0fW",
 		batteryPlanDirectionString(plan.direction), gridPower, battPower, target, plan.total, plan.gridOffset, plan.evExcluded)
 
 	// Tier-up: when the engaged set is saturated (target exceeds its total capacity)
@@ -235,7 +235,7 @@ func (site *Site) batteryFastTick() {
 	commanded := site.batteryFastSend(plan, target)
 
 	dir := map[batteryPlanDirection]string{batteryPlanCharge: "charge", batteryPlanDischarge: "discharge"}[plan.direction]
-	site.log.DEBUG.Printf("solar power (fast): %s %.0fW → %.0fW (grid %.0fW, battery %.0fW)", dir, plan.total, commanded, gridPower, battPower)
+	batteryLog.DEBUG.Printf("solar power (fast): %s %.0fW → %.0fW (grid %.0fW, battery %.0fW)", dir, plan.total, commanded, gridPower, battPower)
 
 	plan.total = commanded
 }
@@ -248,7 +248,7 @@ func (site *Site) batteryFastHeartbeat(plan *batteryControlPlan) {
 		return
 	}
 	site.batteryFastSend(plan, plan.total)
-	site.log.DEBUG.Printf("solar power (fast): heartbeat %.0fW", plan.total)
+	batteryLog.DEBUG.Printf("solar power (fast): heartbeat %.0fW", plan.total)
 }
 
 // batteryFastTierUp engages the next standby battery when the engaged set is saturated.
@@ -318,7 +318,7 @@ func (site *Site) batteryFastTierUp(plan *batteryControlPlan, target, measured f
 	if starved {
 		reason = "under-delivering"
 	}
-	site.log.DEBUG.Printf("solar power (fast): tier up (%s), engaging %s (target %.0fW, delivered %.0fW, capacity %.0fW)", reason, next.name, target, delivered, sumCaps)
+	batteryLog.DEBUG.Printf("solar power (fast): tier up (%s), engaging %s (target %.0fW, delivered %.0fW, capacity %.0fW)", reason, next.name, target, delivered, sumCaps)
 	return true
 }
 
@@ -355,7 +355,7 @@ func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, batt
 	if !plan.flipSince.IsZero() {
 		dwell = time.Since(plan.flipSince)
 	}
-	site.log.TRACE.Printf("solar power (fast): crossing wanted (opposite %.0fW > %.0fW), dwell %s/%s, backoff %s",
+	batteryLog.TRACE.Printf("solar power (fast): crossing wanted (opposite %.0fW > %.0fW), dwell %s/%s, backoff %s",
 		oppositeNeed, plan.threshold, dwell.Round(100*time.Millisecond), fastLoopFlipDwell, site.batteryFlipBackoff)
 
 	// start the dwell timer on first detection; require it to stay wanted for the dwell
@@ -388,7 +388,7 @@ func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, batt
 	// non-blocking poke; the cap-1 channel coalesces bursts and a pending request
 	select {
 	case site.batteryReplanChan <- struct{}{}:
-		site.log.DEBUG.Printf("solar power (fast): crossing detected (opposite need %.0fW > %.0fW dead band, next flip ≥ %s), requesting re-decision", oppositeNeed, plan.threshold, site.batteryFlipBackoff)
+		batteryLog.DEBUG.Printf("solar power (fast): crossing detected (opposite need %.0fW > %.0fW dead band, next flip ≥ %s), requesting re-decision", oppositeNeed, plan.threshold, site.batteryFlipBackoff)
 	default:
 	}
 }
@@ -418,7 +418,7 @@ func (site *Site) batteryFastSend(plan *batteryControlPlan, target float64) floa
 				err = e.ctrl.SetBatteryDischargePower(p)
 			}
 			if err != nil {
-				site.log.ERROR.Printf("solar power (fast): %s: %v", e.name, err)
+				batteryLog.ERROR.Printf("solar power (fast): %s: %v", e.name, err)
 				return
 			}
 			powers[i] = p
