@@ -48,29 +48,14 @@ var (
 	instance    *CS
 	started     func() error // memoized listen; set in NewServer, runs once
 	port        = 8887
-<<<<<<< HEAD
 	port20      = 8886
-=======
 	boundPort   int
->>>>>>> origin/master
 	externalUrl string
 
 	// statusHook20 is set by the ocpp20 package to contribute its stations to GetStatus.
 	statusHook20 func() []StationInfo
 )
 
-<<<<<<< HEAD
-// Port20 returns the configured OCPP 2.0.1 listen port.
-func Port20() int { return port20 }
-
-// RegisterStatusHook20 lets the ocpp20 package register a callback that returns
-// its station list. Called once at package init; safe to leave nil otherwise.
-func RegisterStatusHook20(fn func() []StationInfo) {
-	statusHook20 = fn
-}
-
-// GetStatus returns the OCPP runtime status for both 1.6 and 2.0.1
-=======
 // Forwarder hooks, nil unless the forwarder is built in (set once in init()
 // before any charger connects, so reads need no lock).
 var (
@@ -120,8 +105,16 @@ func Port() int {
 	return boundPort
 }
 
-// GetStatus returns the OCPP runtime status
->>>>>>> origin/master
+// Port20 returns the configured OCPP 2.0.1 listen port.
+func Port20() int { return port20 }
+
+// RegisterStatusHook20 lets the ocpp20 package register a callback that returns
+// its station list. Called once at package init; safe to leave nil otherwise.
+func RegisterStatusHook20(fn func() []StationInfo) {
+	statusHook20 = fn
+}
+
+// GetStatus returns the OCPP runtime status for both 1.6 and 2.0.1
 func GetStatus() Status {
 	status := Status{}
 
@@ -153,25 +146,17 @@ func ExternalUrl() string {
 	return u.String()
 }
 
-<<<<<<< HEAD
-// Init initializes the OCPP server
-func Init(cfg Config, networkExternalUrl string) {
-	if cfg.Port != 0 {
-		port = cfg.Port
-	}
-	if cfg.Port20 != 0 {
-		port20 = cfg.Port20
-	}
-=======
 // CurrentConfig returns the current runtime OCPP configuration.
 func CurrentConfig() Config {
-	return Config{Port: port}
+	return Config{Port: port, Port20: port20}
 }
 
 // NewServer builds the OCPP central system without starting it.
 func NewServer(cfg Config, networkExternalUrl string) {
 	port = cfg.Port
->>>>>>> origin/master
+	if cfg.Port20 != 0 {
+		port20 = cfg.Port20
+	}
 	externalUrl = networkExternalUrl
 
 	log := util.NewLogger("ocpp")
