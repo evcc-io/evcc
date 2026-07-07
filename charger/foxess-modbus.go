@@ -42,6 +42,7 @@ type FoxESSEVC struct {
 	mu               sync.Mutex
 	current          uint16  // last setpoint in register units (0.1A or 0.1kW depending on pbox)
 	commandedCurrent float64 // last setpoint in amps, for CurrentGetter
+	enabled          bool    // tracks enabled state for the heartbeat
 	pbox             bool    // phase-cutting box present; uses current register instead of power
 }
 
@@ -163,8 +164,12 @@ func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
 	return nil
 }
 
-// heartbeat re-sends the current setpoint to keep the charger from reverting
-// to its fallback current when the time validity window expires
+// heartbeat keeps the charger from considering evcc offline by sending a
+// message every half validity window. When enabled it re-sends the current
+// setpoint; when disabled it re-sends the stop command. The spec says the
+// setpoint registers (0x3001/0x3002) only take effect in the charging state,
+// but some firmware resumes on a re-sent setpoint after a stop, so we send
+// the stop command instead to actively hold the stopped state.
 func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 	for tick := time.Tick(foxTimeValidity / 2 * time.Second); ; {
 		select {
@@ -176,17 +181,18 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 		wb.mu.Lock()
 		cur := wb.current
 		pbox := wb.pbox
+		enabled := wb.enabled
 		wb.mu.Unlock()
 
-		if cur == 0 {
-			continue
-		}
-
 		var err error
-		if pbox {
-			err = wb.writeReg(foxRegMaxCurrent, cur)
-		} else {
-			err = wb.writeReg(foxRegMaxPower, cur)
+		if !enabled {
+			_, err = wb.conn.WriteSingleRegister(foxRegChargingControl, foxChargingStop)
+		} else if cur != 0 {
+			if pbox {
+				err = wb.writeReg(foxRegMaxCurrent, cur)
+			} else {
+				err = wb.writeReg(foxRegMaxPower, cur)
+			}
 		}
 		if err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
@@ -253,6 +259,10 @@ func (wb *FoxESSEVC) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *FoxESSEVC) Enable(enable bool) error {
+	wb.mu.Lock()
+	wb.enabled = enable
+	wb.mu.Unlock()
+
 	val := uint16(foxChargingStop)
 	if enable {
 		val = foxChargingStart
