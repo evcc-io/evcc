@@ -35,10 +35,10 @@ const (
 	// commanded total counts as under-delivery (a unit ACKs but can't physically deliver)
 	fastLoopShortfallDwell = 4 // consecutive under-delivering ticks (≈4s at 1s tick, longer
 	// than the inverter ramp) before engaging a standby, so normal ramp-up doesn't trip it
-	fastLoopRampZero = 100.0 // W; the active direction must have ramped this close to zero
-	// before the opposite-direction need is trusted for a flip request
 	fastLoopFlipDwell = 3 // consecutive ticks the opposite direction is wanted (past the dead
-	// band, battery ramped down) before poking the main loop to re-decide direction
+	// band) before poking the main loop to re-decide direction. The opposite need is
+	// ramp-invariant, so this runs during the ramp - no wait for the battery to reach zero
+
 )
 
 type batteryPlanDirection int
@@ -298,16 +298,17 @@ func (site *Site) batteryFastTierUp(plan *batteryControlPlan, target, measured f
 // for a sustained dwell. It never flips direction itself - the main loop remains the sole
 // authority, this only shortens when that decision runs. Caller holds batteryPlanMu.
 func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, battPower, target float64) {
-	// only consider a flip once the active direction has no work left (target ≈ 0) and
-	// the inverter has actually ramped down, so the opposite need is read from a settled
-	// state rather than mid-ramp (measured battery power still reflects the old direction)
-	if target > fastLoopMinDelta || math.Abs(battPower) > fastLoopRampZero {
+	// only consider a flip once the active direction has clamped to zero (no work left)
+	if target > fastLoopMinDelta {
 		plan.flipTicks = 0
 		return
 	}
 
 	// opposite-direction need, using the offsets the main loop shipped for that side
-	// (battery power convention: positive = discharging, negative = charging)
+	// (battery power convention: positive = discharging, negative = charging). This adds
+	// back the battery's current power, exactly like the main loop's energy balance, so it
+	// is ramp-invariant: the crossing is detectable immediately, without waiting for the
+	// inverter to ramp the old direction down to zero (which would cost 3-4s for nothing).
 	var oppositeNeed float64
 	switch plan.direction {
 	case batteryPlanDischarge: // opposite = charge
