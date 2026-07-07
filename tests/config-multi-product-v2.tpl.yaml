@@ -4,7 +4,7 @@ products:
   - brand: Alpha
     description:
       generic: Product A
-  - brand: NewZeta
+  - brand: ZetaNew
     description:
       generic: Product B
 params:
