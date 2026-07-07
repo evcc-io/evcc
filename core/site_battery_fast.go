@@ -35,13 +35,18 @@ const (
 	// commanded total counts as under-delivery (a unit ACKs but can't physically deliver)
 	fastLoopShortfallDwell = 4 // consecutive under-delivering ticks (≈4s at 1s tick, longer
 	// than the inverter ramp) before engaging a standby, so normal ramp-up doesn't trip it
-	fastLoopFlipDwell = 2 * time.Second // the opposite direction must stay wanted (past the
-	// dead band) this long before poking the main loop to re-decide direction. Wall-clock,
-	// not tick count, so stale-grid ticks that don't refresh the reading do not stretch it.
-	// The opposite need is ramp-invariant, so this runs during the ramp - no wait for zero
-	fastLoopFlipCooldown = 15 * time.Second // minimum spacing between fast-loop flip pokes,
-	// bounding charge<->discharge thrash when power hovers near the crossing. The main loop's
-	// scheduled tick can still flip during the cooldown; this only rate-limits the fast path
+	fastLoopFlipDwell = 1 * time.Second // the opposite direction must stay wanted (past the
+	// dead band) this long before poking the main loop - quick reaction, rejects a single
+	// glitchy sample. Wall-clock, so stale-grid ticks that carry no reading do not stretch it
+	// Adaptive flip spacing: instant for an isolated reversal, backing off when flipping
+	// repeatedly near the crossing. Each rapid re-flip doubles the spacing up to the max; a
+	// calm gap resets it to the minimum. Only rate-limits the fast path - the scheduled main
+	// tick still owns genuine flips.
+	fastLoopFlipBackoffMin = 2 * time.Second
+	fastLoopFlipBackoffMax = 60 * time.Second
+	fastLoopFlipCalm       = 120 * time.Second // gap since last flip beyond which a new one is
+	// treated as isolated (reset spacing to min) rather than oscillation (grow it). Larger than
+	// the max so sustained oscillation stays pinned at the max instead of resetting each cycle
 
 )
 
@@ -335,10 +340,20 @@ func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, batt
 		return
 	}
 
-	// cooldown: bound charge<->discharge thrash near the crossing (the scheduled main
-	// tick still owns genuine flips during the window)
-	if time.Since(site.lastBatteryFlipRequest) < fastLoopFlipCooldown {
+	// adaptive spacing: suppress while inside the current backoff window (the scheduled
+	// main tick still owns genuine flips there)
+	gap := time.Since(site.lastBatteryFlipRequest)
+	if gap < site.batteryFlipBackoff {
 		return
+	}
+	// grow the spacing when flips keep coming (oscillation), reset it after a calm gap
+	if gap < fastLoopFlipCalm {
+		site.batteryFlipBackoff = min(2*site.batteryFlipBackoff, fastLoopFlipBackoffMax)
+		if site.batteryFlipBackoff < fastLoopFlipBackoffMin {
+			site.batteryFlipBackoff = fastLoopFlipBackoffMin
+		}
+	} else {
+		site.batteryFlipBackoff = fastLoopFlipBackoffMin
 	}
 	plan.flipSince = time.Time{}
 	site.lastBatteryFlipRequest = time.Now()
@@ -346,7 +361,7 @@ func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, batt
 	// non-blocking poke; the cap-1 channel coalesces bursts and a pending request
 	select {
 	case site.batteryReplanChan <- struct{}{}:
-		site.log.DEBUG.Printf("solar power (fast): crossing detected (opposite need %.0fW > %.0fW dead band), requesting re-decision", oppositeNeed, plan.threshold)
+		site.log.DEBUG.Printf("solar power (fast): crossing detected (opposite need %.0fW > %.0fW dead band, next flip ≥ %s), requesting re-decision", oppositeNeed, plan.threshold, site.batteryFlipBackoff)
 	default:
 	}
 }
