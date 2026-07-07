@@ -35,6 +35,10 @@ const (
 	// commanded total counts as under-delivery (a unit ACKs but can't physically deliver)
 	fastLoopShortfallDwell = 4 // consecutive under-delivering ticks (≈4s at 1s tick, longer
 	// than the inverter ramp) before engaging a standby, so normal ramp-up doesn't trip it
+	fastLoopRampZero = 100.0 // W; the active direction must have ramped this close to zero
+	// before the opposite-direction need is trusted for a flip request
+	fastLoopFlipDwell = 3 // consecutive ticks the opposite direction is wanted (past the dead
+	// band, battery ramped down) before poking the main loop to re-decide direction
 )
 
 type batteryPlanDirection int
@@ -63,6 +67,14 @@ type batteryControlPlan struct {
 	evExcluded float64 // W of EV charge power the battery must not cover (discharge only)
 	gridOffset float64 // grid setpoint offset the main loop steered toward (residualPower,
 	// or 0 below prioritySoc where the energy-balance formula ignores it)
+
+	// opposite-direction parameters + shared dead band, so the fast loop can detect a
+	// charge<->discharge crossing and request a main-loop re-decision (never flips itself)
+	threshold          float64 // standbyPower + batteryControlDeadBand (same as the main loop)
+	oppositeGridOffset float64
+	oppositeEvExcluded float64
+	flipTicks          int // consecutive ticks the opposite direction has been wanted
+
 	total     float64 // currently commanded total power across entries
 	created   time.Time
 	lastWrite time.Time // last time power commands were sent (heartbeat reference)
@@ -181,6 +193,11 @@ func (site *Site) batteryFastTick() {
 	// no flapping. Selection and order stay in the main loop (the standby list).
 	engaged := site.batteryFastTierUp(plan, target, battPower)
 
+	// Direction crossing: when the active direction has clamped to zero and the opposite
+	// direction is genuinely wanted, poke the main loop to re-decide direction. The fast
+	// loop never flips itself - it only shortens when the existing main-loop decision runs.
+	site.batteryFastFlipCheck(plan, gridPower, battPower, target)
+
 	if !engaged && math.Abs(target-plan.total) < fastLoopMinDelta {
 		site.batteryFastHeartbeat(plan)
 		return
@@ -274,6 +291,48 @@ func (site *Site) batteryFastTierUp(plan *batteryControlPlan, target, measured f
 	}
 	site.log.DEBUG.Printf("solar power (fast): tier up (%s), engaging %s (target %.0fW, delivered %.0fW, capacity %.0fW)", reason, next.name, target, delivered, sumCaps)
 	return true
+}
+
+// batteryFastFlipCheck requests an out-of-band main-loop re-decision when the active
+// direction has clamped to zero and the opposite direction is wanted past the dead band
+// for a sustained dwell. It never flips direction itself - the main loop remains the sole
+// authority, this only shortens when that decision runs. Caller holds batteryPlanMu.
+func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, battPower, target float64) {
+	// only consider a flip once the active direction has no work left (target ≈ 0) and
+	// the inverter has actually ramped down, so the opposite need is read from a settled
+	// state rather than mid-ramp (measured battery power still reflects the old direction)
+	if target > fastLoopMinDelta || math.Abs(battPower) > fastLoopRampZero {
+		plan.flipTicks = 0
+		return
+	}
+
+	// opposite-direction need, using the offsets the main loop shipped for that side
+	// (battery power convention: positive = discharging, negative = charging)
+	var oppositeNeed float64
+	switch plan.direction {
+	case batteryPlanDischarge: // opposite = charge
+		oppositeNeed = -battPower - (gridPower + plan.oppositeGridOffset)
+	case batteryPlanCharge: // opposite = discharge
+		oppositeNeed = battPower + gridPower + plan.oppositeGridOffset - plan.oppositeEvExcluded
+	}
+
+	if oppositeNeed <= plan.threshold {
+		plan.flipTicks = 0
+		return
+	}
+
+	plan.flipTicks++
+	if plan.flipTicks < fastLoopFlipDwell {
+		return
+	}
+	plan.flipTicks = 0
+
+	// non-blocking poke; the cap-1 channel coalesces bursts and a pending request
+	select {
+	case site.batteryReplanChan <- struct{}{}:
+		site.log.DEBUG.Printf("solar power (fast): crossing detected (opposite need %.0fW > %.0fW dead band), requesting re-decision", oppositeNeed, plan.threshold)
+	default:
+	}
 }
 
 // batteryFastSend distributes target equally across the plan's entries, clamps to the

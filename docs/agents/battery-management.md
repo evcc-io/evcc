@@ -298,8 +298,14 @@ Tier-*down* is never done by the fast loop; the main loop's `computeTier` hyster
 
 Note: distribution across the engaged set is still equal-share (`batteryFastSend`), so a weak unit's slack is only partly absorbed by adding another battery — capacity-aware (measured) redistribution would be needed to drive the residual grid error fully to zero when one unit is limited.
 
+**Direction-crossing detector** (`batteryFastFlipCheck`): the fast loop never flips direction itself — but it does **shorten when the main loop's existing direction decision runs**. When the active direction has clamped to zero (`target ≤ fastLoopMinDelta`) *and* the inverter has actually ramped down (`|battPower| < fastLoopRampZero`, 100W) *and* the opposite-direction need exceeds the **same** dead band the main loop uses (`threshold = standbyPower + batteryControlDeadBand`) for `fastLoopFlipDwell` (3) consecutive ticks, it sends a non-blocking poke on `batteryReplanChan`. The main loop drains that channel in its `Run` select and calls `replanBattery()` — the battery-only subset of `update()` (fresh meters via `sitePower`, then `updateBatteryMode`), leaving the loadpoint/EV cycle untouched. The opposite need is computed from the `oppositeGridOffset`/`oppositeEvExcluded` the main loop publishes, so it matches the main loop's own semantics.
+
+Why this is safe: the poke handler runs in the same goroutine as the scheduled tick (Go `select` serialises them — no new concurrency), and the **direction decision itself stays byte-identical** in `applyBatterySolarPower`; a spurious poke just re-decides the same direction (a no-op). The dead band + ramp-zero gate + dwell prevent zero-crossing chatter. Net effect: a charge↔discharge reversal happens ~ramp+dwell (≈5–8s, mostly unavoidable inverter ramp) after the crossing instead of waiting up to a full main interval — which lets the main interval be raised back toward the recommended 30s (calmer EV control) without losing battery reactivity. `replanBattery` reuses the last `flexiblePower`/`totalChargePower` (both benign: `totalChargePower` is unused with grid+PV meters; stale `flexiblePower` only matters in the rare EV-PV-charging + crossing overlap, self-corrected next tick).
+
+Limitation: the detector only accelerates charge↔discharge *flips*, not idle→active starts (the plan is idle when balanced and the fast loop bails early). Idle is transient with a residual-power setpoint, so idle→active still waits for the scheduled tick.
+
 **Safety rules**:
-- Direction flips are never done by the fast loop — corrections clamp at 0 and wait for the main loop
+- Direction flips are never *decided* by the fast loop — it clamps at 0 and either waits for the main loop or pokes it to re-decide sooner (above); the decision stays in the main loop
 - Plan stays **idle on swap ticks** (ramp/overlap makes the commanded-power proxy unreliable) — fast loop pauses for one main tick
 - Plan older than 30s (main loop stalled) → fast loop parks
 - Failed grid read → skip tick

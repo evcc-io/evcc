@@ -341,6 +341,26 @@ func (site *Site) applyBatterySolarPower(rate api.Rate, sitePower float64) {
 	// reacting to small measurement noise around the zero-grid setpoint.
 	threshold := standbyPower + site.batteryControlDeadBand
 
+	// Direction-agnostic grid setpoints, computed once so the active branch and the
+	// fast loop's opposite-direction crossing detector stay consistent. Charge ignores
+	// residualPower below prioritySoc (energy-balance surplus already does); discharge
+	// excludes fast/planned EV power that the battery must not cover.
+	residual := site.GetResidualPower()
+	chargeOffset := 0.0
+	if site.battery.Soc >= site.prioritySoc {
+		chargeOffset = residual
+	}
+	dischargeOffset := residual
+	// mirrors the discharge branch's EV-exclusion exactly (kept in sync by construction):
+	// discharge control excludes only fast/planned EV; below bufferSoc excludes all EV
+	var dischargeEvExcluded float64
+	if site.dischargeControlActive(rate) {
+		dischargeEvExcluded = evPowerFast
+	} else if !(site.bufferSoc > 0 && site.battery.Soc > site.bufferSoc) {
+		dischargeEvExcluded = evPower
+	}
+	plan.threshold = threshold
+
 	switch {
 	case surplus > threshold:
 		// filter to batteries that have not yet reached their max SoC.
@@ -551,11 +571,9 @@ func (site *Site) applyBatterySolarPower(rate api.Rate, sitePower float64) {
 		// fast loop's commanded-power proxy unreliable until the handoff settles.
 		if !hasChargeSwap {
 			plan.direction = batteryPlanCharge
-			// below prioritySoc the energy-balance surplus ignores residualPower; the fast
-			// loop must steer toward the same grid setpoint or the loops fight each other
-			if site.battery.Soc >= site.prioritySoc {
-				plan.gridOffset = site.GetResidualPower()
-			}
+			plan.gridOffset = chargeOffset
+			plan.oppositeGridOffset = dischargeOffset
+			plan.oppositeEvExcluded = dischargeEvExcluded
 		}
 		if hasChargeSwap {
 			if chargeSwapInFailed {
@@ -799,7 +817,9 @@ func (site *Site) applyBatterySolarPower(rate api.Rate, sitePower float64) {
 		if !hasDischargeSwap {
 			plan.direction = batteryPlanDischarge
 			plan.evExcluded = evExcluded
-			plan.gridOffset = site.GetResidualPower()
+			plan.gridOffset = dischargeOffset
+			plan.oppositeGridOffset = chargeOffset
+			plan.oppositeEvExcluded = 0
 		}
 		if hasDischargeSwap && dischargeSwapInFailed {
 			site.log.WARN.Printf("solar power: discharge swap failed, keeping %s", dischargeSwapOut.dev.Config().Name)
