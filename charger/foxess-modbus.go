@@ -37,11 +37,12 @@ import (
 // FoxESSEVC charger implementation
 type FoxESSEVC struct {
 	implement.Caps
-	log     *util.Logger
-	conn    *modbus.Connection
-	mu      sync.Mutex
-	current uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
-	pbox    bool   // phase-cutting box present; uses current register instead of power
+	log              *util.Logger
+	conn             *modbus.Connection
+	mu               sync.Mutex
+	current          uint16  // last setpoint in register units (0.1A or 0.1kW depending on pbox)
+	commandedCurrent float64 // last setpoint in amps, for CurrentGetter
+	pbox             bool    // phase-cutting box present; uses current register instead of power
 }
 
 const (
@@ -295,9 +296,24 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 
 	wb.mu.Lock()
 	wb.current = val
+	wb.commandedCurrent = current
 	wb.mu.Unlock()
 
 	return nil
+}
+
+var _ api.CurrentGetter = (*FoxESSEVC)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface.
+// It returns the last commanded current so evcc's sync loop compares against the
+// intended setpoint rather than the measured phase current, which diverges in
+// no-PBOX mode when the charger auto-switches phases.
+func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
+	wb.mu.Lock()
+	cur := wb.commandedCurrent
+	wb.mu.Unlock()
+
+	return cur, nil
 }
 
 var _ api.Meter = (*FoxESSEVC)(nil)
