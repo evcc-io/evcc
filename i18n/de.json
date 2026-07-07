@@ -24,6 +24,9 @@
       "charging": "Lädt",
       "discharging": "Entlädt",
       "energy": "Energie",
+      "gridCharge": "Netzladen",
+      "hold": "Entladesperre",
+      "holdCharge": "Ladesperre",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
