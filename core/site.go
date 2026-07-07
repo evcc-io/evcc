@@ -129,6 +129,7 @@ type Site struct {
 	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
 	lastFlexiblePower        float64                     // last PV-mode charge flexibility, reused by out-of-band battery replan
 	lastTotalChargePower     float64                     // last total loadpoint charge power, reused by out-of-band battery replan
+	lastBatteryFlipRequest   time.Time                   // last fast-loop flip poke; cooldown to bound direction thrash
 }
 
 // MetersConfig contains the site's meter configuration

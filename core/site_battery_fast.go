@@ -35,9 +35,13 @@ const (
 	// commanded total counts as under-delivery (a unit ACKs but can't physically deliver)
 	fastLoopShortfallDwell = 4 // consecutive under-delivering ticks (≈4s at 1s tick, longer
 	// than the inverter ramp) before engaging a standby, so normal ramp-up doesn't trip it
-	fastLoopFlipDwell = 3 // consecutive ticks the opposite direction is wanted (past the dead
-	// band) before poking the main loop to re-decide direction. The opposite need is
-	// ramp-invariant, so this runs during the ramp - no wait for the battery to reach zero
+	fastLoopFlipDwell = 2 * time.Second // the opposite direction must stay wanted (past the
+	// dead band) this long before poking the main loop to re-decide direction. Wall-clock,
+	// not tick count, so stale-grid ticks that don't refresh the reading do not stretch it.
+	// The opposite need is ramp-invariant, so this runs during the ramp - no wait for zero
+	fastLoopFlipCooldown = 15 * time.Second // minimum spacing between fast-loop flip pokes,
+	// bounding charge<->discharge thrash when power hovers near the crossing. The main loop's
+	// scheduled tick can still flip during the cooldown; this only rate-limits the fast path
 
 )
 
@@ -73,7 +77,7 @@ type batteryControlPlan struct {
 	threshold          float64 // standbyPower + batteryControlDeadBand (same as the main loop)
 	oppositeGridOffset float64
 	oppositeEvExcluded float64
-	flipTicks          int // consecutive ticks the opposite direction has been wanted
+	flipSince          time.Time // when the opposite direction first became wanted (zero = not)
 
 	total     float64 // currently commanded total power across entries
 	created   time.Time
@@ -300,7 +304,7 @@ func (site *Site) batteryFastTierUp(plan *batteryControlPlan, target, measured f
 func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, battPower, target float64) {
 	// only consider a flip once the active direction has clamped to zero (no work left)
 	if target > fastLoopMinDelta {
-		plan.flipTicks = 0
+		plan.flipSince = time.Time{}
 		return
 	}
 
@@ -318,15 +322,26 @@ func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, batt
 	}
 
 	if oppositeNeed <= plan.threshold {
-		plan.flipTicks = 0
+		plan.flipSince = time.Time{}
 		return
 	}
 
-	plan.flipTicks++
-	if plan.flipTicks < fastLoopFlipDwell {
+	// start the dwell timer on first detection; require it to stay wanted for the dwell
+	if plan.flipSince.IsZero() {
+		plan.flipSince = time.Now()
 		return
 	}
-	plan.flipTicks = 0
+	if time.Since(plan.flipSince) < fastLoopFlipDwell {
+		return
+	}
+
+	// cooldown: bound charge<->discharge thrash near the crossing (the scheduled main
+	// tick still owns genuine flips during the window)
+	if time.Since(site.lastBatteryFlipRequest) < fastLoopFlipCooldown {
+		return
+	}
+	plan.flipSince = time.Time{}
+	site.lastBatteryFlipRequest = time.Now()
 
 	// non-blocking poke; the cap-1 channel coalesces bursts and a pending request
 	select {
