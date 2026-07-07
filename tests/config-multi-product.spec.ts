@@ -5,11 +5,11 @@ import { expectModalVisible, expectModalHidden } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 const flags = ["--disable-auth", "--template-type", "meter", "--template"];
-const templateFlags = [...flags, "tests/config-multi-product-v1.tpl.yaml"];
-const renamedFlags = [...flags, "tests/config-multi-product-v2.tpl.yaml"];
+const v1Flags = [...flags, "tests/config-multi-product-v1.tpl.yaml"];
+const v2Flags = [...flags, "tests/config-multi-product-v2.tpl.yaml"];
 
 test.beforeEach(async () => {
-  await start(undefined, undefined, templateFlags);
+  await start(undefined, undefined, v1Flags);
 });
 test.afterEach(async () => {
   await stop();
@@ -36,7 +36,7 @@ test.describe("template with multiple products", async () => {
     await expectModalHidden(meterModal);
 
     // product renamed in template (software update): persisted name must survive
-    await restart(undefined, renamedFlags);
+    await restart(undefined, v2Flags);
     await page.reload();
 
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
