@@ -164,8 +164,7 @@ export default defineComponent({
 		isYamlInputType(type: ConfigType): boolean {
 			return type === ConfigType.Custom;
 		},
-		handleTemplateChange(e: Event, values: DeviceValues) {
-			const value = (e.target as HTMLSelectElement).value as ConfigType;
+		handleTemplateChange(value: string, values: DeviceValues) {
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
 				values.yaml = customHemsYaml;
