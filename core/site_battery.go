@@ -361,6 +361,9 @@ func (site *Site) applyBatterySolarPower(rate api.Rate, sitePower float64) {
 	}
 	plan.threshold = threshold
 
+	site.log.TRACE.Printf("battery decision: surplus=%.0fW sitePower=%.0fW threshold=%.0fW soc=%.0f%% evPower=%.0fW",
+		surplus, sitePower, threshold, site.battery.Soc, evPower)
+
 	switch {
 	case surplus > threshold:
 		// filter to batteries that have not yet reached their max SoC.

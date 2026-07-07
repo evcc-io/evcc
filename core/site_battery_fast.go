@@ -58,6 +58,17 @@ const (
 	batteryPlanDischarge
 )
 
+func batteryPlanDirectionString(d batteryPlanDirection) string {
+	switch d {
+	case batteryPlanCharge:
+		return "charge"
+	case batteryPlanDischarge:
+		return "discharge"
+	default:
+		return "idle"
+	}
+}
+
 type batteryPlanEntry struct {
 	ctrl  api.BatteryPowerController
 	meter api.Meter
@@ -121,8 +132,13 @@ func (site *Site) batteryFastTick() {
 	defer site.batteryPlanMu.Unlock()
 
 	plan := site.batteryPlan
-	if plan == nil || plan.direction == batteryPlanIdle || len(plan.entries) == 0 ||
-		time.Since(plan.created) > batteryPlanMaxAge {
+	if plan == nil {
+		site.log.TRACE.Print("solar power (fast): parked (no plan)")
+		return
+	}
+	if plan.direction == batteryPlanIdle || len(plan.entries) == 0 || time.Since(plan.created) > batteryPlanMaxAge {
+		site.log.TRACE.Printf("solar power (fast): parked (dir=%s, %d entries, plan age %s)",
+			batteryPlanDirectionString(plan.direction), len(plan.entries), time.Since(plan.created).Round(time.Second))
 		return
 	}
 
@@ -140,6 +156,7 @@ func (site *Site) batteryFastTick() {
 	// ticks cost a single TCP read.
 	firstTick := !plan.lastValid
 	if !firstTick && gridPower == plan.lastGrid {
+		site.log.TRACE.Printf("solar power (fast): stale grid %.0fW, skip", gridPower)
 		site.batteryFastHeartbeat(plan)
 		return
 	}
@@ -195,6 +212,9 @@ func (site *Site) batteryFastTick() {
 		target = -battPower - (gridPower + plan.gridOffset)
 	}
 	target = math.Max(plan.total+fastLoopGain*(target-plan.total), 0)
+
+	site.log.TRACE.Printf("solar power (fast): dir=%s grid=%.0fW batt=%.0fW target=%.0fW total=%.0fW off=%.0fW ev=%.0fW",
+		batteryPlanDirectionString(plan.direction), gridPower, battPower, target, plan.total, plan.gridOffset, plan.evExcluded)
 
 	// Tier-up: when the engaged set is saturated (target exceeds its total capacity)
 	// and an eligible standby battery is available, engage the next one. The main loop
@@ -330,6 +350,13 @@ func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, batt
 		plan.flipSince = time.Time{}
 		return
 	}
+
+	dwell := time.Duration(0)
+	if !plan.flipSince.IsZero() {
+		dwell = time.Since(plan.flipSince)
+	}
+	site.log.TRACE.Printf("solar power (fast): crossing wanted (opposite %.0fW > %.0fW), dwell %s/%s, backoff %s",
+		oppositeNeed, plan.threshold, dwell.Round(100*time.Millisecond), fastLoopFlipDwell, site.batteryFlipBackoff)
 
 	// start the dwell timer on first detection; require it to stay wanted for the dwell
 	if plan.flipSince.IsZero() {
