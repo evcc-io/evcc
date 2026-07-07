@@ -127,14 +127,28 @@ func (site *Site) batteryFastTick() {
 	// commanded total is essential: during inverter ramps the commanded value is not
 	// yet delivered, and integrating the still-visible grid error against it causes
 	// runaway oscillation. The energy-balance target below is ramp-state invariant.
+	// Reads run in parallel (each battery has its own connection) so a multi-battery
+	// tier does not serialize round-trips into the tick latency.
+	powers := make([]float64, len(plan.entries))
+	errs := make([]error, len(plan.entries))
+	var rwg sync.WaitGroup
+	for i, e := range plan.entries {
+		rwg.Add(1)
+		go func() {
+			defer rwg.Done()
+			powers[i], errs[i] = e.meter.CurrentPower()
+		}()
+	}
+	rwg.Wait()
+
 	var battPower float64
-	for _, e := range plan.entries {
-		p, err := e.meter.CurrentPower()
-		if err != nil {
-			site.log.DEBUG.Printf("solar power (fast): %s power: %v", e.name, err)
+	for i, e := range plan.entries {
+		if errs[i] != nil {
+			// any failed read: skip the tick, retry next period
+			site.log.DEBUG.Printf("solar power (fast): %s power: %v", e.name, errs[i])
 			return
 		}
-		battPower += p
+		battPower += powers[i]
 	}
 
 	// Meter consistency guard rule 2 - sampling skew: with constant load,
