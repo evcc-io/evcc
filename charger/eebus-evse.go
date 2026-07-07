@@ -345,7 +345,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// always set overload protection limits (obligation)
-	if err := eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, cb)
 	}); err != nil {
 		return err
@@ -397,7 +397,7 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		limits = append(limits, limit)
 	}
 
-	if err := eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, cb)
 	}); err != nil {
 		c.log.DEBUG.Println("failed to write OSCEV limits:", err)

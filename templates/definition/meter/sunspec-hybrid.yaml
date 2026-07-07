@@ -112,7 +112,9 @@ render: |
     set:
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPct
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
       - source: switch
         switch:
           - case: 100 # Uncurtailed
@@ -122,18 +124,24 @@ render: |
               set:
                 source: sunspec
                 {{- include "modbus" . | indent 14 }}
-                value: 704:WMaxLimPctEna
+                value:
+                  - 704:WMaxLimPctEna
+                  - 123:WMaxLim_Ena
         default:
           source: const
           value: 1 # Limit enabled
           set:
             source: sunspec
             {{- include "modbus" . | indent 10 }}
-            value: 704:WMaxLimPctEna
+            value:
+              - 704:WMaxLimPctEna
+              - 123:WMaxLim_Ena
   curtailed:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 704:WMaxLimPctEna
+    value:
+      - 704:WMaxLimPctEna
+      - 123:WMaxLim_Ena
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
