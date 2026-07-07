@@ -3,8 +3,7 @@
 		<select
 			v-if="isNew"
 			:id="`${deviceType}Template`"
-			ref="select"
-			v-model="modelProxy"
+			v-model="selected"
 			class="form-select w-100"
 			:disabled="disabled"
 			@change="changed"
@@ -14,11 +13,7 @@
 					v-if="group.options?.length"
 					:label="$t(`config.${deviceType}.${group.label}`)"
 				>
-					<option
-						v-for="option in group.options"
-						:key="option.name"
-						:value="option.template"
-					>
+					<option v-for="option in group.options" :key="option.name" :value="option">
 						{{ option.name }}
 					</option>
 				</optgroup>
@@ -69,23 +64,36 @@ export default defineComponent({
 		disabled: Boolean,
 	},
 	emits: ["update:modelValue", "change"],
+	data() {
+		return {
+			selected: null as TemplateOption | null,
+		};
+	},
 	computed: {
-		modelProxy: {
-			get() {
-				return this.modelValue;
-			},
-			set(value: string) {
-				this.$emit("update:modelValue", value);
-			},
+		flatOptions(): TemplateOption[] {
+			return (this.groups ?? []).flatMap((g) => g.options ?? []);
 		},
 	},
+	watch: {
+		modelValue: "syncFromModel",
+		groups: { handler: "syncFromModel", deep: true },
+	},
+	created() {
+		this.syncFromModel();
+	},
 	methods: {
+		syncFromModel() {
+			const options = this.flatOptions.filter((o) => o.template === this.modelValue);
+			const sameNameOption = options.find((o) => o.name === this.selected?.name);
+			this.selected = sameNameOption ?? options[0] ?? null;
+		},
 		changed(e: Event) {
-			this.$emit("change", e);
+			this.selected = this.flatOptions[(e.target as HTMLSelectElement).selectedIndex] ?? null;
+			this.$emit("update:modelValue", this.selected?.template ?? null);
+			this.$emit("change", this.selected?.template ?? null);
 		},
 		getProductName() {
-			const select = this.$refs["select"] as HTMLSelectElement;
-			return select.options[select.selectedIndex]?.text || "";
+			return this.selected?.name || "";
 		},
 	},
 });
