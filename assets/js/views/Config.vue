@@ -1283,8 +1283,13 @@ export default defineComponent({
 .config-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-	grid-gap: 2rem;
+	grid-gap: 1rem;
 	margin-bottom: 5rem;
+}
+@media (min-width: 576px) {
+	.config-list {
+		grid-gap: 2rem;
+	}
 }
 .wip {
 	opacity: 0.2 !important;
