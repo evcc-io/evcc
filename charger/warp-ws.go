@@ -102,14 +102,14 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		implement.Has(w, implement.PhaseVoltages(w.voltages))
 	}
 
-	// Feature: EV (WARP4): vehicle soc and mac read via ISO 15118
-	hasEv := w.hasFeature(warp.FeatureEv)
-	if hasEv {
+	// Feature: ISO 15118 (WARP4): vehicle soc and mac exposed via ev/state
+	hasIso15118 := w.hasFeature(warp.FeatureIso15118)
+	if hasIso15118 {
 		implement.Has(w, implement.Battery(w.soc))
 	}
 
 	// Feature: NFC
-	if w.hasFeature(warp.FeatureNfc) || hasEv {
+	if w.hasFeature(warp.FeatureNfc) || hasIso15118 {
 		implement.Has(w, implement.Identifier(w.identify))
 	}
 
