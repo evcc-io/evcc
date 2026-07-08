@@ -13,6 +13,18 @@ params:
     default: 1s
 render: |
   type: custom
+  getminsoc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.minSoc
+    scale: 0.01
+    cache: {{ .cache }}
+  getmaxsoc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.socSet
+    scale: 0.01
+    cache: {{ .cache }}
   power:
     source: http
     uri: http://{{ .host }}/properties/report
