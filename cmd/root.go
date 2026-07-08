@@ -32,6 +32,8 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
@@ -46,13 +48,14 @@ const (
 )
 
 var (
-	log           = util.NewLogger("main")
-	cfgFile       string
-	cfgDatabase   string
-	customCssFile string
-	ignoreEmpty   = ""                                      // ignore empty keys
-	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
-	ignoreMqtt    = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
+	log              = util.NewLogger("main")
+	cfgFile          string
+	cfgDatabase      string
+	customCssFile    string
+	ignoreEmpty      = ""                                                  // ignore empty keys
+	ignoreLogs       = []string{"log"}                                     // ignore log messages, including warn/error
+	ignoreMqtt       = []string{"log", "auth", "releaseNotes"}             // excessive size may crash certain brokers
+	ignorePrometheus = []string{"log", "auth", "releaseNotes", "forecast"} // avoid excessive metric/label cardinality
 
 	viper *vpr.Viper
 
@@ -267,8 +270,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ApiReady, Val: false}
 
 	// metrics
+	var promMetrics *server.Prometheus
 	if viper.GetBool("metrics") {
-		httpd.Router().Handle("/metrics", promhttp.Handler())
+		promRegistry := prometheus.NewRegistry()
+		promRegistry.MustRegister(collectors.NewGoCollector(), collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+
+		promMetrics = server.NewPrometheus(promRegistry)
+
+		httpd.Router().Handle("/metrics", promhttp.HandlerFor(promRegistry, promhttp.HandlerOpts{}))
 	}
 
 	// pprof
@@ -339,6 +348,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		if err == nil {
 			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
 		}
+	}
+
+	// feed prometheus exporter with site state
+	if err == nil && promMetrics != nil {
+		go promMetrics.Run(site, pipe.NewDropper(append(ignorePrometheus, ignoreEmpty)...).Pipe(tee.Attach()))
 	}
 
 	// announce on mDNS
