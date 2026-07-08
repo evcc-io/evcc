@@ -94,6 +94,7 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  consumers?: Meter[];
   tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
@@ -755,7 +756,7 @@ export interface SiteConfig {
   title: string;
   aux: string[] | null;
   ext: string[] | null;
-  consumers: string[] | null;
+  consumer: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

@@ -27,6 +27,7 @@ export interface BatteryStatusCardModel {
   power: number;
   capacity: number;
   color: string;
+  controllable: boolean;
   suggestion: BatterySuggestion | null;
   forecast: BatteryForecast | null;
 }

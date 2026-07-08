@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Charging",
-      "discharging": "Discharging",
+      "charging": "charging",
+      "discharging": "discharging",
       "energy": "Energy",
+      "gridCharge": "grid charging",
+      "hold": "discharge locked",
+      "holdCharge": "charge locked",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Battery level"
