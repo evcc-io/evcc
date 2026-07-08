@@ -79,6 +79,11 @@ func fromBytes(b []byte) (Template, error) {
 		}
 	}
 
+	// push down capabilities to products
+	for i := range tmpl.Products {
+		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
+	}
+
 	return tmpl, nil
 }
 
