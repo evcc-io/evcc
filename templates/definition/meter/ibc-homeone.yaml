@@ -78,9 +78,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      # 31622 battery SOC (U16, whole %); vendor doc lists scale 0.01 but the device
-      # reports plain percent on the wire, confirmed against a real charge session (#31584)
-      address: 1621
+      address: 1621 # 31622 battery SOC (U16, %)
       type: input
       decode: uint16
   {{- include "battery-params" . }}
