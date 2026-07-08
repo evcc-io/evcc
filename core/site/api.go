@@ -3,6 +3,7 @@ package site
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/types"
 )
 
 // publisher gives access to the site's publish function
@@ -21,6 +22,10 @@ type API interface {
 	// Meta
 	GetTitle() string
 	SetTitle(string)
+
+	// GeoLocation
+	GetGeoLocation() types.GeoLocation
+	SetGeoLocation(types.GeoLocation)
 
 	// Config
 	GetGridMeterRef() string

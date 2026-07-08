@@ -19,6 +19,7 @@ const (
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
 	SiteTitle             = "siteTitle"
+	GeoLocation           = "geoLocation"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
 	Forecast              = "forecast"

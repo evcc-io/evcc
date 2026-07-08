@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -15,14 +16,16 @@ type Coordinator struct {
 	log      *util.Logger
 	vehicles []api.Vehicle
 	tracked  map[api.Vehicle]loadpoint.API
+	site     site.API
 }
 
 // New creates a coordinator for a set of vehicles
-func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
+func New(log *util.Logger, vehicles []api.Vehicle, site site.API) *Coordinator {
 	return &Coordinator{
 		log:      log,
 		vehicles: vehicles,
 		tracked:  make(map[api.Vehicle]loadpoint.API),
+		site:     site,
 	}
 }
 
@@ -148,19 +151,22 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus 
 
 			c.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.GetTitle())
 
-			// vehicle is plugged or charging and has the same state as the charger, so it should be the right one
+			// vehicle is plugged or charging, has the same state as the charger
+      // and is at site location, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
-				if status == lpStatus {
-					if exactMatch != nil {
-						c.log.WARN.Println("vehicle status: >1 matches, giving up")
-						return nil
-					}
+        if c.isVehicleAtHome(vehicle) {
+				  if status == lpStatus {
+					  if exactMatch != nil {
+						  c.log.WARN.Println("vehicle status: >1 matches, giving up")
+						  return nil
+					  }
 
-					exactMatch = vehicle
-				} else {
-					// vehicle is plugged or charging, so it should be the right one if there is no exact match
-					approximateMatches = append(approximateMatches, vehicle)
-				}
+					  exactMatch = vehicle
+				  } else {
+					  // vehicle is plugged or charging, so it should be the right one if there is no exact match
+					  approximateMatches = append(approximateMatches, vehicle)
+				  }
+        }
 			}
 		}
 	}
