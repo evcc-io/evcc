@@ -16,9 +16,6 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
-  - name: maxchargepower
-    default: 1750
-    required: true
   # battery control
   - name: watchdog
     default: 60s
@@ -120,36 +117,6 @@ render: |
                 decode: int16
           - source: const
             value: 0
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 141
-                type: writemultiple
-                decode: int16
-          - source: random
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 142
-                type: writemultiple
-                decode: int16
-      - case: 3 # charge
-        set:
-          source: sequence
-          set:
-          - source: const
-            value: {{ .maxchargepower }} # W, max charge power
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 140
-                type: writemultiple
-                decode: int16
-          - source: const
-            value: 0 # W, block discharge while forcing charge
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
