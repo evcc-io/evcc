@@ -27,6 +27,7 @@
       "gridCharge": "grid charging",
       "hold": "discharge locked",
       "holdCharge": "charge locked",
+      "idle": "idle",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Battery level"

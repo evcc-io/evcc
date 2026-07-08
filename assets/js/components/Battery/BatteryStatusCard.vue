@@ -92,7 +92,11 @@ export default defineComponent({
 			| "discharging"
 			| "idle" {
 			if (this.controllable) {
-				if (this.batteryMode === BATTERY_MODE.HOLD) return BATTERY_MODE.HOLD;
+				// FORK (feat/battery_loop): HOLD intentionally omitted here. Watt-level solar
+				// control keeps the battery in HOLD (RS485 enabled) while actively charging/
+				// discharging, so mode-priority would mislabel it "discharge locked". Fall
+				// through to the power-based status instead. Restore the HOLD line to follow
+				// upstream if watt-level control is dropped.
 				if (this.batteryMode === BATTERY_MODE.HOLDCHARGE) return BATTERY_MODE.HOLDCHARGE;
 				if (this.batteryMode === BATTERY_MODE.CHARGE) return BATTERY_MODE.CHARGE;
 			}
@@ -112,6 +116,11 @@ export default defineComponent({
 					return this.$t("battery.card.charging");
 				case "discharging":
 					return this.$t("battery.card.discharging");
+				// FORK (feat/battery_loop): label idle batteries (tiered-off units under
+				// watt-level control sit at 0W) instead of showing no status. Remove to
+				// follow upstream.
+				case "idle":
+					return this.$t("battery.card.idle");
 				default:
 					return undefined;
 			}
