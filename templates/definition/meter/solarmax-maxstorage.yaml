@@ -17,7 +17,7 @@ params:
   - name: maxacpower
   - preset: battery-params
   - name: maxchargepower
-    service: modbus/read?address=130&type=input&encoding=uint32&{modbus}
+    default: 1750
     required: true
   # battery control
   - name: watchdog
