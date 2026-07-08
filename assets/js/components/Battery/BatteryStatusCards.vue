@@ -1,11 +1,11 @@
 <template>
-	<div v-if="showSplit" class="cards cards--split gap-3">
+	<div v-if="showSplit" class="cards cards--split gap-4">
 		<BatteryStatusCard v-bind="cards[0]" />
 		<Card :title="$t('battery.optimizer.title')" data-testid="battery-optimizer-card">
 			<OptimizerInfo :suggestion="suggestion" :forecast="batteryForecast" />
 		</Card>
 	</div>
-	<div v-else class="cards gap-3">
+	<div v-else class="cards gap-4">
 		<BatteryStatusCard v-for="card in cards" :key="card.id" v-bind="card" />
 	</div>
 </template>

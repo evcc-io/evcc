@@ -16,6 +16,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig
+					class="box-pull-out"
 					:experimental="experimental"
 					:sponsor-error="hasClassError('sponsorship')"
 					@site-changed="siteChanged"
@@ -23,7 +24,7 @@
 
 				<WelcomeBanner v-if="setupRequired" />
 				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
 						:id="`loadpoint_${loadpoint.name}`"
@@ -55,7 +56,7 @@
 				</div>
 
 				<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="vehicle in vehicles"
 						:id="`vehicle_${vehicle.name}`"
@@ -82,7 +83,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.consumers") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in consumerMeters"
 						:key="meter.name"
@@ -109,7 +110,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-if="gridMeter"
 						:meter="gridMeter"
@@ -127,7 +128,7 @@
 					/>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in pvMeters"
 						:key="meter.name"
@@ -154,7 +155,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in extMeters"
 						:key="meter.name"
@@ -172,7 +173,7 @@
 				</div>
 
 				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
-				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
+				<div v-if="!!tariffsYamlSource" class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.tariff.title')"
 						:editable="tariffsYamlSource === 'db'"
@@ -191,7 +192,7 @@
 						</template>
 					</DeviceCard>
 				</div>
-				<div v-else class="p-0 config-list">
+				<div v-else class="p-0 config-list box-pull-out">
 					<TariffCard
 						v-if="gridTariff"
 						:tariff="gridTariff"
@@ -252,7 +253,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
 
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<AuthProvidersCard
 						:providers="authProviders"
 						data-testid="auth-providers"
@@ -374,7 +375,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.ocpp.title')"
 						editable
@@ -416,7 +417,10 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div data-testid="config-system" class="round-box p-4 d-flex gap-4 flex-wrap">
+				<div
+					data-testid="config-system"
+					class="round-box box-pull-out p-4 d-flex gap-4 flex-wrap"
+				>
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>

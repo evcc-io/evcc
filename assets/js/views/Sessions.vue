@@ -65,91 +65,98 @@
 					</IconSelectGroup>
 				</div>
 
-				<h3
-					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden"
+				<Card
+					:title="historyTitle"
+					:subtitle="historySubTitle"
+					edge-to-edge
+					class="box-pull-out mb-4"
 				>
-					<span v-if="historyTitle" class="d-block no-wrap text-truncate">
-						{{ historyTitle }}
-					</span>
-					<small class="d-block no-wrap text-truncate">{{ historySubTitle }}</small>
-				</h3>
-				<EnergyHistoryChart
-					v-if="activeType === types.SOLAR"
-					class="mb-5"
-					:sessions="currentSessions"
-					:color-mappings="colorMappings"
-					:device-colors="deviceColors"
-					:group-by="selectedGroup"
-					:period="period"
-				/>
-				<CostHistoryChart
-					v-else
-					class="mb-5"
-					:sessions="currentTypeSessions"
-					:color-mappings="colorMappings"
-					:device-colors="deviceColors"
-					:group-by="selectedGroup"
-					:cost-type="activeType"
-					:currency="currency"
-					:period="period"
-				/>
-				<div v-if="showExtraCharts" class="row align-items-start">
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ firstExtraTitle }}</h3>
-						<div v-if="activeType === types.SOLAR">
-							<SolarYearChart
-								v-if="showSolarYearChart"
-								:period="period"
-								:sessions="currentSessions"
-							/>
-							<SolarGroupedChart
-								v-else
-								:sessions="currentSessions"
-								:color-mappings="colorMappings"
-								:device-colors="deviceColors"
-								:group-by="selectedGroupWithoutNone"
-							/>
+					<EnergyHistoryChart
+						v-if="activeType === types.SOLAR"
+						:sessions="currentSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:period="period"
+					/>
+					<CostHistoryChart
+						v-else
+						:sessions="currentTypeSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:cost-type="activeType"
+						:currency="currency"
+						:period="period"
+					/>
+				</Card>
+				<div v-if="showExtraCharts" class="box-pull-out">
+					<div class="row align-items-start">
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="firstExtraTitle" edge-to-edge>
+								<div v-if="activeType === types.SOLAR">
+									<SolarYearChart
+										v-if="showSolarYearChart"
+										:period="period"
+										:sessions="currentSessions"
+									/>
+									<SolarGroupedChart
+										v-else
+										:sessions="currentSessions"
+										:color-mappings="colorMappings"
+										:device-colors="deviceColors"
+										:group-by="selectedGroupWithoutNone"
+									/>
+								</div>
+								<AvgCostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:suggested-max-price="suggestedMaxAvgCost"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
 						</div>
-						<AvgCostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:suggested-max-price="suggestedMaxAvgCost"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
-					</div>
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ secondExtraTitle }}</h3>
-						<EnergyGroupedChart
-							v-if="activeType === types.SOLAR"
-							:sessions="currentSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:group-by="selectedGroupWithoutNone"
-						/>
-						<CostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="secondExtraTitle" edge-to-edge>
+								<EnergyGroupedChart
+									v-if="activeType === types.SOLAR"
+									:sessions="currentSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+								/>
+								<CostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
+						</div>
 					</div>
 				</div>
 
-				<SessionTable
+				<Card
 					v-if="showTable"
-					:sessions="currentSessions"
-					:vehicleFilter="vehicleFilter"
-					:loadpointFilter="loadpointFilter"
-					:currency="currency"
-					@show-session="showDetails"
-				/>
+					:title="$t('sessions.overview')"
+					edge-to-edge
+					class="box-pull-out mb-4"
+				>
+					<SessionTable
+						:sessions="currentSessions"
+						:vehicleFilter="vehicleFilter"
+						:loadpointFilter="loadpointFilter"
+						:currency="currency"
+						@show-session="showDetails"
+					/>
+				</Card>
 				<div class="d-flex gap-2 my-3">
 					<a
 						class="btn btn-outline-secondary"
@@ -201,6 +208,7 @@ import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
 import CostGroupedChart from "../components/Sessions/CostGroupedChart.vue";
 import AvgCostGroupedChart from "../components/Sessions/AvgCostGroupedChart.vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
@@ -223,6 +231,7 @@ export default defineComponent({
 		SessionDetailsModal,
 		SessionTable,
 		TopHeader: Header,
+		Card,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,

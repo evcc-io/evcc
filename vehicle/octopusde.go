@@ -7,17 +7,17 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/vehicle/octopusde"
+	"github.com/evcc-io/evcc/vehicle/octopuskraken"
 )
 
 // OctopusDe is an api.Vehicle implementation for the Octopus Energy Germany Kraken API
 type OctopusDe struct {
 	*embed
-	*octopusde.API
+	*octopuskraken.API
 	account  string
 	device   string
 	deviceID string
-	dataG    func() (octopusde.Device, error)
+	dataG    func() (octopuskraken.Device, error)
 }
 
 func init() {
@@ -47,7 +47,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	log := util.NewLogger("octopus-de").Redact(cc.Email, cc.Password)
 
-	api, err := octopusde.NewAPI(log, cc.Email, cc.Password)
+	api, err := octopuskraken.NewAPI(log, octopuskraken.BaseURI, cc.Email, cc.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -66,16 +66,16 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
 
 // status fetches the live state of the configured device, resolving the account
 // and matching device on first use.
-func (v *OctopusDe) status() (octopusde.Device, error) {
+func (v *OctopusDe) status() (octopuskraken.Device, error) {
 	account, err := v.Account(v.account)
 	if err != nil {
-		return octopusde.Device{}, err
+		return octopuskraken.Device{}, err
 	}
 	v.account = account
 
 	devices, err := v.Devices(account)
 	if err != nil {
-		return octopusde.Device{}, err
+		return octopuskraken.Device{}, err
 	}
 
 	for _, d := range devices {
@@ -94,9 +94,9 @@ func (v *OctopusDe) status() (octopusde.Device, error) {
 	}
 
 	if v.device == "" {
-		return octopusde.Device{}, api.ErrNotAvailable
+		return octopuskraken.Device{}, api.ErrNotAvailable
 	}
-	return octopusde.Device{}, fmt.Errorf("device not found: %s", v.device)
+	return octopuskraken.Device{}, fmt.Errorf("device not found: %s", v.device)
 }
 
 // Soc implements the api.Vehicle interface

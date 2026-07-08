@@ -404,6 +404,7 @@ export default defineComponent({
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 }
 
 .details > div {

@@ -17,17 +17,22 @@ import (
 // The implementation in this file follows the published example at https://octopusenergy.de/blog/wohnen/dynamisch-sparen-per-api
 const BaseURI = "https://api.oeg-kraken.energy/v1/graphql/"
 
-// OctopusDeGraphQLClient provides an interface for communicating with Octopus Energy Germany's Kraken platform.
-type OctopusDeGraphQLClient struct {
+// ItBaseURI is Octopus Energy Italy's Kraken API root, the same platform under its own domain.
+const ItBaseURI = "https://api.oeit-kraken.energy/v1/graphql/"
+
+// Client provides an interface for communicating with an Octopus Energy Kraken platform instance.
+type Client struct {
 	log *util.Logger
 	*graphql.Client
 	accountNumber string
 }
 
-// NewClient returns a new, authenticated instance of OctopusDeGraphQLClient.
-func NewClient(log *util.Logger, email, password, accountNumber string) (*OctopusDeGraphQLClient, error) {
+// NewClient returns a new, authenticated instance for the given Kraken instance
+// (other regional Octopus companies run the same platform under their own baseURI).
+func NewClient(log *util.Logger, baseURI, email, password, accountNumber string) (*Client, error) {
 	ts := oauth2.ReuseTokenSource(nil, &tokenSource{
 		log:      log,
+		baseURI:  baseURI,
 		email:    email,
 		password: password,
 	})
@@ -46,17 +51,17 @@ func NewClient(log *util.Logger, email, password, accountNumber string) (*Octopu
 		Base: cli.Transport,
 	}
 
-	gq := &OctopusDeGraphQLClient{
+	gq := &Client{
 		log:           log,
 		accountNumber: accountNumber,
-		Client:        graphql.NewClient(BaseURI, cli),
+		Client:        graphql.NewClient(baseURI, cli),
 	}
 
 	return gq, nil
 }
 
 // ActiveAgreement queries the Kraken API and returns the active electricity supply agreement.
-func (c *OctopusDeGraphQLClient) ActiveAgreement() (Agreement, error) {
+func (c *Client) ActiveAgreement() (Agreement, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 

@@ -37,7 +37,7 @@
 					<div
 						v-for="i in 3"
 						:key="i"
-						class="history-tile history-tile-skeleton mb-4"
+						class="history-tile history-tile-skeleton box-pull-out mb-4"
 						aria-hidden="true"
 					></div>
 				</div>
@@ -53,7 +53,7 @@
 					:title="$t(`main.history.group.${group}`)"
 					:subtitle="groupTotalLabel(group)"
 					edge-to-edge
-					class="mb-4"
+					class="box-pull-out mb-4"
 					:data-testid="`history-section-${group}`"
 				>
 					<GroupChart
