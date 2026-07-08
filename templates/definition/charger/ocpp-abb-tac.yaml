@@ -7,14 +7,23 @@ products:
 capabilities: ["mA", "rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
-  description:
-    generic: "[library.e.abb.com](https://library.e.abb.com/public/8f07987a3a284da6bf4e4f8f53cd6502/ABB_Terra_AC_Charger_OCPP1.6_ImplementationOverview%20_v1.8_FW1.6.6.pdf)"
-      Setup Guide:
+    generic: |
+      https://library.e.abb.com/public/8f07987a3a284da6bf4e4f8f53cd6502/ABB_Terra_AC_Charger_OCPP1.6_ImplementationOverview%20_v1.8_FW1.6.6.pdf
+
+      ## Important
+
+      * If the charger has previously been connected to another OCPP backend/server, it is recommended to perform a complete factory reset before onboarding it to evcc.
+      * This helps ensure that no residual OCPP configuration, certificates, or backend settings interfere with the connection to the evcc OCPP server.
+
+      ## Setup Guide
+
       * Select **ABB Terra AC (OCPP)** when adding the charger in evcc.
       * Configure the charger to use the OCPP Server URL displayed by evcc.
       * Enable **Start remote transaction on vehicle connection**.
       * Save the charger configuration.
-      Validation:
+
+      ## Validation
+
       * During the initial setup, validation may fail with `chargeStatus: timeout`.
       * If this happens, save the configuration anyway and allow the charger to reconnect.
       * If the charger does not reconnect automatically, restart evcc and wait for the charger to establish a new OCPP connection.
