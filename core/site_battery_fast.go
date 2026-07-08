@@ -2,52 +2,33 @@ package core
 
 import (
 	"math"
+	"sort"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 )
 
-// The battery fast loop is a thin companion to applyBatterySolarPower. All decisions
-// (charge/discharge direction, tiering, sticky selection, swaps, stops, mode handling)
-// remain in the main loop. The fast loop owns the power values of the currently active
-// batteries: it re-scales them against fresh grid readings, closing the gap between
-// main loop ticks. It never changes direction, never selects batteries and never
-// sends stop commands - when its correction reaches zero it clamps and waits for
-// the main loop to decide.
+// The battery fast loop is the complete battery power controller. The main loop
+// (buildBatterySnapshot) only decides participation - it sets the battery mode and
+// publishes a snapshot (per-battery SoC/limits/caps + config) once per cycle. Every
+// power decision - direction, tiering, selection, swaps, scaling, stops - is made here,
+// every tick, off fresh grid and battery readings. Direction is continuous (the sign of
+// the energy-balance need), so there is no separate charge/discharge decision to wait on.
 const (
-	batteryFastLoopPeriod = 1 * time.Second // matched to the (DSMR P1) grid telegram cadence;
-	// ticking faster than the meter refreshes only re-chews stale samples - every tick now reads
-	// a fresh telegram, which also removes the stale-read overshoot that gain 1.0 used to amplify
-	batteryPlanMaxAge = 30 * time.Second // ignore plans when the main loop stopped updating them
-	fastLoopMinDelta  = 10.0             // W; skip Modbus writes below the grid meter noise floor
-	fastLoopGain      = 1.0              // full one-tick correction toward the measured target.
-	// Kept aggressive for reactivity; the target is absolute (no integration) and gross sampling
-	// skew is handled by the consistency guard below. If near-zero/phase-imbalance ringing returns,
-	// prefer a near-zero deadband (raise fastLoopMinDelta) over lowering the gain
-	fastLoopSkewThreshold = 100.0            // W; see meter consistency guard in batteryFastTick
-	fastLoopHeartbeat     = 10 * time.Second // re-send the current setpoints when no write
-	// happened for this long, keeping the inverters' RS485 watchdog alive now that the
-	// main loop no longer re-commands active batteries every tick
-	fastLoopTierMargin = 50.0 // W of unmet demand beyond engaged capacity before the
-	// fast loop engages another battery (Marstek minimum effective power)
-	fastLoopShortfall = 150.0 // W; engaged set delivering at least this far below the
-	// commanded total counts as under-delivery (a unit ACKs but can't physically deliver)
-	fastLoopShortfallDwell = 4 // consecutive under-delivering ticks (≈4s at 1s tick, longer
-	// than the inverter ramp) before engaging a standby, so normal ramp-up doesn't trip it
-	fastLoopFlipDwell = 1 * time.Second // the opposite direction must stay wanted (past the
-	// dead band) this long before poking the main loop - quick reaction, rejects a single
-	// glitchy sample. Wall-clock, so stale-grid ticks that carry no reading do not stretch it
-	// Adaptive flip spacing: instant for an isolated reversal, backing off when flipping
-	// repeatedly near the crossing. Each rapid re-flip doubles the spacing up to the max; a
-	// calm gap resets it to the minimum. Only rate-limits the fast path - the scheduled main
-	// tick still owns genuine flips.
+	batteryFastLoopPeriod = 1 * time.Second  // matched to the (DSMR P1) grid telegram cadence
+	batterySnapshotMaxAge = 30 * time.Second // ignore snapshots when the main loop stalled
+	fastLoopSkewThreshold = 100.0            // W; meter consistency guard (see batteryFastTick)
+
+	// direction anti-chatter: a genuine charge<->discharge reversal must persist this long,
+	// and repeated reversals near the crossing back off (doubling up to max, reset when calm)
+	fastLoopFlipDwell      = 1 * time.Second
 	fastLoopFlipBackoffMin = 2 * time.Second
 	fastLoopFlipBackoffMax = 60 * time.Second
-	fastLoopFlipCalm       = 120 * time.Second // gap since last flip beyond which a new one is
-	// treated as isolated (reset spacing to min) rather than oscillation (grow it). Larger than
-	// the max so sustained oscillation stays pinned at the max instead of resetting each cycle
+	fastLoopFlipCalm       = 120 * time.Second
 
+	socSwitchThreshold = 3.0  // % SoC divergence before swapping a sticky battery
+	minEffectiveShare  = 50.0 // W; below this per-battery share, concentrate (no power limiter)
 )
 
 type batteryPlanDirection int
@@ -69,54 +50,59 @@ func batteryPlanDirectionString(d batteryPlanDirection) string {
 	}
 }
 
-type batteryPlanEntry struct {
-	ctrl  api.BatteryPowerController
-	meter api.Meter
-	name  string
-	cap   float64 // effective per-battery power limit in W incl. taper; 0 = uncapped
+// batterySnapEntry is a per-battery slice of the snapshot: control handle, meter, and the
+// slow-moving state (SoC, limits, caps) the main loop read this cycle.
+type batterySnapEntry struct {
+	ctrl         api.BatteryPowerController
+	meter        api.Meter
+	name         string
+	soc          float64
+	socOK        bool
+	hasSocLimit  bool
+	minSoc       float64
+	maxSoc       float64
+	chargeCap    float64 // W; 0 = uncapped
+	dischargeCap float64 // W; 0 = uncapped
 }
 
-// batteryControlPlan is the contract between the main loop and the fast loop.
-// The main loop replaces it on every tick; the fast loop adjusts total between ticks.
-// Both access it under batteryPlanMu.
-type batteryControlPlan struct {
-	direction batteryPlanDirection
-	entries   []batteryPlanEntry
-	standby   []batteryPlanEntry // eligible batteries beyond the current tier, in engage
-	// order; the fast loop turns them on (tier-up) when the engaged set saturates
-	evExcluded float64 // W of EV charge power the battery must not cover (discharge only)
-	gridOffset float64 // grid setpoint offset the main loop steered toward (residualPower,
-	// or 0 below prioritySoc where the energy-balance formula ignores it)
-
-	// opposite-direction parameters + shared dead band, so the fast loop can detect a
-	// charge<->discharge crossing and request a main-loop re-decision (never flips itself)
-	threshold          float64 // standbyPower + batteryControlDeadBand (same as the main loop)
-	oppositeGridOffset float64
-	oppositeEvExcluded float64
-	flipSince          time.Time // when the opposite direction first became wanted (zero = not)
-
-	total     float64 // currently commanded total power across entries
-	created   time.Time
-	lastWrite time.Time // last time power commands were sent (heartbeat reference)
-
-	// previous fast tick readings for the meter consistency guard
-	lastGrid, lastBatt float64
-	lastValid          bool
-
-	// consecutive ticks the engaged set delivered materially less than commanded
-	// (ACKed but under-delivering); drives tier-up onto a standby battery
-	shortfallTicks int
+// batterySnapshot is the main loop -> fast loop contract, rebuilt each main cycle under
+// batteryPlanMu. It carries no power or direction - the fast loop derives those.
+type batterySnapshot struct {
+	enabled             bool // fast loop may drive power (Hold mode, solar control, not overridden)
+	pool                bool
+	tiering             bool
+	sticky              bool
+	tapering            bool
+	calibration         bool
+	chargeOffset        float64 // residual, or 0 below prioritySoc
+	dischargeOffset     float64 // residual
+	dischargeEvExcluded float64 // EV power the battery must not cover (discharge only)
+	threshold           float64 // dead band
+	created             time.Time
+	batteries           []batterySnapEntry
 }
 
-// batteryFastLoop runs the correction ticker until stopC closes.
+// fastEntry references a snapshot battery for the per-tick selection working set.
+type fastEntry struct {
+	*batterySnapEntry
+}
+
+// fastEntriesAll wraps every snapshot battery as a fastEntry (used for stop-all paths).
+func fastEntriesAll(snap *batterySnapshot) []fastEntry {
+	all := make([]fastEntry, len(snap.batteries))
+	for i := range snap.batteries {
+		all[i] = fastEntry{batterySnapEntry: &snap.batteries[i]}
+	}
+	return all
+}
+
+// batteryFastLoop runs the controller tick until stopC closes.
 func (site *Site) batteryFastLoop(stopC chan struct{}) {
 	if site.gridMeter == nil {
 		return
 	}
-
 	ticker := time.NewTicker(batteryFastLoopPeriod)
 	defer ticker.Stop()
-
 	for {
 		select {
 		case <-stopC:
@@ -131,249 +117,128 @@ func (site *Site) batteryFastTick() {
 	site.batteryPlanMu.Lock()
 	defer site.batteryPlanMu.Unlock()
 
-	plan := site.batteryPlan
-	if plan == nil {
-		batteryLog.TRACE.Print("solar power (fast): parked (no plan)")
+	snap := site.batterySnapshot
+	if snap == nil {
+		batteryLog.TRACE.Print("solar power (fast): parked (no snapshot)")
 		return
 	}
-	if plan.direction == batteryPlanIdle || len(plan.entries) == 0 || time.Since(plan.created) > batteryPlanMaxAge {
-		batteryLog.TRACE.Printf("solar power (fast): parked (dir=%s, %d entries, plan age %s)",
-			batteryPlanDirectionString(plan.direction), len(plan.entries), time.Since(plan.created).Round(time.Second))
+	if !snap.enabled || len(snap.batteries) == 0 || time.Since(snap.created) > batterySnapshotMaxAge {
+		batteryLog.TRACE.Printf("solar power (fast): parked (enabled=%v, %d batteries, age %s)",
+			snap.enabled, len(snap.batteries), time.Since(snap.created).Round(time.Second))
 		return
+	}
+
+	if site.batteryStopped == nil {
+		site.batteryStopped = make(map[string]int)
 	}
 
 	gridPower, err := site.gridMeter.CurrentPower()
 	if err != nil {
-		// skip tick, next attempt in one period
 		batteryLog.DEBUG.Printf("solar power (fast): grid power: %v", err)
 		return
 	}
 
-	// Meter consistency guard rule 1 - stale grid register: the grid meter refreshes
-	// its registers slower than the fast loop ticks. An identical reading carries no
-	// new information; pairing it with a fresher battery reading would double-count
-	// the battery's ramping contribution. Checked before the battery reads so stale
-	// ticks cost a single TCP read.
-	firstTick := !plan.lastValid
-	if !firstTick && gridPower == plan.lastGrid {
+	// meter guard rule 1 - stale grid: an unchanged reading carries no new information and
+	// pairing it with a fresher battery reading would double-count the battery's ramp
+	firstTick := !site.batteryGuardValid
+	if !firstTick && gridPower == site.batteryLastGrid {
 		batteryLog.TRACE.Printf("solar power (fast): stale grid %.0fW, skip", gridPower)
-		site.batteryFastHeartbeat(plan)
 		return
 	}
 
-	// Measured battery power of the active set. Using measurements instead of the
-	// commanded total is essential: during inverter ramps the commanded value is not
-	// yet delivered, and integrating the still-visible grid error against it causes
-	// runaway oscillation. The energy-balance target below is ramp-state invariant.
-	// Reads run in parallel (each battery has its own connection) so a multi-battery
-	// tier does not serialize round-trips into the tick latency.
-	powers := make([]float64, len(plan.entries))
-	errs := make([]error, len(plan.entries))
+	// measured battery power of all snapshot batteries, read in parallel
+	powers := make([]float64, len(snap.batteries))
+	errs := make([]error, len(snap.batteries))
 	var rwg sync.WaitGroup
-	for i, e := range plan.entries {
+	for i := range snap.batteries {
 		rwg.Add(1)
 		go func() {
 			defer rwg.Done()
-			powers[i], errs[i] = e.meter.CurrentPower()
+			powers[i], errs[i] = snap.batteries[i].meter.CurrentPower()
 		}()
 	}
 	rwg.Wait()
 
 	var battPower float64
-	for i, e := range plan.entries {
+	for i := range snap.batteries {
 		if errs[i] != nil {
-			// any failed read: skip the tick, retry next period
-			batteryLog.DEBUG.Printf("solar power (fast): %s power: %v", e.name, errs[i])
+			batteryLog.DEBUG.Printf("solar power (fast): %s power: %v", snap.batteries[i].name, errs[i])
 			return
 		}
 		battPower += powers[i]
 	}
 
-	// Meter consistency guard rule 2 - sampling skew: with constant load,
-	// Δgrid + Δbattery ≈ 0 between ticks. When the battery reading moved substantially
-	// without the grid reflecting it, the registers are out of sync - skip and let
-	// them align. Genuine load steps (Δbattery ≈ 0) are never skipped.
-	dGrid, dBatt := gridPower-plan.lastGrid, battPower-plan.lastBatt
-	plan.lastGrid, plan.lastBatt, plan.lastValid = gridPower, battPower, true
+	// meter guard rule 2 - sampling skew: with constant load Δgrid + Δbatt ≈ 0; when the
+	// battery moved without the grid reflecting it, the registers are out of sync - skip
+	dGrid, dBatt := gridPower-site.batteryLastGrid, battPower-site.batteryLastBatt
+	site.batteryLastGrid, site.batteryLastBatt, site.batteryGuardValid = gridPower, battPower, true
 	if !firstTick && math.Abs(dBatt) > fastLoopSkewThreshold && math.Abs(dGrid+dBatt) > fastLoopSkewThreshold {
-		batteryLog.DEBUG.Printf("solar power (fast): meters inconsistent (Δgrid %.0fW, Δbattery %.0fW), skipping tick", dGrid, dBatt)
+		batteryLog.TRACE.Printf("solar power (fast): meters inconsistent (Δgrid %.0fW, Δbattery %.0fW), skip", dGrid, dBatt)
 		return
 	}
 
-	// Absolute energy-balance target, same construction as the main loop's setpoint
-	// (battery power convention: positive = discharging, negative = charging).
-	// Steady state (grid ≈ -gridOffset) reproduces the currently delivered power, so
-	// the loop is quiescent until grid moves.
-	var target float64
-	switch plan.direction {
-	case batteryPlanDischarge:
-		target = battPower + gridPower + plan.gridOffset - plan.evExcluded
+	// Energy-balance targets (battery convention: positive = discharging). Ramp-invariant
+	// because measured battPower is added back. Only one is positive away from the crossing.
+	dischargeTarget := battPower + gridPower + snap.dischargeOffset - snap.dischargeEvExcluded
+	chargeTarget := -battPower - (gridPower + snap.chargeOffset)
+
+	// desired direction from the fresh signal
+	desired := batteryPlanIdle
+	switch {
+	case dischargeTarget > snap.threshold && dischargeTarget >= chargeTarget:
+		desired = batteryPlanDischarge
+	case chargeTarget > snap.threshold:
+		desired = batteryPlanCharge
+	}
+
+	batteryLog.TRACE.Printf("solar power (fast): grid=%.0fW batt=%.0fW dis=%.0fW chg=%.0fW committed=%s desired=%s",
+		gridPower, battPower, dischargeTarget, chargeTarget,
+		batteryPlanDirectionString(site.batteryFastDirection), batteryPlanDirectionString(desired))
+
+	// direction arbitration with anti-chatter: a reversal must persist for the dwell and is
+	// rate-limited by an adaptive backoff. Same-direction changes pass through immediately.
+	direction := site.batteryArbitrateDirection(desired)
+
+	switch direction {
 	case batteryPlanCharge:
-		target = -battPower - (gridPower + plan.gridOffset)
-	}
-	target = math.Max(plan.total+fastLoopGain*(target-plan.total), 0)
-
-	batteryLog.TRACE.Printf("solar power (fast): dir=%s grid=%.0fW batt=%.0fW target=%.0fW total=%.0fW off=%.0fW ev=%.0fW",
-		batteryPlanDirectionString(plan.direction), gridPower, battPower, target, plan.total, plan.gridOffset, plan.evExcluded)
-
-	// Tier-up: when the engaged set is saturated (target exceeds its total capacity)
-	// and an eligible standby battery is available, engage the next one. The main loop
-	// owns tier-down via computeTier hysteresis, so the fast loop only ever expands -
-	// no flapping. Selection and order stay in the main loop (the standby list).
-	engaged := site.batteryFastTierUp(plan, target, battPower)
-
-	// Direction crossing: when the active direction has clamped to zero and the opposite
-	// direction is genuinely wanted, poke the main loop to re-decide direction. The fast
-	// loop never flips itself - it only shortens when the existing main-loop decision runs.
-	site.batteryFastFlipCheck(plan, gridPower, battPower, target)
-
-	if !engaged && math.Abs(target-plan.total) < fastLoopMinDelta {
-		site.batteryFastHeartbeat(plan)
-		return
-	}
-
-	commanded := site.batteryFastSend(plan, target)
-
-	dir := map[batteryPlanDirection]string{batteryPlanCharge: "charge", batteryPlanDischarge: "discharge"}[plan.direction]
-	batteryLog.DEBUG.Printf("solar power (fast): %s %.0fW → %.0fW (grid %.0fW, battery %.0fW)", dir, plan.total, commanded, gridPower, battPower)
-
-	plan.total = commanded
-}
-
-// batteryFastHeartbeat re-sends the current setpoints when no power command was
-// written for fastLoopHeartbeat, keeping the inverters' RS485 watchdog alive.
-// Called from skip paths; caller holds batteryPlanMu.
-func (site *Site) batteryFastHeartbeat(plan *batteryControlPlan) {
-	if time.Since(plan.lastWrite) < fastLoopHeartbeat {
-		return
-	}
-	site.batteryFastSend(plan, plan.total)
-	batteryLog.DEBUG.Printf("solar power (fast): heartbeat %.0fW", plan.total)
-}
-
-// batteryFastTierUp engages the next standby battery when the engaged set is saturated.
-// Returns true if a battery was engaged. Caller holds batteryPlanMu. The shared tier and
-// active-name state is updated so the next main tick takes ownership coherently; the main
-// loop remains the sole authority for tier-down and selection.
-func (site *Site) batteryFastTierUp(plan *batteryControlPlan, target, measured float64) bool {
-	if len(plan.standby) == 0 {
-		plan.shortfallTicks = 0
-		return false
-	}
-
-	// saturation is only well-defined when every engaged battery has a known cap
-	var sumCaps float64
-	for _, e := range plan.entries {
-		if e.cap <= 0 {
-			plan.shortfallTicks = 0
-			return false
-		}
-		sumCaps += e.cap
-	}
-
-	// (1) cap saturation: the commanded target exceeds the engaged set's rated capacity.
-	saturated := target > sumCaps+fastLoopTierMargin
-
-	// (2) under-delivery: the engaged set ACKs the command (no Modbus error) but cannot
-	// physically deliver it - a faulted, low-SoC-derated or phase-limited unit. The Modbus
-	// ACK can't reveal this; only the measured power can. The energy-balance target tracks
-	// the persisting grid error (target ≈ measured + grid), so target − measured is the
-	// undelivered watts. A dwell longer than the inverter ramp keeps normal ramp-up from
-	// tripping it (and shortfallTicks is reset on engage so a freshly-engaged unit can ramp).
-	// measured battery power is signed (negative = charging); convert to the delivered
-	// magnitude in the active direction so the shortfall is correct for charge too -
-	// otherwise target − measured is always large positive while charging and the trigger
-	// fires every tick even when the battery is over-delivering.
-	delivered := measured
-	if plan.direction == batteryPlanCharge {
-		delivered = -measured
-	}
-	if target-delivered > fastLoopShortfall {
-		plan.shortfallTicks++
-	} else {
-		plan.shortfallTicks = 0
-	}
-	starved := plan.shortfallTicks >= fastLoopShortfallDwell
-
-	if !saturated && !starved {
-		return false
-	}
-
-	next := plan.standby[0]
-	plan.standby = plan.standby[1:]
-	plan.entries = append(plan.entries, next)
-	delete(site.batteryStopped, next.name)
-	plan.shortfallTicks = 0
-
-	switch plan.direction {
-	case batteryPlanCharge:
-		site.batteryChargeActive = append(site.batteryChargeActive, next.name)
-		site.batteryChargeTier = len(plan.entries)
+		// clamp ≥ 0: while a flip is pending the held direction's target is negative, so it
+		// simply ramps to zero rather than commanding negative power
+		site.fastControl(snap, batteryPlanCharge, math.Max(0, chargeTarget))
 	case batteryPlanDischarge:
-		site.batteryDischargeActive = append(site.batteryDischargeActive, next.name)
-		site.batteryDischargeTier = len(plan.entries)
+		site.fastControl(snap, batteryPlanDischarge, math.Max(0, dischargeTarget))
+	default:
+		site.stopBatteries(fastEntriesAll(snap))
+		site.batteryChargeActive, site.batteryDischargeActive = nil, nil
+		site.batteryChargeTier, site.batteryDischargeTier = 0, 0
 	}
-
-	reason := "saturated"
-	if starved {
-		reason = "under-delivering"
-	}
-	batteryLog.DEBUG.Printf("solar power (fast): tier up (%s), engaging %s (target %.0fW, delivered %.0fW, capacity %.0fW)", reason, next.name, target, delivered, sumCaps)
-	return true
+	site.batteryFastDirection = direction
 }
 
-// batteryFastFlipCheck requests an out-of-band main-loop re-decision when the active
-// direction has clamped to zero and the opposite direction is wanted past the dead band
-// for a sustained dwell. It never flips direction itself - the main loop remains the sole
-// authority, this only shortens when that decision runs. Caller holds batteryPlanMu.
-func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, battPower, target float64) {
-	// only consider a flip once the active direction has clamped to zero (no work left)
-	if target > fastLoopMinDelta {
-		plan.flipSince = time.Time{}
-		return
+// batteryArbitrateDirection returns the direction to drive this tick. A reversal from the
+// committed direction must persist for fastLoopFlipDwell and is spaced by an adaptive
+// backoff (doubling up to max on repeated reversals, reset after a calm gap). While a
+// reversal is pending the committed direction is held (its target has clamped to ~0, so it
+// simply ramps down). Idle and same-direction pass through immediately.
+func (site *Site) batteryArbitrateDirection(desired batteryPlanDirection) batteryPlanDirection {
+	committed := site.batteryFastDirection
+
+	if desired == committed || desired == batteryPlanIdle || committed == batteryPlanIdle {
+		site.batteryFlipSince = time.Time{}
+		return desired
 	}
 
-	// opposite-direction need, using the offsets the main loop shipped for that side
-	// (battery power convention: positive = discharging, negative = charging). This adds
-	// back the battery's current power, exactly like the main loop's energy balance, so it
-	// is ramp-invariant: the crossing is detectable immediately, without waiting for the
-	// inverter to ramp the old direction down to zero (which would cost 3-4s for nothing).
-	var oppositeNeed float64
-	switch plan.direction {
-	case batteryPlanDischarge: // opposite = charge
-		oppositeNeed = -battPower - (gridPower + plan.oppositeGridOffset)
-	case batteryPlanCharge: // opposite = discharge
-		oppositeNeed = battPower + gridPower + plan.oppositeGridOffset - plan.oppositeEvExcluded
+	// desired is the opposite active direction: gate it
+	if site.batteryFlipSince.IsZero() {
+		site.batteryFlipSince = time.Now()
+		return committed
 	}
-
-	if oppositeNeed <= plan.threshold {
-		plan.flipSince = time.Time{}
-		return
+	if time.Since(site.batteryFlipSince) < fastLoopFlipDwell {
+		return committed
 	}
-
-	dwell := time.Duration(0)
-	if !plan.flipSince.IsZero() {
-		dwell = time.Since(plan.flipSince)
-	}
-	batteryLog.TRACE.Printf("solar power (fast): crossing wanted (opposite %.0fW > %.0fW), dwell %s/%s, backoff %s",
-		oppositeNeed, plan.threshold, dwell.Round(100*time.Millisecond), fastLoopFlipDwell, site.batteryFlipBackoff)
-
-	// start the dwell timer on first detection; require it to stay wanted for the dwell
-	if plan.flipSince.IsZero() {
-		plan.flipSince = time.Now()
-		return
-	}
-	if time.Since(plan.flipSince) < fastLoopFlipDwell {
-		return
-	}
-
-	// adaptive spacing: suppress while inside the current backoff window (the scheduled
-	// main tick still owns genuine flips there)
 	gap := time.Since(site.lastBatteryFlipRequest)
 	if gap < site.batteryFlipBackoff {
-		return
+		return committed
 	}
-	// grow the spacing when flips keep coming (oscillation), reset it after a calm gap
 	if gap < fastLoopFlipCalm {
 		site.batteryFlipBackoff = min(2*site.batteryFlipBackoff, fastLoopFlipBackoffMax)
 		if site.batteryFlipBackoff < fastLoopFlipBackoffMin {
@@ -382,55 +247,241 @@ func (site *Site) batteryFastFlipCheck(plan *batteryControlPlan, gridPower, batt
 	} else {
 		site.batteryFlipBackoff = fastLoopFlipBackoffMin
 	}
-	plan.flipSince = time.Time{}
+	site.batteryFlipSince = time.Time{}
 	site.lastBatteryFlipRequest = time.Now()
-
-	// non-blocking poke; the cap-1 channel coalesces bursts and a pending request
-	select {
-	case site.batteryReplanChan <- struct{}{}:
-		batteryLog.DEBUG.Printf("solar power (fast): crossing detected (opposite need %.0fW > %.0fW dead band, next flip ≥ %s), requesting re-decision", oppositeNeed, plan.threshold, site.batteryFlipBackoff)
-	default:
-	}
+	batteryLog.DEBUG.Printf("solar power (fast): direction flip %s → %s (next flip ≥ %s)",
+		batteryPlanDirectionString(committed), batteryPlanDirectionString(desired), site.batteryFlipBackoff)
+	return desired
 }
 
-// batteryFastSend distributes target equally across the plan's entries, clamps to the
-// per-battery cap and writes the power commands in parallel (each battery has its own
-// Modbus connection). Returns the total actually commanded. Caller holds batteryPlanMu.
-func (site *Site) batteryFastSend(plan *batteryControlPlan, target float64) float64 {
-	share := target / float64(len(plan.entries))
+// fastControl runs the full selection/tiering/scaling for one direction and commands the
+// batteries. target is the signed magnitude to deliver in that direction (positive).
+func (site *Site) fastControl(snap *batterySnapshot, dir batteryPlanDirection, target float64) {
+	charge := dir == batteryPlanCharge
 
-	powers := make([]float64, len(plan.entries))
-	var wg sync.WaitGroup
-	for i, e := range plan.entries {
-		p := share
-		if e.cap > 0 && p > e.cap {
-			p = e.cap
+	// eligibility filter: charge drops units at maxSoc (unless calibrating); discharge drops
+	// units at/below minSoc and fails closed on an unreadable SoC (never over-drain)
+	var active, ineligible []fastEntry
+	for i := range snap.batteries {
+		e := &snap.batteries[i]
+		fe := fastEntry{batterySnapEntry: e}
+		if charge {
+			if !snap.calibration && e.hasSocLimit && e.maxSoc > 0 && e.socOK && e.soc >= e.maxSoc {
+				ineligible = append(ineligible, fe)
+				continue
+			}
+		} else {
+			if !e.socOK {
+				ineligible = append(ineligible, fe)
+				continue
+			}
+			if e.hasSocLimit && e.soc <= e.minSoc {
+				ineligible = append(ineligible, fe)
+				continue
+			}
+		}
+		active = append(active, fe)
+	}
+
+	var deferStop []fastEntry
+	deferStop = append(deferStop, ineligible...)
+	if len(active) == 0 {
+		site.stopBatteries(fastEntriesAll(snap))
+		return
+	}
+
+	capOf := func(e fastEntry) float64 {
+		if charge {
+			return e.chargeCap
+		}
+		return e.dischargeCap
+	}
+
+	// selection: tiering + sticky, unless pool mode uses all active equally
+	if !snap.pool {
+		var maxPerBat float64
+		for _, e := range active {
+			if c := capOf(e); c > 0 && (maxPerBat == 0 || c < maxPerBat) {
+				maxPerBat = c
+			}
 		}
 
+		if maxPerBat > 0 && snap.tiering {
+			tierPerBat := maxPerBat * batteryTierFraction
+			tier := &site.batteryChargeTier
+			activeNames := &site.batteryChargeActive
+			if !charge {
+				tier = &site.batteryDischargeTier
+				activeNames = &site.batteryDischargeActive
+			}
+			*tier = computeTier(target, tierPerBat, *tier, len(active))
+			needed := *tier
+
+			if needed < len(active) {
+				sel, stop := site.selectSticky(active, needed, charge, activeNames)
+				deferStop = append(deferStop, stop...)
+				active = sel
+			} else {
+				*activeNames = nil
+			}
+		} else if maxPerBat == 0 {
+			// no power limiter: concentrate on the single best unit if the share is too small
+			share := target / float64(len(active))
+			if share < minEffectiveShare && len(active) > 1 {
+				best := 0
+				for i, e := range active {
+					if charge {
+						if e.socOK && (i == 0 || e.soc < active[best].soc) {
+							best = i
+						}
+					} else if e.socOK && (i == 0 || e.soc > active[best].soc) {
+						best = i
+					}
+				}
+				for i, e := range active {
+					if i != best {
+						deferStop = append(deferStop, e)
+					}
+				}
+				active = active[best : best+1]
+			}
+		}
+	}
+
+	// scale and command (parallel writes), applying per-battery cap and charge taper
+	share := target / float64(len(active))
+	commands := make([]float64, len(active))
+	for i, e := range active {
+		p := share
+		if c := capOf(e); c > 0 && p > c {
+			p = c
+		}
+		if charge && snap.tapering && !snap.calibration && e.hasSocLimit && e.maxSoc > 0 && e.socOK && e.soc > e.maxSoc-chargeTaperRange {
+			factor := (e.maxSoc - e.soc) / chargeTaperRange
+			if factor < chargeMinFactor {
+				factor = chargeMinFactor
+			}
+			p *= factor
+		}
+		commands[i] = p
+	}
+	site.sendBatteries(active, charge, commands)
+
+	var total float64
+	for _, c := range commands {
+		total += c
+	}
+	batteryLog.DEBUG.Printf("solar power (fast): %s %.0fW across %d/%d batteries (grid target %.0fW)",
+		batteryPlanDirectionString(dir), total, len(active), len(snap.batteries), target)
+
+	site.stopBatteries(deferStop)
+}
+
+// selectSticky keeps the current active set stable, swapping one unit only when a candidate
+// is more than socSwitchThreshold better. charge fills lowest-SoC first, discharge drains
+// highest-SoC first. Returns the selected set and the units to stop (the leftover candidates).
+func (site *Site) selectSticky(active []fastEntry, needed int, charge bool, activeNames *[]string) (sel, cand []fastEntry) {
+	prev := make(map[string]bool, len(*activeNames))
+	for _, n := range *activeNames {
+		prev[n] = true
+	}
+	for _, e := range active {
+		if prev[e.name] {
+			sel = append(sel, e)
+		} else {
+			cand = append(cand, e)
+		}
+	}
+
+	better := func(a, b fastEntry) bool { // a strictly preferred over b
+		if charge {
+			return a.soc < b.soc // lower SoC first
+		}
+		return a.soc > b.soc // higher SoC first
+	}
+
+	if len(sel) != needed {
+		// stored set no longer valid: reselect the N best by SoC
+		all := append([]fastEntry{}, active...)
+		sort.Slice(all, func(i, j int) bool { return better(all[i], all[j]) })
+		sel = all[:needed]
+		cand = all[needed:]
+	} else {
+		// find the worst in sel and swap in a clearly-better candidate
+		worst := 0
+		for i, e := range sel {
+			if i == 0 || better(sel[worst], e) {
+				worst = i
+			}
+		}
+		for ci, c := range cand {
+			// swap when a candidate is clearly better than our worst pick:
+			// charge → candidate emptier (lower SoC); discharge → candidate fuller (higher SoC)
+			diff := sel[worst].soc - c.soc
+			if !charge {
+				diff = c.soc - sel[worst].soc
+			}
+			if c.socOK && sel[worst].socOK && diff > socSwitchThreshold {
+				batteryLog.DEBUG.Printf("solar power (fast): %s swap %s (%.0f%%) → %s (%.0f%%)",
+					map[bool]string{true: "charge", false: "discharge"}[charge],
+					sel[worst].name, sel[worst].soc, c.name, c.soc)
+				sel[worst], cand[ci] = c, sel[worst]
+				break
+			}
+		}
+	}
+
+	*activeNames = make([]string, len(sel))
+	for i, e := range sel {
+		(*activeNames)[i] = e.name
+	}
+	return sel, cand
+}
+
+// sendBatteries writes power commands in parallel (each battery has its own connection) and
+// clears the stop bookkeeping for the commanded units.
+func (site *Site) sendBatteries(active []fastEntry, charge bool, commands []float64) {
+	var wg sync.WaitGroup
+	for i, e := range active {
+		delete(site.batteryStopped, e.name)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-
 			var err error
-			if plan.direction == batteryPlanCharge {
-				err = e.ctrl.SetBatteryChargePower(p)
+			if charge {
+				err = e.ctrl.SetBatteryChargePower(commands[i])
 			} else {
-				err = e.ctrl.SetBatteryDischargePower(p)
+				err = e.ctrl.SetBatteryDischargePower(commands[i])
 			}
 			if err != nil {
 				batteryLog.ERROR.Printf("solar power (fast): %s: %v", e.name, err)
-				return
 			}
-			powers[i] = p
 		}()
 	}
 	wg.Wait()
+}
 
-	var commanded float64
-	for _, p := range powers {
-		commanded += p
+// stopBatteries commands 0 to the given batteries, skipping units already stopped and
+// re-sending only every stopRefreshTicks as an RS485 watchdog heartbeat.
+func (site *Site) stopBatteries(entries []fastEntry) {
+	for _, e := range entries {
+		if n, ok := site.batteryStopped[e.name]; ok && n < stopRefreshTicks {
+			site.batteryStopped[e.name] = n + 1
+			continue
+		}
+		failed := false
+		if err := e.ctrl.SetBatteryChargePower(0); err != nil {
+			batteryLog.ERROR.Printf("battery charge power: %v", err)
+			failed = true
+		}
+		if err := e.ctrl.SetBatteryDischargePower(0); err != nil {
+			batteryLog.ERROR.Printf("battery discharge power: %v", err)
+			failed = true
+		}
+		if failed {
+			delete(site.batteryStopped, e.name)
+		} else {
+			site.batteryStopped[e.name] = 0
+		}
 	}
-
-	plan.lastWrite = time.Now()
-	return commanded
 }

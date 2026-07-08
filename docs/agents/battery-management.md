@@ -148,10 +148,10 @@ The active battery set is persisted between ticks (`batteryChargeActive`, `batte
 
 ## 8. Charge Tapering
 
-Linearly reduces charge power in the last 10% of SoC before `maxSoc`. Mimics the CC/CV charging profile that protects lithium cells from stress near full charge.
+Linearly reduces charge power in the last 5% of SoC before `maxSoc`. Mimics the CC/CV charging profile that protects lithium cells from stress near full charge.
 
 ```
-taperFactor = (maxSoc - currentSoc) / chargeTaperRange   (clamped to minimum 0.10)
+taperFactor = (maxSoc - currentSoc) / chargeTaperRange   (clamped to minimum 0.25)
 chargePower = requestedPower × taperFactor
 ```
 
@@ -177,8 +177,21 @@ When battery SoC is below this threshold:
 
 Controls battery-supported EV charging:
 
-- **`bufferSoc`**: when battery SoC is above this level, battery power is included in the available budget for EV charging even without solar surplus
+- **`bufferSoc`**: when battery SoC is above this level, battery power is included in the available budget for EV charging even without solar surplus. Only *sustains* an already-running charge (`batteryBuffered && lp.charging()`); it never starts one.
 - **`bufferStartSoc`**: EV charging from battery only starts when SoC exceeds this level (hysteresis to prevent immediately draining a partially-charged battery)
+
+Both are only evaluated when `soc >= prioritySoc` — below that, [§9](#9-priority-soc-prioritysoc) takes precedence and the buffer logic never runs (`site.go`, `sitePower`).
+
+### Why "battery covers the EV" is self-limiting in PV mode
+
+Above `bufferSoc` the fast loop sets `dischargeEvExcluded = 0`, so the EV's load lands in the discharge target. This does **not** mean the battery backfills the charger's full power. `sitePower` includes `batteryPower` (discharging is positive), so battery discharge *raises* `sitePower`, which drives `targetCurrent` down in `pvMaxCurrent` until it hits the `minCurrent` floor that `batteryBuffered` itself pins. The loop settles with the charger at `minCurrent` and the battery covering that floor minus any solar surplus.
+
+Consequences:
+
+- A watt cap on the battery's EV contribution would be meaningless here: above `minCurrent` it never binds (surplus exists, so the discharge target is ~0), and below `minCurrent` it is unhonorable (the charger cannot go lower — the only way down is to pause it, which is what `bufferSoc = off` already does).
+- The one mode where `evPower` is *not* surplus-bounded is Now/plan charging, which bypasses `pvMaxCurrent` entirely. That case is governed by `batteryDischargeControl` ([§11](#11-discharge-control-batterydischargecontrol)), not by `bufferSoc`.
+
+`bufferSoc` off is encoded as `0` (Go: `bufferSoc > 0 && ...`) or `100` (UI default and `|| 100` fallback); both make the gate unsatisfiable.
 
 ---
 
@@ -191,12 +204,34 @@ When enabled, modifies battery discharge behaviour per-charger:
 
 **Key behaviour**: discharge control is independent of `bufferSoc`. When the toggle is on and a fast/planned charger is active, battery does not cover that charger's load regardless of SoC level. It only covers house loads and other (non-fast) EV chargers, which is independent of this flag.
 
-**Implementation** (`applyBatterySolarPower`, discharge path):
-1. `evPowerFast` = sum of `GetChargePower()` for all loadpoints where `GetStatus() != StatusA && IsFastChargingActive()`
-2. `evPower` = sum of all non-heating loadpoints (used for bufferSoc protection)
-3. When `dischargeControlActive`: `dischargeTarget -= evPowerFast`, fast loop gets `plan.evExcluded = evPowerFast`
-4. When `!batteryBufferedEv` (battery below bufferSoc, discharge control off): `dischargeTarget -= evPower`
-5. If `dischargeTarget <= standbyPower` after subtraction: stop all
+### How `dischargeEvExcluded` is derived
+
+The main loop computes a single value in `buildBatterySnapshot` and publishes it on the snapshot; the fast loop subtracts it from every discharge target (`dischargeTarget = Σbatt + grid + dischargeOffset − dischargeEvExcluded`).
+
+1. `evPowerFast` = Σ `GetChargePower()` over loadpoints where `GetStatus() != StatusA && IsFastChargingActive()`
+2. `evPower` = Σ `GetChargePower()` over all non-heating loadpoints
+
+```go
+if site.dischargeControlActive(rate) {
+    dischargeEvExcluded = evPowerFast          // (1) discharge control wins
+} else if !(site.bufferSoc > 0 && site.battery.Soc > site.bufferSoc) {
+    dischargeEvExcluded = evPower              // (2) below bufferSoc: battery refuses the EV
+}                                              // (3) else 0: battery covers the EV
+```
+
+The three outcomes, in precedence order:
+
+| Condition | `dischargeEvExcluded` | Battery covers |
+| --- | --- | --- |
+| `dischargeControlActive` | `evPowerFast` | house + non-fast chargers |
+| else, SoC ≤ `bufferSoc` (or unset) | `evPower` | house only |
+| else (SoC > `bufferSoc`) | `0` | house + EV (bounded by `minCurrent`, see [§10](#10-buffer-soc-buffersoc--bufferstartsoc)) |
+
+`dischargeControlActive` is checked **first**, so when the toggle is on and a fast/planned charger is active the battery refuses that charger's load regardless of SoC — `bufferSoc` cannot override it.
+
+There is no separate "battery may power the EV" toggle and none is needed: `bufferSoc` governs the PV case (and self-limits), `batteryDischargeControl` governs the fast-charge case. A third control would be a third source of truth over the same decision.
+
+If neither `dischargeTarget` nor `chargeTarget` exceeds `snap.threshold` (`standbyPower + batteryControlDeadBand`), the fast loop commits to idle and stops all batteries.
 
 ---
 
@@ -255,68 +290,42 @@ When the grid meter read fails (`sitePower` cannot be computed), the solar power
 
 ### Redundant stop suppression
 
-A battery that is already stopped is not re-stopped every tick. `stopAll` tracks ticks-since-last-stop per battery (`batteryStopped`) and skips the Modbus writes while the battery remains stopped, re-sending the stop every `stopRefreshTicks` (10) ticks as a watchdog heartbeat so RS485 control stays alive. Any active power command (including the swap fallback) clears the tracking so the next stop is always sent immediately; a failed stop is retried on the next tick. This frees roughly two writes per inactive battery per tick of Modbus bus time.
+A battery that is already stopped is not re-stopped every tick. `stopBatteries` tracks ticks-since-last-stop per battery (`batteryStopped`) and skips the Modbus writes while the battery remains stopped, re-sending the stop every `stopRefreshTicks` (10) ticks as a watchdog heartbeat so RS485 control stays alive. Any active power command clears the tracking so the next stop is always sent immediately; a failed stop is retried on the next tick.
+
+> **Note:** §15 describes mechanisms that now live inside the fast loop (§16) — the SoC read is the snapshot's, the stops are `stopBatteries`, and the failed-meter-read / single-writer / command-ordering concerns no longer apply in their old form (the fast loop is the sole writer and reads its own grid). Kept for the underlying rationale.
 
 ---
 
-## 16. Battery Fast Loop
+## 16. Battery Control Architecture (snapshot + fast controller)
 
-A dedicated 1s loop (`core/site_battery_fast.go`) closes the reaction gap between main loop ticks. The split keeps all intelligence in the main loop:
+The battery is controlled by a **1 s fast loop** (`core/site_battery_fast.go`) that owns *every* power decision. The main loop is a slow supervisor: it sets the battery **mode** and publishes a **snapshot**; it commands no power and picks no direction. This is the OpenEMS-style continuous-setpoint model — direction is simply the sign of the energy-balance need, so there is no separate charge/discharge decision to wait on and no flip-latency to patch.
 
-| | Main loop | Fast loop |
+| | Main loop (supervisor) | Fast loop (controller, 1 s) |
 |---|---|---|
-| Direction (charge/discharge/idle) | ✔ decides | never changes |
-| Tiering / sticky / swaps | ✔ | — |
-| Stop commands / mode writes | ✔ | — |
-| SoC reads / taper | ✔ | — |
-| Power commands | only on activation, direction change, swap | ✔ owns steady state, every 1s tick |
-| Tier-up (engage another battery) | baseline selection + ordering | ✔ engages a pre-selected standby on saturation |
-| Tier-down (release a battery) | ✔ owns it (computeTier hysteresis) | never |
+| Battery mode (Hold/Charge/Normal), EV, tariffs, calibration | ✔ | — |
+| Snapshot: per-battery SoC/limits/caps + config | ✔ builds each cycle | consumes |
+| Direction, tiering, sticky selection, swaps | — | ✔ |
+| Power commands + stops | — | ✔ every tick |
 
-**Single-writer principle**: while the fast loop is active (grid meter present), the main loop does **not** re-command power to batteries that are already active in the same direction — its meter snapshot suffers the same sampling skew as any other reading, and re-commanding from it injects phantom values that the fast loop then has to correct. The main loop issues power commands only when a battery joins the active set (was stopped), on direction change, or during swap handling (where the Modbus ACK check drives the safe-handoff logic). A 10s heartbeat in the fast loop re-sends the current setpoints when no write happened, keeping the inverters' RS485 watchdog alive.
+**Snapshot contract** (`batterySnapshot`, built by `buildBatterySnapshot`, swapped under `batteryPlanMu`): per-battery `ctrl/meter/name`, cached `soc`, `min/maxSoc`, `chargeCap/dischargeCap`, plus `chargeOffset` / `dischargeOffset` / `dischargeEvExcluded` / `threshold` and the pool/tiering/sticky/tapering/calibration flags. No power, no direction. SoC is read once per main cycle — it moves ~0.02 %/5 s, so the fast loop selects/tiers off the snapshot without live SoC reads.
 
-**Contract**: the main loop publishes a `batteryControlPlan` snapshot (direction, active entries with effective power caps, EV-excluded power, commanded total) at the end of every `applyBatterySolarPower` run. Both sides synchronize on `batteryPlanMu`, which also serializes the entire main-loop battery section against fast-loop ticks — no stale-plan write can re-activate a stopped battery.
+**Parking.** The snapshot is cleared (and the fast loop parks) when solar control is off, or when a higher-precedence controller overrides it — grid charge, or external/API battery mode. Those overrides mirror the precedence in `requiredBatteryMode`, so the fast loop never fights a controller that owns the battery.
 
-**Tick structure** (1s period, matched to the DSMR P1 grid telegram cadence): the grid register is read first; if its value is identical to the previous tick (stale register), the tick ends after that single cheap read. Ticking faster than the meter refreshes only re-chews stale samples and feeds stale-read overshoot into the gain-1.0 correction, so the period is aligned to the meter. Battery power reads and the correction only run on fresh grid samples, so the fast tick costs almost nothing on the Modbus bus. Both the power **reads** and the power **writes** to multiple active batteries go out **in parallel** (each battery has its own connection), so a multi-battery tier neither reads nor commands slower than a single unit.
+When solar control is switched **fully off**, the main loop first stops every battery once before nil'ing the snapshot. This matters: the last actively-driven battery still holds the setpoint the fast loop wrote, and `SetBatteryMode(Normal)` only flips the mode register, not the power register — without the explicit stop it would keep charging/discharging indefinitely. The stop runs under `batteryPlanMu`, so the fast tick cannot run concurrently and the fast loop remains the sole power writer. On an *override* transition no stop is sent: the incoming controller re-commands power every cycle, so a stop would only fight it.
 
-**Correction math** (grid meter read + one power read per active battery per fresh tick):
-- discharge: `target = batteryMeasured + gridPower + gridOffset − evExcluded`
-- charge: `target = −batteryMeasured − (gridPower + gridOffset)`
-- `gridOffset` is the grid setpoint the main loop steered toward (residualPower, or 0 below prioritySoc)
-- The target is an **absolute energy balance from measurements**, not an increment on the commanded value. This is essential: during inverter ramps the commanded power is not yet delivered, and integrating the still-visible grid error against the commanded total double-counts it and produces full-scale oscillation (observed in practice). The measured form is ramp-state invariant.
-- applied at full gain (1.0) for one-tick reaction; clamped to `[0, cap]` per battery; corrections < 10W are skipped. Gain 1.0 is kept deliberately for reactivity; near the charge/discharge zero-crossing with a heavily phase-imbalanced grid total (single-phase battery on a 3-phase meter) it can ring — the preferred remedy is a near-zero deadband (raise the 10W skip threshold) rather than lowering the gain, so real changes still get a full one-tick correction
-- **Meter consistency guard**, two rules evaluated per tick:
-  1. *Stale grid register*: a grid reading identical to the previous tick carries no new information (the meter refreshes slower than 1s) — the tick is skipped silently. Corrections only happen on fresh grid samples.
-  2. *Sampling skew*: with constant load, Δgrid + Δbattery ≈ 0 between ticks. When |Δbattery| > 100W while |Δgrid + Δbattery| > 100W, the registers are out of sync and the energy balance would double-count — the tick is skipped until they align.
-  Genuine load steps (Δbattery ≈ 0, fresh grid) are never skipped, preserving one-tick reactivity. The guard history is seeded from the main loop's readings at plan creation, so the first fast tick after each main tick is guarded too.
+**Fast tick** (`batteryFastTick`): read fresh grid → stale-grid guard → parallel battery power reads → sampling-skew guard → compute both energy-balance targets:
+- `dischargeTarget = Σbatt + grid + dischargeOffset − dischargeEvExcluded`
+- `chargeTarget    = −Σbatt − (grid + chargeOffset)`
 
-**Tier-up** (asymmetric, fast loop only expands): the main loop publishes the eligible batteries beyond the current tier as an ordered `standby` list (charge: lowest SoC first; discharge: highest SoC first), each with its power cap. The fast loop engages the next standby battery — commands it, clears its stop bookkeeping, appends it to the active-name list and bumps `batteryChargeTier`/`batteryDischargeTier` so the next main tick takes ownership coherently — on **either** of two triggers:
-- **Cap saturation**: commanded target exceeds Σ caps by more than `fastLoopTierMargin` (50W).
-- **Under-delivery**: the engaged set ACKs its commands (no Modbus error) but can't physically deliver them — a faulted, low-SoC-derated or phase-limited unit. A Modbus ACK can't reveal this (it only confirms the write); the *measured* power can. `target` is a positive magnitude while measured battery power is signed (negative = charging), so it's first converted to the delivered magnitude in the active direction (`delivered = direction==charge ? −measured : measured`); `target − delivered` is then the undelivered watts. When that exceeds `fastLoopShortfall` (150W) for `fastLoopShortfallDwell` (4 consecutive ticks ≈ 4s, longer than the inverter ramp) the loop engages a standby. `shortfallTicks` resets on engage so a freshly-engaged unit gets time to ramp before another is added. This complements the swap-time `SetBattery*Power` error path (§15), which only handles *no-ACK* failures during a swap.
+Both add back the measured battery power, so they are **ramp-invariant** (this was the fix for the early full-scale oscillation). Direction = whichever exceeds `threshold` (idle if neither). Then `fastControl` runs the full per-direction pipeline off the snapshot: eligibility filter (charge drops maxSoc units unless calibrating; discharge drops minSoc units and **fails closed** on an unreadable SoC), `computeTier` (hysteresis, sized at `batteryTierFraction` of rated), sticky selection with 3 % swap threshold, per-battery cap + charge taper, **parallel writes**, then deferred stops for the rest.
 
-Tier-*down* is never done by the fast loop; the main loop's `computeTier` hysteresis owns it (releasing a battery has no grid impact, so main cadence is fine). Saturation is a one-way trigger and the dwell debounces under-delivery, so no flapping. Selection and ordering stay entirely in the main loop. Tier-up only runs on fresh, consistent ticks (it sits after the meter guards).
+**Direction arbitration** (`batteryArbitrateDirection`): same-direction and to/from-idle changes pass through immediately; a charge↔discharge **reversal** must persist for `fastLoopFlipDwell` (1 s) and is spaced by an adaptive backoff (`batteryFlipBackoff`, 2 s doubling to 60 s on repeated reversals, reset after a `fastLoopFlipCalm` 120 s calm gap). While a reversal is pending the committed direction is held and its target clamps to zero, so the battery just ramps down.
 
-Note: distribution across the engaged set is still equal-share (`batteryFastSend`), so a weak unit's slack is only partly absorbed by adding another battery — capacity-aware (measured) redistribution would be needed to drive the residual grid error fully to zero when one unit is limited.
+**Meter guards:** skip on a stale grid register (identical reading) and on sampling skew (`|Δbatt| > 100 W` while `|Δgrid + Δbatt| > 100 W`). Guard state lives on the `Site` across ticks.
 
-**Direction-crossing detector** (`batteryFastFlipCheck`): the fast loop never flips direction itself — but it does **shorten when the main loop's existing direction decision runs**. When the active direction has clamped to zero (`target ≤ fastLoopMinDelta`) *and* the opposite-direction need exceeds the **same** dead band the main loop uses (`threshold = standbyPower + batteryControlDeadBand`) for `fastLoopFlipDwell` (1s, wall-clock — not tick count, so stale-grid ticks don't stretch it), it sends a non-blocking poke on `batteryReplanChan`. The main loop drains that channel in its `Run` select and calls `replanBattery()` — the battery-only subset of `update()` (fresh meters via `sitePower`, then `updateBatteryMode`), leaving the loadpoint/EV cycle untouched. The opposite need is computed from the `oppositeGridOffset`/`oppositeEvExcluded` the main loop publishes, so it matches the main loop's own semantics.
+**Why this deleted a lot of code:** running the full selection every 1 s off a measured, ramp-invariant target means `computeTier` naturally handles both tier-up (saturation) and under-delivery, and direction falls out of the sign. So the previous bridge machinery — crossing detector, out-of-band `replanBattery` poke, dual offsets, explicit tier-up/standby, shortfall dwell, and the single-writer carve-outs — is **gone**; one controller, one cadence, one place for the runtime state.
 
-**Adaptive flip spacing** (bounds charge↔discharge thrash without slowing genuine reversals): the minimum spacing between fast-loop pokes (`batteryFlipBackoff`) starts at `fastLoopFlipBackoffMin` (2s). Each flip that arrives while still oscillating (gap since the last one < `fastLoopFlipCalm`, 120s) **doubles** the spacing up to `fastLoopFlipBackoffMax` (60s); a flip after a calm gap (> 120s) **resets** it to the minimum. So an isolated reversal (morning charge → evening discharge) fires instantly, while flickering-cloud / cycling-load oscillation near the crossing is progressively damped to at most one fast flip per 60s. The scheduled main tick still owns genuine flips inside the backoff window. The chosen spacing is logged (`next flip ≥ …`).
-
-The opposite need adds back the battery's current power (`oppositeNeed = -battPower - (grid + offset)` for charge), exactly like the main loop's energy balance, so it is **ramp-invariant**: the crossing is detectable *immediately*, without waiting for the inverter to ramp the old direction down to zero. (An earlier version gated on `|battPower| < 100W` first, which added a pointless 3–4s ramp wait and made the whole detector *slower* than a 5s main loop — removed.) So the poke fires ~`flipDwell` (≈1s) after the crossing, during the ramp — faster than a short main interval.
-
-Why this is safe: the poke handler runs in the same goroutine as the scheduled tick (Go `select` serialises them — no new concurrency), and the **direction decision itself stays byte-identical** in `applyBatterySolarPower`; a spurious poke just re-decides the same direction (a no-op). The dead band + dwell prevent zero-crossing chatter (the ramp-invariant need means there is no mid-ramp transient to chatter on). Net effect: a charge↔discharge reversal is re-decided ~1s after the crossing instead of waiting up to a full main interval — which lets the main interval be raised back toward the recommended 30s (calmer EV control) without losing battery reactivity. The *physical* reversal still takes the unavoidable inverter ramp (down through zero, up the other way); the detector removes the *decision* latency, not the ramp. `replanBattery` reuses the last `flexiblePower`/`totalChargePower` (both benign: `totalChargePower` is unused with grid+PV meters; stale `flexiblePower` only matters in the rare EV-PV-charging + crossing overlap, self-corrected next tick).
-
-Limitation: the detector only accelerates charge↔discharge *flips*, not idle→active starts (the plan is idle when balanced and the fast loop bails early). Idle is transient with a residual-power setpoint, so idle→active still waits for the scheduled tick.
-
-**Dedicated log area**: all battery-control and fast-loop logging goes to the `battery` area (`batteryLog = util.NewLogger("battery")` in `core/site_battery.go`), separate from `site`, so it filters and level-controls independently (`levels: {battery: debug}` or `{battery: trace}`).
-
-**Verbose tracing**: at `TRACE` level (`levels: {battery: trace}`) the fast loop and main-loop battery decision emit per-tick diagnostics with no effect on `DEBUG` output — every fast tick (`dir/grid/batt/target/total/offset/ev`), stale-grid skips, parked state, crossing-dwell/backoff progress, and the main-loop decision inputs (`surplus/sitePower/threshold/soc/evPower`). Useful for seeing exactly why a flip did or didn't fire.
-
-**Safety rules**:
-- Direction flips are never *decided* by the fast loop — it clamps at 0 and either waits for the main loop or pokes it to re-decide sooner (above); the decision stays in the main loop
-- Plan stays **idle on swap ticks** (ramp/overlap makes the commanded-power proxy unreliable) — fast loop pauses for one main tick
-- Plan older than 30s (main loop stalled) → fast loop parks
-- Failed grid read → skip tick
+**Known simplifications vs the previous split:** the swap safe-handoff keeps the *ordering* (incoming commanded before outgoing stopped, since writes precede deferred stops) but drops the Modbus-ACK check and the one-tick discharge overlap — a swap may cause a brief blip, acceptable as swaps are infrequent and SoC-driven. Idle↔active is instant (no dwell); if power hovers at the ~10 W threshold this could toggle at 1 s — raise `batteryControlDeadBand` if observed.
 
 ---
 
