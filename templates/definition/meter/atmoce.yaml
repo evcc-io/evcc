@@ -3,7 +3,7 @@ products:
   - brand: Atmoce
     description:
       generic: MG100 M-gateway
-capabilities: ["battery-control", "curtail"]
+capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   description:
     de: |
@@ -344,6 +344,59 @@ render: |
             type: holding
             decode: uint32
     script: limit != 0xFFFFFFFF
+    {{- else }}
+    source: const
+    value: false
+    {{- end }}
+  {{- end }}
+  {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
+  dim:
+    {{- if eq .firmware ">=01.01.00.28.15" }}
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Set grid import limit to 0W
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60326 # Grid Maximum Import Power (kW * 1000)
+            type: writemultiple
+            encoding: uint32
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0xFFFFFFFF # No limit
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60326 # Grid Maximum Import Power (kW * 1000)
+            type: writemultiple
+            encoding: uint32
+    {{- else }}
+    source: sleep
+    duration: 0s
+    {{- end }}
+  dimmed:
+    {{- if eq .firmware ">=01.01.00.28.15" }}
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60326 # Grid Maximum Import Power (kW * 1000)
+            type: holding
+            decode: uint32
+    script: limit == 0
     {{- else }}
     source: const
     value: false
