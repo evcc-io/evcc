@@ -1,0 +1,50 @@
+template: necharge
+products:
+  - brand: NEcharge
+    description:
+      generic: One / Pro
+group: generic
+requirements:
+  description:
+    de: |
+      NEcharge-Ladeeinrichtungen (One / Pro) sprechen OCPP 1.6J. Die Backend-URL am
+      NEcharge auf `ws://<evcc-adresse>:8887/` setzen (SoftAP-Konfigmodus bzw. App).
+      Hinweis: NEcharge akzeptiert über OCPP nur die Stromstufen **6/8/10/13/16 A**
+      (Zwischenwerte werden abgerundet) – keine stufenlose mA-Regelung.
+    en: |
+      NEcharge chargers (One / Pro) speak OCPP 1.6J. Set the charger's backend URL to
+      `ws://<evcc-host>:8887/` (via the SoftAP setup mode or the app).
+      Note: over OCPP the NEcharge only accepts current steps of 6/8/10/13/16 A
+      (in-between values are rounded down) – no continuous mA control.
+params:
+  - name: stationid
+    required: true
+    example: NECH-BE1600057
+    help:
+      de: Die OCPP-Ladepunkt-ID, die der NEcharge meldet (Cst_ChargeBoxId)
+      en: The OCPP charge point identifier reported by the NEcharge (Cst_ChargeBoxId)
+  - name: connector
+    type: int
+    default: 1
+  - name: idtag
+    advanced: true
+  - name: connecttimeout
+    advanced: true
+    default: 5m
+  - name: meterinterval
+    advanced: true
+    default: 10s
+  - name: remotestart
+    type: bool
+    advanced: true
+    default: false
+render: |
+  type: ocpp
+  stationid: {{ .stationid }}
+  connector: {{ .connector }}
+  connecttimeout: {{ .connecttimeout }}
+  meterinterval: {{ .meterinterval }}
+  remotestart: {{ .remotestart }}
+  {{- if .idtag }}
+  idtag: {{ .idtag }}
+  {{- end }}
