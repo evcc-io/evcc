@@ -26,6 +26,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -37,13 +38,13 @@ import (
 // FoxESSEVC charger implementation
 type FoxESSEVC struct {
 	implement.Caps
-	log              *util.Logger
-	conn             *modbus.Connection
-	mu               sync.Mutex
-	current          uint16  // last setpoint in register units (0.1A or 0.1kW depending on pbox)
-	commandedCurrent float64 // last setpoint in amps, for CurrentGetter
-	enabled          bool    // tracks enabled state for the heartbeat
-	pbox             bool    // phase-cutting box present; uses current register instead of power
+	log     *util.Logger
+	conn    *modbus.Connection
+	mu      sync.Mutex
+	current uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
+	enabled bool   // tracks enabled state for the heartbeat
+	pbox    bool   // phase-cutting box present; uses current register instead of power
+	lp      loadpoint.API
 }
 
 const (
@@ -289,10 +290,16 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		reg = foxRegMaxCurrent
 		val = uint16(10 * current)
 	} else {
-		// Auto phase switching: convert to power setpoint so the charger can
-		// decide phase count itself. P = sqrt(3) * 400V * I, scaled to 0.1kW.
+		// No PBOX: convert to power setpoint so the charger decides phase count.
+		// P = V * I * phases, scaled to 0.1kW units.
+		phases := 1
+		if wb.lp != nil {
+			if p := wb.lp.GetPhases(); p != 0 {
+				phases = p
+			}
+		}
 		reg = foxRegMaxPower
-		val = uint16(3 * 230 * current / 100)
+		val = uint16(voltage * current * float64(phases) / 100)
 	}
 
 	if err := wb.writeReg(reg, val); err != nil {
@@ -301,24 +308,9 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 
 	wb.mu.Lock()
 	wb.current = val
-	wb.commandedCurrent = current
 	wb.mu.Unlock()
 
 	return nil
-}
-
-var _ api.CurrentGetter = (*FoxESSEVC)(nil)
-
-// GetMaxCurrent implements the api.CurrentGetter interface.
-// It returns the last commanded current so evcc's sync loop compares against the
-// intended setpoint rather than the measured phase current, which diverges in
-// no-PBOX mode when the charger auto-switches phases.
-func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
-	wb.mu.Lock()
-	cur := wb.commandedCurrent
-	wb.mu.Unlock()
-
-	return cur, nil
 }
 
 var _ api.Meter = (*FoxESSEVC)(nil)
@@ -413,4 +405,11 @@ func (wb *FoxESSEVC) getPhases() (int, error) {
 	}
 
 	return 1, nil
+}
+
+var _ loadpoint.Controller = (*FoxESSEVC)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *FoxESSEVC) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }
