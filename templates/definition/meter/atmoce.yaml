@@ -405,13 +405,13 @@ render: |
     default:
       source: go
       in:
-        - name: maxchargepower
+        - name: maxdischargepower
           type: int
           config:
             source: const
-            value: {{ .maxchargepower }}
+            value: {{ .maxdischargepower }}
       script: |
-        powerlimit := ( maxchargepower * curtail ) / 100
+        powerlimit := ( maxdischargepower * curtail ) / 100
         powerlimit
       out:
         - name: powerlimit
