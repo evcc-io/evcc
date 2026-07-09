@@ -4,12 +4,18 @@ products:
       de: SunSpec Wechselrichter
       en: SunSpec Inverter
 group: generic
-capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
+  - name: curtailable
+    description:
+      de: Abregelbar
+      en: Curtailable
+    type: bool
+    advanced: true
+    usages: ["pv"]
   - preset: battery-params
 render: |
   type: custom
@@ -154,6 +160,7 @@ render: |
       - 103:WH
       - 113:WH
     scale: 0.001
+  {{- if .curtailable }}
   curtail:
     source: sequence
     set:
@@ -189,6 +196,7 @@ render: |
     value:
       - 704:WMaxLimPctEna
       - 123:WMaxLim_Ena
+  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
