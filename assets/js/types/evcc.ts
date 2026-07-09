@@ -43,7 +43,7 @@ export interface HemsConfig {
 
 export interface HemsStatus {
   dimmed?: boolean;
-  curtailed?: boolean;
+  curtailed?: number; // allowed feed-in percent (0..100 integer), <100 = curtailed
   maxConsumptionPower?: number;
   maxProductionPower?: number;
 }
@@ -94,6 +94,7 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  consumers?: Meter[];
   tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
@@ -118,6 +119,7 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
+  historyUpdated?: string; // ISO timestamp, bumped each 15min metrics persist
   siteTitle?: string;
   deviceColors?: DeviceColorEntry[];
   vehicles: Record<string, Vehicle>;
@@ -592,6 +594,12 @@ export type EebusStatus = {
   qr?: string;
 };
 
+export type EebusPairing = {
+  ski: string;
+  shipID: string;
+  source: "paired" | "ski";
+};
+
 export type ModbusProxy = {
   port: number;
   readonly: MODBUS_PROXY_READONLY;
@@ -748,7 +756,7 @@ export interface SiteConfig {
   title: string;
   aux: string[] | null;
   ext: string[] | null;
-  consumers: string[] | null;
+  consumer: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

@@ -1,0 +1,28 @@
+template: bkw
+products:
+  - brand: BKW
+    description:
+      de: Dynamische Abnahmevergütung
+      en: Dynamic feed-in remuneration
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["CH"]
+params:
+  - preset: tariff-base
+  - name: tax
+    default: 0.081
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://api.bkw.ch/api/dyntariffs/v1/tariffs
+    jq: |
+      [.prices[] |
+        {
+          start: (.start_timestamp),
+          end: (.end_timestamp),
+          value: (.feed_in[]? | select(.unit == "CHF_kWh") | .value)
+        } | select(.value != null)
+      ] | tostring

@@ -97,6 +97,12 @@ func TestResolveBrand(t *testing.T) {
 
 	_, ok := resolveBrand("nope")
 	assert.False(t, ok)
+
+	// IsBrand drives the cloud server's brand -> drivesomethinggreater routing
+	for _, name := range []string{"audi", "Volkswagen", "seat", "CUPRA", "skoda"} {
+		assert.True(t, IsBrand(name), "%q is a VW group brand", name)
+	}
+	assert.False(t, IsBrand("tesla"))
 }
 
 func TestPending(t *testing.T) {
@@ -202,6 +208,25 @@ func TestSocFreshestField(t *testing.T) {
 	soc, err := testProvider(data).Soc()
 	require.NoError(t, err)
 	assert.Equal(t, 61.0, soc, "the still-updating field wins over the stale higher-priority field")
+}
+
+func TestSocBatteryStateReportField(t *testing.T) {
+	data := []point{{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "36"}}
+
+	soc, err := testProvider(data).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 36.0, soc)
+}
+
+func TestSocBatteryStateReportOnlyFallbackField(t *testing.T) {
+	data := []point{
+		{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "36"},
+		{Name: FieldHvBatteryLevelValue, Value: "40"},
+	}
+
+	soc, err := testProvider(data).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 40.0, soc)
 }
 
 // TestPoints guards that a data point with a generic field name ("value") is

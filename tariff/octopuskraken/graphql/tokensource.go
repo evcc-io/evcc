@@ -19,6 +19,7 @@ var ErrAuthFailed = errors.New("authentication failed")
 
 type tokenSource struct {
 	log             *util.Logger
+	baseURI         string
 	email, password string
 }
 
@@ -32,7 +33,7 @@ func (ts *tokenSource) Token() (*oauth2.Token, error) {
 
 	// Create a temporary client without authentication for the token request
 	cli := request.NewClient(ts.log)
-	tempClient := graphql.NewClient(BaseURI, cli)
+	tempClient := graphql.NewClient(ts.baseURI, cli)
 
 	var q krakenTokenAuthentication
 	if err := tempClient.Mutate(ctx, &q, map[string]any{

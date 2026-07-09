@@ -1078,8 +1078,6 @@
       "batteryCharge": "Ładowanie magazynu energii",
       "batteryDischarge": "Rozładowywanie magazynu energii",
       "batteryDischargeHold": "Magazyn energii (chroniony)",
-      "batteryForecastEmpty": "Pusty",
-      "batteryForecastFull": "Pełny",
       "batteryGridChargeActive": "Ładowanie z sieci: aktywne",
       "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
       "batteryTooltip": "{energy} z {total} ({soc})",

@@ -15,20 +15,6 @@ type API interface {
 	// Name returns the vehicle name
 	Name() string
 
-	// // GetMode returns the charge mode
-	// GetMode() api.ChargeMode
-	// // SetMode sets the charge mode
-	// SetMode(api.ChargeMode)
-	// // GetPhases returns the phases
-	// GetPhases() int
-	// // SetPhases sets the phases
-	// SetPhases(phases int) error
-
-	// // GetPriority returns the priority
-	// GetPriority() int
-	// // SetPriority sets the priority
-	// SetPriority(priority int)
-
 	// GetMinSoc returns the min soc
 	GetMinSoc() int
 	// SetMinSoc sets the min soc
@@ -52,13 +38,4 @@ type API interface {
 	GetPlanStrategy() api.PlanStrategy
 	// SetPlanStrategy sets the plan strategy
 	SetPlanStrategy(api.PlanStrategy) error
-
-	// // GetMinCurrent returns the min charging current
-	// GetMinCurrent() float64
-	// // SetMinCurrent sets the min charging current
-	// SetMinCurrent(float64)
-	// // GetMaxCurrent returns the max charging current
-	// GetMaxCurrent() float64
-	// // SetMaxCurrent sets the max charging current
-	// SetMaxCurrent(float64)
 }

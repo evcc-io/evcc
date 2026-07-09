@@ -152,7 +152,7 @@ render: |
               type: writeholding
               decode: uint16
         - source: const
-          value: 49 # Bits 0+4+5: Self Use Mode (1) + Battery Reserve (16) + Allow Grid Charge (32)
+          value: 17 # Bits 0+4: Self Use Mode (1) + Battery Reserve (16)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}

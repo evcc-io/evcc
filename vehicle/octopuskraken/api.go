@@ -1,4 +1,4 @@
-package octopusde
+package octopuskraken
 
 import (
 	"context"
@@ -6,25 +6,31 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
+	krakengql "github.com/evcc-io/evcc/tariff/octopuskraken/graphql"
 	"github.com/evcc-io/evcc/util"
 )
 
-// API is the Octopus Energy Germany Kraken client for vehicle data. It reuses the
-// authenticated Kraken GraphQL client from the tariff implementation so the JWT
-// token source and auth transport are not duplicated.
+// BaseURI re-exports the tariff graphql package's Kraken API root.
+const BaseURI = krakengql.BaseURI
+
+// ItBaseURI re-exports the tariff graphql package's Italian Kraken API root.
+const ItBaseURI = krakengql.ItBaseURI
+
+// API is the Octopus Energy Kraken client for vehicle data, reusing the
+// authenticated Kraken GraphQL client from the tariff implementation.
 type API struct {
-	*octoDeGql.OctopusDeGraphQLClient
+	*krakengql.Client
 }
 
-// NewAPI creates a Kraken API client authenticated via the given credentials.
-func NewAPI(log *util.Logger, email, password string) (*API, error) {
+// NewAPI creates a Kraken API client for the given Kraken instance (other
+// regional Octopus companies run the same platform under their own baseURI).
+func NewAPI(log *util.Logger, baseURI, email, password string) (*API, error) {
 	// the account number is discovered on demand and not needed for the shared client
-	client, err := octoDeGql.NewClient(log, email, password, "")
+	client, err := krakengql.NewClient(log, baseURI, email, password, "")
 	if err != nil {
 		return nil, err
 	}
-	return &API{OctopusDeGraphQLClient: client}, nil
+	return &API{Client: client}, nil
 }
 
 // krakenAccounts lists the accounts accessible to the authenticated user.

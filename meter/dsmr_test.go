@@ -257,33 +257,43 @@ func TestDsmrTCP(t *testing.T) {
 }
 
 func TestDsmrWebSocket(t *testing.T) {
-	payload := dsmrFrame(dsmrTelegram50)
+	for _, tc := range []struct {
+		name    string
+		message websocket.MessageType
+	}{
+		{"text", websocket.MessageText},
+		{"binary", websocket.MessageBinary},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			payload := dsmrFrame(dsmrTelegram50)
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, err := websocket.Accept(w, r, nil)
-		if err != nil {
-			return
-		}
-		defer conn.CloseNow()
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				conn, err := websocket.Accept(w, r, nil)
+				if err != nil {
+					return
+				}
+				defer conn.CloseNow()
 
-		for {
-			if err := conn.Write(r.Context(), websocket.MessageText, payload); err != nil {
-				return
-			}
-			time.Sleep(50 * time.Millisecond)
-		}
-	}))
-	defer srv.Close()
+				for {
+					if err := conn.Write(r.Context(), tc.message, payload); err != nil {
+						return
+					}
+					time.Sleep(50 * time.Millisecond)
+				}
+			}))
+			defer srv.Close()
 
-	uri := "ws" + strings.TrimPrefix(srv.URL, "http")
+			uri := "ws" + strings.TrimPrefix(srv.URL, "http")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-	m, err := NewDsmr(ctx, uri, time.Second)
-	require.NoError(t, err)
+			m, err := NewDsmr(ctx, uri, time.Second)
+			require.NoError(t, err)
 
-	assertReadings(t, m)
+			assertReadings(t, m)
+		})
+	}
 }
 
 // TestDsmrIgnoresGarbage verifies that leading garbage and a CRC-mismatched
