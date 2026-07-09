@@ -130,7 +130,7 @@ export default defineComponent({
 			return `./api/gridsessions?${params.toString()}`;
 		},
 		docsLink(): string {
-			return `${docsPrefix()}/docs/features/external-control`;
+			return `${docsPrefix()}/docs/external-limit`;
 		},
 	},
 	methods: {
