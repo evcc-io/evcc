@@ -83,12 +83,12 @@ func fromBytes(b []byte) (Template, error) {
 	for i := range tmpl.Products {
 		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
 
-		seen := make(map[Capability]bool)
+		seen := make(map[Capability]struct{}, len(tmpl.Products[i].Capabilities))
 		for _, c := range tmpl.Products[i].Capabilities {
-			if seen[c] {
+			if _, ok := seen[c]; ok {
 				return Template{}, fmt.Errorf("template '%s': duplicate capability '%s' for product '%s'", tmpl.Template, c, tmpl.Products[i].Identifier())
 			}
-			seen[c] = true
+			seen[c] = struct{}{}
 		}
 	}
 
