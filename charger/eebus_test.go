@@ -134,8 +134,8 @@ func opevLimits3p(min, max, def float64) ([]float64, []float64, []float64, error
 
 // ackWrite makes a mocked WriteLoadControlLimits invoke its result callback with a
 // success result, as the real eebus-go does, so eebus.Await completes.
-func ackWrite(_ spineapi.EntityRemoteInterface, _ []ucapi.LoadLimitsPhase, resultCB func(model.ResultDataType)) {
-	resultCB(model.ResultDataType{})
+func ackWrite(_ spineapi.EntityRemoteInterface, _ []ucapi.LoadLimitsPhase, resultCB func(model.ResultDataType, model.MsgCounterType)) {
+	resultCB(model.ResultDataType{}, model.MsgCounterType(0))
 }
 
 func TestWriteCurrentLimitData_OpevOnly(t *testing.T) {

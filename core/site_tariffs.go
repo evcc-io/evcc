@@ -185,7 +185,7 @@ func (site *Site) solarScale() float64 {
 	}
 
 	const minEnergy = 0.5 // kWh
-	if fcst <= 0 || pv+fcst <= minEnergy {
+	if fcst <= 0 || pv <= minEnergy {
 		return 1
 	}
 

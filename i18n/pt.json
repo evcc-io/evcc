@@ -1151,8 +1151,6 @@
       "batteryCharge": "Carga de Bateria",
       "batteryDischarge": "Descarga de Bateria",
       "batteryDischargeHold": "Bateria (suspensa)",
-      "batteryForecastEmpty": "vazio {time}",
-      "batteryForecastFull": "cheio {time}",
       "batteryGridChargeActive": "Carga da rede: ativa",
       "batteryGridChargeLimit": "Carga da rede: quando",
       "batteryTooltip": "{energy} de {total} ({soc})",

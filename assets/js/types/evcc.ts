@@ -94,6 +94,7 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  consumers?: Meter[];
   tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
@@ -676,6 +677,7 @@ export interface BatteryMeter extends Meter {
 
 export interface Vehicle {
   name: string;
+  mode?: CHARGE_MODE | "";
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;
@@ -755,7 +757,7 @@ export interface SiteConfig {
   title: string;
   aux: string[] | null;
   ext: string[] | null;
-  consumers: string[] | null;
+  consumer: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Lädt",
-      "discharging": "Entlädt",
+      "charging": "lädt",
+      "discharging": "entlädt",
       "energy": "Energie",
+      "gridCharge": "Netzladen",
+      "hold": "Entladesperre",
+      "holdCharge": "Ladesperre",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
@@ -1276,10 +1279,6 @@
       "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
       "batteryDischargeHold": "Batterie (Entladesperre)",
-      "batteryForecastEmpty": "Leer",
-      "batteryForecastFull": "Voll",
-      "batteryForecastNextHigh": "Hoch",
-      "batteryForecastNextLow": "Tief",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryTooltip": "{energy} von {total} ({soc})",
@@ -1366,7 +1365,6 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
-      "disclaimerHint": "Hinweis:",
       "limitSoc": {
         "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
         "label": "Standard Ladelimit"
@@ -1381,7 +1379,6 @@
         "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
         "label": "Min. Ladung %"
       },
-      "onlyForSocBasedCharging": "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar.",
       "phasesConfigured": {
         "label": "Phasen",
         "no1p3pSupport": "Wie ist deine Wallbox angeschlossen?",

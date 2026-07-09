@@ -1,17 +1,7 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div
-				class="d-flex justify-content-between align-items-center my-3 my-md-4"
-				data-testid="header"
-			>
-				<h1 class="d-block my-0">
-					<span v-if="!setupRequired">
-						{{ siteTitle || "evcc" }}
-					</span>
-				</h1>
-				<TopNavigationArea :notifications="notifications" />
-			</div>
+			<TopHeader :title="headerTitle" :notifications="notifications" />
 			<HemsWarning :status="hems?.status" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
@@ -77,7 +67,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import TopNavigationArea from "../Top/TopNavigationArea.vue";
+import TopHeader from "../Top/Header.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
@@ -109,7 +99,7 @@ export default defineComponent({
 		Loadpoints,
 		Energyflow,
 		HemsWarning,
-		TopNavigationArea,
+		TopHeader,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
@@ -159,6 +149,9 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
+		headerTitle() {
+			return this.setupRequired ? "" : this.siteTitle || "evcc";
+		},
 		loadpoints() {
 			return store.uiLoadpoints.value || [];
 		},

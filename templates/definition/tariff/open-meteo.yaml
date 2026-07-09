@@ -57,12 +57,24 @@ params:
   - name: interval
     default: 1h
     advanced: true
+  - name: model
+    description:
+      en: Weather model
+      de: Wettermodell
+    help:
+      en: See [Open-Meteo API docs](https://open-meteo.com/en/docs/dwd-api)
+      de: Siehe [Open-Meteo API docs](https://open-meteo.com/en/docs/dwd-api)
+    type: choice
+    choice: ["best_match", "icon_seamless"]
+    default: best_match
+    required: true
+    advanced: true
 render: |
   type: custom
   tariff: solar
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&minutely_15=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=5&timezone=GMT&timeformat=unixtime
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&minutely_15=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=5&timezone=GMT&timeformat=unixtime{{ if ne .model "best_match" }}&models={{ .model }}{{ end }}
     jq: |
       def alphatemp: {{ .alphatemp }}; # temperature coefficient
       def rossmodel: {{ .rossmodel }}; # cooling type
