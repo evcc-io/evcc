@@ -186,6 +186,57 @@ test.describe("charging loadpoint", async () => {
     await expect(lpModal.getByLabel("Priority")).toHaveValue("0");
   });
 
+  test("second loadpoint gets its own charger, not the first one's", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const lpModal = page.getByTestId("loadpoint-modal");
+    const chargerModal = page.getByTestId("charger-modal");
+
+    // first loadpoint with its own charger
+    await newLoadpoint(page, "Carport");
+    await lpModal.getByRole("button", { name: "Add charger" }).click();
+    await expectModalVisible(chargerModal);
+    await expect(chargerModal.getByRole("heading", { name: "Add Charger" })).toBeVisible();
+    await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
+    await chargerModal.getByLabel("Power").fill("11000");
+    await chargerModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
+    await expect(page.getByTestId("loadpoint")).toContainText("11.0 kW");
+
+    // second loadpoint, added right after without a page reload in between
+    await newLoadpoint(page, "Garage");
+    await lpModal.getByRole("button", { name: "Add charger" }).click();
+    await expectModalVisible(chargerModal);
+
+    // must open a fresh charger, not reopen the first one for editing
+    await expect(chargerModal.getByRole("heading", { name: "Add Charger" })).toBeVisible();
+
+    await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
+    await chargerModal.getByLabel("Power").fill("22000");
+    await chargerModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    // two loadpoints, each with its own distinct charger
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+    await expect(page.getByTestId("loadpoint").nth(0)).toContainText("11.0 kW");
+    await expect(page.getByTestId("loadpoint").nth(1)).toContainText("22.0 kW");
+
+    // restart to confirm the persisted config really has two distinct charger devices
+    await restart();
+    await page.reload();
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+    await expect(page.getByTestId("loadpoint").nth(0)).toContainText("11.0 kW");
+    await expect(page.getByTestId("loadpoint").nth(1)).toContainText("22.0 kW");
+  });
+
   test("vehicle", async ({ page }) => {
     await start();
     await page.goto("/#/config");
