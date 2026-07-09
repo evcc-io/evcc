@@ -19,6 +19,45 @@
     "successCloseTab": "Vous pouvez maintenant fermer cet onglet.",
     "title": "Statut d'autorisation"
   },
+  "battery": {
+    "card": {
+      "charging": "En charge",
+      "discharging": "En décharge",
+      "energy": "Energie",
+      "ofTotal": "de {total}",
+      "power": "Puissance",
+      "soc": "Niveau de batterie"
+    },
+    "combined": "Combinée",
+    "config": {
+      "buffer": "Si le niveau de la batterie domestique est supérieur à {soc}, la batterie sera utilisée pour charger les points de charge et repousser le passage en mode solaire. La charge solaire démarre automatiquement à {start}.",
+      "bufferNone": "La batterie domestique n’est pas utilisée pour charger les points de charge. Définissez une valeur en dessous de {soc} pour activer le support.",
+      "bufferStart": {
+        "above": "dès que la batterie est chargée à plus de {soc}",
+        "full": "dès que la batterie est pleine",
+        "never": "seulement avec un surplus suffisant"
+      },
+      "bufferTitle": "Batterie en tant que tampon de charge",
+      "discharge": "Empêche la batterie domestique de se décharger en mode rapide pendant une recharge planifiée.",
+      "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
+      "priorityNone": "Le surplus solaire va directement aux points de charge. Définissez une valeur au dessus de {soc} pour prioriser la batterie domestique.",
+      "priorityTitle": "Où va le surplus solaire en priorité ?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Chargement depuis le réseau",
+        "hold": "Décharge verrouillée",
+        "holdcharge": "Charge en pause",
+        "normal": "Suivre le surplus solaire"
+      },
+      "empty": "vide",
+      "full": "pleine",
+      "highest": "Au plus haut ({value})",
+      "lowest": "Au plus bas ({value})",
+      "suggestion": "Suggestion",
+      "title": "Optimiseur"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Niveau de la batterie",
     "bufferStart": {
@@ -225,15 +264,21 @@
         "public": "Certificat public",
         "title": "Certificats"
       },
+      "configuredDevices": "Appareils configurés",
       "description": "Configuration permettant à evcc de communiquer avec des appareils compatibles EEBus comme des chargeurs ou un compteur de votre opérateur réseau. Toutes les initialisations nécessaires et la génération de certificat sont faites automatiquement au premier démarrage.",
       "descriptionAdvanced": "Aucun changement nécessaire. Ne faire des modifications que si vous savez ce que vous faites. Si vous changez le SHIP-id ou les certificats, vous aurez besoin d'appairer à nouveau vos appareils.",
       "interfaces": "Interfaces",
       "interfacesHelp": "Limiter les interfaces réseaux utilisées par EEBus afin de limiter des problèmes de communication. Laissez le champ vide pour utiliser toutes les interfaces. Une entrée par ligne.",
+      "noConfiguredDevices": "Aucun appareil configuré par SKI.",
+      "noPairings": "Aucun appareil appairé.",
+      "pairings": "Appareils appairés",
       "port": "Port",
       "portHelp": "Le port a utiliser.",
       "qr": "Code de couplage",
       "qrExplain": "Scannez un autre appareil EEBus pendant l'installation pour effectuer le couplage automatiquement, sans avoir à saisir manuellement le code SKI.",
       "removeConfirm": "Toutes les configurations EEBus seront supprimées. De nouveaux certificats et identifiants seront générés au prochain démarrage. Êtes-vous sûr ?",
+      "removePairing": "Enlever l’appairage",
+      "removePairingConfirm": "Cet appareil va être déconnecté et devra être appairé à nouveau. Etes-vous sûrs ?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Identifiant permanent de l'appareil, le désignant sur le réseau EEBus.",
       "shipidHelp": "Ce SHIP-ID est lié au certificat ci-dessous.",
