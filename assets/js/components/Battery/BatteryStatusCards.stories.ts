@@ -37,12 +37,18 @@ Single.args = {
   battery: battery([device({ title: "Sungrow", soc: 76, power: 800, capacity: 13.5 })]),
 };
 
+// long title on one device illustrates the name label's overflow/ellipsis behavior
 export const Multiple = Template.bind({});
 Multiple.args = {
   battery: {
     ...battery([
       device({ title: "Sungrow", soc: 76, power: 800, capacity: 13.5, controllable: true }),
-      device({ title: "Anker", soc: 40, power: -1200, capacity: 7.5 }),
+      device({
+        title: "Anker SOLIX X1 Home Energy Storage System Extended Pro Max",
+        soc: 40,
+        power: -1200,
+        capacity: 7.5,
+      }),
     ]),
     soc: 63,
   },
