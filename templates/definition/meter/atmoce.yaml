@@ -147,7 +147,6 @@ render: |
   maxacpower: {{ .maxacpower }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   curtail:
-    {{- if eq .firmware ">=01.01.00.28.15" }}
     source: switch
     switch:
       - case: 100 # No curtailment
@@ -182,12 +181,7 @@ render: |
               address: 60322 # Photovoltaic Maximum Power (kW * 1000)
               type: writemultiple
               encoding: uint32
-    {{- else }}
-    source: sleep
-    duration: 0s
-    {{- end }}
   curtailed:
-    {{- if eq .firmware ">=01.01.00.28.15" }}
     source: go
     in:
       - name: limit
@@ -200,10 +194,6 @@ render: |
             type: holding
             decode: uint32
     script: limit != 0xFFFFFFFF
-    {{- else }}
-    source: const
-    value: false
-    {{- end }}
   {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -388,7 +378,6 @@ render: |
             {{- end }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   curtail:
-    {{- if eq .firmware ">=01.01.00.28.15" }}
     source: switch
     switch:
       - case: 100 # No curtailment
@@ -423,12 +412,7 @@ render: |
               address: 60324 # Grid Maximum Export Power (kW * 1000)
               type: writemultiple
               encoding: uint32
-    {{- else }}
-    source: sleep
-    duration: 0s
-    {{- end }}
   curtailed:
-    {{- if eq .firmware ">=01.01.00.28.15" }}
     source: go
     in:
       - name: limit
@@ -441,14 +425,7 @@ render: |
             type: holding
             decode: uint32
     script: limit != 0xFFFFFFFF
-    {{- else }}
-    source: const
-    value: false
-    {{- end }}
-  {{- end }}
-  {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   dim:
-    {{- if eq .firmware ">=01.01.00.28.15" }}
     source: ifelse
     if:
       source: convert
@@ -476,12 +453,7 @@ render: |
             address: 60326 # Grid Maximum Import Power (kW * 1000)
             type: writemultiple
             encoding: uint32
-    {{- else }}
-    source: sleep
-    duration: 0s
-    {{- end }}
   dimmed:
-    {{- if eq .firmware ">=01.01.00.28.15" }}
     source: go
     in:
       - name: limit
@@ -494,10 +466,6 @@ render: |
             type: holding
             decode: uint32
     script: limit == 0
-    {{- else }}
-    source: const
-    value: false
-    {{- end }}
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
