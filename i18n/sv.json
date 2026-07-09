@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Laddar",
-      "discharging": "Laddar ur",
+      "charging": "laddar",
+      "discharging": "laddar ur",
       "energy": "Energi",
+      "gridCharge": "elnätsladdning",
+      "hold": "urladdning låst",
+      "holdCharge": "laddning låst",
       "ofTotal": "av {total}",
       "power": "Effekt",
       "soc": "Batterinivå"
