@@ -21,8 +21,8 @@
   },
   "battery": {
     "card": {
-      "charging": "Lädt",
-      "discharging": "Entlädt",
+      "charging": "lädt",
+      "discharging": "entlädt",
       "energy": "Energie",
       "gridCharge": "Netzladen",
       "hold": "Entladesperre",
@@ -1698,7 +1698,7 @@
     "priceLimit": "Preisgrenze",
     "resetAction": "Grenze löschen",
     "resetWarning": "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
-    "saved": "Gepeichert."
+    "saved": "Gespeichert."
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pausierte Zeit",
