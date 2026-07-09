@@ -79,8 +79,8 @@ type deferredState[T comparable] struct {
 // it is currently not possible to write this as a method
 func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
 	var state *deferredState[T]
-	// seed with "now", not zero: a prior process may have written a reset moments before
-	// restart, so assume one just happened rather than defer none at all
+	// seed with now, not zero: otherwise the first write's delay computes to 0 and skips
+	// deferral, which is wrong for an unknown last write
 	lastUpdated := o.clock.Now()
 	var last *T
 
