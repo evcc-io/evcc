@@ -21,8 +21,8 @@
   },
   "battery": {
     "card": {
-      "charging": "Lädt",
-      "discharging": "Entlädt",
+      "charging": "lädt",
+      "discharging": "entlädt",
       "energy": "Energie",
       "gridCharge": "Netzladen",
       "hold": "Entladesperre",
@@ -1279,10 +1279,6 @@
       "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
       "batteryDischargeHold": "Batterie (Entladesperre)",
-      "batteryForecastEmpty": "Leer",
-      "batteryForecastFull": "Voll",
-      "batteryForecastNextHigh": "Hoch",
-      "batteryForecastNextLow": "Tief",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryTooltip": "{energy} von {total} ({soc})",
