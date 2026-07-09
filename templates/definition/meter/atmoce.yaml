@@ -26,6 +26,29 @@ params:
   - name: maxsoc
     advanced: true
     default: 100
+  - name: maxchargepower
+    help:
+      de: "Für erzwungenes Laden des Speichers; 3.75kVA kontinuierlich pro MS-7K-U Batterie"
+      en: "For forced charging of the battery; 3.75kVA continuous per MS-7K-U battery"
+  - name: maxdischargepower
+    help:
+      de: "Maximale Entladeleistung des Speichers; 4.5kVA kontinuierlich pro MS-7K-U Batterie"
+      en: "Maximum discharge power of the storage; 4.5kVA continuous per MS-7K-U battery"
+  - name: firmware
+    type: choice
+    choice: ["<01.01.00.28.15", ">=01.01.00.28.15"]
+    default: "<01.01.00.28.15"
+    advanced: true
+    description:
+      de: Firmware-Version
+      en: Firmware version
+    help:
+      de: |
+        Firmware 01.01.00.28.15 und höher ermöglichen die korrekte Hold/Holdcharge-Funktionalität sowie das Dimmen und Abschalten.
+        Ältere Versionen unterstützen lediglich die Hold-Funktion ohne (Ent-)Ladefunktion.
+      en: |
+        Firmware 01.01.00.28.15 and higher allows for correct hold/holdcharge functionality, dimming and curtailing.
+        Older versions only support hold function without (dis)charge.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
