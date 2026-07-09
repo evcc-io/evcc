@@ -927,6 +927,9 @@ export default {
 				await api.post("config/loadpoints", this.values);
 				this.created = true;
 				this.emitChanged("added");
+				// the created response has no id to compare against on next open, so
+				// reset explicitly instead of relying on the isModalVisible watcher
+				this.reset();
 			} catch (e) {
 				handleError(e, "create failed");
 			}
@@ -943,8 +946,8 @@ export default {
 				await this.cleanupDevice("charger", this.values.charger, this.chargers);
 				await this.cleanupDevice("meter", this.values.meter, this.meters);
 				this.$emit("dismissed");
+				this.reset();
 			}
-			this.reset();
 		},
 		async cleanupDevice(type: DeviceType, name: string, list: { name: string; id: number }[]) {
 			const id = list.find((d) => d.name === name)?.id;
