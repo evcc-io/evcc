@@ -1,6 +1,10 @@
 <template>
 	<div v-if="batteryAvailable" data-testid="battery-experimental">
-		<BatteryStatusCards class="mb-4 box-pull-out" :battery="state.battery" />
+		<BatteryStatusCards
+			class="mb-4 box-pull-out"
+			:battery="state.battery"
+			:battery-mode="state.batteryMode"
+		/>
 
 		<BatteryHistoryCard
 			class="mb-4 box-pull-out"

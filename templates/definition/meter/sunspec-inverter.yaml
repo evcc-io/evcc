@@ -183,12 +183,26 @@ render: |
             value:
               - 704:WMaxLimPctEna
               - 123:WMaxLim_Ena
-  curtailed:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value:
-      - 704:WMaxLimPctEna
-      - 123:WMaxLim_Ena
+  curtailed: # curtailed only while the limit is enabled and below nominal (< 100 %)
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPctEna
+          - 123:WMaxLim_Ena
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
+    script: ena && limit < 100
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

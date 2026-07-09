@@ -748,7 +748,11 @@ html.app .modal-dialog {
 	padding: 1rem;
 }
 
-/* pull boxes into the container padding so box content aligns with the page header */
+/* small margin on mobile (matches loadpoint card), pull into container padding at sm+ */
+.box-pull-out {
+	margin-left: -1rem;
+	margin-right: -1rem;
+}
 @media (min-width: 576px) {
 	.box-pull-out {
 		margin-left: -1.5rem;
