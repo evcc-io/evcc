@@ -3,7 +3,7 @@ products:
   - brand: Atmoce
     description:
       generic: MG100 M-gateway
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: |
@@ -139,6 +139,66 @@ render: |
       decode: uint64
     scale: 0.01
   maxacpower: {{ .maxacpower }}
+  {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
+  curtail:
+    {{- if eq .firmware ">=01.01.00.28.15" }}
+    source: switch
+    switch:
+      - case: 100 # No curtailment
+        set:
+          source: const
+          value: 0xFFFFFFFF # No limit
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60322 # Photovoltaic Maximum Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
+    default:
+      source: go
+      in:
+        - name: maxacpower
+          type: int
+          config:
+            source: const
+            value: {{ .maxacpower }}
+      script: |
+        powerlimit := ( maxacpower * curtail ) / 100
+        powerlimit
+      out:
+        - name: powerlimit
+          type: int
+          config:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60322 # Photovoltaic Maximum Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
+    {{- else }}
+    source: sleep
+    duration: 0s
+    {{- end }}
+  curtailed:
+    {{- if eq .firmware ">=01.01.00.28.15" }}
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60322 # Photovoltaic Maximum Power (kW * 1000)
+            type: holding
+            decode: uint32
+    script: limit != 0xFFFFFFFF
+    {{- else }}
+    source: const
+    value: false
+    {{- end }}
+  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -229,5 +289,65 @@ render: |
               address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
               type: writemultiple
               decode: uint16
+  {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
+  curtail:
+    {{- if eq .firmware ">=01.01.00.28.15" }}
+    source: switch
+    switch:
+      - case: 100 # No curtailment
+        set:
+          source: const
+          value: 0xFFFFFFFF # No limit
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60324 # Grid Maximum Export Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
+    default:
+      source: go
+      in:
+        - name: maxchargepower
+          type: int
+          config:
+            source: const
+            value: {{ .maxchargepower }}
+      script: |
+        powerlimit := ( maxchargepower * curtail ) / 100
+        powerlimit
+      out:
+        - name: powerlimit
+          type: int
+          config:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60324 # Grid Maximum Export Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
+    {{- else }}
+    source: sleep
+    duration: 0s
+    {{- end }}
+  curtailed:
+    {{- if eq .firmware ">=01.01.00.28.15" }}
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60324 # Grid Maximum Export Power (kW * 1000)
+            type: holding
+            decode: uint32
+    script: limit != 0xFFFFFFFF
+    {{- else }}
+    source: const
+    value: false
+    {{- end }}
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
