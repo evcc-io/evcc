@@ -30,6 +30,74 @@ func freePort(t *testing.T) int {
 	return l.Addr().(*net.TCPAddr).Port
 }
 
+// nextFreePort is overridable in tests to force the bind-race retry path.
+var nextFreePort = freePort
+
+// newServerOnFreePort starts the eebus server on a free port, retrying the rare
+// freePort race where the port is taken between probe and bind. Sets conf.Port.
+func newServerOnFreePort(t *testing.T, conf *server.Config) *server.EEBus {
+	t.Helper()
+
+	for range 5 {
+		conf.Port = nextFreePort(t)
+
+		inst, err := server.NewServer(*conf)
+		require.NoError(t, err, "server")
+
+		if _, err := server.Instance(); err == nil {
+			return inst
+		} else if !strings.Contains(err.Error(), "address already in use") {
+			require.NoError(t, err, "instance")
+		}
+
+		// bind race lost: tear down and retry with a new port
+		inst.Shutdown()
+	}
+
+	t.Fatal("eebus server could not bind a free port")
+	return nil
+}
+
+// TestNewServerOnFreePort_RetriesPastOccupiedPort: the helper must recover when
+// its first port is already bound (simulating the freePort probe/bind race).
+func TestNewServerOnFreePort_RetriesPastOccupiedPort(t *testing.T) {
+	util.LogLevel("error", map[string]string{"eebus": "trace"})
+
+	if inst, err := server.Instance(); err == nil {
+		inst.Shutdown()
+	}
+
+	// hold a port on the same wildcard address the server binds (":port"), so the
+	// first bind attempt fails with "address already in use"
+	l, err := net.Listen("tcp", ":0")
+	require.NoError(t, err)
+	defer l.Close()
+	occupied := l.Addr().(*net.TCPAddr).Port
+
+	calls := 0
+	orig := nextFreePort
+	nextFreePort = func(t *testing.T) int {
+		calls++
+		if calls == 1 {
+			return occupied
+		}
+		return orig(t)
+	}
+	defer func() { nextFreePort = orig }()
+
+	certificate, err := cert.CreateCertificate("Demo", "Demo", "DE", "Demo-FreePort-01")
+	require.NoError(t, err, "certificate")
+	public, private, err := server.GetX509KeyPair(certificate)
+	require.NoError(t, err, "decode certificate")
+
+	conf := server.Config{Certificate: server.Certificate{Public: public, Private: private}}
+	inst := newServerOnFreePort(t, &conf)
+	defer inst.Shutdown()
+
+	require.Greater(t, calls, 1, "helper should retry past the occupied port")
+	require.NotEqual(t, occupied, conf.Port, "server must not bind the occupied port")
+}
+
 // qrField extracts a field value from the SHIP QR code text
 func qrField(qr, key string) string {
 	for f := range strings.SplitSeq(qr, ";") {
@@ -127,7 +195,6 @@ func TestShipPairing(t *testing.T) {
 	require.NoError(t, err, "secret")
 
 	conf := server.Config{
-		Port:   freePort(t),
 		Secret: secret,
 		Certificate: server.Certificate{
 			Public:  public,
@@ -135,11 +202,7 @@ func TestShipPairing(t *testing.T) {
 		},
 	}
 
-	_, err = server.NewServer(conf)
-	require.NoError(t, err, "server")
-
-	inst, err := server.Instance()
-	require.NoError(t, err, "instance")
+	inst := newServerOnFreePort(t, &conf)
 
 	qr := serverQR(t)
 	require.Contains(t, qr, "SPSEC:", "expected SHIP Pairing Service QR")

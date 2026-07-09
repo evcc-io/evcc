@@ -28,17 +28,13 @@ func TestControlBoxGridGuardHeartbeat(t *testing.T) {
 	public, private, err := server.GetX509KeyPair(certificate)
 	require.NoError(t, err, "decode certificate")
 
-	_, err = server.NewServer(server.Config{
-		Port: freePort(t),
+	conf := server.Config{
 		Certificate: server.Certificate{
 			Public:  public,
 			Private: private,
 		},
-	})
-	require.NoError(t, err, "server")
-
-	inst, err := server.Instance()
-	require.NoError(t, err, "instance")
+	}
+	inst := newServerOnFreePort(t, &conf)
 	defer inst.Shutdown()
 
 	// the controlbox test double, like a real ControlBox, only exposes GridGuard
