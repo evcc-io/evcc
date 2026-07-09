@@ -39,10 +39,12 @@ func TestControlBoxGridGuardHeartbeat(t *testing.T) {
 
 	inst, err := server.Instance()
 	require.NoError(t, err, "instance")
+	defer inst.Shutdown()
 
 	// the controlbox test double, like a real ControlBox, only exposes GridGuard
 	box, err := createControlbox(t.Context(), inst.Ski(), freePort(t))
 	require.NoError(t, err, "controlbox")
+	defer box.myService.Shutdown()
 
 	// no hems.Run(): the run loop applies limits via the nil site and is not needed here
 	_, err = hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, nil, time.Second)
