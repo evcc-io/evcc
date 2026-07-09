@@ -82,8 +82,6 @@ func fromBytes(b []byte) (Template, error) {
 	// push down capabilities to products
 	for i := range tmpl.Products {
 		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
-<<<<<<< HEAD
-=======
 
 		seen := make(map[Capability]struct{}, len(tmpl.Products[i].Capabilities))
 		for _, c := range tmpl.Products[i].Capabilities {
@@ -92,7 +90,6 @@ func fromBytes(b []byte) (Template, error) {
 			}
 			seen[c] = struct{}{}
 		}
->>>>>>> origin/master
 	}
 
 	return tmpl, nil
