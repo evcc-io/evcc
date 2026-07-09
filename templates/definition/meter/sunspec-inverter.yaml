@@ -4,6 +4,7 @@ products:
       de: SunSpec Wechselrichter
       en: SunSpec Inverter
 group: generic
+capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
