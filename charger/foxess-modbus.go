@@ -286,8 +286,7 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	var reg uint16
-	var val uint16
+	var reg, val uint16
 
 	if wb.pbox {
 		// PBOX present: use current setpoint directly
@@ -335,7 +334,6 @@ func (wb *FoxESSEVC) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	// 0.1kW -> W
 	return float64(binary.BigEndian.Uint16(b)) * 100, nil
 }
 
@@ -348,7 +346,6 @@ func (wb *FoxESSEVC) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// 0.1kWh -> kWh
 	return float64(energy) / 10, nil
 }
 
@@ -361,7 +358,6 @@ func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// 0.1kWh -> kWh
 	return float64(energy) / 10, nil
 }
 
@@ -398,7 +394,7 @@ func (wb *FoxESSEVC) Identify() (string, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *FoxESSEVC) phases1p3p(phases int) error {
 	// 0: three-phase, 1: single-phase (L2)
-	val := uint16(0)
+	var val uint16
 	if phases == 1 {
 		val = 1
 	}
