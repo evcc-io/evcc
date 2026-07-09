@@ -15,6 +15,7 @@ params:
       en: Curtailable
     type: bool
     advanced: true
+    default: true
     usages: ["pv"]
   - preset: battery-params
 render: |
@@ -160,7 +161,7 @@ render: |
       - 103:WH
       - 113:WH
     scale: 0.001
-  {{- if .curtailable }}
+  {{- if eq .curtailable "true" }}
   curtail:
     source: sequence
     set:
