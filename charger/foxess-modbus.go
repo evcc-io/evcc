@@ -313,6 +313,34 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 	return nil
 }
 
+var _ api.CurrentGetter = (*FoxESSEVC)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
+	if wb.pbox {
+		b, err := wb.conn.ReadHoldingRegisters(foxRegMaxCurrent, 1)
+		if err != nil {
+			return 0, err
+		}
+		return float64(binary.BigEndian.Uint16(b)) / 10, nil
+	}
+
+	b, err := wb.conn.ReadHoldingRegisters(foxRegMaxPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	phases := 1
+	if wb.lp != nil {
+		if p := wb.lp.GetPhases(); p != 0 {
+			phases = p
+		}
+	}
+
+	// invert the MaxCurrentMillis formula: val (0.1kW) -> amps
+	return float64(binary.BigEndian.Uint16(b)) * 100 / (voltage * float64(phases)), nil
+}
+
 var _ api.Meter = (*FoxESSEVC)(nil)
 
 // CurrentPower implements the api.Meter interface
