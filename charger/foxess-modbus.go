@@ -246,15 +246,11 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *FoxESSEVC) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
-	if err != nil {
-		return false, err
-	}
+	wb.mu.Lock()
+	enabled := wb.enabled
+	wb.mu.Unlock()
 
-	// enabled when charger is starting (2), charging (3), or switching phases (9)
-	s := binary.BigEndian.Uint16(b)
-
-	return s == 2 || s == 3 || s == 9, nil
+	return verifyEnabled(wb, enabled)
 }
 
 // Enable implements the api.Charger interface
