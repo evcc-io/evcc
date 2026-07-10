@@ -99,8 +99,9 @@ export default defineComponent({
 			return new Date(this.now.getTime() + baseEndH * HOUR + this.dayOffset * 24 * HOUR);
 		},
 		windowLabel(): string {
-			// short weekday + day, no month (e.g. "Sa. 27. – Mo. 29.")
-			const fmt = (d: Date) => `${this.weekdayShort(d)} ${d.getDate()}.`;
+			// relative day name if close (e.g. "gestern – morgen"), else "Sa. 27."
+			const fmt = (d: Date) =>
+				this.relativeDayName(d) ?? `${this.weekdayShort(d)} ${d.getDate()}.`;
 			return `${fmt(this.winStart)} – ${fmt(this.winEnd)}`;
 		},
 		prevDisabled(): boolean {

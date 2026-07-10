@@ -243,18 +243,21 @@ export default defineComponent({
 
       return `${weekday} ${hour}`.trim();
     },
+    // "gestern"/"heute"/"morgen" within one day of now, null otherwise
+    relativeDayName(date: Date) {
+      const startOfDay = (d: Date) => new Date(d).setHours(0, 0, 0, 0);
+      const days = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
+      if (Math.abs(days) > 1) return null;
+      return new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" }).format(
+        days,
+        "day"
+      );
+    },
     // relative day plus time, e.g. "heute 16:30", "morgen 5:00", "Freitag 12:15"
     fmtDayTime(date: Date) {
       const time = this.fmtHourMinute(date);
-      const startOfDay = (d: Date) => new Date(d).setHours(0, 0, 0, 0);
-      const days = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
-      if (days === 0 || days === 1) {
-        const day = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
-          numeric: "auto",
-        }).format(days, "day");
-        return `${day} ${time}`;
-      }
-      return `${this.weekdayLong(date)} ${time}`;
+      const day = this.relativeDayName(date);
+      return `${day ?? this.weekdayLong(date)} ${time}`;
     },
     fmtHourMinute(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {

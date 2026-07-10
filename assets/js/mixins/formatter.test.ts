@@ -323,3 +323,22 @@ describe("hourShort", () => {
     config.global.mocks["$i18n"].locale = "de";
   });
 });
+
+describe("relativeDayName", () => {
+  const day = (offset: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d;
+  };
+
+  test("should name adjacent days", () => {
+    expect(fmt.relativeDayName(day(-1))).toBe("gestern");
+    expect(fmt.relativeDayName(day(0))).toBe("heute");
+    expect(fmt.relativeDayName(day(1))).toBe("morgen");
+  });
+
+  test("should return null beyond one day", () => {
+    expect(fmt.relativeDayName(day(-2))).toBeNull();
+    expect(fmt.relativeDayName(day(2))).toBeNull();
+  });
+});

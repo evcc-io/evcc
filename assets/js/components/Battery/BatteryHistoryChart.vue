@@ -153,22 +153,6 @@ export default defineComponent({
 					});
 				});
 			}
-			// now marker as a 2-point series so it slides with the axis on paging
-			if (this.nowInWindow) {
-				series.push({
-					id: "now-line",
-					type: "line",
-					data: [
-						[this.now, 0],
-						[this.now, this.yMax],
-					],
-					showSymbol: false,
-					silent: true,
-					z: 5,
-					lineStyle: { color: colors.muted || "", width: 1, type: "dashed" },
-					emphasis: { disabled: true },
-				});
-			}
 			return series;
 		},
 		chartOption(): Record<string, unknown> {
@@ -203,13 +187,16 @@ export default defineComponent({
 		xAxes(): Record<string, unknown>[] {
 			// narrow 48h window: wider "4 PM" labels need extra spacing
 			const stepHours = is12hFormat() ? 6 : 4;
-			return forecastXAxes(
+			const [hourAxis, dayAxis] = forecastXAxes(
 				this.winStart,
 				this.winEnd,
 				this.hourShort,
 				this.weekdayShort,
 				stepHours
 			);
+			// stronger day divider
+			dayAxis.splitLine.lineStyle = { color: colors.muted || "", type: "solid" };
+			return [hourAxis, dayAxis];
 		},
 	},
 	watch: {
