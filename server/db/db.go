@@ -30,13 +30,6 @@ func New(driver, dsn string) (*gorm.DB, error) {
 
 	switch driver {
 	case "sqlite":
-
-		// Example DSNs:
-		//"path/to/database.db"
-		// "~/database.db",
-		// "database.db?cache=shared&journal_mode=WAL"
-		// ":memory:"
-
 		// Split database path and connection parameters
 		dbPath, params, _ := strings.Cut(dsn, "?")
 

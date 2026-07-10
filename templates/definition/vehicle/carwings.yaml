@@ -5,7 +5,7 @@ products:
       generic: Leaf (pre 2019)
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
 render: |
   type: carwings
   {{ include "vehicle-base" . }}

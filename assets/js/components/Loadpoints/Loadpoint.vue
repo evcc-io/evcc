@@ -120,6 +120,7 @@ import type {
 	Forecast,
 	SMART_COST_TYPE,
 	BATTERY_MODE,
+	LoadpointUi,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
@@ -166,7 +167,11 @@ export default defineComponent({
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
 		chargerFeatureContinuous: Boolean,
+		chargerFeatureSwitchDevice: Boolean,
 		chargerIcon: String as PropType<string | null>,
+
+		// heating display range (ui-only)
+		ui: Object as PropType<LoadpointUi>,
 
 		// vehicle
 		connected: Boolean,
@@ -276,6 +281,9 @@ export default defineComponent({
 		},
 		continuous() {
 			return this.chargerFeatureContinuous;
+		},
+		switchDevice() {
+			return this.chargerFeatureSwitchDevice;
 		},
 		phasesProps() {
 			return this.collectProps(Phases);
@@ -396,6 +404,7 @@ export default defineComponent({
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 }
 
 .details > div {

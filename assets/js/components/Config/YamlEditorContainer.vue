@@ -47,17 +47,7 @@ export default {
 </script>
 
 <style scoped>
-@import "../../../css/breakpoints.css";
-
 .editor-container {
-	width: 100%;
 	overflow: hidden;
-	margin: 0 -1rem 0 -1.25rem;
-}
-/* reset margins on lg */
-@media (--lg-and-up) {
-	.editor-container {
-		margin: 0;
-	}
 }
 </style>
