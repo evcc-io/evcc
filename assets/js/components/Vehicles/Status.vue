@@ -175,7 +175,8 @@ export default defineComponent({
 		vehicleLimitWarning() {
 			return this.effectivePlanSoc > this.vehicleLimitSoc;
 		},
-		suggestionMismatch(): boolean {
+		showSuggestions(): boolean {
+			if (!this.connected) return false;
 			// only advise when the suggestion differs from the current charging state
 			const action = this.suggestion?.action;
 			return (action === "charge" && !this.enabled) || (action === "stop" && this.enabled);
@@ -365,7 +366,7 @@ export default defineComponent({
 				},
 				{
 					id: "suggestion",
-					visible: this.connected && this.suggestionMismatch,
+					visible: this.showSuggestions,
 					tooltipContent: this.translateStatus(
 						this.suggestion?.action === "charge"
 							? "suggestionStartTooltip"
