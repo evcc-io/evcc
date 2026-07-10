@@ -235,6 +235,7 @@
       "price": "Price",
       "productionLimited": "Production limited",
       "range": "Range",
+      "remoteEnabled": "Enabled",
       "returnEnergy": "Energy (reverse)",
       "singlePhase": "Single phase",
       "soc": "Charge",
