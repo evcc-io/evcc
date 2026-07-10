@@ -630,18 +630,15 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
-            - case: 1 # normal
-            - case: 2 # hold
-            - case: 4 # holdcharge
-              set:
-                source: const
-                value: 0 # stop
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47100 # Forcible charge/discharge
-                    type: writesingle
-                    encoding: uint16
+          default:
+            source: const
+            value: 0 # stop
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47100 # Forcible charge/discharge
+                type: writesingle
+                encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}
