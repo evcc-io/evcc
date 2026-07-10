@@ -144,16 +144,16 @@
       "template": "Hersteller",
       "titleAdd": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizungsgerät hinzufügen"
+        "heating": "Heizgerät hinzufügen"
       },
       "titleEdit": {
         "charging": "Wallbox bearbeiten",
-        "heating": "Heizungsgerät bearbeiten"
+        "heating": "Heizgerät bearbeiten"
       },
       "type": {
         "custom": {
           "charging": "Benutzerdefinierte Wallbox",
-          "heating": "Benutzerdefiniertes Heizungsgerät"
+          "heating": "Benutzerdefiniertes Heizgerät"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
         "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready über Plugins)",
@@ -396,18 +396,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizungsgerät hinzufügen"
+        "heating": "Heizgerät hinzufügen"
       },
       "addMeter": "Zusätzlichen Energiezähler hinzufügen",
       "advancedConfig": "Erweiterte Konfiguration",
       "cancel": "Abbrechen",
       "chargerError": {
         "charging": "Wallbox muss konfiguriert sein.",
-        "heating": "Heizungsgerät muss konfiguriert sein."
+        "heating": "Heizgerät muss konfiguriert sein."
       },
       "chargerLabel": {
         "charging": "Wallbox",
-        "heating": "Heizungsgerät"
+        "heating": "Heizgerät"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
@@ -428,7 +428,7 @@
       },
       "creating": {
         "charging": "Wallbox gespeichert. Ladepunkt wird erstellt …",
-        "heating": "Heizungsgerät gespeichert. Heizung wird erstellt …"
+        "heating": "Heizgerät gespeichert. Heizung wird erstellt …"
       },
       "defaultModeHelp": {
         "charging": "Lademodus beim Anschließen des Fahrzeugs.",
