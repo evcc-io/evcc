@@ -235,6 +235,7 @@
       "price": "Preis",
       "productionLimited": "Erzeugung begrenzt",
       "range": "Reichweite",
+      "remoteEnabled": "Aktiviert",
       "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
