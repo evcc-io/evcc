@@ -946,11 +946,10 @@ export default {
 			this.autoCreate = true;
 			this.autoCreateInProgress = true;
 			await sleep(1000); // ux pause
-			// ensure charger capabilities are known
-			while (!this.chargerStatus) {
-				await sleep(50);
-			}
 			try {
+				for (let i = 0; !this.chargerStatus && i < 100; i++) {
+					await sleep(50);
+				}
 				const res = await api.post("config/loadpoints", this.values);
 				this.$emit("changed", { action: "added" });
 				// edit mode of the newly loadpoint

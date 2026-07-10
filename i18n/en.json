@@ -144,16 +144,16 @@
       "template": "Manufacturer",
       "titleAdd": {
         "charging": "Add Charger",
-        "heating": "Add Heater"
+        "heating": "Add Heating Device"
       },
       "titleEdit": {
         "charging": "Edit Charger",
-        "heating": "Edit Heater"
+        "heating": "Edit Heating Device"
       },
       "type": {
         "custom": {
           "charging": "User-defined charger",
-          "heating": "User-defined heater"
+          "heating": "User-defined heating device"
         },
         "heatpump": "User-defined heat pump",
         "sgready": "User-defined heat pump (sg-ready via plugins)",

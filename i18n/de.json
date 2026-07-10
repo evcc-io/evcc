@@ -144,16 +144,16 @@
       "template": "Hersteller",
       "titleAdd": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizung hinzufügen"
+        "heating": "Heizungsgerät hinzufügen"
       },
       "titleEdit": {
         "charging": "Wallbox bearbeiten",
-        "heating": "Heizung bearbeiten"
+        "heating": "Heizungsgerät bearbeiten"
       },
       "type": {
         "custom": {
           "charging": "Benutzerdefinierte Wallbox",
-          "heating": "Benutzerdefinierte Heizung"
+          "heating": "Benutzerdefiniertes Heizungsgerät"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
         "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready über Plugins)",

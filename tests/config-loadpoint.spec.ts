@@ -669,7 +669,7 @@ test.describe("heating loadpoint", async () => {
     // add user-defined heat pump
     const modal = page.getByTestId("charger-modal");
     await expectModalVisible(modal);
-    await modal.getByLabel("Manufacturer").selectOption("User-defined heater");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heating device");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
     await modal
       .getByLabel("Manufacturer")
