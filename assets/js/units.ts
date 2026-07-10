@@ -34,3 +34,8 @@ export function is12hFormat() {
 export function set12hFormat(value: boolean) {
   settings.is12hFormat = value;
 }
+
+// short hour label for chart axes: "14" or "2 PM"
+export function fmtHourShort(h: number) {
+  return is12hFormat() ? `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}` : String(h);
+}

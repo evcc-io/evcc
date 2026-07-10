@@ -18,7 +18,7 @@ import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha }
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
-import { is12hFormat } from "@/units";
+import { fmtHourShort } from "@/units";
 import { hasColorPicker } from "./groups";
 
 export interface HistorySlot {
@@ -405,18 +405,13 @@ export default defineComponent({
 				// Use every 6h on mobile (06/12/18) and every 3h on desktop. 12 is a
 				// multiple of both, so noon stays visible. Drop minutes; honor am/pm.
 				const stepHours = this.isMobile ? 6 : 3;
-				const h12 = is12hFormat();
 				return (t: number) => {
 					const d = new Date(t);
 					if (d.getMinutes() !== 0) return "";
 					const h = d.getHours();
 					if (h === 0) return "";
 					if (h % stepHours !== 0) return "";
-					if (h12) {
-						const hh = h % 12 || 12;
-						return `${hh} ${h < 12 ? "AM" : "PM"}`;
-					}
-					return String(h);
+					return fmtHourShort(h);
 				};
 			}
 			if (this.period === PERIODS.MONTH) {

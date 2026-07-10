@@ -24,7 +24,6 @@
 			:win-start="winStart.getTime()"
 			:win-end="winEnd.getTime()"
 			:now="now.getTime()"
-			:has-forecast="windowHasForecast"
 			:day-offset="dayOffset"
 			:focused="focusedBattery"
 		/>
@@ -90,9 +89,6 @@ export default defineComponent({
 		},
 		hasForecastData(): boolean {
 			return this.batteries.some((b) => b.forecast.length > 0);
-		},
-		windowHasForecast(): boolean {
-			return this.hasForecastData && this.winEnd > this.now;
 		},
 		winStart(): Date {
 			const baseStartH = this.hasForecastData ? 24 : 48;
