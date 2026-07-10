@@ -86,24 +86,21 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 
 	lp := dev.Instance()
 
-	// // missing instance due to error, decode config from database
-	// if lp == nil || reflect.ValueOf(lp).IsNil() {
-	// 	cc := dev.Config()
+	// disabled loadpoint has no live instance; decode static config from the database instead
+	if lp == nil {
+		dynamic, staticMap, _ := loadpoint.SplitConfig(dev.Config().Other)
 
-	// 	dynamic, staticMap, _ := loadpoint.SplitConfig(cc.Other)
+		var static loadpoint.StaticConfig
+		_ = util.DecodeOther(staticMap, &static)
 
-	// 	var static loadpoint.StaticConfig
-	// 	_ = util.DecodeOther(staticMap, &static)
-
-	// 	res := loadpointFullConfig{
-	// 		ID:            id,
-	// 		Name:          dev.Config().Name,
-	// 		StaticConfig:  static,
-	// 		DynamicConfig: dynamic,
-	// 	}
-
-	// 	return res
-	// }
+		return loadpointFullConfig{
+			ID:            id,
+			Name:          dev.Config().Name,
+			Disable:       disable,
+			StaticConfig:  static,
+			DynamicConfig: dynamic,
+		}
+	}
 
 	res := loadpointFullConfig{
 		ID:            id,
@@ -250,10 +247,12 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		// dynamic
-		if err := dynamic.Apply(instance); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		// dynamic; instance is nil for a disabled loadpoint, takes effect on next restart
+		if instance != nil {
+			if err := dynamic.Apply(instance); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
 		}
 
 		setConfigDirty()
@@ -283,6 +282,20 @@ func deleteLoadpointHandler() http.HandlerFunc {
 		}
 
 		instance := lp.Instance()
+
+		// disabled loadpoint has no live instance; delete it without ref cleanup
+		if instance == nil {
+			if err := deleteDevice(id, h); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			jsonWrite(w, struct {
+				ID int `json:"id"`
+			}{ID: id})
+
+			return
+		}
 
 		if dev, err := configurableDevice(instance.GetChargerRef(), config.Chargers()); err == nil {
 			if err := deleteDevice(dev.ID(), config.Chargers()); err != nil {

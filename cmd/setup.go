@@ -1432,17 +1432,19 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
-		var instance *core.Loadpoint
+		var instance loadpoint.API
 		if !conf.Disable {
-			instance, err = newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+			lp, e := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
 				return coresettings.NewConfigSettingsAdapter(log, &conf)
 			})
-			if err != nil {
-				err = &DeviceError{cc.Name, err}
+			if e != nil {
+				err = &DeviceError{cc.Name, e}
+			} else {
+				instance = lp
 			}
 		}
 
-		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		dev := config.NewConfigurableDevice(&conf, instance)
 		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
 			err = &DeviceError{cc.Name, e}
 		}
