@@ -22,6 +22,7 @@ type watchdogPlugin struct {
 	timeout  time.Duration
 	deferred bool
 	cancel   func()
+	wdtDone  chan struct{} // closed by the running wdt goroutine once it has exited
 	clock    clock.Clock
 }
 
@@ -82,11 +83,29 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 	var lastUpdated time.Time
 	var last *T
 
-	// stop running wdt
+	// stop running wdt and block until it has actually exited, so that any
+	// tick already in flight has resolved (either wrote, or observed
+	// cancellation and no-opped) before the caller proceeds. Without this,
+	// a tick that fired just before cancel() can still race a subsequent
+	// write issued right after stopWdt() returns.
 	stopWdt := func() {
-		if o.cancel != nil {
-			o.cancel()
-			o.cancel = nil
+		if o.cancel == nil {
+			return
+		}
+
+		o.cancel()
+		done := o.wdtDone
+		o.cancel = nil
+		o.wdtDone = nil
+
+		if done != nil {
+			// must release the lock here: the goroutine's tick callback
+			// needs o.mu to observe ctx.Err() and return, or to finish a
+			// write that was already in flight. Holding the lock while
+			// waiting on done would deadlock against that callback.
+			o.mu.Unlock()
+			<-done
+			o.mu.Lock()
 		}
 	}
 
@@ -103,22 +122,29 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
 
-			go o.wdt(ctx, func() error {
-				o.mu.Lock()
-				defer o.mu.Unlock()
+			done := make(chan struct{})
+			o.wdtDone = done
 
-				// a reset may have cancelled us while we waited for the lock
-				if ctx.Err() != nil {
+			go func() {
+				defer close(done)
+
+				o.wdt(ctx, func() error {
+					o.mu.Lock()
+					defer o.mu.Unlock()
+
+					// a reset may have cancelled us while we waited for the lock
+					if ctx.Err() != nil {
+						return nil
+					}
+
+					if err := set(val); err != nil {
+						return err
+					}
+					lastUpdated = o.clock.Now()
+
 					return nil
-				}
-
-				if err := set(val); err != nil {
-					return err
-				}
-				lastUpdated = o.clock.Now()
-
-				return nil
-			})
+				})
+			}()
 		}
 
 		return nil
