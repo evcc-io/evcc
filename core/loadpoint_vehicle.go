@@ -77,7 +77,11 @@ func (lp *Loadpoint) identifyVehicle() {
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.stopVehicleDetection()
-			lp.setActiveVehicle(vehicle)
+
+			// already active via a different detection path - avoid reapplying its mode
+			if lp.GetVehicle() != vehicle {
+				lp.setActiveVehicle(vehicle)
+			}
 		}
 	}
 }
