@@ -33,7 +33,9 @@ func TestLoadpointConfigDisabledNilInstance(t *testing.T) {
 
 	var res loadpointFullConfig
 	require.NotPanics(t, func() {
-		res = loadpointConfig(dev)
+		var err error
+		res, err = loadpointConfig(dev)
+		require.NoError(t, err)
 	})
 
 	assert.True(t, res.Disable)
