@@ -1,4 +1,4 @@
-package octopusde
+package octopuskraken
 
 import (
 	"encoding/json"
@@ -10,15 +10,23 @@ import (
 )
 
 func init() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /devices", getDevices)
+	register("octopus-de", BaseURI)
+	register("octopus-it", ItBaseURI)
+}
 
-	service.Register("octopus-de", mux)
+// register wires the device-listing endpoint for a Kraken instance under the given service name.
+func register(name, baseURI string) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /devices", func(w http.ResponseWriter, req *http.Request) {
+		getDevices(w, req, name, baseURI)
+	})
+
+	service.Register(name, mux)
 }
 
 // getDevices lists the ids of the SmartFlex devices in the account, driving
 // device selection in the template.
-func getDevices(w http.ResponseWriter, req *http.Request) {
+func getDevices(w http.ResponseWriter, req *http.Request, name, baseURI string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	q := req.URL.Query()
@@ -31,8 +39,8 @@ func getDevices(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log := util.NewLogger("octopus-de").Redact(email, password)
-	api, err := NewAPI(log, email, password)
+	log := util.NewLogger(name).Redact(email, password)
+	api, err := NewAPI(log, baseURI, email, password)
 	if err != nil {
 		log.ERROR.Println(err)
 		return

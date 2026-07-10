@@ -2,6 +2,7 @@ package eebus
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -41,9 +42,10 @@ type EEBus struct {
 	failsafeConsumptionLimit  float64
 
 	smartgridProductionId    uint
-	productionLimit          ucapi.LoadLimit
+	productionLimit          ucapi.LoadLimit // feed-in limit (NOT production despite its name)
 	productionLimitActivated time.Time
-	failsafeProductionLimit  *float64
+	failsafeProductionLimit  *float64 // feed-in limit (NOT production despite its name)
+	productionNominalMax     float64
 
 	heartbeat *util.Value[struct{}]
 	interval  time.Duration
@@ -113,6 +115,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
 		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
+		productionNominalMax:     limits.ProductionNominalMax,
 	}
 
 	// simulate a received heartbeat
@@ -244,6 +247,10 @@ func (c *EEBus) run() error {
 	// LPP
 	if c.productionLimitActivated.IsZero() {
 		if c.productionLimit.IsActive {
+			if c.productionNominalMax <= 0 {
+				return errors.New("production limit received but productionNominalMax is not configured")
+			}
+
 			c.log.WARN.Println("activating production limit")
 			c.setProductionLimit(c.productionLimit.Value, true)
 		}
@@ -308,11 +315,24 @@ func (c *EEBus) Dimmed() *bool {
 	return new(!c.consumptionLimitActivated.IsZero())
 }
 
-// Curtailed implements api.HEMS, derived from productionLimitActivated.
-func (c *EEBus) Curtailed() *bool {
+// CurtailedPercent implements api.HEMS, converting the active LPP production
+// limit to an allowed production percent via the configured nominal production power.
+func (c *EEBus) CurtailedPercent() *int {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return new(!c.productionLimitActivated.IsZero())
+
+	// without a nominal reference the W limit cannot be expressed as a percent
+	if c.productionNominalMax <= 0 {
+		return nil
+	}
+
+	percent := 100
+	if !c.productionLimitActivated.IsZero() {
+		// production limits are negative watts
+		percent = int(-c.productionLimit.Value / c.productionNominalMax * 100)
+	}
+
+	return &percent
 }
 
 // MaxConsumptionPower implements api.HEMS, returning the consumption cap

@@ -3,8 +3,8 @@ products:
   - description:
       de: EEBUS Wärmepumpe (OHPCF)
       en: EEBUS heat pump (OHPCF)
-group: heating
-capabilities: ["meter"]
+group: heatinggeneric
+capabilities: ["meter", "dim"]
 params:
   - preset: eebus
   - name: reboost
@@ -19,9 +19,5 @@ params:
       en: Wait time after which a newly announced optional power consumption is scheduled again.
 render: |
   type: eebus-ohpcf
-  ski: {{ .ski }}
-  {{ if .ip }}ip: {{ .ip }}{{ end }}
+  {{ include "eebus" . }}
   reboost: {{ .reboost }}
-  features:
-    - heating
-    - integrateddevice

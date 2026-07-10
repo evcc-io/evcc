@@ -1,4 +1,4 @@
-package octopusde
+package octopuskraken
 
 import (
 	"testing"

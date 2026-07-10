@@ -37,6 +37,7 @@ params:
       en: Active power limit in percent
     advanced: true
     usages: ["pv"]
+    deprecated: true # curtailment now applies the HEMS-distributed percent directly
   - name: storageunit
   - name: forceaccharging
     default: false
@@ -226,38 +227,33 @@ render: |
     scale: 0.01
   maxacpower: {{ .maxacpower }}
   curtail:
-    source: ifelse
-    if:
-      source: convert
-      convert: bool2int
-      set:
-        source: sequence
-        set:
-        - source: const
-          value: {{ .curtailpercent }}
+    source: sequence
+    set:
+    # allowed feed-in power as percent of nominal (0-100 %)
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 47418 # Maximum Feed Grid Power (0-100 %)
+        type: writesingle
+        encoding: uint16
+      scale: 10
+    # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
+    - source: switch
+      switch:
+        - case: 100 # uncurtailed
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47418 # Maximum Feed Grid Power (0-100 %)
-              type: writesingle
-              encoding: uint16
-            scale: 10
-        - source: const
-          value: 7 # Power-limited grid connection (%)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47415 # Active power control mode
-              type: writesingle
-              encoding: uint16
-    else:
-      source: convert
-      convert: bool2int
-      set:
+            source: const
+            value: 0 # Unlimited
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47415 # Active power control mode
+                type: writesingle
+                encoding: uint16
+      default:
         source: const
-        value: 0 # Unlimited 
+        value: 7 # Power-limited grid connection (%)
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -643,19 +639,31 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
+      # normal/hold/holdcharge (1,2,4) already stopped 47100 above; only charge
+      # (3, excluded from reset) needs it periodically reasserted here.
+      # set: must no-op for 1/2/4 - it fires immediately on every call (not just
+      # on the recurring reset-suppressed tick), so a bare write here would
+      # re-assert 47100=1 right after the switch above just cleared it to 0.
       - source: watchdog
         timeout: 30s
         reset: [1, 2, 4]
         # only charging (3) needs periodic reassertion of 47100
         set:
-          source: const
-          value: 1 # charge
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47100 # Forcible charge/discharge
-              type: writesingle
-              encoding: uint16
+          source: switch
+          switch:
+            - case: 3 # charge
+              set:
+                source: const
+                value: 1 # charge
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+          default:
+            source: sleep
+            duration: 0s
   {{- include "battery-params" . }}
   {{- end }}

@@ -3,13 +3,13 @@ package charger
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
+	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mdt"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
@@ -30,17 +30,19 @@ type EEBusOHPCF struct {
 	*embed
 	cem *eebus.CustomerEnergyManagement
 	ma  *eebus.MonitoringAppliance
+	eg  *eebus.EnergyGuard
 
 	ctx     context.Context
 	reboost time.Duration
 
-	mu         sync.RWMutex
-	log        *util.Logger
-	compressor spineapi.EntityRemoteInterface
-	mpcEntity  spineapi.EntityRemoteInterface
-	dhwEntity  spineapi.EntityRemoteInterface
-	enabled    bool
-	reboosting bool
+	mu          sync.RWMutex
+	log         *util.Logger
+	compressor  spineapi.EntityRemoteInterface
+	mpcEntity   spineapi.EntityRemoteInterface
+	dhwEntity   spineapi.EntityRemoteInterface
+	egLpcEntity spineapi.EntityRemoteInterface
+	enabled     bool
+	reboosting  bool
 
 	connector *eebus.Connector
 }
@@ -61,7 +63,8 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		Reboost time.Duration
 	}{
 		embed: embed{
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Icon_:     "heatpump",
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice, api.SwitchDevice},
 		},
 		Reboost: 10 * time.Minute,
 	}
@@ -86,6 +89,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		log:       util.NewLogger("eebus-ohpcf"),
 		cem:       inst.CustomerEnergyManagement(),
 		ma:        inst.MonitoringAppliance(),
+		eg:        inst.EnergyGuard(),
 		connector: eebus.NewConnector(),
 		ctx:       ctx,
 		reboost:   reboost,
@@ -125,6 +129,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 	c.compressor = nil
 	c.mpcEntity = nil
 	c.dhwEntity = nil
+	c.egLpcEntity = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -135,13 +140,25 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	}
 
 	switch event {
+	case ohpcf.DataUpdateConsumptionState:
+		c.mu.Lock()
+		c.compressor = entity
+		c.mu.Unlock()
+
+		// react immediately to a freshly announced schedule/resume opportunity
+		// instead of waiting for the next reboost tick, which may miss it (#31549)
+		if c.lastEnabled() {
+			if err := c.apply(); err != nil {
+				c.log.DEBUG.Printf("apply: %v", err)
+			}
+		}
+
 	case ohpcf.UseCaseSupportUpdate,
 		ohpcf.DataUpdateRequestedPowerEstimate,
 		ohpcf.DataUpdateRequestedPowerMax,
 		ohpcf.DataUpdateConsumptionIsStoppable,
 		ohpcf.DataUpdateConsumptionIsPausable,
 		ohpcf.DataUpdateConsumptionStartTime,
-		ohpcf.DataUpdateConsumptionState,
 		ohpcf.DataUpdateMinimalRunDuration,
 		ohpcf.DataUpdateMinimalPauseDuration:
 		c.mu.Lock()
@@ -161,6 +178,15 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	case mdt.UseCaseSupportUpdate, mdt.DataUpdateTemperature:
 		c.mu.Lock()
 		c.dhwEntity = entity
+		c.mu.Unlock()
+
+	// Energy Guard LPC carries the §14a/LPC consumption limit
+	case lpc.UseCaseSupportUpdate:
+		c.mu.Lock()
+		// use most specific selector
+		if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
+			c.egLpcEntity = entity
+		}
 		c.mu.Unlock()
 	}
 }
@@ -312,13 +338,13 @@ func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable 
 // it aborts the process.
 func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 	if pausable, err := c.cem.OHPCF.ConsumptionIsPausable(entity); err == nil && pausable {
-		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.PausePowerConsumptionProcess(entity, cb)
 		})
 	}
 
 	if stoppable, err := c.cem.OHPCF.ConsumptionIsStoppable(entity); err == nil && stoppable {
-		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.AbortPowerConsumptionProcess(entity, cb)
 		})
 	}
@@ -326,38 +352,56 @@ func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 	return api.ErrNotAvailable
 }
 
-// ohpcfWriteTimeout bounds how long a control write waits for its result.
-const ohpcfWriteTimeout = 10 * time.Second
-
-// await runs a control write and waits for the heat pump's result, returning an
-// error if the write is rejected or no result arrives within the timeout.
-func (c *EEBusOHPCF) await(write func(func(model.ResultDataType)) (*model.MsgCounterType, error)) error {
-	res := make(chan model.ResultDataType, 1)
-
-	if _, err := write(func(r model.ResultDataType) { res <- r }); err != nil {
-		return err
-	}
-
-	select {
-	case r := <-res:
-		if r.ErrorNumber != nil && *r.ErrorNumber != 0 {
-			err := fmt.Errorf("write rejected: %d", *r.ErrorNumber)
-			if r.Description != nil {
-				err = fmt.Errorf("%w (%s)", err, *r.Description)
-			}
-			c.log.ERROR.Println(err)
-			return err
-		}
-		return nil
-	case <-time.After(ohpcfWriteTimeout):
-		return errors.New("write result timeout")
-	}
-}
-
 // MaxCurrent implements the api.Charger interface. OHPCF is on/off and cannot
 // be modulated, so the offered current is ignored.
 func (c *EEBusOHPCF) MaxCurrent(int64) error {
 	return c.apply()
+}
+
+var _ api.Dimmer = (*EEBusOHPCF)(nil)
+
+// Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
+// consumption limit is currently active on the heat pump.
+func (c *EEBusOHPCF) Dimmed() (bool, error) {
+	c.mu.RLock()
+	entity := c.egLpcEntity
+	c.mu.RUnlock()
+
+	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
+		return false, api.ErrNotAvailable
+	}
+
+	limit, err := c.eg.EgLPCInterface.ConsumptionLimit(entity)
+	if err != nil {
+		// scenario announced but no usable value yet
+		if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
+			errors.Is(err, eebusapi.ErrDataInvalid) {
+			return false, api.ErrNotAvailable
+		}
+		return false, err
+	}
+
+	// an active limit means dimmed; the applied §14a limit value is 0W, so a
+	// value-based check would never report the dimmed state and never release it
+	return limit.IsActive, nil
+}
+
+// Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
+// limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
+func (c *EEBusOHPCF) Dim(dim bool) error {
+	c.mu.RLock()
+	entity := c.egLpcEntity
+	c.mu.RUnlock()
+
+	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
+		return api.ErrNotAvailable
+	}
+
+	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
+	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
+	})
 }
 
 // apply issues the command to align the optional consumption with the on/off
@@ -376,12 +420,12 @@ func (c *EEBusOHPCF) apply() error {
 
 	switch ohpcfControlAction(state, c.lastEnabled()) {
 	case ohpcfSchedule:
-		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
 			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, 0, cb)
 		})
 	case ohpcfResume:
-		return c.await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.ResumePowerConsumptionProcess(entity, cb)
 		})
 	case ohpcfStop:
@@ -394,24 +438,22 @@ func (c *EEBusOHPCF) apply() error {
 var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
-// announced optional consumption (estimate..max) or ErrNotAvailable if none.
+// optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
 		return 0, 0, errNotConnected
 	}
 
-	estimate, err := c.cem.OHPCF.RequestedPowerEstimate(entity)
-	if err != nil {
-		return 0, 0, api.ErrNotAvailable
+	if power, _ := c.cem.OHPCF.RequestedPowerEstimate(entity); power > 0 {
+		return power, power, nil
 	}
 
-	maxPower, err := c.cem.OHPCF.RequestedPowerMax(entity)
-	if err != nil {
-		maxPower = estimate
+	if power, _ := c.cem.OHPCF.RequestedPowerMax(entity); power > 0 {
+		return power, power, nil
 	}
 
-	return estimate, maxPower, nil
+	return 0, 0, api.ErrNotAvailable
 }
 
 var _ api.Meter = (*EEBusOHPCF)(nil)
