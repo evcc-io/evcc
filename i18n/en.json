@@ -396,17 +396,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Add charger",
-        "heating": "Add heater"
+        "heating": "Add heating device"
       },
       "addMeter": "Add dedicated energy meter",
+      "advancedConfig": "Advanced configuration",
       "cancel": "Cancel",
       "chargerError": {
         "charging": "Configuring a charger is required.",
-        "heating": "Configuring a heater is required."
+        "heating": "Configuring a heating device is required."
       },
       "chargerLabel": {
         "charging": "Charger",
-        "heating": "Heater"
+        "heating": "Heating device"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
@@ -420,14 +421,21 @@
       "circuitInvalid": "Circuit does not exist",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
+      "created": "“{name}” was created and uses sensible defaults.",
+      "createdTitle": {
+        "charging": "Charging point created",
+        "heating": "Heater created"
+      },
+      "creating": {
+        "charging": "Charger saved. Creating charging point …",
+        "heating": "Heating device saved. Creating heater …"
+      },
       "defaultModeHelp": {
         "charging": "Charging mode when connecting the vehicle.",
         "heating": "Is set when on system start."
       },
       "defaultModeHelpKeep": "Keeps the last selected mode.",
       "defaultModeLabel": "Default mode",
-      "defaultsHint": "Default mode, solar behaviour and electrical details use sensible defaults.",
-      "defaultsHintLink": "Adjust settings",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
       "electricalTitle": "Electrics",
@@ -444,7 +452,7 @@
       "noVehicles": "No vehicles are configured.",
       "option": {
         "charging": "Add charging point",
-        "heating": "Add heating device"
+        "heating": "Add heater"
       },
       "phases1p": "1-phase",
       "phases3p": "3-phase",
@@ -484,13 +492,13 @@
       "thresholdEnableLabel": "Enable grid power",
       "titleAdd": {
         "charging": "Add Charging Point",
-        "heating": "Add Heating Device",
-        "unknown": "Add Charger or Heater"
+        "heating": "Add Heater",
+        "unknown": "Add Charging Point or Heater"
       },
       "titleEdit": {
         "charging": "Edit Charging Point",
-        "heating": "Edit Heating Device",
-        "unknown": "Edit Charger or Heater"
+        "heating": "Edit Heater",
+        "unknown": "Edit Charging Point or Heater"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -508,7 +516,7 @@
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
       "addGrid": "Add grid meter",
-      "addLoadpoint": "Add charger or heater",
+      "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
       "addVehicle": "Add vehicle",
@@ -801,7 +809,7 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging & Heating",
+      "loadpoints": "Charging points & Heaters",
       "meter": "Solar & Battery",
       "services": "Services",
       "system": "System",
