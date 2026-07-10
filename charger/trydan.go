@@ -53,7 +53,15 @@ type RealTimeData struct {
 	FirmwareVersion  string  `json:"FirmwareVersion"`
 	DynamicPowerMode int     `json:"DynamicPowerMode"`
 	ContractedPower  int     `json:"ContractedPower"`
+	ChargeMode       int     `json:"ChargeMode"`
 }
+
+// Trydan ChargeMode values
+const (
+	trydanChargeModeMono  = 0
+	trydanChargeModeThree = 1
+	trydanChargeModeMixed = 2
+)
 
 // Trydan charger implementation
 type Trydan struct {
@@ -202,6 +210,37 @@ func (c Trydan) MaxCurrent(current int64) error {
 // 	data, err := c.statusG.Get()
 // 	return time.Duration(data.ChargeTime) * time.Second, err
 // }
+
+var _ api.PhaseSwitcher = (*Trydan)(nil)
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+func (c Trydan) Phases1p3p(phases int) error {
+	mode := trydanChargeModeThree
+	if phases == 1 {
+		mode = trydanChargeModeMono
+	}
+	return c.setValue("ChargeMode", mode)
+}
+
+var _ api.PhaseGetter = (*Trydan)(nil)
+
+// GetPhases implements the api.PhaseGetter interface
+func (c Trydan) GetPhases() (int, error) {
+	data, err := c.statusG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	switch data.ChargeMode {
+	case trydanChargeModeMono:
+		return 1, nil
+	case trydanChargeModeThree:
+		return 3, nil
+	default:
+		// mixed mode: phase count varies dynamically, not a fixed 1p/3p state
+		return 0, nil
+	}
+}
 
 var _ api.Meter = (*Trydan)(nil)
 

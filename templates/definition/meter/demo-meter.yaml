@@ -70,7 +70,7 @@ render: |
     source: js
     vm: shared
     script: |
-      typeof demoMeterCurtailed !== "undefined" && demoMeterCurtailed
+      typeof demoMeterCurtailed !== "undefined" && demoMeterCurtailed < 100
   {{- end }}
   {{- if .energy }}
   energy:

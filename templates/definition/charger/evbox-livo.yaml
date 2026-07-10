@@ -11,4 +11,5 @@ requirements:
 params:
   - preset: eebus
 render: |
+  type: eebus-evse
   {{ include "eebus" . }}

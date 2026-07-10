@@ -121,6 +121,7 @@ import type {
 	SMART_COST_TYPE,
 	BATTERY_MODE,
 	LoadpointUi,
+	LoadpointSuggestion,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
@@ -229,6 +230,7 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		smartFeedInPriorityActive: Boolean,
 		smartFeedInPriorityNextStart: String as PropType<string | null>,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffGrid: Number,
 		tariffFeedIn: Number,
 		tariffCo2: Number,
@@ -404,6 +406,7 @@ export default defineComponent({
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 }
 
 .details > div {

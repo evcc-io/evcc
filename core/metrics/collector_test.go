@@ -310,6 +310,63 @@ func TestCreateEntityRefreshesTitle(t *testing.T) {
 	require.EqualValues(t, 1, count, "must not duplicate existing rows")
 }
 
+func TestCollectorSetSocTemp(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Battery, "bat", "", WithClock(clk))
+	require.NoError(t, err)
+
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	require.NoError(t, col.SetSocTemp(50, false))
+	require.NoError(t, col.SetSocTemp(60, false)) // first reading per slot wins
+	require.Equal(t, 50.0, *col.accu.SocTemp)
+
+	// cross into the next slot: prior slot persisted, snapshot cleared
+	clk.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	require.Nil(t, col.accu.SocTemp)
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ?", col.entity.Id).First(&m).Error)
+	require.Equal(t, 50.0, *m.SocTemp)
+
+	// battery never marks is_temp, so the value is soc
+	require.False(t, col.entity.IsTemp)
+
+	// fresh slot captures its own start value
+	require.NoError(t, col.SetSocTemp(70, false))
+	require.Equal(t, 70.0, *col.accu.SocTemp)
+}
+
+func TestCollectorSetSocTempHeating(t *testing.T) {
+	clk := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Loadpoint, "lp", "", WithClock(clk))
+	require.NoError(t, err)
+
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	require.NoError(t, col.SetSocTemp(21.5, true)) // heating charger: value is temperature
+	require.Equal(t, 21.5, *col.accu.SocTemp)
+
+	clk.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ?", col.entity.Id).First(&m).Error)
+	require.Equal(t, 21.5, *m.SocTemp)
+
+	// is_temp persisted on the entity row
+	var e entity
+	require.NoError(t, db.Instance.Where("id = ?", col.entity.Id).First(&e).Error)
+	require.True(t, e.IsTemp)
+}
+
 // a meter regrouped to consumer keeps its id and history via in-place relabel
 func TestCreateEntityReconcilesExtToConsumer(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
@@ -318,7 +375,7 @@ func TestCreateEntityReconcilesExtToConsumer(t *testing.T) {
 	// ext meter with a persisted history slot
 	ext, err := createEntity(Meter, "db:5", "Fridge")
 	require.NoError(t, err)
-	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0))
+	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil))
 
 	// reconfigured as consumer: same row relabeled, history intact
 	con, err := createEntity(Consumer, "db:5", "Fridge")

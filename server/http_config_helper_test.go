@@ -240,6 +240,8 @@ func TestConfigHasCriticalPlugin(t *testing.T) {
 		{"go without script", "power:\n  source: go\n  script: \"return 1\"", false},
 		{"http without script", "power:\n  source: http\n  uri: http://localhost", false},
 		{"plain template", "power: 100", false},
+		{"script in yaml list", "- name: main\n  getmaxcurrent:\n    source: script\n    cmd: echo 1", true},
+		{"benign yaml list", "- name: main\n  maxcurrent: 16", false},
 	}
 
 	for _, tc := range tc {

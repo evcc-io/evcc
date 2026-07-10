@@ -173,18 +173,14 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 
 	// vehicle api
 	vehicles := map[string]route{
+		"mode":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/mode/{value:[a-z]+}", vehicleModeHandler(site)},
+		"modeDelete":     {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/mode", vehicleModeHandler(site)},
 		"minsoc":         {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
 		"limitsoc":       {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
 		"plan":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.+-]+}", planSocHandler(site)},
 		"plan2":          {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 		"repeatingPlans": {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/repeating", addRepeatingPlansHandler(site)},
 		"planStrategy":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/strategy", updatePlanStrategyHandler(site)},
-
-		// config ui
-		// "mode":       {"POST", "/mode/{value:[a-z]+}", chargeModeHandler(v)},
-		// "mincurrent": {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
-		// "maxcurrent": {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
-		// "phases":     {"POST", "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
 	}
 
 	for _, r := range vehicles {
@@ -298,11 +294,11 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
 			"evccyaml":           {"GET", "/evcc.yaml", configYamlHandler(configFile)},
-			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler(auth)},
-			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler(auth)},
+			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler(site, auth)},
+			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler(site, auth)},
 			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
-			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler(auth)},
-			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler(auth)},
+			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler(site, auth)},
+			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler(site, auth)},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
@@ -323,7 +319,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		} {
 			other, struc := fun()
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
-			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, other, struc)}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, other, struc, auth)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteHandler(key)}
 		}
 

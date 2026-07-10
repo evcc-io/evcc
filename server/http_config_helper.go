@@ -538,7 +538,8 @@ var criticalPluginSources = []string{"script"}
 
 func configHasCriticalPlugin(req configReq) bool {
 	if req.Yaml != "" {
-		var m map[string]any
+		// any, not map: global yaml configs (circuits) are a list
+		var m any
 		if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil {
 			return false // malformed yaml already rejected by decodeDeviceConfig
 		}

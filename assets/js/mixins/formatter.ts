@@ -213,13 +213,15 @@ export default defineComponent({
       }).format(date);
     },
     hourShort(date: Date) {
-      const locale = this.$i18n?.locale;
-      // special: use shorter german format
-      if (locale === "de") return date.getHours();
-      return new Intl.DateTimeFormat(locale, {
+      // keep only hour and AM/PM; drops locale noise like "Uhr" (de), "h" (fr) and leading zeros
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         hour: "numeric",
         hour12: is12hFormat(),
-      }).format(date);
+      })
+        .formatToParts(date)
+        .filter(({ type }) => type === "hour" || type === "dayPeriod")
+        .map(({ value }) => value.replace(/^0(?=\d)/, ""))
+        .join(" ");
     },
     weekdayShort(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -240,6 +242,22 @@ export default defineComponent({
       }).format(date);
 
       return `${weekday} ${hour}`.trim();
+    },
+    // "gestern"/"heute"/"morgen" within one day of now, null otherwise
+    relativeDayName(date: Date) {
+      const startOfDay = (d: Date) => new Date(d).setHours(0, 0, 0, 0);
+      const days = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
+      if (Math.abs(days) > 1) return null;
+      return new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" }).format(
+        days,
+        "day"
+      );
+    },
+    // relative day plus time, e.g. "heute 16:30", "morgen 5:00", "Freitag 12:15"
+    fmtDayTime(date: Date) {
+      const time = this.fmtHourMinute(date);
+      const day = this.relativeDayName(date);
+      return `${day ?? this.weekdayLong(date)} ${time}`;
     },
     fmtHourMinute(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
