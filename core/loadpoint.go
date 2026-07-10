@@ -122,6 +122,7 @@ type Loadpoint struct {
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
+	batteryBoostDefault      bool     // auto-enable battery boost on vehicle connect
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -376,6 +377,9 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Int(keys.BatteryBoostLimit); err == nil {
 		lp.SetBatteryBoostLimit(int(v))
 	}
+	if v, err := lp.settings.Bool(keys.BatteryBoostDefault); err == nil {
+		lp.SetBatteryBoostDefault(v)
+	}
 
 	var thresholds loadpoint.ThresholdsConfig
 	if err := lp.settings.Json(keys.Thresholds, &thresholds); err == nil {
@@ -563,6 +567,13 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
+
+	// re-arm battery boost if configured as default (opt-in, PV modes only)
+	if lp.GetBatteryBoostDefault() {
+		if err := lp.SetBatteryBoost(true); err != nil {
+			lp.log.DEBUG.Printf("battery boost default: %v", err)
+		}
+	}
 
 	// create charging session
 	lp.createSession()
@@ -762,6 +773,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	// battery boost
 	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
 	lp.publish(keys.BatteryBoostLimit, lp.batteryBoostLimit)
+	lp.publish(keys.BatteryBoostDefault, lp.batteryBoostDefault)
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
