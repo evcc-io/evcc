@@ -81,13 +81,8 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 	implement.May(meter, implement.MeterReturnEnergy(returnEnergy))
 
 	if batterySoc != nil {
-		capacity, err := cc.Meter.batteryCapacity.Decorator(ctx)
-		if err != nil {
-			return nil, err
-		}
-
 		implement.Has(meter, implement.Battery(batterySoc))
-		implement.May(meter, implement.BatteryCapacity(capacity))
+		implement.May(meter, implement.BatteryCapacity(cc.Meter.batteryCapacity.Decorator()))
 		return meter, nil
 	}
 

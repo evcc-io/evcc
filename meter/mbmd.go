@@ -121,11 +121,7 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		}
 		implement.Has(m, implement.Battery(soc))
 
-		capacity, err := cc.batteryCapacity.Decorator(ctx)
-		if err != nil {
-			return nil, err
-		}
-		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
 		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 

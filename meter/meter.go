@@ -27,7 +27,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		pvMaxACPower `mapstructure:",squash"`
 
 		// battery
-		batteryCapacity    `mapstructure:",squash"`
+		batteryCapacityCtx `mapstructure:",squash"`
 		batterySocLimits   `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
 		Soc                *plugin.Config // optional
@@ -68,7 +68,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	}
 
 	if socG != nil {
-		capacity, err := cc.batteryCapacity.Decorator(ctx)
+		capacity, err := cc.batteryCapacityCtx.Decorator(ctx)
 		if err != nil {
 			return nil, err
 		}

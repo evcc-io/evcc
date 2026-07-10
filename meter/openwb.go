@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -17,11 +16,11 @@ import (
 )
 
 func init() {
-	registry.AddCtx("openwb", NewOpenWBFromConfig)
+	registry.Add("openwb", NewOpenWBFromConfig)
 }
 
 // NewOpenWBFromConfig creates a new configurable meter
-func NewOpenWBFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+func NewOpenWBFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		mqtt.Config     `mapstructure:",squash"`
 		Topic           string
@@ -130,10 +129,7 @@ func NewOpenWBFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 			return nil, err
 		}
 
-		capacity, err = cc.batteryCapacity.Decorator(ctx)
-		if err != nil {
-			return nil, err
-		}
+		capacity = cc.batteryCapacity.Decorator()
 
 	default:
 		return nil, fmt.Errorf("invalid usage: %s", cc.Usage)

@@ -9,14 +9,30 @@ import (
 )
 
 type batteryCapacity struct {
-	Capacity any // static kWh value or float plugin
+	Capacity float64
 }
 
 // var _ api.BatteryCapacity = (*batteryCapacity)(nil)
 
+// Decorator returns an api.BatteryCapacity decorator
+func (m *batteryCapacity) Decorator() func() float64 {
+	if m.Capacity == 0 {
+		return nil
+	}
+	return func() float64 {
+		return m.Capacity
+	}
+}
+
+type batteryCapacityCtx struct {
+	Capacity any // static kWh value or float plugin
+}
+
+// var _ api.BatteryCapacity = (*batteryCapacityCtx)(nil)
+
 // Decorator returns an api.BatteryCapacity decorator. Capacity may be a static
 // number or a float plugin config; nil/zero means not configured.
-func (m *batteryCapacity) Decorator(ctx context.Context) (func() float64, error) {
+func (m *batteryCapacityCtx) Decorator(ctx context.Context) (func() float64, error) {
 	switch v := m.Capacity.(type) {
 	case nil:
 		return nil, nil

@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -13,7 +12,7 @@ import (
 )
 
 func init() {
-	registry.AddCtx("zendure", NewZendureFromConfig)
+	registry.Add("zendure", NewZendureFromConfig)
 }
 
 type Zendure struct {
@@ -23,7 +22,7 @@ type Zendure struct {
 }
 
 // NewZendureFromConfig creates a Zendure meter from generic config
-func NewZendureFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity                `mapstructure:",squash"`
 		batteryPowerLimits             `mapstructure:",squash"`
@@ -50,15 +49,10 @@ func NewZendureFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 		conn:  conn,
 	}
 
-	capacity, err := cc.batteryCapacity.Decorator(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	// decorate battery
 	if cc.Usage == "battery" {
 		implement.Has(m, implement.Battery(m.soc))
-		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
 		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 	}

@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"errors"
 	"net"
 	"strconv"
@@ -29,10 +28,10 @@ type E3dc struct {
 }
 
 func init() {
-	registry.AddCtx("e3dc-rscp", NewE3dcFromConfig)
+	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
 
-func NewE3dcFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity    `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
@@ -72,12 +71,7 @@ func NewE3dcFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	capacity, err := cc.batteryCapacity.Decorator(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, capacity, cc.pvMaxACPower.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 var e3dcOnce sync.Once

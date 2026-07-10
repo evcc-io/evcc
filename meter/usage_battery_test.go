@@ -13,7 +13,7 @@ func TestBatteryCapacity(t *testing.T) {
 
 	// static value
 	{
-		var cc batteryCapacity
+		var cc batteryCapacityCtx
 		require.NoError(t, util.DecodeOther(map[string]any{"capacity": 10}, &cc))
 		g, err := cc.Decorator(ctx)
 		require.NoError(t, err)
@@ -23,7 +23,7 @@ func TestBatteryCapacity(t *testing.T) {
 
 	// zero value is treated as not configured
 	{
-		var cc batteryCapacity
+		var cc batteryCapacityCtx
 		require.NoError(t, util.DecodeOther(map[string]any{"capacity": 0}, &cc))
 		g, err := cc.Decorator(ctx)
 		require.NoError(t, err)
@@ -32,7 +32,7 @@ func TestBatteryCapacity(t *testing.T) {
 
 	// unset is not configured
 	{
-		var cc batteryCapacity
+		var cc batteryCapacityCtx
 		g, err := cc.Decorator(ctx)
 		require.NoError(t, err)
 		require.Nil(t, g)
@@ -40,7 +40,7 @@ func TestBatteryCapacity(t *testing.T) {
 
 	// float plugin
 	{
-		var cc batteryCapacity
+		var cc batteryCapacityCtx
 		require.NoError(t, util.DecodeOther(map[string]any{
 			"capacity": map[string]any{
 				"source": "const",
