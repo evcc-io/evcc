@@ -214,6 +214,10 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 		return []byte{}, err
 	}
 
+	// force connection close; embedded devices often drop the socket after
+	// responding, so a pooled keep-alive reuse yields EOF/connection reset
+	req.Close = true
+
 	val, err := p.DoBody(req)
 	if err != nil {
 		if err2 := knownErrors(val); err2 != nil {
