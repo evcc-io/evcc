@@ -28,11 +28,11 @@ test.describe("experimental battery page", async () => {
 
     // per-battery: soc, charge/discharge state and energy of total
     const charging = cards.filter({ hasText: "76%" });
-    await expect(charging).toContainText("Charging"); // battery1 power -800 W
+    await expect(charging).toContainText("charging"); // battery1 power -800 W
     await expect(charging).toContainText("13.5 kWh"); // of total capacity
 
     const discharging = cards.filter({ hasText: "40%" });
-    await expect(discharging).toContainText("Discharging"); // battery2 power 1200 W
+    await expect(discharging).toContainText("discharging"); // battery2 power 1200 W
   });
 
   test("history chart: unit toggle persists and window pages", async ({ page }) => {

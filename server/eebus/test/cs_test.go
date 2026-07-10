@@ -62,7 +62,7 @@ func TestEEBus(t *testing.T) {
 	_, err = box.uclpc.WriteConsumptionLimit(srvEntity, ucapi.LoadLimit{
 		IsActive: true,
 		Value:    1,
-	}, func(result model.ResultDataType) {
+	}, func(result model.ResultDataType, _ model.MsgCounterType) {
 		t.Logf("lpc result: %v", result)
 	})
 

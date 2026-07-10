@@ -29,8 +29,8 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/enbility/eebus-go v0.7.1-0.20260608105936-abdcf864d0cf
-	github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c
+	github.com/enbility/eebus-go v0.7.1-0.20260706105148-69719d143633
+	github.com/enbility/ship-go v0.6.1-0.20260706134013-3abd41d19f41
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
 	github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657
@@ -262,6 +262,4 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
 
-replace github.com/enbility/eebus-go => github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6
-
-replace github.com/enbility/ship-go => github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307
+replace github.com/enbility/eebus-go => github.com/evcc-io/eebus-go v0.0.0-20260707170747-eb60ff7e2025

@@ -104,7 +104,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if not .firmware1098 }}
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
     scale: 0.1
     {{- end }}
   returnenergy:
@@ -117,7 +117,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if not .firmware1098 }}
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
     scale: 0.1
     {{- end }}
   currents:
@@ -260,7 +260,7 @@ render: |
       block: # 516-538
         register: 516
         count: 23
-      {{- if not .firmware1098 }}
+      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- if .includegenport }}
@@ -273,7 +273,7 @@ render: |
       block: # 516-538
         register: 516
         count: 23
-      {{- if not .firmware1098 }}
+      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- end }}
@@ -308,7 +308,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if not .firmware1098 }}
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
     scale: 0.1
     {{- end }}
   returnenergy:
@@ -321,7 +321,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if not .firmware1098 }}
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
     scale: 0.1
     {{- end }}
   soc:

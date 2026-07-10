@@ -138,12 +138,14 @@ github.com/eclipse/paho.mqtt.golang v1.5.1 h1:/VSOv3oDLlpqR2Epjn1Q7b2bSTplJIeV2I
 github.com/eclipse/paho.mqtt.golang v1.5.1/go.mod h1:1/yJCneuyOoCOzKSsOTUc0AJfpsItBGWvYpBLimhArU=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a h1:foChWb8lhzqa6lWDRs6COYMdp649YlUirFP8GqoT0JQ=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a/go.mod h1:H64mhYcAQUGUUnVqMdZQf93kPecH4M79xwH95Lddt3U=
+github.com/enbility/ship-go v0.6.1-0.20260706134013-3abd41d19f41 h1:Uzs5tsH+eh7IveFrtnumh36DKFaPS8nHZgBW/xbz9zw=
+github.com/enbility/ship-go v0.6.1-0.20260706134013-3abd41d19f41/go.mod h1:EvRFx83phCwPQrOuWw2CX5t0c6mcFVzIk6gQEz4Lijg=
 github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323 h1:bLsMlyRamUgDNz6PNiKa1ukPebvs3pplrVGNdHo1JMI=
 github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323/go.mod h1:ddWZU5BQGyzRGF20Z7rUKFFzbCp+cfu9mZgYtOMW/fM=
 github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6 h1:XOYvxKtT1oxT37w/5oEiRLuPbm9FuJPt3fiYhX0h8Po=
 github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6/go.mod h1:BszP9qFV14mPXgyIREbgIdQtWxbAj3OKqvK02HihMoM=
-github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6 h1:ax+dfxmeF/hN3IIUXFnDw3y3BE7pr0m/699k08+Q9sM=
-github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
+github.com/evcc-io/eebus-go v0.0.0-20260707170747-eb60ff7e2025 h1:hXZTTduvtyv4NxC6T4tBsKOniqC7f5nhvaIxQBvmyjg=
+github.com/evcc-io/eebus-go v0.0.0-20260707170747-eb60ff7e2025/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea h1:F6eyC8V8wvc3ranlsR4coAls+OPBkVvxyX0a2VqdlPc=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
 github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b h1:5vFr7wOwoi5ylybUnxxBk1U3FRF2+3Sf0sKx8thxw18=
@@ -154,8 +156,6 @@ github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657 h1:pZW9CGsXsJNHQ
 github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
 github.com/evcc-io/rct v0.2.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
-github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307 h1:vSYO9pNyjpiuxpUF8rdUR7fAvjnEqnkJaSdd2qLWSgk=
-github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307/go.mod h1:EvRFx83phCwPQrOuWw2CX5t0c6mcFVzIk6gQEz4Lijg=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae h1:0ihqBMBjkekSlwD3ZYQIiYite6ZAln9ze60evOE6FkQ=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae/go.mod h1:L8AR3E7/MbbvCgnrtzsT6YsgQJtN5gk/LumR1gDBeJM=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=

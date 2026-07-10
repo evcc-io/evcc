@@ -323,6 +323,51 @@ func TestDefaultVehicle(t *testing.T) {
 	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
 
+// idCharger is a minimal charger implementing api.Identifier for identifyVehicle tests.
+type idCharger struct {
+	id string
+}
+
+func (c *idCharger) Status() (api.ChargeStatus, error) { return api.StatusB, nil }
+func (c *idCharger) Enabled() (bool, error)            { return false, nil }
+func (c *idCharger) Enable(bool) error                 { return nil }
+func (c *idCharger) MaxCurrent(int64) error            { return nil }
+func (c *idCharger) Identify() (string, error)         { return c.id, nil }
+
+// TestReidentifyActiveVehicleKeepsMode is a regression test for #31499:
+// re-identifying the already-active vehicle must not reapply its default mode.
+func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().Identifiers().Return([]string{"rfid-1"}).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{
+		Mode: api.ModePV,
+	}).AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.charger = &idCharger{id: "rfid-1"}
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// vehicle already active via a different detection path (e.g. SoC poll)
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, api.ModePV, lp.GetMode(), "mode after first identification")
+
+	// user/system escalates to now in between
+	lp.SetMode(api.ModeNow)
+
+	// charger reports the same vehicle's RFID id - must not reapply default mode
+	lp.identifyVehicle()
+	assert.Equal(t, api.ModeNow, lp.GetMode(), "mode must not be reapplied for already-active vehicle")
+}
+
 // integratedDeviceCharger is a minimal charger advertising the IntegratedDevice feature.
 type integratedDeviceCharger struct{}
 
