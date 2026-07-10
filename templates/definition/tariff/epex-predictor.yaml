@@ -30,7 +30,7 @@ render: |
   {{ include "tariff-features" . }}
   forecast:
     source: http
-    uri: {{ .uri }}/prices?region={{ .region }}&unit=EUR_PER_KWH&timezone=UTC
+    uri: {{ .uri }}/prices?hours=120&region={{ .region }}&unit=EUR_PER_KWH&timezone=UTC
     jq: |
       [.prices[] | {
         "start": .startsAt,
