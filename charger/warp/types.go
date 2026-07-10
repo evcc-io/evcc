@@ -1,6 +1,7 @@
 package warp
 
 const (
+	FeatureIso15118       = "iso15118"
 	FeatureMeter          = "meter"
 	FeatureMeters         = "meters"
 	FeatureMeterAllValues = "meter_all_values"
@@ -65,6 +66,12 @@ var DefaultSchema = MeterSchema{
 		{CurrentID: 17, VoltageID: 2}, // Current L2 Im-Ex Sum, Voltage L2-N
 		{CurrentID: 21, VoltageID: 3}, // Current L3 Im-Ex Sum, Voltage L3-N
 	},
+}
+
+// WARP4 only: vehicle data read via ISO 15118; soc is null and mac is empty while unknown
+type EvState struct {
+	Soc *float64 `json:"soc"`
+	Mac string   `json:"mac"`
 }
 
 type ChargeTrackerCurrentCharge struct {

@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Charging",
-      "discharging": "Discharging",
+      "charging": "charging",
+      "discharging": "discharging",
       "energy": "Energy",
+      "gridCharge": "grid charging",
+      "hold": "discharge locked",
+      "holdCharge": "charge locked",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Battery level"
@@ -1276,10 +1279,6 @@
       "batteryChargeHold": "Battery (charge locked)",
       "batteryDischarge": "Battery discharging",
       "batteryDischargeHold": "Battery (discharge locked)",
-      "batteryForecastEmpty": "Empty",
-      "batteryForecastFull": "Full",
-      "batteryForecastNextHigh": "High",
-      "batteryForecastNextLow": "Low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryTooltip": "{energy} of {total} ({soc})",
@@ -1366,7 +1365,6 @@
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
       "default": "default",
-      "disclaimerHint": "Note:",
       "limitSoc": {
         "description": "Charging limit that is used when this vehicle is connected.",
         "label": "Default limit"
@@ -1381,7 +1379,6 @@
         "description": "The vehicle gets „fast” charged to {0} in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days.",
         "label": "Min. charge %"
       },
-      "onlyForSocBasedCharging": "These options are only available for vehicles with known charging level.",
       "phasesConfigured": {
         "label": "Phases",
         "no1p3pSupport": "How is your charger connected?",

@@ -927,6 +927,9 @@ export default {
 				await api.post("config/loadpoints", this.values);
 				this.created = true;
 				this.emitChanged("added");
+				// the created response has no id to compare against on next open, so
+				// reset explicitly instead of relying on the isModalVisible watcher
+				this.reset();
 			} catch (e) {
 				handleError(e, "create failed");
 			}
