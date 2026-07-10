@@ -1,13 +1,13 @@
 <template>
-	<div>
-		<div v-if="recommendation" class="d-flex justify-content-between gap-3 py-1">
+	<div class="d-flex flex-column gap-2">
+		<div v-if="recommendation" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<Optimizer />
 				{{ $t("battery.optimizer.suggestion") }}
 			</span>
 			<span class="text-muted text-end">{{ recommendation }}</span>
 		</div>
-		<div v-if="forecast?.highest" class="d-flex justify-content-between gap-3 py-1">
+		<div v-if="forecast?.highest" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<BatteryIcon :soc="95" />
 				{{ pointLabel(forecast.highest, true) }}
@@ -16,7 +16,7 @@
 				fmtDayTime(new Date(forecast.highest.time))
 			}}</span>
 		</div>
-		<div v-if="forecast?.lowest" class="d-flex justify-content-between gap-3 py-1">
+		<div v-if="forecast?.lowest" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<BatteryIcon :soc="10" />
 				{{ pointLabel(forecast.lowest, false) }}

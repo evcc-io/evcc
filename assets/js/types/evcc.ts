@@ -43,7 +43,7 @@ export interface HemsConfig {
 
 export interface HemsStatus {
   dimmed?: boolean;
-  curtailed?: boolean;
+  curtailed?: number; // allowed feed-in percent (0..100 integer), <100 = curtailed
   maxConsumptionPower?: number;
   maxProductionPower?: number;
 }
@@ -94,6 +94,7 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  consumers?: Meter[];
   tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
@@ -594,6 +595,12 @@ export type EebusStatus = {
   qr?: string;
 };
 
+export type EebusPairing = {
+  ski: string;
+  shipID: string;
+  source: "paired" | "ski";
+};
+
 export type ModbusProxy = {
   port: number;
   readonly: MODBUS_PROXY_READONLY;
@@ -684,6 +691,7 @@ export interface BatteryMeter extends Meter {
 
 export interface Vehicle {
   name: string;
+  mode?: CHARGE_MODE | "";
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;
@@ -763,7 +771,7 @@ export interface SiteConfig {
   title: string;
   aux: string[] | null;
   ext: string[] | null;
-  consumers: string[] | null;
+  consumer: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

@@ -366,9 +366,9 @@ export default defineComponent({
 				{
 					id: "suggestion",
 					visible: this.connected && this.suggestionMismatch,
-					tooltipContent: t(
+					tooltipContent: this.translateStatus(
 						this.suggestion?.action === "charge"
-							? "suggestionChargeTooltip"
+							? "suggestionStartTooltip"
 							: "suggestionStopTooltip"
 					),
 					iconComponent:

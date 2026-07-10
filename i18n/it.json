@@ -1139,8 +1139,6 @@
       "batteryCharge": "Carica della batteria",
       "batteryDischarge": "Scarico della batteria",
       "batteryDischargeHold": "Batteria (locked)",
-      "batteryForecastEmpty": "vuoto {time}",
-      "batteryForecastFull": "full {time}",
       "batteryGridChargeActive": "Ricarica dalla rete: attiva",
       "batteryGridChargeLimit": "Ricarica dalla rete: quando",
       "batteryTooltip": "{energy} di {total} ({soc})",

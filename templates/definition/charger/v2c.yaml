@@ -1,5 +1,5 @@
 template: v2c
-capabilities: ["meter", "dim"]
+capabilities: ["1p3p", "meter", "dim"]
 covers: ["trydan"]
 products:
   - brand: V2C

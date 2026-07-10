@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Lädt",
-      "discharging": "Entlädt",
+      "charging": "lädt",
+      "discharging": "entlädt",
       "energy": "Energie",
+      "gridCharge": "Netzladen",
+      "hold": "Entladesperre",
+      "holdCharge": "Ladesperre",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
@@ -54,8 +57,7 @@
       "full": "voll",
       "highest": "Höchststand ({value})",
       "lowest": "Tiefststand ({value})",
-      "suggestion": "Vorschlag",
-      "title": "Optimizer"
+      "suggestion": "Vorschlag"
     }
   },
   "batterySettings": {
@@ -264,15 +266,21 @@
         "public": "Öffentliches Zertifikat",
         "title": "Zertifikate"
       },
+      "configuredDevices": "Konfigurierte Geräte",
       "description": "Konfiguration zur Kommunikation mit EEBus-kompatiblen Geräten wie Wallboxen oder dem Steuergerät des Netzbetreibers. Alle notwendigen Initialisierungen und die Zertifikatsgenerierung erfolgen automatisch beim ersten Start.",
       "descriptionAdvanced": "Keine Änderungen erforderlich. Bei Änderung ist Neukoppelung aller Geräte erforderlich.",
       "interfaces": "Schnittstellen",
       "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
+      "noConfiguredDevices": "Keine per SKI konfigurierten Geräte.",
+      "noPairings": "Keine gekoppelten Geräte.",
+      "pairings": "Gekoppelte Geräte",
       "port": "Port",
       "portHelp": "Der zu verwendende Port.",
       "qr": "Kopplungscode",
       "qrExplain": "Während der Installation von einem anderen EEBus-Gerät scannen, um automatisch zu koppeln, ohne die SKI manuell einzugeben.",
       "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
+      "removePairing": "Kopplung entfernen",
+      "removePairingConfirm": "Die Verbindung zum Gerät wird getrennt und es muss neu gekoppelt werden. Bist du sicher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
       "shipidHelp": "Diese SHIP-ID ist mit den unten stehenden Zertifikaten verknüpft.",
@@ -1270,10 +1278,6 @@
       "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
       "batteryDischargeHold": "Batterie (Entladesperre)",
-      "batteryForecastEmpty": "Leer",
-      "batteryForecastFull": "Voll",
-      "batteryForecastNextHigh": "Hoch",
-      "batteryForecastNextLow": "Tief",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryTooltip": "{energy} von {total} ({soc})",
@@ -1292,6 +1296,8 @@
     "heatingStatus": {
       "charging": "Heize …",
       "connected": "Standby.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu heizen.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Heizen zu pausieren.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit zum Heizen …"
     },
@@ -1360,7 +1366,6 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
-      "disclaimerHint": "Hinweis:",
       "limitSoc": {
         "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
         "label": "Standard Ladelimit"
@@ -1375,7 +1380,6 @@
         "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
         "label": "Min. Ladung %"
       },
-      "onlyForSocBasedCharging": "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar.",
       "phasesConfigured": {
         "label": "Phasen",
         "no1p3pSupport": "Wie ist deine Wallbox angeschlossen?",
@@ -1484,7 +1488,7 @@
       "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
       "scale1p": "Reduziere gleich auf 1-phasiges Laden.",
       "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
-      "suggestionChargeTooltip": "Der Optimizer empfiehlt, jetzt zu laden.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu laden.",
       "suggestionStopTooltip": "Der Optimizer empfiehlt, das Laden zu pausieren.",
       "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
       "targetChargePlanned": "Ladeplan startet in {duration}.",

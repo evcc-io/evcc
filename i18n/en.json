@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Charging",
-      "discharging": "Discharging",
+      "charging": "charging",
+      "discharging": "discharging",
       "energy": "Energy",
+      "gridCharge": "grid charging",
+      "hold": "discharge locked",
+      "holdCharge": "charge locked",
       "ofTotal": "of {total}",
       "power": "Power",
       "soc": "Battery level"
@@ -54,8 +57,7 @@
       "full": "full",
       "highest": "Highest ({value})",
       "lowest": "Lowest ({value})",
-      "suggestion": "Suggestion",
-      "title": "Optimizer"
+      "suggestion": "Suggestion"
     }
   },
   "batterySettings": {
@@ -264,15 +266,21 @@
         "public": "Public certificate",
         "title": "Certificates"
       },
+      "configuredDevices": "Configured devices",
       "description": "Configuration that enables evcc to communicate with EEBus compatible devices like chargers or a control unit of your grid operator. All relevant initialization and certificate generation is done automatically on first start.",
       "descriptionAdvanced": "No changes required. Only perform changes if you really know what you're doing. If you change either the SHIP-id or the certificates, you'll need to pair your devices again.",
       "interfaces": "Interfaces",
       "interfacesHelp": "Limit the network interfaces that EEBus should use to avoid communication problems. Leave the field blank to use all interfaces. One entry per line.",
+      "noConfiguredDevices": "No devices configured by SKI.",
+      "noPairings": "No paired devices.",
+      "pairings": "Paired devices",
       "port": "Port",
       "portHelp": "The port to be used.",
       "qr": "Pairing code",
       "qrExplain": "Scan from another EEBus device during installation to pair automatically, without entering the SKI manually.",
       "removeConfirm": "All EEBus configuration will be removed. New certificates and identifiers will be generated on next start. Are you sure?",
+      "removePairing": "Remove pairing",
+      "removePairingConfirm": "The device will be disconnected and must be paired again. Are you sure?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent device identifier for identification in the EEBus network.",
       "shipidHelp": "This SHIP-ID is linked to the certificates below.",
@@ -1270,10 +1278,6 @@
       "batteryChargeHold": "Battery (charge locked)",
       "batteryDischarge": "Battery discharging",
       "batteryDischargeHold": "Battery (discharge locked)",
-      "batteryForecastEmpty": "Empty",
-      "batteryForecastFull": "Full",
-      "batteryForecastNextHigh": "High",
-      "batteryForecastNextLow": "Low",
       "batteryGridChargeActive": "Grid charging: active",
       "batteryGridChargeLimit": "Grid charging: when",
       "batteryTooltip": "{energy} of {total} ({soc})",
@@ -1292,6 +1296,8 @@
     "heatingStatus": {
       "charging": "Heating…",
       "connected": "Standby.",
+      "suggestionStartTooltip": "Optimizer recommends heating now.",
+      "suggestionStopTooltip": "Optimizer recommends pausing the heating.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready to heat…"
     },
@@ -1360,7 +1366,6 @@
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
       "default": "default",
-      "disclaimerHint": "Note:",
       "limitSoc": {
         "description": "Charging limit that is used when this vehicle is connected.",
         "label": "Default limit"
@@ -1375,7 +1380,6 @@
         "description": "The vehicle gets „fast” charged to {0} in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days.",
         "label": "Min. charge %"
       },
-      "onlyForSocBasedCharging": "These options are only available for vehicles with known charging level.",
       "phasesConfigured": {
         "label": "Phases",
         "no1p3pSupport": "How is your charger connected?",
@@ -1484,7 +1488,7 @@
       "pvEnable": "Surplus available. Starting soon.",
       "scale1p": "Reducing to 1-phase charging soon.",
       "scale3p": "Increasing to 3-phase charging soon.",
-      "suggestionChargeTooltip": "Optimizer recommends charging now.",
+      "suggestionStartTooltip": "Optimizer recommends charging now.",
       "suggestionStopTooltip": "Optimizer recommends pausing the charge.",
       "targetChargeActive": "Charging plan active. Estimated finish in {duration}.",
       "targetChargePlanned": "Charging plan starts in {duration}.",

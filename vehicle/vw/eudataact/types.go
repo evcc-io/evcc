@@ -38,6 +38,12 @@ func resolveBrand(name string) (brand, bool) {
 	return brand{}, false
 }
 
+// IsBrand reports whether name is a known VW group brand (case-insensitive)
+func IsBrand(name string) bool {
+	_, ok := resolveBrand(name)
+	return ok
+}
+
 // Vehicle is a single entry of the portal vehicle list. VIN and name carry
 // several alternative field names depending on the response variant.
 type Vehicle struct {

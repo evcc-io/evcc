@@ -63,7 +63,8 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		Reboost time.Duration
 	}{
 		embed: embed{
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Icon_:     "heatpump",
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice, api.SwitchDevice},
 		},
 		Reboost: 10 * time.Minute,
 	}
@@ -139,13 +140,25 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	}
 
 	switch event {
+	case ohpcf.DataUpdateConsumptionState:
+		c.mu.Lock()
+		c.compressor = entity
+		c.mu.Unlock()
+
+		// react immediately to a freshly announced schedule/resume opportunity
+		// instead of waiting for the next reboost tick, which may miss it (#31549)
+		if c.lastEnabled() {
+			if err := c.apply(); err != nil {
+				c.log.DEBUG.Printf("apply: %v", err)
+			}
+		}
+
 	case ohpcf.UseCaseSupportUpdate,
 		ohpcf.DataUpdateRequestedPowerEstimate,
 		ohpcf.DataUpdateRequestedPowerMax,
 		ohpcf.DataUpdateConsumptionIsStoppable,
 		ohpcf.DataUpdateConsumptionIsPausable,
 		ohpcf.DataUpdateConsumptionStartTime,
-		ohpcf.DataUpdateConsumptionState,
 		ohpcf.DataUpdateMinimalRunDuration,
 		ohpcf.DataUpdateMinimalPauseDuration:
 		c.mu.Lock()
@@ -325,13 +338,13 @@ func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable 
 // it aborts the process.
 func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 	if pausable, err := c.cem.OHPCF.ConsumptionIsPausable(entity); err == nil && pausable {
-		return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.PausePowerConsumptionProcess(entity, cb)
 		})
 	}
 
 	if stoppable, err := c.cem.OHPCF.ConsumptionIsStoppable(entity); err == nil && stoppable {
-		return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.AbortPowerConsumptionProcess(entity, cb)
 		})
 	}
@@ -386,7 +399,7 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 	}
 
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
-	return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
 	})
 }
@@ -407,12 +420,12 @@ func (c *EEBusOHPCF) apply() error {
 
 	switch ohpcfControlAction(state, c.lastEnabled()) {
 	case ohpcfSchedule:
-		return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
 			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, 0, cb)
 		})
 	case ohpcfResume:
-		return eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.ResumePowerConsumptionProcess(entity, cb)
 		})
 	case ohpcfStop:
@@ -425,24 +438,22 @@ func (c *EEBusOHPCF) apply() error {
 var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
-// announced optional consumption (estimate..max) or ErrNotAvailable if none.
+// optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
 		return 0, 0, errNotConnected
 	}
 
-	estimate, err := c.cem.OHPCF.RequestedPowerEstimate(entity)
-	if err != nil {
-		return 0, 0, api.ErrNotAvailable
+	if power, _ := c.cem.OHPCF.RequestedPowerEstimate(entity); power > 0 {
+		return power, power, nil
 	}
 
-	maxPower, err := c.cem.OHPCF.RequestedPowerMax(entity)
-	if err != nil {
-		maxPower = estimate
+	if power, _ := c.cem.OHPCF.RequestedPowerMax(entity); power > 0 {
+		return power, power, nil
 	}
 
-	return estimate, maxPower, nil
+	return 0, 0, api.ErrNotAvailable
 }
 
 var _ api.Meter = (*EEBusOHPCF)(nil)

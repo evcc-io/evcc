@@ -21,7 +21,7 @@ test.describe("fatal config handling", async () => {
     const meterModal = page.getByTestId("meter-modal");
     await meterModal.getByRole("button", { name: "Add solar meter" }).click();
     await meterModal.getByLabel("Title").fill("North Roof");
-    await meterModal.getByLabel("Manufacturer").selectOption("shelly-1pm");
+    await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
@@ -72,7 +72,7 @@ test.describe("fatal config handling", async () => {
     await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Manufacturer").selectOption("shelly-1pm");
+    await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
@@ -127,7 +127,7 @@ test.describe("fatal config handling", async () => {
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByLabel("Manufacturer").selectOption("shelly-1pm");
+    await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
