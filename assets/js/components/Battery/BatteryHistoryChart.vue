@@ -7,6 +7,7 @@ import { defineComponent, markRaw, type PropType } from "vue";
 import {
 	echarts,
 	FONT_FAMILY,
+	forecastXAxes,
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
@@ -14,7 +15,7 @@ import {
 } from "../Forecast/echarts";
 import colors, { dimColor, setAlpha, batteryColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import { fmtHourShort } from "@/units";
+import { is12hFormat } from "@/units";
 import type { SocPoint, BatterySeries } from "./types";
 
 type EChartsType = ReturnType<typeof echarts.init>;
@@ -200,50 +201,15 @@ export default defineComponent({
 			};
 		},
 		xAxes(): Record<string, unknown>[] {
-			return [
-				// hours every 4h; midnight adds weekday below
-				{
-					type: "time",
-					min: this.winStart,
-					max: this.winEnd,
-					minInterval: 4 * 3600 * 1000,
-					maxInterval: 4 * 3600 * 1000,
-					axisLine: { show: false },
-					axisTick: { show: false },
-					splitLine: { show: false },
-					axisLabel: {
-						color: colors.muted || "",
-						fontSize: 14,
-						lineHeight: Math.round(14 * 1.1),
-						margin: 4,
-						formatter: (value: number) => {
-							const d = new Date(value);
-							const h = d.getHours();
-							if (d.getMinutes() !== 0 || h % 4 !== 0) return "";
-							const label = fmtHourShort(h);
-							return h === 0 ? `${label}\n${this.weekdayShort(d)}` : label;
-						},
-					},
-				},
-				// day axis: dashed divider at every local midnight
-				{
-					type: "time",
-					position: "bottom",
-					min: this.winStart,
-					max: this.winEnd,
-					minInterval: 24 * 3600 * 1000,
-					maxInterval: 24 * 3600 * 1000,
-					axisLine: { show: false },
-					axisTick: { show: false },
-					axisLabel: { show: false },
-					splitLine: {
-						show: true,
-						showMinLine: false,
-						showMaxLine: false,
-						lineStyle: { color: colors.border || "", type: "dashed" },
-					},
-				},
-			];
+			// narrow 48h window: wider "4 PM" labels need extra spacing
+			const stepHours = is12hFormat() ? 6 : 4;
+			return forecastXAxes(
+				this.winStart,
+				this.winEnd,
+				this.hourShort,
+				this.weekdayShort,
+				stepHours
+			);
 		},
 	},
 	watch: {

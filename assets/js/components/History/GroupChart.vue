@@ -13,12 +13,13 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
+	xAxisLabelStyle,
 } from "../Forecast/echarts";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
-import { fmtHourShort } from "@/units";
+import { is12hFormat } from "@/units";
 import { hasColorPicker } from "./groups";
 
 export interface HistorySlot {
@@ -402,16 +403,14 @@ export default defineComponent({
 		labelForTimestamp(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
 				// Skip 00:00 so the chart can align with the section title on the left.
-				// Use every 6h on mobile (06/12/18) and every 3h on desktop. 12 is a
-				// multiple of both, so noon stays visible. Drop minutes; honor am/pm.
-				const stepHours = this.isMobile ? 6 : 3;
+				// wider "4 PM" labels get double spacing
+				const stepHours = (this.isMobile ? 2 : 1) * (is12hFormat() ? 2 : 1);
 				return (t: number) => {
 					const d = new Date(t);
 					if (d.getMinutes() !== 0) return "";
 					const h = d.getHours();
-					if (h === 0) return "";
-					if (h % stepHours !== 0) return "";
-					return fmtHourShort(h);
+					if (h === 0 || h % stepHours !== 0) return "";
+					return this.hourShort(d);
 				};
 			}
 			if (this.period === PERIODS.MONTH) {
@@ -586,11 +585,8 @@ export default defineComponent({
 					axisTick: { show: false },
 					splitLine: { show: false },
 					axisLabel: {
-						color: colors.muted || "",
-						fontSize: 11,
-						hideOverlap:
-							this.period !== PERIODS.DAY &&
-							!(this.period === PERIODS.YEAR && this.isMobile),
+						...xAxisLabelStyle(),
+						hideOverlap: !(this.period === PERIODS.YEAR && this.isMobile),
 						interval:
 							this.period === PERIODS.DAY ||
 							(this.period === PERIODS.YEAR && this.isMobile)

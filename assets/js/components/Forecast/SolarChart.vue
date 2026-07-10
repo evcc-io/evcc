@@ -89,7 +89,7 @@ export default defineComponent({
 						]);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				xAxis: forecastXAxes(this.startDate, this.endDate, this.hourShort, this.weekdayShort),
 				yAxis: forecastYAxis({
 					max: (value: { max: number }) => {
 						const m = Math.max(value.max, this.combinedMax);
