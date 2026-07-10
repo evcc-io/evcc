@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -18,11 +19,11 @@ type BoschBpts5Hybrid struct {
 }
 
 func init() {
-	registry.Add("bosch-bpt", NewBoschBpts5HybridFromConfig)
+	registry.AddCtx("bosch-bpt", NewBoschBpts5HybridFromConfig)
 }
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
-func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
+func NewBoschBpts5HybridFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
 		batteryCapacity    `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
@@ -40,7 +41,12 @@ func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	capacity, err := cc.batteryCapacity.Decorator(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache, capacity, cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter

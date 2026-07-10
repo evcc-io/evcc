@@ -68,8 +68,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	}
 
 	if socG != nil {
+		capacity, err := cc.batteryCapacity.Decorator(ctx)
+		if err != nil {
+			return nil, err
+		}
+
 		implement.Has(m, implement.Battery(socG))
-		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 

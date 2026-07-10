@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -12,11 +13,11 @@ import (
 )
 
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 }
 
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
-func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
+func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Power                string
@@ -98,8 +99,13 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	if cc.Soc != "" {
 		socG := func() (float64, error) { return conn.GetFloatState(cc.Soc) }
 
+		capacity, err := cc.batteryCapacity.Decorator(ctx)
+		if err != nil {
+			return nil, err
+		}
+
 		implement.Has(m, implement.Battery(socG))
-		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 

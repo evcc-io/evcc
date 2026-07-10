@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -17,12 +18,12 @@ type goodWeWiFi struct {
 }
 
 func init() {
-	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
+	registry.AddCtx("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
 // TODO deprecated
 
-func NewGoodWeWifiFromConfig(other map[string]any) (api.Meter, error) {
+func NewGoodWeWifiFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity `mapstructure:",squash"`
 		URI, Usage      string
@@ -35,7 +36,12 @@ func NewGoodWeWifiFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.Timeout)
+	capacity, err := cc.batteryCapacity.Decorator(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewGoodWeWiFi(cc.URI, cc.Usage, capacity, cc.Timeout)
 }
 
 func NewGoodWeWiFi(uri, usage string, capacity func() float64, timeout time.Duration) (api.Meter, error) {

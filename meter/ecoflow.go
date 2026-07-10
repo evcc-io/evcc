@@ -27,11 +27,11 @@ type EcoFlow struct {
 }
 
 func init() {
-	registry.Add("ecoflow", NewEcoFlowFromConfig)
+	registry.AddCtx("ecoflow", NewEcoFlowFromConfig)
 }
 
 // NewEcoFlowFromConfig creates an EcoFlow  meter from generic config
-func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
+func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity                      `mapstructure:",squash"`
 		batteryPowerLimits                   `mapstructure:",squash"`
@@ -72,7 +72,12 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	return NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	capacity, err := cc.batteryCapacity.Decorator(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, capacity, cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewEcoFlow constructs the EcoFlow struct

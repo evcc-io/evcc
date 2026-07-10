@@ -1,21 +1,55 @@
 package meter
 
-import "github.com/evcc-io/evcc/api"
+import (
+	"context"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/plugin"
+	"github.com/evcc-io/evcc/util"
+)
 
 type batteryCapacity struct {
-	Capacity float64
+	Capacity any // static kWh value or float plugin
 }
 
 // var _ api.BatteryCapacity = (*batteryCapacity)(nil)
 
-// Decorator returns an api.BatteryCapacity decorator
-func (m *batteryCapacity) Decorator() func() float64 {
-	if m.Capacity == 0 {
+// Decorator returns an api.BatteryCapacity decorator. Capacity may be a static
+// number or a float plugin config; nil/zero means not configured.
+func (m *batteryCapacity) Decorator(ctx context.Context) (func() float64, error) {
+	switch v := m.Capacity.(type) {
+	case nil:
+		return nil, nil
+	case int:
+		return staticCapacity(float64(v)), nil
+	case int64:
+		return staticCapacity(float64(v)), nil
+	case float64:
+		return staticCapacity(v), nil
+	default:
+		var cfg plugin.Config
+		if err := util.DecodeOther(v, &cfg); err != nil {
+			return nil, err
+		}
+		get, err := cfg.FloatGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func() float64 {
+			f, err := get()
+			if err != nil {
+				return 0 // ponytail: treat plugin error as unknown capacity
+			}
+			return f
+		}, nil
+	}
+}
+
+func staticCapacity(f float64) func() float64 {
+	if f == 0 {
 		return nil
 	}
-	return func() float64 {
-		return m.Capacity
-	}
+	return func() float64 { return f }
 }
 
 type batteryPowerLimits struct {
