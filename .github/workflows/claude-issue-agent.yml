@@ -25,6 +25,11 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Issues come from external users without write access; this workflow's
+          # token is scoped to labels/comments/PR only. Issue body is treated as
+          # untrusted data in the prompt.
+          allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
           claude_args: '--allowed-tools "Bash(gh label list),Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git status)"'
