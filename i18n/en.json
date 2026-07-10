@@ -48,17 +48,16 @@
     },
     "optimizer": {
       "action": {
-        "charge": "Grid charging",
-        "hold": "Discharge locked",
-        "holdcharge": "Charging paused",
-        "normal": "Following solar surplus"
+        "charge": "Charge from grid",
+        "hold": "Prevent discharging",
+        "holdcharge": "Prevent charging",
+        "normal": "Normal operation"
       },
       "empty": "empty",
       "full": "full",
       "highest": "Highest ({value})",
       "lowest": "Lowest ({value})",
-      "suggestion": "Suggestion",
-      "title": "Optimizer"
+      "suggestion": "Suggestion"
     }
   },
   "batterySettings": {
@@ -236,6 +235,7 @@
       "price": "Price",
       "productionLimited": "Production limited",
       "range": "Range",
+      "remoteEnabled": "Enabled",
       "returnEnergy": "Energy (reverse)",
       "singlePhase": "Single phase",
       "soc": "Charge",
@@ -1297,6 +1297,8 @@
     "heatingStatus": {
       "charging": "Heating…",
       "connected": "Standby.",
+      "suggestionStartTooltip": "Optimizer recommends heating now.",
+      "suggestionStopTooltip": "Optimizer recommends pausing the heating.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready to heat…"
     },
@@ -1487,6 +1489,8 @@
       "pvEnable": "Surplus available. Starting soon.",
       "scale1p": "Reducing to 1-phase charging soon.",
       "scale3p": "Increasing to 3-phase charging soon.",
+      "suggestionStartTooltip": "Optimizer recommends charging now.",
+      "suggestionStopTooltip": "Optimizer recommends pausing the charge.",
       "targetChargeActive": "Charging plan active. Estimated finish in {duration}.",
       "targetChargePlanned": "Charging plan starts in {duration}.",
       "targetChargeWaitForVehicle": "Charging plan ready. Waiting for vehicle…",
