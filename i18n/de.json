@@ -48,17 +48,16 @@
     },
     "optimizer": {
       "action": {
-        "charge": "Netzladen",
-        "hold": "Entladung gesperrt",
-        "holdcharge": "Laden pausiert",
-        "normal": "PV-Überschuss folgen"
+        "charge": "Aus dem Netz laden",
+        "hold": "Entladen verhindern",
+        "holdcharge": "Laden verhindern",
+        "normal": "Normaler Betrieb"
       },
       "empty": "leer",
       "full": "voll",
       "highest": "Höchststand ({value})",
       "lowest": "Tiefststand ({value})",
-      "suggestion": "Vorschlag",
-      "title": "Optimizer"
+      "suggestion": "Vorschlag"
     }
   },
   "batterySettings": {
@@ -1305,6 +1304,8 @@
     "heatingStatus": {
       "charging": "Heize …",
       "connected": "Standby.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu heizen.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Heizen zu pausieren.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit zum Heizen …"
     },
@@ -1495,6 +1496,8 @@
       "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
       "scale1p": "Reduziere gleich auf 1-phasiges Laden.",
       "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu laden.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Laden zu pausieren.",
       "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
       "targetChargePlanned": "Ladeplan startet in {duration}.",
       "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",

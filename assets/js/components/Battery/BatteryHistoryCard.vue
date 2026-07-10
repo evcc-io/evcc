@@ -24,7 +24,6 @@
 			:win-start="winStart.getTime()"
 			:win-end="winEnd.getTime()"
 			:now="now.getTime()"
-			:has-forecast="windowHasForecast"
 			:day-offset="dayOffset"
 			:focused="focusedBattery"
 		/>
@@ -91,9 +90,6 @@ export default defineComponent({
 		hasForecastData(): boolean {
 			return this.batteries.some((b) => b.forecast.length > 0);
 		},
-		windowHasForecast(): boolean {
-			return this.hasForecastData && this.winEnd > this.now;
-		},
 		winStart(): Date {
 			const baseStartH = this.hasForecastData ? 24 : 48;
 			return new Date(this.now.getTime() - baseStartH * HOUR + this.dayOffset * 24 * HOUR);
@@ -103,8 +99,9 @@ export default defineComponent({
 			return new Date(this.now.getTime() + baseEndH * HOUR + this.dayOffset * 24 * HOUR);
 		},
 		windowLabel(): string {
-			// short weekday + day, no month (e.g. "Sa. 27. – Mo. 29.")
-			const fmt = (d: Date) => `${this.weekdayShort(d)} ${d.getDate()}.`;
+			// relative day name if close (e.g. "gestern – morgen"), else "Sa. 27."
+			const fmt = (d: Date) =>
+				this.relativeDayName(d) ?? `${this.weekdayShort(d)} ${d.getDate()}.`;
 			return `${fmt(this.winStart)} – ${fmt(this.winEnd)}`;
 		},
 		prevDisabled(): boolean {
