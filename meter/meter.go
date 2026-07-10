@@ -27,14 +27,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		pvMaxACPower `mapstructure:",squash"`
 
 		// battery
-		batteryCapacityCtx `mapstructure:",squash"`
-		batterySocLimits   `mapstructure:",squash"`
-		batteryPowerLimits `mapstructure:",squash"`
-		Soc                *plugin.Config // optional
-		LimitSoc           *plugin.Config // optional
-		BatteryMode        *plugin.Config // optional
+		batteryCapacityCtx    `mapstructure:",squash"`
+		batterySocLimitsCtx   `mapstructure:",squash"`
+		batteryPowerLimitsCtx `mapstructure:",squash"`
+		Soc                   *plugin.Config // optional
+		LimitSoc              *plugin.Config // optional
+		BatteryMode           *plugin.Config // optional
 	}{
-		batterySocLimits: batterySocLimits{
+		batterySocLimitsCtx: batterySocLimitsCtx{
 			MinSoc: 20,
 			MaxSoc: 95,
 		},
@@ -73,10 +73,20 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 			return nil, err
 		}
 
+		socLimiter, err := cc.batterySocLimitsCtx.Decorator(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		powerLimiter, err := cc.batteryPowerLimitsCtx.Decorator(ctx)
+		if err != nil {
+			return nil, err
+		}
+
 		implement.Has(m, implement.Battery(socG))
 		implement.May(m, implement.BatteryCapacity(capacity))
-		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
-		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(socLimiter))
+		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
 
 		switch {
 		case cc.Soc != nil && cc.LimitSoc != nil:
@@ -85,7 +95,12 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 				return nil, fmt.Errorf("battery limit soc: %w", err)
 			}
 
-			implement.Has(m, implement.BatteryController(cc.batterySocLimits.LimitController(socG, limitSocS)))
+			limitController, err := cc.batterySocLimitsCtx.LimitController(ctx, socG, limitSocS)
+			if err != nil {
+				return nil, err
+			}
+
+			implement.Has(m, implement.BatteryController(limitController))
 
 		case cc.BatteryMode != nil:
 			modeS, err := cc.BatteryMode.IntSetter(ctx, "batteryMode")
