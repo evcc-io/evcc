@@ -378,15 +378,6 @@ render: |
             set:
               source: sequence
               set:
-              - source: const
-                value: 0 # stop
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47100 # Forcible charge/discharge
-                    type: writesingle
-                    encoding: uint16
               # register 47075 is range-checked: a maxchargepower above the
               # inverter rated max (37046) is rejected, so clamp before writing
               - source: go
@@ -453,15 +444,6 @@ render: |
             set:
               source: sequence
               set:
-              - source: const
-                value: 0 # stop
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47100 # Forcible charge/discharge
-                    type: writesingle
-                    encoding: uint16
               # register 47075 is range-checked: a maxchargepower above the
               # inverter rated max (37046) is rejected, so clamp before writing
               - source: go
@@ -591,15 +573,6 @@ render: |
               source: sequence
               set:
               - source: const
-                value: 0 # stop
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  register:
-                    address: 47100 # Forcible charge/discharge
-                    type: writesingle
-                    encoding: uint16
-              - source: const
                 value: 0 # W
                 set:
                   source: modbus
@@ -639,15 +612,10 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
-      # normal/hold/holdcharge (1,2,4) already stopped 47100 above; only charge
-      # (3, excluded from reset) needs it periodically reasserted here.
-      # set: must no-op for 1/2/4 - it fires immediately on every call (not just
-      # on the recurring reset-suppressed tick), so a bare write here would
-      # re-assert 47100=1 right after the switch above just cleared it to 0.
+      # single watchdog wraps the ENTIRE 47100 lifecycle, not just case 3
       - source: watchdog
         timeout: 30s
         reset: [1, 2, 4]
-        # only charging (3) needs periodic reassertion of 47100
         set:
           source: switch
           switch:
@@ -662,8 +630,18 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
-          default:
-            source: sleep
-            duration: 0s
+            - case: 1 # normal
+            - case: 2 # hold
+            - case: 4 # holdcharge
+              set:
+                source: const
+                value: 0 # stop
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}
