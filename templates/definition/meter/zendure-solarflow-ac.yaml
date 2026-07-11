@@ -8,10 +8,8 @@ params:
   - name: usage
     choice: ["battery"]
   - name: host
-    required: true
   - preset: battery-params
   - name: cache
-    advanced: true
     default: 1s
 render: |
   type: custom

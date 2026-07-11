@@ -16,7 +16,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -26,7 +26,7 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/go-build
@@ -56,7 +56,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -66,7 +66,7 @@ jobs:
           cache: false
         id: go
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/go-build
@@ -78,7 +78,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: "24"
+          node-version: "26"
           cache: "npm"
 
       - run: mkdir dist && touch dist/empty
@@ -94,7 +94,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -104,7 +104,7 @@ jobs:
           cache: false
         id: go
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/go-build
@@ -125,7 +125,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -135,7 +135,7 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/go-build
@@ -148,7 +148,7 @@ jobs:
       - run: mkdir dist && touch dist/empty
 
       - name: Lint
-        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:
           version: latest
           args: --timeout 5m
@@ -164,13 +164,13 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - uses: actions/setup-node@v6
         with:
-          node-version: "24"
+          node-version: "26"
           cache: "npm"
 
       - name: Install
@@ -191,7 +191,7 @@ jobs:
       - name: Cache dist
         # avoid cache thrashing by nightly
         if: github.event_name == 'push' || github.event_name == 'pull_request'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         id: cache-dist
         with:
           path: dist
@@ -210,7 +210,7 @@ jobs:
       actions: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -220,7 +220,7 @@ jobs:
           cache: false
         id: go
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/go-build
@@ -232,7 +232,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: "24"
+          node-version: "26"
           cache: "npm"
 
       - name: Build UI
@@ -246,7 +246,7 @@ jobs:
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -255,10 +255,7 @@ jobs:
       - name: Install Playwright (browsers + deps)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
-
-      - name: Install Playwright (deps only)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        timeout-minutes: 5
 
       - name: Run tests
         run: npx playwright test
@@ -267,7 +264,7 @@ jobs:
           TZ: Europe/Berlin
 
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -275,7 +272,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Playwright Raw Test Results
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-test-results

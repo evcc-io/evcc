@@ -12,6 +12,7 @@ requirements:
       Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`. On December 31, 2024, Mercedes disabled the online access and the app for the Smart EQ. Therefore, integration into EVCC is no longer possible.
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: user
     required: true
   - name: region
@@ -20,10 +21,8 @@ params:
     default: EMEA
   - name: accessToken
     required: true
-    mask: true
   - name: refreshToken
     required: true
-    mask: true
   - name: vin
     example: V...
   - name: cache
@@ -37,3 +36,4 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" . }}

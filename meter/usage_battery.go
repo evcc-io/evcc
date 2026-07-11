@@ -68,6 +68,7 @@ func (m *batterySocLimits) LimitController(socG func() (float64, error), limitSo
 		case api.BatteryCharge:
 			return limitSocS(m.MaxSoc)
 
+		// BatteryHoldCharge implementable via limit soc
 		default:
 			return api.ErrNotAvailable
 		}

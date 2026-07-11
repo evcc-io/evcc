@@ -25,9 +25,9 @@ type HomeAssistant struct {
 // NewHomeAssistantFromConfig creates a new Home Assistant messenger
 func NewHomeAssistantFromConfig(other map[string]any) (api.Messenger, error) {
 	var cc struct {
-		URI    string
-		Notify string
-		Data   map[string]any
+		homeassistant.Config `mapstructure:",squash"`
+		Notify               string
+		Data                 map[string]any
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -40,7 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Messenger, error) {
 
 	log := util.NewLogger("homeassistant")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, "")
+	conn, err := cc.Config.NewConnection(log)
 	if err != nil {
 		return nil, err
 	}

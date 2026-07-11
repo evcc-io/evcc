@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -109,11 +110,16 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 	}
 
 	if cache > 0 {
-		// remove no-cache response headers
+		// remove cache-busting response headers
 		base = &transport.Modifier{
 			Modifier: func(resp *http.Response) error {
-				dropNoCache(resp, "Cache-Control")
-				dropNoCache(resp, "Pragma")
+				dropCacheBusting(resp, "Cache-Control")
+				dropCacheBusting(resp, "Pragma")
+				// httpcache derives freshness from the response Date; stamp one
+				// for devices that omit it, else every read is treated as stale
+				if resp.Header.Get("Date") == "" {
+					resp.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
+				}
 				return nil
 			},
 			Base: base,
@@ -148,21 +154,36 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 	return p
 }
 
-func dropNoCache(resp *http.Response, header string) {
-	if h := resp.Header.Get(header); h != "" {
-		var hh []string
+// dropCacheBusting removes response directives that defeat the cache layer
+// (no-cache, no-store and max-age=0) so a configured cache duration takes effect.
+func dropCacheBusting(resp *http.Response, header string) {
+	h := resp.Header.Get(header)
+	if h == "" {
+		return
+	}
 
-		for h := range strings.SplitSeq(h, ",") {
-			if s := strings.TrimSpace(h); strings.ToLower(s) != "no-cache" {
-				hh = append(hh, s)
+	var hh []string
+
+	for token := range strings.SplitSeq(h, ",") {
+		s := strings.TrimSpace(token)
+
+		name, value, _ := strings.Cut(s, "=")
+		switch strings.ToLower(strings.TrimSpace(name)) {
+		case "no-cache", "no-store":
+			continue
+		case "max-age":
+			if v, err := strconv.Atoi(strings.TrimSpace(value)); err == nil && v <= 0 {
+				continue
 			}
 		}
 
-		if len(hh) == 0 {
-			resp.Header.Del(header)
-		} else {
-			resp.Header.Set(header, strings.Join(hh, ", "))
-		}
+		hh = append(hh, s)
+	}
+
+	if len(hh) == 0 {
+		resp.Header.Del(header)
+	} else {
+		resp.Header.Set(header, strings.Join(hh, ", "))
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"slices"
 	"sort"
 	"strconv"
 	"time"
@@ -20,6 +21,7 @@ type Slot struct {
 	End          time.Time `json:"end"`
 	Energy       float64   `json:"energy"`
 	ReturnEnergy float64   `json:"returnEnergy"`
+	SocTemp      *float64  `json:"socTemp,omitempty"`
 }
 
 // roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
@@ -27,11 +29,12 @@ func roundEnergy(v float64) float64 {
 	return max(0, math.Round(v*1000)/1000)
 }
 
-// Series represents a named series of energy slots
+// Series represents an energy series for one title group or one entity group.
 type Series struct {
-	Name  string `json:"name,omitempty"`
-	Group string `json:"group"`
-	Data  []Slot `json:"data"`
+	Title  string `json:"title,omitempty"`
+	Group  string `json:"group"`
+	IsTemp bool   `json:"isTemp,omitempty"` // socTemp values are temperature, not soc
+	Data   []Slot `json:"data"`
 }
 
 // SeriesCSV wraps a slice of Series for CSV export.
@@ -39,7 +42,7 @@ type SeriesCSV []Series
 
 // GroupOrder is the canonical display order of metric groups, mirroring the
 // frontend GROUP_ORDER plus home/forecast.
-var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Meter, Home, Forecast}
+var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Consumer, Meter, Home, Forecast}
 
 var aggregateFormats = map[string]string{
 	"15m":   "%Y-%m-%d %H:%M",
@@ -55,8 +58,15 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryEnergy returns aggregated energy data, per entity or per group.
-func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
+// EnergyFilter narrows QueryEnergy to matching entities. Empty fields are ignored.
+type EnergyFilter struct {
+	Group string
+	Name  string
+	Title string
+}
+
+// QueryEnergy returns aggregated energy data, per title or per group.
+func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...EnergyFilter) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
 
 	format, ok := aggregateFormats[aggregate]
@@ -64,24 +74,37 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 		return nil, errors.New("invalid aggregate value")
 	}
 
-	groupCols := `e."group", ` + fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
-	if !grouped {
-		groupCols = "e.name, " + groupCols
+	titleExpr := `COALESCE(NULLIF(e.title,''), e.name)`
+	timeCol := fmt.Sprintf(`strftime('%s', m.ts, 'unixepoch', 'localtime')`, format)
+
+	selectTitle := titleExpr + ` AS title`
+	groupCols := titleExpr + `, e."group", ` + timeCol
+	if grouped {
+		selectTitle = `'' AS title`
+		groupCols = `e."group", ` + timeCol
 	}
 
 	type row struct {
-		Name         string
+		Title        string
 		Group        string
 		Start        SqlTime
 		Energy       float64
 		ReturnEnergy float64
+		SocTemp      *float64
+		IsTemp       bool
+	}
+
+	// soc_temp reports the bucket's first slot; omitted for grouped sums
+	socCols := `, m.soc_temp AS soc_temp, e.is_temp AS is_temp`
+	if grouped {
+		socCols = ``
 	}
 
 	tx := db.Instance.Table("meters m").
-		Select(`e.name, e."group",
+		Select(selectTitle + `, e."group",
 			MIN(m.ts) AS start,
 			COALESCE(SUM(m.energy), 0) AS energy,
-			COALESCE(SUM(m.return_energy), 0) AS return_energy`).
+			COALESCE(SUM(m.return_energy), 0) AS return_energy` + socCols).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group(groupCols).
 		Order(groupCols)
@@ -93,6 +116,19 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 		tx = tx.Where("m.ts < ?", to.Unix())
 	}
 
+	if len(filter) > 0 {
+		f := filter[0]
+		if f.Group != "" {
+			tx = tx.Where(`e."group" = ?`, f.Group)
+		}
+		if f.Name != "" {
+			tx = tx.Where("e.name = ?", f.Name)
+		}
+		if f.Title != "" {
+			tx = tx.Where("e.title = ?", f.Title)
+		}
+	}
+
 	var rows []row
 	if err := tx.Scan(&rows).Error; err != nil {
 		return nil, err
@@ -100,13 +136,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 
 	var res []Series
 	for _, r := range rows {
-		name := r.Name
-		if grouped {
-			name = ""
-		}
-
-		if n := len(res); n == 0 || res[n-1].Name != name || res[n-1].Group != r.Group {
-			res = append(res, Series{Name: name, Group: r.Group})
+		if n := len(res); n == 0 || res[n-1].Title != r.Title || res[n-1].Group != r.Group {
+			res = append(res, Series{Title: r.Title, Group: r.Group, IsTemp: r.IsTemp})
 		}
 
 		s := &res[len(res)-1]
@@ -115,6 +146,7 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 			End:          addDuration(time.Time(r.Start)),
 			Energy:       roundEnergy(r.Energy),
 			ReturnEnergy: roundEnergy(r.ReturnEnergy),
+			SocTemp:      r.SocTemp,
 		})
 	}
 
@@ -126,6 +158,18 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, 
 // single energy column.
 func hasReturnEnergy(group string) bool {
 	return group == Grid || group == Battery
+}
+
+func seriesHasSocTemp(s *Series) bool {
+	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.SocTemp != nil })
+}
+
+// formatSocTemp renders a soc/temp value rounded to 0.1, empty when unset.
+func formatSocTemp(v *float64) string {
+	if v == nil {
+		return ""
+	}
+	return strconv.FormatFloat(math.Round(*v*10)/10, 'f', -1, 64)
 }
 
 // WriteCsv emits a wide-table CSV with columns
@@ -175,25 +219,45 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 	type col struct {
 		series       *Series
 		returnEnergy bool
+		socTemp      bool
 	}
 	cols := []col{{}, {}}
 	tsSet := make(map[int64]time.Time)
 	endByStart := make(map[int64]time.Time)
 
+	label := func(e *Series, g string) string {
+		if e.Title != "" {
+			return e.Title
+		}
+		return g
+	}
+
+	prefix := func(g, l string) string {
+		if l == g {
+			return g
+		}
+		return g + "." + l
+	}
+
 	for _, g := range groups {
 		entities := byGroup[g]
-		sort.Slice(entities, func(i, j int) bool { return entities[i].Name < entities[j].Name })
+		sort.Slice(entities, func(i, j int) bool { return label(entities[i], g) < label(entities[j], g) })
 
 		for _, e := range entities {
-			name := e.Name
-			if name == "" {
-				name = g
-			}
-			header = append(header, g+"."+name+".energy.Wh")
+			p := prefix(g, label(e, g))
+			header = append(header, p+".energy.Wh")
 			cols = append(cols, col{series: e, returnEnergy: false})
 			if hasReturnEnergy(g) {
-				header = append(header, g+"."+name+".returnEnergy.Wh")
+				header = append(header, p+".returnEnergy.Wh")
 				cols = append(cols, col{series: e, returnEnergy: true})
+			}
+			if seriesHasSocTemp(e) {
+				unit := ".soc.pct"
+				if e.IsTemp {
+					unit = ".temp.degC"
+				}
+				header = append(header, p+unit)
+				cols = append(cols, col{series: e, socTemp: true})
 			}
 			for _, slot := range e.Data {
 				tsSet[slot.Start.UnixNano()] = slot.Start
@@ -243,11 +307,14 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 				row[i] = ""
 				continue
 			}
-			v := slot.Energy
-			if c.returnEnergy {
-				v = slot.ReturnEnergy
+			switch {
+			case c.socTemp:
+				row[i] = formatSocTemp(slot.SocTemp)
+			case c.returnEnergy:
+				row[i] = strconv.FormatInt(int64(math.Round(slot.ReturnEnergy*1000)), 10)
+			default:
+				row[i] = strconv.FormatInt(int64(math.Round(slot.Energy*1000)), 10)
 			}
-			row[i] = strconv.FormatInt(int64(math.Round(v*1000)), 10)
 		}
 		if err := ww.Write(row); err != nil {
 			return err

@@ -9,7 +9,6 @@ params:
     choice: ["grid"]
   - name: host
   - name: cache
-    advanced: true
     default: 1s
 
 render: |

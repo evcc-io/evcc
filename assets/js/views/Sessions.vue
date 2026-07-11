@@ -65,93 +65,98 @@
 					</IconSelectGroup>
 				</div>
 
-				<h3
-					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden"
+				<Card
+					:title="historyTitle"
+					:subtitle="historySubTitle"
+					edge-to-edge
+					class="box-pull-out mb-4"
 				>
-					<span v-if="historyTitle" class="d-block no-wrap text-truncate">
-						{{ historyTitle }}
-					</span>
-					<small class="d-block no-wrap text-truncate">{{ historySubTitle }}</small>
-				</h3>
-				<EnergyHistoryChart
-					v-if="activeType === types.SOLAR"
-					class="mb-5"
-					:sessions="currentSessions"
-					:color-mappings="colorMappings"
-					:device-colors="deviceColors"
-					:group-by="selectedGroup"
-					:period="period"
-				/>
-				<CostHistoryChart
-					v-else
-					class="mb-5"
-					:sessions="currentTypeSessions"
-					:color-mappings="colorMappings"
-					:device-colors="deviceColors"
-					:group-by="selectedGroup"
-					:cost-type="activeType"
-					:currency="currency"
-					:period="period"
-					:suggested-max-avg-cost="suggestedMaxAvgCost"
-					:suggested-max-cost="suggestedMaxCost"
-				/>
-				<div v-if="showExtraCharts" class="row align-items-start">
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ firstExtraTitle }}</h3>
-						<div v-if="activeType === types.SOLAR">
-							<SolarYearChart
-								v-if="showSolarYearChart"
-								:period="period"
-								:sessions="currentSessions"
-							/>
-							<SolarGroupedChart
-								v-else
-								:sessions="currentSessions"
-								:color-mappings="colorMappings"
-								:device-colors="deviceColors"
-								:group-by="selectedGroupWithoutNone"
-							/>
+					<EnergyHistoryChart
+						v-if="activeType === types.SOLAR"
+						:sessions="currentSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:period="period"
+					/>
+					<CostHistoryChart
+						v-else
+						:sessions="currentTypeSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:cost-type="activeType"
+						:currency="currency"
+						:period="period"
+					/>
+				</Card>
+				<div v-if="showExtraCharts" class="box-pull-out">
+					<div class="row align-items-start">
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="firstExtraTitle" edge-to-edge>
+								<div v-if="activeType === types.SOLAR">
+									<SolarYearChart
+										v-if="showSolarYearChart"
+										:period="period"
+										:sessions="currentSessions"
+									/>
+									<SolarGroupedChart
+										v-else
+										:sessions="currentSessions"
+										:color-mappings="colorMappings"
+										:device-colors="deviceColors"
+										:group-by="selectedGroupWithoutNone"
+									/>
+								</div>
+								<AvgCostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:suggested-max-price="suggestedMaxAvgCost"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
 						</div>
-						<AvgCostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:suggested-max-price="suggestedMaxAvgCost"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
-					</div>
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ secondExtraTitle }}</h3>
-						<EnergyGroupedChart
-							v-if="activeType === types.SOLAR"
-							:sessions="currentSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:group-by="selectedGroupWithoutNone"
-						/>
-						<CostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="secondExtraTitle" edge-to-edge>
+								<EnergyGroupedChart
+									v-if="activeType === types.SOLAR"
+									:sessions="currentSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+								/>
+								<CostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
+						</div>
 					</div>
 				</div>
 
-				<SessionTable
+				<Card
 					v-if="showTable"
-					:sessions="currentSessions"
-					:vehicleFilter="vehicleFilter"
-					:loadpointFilter="loadpointFilter"
-					:currency="currency"
-					@show-session="showDetails"
-				/>
+					:title="$t('sessions.overview')"
+					edge-to-edge
+					class="box-pull-out mb-4"
+				>
+					<SessionTable
+						:sessions="currentSessions"
+						:vehicleFilter="vehicleFilter"
+						:loadpointFilter="loadpointFilter"
+						:currency="currency"
+						@show-session="showDetails"
+					/>
+				</Card>
 				<div class="d-flex gap-2 my-3">
 					<a
 						class="btn btn-outline-secondary"
@@ -189,6 +194,7 @@ import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/lightning";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -202,6 +208,7 @@ import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
 import CostGroupedChart from "../components/Sessions/CostGroupedChart.vue";
 import AvgCostGroupedChart from "../components/Sessions/AvgCostGroupedChart.vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
@@ -214,7 +221,6 @@ import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
 import { handleDownloadClick } from "@/utils/native";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
-import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
 import { CURRENCY, type Notification } from "@/types/evcc";
@@ -225,6 +231,7 @@ export default defineComponent({
 		SessionDetailsModal,
 		SessionTable,
 		TopHeader: Header,
+		Card,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,
@@ -567,14 +574,14 @@ export default defineComponent({
 		},
 		groupIcons() {
 			return {
-				[GROUPS.NONE]: TotalIcon,
+				[GROUPS.NONE]: "shopicon-regular-sun",
 				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
 				[GROUPS.VEHICLE]: "shopicon-regular-car3",
 			};
 		},
 		typeIcons() {
 			return {
-				[TYPES.SOLAR]: "shopicon-regular-sun",
+				[TYPES.SOLAR]: "shopicon-regular-lightning",
 				[TYPES.PRICE]: DynamicPriceIcon,
 				[TYPES.CO2]: "shopicon-regular-eco1",
 			};
@@ -640,29 +647,6 @@ export default defineComponent({
 				? this.suggestedMaxAvgPrice
 				: this.suggestedMaxAvgCo2;
 		},
-		suggestedMaxCo2() {
-			// returns the 98th percentile of total co2 emissions by time period
-			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2Map = sessionsWithCo2.reduce((acc: Record<string, number>, s) => {
-				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + (s.co2PerKWh ?? 0) * s.chargedEnergy;
-				return acc;
-			}, {});
-			return Math.max(this.percentile(Object.values(co2Map), 98) ?? 0, 5); // 5kg default
-		},
-		suggestedMaxPrice() {
-			// returns the 98th percentile of total price by time period
-			const sessionsWithPrice = this.sessions.filter((s) => s.price !== null);
-			const priceMap = sessionsWithPrice.reduce((acc: Record<string, number>, s) => {
-				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + (s.price || 0);
-				return acc;
-			}, {});
-			return Math.max(this.percentile(Object.values(priceMap), 98) ?? 0, 1); // 1 CURRENCY default
-		},
-		suggestedMaxCost() {
-			return this.activeType === TYPES.PRICE ? this.suggestedMaxPrice : this.suggestedMaxCo2;
-		},
 	},
 	watch: {
 		offline() {
@@ -690,16 +674,6 @@ export default defineComponent({
 					period = undefined;
 			}
 			this.$router.push({ query: { ...this.$route.query, period, month, year } });
-		},
-		dateToPeriodKey(date: Date) {
-			const options: Intl.DateTimeFormatOptions = {
-				year: "numeric",
-				month: "numeric",
-				day: "numeric",
-			};
-			if (this.period === PERIODS.YEAR) options.day = undefined;
-			if (this.period === PERIODS.TOTAL) options.month = undefined;
-			return date.toLocaleDateString(undefined, options);
 		},
 		async loadSessions() {
 			const response = await api.get("sessions");

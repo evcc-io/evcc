@@ -46,7 +46,26 @@
     "noBattery": "Ingen batterier er konfigurerede.",
     "usageTab": "Batteri anvendelse"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex farve"
+  },
   "config": {
+    "apiKey": {
+      "description": "Giv scripts og automatiseringsopgaver, såsom planlagte sikkerhedskopier, sikker adgang uden at dele din administratoradgangskode.",
+      "exampleLabel": "Prøv det: Hent en backup med curl",
+      "generate": "Lav en API nøgle",
+      "generateConfirm": "Skriv admin kodeordet for at lave en ny API nøgle.",
+      "keyLabel": "API nøgle",
+      "regenerate": "Opret en ny API-nøgle",
+      "regenerateConfirm": "Skriv admin kodeord for at lave en ny API nøgle.",
+      "regenerateLink": "Lav ny",
+      "regenerateWarning": "At lave en ny nøgle vil gøre den eksisterende ugyldig og enhver automation som benytter den stopper med at virke. Vil du fortsætte?",
+      "revealSuccess": "Den nye API nøgle er klar til brug.",
+      "revealTitle": "API nøgle lavet",
+      "shownOnce": "Nøglen vises kun én gang. Gem den et sikkert sted, da den ikke kan hentes senere.",
+      "title": "API nøgle"
+    },
     "aux": {
       "description": "Enhed, der justerer sit forbrug baseret på tilgængeligt overskud (som smarte vandvarmere). evcc forventer, at denne enhed reducerer sit strømforbrug, hvis det er nødvendigt.",
       "titleAdd": "Tilføj selvregulerende forbrugsenhed",
@@ -101,6 +120,11 @@
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
     },
+    "consumer": {
+      "description": "Overvåger mindre enheder, som ikke kan styres, f.eks. køleskab, vaskemaskine osv. Giver et bedre overblik over dit samlede forbrug i hjemmet.",
+      "titleAdd": "Tilføj forbrugsmåler",
+      "titleEdit": "Juster forbrugsmåler"
+    },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
       "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
@@ -136,8 +160,11 @@
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
+      "curtailLimit": "Indfødnings begrænsning",
+      "curtailable": "Kan begrænses",
       "curtailed": "Indfødning begrænset",
       "detected": "Registreret",
+      "dimLimit": "Forbrugsgrænse",
       "dimmed": "Forbrug begrænset",
       "enabled": "Aktiveret",
       "energy": "Energi",
@@ -146,8 +173,6 @@
       "forecast": "Prognose",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
-      "hemsActiveLimit": "Aktiv begrænsning",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
       "loginBlocked": "Grænsen for loginforsøg er nået",
       "max": "max",
@@ -162,10 +187,13 @@
       "power": "Effekt",
       "powerRange": "Effekt",
       "price": "Pris",
+      "productionLimited": "Produktionsgrænse",
       "range": "Rækkevidde",
+      "returnEnergy": "Energi (baglæns)",
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
       "solarForecast": "Sol prognose",
+      "switchDevice": "Strømstyring",
       "temp": "Temperatur",
       "topic": "Emne",
       "url": "URL",
@@ -176,10 +204,6 @@
       "A": "A (ikke forbundet)",
       "B": "B (forbundet)",
       "C": "C (oplader)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
@@ -202,6 +226,8 @@
       "interfacesHelp": "Begræns de netværksgrænseflader, som EEBus skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
       "port": "Port",
       "portHelp": "Porten, der skal bruges.",
+      "qr": "koblingskode",
+      "qrExplain": "Skan fra en anden EEBus-enhed under installationen for automatisk parring uden manuel indtastning af SKI.",
       "removeConfirm": "Hele EEBus-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBus-netværket.",
@@ -215,9 +241,9 @@
       "title": "Eksperimentel"
     },
     "ext": {
-      "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
-      "titleAdd": "Tilføj forbrugsmåler",
-      "titleEdit": "Rediger forbrugsmåler"
+      "description": "Overvåger målere, der ikke bruges til regulering eller vises i grænsefladen (undermålere, alternative net- eller solmålere osv.). Data logges og eksporteres ligesom for øvrige målere.",
+      "titleAdd": "Tilføj ekstra måler",
+      "titleEdit": "Rediger ekstra måler"
     },
     "form": {
       "danger": "Pas på",
@@ -353,8 +379,11 @@
       "estimateLabel": "Interpoler opladningsniveauet mellem API-opdateringer",
       "maxCurrentHelp": "Skal være større end minimum strømstyrken.",
       "maxCurrentLabel": "Maksimal strømstyrke",
+      "maxTempHelp": "Skal være højere end minimums temperaturen.",
+      "maxTempLabel": "Maksimum temperatur",
       "minCurrentHelp": "Brug kun lavere end 6 A, hvis du er sikker på hvad du gør.",
       "minCurrentLabel": "Minimum strømstyrke",
+      "minTempLabel": "Minimums temperatur",
       "noVehicles": "Ingen køretøjer er konfigureret.",
       "option": {
         "charging": "\"Tilføj ladepunkt",
@@ -385,6 +414,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "egen",
       "solarModeMaximum": "max solenergi",
+      "temperatureRangeHelp": "Visningsområde for temperaturbjælken. Påvirker ikke styringen.",
+      "temperatureRangeTitle": "Temperatur område",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
       "thresholdDisableHelpInvalid": "Brug en positiv værdi.",
       "thresholdDisableHelpPositive": "Stop, når der bruges mere end {power} fra elnettet i {delay}.",
@@ -419,6 +450,7 @@
     },
     "main": {
       "addAdditional": "Tilføj en ekstra måler",
+      "addConsumer": "Tilføj forbrugsenhed",
       "addGrid": "Tilføj måler til elnet",
       "addLoadpoint": "Tilføj lader eller varmelegeme",
       "addPvBattery": "Tilføj solpanel eller batteri",
@@ -509,6 +541,7 @@
       "option": {
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
+        "consumer": "Tilføj standardforbrugsenhed",
         "ext": "Tilføj almindelig forbrugsenhed",
         "pv": "Tilføj en solenergimåler"
       },
@@ -606,8 +639,13 @@
       "connectionStatusHelp": "Forbindelsesstatus for konfigurerede ladere.",
       "detectedChargers": "Registrerede stations-ID’er",
       "detectedHelp": "Disse ladere har forsøgt at forbinde til evcc. For at bruge en lader skal du oprette et loadpoint med dens stations-ID.",
+      "forwardingConfigured": "Videresendelse af OCPP data er konfigureret",
+      "forwardingError": "Fejl ved videresendelse",
+      "forwardingOff": "Videresendelse er ikke konfigureret",
       "noChargers": "Ingen OCPP-ladere fundet.",
       "noStations": "Ingen stationer tilsluttet",
+      "stations": "Station ID'er",
+      "stationsHelp": "Konfigurerede og fundne OCPP ladere. Udover lokal kontrol kan du videresende beskeder til en ekstern server (f.eks. til regninger).",
       "status": {
         "configured": "Ikke tilsluttet",
         "connected": "Tilsluttet",
@@ -616,6 +654,30 @@
       "title": "OCPP Server",
       "url": "Server URL",
       "urlHelp": "Kopier denne URL til din laders opsætning. Tjek producentens vejledning for detaljer. Laderen tilføjer normalt automatisk sit unikke ID (stations-id) til URL’en. I sjældne tilfælde skal ID’et angives manuelt. Eksempel: {url}"
+    },
+    "ocppforwarder": {
+      "description": "Videresend denne laders OCPP beskeder til en ekstern server (regnings platform, DSO osv.) ud over evcc.",
+      "editTitle": "OCPP videresend",
+      "labelCaCert": "Server certifikat (CA)",
+      "labelCheckInsecure": "Tillad selv-signerede certifikater",
+      "labelInsecure": "Certifikat validerering",
+      "password": "Kodeord",
+      "passwordHelp": "Til HTTP Basic Authentication mod den eksterne server.",
+      "readOnly": {
+        "check": "Bloker kommandoer fra den eksterne server",
+        "help": {
+          "false": "Den eksterne server kan sende kommandoer til laderen via evcc.",
+          "true": "Den eksterne server modtager alle beskeder fra laderen, men kan ikke sende kommandoer. evcc bibeholder eksklusiv kontrol."
+        },
+        "label": "Eksterne kommandoer"
+      },
+      "status": "Status",
+      "upstreamStationId": "Stations ID",
+      "upstreamStationIdHelp": "Laderens ID er sendt til den eksterne server.",
+      "upstreamUrl": "Ekstern server URL",
+      "upstreamUrlHelp": "OCPP WebSocket URL på den eksterne server.",
+      "username": "Brugernavn",
+      "usernameHelp": "Til HTTP Basic Authentication mod den overordnede server."
     },
     "optimizer": {
       "description": "Analyserer sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service for at blive beregnet. Aktuelt beregnes og vises data kun, der er ingen styring af enheder endnu.",
@@ -684,6 +746,7 @@
     },
     "section": {
       "additionalMeter": "Tilføj ekstra målere",
+      "consumers": "Forbrugsenheder",
       "general": "Generelle",
       "grid": "Elnettet",
       "integrations": "Integrationer",
@@ -692,6 +755,14 @@
       "services": "Tjenester",
       "system": "System",
       "vehicles": "Køretøjer"
+    },
+    "security": {
+      "authDisabledHint": "Autentificering er deaktiveret. Håndtering af legitimationsoplysninger er ikke tilgængelig.",
+      "description": "Håndtér autentificering og loginoplysninger for denne instans.",
+      "passwordDescription": "Opdater kodeordet som benyttes for at logge ind på konfigurerings UI.",
+      "passwordTitle": "Admin kodeord",
+      "title": "Sikkerhed",
+      "updatePassword": "Opdater kodeord"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -885,15 +956,15 @@
       "greenShareSub2": "sol, og batteriopbevaring",
       "power": "Opladningsstrøm",
       "powerSub1": "{activeClients} af {totalClients} deltagere",
-      "powerSub2": "oplader…",
+      "powerSub2": "oplader.",
       "tabTitle": "Live fællesskab"
     },
     "savings": {
       "co2Saved": "{value} sparet",
       "co2Title": "CO₂ Udledning",
       "configurePriceCo2": "Lær hvordan man indstiller pris og CO₂ data.",
-      "footerLong": "{percent} Solenergi",
-      "footerShort": "{percent} Solenergi",
+      "footerLong": "{percent} solenergi",
+      "footerShort": "{percent} solenergi",
       "indicator": {
         "co2": "CO₂ emission",
         "co2saved": "CO₂ sparet",
@@ -1167,14 +1238,11 @@
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
+      "batteryChargeHold": "Batteri (opladning blokeret)",
       "batteryDischarge": "Batteriet aflades",
-      "batteryForecastEmpty": "Tømt {time}",
-      "batteryForecastFull": "Fyldt {time}",
-      "batteryForecastNextHigh": "Næste højdepunkt",
-      "batteryForecastNextLow": "Næste lavpunkt",
+      "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
-      "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
@@ -1195,8 +1263,9 @@
       "waitForVehicle": "Klar til at varme…"
     },
     "hemsWarning": {
-      "description": "Opladningen reduceres for ikke at overskride {limit}.",
-      "title": "Ekstern begrænsning:"
+      "consumption": "Forbrug",
+      "feedIn": "Indfødning",
+      "title": "Ekstern begrænsning er aktiv"
     },
     "history": {
       "direction": {
@@ -1213,10 +1282,11 @@
       "empty": "Ingen historik i dette tidsinterval.",
       "group": {
         "battery": "Batteri",
+        "consumer": "Forbrug",
         "forecast": "Prognose",
         "grid": "Elnet",
         "loadpoint": "Opladning og opvarmning",
-        "meter": "Forbrug",
+        "meter": "Ekstra målere",
         "pv": "Produktion"
       },
       "otherConsumers": "Andet",
@@ -1415,6 +1485,7 @@
     "updatePassword": "Opdater adgangskode"
   },
   "session": {
+    "addOdometer": "Tilføj distance",
     "cancel": "Afbryd",
     "co2": "CO2",
     "date": "Tidsrum",
@@ -1424,7 +1495,8 @@
     "meterstart": "kilometertælleraflæsning",
     "meterstop": "Meter slut",
     "odometer": "Kilometerstand",
-    "price": "Pris",
+    "price": "Omkostning",
+    "soc": "Køretøjets SoC",
     "started": "Startet",
     "title": "Lade session"
   },
@@ -1432,6 +1504,7 @@
     "avgPower": "⌀ Effekt",
     "avgPrice": "⌀ pris",
     "chargeDuration": "Varighed",
+    "chargedSoc": "Oplader",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Pris {byGroup}",
@@ -1463,8 +1536,10 @@
       "meterstart": "Målerstart (kWh)",
       "meterstop": "Målerstop (kWh)",
       "odometer": "Kilometertal (km)",
-      "price": "Pris",
+      "price": "Omkostning",
       "priceperkwh": "Pris/kWh",
+      "socend": "Soc ved slut (%)",
+      "socstart": "SoC ved start (%)",
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
@@ -1480,12 +1555,12 @@
     "group": {
       "co2": "Emission",
       "grid": "Elnet",
-      "price": "Pris",
+      "price": "Omkostning",
       "self": "Sol"
     },
     "groupBy": {
       "loadpoint": "Opladnings punkt",
-      "none": "Total",
+      "none": "Sol",
       "vehicle": "Køretøj"
     },
     "loadpoint": "Ladepunkt",
@@ -1506,8 +1581,8 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Pris",
-      "solar": "Sol"
+      "price": "Omkostning",
+      "solar": "Energi"
     },
     "vehicle": "Køretøj"
   },

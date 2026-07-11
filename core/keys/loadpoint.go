@@ -19,6 +19,7 @@ const (
 	LimitEnergy       = "limitEnergy"      // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
+	UI                = "ui" // display-only ui settings (json)
 	EnableThreshold   = "enableThreshold"
 	DisableThreshold  = "disableThreshold"
 	EnableDelay       = "enableDelay"
@@ -43,6 +44,9 @@ const (
 
 	// loadpoint setpoint
 	OfferedCurrent = "offeredCurrent" // offered current
+
+	// optimizer
+	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
 
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active

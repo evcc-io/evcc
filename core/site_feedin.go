@@ -51,7 +51,12 @@ func (site *Site) setFeedInDisable(enable bool) error {
 		meter := dev.Instance()
 
 		if fl, ok := meter.(api.Curtailer); ok {
-			if err := fl.Curtail(enable); err != nil {
+			limit := 100
+			if enable {
+				limit = 0
+			}
+
+			if err := fl.SetCurtailPercent(limit); err != nil {
 				return err
 			}
 		}

@@ -254,21 +254,24 @@
 		</div>
 
 		<h4 class="my-4">HEMS</h4>
-		<div class="row">
-			<label for="hemsRelay" class="col-sm-6 col-form-label">Relay Limit</label>
-			<div class="col-sm-6 mb-3">
-				<div class="form-check form-switch">
-					<input
-						id="hemsRelay"
-						v-model="state.hems.relay"
-						class="form-check-input"
-						type="checkbox"
-						role="switch"
-					/>
-					<label class="form-check-label" for="hemsRelay"> active </label>
+		<template v-for="(signals, group) in hemsGroups" :key="group">
+			<h5 class="my-3">{{ group }}</h5>
+			<div v-for="(label, signal) in signals" :key="signal" class="row">
+				<label :for="`hems-${signal}`" class="col-sm-6 col-form-label">{{ label }}</label>
+				<div class="col-sm-6 mb-3">
+					<div class="form-check form-switch">
+						<input
+							:id="`hems-${signal}`"
+							v-model="state.hems[signal]"
+							class="form-check-input"
+							type="checkbox"
+							role="switch"
+						/>
+						<label class="form-check-label" :for="`hems-${signal}`"> active </label>
+					</div>
 				</div>
 			</div>
-		</div>
+		</template>
 
 		<h4 class="my-4">OCPP <small>work in progress, connect only</small></h4>
 
@@ -343,6 +346,74 @@
 			</div>
 		</div>
 
+		<!-- Upstream OCPP Server (for forwarder testing) -->
+		<div class="card mb-3" data-testid="ocpp-server">
+			<div class="card-body">
+				<div class="d-flex justify-content-between align-items-center mb-2">
+					<h5 class="card-title mb-0">OCPP Server</h5>
+					<span class="badge" :class="ocppServer.enabled ? 'bg-success' : 'bg-secondary'">
+						{{ ocppServer.enabled ? "Listening" : "Off" }}
+					</span>
+				</div>
+				<p class="card-text text-muted small mb-3">
+					Upstream server for forwarder testing. Point a rule at
+					<code>ws://{{ host }}/&lt;stationId&gt;</code>
+				</p>
+				<div class="row">
+					<label for="ocppServerUsername" class="col-sm-6 col-form-label">
+						Username <small class="text-muted">(optional)</small>
+					</label>
+					<div class="col-sm-6">
+						<div class="input-group mb-3">
+							<input
+								id="ocppServerUsername"
+								v-model="ocppServer.username"
+								type="text"
+								class="form-control"
+								autocomplete="off"
+								:disabled="ocppServer.enabled"
+							/>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<label for="ocppServerPassword" class="col-sm-6 col-form-label">
+						Password <small class="text-muted">(optional)</small>
+					</label>
+					<div class="col-sm-6">
+						<div class="input-group mb-3">
+							<input
+								id="ocppServerPassword"
+								v-model="ocppServer.password"
+								type="text"
+								class="form-control"
+								autocomplete="off"
+								:disabled="ocppServer.enabled"
+							/>
+						</div>
+					</div>
+				</div>
+				<div class="row mb-3">
+					<label class="col-sm-6 col-form-label">Last station</label>
+					<div class="col-sm-6 col-form-label" data-testid="ocpp-server-last-station">
+						{{ ocppServer.lastStationId || "—" }}
+						<span v-if="ocppServer.connections" class="text-muted small">
+							({{ ocppServer.connections }} active)
+						</span>
+					</div>
+				</div>
+				<button
+					type="button"
+					class="btn w-100"
+					:class="ocppServer.enabled ? 'btn-danger' : 'btn-primary'"
+					data-testid="ocpp-server-toggle"
+					@click="toggleOcppServer"
+				>
+					{{ ocppServer.enabled ? "Disable server" : "Enable server" }}
+				</button>
+			</div>
+		</div>
+
 		<div class="p-4 text-center fixed-bottom bg-light text-dark bg-opacity-75">
 			<button type="submit" class="btn btn-primary">Apply changes</button>
 		</div>
@@ -360,6 +431,17 @@ export default defineComponent({
 			mockLoginMode: false,
 			mockLoginState: "",
 			mockLoginRedirectUri: "",
+			hemsGroups: {
+				Relay: {
+					relay: "Relay (dim)",
+				},
+				"FNN Steuerbox": {
+					w4: "FNN W4 (dim)",
+					w3: "FNN W3 (curtail 0%)",
+					s2: "FNN S2 (curtail 30%)",
+					s1: "FNN S1 (curtail 60%)",
+				},
+			} as const,
 			state: null as {
 				site: {
 					grid: { power: number };
@@ -373,7 +455,7 @@ export default defineComponent({
 					status: string;
 				}[];
 				vehicles: { soc: number; range: number }[];
-				hems: { relay: boolean };
+				hems: { relay: boolean; w3: boolean; s1: boolean; s2: boolean; w4: boolean };
 				ocpp: {
 					clients: { stationId: string; serverUrl: string; connected: boolean }[];
 				};
@@ -381,13 +463,31 @@ export default defineComponent({
 			ocppServerUrl: "ws://127.0.0.1:8887/",
 			ocppStationId: "",
 			connecting: false,
+			ocppServer: {
+				enabled: false,
+				username: "",
+				password: "",
+				lastStationId: null as string | null,
+				connections: 0,
+			},
+			ocppServerPoll: undefined as ReturnType<typeof setInterval> | undefined,
 		};
+	},
+	computed: {
+		host(): string {
+			return window.location.host;
+		},
 	},
 	mounted() {
 		this.checkMockLoginMode();
 		if (!this.mockLoginMode) {
 			this.load();
+			this.refreshOcppServer();
+			this.ocppServerPoll = setInterval(() => this.refreshOcppServer(), 2000);
 		}
+	},
+	beforeUnmount() {
+		clearInterval(this.ocppServerPoll);
 	},
 	methods: {
 		checkMockLoginMode() {
@@ -433,6 +533,36 @@ export default defineComponent({
 				alert("Failed to connect OCPP client");
 			} finally {
 				this.connecting = false;
+			}
+		},
+		// refresh server status without clobbering credentials the user is editing
+		async refreshOcppServer() {
+			try {
+				const { data } = await axios.get("/api/ocpp/server");
+				this.ocppServer.enabled = data.enabled;
+				this.ocppServer.lastStationId = data.lastStationId;
+				this.ocppServer.connections = data.connections;
+				if (data.enabled) {
+					this.ocppServer.username = data.username;
+					this.ocppServer.password = data.password;
+				}
+			} catch (error) {
+				console.error("Failed to read OCPP server status:", error);
+			}
+		},
+		async toggleOcppServer() {
+			try {
+				const { data } = await axios.post("/api/ocpp/server", {
+					enabled: !this.ocppServer.enabled,
+					username: this.ocppServer.username,
+					password: this.ocppServer.password,
+				});
+				this.ocppServer.enabled = data.enabled;
+				this.ocppServer.lastStationId = data.lastStationId;
+				this.ocppServer.connections = data.connections;
+			} catch (error) {
+				console.error("Failed to toggle OCPP server:", error);
+				alert("Failed to toggle OCPP server");
 			}
 		},
 		async disconnectOcpp(stationId: string) {

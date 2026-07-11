@@ -178,6 +178,25 @@ type Requirements struct {
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
 }
 
+// Caveat documents a known device limitation
+type Caveat struct {
+	Description TextLanguage // localized description of the limitation
+	Link        string       `json:",omitempty"` // optional URL with more details
+}
+
+func (c Caveat) MarshalJSON() ([]byte, error) {
+	mu.Lock()
+	custom := struct {
+		Description string `json:",omitempty"`
+		Link        string `json:",omitempty"`
+	}{
+		Description: c.Description.String(encoderLanguage),
+		Link:        c.Link,
+	}
+	mu.Unlock()
+	return json.Marshal(custom)
+}
+
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
@@ -302,8 +321,9 @@ func (p Param) MarshalJSON() ([]byte, error) {
 
 // Product contains naming information about a product a template supports
 type Product struct {
-	Brand       string       // product brand
-	Description TextLanguage `json:",omitempty"` // product name
+	Brand        string       // product brand
+	Description  TextLanguage `json:",omitempty"` // product name
+	Capabilities []Capability `json:",omitempty"` // appended to template-level capabilities
 }
 
 // Title returns the product title in the given language

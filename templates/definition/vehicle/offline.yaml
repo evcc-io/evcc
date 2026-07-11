@@ -12,18 +12,14 @@ params:
   - name: coarsecurrent
     advanced: true
   - name: welcomecharge
-    advanced: true
+  - name: climaterdisabled
+    deprecated: true
+  - name: autodetectdisabled
+    deprecated: true
 render: |
   type: custom
   {{- include "vehicle-common" . }}
-  features:
-  - offline
-  {{- if eq .coarsecurrent "true" }}
-  - coarsecurrent
-  {{- end }}
-  {{- if eq .welcomecharge "true" }}
-  - welcomecharge
-  {{- end }}
+  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const
     value: 0

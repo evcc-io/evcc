@@ -1,10 +1,8 @@
 <template>
-	<h3 class="fw-normal mb-4">{{ $t("sessions.overview") }}</h3>
-
-	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="mb-5">
+	<div v-if="sessions.length === 0" data-testid="sessions-nodata">
 		<p>{{ $t("sessions.noData") }}</p>
 	</div>
-	<div v-else class="mb-5 table-outer">
+	<div v-else class="table-outer">
 		<table class="table text-nowrap">
 			<thead class="sticky-top">
 				<tr data-testid="sessions-head">
@@ -95,11 +93,11 @@
 							data-testid="column"
 							@change="selectColumnPosition(index, $event.target.value)"
 						>
-							<span class="text-decoration-underline">
+							<span class="text-decoration-underline d-block text-truncate">
 								{{ $t(`sessions.${column.name}`) }}
 							</span>
 						</CustomSelect>
-						<span v-else>
+						<span v-else class="d-block text-truncate">
 							{{ $t(`sessions.${column.name}`) }}
 						</span>
 						<div class="text-gray fw-normal">{{ column.unit }}</div>
@@ -173,11 +171,11 @@ import type { Session, Column } from "./types";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
-	sm: 2,
-	md: 3,
-	lg: 4,
-	xl: 5,
-	xxl: 6,
+	sm: 3,
+	md: 4,
+	lg: 7,
+	xl: 8,
+	xxl: 9,
 };
 
 export default defineComponent({
@@ -214,6 +212,18 @@ export default defineComponent({
 					total: this.chargedEnergy,
 					value: (session) => session.chargedEnergy,
 					format: (value) => this.fmtWh(value * 1e3, POWER_UNIT.KW, false),
+				},
+				{
+					name: "chargedSoc",
+					unit: "%",
+					total: this.chargedSoc,
+					value: (session) => {
+						if (session.socStart != null && session.socEnd != null) {
+							return Math.max(0, session.socEnd - session.socStart);
+						}
+						return null;
+					},
+					format: (value) => `+${Math.round(value)}`,
 				},
 				{
 					name: "solar",
@@ -340,6 +350,16 @@ export default defineComponent({
 		chargedEnergy() {
 			return this.filteredSessions.reduce((total, s) => total + s.chargedEnergy, 0);
 		},
+		chargedSoc() {
+			const sessions = this.filteredSessions.filter(
+				(s) => s.socStart != null && s.socEnd != null
+			);
+			if (!sessions.length) return null;
+			return sessions.reduce(
+				(total, s) => total + Math.max(0, (s.socEnd || 0) - (s.socStart || 0)),
+				0
+			);
+		},
 		chargeDuration() {
 			return this.filteredSessions.reduce((total, s) => total + s.chargeDuration, 0);
 		},
@@ -457,7 +477,7 @@ export default defineComponent({
 }
 .table thead,
 .table tfoot {
-	background: var(--evcc-background);
+	background: var(--evcc-box);
 }
 .table tfoot th {
 	border-top-width: 2px;
