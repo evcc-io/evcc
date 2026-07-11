@@ -66,6 +66,27 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 	if got := rows[1]; !equal(got[:3], []string{"Test", "123.456", "42.5"}) {
 		t.Errorf("unexpected data row: %v", got)
 	}
+
+	sheet := f.GetSheetName(0)
+	styleID, err := f.GetCellStyle(sheet, "A1")
+	if err != nil {
+		t.Fatalf("GetCellStyle: %v", err)
+	}
+	style, err := f.GetStyle(styleID)
+	if err != nil {
+		t.Fatalf("GetStyle: %v", err)
+	}
+	if style.Font == nil || !style.Font.Bold {
+		t.Error("expected bold header")
+	}
+
+	panes, err := f.GetPanes(sheet)
+	if err != nil {
+		t.Fatalf("GetPanes: %v", err)
+	}
+	if !panes.Freeze {
+		t.Error("expected frozen header row")
+	}
 }
 
 func equal(a, b []string) bool {

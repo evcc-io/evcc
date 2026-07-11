@@ -34,8 +34,33 @@ func (x *writer) Write(record []string) error {
 			return err
 		}
 	}
+	if x.row == 1 {
+		if err := x.styleHeader(len(record)); err != nil {
+			x.err = err
+			return err
+		}
+	}
 	x.row++
 	return nil
+}
+
+// styleHeader makes the header row bold and freezes it below the viewport.
+func (x *writer) styleHeader(cols int) error {
+	if cols == 0 {
+		return nil
+	}
+	style, err := x.f.NewStyle(&excelize.Style{Font: &excelize.Font{Bold: true}})
+	if err != nil {
+		return err
+	}
+	last, err := excelize.CoordinatesToCellName(cols, 1)
+	if err != nil {
+		return err
+	}
+	if err := x.f.SetCellStyle(x.sheet, "A1", last, style); err != nil {
+		return err
+	}
+	return x.f.SetPanes(x.sheet, &excelize.Panes{Freeze: true, YSplit: 1, TopLeftCell: "A2", ActivePane: "bottomLeft"})
 }
 
 func (x *writer) Flush() {
