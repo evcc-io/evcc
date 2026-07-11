@@ -95,6 +95,35 @@ func TestEffectivePowerLimiter(t *testing.T) {
 	assert.Equal(t, 12.0, lp.effectiveMaxCurrent(), "max")
 }
 
+// coarse power-limited charger with fixed request must not yield min > max (#31549)
+func TestEffectivePowerLimiterCoarse(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	phases := float64(lp.minActivePhases())
+
+	powerLimiter := api.NewMockPowerLimiter(ctrl)
+	// fixed 5.5 A/phase request -> fractional, coarse charger truncates to 5 A
+	power := 230 * phases * 5.5
+	powerLimiter.EXPECT().GetMinMaxPower().Return(power, power, nil).AnyTimes()
+
+	// MockCharger does not implement api.ChargerEx -> coarseCurrent() == true
+	lp.charger = struct {
+		api.Charger
+		api.PowerLimiter
+	}{
+		Charger:      api.NewMockCharger(ctrl),
+		PowerLimiter: powerLimiter,
+	}
+
+	minCurrent := lp.effectiveMinCurrent()
+	maxCurrent := lp.effectiveMaxCurrent()
+	assert.Equal(t, 6.0, minCurrent, "min rounded up to full amps")
+	assert.Equal(t, 6.0, maxCurrent, "max rounded up to full amps")
+	assert.LessOrEqual(t, minCurrent, maxCurrent, "min must not exceed max")
+}
+
 func TestNextPlan(t *testing.T) {
 	clock := clock.NewMock()
 
