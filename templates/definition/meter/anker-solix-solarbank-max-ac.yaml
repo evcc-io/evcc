@@ -11,11 +11,12 @@ requirements:
       The Modbus TCP interface must be enabled in the Anker app.
 params:
   - name: usage
-    choice: ["grid", "battery"]
+    choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
     port: 502
     id: 1
+  - name: maxacpower
   - preset: battery-params
 render: |
   type: custom
@@ -27,6 +28,32 @@ render: |
       address: 10012 # Grid Power (W, positive = import, negative = export)
       type: input
       decode: int32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10002 # PV Power (W)
+          type: input
+          decode: int32
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10004 # Thirdparty PV Power (W)
+          type: input
+          decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10018 # Total PV Generation (kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
