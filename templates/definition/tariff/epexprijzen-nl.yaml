@@ -17,7 +17,6 @@ params:
     choice:
       [
         "anwb-energie",
-        "atoom-alliantie",
         "budget-energie",
         "coolblue-energie",
         "easyenergy",
