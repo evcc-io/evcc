@@ -35,8 +35,12 @@ test.describe("HEMS", () => {
     await expect(hemsModal).toContainText("Recorded 3 grid limitation events");
     await expect(hemsModal).toContainText("Most recent");
 
-    const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
+    const csvLink = hemsModal.getByTestId("download-csv");
     await expect(csvLink).toHaveAttribute("href", /\.\/api\/gridsessions\?format=csv&lang=en/);
+    await expect(hemsModal.getByTestId("download-xlsx")).toHaveAttribute(
+      "href",
+      /\.\/api\/gridsessions\?format=xlsx&lang=en/
+    );
 
     // template selector is shown in create mode, yaml editor hidden until "User-defined" is chosen
     await expect(hemsModal.getByLabel("Integration")).toBeVisible();
@@ -324,7 +328,7 @@ w3:
       const hemsModal = page.getByTestId("hems-modal");
       await expectModalVisible(hemsModal);
 
-      const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
+      const csvLink = hemsModal.getByTestId("download-csv");
       await csvLink.click();
       expect(await expectAppEvent(page)).toMatchObject({
         type: "download",
