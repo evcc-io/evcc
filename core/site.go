@@ -1055,7 +1055,9 @@ func (site *Site) update(lp updater) {
 	}
 
 	// curtail PV to the strictest of grid-required (HEMS) and smart feed-in disable
-	if err := site.curtailPV(site.effectiveCurtailPercent()); err != nil {
+	curtail := site.effectiveCurtailPercent()
+	site.publish(keys.CurtailPercent, curtail)
+	if err := site.curtailPV(curtail); err != nil {
 		site.log.ERROR.Println(err)
 	}
 
