@@ -52,22 +52,11 @@
 						$t("config.hems.lastEvent", { timeAgo: lastEventTimeAgo })
 					}}</span>
 				</div>
-				<a
-					:href="formatLink('csv')"
-					download
-					class="alert-link text-nowrap"
-					@click="handleDownloadClick($event, formatLink('csv'))"
-				>
-					{{ $t("config.hems.downloadCsv") }}
-				</a>
-				<a
-					:href="formatLink('xlsx')"
-					download
-					class="alert-link text-nowrap ms-3"
-					@click="handleDownloadClick($event, formatLink('xlsx'))"
-				>
-					{{ $t("config.hems.downloadXlsx") }}
-				</a>
+				<DownloadDropdown
+					:label="$t('config.hems.download')"
+					:csvHref="formatLink('csv')"
+					:xlsxHref="formatLink('xlsx')"
+				/>
 			</div>
 			<p v-if="fromYaml" class="text-muted">
 				{{ $t("config.general.fromYamlHint") }}
@@ -86,7 +75,7 @@ import { customTemplateOption, type TemplateGroup } from "./DeviceModal/Template
 import customHemsYaml from "./defaultYaml/customHems.yaml?raw";
 import api from "../../api";
 import { docsPrefix } from "@/i18n";
-import { handleDownloadClick } from "../../utils/native";
+import DownloadDropdown from "../Helper/DownloadDropdown.vue";
 import formatter from "../../mixins/formatter";
 
 const initialValues = {
@@ -99,7 +88,7 @@ const initialValues = {
 
 export default defineComponent({
 	name: "HemsModal",
-	components: { DeviceModalBase },
+	components: { DeviceModalBase, DownloadDropdown },
 	mixins: [formatter],
 	props: {
 		yamlSource: String as PropType<YamlSource>,
@@ -135,7 +124,6 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		handleDownloadClick,
 		formatLink(format: string): string {
 			const params = new URLSearchParams({
 				format,

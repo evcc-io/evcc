@@ -87,26 +87,13 @@
 						@focus="onLegendFocus(group, $event)"
 					/>
 				</Card>
-				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
-					<a
-						:href="downloadLink('csv')"
-						download
-						class="text-muted small history-csv-link"
-						data-testid="history-csv-download"
-						@click="handleDownloadClick($event, downloadLink('csv'))"
-					>
-						{{ $t("main.history.downloadCsv") }}
-					</a>
-					<a
-						:href="downloadLink('xlsx')"
-						download
-						class="text-muted small history-csv-link ms-3"
-						data-testid="history-xlsx-download"
-						@click="handleDownloadClick($event, downloadLink('xlsx'))"
-					>
-						{{ $t("main.history.downloadXlsx") }}
-					</a>
-				</p>
+				<div v-if="visibleGroups.length" class="d-flex justify-content-end mt-3">
+					<DownloadDropdown
+						:label="$t('main.history.download')"
+						:csvHref="downloadLink('csv')"
+						:xlsxHref="downloadLink('xlsx')"
+					/>
+				</div>
 			</main>
 		</div>
 	</div>
@@ -126,7 +113,7 @@ import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import { handleDownloadClick } from "@/utils/native";
+import DownloadDropdown from "../components/Helper/DownloadDropdown.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -147,6 +134,7 @@ export default defineComponent({
 		PeriodHeader,
 		GroupChart,
 		LegendList,
+		DownloadDropdown,
 	},
 	mixins: [formatter],
 	props: {
@@ -358,7 +346,6 @@ export default defineComponent({
 	},
 	methods: {
 		groupColor,
-		handleDownloadClick,
 		downloadLink(format: string): string {
 			const params = new URLSearchParams({
 				format,
@@ -579,14 +566,6 @@ export default defineComponent({
 		animation: none;
 		opacity: 0.8;
 	}
-}
-.history-csv-link {
-	text-decoration: none;
-}
-.history-csv-link:hover,
-.history-csv-link:focus {
-	color: var(--evcc-default-text);
-	text-decoration: underline;
 }
 @media (max-width: 575.98px) {
 	/* edge-to-edge on mobile: cancel the container's px-4 padding */
