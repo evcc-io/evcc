@@ -148,21 +148,18 @@ func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
 	return err
 }
 
-// ensureReg writes a value to a read/write register and verifies the result.
-// If the write is rejected (e.g. because the register already holds the value),
-// it reads back the register and succeeds if the value matches.
+// ensureReg writes a value to a read/write register only if it differs from
+// the current value, avoiding spurious write errors on registers that reject
+// redundant writes (e.g. Modbus exception 3 when value is unchanged).
 func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
-	if err := wb.writeReg(reg, val); err != nil {
-		b, readErr := wb.conn.ReadHoldingRegisters(reg, 1)
-		if readErr != nil {
-			return err
-		}
-		if binary.BigEndian.Uint16(b) != val {
-			return err
-		}
+	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+	if err != nil {
+		return err
 	}
-
-	return nil
+	if binary.BigEndian.Uint16(b) == val {
+		return nil
+	}
+	return wb.writeReg(reg, val)
 }
 
 // heartbeat keeps the charger from considering evcc offline by sending a
