@@ -30,10 +30,10 @@ params:
       en: Forecast days
       de: Vorhersagetage
     help:
-      en: The free plan of pvnode only allows 2 forecast day.
-      de: Der kostenlose Plan von pvnode erlaubt nur 2 Vorhersagetag.
+      en: The free plan of pvnode only allows 1 forecast day (1 = today + tomorrow).
+      de: Der kostenlose Plan von pvnode erlaubt nur 1 Vorhersagetag (1 = heute + morgen).
     type: int
-    default: 2
+    default: 1
     advanced: true
 
 render: |
@@ -42,18 +42,15 @@ render: |
   features: ["cacheable"]
   forecast:
     source: http
-    uri: https://api.pvnode.com/v2/forecast/{{ .site_id }}?forecast_days={{ .forecast_days }}&past_days=0
+    uri: https://api.pvnode.com/v2/forecast/{{ .site_id }}?forecast_days={{ .forecast_days }}&past_days=0&timezone=utc
     auth:
       type: bearer
       token: {{ .apikey }}
     jq: |
-      def toEpoch: sub("\\.[0-9]+"; "") | strptime("%FT%T") | mktime;
-
       [.values[] |
-        (.timestamp | toEpoch) as $t |
         {
-          start: ($t | todateiso8601),
-          end:   ($t + 900 | todateiso8601),
-          value: (.pv_power | round)
+          start: (.timestamp),
+          end:   (.timestamp | fromdateiso8601 + 900 | todateiso8601 ),
+          value: (.pv_power | round )
         }
       ] | tostring
