@@ -108,15 +108,10 @@ type batteryResult struct {
 // suggestionThreshold ignores numerical noise around zero power (W)
 const suggestionThreshold = 50
 
-//go:generate go tool enumer -type suggestionAction -trimprefix action -transform=lower
-
-// suggestionAction is the advisory action for a loadpoint/vehicle slot.
-// Battery actions use api.BatteryMode instead.
-type suggestionAction int
-
+// advisory actions for a loadpoint/vehicle slot; battery actions use api.BatteryMode
 const (
-	actionStop suggestionAction = iota
-	actionCharge
+	actionStop   = "stop"
+	actionCharge = "charge"
 )
 
 // currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
@@ -150,9 +145,9 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 			s.Action = api.BatteryNormal.String()
 		}
 	} else if charge > suggestionThreshold {
-		s.Action = actionCharge.String()
+		s.Action = actionCharge
 	} else {
-		s.Action = actionStop.String()
+		s.Action = actionStop
 	}
 
 	// actionable when the suggested action differs from the current operating mode
@@ -430,9 +425,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			current = site.GetBatteryMode().String()
 		} else if detail.loadpoint != nil {
 			if site.loadpoints[*detail.loadpoint].IsEnabled() {
-				current = actionCharge.String()
+				current = actionCharge
 			} else {
-				current = actionStop.String()
+				current = actionStop
 			}
 		}
 
