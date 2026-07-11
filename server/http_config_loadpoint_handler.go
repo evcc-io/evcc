@@ -14,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/gorilla/mux"
-	"github.com/samber/lo"
 )
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
@@ -74,7 +73,7 @@ func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any,
 }
 
 // loadpointConfig returns a single loadpoint's configuration
-func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
+func loadpointConfig(dev config.Device[loadpoint.API]) (loadpointFullConfig, error) {
 	var (
 		id      int
 		disable bool
@@ -86,24 +85,26 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 
 	lp := dev.Instance()
 
-	// // missing instance due to error, decode config from database
-	// if lp == nil || reflect.ValueOf(lp).IsNil() {
-	// 	cc := dev.Config()
+	// disabled loadpoint has no live instance; decode static config from the database instead
+	if lp == nil {
+		dynamic, staticMap, err := loadpoint.SplitConfig(dev.Config().Other)
+		if err != nil {
+			return loadpointFullConfig{}, err
+		}
 
-	// 	dynamic, staticMap, _ := loadpoint.SplitConfig(cc.Other)
+		var static loadpoint.StaticConfig
+		if err := util.DecodeOther(staticMap, &static); err != nil {
+			return loadpointFullConfig{}, err
+		}
 
-	// 	var static loadpoint.StaticConfig
-	// 	_ = util.DecodeOther(staticMap, &static)
-
-	// 	res := loadpointFullConfig{
-	// 		ID:            id,
-	// 		Name:          dev.Config().Name,
-	// 		StaticConfig:  static,
-	// 		DynamicConfig: dynamic,
-	// 	}
-
-	// 	return res
-	// }
+		return loadpointFullConfig{
+			ID:            id,
+			Name:          dev.Config().Name,
+			Disable:       disable,
+			StaticConfig:  static,
+			DynamicConfig: dynamic,
+		}, nil
+	}
 
 	res := loadpointFullConfig{
 		ID:            id,
@@ -113,15 +114,24 @@ func loadpointConfig(dev config.Device[loadpoint.API]) loadpointFullConfig {
 		DynamicConfig: getLoadpointDynamicConfig(lp),
 	}
 
-	return res
+	return res, nil
 }
 
 // loadpointsConfigHandler returns a device configurations by class
 func loadpointsConfigHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) loadpointFullConfig {
-			return loadpointConfig(dev)
-		})
+		devices := config.Loadpoints().Devices()
+
+		res := make([]loadpointFullConfig, 0, len(devices))
+		for _, dev := range devices {
+			c, err := loadpointConfig(dev)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			res = append(res, c)
+		}
 
 		jsonWrite(w, res)
 	}
@@ -146,7 +156,11 @@ func loadpointConfigHandler() http.HandlerFunc {
 			return
 		}
 
-		res := loadpointConfig(dev)
+		res, err := loadpointConfig(dev)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
 
 		jsonWrite(w, res)
 	}
@@ -250,10 +264,12 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		// dynamic
-		if err := dynamic.Apply(instance); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		// dynamic; instance is nil for a disabled loadpoint, takes effect on next restart
+		if instance != nil {
+			if err := dynamic.Apply(instance); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
 		}
 
 		setConfigDirty()
@@ -283,6 +299,20 @@ func deleteLoadpointHandler() http.HandlerFunc {
 		}
 
 		instance := lp.Instance()
+
+		// disabled loadpoint has no live instance; delete it without ref cleanup
+		if instance == nil {
+			if err := deleteDevice(id, h); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			jsonWrite(w, struct {
+				ID int `json:"id"`
+			}{ID: id})
+
+			return
+		}
 
 		if dev, err := configurableDevice(instance.GetChargerRef(), config.Chargers()); err == nil {
 			if err := deleteDevice(dev.ID(), config.Chargers()); err != nil {
