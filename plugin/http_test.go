@@ -31,9 +31,11 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			panic(err)
 		}
 		defer conn.Close()
+		// increment before flushing: the client returns as soon as it reads the body,
+		// so counting after the flush races with the test asserting on cnt
+		h.cnt++
 		fmt.Fprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n%s", len(h.val), h.val)
 		buf.Flush()
-		h.cnt++
 		return
 	}
 
