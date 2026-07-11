@@ -35,11 +35,8 @@ func formatValue(mp *message.Printer, value any, digits int) string {
 	}
 }
 
-func writeHeader(ctx context.Context, ww RowWriter, structType any, i18nPrefix string) error {
-	localizer := locale.Localizer
-	if val, ok := ctx.Value(locale.Locale).(string); ok && val != "" {
-		localizer = i18n.NewLocalizer(locale.Bundle, val, locale.Language)
-	}
+func writeHeader(ww RowWriter, structType any, i18nPrefix string) error {
+	localizer := ww.Localizer()
 
 	var row []string
 	for _, f := range structs.Fields(structType) {
@@ -65,7 +62,9 @@ func writeHeader(ctx context.Context, ww RowWriter, structType any, i18nPrefix s
 	return ww.Write(row)
 }
 
-func writeRow(ww RowWriter, mp *message.Printer, structVal any) error {
+func writeRow(ww RowWriter, structVal any) error {
+	mp := ww.Printer()
+
 	var row []string
 	for _, f := range structs.Fields(structVal) {
 		if f.Tag("csv") == "-" {
@@ -77,15 +76,14 @@ func writeRow(ww RowWriter, mp *message.Printer, structVal any) error {
 			digits = 0
 		}
 
-		val := formatValue(mp, f.Value(), digits)
-		row = append(row, val)
+		row = append(row, formatValue(mp, f.Value(), digits))
 	}
 
 	return ww.Write(row)
 }
 
-// localeTag resolves the export language tag from the context.
-func localeTag(ctx context.Context) (language.Tag, error) {
+// LocaleTag resolves the export language tag from the context.
+func LocaleTag(ctx context.Context) (language.Tag, error) {
 	lang := locale.Language
 	if v, ok := ctx.Value(locale.Locale).(string); ok && v != "" {
 		lang = v
@@ -96,8 +94,16 @@ func localeTag(ctx context.Context) (language.Tag, error) {
 	return language.Parse(lang)
 }
 
-// writeStructSlice emits a slice of structs to any RowWriter with localized headers.
-func writeStructSlice(ctx context.Context, ww RowWriter, mp *message.Printer, slice any, cfg Config) error {
+// Localizer returns an i18n localizer for the context's locale.
+func Localizer(ctx context.Context) *i18n.Localizer {
+	if val, ok := ctx.Value(locale.Locale).(string); ok && val != "" {
+		return i18n.NewLocalizer(locale.Bundle, val, locale.Language)
+	}
+	return locale.Localizer
+}
+
+// WriteStructSlice emits a slice of structs to ww with localized headers.
+func WriteStructSlice(ww RowWriter, slice any, cfg Config) error {
 	sliceVal := reflect.ValueOf(slice)
 	if sliceVal.Kind() == reflect.Pointer {
 		sliceVal = sliceVal.Elem()
@@ -113,13 +119,12 @@ func writeStructSlice(ctx context.Context, ww RowWriter, mp *message.Printer, sl
 		structType = reflect.New(sliceVal.Type().Elem()).Elem().Interface()
 	}
 
-	if err := writeHeader(ctx, ww, structType, cfg.I18nPrefix); err != nil {
+	if err := writeHeader(ww, structType, cfg.I18nPrefix); err != nil {
 		return err
 	}
 
 	for i := 0; i < sliceVal.Len(); i++ {
-		row := sliceVal.Index(i).Interface()
-		if err := writeRow(ww, mp, row); err != nil {
+		if err := writeRow(ww, sliceVal.Index(i).Interface()); err != nil {
 			return err
 		}
 	}

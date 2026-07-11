@@ -89,20 +89,20 @@
 				</Card>
 				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
 					<a
-						:href="csvLink"
+						:href="downloadLink('csv')"
 						download
 						class="text-muted small history-csv-link"
 						data-testid="history-csv-download"
-						@click="handleDownloadClick($event, csvLink)"
+						@click="handleDownloadClick($event, downloadLink('csv'))"
 					>
 						{{ $t("main.history.downloadCsv") }}
 					</a>
 					<a
-						:href="xlsxLink"
+						:href="downloadLink('xlsx')"
 						download
 						class="text-muted small history-csv-link ms-3"
 						data-testid="history-xlsx-download"
-						@click="handleDownloadClick($event, xlsxLink)"
+						@click="handleDownloadClick($event, downloadLink('xlsx'))"
 					>
 						{{ $t("main.history.downloadXlsx") }}
 					</a>
@@ -324,12 +324,6 @@ export default defineComponent({
 				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
 			}
 			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
-		},
-		csvLink(): string {
-			return this.downloadLink("csv");
-		},
-		xlsxLink(): string {
-			return this.downloadLink("xlsx");
 		},
 	},
 	watch: {

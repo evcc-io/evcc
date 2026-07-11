@@ -53,18 +53,18 @@
 					}}</span>
 				</div>
 				<a
-					:href="csvLink"
+					:href="formatLink('csv')"
 					download
 					class="alert-link text-nowrap"
-					@click="handleDownloadClick($event, csvLink)"
+					@click="handleDownloadClick($event, formatLink('csv'))"
 				>
 					{{ $t("config.hems.downloadCsv") }}
 				</a>
 				<a
-					:href="xlsxLink"
+					:href="formatLink('xlsx')"
 					download
 					class="alert-link text-nowrap ms-3"
-					@click="handleDownloadClick($event, xlsxLink)"
+					@click="handleDownloadClick($event, formatLink('xlsx'))"
 				>
 					{{ $t("config.hems.downloadXlsx") }}
 				</a>
@@ -129,12 +129,6 @@ export default defineComponent({
 			const ms = new Date(created).getTime();
 			if (!Number.isFinite(ms)) return "";
 			return (this as any).fmtTimeAgo(ms - Date.now());
-		},
-		csvLink(): string {
-			return this.formatLink("csv");
-		},
-		xlsxLink(): string {
-			return this.formatLink("xlsx");
 		},
 		docsLink(): string {
 			return `${docsPrefix()}/docs/external-limit`;

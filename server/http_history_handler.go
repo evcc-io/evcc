@@ -66,11 +66,7 @@ func energyHistoryHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		if format == "xlsx" {
-			xlsxResult(ctx, w, metrics.SeriesCSV(res), historyFilename(from, aggregate))
-		} else {
-			csvResult(ctx, w, metrics.SeriesCSV(res), historyFilename(from, aggregate))
-		}
+		exportResult(ctx, w, format, metrics.SeriesExport(res), historyFilename(from, aggregate))
 		return
 	}
 

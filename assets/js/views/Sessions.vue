@@ -161,22 +161,22 @@
 					<a
 						class="btn btn-outline-secondary"
 						tabindex="0"
-						:href="csvLink"
+						:href="formatLink('csv')"
 						download
 						data-testid="sessions-download"
-						@click="handleDownloadClick($event, csvLink)"
+						@click="handleDownloadClick($event, formatLink('csv'))"
 					>
-						{{ csvLinkLabel }}
+						{{ downloadLabel("csv") }}
 					</a>
 					<a
 						class="btn btn-outline-secondary"
 						tabindex="0"
-						:href="xlsxLink"
+						:href="formatLink('xlsx')"
 						download
 						data-testid="sessions-download-xlsx"
-						@click="handleDownloadClick($event, xlsxLink)"
+						@click="handleDownloadClick($event, formatLink('xlsx'))"
 					>
-						{{ xlsxLinkLabel }}
+						{{ downloadLabel("xlsx") }}
 					</a>
 					<button
 						v-if="!showTable"
@@ -501,37 +501,6 @@ export default defineComponent({
 			date.setMonth(this.month - 1, 1);
 			return this.fmtMonth(date, false);
 		},
-		csvLinkLabel() {
-			if (this.period === PERIODS.MONTH) {
-				const date = new Date();
-				date.setMonth(this.month - 1, 1);
-				date.setFullYear(this.year);
-				const period = this.fmtMonthYear(date);
-				return this.$t("sessions.csvPeriod", { period });
-			} else if (this.period === PERIODS.YEAR) {
-				const period = this.year;
-				return this.$t("sessions.csvPeriod", { period });
-			} else {
-				return this.$t("sessions.csvTotal");
-			}
-		},
-		csvLink() {
-			return this.formatLink("csv");
-		},
-		xlsxLink() {
-			return this.formatLink("xlsx");
-		},
-		xlsxLinkLabel() {
-			if (this.period === PERIODS.MONTH) {
-				const date = new Date();
-				date.setMonth(this.month - 1, 1);
-				date.setFullYear(this.year);
-				return this.$t("sessions.xlsxPeriod", { period: this.fmtMonthYear(date) });
-			} else if (this.period === PERIODS.YEAR) {
-				return this.$t("sessions.xlsxPeriod", { period: this.year });
-			}
-			return this.$t("sessions.xlsxTotal");
-		},
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
 		},
@@ -716,6 +685,17 @@ export default defineComponent({
 				return this.hrefLink(format, this.year);
 			}
 			return this.hrefLink(format);
+		},
+		downloadLabel(format: string) {
+			if (this.period === PERIODS.MONTH) {
+				const date = new Date();
+				date.setMonth(this.month - 1, 1);
+				date.setFullYear(this.year);
+				return this.$t(`sessions.${format}Period`, { period: this.fmtMonthYear(date) });
+			} else if (this.period === PERIODS.YEAR) {
+				return this.$t(`sessions.${format}Period`, { period: this.year });
+			}
+			return this.$t(`sessions.${format}Total`);
 		},
 		hrefLink(format: string, year?: number, month?: number) {
 			const params = new URLSearchParams({

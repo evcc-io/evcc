@@ -1,16 +1,34 @@
-package export
+package xlsx
 
 import (
 	"bytes"
 	"context"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/server/assets"
+	"github.com/evcc-io/evcc/util/export"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/xuri/excelize/v2"
 )
 
-func TestWriteStructSliceXlsx_WithData(t *testing.T) {
+func init() {
+	assets.I18n = os.DirFS("../../../i18n")
+	_ = locale.Init()
+}
+
+type TestStruct struct {
+	ID       int       `json:"id" csv:"-"`
+	Name     string    `json:"name"`
+	Value    float64   `json:"value"`
+	OptValue *float64  `json:"optValue,omitempty"`
+	Created  time.Time `json:"created"`
+}
+
+type TestStructs []TestStruct
+
+func TestWriteStructSlice_WithData(t *testing.T) {
 	var buf bytes.Buffer
 	val := 42.5
 	slice := TestStructs{
@@ -24,7 +42,7 @@ func TestWriteStructSliceXlsx_WithData(t *testing.T) {
 	}
 
 	ctx := context.WithValue(context.Background(), locale.Locale, "en")
-	if err := WriteStructSliceXlsx(ctx, &buf, &slice, Config{I18nPrefix: "test.csv"}); err != nil {
+	if err := WriteStructSlice(ctx, &buf, &slice, export.Config{I18nPrefix: "test.csv"}); err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 

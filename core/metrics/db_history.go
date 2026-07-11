@@ -1,10 +1,8 @@
 package metrics
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"slices"
 	"sort"
@@ -37,8 +35,8 @@ type Series struct {
 	Data   []Slot `json:"data"`
 }
 
-// SeriesCSV wraps a slice of Series for CSV export.
-type SeriesCSV []Series
+// SeriesExport wraps a slice of Series for tabular export.
+type SeriesExport []Series
 
 // GroupOrder is the canonical display order of metric groups, mirroring the
 // frontend GROUP_ORDER plus home/forecast.
@@ -172,32 +170,9 @@ func formatSocTemp(v *float64) string {
 	return strconv.FormatFloat(math.Round(*v*10)/10, 'f', -1, 64)
 }
 
-// WriteCsv emits a wide-table CSV with columns
-//
-//	time.start, time.end, <group>.<entity>.energy.Wh[, <group>.<entity>.returnEnergy.Wh], …
-//
-// Only grid and battery contribute a second returnEnergy column.
-// Values are plain Wh integers (the DB is already rounded to milli-kWh) — no
-// decimal point, no thousands separator, so they survive locale-mismatched
-// spreadsheet importers unambiguously.
-func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
-	ww, _, err := export.NewLocalizedCsv(ctx, w)
-	if err != nil {
-		return err
-	}
-	return s.write(ww)
-}
-
-// WriteXlsx implements the api.XlsxWriter interface
-func (s SeriesCSV) WriteXlsx(ctx context.Context, w io.Writer) error {
-	ww, _, err := export.NewLocalizedXlsx(ctx, w)
-	if err != nil {
-		return err
-	}
-	return s.write(ww)
-}
-
-func (s SeriesCSV) write(ww export.RowWriter) error {
+// Write emits the wide table to ww: time.start, time.end, then one energy.Wh
+// column per entity (grid/battery add returnEnergy.Wh) as plain locale-safe Wh ints.
+func (s SeriesExport) Write(ww export.RowWriter) error {
 	byGroup := make(map[string][]*Series)
 	for i := range s {
 		g := s[i].Group

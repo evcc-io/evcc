@@ -36,11 +36,7 @@ func gridSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		if format == "xlsx" {
-			xlsxResult(ctx, w, &res, "gridsessions")
-		} else {
-			csvResult(ctx, w, &res, "gridsessions")
-		}
+		exportResult(ctx, w, format, &res, "gridsessions")
 		return
 	}
 
