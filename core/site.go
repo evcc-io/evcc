@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -186,6 +187,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.circuit = c
 	}
 
+	// drop references to meters that no longer exist (e.g. deleted via UI) to
+	// avoid an unrecoverable boot failure, see #31698
+	site.dropMissingMeterRefs()
+
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
 		dev, err := config.Meters().ByName(site.Meters.GridMeterRef)
@@ -336,6 +341,43 @@ func (site *Site) restoreMetersAndTitle() {
 	}
 	if v, err := settings.String(keys.ConsumerMeters); err == nil && v != "" {
 		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurable(strings.Split(v, ","))...)
+	}
+}
+
+// dropMissingMeterRefs removes meter references pointing to devices that no longer
+// exist (e.g. deleted via UI) and persists the cleanup, see #31698
+func (site *Site) dropMissingMeterRefs() {
+	exists := func(ref string) bool {
+		_, err := config.Meters().ByName(ref)
+		return err == nil
+	}
+
+	if ref := site.GetGridMeterRef(); ref != "" && !exists(ref) {
+		site.log.WARN.Printf("grid meter %s not found, removing reference", ref)
+		site.SetGridMeterRef("")
+	}
+
+	for _, m := range []struct {
+		get func() []string
+		set func([]string)
+	}{
+		{site.GetPVMeterRefs, site.SetPVMeterRefs},
+		{site.GetBatteryMeterRefs, site.SetBatteryMeterRefs},
+		{site.GetExtMeterRefs, site.SetExtMeterRefs},
+		{site.GetAuxMeterRefs, site.SetAuxMeterRefs},
+		{site.GetConsumerMeterRefs, site.SetConsumerMeterRefs},
+	} {
+		refs := m.get()
+		valid := slices.DeleteFunc(slices.Clone(refs), func(ref string) bool {
+			if exists(ref) {
+				return false
+			}
+			site.log.WARN.Printf("meter %s not found, removing reference", ref)
+			return true
+		})
+		if len(valid) != len(refs) {
+			m.set(valid)
+		}
 	}
 }
 
