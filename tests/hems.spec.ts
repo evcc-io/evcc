@@ -385,6 +385,7 @@ limit:
     await addDemoCharger(page);
     const lpModal = page.getByTestId("loadpoint-modal");
     await expectModalVisible(lpModal);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const circuitOptions = lpModal.getByLabel("Circuit").getByRole("option");
     await expect(circuitOptions).toHaveText(["---", "House [main]"]);
   });

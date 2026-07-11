@@ -367,6 +367,7 @@ export interface Loadpoint {
   smartFeedInPriorityActive: boolean;
   smartFeedInPriorityLimit: number | null;
   smartFeedInPriorityNextStart: string | null;
+  suggestion?: LoadpointSuggestion | null;
   title: string;
   vehicleClimaterActive: boolean | null;
   vehicleDetectionActive: boolean;
@@ -669,14 +670,28 @@ export interface Battery {
   forecast?: BatteryForecast;
 }
 
+export interface BatterySuggestion {
+  action: "normal" | "hold" | "charge" | "holdcharge";
+  charge?: number; // recommended charge power, W
+  discharge?: number; // recommended discharge power, W
+}
+
+export interface LoadpointSuggestion {
+  action: "charge" | "stop";
+  charge?: number; // recommended charge power, W
+  discharge?: number; // recommended discharge power, W
+}
+
 export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
+  suggestion?: BatterySuggestion;
 }
 
 export interface Vehicle {
   name: string;
+  mode?: CHARGE_MODE | "";
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;

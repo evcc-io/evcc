@@ -1,6 +1,7 @@
 package core
 
 import (
+	"math"
 	"slices"
 	"time"
 
@@ -166,6 +167,11 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
 		if res, _, err := c.GetMinMaxPower(); err == nil && res > 0 {
 			chargerMin = res / (Voltage * float64(lp.minActivePhases()))
+			// coarse chargers truncate to full amps in setLimit, so round the
+			// demand up to keep the enable gate reachable (#31549)
+			if lp.coarseCurrent() {
+				chargerMin = math.Ceil(chargerMin)
+			}
 		}
 	}
 
@@ -197,7 +203,13 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 
 	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
 		if _, res, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			maxCurrent = min(maxCurrent, res/(Voltage*float64(lp.maxActivePhases())))
+			powerMax := res / (Voltage * float64(lp.maxActivePhases()))
+			// match effectiveMinCurrent's rounding so a fixed power request
+			// (min == max) doesn't yield min > max on coarse chargers (#31549)
+			if lp.coarseCurrent() {
+				powerMax = math.Ceil(powerMax)
+			}
+			maxCurrent = min(maxCurrent, powerMax)
 		}
 	}
 

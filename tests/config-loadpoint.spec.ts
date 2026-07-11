@@ -10,6 +10,7 @@ import {
   addDemoMeter,
   addVehicle,
   newLoadpoint,
+  finishLoadpoint,
 } from "./utils";
 
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
@@ -43,6 +44,12 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
+
+    // instant-create success screen
+    await expect(lpModal.getByRole("heading", { name: "Charging point created" })).toBeVisible();
+    await expect(lpModal).toContainText("“Solar Carport” was created and uses sensible defaults.");
+
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Title")).toHaveValue("Solar Carport");
     // verify defaults
     await expect(lpModal.getByLabel("Default mode")).toHaveValue("");
@@ -146,8 +153,7 @@ test.describe("charging loadpoint", async () => {
     // add loadpoint via UI
     await newLoadpoint(page, "Garage");
     await addDemoCharger(page);
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
 
     // two loadpoints
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
@@ -203,8 +209,7 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("11.0 kW");
 
@@ -221,8 +226,7 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
 
     // two loadpoints, each with its own distinct charger
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
@@ -251,6 +255,7 @@ test.describe("charging loadpoint", async () => {
     // add loadpoint > no vehicle option
     await newLoadpoint(page, LP_1);
     await addDemoCharger(page);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Default vehicle")).not.toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -278,6 +283,7 @@ test.describe("charging loadpoint", async () => {
     // add second loadpoint
     await newLoadpoint(page, LP_2);
     await addDemoCharger(page);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await lpModal.getByLabel("Default vehicle").selectOption(VEHICLE_2);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -313,6 +319,7 @@ test.describe("charging loadpoint", async () => {
     const lpModal = page.getByTestId("loadpoint-modal");
     await newLoadpoint(page, "Carport");
     await addDemoCharger(page);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await lpModal.getByLabel("Default mode").selectOption("---");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -356,9 +363,13 @@ test.describe("charging loadpoint", async () => {
     await addDemoCharger(page);
     const lpModal = page.getByTestId("loadpoint-modal");
     await expectModalVisible(lpModal);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await lpModal.getByLabel("Default vehicle").selectOption("Porsche");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
+
+    await restart();
+    await page.reload();
 
     // delete vehicle
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
@@ -385,8 +396,7 @@ test.describe("charging loadpoint", async () => {
     await newLoadpoint(page, "Garage");
     await addDemoCharger(page);
     const lpModal = page.getByTestId("loadpoint-modal");
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
 
     // delete charger
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
@@ -397,7 +407,9 @@ test.describe("charging loadpoint", async () => {
     await chargerModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("heading", { name: "Edit Charger or Heater" })).toBeVisible();
+    await expect(
+      lpModal.getByRole("heading", { name: "Edit Charging Point or Heater" })
+    ).toBeVisible();
 
     // close modal before restarting
     await lpModal.getByRole("button", { name: "Close" }).click();
@@ -426,6 +438,8 @@ test.describe("charging loadpoint", async () => {
     const lpModal = page.getByTestId("loadpoint-modal");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
+    await restart();
+    await page.reload();
     await expect(page.getByTestId("loadpoint")).toContainText("11.0 kW");
 
     // delete charger
@@ -504,6 +518,7 @@ power:
     await expectModalVisible(lpModal);
 
     // add user-defined meter
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
@@ -585,6 +600,7 @@ power:
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
 
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const modeSelect = lpModal.getByLabel("Default mode");
     await expect(modeSelect.getByRole("option", { name: "Solar", exact: true })).toHaveCount(1);
     await expect(modeSelect.getByRole("option", { name: "Min+Solar" })).toHaveCount(0);
@@ -611,10 +627,8 @@ test.describe("heating loadpoint", async () => {
     const lpModal = page.getByTestId("loadpoint-modal");
     await addDemoCharger(page, LoadpointType.Heating);
 
-    // check heading
-    await expect(lpModal.getByRole("heading", { name: "Add Heating Device" })).toBeVisible();
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await expect(lpModal.getByRole("heading", { name: "Heater created" })).toBeVisible();
+    await finishLoadpoint(page);
 
     // restart edit
     await restart();
@@ -624,7 +638,7 @@ test.describe("heating loadpoint", async () => {
     await expect(lpEntry).toContainText("Wärmepumpe");
     await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("heading", { name: "Edit Heating Device" })).toBeVisible();
+    await expect(lpModal.getByRole("heading", { name: "Edit Heater" })).toBeVisible();
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -650,12 +664,12 @@ test.describe("heating loadpoint", async () => {
     // add loadpoint
     await newLoadpoint(page, "Wärmepumpe", LoadpointType.Heating);
     const lpModal = page.getByTestId("loadpoint-modal");
-    await lpModal.getByRole("button", { name: "Add heater" }).click();
+    await lpModal.getByRole("button", { name: "Add heating device" }).click();
 
     // add user-defined heat pump
     const modal = page.getByTestId("charger-modal");
     await expectModalVisible(modal);
-    await modal.getByLabel("Manufacturer").selectOption("User-defined heater");
+    await modal.getByLabel("Manufacturer").selectOption("User-defined heating device");
     await modal.getByLabel("Manufacturer").selectOption("User-defined heat pump");
     await modal
       .getByLabel("Manufacturer")
@@ -706,8 +720,7 @@ temp:
     await expectModalVisible(lpModal);
 
     // create
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     const lpEntry = page.getByTestId("loadpoint").first();
@@ -724,8 +737,7 @@ temp:
     await newLoadpoint(page, "Wärmepumpe", LoadpointType.Heating);
     await addDemoCharger(page, LoadpointType.Heating);
     const lpModal = page.getByTestId("loadpoint-modal");
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
 
     // delete heater
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
@@ -736,9 +748,11 @@ temp:
     await chargerModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("heading", { name: "Edit Charger or Heater" })).toBeVisible();
+    await expect(
+      lpModal.getByRole("heading", { name: "Edit Charging Point or Heater" })
+    ).toBeVisible();
     await expect(lpModal.getByRole("button", { name: "Add charging point" })).toBeVisible();
-    await expect(lpModal.getByRole("button", { name: "Add heating device" })).toBeVisible();
+    await expect(lpModal.getByRole("button", { name: "Add heater" })).toBeVisible();
   });
 });
 
