@@ -28,6 +28,17 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename str
 	}
 }
 
+func xlsxResult(ctx context.Context, w http.ResponseWriter, res any, filename string) {
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.xlsx"`)
+
+	if ww, ok := api.Cap[api.XlsxWriter](res); ok {
+		_ = ww.WriteXlsx(ctx, w)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
 // sessionHandler returns the list of charging sessions
 func sessionHandler(w http.ResponseWriter, r *http.Request) {
 	if db.Instance == nil {
@@ -72,7 +83,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if r.URL.Query().Get("format") == "csv" {
+	if format := r.URL.Query().Get("format"); format == "csv" || format == "xlsx" {
 		lang := r.URL.Query().Get("lang")
 		if lang == "" {
 			// get request language
@@ -83,7 +94,11 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, &res, filename)
+		if format == "xlsx" {
+			xlsxResult(ctx, w, &res, filename)
+		} else {
+			csvResult(ctx, w, &res, filename)
+		}
 		return
 	}
 

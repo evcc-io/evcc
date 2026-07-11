@@ -32,3 +32,10 @@ func (t *GridSessions) WriteCsv(ctx context.Context, w io.Writer) error {
 		I18nPrefix: "config.hems.csv",
 	})
 }
+
+// WriteXlsx implements the api.XlsxWriter interface
+func (t *GridSessions) WriteXlsx(ctx context.Context, w io.Writer) error {
+	return csvutil.WriteStructSliceXlsx(ctx, w, t, csvutil.Config{
+		I18nPrefix: "config.hems.csv",
+	})
+}

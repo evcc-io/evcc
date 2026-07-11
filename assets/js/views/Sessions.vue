@@ -168,6 +168,16 @@
 					>
 						{{ csvLinkLabel }}
 					</a>
+					<a
+						class="btn btn-outline-secondary"
+						tabindex="0"
+						:href="xlsxLink"
+						download
+						data-testid="sessions-download-xlsx"
+						@click="handleDownloadClick($event, xlsxLink)"
+					>
+						{{ xlsxLinkLabel }}
+					</a>
 					<button
 						v-if="!showTable"
 						class="btn btn-link text-muted"
@@ -506,12 +516,21 @@ export default defineComponent({
 			}
 		},
 		csvLink() {
+			return this.formatLink("csv");
+		},
+		xlsxLink() {
+			return this.formatLink("xlsx");
+		},
+		xlsxLinkLabel() {
 			if (this.period === PERIODS.MONTH) {
-				return this.csvHrefLink(this.year, this.month);
+				const date = new Date();
+				date.setMonth(this.month - 1, 1);
+				date.setFullYear(this.year);
+				return this.$t("sessions.xlsxPeriod", { period: this.fmtMonthYear(date) });
 			} else if (this.period === PERIODS.YEAR) {
-				return this.csvHrefLink(this.year);
+				return this.$t("sessions.xlsxPeriod", { period: this.year });
 			}
-			return this.csvHrefLink();
+			return this.$t("sessions.xlsxTotal");
 		},
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
@@ -690,9 +709,17 @@ export default defineComponent({
 			);
 			modal.show();
 		},
-		csvHrefLink(year?: number, month?: number) {
+		formatLink(format: string) {
+			if (this.period === PERIODS.MONTH) {
+				return this.hrefLink(format, this.year, this.month);
+			} else if (this.period === PERIODS.YEAR) {
+				return this.hrefLink(format, this.year);
+			}
+			return this.hrefLink(format);
+		},
+		hrefLink(format: string, year?: number, month?: number) {
 			const params = new URLSearchParams({
-				format: "csv",
+				format,
 				lang: this.$i18n?.locale,
 			});
 			if (year) params.append("year", year.toString());

@@ -60,6 +60,14 @@
 				>
 					{{ $t("config.hems.downloadCsv") }}
 				</a>
+				<a
+					:href="xlsxLink"
+					download
+					class="alert-link text-nowrap ms-3"
+					@click="handleDownloadClick($event, xlsxLink)"
+				>
+					{{ $t("config.hems.downloadXlsx") }}
+				</a>
 			</div>
 			<p v-if="fromYaml" class="text-muted">
 				{{ $t("config.general.fromYamlHint") }}
@@ -123,11 +131,10 @@ export default defineComponent({
 			return (this as any).fmtTimeAgo(ms - Date.now());
 		},
 		csvLink(): string {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-			});
-			return `./api/gridsessions?${params.toString()}`;
+			return this.formatLink("csv");
+		},
+		xlsxLink(): string {
+			return this.formatLink("xlsx");
 		},
 		docsLink(): string {
 			return `${docsPrefix()}/docs/external-limit`;
@@ -135,6 +142,13 @@ export default defineComponent({
 	},
 	methods: {
 		handleDownloadClick,
+		formatLink(format: string): string {
+			const params = new URLSearchParams({
+				format,
+				lang: this.$i18n?.locale,
+			});
+			return `./api/gridsessions?${params.toString()}`;
+		},
 		async loadSessions() {
 			try {
 				const response = await api.get("gridsessions", {

@@ -25,7 +25,7 @@ func gridSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.URL.Query().Get("format") == "csv" {
+	if format := r.URL.Query().Get("format"); format == "csv" || format == "xlsx" {
 		lang := r.URL.Query().Get("lang")
 		if lang == "" {
 			// get request language
@@ -36,7 +36,11 @@ func gridSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, &res, "gridsessions")
+		if format == "xlsx" {
+			xlsxResult(ctx, w, &res, "gridsessions")
+		} else {
+			csvResult(ctx, w, &res, "gridsessions")
+		}
 		return
 	}
 

@@ -21,6 +21,14 @@ type Config struct {
 	I18nPrefix string // e.g., "sessions.csv" or "config.hems.csv"
 }
 
+// RowWriter is the row-oriented sink shared by the CSV and XLSX exporters.
+// *csv.Writer satisfies it directly.
+type RowWriter interface {
+	Write(record []string) error
+	Flush()
+	Error() error
+}
+
 func formatValue(mp *message.Printer, value any, digits int) string {
 	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Pointer && rv.IsNil() {
 		return ""
@@ -41,7 +49,7 @@ func formatValue(mp *message.Printer, value any, digits int) string {
 	}
 }
 
-func writeHeader(ctx context.Context, ww *csv.Writer, structType any, i18nPrefix string) error {
+func writeHeader(ctx context.Context, ww RowWriter, structType any, i18nPrefix string) error {
 	localizer := locale.Localizer
 	if val, ok := ctx.Value(locale.Locale).(string); ok && val != "" {
 		localizer = i18n.NewLocalizer(locale.Bundle, val, locale.Language)
@@ -71,7 +79,7 @@ func writeHeader(ctx context.Context, ww *csv.Writer, structType any, i18nPrefix
 	return ww.Write(row)
 }
 
-func writeRow(ww *csv.Writer, mp *message.Printer, structVal any) error {
+func writeRow(ww RowWriter, mp *message.Printer, structVal any) error {
 	var row []string
 	for _, f := range structs.Fields(structVal) {
 		if f.Tag("csv") == "-" {
@@ -90,13 +98,8 @@ func writeRow(ww *csv.Writer, mp *message.Printer, structVal any) error {
 	return ww.Write(row)
 }
 
-// NewLocalizedWriter writes a UTF-8 BOM and returns a locale-configured
-// csv.Writer (German uses ';') and matching number printer.
-func NewLocalizedWriter(ctx context.Context, w io.Writer) (*csv.Writer, *message.Printer, error) {
-	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
-		return nil, nil, err
-	}
-
+// localeTag resolves the export language tag from the context.
+func localeTag(ctx context.Context) (language.Tag, error) {
 	lang := locale.Language
 	if v, ok := ctx.Value(locale.Locale).(string); ok && v != "" {
 		lang = v
@@ -104,8 +107,17 @@ func NewLocalizedWriter(ctx context.Context, w io.Writer) (*csv.Writer, *message
 	if lang == "" {
 		lang = "en"
 	}
+	return language.Parse(lang)
+}
 
-	tag, err := language.Parse(lang)
+// NewLocalizedWriter writes a UTF-8 BOM and returns a locale-configured
+// csv.Writer (German uses ';') and matching number printer.
+func NewLocalizedWriter(ctx context.Context, w io.Writer) (*csv.Writer, *message.Printer, error) {
+	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
+		return nil, nil, err
+	}
+
+	tag, err := localeTag(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -124,7 +136,11 @@ func WriteStructSlice(ctx context.Context, w io.Writer, slice any, cfg Config) e
 	if err != nil {
 		return err
 	}
+	return writeStructSlice(ctx, ww, mp, slice, cfg)
+}
 
+// writeStructSlice emits a slice of structs to any RowWriter with localized headers.
+func writeStructSlice(ctx context.Context, ww RowWriter, mp *message.Printer, slice any, cfg Config) error {
 	sliceVal := reflect.ValueOf(slice)
 	if sliceVal.Kind() == reflect.Pointer {
 		sliceVal = sliceVal.Elem()

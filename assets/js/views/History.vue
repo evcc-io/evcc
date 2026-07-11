@@ -97,6 +97,15 @@
 					>
 						{{ $t("main.history.downloadCsv") }}
 					</a>
+					<a
+						:href="xlsxLink"
+						download
+						class="text-muted small history-csv-link ms-3"
+						data-testid="history-xlsx-download"
+						@click="handleDownloadClick($event, xlsxLink)"
+					>
+						{{ $t("main.history.downloadXlsx") }}
+					</a>
 				</p>
 			</main>
 		</div>
@@ -317,14 +326,10 @@ export default defineComponent({
 			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
 		},
 		csvLink(): string {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-				from: this.from.toISOString(),
-				to: this.to.toISOString(),
-				aggregate: this.aggregate,
-			});
-			return `./api/history/energy?${params.toString()}`;
+			return this.downloadLink("csv");
+		},
+		xlsxLink(): string {
+			return this.downloadLink("xlsx");
 		},
 	},
 	watch: {
@@ -360,6 +365,16 @@ export default defineComponent({
 	methods: {
 		groupColor,
 		handleDownloadClick,
+		downloadLink(format: string): string {
+			const params = new URLSearchParams({
+				format,
+				lang: this.$i18n?.locale,
+				from: this.from.toISOString(),
+				to: this.to.toISOString(),
+				aggregate: this.aggregate,
+			});
+			return `./api/history/energy?${params.toString()}`;
+		},
 		legendsForGroup(group: string): Legend[] {
 			const items = this.entityLegends(group);
 			const focused = this.focusedEntity[group] ?? null;

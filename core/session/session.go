@@ -35,11 +35,21 @@ type Session struct {
 // Sessions is a list of sessions
 type Sessions []Session
 
-var _ api.CsvWriter = (*Sessions)(nil)
+var (
+	_ api.CsvWriter  = (*Sessions)(nil)
+	_ api.XlsxWriter = (*Sessions)(nil)
+)
 
 // WriteCsv implements the api.CsvWriter interface
 func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
 	return csvutil.WriteStructSlice(ctx, w, t, csvutil.Config{
+		I18nPrefix: "sessions.csv",
+	})
+}
+
+// WriteXlsx implements the api.XlsxWriter interface
+func (t *Sessions) WriteXlsx(ctx context.Context, w io.Writer) error {
+	return csvutil.WriteStructSliceXlsx(ctx, w, t, csvutil.Config{
 		I18nPrefix: "sessions.csv",
 	})
 }

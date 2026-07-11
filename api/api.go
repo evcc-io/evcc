@@ -259,6 +259,11 @@ type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
 
+// XlsxWriter converts to xlsx
+type XlsxWriter interface {
+	WriteXlsx(context.Context, io.Writer) error
+}
+
 // CircuitMeasurements is the measurements a circuit or load must deliver
 type CircuitMeasurements interface {
 	GetChargePower() float64

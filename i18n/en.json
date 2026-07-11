@@ -366,6 +366,7 @@
       "customOption": "User-defined integration",
       "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature. Curtailing solar production is also supported for selected devices. The actual curtailment limit must be set on each inverter configuration.",
       "downloadCsv": "Download CSV",
+      "downloadXlsx": "Download XLSX",
       "eventsRecorded": "Recorded {count} grid limitation events.",
       "generic": "Generic integrations",
       "integrations": "Integrations",
@@ -1331,6 +1332,7 @@
         }
       },
       "downloadCsv": "Download CSV",
+      "downloadXlsx": "Download XLSX",
       "empty": "No history data available for this time range.",
       "group": {
         "battery": "Battery",
@@ -1636,7 +1638,9 @@
       "price": "Cost",
       "solar": "Energy"
     },
-    "vehicle": "Vehicle"
+    "vehicle": "Vehicle",
+    "xlsxPeriod": "Download {period} XLSX",
+    "xlsxTotal": "Download total XLSX"
   },
   "settings": {
     "deviceInfo": "Settings you make in this dialog only affect this device.",

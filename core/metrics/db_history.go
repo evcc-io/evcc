@@ -185,7 +185,19 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	return s.write(ww)
+}
 
+// WriteXlsx implements the api.XlsxWriter interface
+func (s SeriesCSV) WriteXlsx(ctx context.Context, w io.Writer) error {
+	ww, _, err := csvutil.NewLocalizedXlsx(ctx, w)
+	if err != nil {
+		return err
+	}
+	return s.write(ww)
+}
+
+func (s SeriesCSV) write(ww csvutil.RowWriter) error {
 	byGroup := make(map[string][]*Series)
 	for i := range s {
 		g := s[i].Group
