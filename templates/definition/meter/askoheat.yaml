@@ -12,13 +12,6 @@ params:
     default: 502
   - name: id
     default: 1
-  - name: tempsensor
-    type: choice
-    choice: ["0", "1", "2", "3", "4"]
-    default: "0"
-    description:
-      de: Temperatursensor
-      en: Temperature sensor
 render: |
   type: custom
   power:
@@ -29,11 +22,3 @@ render: |
       address: 317
       type: input
       encoding: uint16
-  soc:
-    source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
-    register:
-      address: {{ add 325 (mul (int .tempsensor) 2) }}
-      type: input
-      encoding: float32
