@@ -8,7 +8,7 @@ requirements:
     de: |
       Nutzt die im Rahmen des EU Data Act bereitgestellten Fahrzeugdaten über das
       [VW-Konzern-Portal](https://eu-data-act.drivesomethinggreater.com). Die Anmeldung
-      erfolgt mit den Zugangsdaten der SEAT/CUPRA Connect App.
+      erfolgt mit den Zugangsdaten der My CUPRA App.
 
       Voraussetzung (einmalig im Browser): im Portal anmelden, die Einwilligung
       bestätigen, das Fahrzeug verknüpfen und eine fortlaufende Datenanfrage
@@ -17,7 +17,7 @@ requirements:
     en: |
       Uses the vehicle data provided under the EU Data Act through the [VW group
       portal](https://eu-data-act.drivesomethinggreater.com). Log in with the credentials
-      of the SEAT/CUPRA Connect app.
+      of the My CUPRA App.
 
       Prerequisite (one-time, in a browser): log in to the portal, confirm the
       consent screen, link the vehicle and enable a continuous data request
