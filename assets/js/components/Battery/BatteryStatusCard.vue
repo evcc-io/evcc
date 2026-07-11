@@ -47,8 +47,7 @@ import Card from "../Helper/Card.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import SocGauge from "./SocGauge.vue";
 import OptimizerInfo from "./OptimizerInfo.vue";
-import { BATTERY_MODE, type BatteryForecast } from "@/types/evcc";
-import type { BatterySuggestion } from "./types";
+import { BATTERY_MODE, type BatteryForecast, type BatterySuggestion } from "@/types/evcc";
 
 export default defineComponent({
 	name: "BatteryStatusCard",
@@ -130,6 +129,11 @@ export default defineComponent({
 	grid-template-columns: repeat(3, 1fr);
 	align-items: start;
 	gap: 0.5rem;
+}
+.optimizer {
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--bs-border-color);
 }
 .values :deep(.root) {
 	margin-bottom: 0;

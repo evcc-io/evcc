@@ -24,7 +24,6 @@
 			:win-start="winStart.getTime()"
 			:win-end="winEnd.getTime()"
 			:now="now.getTime()"
-			:has-forecast="windowHasForecast"
 			:day-offset="dayOffset"
 			:focused="focusedBattery"
 		/>
@@ -51,6 +50,7 @@ import WindowNav from "./WindowNav.vue";
 import BatteryHistoryChart from "./BatteryHistoryChart.vue";
 
 const HOUR = 3600 * 1000;
+const DAY = 24 * HOUR;
 const MIN_OFFSET = -30; // page back ~30 days
 
 // History + forecast chart with its date navigation, unit toggle and legend. Presentation
@@ -91,21 +91,18 @@ export default defineComponent({
 		hasForecastData(): boolean {
 			return this.batteries.some((b) => b.forecast.length > 0);
 		},
-		windowHasForecast(): boolean {
-			return this.hasForecastData && this.winEnd > this.now;
-		},
 		winStart(): Date {
 			const baseStartH = this.hasForecastData ? 24 : 48;
-			return new Date(this.now.getTime() - baseStartH * HOUR + this.dayOffset * 24 * HOUR);
+			return new Date(this.now.getTime() - baseStartH * HOUR + this.dayOffset * DAY);
 		},
 		winEnd(): Date {
 			const baseEndH = this.hasForecastData ? 24 : 0;
-			return new Date(this.now.getTime() + baseEndH * HOUR + this.dayOffset * 24 * HOUR);
+			return new Date(this.now.getTime() + baseEndH * HOUR + this.dayOffset * DAY);
 		},
 		windowLabel(): string {
-			// short weekday + day, no month (e.g. "Sa. 27. – Mo. 29.")
-			const fmt = (d: Date) => `${this.weekdayShort(d)} ${d.getDate()}.`;
-			return `${fmt(this.winStart)} – ${fmt(this.winEnd)}`;
+			// day of "now" shifted by paging; this is the only fully visible day
+			const d = new Date(this.now.getTime() + this.dayOffset * DAY);
+			return this.relativeDayName(d) ?? `${this.weekdayShort(d)} ${d.getDate()}.`;
 		},
 		prevDisabled(): boolean {
 			return this.dayOffset <= MIN_OFFSET;

@@ -45,6 +45,9 @@ const (
 	// loadpoint setpoint
 	OfferedCurrent = "offeredCurrent" // offered current
 
+	// optimizer
+	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
+
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below

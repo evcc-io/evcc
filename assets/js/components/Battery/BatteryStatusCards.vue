@@ -2,7 +2,10 @@
 	<div v-if="showSplit" class="cards cards--split gap-4">
 		<BatteryStatusCard v-bind="cards[0]" :battery-mode="batteryMode" />
 		<Card data-testid="battery-optimizer-card">
-			<OptimizerInfo :suggestion="suggestion" :forecast="batteryForecast" />
+			<OptimizerInfo
+				:suggestion="devices[0]?.suggestion ?? null"
+				:forecast="batteryForecast"
+			/>
 		</Card>
 	</div>
 	<div v-else class="cards gap-4">
@@ -22,7 +25,7 @@ import type { BATTERY_MODE, Battery, BatteryForecast, BatteryMeter } from "@/typ
 import Card from "../Helper/Card.vue";
 import BatteryStatusCard from "./BatteryStatusCard.vue";
 import OptimizerInfo from "./OptimizerInfo.vue";
-import type { BatterySuggestion, BatteryStatusCardModel } from "./types";
+import type { BatteryStatusCardModel } from "./types";
 
 // One battery + forecast splits into battery and optimizer cards; several batteries prepend a
 // combined aggregate. Stateless, derived from the battery object.
@@ -32,7 +35,6 @@ export default defineComponent({
 	props: {
 		battery: { type: Object as PropType<Battery> },
 		batteryMode: String as PropType<BATTERY_MODE>,
-		suggestion: { type: Object as PropType<BatterySuggestion | null>, default: null },
 	},
 	computed: {
 		devices(): BatteryMeter[] {
@@ -43,7 +45,9 @@ export default defineComponent({
 			return fc?.highest || fc?.lowest ? fc : null;
 		},
 		showSplit(): boolean {
-			return this.devices.length === 1 && !!this.batteryForecast;
+			return (
+				this.devices.length === 1 && !!(this.batteryForecast || this.devices[0]?.suggestion)
+			);
 		},
 		cards(): BatteryStatusCardModel[] {
 			const multiple = this.devices.length > 1;
@@ -55,7 +59,8 @@ export default defineComponent({
 				capacity: d.capacity || 0,
 				color: batteryColor(i),
 				controllable: d.controllable,
-				suggestion: null, // per-battery suggestion not wired yet
+				// single battery shows the suggestion on the dedicated optimizer card
+				suggestion: multiple ? (d.suggestion ?? null) : null,
 				forecast: null, // aggregate forecast lives on the combined / dedicated card
 			}));
 			// combined uses the site aggregate soc/power, not per-device sums; the site-wide
@@ -69,7 +74,7 @@ export default defineComponent({
 					capacity: this.devices.reduce((s, d) => s + (d.capacity || 0), 0),
 					color: batteryColor(0),
 					controllable: true,
-					suggestion: this.suggestion,
+					suggestion: null, // no aggregate; device cards show their own
 					forecast: this.batteryForecast,
 				});
 			}
