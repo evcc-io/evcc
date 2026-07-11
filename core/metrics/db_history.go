@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/util/export"
 )
 
 // Slot represents an aggregated energy time slot
@@ -181,7 +181,7 @@ func formatSocTemp(v *float64) string {
 // decimal point, no thousands separator, so they survive locale-mismatched
 // spreadsheet importers unambiguously.
 func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
-	ww, _, err := csvutil.NewLocalizedWriter(ctx, w)
+	ww, _, err := export.NewLocalizedCsv(ctx, w)
 	if err != nil {
 		return err
 	}
@@ -190,14 +190,14 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 
 // WriteXlsx implements the api.XlsxWriter interface
 func (s SeriesCSV) WriteXlsx(ctx context.Context, w io.Writer) error {
-	ww, _, err := csvutil.NewLocalizedXlsx(ctx, w)
+	ww, _, err := export.NewLocalizedXlsx(ctx, w)
 	if err != nil {
 		return err
 	}
 	return s.write(ww)
 }
 
-func (s SeriesCSV) write(ww csvutil.RowWriter) error {
+func (s SeriesCSV) write(ww export.RowWriter) error {
 	byGroup := make(map[string][]*Series)
 	for i := range s {
 		g := s[i].Group

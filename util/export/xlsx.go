@@ -1,4 +1,4 @@
-package csv
+package export
 
 import (
 	"context"
@@ -24,9 +24,6 @@ func newXlsxWriter(w io.Writer) *xlsxWriter {
 }
 
 func (x *xlsxWriter) Write(record []string) error {
-	if x.err != nil {
-		return x.err
-	}
 	for i, v := range record {
 		cell, err := excelize.CoordinatesToCellName(i+1, x.row)
 		if err != nil {
@@ -56,7 +53,7 @@ func (x *xlsxWriter) Error() error {
 }
 
 // NewLocalizedXlsx returns an xlsx-backed RowWriter and a matching locale
-// number printer, mirroring NewLocalizedWriter.
+// number printer, mirroring NewLocalizedCsv.
 func NewLocalizedXlsx(ctx context.Context, w io.Writer) (RowWriter, *message.Printer, error) {
 	tag, err := localeTag(ctx)
 	if err != nil {

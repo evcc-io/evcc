@@ -5,7 +5,7 @@ import (
 	"io"
 	"time"
 
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/util/export"
 )
 
 type GridSession struct {
@@ -28,14 +28,14 @@ type GridSessions []GridSession
 
 // WriteCsv implements the api.CsvWriter interface
 func (t *GridSessions) WriteCsv(ctx context.Context, w io.Writer) error {
-	return csvutil.WriteStructSlice(ctx, w, t, csvutil.Config{
+	return export.WriteStructSlice(ctx, w, t, export.Config{
 		I18nPrefix: "config.hems.csv",
 	})
 }
 
 // WriteXlsx implements the api.XlsxWriter interface
 func (t *GridSessions) WriteXlsx(ctx context.Context, w io.Writer) error {
-	return csvutil.WriteStructSliceXlsx(ctx, w, t, csvutil.Config{
+	return export.WriteStructSliceXlsx(ctx, w, t, export.Config{
 		I18nPrefix: "config.hems.csv",
 	})
 }

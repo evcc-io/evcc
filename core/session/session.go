@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/util/export"
 )
 
 // Session is a single charging session
@@ -42,14 +42,14 @@ var (
 
 // WriteCsv implements the api.CsvWriter interface
 func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
-	return csvutil.WriteStructSlice(ctx, w, t, csvutil.Config{
+	return export.WriteStructSlice(ctx, w, t, export.Config{
 		I18nPrefix: "sessions.csv",
 	})
 }
 
 // WriteXlsx implements the api.XlsxWriter interface
 func (t *Sessions) WriteXlsx(ctx context.Context, w io.Writer) error {
-	return csvutil.WriteStructSliceXlsx(ctx, w, t, csvutil.Config{
+	return export.WriteStructSliceXlsx(ctx, w, t, export.Config{
 		I18nPrefix: "sessions.csv",
 	})
 }

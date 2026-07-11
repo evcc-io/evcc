@@ -1,10 +1,8 @@
-package csv
+package export
 
 import (
 	"context"
-	"encoding/csv"
 	"fmt"
-	"io"
 	"reflect"
 	"strings"
 	"time"
@@ -16,18 +14,6 @@ import (
 	"golang.org/x/text/message"
 	"golang.org/x/text/number"
 )
-
-type Config struct {
-	I18nPrefix string // e.g., "sessions.csv" or "config.hems.csv"
-}
-
-// RowWriter is the row-oriented sink shared by the CSV and XLSX exporters.
-// *csv.Writer satisfies it directly.
-type RowWriter interface {
-	Write(record []string) error
-	Flush()
-	Error() error
-}
 
 func formatValue(mp *message.Printer, value any, digits int) string {
 	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Pointer && rv.IsNil() {
@@ -108,35 +94,6 @@ func localeTag(ctx context.Context) (language.Tag, error) {
 		lang = "en"
 	}
 	return language.Parse(lang)
-}
-
-// NewLocalizedWriter writes a UTF-8 BOM and returns a locale-configured
-// csv.Writer (German uses ';') and matching number printer.
-func NewLocalizedWriter(ctx context.Context, w io.Writer) (*csv.Writer, *message.Printer, error) {
-	if _, err := w.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
-		return nil, nil, err
-	}
-
-	tag, err := localeTag(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ww := csv.NewWriter(w)
-	if b, _ := tag.Base(); b.String() == language.German.String() {
-		ww.Comma = ';'
-	}
-
-	return ww, message.NewPrinter(tag), nil
-}
-
-// WriteStructSlice writes a slice of structs to CSV format with localized headers
-func WriteStructSlice(ctx context.Context, w io.Writer, slice any, cfg Config) error {
-	ww, mp, err := NewLocalizedWriter(ctx, w)
-	if err != nil {
-		return err
-	}
-	return writeStructSlice(ctx, ww, mp, slice, cfg)
 }
 
 // writeStructSlice emits a slice of structs to any RowWriter with localized headers.
