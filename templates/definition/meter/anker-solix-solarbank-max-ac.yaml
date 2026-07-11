@@ -16,7 +16,6 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 1
-  - name: maxacpower
   - preset: battery-params
 render: |
   type: custom
