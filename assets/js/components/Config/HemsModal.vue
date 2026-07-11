@@ -52,7 +52,7 @@
 						$t("config.hems.lastEvent", { timeAgo: lastEventTimeAgo })
 					}}</span>
 				</div>
-				<DownloadDropdown
+				<DownloadButtons
 					:label="$t('config.hems.download')"
 					:csvHref="formatLink('csv')"
 					:xlsxHref="formatLink('xlsx')"
@@ -75,7 +75,7 @@ import { customTemplateOption, type TemplateGroup } from "./DeviceModal/Template
 import customHemsYaml from "./defaultYaml/customHems.yaml?raw";
 import api from "../../api";
 import { docsPrefix } from "@/i18n";
-import DownloadDropdown from "../Helper/DownloadDropdown.vue";
+import DownloadButtons from "../Helper/DownloadButtons.vue";
 import formatter from "../../mixins/formatter";
 
 const initialValues = {
@@ -88,7 +88,7 @@ const initialValues = {
 
 export default defineComponent({
 	name: "HemsModal",
-	components: { DeviceModalBase, DownloadDropdown },
+	components: { DeviceModalBase, DownloadButtons },
 	mixins: [formatter],
 	props: {
 		yamlSource: String as PropType<YamlSource>,

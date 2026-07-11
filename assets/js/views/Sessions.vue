@@ -158,7 +158,7 @@
 					/>
 				</Card>
 				<div class="d-flex gap-2 my-3">
-					<DownloadDropdown
+					<DownloadButtons
 						:label="downloadLabel"
 						:csvHref="formatLink('csv')"
 						:xlsxHref="formatLink('xlsx')"
@@ -214,7 +214,7 @@ import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import DownloadDropdown from "../components/Helper/DownloadDropdown.vue";
+import DownloadButtons from "../components/Helper/DownloadButtons.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
@@ -227,7 +227,7 @@ export default defineComponent({
 		SessionTable,
 		TopHeader: Header,
 		Card,
-		DownloadDropdown,
+		DownloadButtons,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,

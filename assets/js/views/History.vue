@@ -88,7 +88,7 @@
 					/>
 				</Card>
 				<div v-if="visibleGroups.length" class="d-flex justify-content-end mt-3">
-					<DownloadDropdown
+					<DownloadButtons
 						:label="$t('main.history.download')"
 						:csvHref="downloadLink('csv')"
 						:xlsxHref="downloadLink('xlsx')"
@@ -113,7 +113,7 @@ import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import DownloadDropdown from "../components/Helper/DownloadDropdown.vue";
+import DownloadButtons from "../components/Helper/DownloadButtons.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -134,7 +134,7 @@ export default defineComponent({
 		PeriodHeader,
 		GroupChart,
 		LegendList,
-		DownloadDropdown,
+		DownloadButtons,
 	},
 	mixins: [formatter],
 	props: {
