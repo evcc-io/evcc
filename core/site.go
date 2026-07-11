@@ -104,6 +104,7 @@ type Site struct {
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
 	smartFeedInDisableActive bool                        // Smart feed-in disable active
+	curtailPercent           *int                        // last curtail percent applied to PV meters (nil = never applied)
 }
 
 // MetersConfig contains the site's meter configuration
@@ -163,10 +164,8 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 	if site.smartFeedInDisableAvailable() {
 		shutdown.Register(func() {
-			if site.SmartFeedInDisableActive() {
-				if err := site.setFeedInDisable(false); err != nil {
-					site.log.ERROR.Printf("smart feed-in disable: %v", err)
-				}
+			if err := site.revertSmartFeedInCurtail(); err != nil {
+				site.log.ERROR.Printf("smart feed-in disable: %v", err)
 			}
 		})
 	}
@@ -1050,21 +1049,14 @@ func (site *Site) update(lp updater) {
 	}
 
 	if site.hems != nil {
-		var wg sync.WaitGroup
+		if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
+			site.log.ERROR.Println(err)
+		}
+	}
 
-		wg.Go(func() {
-			if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
-				site.log.ERROR.Println(err)
-			}
-		})
-
-		wg.Go(func() {
-			if err := site.curtailPV(hemsCurtailed(site.hems)); err != nil {
-				site.log.ERROR.Println(err)
-			}
-		})
-
-		wg.Wait()
+	// curtail PV to the strictest of grid-required (HEMS) and smart feed-in disable
+	if err := site.curtailPV(site.effectiveCurtailPercent()); err != nil {
+		site.log.ERROR.Println(err)
 	}
 
 	// prioritize if possible

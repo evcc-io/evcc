@@ -94,7 +94,13 @@ func (site *Site) curtailPV(percent *int) error {
 		return nil
 	}
 
-	curtail := *percent < 100
+	// skip if unchanged since the last successful apply
+	site.RLock()
+	unchanged := site.curtailPercent != nil && *site.curtailPercent == *percent
+	site.RUnlock()
+	if unchanged {
+		return nil
+	}
 
 	var errs error
 	for _, dev := range site.pvMeters {
@@ -103,22 +109,18 @@ func (site *Site) curtailPV(percent *int) error {
 			continue
 		}
 
-		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			if curtail == curtailed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
-			}
-			continue
-		}
-
 		if err := m.SetCurtailPercent(*percent); err == nil {
 			site.log.DEBUG.Printf("%s curtail: %d%%", deviceTitleOrName(dev), *percent)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
 		}
+	}
+
+	// cache only on full success, so any error reapplies next cycle
+	if errs == nil {
+		site.Lock()
+		site.curtailPercent = percent
+		site.Unlock()
 	}
 
 	return errs

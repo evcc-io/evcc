@@ -24,8 +24,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		measurement.Curtailer `mapstructure:",squash"` // optional
 
 		// pv
-		pvMaxACPower             `mapstructure:",squash"`
-		FeedInDisableLimitEnable *plugin.Config // optional
+		pvMaxACPower `mapstructure:",squash"`
 
 		// battery
 		batteryCapacity    `mapstructure:",squash"`

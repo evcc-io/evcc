@@ -35,32 +35,35 @@ func (site *Site) UpdateSmartFeedInDisable(rate api.Rate) error {
 		return nil
 	}
 
-	err := site.setFeedInDisable(enable)
-	if err == nil {
-		site.Lock()
-		site.smartFeedInDisableActive = enable
-		site.publish(keys.SmartFeedInDisableActive, enable)
-		site.Unlock()
-	}
-
-	return err
-}
-
-func (site *Site) setFeedInDisable(enable bool) error {
-	for _, dev := range site.pvMeters {
-		meter := dev.Instance()
-
-		if fl, ok := meter.(api.Curtailer); ok {
-			limit := 100
-			if enable {
-				limit = 0
-			}
-
-			if err := fl.SetCurtailPercent(limit); err != nil {
-				return err
-			}
-		}
-	}
+	// flag only; curtailPV applies the effective percent every cycle
+	site.Lock()
+	site.smartFeedInDisableActive = enable
+	site.publish(keys.SmartFeedInDisableActive, enable)
+	site.Unlock()
 
 	return nil
+}
+
+// effectiveCurtailPercent is the strictest curtailment of grid-required (HEMS)
+// and smart feed-in disable (0% = fully curtailed). nil = no active limit.
+func (site *Site) effectiveCurtailPercent() *int {
+	if site.SmartFeedInDisableActive() {
+		return new(0)
+	}
+	return hemsCurtailed(site.hems)
+}
+
+// revertSmartFeedInCurtail drops smart feed-in's curtailment and restores the
+// grid-required level (100% = uncurtailed when no grid limit). Used on shutdown.
+func (site *Site) revertSmartFeedInCurtail() error {
+	if !site.SmartFeedInDisableActive() {
+		return nil
+	}
+
+	percent := 100
+	if p := hemsCurtailed(site.hems); p != nil {
+		percent = *p
+	}
+
+	return site.curtailPV(&percent)
 }

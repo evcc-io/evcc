@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -9,6 +10,67 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+// curtailSite builds a Site with a single PV meter that also implements api.Curtailer
+func curtailSite(t *testing.T) (*Site, *api.MockCurtailer) {
+	t.Helper()
+	ctrl := gomock.NewController(t)
+
+	cm := &struct {
+		api.Meter
+		api.Curtailer
+	}{
+		Meter:     api.NewMockMeter(ctrl),
+		Curtailer: api.NewMockCurtailer(ctrl),
+	}
+
+	s := &Site{
+		log:      util.NewLogger("foo"),
+		pvMeters: []config.Device[api.Meter]{config.NewStaticDevice[api.Meter](config.Named{}, cm)},
+	}
+
+	return s, cm.Curtailer.(*api.MockCurtailer)
+}
+
+func TestCurtailPV(t *testing.T) {
+	s, mc := curtailSite(t)
+
+	// first apply writes
+	mc.EXPECT().SetCurtailPercent(60).Return(nil)
+	require.NoError(t, s.curtailPV(new(60)))
+
+	// unchanged: no write
+	require.NoError(t, s.curtailPV(new(60)))
+
+	// changed: writes
+	mc.EXPECT().SetCurtailPercent(100).Return(nil)
+	require.NoError(t, s.curtailPV(new(100)))
+}
+
+func TestCurtailPVReapplyOnError(t *testing.T) {
+	s, mc := curtailSite(t)
+
+	// error: cache not advanced
+	mc.EXPECT().SetCurtailPercent(0).Return(errors.New("nope"))
+	require.Error(t, s.curtailPV(new(0)))
+
+	// same percent reapplied because previous attempt failed
+	mc.EXPECT().SetCurtailPercent(0).Return(nil)
+	require.NoError(t, s.curtailPV(new(0)))
+}
+
+func TestRevertSmartFeedInCurtail(t *testing.T) {
+	// inactive: nothing happens
+	s, _ := curtailSite(t)
+	require.NoError(t, s.revertSmartFeedInCurtail())
+
+	// active without HEMS: restore to uncurtailed (100%)
+	s, mc := curtailSite(t)
+	s.smartFeedInDisableActive = true
+	s.curtailPercent = new(0) // feed-in previously curtailed to 0%
+	mc.EXPECT().SetCurtailPercent(100).Return(nil)
+	require.NoError(t, s.revertSmartFeedInCurtail())
+}
 
 func TestDimming(t *testing.T) {
 	ctrl := gomock.NewController(t)
