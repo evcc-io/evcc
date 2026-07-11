@@ -113,7 +113,7 @@ const suggestionThreshold = 50
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64, current string) types.Suggestion {
 	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
 		return types.Suggestion{}
 	}
@@ -143,6 +143,9 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 	} else {
 		s.Action = "stop"
 	}
+
+	// actionable when the suggested action differs from the current operating mode
+	s.Actionable = s.Action != current
 
 	return s
 }
@@ -410,7 +413,19 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 		batteries = append(batteries, batResult)
 
-		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours)
+		// current operating mode to detect an actionable change
+		var current string
+		if detail.Type == batteryTypeBattery {
+			current = site.GetBatteryMode().String()
+		} else if detail.loadpoint != nil {
+			if site.loadpoints[*detail.loadpoint].IsEnabled() {
+				current = "charge"
+			} else {
+				current = "stop"
+			}
+		}
+
+		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours, current)
 		if suggestion.Action == "" {
 			continue
 		}
