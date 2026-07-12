@@ -4,7 +4,6 @@
 			class="btn btn-outline-secondary"
 			:href="hrefFor('xlsx')"
 			download
-			data-testid="download-default"
 			@click="handleDownloadClick($event, hrefFor('xlsx'))"
 		>
 			{{ label }}
@@ -18,15 +17,14 @@
 			<span class="visually-hidden">{{ label }}</span>
 		</button>
 		<ul class="dropdown-menu">
-			<li v-for="{ format, title } in formats" :key="format">
+			<li v-for="format in formats" :key="format">
 				<a
 					class="dropdown-item"
 					:href="hrefFor(format)"
 					download
-					:data-testid="`download-${format}`"
 					@click="handleDownloadClick($event, hrefFor(format))"
 				>
-					{{ title }}
+					{{ format.toUpperCase() }}
 				</a>
 			</li>
 		</ul>
@@ -46,11 +44,7 @@ export default defineComponent({
 	},
 	computed: {
 		formats() {
-			return [
-				{ format: "xlsx", title: this.$t("general.downloadXlsx") },
-				{ format: "csv", title: this.$t("general.downloadCsv") },
-				{ format: "json", title: this.$t("general.downloadJson") },
-			];
+			return ["xlsx", "csv", "json"];
 		},
 	},
 	methods: {
@@ -61,3 +55,9 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style scoped>
+.dropdown-menu {
+	--bs-dropdown-min-width: 0;
+}
+</style>

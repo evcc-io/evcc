@@ -55,9 +55,12 @@ test.describe("HEMS", () => {
     await expect(hemsModal).toContainText("Recorded 3 grid limitation events");
     await expect(hemsModal).toContainText("Most recent");
 
-    const csvLink = hemsModal.getByTestId("download-csv");
-    await expect(csvLink).toHaveAttribute("href", "./api/gridsessions?lang=en&format=csv");
-    await expect(hemsModal.getByTestId("download-xlsx")).toHaveAttribute(
+    await hemsModal.getByRole("button", { name: "Download" }).click();
+    await expect(hemsModal.getByRole("link", { name: "CSV" })).toHaveAttribute(
+      "href",
+      "./api/gridsessions?lang=en&format=csv"
+    );
+    await expect(hemsModal.getByRole("link", { name: "XLSX" })).toHaveAttribute(
       "href",
       "./api/gridsessions?lang=en&format=xlsx"
     );
@@ -345,8 +348,7 @@ w3:
       await expectModalVisible(hemsModal);
 
       await hemsModal.getByRole("button", { name: "Download" }).click();
-      const csvLink = hemsModal.getByTestId("download-csv");
-      await csvLink.click();
+      await hemsModal.getByRole("link", { name: "CSV" }).click();
       expect(await expectAppEvent(page)).toMatchObject({
         type: "download",
         url: expect.stringContaining("/api/gridsessions?lang=en&format=csv"),

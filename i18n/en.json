@@ -1134,9 +1134,6 @@
   },
   "general": {
     "download": "Download",
-    "downloadCsv": "Download CSV",
-    "downloadJson": "Download JSON",
-    "downloadXlsx": "Download XLSX",
     "note": "Note:"
   },
   "header": {

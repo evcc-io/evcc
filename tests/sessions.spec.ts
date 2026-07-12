@@ -272,18 +272,26 @@ const date = new Date();
 const YEAR = date.getFullYear();
 const MONTH = date.getMonth() + 1;
 
+const openDownloadMenu = async (page: Page) => {
+  const toggle = page.getByRole("button", { name: "Download" });
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") {
+    await toggle.click();
+  }
+};
+
 test.describe("csv export", async () => {
   test("total export", async ({ page }) => {
     await page.goto("/#/sessions?period=total");
-    await expect(page.getByTestId("download-csv")).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
       "./api/sessions?lang=en&format=csv"
     );
-    await expect(page.getByTestId("download-xlsx")).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "XLSX" })).toHaveAttribute(
       "href",
       "./api/sessions?lang=en&format=xlsx"
     );
-    await expect(page.getByTestId("download-json")).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "JSON" })).toHaveAttribute(
       "href",
       "./api/sessions?lang=en&format=json"
     );
@@ -291,28 +299,32 @@ test.describe("csv export", async () => {
   test("year export", async ({ page }) => {
     // fixed year
     await page.goto("/#/sessions?period=year&year=2023");
-    await expect(page.getByTestId("download-csv")).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
       "./api/sessions?lang=en&year=2023&format=csv"
     );
 
     // current year
     await page.goto(`/#/sessions?period=year`);
-    await expect(page.getByTestId("download-csv")).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
       `./api/sessions?lang=en&year=${YEAR}&format=csv`
     );
   });
   test("monthly export", async ({ page }) => {
     await page.goto("/#/sessions?&year=2023&month=5");
-    await expect(page.getByTestId("download-csv")).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
       "./api/sessions?lang=en&year=2023&month=5&format=csv"
     );
 
     // current month
     await page.goto(`/#/sessions`);
-    await expect(page.getByTestId("download-csv")).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
       `./api/sessions?lang=en&year=${YEAR}&month=${MONTH}&format=csv`
     );
@@ -323,8 +335,8 @@ test.describe("csv export download", async () => {
   test("in browser context", async ({ page }) => {
     await page.goto("/#/sessions?period=total");
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Download" }).click();
-    await page.getByTestId("download-csv").click();
+    await openDownloadMenu(page);
+    await page.getByRole("link", { name: "CSV" }).click();
     const download = await downloadPromise;
     expect(download.url()).toContain("format=csv");
     expect(download.suggestedFilename()).toBe("session.csv");
@@ -333,7 +345,7 @@ test.describe("csv export download", async () => {
   test("xlsx via default button", async ({ page }) => {
     await page.goto("/#/sessions?period=total");
     const downloadPromise = page.waitForEvent("download");
-    await page.getByTestId("download-default").click();
+    await page.getByRole("link", { name: "Download" }).click();
     const download = await downloadPromise;
     expect(download.url()).toContain("format=xlsx");
     expect(download.suggestedFilename()).toBe("session.xlsx");
@@ -342,8 +354,8 @@ test.describe("csv export download", async () => {
   test("json with attachment header", async ({ page }) => {
     await page.goto("/#/sessions?period=total");
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Download" }).click();
-    await page.getByTestId("download-json").click();
+    await openDownloadMenu(page);
+    await page.getByRole("link", { name: "JSON" }).click();
     const download = await downloadPromise;
     expect(download.url()).toContain("format=json");
     expect(download.suggestedFilename()).toBe("session.json");
@@ -352,8 +364,8 @@ test.describe("csv export download", async () => {
   test("in app context", async ({ page }) => {
     await enableAppContext(page);
     await page.goto("/#/sessions?period=total");
-    await page.getByRole("button", { name: "Download" }).click();
-    await page.getByTestId("download-csv").click();
+    await openDownloadMenu(page);
+    await page.getByRole("link", { name: "CSV" }).click();
     expect(await expectAppEvent(page)).toMatchObject({
       type: "download",
       url: expect.stringContaining("/api/sessions?lang=en&format=csv"),
