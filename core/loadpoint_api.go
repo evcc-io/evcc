@@ -142,6 +142,13 @@ func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 	return lp.status
 }
 
+// IsEnabled returns the charger enabled state
+func (lp *Loadpoint) IsEnabled() bool {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.enabled
+}
+
 // GetMode returns loadpoint charge mode
 func (lp *Loadpoint) GetMode() api.ChargeMode {
 	lp.RLock()

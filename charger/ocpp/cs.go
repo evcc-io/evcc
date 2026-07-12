@@ -175,7 +175,17 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 		cp.onTransportConnect()
 	}
 
-	return cp, init(cp)
+	err := init(cp)
+	if err != nil {
+		// allow retry on next call instead of permanently caching a failed setup
+		cs.mu.Lock()
+		if reg.cp == cp {
+			reg.cp = nil
+		}
+		cs.mu.Unlock()
+	}
+
+	return cp, err
 }
 
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler

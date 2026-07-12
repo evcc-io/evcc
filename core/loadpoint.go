@@ -1027,6 +1027,21 @@ func (lp *Loadpoint) charging() bool {
 	return lp.GetStatus() == api.StatusC
 }
 
+// pvChargeStarting reports a PV loadpoint claiming surplus but not yet drawing it
+// (enable timer running, or enabled but not yet charging). See #31194.
+func (lp *Loadpoint) pvChargeStarting() bool {
+	if lp.GetMode() != api.ModePV || !lp.connected() {
+		return false
+	}
+
+	lp.RLock()
+	enabled, timer := lp.enabled, lp.pvTimer
+	lp.RUnlock()
+
+	// enable timer running (not yet enabled), or enabled but vehicle not yet charging
+	return (!enabled && !timer.IsZero()) || (enabled && !lp.charging())
+}
+
 // setStatus updates the internal charging state according to EV
 func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 	lp.Lock()

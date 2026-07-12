@@ -1,12 +1,9 @@
 package session
 
 import (
-	"context"
-	"io"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/util/export"
 )
 
 // Session is a single charging session
@@ -35,11 +32,11 @@ type Session struct {
 // Sessions is a list of sessions
 type Sessions []Session
 
-var _ api.CsvWriter = (*Sessions)(nil)
+var _ export.Writer = (*Sessions)(nil)
 
-// WriteCsv implements the api.CsvWriter interface
-func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
-	return csvutil.WriteStructSlice(ctx, w, t, csvutil.Config{
+// Write implements the export.Writer interface
+func (t *Sessions) Write(ww export.RowWriter) error {
+	return export.WriteStructSlice(ww, t, export.Config{
 		I18nPrefix: "sessions.csv",
 	})
 }
