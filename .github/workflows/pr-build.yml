@@ -6,6 +6,7 @@ name: PR Build
 #   /build arm      linux arm64 + arm/v6 only
 #   /build docker   multiarch docker image only, no binaries
 #   /nightly        nightly packages (.deb/.tar.gz) built from the PR head
+#   /help           post the command reference as a comment, build nothing
 # Uploads downloadable binaries/packages and publishes a docker image tagged pr-<number>.
 
 on:
@@ -18,10 +19,10 @@ permissions:
 jobs:
   prep:
     name: Prepare
-    # only on PR comments starting with /build or /nightly, and only from maintainers
+    # only on PR comments starting with /build, /nightly or /help, and only from maintainers
     if: |
       github.event.issue.pull_request &&
-      (startsWith(github.event.comment.body, '/build') || startsWith(github.event.comment.body, '/nightly')) &&
+      (startsWith(github.event.comment.body, '/build') || startsWith(github.event.comment.body, '/nightly') || startsWith(github.event.comment.body, '/help')) &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:
@@ -59,6 +60,7 @@ jobs:
           esac
           case "$cmd" in
             /nightly) echo "cmd=nightly" >> "$GITHUB_OUTPUT" ;;
+            /help)    echo "cmd=help"    >> "$GITHUB_OUTPUT" ;;
             *)        echo "cmd=build"   >> "$GITHUB_OUTPUT" ;;
           esac
           echo "archs=$archs" >> "$GITHUB_OUTPUT"
@@ -202,10 +204,45 @@ jobs:
             release/*.tar.gz
           retention-days: 14
 
+  help:
+    name: Help
+    needs: prep
+    if: needs.prep.outputs.cmd == 'help'
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment command reference
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const body = [
+              '### PR build commands',
+              '',
+              'Maintainer-only slash commands. All build from the PR head commit and reply with the result.',
+              '',
+              '| Comment | What it builds |',
+              '| --- | --- |',
+              '| `/build` | Linux binaries (amd64 + arm64 + arm/v6) **and** the multi-arch docker image |',
+              '| `/build amd` | linux amd64 binary only |',
+              '| `/build arm` | linux arm64 + arm/v6 binaries only |',
+              '| `/build docker` | multi-arch docker image only, no binaries |',
+              '| `/nightly` | nightly `.deb` / `.tar.gz` packages (goreleaser snapshot) |',
+              '| `/help` | this reference |',
+              '',
+              'Binaries and packages are uploaded as run artifacts (14-day retention); the docker image is pushed as `evcc/evcc:pr-<number>`.',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body,
+            });
+
   report:
     name: Report
     needs: [prep, binaries, docker, nightly]
-    if: always() && needs.prep.result == 'success'
+    if: always() && needs.prep.result == 'success' && needs.prep.outputs.cmd != 'help'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       pull-requests: write
