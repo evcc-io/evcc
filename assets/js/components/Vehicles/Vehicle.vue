@@ -98,6 +98,7 @@ import {
 	type VehicleStatus,
 	type Vehicle,
 	type LoadpointUi,
+	type LoadpointSuggestion,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
@@ -162,6 +163,7 @@ export default defineComponent({
 		smartFeedInPriorityNextStart: String,
 		smartFeedInPriorityLimit: Number,
 		socBasedCharging: Boolean,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
 		tariffGrid: Number,

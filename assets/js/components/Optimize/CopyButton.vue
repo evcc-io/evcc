@@ -1,6 +1,6 @@
 <template>
 	<button
-		class="btn btn-link position-absolute text-primary rounded"
+		class="btn btn-link position-absolute text-primary"
 		:style="buttonStyle"
 		:title="copied ? 'Copied!' : 'Copy to clipboard'"
 		@click="handleCopy"
@@ -47,7 +47,6 @@ export default defineComponent({
 				top: this.top,
 				right: this.right,
 				padding: this.padding,
-				backgroundColor: "var(--evcc-box)",
 			};
 		},
 	},

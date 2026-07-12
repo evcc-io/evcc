@@ -61,10 +61,18 @@ import { DEFAULT_LOCALE } from "@/i18n.ts";
 import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import { defineComponent, type PropType } from "vue";
-import { SMART_COST_TYPE, type CURRENCY, type VehicleStatus, type Timeout } from "@/types/evcc";
+import {
+	SMART_COST_TYPE,
+	type CURRENCY,
+	type LoadpointSuggestion,
+	type VehicleStatus,
+	type Timeout,
+} from "@/types/evcc";
 
 import ClimaterIcon from "../MaterialIcon/Climater.vue";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
+import OptimizerChargeIcon from "../MaterialIcon/OptimizerCharge.vue";
+import OptimizerPauseIcon from "../MaterialIcon/OptimizerPause.vue";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import PlanStartIcon from "../MaterialIcon/PlanStart.vue";
 import ReconnectIcon from "../MaterialIcon/Reconnect.vue";
@@ -125,6 +133,7 @@ export default defineComponent({
 		smartFeedInPriorityDisabled: Boolean,
 		smartFeedInPriorityLimit: { type: Number, default: null },
 		smartFeedInPriorityNextStart: String,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffCo2: { type: Number, default: 0 },
 		tariffGrid: { type: Number, default: 0 },
 		tariffFeedIn: { type: Number, default: 0 },
@@ -165,6 +174,9 @@ export default defineComponent({
 		},
 		vehicleLimitWarning() {
 			return this.effectivePlanSoc > this.vehicleLimitSoc;
+		},
+		showSuggestions(): boolean {
+			return this.connected && Boolean(this.suggestion?.actionable);
 		},
 		smartCostPrice() {
 			return this.smartCostType !== SMART_COST_TYPE.CO2;
@@ -348,6 +360,22 @@ export default defineComponent({
 					testId: "vehicle-status-smartfeedinpriority",
 					clickable: true,
 					clickHandler: () => this.openLoadpointSettings(),
+				},
+				{
+					id: "suggestion",
+					visible: this.showSuggestions,
+					tooltipContent: this.translateStatus(
+						this.suggestion?.action === "charge"
+							? "suggestionStartTooltip"
+							: "suggestionStopTooltip"
+					),
+					iconComponent:
+						this.suggestion?.action === "charge"
+							? OptimizerChargeIcon
+							: OptimizerPauseIcon,
+					testId: "vehicle-status-suggestion",
+					clickable: true,
+					clickHandler: () => this.$router.push("/optimize"),
 				},
 				{
 					id: "planActive",

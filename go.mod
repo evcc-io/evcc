@@ -29,8 +29,8 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	github.com/enbility/eebus-go v0.7.1-0.20260608105936-abdcf864d0cf
-	github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c
+	github.com/enbility/eebus-go v0.7.1-0.20260706105148-69719d143633
+	github.com/enbility/ship-go v0.6.1-0.20260706134013-3abd41d19f41
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
 	github.com/evcc-io/optimizer v0.0.0-20260613102250-473d3906e657
@@ -101,6 +101,7 @@ require (
 	github.com/traefik/yaegi v0.16.1
 	github.com/volkszaehler/mbmd v0.0.0-20260623211432-fb8f9c22f121
 	github.com/warthog618/go-gpiocdev v0.9.1
+	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
 	go.bug.st/serial v1.7.1
 	go.uber.org/mock v0.6.0
@@ -216,6 +217,8 @@ require (
 	github.com/quic-go/webtransport-go v0.10.0 // indirect
 	github.com/relvacode/iso8601 v1.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/richardlehane/mscfb v1.0.7 // indirect
+	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rickb777/period v1.0.22 // indirect
 	github.com/rickb777/plural v1.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -230,8 +233,11 @@ require (
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
+	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/xuri/efp v0.0.1 // indirect
+	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
@@ -262,6 +268,4 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
 
-replace github.com/enbility/eebus-go => github.com/evcc-io/eebus-go v0.0.0-20260627085352-933afd2a4ea6
-
-replace github.com/enbility/ship-go => github.com/evcc-io/ship-go v0.6.1-0.20260705143036-943556b69307
+replace github.com/enbility/eebus-go => github.com/evcc-io/eebus-go v0.0.0-20260707170747-eb60ff7e2025

@@ -262,8 +262,7 @@ export default defineComponent({
 			}
 			return data;
 		},
-		handleTemplateChange(e: Event, values: DeviceValues) {
-			const value = (e.target as HTMLSelectElement).value;
+		handleTemplateChange(value: string, values: DeviceValues) {
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
 				values.yaml = defaultMeterYaml;
