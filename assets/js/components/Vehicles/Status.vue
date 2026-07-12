@@ -68,6 +68,7 @@ import {
 	type VehicleStatus,
 	type Timeout,
 } from "@/types/evcc";
+import { optimizerActionClass } from "@/utils/optimizer";
 
 import ClimaterIcon from "../MaterialIcon/Climater.vue";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
@@ -373,6 +374,7 @@ export default defineComponent({
 						this.suggestion?.action === "charge"
 							? OptimizerChargeIcon
 							: OptimizerPauseIcon,
+					itemClass: optimizerActionClass(this.suggestion?.action),
 					testId: "vehicle-status-suggestion",
 					clickable: true,
 					clickHandler: () => this.$router.push("/optimize"),

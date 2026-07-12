@@ -2,7 +2,7 @@
 	<div class="d-flex flex-column gap-2">
 		<div v-if="recommendation" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
-				<Optimizer />
+				<Optimizer :class="actionClass" />
 				<router-link to="/optimize" class="evcc-default-text text-decoration-underline">
 					{{ $t("battery.optimizer.suggestion") }}
 				</router-link>
@@ -36,6 +36,7 @@ import formatter from "@/mixins/formatter";
 import type { BatteryForecast, BatteryForecastPoint, BatterySuggestion } from "@/types/evcc";
 import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Optimizer from "../MaterialIcon/Optimizer.vue";
+import { optimizerActionClass } from "@/utils/optimizer";
 
 // Optimizer rows: suggestion plus the battery high/low soc forecast.
 // Simple bold-label / muted-value layout.
@@ -52,6 +53,9 @@ export default defineComponent({
 			const action = this.suggestion?.action;
 			if (!action) return null;
 			return this.$t(`battery.optimizer.action.${action}`);
+		},
+		actionClass(): string {
+			return optimizerActionClass(this.suggestion?.action);
 		},
 	},
 	methods: {
