@@ -83,18 +83,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: ./.github/actions/build-toolchain
         with:
-          go-version-file: go.mod
-        id: go
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: "npm"
-
-      - name: Build UI
-        run: make install-ui ui
+          cache-scope: pr # isolated cache, cannot poison the nightly/main cache
 
       - name: Build binary
         env:
@@ -190,3 +181,13 @@ jobs:
               const body = [`Test binaries for the fix in #${num} are ready to test:`, '', ...artifacts].join('\n');
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
+      - name: Resolve command comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // collapse the /build comment as resolved now that the build is done
+            await github.graphql(
+              `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
+              { id: context.payload.comment.node_id }
+            );

@@ -5,7 +5,6 @@ import "time"
 // ItAgreement is an electricity supply agreement on Octopus Italy's schema.
 // Rates live on the product directly - agreementRates isn't reachable with a customer token.
 type ItAgreement struct {
-	ID        int
 	IsActive  bool
 	ValidFrom time.Time
 	ValidTo   time.Time
