@@ -5,7 +5,7 @@ products:
       generic: FordConnect Query
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: clientid
     description:
       generic: FordConnect Query Client ID

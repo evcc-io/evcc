@@ -1,69 +1,79 @@
 <template>
 	<div class="mt-4 container">
-		<div class="row">
-			<div class="col-6 col-lg-3 col-form-label">
-				<label :for="formId('minsoc')">
+		<div class="row mb-4">
+			<label :for="formId('mode')" class="col-12 col-md-4 col-lg-3 col-form-label">
+				{{ $t("config.loadpoint.defaultModeLabel") }}
+			</label>
+			<div class="col-12 col-md-8 col-lg-6">
+				<select
+					:id="formId('mode')"
+					v-model="selectedMode"
+					class="form-select"
+					@change="changeMode"
+				>
+					<option v-for="opt in modeOptions" :key="opt.value" :value="opt.value">
+						{{ opt.name }}
+					</option>
+				</select>
+				<small class="form-text text-muted">{{ modeHelp }}</small>
+			</div>
+		</div>
+		<template v-if="socSettingsVisible">
+			<div class="row mb-4">
+				<label :for="formId('minsoc')" class="col-12 col-md-4 col-lg-3 col-form-label">
 					{{ $t("main.loadpointSettings.minSoc.label") }}
 				</label>
+				<div class="col-12 col-md-8 col-lg-6">
+					<select
+						:id="formId('minsoc')"
+						v-model.number="selectedMinSoc"
+						class="form-select"
+						@change="changeMinSoc"
+					>
+						<option v-for="soc in minSocOptions" :key="soc.value" :value="soc.value">
+							{{ soc.name }}
+						</option>
+					</select>
+					<small class="form-text text-muted">
+						{{
+							$t("main.loadpointSettings.minSoc.description", [
+								selectedMinSoc ? fmtPercentage(selectedMinSoc) : "x",
+							])
+						}}
+					</small>
+				</div>
 			</div>
-			<div class="col-6 col-lg-3">
-				<select
-					:id="formId('minsoc')"
-					v-model.number="selectedMinSoc"
-					class="form-select mb-2"
-					:disabled="arrivalDisabled"
-					@change="changeMinSoc"
-				>
-					<option v-for="soc in minSocOptions" :key="soc.value" :value="soc.value">
-						{{ soc.name }}
-					</option>
-				</select>
-			</div>
-			<small class="col-12 col-lg-6 ps-lg-4 col-form-label mb-4">
-				{{
-					$t("main.loadpointSettings.minSoc.description", [
-						selectedMinSoc ? fmtPercentage(selectedMinSoc) : "x",
-					])
-				}}
-			</small>
-		</div>
-		<div class="row">
-			<div class="col-6 col-lg-3 col-form-label">
-				<label :for="formId('limitsoc')">
+			<div class="row mb-4">
+				<label :for="formId('limitsoc')" class="col-12 col-md-4 col-lg-3 col-form-label">
 					{{ $t("main.loadpointSettings.limitSoc.label") }}
 				</label>
+				<div class="col-12 col-md-8 col-lg-6">
+					<select
+						:id="formId('limitsoc')"
+						v-model.number="selectedLimitSoc"
+						class="form-select"
+						@change="changeLimitSoc"
+					>
+						<option v-for="soc in limitSocOptions" :key="soc.value" :value="soc.value">
+							{{ soc.name }}
+						</option>
+					</select>
+					<small class="form-text text-muted">
+						{{ $t("main.loadpointSettings.limitSoc.description") }}
+					</small>
+				</div>
 			</div>
-			<div class="col-6 col-lg-3">
-				<select
-					:id="formId('limitsoc')"
-					v-model.number="selectedLimitSoc"
-					class="form-select mb-2"
-					:disabled="arrivalDisabled"
-					@change="changeLimitSoc"
-				>
-					<option v-for="soc in limitSocOptions" :key="soc.value" :value="soc.value">
-						{{ soc.name }}
-					</option>
-				</select>
-			</div>
-			<small class="col-12 col-lg-6 ps-lg-4 col-form-label mb-4">
-				{{ $t("main.loadpointSettings.limitSoc.description") }}
-			</small>
-		</div>
-	</div>
-	<div v-if="arrivalDisabled" class="mx-2 small text-muted">
-		<strong class="text-evcc">
-			{{ $t("main.loadpointSettings.disclaimerHint") }}
-		</strong>
-		{{ $t("main.loadpointSettings.onlyForSocBasedCharging") }}
+		</template>
 	</div>
 </template>
 
 <script lang="ts">
 import { distanceUnit } from "@/units";
 import formatter from "@/mixins/formatter";
-import type { SelectOption } from "@/types/evcc";
+import { CHARGE_MODE, type SelectOption } from "@/types/evcc";
 import { defineComponent } from "vue";
+
+const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
 
 export default defineComponent({
 	name: "ChargingPlanArrival",
@@ -72,16 +82,35 @@ export default defineComponent({
 		id: [String, Number],
 		minSoc: { type: Number, default: 0 },
 		limitSoc: { type: Number, default: 0 },
+		mode: { type: String, default: "" },
 		vehicleName: String,
 		vehicleNotReachable: Boolean,
 		socBasedCharging: Boolean,
 		rangePerSoc: Number,
 	},
-	emits: ["minsoc-updated", "limitsoc-updated"],
+	emits: ["minsoc-updated", "limitsoc-updated", "mode-updated"],
 	data() {
-		return { selectedMinSoc: this.minSoc, selectedLimitSoc: this.limitSoc };
+		return {
+			selectedMinSoc: this.minSoc,
+			selectedLimitSoc: this.limitSoc,
+			selectedMode: this.mode,
+		};
 	},
 	computed: {
+		modeOptions(): SelectOption<string>[] {
+			return [
+				{ value: "", name: "---" },
+				...[OFF, PV, MINPV, NOW].map((mode) => ({
+					value: mode,
+					name: this.$t(`main.mode.${mode}`),
+				})),
+			];
+		},
+		modeHelp(): string {
+			return this.selectedMode === ""
+				? this.$t("config.loadpoint.defaultModeHelpKeep")
+				: this.$t("config.loadpoint.defaultModeHelp.charging");
+		},
 		minSocOptions(): SelectOption<number>[] {
 			// a list of entries from 0 to 95 with a step of 5
 			return Array.from(Array(20).keys())
@@ -94,8 +123,8 @@ export default defineComponent({
 				.map((i) => i * 5)
 				.map(this.socOption);
 		},
-		arrivalDisabled(): boolean {
-			return !(this.socBasedCharging || this.vehicleNotReachable);
+		socSettingsVisible(): boolean {
+			return this.socBasedCharging || this.vehicleNotReachable;
 		},
 	},
 	watch: {
@@ -104,6 +133,9 @@ export default defineComponent({
 		},
 		limitSoc(value: number): void {
 			this.selectedLimitSoc = value;
+		},
+		mode(value: string): void {
+			this.selectedMode = value;
 		},
 	},
 	methods: {
@@ -121,6 +153,9 @@ export default defineComponent({
 		},
 		changeLimitSoc(): void {
 			this.$emit("limitsoc-updated", this.selectedLimitSoc);
+		},
+		changeMode(): void {
+			this.$emit("mode-updated", this.selectedMode);
 		},
 	},
 });

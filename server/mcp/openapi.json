@@ -1384,6 +1384,7 @@
             "in": "query",
             "name": "from",
             "schema": {
+              "example": "2026-07-01T00:00:00Z",
               "format": "date-time",
               "type": "string"
             }
@@ -1393,6 +1394,7 @@
             "in": "query",
             "name": "to",
             "schema": {
+              "example": "2026-07-02T00:00:00Z",
               "format": "date-time",
               "type": "string"
             }
@@ -1403,6 +1405,7 @@
             "name": "aggregate",
             "schema": {
               "default": "15m",
+              "example": "1h",
               "type": "string"
             }
           },
@@ -1412,7 +1415,45 @@
             "name": "grouped",
             "schema": {
               "default": false,
+              "example": false,
               "type": "boolean"
+            }
+          },
+          {
+            "description": "Filter by entity group",
+            "in": "query",
+            "name": "group",
+            "schema": {
+              "enum": [
+                "forecast",
+                "battery",
+                "grid",
+                "pv",
+                "home",
+                "loadpoint",
+                "meter",
+                "consumer"
+              ],
+              "example": "battery",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity name",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "example": "db:8",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity title",
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "example": "Battery",
+              "type": "string"
             }
           },
           {
@@ -1425,6 +1466,7 @@
                 "json",
                 "csv"
               ],
+              "example": "json",
               "type": "string"
             }
           },
@@ -1433,6 +1475,7 @@
             "in": "query",
             "name": "lang",
             "schema": {
+              "example": "de",
               "type": "string"
             }
           }
@@ -2960,6 +3003,67 @@
           }
         },
         "summary": "Set minimum SoC",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode": {
+      "delete": {
+        "description": "Resets the vehicle charge mode to keep the last selected mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "deleteVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Reset charge mode",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode/{mode}": {
+      "post": {
+        "description": "Sets the charge mode applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "setVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/mode"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "mode": {
+                      "$ref": "#/components/schemas/Mode"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set charge mode",
         "tags": [
           "vehicles"
         ]

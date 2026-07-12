@@ -37,6 +37,7 @@ params:
       en: Active power limit in percent
     advanced: true
     usages: ["pv"]
+    deprecated: true # curtailment now applies the HEMS-distributed percent directly
   - name: storageunit
   - name: forceaccharging
     default: false
@@ -74,9 +75,9 @@ render: |
       address: 37113 # Grid import/export power
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -1
   energy:
     source: modbus
@@ -86,9 +87,9 @@ render: |
       address: 37121 # Active energy imported from the grid
       type: holding
       decode: uint32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: 0.01
   returnenergy:
     source: modbus
@@ -98,9 +99,9 @@ render: |
       address: 37119 # Active energy exported to the grid
       type: holding
       decode: uint32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: 0.01
   currents:
   - source: modbus
@@ -110,9 +111,9 @@ render: |
       address: 37107 # Huawei phase A grid current
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -121,9 +122,9 @@ render: |
       address: 37109 # Huawei phase B grid current
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -132,10 +133,78 @@ render: |
       address: 37111 # Huawei phase C grid current
       type: holding
       decode: int32nan
-    block: # 37107-37122
-      register: 37107
-      count: 16
+    block: # 37101-37137
+      register: 37101
+      count: 37
     scale: -0.01
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37101 # Huawei phase A grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37103 # Huawei phase B grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37105 # Huawei phase C grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37132 # Huawei phase A grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37134 # Huawei phase B grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37136 # Huawei phase C grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -158,38 +227,33 @@ render: |
     scale: 0.01
   maxacpower: {{ .maxacpower }}
   curtail:
-    source: ifelse
-    if:
-      source: convert
-      convert: bool2int
-      set:
-        source: sequence
-        set:
-        - source: const
-          value: {{ .curtailpercent }}
+    source: sequence
+    set:
+    # allowed feed-in power as percent of nominal (0-100 %)
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 47418 # Maximum Feed Grid Power (0-100 %)
+        type: writesingle
+        encoding: uint16
+      scale: 10
+    # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
+    - source: switch
+      switch:
+        - case: 100 # uncurtailed
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47418 # Maximum Feed Grid Power (0-100 %)
-              type: writesingle
-              encoding: uint16
-            scale: 10
-        - source: const
-          value: 7 # Power-limited grid connection (%)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47415 # Active power control mode
-              type: writesingle
-              encoding: uint16
-    else:
-      source: convert
-      convert: bool2int
-      set:
+            source: const
+            value: 0 # Unlimited
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47415 # Active power control mode
+                type: writesingle
+                encoding: uint16
+      default:
         source: const
-        value: 0 # Unlimited 
+        value: 7 # Power-limited grid connection (%)
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -198,12 +262,29 @@ render: |
             type: writesingle
             encoding: uint16
   curtailed:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 47415 # Active power control mode (0=no curtailment)
-      type: holding
-      decode: uint16
+    source: go
+    in:
+    - name: mode
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47415 # Active power control mode (0=no curtailment)
+          type: holding
+          decode: uint16
+    - name: percent
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47418 # Maximum Feed Grid Power (0-100 %)
+          type: holding
+          decode: uint16
+        scale: 0.1
+    # mode 7 (percentage limit) at 100% means limited-grid-connection is enabled but not actually curtailing
+    script: mode != 0 && !(mode == 7 && percent == 100)
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

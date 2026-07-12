@@ -113,26 +113,33 @@ func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
 		return nil
 	}, []int{1}) // 1 is reset value
 
-	// Value 3 (non-reset)
+	// Value 1 (reset) → establishes a known write time so the subsequent non-reset
+	// writes below are deferred based on that, not the fresh-setter startup assumption
+	require.NoError(t, set(1))
+	require.Equal(t, []int{1}, calls)
+
+	// Value 3 (non-reset) → deferred (no time has passed since the reset write)
 	require.NoError(t, set(3))
-	require.Equal(t, []int{3}, calls)
+	require.Equal(t, []int{1}, calls, "Value 3 should not be set yet")
+	c.Add(timeout + 5*time.Second)
+	require.Equal(t, []int{1, 3}, calls)
 
 	// Value 2 (deferred update)
 	require.NoError(t, set(2))
-	require.Equal(t, []int{3}, calls, "Value 2 should not be set yet")
+	require.Equal(t, []int{1, 3}, calls, "Value 2 should not be set yet")
 
 	// Wait a bit but not the full delay
 	c.Add(30 * time.Second)
 
 	// Value 1 (reset) → should cancel pending deferred update and set immediately
 	require.NoError(t, set(1))
-	require.Equal(t, []int{3, 1}, calls, "Value 1 should be set, Value 2 should be cancelled")
+	require.Equal(t, []int{1, 3, 1}, calls, "Value 1 should be set, Value 2 should be cancelled")
 
 	// Wait for what would have been the original delay
 	c.Add(timeout + 5*time.Second)
 
 	// Value 2 should still not have been set
-	require.Equal(t, []int{3, 1}, calls, "Value 2 should remain cancelled")
+	require.Equal(t, []int{1, 3, 1}, calls, "Value 2 should remain cancelled")
 }
 
 func TestWatchdogDelayBackwardCompatibility(t *testing.T) {

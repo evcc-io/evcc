@@ -95,6 +95,9 @@ type batteryDetail struct {
 	Title    string      `json:"title,omitempty"`
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
+
+	loadpoint    *int // originating loadpoint id for loadpoint/vehicle entries
+	controllable bool // battery exposes a controller; only these get suggestions
 }
 
 type batteryResult struct {
@@ -103,12 +106,96 @@ type batteryResult struct {
 	Empty time.Time `json:"empty,omitzero"`
 }
 
+// suggestionThreshold ignores numerical noise around zero power (W)
+const suggestionThreshold = 50
+
+// advisory actions for a loadpoint/vehicle slot; battery actions use api.BatteryMode
+const (
+	actionStop   = "stop"
+	actionCharge = "charge"
+)
+
+// currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
+// Because the optimization is linear, the first slot is at an operating-range extreme, so it
+// maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
+// An idle battery is interpreted from the grid flow: importing means discharge is withheld
+// (hold), exporting means charging is withheld (holdcharge).
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64, current string) types.Suggestion {
+	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
+		return types.Suggestion{}
+	}
+
+	charge := float64(res.ChargingPower[0]) / slotHours
+	discharge := float64(res.DischargingPower[0]) / slotHours
+
+	s := types.Suggestion{Charge: charge, Discharge: discharge}
+
+	if detail.Type == batteryTypeBattery {
+		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
+		switch {
+		case charge > suggestionThreshold && gridImporting:
+			// charging while importing means grid charging
+			s.Action = api.BatteryCharge.String()
+		case idle && gridImporting:
+			// idle while importing: discharge is deliberately withheld
+			s.Action = api.BatteryHold.String()
+		case idle && gridExporting:
+			// idle while exporting: surplus is exported instead of charged
+			s.Action = api.BatteryHoldCharge.String()
+		default:
+			s.Action = api.BatteryNormal.String()
+		}
+	} else if charge > suggestionThreshold {
+		s.Action = actionCharge
+	} else {
+		s.Action = actionStop
+	}
+
+	// actionable when the suggested action differs from the current operating mode
+	s.Actionable = s.Action != current
+
+	return s
+}
+
+// setBatterySuggestions replaces the suggestions applied on each battery publish
+func (site *Site) setBatterySuggestions(suggestions map[string]types.Suggestion) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.batterySuggestions = suggestions
+}
+
+// batterySuggestion returns the optimizer suggestion for the given battery meter
+func (site *Site) batterySuggestion(name string) *types.Suggestion {
+	site.RLock()
+	defer site.RUnlock()
+
+	if s, ok := site.batterySuggestions[name]; ok {
+		return &s
+	}
+	return nil
+}
+
+// clearSuggestions removes all suggestions when the optimizer result is stale
+func (site *Site) clearSuggestions() {
+	site.setBatterySuggestions(nil)
+	site.publishBattery()
+
+	for id := range site.Loadpoints() {
+		site.publishLoadpoint(id, keys.Suggestion, nil)
+	}
+}
+
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
+
+// errOptimizerNotReady means battery measurements aren't available yet (e.g. at
+// startup); the slot gate is left open so the next cycle retries.
+var errOptimizerNotReady = errors.New("battery measurements not ready")
 
 func (site *Site) optimizerUpdateAsync() {
 	if !mu.TryLock() {
@@ -123,14 +210,22 @@ func (site *Site) optimizerUpdateAsync() {
 	var err error
 
 	defer func() {
-		optimizerUpdated = time.Now()
-
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
 		}
 
+		// not ready yet: keep the gate open for an immediate retry next cycle
+		if errors.Is(err, errOptimizerNotReady) {
+			return
+		}
+
+		optimizerUpdated = time.Now()
+
 		if err != nil {
 			site.log.ERROR.Println("optimizer:", err)
+
+			// stale advice must not linger
+			site.clearSuggestions()
 		}
 	}()
 
@@ -228,7 +323,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		details.BatteryDetails = append(details.BatteryDetails, detail)
 	}
 
-	for _, lp := range site.Loadpoints() {
+	for id, lp := range site.Loadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
@@ -240,6 +335,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 		// skip disabled loadpoints
 		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+			detail.loadpoint = &id
 			add(req, detail)
 		}
 	}
@@ -258,9 +354,13 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
 	}
 
-	// empty request- all loadpoints disabled
 	if len(req.Batteries) == 0 {
-		return nil
+		// meters configured but measurements not in yet: retry instead of
+		// consuming the slot gate
+		if len(site.batteryMeters) > 0 {
+			return errOptimizerNotReady
+		}
+		return nil // nothing to optimize
 	}
 
 	httpClient := request.NewClient(site.log)
@@ -296,12 +396,20 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Details: details,
 	})
 
+	slotHours := firstSlotDuration.Hours()
+	gridImporting := len(resp.JSON200.GridImport) > 0 && resp.JSON200.GridImport[0] > 0
+	gridExporting := len(resp.JSON200.GridExport) > 0 && resp.JSON200.GridExport[0] > 0
+
 	var batteries []batteryResult
+	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
+	lpSuggestions := make(map[int]types.Suggestion)
+
 	for i, batReq := range req.Batteries {
 		batResp := resp.JSON200.Batteries[i]
+		detail := details.BatteryDetails[i]
 
 		batResult := batteryResult{
-			batteryDetail: details.BatteryDetails[i],
+			batteryDetail: detail,
 			Full: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
@@ -311,13 +419,48 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 
 		batteries = append(batteries, batResult)
+
+		// current operating mode to detect an actionable change
+		var current string
+		if detail.Type == batteryTypeBattery {
+			current = site.GetBatteryMode().String()
+		} else if detail.loadpoint != nil {
+			if site.loadpoints[*detail.loadpoint].IsEnabled() {
+				current = actionCharge
+			} else {
+				current = actionStop
+			}
+		}
+
+		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours, current)
+		if suggestion.Action == "" {
+			continue
+		}
+		if detail.Type == batteryTypeBattery {
+			// uncontrollable batteries can't act on a suggestion
+			if detail.controllable {
+				suggestions[detail.Name] = suggestion
+			}
+		} else if detail.loadpoint != nil {
+			lpSuggestions[*detail.loadpoint] = suggestion
+		}
 	}
 
 	site.publish("evopt-batteries", batteries)
 
+	site.setBatterySuggestions(suggestions)
 	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
 
-	site.publish(keys.Battery, site.battery)
+	site.publishBattery()
+
+	// publish for all loadpoints so suggestions of dropped-out loadpoints clear
+	for id := range site.Loadpoints() {
+		var val any
+		if s, ok := lpSuggestions[id]; ok {
+			val = s
+		}
+		site.publishLoadpoint(id, keys.Suggestion, val)
+	}
 
 	return nil
 }
@@ -490,7 +633,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	if api.HasCap[api.BatteryController](instance) {
+	controllable := api.HasCap[api.BatteryController](instance)
+	if controllable {
 		bat.ChargeFromGrid = true
 	}
 
@@ -507,10 +651,11 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	}
 
 	detail := batteryDetail{
-		Type:     batteryTypeBattery,
-		Name:     dev.Config().Name,
-		Title:    deviceProperties(dev).Title,
-		Capacity: *b.Capacity,
+		Type:         batteryTypeBattery,
+		Name:         dev.Config().Name,
+		Title:        deviceProperties(dev).Title,
+		Capacity:     *b.Capacity,
+		controllable: controllable,
 	}
 
 	// tariff forecast-based grid charging demand

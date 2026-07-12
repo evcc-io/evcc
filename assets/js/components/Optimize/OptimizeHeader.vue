@@ -251,8 +251,9 @@ export default defineComponent({
 	padding: 0.75rem 0;
 	border-top: 1px solid var(--evcc-gray-25);
 }
-.field:last-child {
-	border-bottom: 1px solid var(--evcc-gray-25);
+/* card provides the outer boundary */
+.field:first-child {
+	border-top: none;
 }
 .field-head {
 	display: flex;
@@ -279,6 +280,14 @@ export default defineComponent({
 	text-underline-offset: 3px;
 }
 
+/* small: slightly reduced value size, rows are tighter */
+@media (max-width: 767.98px) {
+	.field-value .large,
+	.field-value .fs-4 {
+		font-size: 1.125rem !important;
+	}
+}
+
 /* md and up: each field a vertical stack (label, value, caption); columns via Bootstrap grid */
 @media (min-width: 768px) {
 	.field {
@@ -288,9 +297,6 @@ export default defineComponent({
 		gap: 0;
 		padding: 0.75rem 1.5rem;
 		border: none;
-	}
-	.field:last-child {
-		border-bottom: none;
 	}
 	/* promote label + caption so value can sit between them via order */
 	.field-head {

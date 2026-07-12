@@ -31,7 +31,7 @@
 						<span v-if="status.connected" class="text-primary">
 							{{ $t("config.remote.connected") }}
 						</span>
-						<span v-else class="text-muted small">
+						<span v-else :class="config.enabled ? 'text-danger' : 'small'">
 							{{ $t("config.remote.disconnected") }}
 						</span>
 					</div>
