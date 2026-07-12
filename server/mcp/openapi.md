@@ -416,6 +416,66 @@ call setGlobalSmartFeedInPriorityLimit {
 }
 ```
 
+## setPriorityBasis
+
+Set whether the site-wide priority strategy ranks by soc percentage or by absolute energy (kWh).
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| basis | string | Whether the priority strategy ranks by soc percentage or by absolute energy (kWh). |
+
+**Example call:**
+
+```json
+call setPriorityBasis {
+  "basis": "percent"
+}
+```
+
+## setPriorityHysteresis
+
+Set the site-wide deadband used when sub-ordering loadpoints of the same priority (soc-%, or kWh with the energy basis; 0 = off).
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| hysteresis | integer | Deadband in soc-% or kWh per basis (0..99, 0 = off). |
+
+**Example call:**
+
+```json
+call setPriorityHysteresis {
+  "hysteresis": 123
+}
+```
+
+## setPriorityStrategy
+
+Set the site-wide strategy used to sub-order loadpoints of the same priority.
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| strategy | string | Priority strategy used to sub-order loadpoints of the same priority. |
+
+**Example call:**
+
+```json
+call setPriorityStrategy {
+  "strategy": "none"
+}
+```
+
 ## assignLoadpointVehicle
 
 Assigns vehicle to loadpoint.
@@ -925,72 +985,6 @@ Set loadpoint priority.
 call setLoadpointPriority {
   "id": 1,
   "priority": 123
-}
-```
-
-## setLoadpointPriorityBasis
-
-Set whether the priority strategy ranks by soc percentage or by absolute energy (kWh).
-
-**Tags:** loadpoints
-
-**Arguments:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| basis | string | Whether the priority strategy ranks by soc percentage or by absolute energy (kWh). |
-| id | integer | Loadpoint index starting at 1 |
-
-**Example call:**
-
-```json
-call setLoadpointPriorityBasis {
-  "basis": "example",
-  "id": 123
-}
-```
-
-## setLoadpointPriorityHysteresis
-
-Set the deadband used when sub-ordering loadpoints of the same priority (soc-%, or kWh with the energy basis; 0 = off).
-
-**Tags:** loadpoints
-
-**Arguments:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| hysteresis | integer | Deadband in soc-% or kWh per basis (0..99, 0 = off). |
-| id | integer | Loadpoint index starting at 1 |
-
-**Example call:**
-
-```json
-call setLoadpointPriorityHysteresis {
-  "hysteresis": 123,
-  "id": 123
-}
-```
-
-## setLoadpointPriorityStrategy
-
-Set the strategy used to sub-order loadpoints of the same priority.
-
-**Tags:** loadpoints
-
-**Arguments:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| strategy | string | Priority strategy used to sub-order loadpoints of the same priority. |
-
-**Example call:**
-
-```json
-call setLoadpointPriorityStrategy {
-  "id": 123,
-  "strategy": "example"
 }
 ```
 

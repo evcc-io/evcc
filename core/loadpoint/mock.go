@@ -166,17 +166,17 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 }
 
 // EffectivePriorityScore mocks base method.
-func (m *MockAPI) EffectivePriorityScore(basis api.PriorityBasis) float64 {
+func (m *MockAPI) EffectivePriorityScore(strategy api.PriorityStrategy, basis api.PriorityBasis) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EffectivePriorityScore", basis)
+	ret := m.ctrl.Call(m, "EffectivePriorityScore", strategy, basis)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // EffectivePriorityScore indicates an expected call of EffectivePriorityScore.
-func (mr *MockAPIMockRecorder) EffectivePriorityScore(basis any) *gomock.Call {
+func (mr *MockAPIMockRecorder) EffectivePriorityScore(strategy, basis any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriorityScore", reflect.TypeOf((*MockAPI)(nil).EffectivePriorityScore), basis)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriorityScore", reflect.TypeOf((*MockAPI)(nil).EffectivePriorityScore), strategy, basis)
 }
 
 // GetBatteryBoost mocks base method.
@@ -571,48 +571,6 @@ func (m *MockAPI) GetPriority() int {
 func (mr *MockAPIMockRecorder) GetPriority() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriority", reflect.TypeOf((*MockAPI)(nil).GetPriority))
-}
-
-// GetPriorityBasis mocks base method.
-func (m *MockAPI) GetPriorityBasis() api.PriorityBasis {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPriorityBasis")
-	ret0, _ := ret[0].(api.PriorityBasis)
-	return ret0
-}
-
-// GetPriorityBasis indicates an expected call of GetPriorityBasis.
-func (mr *MockAPIMockRecorder) GetPriorityBasis() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriorityBasis", reflect.TypeOf((*MockAPI)(nil).GetPriorityBasis))
-}
-
-// GetPriorityHysteresis mocks base method.
-func (m *MockAPI) GetPriorityHysteresis() int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPriorityHysteresis")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// GetPriorityHysteresis indicates an expected call of GetPriorityHysteresis.
-func (mr *MockAPIMockRecorder) GetPriorityHysteresis() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriorityHysteresis", reflect.TypeOf((*MockAPI)(nil).GetPriorityHysteresis))
-}
-
-// GetPriorityStrategy mocks base method.
-func (m *MockAPI) GetPriorityStrategy() api.PriorityStrategy {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPriorityStrategy")
-	ret0, _ := ret[0].(api.PriorityStrategy)
-	return ret0
-}
-
-// GetPriorityStrategy indicates an expected call of GetPriorityStrategy.
-func (mr *MockAPIMockRecorder) GetPriorityStrategy() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriorityStrategy", reflect.TypeOf((*MockAPI)(nil).GetPriorityStrategy))
 }
 
 // GetRemainingDuration mocks base method.
@@ -1059,42 +1017,6 @@ func (m *MockAPI) SetPriority(arg0 int) {
 func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockAPI)(nil).SetPriority), arg0)
-}
-
-// SetPriorityBasis mocks base method.
-func (m *MockAPI) SetPriorityBasis(arg0 api.PriorityBasis) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetPriorityBasis", arg0)
-}
-
-// SetPriorityBasis indicates an expected call of SetPriorityBasis.
-func (mr *MockAPIMockRecorder) SetPriorityBasis(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriorityBasis", reflect.TypeOf((*MockAPI)(nil).SetPriorityBasis), arg0)
-}
-
-// SetPriorityHysteresis mocks base method.
-func (m *MockAPI) SetPriorityHysteresis(arg0 int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetPriorityHysteresis", arg0)
-}
-
-// SetPriorityHysteresis indicates an expected call of SetPriorityHysteresis.
-func (mr *MockAPIMockRecorder) SetPriorityHysteresis(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriorityHysteresis", reflect.TypeOf((*MockAPI)(nil).SetPriorityHysteresis), arg0)
-}
-
-// SetPriorityStrategy mocks base method.
-func (m *MockAPI) SetPriorityStrategy(arg0 api.PriorityStrategy) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetPriorityStrategy", arg0)
-}
-
-// SetPriorityStrategy indicates an expected call of SetPriorityStrategy.
-func (mr *MockAPIMockRecorder) SetPriorityStrategy(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriorityStrategy", reflect.TypeOf((*MockAPI)(nil).SetPriorityStrategy), arg0)
 }
 
 // SetSmartCostLimit mocks base method.

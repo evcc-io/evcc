@@ -174,9 +174,20 @@
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
       "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. The default of 30 seconds is a safe choice. Devices like vehicles, wallboxes and inverters typically need several seconds to adjust their behavior. If your components react quickly you can use lower values. We strongly recommend not going below 10 seconds. If you observe erratic control behavior or jumping power values choose a larger interval.",
+      "descriptionPriorityBasis": "Rank vehicles by charge level percentage or by the absolute energy (kWh) they still need.",
+      "descriptionPriorityHysteresis": "Don't reorder loadpoints of equal priority until the gap exceeds this value. Prevents constant leapfrogging between cars. Set to 0 to disable.",
+      "descriptionPriorityStrategy": "How to order loadpoints of equal priority when distributing solar surplus.",
       "descriptionResidualPower": "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use.",
       "labelInterval": "Update interval",
+      "labelPriorityBasis": "Priority basis",
+      "labelPriorityHysteresis": "Priority hysteresis",
+      "labelPriorityStrategy": "Priority strategy",
       "labelResidualPower": "Residual power",
+      "priorityBasisEnergy": "Energy demand (kWh)",
+      "priorityBasisPercent": "Charge level (%)",
+      "priorityStrategyDeficit": "Largest deficit",
+      "priorityStrategyNone": "None",
+      "priorityStrategySoc": "Lower charge level first",
       "title": "Control behavior"
     },
     "currency": {
@@ -473,14 +484,7 @@
       "pollModeConnectedHelp": "Update vehicle status in regular intervals when connected.",
       "pollModeLabel": "Update behaviour",
       "priorityHelp": "Higher priority get preferred access to solar surplus.",
-      "priorityHysteresisHelp": "Don't reorder loadpoints of equal priority until the charge level gap exceeds this many percent. Prevents constant leapfrogging between cars. Set to 0 to disable.",
-      "priorityHysteresisLabel": "Priority hysteresis",
       "priorityLabel": "Priority",
-      "priorityStrategyDeficit": "Largest deficit",
-      "priorityStrategyHelp": "How to order loadpoints of equal priority when distributing solar surplus.",
-      "priorityStrategyLabel": "Priority strategy",
-      "priorityStrategyNone": "None",
-      "priorityStrategySoc": "Lower charge level first",
       "save": "Save",
       "solarBehaviorCustomHelp": "Define your own enable and disable thresholds and delays.",
       "solarBehaviorDefaultHelp": "Start after {enableDelay} of sufficient surplus. Stop when there is not enough surplus for {disableDelay}.",
@@ -1407,20 +1411,6 @@
         "phases_1_hint": "({min} to {max})",
         "phases_3": "3 phase",
         "phases_3_hint": "({min} to {max})"
-      },
-      "priority": {
-        "heading": "Priority"
-      },
-      "priorityHysteresis": {
-        "help": "Don't reorder loadpoints until the charge level gap exceeds this many percent. Prevents constant leapfrogging between cars. Set to 0 to disable.",
-        "label": "Hysteresis"
-      },
-      "priorityStrategy": {
-        "deficit": "Largest deficit",
-        "help": "How to order loadpoints of equal priority when distributing solar surplus.",
-        "label": "Strategy",
-        "none": "None",
-        "soc": "Lower charge level first"
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",

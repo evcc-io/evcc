@@ -57,18 +57,6 @@ type API interface {
 	GetPriority() int
 	// SetPriority sets the priority
 	SetPriority(int)
-	// GetPriorityStrategy returns the priority strategy
-	GetPriorityStrategy() api.PriorityStrategy
-	// SetPriorityStrategy sets the priority strategy
-	SetPriorityStrategy(api.PriorityStrategy)
-	// GetPriorityBasis returns the priority strategy basis (percent, energy)
-	GetPriorityBasis() api.PriorityBasis
-	// SetPriorityBasis sets the priority strategy basis (percent, energy)
-	SetPriorityBasis(api.PriorityBasis)
-	// GetPriorityHysteresis returns the priority sub-ordering deadband (soc-% or kWh per basis)
-	GetPriorityHysteresis() int
-	// SetPriorityHysteresis sets the priority sub-ordering deadband (soc-% or kWh per basis)
-	SetPriorityHysteresis(int)
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
 	// SetMinCurrent sets the min charging current
@@ -110,8 +98,8 @@ type API interface {
 
 	// EffectivePriority returns the effective priority tier (integer part of the score)
 	EffectivePriority() int
-	// EffectivePriorityScore returns the sortable priority score (tier + strategy sub-ordering) for the given basis
-	EffectivePriorityScore(basis api.PriorityBasis) float64
+	// EffectivePriorityScore returns the sortable priority score (tier + strategy sub-ordering) for the given site-level strategy and basis
+	EffectivePriorityScore(strategy api.PriorityStrategy, basis api.PriorityBasis) float64
 	// EffectiveLimitSoc returns the effective session limit soc
 	EffectiveLimitSoc() int
 	// EffectivePlanId returns the effective plan id

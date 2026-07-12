@@ -309,57 +309,6 @@
 							/>
 						</FormRow>
 
-						<FormRow
-							v-if="showPriority"
-							id="loadpointParamPriorityStrategy"
-							:label="$t('config.loadpoint.priorityStrategyLabel')"
-							:help="$t('config.loadpoint.priorityStrategyHelp')"
-						>
-							<PropertyField
-								id="loadpointParamPriorityStrategy"
-								v-model="priorityStrategy"
-								type="Choice"
-								size="w-100"
-								class="me-2"
-								required
-								:choice="priorityStrategyOptions"
-							/>
-						</FormRow>
-
-						<FormRow
-							v-if="showPriority && priorityHysteresisAvailable"
-							id="loadpointParamPriorityBasis"
-							:label="$t('config.loadpoint.priorityBasisLabel')"
-							:help="$t('config.loadpoint.priorityBasisHelp')"
-						>
-							<PropertyField
-								id="loadpointParamPriorityBasis"
-								v-model="priorityBasis"
-								type="Choice"
-								size="w-100"
-								class="me-2"
-								required
-								:choice="priorityBasisOptions"
-							/>
-						</FormRow>
-
-						<FormRow
-							v-if="showPriority && priorityHysteresisAvailable"
-							id="loadpointParamPriorityHysteresis"
-							:label="$t('config.loadpoint.priorityHysteresisLabel')"
-							:help="$t('config.loadpoint.priorityHysteresisHelp')"
-						>
-							<PropertyField
-								id="loadpointParamPriorityHysteresis"
-								v-model="values.priorityHysteresis"
-								type="Float"
-								:unit="priorityHysteresisUnit"
-								size="w-25 w-min-200"
-								class="me-2"
-								required
-							/>
-						</FormRow>
-
 						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
 							<small class="text-muted">{{
@@ -696,8 +645,6 @@ import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	CHARGE_MODE,
 	LOADPOINT_TYPE,
-	PRIORITY_STRATEGY,
-	PRIORITY_BASIS,
 	type DeviceType,
 	type LoadpointType,
 	type ConfigCharger,
@@ -718,9 +665,6 @@ const defaultValues = {
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
-	priorityStrategy: PRIORITY_STRATEGY.NONE,
-	priorityBasis: PRIORITY_BASIS.PERCENT,
-	priorityHysteresis: 0,
 	defaultMode: "",
 	thresholds: {
 		enable: { delay: 1 * nsPerMin, threshold: 0 },
@@ -865,58 +809,6 @@ export default {
 			result[0]!.name = "0 (default)";
 			result[10]!.name = "10 (highest)";
 			return result;
-		},
-		priorityStrategy: {
-			// fall back to the none (default) strategy
-			get(): PRIORITY_STRATEGY {
-				return this.values.priorityStrategy || PRIORITY_STRATEGY.NONE;
-			},
-			set(value: PRIORITY_STRATEGY) {
-				this.values.priorityStrategy = value;
-			},
-		},
-		priorityStrategyOptions(): { key: PRIORITY_STRATEGY; name: string }[] {
-			return [
-				{
-					key: PRIORITY_STRATEGY.NONE,
-					name: this.$t("config.loadpoint.priorityStrategyNone"),
-				},
-				{
-					key: PRIORITY_STRATEGY.SOC,
-					name: this.$t("config.loadpoint.priorityStrategySoc"),
-				},
-				{
-					key: PRIORITY_STRATEGY.DEFICIT,
-					name: this.$t("config.loadpoint.priorityStrategyDeficit"),
-				},
-			];
-		},
-		priorityBasis: {
-			// backend returns "" for the percent basis; map to/from the explicit "percent" choice
-			get(): PRIORITY_BASIS {
-				return this.values.priorityBasis || PRIORITY_BASIS.PERCENT;
-			},
-			set(value: PRIORITY_BASIS) {
-				this.values.priorityBasis = value;
-			},
-		},
-		priorityBasisOptions(): { key: PRIORITY_BASIS; name: string }[] {
-			return [
-				{
-					key: PRIORITY_BASIS.PERCENT,
-					name: this.$t("config.loadpoint.priorityBasisPercent"),
-				},
-				{
-					key: PRIORITY_BASIS.ENERGY,
-					name: this.$t("config.loadpoint.priorityBasisEnergy"),
-				},
-			];
-		},
-		priorityHysteresisAvailable(): boolean {
-			return this.priorityStrategy !== PRIORITY_STRATEGY.NONE;
-		},
-		priorityHysteresisUnit(): string {
-			return this.priorityBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";
 		},
 		phasesOptions() {
 			return [

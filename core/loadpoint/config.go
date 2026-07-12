@@ -34,11 +34,6 @@ type DynamicConfig struct {
 
 	PlanStrategy api.PlanStrategy `json:"planStrategy"`
 
-	// priority sub-ordering within a tier (see api.PriorityStrategy)
-	PriorityStrategy   api.PriorityStrategy `json:"priorityStrategy"`
-	PriorityBasis      api.PriorityBasis    `json:"priorityBasis"`
-	PriorityHysteresis int                  `json:"priorityHysteresis"`
-
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
 	UI         UIConfig         `json:"ui"`
@@ -72,9 +67,6 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
-	lp.SetPriorityStrategy(payload.PriorityStrategy)
-	lp.SetPriorityBasis(payload.PriorityBasis)
-	lp.SetPriorityHysteresis(payload.PriorityHysteresis)
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
 	lp.SetThresholds(payload.Thresholds)

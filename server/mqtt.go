@@ -216,6 +216,9 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"bufferStartSoc", floatSetter(site.SetBufferStartSoc)},
 		{"batteryDischargeControl", boolSetter(site.SetBatteryDischargeControl)},
 		{"prioritySoc", floatSetter(site.SetPrioritySoc)},
+		{"priorityStrategy", setterFunc(api.PriorityStrategyString, site.SetPriorityStrategy)},
+		{"priorityBasis", setterFunc(api.PriorityBasisString, site.SetPriorityBasis)},
+		{"priorityHysteresis", intSetter(site.SetPriorityHysteresis)},
 		{"residualPower", floatSetter(site.SetResidualPower)},
 		{"smartCostLimit", floatPtrSetter(pass(func(limit *float64) {
 			for _, lp := range site.Loadpoints() {
@@ -249,9 +252,6 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"phasesConfigured", intSetter(lp.SetPhasesConfigured)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
-		{"priorityStrategy", setterFunc(api.PriorityStrategyString, pass(lp.SetPriorityStrategy))},
-		{"priorityBasis", setterFunc(api.PriorityBasisString, pass(lp.SetPriorityBasis))},
-		{"priorityHysteresis", intSetter(pass(lp.SetPriorityHysteresis))},
 		{"minCurrent", floatSetter(lp.SetMinCurrent)},
 		{"maxCurrent", floatSetter(lp.SetMaxCurrent)},
 		{"limitEnergy", floatSetter(pass(lp.SetLimitEnergy))},

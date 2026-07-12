@@ -114,6 +114,9 @@ export interface State {
   circuits?: Record<string, Circuit>;
   bufferSoc?: number;
   prioritySoc?: number;
+  priorityStrategy?: PRIORITY_STRATEGY;
+  priorityBasis?: PRIORITY_BASIS;
+  priorityHysteresis?: number;
   bufferStartSoc?: number;
   batteryDischargeControl?: boolean;
   batteryGridChargeLimit?: number | null;
@@ -255,9 +258,6 @@ export interface ConfigLoadpoint {
   title: string;
   defaultMode: string;
   priority: number;
-  priorityStrategy: PRIORITY_STRATEGY;
-  priorityBasis: PRIORITY_BASIS;
-  priorityHysteresis: number;
   phasesConfigured: number;
   minCurrent: number;
   maxCurrent: number;
@@ -358,9 +358,6 @@ export interface Loadpoint {
   planProjectedStart: string | null;
   planTime: string | null;
   priority: number;
-  priorityStrategy: PRIORITY_STRATEGY;
-  priorityBasis: PRIORITY_BASIS;
-  priorityHysteresis: number;
   pvAction: PV_ACTION;
   pvRemaining: number;
   sessionCo2PerKWh: number | null;

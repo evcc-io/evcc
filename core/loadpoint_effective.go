@@ -13,8 +13,14 @@ import (
 
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
+	// strategy/basis are site-level settings; site may be unset in tests
+	strategy, basis := api.PriorityNone, api.PriorityBasisPercent
+	if lp.site != nil {
+		strategy, basis = lp.site.GetPriorityStrategy(), lp.site.GetPriorityBasis()
+	}
+
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
-	lp.publish(keys.EffectivePriorityScore, lp.EffectivePriorityScore(lp.GetPriorityBasis()))
+	lp.publish(keys.EffectivePriorityScore, lp.EffectivePriorityScore(strategy, basis))
 	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
@@ -36,9 +42,9 @@ func (lp *Loadpoint) EffectivePriority() int {
 
 // EffectivePriorityScore ranks loadpoints for surplus distribution: the integer part is
 // the effective priority tier, the fractional part [0,1) sub-orders within the tier by the
-// priority strategy/basis (higher wins). Basis is passed in so the prioritizer can score a
-// whole tier on one scale, see Prioritizer.effectiveBasis.
-func (lp *Loadpoint) EffectivePriorityScore(basis api.PriorityBasis) float64 {
+// priority strategy/basis (higher wins). Strategy and basis are site-level settings passed
+// in by the caller so all loadpoints are scored on one scale, see Prioritizer.effectiveBasis.
+func (lp *Loadpoint) EffectivePriorityScore(strategy api.PriorityStrategy, basis api.PriorityBasis) float64 {
 	score := float64(lp.EffectivePriority())
 
 	soc := lp.GetSoc()
@@ -48,7 +54,7 @@ func (lp *Loadpoint) EffectivePriorityScore(basis api.PriorityBasis) float64 {
 
 	// gap is the soc-% quantity the strategy ranks by (a larger gap scores higher)
 	var gap float64
-	switch lp.GetPriorityStrategy() {
+	switch strategy {
 	case api.PrioritySoc:
 		gap = 100 - soc
 	case api.PriorityDeficit:

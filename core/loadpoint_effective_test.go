@@ -61,8 +61,6 @@ func TestEffectivePriorityScore(t *testing.T) {
 
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.priority = tc.priority
-		lp.priorityStrategy = tc.strategy
-		lp.priorityBasis = tc.basis
 		lp.vehicleSoc = tc.soc
 		lp.limitSoc = int(tc.limitSoc)
 
@@ -74,7 +72,7 @@ func TestEffectivePriorityScore(t *testing.T) {
 			lp.vehicle = vehicle
 		}
 
-		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(tc.basis), 1e-9)
+		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(tc.strategy, tc.basis), 1e-9)
 	}
 }
 
