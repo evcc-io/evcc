@@ -245,6 +245,8 @@ jobs:
     if: always() && needs.prep.result == 'success' && needs.prep.outputs.cmd != 'help'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
+      contents: read
+      issues: write
       pull-requests: write
     steps:
       - name: Comment result
@@ -253,30 +255,39 @@ jobs:
           script: |
             const cmd = '${{ needs.prep.outputs.cmd }}';
             const num = context.payload.issue.number;
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            let body;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            // build a uniform (ok, artifacts) view for both commands
+            let ok, artifacts, label;
             if (cmd === 'nightly') {
-              if ('${{ needs.nightly.result }}' === 'success') {
-                body = ['✅ Nightly build finished.', '', `- Packages: [download artifacts](${runUrl}#artifacts)`].join('\n');
-              } else {
-                body = `❌ Nightly build failed. See the [run logs](${runUrl}).`;
-              }
+              ok = '${{ needs.nightly.result }}' === 'success';
+              artifacts = [`- Packages: [download artifacts](${runUrl}#artifacts)`];
+              label = 'Nightly packages';
             } else {
               const b = '${{ needs.binaries.result }}';
               const d = '${{ needs.docker.result }}';
-              const ok = d === 'success' && (b === 'success' || b === 'skipped');
-              if (ok) {
-                const lines = ['✅ Build finished.', ''];
-                if (b === 'success') lines.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
-                lines.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
-                body = lines.join('\n');
-              } else {
-                body = `❌ Build failed. See the [run logs](${runUrl}).`;
-              }
+              ok = d === 'success' && (b === 'success' || b === 'skipped');
+              artifacts = [];
+              if (b === 'success') artifacts.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
+              artifacts.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
+              label = 'Test binaries';
             }
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: num,
-              body,
-            });
+
+            const heading = cmd === 'nightly' ? 'Nightly build' : 'Build';
+            const prBody = ok
+              ? [`✅ ${heading} finished.`, '', ...artifacts].join('\n')
+              : `❌ ${heading} failed. See the [run logs](${runUrl}).`;
+            await github.rest.issues.createComment({ owner, repo, issue_number: num, body: prBody });
+
+            if (!ok) return;
+
+            // notify each issue this PR closes (via "fixes #N" keywords) that fresh builds exist
+            const q = `query($owner:String!,$repo:String!,$num:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$num){closingIssuesReferences(first:20){nodes{number}}}}}`;
+            const res = await github.graphql(q, { owner, repo, num });
+            const issues = res.repository.pullRequest.closingIssuesReferences.nodes.map((n) => n.number);
+            for (const issue_number of issues) {
+              const body = [`${label} for the fix in #${num} are ready to test:`, '', ...artifacts].join('\n');
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
