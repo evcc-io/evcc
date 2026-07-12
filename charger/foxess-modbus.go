@@ -38,13 +38,14 @@ import (
 // FoxESSEVC charger implementation
 type FoxESSEVC struct {
 	implement.Caps
-	log     *util.Logger
-	conn    *modbus.Connection
-	mu      sync.Mutex
-	current uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
-	enabled bool   // tracks enabled state for the heartbeat
-	pbox    bool   // phase-cutting box present; uses current register instead of power
-	lp      loadpoint.API
+	log         *util.Logger
+	conn        *modbus.Connection
+	mu          sync.Mutex
+	current     uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
+	enabled     bool   // tracks enabled state for the heartbeat
+	lastEnabled bool   // last enabled state successfully sent to the charger
+	pbox        bool   // phase-cutting box present; uses current register instead of power
+	lp          loadpoint.API
 }
 
 const (
@@ -164,10 +165,9 @@ func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
 
 // heartbeat keeps the charger from considering evcc offline by sending a
 // message every half validity window. When enabled it re-sends the current
-// setpoint; when disabled it re-sends the stop command. The spec says the
-// setpoint registers (0x3001/0x3002) only take effect in the charging state,
-// but some firmware resumes on a re-sent setpoint after a stop, so we send
-// the stop command instead to actively hold the stopped state.
+// setpoint; when disabled it sends the stop command only on the transition
+// from enabled to disabled, since the charger rejects redundant stop commands
+// (write-only register 0x4001 has no read-back to check against).
 func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 	for tick := time.Tick(foxTimeValidity / 2 * time.Second); ; {
 		select {
@@ -180,12 +180,19 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 		cur := wb.current
 		pbox := wb.pbox
 		enabled := wb.enabled
+		lastEnabled := wb.lastEnabled
 		wb.mu.Unlock()
 
 		var err error
-		if !enabled {
+		if !enabled && lastEnabled {
+			// transition: send stop once
 			_, err = wb.conn.WriteSingleRegister(foxRegChargingControl, foxChargingStop)
-		} else if cur != 0 {
+			if err == nil {
+				wb.mu.Lock()
+				wb.lastEnabled = false
+				wb.mu.Unlock()
+			}
+		} else if enabled && cur != 0 {
 			if pbox {
 				err = wb.ensureReg(foxRegMaxCurrent, cur)
 			} else {
@@ -263,6 +270,11 @@ func (wb *FoxESSEVC) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(foxRegChargingControl, val)
+	if err == nil {
+		wb.mu.Lock()
+		wb.lastEnabled = enable
+		wb.mu.Unlock()
+	}
 
 	return err
 }
