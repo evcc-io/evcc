@@ -176,10 +176,7 @@ export default defineComponent({
 			return this.effectivePlanSoc > this.vehicleLimitSoc;
 		},
 		showSuggestions(): boolean {
-			if (!this.connected) return false;
-			// only advise when the suggestion differs from the current charging state
-			const action = this.suggestion?.action;
-			return (action === "charge" && !this.enabled) || (action === "stop" && this.enabled);
+			return this.connected && Boolean(this.suggestion?.actionable);
 		},
 		smartCostPrice() {
 			return this.smartCostType !== SMART_COST_TYPE.CO2;
@@ -377,6 +374,8 @@ export default defineComponent({
 							? OptimizerChargeIcon
 							: OptimizerPauseIcon,
 					testId: "vehicle-status-suggestion",
+					clickable: true,
+					clickHandler: () => this.$router.push("/optimize"),
 				},
 				{
 					id: "planActive",
