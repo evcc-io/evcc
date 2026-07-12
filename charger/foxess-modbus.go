@@ -187,9 +187,9 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 			_, err = wb.conn.WriteSingleRegister(foxRegChargingControl, foxChargingStop)
 		} else if cur != 0 {
 			if pbox {
-				err = wb.writeReg(foxRegMaxCurrent, cur)
+				err = wb.ensureReg(foxRegMaxCurrent, cur)
 			} else {
-				err = wb.writeReg(foxRegMaxPower, cur)
+				err = wb.ensureReg(foxRegMaxPower, cur)
 			}
 		}
 		if err != nil {
