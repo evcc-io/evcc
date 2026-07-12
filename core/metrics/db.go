@@ -48,6 +48,11 @@ func SetupSchema() error {
 		return err
 	}
 
+	// grid: migrate old entities (title was the device ref) to the fixed title
+	if err := db.Instance.Model(new(entity)).Where(`"group" = ? AND title <> ?`, Grid, Grid).Update("title", Grid).Error; err != nil {
+		return err
+	}
+
 	// enable FK constraints only here to make sure entity for metric exists
 	if err := db.Instance.Exec("pragma foreign_keys(1)").Error; err != nil {
 		return err
