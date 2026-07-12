@@ -92,6 +92,11 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, err
 	}
 
+	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
+	if s, _ := utf16BEBytesAsString(c); err != nil || s == "" {
+		return nil, api.ErrSponsorRequired
+	}
+
 	log := util.NewLogger("daheimladen")
 	conn.Logger(log.TRACE)
 
