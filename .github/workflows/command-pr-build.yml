@@ -84,6 +84,8 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/build-toolchain
+        with:
+          cache-scope: pr # isolated cache, cannot poison the nightly/main cache
 
       - name: Build binary
         env:
