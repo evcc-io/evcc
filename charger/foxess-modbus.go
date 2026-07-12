@@ -136,6 +136,20 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
+	// seed current setpoint and enabled state from the charger so the heartbeat
+	// has accurate values from the first tick, before evcc issues any commands
+	seedReg := uint16(foxRegMaxPower)
+	if pbox {
+		seedReg = foxRegMaxCurrent
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(seedReg, 1); err == nil {
+		wb.current = binary.BigEndian.Uint16(b)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1); err == nil {
+		s := binary.BigEndian.Uint16(b)
+		wb.lastEnabled = s == 2 || s == 3 || s == 9
+	}
+
 	return wb, nil
 }
 
