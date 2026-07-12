@@ -18,7 +18,6 @@ export default {
     effectivePlanTime: { control: "text" },
     effectivePlanSoc: { control: "number" },
     planEnergy: { control: "number" },
-    planDuration: { control: "number" },
     socBasedCharging: { control: "boolean" },
     socBasedPlanning: { control: "boolean" },
     vehicleSoc: { control: "number" },
@@ -52,15 +51,6 @@ EnergyBasedCharging.args = {
   id: "1",
   effectivePlanTime: hoursFromNow(12),
   planEnergy: 77,
-  socBasedCharging: false,
-  socBasedPlanning: false,
-};
-
-export const DurationBasedCharging = Template.bind({});
-DurationBasedCharging.args = {
-  id: "1",
-  effectivePlanTime: hoursFromNow(12),
-  planDuration: 3 * 3600,
   socBasedCharging: false,
   socBasedPlanning: false,
 };
