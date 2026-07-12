@@ -42,16 +42,6 @@ params:
   - name: cache
     default: 5s
   - preset: battery-params
-  - name: minsoc
-    default: 5
-    help:
-      en: Lower state-of-charge limit for battery discharge and hold mode. Valid range 5-100.
-      de: Untergrenze bei Entladung der Batterie sowie im Haltemodus. Gültiger Bereich 5-100.
-  - name: maxsoc
-    default: 100
-    help:
-      en: Upper limit when charging the battery. Valid range 5-100.
-      de: Obergrenze beim Laden der Batterie. Gültiger Bereich 5-100.
   - name: maxchargepower
     default: 2400
     help:
