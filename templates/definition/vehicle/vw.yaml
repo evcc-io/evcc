@@ -34,13 +34,7 @@ params:
     example: WVWZZZ...
   - name: timeout
     deprecated: true
-  - name: coarsecurrent
-    advanced: true
-    deprecated: true
-  - name: welcomecharge
-    advanced: true
-    deprecated: true
-  - preset: vehicle-online
+  - preset: vehicle-features
 render: |
   type: drivesomethinggreater
   brand: Volkswagen
