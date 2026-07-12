@@ -5,9 +5,8 @@ name: PR Build
 #   /build amd      linux amd64 only
 #   /build arm      linux arm64 + arm/v6 only
 #   /build docker   multiarch docker image only, no binaries
-#   /help           post the command reference as a comment, build nothing
 # Uploads downloadable binaries and publishes a docker image tagged pr-<number>.
-# The /nightly command lives in pr-nightly.yml.
+# The /nightly command lives in command-nightly.yml.
 
 on:
   issue_comment:
@@ -19,10 +18,10 @@ permissions:
 jobs:
   prep:
     name: Prepare
-    # only on PR comments starting with /build or /help, and only from maintainers
+    # only on PR comments starting with /build, and only from maintainers
     if: |
       github.event.issue.pull_request &&
-      (startsWith(github.event.comment.body, '/build') || startsWith(github.event.comment.body, '/help')) &&
+      startsWith(github.event.comment.body, '/build') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:
@@ -30,7 +29,6 @@ jobs:
       pull-requests: write
     outputs:
       sha: ${{ steps.pr.outputs.sha }}
-      cmd: ${{ steps.parse.outputs.cmd }}
       archs: ${{ steps.parse.outputs.archs }}
       platforms: ${{ steps.parse.outputs.platforms }}
     steps:
@@ -50,17 +48,12 @@ jobs:
         env:
           BODY: ${{ github.event.comment.body }}
         run: |
-          cmd=$(printf '%s' "$BODY" | awk '{print $1}')
           arg=$(printf '%s' "$BODY" | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
           case "$arg" in
             amd*)    archs='["amd64"]';              platforms='linux/amd64' ;;
             arm*)    archs='["arm64","arm"]';        platforms='linux/arm64,linux/arm/v6' ;;
             docker*) archs='[]';                     platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
             *)       archs='["amd64","arm64","arm"]'; platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
-          esac
-          case "$cmd" in
-            /help) echo "cmd=help"  >> "$GITHUB_OUTPUT" ;;
-            *)     echo "cmd=build" >> "$GITHUB_OUTPUT" ;;
           esac
           echo "archs=$archs" >> "$GITHUB_OUTPUT"
           echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
@@ -76,7 +69,7 @@ jobs:
   binaries:
     name: Binaries
     needs: prep
-    if: needs.prep.outputs.cmd == 'build' && needs.prep.outputs.archs != '[]'
+    if: needs.prep.outputs.archs != '[]'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
@@ -126,7 +119,6 @@ jobs:
   docker:
     name: Docker
     needs: prep
-    if: needs.prep.outputs.cmd == 'build'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
@@ -156,45 +148,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  help:
-    name: Help
-    needs: prep
-    if: needs.prep.outputs.cmd == 'help'
-    runs-on: depot-ubuntu-24.04-arm
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Comment command reference
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const body = [
-              '### PR build commands',
-              '',
-              'Maintainer-only slash commands that reply with the result.',
-              '',
-              '| Comment | What it does |',
-              '| --- | --- |',
-              '| `/build` | Linux binaries (amd64 + arm64 + arm/v6) **and** the multi-arch docker image, from the PR head |',
-              '| `/build amd` | linux amd64 binary only |',
-              '| `/build arm` | linux arm64 + arm/v6 binaries only |',
-              '| `/build docker` | multi-arch docker image only, no binaries |',
-              '| `/nightly` | nightly packages built from master (reply only, no artifacts) |',
-              '| `/help` | this reference |',
-              '',
-              'Binaries are uploaded as run artifacts (14-day retention); the docker image is pushed as `evcc/evcc:pr-<number>`.',
-            ].join('\n');
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              body,
-            });
-
   report:
     name: Report
     needs: [prep, binaries, docker]
-    if: always() && needs.prep.result == 'success' && needs.prep.outputs.cmd == 'build'
+    if: always() && needs.prep.result == 'success'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
