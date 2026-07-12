@@ -1,0 +1,18 @@
+name: Build toolchain
+description: Go and Node toolchain plus UI build, shared by the PR and nightly build commands. Requires the repo to be checked out first.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: "26"
+        cache: "npm"
+
+    - name: Build UI
+      shell: bash
+      run: make install-ui ui

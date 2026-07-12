@@ -41,18 +41,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-        id: go
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: "npm"
-
-      - name: Build UI
-        run: make install-ui ui
+      - uses: ./.github/actions/build-toolchain
 
       - name: Patch ASN1
         run: make patch-asn1-sudo
