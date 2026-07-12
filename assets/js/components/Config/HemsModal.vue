@@ -38,25 +38,23 @@
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</p>
-			<div
-				v-if="sessionCount"
-				class="alert alert-info my-4 d-flex justify-content-between align-items-start flex-wrap gap-2"
-				role="alert"
-				data-testid="grid-sessions"
-			>
-				<div class="d-flex flex-wrap">
-					<span class="me-2">{{
-						$t("config.hems.eventsRecorded", { count: sessionCount })
-					}}</span>
-					<span v-if="lastEventTimeAgo">{{
-						$t("config.hems.lastEvent", { timeAgo: lastEventTimeAgo })
-					}}</span>
+			<div v-if="configured" class="mb-4" data-testid="grid-sessions">
+				<h6 class="mb-3">{{ $t("config.hems.recordedEvents") }}</h6>
+				<div class="events-box rounded p-3">
+					<p v-if="!sessionCount" class="mb-0 text-muted">
+						{{ $t("config.hems.noEvents") }}
+					</p>
+					<template v-else>
+						<p class="mb-3">
+							{{ $t("config.hems.eventsRecorded", { count: sessionCount }) }}<br />
+							<template v-if="lastEventTimeAgo">
+								{{ $t("config.hems.lastEvent", { timeAgo: lastEventTimeAgo }) }}
+							</template>
+						</p>
+						<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
+					</template>
 				</div>
-				<DownloadButtons
-					:label="$t('config.hems.download')"
-					:csvHref="formatLink('csv')"
-					:xlsxHref="formatLink('xlsx')"
-				/>
+				<hr class="mt-4 mb-0" />
 			</div>
 			<p v-if="fromYaml" class="text-muted">
 				{{ $t("config.general.fromYamlHint") }}
@@ -75,7 +73,7 @@ import { customTemplateOption, type TemplateGroup } from "./DeviceModal/Template
 import customHemsYaml from "./defaultYaml/customHems.yaml?raw";
 import api from "../../api";
 import { docsPrefix } from "@/i18n";
-import DownloadButtons from "../Helper/DownloadButtons.vue";
+import DownloadButton from "../Helper/DownloadButton.vue";
 import formatter from "../../mixins/formatter";
 
 const initialValues = {
@@ -88,7 +86,7 @@ const initialValues = {
 
 export default defineComponent({
 	name: "HemsModal",
-	components: { DeviceModalBase, DownloadButtons },
+	components: { DeviceModalBase, DownloadButton },
 	mixins: [formatter],
 	props: {
 		yamlSource: String as PropType<YamlSource>,
@@ -105,6 +103,9 @@ export default defineComponent({
 	computed: {
 		fromYaml(): boolean {
 			return this.yamlSource === "file";
+		},
+		configured(): boolean {
+			return this.id !== undefined || this.fromYaml;
 		},
 		sessionCount(): number {
 			return this.sessions.length;
@@ -124,11 +125,8 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		formatLink(format: string): string {
-			const params = new URLSearchParams({
-				format,
-				lang: this.$i18n?.locale,
-			});
+		downloadHref(): string {
+			const params = new URLSearchParams({ lang: this.$i18n?.locale });
 			return `./api/gridsessions?${params.toString()}`;
 		},
 		async loadSessions() {
@@ -188,3 +186,9 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style scoped>
+.events-box {
+	background: var(--evcc-background);
+}
+</style>

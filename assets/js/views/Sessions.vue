@@ -157,12 +157,8 @@
 						@show-session="showDetails"
 					/>
 				</Card>
-				<div class="d-flex gap-2 my-3">
-					<DownloadButtons
-						:label="downloadLabel"
-						:csvHref="formatLink('csv')"
-						:xlsxHref="formatLink('xlsx')"
-					/>
+				<div class="d-flex align-items-baseline gap-2 my-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
 					<button
 						v-if="!showTable"
 						class="btn btn-link text-muted"
@@ -214,7 +210,7 @@ import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import DownloadButtons from "../components/Helper/DownloadButtons.vue";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
@@ -227,7 +223,7 @@ export default defineComponent({
 		SessionTable,
 		TopHeader: Header,
 		Card,
-		DownloadButtons,
+		DownloadButton,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,
@@ -487,17 +483,6 @@ export default defineComponent({
 			date.setMonth(this.month - 1, 1);
 			return this.fmtMonth(date, false);
 		},
-		downloadLabel() {
-			if (this.period === PERIODS.MONTH) {
-				const date = new Date();
-				date.setMonth(this.month - 1, 1);
-				date.setFullYear(this.year);
-				return this.$t("sessions.download", { period: this.fmtMonthYear(date) });
-			} else if (this.period === PERIODS.YEAR) {
-				return this.$t("sessions.download", { period: this.year });
-			}
-			return this.$t("sessions.downloadTotal");
-		},
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
 		},
@@ -674,21 +659,14 @@ export default defineComponent({
 			);
 			modal.show();
 		},
-		formatLink(format: string) {
-			if (this.period === PERIODS.MONTH) {
-				return this.hrefLink(format, this.year, this.month);
-			} else if (this.period === PERIODS.YEAR) {
-				return this.hrefLink(format, this.year);
+		downloadHref() {
+			const params = new URLSearchParams({ lang: this.$i18n?.locale });
+			if (this.period === PERIODS.MONTH || this.period === PERIODS.YEAR) {
+				params.append("year", this.year.toString());
 			}
-			return this.hrefLink(format);
-		},
-		hrefLink(format: string, year?: number, month?: number) {
-			const params = new URLSearchParams({
-				format,
-				lang: this.$i18n?.locale,
-			});
-			if (year) params.append("year", year.toString());
-			if (month) params.append("month", month.toString());
+			if (this.period === PERIODS.MONTH) {
+				params.append("month", this.month.toString());
+			}
 			return `./api/sessions?${params.toString()}`;
 		},
 		updateType(type: TYPES) {

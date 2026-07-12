@@ -25,7 +25,14 @@ func gridSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if format := r.URL.Query().Get("format"); format == "csv" || format == "xlsx" {
+	format := r.URL.Query().Get("format")
+
+	if format == "json" {
+		jsonAttachment(w, &res, "gridsessions")
+		return
+	}
+
+	if format == "csv" || format == "xlsx" {
 		lang := r.URL.Query().Get("lang")
 		if lang == "" {
 			// get request language

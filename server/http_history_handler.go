@@ -58,7 +58,14 @@ func energyHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if format := q.Get("format"); format == "csv" || format == "xlsx" {
+	format := q.Get("format")
+
+	if format == "json" {
+		jsonAttachment(w, res, historyFilename(from, aggregate))
+		return
+	}
+
+	if format == "csv" || format == "xlsx" {
 		lang := q.Get("lang")
 		if lang == "" {
 			if tags, _, err := language.ParseAcceptLanguage(r.Header.Get("Accept-Language")); err == nil && len(tags) > 0 {

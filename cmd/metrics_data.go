@@ -97,9 +97,9 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 		var ww export.RowWriter
 		var err error
 		if asXLSX {
-			ww, err = xlsx.NewLocalized(context.Background(), os.Stdout)
+			ww, err = xlsx.New(context.Background(), os.Stdout)
 		} else {
-			ww, err = csv.NewLocalized(context.Background(), os.Stdout)
+			ww, err = csv.New(context.Background(), os.Stdout)
 		}
 		if err != nil {
 			log.FATAL.Fatal(err)

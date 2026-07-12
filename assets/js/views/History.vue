@@ -87,12 +87,8 @@
 						@focus="onLegendFocus(group, $event)"
 					/>
 				</Card>
-				<div v-if="visibleGroups.length" class="d-flex justify-content-end mt-3">
-					<DownloadButtons
-						:label="$t('main.history.download')"
-						:csvHref="downloadLink('csv')"
-						:xlsxHref="downloadLink('xlsx')"
-					/>
+				<div v-if="visibleGroups.length" class="d-flex align-items-baseline gap-2 mb-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
 				</div>
 			</main>
 		</div>
@@ -113,7 +109,7 @@ import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import DownloadButtons from "../components/Helper/DownloadButtons.vue";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -134,7 +130,7 @@ export default defineComponent({
 		PeriodHeader,
 		GroupChart,
 		LegendList,
-		DownloadButtons,
+		DownloadButton,
 	},
 	mixins: [formatter],
 	props: {
@@ -346,9 +342,8 @@ export default defineComponent({
 	},
 	methods: {
 		groupColor,
-		downloadLink(format: string): string {
+		downloadHref(): string {
 			const params = new URLSearchParams({
-				format,
 				lang: this.$i18n?.locale,
 				from: this.from.toISOString(),
 				to: this.to.toISOString(),

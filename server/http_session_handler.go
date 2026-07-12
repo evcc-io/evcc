@@ -19,6 +19,12 @@ import (
 	"golang.org/x/text/language"
 )
 
+// jsonAttachment writes res as json with download headers
+func jsonAttachment(w http.ResponseWriter, res any, filename string) {
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.json"`)
+	jsonWrite(w, res)
+}
+
 // exportResult writes res to w as format (csv|xlsx) with download headers.
 func exportResult(ctx context.Context, w http.ResponseWriter, format string, res export.Writer, filename string) {
 	if format == "xlsx" {
@@ -32,9 +38,9 @@ func exportResult(ctx context.Context, w http.ResponseWriter, format string, res
 	var ww export.RowWriter
 	var err error
 	if format == "xlsx" {
-		ww, err = xlsx.NewLocalized(ctx, w)
+		ww, err = xlsx.New(ctx, w)
 	} else {
-		ww, err = csv.NewLocalized(ctx, w)
+		ww, err = csv.New(ctx, w)
 	}
 	if err == nil {
 		err = res.Write(ww)
@@ -88,7 +94,14 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if format := r.URL.Query().Get("format"); format == "csv" || format == "xlsx" {
+	format := r.URL.Query().Get("format")
+
+	if format == "json" {
+		jsonAttachment(w, res, filename)
+		return
+	}
+
+	if format == "csv" || format == "xlsx" {
 		lang := r.URL.Query().Get("lang")
 		if lang == "" {
 			// get request language

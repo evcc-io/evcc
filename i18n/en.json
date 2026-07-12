@@ -370,6 +370,8 @@
       "generic": "Generic integrations",
       "integrations": "Integrations",
       "lastEvent": "Most recent {timeAgo}.",
+      "noEvents": "No events recorded yet.",
+      "recordedEvents": "Recorded events",
       "template": "Integration",
       "title": "External Limit"
     },
@@ -1131,6 +1133,10 @@
     }
   },
   "general": {
+    "download": "Download",
+    "downloadCsv": "Download CSV",
+    "downloadJson": "Download JSON",
+    "downloadXlsx": "Download XLSX",
     "note": "Note:"
   },
   "header": {

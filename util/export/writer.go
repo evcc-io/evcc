@@ -3,6 +3,7 @@ package export
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 	"time"
@@ -10,35 +11,35 @@ import (
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/fatih/structs"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
-	"golang.org/x/text/number"
 )
 
-func formatValue(mp *message.Printer, value any, digits int) string {
-	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Pointer && rv.IsNil() {
-		return ""
+// normalizeValue converts a field into a typed cell value: nil for empty, floats rounded to digits, times localized
+func normalizeValue(value any, digits int) any {
+	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Pointer {
+		if rv.IsNil() {
+			return nil
+		}
+		value = rv.Elem().Interface()
 	}
 
 	switch v := value.(type) {
 	case float64:
-		return mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
-	case *float64:
-		return mp.Sprint(number.Decimal(*v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+		p := math.Pow10(digits)
+		return math.Round(v*p) / p
 	case time.Time:
 		if v.IsZero() {
-			return ""
+			return nil
 		}
-		return v.Local().Format("2006-01-02 15:04:05")
+		return v.Local()
 	default:
-		return fmt.Sprintf("%v", value)
+		return v
 	}
 }
 
 func writeHeader(ww RowWriter, structType any, i18nPrefix string) error {
 	localizer := ww.Localizer()
 
-	var row []string
+	var row []any
 	for _, f := range structs.Fields(structType) {
 		csvTag := f.Tag("csv")
 		if csvTag == "-" {
@@ -63,9 +64,7 @@ func writeHeader(ww RowWriter, structType any, i18nPrefix string) error {
 }
 
 func writeRow(ww RowWriter, structVal any) error {
-	mp := ww.Printer()
-
-	var row []string
+	var row []any
 	for _, f := range structs.Fields(structVal) {
 		if f.Tag("csv") == "-" {
 			continue
@@ -76,22 +75,10 @@ func writeRow(ww RowWriter, structVal any) error {
 			digits = 0
 		}
 
-		row = append(row, formatValue(mp, f.Value(), digits))
+		row = append(row, normalizeValue(f.Value(), digits))
 	}
 
 	return ww.Write(row)
-}
-
-// LocaleTag resolves the export language tag from the context.
-func LocaleTag(ctx context.Context) (language.Tag, error) {
-	lang := locale.Language
-	if v, ok := ctx.Value(locale.Locale).(string); ok && v != "" {
-		lang = v
-	}
-	if lang == "" {
-		lang = "en"
-	}
-	return language.Parse(lang)
 }
 
 // Localizer returns an i18n localizer for the context's locale.

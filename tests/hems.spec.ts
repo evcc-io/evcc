@@ -23,7 +23,7 @@ test.afterEach(async () => {
 const CONFIG = "fast.evcc.yaml";
 
 test.describe("HEMS", () => {
-  test("grid sessions in template modal", async ({ page }) => {
+  test("no recorded events section in create mode", async ({ page }) => {
     await start(CONFIG, "hems.sql");
     await page.goto("/#/config");
 
@@ -31,21 +31,36 @@ test.describe("HEMS", () => {
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
 
-    await expect(hemsModal.getByTestId("grid-sessions")).toBeVisible();
-    await expect(hemsModal).toContainText("Recorded 3 grid limitation events");
-    await expect(hemsModal).toContainText("Most recent");
-
-    const csvLink = hemsModal.getByTestId("download-csv");
-    await expect(csvLink).toHaveAttribute("href", /\.\/api\/gridsessions\?format=csv&lang=en/);
-    await expect(hemsModal.getByTestId("download-xlsx")).toHaveAttribute(
-      "href",
-      /\.\/api\/gridsessions\?format=xlsx&lang=en/
-    );
+    await expect(hemsModal.getByTestId("grid-sessions")).not.toBeVisible();
 
     // template selector is shown in create mode, yaml editor hidden until "User-defined" is chosen
     await expect(hemsModal.getByLabel("Integration")).toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal).not.toContainText("Configured via evcc.yaml");
+
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+  });
+
+  test("recorded events in configured modal", async ({ page }) => {
+    await start("hems-yaml.evcc.yaml", "hems.sql");
+    await page.goto("/#/config");
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+
+    await expect(hemsModal.getByTestId("grid-sessions")).toBeVisible();
+    await expect(hemsModal).toContainText("Recorded events");
+    await expect(hemsModal).toContainText("Recorded 3 grid limitation events");
+    await expect(hemsModal).toContainText("Most recent");
+
+    const csvLink = hemsModal.getByTestId("download-csv");
+    await expect(csvLink).toHaveAttribute("href", "./api/gridsessions?lang=en&format=csv");
+    await expect(hemsModal.getByTestId("download-xlsx")).toHaveAttribute(
+      "href",
+      "./api/gridsessions?lang=en&format=xlsx"
+    );
 
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
@@ -59,7 +74,8 @@ test.describe("HEMS", () => {
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
 
-    await expect(hemsModal.getByTestId("grid-sessions")).not.toBeVisible();
+    await expect(hemsModal.getByTestId("grid-sessions")).toBeVisible();
+    await expect(hemsModal).toContainText("No events recorded yet");
     await expect(hemsModal).toContainText("Configured via evcc.yaml");
     await expect(hemsModal.getByLabel("Integration")).not.toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
@@ -321,18 +337,19 @@ w3:
   test.describe("grid sessions CSV in app context", () => {
     test("dispatches download event", async ({ page }) => {
       await enableAppContext(page);
-      await start(CONFIG, "hems.sql");
+      await start("hems-yaml.evcc.yaml", "hems.sql");
       await page.goto("/#/config");
 
       await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
       const hemsModal = page.getByTestId("hems-modal");
       await expectModalVisible(hemsModal);
 
+      await hemsModal.getByRole("button", { name: "Download" }).click();
       const csvLink = hemsModal.getByTestId("download-csv");
       await csvLink.click();
       expect(await expectAppEvent(page)).toMatchObject({
         type: "download",
-        url: expect.stringContaining("/api/gridsessions?format=csv&lang=en"),
+        url: expect.stringContaining("/api/gridsessions?lang=en&format=csv"),
       });
     });
   });

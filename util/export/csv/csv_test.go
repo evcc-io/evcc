@@ -79,7 +79,7 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 	}
 }
 
-func TestWriteStructSlice_GermanLocale(t *testing.T) {
+func TestWriteStructSlice_LocaleIndependentValues(t *testing.T) {
 	var buf bytes.Buffer
 	slice := TestStructs{
 		{Name: "Test", Value: 123.456},
@@ -91,7 +91,10 @@ func TestWriteStructSlice_GermanLocale(t *testing.T) {
 	}
 
 	lines := strings.Split(buf.String(), "\n")
-	if len(lines) > 1 && !strings.Contains(lines[1], ";") {
-		t.Errorf("Expected German CSV to use ';' separator, got: %s", lines[1])
+	if len(lines) < 2 {
+		t.Fatalf("Expected header + data row, got: %s", buf.String())
+	}
+	if !strings.Contains(lines[1], "Test,123.456") {
+		t.Errorf("Expected comma delimiter and dot decimal for German locale, got: %s", lines[1])
 	}
 }

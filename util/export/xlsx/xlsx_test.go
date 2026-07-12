@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -68,6 +69,15 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 	}
 
 	sheet := f.GetSheetName(0)
+
+	// numeric cells carry no type attribute, strings are shared strings
+	if typ, err := f.GetCellType(sheet, "B2"); err != nil || typ == excelize.CellTypeSharedString {
+		t.Errorf("expected numeric cell for Value, got type %v, err %v", typ, err)
+	}
+	if v, err := f.GetCellValue(sheet, "D2", excelize.Options{RawCellValue: true}); err != nil || v == "" || strings.Contains(v, "-") {
+		t.Errorf("expected date serial number for Created, got %q, err %v", v, err)
+	}
+
 	styleID, err := f.GetCellStyle(sheet, "A1")
 	if err != nil {
 		t.Fatalf("GetCellStyle: %v", err)

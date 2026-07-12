@@ -21,7 +21,7 @@ func mkSlot(t time.Time, energy, returnEnergy float64) Slot {
 
 // writeSeriesCsv exports s to w as localized CSV via the csv row writer.
 func writeSeriesCsv(t *testing.T, ctx context.Context, s SeriesExport, w io.Writer) error {
-	ww, err := csvexport.NewLocalized(ctx, w)
+	ww, err := csvexport.New(ctx, w)
 	require.NoError(t, err)
 	return s.Write(ww)
 }
@@ -86,9 +86,7 @@ func TestSeriesExport_GermanLocale(t *testing.T) {
 	require.NoError(t, writeSeriesCsv(t, ctx, series, &buf))
 
 	s := string(bytes.TrimPrefix(buf.Bytes(), []byte{0xEF, 0xBB, 0xBF}))
-	require.True(t, strings.Contains(s, ";"), "german CSV must use ';' separator")
-	// Values are plain Wh integers so they're locale-agnostic. We just check
-	// no decimal point / comma snuck in.
+	require.False(t, strings.Contains(s, ";"), "delimiter is ',' regardless of locale")
 	require.True(t, strings.Contains(s, "2500"), "value should be Wh integer")
 	require.False(t, strings.Contains(s, "2.500"), "no '.' decimal/thousands")
 	require.False(t, strings.Contains(s, "2,500"), "no ',' decimal/thousands")
