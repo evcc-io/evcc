@@ -114,7 +114,7 @@ jobs:
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           tags: evcc/evcc:pr-${{ github.event.issue.number }}
           cache-from: type=gha
