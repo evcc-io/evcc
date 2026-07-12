@@ -518,7 +518,7 @@
       "usage": {
         "aux": "Intelligente Verbraucher",
         "battery": "Batterie",
-        "charge": "Verbraucher / Luedgerät",
+        "charge": "Luedgerät",
         "grid": "Réseau",
         "label": "Benotzung",
         "pv": "Productioun"
@@ -1165,10 +1165,6 @@
       "batteryCharge": "Batterie oplueden",
       "batteryDischarge": "Batterie entlueden",
       "batteryDischargeHold": "Batterie (gespäert)",
-      "batteryForecastEmpty": "Eidel",
-      "batteryForecastFull": "Voll",
-      "batteryForecastNextHigh": "Héich",
-      "batteryForecastNextLow": "Déif",
       "batteryGridChargeActive": "Oluede vum Netz: aktiv",
       "batteryGridChargeLimit": "Opluede vum Netz: wann",
       "batteryTooltip": "{energy} vun {total} ({soc})",

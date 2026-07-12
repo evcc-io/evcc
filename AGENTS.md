@@ -93,6 +93,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - In user-facing strings, only mention `evcc` when needed to understand the context. Inside evcc's own UI the self-reference is usually redundant
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
 - Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
+- Terminology: the top-level load management circuit is "root circuit" in English, "Hauptstromkreis" in German
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
 
 ## Comment Style
@@ -172,6 +173,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Implement accessibility features (tabindex, aria-label, keyboard handlers)
 - Use descriptive names for variables, functions, and event handlers
 - Use early returns for readability
+- Prefer named computed properties over inline template expressions, even for single use. Readability beats saving lines
 - Use configured Axios instance for HTTP communication
 
 ### State Management
@@ -312,3 +314,5 @@ Structure PR descriptions in this order. No headlines. Be concise.
    ```
 
 Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers, no generator footers.
+
+Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.

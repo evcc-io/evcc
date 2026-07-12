@@ -18,6 +18,8 @@ requirements:
 params:
   - preset: vehicle-common
   - preset: vehicle-online
+  - name: welcomecharge
+    advanced: true
   - name: email
     required: true
   - name: password

@@ -93,7 +93,7 @@ jobs:
 
       # Default checkout (base ref) only — do NOT check out the untrusted PR head.
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
         with:
           fetch-depth: 1
 
@@ -113,7 +113,9 @@ jobs:
           allowed_bots: "dependabot[bot]"
           plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
           plugins: "code-review@claude-code-plugins"
-          prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ needs.gate.outputs.number }}"
+          # --comment makes the plugin post its findings (or a "no issues" summary)
+          # to the PR; without it the review only prints to the hidden CI log.
+          prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ needs.gate.outputs.number }} --comment"
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 

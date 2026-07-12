@@ -227,8 +227,8 @@ test.describe("additional meters", () => {
     const additional = section(page, "meter");
     await expect(additional).toBeVisible();
 
-    // Total is the entity sum, not home-derived.
-    await expect(additional.getByRole("heading")).toContainText("1.2 kWh");
+    // No section total: additional meters can be import, export, or consumption.
+    await expect(additional.getByRole("heading")).not.toContainText("kWh");
 
     // Explicit entity legend, no virtual "Others" (unlike the consumer group).
     await expect(additional.getByRole("button", { name: "Submeter 1.2 kWh" })).toBeVisible();
