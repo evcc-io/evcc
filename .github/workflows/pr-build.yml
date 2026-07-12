@@ -5,7 +5,8 @@ name: PR Build
 #   /build amd      linux amd64 only
 #   /build arm      linux arm64 + arm/v6 only
 #   /build docker   multiarch docker image only, no binaries
-# Uploads downloadable binaries and publishes a docker image tagged pr-<number>.
+#   /nightly        nightly packages (.deb/.tar.gz) built from the PR head
+# Uploads downloadable binaries/packages and publishes a docker image tagged pr-<number>.
 
 on:
   issue_comment:
@@ -17,10 +18,10 @@ permissions:
 jobs:
   prep:
     name: Prepare
-    # only on PR comments starting with /build, and only from maintainers
+    # only on PR comments starting with /build or /nightly, and only from maintainers
     if: |
       github.event.issue.pull_request &&
-      startsWith(github.event.comment.body, '/build') &&
+      (startsWith(github.event.comment.body, '/build') || startsWith(github.event.comment.body, '/nightly')) &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:
@@ -28,6 +29,7 @@ jobs:
       pull-requests: write
     outputs:
       sha: ${{ steps.pr.outputs.sha }}
+      cmd: ${{ steps.parse.outputs.cmd }}
       archs: ${{ steps.parse.outputs.archs }}
       platforms: ${{ steps.parse.outputs.platforms }}
     steps:
@@ -47,12 +49,17 @@ jobs:
         env:
           BODY: ${{ github.event.comment.body }}
         run: |
+          cmd=$(printf '%s' "$BODY" | awk '{print $1}')
           arg=$(printf '%s' "$BODY" | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
           case "$arg" in
             amd*)    archs='["amd64"]';              platforms='linux/amd64' ;;
             arm*)    archs='["arm64","arm"]';        platforms='linux/arm64,linux/arm/v6' ;;
             docker*) archs='[]';                     platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
             *)       archs='["amd64","arm64","arm"]'; platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
+          esac
+          case "$cmd" in
+            /nightly) echo "cmd=nightly" >> "$GITHUB_OUTPUT" ;;
+            *)        echo "cmd=build"   >> "$GITHUB_OUTPUT" ;;
           esac
           echo "archs=$archs" >> "$GITHUB_OUTPUT"
           echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
@@ -68,7 +75,7 @@ jobs:
   binaries:
     name: Binaries
     needs: prep
-    if: needs.prep.outputs.archs != '[]'
+    if: needs.prep.outputs.cmd == 'build' && needs.prep.outputs.archs != '[]'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
@@ -118,6 +125,7 @@ jobs:
   docker:
     name: Docker
     needs: prep
+    if: needs.prep.outputs.cmd == 'build'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
@@ -147,9 +155,56 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  nightly:
+    name: Nightly Packages
+    needs: prep
+    if: needs.prep.outputs.cmd == 'nightly'
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prep.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+        id: go
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26"
+          cache: "npm"
+
+      - name: Build UI
+        run: make install-ui ui
+
+      - name: Patch ASN1
+        run: make patch-asn1-sudo
+
+      - name: Create nightly build
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
+        with:
+          version: "~> v2"
+          args: --snapshot -f .goreleaser-nightly.yml --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: evcc-nightly-pr-${{ github.event.issue.number }}
+          path: |
+            release/*.deb
+            release/*.tar.gz
+          retention-days: 14
+
   report:
     name: Report
-    needs: [prep, binaries, docker]
+    needs: [prep, binaries, docker, nightly]
     if: always() && needs.prep.result == 'success'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
@@ -159,19 +214,28 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const b = '${{ needs.binaries.result }}';
-            const d = '${{ needs.docker.result }}';
-            const ok = d === 'success' && (b === 'success' || b === 'skipped');
+            const cmd = '${{ needs.prep.outputs.cmd }}';
             const num = context.payload.issue.number;
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             let body;
-            if (ok) {
-              const lines = ['✅ Build finished.', ''];
-              if (b === 'success') lines.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
-              lines.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
-              body = lines.join('\n');
+            if (cmd === 'nightly') {
+              if ('${{ needs.nightly.result }}' === 'success') {
+                body = ['✅ Nightly build finished.', '', `- Packages: [download artifacts](${runUrl}#artifacts)`].join('\n');
+              } else {
+                body = `❌ Nightly build failed. See the [run logs](${runUrl}).`;
+              }
             } else {
-              body = `❌ Build failed. See the [run logs](${runUrl}).`;
+              const b = '${{ needs.binaries.result }}';
+              const d = '${{ needs.docker.result }}';
+              const ok = d === 'success' && (b === 'success' || b === 'skipped');
+              if (ok) {
+                const lines = ['✅ Build finished.', ''];
+                if (b === 'success') lines.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
+                lines.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
+                body = lines.join('\n');
+              } else {
+                body = `❌ Build failed. See the [run logs](${runUrl}).`;
+              }
             }
             await github.rest.issues.createComment({
               owner: context.repo.owner,
