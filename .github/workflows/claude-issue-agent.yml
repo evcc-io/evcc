@@ -57,6 +57,7 @@ jobs:
                this set and apply it with
                `gh issue edit ${{ github.event.issue.number }} --add-label <label>`:
                bug, enhancement, documentation, question, device, tariff, vehicle, heating.
+               Only ever apply a label from this existing set — never create a new label.
                Skip this step if the issue already has one of these labels.
                - Only classify as a bug when the evidence shows a genuine software
                  defect. If the report is missing information, or you cannot tell
