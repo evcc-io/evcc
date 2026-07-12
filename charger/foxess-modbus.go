@@ -164,10 +164,12 @@ func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
 }
 
 // heartbeat keeps the charger from considering evcc offline by sending a
-// message every half validity window. When enabled it re-sends the current
-// setpoint; when disabled it sends the stop command only on the transition
-// from enabled to disabled, since the charger rejects redundant stop commands
-// (write-only register 0x4001 has no read-back to check against).
+// message every half validity window. It always re-sends the last setpoint
+// (power or current) to keep the validity window alive. When the charger is
+// disabled the setpoint registers are inert (spec says they only take effect
+// in charging state), so this is safe. The stop command is sent once on the
+// transition from enabled to disabled; it is not repeated because 0x4001 is
+// write-only and the charger rejects redundant stop commands with exception 3.
 func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 	for tick := time.Tick(foxTimeValidity / 2 * time.Second); ; {
 		select {
@@ -192,7 +194,9 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 				wb.lastEnabled = false
 				wb.mu.Unlock()
 			}
-		} else if enabled && cur != 0 {
+		} else if cur != 0 {
+			// always re-send the setpoint to keep the validity window alive;
+			// setpoint registers are inert when not charging so this is safe
 			if pbox {
 				err = wb.ensureReg(foxRegMaxCurrent, cur)
 			} else {
