@@ -868,13 +868,16 @@ export default defineComponent({
 				return { configured: { value: false } };
 			}
 			const tags: DeviceTags = {
-				enabled: { value: remote.config?.enabled },
-				connected: { value: remote.status?.connected },
+				remoteEnabled: { value: remote.config?.enabled },
+				connected: {
+					value: remote.status?.connected,
+					error: remote.config?.enabled && !remote.status?.connected,
+				},
 			};
 			if (remote.status?.loginBlocked) {
 				tags["loginBlocked"] = { value: true, error: true };
 			}
-			if (remote.status?.connected) {
+			if (remote.config?.enabled) {
 				const lastSeen = remote.status?.lastSeen;
 				const count = lastSeen
 					? Object.keys(lastSeen).filter((u) => isRemoteClientActive(lastSeen, u)).length

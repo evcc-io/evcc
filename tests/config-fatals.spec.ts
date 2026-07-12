@@ -69,6 +69,7 @@ test.describe("fatal config handling", async () => {
     await addDemoCharger(page);
 
     // add shelly meter
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);

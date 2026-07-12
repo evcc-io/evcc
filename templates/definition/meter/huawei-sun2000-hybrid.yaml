@@ -262,12 +262,29 @@ render: |
             type: writesingle
             encoding: uint16
   curtailed:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 47415 # Active power control mode (0=no curtailment)
-      type: holding
-      decode: uint16
+    source: go
+    in:
+    - name: mode
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47415 # Active power control mode (0=no curtailment)
+          type: holding
+          decode: uint16
+    - name: percent
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47418 # Maximum Feed Grid Power (0-100 %)
+          type: holding
+          decode: uint16
+        scale: 0.1
+    # mode 7 (percentage limit) at 100% means limited-grid-connection is enabled but not actually curtailing
+    script: mode != 0 && !(mode == 7 && percent == 100)
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
