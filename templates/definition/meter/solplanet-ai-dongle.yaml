@@ -1,0 +1,48 @@
+template: solplanet-ai-dongle
+products:
+  - brand: Solplanet
+    description:
+      generic: AI-Dongle LAN (local HTTP API)
+requirements:
+  description:
+    de: |
+      Nutzt die lokale HTTP-Schnittstelle des AI-Dongle (z.B. BA121T-30) statt Modbus TCP.
+      Die Seriennummer (isn) des Wechselrichters kann über `http://<host>:8484/getdev.cgi?device=2` ausgelesen werden.
+    en: |
+      Uses the AI-Dongle local HTTP API (e.g. BA121T-30) instead of Modbus TCP.
+      The inverter serial number (isn) can be read via `http://<host>:8484/getdev.cgi?device=2`.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: serial
+    description:
+      en: Inverter serial number (isn)
+      de: Seriennummer des Wechselrichters (isn)
+    required: true
+  - preset: battery-params
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=3&sn={{ .serial }}
+    jq: .pac
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
+    jq: .ppv
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
+    jq: .pb
+  soc:
+    source: http
+    uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
+    jq: .soc
+  {{- include "battery-params" . }}
+  {{- end }}
