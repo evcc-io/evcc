@@ -106,6 +106,29 @@
 					{{ $t("config.eebus.noConfiguredDevices") }}
 				</div>
 			</div>
+			<div v-if="status.ski" class="mb-4">
+				<h6 class="mb-1">{{ $t("config.eebus.discoveredDevices") }}</h6>
+				<p class="text-muted small mb-3">
+					{{ $t("config.eebus.discoveredDevicesHint") }}
+				</p>
+				<div
+					v-for="ski in discoveredDevices"
+					:key="ski"
+					data-testid="eebus-discovered-device"
+					class="mb-2"
+				>
+					<div
+						class="d-flex align-items-center justify-content-between py-2 ps-3 pe-2 border rounded"
+					>
+						<div class="flex-grow-1 fw-semibold text-truncate">
+							{{ ski }}
+						</div>
+					</div>
+				</div>
+				<div v-if="!discoveredDevices.length" class="text-muted small mb-2">
+					{{ $t("config.eebus.noDiscoveredDevices") }}
+				</div>
+			</div>
 			<PropertyCollapsible v-if="!fromYaml">
 				<template #advanced>
 					<div class="alert alert-danger">
@@ -216,6 +239,7 @@ export default {
 		return {
 			qrDataUrl: null as string | null,
 			pairings: [] as EebusPairing[],
+			services: [] as string[],
 		};
 	},
 	computed: {
@@ -227,6 +251,11 @@ export default {
 		},
 		configuredDevices(): EebusPairing[] {
 			return this.pairings.filter((p) => p.source === "ski");
+		},
+		// mDNS-discovered SKIs that are not yet paired or configured
+		discoveredDevices(): string[] {
+			const known = new Set(this.pairings.map((p) => p.ski));
+			return this.services.filter((ski) => !known.has(ski));
 		},
 	},
 	watch: {
@@ -255,6 +284,12 @@ export default {
 				this.pairings = res.data || [];
 			} catch {
 				this.pairings = [];
+			}
+			try {
+				const res = await api.get("config/service/eebus/services");
+				this.services = res.data || [];
+			} catch {
+				this.services = [];
 			}
 		},
 		async removePairing(pairing: EebusPairing) {
