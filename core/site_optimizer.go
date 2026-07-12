@@ -96,7 +96,8 @@ type batteryDetail struct {
 	Name     string      `json:"name,omitempty"`
 	Capacity float64     `json:"capacity,omitempty"`
 
-	loadpoint *int // originating loadpoint id for loadpoint/vehicle entries
+	loadpoint    *int // originating loadpoint id for loadpoint/vehicle entries
+	controllable bool // battery exposes a controller; only these get suggestions
 }
 
 type batteryResult struct {
@@ -436,7 +437,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 		if detail.Type == batteryTypeBattery {
-			suggestions[detail.Name] = suggestion
+			// uncontrollable batteries can't act on a suggestion
+			if detail.controllable {
+				suggestions[detail.Name] = suggestion
+			}
 		} else if detail.loadpoint != nil {
 			lpSuggestions[*detail.loadpoint] = suggestion
 		}
@@ -629,7 +633,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	if api.HasCap[api.BatteryController](instance) {
+	controllable := api.HasCap[api.BatteryController](instance)
+	if controllable {
 		bat.ChargeFromGrid = true
 	}
 
@@ -646,10 +651,11 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	}
 
 	detail := batteryDetail{
-		Type:     batteryTypeBattery,
-		Name:     dev.Config().Name,
-		Title:    deviceProperties(dev).Title,
-		Capacity: *b.Capacity,
+		Type:         batteryTypeBattery,
+		Name:         dev.Config().Name,
+		Title:        deviceProperties(dev).Title,
+		Capacity:     *b.Capacity,
+		controllable: controllable,
 	}
 
 	// tariff forecast-based grid charging demand

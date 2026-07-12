@@ -87,7 +87,8 @@ export default defineComponent({
 	},
 	methods: {
 		deviceSuggestion(d?: BatteryMeter): BatterySuggestion | null {
-			return d?.controllable && d.suggestion?.actionable ? d.suggestion : null;
+			// optimizer only emits suggestions for controllable batteries
+			return d?.suggestion?.actionable ? d.suggestion : null;
 		},
 	},
 });
