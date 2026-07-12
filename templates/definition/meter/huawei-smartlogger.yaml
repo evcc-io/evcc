@@ -3,7 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: SmartLogger
-capabilities: ["battery-control", "curtail", "dim"]
+capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
