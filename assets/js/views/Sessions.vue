@@ -157,17 +157,8 @@
 						@show-session="showDetails"
 					/>
 				</Card>
-				<div class="d-flex gap-2 my-3">
-					<a
-						class="btn btn-outline-secondary"
-						tabindex="0"
-						:href="csvLink"
-						download
-						data-testid="sessions-download"
-						@click="handleDownloadClick($event, csvLink)"
-					>
-						{{ csvLinkLabel }}
-					</a>
+				<div class="d-flex align-items-baseline gap-2 my-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
 					<button
 						v-if="!showTable"
 						class="btn btn-link text-muted"
@@ -219,7 +210,7 @@ import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import { handleDownloadClick } from "@/utils/native";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
@@ -232,6 +223,7 @@ export default defineComponent({
 		SessionTable,
 		TopHeader: Header,
 		Card,
+		DownloadButton,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,
@@ -491,28 +483,6 @@ export default defineComponent({
 			date.setMonth(this.month - 1, 1);
 			return this.fmtMonth(date, false);
 		},
-		csvLinkLabel() {
-			if (this.period === PERIODS.MONTH) {
-				const date = new Date();
-				date.setMonth(this.month - 1, 1);
-				date.setFullYear(this.year);
-				const period = this.fmtMonthYear(date);
-				return this.$t("sessions.csvPeriod", { period });
-			} else if (this.period === PERIODS.YEAR) {
-				const period = this.year;
-				return this.$t("sessions.csvPeriod", { period });
-			} else {
-				return this.$t("sessions.csvTotal");
-			}
-		},
-		csvLink() {
-			if (this.period === PERIODS.MONTH) {
-				return this.csvHrefLink(this.year, this.month);
-			} else if (this.period === PERIODS.YEAR) {
-				return this.csvHrefLink(this.year);
-			}
-			return this.csvHrefLink();
-		},
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
 		},
@@ -657,7 +627,6 @@ export default defineComponent({
 		this.loadSessions();
 	},
 	methods: {
-		handleDownloadClick,
 		changePeriod(newPeriod: PERIODS) {
 			let month: number | undefined = this.month;
 			let year: number | undefined = this.year;
@@ -690,13 +659,14 @@ export default defineComponent({
 			);
 			modal.show();
 		},
-		csvHrefLink(year?: number, month?: number) {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-			});
-			if (year) params.append("year", year.toString());
-			if (month) params.append("month", month.toString());
+		downloadHref() {
+			const params = new URLSearchParams({ lang: this.$i18n?.locale });
+			if (this.period === PERIODS.MONTH || this.period === PERIODS.YEAR) {
+				params.append("year", this.year.toString());
+			}
+			if (this.period === PERIODS.MONTH) {
+				params.append("month", this.month.toString());
+			}
 			return `./api/sessions?${params.toString()}`;
 		},
 		updateType(type: TYPES) {

@@ -370,6 +370,8 @@
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "integrations": "Integrationen",
       "lastEvent": "Letzter Eintrag {timeAgo}.",
+      "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
+      "recordedEvents": "Aufgezeichnete Ereignisse",
       "template": "Integration",
       "title": "Externe Begrenzung"
     },
@@ -1131,6 +1133,7 @@
     }
   },
   "general": {
+    "download": "Download",
     "note": "Hinweis:"
   },
   "header": {

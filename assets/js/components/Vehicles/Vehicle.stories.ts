@@ -188,7 +188,7 @@ SmartChargeCostLimitActive.args = {
 export const SuggestionCharge = Template.bind({});
 SuggestionCharge.args = {
   ...baseState,
-  suggestion: { action: "charge" },
+  suggestion: { action: "charge", actionable: true },
 };
 
 export const SuggestionPause = Template.bind({});
@@ -196,7 +196,7 @@ SuggestionPause.args = {
   ...baseState,
   enabled: true,
   charging: true,
-  suggestion: { action: "stop" },
+  suggestion: { action: "stop", actionable: true },
 };
 
 export const SuggestionCombination = Template.bind({});
@@ -204,7 +204,7 @@ SuggestionCombination.args = {
   ...baseState,
   enabled: true,
   charging: true,
-  suggestion: { action: "stop" },
+  suggestion: { action: "stop", actionable: true },
   currency: "EUR",
   tariffGrid: 0.32,
   smartCostLimit: 0.12,

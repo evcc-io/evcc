@@ -3,7 +3,9 @@
 		<div v-if="recommendation" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<Optimizer />
-				{{ $t("battery.optimizer.suggestion") }}
+				<router-link to="/optimize" class="evcc-default-text text-decoration-underline">
+					{{ $t("battery.optimizer.suggestion") }}
+				</router-link>
 			</span>
 			<span class="text-muted text-end">{{ recommendation }}</span>
 		</div>

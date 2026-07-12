@@ -674,12 +674,14 @@ export interface BatterySuggestion {
   action: "normal" | "hold" | "charge" | "holdcharge";
   charge?: number; // recommended charge power, W
   discharge?: number; // recommended discharge power, W
+  actionable?: boolean; // suggestion differs from the current operating mode
 }
 
 export interface LoadpointSuggestion {
   action: "charge" | "stop";
   charge?: number; // recommended charge power, W
   discharge?: number; // recommended discharge power, W
+  actionable?: boolean; // suggestion differs from the current operating mode
 }
 
 export interface BatteryMeter extends Meter {
