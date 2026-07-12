@@ -102,7 +102,11 @@ import Card from "../components/Helper/Card.vue";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import GroupChart, { type HistorySeries, stepAlpha } from "../components/History/GroupChart.vue";
+import GroupChart, {
+	type HistorySeries,
+	type HistorySlot,
+	stepAlpha,
+} from "../components/History/GroupChart.vue";
 import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
@@ -116,8 +120,30 @@ import store from "../store";
 
 const HISTORY_PERIODS = [PERIODS.DAY, PERIODS.MONTH, PERIODS.YEAR];
 
+// single logical entities: swapping the device ref creates a second entity
+// row that would otherwise show as a duplicate history series.
+const SINGLE_ENTITY_GROUPS = ["grid", "home", "forecast"];
+
 function daysInMonth(year: number, month: number) {
 	return new Date(year, month, 0).getDate();
+}
+
+// mergeSeries sums the slots of multiple series per timestamp into one series.
+function mergeSeries(list: HistorySeries[]): HistorySeries {
+	const slots = new Map<string, HistorySlot>();
+	for (const s of list) {
+		for (const slot of s.data) {
+			const cur = slots.get(slot.start);
+			if (cur) {
+				cur.energy += slot.energy;
+				cur.returnEnergy += slot.returnEnergy;
+			} else {
+				slots.set(slot.start, { ...slot });
+			}
+		}
+	}
+	const data = [...slots.values()].sort((a, b) => a.start.localeCompare(b.start));
+	return { ...list[0], data };
 }
 
 export default defineComponent({
@@ -236,6 +262,10 @@ export default defineComponent({
 			for (const s of this.rawSeries) {
 				if (!s.group) continue;
 				(map[s.group] ||= []).push(s);
+			}
+			// collapse duplicate rows of single-entity groups into one series
+			for (const g of SINGLE_ENTITY_GROUPS) {
+				if (map[g] && map[g].length > 1) map[g] = [mergeSeries(map[g])];
 			}
 			return map;
 		},
