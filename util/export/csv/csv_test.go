@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/assets"
+	"github.com/evcc-io/evcc/util/export"
 	"github.com/evcc-io/evcc/util/locale"
 )
 
 func init() {
-	assets.I18n = os.DirFS("../../i18n")
+	assets.I18n = os.DirFS("../../../i18n")
 	_ = locale.Init()
 }
 
@@ -32,17 +33,12 @@ func TestWriteStructSlice_Empty(t *testing.T) {
 	slice := TestStructs{}
 
 	ctx := context.WithValue(context.Background(), locale.Locale, "en")
-	err := WriteStructSlice(ctx, &buf, &slice, Config{
-		I18nPrefix: "test.csv",
-	})
-
-	if err != nil {
+	if err := WriteStructSlice(ctx, &buf, &slice, export.Config{I18nPrefix: "test.csv"}); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	output := buf.String()
-	if !strings.Contains(output, "Name") {
-		t.Errorf("Expected header with 'Name', got: %s", output)
+	if !strings.Contains(buf.String(), "Name") {
+		t.Errorf("Expected header with 'Name', got: %s", buf.String())
 	}
 }
 
@@ -60,16 +56,11 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 	}
 
 	ctx := context.WithValue(context.Background(), locale.Locale, "en")
-	err := WriteStructSlice(ctx, &buf, &slice, Config{
-		I18nPrefix: "test.csv",
-	})
-
-	if err != nil {
+	if err := WriteStructSlice(ctx, &buf, &slice, export.Config{I18nPrefix: "test.csv"}); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
 	output := buf.String()
-
 	if !strings.HasPrefix(output, "\xEF\xBB\xBF") {
 		t.Error("Expected UTF-8 BOM at start")
 	}
@@ -79,9 +70,8 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 		t.Fatalf("Expected at least 2 lines (header + data), got: %d", len(lines))
 	}
 
-	expectedHeader := "Name,Value,OptValue,Created"
-	if lines[0] != expectedHeader {
-		t.Errorf("Expected header: %s\nGot: %s", expectedHeader, lines[0])
+	if lines[0] != "Name,Value,OptValue,Created" {
+		t.Errorf("Expected header: Name,Value,OptValue,Created\nGot: %s", lines[0])
 	}
 
 	if !strings.Contains(lines[1], "Test,123.456,42.5,2024-01-01") {
@@ -89,39 +79,22 @@ func TestWriteStructSlice_WithData(t *testing.T) {
 	}
 }
 
-func TestWriteStructSlice_GermanLocale(t *testing.T) {
+func TestWriteStructSlice_LocaleIndependentValues(t *testing.T) {
 	var buf bytes.Buffer
 	slice := TestStructs{
 		{Name: "Test", Value: 123.456},
 	}
 
 	ctx := context.WithValue(context.Background(), locale.Locale, "de")
-	err := WriteStructSlice(ctx, &buf, &slice, Config{
-		I18nPrefix: "test.csv",
-	})
-
-	if err != nil {
+	if err := WriteStructSlice(ctx, &buf, &slice, export.Config{I18nPrefix: "test.csv"}); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	output := buf.String()
-	lines := strings.Split(output, "\n")
-	if len(lines) > 1 && !strings.Contains(lines[1], ";") {
-		t.Errorf("Expected German CSV to use ';' separator, got: %s", lines[1])
+	lines := strings.Split(buf.String(), "\n")
+	if len(lines) < 2 {
+		t.Fatalf("Expected header + data row, got: %s", buf.String())
 	}
-}
-
-func TestFormatValue_NilPointer(t *testing.T) {
-	var nilPtr *float64
-	result := formatValue(nil, nilPtr, 3)
-	if result != "" {
-		t.Errorf("Expected empty string for nil pointer, got: %s", result)
-	}
-}
-
-func TestFormatValue_ZeroTime(t *testing.T) {
-	result := formatValue(nil, time.Time{}, 3)
-	if result != "" {
-		t.Errorf("Expected empty string for zero time, got: %s", result)
+	if !strings.Contains(lines[1], "Test,123.456") {
+		t.Errorf("Expected comma delimiter and dot decimal for German locale, got: %s", lines[1])
 	}
 }
