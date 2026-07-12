@@ -1011,6 +1011,32 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	return sum
 }
 
+// reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
+// that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
+func (site *Site) reservedPVPower(lp updater) float64 {
+	if lp.GetMode() != api.ModePV {
+		return 0
+	}
+
+	prio := lp.EffectivePriority()
+
+	var reserved float64
+	for _, other := range site.loadpoints {
+		if any(other) == any(lp) {
+			continue
+		}
+		if other.EffectivePriority() > prio && other.pvChargeStarting() {
+			reserved += other.EffectiveMaxPower()
+		}
+	}
+
+	if reserved > 0 {
+		site.log.DEBUG.Printf("lp %s reserves %.0fW for higher-priority loadpoints starting up", lp.GetTitle(), reserved)
+	}
+
+	return reserved
+}
+
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -1081,6 +1107,9 @@ func (site *Site) update(lp updater) {
 
 		// TODO
 		if lp != nil {
+			// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
+			sitePower += site.reservedPVPower(lp)
+
 			lp.Update(
 				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
