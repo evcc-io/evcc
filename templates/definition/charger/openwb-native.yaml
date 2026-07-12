@@ -30,9 +30,9 @@ requirements:
           - Bernecker Engineering MPM3PM (template: mpm3pm) mit ID 5 oder ID 6 für den zweiten Ladepunkt bei der Duo.
           - SDM630/SDM72 (template: eastron) mit ID 105 oder ID 106 für den zweiten Ladepunkt bei der Duo (u.a. openWB SE).
           - ABB B23 (template: abb-ab) mit ID 201
-      - Die openWB SE-Hardware limitiert die maximal zulässigen Ströme abhängig von der Anzahl der aktivenPhasen; 
-        siehe https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se. evcc selbst begrenzt den Strom *nicht* auf 
-        den zulässigen Maximalwert, daher bitte den maximalen Strom in evcc entsprechend konfigurieren.
+      - Die openWB SE-Hardware limitiert die maximal zulässigen Ströme abhängig von der Anzahl der aktiven Phasen;
+        siehe https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se. evcc selbst begrenzt den Strom nicht auf
+        den zulässigen Maximalwert, daher muss der maximale Strom durch die Ladepunkt-Konfiguration entsprechend begrenzt werden.
 
       Zusätzlich für die Anzeige von evcc im Display (Achtung dann können auch Unbefugte laden!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
@@ -83,7 +83,7 @@ requirements:
           - ABB B23 (template: abb-ab) with ID 201
       - The openWB SE Hardware limits the maximum allowed currents depending on the number of active phases, 
         see https://wiki.openwb.de/doku.php?id=openwb:technische-daten:openwb_se. evcc by itself does not enforce these current limits, 
-        so please ensure to configure the maximum current in evcc accordingly.
+        thus those physical charger limits must be enforced by the load-point configuration.
 
       Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
       - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
