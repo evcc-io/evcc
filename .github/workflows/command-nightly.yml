@@ -1,6 +1,6 @@
-name: PR Nightly
+name: Nightly Command
 
-# Triggered by a maintainer commenting `/nightly` on a pull request.
+# Triggered by a maintainer commenting `/nightly` on an issue or pull request.
 # Builds the nightly packages from master (goreleaser snapshot) to check the
 # nightly pipeline is green, then replies with the result. No download artifacts.
 
@@ -14,14 +14,14 @@ permissions:
 jobs:
   nightly:
     name: Nightly Build
-    # only on PR comments starting with /nightly, and only from maintainers
+    # on any issue/PR comment starting with /nightly, only from maintainers
     if: |
-      github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '/nightly') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
+      issues: write
       pull-requests: write
     steps:
       - name: React to comment
@@ -71,6 +71,7 @@ jobs:
     if: always() && needs.nightly.result != 'skipped'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
+      issues: write
       pull-requests: write
     steps:
       - name: Comment result
