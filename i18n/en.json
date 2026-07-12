@@ -1251,6 +1251,8 @@
       "day": "Day",
       "departureTab": "Departure",
       "goal": "Charging goal",
+      "goalDuration": "Duration",
+      "goalEnergy": "Energy",
       "modalTitle": "Charging Plan",
       "none": "none",
       "optimization": {

@@ -26,6 +26,7 @@ type DynamicConfig struct {
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	PlanEnergy               float64   `json:"planEnergy"`
+	PlanDuration             int64     `json:"planDuration"` // seconds
 	PlanTime                 time.Time `json:"planTime"`
 	PlanPrecondition_        int64     `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
 	BatteryBoostLimit        int       `json:"batteryBoostLimit"`
@@ -70,7 +71,12 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
 	lp.SetThresholds(payload.Thresholds)
-	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
+	// energy and duration plans are mutually exclusive
+	if payload.PlanDuration > 0 {
+		lp.SetPlanDuration(payload.PlanTime, time.Duration(payload.PlanDuration)*time.Second)
+	} else {
+		lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
+	}
 	lp.SetPlanStrategy(payload.PlanStrategy)
 	lp.SetBatteryBoostLimit(payload.BatteryBoostLimit)
 	lp.SetLimitEnergy(payload.LimitEnergy)

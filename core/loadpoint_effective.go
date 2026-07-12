@@ -114,7 +114,7 @@ func (lp *Loadpoint) getPlanId() int {
 		_, _, id := lp.nextVehiclePlan()
 		return id
 	}
-	if lp.planEnergy > 0 {
+	if lp.planEnergy > 0 || lp.planDuration > 0 {
 		return 1
 	}
 	return 0

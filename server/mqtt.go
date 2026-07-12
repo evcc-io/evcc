@@ -262,6 +262,9 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"batteryBoostLimit", intSetter(pass(lp.SetBatteryBoostLimit))},
 		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},
 		{"planEnergy", planGoalSetter(lp.SetPlanEnergy)},
+		{"planDuration", planGoalSetter(func(t time.Time, sec int64) error {
+			return lp.SetPlanDuration(t, time.Duration(sec)*time.Second)
+		})},
 		{"vehicle", func(payload string) error {
 			// https://github.com/evcc-io/evcc/issues/11184 empty payload is swallowed by listener
 			if isEmpty(payload) {

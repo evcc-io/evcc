@@ -21,7 +21,7 @@ export interface PlanResponse {
   data: PlanWrapper;
 }
 
-export type StaticPlan = StaticSocPlan | StaticEnergyPlan;
+export type StaticPlan = StaticSocPlan | StaticEnergyPlan | StaticDurationPlan;
 
 export interface StaticSocPlan {
   soc: number;
@@ -30,6 +30,11 @@ export interface StaticSocPlan {
 
 export interface StaticEnergyPlan {
   energy: number;
+  time: Date;
+}
+
+export interface StaticDurationPlan {
+  duration: number; // seconds
   time: Date;
 }
 
