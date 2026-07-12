@@ -5,9 +5,9 @@ name: PR Build
 #   /build amd      linux amd64 only
 #   /build arm      linux arm64 + arm/v6 only
 #   /build docker   multiarch docker image only, no binaries
-#   /nightly        nightly packages (.deb/.tar.gz) built from the PR head
 #   /help           post the command reference as a comment, build nothing
-# Uploads downloadable binaries/packages and publishes a docker image tagged pr-<number>.
+# Uploads downloadable binaries and publishes a docker image tagged pr-<number>.
+# The /nightly command lives in pr-nightly.yml.
 
 on:
   issue_comment:
@@ -19,10 +19,10 @@ permissions:
 jobs:
   prep:
     name: Prepare
-    # only on PR comments starting with /build, /nightly or /help, and only from maintainers
+    # only on PR comments starting with /build or /help, and only from maintainers
     if: |
       github.event.issue.pull_request &&
-      (startsWith(github.event.comment.body, '/build') || startsWith(github.event.comment.body, '/nightly') || startsWith(github.event.comment.body, '/help')) &&
+      (startsWith(github.event.comment.body, '/build') || startsWith(github.event.comment.body, '/help')) &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:
@@ -59,9 +59,8 @@ jobs:
             *)       archs='["amd64","arm64","arm"]'; platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
           esac
           case "$cmd" in
-            /nightly) echo "cmd=nightly" >> "$GITHUB_OUTPUT" ;;
-            /help)    echo "cmd=help"    >> "$GITHUB_OUTPUT" ;;
-            *)        echo "cmd=build"   >> "$GITHUB_OUTPUT" ;;
+            /help) echo "cmd=help"  >> "$GITHUB_OUTPUT" ;;
+            *)     echo "cmd=build" >> "$GITHUB_OUTPUT" ;;
           esac
           echo "archs=$archs" >> "$GITHUB_OUTPUT"
           echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
@@ -157,53 +156,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  nightly:
-    name: Nightly Packages
-    needs: prep
-    if: needs.prep.outputs.cmd == 'nightly'
-    runs-on: depot-ubuntu-24.04-arm
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.prep.outputs.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-        id: go
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "26"
-          cache: "npm"
-
-      - name: Build UI
-        run: make install-ui ui
-
-      - name: Patch ASN1
-        run: make patch-asn1-sudo
-
-      - name: Create nightly build
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
-        with:
-          version: "~> v2"
-          args: --snapshot -f .goreleaser-nightly.yml --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload packages
-        uses: actions/upload-artifact@v7
-        with:
-          name: evcc-nightly-pr-${{ github.event.issue.number }}
-          path: |
-            release/*.deb
-            release/*.tar.gz
-          retention-days: 14
-
   help:
     name: Help
     needs: prep
@@ -219,18 +171,18 @@ jobs:
             const body = [
               '### PR build commands',
               '',
-              'Maintainer-only slash commands. All build from the PR head commit and reply with the result.',
+              'Maintainer-only slash commands that reply with the result.',
               '',
-              '| Comment | What it builds |',
+              '| Comment | What it does |',
               '| --- | --- |',
-              '| `/build` | Linux binaries (amd64 + arm64 + arm/v6) **and** the multi-arch docker image |',
+              '| `/build` | Linux binaries (amd64 + arm64 + arm/v6) **and** the multi-arch docker image, from the PR head |',
               '| `/build amd` | linux amd64 binary only |',
               '| `/build arm` | linux arm64 + arm/v6 binaries only |',
               '| `/build docker` | multi-arch docker image only, no binaries |',
-              '| `/nightly` | nightly `.deb` / `.tar.gz` packages (goreleaser snapshot) |',
+              '| `/nightly` | nightly packages built from master (reply only, no artifacts) |',
               '| `/help` | this reference |',
               '',
-              'Binaries and packages are uploaded as run artifacts (14-day retention); the docker image is pushed as `evcc/evcc:pr-<number>`.',
+              'Binaries are uploaded as run artifacts (14-day retention); the docker image is pushed as `evcc/evcc:pr-<number>`.',
             ].join('\n');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -241,8 +193,8 @@ jobs:
 
   report:
     name: Report
-    needs: [prep, binaries, docker, nightly]
-    if: always() && needs.prep.result == 'success' && needs.prep.outputs.cmd != 'help'
+    needs: [prep, binaries, docker]
+    if: always() && needs.prep.result == 'success' && needs.prep.outputs.cmd == 'build'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
@@ -253,32 +205,22 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const cmd = '${{ needs.prep.outputs.cmd }}';
             const num = context.payload.issue.number;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
-            // build a uniform (ok, artifacts) view for both commands
-            let ok, artifacts, label;
-            if (cmd === 'nightly') {
-              ok = '${{ needs.nightly.result }}' === 'success';
-              artifacts = [`- Packages: [download artifacts](${runUrl}#artifacts)`];
-              label = 'Nightly packages';
-            } else {
-              const b = '${{ needs.binaries.result }}';
-              const d = '${{ needs.docker.result }}';
-              ok = d === 'success' && (b === 'success' || b === 'skipped');
-              artifacts = [];
-              if (b === 'success') artifacts.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
-              artifacts.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
-              label = 'Test binaries';
-            }
+            const b = '${{ needs.binaries.result }}';
+            const d = '${{ needs.docker.result }}';
+            const ok = d === 'success' && (b === 'success' || b === 'skipped');
 
-            const heading = cmd === 'nightly' ? 'Nightly build' : 'Build';
+            const artifacts = [];
+            if (b === 'success') artifacts.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
+            artifacts.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
+
             const prBody = ok
-              ? [`✅ ${heading} finished.`, '', ...artifacts].join('\n')
-              : `❌ ${heading} failed. See the [run logs](${runUrl}).`;
+              ? [`✅ Build finished.`, '', ...artifacts].join('\n')
+              : `❌ Build failed. See the [run logs](${runUrl}).`;
             await github.rest.issues.createComment({ owner, repo, issue_number: num, body: prBody });
 
             if (!ok) return;
@@ -288,6 +230,6 @@ jobs:
             const res = await github.graphql(q, { owner, repo, num });
             const issues = res.repository.pullRequest.closingIssuesReferences.nodes.map((n) => n.number);
             for (const issue_number of issues) {
-              const body = [`${label} for the fix in #${num} are ready to test:`, '', ...artifacts].join('\n');
+              const body = [`Test binaries for the fix in #${num} are ready to test:`, '', ...artifacts].join('\n');
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
