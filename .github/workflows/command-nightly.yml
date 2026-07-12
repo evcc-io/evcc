@@ -76,3 +76,13 @@ jobs:
               ? '✅ Nightly build from master finished.'
               : `❌ Nightly build from master failed. See the [run logs](${runUrl}).`;
             await github.rest.issues.createComment({ owner, repo, issue_number: num, body });
+
+      - name: Resolve command comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // collapse the /nightly comment as resolved now that the build is done
+            await github.graphql(
+              `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
+              { id: context.payload.comment.node_id }
+            );
