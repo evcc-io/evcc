@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,11 +17,28 @@ type httpHandler struct {
 	req          *http.Request
 	cnt          int
 	cacheBusting bool
+	noDate       bool
 }
 
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.req = req
 	h.val = lo.RandomString(16, lo.LettersCharset)
+
+	// emulate a device that omits the Date header (e.g. Zendure Solarflow)
+	if h.noDate {
+		conn, buf, err := w.(http.Hijacker).Hijack()
+		if err != nil {
+			panic(err)
+		}
+		defer conn.Close()
+		// increment before flushing: the client returns as soon as it reads the body,
+		// so counting after the flush races with the test asserting on cnt
+		h.cnt++
+		fmt.Fprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %d\r\n\r\n%s", len(h.val), h.val)
+		buf.Flush()
+		return
+	}
+
 	if h.cacheBusting {
 		w.Header().Set("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
@@ -98,6 +116,30 @@ func (suite *httpTestSuite) TestCacheGetNoStore() {
 		suite.Require().NoError(err)
 		suite.Require().Equal(res, val)
 		suite.Require().Equal(first, suite.h.cnt)
+	}
+}
+
+func (suite *httpTestSuite) TestCacheGetNoDate() {
+	// upstream omits the Date header, cache must still take effect via injected Date
+	suite.h.noDate = true
+	defer func() { suite.h.noDate = false }()
+
+	uri := suite.srv.URL + "/foo/bar?baz=3"
+	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, time.Minute)
+
+	g, err := p.StringGetter()
+	suite.Require().NoError(err)
+
+	suite.h.cnt = 0
+	res, err := g()
+	suite.Require().NoError(err)
+	suite.Require().Equal(1, suite.h.cnt)
+
+	for range 3 {
+		val, err := g()
+		suite.Require().NoError(err)
+		suite.Require().Equal(res, val)
+		suite.Require().Equal(1, suite.h.cnt)
 	}
 }
 

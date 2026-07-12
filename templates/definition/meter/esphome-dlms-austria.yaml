@@ -18,20 +18,30 @@ params:
   - name: timeout
     default: 10s
     advanced: true
+  - name: firmware
+    type: choice
+    choice: ["<2026.1", ">=2026.1"]
+    default: "<2026.1"
+    description:
+      de: ESPHome Firmware-Version
+      en: ESPHome firmware version
+    help:
+      de: ESPHome ab 2026.1 adressiert Sensoren über den Entitätsnamen. Die alten /sensor/<object_id> URLs sind veraltet und werden in ESPHome 2026.7.0 entfernt. Wähle '>=2026.1', wenn dein Gerät ESPHome 2026.1 oder neuer verwendet.
+      en: ESPHome 2026.1+ addresses sensors by entity name. The legacy /sensor/<object_id> URLs are deprecated and will be removed in ESPHome 2026.7.0. Choose '>=2026.1' if your device runs ESPHome 2026.1 or newer.
 render: |
   type: custom
   power: # Total power: positive for consumption, negative for production (Watts)
     source: calc
     add:
     - source: http
-      uri: http://{{ .host }}/sensor/active_power_taken_from_grid # ESPHome sensor: name: "Active power taken from grid"
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Active power taken from grid{{ else }}active_power_taken_from_grid{{ end }}
       headers:
       - content-type: application/json
       timeout: {{ .timeout }}
       jq: .value
       # No scale: value is already in Watts
     - source: http
-      uri: http://{{ .host }}/sensor/active_power_put_into_grid # ESPHome sensor: name: "Active power put into grid"
+      uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Active power put into grid{{ else }}active_power_put_into_grid{{ end }}
       headers:
       - content-type: application/json
       timeout: {{ .timeout }}
@@ -39,7 +49,7 @@ render: |
       scale: -1 # Invert for production, value is already in Watts
   energy: # Total imported energy (kWh)
     source: http
-    uri: http://{{ .host }}/sensor/active_energy_taken_from_grid # ESPHome sensor: name: "Active energy taken from grid"
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Active energy taken from grid{{ else }}active_energy_taken_from_grid{{ end }}
     headers:
     - content-type: application/json
     timeout: {{ .timeout }}
@@ -47,38 +57,38 @@ render: |
     jq: .value
   currents: # Phase currents (Amperes)
   - source: http
-    uri: http://{{ .host }}/sensor/current_l1 # ESPHome sensor: name: "Current L1"
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Current L1{{ else }}current_l1{{ end }}
     headers:
     - content-type: application/json
     timeout: {{ .timeout }}
     jq: .value
   - source: http
-    uri: http://{{ .host }}/sensor/current_l2 # ESPHome sensor: name: "Current L2"
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Current L2{{ else }}current_l2{{ end }}
     headers:
     - content-type: application/json
     timeout: {{ .timeout }}
     jq: .value
   - source: http
-    uri: http://{{ .host }}/sensor/current_l3 # ESPHome sensor: name: "Current L3"
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Current L3{{ else }}current_l3{{ end }}
     headers:
     - content-type: application/json
     timeout: {{ .timeout }}
     jq: .value
   voltages: # Phase voltages (Volts)
   - source: http
-    uri: http://{{ .host }}/sensor/voltage_l1 # ESPHome sensor: name: "Voltage L1"
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Voltage L1{{ else }}voltage_l1{{ end }}
     headers:
     - content-type: application/json
     timeout: {{ .timeout }}
     jq: .value
   - source: http
-    uri: http://{{ .host }}/sensor/voltage_l2 # ESPHome sensor: name: "Voltage L2"
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Voltage L2{{ else }}voltage_l2{{ end }}
     headers:
     - content-type: application/json
     timeout: {{ .timeout }}
     jq: .value
   - source: http
-    uri: http://{{ .host }}/sensor/voltage_l3 # ESPHome sensor: name: "Voltage L3"
+    uri: http://{{ .host }}/sensor/{{ if eq .firmware ">=2026.1" }}Voltage L3{{ else }}voltage_l3{{ end }}
     headers:
     - content-type: application/json
     timeout: {{ .timeout }}

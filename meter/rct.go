@@ -24,7 +24,37 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
-	rSocStrategy  *uint8          // remembers overwritten soc strategy value
+
+	mu           sync.Mutex
+	rSocStrategy *uint8 // remembers overwritten soc strategy value
+}
+
+// takeRSocStrategy atomically returns and clears the saved soc strategy, or nil
+// if none is saved (e.g. BatteryNormal applied twice in a row, #31471).
+func (m *RCT) takeRSocStrategy() *uint8 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	s := m.rSocStrategy
+	m.rSocStrategy = nil
+	return s
+}
+
+// setRSocStrategyIfAbsent saves strategy unless a value is already saved.
+func (m *RCT) setRSocStrategyIfAbsent(strategy uint8) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.rSocStrategy == nil {
+		m.rSocStrategy = &strategy
+	}
+}
+
+// hasRSocStrategy reports whether a soc strategy is currently saved
+func (m *RCT) hasRSocStrategy() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.rSocStrategy != nil
 }
 
 var (
@@ -107,12 +137,8 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	}
 
 	if usage == "pv" {
-		curtail := func(b bool) error {
-			var r float64
-			if !b {
-				r = 1.0
-			}
-			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(r))
+		curtail := func(percent int) error {
+			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(float64(percent)/100))
 		}
 
 		curtailed := func() (bool, error) {
@@ -120,7 +146,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return r != 1, err
 		}
 
-		implement.Has(m, implement.Curtailer(curtail, curtailed))
+		implement.Has(m, implement.Curtailer(curtailed, curtail))
 		implement.May(m, implement.MaxACPowerGetter(maxACPower))
 	}
 
@@ -165,12 +191,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 
 				// read soc strategy to reset afterwards
-				if m.rSocStrategy == nil {
+				if !m.hasRSocStrategy() {
 					strategy, err := m.queryUint8(rct.PowerMngSocStrategy)
 					if err != nil {
 						return err
 					}
-					m.rSocStrategy = &strategy
+					m.setRSocStrategyIfAbsent(strategy)
 				}
 			}
 
@@ -178,11 +204,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			switch mode {
 			case api.BatteryNormal:
-				eg.Go(func() error {
-					err := m.conn.Write(rct.PowerMngSocStrategy, []byte{*m.rSocStrategy})
-					m.rSocStrategy = nil
-					return err
-				})
+				if strategy := m.takeRSocStrategy(); strategy != nil {
+					eg.Go(func() error {
+						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
+					})
+				}
 
 				eg.Go(func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
@@ -206,7 +232,13 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MaxSoc/100))
+					// hold at current SoC (not MaxSoc): otherwise the gap between current
+					// and target SoC lets the inverter charge from the grid (#31280)
+					soc, err := m.queryFloat(rct.BatterySoC)
+					if err != nil {
+						return err
+					}
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(soc))
 				})
 
 			case api.BatteryCharge:
