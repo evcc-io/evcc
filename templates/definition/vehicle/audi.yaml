@@ -30,6 +30,7 @@ params:
     example: WAUZZZ...
   - name: coarsecurrent
     advanced: true
+    deprecated: true
   - name: welcomecharge
     advanced: true
     deprecated: true
