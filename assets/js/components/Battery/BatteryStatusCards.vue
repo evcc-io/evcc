@@ -2,10 +2,7 @@
 	<div v-if="showSplit" class="cards cards--split gap-4">
 		<BatteryStatusCard v-bind="cards[0]" :battery-mode="batteryMode" />
 		<Card data-testid="battery-optimizer-card">
-			<OptimizerInfo
-				:suggestion="devices[0]?.suggestion ?? null"
-				:forecast="batteryForecast"
-			/>
+			<OptimizerInfo :suggestion="singleSuggestion" :forecast="batteryForecast" />
 		</Card>
 	</div>
 	<div v-else class="cards gap-4">
@@ -21,7 +18,13 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import { batteryColor } from "@/colors";
-import type { BATTERY_MODE, Battery, BatteryForecast, BatteryMeter } from "@/types/evcc";
+import type {
+	BATTERY_MODE,
+	Battery,
+	BatteryForecast,
+	BatteryMeter,
+	BatterySuggestion,
+} from "@/types/evcc";
 import Card from "../Helper/Card.vue";
 import BatteryStatusCard from "./BatteryStatusCard.vue";
 import OptimizerInfo from "./OptimizerInfo.vue";
@@ -44,10 +47,11 @@ export default defineComponent({
 			const fc = this.battery?.forecast;
 			return fc?.highest || fc?.lowest ? fc : null;
 		},
+		singleSuggestion(): BatterySuggestion | null {
+			return this.deviceSuggestion(this.devices[0]);
+		},
 		showSplit(): boolean {
-			return (
-				this.devices.length === 1 && !!(this.batteryForecast || this.devices[0]?.suggestion)
-			);
+			return this.devices.length === 1 && !!(this.batteryForecast || this.singleSuggestion);
 		},
 		cards(): BatteryStatusCardModel[] {
 			const multiple = this.devices.length > 1;
@@ -60,7 +64,7 @@ export default defineComponent({
 				color: batteryColor(i),
 				controllable: d.controllable,
 				// single battery shows the suggestion on the dedicated optimizer card
-				suggestion: multiple ? (d.suggestion ?? null) : null,
+				suggestion: multiple ? this.deviceSuggestion(d) : null,
 				forecast: null, // aggregate forecast lives on the combined / dedicated card
 			}));
 			// combined uses the site aggregate soc/power, not per-device sums; the site-wide
@@ -79,6 +83,11 @@ export default defineComponent({
 				});
 			}
 			return list;
+		},
+	},
+	methods: {
+		deviceSuggestion(d?: BatteryMeter): BatterySuggestion | null {
+			return d?.controllable && d.suggestion?.actionable ? d.suggestion : null;
 		},
 	},
 });
