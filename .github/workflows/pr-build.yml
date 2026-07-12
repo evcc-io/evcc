@@ -1,7 +1,11 @@
 name: PR Build
 
-# Triggered by a maintainer commenting `/build` on a pull request.
-# Builds the PR head, uploads downloadable binaries and publishes a docker image tagged pr-<number>.
+# Triggered by a maintainer commenting on a pull request:
+#   /build          binaries (amd64/arm64/arm) + multiarch docker
+#   /build amd      linux amd64 only
+#   /build arm      linux arm64 + arm/v6 only
+#   /build docker   multiarch docker image only, no binaries
+# Uploads downloadable binaries and publishes a docker image tagged pr-<number>.
 
 on:
   issue_comment:
@@ -24,6 +28,8 @@ jobs:
       pull-requests: write
     outputs:
       sha: ${{ steps.pr.outputs.sha }}
+      archs: ${{ steps.parse.outputs.archs }}
+      platforms: ${{ steps.parse.outputs.platforms }}
     steps:
       - name: React to comment
         uses: actions/github-script@v8
@@ -36,20 +42,39 @@ jobs:
               content: 'eyes',
             });
 
+      - name: Parse target
+        id: parse
+        env:
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          arg=$(printf '%s' "$BODY" | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
+          case "$arg" in
+            amd*)    archs='["amd64"]';              platforms='linux/amd64' ;;
+            arm*)    archs='["arm64","arm"]';        platforms='linux/arm64,linux/arm/v6' ;;
+            docker*) archs='[]';                     platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
+            *)       archs='["amd64","arm64","arm"]'; platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
+          esac
+          echo "archs=$archs" >> "$GITHUB_OUTPUT"
+          echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
+
       - name: Resolve PR head
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           sha=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json headRefOid -q .headRefOid)
-          echo "sha=$sha" >> $GITHUB_OUTPUT
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
   binaries:
     name: Binaries
     needs: prep
+    if: needs.prep.outputs.archs != '[]'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
+    strategy:
+      matrix:
+        arch: ${{ fromJSON(needs.prep.outputs.archs) }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -70,22 +95,24 @@ jobs:
       - name: Build UI
         run: make install-ui ui
 
-      - name: Build binaries
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
-        with:
-          version: '~> v2'
-          args: --snapshot -f .goreleaser-nightly.yml --clean
+      - name: Build binary
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CGO_ENABLED: 0
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+          GOARM: 6
+          SHA: ${{ needs.prep.outputs.sha }}
+          NUM: ${{ github.event.issue.number }}
+        run: |
+          go build -trimpath -tags release \
+            -ldflags "-X github.com/evcc-io/evcc/util.Version=pr-${NUM}-${SHA:0:7} -X github.com/evcc-io/evcc/util.Commit=${SHA:0:7} -s -w" \
+            -o "evcc-linux-${{ matrix.arch }}" .
 
-      - name: Upload binaries
+      - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
-          name: evcc-pr-${{ github.event.issue.number }}-binaries
-          path: |
-            release/*.tar.gz
-            release/*.zip
-            release/checksums.txt
+          name: evcc-pr-${{ github.event.issue.number }}-linux-${{ matrix.arch }}
+          path: evcc-linux-${{ matrix.arch }}
           retention-days: 14
 
   docker:
@@ -114,7 +141,7 @@ jobs:
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v6
+          platforms: ${{ needs.prep.outputs.platforms }}
           push: true
           tags: evcc/evcc:pr-${{ github.event.issue.number }}
           cache-from: type=gha
@@ -132,12 +159,20 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const ok = '${{ needs.binaries.result }}' === 'success' && '${{ needs.docker.result }}' === 'success';
+            const b = '${{ needs.binaries.result }}';
+            const d = '${{ needs.docker.result }}';
+            const ok = d === 'success' && (b === 'success' || b === 'skipped');
             const num = context.payload.issue.number;
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = ok
-              ? `✅ Build finished.\n\n- Binaries: [download artifact](${runUrl}#artifacts)\n- Docker: \`docker pull evcc/evcc:pr-${num}\``
-              : `❌ Build failed. See the [run logs](${runUrl}).`;
+            let body;
+            if (ok) {
+              const lines = ['✅ Build finished.', ''];
+              if (b === 'success') lines.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
+              lines.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
+              body = lines.join('\n');
+            } else {
+              body = `❌ Build failed. See the [run logs](${runUrl}).`;
+            }
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
