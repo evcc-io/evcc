@@ -86,7 +86,7 @@ render: |
       id: 0
       uri: {{ joinHostPort .host .port }}
       register:
-        address: 47418 # Maximum Feed Grid Power (0-100 %)
+        address: 47428 # Maximum Feed Grid Power (0-100 %)
         type: writesingle
         encoding: uint16
       scale: 10
@@ -136,7 +136,7 @@ render: |
         id: 0
         uri: {{ joinHostPort .host .port }}
         register:
-          address: 47418 # Maximum Feed Grid Power (0-100 %)
+          address: 47428 # Maximum Feed Grid Power (0-100 %)
           type: holding
           decode: uint16
         scale: 0.1
