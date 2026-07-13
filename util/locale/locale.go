@@ -49,21 +49,31 @@ func Init() error {
 			Sessions struct {
 				CSV map[string]string `json:"csv"`
 			} `json:"sessions"`
+			Config struct {
+				Hems struct {
+					CSV map[string]string `json:"csv"`
+				} `json:"hems"`
+			} `json:"config"`
 		}
 
 		if err := json.Unmarshal(b, &s); err != nil {
 			return err
 		}
 
-		if len(s.Sessions.CSV) > 0 {
-			m := make([]*i18n.Message, 0, len(s.Sessions.CSV))
-			for k, v := range s.Sessions.CSV {
+		var m []*i18n.Message
+		for prefix, msgs := range map[string]map[string]string{
+			"sessions.csv":    s.Sessions.CSV,
+			"config.hems.csv": s.Config.Hems.CSV,
+		} {
+			for k, v := range msgs {
 				m = append(m, &i18n.Message{
-					ID:    "sessions.csv." + k,
+					ID:    prefix + "." + k,
 					Other: v,
 				})
 			}
+		}
 
+		if len(m) > 0 {
 			languageTag := language.Make(strings.TrimSuffix(d.Name(), filepath.Ext(d.Name())))
 			if err := Bundle.AddMessages(languageTag, m...); err != nil {
 				return fmt.Errorf("loading locales failed: %w", err)

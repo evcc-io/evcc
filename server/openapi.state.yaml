@@ -370,8 +370,11 @@ components:
           description: Battery supports external control of its operation mode.
           type: boolean
         capacity:
-          description: Battery capacity in kWh.
+          description: Battery capacity in kWh. Zero when not specified.
           type: number
+        suggestion:
+          $ref: "#/components/schemas/BatterySuggestion"
+          description: Battery optimizer suggestion.
       required:
         - capacity
         - controllable
@@ -386,6 +389,29 @@ components:
         - hold
         - charge
         - holdcharge
+    BatterySuggestion:
+      description: Battery optimizer suggestion for a home battery.
+      type: object
+      properties:
+        action:
+          description: Suggested operation mode.
+          type: string
+          enum:
+            - normal
+            - hold
+            - charge
+            - holdcharge
+        charge:
+          description: Recommended charge power in W.
+          type: number
+        discharge:
+          description: Recommended discharge power in W.
+          type: number
+        actionable:
+          description: Suggestion differs from the current operating mode.
+          type: boolean
+      required:
+        - action
     Certificate:
       description: A TLS certificate key pair.
       type: object
@@ -807,6 +833,9 @@ components:
         effectiveMinCurrent:
           description: Currently applied minimum charging current in A.
           type: number
+        effectiveMinSoc:
+          description: Currently applied minimum SoC in %.
+          type: number
         effectivePlanId:
           description: Id of the currently applied charging plan. Zero if no plan is active.
           type: number
@@ -844,6 +873,9 @@ components:
           type: number
         minCurrent:
           description: Minimum charging current in A.
+          type: number
+        minSoc:
+          description: Minimum SoC in %. Vehicle is fast-charged until this level is reached.
           type: number
         minSocNotReached:
           description: Vehicle SoC is below the configured minimum SoC.
@@ -950,6 +982,11 @@ components:
           type: string
           nullable: true
           format: date-time
+        suggestion:
+          description: Charging suggestion from the battery optimizer.
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/LoadpointSuggestion"
         title:
           description: Loadpoint title for UI display.
           type: string
@@ -1018,6 +1055,7 @@ components:
         - effectiveLimitSoc
         - effectiveMaxCurrent
         - effectiveMinCurrent
+        - effectiveMinSoc
         - effectivePlanId
         - effectivePlanSoc
         - effectivePlanTime
@@ -1030,6 +1068,7 @@ components:
         - limitSoc
         - maxCurrent
         - minCurrent
+        - minSoc
         - minSocNotReached
         - mode
         - offeredCurrent
@@ -1070,6 +1109,27 @@ components:
         - vehicleTitle
         - vehicleWelcomeActive
         - batteryBoostLimit
+    LoadpointSuggestion:
+      description: Battery optimizer suggestion for a loadpoint.
+      type: object
+      properties:
+        action:
+          description: Suggested charging action.
+          type: string
+          enum:
+            - charge
+            - stop
+        charge:
+          description: Recommended charge power in W.
+          type: number
+        discharge:
+          description: Recommended discharge power in W.
+          type: number
+        actionable:
+          description: Suggestion differs from the current operating mode.
+          type: boolean
+      required:
+        - action
     LoadpointUi:
       description: Display-only UI settings of a loadpoint.
       type: object
@@ -1692,6 +1752,12 @@ components:
         name:
           description: Unique vehicle name used in API routes and configuration.
           type: string
+        mode:
+          description: Charge mode applied when the vehicle connects.
+          anyOf:
+            - $ref: "#/components/schemas/ChargeMode"
+            - type: string
+              const: ""
         minSoc:
           description: Minimum SoC in %. Vehicle is fast-charged until this level is reached.
           type: number

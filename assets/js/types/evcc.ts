@@ -594,6 +594,8 @@ export interface Loadpoint {
   effectiveMaxCurrent: number;
   /** Currently applied minimum charging current in A. */
   effectiveMinCurrent: number;
+  /** Currently applied minimum SoC in %. */
+  effectiveMinSoc: number;
   /** Id of the currently applied charging plan. Zero if no plan is active. */
   effectivePlanId: number;
   /** SoC goal in % of the currently applied charging plan. */
@@ -621,6 +623,8 @@ export interface Loadpoint {
   maxCurrent: number;
   /** Minimum charging current in A. */
   minCurrent: number;
+  /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
+  minSoc: number;
   /** Vehicle SoC is below the configured minimum SoC. */
   minSocNotReached: boolean;
   /** Charging behavior. */
@@ -694,6 +698,8 @@ export interface Loadpoint {
    * @format date-time
    */
   smartFeedInPriorityNextStart: string | null;
+  /** Charging suggestion from the battery optimizer. */
+  suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
   title: string;
   /** Climater of the connected vehicle is active. */
@@ -1091,14 +1097,40 @@ export interface Battery {
   forecast?: BatteryForecast;
 }
 
+/** Battery optimizer suggestion for a home battery. */
+export interface BatterySuggestion {
+  /** Suggested operation mode. */
+  action: "normal" | "hold" | "charge" | "holdcharge";
+  /** Recommended charge power in W. */
+  charge?: number;
+  /** Recommended discharge power in W. */
+  discharge?: number;
+  /** Suggestion differs from the current operating mode. */
+  actionable?: boolean;
+}
+
+/** Battery optimizer suggestion for a loadpoint. */
+export interface LoadpointSuggestion {
+  /** Suggested charging action. */
+  action: "charge" | "stop";
+  /** Recommended charge power in W. */
+  charge?: number;
+  /** Recommended discharge power in W. */
+  discharge?: number;
+  /** Suggestion differs from the current operating mode. */
+  actionable?: boolean;
+}
+
 /** Measurement data of a single home battery meter. */
 export interface BatteryMeter extends Meter {
   /** Charge level in %. */
   soc: number;
   /** Battery supports external control of its operation mode. */
   controllable: boolean;
-  /** Battery capacity in kWh. */
+  /** Battery capacity in kWh. Zero when not specified. */
   capacity: number;
+  /** Battery optimizer suggestion. */
+  suggestion?: BatterySuggestion;
 }
 
 /** A repeating charging plan. */
@@ -1159,6 +1191,8 @@ export interface PlanStrategy {
 export interface Vehicle {
   /** Unique vehicle name used in API routes and configuration. */
   name?: string;
+  /** Charge mode applied when the vehicle connects. */
+  mode?: CHARGE_MODE | "";
   /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
   minSoc?: number;
   /** SoC limit in %. Charging stops when reached. */
@@ -1306,7 +1340,7 @@ export interface SiteConfig {
   title: string;
   aux: string[] | null;
   ext: string[] | null;
-  consumers: string[] | null;
+  consumer: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

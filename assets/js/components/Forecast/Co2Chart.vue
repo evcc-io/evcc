@@ -84,7 +84,12 @@ export default defineComponent({
 						return tooltipTable(time, [{ values: [vThis.fmtCo2Medium(p.value[1])] }]);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
 					splitNumber: 2,
 					axisLabel: {

@@ -99,6 +99,7 @@ import {
 	type Vehicle,
 	type LoadpointUi,
 	type PlanStrategy,
+	type LoadpointSuggestion,
 } from "@/types/evcc";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
 import type ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
@@ -124,6 +125,7 @@ export default defineComponent({
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
+		effectiveMinSoc: { type: Number, default: 0 },
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,
@@ -162,6 +164,7 @@ export default defineComponent({
 		smartFeedInPriorityNextStart: String,
 		smartFeedInPriorityLimit: Number,
 		socBasedCharging: Boolean,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
 		tariffGrid: Number,
@@ -207,7 +210,7 @@ export default defineComponent({
 			return this.vehicle?.icon || "";
 		},
 		minSoc() {
-			return this.vehicle?.minSoc || 0;
+			return this.effectiveMinSoc;
 		},
 		vehicleSocProps() {
 			return this.collectProps(Soc);

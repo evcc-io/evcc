@@ -431,6 +431,20 @@ func (mr *MockAPIMockRecorder) GetMinCurrent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinCurrent", reflect.TypeOf((*MockAPI)(nil).GetMinCurrent))
 }
 
+// GetMinSoc mocks base method.
+func (m *MockAPI) GetMinSoc() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMinSoc")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetMinSoc indicates an expected call of GetMinSoc.
+func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinSoc", reflect.TypeOf((*MockAPI)(nil).GetMinSoc))
+}
+
 // GetMode mocks base method.
 func (m *MockAPI) GetMode() api.ChargeMode {
 	m.ctrl.T.Helper()
@@ -937,6 +951,18 @@ func (m *MockAPI) SetMinCurrent(arg0 float64) error {
 func (mr *MockAPIMockRecorder) SetMinCurrent(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinCurrent", reflect.TypeOf((*MockAPI)(nil).SetMinCurrent), arg0)
+}
+
+// SetMinSoc mocks base method.
+func (m *MockAPI) SetMinSoc(soc int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMinSoc", soc)
+}
+
+// SetMinSoc indicates an expected call of SetMinSoc.
+func (mr *MockAPIMockRecorder) SetMinSoc(soc any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinSoc", reflect.TypeOf((*MockAPI)(nil).SetMinSoc), soc)
 }
 
 // SetMode mocks base method.
