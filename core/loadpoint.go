@@ -1038,12 +1038,32 @@ func (lp *Loadpoint) pvChargeStarting() bool {
 		return false
 	}
 
+	// a loadpoint that reached its charge goal is no longer starting up, even
+	// while it stays enabled and connected but no longer draws current (#31684)
+	if lp.chargeGoalReached() {
+		return false
+	}
+
 	lp.RLock()
 	enabled, timer := lp.enabled, lp.pvTimer
 	lp.RUnlock()
 
 	// enable timer running (not yet enabled), or enabled but vehicle not yet charging
 	return (!enabled && !timer.IsZero()) || (enabled && !lp.charging())
+}
+
+// chargeGoalReached reports whether the vehicle will not draw more, i.e. an
+// energy limit is reached or its soc is at/above the effective limit (#31684).
+func (lp *Loadpoint) chargeGoalReached() bool {
+	if lp.LimitEnergyReached() {
+		return true
+	}
+
+	lp.RLock()
+	soc := lp.vehicleSoc
+	lp.RUnlock()
+
+	return soc > 0 && soc >= float64(lp.EffectiveLimitSoc())
 }
 
 // setStatus updates the internal charging state according to EV

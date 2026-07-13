@@ -28,6 +28,10 @@ func newPVLoadpoint(prio int, mode api.ChargeMode, status api.ChargeStatus, enab
 func TestPvChargeStarting(t *testing.T) {
 	now := clock.NewMock().Now()
 
+	// enabled and connected but car full (soc at default 100% limit): not starting up
+	goalReached := newPVLoadpoint(0, api.ModePV, api.StatusB, true, time.Time{})
+	goalReached.vehicleSoc = 100
+
 	tc := []struct {
 		name     string
 		lp       *Loadpoint
@@ -39,6 +43,7 @@ func TestPvChargeStarting(t *testing.T) {
 		{"disabled idle", newPVLoadpoint(0, api.ModePV, api.StatusB, false, time.Time{}), false},
 		{"disconnected", newPVLoadpoint(0, api.ModePV, api.StatusA, false, now), false},
 		{"not pv mode", newPVLoadpoint(0, api.ModeNow, api.StatusB, false, now), false},
+		{"charge goal reached", goalReached, false},
 	}
 
 	for _, tc := range tc {
@@ -77,6 +82,13 @@ func TestReservedPVPower(t *testing.T) {
 	high.pvTimer = time.Time{}
 	if got := site.reservedPVPower(low); got != 0 {
 		t.Errorf("low after high charging: want 0, got %.0f", got)
+	}
+
+	// high stays enabled and connected but its car is full (goal reached): no reservation (#31684)
+	high.status = api.StatusB
+	high.vehicleSoc = 100
+	if got := site.reservedPVPower(low); got != 0 {
+		t.Errorf("low after high reached goal: want 0, got %.0f", got)
 	}
 }
 
