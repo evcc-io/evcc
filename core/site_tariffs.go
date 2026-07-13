@@ -34,6 +34,10 @@ type forecastRate struct {
 }
 
 func forecastRates(rr api.Rates) []forecastRate {
+	// keep nil for empty rates: shards are published without omitempty
+	if len(rr) == 0 {
+		return nil
+	}
 	res := make([]forecastRate, 0, len(rr))
 	for _, r := range rr {
 		res = append(res, forecastRate{Start: r.Start.Unix(), End: r.End.Unix(), Value: r.Value})

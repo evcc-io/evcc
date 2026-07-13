@@ -203,15 +203,15 @@ export default defineComponent({
 		dataEndDate(): Date {
 			let latest = this.startDate.getTime();
 			for (const s of this.forecast.grid || []) {
-				const t = new Date(s.end).getTime();
+				const t = s.end * 1000;
 				if (t > latest) latest = t;
 			}
 			for (const s of this.forecast.co2 || []) {
-				const t = new Date(s.end).getTime();
+				const t = s.end * 1000;
 				if (t > latest) latest = t;
 			}
 			for (const e of this.forecast.solar?.timeseries || []) {
-				const t = new Date(e.ts).getTime();
+				const t = e.ts * 1000;
 				if (t > latest) latest = t;
 			}
 			const end = new Date(Math.min(latest, this.maxEndDate.getTime()));
