@@ -236,9 +236,11 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// clampStart works in the same unit as ts (unix seconds); callers convert to
+// milliseconds at the chart/Date boundary.
 export function clampStart(ts: number, startDate: Date): number {
-  const ms = ts * 1000;
-  return ms < startDate.getTime() ? startDate.getTime() : ms;
+  const startTs = startDate.getTime() / 1000;
+  return ts < startTs ? startTs : ts;
 }
 
 export function filterForecastSlots(

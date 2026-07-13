@@ -50,14 +50,20 @@ export default defineComponent({
 			}[] = [];
 			if (slots[minIdx]) {
 				points.push({
-					coord: [clampStart(slots[minIdx]!.start, this.startDate), slots[minIdx]!.value],
+					coord: [
+						clampStart(slots[minIdx]!.start, this.startDate) * 1000,
+						slots[minIdx]!.value,
+					],
 					value: this.fmtGrams(slots[minIdx]!.value),
 					label: { position: "bottom", offset: [0, 2] },
 				});
 			}
 			if (maxIdx !== minIdx && slots[maxIdx]) {
 				points.push({
-					coord: [clampStart(slots[maxIdx]!.start, this.startDate), slots[maxIdx]!.value],
+					coord: [
+						clampStart(slots[maxIdx]!.start, this.startDate) * 1000,
+						slots[maxIdx]!.value,
+					],
 					value: this.fmtGrams(slots[maxIdx]!.value),
 				});
 			}
