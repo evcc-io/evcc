@@ -137,7 +137,8 @@ export type Statistics = Record<StatisticsPeriod, StatisticsData>;
 
 /**
  * Complete system state as returned by /api/state and pushed via websocket and MQTT.
- * The overall structure is stable, details may change between releases.
+ * This structure mirrors the internal UI state and carries no compatibility promise.
+ * Fields may change or disappear between releases.
  */
 export interface State {
   /** @internal */

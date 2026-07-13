@@ -1086,7 +1086,7 @@ call updateSession {
 
 ## state
 
-Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data.
+Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.
 
 **Tags:** state
 

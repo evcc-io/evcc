@@ -1,16 +1,15 @@
 import { buildSchemas } from "./schemas";
-import { spliceOpenapi } from "./openapi";
+import { writeStateSchemas, bundleMcpJson } from "./openapi";
 
 const command = process.argv[2] ?? "generate";
 
 switch (command) {
   case "generate": {
     const schemas = buildSchemas();
-    const changed = await spliceOpenapi(schemas);
+    await writeStateSchemas(schemas);
+    await bundleMcpJson();
     console.log(
-      changed
-        ? `server/openapi.yaml updated (${Object.keys(schemas.defs).length} schemas)`
-        : "server/openapi.yaml unchanged"
+      `${Object.keys(schemas.defs).length} state schemas → openapi.state.yaml + mcp/openapi.json`
     );
     break;
   }

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 import { Ajv2020 } from "ajv/dist/2020.js";
 
-const OPENAPI_PATH = "server/openapi.yaml";
+const STATE_SCHEMAS_PATH = "server/openapi.state.yaml";
 
 // intentionally undocumented experimental structures
 const IGNORE = new Set(["$.evopt", "$.evopt-batteries"]);
@@ -65,9 +65,9 @@ function expandNullable(node: any): void {
   }
 }
 
-// validate a /api/state payload against the State schema in server/openapi.yaml
+// validate a /api/state payload against the State schema in server/openapi.state.yaml
 export function validateState(payload: any): { errors: string[]; undocumented: string[] } {
-  const doc = parse(readFileSync(OPENAPI_PATH, "utf8"));
+  const doc = parse(readFileSync(STATE_SCHEMAS_PATH, "utf8"));
   const schemas: Record<string, AnySchema> = doc.components.schemas;
   expandNullable(schemas);
 

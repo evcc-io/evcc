@@ -59,6 +59,7 @@
     "@eslint/js": "^9.39.4",
     "@jest/types": "^30.4.1",
     "@playwright/test": "^1.60.0",
+    "@redocly/openapi-core": "^2.38.0",
     "@storybook/vue3": "^10.4.4",
     "@storybook/vue3-vite": "^10.4.4",
     "@types/body-parser": "^1.19.6",
