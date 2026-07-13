@@ -83,6 +83,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # PR branches older than the composite action itself won't have it on disk,
+      # so pull .github/actions from master regardless of how stale the PR is.
+      - uses: actions/checkout@v7
+        with:
+          path: .base-actions
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - run: |
+          rm -rf .github/actions
+          cp -r .base-actions/.github/actions .github/actions
+          rm -rf .base-actions
+
       - uses: ./.github/actions/build-toolchain
         with:
           cache-scope: pr # isolated cache, cannot poison the nightly/main cache
