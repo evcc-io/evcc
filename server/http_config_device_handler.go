@@ -680,6 +680,12 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			site.Publish(keys.Hems, HemsStatus(false))
 		}
 
+		// persist immediately to keep cleaned-up refs consistent with device config on unclean shutdown
+		if err := settings.Persist(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
+		}
+
 		res := struct {
 			ID int `json:"id"`
 		}{
