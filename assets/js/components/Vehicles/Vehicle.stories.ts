@@ -162,6 +162,33 @@ VehicleLimitReached.args = {
   vehicleSoc: 80,
 };
 
+export const MinSocCharging = Template.bind({});
+MinSocCharging.args = {
+  ...baseState,
+  enabled: true,
+  charging: true,
+  vehicleSoc: 17.3,
+  vehicleRange: 92,
+  minSocNotReached: true,
+  effectiveMinSoc: 30,
+};
+
+export const HeatingMinTemp = Template.bind({});
+HeatingMinTemp.args = {
+  ...baseState,
+  vehicle: { ...baseState.vehicle, title: "Warmwasser", icon: "waterheater" },
+  heating: true,
+  integratedDevice: true,
+  enabled: true,
+  charging: true,
+  vehicleSoc: 38,
+  vehicleRange: 0,
+  effectiveLimitSoc: 60,
+  minSocNotReached: true,
+  effectiveMinSoc: 40,
+  ui: { minTemp: 35, maxTemp: 70 },
+};
+
 export const TargetChargePlanned = Template.bind({});
 TargetChargePlanned.args = {
   ...baseState,

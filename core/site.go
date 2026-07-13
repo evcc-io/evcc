@@ -198,7 +198,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return errors.New("missing grid meter instance")
 		}
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, deviceTitleOrName(dev))
+		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
 		if err != nil {
 			return err
 		}
@@ -1022,10 +1022,10 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 
 	var reserved float64
 	for _, other := range site.loadpoints {
-		if any(other) == any(lp) {
+		if other == lp {
 			continue
 		}
-		if other.EffectivePriority() > prio && other.pvChargeStarting() {
+		if other.EffectivePriority() > prio && other.PvChargeStarting() {
 			reserved += other.EffectiveMaxPower()
 		}
 	}

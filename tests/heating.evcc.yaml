@@ -47,5 +47,5 @@ chargers:
     soc:
       source: js
       script: |
-        55
+        40
     features: [integrateddevice, heating, switchdevice]
