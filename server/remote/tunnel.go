@@ -68,6 +68,11 @@ func (t *Tunnel) run() {
 			t.log.ERROR.Printf("tunnel: %v", err)
 		}
 
+		// rejected credentials will not self-heal; a new token requires a restart
+		if errors.Is(err, errCredentialsRejected) {
+			return
+		}
+
 		// reset backoff only after a session that stayed connected
 		if ok {
 			bo.Reset()

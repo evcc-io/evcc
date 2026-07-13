@@ -100,36 +100,32 @@ func TestTunnelReconnect(t *testing.T) {
 	require.True(t, tun.IsConnected())
 }
 
-// TestTunnelRetriesRejectedCredentials verifies the client keeps retrying after
-// a credential rejection (401/403) and reconnects once the token is accepted.
-func TestTunnelRetriesRejectedCredentials(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("pong"))
-	})
-	authenticate := func(user, pass string) bool { return true }
-
+// TestTunnelRejectedCredentialsStops verifies the client does not retry when
+// the proxy rejects credentials (401/403); a new token requires a restart.
+func TestTunnelRejectedCredentialsStops(t *testing.T) {
 	var attempts atomic.Int32
-	sessions := make(chan *yamux.Session, 4)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// reject credentials first, then accept
-		if attempts.Add(1) == 1 {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		serveSession(w, r, sessions)
+		attempts.Add(1)
+		w.WriteHeader(http.StatusUnauthorized)
 	}))
 	defer srv.Close()
 
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http")
 
-	tun := NewTunnel(wsURL, "token", handler, authenticate, nil, util.NewLogger("test"), nil)
-	go tun.run()
+	tun := NewTunnel(wsURL, "token", nil, nil, nil, util.NewLogger("test"), nil)
 	defer tun.Close()
 
-	session := waitSession(t, sessions)
-	requireReachable(t, session)
-	require.True(t, tun.IsConnected())
-	require.GreaterOrEqual(t, attempts.Load(), int32(2), "must retry after credential rejection")
+	done := make(chan struct{})
+	go func() { tun.run(); close(done) }()
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("run did not return after credential rejection")
+	}
+
+	require.Equal(t, int32(1), attempts.Load(), "must not retry after credential rejection")
+	require.False(t, tun.IsConnected())
 }
 
 // TestTunnelReconnectsAfterTransientError verifies the client keeps retrying
