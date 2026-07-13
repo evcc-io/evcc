@@ -1,6 +1,6 @@
 <template>
 	<div class="d-flex flex-column gap-2">
-		<div v-if="suggestion" class="d-flex justify-content-between gap-3">
+		<div v-if="suggestionValue" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<Optimizer />
 				<router-link to="/optimize" class="evcc-default-text text-decoration-underline">
