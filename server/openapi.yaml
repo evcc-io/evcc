@@ -402,6 +402,21 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/mintemp/{temp}:
+    post:
+      operationId: setLoadpointMinTemp
+      summary: Update minimum temperature
+      description: "Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/limit
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/temp"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/mode/{mode}:
     post:
       operationId: setLoadpointMode
@@ -1678,6 +1693,11 @@ components:
       example: 60
       minimum: 0
       maximum: 100
+    Temp:
+      description: Temperature in °C
+      type: number
+      example: 50
+      minimum: 0
     State:
       description: "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases."
       type: object
@@ -1803,6 +1823,13 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/Soc"
+    temp:
+      name: temp
+      description: Temperature in °C
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/Temp"
     timestamp:
       name: timestamp
       description: Timestamp in RFC3339 format

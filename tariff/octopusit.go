@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"sync"
 	"time"
@@ -13,7 +14,7 @@ import (
 )
 
 // OctopusIt is an api.Tariff implementation for Octopus Energy Italy, reusing
-// the Germany implementation's Kraken GraphQL client and rate computation.
+// Germany's Kraken auth/transport but its own rate query (schemas diverge).
 type OctopusIt struct {
 	log       *util.Logger
 	gqlClient *krakengql.Client
@@ -84,14 +85,14 @@ func (t *OctopusIt) run(done chan error) {
 		var rates []RatePeriod
 
 		if err := backoff.Retry(func() error {
-			agr, err := t.gqlClient.ActiveAgreement()
+			agr, err := t.gqlClient.ItActiveAgreement()
 			if err != nil {
 				if errors.Is(err, krakengql.ErrAuthFailed) {
 					return backoff.Permanent(err)
 				}
 				return backoffPermanentError(err)
 			}
-			rates, err = ratesForAgreement(agr, time.Now())
+			rates, err = ratesForItAgreement(agr, time.Now())
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
@@ -131,4 +132,50 @@ func (t *OctopusIt) Rates() (api.Rates, error) {
 // Type implements the api.Tariff interface
 func (t *OctopusIt) Type() api.TariffType {
 	return api.TariffTypePriceForecast
+}
+
+// ratesForItAgreement returns a flat rate covering the planning horizon.
+// Only FIXED_SINGLE_RATE products are supported - F1/F2/F3 is not implemented.
+func ratesForItAgreement(agr krakengql.ItAgreement, now time.Time) ([]RatePeriod, error) {
+	horizon, err := computeItHorizon(now, agr, planDays)
+	if err != nil {
+		return nil, err
+	}
+
+	p := agr.Product.Prices
+	if p.ConsumptionChargeF2 != "" || p.ConsumptionChargeF3 != "" {
+		return nil, fmt.Errorf("unsupported time-of-use product %q: F2/F3 rates are not implemented", agr.Product.Code)
+	}
+
+	rate, err := parseFloat(p.ConsumptionCharge)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse consumption charge: %w", err)
+	}
+
+	// prices are € per kWh; RatePeriod stores cents per kWh like the DE tariff.
+	return []RatePeriod{{
+		ValidFrom:                horizon.start,
+		ValidTo:                  horizon.end,
+		GrossUnitRateCentsPerKwh: rate * 100,
+	}}, nil
+}
+
+// computeItHorizon returns the planning window, capped by the agreement's validity.
+func computeItHorizon(now time.Time, agreement krakengql.ItAgreement, planDays int) (planningHorizon, error) {
+	start := now
+	end := now.AddDate(0, 0, planDays)
+
+	if agreement.ValidFrom.After(end) || (!agreement.ValidTo.IsZero() && agreement.ValidTo.Before(start)) {
+		return planningHorizon{}, errors.New("agreement is not valid for the planning horizon")
+	}
+
+	if agreement.ValidFrom.After(start) {
+		start = agreement.ValidFrom
+	}
+
+	if !agreement.ValidTo.IsZero() && agreement.ValidTo.Before(end) {
+		end = agreement.ValidTo
+	}
+
+	return planningHorizon{start: start, end: end}, nil
 }

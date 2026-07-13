@@ -329,6 +329,7 @@ export interface Loadpoint {
   effectiveLimitSoc: number;
   effectiveMaxCurrent: number;
   effectiveMinCurrent: number;
+  effectiveMinSoc: number;
   effectivePlanId: number;
   effectivePlanSoc: number;
   effectivePlanTime: string | null;
@@ -341,6 +342,7 @@ export interface Loadpoint {
   limitSoc: number;
   maxCurrent: number;
   minCurrent: number;
+  minSoc: number;
   minSocNotReached: boolean;
   mode: CHARGE_MODE;
   offeredCurrent: number;
@@ -676,12 +678,14 @@ export interface BatterySuggestion {
   action: "normal" | "hold" | "charge" | "holdcharge";
   charge?: number; // recommended charge power, W
   discharge?: number; // recommended discharge power, W
+  actionable?: boolean; // suggestion differs from the current operating mode
 }
 
 export interface LoadpointSuggestion {
   action: "charge" | "stop";
   charge?: number; // recommended charge power, W
   discharge?: number; // recommended discharge power, W
+  actionable?: boolean; // suggestion differs from the current operating mode
 }
 
 export interface BatteryMeter extends Meter {

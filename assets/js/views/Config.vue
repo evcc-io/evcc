@@ -500,7 +500,7 @@
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
-				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
+				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
@@ -897,13 +897,16 @@ export default defineComponent({
 				return { configured: { value: false } };
 			}
 			const tags: DeviceTags = {
-				enabled: { value: remote.config?.enabled },
-				connected: { value: remote.status?.connected },
+				remoteEnabled: { value: remote.config?.enabled },
+				connected: {
+					value: remote.status?.connected,
+					error: remote.config?.enabled && !remote.status?.connected,
+				},
 			};
 			if (remote.status?.loginBlocked) {
 				tags["loginBlocked"] = { value: true, error: true };
 			}
-			if (remote.status?.connected) {
+			if (remote.config?.enabled) {
 				const lastSeen = remote.status?.lastSeen;
 				const count = lastSeen
 					? Object.keys(lastSeen).filter((u) => isRemoteClientActive(lastSeen, u)).length

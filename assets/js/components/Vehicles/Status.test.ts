@@ -84,17 +84,22 @@ describe("min charge", () => {
 describe("optimizer suggestion", () => {
   test("charge suggested while not charging", () => {
     expectEntries(
-      { connected: true, suggestion: { action: "charge" } },
+      { connected: true, suggestion: { action: "charge", actionable: true } },
       { charger: "Connected.", suggestion: true }
     );
   });
   test("stop suggested while charging", () => {
     expectEntries(
-      { connected: true, enabled: true, charging: true, suggestion: { action: "stop" } },
+      {
+        connected: true,
+        enabled: true,
+        charging: true,
+        suggestion: { action: "stop", actionable: true },
+      },
       { charger: "Charging…", suggestion: true }
     );
   });
-  test("hidden when suggestion matches state", () => {
+  test("hidden when not actionable", () => {
     expectEntries(
       { connected: true, enabled: true, charging: true, suggestion: { action: "charge" } },
       { charger: "Charging…", suggestion: false }
@@ -106,7 +111,7 @@ describe("optimizer suggestion", () => {
   });
   test("hidden when disconnected", () => {
     expectEntries(
-      { connected: false, suggestion: { action: "charge" } },
+      { connected: false, suggestion: { action: "charge", actionable: true } },
       { charger: "Disconnected.", suggestion: false }
     );
   });
