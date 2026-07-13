@@ -189,7 +189,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 
 	// loadpoint api
 	// TODO any loadpoint
-	for id, lp := range site.Loadpoints() {
+	for id, lp := range site.ActiveLoadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{

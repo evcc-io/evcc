@@ -1,6 +1,14 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, addDemoCharger, newLoadpoint } from "./utils";
+import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
+import {
+  expectModalVisible,
+  expectModalHidden,
+  addDemoCharger,
+  newLoadpoint,
+  finishLoadpoint,
+  openMoreMenu,
+} from "./utils";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -24,8 +32,16 @@ function disabledBadge(card: Locator) {
 async function createLoadpoint(page: Page, title: string) {
   await newLoadpoint(page, title);
   await addDemoCharger(page);
+  // charger save instant-creates the loadpoint
+  await finishLoadpoint(page);
+}
+
+async function toggleLoadpointDisable(page: Page, index: number, action: "Disable" | "Enable") {
+  const target = page.getByTestId("loadpoint").nth(index);
   const lpModal = page.getByTestId("loadpoint-modal");
-  await lpModal.getByRole("button", { name: "Save" }).click();
+  await target.getByRole("button", { name: "edit" }).click();
+  await expectModalVisible(lpModal);
+  await lpModal.getByRole("button", { name: action }).click();
   await expectModalHidden(lpModal);
 }
 
@@ -42,14 +58,8 @@ test.describe("disable / enable", async () => {
     await createLoadpoint(page, "Garage");
 
     const target = page.getByTestId("loadpoint").nth(0);
-    const lpModal = page.getByTestId("loadpoint-modal");
 
-    // open modal, disable
-    await target.getByRole("button", { name: "edit" }).click();
-    await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("button", { name: "Disable" })).toBeVisible();
-    await lpModal.getByRole("button", { name: "Disable" }).click();
-    await expectModalHidden(lpModal);
+    await toggleLoadpointDisable(page, 0, "Disable");
 
     // card shows disabled state
     await expect(disabledBadge(target)).toBeVisible();
@@ -159,5 +169,109 @@ test.describe("disable / enable", async () => {
     await page.reload();
     await expectNoFatal(page);
     await expect(disabledBadge(pvCard)).toHaveCount(0);
+  });
+});
+
+test.describe("disabled loadpoint behavior", async () => {
+  test("broken charger boots after disabling its loadpoint", async ({ page }) => {
+    autoAcceptDialogs(page);
+    await startSimulator();
+    await start();
+    await page.goto("/#/config");
+
+    // second loadpoint so the site stays valid
+    await createLoadpoint(page, "Carport");
+    await page.reload();
+
+    // loadpoint with shelly charger against simulator
+    await newLoadpoint(page, "Garage");
+    const lpModal = page.getByTestId("loadpoint-modal");
+    await lpModal.getByRole("button", { name: "Add charger" }).click();
+    const chargerModal = page.getByTestId("charger-modal");
+    await expectModalVisible(chargerModal);
+    await chargerModal.getByLabel("Manufacturer").selectOption("Shelly 1");
+    await chargerModal.getByLabel("IP address or hostname").fill(simulatorHost());
+    await chargerModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(chargerModal);
+    await expectModalVisible(lpModal);
+    // charger save instant-creates the loadpoint
+    await finishLoadpoint(page);
+    await page.waitForLoadState("networkidle");
+
+    // break charger
+    await stopSimulator();
+    await restart();
+    await page.reload();
+    await expect(page.getByTestId("fatal-error")).toBeVisible();
+
+    // disable loadpoint with broken charger
+    await toggleLoadpointDisable(page, 1, "Disable");
+    await expect(disabledBadge(page.getByTestId("loadpoint").nth(1))).toBeVisible();
+
+    // clean boot, charger no longer instantiated
+    await restart();
+    await page.reload();
+    await expectNoFatal(page);
+    await expect(disabledBadge(page.getByTestId("loadpoint").nth(1))).toBeVisible();
+
+    // re-enable, fatal returns
+    await disabledBadge(page.getByTestId("loadpoint").nth(1)).click();
+    await restart();
+    await page.reload();
+    await expect(page.getByTestId("fatal-error")).toBeVisible();
+  });
+
+  test("disabling a loadpoint keeps api indexes stable", async ({ page }) => {
+    autoAcceptDialogs(page);
+    await start();
+    await page.goto("/#/config");
+
+    await createLoadpoint(page, "Carport");
+    await page.reload();
+    await createLoadpoint(page, "Garage");
+    await page.reload();
+    await createLoadpoint(page, "Süd");
+
+    // disable middle loadpoint
+    await toggleLoadpointDisable(page, 1, "Disable");
+    await restart();
+
+    // main ui hides disabled loadpoint
+    await page.goto("/");
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+    await expect(page.getByRole("heading", { name: "Garage" })).not.toBeVisible();
+    await expect(page.getByTestId("loadpoint").nth(0)).toContainText("Carport");
+    await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Süd");
+
+    // state keeps disabled loadpoint at its position
+    const state = await (await page.request.get("/api/state")).json();
+    expect(state.loadpoints).toHaveLength(3);
+    expect(state.loadpoints[1].disabled).toBe(true);
+    expect(state.loadpoints[1].title).toBe("Garage");
+
+    // api index of third loadpoint does not shift
+    const res = await page.request.post("/api/loadpoints/3/mode/now");
+    expect(res.status()).toBe(200);
+    const updated = await (await page.request.get("/api/state")).json();
+    expect(updated.loadpoints[2].mode).toBe("now");
+    expect(updated.loadpoints[0].mode).not.toBe("now");
+
+    // disabled loadpoint has no api routes
+    const disabledRes = await page.request.post("/api/loadpoints/2/mode/now");
+    expect(disabledRes.status()).toBe(404);
+
+    // ui settings show disabled loadpoint as inactive row
+    const menu = await openMoreMenu(page);
+    await menu.getByRole("button", { name: "User Interface" }).click();
+    const modal = page.getByTestId("global-settings-modal");
+    await expectModalVisible(modal);
+    const garageRow = modal.getByRole("listitem", { name: "Draggable: Garage" });
+    await expect(garageRow).toContainText("disabled");
+    await expect(modal.getByRole("switch", { name: "Hide Garage" })).toHaveCount(0);
+    await expect(modal.getByRole("switch", { name: "Hide Carport" })).toBeEnabled();
+
+    // last-visible guard ignores disabled loadpoint
+    await modal.getByRole("switch", { name: "Hide Carport" }).click();
+    await expect(modal.getByRole("switch", { name: "Hide Süd" })).toBeDisabled();
   });
 });

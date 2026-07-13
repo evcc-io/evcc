@@ -1312,11 +1312,11 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
+	// nil entries mark disabled loadpoints- indexes stay aligned with config order
 	var loadpoints []*core.Loadpoint
 	for _, dev := range config.Loadpoints().Devices() {
-		if inst, _ := dev.Instance().(*core.Loadpoint); inst != nil {
-			loadpoints = append(loadpoints, inst)
-		}
+		inst, _ := dev.Instance().(*core.Loadpoint)
+		loadpoints = append(loadpoints, inst)
 	}
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
@@ -1354,7 +1354,7 @@ CONTINUE:
 		}
 
 		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
-			return lp.GetCircuit() == instance
+			return lp != nil && lp.GetCircuit() == instance
 		}) {
 			continue CONTINUE
 		}

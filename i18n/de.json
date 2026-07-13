@@ -1668,6 +1668,7 @@
       "label": "Sprache"
     },
     "loadpoints": {
+      "disabledDevice": "deaktiviert",
       "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
       "hide": "{title} ausblenden",
       "label": "Ladepunkte",

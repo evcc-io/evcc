@@ -179,7 +179,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	tariff := site.GetTariff(api.TariffUsagePlanner)
 
 	// give loadpoints access to vehicles and database
-	for _, lp := range loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 		lp.planner = planner.New(lp.log, tariff)
 
@@ -502,6 +502,10 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("    solar:     %s", presence[site.GetTariff(api.TariffUsageSolar) != nil])
 
 	for i, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
@@ -554,7 +558,7 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 
 // clearPlanLocks clears locked plan goals for all loadpoints
 func (site *Site) clearPlanLocks() {
-	for _, lp := range site.Loadpoints() {
+	for _, lp := range site.activeLoadpoints() {
 		lp.ClearPlanLock()
 	}
 }
@@ -1020,7 +1024,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	for _, lp := range site.loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
@@ -1045,7 +1049,7 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	prio := lp.EffectivePriority()
 
 	var reserved float64
-	for _, other := range site.loadpoints {
+	for _, other := range site.activeLoadpoints() {
 		if any(other) == any(lp) {
 			continue
 		}
@@ -1233,6 +1237,21 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	lpDevices := config.Loadpoints().Devices()
 
 	for id, lp := range site.loadpoints {
+		// publish name on the loadpoint's behalf — it doesn't know its own
+		if id < len(lpDevices) {
+			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
+		}
+
+		// disabled loadpoint- publish minimal placeholder to keep indexes stable
+		if lp == nil {
+			if id < len(lpDevices) {
+				title, _ := lpDevices[id].Config().Other["title"].(string)
+				site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Title, Val: title}
+			}
+			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Disabled, Val: true}
+			continue
+		}
+
 		lpUIChan := make(chan util.Param)
 		lpPushChan := make(chan messenger.Event)
 
@@ -1250,11 +1269,6 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			}
 		}(id)
 
-		// publish name on the loadpoint's behalf — it doesn't know its own
-		if id < len(lpDevices) {
-			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
-		}
-
 		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
@@ -1262,15 +1276,16 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
+	active := site.activeLoadpoints()
 
 	for {
-		if len(site.loadpoints) == 0 {
+		if len(active) == 0 {
 			logOnce.Do(func() {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 			})
 			next <- nil
 		} else {
-			for _, lp := range site.loadpoints {
+			for _, lp := range active {
 				next <- lp
 			}
 		}

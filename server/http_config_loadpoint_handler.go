@@ -72,6 +72,27 @@ func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any,
 	return dynamic, static, disable, err
 }
 
+// setDeviceDisable persists the disable flag on a loadpoint's subdevice
+func setDeviceDisable[T any](name string, h config.Handler[T], disable bool) error {
+	if name == "" {
+		return nil
+	}
+
+	dev, err := configurableDevice(name, h)
+	if err != nil {
+		// static device- cannot persist
+		return nil
+	}
+
+	props := dev.Properties()
+	if props.Disable == disable {
+		return nil
+	}
+	props.Disable = disable
+
+	return dev.Update(dev.Config().Other, dev.Instance(), config.WithProperties(props))
+}
+
 // loadpointConfig returns a single loadpoint's configuration
 func loadpointConfig(dev config.Device[loadpoint.API]) (loadpointFullConfig, error) {
 	var (
@@ -262,6 +283,19 @@ func updateLoadpointHandler() http.HandlerFunc {
 		instance := dev.Instance()
 
 		if err := configurable.Update(other, instance, config.WithProperties(config.Properties{Disable: disable})); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// propagate disable to the loadpoint's charger and meter
+		chargerRef, _ := other["charger"].(string)
+		if err := setDeviceDisable(chargerRef, config.Chargers(), disable); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		meterRef, _ := other["meter"].(string)
+		if err := setDeviceDisable(meterRef, config.Meters(), disable); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

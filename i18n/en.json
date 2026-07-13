@@ -1668,6 +1668,7 @@
       "label": "Language"
     },
     "loadpoints": {
+      "disabledDevice": "disabled",
       "help": "Change order and visibility for the UI.",
       "hide": "Hide {title}",
       "label": "Charging points",

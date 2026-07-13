@@ -324,6 +324,7 @@ export interface Loadpoint {
   charging: boolean;
   connected: boolean;
   connectedDuration: number;
+  disabled?: boolean;
   disableDelay: number;
   disableThreshold: number;
   effectiveLimitSoc: number;
