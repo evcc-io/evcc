@@ -64,6 +64,11 @@ type Site struct {
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 
+	// loadpoint priority sub-ordering within a tier (see api.PriorityStrategy)
+	PriorityStrategy   api.PriorityStrategy `mapstructure:"priorityStrategy"`   // Priority strategy (none, soc, deficit)
+	PriorityBasis      api.PriorityBasis    `mapstructure:"priorityBasis"`      // Priority strategy basis (percent, energy)
+	PriorityHysteresis int                  `mapstructure:"priorityHysteresis"` // Priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
+
 	// meters
 	circuit        api.Circuit                // Circuit
 	hems           api.HEMS                   // HEMS (set by configureHEMS at boot)
@@ -123,6 +128,11 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 		return nil, err
 	}
 
+	// PriorityStrategy/PriorityBasis are validated at decode via their TextUnmarshaler
+	if site.PriorityHysteresis < 0 || site.PriorityHysteresis > 99 {
+		return nil, fmt.Errorf("invalid priority hysteresis: %d (must be 0..99)", site.PriorityHysteresis)
+	}
+
 	// add meters from config
 	site.restoreMetersAndTitle()
 
@@ -140,7 +150,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()))
 	handler.Subscribe(site.updateVehicles)
 
-	site.prioritizer = prioritizer.New(log)
+	site.prioritizer = prioritizer.New(log, site)
 	site.stats = NewStats()
 
 	me, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
@@ -366,6 +376,25 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.ResidualPower); err == nil {
 		if err := site.SetResidualPower(v); err != nil {
+			return err
+		}
+	}
+	if v, err := settings.String(keys.PriorityStrategy); err == nil {
+		if strategy, err := api.PriorityStrategyString(v); err == nil {
+			if err := site.SetPriorityStrategy(strategy); err != nil {
+				return err
+			}
+		}
+	}
+	if v, err := settings.String(keys.PriorityBasis); err == nil {
+		if basis, err := api.PriorityBasisString(v); err == nil {
+			if err := site.SetPriorityBasis(basis); err != nil {
+				return err
+			}
+		}
+	}
+	if v, err := settings.Int(keys.PriorityHysteresis); err == nil && v >= 0 && v <= 99 {
+		if err := site.SetPriorityHysteresis(int(v)); err != nil {
 			return err
 		}
 	}
@@ -1168,6 +1197,9 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.PriorityStrategy, site.GetPriorityStrategy())
+	site.publish(keys.PriorityBasis, site.GetPriorityBasis())
+	site.publish(keys.PriorityHysteresis, site.GetPriorityHysteresis())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 

@@ -416,6 +416,66 @@ call setGlobalSmartFeedInPriorityLimit {
 }
 ```
 
+## setPriorityBasis
+
+Set whether the site-wide priority strategy ranks by soc percentage or by absolute energy (kWh).
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| basis | string | Whether the priority strategy ranks by soc percentage or by absolute energy (kWh). |
+
+**Example call:**
+
+```json
+call setPriorityBasis {
+  "basis": "percent"
+}
+```
+
+## setPriorityHysteresis
+
+Set the site-wide deadband used when sub-ordering loadpoints of the same priority (soc-%, or kWh with the energy basis; 0 = off).
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| hysteresis | integer | Deadband in soc-% or kWh per basis (0..99, 0 = off). |
+
+**Example call:**
+
+```json
+call setPriorityHysteresis {
+  "hysteresis": 123
+}
+```
+
+## setPriorityStrategy
+
+Set the site-wide strategy used to sub-order loadpoints of the same priority.
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| strategy | string | Priority strategy used to sub-order loadpoints of the same priority. |
+
+**Example call:**
+
+```json
+call setPriorityStrategy {
+  "strategy": "none"
+}
+```
+
 ## assignLoadpointVehicle
 
 Assigns vehicle to loadpoint.

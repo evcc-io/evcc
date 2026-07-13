@@ -723,6 +723,70 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /prioritystrategy/{strategy}:
+    post:
+      operationId: setPriorityStrategy
+      summary: Set priority strategy
+      description: "Set the site-wide strategy used to sub-order loadpoints of the same priority."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/reference/configuration/site
+      tags:
+        - general
+      parameters:
+        - $ref: "#/components/parameters/priorityStrategy"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/PriorityStrategy"
+  /prioritybasis/{basis}:
+    post:
+      operationId: setPriorityBasis
+      summary: Set priority basis
+      description: "Set whether the site-wide priority strategy ranks by soc percentage or by absolute energy (kWh)."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/reference/configuration/site
+      tags:
+        - general
+      parameters:
+        - $ref: "#/components/parameters/priorityBasis"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/PriorityBasis"
+  /priorityhysteresis/{hysteresis}:
+    post:
+      operationId: setPriorityHysteresis
+      summary: Set priority hysteresis
+      description: "Set the site-wide deadband used when sub-ordering loadpoints of the same priority (soc-%, or kWh with the energy basis; 0 = off)."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/reference/configuration/site
+      tags:
+        - general
+      parameters:
+        - name: hysteresis
+          in: path
+          description: Deadband in soc-% or kWh per basis (0..99, 0 = off).
+          required: true
+          example: 5
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 99
+      responses:
+        "200":
+          $ref: "#/components/responses/IntegerResult"
   /residualpower/{power}:
     post:
       operationId: setResidualPower
@@ -1589,6 +1653,19 @@ components:
         - "now"
         - "minpv"
         - "pv"
+    PriorityStrategy:
+      description: "Priority strategy used to sub-order loadpoints of the same priority."
+      type: string
+      enum:
+        - "none"
+        - "soc"
+        - "deficit"
+    PriorityBasis:
+      description: "Whether the priority strategy ranks by soc percentage or by absolute energy (kWh)."
+      type: string
+      enum:
+        - "percent"
+        - "energy"
     Odometer:
       nullable: true
       type: "number"
@@ -1796,6 +1873,18 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/Mode"
+    priorityStrategy:
+      name: strategy
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/PriorityStrategy"
+    priorityBasis:
+      name: basis
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/PriorityBasis"
     soc:
       name: soc
       description: SOC in %
