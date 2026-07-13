@@ -153,8 +153,8 @@ export default defineComponent({
 		},
 		chargingPlanPreviewProps(): any {
 			const rates = (this.forecast?.planner || []).map(({ start, end, value }) => ({
-				start: new Date(start),
-				end: new Date(end),
+				start: new Date(start * 1000),
+				end: new Date(end * 1000),
 				value,
 			}));
 			const { duration, plan, power, planTime } = this.plan;
