@@ -274,4 +274,39 @@ test.describe("disabled loadpoint behavior", async () => {
     await modal.getByRole("switch", { name: "Hide Carport" }).click();
     await expect(modal.getByRole("switch", { name: "Hide Süd" })).toBeDisabled();
   });
+
+  test("editing a disabled loadpoint", async ({ page }) => {
+    autoAcceptDialogs(page);
+    await start();
+    await page.goto("/#/config");
+
+    await createLoadpoint(page, "Carport");
+    await page.reload();
+    await createLoadpoint(page, "Garage");
+
+    await toggleLoadpointDisable(page, 1, "Disable");
+
+    const target = page.getByTestId("loadpoint").nth(1);
+    const lpModal = page.getByTestId("loadpoint-modal");
+
+    // update title while disabled
+    await target.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await lpModal.getByLabel("Title").fill("Garage 2");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+    await expect(target).toContainText("Garage 2");
+
+    // survives restart, still disabled
+    await restart();
+    await page.reload();
+    await expect(target).toContainText("Garage 2");
+    await expect(disabledBadge(target)).toBeVisible();
+
+    // re-enable, title applies to live loadpoint
+    await disabledBadge(target).click();
+    await restart();
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Garage 2" })).toBeVisible();
+  });
 });

@@ -58,18 +58,24 @@ type loadpointFullConfig struct {
 	loadpoint.DynamicConfig
 }
 
-func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any, bool, error) {
+func loadpointSplitConfig(r io.Reader) (loadpoint.DynamicConfig, map[string]any, map[string]any, *bool, error) {
 	var payload map[string]any
 
 	if err := jsonDecoder(r).Decode(&payload); err != nil {
-		return loadpoint.DynamicConfig{}, nil, false, err
+		return loadpoint.DynamicConfig{}, nil, nil, nil, err
 	}
 
-	disable, _ := payload["disable"].(bool)
+	// nil if not part of the payload- keeps the persisted flag
+	var disable *bool
+	if v, ok := payload["disable"].(bool); ok {
+		disable = &v
+	}
 	delete(payload, "disable")
+	delete(payload, "id")
+	delete(payload, "name")
 
 	dynamic, static, err := loadpoint.SplitConfig(payload)
-	return dynamic, static, disable, err
+	return dynamic, static, payload, disable, err
 }
 
 // setDeviceDisable persists the disable flag on a loadpoint's subdevice
@@ -194,7 +200,7 @@ func newLoadpointHandler() http.HandlerFunc {
 	// TODO revert charger, meter etc
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		dynamic, static, disable, err := loadpointSplitConfig(r.Body)
+		dynamic, static, _, disable, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -204,7 +210,7 @@ func newLoadpointHandler() http.HandlerFunc {
 		name := "lp-" + strconv.Itoa(id+1)
 		log := util.NewLoggerWithLoadpoint(name, id+1)
 
-		conf, err := config.AddConfig(templates.Loadpoint, static, config.WithProperties(config.Properties{Disable: disable}))
+		conf, err := config.AddConfig(templates.Loadpoint, static, config.WithProperties(config.Properties{Disable: disable != nil && *disable}))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -265,37 +271,46 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		dynamic, static, disable, err := loadpointSplitConfig(r.Body)
+		dynamic, static, payload, disable, err := loadpointSplitConfig(r.Body)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		// static
-
-		// merge here to maintain dynamic part of the config
-		other := configurable.Config().Other
-		if err := mergo.Merge(&other, static, mergo.WithOverride); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		props := configurable.Properties()
+		if disable != nil {
+			props.Disable = *disable
 		}
 
 		instance := dev.Instance()
 
-		if err := configurable.Update(other, instance, config.WithProperties(config.Properties{Disable: disable})); err != nil {
+		// merge static config to maintain the dynamic part; without live instance
+		// merge the full payload since dynamic setters cannot persist it
+		src := static
+		if instance == nil {
+			src = payload
+		}
+
+		other := configurable.Config().Other
+		if err := mergo.Merge(&other, src, mergo.WithOverride); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := configurable.Update(other, instance, config.WithProperties(props)); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		// propagate disable to the loadpoint's charger and meter
 		chargerRef, _ := other["charger"].(string)
-		if err := setDeviceDisable(chargerRef, config.Chargers(), disable); err != nil {
+		if err := setDeviceDisable(chargerRef, config.Chargers(), props.Disable); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		meterRef, _ := other["meter"].(string)
-		if err := setDeviceDisable(meterRef, config.Meters(), disable); err != nil {
+		if err := setDeviceDisable(meterRef, config.Meters(), props.Disable); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
