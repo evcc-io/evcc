@@ -353,6 +353,15 @@ render: |
           set:
             {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
+              value: 2
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  type: writemultiple
+                  decode: uint16
+            - source: const
               value: 0 # Set charge limit to 0W
               set:
                 source: modbus
