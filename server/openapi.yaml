@@ -1167,7 +1167,7 @@ paths:
                 type: object
                 properties:
                   mode:
-                    $ref: "#/components/schemas/Mode"
+                    $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
   /vehicles/{name}/plan/repeating:
     post:
       operationId: updateVehicleRepeatingPlans

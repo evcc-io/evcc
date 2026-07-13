@@ -113,6 +113,11 @@ function normalizeNullables(schema: AnySchema): void {
         node.allOf = rest;
       }
     }
+    // openapi 3.0 has no `const`, use a single-value enum
+    if ("const" in node) {
+      node.enum = [node.const];
+      delete node.const;
+    }
     // openapi 3.0 uses a singular example
     if (Array.isArray(node.examples)) {
       node.example = node.examples[0];

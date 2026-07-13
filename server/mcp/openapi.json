@@ -1921,7 +1921,7 @@
                   "type": "object",
                   "properties": {
                     "mode": {
-                      "$ref": "#/components/schemas/Mode"
+                      "$ref": "#/components/schemas/ChargeMode"
                     }
                   }
                 }
@@ -4441,7 +4441,9 @@
               },
               {
                 "type": "string",
-                "const": ""
+                "enum": [
+                  ""
+                ]
               }
             ]
           },

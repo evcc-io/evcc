@@ -1757,7 +1757,8 @@ components:
           anyOf:
             - $ref: "#/components/schemas/ChargeMode"
             - type: string
-              const: ""
+              enum:
+                - ""
         minSoc:
           description: Minimum SoC in %. Vehicle is fast-charged until this level is reached.
           type: number
