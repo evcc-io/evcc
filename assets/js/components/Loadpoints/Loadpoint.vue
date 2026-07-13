@@ -145,6 +145,7 @@ export default defineComponent({
 		title: String,
 		mode: String as PropType<CHARGE_MODE>,
 		effectiveLimitSoc: Number,
+		effectiveMinSoc: Number,
 		limitEnergy: Number,
 		remoteDisabled: String,
 		remoteDisabledSource: String,

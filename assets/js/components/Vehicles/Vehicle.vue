@@ -125,6 +125,7 @@ export default defineComponent({
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
+		effectiveMinSoc: { type: Number, default: 0 },
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,
@@ -209,7 +210,7 @@ export default defineComponent({
 			return this.vehicle?.icon || "";
 		},
 		minSoc() {
-			return this.vehicle?.minSoc || 0;
+			return this.effectiveMinSoc;
 		},
 		vehicleSocProps() {
 			return this.collectProps(Soc);

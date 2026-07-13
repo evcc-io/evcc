@@ -13,7 +13,7 @@ const (
 	Priority          = "priority"         // priority
 	MinCurrent        = "minCurrent"       // min current
 	MaxCurrent        = "maxCurrent"       // max current
-	MinSoc            = "minSoc"           // min soc
+	MinSoc            = "minSoc"           // min soc (heating: min temperature)
 	MinSocNotReached  = "minSocNotReached" // min soc not reached
 	LimitSoc          = "limitSoc"         // limit soc
 	LimitEnergy       = "limitEnergy"      // limit energy
@@ -65,6 +65,7 @@ const (
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 
+	EffectiveMinSoc       = "effectiveMinSoc"       // effective min soc
 	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
 	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy
 

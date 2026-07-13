@@ -840,6 +840,28 @@ call setLoadpointMinCurrent {
 }
 ```
 
+## setLoadpointMinTemp
+
+Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| temp | number | Temperature in °C |
+
+**Example call:**
+
+```json
+call setLoadpointMinTemp {
+  "id": 1,
+  "temp": 50
+}
+```
+
 ## setLoadpointMode
 
 Changes the charging behavior of the loadpoint.

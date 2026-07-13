@@ -140,6 +140,15 @@
           "$ref": "#/components/schemas/Soc"
         }
       },
+      "temp": {
+        "description": "Temperature in °C",
+        "in": "path",
+        "name": "temp",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Temp"
+        }
+      },
       "threshold": {
         "description": "Power in W",
         "in": "path",
@@ -718,6 +727,12 @@
           }
         },
         "type": "object"
+      },
+      "Temp": {
+        "description": "Temperature in °C",
+        "example": 50,
+        "minimum": 0,
+        "type": "number"
       },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
@@ -1722,6 +1737,32 @@
           }
         },
         "summary": "Update minimum current",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/mintemp/{temp}": {
+      "post": {
+        "description": "Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limit"
+        },
+        "operationId": "setLoadpointMinTemp",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/temp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update minimum temperature",
         "tags": [
           "loadpoints"
         ]

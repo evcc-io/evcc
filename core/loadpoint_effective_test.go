@@ -6,7 +6,10 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -15,6 +18,39 @@ import (
 func TestEffectiveLimitSoc(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	assert.Equal(t, 100, lp.effectiveLimitSoc())
+}
+
+func TestEffectiveMinSoc(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	for _, tc := range []struct {
+		loadpoint, vehicle, expected int
+	}{
+		{0, 0, 0},
+		{10, 0, 10},  // loadpoint only
+		{0, 20, 20},  // vehicle only
+		{10, 20, 20}, // vehicle wins
+		{20, 10, 20}, // loadpoint wins
+	} {
+		t.Logf("%+v", tc)
+		config.Reset()
+
+		ctrl := gomock.NewController(t)
+		v := api.NewMockVehicle(ctrl)
+
+		const name = "vehicle"
+		require.NoError(t, config.Vehicles().Add(
+			config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
+		))
+		settings.SetInt("vehicle."+name+"."+keys.MinSoc, int64(tc.vehicle))
+
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.vehicle = v
+		lp.minSoc = tc.loadpoint
+
+		assert.Equal(t, tc.expected, lp.effectiveMinSoc())
+	}
 }
 
 func TestEffectiveMinMaxCurrent(t *testing.T) {

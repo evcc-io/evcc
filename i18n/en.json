@@ -1308,6 +1308,7 @@
     "heatingStatus": {
       "charging": "Heating…",
       "connected": "Standby.",
+      "minTemp": "Minimum heating to {temp}.",
       "suggestionStartTooltip": "Optimizer recommends heating now.",
       "suggestionStopTooltip": "Optimizer recommends pausing the heating.",
       "vehicleLimit": "Heater limit",
@@ -1378,6 +1379,7 @@
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
       "default": "default",
+      "heating": "Heating",
       "limitSoc": {
         "description": "Charging limit that is used when this vehicle is connected.",
         "label": "Default limit"
@@ -1391,6 +1393,10 @@
       "minSoc": {
         "description": "The vehicle gets „fast” charged to {0} in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days.",
         "label": "Min. charge %"
+      },
+      "minTemp": {
+        "description": "Below {0} battery and grid power are also used in solar mode to maintain this temperature.",
+        "label": "Min. temperature"
       },
       "phasesConfigured": {
         "label": "Phases",
