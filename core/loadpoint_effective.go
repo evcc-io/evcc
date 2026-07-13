@@ -20,6 +20,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePlanStrategy, lp.EffectivePlanStrategy())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
+	lp.publish(keys.EffectiveMinSoc, lp.EffectiveMinSoc())
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
@@ -214,6 +215,26 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	}
 
 	return maxCurrent
+}
+
+// EffectiveMinSoc returns the effective min soc (heating: min temperature)
+func (lp *Loadpoint) EffectiveMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.effectiveMinSoc()
+}
+
+// effectiveMinSoc returns the effective min soc (heating: min temperature)
+func (lp *Loadpoint) effectiveMinSoc() int {
+	if lp.minSoc > 0 {
+		return lp.minSoc
+	}
+
+	if v := lp.GetVehicle(); v != nil {
+		return vehicle.Settings(lp.log, v).GetMinSoc()
+	}
+
+	return 0
 }
 
 // EffectiveLimitSoc returns the effective session limit soc

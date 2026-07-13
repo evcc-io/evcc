@@ -91,6 +91,10 @@ type API interface {
 	GetLimitEnergy() float64
 	// SetLimitEnergy sets the session limit energy
 	SetLimitEnergy(energy float64)
+	// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+	GetMinSoc() int
+	// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+	SetMinSoc(soc int)
 
 	//
 	// effective values

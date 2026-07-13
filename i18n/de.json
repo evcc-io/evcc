@@ -1308,6 +1308,7 @@
     "heatingStatus": {
       "charging": "Heize …",
       "connected": "Standby.",
+      "minTemp": "Mindestheizung auf {temp}.",
       "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu heizen.",
       "suggestionStopTooltip": "Der Optimizer empfiehlt, das Heizen zu pausieren.",
       "vehicleLimit": "Heizungslimit",
@@ -1378,6 +1379,7 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
+      "heating": "Heizen",
       "limitSoc": {
         "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
         "label": "Standard Ladelimit"
@@ -1391,6 +1393,10 @@
       "minSoc": {
         "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
         "label": "Min. Ladung %"
+      },
+      "minTemp": {
+        "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
+        "label": "Min. Temperatur"
       },
       "phasesConfigured": {
         "label": "Phasen",
