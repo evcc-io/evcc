@@ -78,6 +78,7 @@
     "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
     "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "body-parser": "^2.2.2",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.4",

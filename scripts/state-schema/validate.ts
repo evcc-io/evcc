@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 import { Ajv2020 } from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
 
 const STATE_SCHEMAS_PATH = "server/openapi.state.yaml";
 
@@ -72,6 +73,7 @@ export function validateState(payload: any): { errors: string[]; undocumented: s
   expandNullable(schemas);
 
   const ajv = new Ajv2020({ strict: false, allErrors: true });
+  addFormats(ajv);
   const validateFn = ajv.compile({
     $ref: "#/components/schemas/State",
     components: { schemas },
