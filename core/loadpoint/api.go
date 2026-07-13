@@ -112,6 +112,8 @@ type API interface {
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
+	// PvChargeStarting reports a PV loadpoint claiming surplus but not yet drawing it
+	PvChargeStarting() bool
 	// EffectivePlanStrategy returns the effective plan strategy
 	EffectivePlanStrategy() api.PlanStrategy
 	// PublishEffectiveValues publishes effective values for currently attached vehicle

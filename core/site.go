@@ -1022,10 +1022,10 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 
 	var reserved float64
 	for _, other := range site.loadpoints {
-		if any(other) == any(lp) {
+		if other == lp {
 			continue
 		}
-		if other.EffectivePriority() > prio && other.pvChargeStarting() {
+		if other.EffectivePriority() > prio && other.PvChargeStarting() {
 			reserved += other.EffectiveMaxPower()
 		}
 	}
