@@ -30,14 +30,8 @@ jobs:
   run:
     name: Issue agent
     runs-on: ubuntu-latest
-    # Superset of what either mode needs; the caller job scopes the token down
-    # (analyze grants only contents: read, so it cannot push or open PRs).
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-      id-token: write
-      actions: read
+    # No permissions block: inherit the caller's grant (triage=write to push
+    # fixes, analyze=read). A reusable job can only reduce, never elevate.
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
