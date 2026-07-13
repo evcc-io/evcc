@@ -35,7 +35,7 @@ export default defineComponent({
 			return filterForecastSlots(this.co2, this.startDate, this.endDate);
 		},
 		markPoints(): {
-			coord: [string, number];
+			coord: [number, number];
 			value: string;
 			label?: Record<string, unknown>;
 		}[] {
@@ -44,7 +44,7 @@ export default defineComponent({
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
 			const points: {
-				coord: [string, number];
+				coord: [number, number];
 				value: string;
 				label?: Record<string, unknown>;
 			}[] = [];
@@ -76,7 +76,7 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
 					...tooltipStyle(co2Color, () => this.chart),
-					formatter(params: { value: [string, number] }[]) {
+					formatter(params: { value: [number, number] }[]) {
 						const p = params[0];
 						if (!p) return "";
 						const d = new Date(p.value[0]);
@@ -100,7 +100,7 @@ export default defineComponent({
 				series: [
 					{
 						type: "line",
-						data: this.slots.map((s) => [s.start, s.value]),
+						data: this.slots.map((s) => [s.start * 1000, s.value]),
 						smooth: true,
 						symbol: "circle",
 						symbolSize: 6,

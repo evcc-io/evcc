@@ -18,13 +18,13 @@ func (ts timeseries) MarshalBytes() ([]byte, error) {
 }
 
 type tsEntry struct {
-	Timestamp time.Time `json:"ts"`
-	Value     float64   `json:"val"`
+	Timestamp int64   `json:"ts"`
+	Value     float64 `json:"val"`
 }
 
 func solarTimeseries(rr api.Rates) []tsEntry {
 	return lo.Map(rr, func(r api.Rate, _ int) tsEntry {
-		return tsEntry{Timestamp: r.Start, Value: r.Value}
+		return tsEntry{Timestamp: r.Start.Unix(), Value: r.Value}
 	})
 }
 

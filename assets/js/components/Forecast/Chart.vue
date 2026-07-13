@@ -147,7 +147,7 @@ export default defineComponent({
 					data: this.solarEntries.map((entry, index) => {
 						return {
 							y: entry.val,
-							x: new Date(entry.ts),
+							x: new Date(entry.ts * 1000),
 							highlight:
 								active &&
 								(this.selectedIndex !== null
@@ -177,7 +177,7 @@ export default defineComponent({
 					label: ForecastType.Price,
 					data: this.gridSlots.map((slot, index) => ({
 						y: slot.value,
-						x: new Date(slot.start),
+						x: new Date(slot.start * 1000),
 						highlight:
 							active &&
 							(this.selectedIndex !== null
@@ -205,7 +205,7 @@ export default defineComponent({
 								: index === this.maxCo2Index || index === this.minCo2Index);
 						return {
 							y: slot.value,
-							x: new Date(slot.start),
+							x: new Date(slot.start * 1000),
 							highlight: dataActive,
 							active: dataActive,
 						};
@@ -460,13 +460,15 @@ export default defineComponent({
 
 			return slots.filter(
 				(slot) =>
-					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
+					new Date(slot.end * 1000) >= this.startDate &&
+					new Date(slot.start * 1000) <= this.endDate
 			);
 		},
 		filterEntries(entries: TimeseriesEntry[] = []) {
 			return entries.filter(
 				(entry) =>
-					new Date(entry.ts) >= this.startDate && new Date(entry.ts) <= this.endDate
+					new Date(entry.ts * 1000) >= this.startDate &&
+					new Date(entry.ts * 1000) <= this.endDate
 			);
 		},
 		onMouseLeave() {

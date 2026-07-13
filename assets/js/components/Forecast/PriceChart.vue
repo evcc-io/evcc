@@ -44,12 +44,12 @@ export default defineComponent({
 				? filterForecastSlots(this.feedin, this.startDate, this.endDate)
 				: [];
 		},
-		markPoints(): { coord: [string, number]; value: string }[] {
+		markPoints(): { coord: [number, number]; value: string }[] {
 			const slots = this.slots;
 			if (!slots.length) return [];
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
-			const points: { coord: [string, number]; value: string }[] = [];
+			const points: { coord: [number, number]; value: string }[] = [];
 			if (slots[minIdx]) {
 				points.push({
 					coord: [clampStart(slots[minIdx]!.start, this.startDate), slots[minIdx]!.value],
@@ -100,7 +100,7 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
 					...tooltipStyle(priceColor, () => this.chart),
-					formatter(params: { value: [string, number]; seriesIndex: number }[]) {
+					formatter(params: { value: [number, number]; seriesIndex: number }[]) {
 						const p = params[0];
 						if (!p) return "";
 						const d = new Date(p.value[0]);
@@ -147,7 +147,7 @@ export default defineComponent({
 		priceSeries(
 			slots: ForecastSlot[],
 			color: string,
-			points?: { coord: [string, number]; value: string }[]
+			points?: { coord: [number, number]; value: string }[]
 		): Record<string, unknown> {
 			const avg = slots.length ? slots.reduce((a, s) => a + s.value, 0) / slots.length : 0;
 			const gradientDown = avg >= 0;

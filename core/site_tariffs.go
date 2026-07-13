@@ -25,6 +25,22 @@ type dailyDetails struct {
 	Complete bool    `json:"complete"`
 }
 
+// forecastRate is api.Rate with Start/End published as unix timestamps instead
+// of RFC3339 strings, to keep the forecast payload compact.
+type forecastRate struct {
+	Start int64   `json:"start"`
+	End   int64   `json:"end"`
+	Value float64 `json:"value"`
+}
+
+func forecastRates(rr api.Rates) []forecastRate {
+	res := make([]forecastRate, 0, len(rr))
+	for _, r := range rr {
+		res = append(res, forecastRate{Start: r.Start.Unix(), End: r.End.Unix(), Value: r.Value})
+	}
+	return res
+}
+
 // greenShare returns
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumption below powerFrom will get the available green power first
@@ -98,16 +114,16 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2     api.Rates     `json:"co2,omitempty"`
-		FeedIn  api.Rates     `json:"feedin,omitempty"`
-		Grid    api.Rates     `json:"grid,omitempty"`
-		Planner api.Rates     `json:"planner,omitempty"`
-		Solar   *solarDetails `json:"solar,omitempty"`
+		Co2     []forecastRate `json:"co2,omitempty"`
+		FeedIn  []forecastRate `json:"feedin,omitempty"`
+		Grid    []forecastRate `json:"grid,omitempty"`
+		Planner []forecastRate `json:"planner,omitempty"`
+		Solar   *solarDetails  `json:"solar,omitempty"`
 	}{
-		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:    tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
+		Co2:     forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageCo2))),
+		FeedIn:  forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageFeedIn))),
+		Planner: forecastRates(tariff.Rates(site.GetTariff(api.TariffUsagePlanner))),
+		Grid:    forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageGrid))),
 	}
 
 	// calculate adjusted solar rates

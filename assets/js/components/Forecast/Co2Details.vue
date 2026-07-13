@@ -36,7 +36,7 @@ export default defineComponent({
 			if (!Array.isArray(this.co2)) return [];
 			const now = new Date();
 			return this.co2
-				.filter((slot) => new Date(slot.end) > now)
+				.filter((slot) => new Date(slot.end * 1000) > now)
 				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
 		},
 		average(): string {

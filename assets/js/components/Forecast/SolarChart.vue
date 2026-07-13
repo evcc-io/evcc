@@ -31,7 +31,8 @@ export default defineComponent({
 	computed: {
 		entries(): TimeseriesEntry[] {
 			return (this.solar?.timeseries || []).filter(
-				(e) => new Date(e.ts) >= this.startDate && new Date(e.ts) <= this.endDate
+				(e) =>
+					new Date(e.ts * 1000) >= this.startDate && new Date(e.ts * 1000) <= this.endDate
 			);
 		},
 		combinedMax(): number {
@@ -43,8 +44,8 @@ export default defineComponent({
 			}
 			return max;
 		},
-		markPoints(): { coord: [string, number]; value: string }[] {
-			const points: { coord: [string, number]; value: string }[] = [];
+		markPoints(): { coord: [number, number]; value: string }[] {
+			const points: { coord: [number, number]; value: string }[] = [];
 			const days = [
 				{ energy: this.solar?.today?.energy, day: 0 },
 				{ energy: this.solar?.tomorrow?.energy, day: 1 },
@@ -55,7 +56,7 @@ export default defineComponent({
 				if (idx >= 0 && this.entries[idx] && energy) {
 					const entry = this.entries[idx]!;
 					points.push({
-						coord: [entry.ts, entry.val],
+						coord: [entry.ts * 1000, entry.val],
 						value: this.fmtWh(energy, POWER_UNIT.AUTO),
 					});
 				}
@@ -64,7 +65,7 @@ export default defineComponent({
 		},
 		chartOption(): Record<string, unknown> {
 			const selfColor = colors.self || "";
-			const data = this.entries.map((e) => [e.ts, e.val]);
+			const data = this.entries.map((e) => [e.ts * 1000, e.val]);
 
 			return {
 				animationDuration: 0,
@@ -79,7 +80,7 @@ export default defineComponent({
 						lineStyle: { color: "transparent" },
 					},
 					...tooltipStyle(selfColor, () => this.chart),
-					formatter: (params: { value: [string, number] }[]) => {
+					formatter: (params: { value: [number, number] }[]) => {
 						const p = params[0];
 						if (!p) return "";
 						const d = new Date(p.value[0]);
