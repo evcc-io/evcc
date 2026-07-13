@@ -47,7 +47,7 @@ func TestPvChargeStarting(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		if got := tc.lp.pvChargeStarting(); got != tc.starting {
+		if got := tc.lp.PvChargeStarting(); got != tc.starting {
 			t.Errorf("%s: want %v, got %v", tc.name, tc.starting, got)
 		}
 	}

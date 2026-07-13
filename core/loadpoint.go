@@ -1031,9 +1031,9 @@ func (lp *Loadpoint) charging() bool {
 	return lp.GetStatus() == api.StatusC
 }
 
-// pvChargeStarting reports a PV loadpoint that claimed surplus via a running
+// PvChargeStarting reports a PV loadpoint that claimed surplus via a running
 // enable timer but is not yet drawing it and has not reached its goal. See #31194, #31684.
-func (lp *Loadpoint) pvChargeStarting() bool {
+func (lp *Loadpoint) PvChargeStarting() bool {
 	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached() {
 		return false
 	}

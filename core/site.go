@@ -1025,7 +1025,7 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 		if any(other) == any(lp) {
 			continue
 		}
-		if other.EffectivePriority() > prio && other.pvChargeStarting() {
+		if other.EffectivePriority() > prio && other.PvChargeStarting() {
 			reserved += other.EffectiveMaxPower()
 		}
 	}
