@@ -1031,39 +1031,33 @@ func (lp *Loadpoint) charging() bool {
 	return lp.GetStatus() == api.StatusC
 }
 
-// pvChargeStarting reports a PV loadpoint claiming surplus but not yet drawing it
-// (enable timer running, or enabled but not yet charging). See #31194.
+// pvChargeStarting reports a PV loadpoint that claimed surplus via a running
+// enable timer but is not yet drawing it and has not reached its goal. See #31194, #31684.
 func (lp *Loadpoint) pvChargeStarting() bool {
-	if lp.GetMode() != api.ModePV || !lp.connected() {
-		return false
-	}
-
-	// a loadpoint that reached its charge goal is no longer starting up, even
-	// while it stays enabled and connected but no longer draws current (#31684)
-	if lp.chargeGoalReached() {
+	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached() {
 		return false
 	}
 
 	lp.RLock()
-	enabled, timer := lp.enabled, lp.pvTimer
-	lp.RUnlock()
+	defer lp.RUnlock()
 
-	// enable timer running (not yet enabled), or enabled but vehicle not yet charging
-	return (!enabled && !timer.IsZero()) || (enabled && !lp.charging())
+	// enable timer running (not yet enabled)
+	return !lp.enabled && !lp.pvTimer.IsZero()
 }
 
-// chargeGoalReached reports whether the vehicle will not draw more, i.e. an
-// energy limit is reached or its soc is at/above the effective limit (#31684).
+// chargeGoalReached reports whether the loadpoint will not draw more: enabled
+// but not charging, an energy limit reached, or soc at/above the limit (#31684).
 func (lp *Loadpoint) chargeGoalReached() bool {
-	if lp.LimitEnergyReached() {
+	lp.RLock()
+	enabled, soc := lp.enabled, lp.vehicleSoc
+	lp.RUnlock()
+
+	// enabled but drawing nothing: it won't ramp up
+	if enabled && !lp.charging() {
 		return true
 	}
 
-	lp.RLock()
-	soc := lp.vehicleSoc
-	lp.RUnlock()
-
-	return soc > 0 && soc >= float64(lp.EffectiveLimitSoc())
+	return lp.LimitEnergyReached() || (soc > 0 && soc >= float64(lp.EffectiveLimitSoc()))
 }
 
 // setStatus updates the internal charging state according to EV
