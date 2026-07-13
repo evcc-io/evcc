@@ -8,14 +8,12 @@ requirements:
   description:
     de: |
       Unterstützung für Atmoce MG100 (im Lieferumfang von MC100 und MC100-T enthalten).
-      Erfordert, dass der Installateur Modbus TCP in der Konfiguration oder über die Atmozen-App aktiviert; verfügbar ab Firmware-Version 01.01.00.18.10.
-      Aktivieren Sie die Netzaufladung in der Atmozen-App, um das Laden des Akkus über das Stromnetz zu ermöglichen.
-      Aktivieren Sie Export von Leistung ins Netz in der Atmozen-App, um die Entladung des Akkus ins Stromnetz zu ermöglichen.
+      Der Installateur muss Modbus TCP in der Konfiguration oder über die Atmozen-App aktivieren; verfügbar ab Firmware-Version 01.01.00.18.10.
+      Die Funktionen 'Netzaufladung' und 'Export von Leistung ins Netz' müssen in der Atmozen-App aktiviert sein, um das Laden/Entladen des Akkus aus dem Netz zu ermöglichen.
     en: |
       Support for Atmoce MG100 (included with MC100 and MC100-T).
       Requires installer to enable Modbus TCP in configuration or through Atmozen app; available in firmware 01.01.00.18.10 or later.
-      Enable Grid Recharging in Atmozen app to allow battery charging from grid.
-      Enable Export Power to Grid in Atmozen app to allow battery discharging to grid.
+      'Grid Recharging' and 'Export Power' must be enabled in the Atmozen app to allow battery (dis)charging to/from grid.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
