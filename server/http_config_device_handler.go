@@ -621,6 +621,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				{site.GetBatteryMeterRefs, site.SetBatteryMeterRefs},
 				{site.GetAuxMeterRefs, site.SetAuxMeterRefs},
 				{site.GetExtMeterRefs, site.SetExtMeterRefs},
+				{site.GetConsumerMeterRefs, site.SetConsumerMeterRefs},
 			} {
 				cleanupSiteMeterRef(name, fun.get, fun.set)
 			}
