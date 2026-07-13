@@ -226,15 +226,14 @@ func (lp *Loadpoint) EffectiveMinSoc() int {
 
 // effectiveMinSoc returns the effective min soc (heating: min temperature)
 func (lp *Loadpoint) effectiveMinSoc() int {
-	if lp.minSoc > 0 {
-		return lp.minSoc
-	}
+	minSoc := lp.minSoc
 
+	// loadpoint and vehicle min soc are independent limits- honor both
 	if v := lp.GetVehicle(); v != nil {
-		return vehicle.Settings(lp.log, v).GetMinSoc()
+		minSoc = max(minSoc, vehicle.Settings(lp.log, v).GetMinSoc())
 	}
 
-	return 0
+	return minSoc
 }
 
 // EffectiveLimitSoc returns the effective session limit soc
