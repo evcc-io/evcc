@@ -317,6 +317,7 @@ test.describe("disabled loadpoint behavior", async () => {
 
     // re-enable, fatal returns
     await disabledBadge(page.getByTestId("loadpoint").nth(1)).click();
+    await expect(disabledBadge(page.getByTestId("loadpoint").nth(1))).toHaveCount(0);
     await restart();
     await page.reload();
     await expect(page.getByTestId("fatal-error")).toBeVisible();
@@ -406,6 +407,7 @@ test.describe("disabled loadpoint behavior", async () => {
 
     // re-enable, title applies to live loadpoint
     await disabledBadge(target).click();
+    await expect(disabledBadge(target)).toHaveCount(0);
     await restart();
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Garage 2" })).toBeVisible();
