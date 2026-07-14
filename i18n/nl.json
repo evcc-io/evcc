@@ -1181,9 +1181,7 @@
     "chargingPlan": {
       "active": "Actief",
       "addRepeatingPlan": "Herhalend schema toevoegen",
-      "arrivalTab": "Aankomst",
       "day": "Dag",
-      "departureTab": "Vertrek",
       "goal": "Laaddoel",
       "modalTitle": "Laad Plan",
       "none": "geen",
@@ -1207,8 +1205,6 @@
       "strategySettings": "Strategie-instellingen",
       "time": "Tijd",
       "title": "Plan",
-      "titleMinSoc": "Min lading",
-      "titleTargetCharge": "Vertrek",
       "unsavedChanges": "Wijzigingen nog niet opgeslagen. Nu toepassen?",
       "update": "Toepassen",
       "weekdays": "Dagen"

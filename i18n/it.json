@@ -1102,9 +1102,7 @@
     "chargingPlan": {
       "active": "Attivo",
       "addRepeatingPlan": "Aggiungi piano ricorrente",
-      "arrivalTab": "Arrivo",
       "day": "Giorno",
-      "departureTab": "Partenza",
       "goal": "Obiettivo di ricarica",
       "modalTitle": "Piano di ricarica",
       "none": "nessuno",
@@ -1128,8 +1126,6 @@
       "strategySettings": "Impostazioni strategia",
       "time": "Ora",
       "title": "Piano",
-      "titleMinSoc": "Carica minima",
-      "titleTargetCharge": "Partenza",
       "unsavedChanges": "Ci sono modifiche non salvate. Vuoi salvarle adesso?",
       "update": "Applica",
       "weekdays": "Giorni"

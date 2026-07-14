@@ -1200,9 +1200,7 @@
     "chargingPlan": {
       "active": "Actif",
       "addRepeatingPlan": "Ajouter un plan récurrent",
-      "arrivalTab": "Arrivée",
       "day": "Jour",
-      "departureTab": "Départ",
       "goal": "Objectif de charge",
       "modalTitle": "Planification de la charge",
       "none": "aucune",
@@ -1226,8 +1224,6 @@
       "strategySettings": "Paramètres de stratégie",
       "time": "Heure",
       "title": "Planification",
-      "titleMinSoc": "Charge min",
-      "titleTargetCharge": "Départ",
       "unsavedChanges": "Il y a des modifications non sauvegardées. Appliquer ?",
       "update": "Appliquer",
       "weekdays": "Jours"

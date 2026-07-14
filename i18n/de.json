@@ -1247,9 +1247,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
-      "arrivalTab": "Ankunft",
       "day": "Tag",
-      "departureTab": "Abfahrt",
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
@@ -1273,8 +1271,6 @@
       "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
-      "titleMinSoc": "Min. Ladung",
-      "titleTargetCharge": "Abfahrt",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
       "update": "Anwenden",
       "weekdays": "Tage"
@@ -1303,7 +1299,8 @@
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
       "pvProduction": "Erzeugung",
-      "selfConsumption": "Eigenverbrauch"
+      "selfConsumption": "Eigenverbrauch",
+      "toggleDetails": "Energiefluss-Details"
     },
     "heatingStatus": {
       "charging": "Heize …",
@@ -1392,7 +1389,7 @@
       },
       "minSoc": {
         "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
-        "label": "Min. Ladung %"
+        "label": "Mindestladung"
       },
       "minTemp": {
         "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
@@ -1479,6 +1476,10 @@
       "tempLimit": "Temperaturlimit",
       "unknown": "Gastfahrzeug",
       "vehicleSoc": "Ladestand"
+    },
+    "vehicleSettings": {
+      "entry": "Einstellungen",
+      "title": "Einstellungen {0}"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Warte auf Autorisierung.",

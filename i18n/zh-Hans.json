@@ -614,9 +614,7 @@
     "chargingPlan": {
       "active": "启用",
       "addRepeatingPlan": "添加重复计划",
-      "arrivalTab": "抵达",
       "day": "日期",
-      "departureTab": "离开",
       "goal": "充电目标",
       "modalTitle": "充电计划",
       "none": "无",
@@ -633,8 +631,6 @@
       "selectAll": "全选",
       "time": "时间",
       "title": "计划",
-      "titleMinSoc": "最小充电量",
-      "titleTargetCharge": "出发时间",
       "unsavedChanges": "有未保存的更改。是否立即应用？",
       "update": "应用",
       "weekdays": "天数"

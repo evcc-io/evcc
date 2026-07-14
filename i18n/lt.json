@@ -1202,9 +1202,7 @@
     "chargingPlan": {
       "active": "Aktyvus",
       "addRepeatingPlan": "Pridėti pasikartojantį įkrovimo planą",
-      "arrivalTab": "Atvykimas",
       "day": "Diena",
-      "departureTab": "Išvykimas",
       "goal": "Įkrovimo tikslas",
       "modalTitle": "Įkrovimo planas",
       "none": "nėra",
@@ -1228,8 +1226,6 @@
       "strategySettings": "Strategijos pasirinkimai",
       "time": "Laikas",
       "title": "Planas",
-      "titleMinSoc": "Minimali įkrova",
-      "titleTargetCharge": "Išvykimas",
       "unsavedChanges": "Yra neišsaugotų pakeitimų. Išsaugoti dabar?",
       "update": "Patvirtinti",
       "weekdays": "Dienos"

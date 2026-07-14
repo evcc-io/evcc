@@ -1,6 +1,6 @@
 <template>
 	<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="vehicle-title">
-		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
+		<h4 class="d-flex align-items-center flex-grow-1 overflow-hidden ring-space">
 			<div
 				v-if="iconType === 'refresh'"
 				ref="refresh"
@@ -27,6 +27,7 @@
 				:selected="vehicleName"
 				@change-vehicle="changeVehicle"
 				@remove-vehicle="removeVehicle"
+				@open-settings="$emit('open-vehicle-settings')"
 			>
 				<span class="flex-grow-1 text-truncate vehicle-name" data-testid="vehicle-name">
 					{{ name }}
@@ -56,7 +57,7 @@ import "@h2d2/shopicons/es/regular/cablecharge";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import Modal from "bootstrap/js/dist/modal";
 import VehicleIcon from "../VehicleIcon";
-import Options from "./Options.vue";
+import Options from "./OptionsWithSettings.vue";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
 import collector from "@/mixins/collector";
@@ -77,7 +78,7 @@ export default defineComponent({
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
 		title: String,
 	},
-	emits: ["change-vehicle", "remove-vehicle"],
+	emits: ["change-vehicle", "remove-vehicle", "open-vehicle-settings"],
 	data() {
 		return {
 			refreshTooltip: null as Tooltip | null,
@@ -158,6 +159,11 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* overflow-hidden would clip the vehicle select focus ring */
+.ring-space {
+	padding: 0.5rem;
+	margin: -0.5rem;
+}
 .vehicle-name {
 	text-decoration-color: var(--evcc-gray);
 }

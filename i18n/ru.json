@@ -850,9 +850,7 @@
     "chargingPlan": {
       "active": "Активный",
       "addRepeatingPlan": "Добавить повторяющийся план",
-      "arrivalTab": "Прибытие",
       "day": "День",
-      "departureTab": "Отправление",
       "goal": "Цель зарядки",
       "modalTitle": "План тарификации",
       "none": "нет",
@@ -876,8 +874,6 @@
       "strategySettings": "Настройки стратегии",
       "time": "Время",
       "title": "План",
-      "titleMinSoc": "Минимальная плата",
-      "titleTargetCharge": "Отправление",
       "unsavedChanges": "Есть несохраненные изменения. Применить сейчас?",
       "update": "Применить",
       "weekdays": "Дни"

@@ -860,9 +860,7 @@
     "chargingPlan": {
       "active": "Aktivno",
       "addRepeatingPlan": "Dodaj ponavljajući plan",
-      "arrivalTab": "Dolazak",
       "day": "Dan",
-      "departureTab": "Odlazak",
       "goal": "Cilj punjenja",
       "modalTitle": "Plan punjenja",
       "none": "nema, dodaj",
@@ -886,8 +884,6 @@
       "strategySettings": "Postavke strategije",
       "time": "Vrijeme",
       "title": "Plan",
-      "titleMinSoc": "Min. punjenje",
-      "titleTargetCharge": "Odlazak",
       "unsavedChanges": "Postoje promjene koje nisu spremljene. Spremiti odmah?",
       "update": "Primijeni",
       "weekdays": "Dani"

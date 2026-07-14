@@ -32,45 +32,60 @@ test.afterEach(async () => {
   await stop();
 });
 
+function changeVehicleSelect(page: Page) {
+  return page.getByRole("combobox", { name: "Change vehicle" });
+}
+
+async function switchVehicle(page: Page, title: string) {
+  await changeVehicleSelect(page).selectOption(title);
+  await expect(page.getByTestId("vehicle-name")).toHaveText(title);
+}
+
+async function openVehicleSettings(page: Page) {
+  await changeVehicleSelect(page).selectOption({ label: "→ Settings" });
+  const modal = page.getByTestId("vehicle-settings-modal");
+  await expectModalVisible(modal);
+  return modal;
+}
+
+async function closeModal(page: Page) {
+  const modal = page.getByTestId("vehicle-settings-modal");
+  await modal.getByRole("button", { name: "Close" }).click();
+  await expectModalHidden(modal);
+}
+
 test.describe("minSoc", async () => {
   test("apply and restart", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = page.getByTestId("charging-plan-modal");
-    await expectModalVisible(modal);
-    await modal.getByRole("link", { name: "Arrival" }).click();
-
+    const modal = await openVehicleSettings(page);
     await expect(modal).toContainText("charged to x in solar mode");
-    await modal.getByRole("combobox", { name: "Min. charge %" }).selectOption("20%");
+    await modal.getByRole("combobox", { name: "Minimum charge" }).selectOption("20%");
     await expect(modal).toContainText("charged to 20% in solar mode");
-    await modal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(modal);
+    await closeModal(page);
     await page.waitForLoadState("networkidle");
 
     await restart(simulatorConfig());
     await page.reload();
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
+    await openVehicleSettings(page);
     await expect(page.getByText("charged to 20% in solar mode")).toBeVisible();
   });
 
   test("show minsoc indicator when minsoc is active", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByTestId("charging-plan")).toContainText("Plan");
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
-    await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("50%");
-    await page.getByRole("button", { name: "Close" }).click();
+    const modal = await openVehicleSettings(page);
+    await modal.getByRole("combobox", { name: "Minimum charge" }).selectOption("50%");
+    await closeModal(page);
 
     await expect(page.getByTestId("vehicle-status-minsoc")).toBeVisible();
     await expect(page.getByTestId("vehicle-status-minsoc")).toHaveText("50%");
 
     await page.getByTestId("vehicle-status-minsoc").click();
-    await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("---");
-    await page.getByRole("button", { name: "Close" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("combobox", { name: "Minimum charge" }).selectOption("---");
+    await closeModal(page);
 
     await expect(page.getByTestId("vehicle-status-minsoc")).not.toBeVisible();
   });
@@ -80,14 +95,9 @@ test.describe("limitSoc", async () => {
   test("apply and restart", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = page.getByTestId("charging-plan-modal");
-    await expectModalVisible(modal);
-    await modal.getByRole("link", { name: "Arrival" }).click();
-
+    const modal = await openVehicleSettings(page);
     await modal.getByRole("combobox", { name: "Default limit" }).selectOption("80%");
-    await modal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(modal);
+    await closeModal(page);
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(500); // bad practice but may help here :/
@@ -97,9 +107,10 @@ test.describe("limitSoc", async () => {
 
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
-    await expect(page.getByRole("combobox", { name: "Default limit" })).toHaveValue("80");
+    const modalAfterRestart = await openVehicleSettings(page);
+    await expect(modalAfterRestart.getByRole("combobox", { name: "Default limit" })).toHaveValue(
+      "80"
+    );
   });
 });
 
@@ -107,38 +118,52 @@ test.describe("minSoc and limitSoc", async () => {
   test("hidden for offline vehicles", async ({ page }) => {
     await page.goto("/");
 
-    // switch to offline vehicle
-    await page.getByTestId("change-vehicle").locator("select").selectOption("grüner Honda e");
+    await switchVehicle(page, "grüner Honda e");
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
-    await expect(page.getByRole("combobox", { name: "Min. charge %" })).not.toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Default limit" })).not.toBeVisible();
+    const modal = await openVehicleSettings(page);
+    await expect(modal.getByRole("combobox", { name: "Default mode" })).toBeVisible();
+    await expect(modal.getByRole("combobox", { name: "Minimum charge" })).not.toBeVisible();
+    await expect(modal.getByRole("combobox", { name: "Default limit" })).not.toBeVisible();
   });
 
-  test("no tabs for guest vehicles", async ({ page }) => {
+  test("no settings entry for guest vehicles", async ({ page }) => {
     await page.goto("/");
 
     // switch to guest vehicle (no known vehicle)
-    await page.getByTestId("change-vehicle").locator("select").selectOption("Guest vehicle");
+    const select = changeVehicleSelect(page);
+    await select.selectOption("Guest vehicle");
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = page.getByTestId("charging-plan-modal");
-    await expectModalVisible(modal);
-    await expect(modal.getByRole("link", { name: "Departure" })).toHaveCount(0);
-    await expect(modal.getByRole("link", { name: "Arrival" })).toHaveCount(0);
+    await expect(select.locator("option", { hasText: "Settings" })).toHaveCount(0);
+  });
+});
+
+test.describe("vehicle switch in modal", async () => {
+  test("switch context and keep per-vehicle values", async ({ page }) => {
+    await page.goto("/");
+
+    const modal = await openVehicleSettings(page);
+    const switcher = modal.getByRole("combobox", { name: "Change vehicle" });
+    const defaultMode = modal.getByRole("combobox", { name: "Default mode" });
+
+    await expect(switcher.locator("option", { hasText: "Guest vehicle" })).toHaveCount(0);
+    await expect(switcher.locator("option", { hasText: "Settings" })).toHaveCount(0);
+
+    await switcher.selectOption("grüner Honda e");
+    await defaultMode.selectOption("Fast");
+
+    await switcher.selectOption("blauer e-Golf");
+    await expect(defaultMode).toHaveValue("");
+
+    await switcher.selectOption("grüner Honda e");
+    await expect(defaultMode).toHaveValue("now");
   });
 });
 
 test.describe("default mode", async () => {
   async function setDefaultMode(page: Page, option: string) {
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = page.getByTestId("charging-plan-modal");
-    await expectModalVisible(modal);
-    await modal.getByRole("link", { name: "Arrival" }).click();
+    const modal = await openVehicleSettings(page);
     await modal.getByRole("combobox", { name: "Default mode" }).selectOption(option);
-    await modal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(modal);
+    await closeModal(page);
   }
 
   test("apply and restart", async ({ page }) => {
@@ -150,26 +175,24 @@ test.describe("default mode", async () => {
     await restart(simulatorConfig());
     await page.reload();
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("link", { name: "Arrival" }).click();
-    await expect(page.getByRole("combobox", { name: "Default mode" })).toHaveValue("now");
+    const modal = await openVehicleSettings(page);
+    await expect(modal.getByRole("combobox", { name: "Default mode" })).toHaveValue("now");
   });
 
   test("applied on vehicle switch", async ({ page }) => {
     await page.goto("/");
     const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
-    const changeVehicle = page.getByTestId("change-vehicle").locator("select");
 
     // per-vehicle default modes
     await setDefaultMode(page, "Solar");
-    await changeVehicle.selectOption("grüner Honda e");
+    await switchVehicle(page, "grüner Honda e");
     await setDefaultMode(page, "Fast");
 
     // switching vehicles applies the vehicle's default mode
-    await changeVehicle.selectOption("blauer e-Golf");
+    await switchVehicle(page, "blauer e-Golf");
     await expect(mode.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
 
-    await changeVehicle.selectOption("grüner Honda e");
+    await switchVehicle(page, "grüner Honda e");
     await expect(mode.getByRole("button", { name: "Fast" })).toHaveClass(/active/);
   });
 });

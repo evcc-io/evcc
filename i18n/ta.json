@@ -935,9 +935,7 @@
     "chargingPlan": {
       "active": "செயலில்",
       "addRepeatingPlan": "மறுநிகழ்வு திட்டத்தைச் சேர்",
-      "arrivalTab": "வருகை",
       "day": "நாள்",
-      "departureTab": "புறப்படுதல்",
       "goal": "மின்சேர்வி இலக்கு",
       "modalTitle": "மின்சேர்வி திட்டம்",
       "none": "எதுவுமில்லை",
@@ -961,8 +959,6 @@
       "strategySettings": "மூலோபாய அமைப்புகள்",
       "time": "நேரம்",
       "title": "திட்டம்",
-      "titleMinSoc": "\"குறை. மின்னூட்டு\"",
-      "titleTargetCharge": "புறப்படுதல்",
       "unsavedChanges": "There அரே unsaved changes. இடு now?",
       "update": "இடு",
       "weekdays": "நாட்கள்"

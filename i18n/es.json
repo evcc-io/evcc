@@ -988,9 +988,7 @@
     "chargingPlan": {
       "active": "Activo",
       "addRepeatingPlan": "Añadir plan recurrente",
-      "arrivalTab": "Llegadas",
       "day": "Día",
-      "departureTab": "Salidas",
       "goal": "Objetivo de la carga",
       "modalTitle": "Plan de carga",
       "none": "ninguno",
@@ -1014,8 +1012,6 @@
       "strategySettings": "Configuración de la estrategia",
       "time": "Tiempo",
       "title": "Plan",
-      "titleMinSoc": "Carga mínima",
-      "titleTargetCharge": "Partida",
       "unsavedChanges": "Hay cambios sin guardar. ¿Aplicar ahora?",
       "update": "Aplicar",
       "weekdays": "Días"

@@ -900,9 +900,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Legg til gjentakende plan",
-      "arrivalTab": "Ankomst",
       "day": "Dag",
-      "departureTab": "Avgang",
       "goal": "Ladingsmål",
       "modalTitle": "Ladeplan",
       "none": "ingen",
@@ -926,8 +924,6 @@
       "strategySettings": "Strategiinnstillinger",
       "time": "Tid",
       "title": "Plan",
-      "titleMinSoc": "Min.-lading",
-      "titleTargetCharge": "Avgang",
       "unsavedChanges": "Det er ubehandlede endringer. Vil du bruke dem nå?",
       "update": "Søk",
       "weekdays": "Dager"

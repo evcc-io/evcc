@@ -1125,9 +1125,7 @@
     "chargingPlan": {
       "active": "アクティブ",
       "addRepeatingPlan": "繰り返しプランを追加",
-      "arrivalTab": "到着",
       "day": "日",
-      "departureTab": "出発",
       "goal": "充電目標",
       "modalTitle": "充電プラン",
       "none": "なし",
@@ -1151,8 +1149,6 @@
       "strategySettings": "戦略設定",
       "time": "時間",
       "title": "プラン",
-      "titleMinSoc": "最小充電",
-      "titleTargetCharge": "出発",
       "unsavedChanges": "保存されていない変更があります。今すぐ適用しますか？",
       "update": "適用",
       "weekdays": "日"

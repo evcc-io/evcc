@@ -1161,9 +1161,7 @@
     "chargingPlan": {
       "active": "Aktivní",
       "addRepeatingPlan": "Přidat opakující se plán",
-      "arrivalTab": "Příchod",
       "day": "Den",
-      "departureTab": "Odchod",
       "goal": "Cílový stav nabíjení",
       "modalTitle": "Plán nabíjení",
       "none": "Žádný",
@@ -1187,8 +1185,6 @@
       "strategySettings": "Nastavení strategie",
       "time": "Čas",
       "title": "Plán",
-      "titleMinSoc": "Min. nabíjení",
-      "titleTargetCharge": "Odjezd",
       "unsavedChanges": "Jsou zde neuložené změny. Použít nyní?",
       "update": "Nastavit",
       "weekdays": "Dny"

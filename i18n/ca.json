@@ -116,13 +116,9 @@
   },
   "main": {
     "chargingPlan": {
-      "arrivalTab": "Arribades",
-      "departureTab": "Sortides",
       "modalTitle": "Plà de càrrega",
       "none": "no definit",
-      "title": "Plà",
-      "titleMinSoc": "Càrrega mínima",
-      "titleTargetCharge": "Sortides"
+      "title": "Plà"
     },
     "energyflow": {
       "battery": "Bateria",

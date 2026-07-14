@@ -859,9 +859,7 @@
     "chargingPlan": {
       "active": "Ενεργό",
       "addRepeatingPlan": "Προσθήκη επαναλαμβανόμενου προγράμματος",
-      "arrivalTab": "Άφιξη",
       "day": "Ημέρα",
-      "departureTab": "Αναχώρηση",
       "goal": "Επιθυμητή φόρτιση",
       "modalTitle": "Πρόγραμμα Φόρτισης",
       "none": "κανένα",
@@ -885,8 +883,6 @@
       "strategySettings": "Ρυθμίσεις στρατηγικής",
       "time": "Ώρα",
       "title": "Πρόγραμμα",
-      "titleMinSoc": "Ελάχιστη φόρτιση",
-      "titleTargetCharge": "Αναχώρηση",
       "unsavedChanges": "Υπάρχουν μη αποθηκευμένες αλλαγές. Υποβολή τώρα;",
       "update": "Υποβολή",
       "weekdays": "Ημέρες"

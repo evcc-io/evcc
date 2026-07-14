@@ -1123,9 +1123,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Widderhuelte Planifikatioun derbäi fügen",
-      "arrivalTab": "Arrivée",
       "day": "Dag",
-      "departureTab": "Depart",
       "goal": "Luedzil",
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
@@ -1149,8 +1147,6 @@
       "strategySettings": "Strategie-Astellungen",
       "time": "Zäit",
       "title": "Planifikatioun",
-      "titleMinSoc": "Min. Oplueden",
-      "titleTargetCharge": "Depart",
       "unsavedChanges": "Net gespäichert Ännerungen leie vir. Elo uwennen?",
       "update": "Uwennen",
       "weekdays": "Deeg"

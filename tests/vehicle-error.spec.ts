@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -20,10 +21,12 @@ test.describe("vehicle startup error (using failing Tesla API)", async () => {
     await expect(page.getByTestId("vehicle-name")).toHaveText("Broken Tesla");
     await expect(page.getByTestId("vehicle-not-reachable-icon")).toBeVisible();
 
-    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = page.getByTestId("charging-plan-modal");
-    await modal.getByRole("link", { name: "Arrival" }).click();
-    await expect(modal.getByRole("combobox", { name: "Min. charge %" })).toBeEnabled();
+    await page
+      .getByRole("combobox", { name: "Change vehicle" })
+      .selectOption({ label: "→ Settings" });
+    const modal = page.getByTestId("vehicle-settings-modal");
+    await expectModalVisible(modal);
+    await expect(modal.getByRole("combobox", { name: "Minimum charge" })).toBeEnabled();
     await expect(modal.getByRole("combobox", { name: "Default limit" })).toBeEnabled();
   });
 

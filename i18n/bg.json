@@ -854,9 +854,7 @@
     "chargingPlan": {
       "active": "Активен",
       "addRepeatingPlan": "Добавяне на повтарящ се план",
-      "arrivalTab": "Пристигане",
       "day": "Ден",
-      "departureTab": "Заминаване",
       "goal": "Цел на зареждане",
       "modalTitle": "План за зареждане",
       "none": "няма",
@@ -880,8 +878,6 @@
       "strategySettings": "Настройки на стратегията",
       "time": "Време",
       "title": "План",
-      "titleMinSoc": "Минимално зареждане",
-      "titleTargetCharge": "Заминаване",
       "unsavedChanges": "Има незаписани промени. Приложи сега?",
       "update": "Приложи",
       "weekdays": "Дни"

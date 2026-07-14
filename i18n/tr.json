@@ -1147,9 +1147,7 @@
     "chargingPlan": {
       "active": "Aktif",
       "addRepeatingPlan": "“Tekrar eden plan ekle”",
-      "arrivalTab": "Varış",
       "day": "Gün",
-      "departureTab": "Ayrılış",
       "goal": "Doldurma hedefi",
       "modalTitle": "Doldurma Planı",
       "none": "yok",
@@ -1173,8 +1171,6 @@
       "strategySettings": "Strateji ayarları",
       "time": "Zaman",
       "title": "Plan",
-      "titleMinSoc": "Asgari doldurma",
-      "titleTargetCharge": "Ayrılış",
       "unsavedChanges": "Kaydedilmemiş değişiklikler var. Şimdi uygulansın mı?",
       "update": "Uygula",
       "weekdays": "Günler"

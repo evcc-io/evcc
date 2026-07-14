@@ -863,9 +863,7 @@
     "chargingPlan": {
       "active": "Активний",
       "addRepeatingPlan": "Додати повторюваний план",
-      "arrivalTab": "Прибуття",
       "day": "День",
-      "departureTab": "Від'їзд",
       "goal": "Зарядка гол",
       "modalTitle": "Тарифний план",
       "none": "немає",
@@ -889,8 +887,6 @@
       "strategySettings": "Налаштування стратегії",
       "time": "Час",
       "title": "План",
-      "titleMinSoc": "Мінімальна плата",
-      "titleTargetCharge": "Від'їзд",
       "unsavedChanges": "Є незбережені зміни. Застосувати зараз?",
       "update": "Застосувати",
       "weekdays": "Днів"

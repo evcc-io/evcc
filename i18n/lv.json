@@ -1175,9 +1175,7 @@
     "chargingPlan": {
       "active": "Aktīvs",
       "addRepeatingPlan": "Pievienot atkārtojošu plānu",
-      "arrivalTab": "Ierašanās",
       "day": "Diena",
-      "departureTab": "Izbraukšana",
       "goal": "Uzlādes mērķis",
       "modalTitle": "Uzlādes plāns",
       "none": "nav",
@@ -1201,8 +1199,6 @@
       "strategySettings": "Stratēģijas iestatījumi",
       "time": "Laiks",
       "title": "Plāns",
-      "titleMinSoc": "Min. uzlāde",
-      "titleTargetCharge": "Izbraukšana",
       "unsavedChanges": "Ir nesaglabātas izmaiņas. Piemērot tagad?",
       "update": "Piemērot",
       "weekdays": "Dienas"

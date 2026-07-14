@@ -1173,9 +1173,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Lägg till en återkommande laddplan",
-      "arrivalTab": "Ankomst",
       "day": "Dag",
-      "departureTab": "Avfärd",
       "goal": "Laddmål",
       "modalTitle": "Laddplan",
       "none": "ingen",
@@ -1199,8 +1197,6 @@
       "strategySettings": "Strategiinställningar",
       "time": "Tid",
       "title": "Plan",
-      "titleMinSoc": "Min. laddning",
-      "titleTargetCharge": "Avfärd",
       "unsavedChanges": "Det finns ej sparade ändringar. Spara nu?",
       "update": "Verkställ",
       "weekdays": "Dagar"

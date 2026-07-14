@@ -1041,9 +1041,7 @@
     "chargingPlan": {
       "active": "Aktywny",
       "addRepeatingPlan": "Dodaj plan powtarzalny",
-      "arrivalTab": "Przyjazd",
       "day": "Dzień",
-      "departureTab": "Wyjazd",
       "goal": "Cel ładowania",
       "modalTitle": "Plan ładowania",
       "none": "brak",
@@ -1067,8 +1065,6 @@
       "strategySettings": "Ustawienia strategii",
       "time": "Czas",
       "title": "Plan",
-      "titleMinSoc": "Minimalne ładowanie",
-      "titleTargetCharge": "Wyjazd",
       "unsavedChanges": "Są niezapisane zmiany. Zastosować teraz?",
       "update": "Zastosuj",
       "weekdays": "Dni"

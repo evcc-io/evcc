@@ -870,9 +870,7 @@
     "chargingPlan": {
       "active": "Aktív",
       "addRepeatingPlan": "Ismétlődő terv hozzáadása",
-      "arrivalTab": "Érkezés",
       "day": "Nap",
-      "departureTab": "Indulás",
       "goal": "Töltési cél",
       "modalTitle": "Töltési Tervezet",
       "none": "nincs",
@@ -896,8 +894,6 @@
       "strategySettings": "Stratégiai beállítások",
       "time": "Idő",
       "title": "Terv",
-      "titleMinSoc": "Min töltés",
-      "titleTargetCharge": "Indulás",
       "unsavedChanges": "Vannak nem mentett módosítások. Alkalmazza most?",
       "update": "Alkalmazás",
       "weekdays": "Napok"

@@ -5,13 +5,14 @@
 			v-bind="vehicleTitleProps"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
+			@open-vehicle-settings="openVehicleSettings"
 		/>
 		<VehicleStatus
 			v-bind="vehicleStatus"
 			class="mb-2"
 			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
-			@open-minsoc-settings="openPlanModal(true)"
-			@open-plan-modal="openPlanModal"
+			@open-minsoc-settings="openVehicleSettings"
+			@open-plan-modal="$emit('open-modal')"
 		/>
 		<div class="mt-2 mb-4 d-flex gap-2">
 			<BatteryBoostButton
@@ -26,7 +27,7 @@
 				v-bind="vehicleSocProps"
 				@limit-soc-updated="limitSocUpdated"
 				@limit-soc-drag="limitSocDrag"
-				@plan-clicked="openPlanModal"
+				@plan-clicked="$emit('open-modal')"
 			/>
 		</div>
 		<div class="details d-flex flex-wrap justify-content-between">
@@ -190,6 +191,7 @@ export default defineComponent({
 		"change-vehicle",
 		"remove-vehicle",
 		"open-loadpoint-settings",
+		"open-vehicle-settings",
 		"batteryboost-updated",
 		"open-modal",
 	],
@@ -287,8 +289,8 @@ export default defineComponent({
 		fmtEnergy(value: number) {
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
-		openPlanModal(openArrivalTab = false) {
-			this.$emit("open-modal", openArrivalTab);
+		openVehicleSettings() {
+			this.$emit("open-vehicle-settings", this.vehicleName);
 		},
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;
