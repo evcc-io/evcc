@@ -4,6 +4,7 @@ package urlvalues
 import (
 	"errors"
 	"net/url"
+	"slices"
 	"strings"
 )
 
@@ -20,7 +21,7 @@ func Merge(to url.Values, from ...url.Values) {
 func Copy(q url.Values) url.Values {
 	res := make(url.Values, len(q))
 	for k, v := range q {
-		res[k] = append([]string{}, v...)
+		res[k] = slices.Clone(v)
 	}
 	return res
 }

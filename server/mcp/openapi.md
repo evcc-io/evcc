@@ -840,6 +840,28 @@ call setLoadpointMinCurrent {
 }
 ```
 
+## setLoadpointMinTemp
+
+Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| temp | number | Temperature in °C |
+
+**Example call:**
+
+```json
+call setLoadpointMinTemp {
+  "id": 1,
+  "temp": 50
+}
+```
+
 ## setLoadpointMode
 
 Changes the charging behavior of the loadpoint.
@@ -1192,6 +1214,26 @@ call getTariffInfo {
 }
 ```
 
+## deleteVehicleMode
+
+Resets the vehicle charge mode to keep the last selected mode.
+
+**Tags:** vehicles
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | Vehicle name |
+
+**Example call:**
+
+```json
+call deleteVehicleMode {
+  "name": "vehicle_1"
+}
+```
+
 ## deleteVehicleSocPlan
 
 Delete the charging plan
@@ -1231,6 +1273,28 @@ Vehicle will be fast-charged until this SoC is reached.
 call setVehicleMinSoc {
   "name": "vehicle_1",
   "soc": 60
+}
+```
+
+## setVehicleMode
+
+Sets the charge mode applied when this vehicle becomes active on a loadpoint.
+
+**Tags:** vehicles
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| mode | string | Charging mode. |
+| name | string | Vehicle name |
+
+**Example call:**
+
+```json
+call setVehicleMode {
+  "mode": "off",
+  "name": "vehicle_1"
 }
 ```
 

@@ -17,8 +17,8 @@ func Backoff() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(10*time.Second))
 }
 
-// decodeMask converts a bit mask in decimal or hex format to uint64
-func decodeMask(mask string) (uint64, error) {
+// DecodeMask converts a bit mask in decimal or hex format to uint64
+func DecodeMask(mask string) (uint64, error) {
 	mask = strings.ToLower(mask)
 
 	if mask == "" {

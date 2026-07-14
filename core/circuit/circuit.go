@@ -218,6 +218,11 @@ func (c *Circuit) effectiveMaxPower() float64 {
 		return maxPower
 	}
 
+	// unconfigured maxPower means unlimited, so the HEMS limit applies alone
+	if maxPower <= 0 {
+		return hemsLimit
+	}
+
 	return min(hemsLimit, maxPower)
 }
 

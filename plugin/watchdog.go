@@ -78,7 +78,9 @@ type deferredState[T comparable] struct {
 // setter is the generic setter function for watchdogPlugin
 func (o *watchdogPlugin) setter[T comparable](set func(T) error, reset []T) func(T) error {
 	var state *deferredState[T]
-	var lastUpdated time.Time
+	// seed with now, not zero: otherwise the first write's delay computes to 0 and skips
+	// deferral, which is wrong for an unknown last write
+	lastUpdated := o.clock.Now()
 	var last *T
 
 	// stop running wdt
@@ -143,7 +145,7 @@ func (o *watchdogPlugin) setter[T comparable](set func(T) error, reset []T) func
 		delay := max(0, o.timeout+5*time.Second-o.clock.Since(lastUpdated))
 
 		// defer update to non-reset value
-		if o.deferred && delay > 0 && !lastUpdated.IsZero() && !slices.Contains(reset, val) {
+		if o.deferred && delay > 0 && !slices.Contains(reset, val) {
 			stopWdt()
 
 			// store deferred value

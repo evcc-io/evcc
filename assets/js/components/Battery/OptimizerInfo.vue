@@ -1,13 +1,18 @@
 <template>
-	<div>
-		<div v-if="recommendation" class="d-flex justify-content-between gap-3 py-1">
+	<div class="d-flex flex-column gap-2">
+		<div v-if="suggestion && suggestionValue" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<Optimizer />
-				{{ $t("battery.optimizer.suggestion") }}
+				<router-link to="/optimize" class="evcc-default-text text-decoration-underline">
+					{{ $t("battery.optimizer.suggestion") }}
+				</router-link>
 			</span>
-			<span class="text-muted text-end">{{ recommendation }}</span>
+			<span class="d-flex align-items-center gap-1 text-muted text-end">
+				{{ suggestionValue }}
+				<BatterySuggestionIcon :action="suggestion.action" />
+			</span>
 		</div>
-		<div v-if="forecast?.highest" class="d-flex justify-content-between gap-3 py-1">
+		<div v-if="forecast?.highest" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<BatteryIcon :soc="95" />
 				{{ pointLabel(forecast.highest, true) }}
@@ -16,7 +21,7 @@
 				fmtDayTime(new Date(forecast.highest.time))
 			}}</span>
 		</div>
-		<div v-if="forecast?.lowest" class="d-flex justify-content-between gap-3 py-1">
+		<div v-if="forecast?.lowest" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
 				<BatteryIcon :soc="10" />
 				{{ pointLabel(forecast.lowest, false) }}
@@ -31,26 +36,26 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import type { BatteryForecast, BatteryForecastPoint } from "@/types/evcc";
+import type { BatteryForecast, BatteryForecastPoint, BatterySuggestion } from "@/types/evcc";
 import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Optimizer from "../MaterialIcon/Optimizer.vue";
-import type { BatterySuggestion } from "./types";
+import BatterySuggestionIcon from "./BatterySuggestionIcon.vue";
 
-// Optimizer rows: suggestion (not yet wired) plus the site battery high/low
-// soc forecast. Simple bold-label / muted-value layout.
+// Optimizer rows: suggestion plus the battery high/low soc forecast.
+// Simple bold-label / muted-value layout.
 export default defineComponent({
 	name: "OptimizerInfo",
-	components: { BatteryIcon, Optimizer },
+	components: { BatteryIcon, Optimizer, BatterySuggestionIcon },
 	mixins: [formatter],
 	props: {
 		suggestion: { type: Object as PropType<BatterySuggestion | null>, default: null },
 		forecast: { type: Object as PropType<BatteryForecast | null>, default: null },
 	},
 	computed: {
-		recommendation(): string | null {
-			const s = this.suggestion;
-			if (!s) return null;
-			return this.$t(`battery.optimizer.action.${s.action}`);
+		suggestionValue(): string | null {
+			const action = this.suggestion?.action;
+			if (!action) return null;
+			return this.$t(`battery.optimizer.action.${action}`);
 		},
 	},
 	methods: {

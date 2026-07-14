@@ -4,7 +4,7 @@
   "author": "evcc-io",
   "scripts": {
     "build": "vite build",
-    "test": "cross-env TZ=Europe/Berlin vitest",
+    "test": "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vitest",
     "lint": "npm run lint:prettier && npm run lint:eslint && npm run lint:tsc && npm run lint:i18n",
     "lint:prettier": "prettier assets tests **/*.{yaml,sh} i18n/*.json --write",
     "lint:eslint": "eslint --fix --max-warnings=0",
@@ -49,7 +49,7 @@
   },
   "engines": {
     "npm": ">=10.0.0",
-    "node": ">=24.0.0"
+    "node": ">=26.0.0"
   },
   "license": "MIT",
   "repository": "github:evcc-io/evcc",

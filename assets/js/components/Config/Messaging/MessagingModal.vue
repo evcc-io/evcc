@@ -4,7 +4,7 @@
 		name="messaging"
 		:title="$t('config.messaging.title')"
 		:description="$t('config.messaging.description')"
-		docs="/docs/reference/configuration/messaging"
+		docs="/docs/notifications"
 		endpoint="/config/messagingEvents"
 		state-key="messagingEvents"
 		data-testid="messaging-modal"
