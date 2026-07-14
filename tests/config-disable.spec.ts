@@ -8,6 +8,8 @@ import {
   newLoadpoint,
   finishLoadpoint,
   openMoreMenu,
+  editorClear,
+  editorPaste,
 } from "./utils";
 
 test.use({ baseURL: baseUrl() });
@@ -169,6 +171,105 @@ test.describe("disable / enable", async () => {
     await page.reload();
     await expectNoFatal(page);
     await expect(disabledBadge(pvCard)).toHaveCount(0);
+  });
+
+  test("grid tariff", async ({ page }) => {
+    autoAcceptDialogs(page);
+    await start();
+    await page.goto("/#/config");
+
+    const tariffModal = page.getByTestId("tariff-modal");
+    const gridCard = page.getByTestId("tariff-grid");
+
+    // add grid tariff
+    await page.getByRole("button", { name: "Add tariff" }).click();
+    await expectModalVisible(tariffModal);
+    await tariffModal.getByRole("button", { name: "Add grid import tariff" }).click();
+    await tariffModal.getByLabel("Provider").selectOption("Fixed Price");
+    await tariffModal.getByLabel("Price").fill("32.1");
+    await tariffModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(tariffModal);
+
+    // open modal, disable
+    await gridCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(tariffModal);
+    await tariffModal.getByRole("button", { name: "Disable" }).click();
+    await expectModalHidden(tariffModal);
+
+    // card shows disabled state
+    await expect(disabledBadge(gridCard)).toBeVisible();
+
+    // restart, tariff not instantiated
+    await restart();
+    await page.reload();
+    await expectNoFatal(page);
+    await expect(disabledBadge(gridCard)).toBeVisible();
+    await expect(gridCard).not.toContainText("32.1");
+
+    // re-enable by clicking the disabled card
+    await disabledBadge(gridCard).click();
+    await expect(disabledBadge(gridCard)).toHaveCount(0);
+
+    // restart, tariff active again
+    await restart();
+    await page.reload();
+    await expectNoFatal(page);
+    await expect(disabledBadge(gridCard)).toHaveCount(0);
+    await expect(gridCard).toContainText(["Price", "32.1 ct"].join(""));
+  });
+
+  test("user-defined vehicle", async ({ page }) => {
+    autoAcceptDialogs(page);
+    await start();
+    await page.goto("/#/config");
+
+    // add user-defined vehicle
+    await page.getByTestId("add-vehicle").click();
+    const modal = page.getByTestId("vehicle-modal");
+    await expectModalVisible(modal);
+    await modal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await page.waitForLoadState("networkidle");
+    const editor = modal.getByTestId("yaml-editor");
+    await editorClear(editor);
+    await editorPaste(
+      editor,
+      page,
+      `title: blue Honda
+capacity: 12.3
+soc:
+  source: const
+  value: 42`
+    );
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+
+    const vehicleCard = page.getByTestId("vehicle");
+    await expect(vehicleCard).toHaveCount(1);
+
+    // open modal, disable
+    await vehicleCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Disable" }).click();
+    await expectModalHidden(modal);
+
+    // card shows disabled state
+    await expect(disabledBadge(vehicleCard)).toBeVisible();
+
+    // restart, no fatal
+    await restart();
+    await page.reload();
+    await expectNoFatal(page);
+    await expect(disabledBadge(vehicleCard)).toBeVisible();
+
+    // re-enable by clicking the disabled card
+    await disabledBadge(vehicleCard).click();
+    await expect(disabledBadge(vehicleCard)).toHaveCount(0);
+
+    // restart, yaml config intact
+    await restart();
+    await page.reload();
+    await expectNoFatal(page);
+    await expect(vehicleCard).toContainText("blue Honda");
   });
 });
 

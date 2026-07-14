@@ -1126,15 +1126,20 @@ func configureSolarTariffs(confs []config.Typed, deviceNames []string, target *a
 		if len(deviceNames) == 1 {
 			return configureTariff(config.Typed{}, deviceNames[0], target)
 		}
-		tt := make([]api.Tariff, len(deviceNames))
-		for i, name := range deviceNames {
+		var tt []api.Tariff
+		for _, name := range deviceNames {
 			dev, err := config.Tariffs().ByName(name)
 			if err != nil {
 				return fmt.Errorf("tariff device %s not found: %w", name, err)
 			}
-			tt[i] = dev.Instance()
+			// nil instance marks disabled device
+			if instance := dev.Instance(); instance != nil {
+				tt = append(tt, instance)
+			}
 		}
-		*target = tariff.NewCombined(tt)
+		if len(tt) > 0 {
+			*target = tariff.NewCombined(tt)
+		}
 	}
 	return nil
 }
@@ -1189,9 +1194,13 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 				return nil
 			}
 
-			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
-			if err != nil {
-				return err
+			var instance api.Tariff
+			if !conf.Disable {
+				var err error
+				instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+				if err != nil {
+					return err
+				}
 			}
 
 			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {

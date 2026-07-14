@@ -152,7 +152,14 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
 // matching db structure. Once the API is symmetric this helper goes away.
 export function flattenDeviceConfig(dev: any): Record<string, any> {
   const { id, name, config, ...rest } = dev;
-  return { ...config, ...rest };
+  const flat = { ...config, ...rest };
+  // title/icon are extracted from yaml on GET for display only; writing them
+  // back is rejected ("cannot mix yaml and other")
+  if (flat.yaml) {
+    delete flat.title;
+    delete flat.icon;
+  }
+  return flat;
 }
 
 export async function loadServiceValues(path: string) {
