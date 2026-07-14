@@ -51,8 +51,8 @@ func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().
 				WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: tc.active}, mock.Anything).
-				Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType)) {
-					cb(model.ResultDataType{})
+				Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
+					cb(model.ResultDataType{}, 0)
 				}).
 				Return(new(model.MsgCounterType), nil)
 
@@ -67,9 +67,9 @@ func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 	lpc.EXPECT().
 		WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
-		Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType)) {
+		Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
 			n := model.ErrorNumberType(7)
-			cb(model.ResultDataType{ErrorNumber: &n})
+			cb(model.ResultDataType{ErrorNumber: &n}, 0)
 		}).
 		Return(new(model.MsgCounterType), nil)
 
@@ -93,8 +93,9 @@ func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
 	})
 }
 
-// Dimmed reports an active consumption limit. A positive value is required, so a
-// zero/deactivated limit reads as not dimmed.
+// Dimmed reports an active consumption limit. Dim always writes a fixed 0W
+// limit, so only IsActive determines the dimmed state (a value-based check
+// would never report dimmed or release it).
 func TestOHPCF_LPC_Dimmed(t *testing.T) {
 	for _, tc := range []struct {
 		name  string
@@ -102,7 +103,7 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 		want  bool
 	}{
 		{"active_positive", ucapi.LoadLimit{IsActive: true, Value: 4000}, true},
-		{"active_zero", ucapi.LoadLimit{IsActive: true, Value: 0}, false},
+		{"active_zero", ucapi.LoadLimit{IsActive: true, Value: 0}, true},
 		{"inactive", ucapi.LoadLimit{IsActive: false, Value: 4000}, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -115,6 +116,25 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 			assert.Equal(t, tc.want, got)
 		})
 	}
+}
+
+// Dimmed is gated like Dim: no announced LPC scenario, or no connected entity → ErrNotAvailable.
+func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
+	t.Run("scenario_not_announced", func(t *testing.T) {
+		c, lpc, entity := newOHPCFEGCharger(t)
+		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
+
+		_, err := c.Dimmed()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+
+	t.Run("entity_not_connected", func(t *testing.T) {
+		c, _, _ := newOHPCFEGCharger(t)
+		c.egLpcEntity = nil
+
+		_, err := c.Dimmed()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
 }
 
 // Dimmed discards a non-normal limit value (LPC-TS-008) as ErrNotAvailable.
