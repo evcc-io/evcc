@@ -342,6 +342,14 @@ params:
     help:
       en: Ignore the vehicle for auto detection of connected vehicles
       de: Das Fahrzeug von der automatischen Erkennung beim Anschließen eines Fahrzeugs ausschließen
+  - name: wakeupdisabled
+    type: bool
+    description:
+      en: Disable wake-up calls
+      de: Aufweck-Aufrufe deaktivieren
+    help:
+      en: Do not send wake-up calls to the vehicle or charger, useful for vehicles that refuse to charge after repeated wake-ups.
+      de: Keine Aufweck-Aufrufe an Fahrzeug oder Ladegerät senden, hilfreich bei Fahrzeugen, die nach wiederholtem Aufwecken das Laden verweigern.
   - name: heating
     type: bool
     description:
@@ -611,10 +619,14 @@ presets:
       advanced: true
     - name: autodetectdisabled
       advanced: true
+    - name: wakeupdisabled
+      advanced: true
   vehicle-online:
     - name: climaterdisabled
       advanced: true
     - name: autodetectdisabled
+      advanced: true
+    - name: wakeupdisabled
       advanced: true
   charger-features:
     - name: heating

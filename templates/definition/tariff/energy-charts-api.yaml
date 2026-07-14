@@ -6,8 +6,8 @@ products:
       en: Market Price
 requirements:
   description:
-    de: "Day-ahead Energiepreise an der Börse. Bereitgestellt von Fraunhofer ISE. Kann ohne vorherige Anmeldung auf [api.energy-charts.info](https://api.energy-charts.info/) abgerufen werden. Nutzbar u.a. für dynamische Stromtarife, wo der Anbieter bis dato auf der Kundenschnittstelle noch kein Preis-Vorhersagen anbietet."
-    en: "Day-ahead forecast of energy prices on the exchange. Provided by Fraunhofer ISE. No prior registration for [api.energy-charts.info](https://api.energy-charts.info/) necessary. Can be used for dynamic electricity tariffs, for example, where the supplier does not yet offer a price forecast on the customer interface."
+    de: "Day-ahead Energiepreise an der Börse. Bereitgestellt von Fraunhofer ISE. Kann ohne vorherige Anmeldung auf [api.energy-charts.info](https://api.energy-charts.info/) abgerufen werden. Nutzbar u.a. für dynamische Stromtarife, wo der Anbieter bis dato auf der Kundenschnittstelle noch kein Preis-Vorhersagen anbietet. Die API liefert Preise immer in EUR/MWh, auch für Gebotszonen mit einer anderen Landeswährung (z.B. DK1, DK2, HU, NO2, PL, SE4). Für diese Zonen muss der Wechselkurs manuell über das Feld `formula` (z.B. `price * 11.2`) berücksichtigt werden."
+    en: "Day-ahead forecast of energy prices on the exchange. Provided by Fraunhofer ISE. No prior registration for [api.energy-charts.info](https://api.energy-charts.info/) necessary. Can be used for dynamic electricity tariffs, for example, where the supplier does not yet offer a price forecast on the customer interface. The API always returns prices in EUR/MWh, even for bidding zones with a different local currency (e.g. DK1, DK2, HU, NO2, PL, SE4). For these zones the exchange rate must be applied manually via the `formula` field (e.g. `price * 11.2`)."
   evcc: ["skiptest"]
 group: price
 countries: ["EU"]

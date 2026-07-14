@@ -93,8 +93,10 @@ export default defineComponent({
 	overflow: hidden;
 }
 .extraValue {
+	margin-top: 0.1rem;
 	color: var(--evcc-gray);
 	font-size: 14px;
+	font-weight: normal;
 }
 .custom-select {
 	left: 0;

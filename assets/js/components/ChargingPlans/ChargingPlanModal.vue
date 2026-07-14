@@ -10,7 +10,7 @@
 			@closed="modalInvisible"
 		>
 			<div class="pt-2">
-				<ul class="nav nav-tabs">
+				<ul v-if="vehicle" class="nav nav-tabs">
 					<li class="nav-item">
 						<a
 							class="nav-link"
@@ -21,7 +21,7 @@
 							{{ $t("main.chargingPlan.departureTab") }}
 						</a>
 					</li>
-					<li class="nav-item">
+					<li v-if="vehicle" class="nav-item">
 						<a
 							class="nav-link"
 							:class="{ active: arrivalTabActive }"
@@ -65,12 +65,14 @@
 						:id="id"
 						:minSoc="vehicle?.minSoc"
 						:limitSoc="vehicle?.limitSoc"
+						:mode="vehicle?.mode"
 						:vehicleName="vehicle?.name"
 						:vehicleNotReachable="loadpoint?.vehicleNotReachable"
 						:socBasedCharging="loadpoint?.socBasedCharging"
 						:rangePerSoc="loadpoint?.rangePerSoc"
 						@minsoc-updated="setMinSoc"
 						@limitsoc-updated="setLimitSoc"
+						@mode-updated="setMode"
 					/>
 				</div>
 			</div>
@@ -91,7 +93,14 @@ import type {
 	StaticPlan,
 	StaticSocPlan,
 } from "./types";
-import type { CURRENCY, Forecast, SMART_COST_TYPE, UiLoadpoint, Vehicle } from "@/types/evcc";
+import type {
+	CHARGE_MODE,
+	CURRENCY,
+	Forecast,
+	SMART_COST_TYPE,
+	UiLoadpoint,
+	Vehicle,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanModal",
@@ -142,16 +151,17 @@ export default defineComponent({
 		},
 		modalTitle(): string {
 			const baseTitle = this.$t("main.chargingPlan.modalTitle");
-			if (this.loadpoint?.socBasedPlanning && this.vehicle) {
+			const withVehicle = this.arrivalTabActive || this.loadpoint?.socBasedPlanning;
+			if (withVehicle && this.vehicle) {
 				return `${baseTitle}: ${this.vehicle.title}`;
 			}
 			return baseTitle;
 		},
 		departureTabActive(): boolean {
-			return this.activeTab === "departure";
+			return this.activeTab === "departure" || !this.vehicle;
 		},
 		arrivalTabActive(): boolean {
-			return this.activeTab === "arrival";
+			return this.activeTab === "arrival" && !!this.vehicle;
 		},
 		apiVehicle(): string {
 			return `vehicles/${this.vehicle?.name}/`;
@@ -187,6 +197,13 @@ export default defineComponent({
 		},
 		setLimitSoc(soc: number): void {
 			api.post(`${this.apiVehicle}limitsoc/${soc}`);
+		},
+		setMode(mode: CHARGE_MODE | ""): void {
+			if (mode === "") {
+				api.delete(`${this.apiVehicle}mode`);
+			} else {
+				api.post(`${this.apiVehicle}mode/${mode}`);
+			}
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();

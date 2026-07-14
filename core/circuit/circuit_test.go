@@ -156,9 +156,7 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 		{"no hems, max set", 5000, 0, 9000, 5000},
 		{"hems below max", 5000, 4200, 9000, 4200},
 		{"hems above max", 5000, 9000, 9000, 5000},
-		// when the user has no circuit max, the HEMS limit is not enforced
-		// — strictly preserve user intent (no clamp without an explicit user-side cap).
-		{"hems but no user max", 0, 4200, 9000, 9000},
+		{"hems but no user max", 0, 4200, 9000, 4200},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, err := New(log, "root", 0, tc.maxPower, nil, 0)

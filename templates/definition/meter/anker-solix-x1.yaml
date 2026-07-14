@@ -112,7 +112,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10187 # Total PV Generation (kWh)
+      address: 10189 # Total PV Generation (kWh)
       type: input
       decode: uint32s
     scale: 0.1
