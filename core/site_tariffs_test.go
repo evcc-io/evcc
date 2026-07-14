@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -25,6 +26,19 @@ func TestForecastRatesJSONShape(t *testing.T) {
 
 	assert.Nil(t, forecastRates(nil))
 	assert.Nil(t, forecastRates(api.Rates{}))
+}
+
+// TestForecastRatesEmptyMarshalsNull mirrors socketEncode's condition
+// (Kind==Slice && !IsNil): a nil forecastRates must hit its else branch and
+// json.Marshal to "null", not "[]", so the frontend sees an empty shard.
+func TestForecastRatesEmptyMarshalsNull(t *testing.T) {
+	b, err := json.Marshal(forecastRates(nil))
+	require.NoError(t, err)
+	assert.Equal(t, "null", string(b))
+
+	b, err = json.Marshal(forecastRates(api.Rates{}))
+	require.NoError(t, err)
+	assert.Equal(t, "null", string(b))
 }
 
 // TestForecastRatesSocketEncodeSimulation mirrors socketEncode's per-element
