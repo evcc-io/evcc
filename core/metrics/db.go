@@ -21,11 +21,13 @@ type meter struct {
 }
 
 type entity struct {
-	Id     int    `gorm:"column:id;primarykey"`
-	Group  string `gorm:"column:group;uniqueIndex:entities_group_name"`
-	Name   string `gorm:"column:name;uniqueIndex:entities_group_name"`
-	Title  string `gorm:"column:title"`
-	IsTemp bool   `gorm:"column:is_temp"` // soc_temp holds temperature, not soc
+	Id                int      `gorm:"column:id;primarykey"`
+	Group             string   `gorm:"column:group;uniqueIndex:entities_group_name"`
+	Name              string   `gorm:"column:name;uniqueIndex:entities_group_name"`
+	Title             string   `gorm:"column:title"`
+	IsTemp            bool     `gorm:"column:is_temp"`             // soc_temp holds temperature, not soc
+	EnergyMeter       *float64 `gorm:"column:energy_meter"`        // kWh, at last persisted slot
+	ReturnEnergyMeter *float64 `gorm:"column:return_energy_meter"` // kWh, at last persisted slot
 }
 
 func init() {

@@ -266,6 +266,63 @@ func TestCollectorSkipsPartialFirstSlot(t *testing.T) {
 	require.Equal(t, int64(15*60), m.Timestamp, "persisted slot should start at 00:15")
 }
 
+// TestCollectorRecoversDowntimeViaMeterReadings verifies that saved readings
+// seed a new collector so the first slot after restart contains downtime energy.
+func TestCollectorRecoversDowntimeViaMeterReadings(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Grid, "restore", "", WithClock(clk))
+	require.NoError(t, err)
+	require.False(t, col.restored, "fresh entity must not restore")
+
+	// seed meters at slot start, advance within slot
+	require.NoError(t, col.AddEnergy(new(100.0), new(200.0), 0))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(100.5), new(200.2), 0))
+
+	// cross into 00:30: slot 00:15 persisted, readings saved on entity
+	clk.Add(15 * time.Minute) // 00:30
+	require.NoError(t, col.AddEnergy(new(101.0), new(200.4), 0))
+
+	var e entity
+	require.NoError(t, db.Instance.First(&e, col.entity.Id).Error)
+	require.Equal(t, 101.0, *e.EnergyMeter)
+	require.Equal(t, 200.4, *e.ReturnEnergyMeter)
+
+	var count int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ?", col.entity.Id).Count(&count).Error)
+	require.EqualValues(t, 2, count)
+
+	// restart after 1h downtime, joining slot 01:30 mid-way
+	clk.Add(65 * time.Minute) // 01:35
+	col2, err := NewCollector(Grid, "restore", "", WithClock(clk))
+	require.NoError(t, err)
+	require.True(t, col2.restored)
+
+	// first reading yields the delta across the downtime
+	require.NoError(t, col2.AddEnergy(new(103.0), new(201.4), 0))
+	require.InDelta(t, 2.0, col2.accu.Energy, 1e-10)
+	require.InDelta(t, 1.0, col2.accu.ReturnEnergy, 1e-10)
+
+	// cross into 01:45: catchup slot 01:30 persisted despite mid-slot start,
+	// downtime delta plus the 0.5 kWh accrued since restart
+	clk.Add(10 * time.Minute) // 01:45
+	require.NoError(t, col2.AddEnergy(new(103.5), new(201.4), 0))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
+	require.InDelta(t, 2.5, m.Energy, 1e-10)
+	require.InDelta(t, 1.0, m.ReturnEnergy, 1e-10)
+
+	// readings advanced with the persisted slot
+	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
+	require.Equal(t, 103.5, *e.EnergyMeter)
+	require.Equal(t, 201.4, *e.ReturnEnergyMeter)
+}
+
 // TestCreateEntityRefreshesTitle verifies that a second call to createEntity
 // with a non-empty title fills in (or updates) the title on an existing row,
 // and that passing an empty title never clears a previously stored value.

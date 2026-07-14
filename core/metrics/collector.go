@@ -20,9 +20,10 @@ const (
 )
 
 type Collector struct {
-	entity  entity
-	accu    *Accumulator
-	started time.Time
+	entity   entity
+	accu     *Accumulator
+	started  time.Time
+	restored bool // meter readings seeded from db
 }
 
 func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collector, error) {
@@ -32,9 +33,14 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 	}
 
 	c := &Collector{
-		entity: entity,
-		accu:   NewAccumulator(opt...),
+		entity:   entity,
+		accu:     NewAccumulator(opt...),
+		restored: entity.EnergyMeter != nil || entity.ReturnEnergyMeter != nil,
 	}
+
+	// seed saved readings so the first delta covers the downtime
+	c.accu.energyMeter = entity.EnergyMeter
+	c.accu.returnEnergyMeter = entity.ReturnEnergyMeter
 
 	return c, nil
 }
@@ -92,6 +98,11 @@ func (c *Collector) process(fun func()) error {
 
 	switch {
 	case c.started.IsZero():
+		if c.restored {
+			// seeded readings make the mid-slot start complete energy-wise
+			c.started = slotStart
+			return nil
+		}
 		// keep started un-truncated so a mid-slot start stays distinguishable
 		c.started = now
 
@@ -118,7 +129,14 @@ func (c *Collector) process(fun func()) error {
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp)
+	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp); err != nil {
+		return err
+	}
+
+	// save readings for downtime recovery
+	c.entity.EnergyMeter = c.accu.energyMeter
+	c.entity.ReturnEnergyMeter = c.accu.returnEnergyMeter
+	return db.Instance.Save(&c.entity).Error
 }
 
 // SetSocTemp records the slot-start soc (temperature when isTemp). Call after AddEnergy.
