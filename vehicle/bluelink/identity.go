@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -73,7 +73,7 @@ func (v *Identity) getDeviceID() (string, error) {
 		return "", err
 	}
 
-	uuid := uuid.NewString()
+	uuid := uuid.New().String()
 	data := map[string]any{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
 		"pushType":  v.config.PushType,
