@@ -140,6 +140,15 @@
           "$ref": "#/components/schemas/Soc"
         }
       },
+      "temp": {
+        "description": "Temperature in °C",
+        "in": "path",
+        "name": "temp",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Temp"
+        }
+      },
       "threshold": {
         "description": "Power in W",
         "in": "path",
@@ -718,6 +727,12 @@
           }
         },
         "type": "object"
+      },
+      "Temp": {
+        "description": "Temperature in °C",
+        "example": 50,
+        "minimum": 0,
+        "type": "number"
       },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
@@ -1722,6 +1737,32 @@
           }
         },
         "summary": "Update minimum current",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/mintemp/{temp}": {
+      "post": {
+        "description": "Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limit"
+        },
+        "operationId": "setLoadpointMinTemp",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/temp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update minimum temperature",
         "tags": [
           "loadpoints"
         ]
@@ -2859,6 +2900,67 @@
           }
         },
         "summary": "Set minimum SoC",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode": {
+      "delete": {
+        "description": "Resets the vehicle charge mode to keep the last selected mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "deleteVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Reset charge mode",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode/{mode}": {
+      "post": {
+        "description": "Sets the charge mode applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "setVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/mode"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "mode": {
+                      "$ref": "#/components/schemas/Mode"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set charge mode",
         "tags": [
           "vehicles"
         ]

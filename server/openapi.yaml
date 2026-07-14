@@ -402,6 +402,21 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/mintemp/{temp}:
+    post:
+      operationId: setLoadpointMinTemp
+      summary: Update minimum temperature
+      description: "Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/limit
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/temp"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/mode/{mode}:
     post:
       operationId: setLoadpointMode
@@ -1121,6 +1136,42 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/SocResult"
+  /vehicles/{name}/mode:
+    delete:
+      operationId: deleteVehicleMode
+      summary: Reset charge mode
+      description: "Resets the vehicle charge mode to keep the last selected mode."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/solar-charging
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+      responses:
+        "200":
+          $ref: "#/components/responses/NullResult"
+  /vehicles/{name}/mode/{mode}:
+    post:
+      operationId: setVehicleMode
+      summary: Set charge mode
+      description: "Sets the charge mode applied when this vehicle becomes active on a loadpoint."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/solar-charging
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+        - $ref: "#/components/parameters/mode"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    $ref: "#/components/schemas/Mode"
   /vehicles/{name}/plan/repeating:
     post:
       operationId: updateVehicleRepeatingPlans
@@ -1642,6 +1693,11 @@ components:
       example: 60
       minimum: 0
       maximum: 100
+    Temp:
+      description: Temperature in °C
+      type: number
+      example: 50
+      minimum: 0
     State:
       description: "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases."
       type: object
@@ -1767,6 +1823,13 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/Soc"
+    temp:
+      name: temp
+      description: Temperature in °C
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/Temp"
     timestamp:
       name: timestamp
       description: Timestamp in RFC3339 format

@@ -168,6 +168,18 @@ func TestRun_ProductionLimitReleasedEarly(t *testing.T) {
 	assertProductionLimit(t, c, false)
 }
 
+// TestRun_ProductionLimitWithoutNominalMax verifies an incoming LPP limit
+// errors instead of being silently ignored when productionNominalMax is unset (#31469).
+func TestRun_ProductionLimitWithoutNominalMax(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+	c.productionNominalMax = 0
+
+	c.productionLimit = ucapi.LoadLimit{Value: -2200, IsActive: true, Duration: time.Hour}
+	require.Error(t, c.run())
+	assert.Nil(t, c.CurtailedPercent())
+}
+
 // TestRun_ConsumptionLimitReleasedEarly is the LPC mirror of the LPP early-release
 // case: an active consumption limit must drop as soon as the EG deactivates it.
 func TestRun_ConsumptionLimitReleasedEarly(t *testing.T) {

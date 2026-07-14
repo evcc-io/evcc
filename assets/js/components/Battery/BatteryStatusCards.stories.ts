@@ -37,12 +37,27 @@ Single.args = {
   battery: battery([device({ title: "Sungrow", soc: 76, power: 800, capacity: 13.5 })]),
 };
 
+// long title on one device illustrates the name label's overflow/ellipsis behavior
 export const Multiple = Template.bind({});
 Multiple.args = {
   battery: {
     ...battery([
-      device({ title: "Sungrow", soc: 76, power: 800, capacity: 13.5, controllable: true }),
-      device({ title: "Anker", soc: 40, power: -1200, capacity: 7.5 }),
+      device({
+        title: "Sungrow",
+        soc: 76,
+        power: 800,
+        capacity: 13.5,
+        controllable: true,
+        suggestion: { action: "hold", actionable: true },
+      }),
+      device({
+        title: "Anker SOLIX X1 Home Energy Storage System Extended Pro Max",
+        soc: 40,
+        power: -1200,
+        capacity: 7.5,
+        controllable: true,
+        suggestion: { action: "normal", actionable: true },
+      }),
     ]),
     soc: 63,
   },
@@ -51,11 +66,22 @@ Multiple.args = {
 // single battery: optimizer gets its own card, showing suggestion + high + low
 export const WithForecast = Template.bind({});
 WithForecast.args = {
-  battery: battery([device({ title: "Battery", soc: 62, power: 900, capacity: 10 })], {
-    highest: { soc: 100, time: "2026-07-01T16:30:00+02:00" },
-    lowest: { soc: 12, time: "2026-07-02T06:00:00+02:00" },
-  }),
-  suggestion: { action: "charge" },
+  battery: battery(
+    [
+      device({
+        title: "Battery",
+        soc: 62,
+        power: 900,
+        capacity: 10,
+        controllable: true,
+        suggestion: { action: "charge", actionable: true },
+      }),
+    ],
+    {
+      highest: { soc: 100, time: "2026-07-01T16:30:00+02:00" },
+      lowest: { soc: 12, time: "2026-07-02T06:00:00+02:00" },
+    }
+  ),
 };
 
 // forecast is a site-aggregate value, so it lands on the combined card

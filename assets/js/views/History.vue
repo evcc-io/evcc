@@ -37,7 +37,7 @@
 					<div
 						v-for="i in 3"
 						:key="i"
-						class="history-tile history-tile-skeleton mb-4"
+						class="history-tile history-tile-skeleton box-pull-out mb-4"
 						aria-hidden="true"
 					></div>
 				</div>
@@ -53,7 +53,7 @@
 					:title="$t(`main.history.group.${group}`)"
 					:subtitle="groupTotalLabel(group)"
 					edge-to-edge
-					class="mb-4"
+					class="box-pull-out mb-4"
 					:data-testid="`history-section-${group}`"
 				>
 					<GroupChart
@@ -87,17 +87,9 @@
 						@focus="onLegendFocus(group, $event)"
 					/>
 				</Card>
-				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
-					<a
-						:href="csvLink"
-						download
-						class="text-muted small history-csv-link"
-						data-testid="history-csv-download"
-						@click="handleDownloadClick($event, csvLink)"
-					>
-						{{ $t("main.history.downloadCsv") }}
-					</a>
-				</p>
+				<div v-if="visibleGroups.length" class="d-flex align-items-baseline gap-2 mb-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
+				</div>
 			</main>
 		</div>
 	</div>
@@ -117,7 +109,7 @@ import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import { handleDownloadClick } from "@/utils/native";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -138,6 +130,7 @@ export default defineComponent({
 		PeriodHeader,
 		GroupChart,
 		LegendList,
+		DownloadButton,
 	},
 	mixins: [formatter],
 	props: {
@@ -316,16 +309,6 @@ export default defineComponent({
 			}
 			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
 		},
-		csvLink(): string {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-				from: this.from.toISOString(),
-				to: this.to.toISOString(),
-				aggregate: this.aggregate,
-			});
-			return `./api/history/energy?${params.toString()}`;
-		},
 	},
 	watch: {
 		fetchKey() {
@@ -359,7 +342,15 @@ export default defineComponent({
 	},
 	methods: {
 		groupColor,
-		handleDownloadClick,
+		downloadHref(): string {
+			const params = new URLSearchParams({
+				lang: this.$i18n?.locale,
+				from: this.from.toISOString(),
+				to: this.to.toISOString(),
+				aggregate: this.aggregate,
+			});
+			return `./api/history/energy?${params.toString()}`;
+		},
 		legendsForGroup(group: string): Legend[] {
 			const items = this.entityLegends(group);
 			const focused = this.focusedEntity[group] ?? null;
@@ -570,14 +561,6 @@ export default defineComponent({
 		animation: none;
 		opacity: 0.8;
 	}
-}
-.history-csv-link {
-	text-decoration: none;
-}
-.history-csv-link:hover,
-.history-csv-link:focus {
-	color: var(--evcc-default-text);
-	text-decoration: underline;
 }
 @media (max-width: 575.98px) {
 	/* edge-to-edge on mobile: cancel the container's px-4 padding */

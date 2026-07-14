@@ -1,8 +1,6 @@
 package api
 
 import (
-	"context"
-	"io"
 	"net/url"
 	"time"
 
@@ -252,11 +250,6 @@ type FeatureDescriber interface {
 // TitleDescriber optionally provides an title
 type TitleDescriber interface {
 	GetTitle() string
-}
-
-// CsvWriter converts to csv
-type CsvWriter interface {
-	WriteCsv(context.Context, io.Writer) error
 }
 
 // CircuitMeasurements is the measurements a circuit or load must deliver

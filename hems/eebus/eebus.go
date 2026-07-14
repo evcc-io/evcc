@@ -2,6 +2,7 @@ package eebus
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -266,6 +267,10 @@ func (c *EEBus) run() error {
 	// LPP
 	if !limitActive(c.productionLimitActivated) {
 		if c.productionLimit.IsActive {
+			if c.productionNominalMax <= 0 {
+				return errors.New("production limit received but productionNominalMax is not configured")
+			}
+
 			c.log.WARN.Println("activating production limit")
 			c.setProductionLimit(c.productionLimit.Value, true)
 		}
