@@ -163,10 +163,10 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 // stopped instead of triggering a spurious pause suggestion.
 func loadpointCurrentAction(lp *Loadpoint) string {
 	lp.RLock()
-	enabled := lp.isEnabled()
+	enabled := lp.enabled
 	lp.RUnlock()
 
-	if enabled && !lp.chargeGoalReached() {
+	if enabled && !lp.chargeGoalReached(enabled) {
 		return actionCharge
 	}
 	return actionStop

@@ -1034,25 +1034,23 @@ func (lp *Loadpoint) charging() bool {
 // PvChargeStarting reports a PV loadpoint that claimed surplus via a running
 // enable timer but is not yet drawing it and has not reached its goal. See #31194, #31684.
 func (lp *Loadpoint) PvChargeStarting() bool {
-	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached() {
+	lp.RLock()
+	enabled := lp.enabled
+	pvTimerRunning := !lp.pvTimer.IsZero()
+	lp.RUnlock()
+
+	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached(enabled) {
 		return false
 	}
 
-	lp.RLock()
-	defer lp.RUnlock()
-
 	// enable timer running (not yet enabled)
-	return !lp.enabled && !lp.pvTimer.IsZero()
+	return !enabled && pvTimerRunning
 }
 
 // chargeGoalReached reports whether the loadpoint will not draw more: enabled
 // but not charging, an energy limit reached, or soc at/above the limit (#31684).
-func (lp *Loadpoint) chargeGoalReached() bool {
+func (lp *Loadpoint) chargeGoalReached(enabled bool) bool {
 	// enabled but drawing nothing: it won't ramp up
-	lp.RLock()
-	enabled := lp.isEnabled()
-	lp.RUnlock()
-
 	if enabled && !lp.charging() {
 		return true
 	}
