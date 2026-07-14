@@ -1,7 +1,9 @@
 package core
 
 import (
+	jsonv2 "encoding/json/v2"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
+	"github.com/samber/lo"
 )
 
 type solarDetails struct {
@@ -25,12 +28,20 @@ type dailyDetails struct {
 	Complete bool    `json:"complete"`
 }
 
-// forecastRate is api.Rate with Start/End published as unix timestamps instead
-// of RFC3339 strings, to keep the forecast payload compact.
-type forecastRate struct {
-	Start int64   `json:"start"`
-	End   int64   `json:"end"`
-	Value float64 `json:"value"`
+// unixTimeMarshalers formats every time.Time in a Marshal call as unix
+// seconds, recursively, without per-field struct tags. Requires Go 1.27
+// (encoding/json/v2 baseline).
+var unixTimeMarshalers = jsonv2.WithMarshalers(jsonv2.MarshalFunc(func(t time.Time) ([]byte, error) {
+	return strconv.AppendInt(nil, t.Unix(), 10), nil
+}))
+
+// forecastRate is api.Rate with a custom JSON encoding that publishes
+// Start/End as unix timestamps instead of RFC3339 strings, to keep the
+// forecast payload compact.
+type forecastRate api.Rate
+
+func (r forecastRate) MarshalJSON() ([]byte, error) {
+	return jsonv2.Marshal(api.Rate(r), unixTimeMarshalers)
 }
 
 func forecastRates(rr api.Rates) []forecastRate {
@@ -38,11 +49,7 @@ func forecastRates(rr api.Rates) []forecastRate {
 	if len(rr) == 0 {
 		return nil
 	}
-	res := make([]forecastRate, 0, len(rr))
-	for _, r := range rr {
-		res = append(res, forecastRate{Start: r.Start.Unix(), End: r.End.Unix(), Value: r.Value})
-	}
-	return res
+	return lo.Map(rr, func(r api.Rate, _ int) forecastRate { return forecastRate(r) })
 }
 
 // greenShare returns

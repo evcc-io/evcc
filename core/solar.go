@@ -1,7 +1,7 @@
 package core
 
 import (
-	"encoding/json"
+	jsonv2 "encoding/json/v2"
 	"slices"
 	"time"
 
@@ -14,17 +14,21 @@ type timeseries []tsEntry
 var _ api.BytesMarshaler = (*timeseries)(nil)
 
 func (ts timeseries) MarshalBytes() ([]byte, error) {
-	return json.Marshal(ts)
+	return ts.MarshalJSON()
+}
+
+func (ts timeseries) MarshalJSON() ([]byte, error) {
+	return jsonv2.Marshal([]tsEntry(ts), unixTimeMarshalers)
 }
 
 type tsEntry struct {
-	Timestamp int64   `json:"ts"`
-	Value     float64 `json:"val"`
+	Timestamp time.Time `json:"ts"`
+	Value     float64   `json:"val"`
 }
 
 func solarTimeseries(rr api.Rates) []tsEntry {
 	return lo.Map(rr, func(r api.Rate, _ int) tsEntry {
-		return tsEntry{Timestamp: r.Start.Unix(), Value: r.Value}
+		return tsEntry{Timestamp: r.Start, Value: r.Value}
 	})
 }
 

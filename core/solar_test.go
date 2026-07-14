@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -111,4 +112,17 @@ func TestSolarEnergyNoRates(t *testing.T) {
 	now := time.Now()
 	assert.Equal(t, 0.0, solarEnergy(api.Rates{}, now, now.Add(time.Hour)))
 	assert.Equal(t, 0.0, solarEnergy(nil, now, now.Add(time.Hour)))
+}
+
+func TestTimeseriesMarshalJSON(t *testing.T) {
+	ts := time.Date(2026, 7, 14, 12, 0, 0, 0, time.UTC)
+	tsSeries := timeseries{{Timestamp: ts, Value: 1.5}}
+
+	b, err := tsSeries.MarshalJSON()
+	require.NoError(t, err)
+	assert.JSONEq(t, `[{"ts":1784030400,"val":1.5}]`, string(b))
+
+	b2, err := tsSeries.MarshalBytes()
+	require.NoError(t, err)
+	assert.Equal(t, string(b), string(b2))
 }
