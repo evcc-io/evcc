@@ -253,3 +253,86 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 		ctrl.Finish()
 	}
 }
+
+type maxACPower float64
+
+func (m maxACPower) MaxACPower() float64 { return float64(m) }
+
+func TestForcedBatteryChargeCircuitOverload(t *testing.T) {
+	for _, tc := range []struct {
+		internal, expected  api.BatteryMode
+		maxPower, power     float64
+		maxCurrent, current float64
+		maxChargePower      float64 // battery max AC power, 0 = not available
+		batteryPower        float64 // actual battery power, negative = charging
+		hasMeter            bool
+	}{
+		// no limits configured
+		{api.BatteryNormal, api.BatteryCharge, 0, 10e3, 0, 50, 0, 0, false},
+		// power below/above limit
+		{api.BatteryNormal, api.BatteryCharge, 20e3, 10e3, 0, 0, 0, 0, false},
+		{api.BatteryNormal, api.BatteryNormal, 20e3, 25e3, 0, 0, 0, 0, false},
+		// current below/above limit
+		{api.BatteryNormal, api.BatteryCharge, 0, 0, 63, 50, 0, 0, false},
+		{api.BatteryNormal, api.BatteryNormal, 0, 0, 63, 70, 0, 0, false},
+		// charging active, overload puts battery into normal mode
+		{api.BatteryCharge, api.BatteryNormal, 20e3, 25e3, 0, 0, 0, 0, false},
+		// overload resolved, charging resumes
+		{api.BatteryNormal, api.BatteryCharge, 20e3, 10e3, 0, 0, 0, 0, false},
+
+		// anticipated max charge power exceeds limit, with and without headroom
+		{api.BatteryNormal, api.BatteryNormal, 20e3, 15e3, 0, 0, 6e3, 0, false},
+		{api.BatteryNormal, api.BatteryCharge, 20e3, 13e3, 0, 0, 6e3, 0, false},
+		// metered circuit: actual charge power already measured, not double-counted
+		{api.BatteryNormal, api.BatteryCharge, 20e3, 17e3, 0, 0, 6e3, -4e3, true},
+		{api.BatteryNormal, api.BatteryNormal, 20e3, 19e3, 0, 0, 6e3, -4e3, true},
+	} {
+		t.Logf("%+v", tc)
+
+		ctrl := gomock.NewController(t)
+
+		var bat api.Meter
+		batCon := api.NewMockBatteryController(ctrl)
+
+		if tc.maxChargePower > 0 {
+			bat = &struct {
+				api.Meter
+				api.BatteryController
+				api.MaxACPowerGetter
+			}{
+				BatteryController: batCon,
+				MaxACPowerGetter:  maxACPower(tc.maxChargePower),
+			}
+		} else {
+			bat = &struct {
+				api.Meter
+				api.BatteryController
+			}{
+				BatteryController: batCon,
+			}
+		}
+
+		circuit := api.NewMockCircuit(ctrl)
+		circuit.EXPECT().GetMaxPower().Return(tc.maxPower).AnyTimes()
+		circuit.EXPECT().GetChargePower().Return(tc.power).AnyTimes()
+		circuit.EXPECT().GetMaxCurrent().Return(tc.maxCurrent).AnyTimes()
+		circuit.EXPECT().GetMaxPhaseCurrent().Return(tc.current).AnyTimes()
+		circuit.EXPECT().HasMeter().Return(tc.hasMeter).AnyTimes()
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+			batteryMode:   tc.internal,
+			circuit:       circuit,
+		}
+		site.battery.Power = tc.batteryPower
+
+		if tc.expected != api.BatteryUnknown {
+			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
+		}
+
+		site.updateBatteryMode(true, api.Rate{})
+
+		ctrl.Finish()
+	}
+}
