@@ -27,6 +27,26 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
+func TestLoadpointCurrentAction(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		enabled bool
+		status  api.ChargeStatus
+		soc     float64
+		want    string
+	}{
+		{"charging", true, api.StatusC, 0, actionCharge},
+		{"enabled but idle (e.g. vehicle finished at limit)", true, api.StatusB, 0, actionStop},
+		{"disabled", false, api.StatusB, 0, actionStop},
+		{"charging at 100% soc with no explicit limit", true, api.StatusC, 100, actionStop},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := &Loadpoint{enabled: tc.enabled, status: tc.status, vehicleSoc: tc.soc}
+			assert.Equal(t, tc.want, loadpointCurrentAction(lp))
+		})
+	}
+}
+
 func TestAsTimestamps(t *testing.T) {
 	// now is 10 minutes into a 15-minute slot
 	now := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
