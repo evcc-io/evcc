@@ -672,7 +672,7 @@ func matchSoc(ts []float32, fun func(float32) bool) time.Time {
 	for i, soc := range ts {
 		if fun(soc) {
 			// TODO first slot
-			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
+			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration).Round(time.Second)
 		}
 	}
 
