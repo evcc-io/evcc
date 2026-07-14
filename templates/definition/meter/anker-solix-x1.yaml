@@ -32,10 +32,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10656 # Meter Total Forward Active Energy (kWh)
+      address: 10656 # Meter Total Forward Active Energy (0.01 kWh/LSB on X1 firmware)
       type: input
       decode: uint32s
-    scale: 0.1
+    scale: 0.01
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -112,10 +112,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10189 # Total PV Generation (kWh)
+      address: 10187 # Total PV Generation (0.01 kWh/LSB on X1 firmware; 10189 reads 0)
       type: input
       decode: uint32s
-    scale: 0.1
+    scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -130,10 +130,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10264 # Battery Total Discharge Energy (kWh)
+      address: 10264 # Battery Total Discharge Energy (0.01 kWh/LSB on X1 firmware)
       type: input
       decode: uint32s
-    scale: 0.1
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
