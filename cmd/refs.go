@@ -29,6 +29,11 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
+	// circuits
+	if err := collectCircuitRefs(conf.Circuits); err != nil {
+		return err
+	}
+
 	// loadpoints
 	if err := collectLoadpointRefs(slices.Values(conf.Loadpoints)); err != nil {
 		return err
@@ -127,6 +132,23 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 		references.charger = append(references.charger, refs.ChargerRef)
 		references.vehicle = append(references.vehicle, refs.VehicleRef)
 		references.circuit = append(references.circuit, refs.CircuitRef)
+	}
+
+	return nil
+}
+
+func collectCircuitRefs(circuits []config.Named) error {
+	for _, cc := range circuits {
+		var refs struct {
+			MeterRef string         `mapstructure:"meter"` // Circuit meter reference
+			Other    map[string]any `mapstructure:",remain"`
+		}
+
+		if err := util.DecodeOther(cc.Other, &refs); err != nil {
+			return err
+		}
+
+		references.meter = append(references.meter, refs.MeterRef)
 	}
 
 	return nil
