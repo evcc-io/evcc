@@ -56,8 +56,19 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
 
-	// put battery into hold mode when charging is active and HEMS dimmed
 	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+
+	// Forced charging conflicts with load management in two distinct ways, handled differently:
+
+	// 1. circuit overload: the battery discharging relieves the overloaded circuit, so normal mode
+	// (which permits discharge) is preferable to hold. Charging resumes once back within limits.
+	if fromToCharge && site.circuitOverloaded() {
+		batteryMode = api.BatteryNormal
+	}
+
+	// 2. HEMS dimming: an obligation to reduce consumption, met by stopping the charge. Hold (no
+	// discharge) is used rather than normal, since the battery was force-charged to bank grid energy,
+	// not to feed it back. Checked last, so dimming takes precedence over a circuit overload.
 	if dimmed := hems.Dimmed(site.hems); fromToCharge && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
 		batteryMode = api.BatteryHold
@@ -73,6 +84,72 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 			site.log.ERROR.Println("battery mode:", err)
 		}
 	}
+}
+
+// circuitOverloaded checks if the root circuit's load management limits are or would be exceeded,
+// mirroring the overload detection in circuit.Update: total circuit power against
+// maxPower and the highest phase current against the per-phase maxCurrent.
+// Batteries exposing their max AC power are assumed to charge at that power, guarding
+// against the overload before it occurs. Forced battery charging draws through the
+// grid connection point, hence only the root circuit is considered.
+func (site *Site) circuitOverloaded() bool {
+	circuit := site.circuit
+	if circuit == nil {
+		return false
+	}
+
+	if maxPower := circuit.GetMaxPower(); maxPower != 0 {
+		power := circuit.GetChargePower() + site.anticipatedBatteryChargePower(circuit.HasMeter())
+		if power > maxPower {
+			site.log.DEBUG.Printf("battery mode: circuit overloaded: %.0fW > %.0fW", power, maxPower)
+			return true
+		}
+	}
+
+	if maxCurrent := circuit.GetMaxCurrent(); maxCurrent != 0 {
+		if current := circuit.GetMaxPhaseCurrent(); current > maxCurrent {
+			site.log.DEBUG.Printf("battery mode: circuit overloaded: %.3gA > %.3gA", current, maxCurrent)
+			return true
+		}
+	}
+
+	return false
+}
+
+// anticipatedBatteryChargePower is the charge power controllable batteries are
+// assumed to draw, added to the circuit power to guard against an overload
+// before it occurs. On a metered circuit the measured power already includes
+// the actual battery charge, so only the not-yet-drawn headroom is added.
+func (site *Site) anticipatedBatteryChargePower(metered bool) float64 {
+	maxChargePower := site.batteryMaxChargePower()
+	if maxChargePower <= 0 {
+		return 0
+	}
+
+	if metered {
+		maxChargePower = max(0, maxChargePower-max(0, -site.battery.Power))
+	}
+
+	return maxChargePower
+}
+
+// batteryMaxChargePower returns the aggregate maximum AC charge power of all
+// controllable batteries that expose it
+func (site *Site) batteryMaxChargePower() float64 {
+	var res float64
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+
+		if _, ok := api.Cap[api.BatteryController](meter); !ok {
+			continue
+		}
+
+		if m, ok := api.Cap[api.MaxACPowerGetter](meter); ok {
+			res += m.MaxACPower()
+		}
+	}
+
+	return res
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge and rate
