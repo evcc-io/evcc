@@ -162,7 +162,11 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 // enabled while idle (e.g. vehicle finished at its limit) is treated as
 // stopped instead of triggering a spurious pause suggestion.
 func loadpointCurrentAction(lp *Loadpoint) string {
-	if lp.IsEnabled() && !lp.chargeGoalReached() {
+	lp.RLock()
+	enabled := lp.isEnabled()
+	lp.RUnlock()
+
+	if enabled && !lp.chargeGoalReached() {
 		return actionCharge
 	}
 	return actionStop

@@ -1049,7 +1049,11 @@ func (lp *Loadpoint) PvChargeStarting() bool {
 // but not charging, an energy limit reached, or soc at/above the limit (#31684).
 func (lp *Loadpoint) chargeGoalReached() bool {
 	// enabled but drawing nothing: it won't ramp up
-	if lp.IsEnabled() && !lp.charging() {
+	lp.RLock()
+	enabled := lp.isEnabled()
+	lp.RUnlock()
+
+	if enabled && !lp.charging() {
 		return true
 	}
 
