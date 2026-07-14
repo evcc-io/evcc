@@ -3,7 +3,6 @@ products:
   - brand: Ntfy
 params:
   - name: host
-    required: true
     example: ntfy.sh
     default: ntfy.sh
   - name: topics
@@ -30,9 +29,6 @@ params:
     type: choice
     choice: ["max", "high", "default", "low", "min"]
     default: default
-    description:
-      de: Priorität
-      en: Priority
     help:
       de: >
         Nachrichten haben eine Prioritätsstufe, die bestimmt, wie dringend dein Telefon dich benachrichtigt.

@@ -126,25 +126,8 @@
 								@details-clicked="openBatteryView"
 								@toggle="toggleBattery"
 							>
-								<template
-									v-if="batteryForecastExists || batteryGridChargeLimitSet"
-									#subline
-								>
-									<div
-										v-if="batteryForecastLowest"
-										class="d-flex align-items-center mb-2"
-									>
-										<ForecastMessage :point="batteryForecastLowest" />
-									</div>
-									<div
-										v-else-if="batteryForecastHighest"
-										class="d-none d-md-block mb-2"
-									>
-										&nbsp;
-									</div>
-									<div v-if="batteryGridChargeLimitSet" class="d-none d-md-block">
-										&nbsp;
-									</div>
+								<template v-if="batteryGridChargeLimitSet" #subline>
+									<div class="d-none d-md-block">&nbsp;</div>
 								</template>
 								<template v-if="hasMultipleBatteries" #expanded>
 									<EnergyflowEntry
@@ -197,9 +180,9 @@
 								@details-clicked="toggleCo2"
 								@toggle="toggleConsumers"
 							>
-								<template v-if="consumers.length > 0" #expanded>
+								<template v-if="allConsumers.length > 0" #expanded>
 									<EnergyflowEntry
-										v-for="(c, index) in consumers"
+										v-for="(c, index) in allConsumers"
 										:key="index"
 										:name="c.title || c.name"
 										:power="c.power"
@@ -256,6 +239,7 @@
 								:power="batteryCharge"
 								:powerUnit="powerUnit"
 								:iconProps="{
+									hold: batteryChargeHold,
 									soc: batterySoc,
 									gridCharge: batteryGridChargeActive,
 								}"
@@ -267,24 +251,8 @@
 								@details-clicked="openBatteryView"
 								@toggle="toggleBattery"
 							>
-								<template
-									v-if="batteryForecastExists || batteryGridChargeLimitSet"
-									#subline
-								>
-									<div
-										v-if="batteryForecastHighest"
-										class="d-flex align-items-center mb-2"
-									>
-										<ForecastMessage :point="batteryForecastHighest" high />
-									</div>
-									<div
-										v-else-if="batteryForecastLowest"
-										class="d-none d-md-block mb-2"
-									>
-										&nbsp;
-									</div>
+								<template v-if="batteryGridChargeLimitSet" #subline>
 									<button
-										v-if="batteryGridChargeLimitSet"
 										type="button"
 										class="btn-reset d-flex justify-content-between text-start pe-4"
 										@click.stop="openBatteryView"
@@ -343,14 +311,12 @@ import Visualization from "./Visualization.vue";
 import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import ForecastMessage from "./ForecastMessage.vue";
 import settings from "@/settings";
 import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
 	type Battery,
-	type BatteryForecastPoint,
 	type Meter,
 	type CURRENCY,
 	type Forecast,
@@ -363,7 +329,6 @@ export default defineComponent({
 		Visualization,
 		EnergyflowEntry: Entry,
 		AnimatedNumber,
-		ForecastMessage,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -375,6 +340,7 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
+		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		pvPower: { type: Number, default: 0 },
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
@@ -445,13 +411,20 @@ export default defineComponent({
 			return this.chargePower(this.batteryPower);
 		},
 		batteryChargeLabel() {
-			return this.$t("main.energyflow.batteryCharge");
+			return this.$t(
+				`main.energyflow.battery${this.batteryChargeHold ? "ChargeHold" : "Charge"}`
+			);
 		},
 		batteryDischargeLabel() {
-			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
+			return this.$t(
+				`main.energyflow.battery${this.batteryHold ? "DischargeHold" : "Discharge"}`
+			);
 		},
 		batteryHold() {
 			return this.batteryMode === "hold";
+		},
+		batteryChargeHold() {
+			return this.batteryMode === "holdcharge";
 		},
 		consumption() {
 			return this.homePower + this.batteryCharge + this.loadpointsPower;
@@ -581,17 +554,8 @@ export default defineComponent({
 				count: this.activeLoadpointsCount,
 			});
 		},
-		consumers() {
-			return [...this.aux, ...this.ext];
-		},
-		batteryForecastHighest(): BatteryForecastPoint | undefined {
-			return this.battery?.forecast?.highest;
-		},
-		batteryForecastLowest(): BatteryForecastPoint | undefined {
-			return this.battery?.forecast?.lowest;
-		},
-		batteryForecastExists(): boolean {
-			return !!(this.batteryForecastHighest || this.batteryForecastLowest);
+		allConsumers() {
+			return [...this.consumers, ...this.aux];
 		},
 	},
 	watch: {
@@ -607,7 +571,7 @@ export default defineComponent({
 		batteryMode() {
 			this.$nextTick(this.updateHeight);
 		},
-		activeLoadpointsCount() {
+		loadpoints() {
 			this.$nextTick(this.updateHeight);
 		},
 	},

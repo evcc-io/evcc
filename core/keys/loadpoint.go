@@ -13,12 +13,13 @@ const (
 	Priority          = "priority"         // priority
 	MinCurrent        = "minCurrent"       // min current
 	MaxCurrent        = "maxCurrent"       // max current
-	MinSoc            = "minSoc"           // min soc
+	MinSoc            = "minSoc"           // min soc (heating: min temperature)
 	MinSocNotReached  = "minSocNotReached" // min soc not reached
 	LimitSoc          = "limitSoc"         // limit soc
 	LimitEnergy       = "limitEnergy"      // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
+	UI                = "ui" // display-only ui settings (json)
 	EnableThreshold   = "enableThreshold"
 	DisableThreshold  = "disableThreshold"
 	EnableDelay       = "enableDelay"
@@ -44,6 +45,9 @@ const (
 	// loadpoint setpoint
 	OfferedCurrent = "offeredCurrent" // offered current
 
+	// optimizer
+	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
+
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
@@ -61,6 +65,7 @@ const (
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 
+	EffectiveMinSoc       = "effectiveMinSoc"       // effective min soc
 	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
 	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy
 

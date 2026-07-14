@@ -37,7 +37,7 @@
 					<div
 						v-for="i in 3"
 						:key="i"
-						class="history-tile history-tile-skeleton mb-4"
+						class="history-tile history-tile-skeleton box-pull-out mb-4"
 						aria-hidden="true"
 					></div>
 				</div>
@@ -47,22 +47,15 @@
 					</div>
 				</div>
 
-				<section
+				<Card
 					v-for="group in visibleGroups"
 					:key="group"
-					class="history-tile mb-4"
+					:title="$t(`main.history.group.${group}`)"
+					:subtitle="groupTotalLabel(group)"
+					edge-to-edge
+					class="box-pull-out mb-4"
 					:data-testid="`history-section-${group}`"
 				>
-					<h3
-						class="fw-normal my-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden history-tile-title"
-					>
-						<span class="d-block no-wrap text-truncate">
-							{{ $t(`main.history.group.${group}`) }}
-						</span>
-						<small class="d-block no-wrap text-truncate">
-							{{ groupTotalLabel(group) }}
-						</small>
-					</h3>
 					<GroupChart
 						v-if="displayFrom && displayTo && displayPeriod"
 						:group="group"
@@ -88,23 +81,15 @@
 					/>
 					<LegendList
 						v-if="hasEntityLegend(group) || hasForecastLegend(group)"
-						class="mt-4"
+						class="mt-4 mb-0"
 						:legends="legendsForGroup(group)"
 						:device-colors="deviceColors"
 						@focus="onLegendFocus(group, $event)"
 					/>
-				</section>
-				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
-					<a
-						:href="csvLink"
-						download
-						class="text-muted small history-csv-link"
-						data-testid="history-csv-download"
-						@click="handleDownloadClick($event, csvLink)"
-					>
-						{{ $t("main.history.downloadCsv") }}
-					</a>
-				</p>
+				</Card>
+				<div v-if="visibleGroups.length" class="d-flex align-items-baseline gap-2 mb-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
+				</div>
 			</main>
 		</div>
 	</div>
@@ -113,21 +98,18 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import GroupChart, {
-	type HistorySeries,
-	alphaColor,
-	stepAlpha,
-} from "../components/History/GroupChart.vue";
+import GroupChart, { type HistorySeries, stepAlpha } from "../components/History/GroupChart.vue";
 import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
-import { GROUP_ORDER, groupColor } from "../components/History/groups";
-import colors, { resolveColors, deviceColorMap } from "../colors";
+import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
+import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import { handleDownloadClick } from "@/utils/native";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -142,11 +124,13 @@ export default defineComponent({
 	name: "History",
 	components: {
 		TopHeader: Header,
+		Card,
 		PeriodSelector,
 		DateNavigator,
 		PeriodHeader,
 		GroupChart,
 		LegendList,
+		DownloadButton,
 	},
 	mixins: [formatter],
 	props: {
@@ -154,6 +138,7 @@ export default defineComponent({
 		month: { type: Number, default: undefined },
 		year: { type: Number, default: undefined },
 		period: { type: String as PropType<PERIODS>, default: undefined },
+		offline: Boolean,
 	},
 	data() {
 		return {
@@ -162,7 +147,6 @@ export default defineComponent({
 			displayTo: null as Date | null,
 			displayPeriod: null as PERIODS | null,
 			loading: true,
-			interval: null as ReturnType<typeof setInterval> | null,
 			startDate: new Date(2020, 0, 1),
 			focusedEntity: {} as Record<string, number | null>,
 		};
@@ -173,6 +157,9 @@ export default defineComponent({
 	computed: {
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
+		},
+		historyUpdated(): string | undefined {
+			return store.state.historyUpdated;
 		},
 		effectivePeriod(): PERIODS {
 			return this.period && HISTORY_PERIODS.includes(this.period)
@@ -245,19 +232,17 @@ export default defineComponent({
 			return `${this.aggregate}|${this.from.getTime()}|${this.to.getTime()}`;
 		},
 		seriesByGroup(): Record<string, HistorySeries[]> {
-			const titles = store.deviceTitles.value;
 			const map: Record<string, HistorySeries[]> = {};
 			for (const s of this.rawSeries) {
 				if (!s.group) continue;
-				if (!map[s.group]) map[s.group] = [];
-				map[s.group]!.push({ ...s, name: titles[s.name] || s.name });
+				(map[s.group] ||= []).push(s);
 			}
 			return map;
 		},
 		visibleGroups(): string[] {
 			return GROUP_ORDER.filter((g) => {
 				// Consumption section follows `home` (the source of truth).
-				if (g === "meter") {
+				if (g === "consumer") {
 					const home = this.seriesByGroup["home"];
 					if (home?.some((s) => s.data.length > 0)) return true;
 				}
@@ -265,53 +250,48 @@ export default defineComponent({
 				return !!list?.some((s) => s.data.length > 0);
 			});
 		},
-		// Series shown in the chart. For the consumption (`meter`) group we append
-		// a virtual "Other consumers" series = home.net − sum(meter entities).
-		// Inactive loadpoints / meters (all-zero data in the selected period) are
-		// dropped from the displayed list; `paletteIndex` carries each entity's
-		// original position so its color stays stable when navigating periods.
+		// Consumer group: append virtual "Other consumers" = home.net − sum(consumers).
+		// paletteIndex pins color across period navigation.
 		displaySeries(): (group: string) => HistorySeries[] {
 			const hasEnergy = (s: HistorySeries) =>
 				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0);
 			return (group: string): HistorySeries[] => {
-				if (group === "loadpoint") {
-					const list = this.seriesByGroup["loadpoint"] || [];
+				// Loadpoint and additional meters stack distinct entities without a
+				// home-derived "Others" series.
+				if (group === "loadpoint" || group === "meter") {
+					const list = this.seriesByGroup[group] || [];
 					return list.map((s, i) => ({ ...s, paletteIndex: i })).filter(hasEnergy);
 				}
-				if (group !== "meter") return this.seriesByGroup[group] || [];
-				const meters = this.seriesByGroup["meter"] || [];
+				if (group !== "consumer") return this.seriesByGroup[group] || [];
+				const consumers = this.seriesByGroup["consumer"] || [];
 				const home = (this.seriesByGroup["home"] || [])[0];
-				const activeMeters = meters
+				const active = consumers
 					.map((s, i) => ({ ...s, paletteIndex: i }))
 					.filter(hasEnergy);
-				if (!home) return activeMeters;
-				const meterTotals = new Map<string, number>();
-				// Net per slot is computed from all meters (incl. inactive ones), so
+				if (!home) return active;
+				const totals = new Map<string, number>();
+				// Net per slot is computed from all consumers (incl. inactive ones), so
 				// dropping inactive entries from the display doesn't shift the
 				// "Other consumers" delta.
-				for (const s of meters) {
+				for (const s of consumers) {
 					for (const slot of s.data) {
 						const net = slot.energy - slot.returnEnergy;
-						meterTotals.set(slot.start, (meterTotals.get(slot.start) || 0) + net);
+						totals.set(slot.start, (totals.get(slot.start) || 0) + net);
 					}
 				}
 				const other: HistorySeries = {
-					name: this.$t("main.history.otherConsumers") as string,
-					group: "meter",
+					title: this.$t("main.history.otherConsumers") as string,
+					group: "consumer",
 					virtual: true,
-					// Use meters.length as a stable paletteIndex that can never
-					// collide with real meters (0..meters.length-1).
-					paletteIndex: meters.length,
+					paletteIndex: consumers.length,
 					data: home.data.map((slot) => {
 						const homeNet = slot.energy - slot.returnEnergy;
-						const v = Math.max(0, homeNet - (meterTotals.get(slot.start) || 0));
+						const v = Math.max(0, homeNet - (totals.get(slot.start) || 0));
 						return { start: slot.start, end: slot.end, energy: v, returnEnergy: 0 };
 					}),
 				};
-				if (!hasEnergy(other)) return activeMeters;
-				// First entry in the array = bottom of the stack, so "Other consumers"
-				// always sits underneath the explicit meters.
-				return [other, ...activeMeters];
+				if (!hasEnergy(other)) return active;
+				return [other, ...active];
 			};
 		},
 		hasForecast(): boolean {
@@ -329,19 +309,15 @@ export default defineComponent({
 			}
 			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
 		},
-		csvLink(): string {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-				from: this.from.toISOString(),
-				to: this.to.toISOString(),
-				aggregate: this.aggregate,
-			});
-			return `./api/history/energy?${params.toString()}`;
-		},
 	},
 	watch: {
 		fetchKey() {
+			this.fetchData();
+		},
+		offline(offline) {
+			if (!offline) this.fetchData();
+		},
+		historyUpdated() {
 			this.fetchData();
 		},
 		rawSeries() {
@@ -363,14 +339,18 @@ export default defineComponent({
 	},
 	mounted() {
 		this.fetchData();
-		this.interval = setInterval(() => this.fetchData(), 15 * 60 * 1e3);
-	},
-	unmounted() {
-		if (this.interval) clearInterval(this.interval);
 	},
 	methods: {
 		groupColor,
-		handleDownloadClick,
+		downloadHref(): string {
+			const params = new URLSearchParams({
+				lang: this.$i18n?.locale,
+				from: this.from.toISOString(),
+				to: this.to.toISOString(),
+				aggregate: this.aggregate,
+			});
+			return `./api/history/energy?${params.toString()}`;
+		},
 		legendsForGroup(group: string): Legend[] {
 			const items = this.entityLegends(group);
 			const focused = this.focusedEntity[group] ?? null;
@@ -398,7 +378,8 @@ export default defineComponent({
 		hasEntityLegend(group: string): boolean {
 			const list = this.displaySeries(group);
 			if (!list.length) return false;
-			if (group === "loadpoint" || group === "meter") return true;
+			// Without explicit consumers an "Others"-only legend is meaningless.
+			if (hasColorPicker(group)) return list.some((s) => !s.virtual);
 			if (group === "pv" || group === "battery") return list.length > 1;
 			return false;
 		},
@@ -409,23 +390,23 @@ export default defineComponent({
 			const list = this.displaySeries(group);
 			const baseColor = groupColor(group);
 			const n = list.length;
-			const isPickGroup = group === "loadpoint" || group === "meter";
+			const colorPicker = hasColorPicker(group);
 
-			// Build palette for pickable groups in displayed order so that user
-			// overrides take priority and autoassign skips taken palette entries.
+			// Resolve in display order so user overrides win and autoassign skips taken entries.
 			let palette: Record<string, string> = {};
-			if (isPickGroup) {
+			if (colorPicker) {
 				const titles: string[] = [];
 				for (const s of list) {
-					if (!s.virtual && !titles.includes(s.name)) titles.push(s.name);
+					if (!s.virtual && !titles.includes(s.title)) titles.push(s.title);
 				}
 				palette = resolveColors(titles, this.deviceColors);
 			}
 
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
-				if (isPickGroup) return palette[s.name] || baseColor;
-				return alphaColor(baseColor, stepAlpha(i, Math.max(n, 1)));
+				if (colorPicker) return palette[s.title] || baseColor;
+				if (group === "battery") return batteryColor(s.paletteIndex ?? i);
+				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
 				let sum = 0;
@@ -435,10 +416,10 @@ export default defineComponent({
 					// Use stable paletteIndex as the focus identifier so that the
 					// selected entity keeps its identity across period navigations.
 					entityIndex: s.paletteIndex ?? i,
-					label: s.name,
+					label: s.title,
 					color: colorFor(i, s),
 					value: this.fmtWh(watts, POWER_UNIT.AUTO),
-					id: isPickGroup && !s.virtual ? s.name : undefined,
+					id: colorPicker && !s.virtual ? s.title : undefined,
 				};
 			});
 		},
@@ -454,10 +435,12 @@ export default defineComponent({
 			return focused !== null && focused !== i;
 		},
 		groupTotalLabel(group: string): string {
+			// Additional meters can be import, export, or consumption, so no meaningful sum.
+			if (group === "meter") return "";
 			// Consumption total comes from `home` (overall consumption),
 			// not the sum of explicit meter entities.
 			const list =
-				group === "meter"
+				group === "consumer"
 					? this.seriesByGroup["home"] || []
 					: this.seriesByGroup[group] || [];
 			let sumEnergy = 0;
@@ -501,7 +484,7 @@ export default defineComponent({
 				this.displayPeriod = requestPeriod;
 			} catch (e) {
 				console.error("Failed to load energy history", e);
-				this.rawSeries = [];
+				// keep previous data on error
 			} finally {
 				this.loading = false;
 			}
@@ -548,6 +531,7 @@ export default defineComponent({
 <style scoped>
 .history-tile {
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 	padding: 1.25rem 1rem 1.75rem;
 }
 .empty-container {
@@ -577,17 +561,6 @@ export default defineComponent({
 		animation: none;
 		opacity: 0.8;
 	}
-}
-.history-csv-link {
-	text-decoration: none;
-}
-.history-csv-link:hover,
-.history-csv-link:focus {
-	color: var(--evcc-default-text);
-	text-decoration: underline;
-}
-.history-tile-title {
-	margin: 0 0 0.5rem;
 }
 @media (max-width: 575.98px) {
 	/* edge-to-edge on mobile: cancel the container's px-4 padding */

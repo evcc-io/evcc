@@ -179,18 +179,26 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 		return parseAuthLocation(location)
 	}
 
-	parsed, err := url.Parse(resp.Header.Get("Location"))
+	// Audi/VW periodically withhold the post-login redirect when a terms-of-service
+	// or consent prompt is pending. Surface a clear error instead of failing later
+	// with an opaque token exchange error (audiconnect/audi_connect_ha#731).
+	location := resp.Header.Get("Location")
+	if location == "" {
+		return nil, errors.New("login redirect missing after password submission - open the myAudi app or website, accept any pending terms or consent prompts, then retry")
+	}
+
+	parsed, err := url.Parse(location)
 	if err != nil {
 		return nil, err
 	}
 	return parseAuthLocation(parsed)
 }
 
-// marketingConsentCallback returns the OIDC callback url embedded in an
+// MarketingConsentCallback returns the OIDC callback url embedded in an
 // optional VW/Audi marketing consent page. VW periodically interjects this
 // page (path .../consent/marketing/...) after an otherwise successful login.
 // It returns a nil url if u is not a marketing consent page.
-func marketingConsentCallback(u *url.URL) (*url.URL, error) {
+func MarketingConsentCallback(u *url.URL) (*url.URL, error) {
 	if u == nil || !strings.Contains(u.Path, "/consent/marketing/") {
 		return nil, nil
 	}
@@ -219,7 +227,7 @@ func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, err
 		return nil, false, nil
 	}
 
-	cb, err := marketingConsentCallback(resp.Request.URL)
+	cb, err := MarketingConsentCallback(resp.Request.URL)
 	if err != nil {
 		return nil, true, err
 	}

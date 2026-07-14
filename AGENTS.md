@@ -33,8 +33,10 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
 | [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
 | [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
+| [OCPP Forwarder](docs/agents/ocpp-forwarder.md) | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
 | [Plugin System](docs/agents/plugin-system.md) | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS) |
 | [Web UI & API](docs/agents/web-ui-api.md) | REST API, WebSocket, Vue frontend, authentication |
+| [API Security](docs/agents/api-security.md) | Auth modes, JWT/API key/session, two-tier checks, credential storage |
 
 ### Loading guide by task type
 
@@ -44,6 +46,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Vehicle implementation** — hardware-integrations
 - **UI/frontend work** — web-ui-api
 - **API endpoint work** — web-ui-api + core-domain
+- **Auth / login / API key / permissions** — api-security + web-ui-api
 - **Config/template work** — plugin-system
 - **Control loop / charging logic** — core-domain
 - **Bug in any area** — core-domain + relevant topic file(s)
@@ -87,7 +90,10 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 - No em dashes (—) in comments, commit messages, or docs. Use periods, commas, or colons
 - Project name is `evcc`, always lowercase
+- In user-facing strings, only mention `evcc` when needed to understand the context. Inside evcc's own UI the self-reference is usually redundant
 - Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
+- Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
+- Terminology: the top-level load management circuit is "root circuit" in English, "Hauptstromkreis" in German
 - Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
 
 ## Comment Style
@@ -108,6 +114,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use `context.Context` for I/O, long-running, or cancelable operations
 - Organize code into logical packages with clear responsibilities
 - Prefer composition over inheritance, minimize external dependencies
+- Navigate Go symbols with go-to-definition and find-references rather than text search; reserve text search for comments and string literals
 
 ### File Patterns
 
@@ -166,10 +173,12 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Implement accessibility features (tabindex, aria-label, keyboard handlers)
 - Use descriptive names for variables, functions, and event handlers
 - Use early returns for readability
+- Prefer named computed properties over inline template expressions, even for single use. Readability beats saving lines
 - Use configured Axios instance for HTTP communication
 
 ### State Management
 
+- Never access the store from sub-components; keep them stateless and pass the values they need as props (emit events back to the parent). Only top-level views read from the store. This keeps components reusable and testable (e.g. Storybook should never mock the store).
 - Use `reactive()` from Vue for simple global state
 - Implement property setters for nested object updates using helper functions
 - Use localStorage with reactive wrappers for persistent settings
@@ -250,7 +259,9 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use `expectModalVisible()` and `expectModalHidden()` helpers
 - Test configuration persistence across application restarts
 - Standard structure: import `{ start, stop, baseUrl }` from `./evcc`, use `test.afterEach(stop)`
-- Never use fixed timeouts, use existance of elements or wait for network idle
+- Never use fixed timeouts. Wait on element state (visibility, count, value) instead.
+- Never use `page.waitForLoadState("networkidle")`. SPAs keep emitting requests (websockets, polling), so it either races or hangs. Wait for the specific element / value you need instead.
+- Keep test names and describe titles short and concrete. They should complement each other, not repeat. Prefer `describe("aux meter") test("create")` over `describe("aux meter") test("create aux meter and verify it appears")`. Drop scenario filler like "and lands in section", "appears correctly", "ensure".
 
 ## Device Integration & Configuration
 
@@ -259,8 +270,10 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Device types: chargers, meters, vehicles, tariffs
 - Plugin protocols: Modbus, HTTP, MQTT, JavaScript, Go
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
+- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a *different* value. Restating the same value is redundant duplication: reference the param by `name` alone.
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
+- When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details
 
 ### Configuration
 
@@ -301,3 +314,5 @@ Structure PR descriptions in this order. No headlines. Be concise.
    ```
 
 Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers, no generator footers.
+
+Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.

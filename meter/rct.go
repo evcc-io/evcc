@@ -24,7 +24,37 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
-	rSocStrategy  *uint8          // remembers overwritten soc strategy value
+
+	mu           sync.Mutex
+	rSocStrategy *uint8 // remembers overwritten soc strategy value
+}
+
+// takeRSocStrategy atomically returns and clears the saved soc strategy, or nil
+// if none is saved (e.g. BatteryNormal applied twice in a row, #31471).
+func (m *RCT) takeRSocStrategy() *uint8 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	s := m.rSocStrategy
+	m.rSocStrategy = nil
+	return s
+}
+
+// setRSocStrategyIfAbsent saves strategy unless a value is already saved.
+func (m *RCT) setRSocStrategyIfAbsent(strategy uint8) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.rSocStrategy == nil {
+		m.rSocStrategy = &strategy
+	}
+}
+
+// hasRSocStrategy reports whether a soc strategy is currently saved
+func (m *RCT) hasRSocStrategy() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.rSocStrategy != nil
 }
 
 var (
@@ -41,6 +71,7 @@ func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, err
 	cc := struct {
 		batterySocLimits   `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
+		pvMaxACPower       `mapstructure:",squash"`
 		Uri, Usage         string
 		Capacity           float64
 		Capacity2          float64
@@ -66,11 +97,11 @@ func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, err
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batterySocLimits, cc.batteryPowerLimits, cc.Cache, cc.ExternalPower, cc.Capacity, cc.Capacity2)
+	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batterySocLimits, cc.batteryPowerLimits, cc.Cache, cc.ExternalPower, cc.Capacity, cc.Capacity2, cc.pvMaxACPower.Decorator())
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, cache time.Duration, externalPower bool, capacity, capacity2 float64) (api.Meter, error) {
+func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, cache time.Duration, externalPower bool, capacity, capacity2 float64, maxACPower func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
 	// re-use connections
@@ -99,17 +130,15 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		externalPower: externalPower,
 	}
 
-	if usage == "grid" {
-		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+	implement.Has(m, implement.MeterEnergy(m.totalEnergy))
+
+	if usage != "pv" {
+		implement.Has(m, implement.MeterReturnEnergy(m.returnEnergy))
 	}
 
 	if usage == "pv" {
-		curtail := func(b bool) error {
-			var r float64
-			if !b {
-				r = 1.0
-			}
-			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(r))
+		curtail := func(percent int) error {
+			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(float64(percent)/100))
 		}
 
 		curtailed := func() (bool, error) {
@@ -117,7 +146,8 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return r != 1, err
 		}
 
-		implement.Has(m, implement.Curtailer(curtail, curtailed))
+		implement.Has(m, implement.Curtailer(curtailed, curtail))
+		implement.May(m, implement.MaxACPowerGetter(maxACPower))
 	}
 
 	if usage == "battery" {
@@ -161,12 +191,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 
 				// read soc strategy to reset afterwards
-				if m.rSocStrategy == nil {
+				if !m.hasRSocStrategy() {
 					strategy, err := m.queryUint8(rct.PowerMngSocStrategy)
 					if err != nil {
 						return err
 					}
-					m.rSocStrategy = &strategy
+					m.setRSocStrategyIfAbsent(strategy)
 				}
 			}
 
@@ -174,14 +204,18 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 			switch mode {
 			case api.BatteryNormal:
-				eg.Go(func() error {
-					err := m.conn.Write(rct.PowerMngSocStrategy, []byte{*m.rSocStrategy})
-					m.rSocStrategy = nil
-					return err
-				})
+				if strategy := m.takeRSocStrategy(); strategy != nil {
+					eg.Go(func() error {
+						return m.conn.Write(rct.PowerMngSocStrategy, []byte{*strategy})
+					})
+				}
 
 				eg.Go(func() error {
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
 				eg.Go(func() error {
@@ -194,7 +228,17 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MaxSoc/100))
+					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MaxSoc/100))
+				})
+
+				eg.Go(func() error {
+					// hold at current SoC (not MaxSoc): otherwise the gap between current
+					// and target SoC lets the inverter charge from the grid (#31280)
+					soc, err := m.queryFloat(rct.BatterySoC)
+					if err != nil {
+						return err
+					}
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(soc))
 				})
 
 			case api.BatteryCharge:
@@ -208,6 +252,19 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+				})
+
+			case api.BatteryHoldCharge:
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
+				})
+
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 			default:
@@ -291,23 +348,24 @@ func (m *RCT) totalEnergy() (float64, error) {
 		return (a + b) / 1000, err
 
 	case "battery":
-		var eg errgroup.Group
-		var in, out float64
+		res, err := m.queryFloat(rct.TotalEnergyBattOutWh)
+		return res / 1000, err
 
-		eg.Go(func() error {
-			var err error
-			in, err = m.queryFloat(rct.TotalEnergyBattInWh)
-			return err
-		})
+	default:
+		return 0, fmt.Errorf("invalid usage: %s", m.usage)
+	}
+}
 
-		eg.Go(func() error {
-			var err error
-			out, err = m.queryFloat(rct.TotalEnergyBattOutWh)
-			return err
-		})
+// returnEnergy implements the api.MeterReturnEnergy interface
+func (m *RCT) returnEnergy() (float64, error) {
+	switch m.usage {
+	case "grid":
+		res, err := m.queryFloat(rct.TotalEnergyGridFeedInWh)
+		return -res / 1000, err
 
-		err := eg.Wait()
-		return (in - out) / 1000, err
+	case "battery":
+		res, err := m.queryFloat(rct.TotalEnergyBattInWh)
+		return res / 1000, err
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)

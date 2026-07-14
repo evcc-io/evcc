@@ -1,6 +1,6 @@
 <template>
 	<div class="root">
-		<div class="mb-2 label text-truncate-xs-only" :class="labelClass">
+		<div class="mb-2 label text-truncate" :class="labelClass" :style="{ color }">
 			<slot name="label">{{ label }}</slot>
 		</div>
 		<slot>
@@ -34,6 +34,7 @@ export default defineComponent({
 		valueFmt: Function as PropType<(n: number) => string>,
 		extraValue: String,
 		align: { type: String, default: "center" },
+		color: String,
 	},
 	computed: {
 		labelClass() {
@@ -58,7 +59,9 @@ export default defineComponent({
 	font-size: 18px;
 }
 .extraValue {
+	margin-top: 0.1rem;
 	color: var(--evcc-gray);
 	font-size: 14px;
+	font-weight: normal;
 }
 </style>

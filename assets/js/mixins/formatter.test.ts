@@ -297,3 +297,48 @@ describe("fmtTimeRange", () => {
     expect(fmt.fmtTimeRange("")).toBe("");
   });
 });
+
+describe("hourShort", () => {
+  const afternoon = new Date(2026, 0, 1, 16);
+
+  test("should strip locale suffixes in 24h format", () => {
+    is12hSpy.mockReturnValue(false);
+    for (const locale of ["de", "fr", "en", "ja"]) {
+      config.global.mocks["$i18n"].locale = locale;
+      expect(fmt.hourShort(afternoon)).toBe("16");
+    }
+    config.global.mocks["$i18n"].locale = "de";
+  });
+
+  test("should include day period in 12h format", () => {
+    is12hSpy.mockReturnValue(true);
+    const expected = { de: "4 PM", fr: "4 PM", en: "4 PM", ja: "午後 4" };
+    for (const [locale, value] of Object.entries(expected)) {
+      config.global.mocks["$i18n"].locale = locale;
+      expect(fmt.hourShort(afternoon)).toBe(value);
+    }
+    config.global.mocks["$i18n"].locale = "en";
+    expect(fmt.hourShort(new Date(2026, 0, 1, 0))).toBe("12 AM");
+    is12hSpy.mockReturnValue(false);
+    config.global.mocks["$i18n"].locale = "de";
+  });
+});
+
+describe("relativeDayName", () => {
+  const day = (offset: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return d;
+  };
+
+  test("should name adjacent days", () => {
+    expect(fmt.relativeDayName(day(-1))).toBe("gestern");
+    expect(fmt.relativeDayName(day(0))).toBe("heute");
+    expect(fmt.relativeDayName(day(1))).toBe("morgen");
+  });
+
+  test("should return null beyond one day", () => {
+    expect(fmt.relativeDayName(day(-2))).toBeNull();
+    expect(fmt.relativeDayName(day(2))).toBeNull();
+  });
+});

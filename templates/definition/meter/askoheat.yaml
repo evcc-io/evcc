@@ -1,0 +1,24 @@
+template: askoheat
+products:
+  - brand: Askoma
+    description:
+      generic: ASKOHEAT+
+group: heating
+params:
+  - name: usage
+    choice: ["aux"]
+  - name: host
+  - name: port
+    default: 502
+  - name: id
+    default: 1
+render: |
+  type: custom
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    register:
+      address: 317
+      type: input
+      encoding: uint16

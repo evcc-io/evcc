@@ -10,7 +10,7 @@
 				<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
 					{{ $t(`config.deviceValue.${entry.name}`) }}
 				</div>
-				<div class="value overflow-hidden text-truncate" :class="valueClasses(entry)">
+				<div class="value" :class="[valueClasses(entry), truncateClasses(entry)]">
 					{{ fmtDeviceValue(entry) }}
 				</div>
 			</span>
@@ -175,6 +175,12 @@ export default {
 		},
 	},
 	methods: {
+		truncateClasses(entry) {
+			// don't truncate numeric values
+			return typeof entry.value === "string"
+				? "overflow-hidden text-truncate"
+				: "text-nowrap flex-shrink-0";
+		},
 		valueClasses(entry) {
 			if (entry.error) {
 				return "value--error";
@@ -195,7 +201,8 @@ export default {
 			switch (name) {
 				case "power":
 				case "solarForecast":
-				case "hemsActiveLimit":
+				case "dimLimit":
+				case "curtailLimit":
 					return this.fmtW(value);
 				case "energy":
 				case "returnEnergy":
@@ -213,6 +220,9 @@ export default {
 					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
+				case "switchDevice":
+					// switch device means no current control
+					return this.$t(`config.deviceValue.${value ? "no" : "yes"}`);
 				case "price":
 				case "gridPrice":
 				case "feedinPrice":
@@ -224,18 +234,19 @@ export default {
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":
+				case "curtailable":
 				case "phases1p3p":
 				case "singlePhase":
 				case "enabled":
 				case "configured":
 				case "connected":
 				case "dimmed":
+				case "curtailed":
 				case "loginBlocked":
+				case "remoteEnabled":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
-				case "hemsType":
-					return this.$t(`config.deviceValueHemsType.${value}`);
 			}
 			return value;
 		},

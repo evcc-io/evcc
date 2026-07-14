@@ -16,6 +16,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig
+					class="box-pull-out"
 					:experimental="experimental"
 					:sponsor-error="hasClassError('sponsorship')"
 					@site-changed="siteChanged"
@@ -23,7 +24,7 @@
 
 				<WelcomeBanner v-if="setupRequired" />
 				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
 						:id="`loadpoint_${loadpoint.name}`"
@@ -55,7 +56,7 @@
 				</div>
 
 				<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="vehicle in vehicles"
 						:id="`vehicle_${vehicle.name}`"
@@ -81,8 +82,35 @@
 					/>
 				</div>
 
+				<h2 class="my-4 mt-5">{{ $t("config.section.consumers") }}</h2>
+				<div class="p-0 config-list box-pull-out">
+					<MeterCard
+						v-for="meter in consumerMeters"
+						:key="meter.name"
+						:meter="meter"
+						meter-type="consumer"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+					/>
+					<MeterCard
+						v-for="meter in auxMeters"
+						:key="meter.name"
+						:meter="meter"
+						meter-type="aux"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+					/>
+					<NewDeviceButton
+						data-testid="add-consumer"
+						:title="$t('config.main.addConsumer')"
+						@click="openModal('meter', { choices: ['consumer', 'aux'] })"
+					/>
+				</div>
+
 				<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-if="gridMeter"
 						:meter="gridMeter"
@@ -100,7 +128,7 @@
 					/>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in pvMeters"
 						:key="meter.name"
@@ -108,6 +136,7 @@
 						meter-type="pv"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
+						:banner="meterBanner(meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<MeterCard
@@ -126,16 +155,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
-				<div class="p-0 config-list">
-					<MeterCard
-						v-for="meter in auxMeters"
-						:key="meter.name"
-						:meter="meter"
-						meter-type="aux"
-						:has-error="hasDeviceError('meter', meter.name)"
-						:tags="deviceTags('meter', meter.name)"
-						@edit="(type, id) => openModal('meter', { type, id })"
-					/>
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in extMeters"
 						:key="meter.name"
@@ -146,13 +166,14 @@
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<NewDeviceButton
+						data-testid="add-additional"
 						:title="$t('config.main.addAdditional')"
-						@click="openModal('meter', { choices: ['aux', 'ext'] })"
+						@click="openModal('meter', { type: 'ext' })"
 					/>
 				</div>
 
 				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
-				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
+				<div v-if="!!tariffsYamlSource" class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.tariff.title')"
 						:editable="tariffsYamlSource === 'db'"
@@ -171,7 +192,7 @@
 						</template>
 					</DeviceCard>
 				</div>
-				<div v-else class="p-0 config-list">
+				<div v-else class="p-0 config-list box-pull-out">
 					<TariffCard
 						v-if="gridTariff"
 						:tariff="gridTariff"
@@ -232,7 +253,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
 
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<AuthProvidersCard
 						:providers="authProviders"
 						data-testid="auth-providers"
@@ -283,6 +304,9 @@
 						editable
 						:error="hasClassError('circuit')"
 						:unconfigured="!circuitsRoot"
+						:banner="
+							hemsDimmed && circuitsRoot ? $t('config.deviceValue.dimmed') : undefined
+						"
 						data-testid="circuits"
 						@edit="openModal('circuits')"
 					>
@@ -293,6 +317,20 @@
 								:tags="{ configured: { value: false } }"
 							/>
 							<CircuitTags v-else :nodes="[circuitsRoot]" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
+						:title="$t('config.hems.title')"
+						editable
+						:error="hasClassError('hems')"
+						:unconfigured="isUnconfigured(hemsTags)"
+						data-testid="hems"
+						@edit="openModal('hems')"
+					>
+						<template #icon><HemsIcon /></template>
+						<template #tags>
+							<p v-if="hemsLabel" class="my-2 fw-bold">{{ hemsLabel }}</p>
+							<DeviceTags :tags="hemsTags" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -309,21 +347,8 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
-						:title="$t('config.hems.title')"
-						editable
-						:error="hasClassError('hems')"
-						:unconfigured="isUnconfigured(hemsTags)"
-						data-testid="hems"
-						@edit="openModal('hems')"
-					>
-						<template #icon><HemsIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="hemsTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
-						v-if="remote"
-						:title="$t('config.remote.title')"
+						v-if="experimental"
+						:title="`${$t('config.remote.title')} 🧪`"
 						editable
 						:unconfigured="isUnconfigured(remoteTags)"
 						data-testid="remote-access"
@@ -350,7 +375,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.ocpp.title')"
 						editable
@@ -392,7 +417,10 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div data-testid="config-system" class="round-box p-4 d-flex gap-4 flex-wrap">
+				<div
+					data-testid="config-system"
+					class="round-box box-pull-out p-4 d-flex gap-4 flex-wrap"
+				>
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
@@ -429,7 +457,11 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :yamlSource="hems?.yamlSource" @changed="loadDirty" />
+				<HemsModal
+					:id="hemsDevices[0]?.id"
+					:yamlSource="hems?.yamlSource"
+					@changed="hemsChanged"
+				/>
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
@@ -440,7 +472,7 @@
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
-				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
+				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
@@ -449,8 +481,11 @@
 					:yamlSource="eebus?.yamlSource"
 					@changed="loadDirty"
 				/>
-				<OcppModal :ocpp="ocpp" />
+				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
+				<OcppForwarderModal @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
+				<SecurityModal :auth-disabled="authDisabled" />
+				<ApiKeyModal :auth-disabled="authDisabled" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
@@ -477,6 +512,7 @@ import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
 import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
+import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -524,6 +560,7 @@ import type {
 	ConfigVehicle,
 	ConfigCircuit,
 	ConfigMessenger,
+	ConfigHems,
 	ConfigLoadpoint,
 	ConfigMeter,
 	Timeout,
@@ -535,8 +572,8 @@ import type {
 	Notification,
 	Remote,
 } from "@/types/evcc";
-import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
-import { circuitTree } from "@/utils/circuits";
+import { ConfigType, CURRENCY } from "@/types/evcc";
+import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -549,6 +586,8 @@ import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import SecurityModal from "../components/Config/Security/SecurityModal.vue";
+import ApiKeyModal from "../components/Config/Security/ApiKeyModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 
 export default defineComponent({
@@ -567,6 +606,7 @@ export default defineComponent({
 		EebusModal,
 		OcppIcon,
 		OcppModal,
+		OcppForwarderModal,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -606,6 +646,8 @@ export default defineComponent({
 		WelcomeBanner,
 		AuthSuccessBanner,
 		PasswordModal,
+		SecurityModal,
+		ApiKeyModal,
 		AuthProvidersCard,
 	},
 	mixins: [formatter, collector],
@@ -621,6 +663,7 @@ export default defineComponent({
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
+			hemsDevices: [] as ConfigHems[],
 			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
 			tariffRefs: {
 				grid: "",
@@ -636,6 +679,7 @@ export default defineComponent({
 				title: "",
 				aux: null as string[] | null,
 				ext: null as string[] | null,
+				consumer: null as string[] | null,
 			} as SiteConfig,
 			deviceValueTimeout: null as Timeout,
 			deviceValues: {
@@ -691,6 +735,9 @@ export default defineComponent({
 		extMeters() {
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
+		},
+		consumerMeters() {
+			return this.getMetersByNames(this.site?.consumer);
 		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
@@ -778,24 +825,39 @@ export default defineComponent({
 			return store.state?.hems;
 		},
 		hemsTags(): DeviceTags {
-			const type = this.hems?.config?.type;
-			if (!type) {
+			if (this.hemsDevices.length === 0 && !this.hems?.config?.configured) {
 				return { configured: { value: false } };
 			}
-			const result = {
-				hemsType: {},
-				hemsActiveLimit: { value: null as number | null },
-			};
-			if (["relay", "eebus"].includes(type)) {
-				result.hemsType = { value: type };
+			const status = store.state?.hems?.status;
+			if (!status) {
+				return { configured: { value: true } };
 			}
-			const gc = store.state?.circuits?.[GRID_CONTROL];
-			if (gc) {
-				const value = gc.maxPower || null;
-				result.hemsActiveLimit = { value };
+			const result: DeviceTags = {};
+			if (status.dimmed && status.maxConsumptionPower) {
+				result["dimLimit"] = {
+					value: status.maxConsumptionPower,
+					warning: true,
+				};
+			} else if (status.dimmed !== undefined) {
+				result["dimmed"] = { value: status.dimmed };
+			}
+			if ((status.curtailed ?? 100) < 100 && status.maxProductionPower !== undefined) {
+				result["curtailLimit"] = {
+					value: status.maxProductionPower,
+					warning: true,
+				};
+			} else if (status.curtailed !== undefined) {
+				result["curtailed"] = { value: status.curtailed < 100 };
 			}
 
 			return result;
+		},
+		hemsLabel(): string {
+			const dev = this.hemsDevices[0];
+			if (!dev) return "";
+			if (dev.deviceProduct) return dev.deviceProduct;
+			if (dev.type === ConfigType.Custom) return this.$t("config.hems.customOption");
+			return "";
 		},
 		remote(): Remote | undefined {
 			return store.state?.remote;
@@ -806,13 +868,16 @@ export default defineComponent({
 				return { configured: { value: false } };
 			}
 			const tags: DeviceTags = {
-				enabled: { value: remote.config?.enabled },
-				connected: { value: remote.status?.connected },
+				remoteEnabled: { value: remote.config?.enabled },
+				connected: {
+					value: remote.status?.connected,
+					error: remote.config?.enabled && !remote.status?.connected,
+				},
 			};
 			if (remote.status?.loginBlocked) {
 				tags["loginBlocked"] = { value: true, error: true };
 			}
-			if (remote.status?.connected) {
+			if (remote.config?.enabled) {
 				const lastSeen = remote.status?.lastSeen;
 				const count = lastSeen
 					? Object.keys(lastSeen).filter((u) => isRemoteClientActive(lastSeen, u)).length
@@ -850,6 +915,18 @@ export default defineComponent({
 			}
 			return { configured: { value: false } };
 		},
+		// maps an OCPP station id to its loadpoint title (fallback: charger title)
+		stationTitles(): Record<string, string> {
+			const map: Record<string, string> = {};
+			this.chargers.forEach((charger) => {
+				const stationId = charger.config?.["stationid"];
+				if (typeof stationId !== "string" || !stationId) return;
+				const loadpoint = this.loadpoints.find((lp) => lp.charger === charger.name);
+				const title = loadpoint?.title || charger.config?.title;
+				if (title) map[stationId] = title;
+			});
+			return map;
+		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
 				const events = store.state?.messagingEvents || [];
@@ -873,13 +950,20 @@ export default defineComponent({
 				Object.values(store.state.messagingEvents ?? {}).some((e) => !e.disabled)
 			);
 		},
+		authDisabled() {
+			return store.state?.authDisabled || false;
+		},
 		backupRestoreProps() {
 			return {
-				authDisabled: store.state?.authDisabled || false,
+				authDisabled: this.authDisabled,
 			};
 		},
-		circuitsRoot() {
+		circuitsRoot(): CircuitNode | null {
 			return circuitTree(store.state?.circuits || {});
+		},
+		hemsDimmed(): boolean {
+			// only consumption limits matter for circuits, curtailment affects feed-in
+			return !!store.state?.hems?.status?.dimmed;
 		},
 		tariffsYamlSource() {
 			return store.state?.tariffs?.yamlSource;
@@ -936,6 +1020,7 @@ export default defineComponent({
 			await this.loadMessengers();
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadHems();
 			await this.loadDirty();
 			this.updateValues();
 		},
@@ -962,10 +1047,11 @@ export default defineComponent({
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
 		},
+		async loadHems() {
+			this.hemsDevices = (await this.loadConfig("devices/hems")) || [];
+		},
 		async loadCircuits() {
-			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// gridcontrol is auto-created for hems and must not be user-assignable to loadpoints
-			this.circuits = circuits.filter((c: ConfigCircuit) => c.name !== GRID_CONTROL);
+			this.circuits = (await this.loadConfig("devices/circuit")) || [];
 		},
 		async loadTariffs() {
 			this.tariffs = (await this.loadConfig("devices/tariff")) || [];
@@ -1027,6 +1113,22 @@ export default defineComponent({
 						this.site.ext.push(name);
 						this.saveSite(type);
 						break;
+					case "consumer":
+						if (!this.site.consumer) this.site.consumer = [];
+						this.site.consumer.push(name);
+						this.saveSite("consumer");
+						break;
+				}
+			}
+
+			// Converted: move ext meter to consumer (history is reconciled on restart)
+			if (result.action === "converted") {
+				const name = this.meters.find((m) => m.id === result.id)?.name;
+				if (name) {
+					const ext = (this.site.ext || []).filter((n) => n !== name);
+					const consumer = [...(this.site.consumer || []), name];
+					await api.put("/config/site", { ext, consumer });
+					await this.loadSite();
 				}
 			}
 
@@ -1044,6 +1146,10 @@ export default defineComponent({
 			await this.loadChargers();
 			await this.loadDirty();
 			this.updateValues();
+		},
+		async hemsChanged() {
+			await this.loadHems();
+			await this.loadDirty();
 		},
 		async loadpointChanged() {
 			await this.loadLoadpoints();
@@ -1143,6 +1249,11 @@ export default defineComponent({
 		deviceTags(type: DeviceType, id: string) {
 			return this.deviceValues[type][id] || {};
 		},
+		meterBanner(name: string): string | undefined {
+			return this.deviceTags("meter", name)["curtailed"]?.value
+				? this.$t("config.deviceValue.productionLimited")
+				: undefined;
+		},
 		loadpointTags(loadpoint: ConfigLoadpoint) {
 			const { charger, meter } = loadpoint;
 			const chargerTags = charger ? this.deviceTags("charger", charger) : {};
@@ -1175,8 +1286,13 @@ export default defineComponent({
 .config-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-	grid-gap: 2rem;
+	grid-gap: 1rem;
 	margin-bottom: 5rem;
+}
+@media (min-width: 576px) {
+	.config-list {
+		grid-gap: 2rem;
+	}
 }
 .wip {
 	opacity: 0.2 !important;
