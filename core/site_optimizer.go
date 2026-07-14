@@ -157,6 +157,21 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 	return s
 }
 
+// loadpointCurrentAction returns the loadpoint's current operating mode for
+// suggestion comparison, reusing chargeGoalReached so a loadpoint left
+// enabled while idle (e.g. vehicle finished at its limit) is treated as
+// stopped instead of triggering a spurious pause suggestion.
+func loadpointCurrentAction(lp *Loadpoint) string {
+	lp.RLock()
+	enabled := lp.enabled
+	lp.RUnlock()
+
+	if enabled && !lp.chargeGoalReached(enabled) {
+		return actionCharge
+	}
+	return actionStop
+}
+
 // setBatterySuggestions replaces the suggestions applied on each battery publish
 func (site *Site) setBatterySuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
@@ -425,11 +440,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		if detail.Type == batteryTypeBattery {
 			current = site.GetBatteryMode().String()
 		} else if detail.loadpoint != nil {
-			if site.loadpoints[*detail.loadpoint].IsEnabled() {
-				current = actionCharge
-			} else {
-				current = actionStop
-			}
+			current = loadpointCurrentAction(site.loadpoints[*detail.loadpoint])
 		}
 
 		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours, current)
