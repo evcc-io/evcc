@@ -20,9 +20,10 @@ const (
 )
 
 type Collector struct {
-	entity  entity
-	accu    *Accumulator
-	started time.Time
+	entity     entity
+	accu       *Accumulator
+	started    time.Time
+	statsCache EnergyStats
 }
 
 func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collector, error) {
