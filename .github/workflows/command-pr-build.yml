@@ -21,7 +21,7 @@ jobs:
     # only on PR comments starting with /build, and only from maintainers
     if: |
       github.event.issue.pull_request &&
-      startsWith(github.event.comment.body, '/build') &&
+      startsWith(trim(github.event.comment.body), '/build') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:

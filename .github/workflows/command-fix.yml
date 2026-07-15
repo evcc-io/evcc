@@ -12,7 +12,7 @@ jobs:
   fix:
     name: Fix on demand
     if: |
-      contains(github.event.comment.body, '/fix') &&
+      startsWith(trim(github.event.comment.body), '/fix') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     permissions:
       contents: write # create branch + push PR fix
