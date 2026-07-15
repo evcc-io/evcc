@@ -62,6 +62,16 @@ render: |
       set:
         source: sequence
         set:
+        # Restore Max Charge Power
+        - source: const
+          value: {{ .maxchargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 44002 # Max Charge Power
+              type: writesingle
+              decode: uint16
         # Enable RS485 Control Mode
         - source: const
           value: 21930
@@ -152,4 +162,48 @@ render: |
               type: writesingle
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
+    - case: 4 # holdcharge -> no charging, discharging allowed
+      set:
+        source: sequence
+        set:
+        # Set Max Charge Power to 0 to prevent charging
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 44002 # Max Charge Power
+              type: writesingle
+              decode: uint16
+        # Enable RS485 Control Mode
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        # Set User Work Mode
+        - source: const
+          value: {{ .work_mode_normal }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43000 # User Work Mode
+              type: writesingle
+              decode: uint16
+        # Disable RS485 Control Mode
+        - source: const
+          value: 21947
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Disabled
+              type: writesingle
+              decode: uint16
   {{- include "battery-params" . }}
