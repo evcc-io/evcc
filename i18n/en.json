@@ -840,14 +840,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "License Key",
-      "activationKeyHint": "Sent to you via email. Can be found in the {url}.",
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
       "descriptionToken": "As GitHub Sponsor you find your token on {url}. For getting-started, we offer a {trialToken}.",
-      "email": "Email",
-      "emailHint": "Email address you used for {url}",
       "enterYourToken": "Your Sponsor Token",
       "error": "The sponsor token is not valid.",
       "invalid": "invalid",
