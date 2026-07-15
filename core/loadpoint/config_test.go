@@ -23,3 +23,16 @@ func TestSplitConfigUI(t *testing.T) {
 	assert.Equal(t, 45.0, dynamic.UI.MaxTemp)
 	assert.NotContains(t, other, "ui")
 }
+
+func TestSplitConfigMinSoc(t *testing.T) {
+	payload := map[string]any{
+		"title":  "Water Heater",
+		"minSoc": 20,
+	}
+
+	dynamic, other, err := SplitConfig(payload)
+	require.NoError(t, err)
+
+	assert.Equal(t, 20, dynamic.MinSoc)
+	assert.NotContains(t, other, "minSoc")
+}
