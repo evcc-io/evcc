@@ -16,7 +16,7 @@ jobs:
     name: Nightly Build
     # on any issue/PR comment starting with /nightly, only from maintainers
     if: |
-      startsWith(github.event.comment.body, '/nightly') &&
+      startsWith(trim(github.event.comment.body), '/nightly') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:
