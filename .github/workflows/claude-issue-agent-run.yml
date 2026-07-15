@@ -35,6 +35,14 @@ jobs:
     # No permissions block: inherit the caller's grant (triage/fix=write to push
     # fixes, analyze=read). A reusable job can only reduce, never elevate.
     steps:
+      - name: React to invoking comment
+        if: inputs.comment_id != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/issues/comments/${{ inputs.comment_id }}/reactions \
+            -f content=eyes
+
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
