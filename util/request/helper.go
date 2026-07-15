@@ -62,6 +62,7 @@ func decodeJSON(resp *http.Response, res any) error {
 		return err
 	}
 
+	// swallow io.EOF to allow empty response
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil && !errors.Is(err, io.EOF) {
 		return err
 	}
