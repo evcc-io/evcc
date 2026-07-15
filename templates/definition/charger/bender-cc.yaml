@@ -10,24 +10,27 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON Professional
+    capabilities: ["meter"]
   - brand: Mennekes
     description:
       generic: AMTRON Professional Twincharge
+    capabilities: ["meter"]
   - brand: Mennekes
     description:
       generic: AMEDIO Professional
+    capabilities: ["meter"]
   - brand: Mennekes
     description:
       generic: AMTRON Professional PnC
-    capabilities: ["iso151182"]
+    capabilities: ["meter", "iso151182"]
   - brand: Mennekes
     description:
       generic: AMTRON Professional Twincharge PnC
-    capabilities: ["iso151182"]
+    capabilities: ["meter", "iso151182"]
   - brand: Mennekes
     description:
       generic: AMEDIO Professional PnC
-    capabilities: ["iso151182"]
+    capabilities: ["meter", "iso151182"]
   - brand: Mennekes
     description:
       generic: AMTRON ChargeControl
