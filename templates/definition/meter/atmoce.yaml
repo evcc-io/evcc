@@ -21,6 +21,7 @@ params:
     choice: ["tcpip"]
     id: 1
   - name: maxacpower
+    service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}
@@ -30,6 +31,8 @@ params:
   - name: maxsoc
     advanced: true
     default: 100
+  - name: maxdischargepower
+    service: modbus/read?address=60029&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - name: firmware
     type: choice
     choice: ["<01.01.00.28.15", ">=01.01.00.28.15"]
