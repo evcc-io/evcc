@@ -86,11 +86,19 @@ func hemsDimmed(hems api.HEMS) *bool {
 	return hems.Dimmed()
 }
 
-// hemsCurtailed returns the HEMS curtail status, nil-safe
-func hemsCurtailed(hems api.HEMS) *bool {
+// hemsCurtailed returns the HEMS curtail percent, nil-safe
+func hemsCurtailed(hems api.HEMS) *int {
 	if hems == nil {
 		return nil
 	}
 
-	return hems.Curtailed()
+	return hems.CurtailedPercent()
+}
+
+// nonZeroEnergy reports a zero lifetime energy reading as api.ErrNotAvailable.
+func nonZeroEnergy(f float64, err error) (float64, error) {
+	if err == nil && f == 0 {
+		return 0, api.ErrNotAvailable
+	}
+	return f, err
 }

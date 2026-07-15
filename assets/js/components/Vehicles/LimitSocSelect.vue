@@ -34,12 +34,19 @@ export default defineComponent({
 		limitSoc: { type: Number, default: 0 },
 		rangePerSoc: Number,
 		heating: Boolean,
+		minTemp: { type: Number, default: 0 },
+		maxTemp: { type: Number, default: 0 },
 	},
 	emits: ["limit-soc-updated"],
 	computed: {
+		rangeActive() {
+			return this.heating && this.maxTemp > this.minTemp;
+		},
 		options() {
 			const result = [];
-			for (let soc = 20; soc <= 100; soc += this.step) {
+			const start = this.rangeActive ? this.minTemp : 20;
+			const end = this.rangeActive ? this.maxTemp : 100;
+			for (let soc = start; soc <= end; soc += this.step) {
 				const text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
 				result.push({ soc, text });
 			}
@@ -86,8 +93,10 @@ export default defineComponent({
 	overflow: hidden;
 }
 .extraValue {
+	margin-top: 0.1rem;
 	color: var(--evcc-gray);
 	font-size: 14px;
+	font-weight: normal;
 }
 .custom-select {
 	left: 0;

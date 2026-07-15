@@ -315,6 +315,34 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	}
 }
 
+// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) GetMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minSoc
+}
+
+// setMinSoc sets the loadpoint min soc (no mutex)
+func (lp *Loadpoint) setMinSoc(soc int) {
+	lp.minSoc = soc
+	lp.publish(keys.MinSoc, soc)
+	lp.settings.SetInt(keys.MinSoc, int64(soc))
+}
+
+// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) SetMinSoc(soc int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set min soc:", soc)
+
+	// apply immediately
+	if lp.minSoc != soc {
+		lp.setMinSoc(soc)
+		lp.requestUpdate()
+	}
+}
+
 // GetLimitEnergy returns the session limit energy
 func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()
@@ -464,6 +492,29 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 
 	// apply immediately
 	lp.setSocConfig(soc)
+}
+
+// GetUI returns the display-only ui settings
+func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.ui
+}
+
+func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
+	lp.ui = ui
+	lp.publish(keys.UI, ui)
+	lp.settings.SetJson(keys.UI, ui)
+}
+
+// SetUI sets the display-only ui settings. Not used in control logic.
+func (lp *Loadpoint) SetUI(ui loadpoint.UIConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set ui config: %+v", ui)
+
+	lp.setUI(ui)
 }
 
 // GetThresholds returns the PV mode threshold settings

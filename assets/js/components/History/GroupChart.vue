@@ -12,12 +12,15 @@ import {
 	forecastGrid,
 	forecastYAxis,
 	tooltipStyle,
+	tooltipTable,
+	xAxisLabelStyle,
 } from "../Forecast/echarts";
-import colors, { lighterColor, resolveColors, deviceColorMap } from "@/colors";
+import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
+import { hasColorPicker } from "./groups";
 
 export interface HistorySlot {
 	start: string;
@@ -49,18 +52,11 @@ export function stepAlpha(i: number, n: number): number {
 	return Math.max(minAlpha, 1 - (n - 1 - i) * step);
 }
 
-export function alphaColor(color: string, alpha: number): string {
-	const c = (color || "").trim().toLowerCase();
-	const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
-		.toString(16)
-		.padStart(2, "0");
-	if (c.length === 7) return c + a;
-	if (c.length === 9) return c.slice(0, 7) + a;
-	return c;
-}
-
 // Symmetric axis regardless of whether the period contains both directions.
 const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
+
+// Multiple entities stack into one bar; grid and meter render side-by-side.
+const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
 
 // Round up to a nice number (5-tick symmetric axis: -L, -L/2, 0, L/2, L).
 function niceCeil(v: number): number {
@@ -94,6 +90,7 @@ export default defineComponent({
 		previousFocusedEntity: number | null;
 		previousPeriod: PERIODS;
 		previousSeriesKey: string;
+		activeSlot: number | null;
 	} {
 		return {
 			chart: null,
@@ -102,6 +99,7 @@ export default defineComponent({
 			previousFocusedEntity: this.focusedEntity as number | null,
 			previousPeriod: this.period as PERIODS,
 			previousSeriesKey: "",
+			activeSlot: null,
 		};
 	},
 	computed: {
@@ -110,19 +108,33 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
+		stackEntities(): boolean {
+			return STACKED_GROUPS.has(this.group);
+		},
 		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
 		// clipped. Bidirectional: pos/neg separately.
 		axisPeak(): number {
 			const factor = this.valueFactor;
+			// Stacked groups: sum entities per slot. Unstacked (grid, meter): max per entity.
 			const peak = (series: HistorySeries[], pick: (slot: HistorySlot) => number) => {
-				const sums = new Map<string, number>();
-				for (const s of series) {
-					for (const slot of s.data) {
-						sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
+				if (this.stackEntities) {
+					const sums = new Map<string, number>();
+					for (const s of series) {
+						for (const slot of s.data) {
+							sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
+						}
 					}
+					let max = 0;
+					for (const v of sums.values()) if (v > max) max = v;
+					return max;
 				}
 				let max = 0;
-				for (const v of sums.values()) if (v > max) max = v;
+				for (const s of series) {
+					for (const slot of s.data) {
+						const v = pick(slot) * factor;
+						if (v > max) max = v;
+					}
+				}
 				return max;
 			};
 			if (this.isBidirectional) {
@@ -155,10 +167,9 @@ export default defineComponent({
 			if (this.period === PERIODS.DAY) return this.useSmallUnit ? "W" : "kW";
 			return this.useSmallUnit ? "Wh" : "kWh";
 		},
-		// Consumer groups have many palette colours per entity — a single neutral
-		// tooltip background reads better than picking one entity's colour.
+		// Picker groups have many entity colors, so use a neutral tooltip background.
 		tooltipColor(): string {
-			if (this.group === "loadpoint" || this.group === "meter") {
+			if (hasColorPicker(this.group)) {
 				return colors.text || this.color;
 			}
 			return this.color;
@@ -169,7 +180,12 @@ export default defineComponent({
 			return this.series.filter((s, i) => (s.paletteIndex ?? i) === idx);
 		},
 		isBidirectional(): boolean {
-			return BIDIRECTIONAL_GROUPS.has(this.group);
+			if (BIDIRECTIONAL_GROUPS.has(this.group)) return true;
+			// additional grid/battery meters can export
+			if (this.group === "meter") {
+				return this.series.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
+			}
+			return false;
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -200,11 +216,22 @@ export default defineComponent({
 		categoryKeys(): string[] {
 			return this.categoryTimestamps.map((t) => this.timestampKey(t));
 		},
+		// Which category slots carry a bar, so hover can skip empty slots.
+		slotsWithData(): boolean[] {
+			const index = new Map(this.categoryKeys.map((k, i) => [k, i]));
+			const has = new Array(this.categoryKeys.length).fill(false);
+			for (const s of this.visibleSeries) {
+				for (const slot of s.data) {
+					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
+					const idx = index.get(this.timestampKey(new Date(slot.start).getTime()));
+					if (idx !== undefined) has[idx] = true;
+				}
+			}
+			return has;
+		},
 		entryColors(): string[] {
-			// Loadpoint and meter use the palette per entity (distinct entities).
-			// Production and battery use the group color with subtle alpha steps so
-			// stacked segments stay visually distinguishable.
-			if (this.group === "loadpoint" || this.group === "meter") {
+			// Picker groups color per entity; pv/battery use darker steps of the group color.
+			if (hasColorPicker(this.group)) {
 				const mutedColor = colors.muted || this.color;
 				const titles: string[] = [];
 				for (const s of this.series) {
@@ -218,10 +245,11 @@ export default defineComponent({
 					return palette[s.title] || this.color;
 				});
 			}
+			if (this.group === "battery") {
+				return this.series.map((s, i) => batteryColor(s.paletteIndex ?? i));
+			}
 			if (this.series.length <= 1) return [this.color];
-			return this.series.map((_, i) =>
-				alphaColor(this.color, stepAlpha(i, this.series.length))
-			);
+			return this.series.map((_, i) => darken(this.color, stepAlpha(i, this.series.length)));
 		},
 		echartsSeries() {
 			const cats = this.categoryKeys;
@@ -262,12 +290,6 @@ export default defineComponent({
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
 			// echarts can animate value transitions instead of redrawing from zero.
-			// Groups with multiple entities stack them; grid keeps bars side-by-side.
-			const stackEntities =
-				this.group === "loadpoint" ||
-				this.group === "meter" ||
-				this.group === "pv" ||
-				this.group === "battery";
 			// Build value arrays per entity first so we can determine, per slot,
 			// which entity is the *visible* top/bottom of the stack — that one
 			// gets the rounded cap even if higher-index entities are zero/null.
@@ -301,10 +323,17 @@ export default defineComponent({
 				}
 			}
 
+			// hover dims all but the active slot (onChartMouseMove); silent stops single-segment highlight
+			const barEmphasis = {
+				silent: true,
+				emphasis: { focus: "self" },
+				blur: { itemStyle: { opacity: 0.25 } },
+			};
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
 				const returnEnergyColor =
-					(s.group === "grid" && colors.export) || lighterColor(c) || c;
+					(s.group === "grid" && colors.export) ||
+					(s.group === "battery" ? setAlpha(c, "cc") || c : c);
 				const energyValues = energyByEntity[i]!;
 				const returnEnergyValues = returnEnergyByEntity[i]!;
 				const energyName =
@@ -314,13 +343,10 @@ export default defineComponent({
 				const returnEnergyName = this.directionLabel(s, "returnEnergy");
 				// Same stack name for import and export means they share one x slot
 				// (positive values stack up, negative stack down, no width penalty).
-				const stackName = stackEntities ? `group-${this.group}` : `entity-${i}`;
-				// For non-stacked groups every bar is its own cap. For stacked groups
-				// the cap moves to the topmost non-zero entity per slot, so when the
-				// last entity is empty at a given slot the next-lower one still gets
-				// the rounded top. A focused entity is rendered solo → always caps.
-				// Stable identity for focus comparison: paletteIndex when set
-				// (filtered groups), otherwise plain array index.
+				const stackName = this.stackEntities ? `group-${this.group}` : `entity-${i}`;
+				// Rounded cap goes on the visible top/bottom per slot: non-stacked bars
+				// always cap; stacked groups cap the topmost non-zero entity so an empty
+				// top entity doesn't drop the rounding; a focused entity is solo.
 				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
 					| number
@@ -329,7 +355,7 @@ export default defineComponent({
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
-						!stackEntities ||
+						!this.stackEntities ||
 						topEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
 					if (!isTop) return v;
@@ -342,7 +368,7 @@ export default defineComponent({
 				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
-						!stackEntities ||
+						!this.stackEntities ||
 						topReturnEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
 					if (!isBottom) return v;
@@ -357,6 +383,7 @@ export default defineComponent({
 					itemStyle: { color: c, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
+					...barEmphasis,
 				});
 				result.push({
 					id: `entity-${stableIdx}-returnEnergy`,
@@ -367,6 +394,7 @@ export default defineComponent({
 					itemStyle: { color: returnEnergyColor, borderRadius: [0, 0, 0, 0] },
 					barCategoryGap: "25%",
 					barGap: "10%",
+					...barEmphasis,
 				});
 			});
 
@@ -375,21 +403,14 @@ export default defineComponent({
 		labelForTimestamp(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
 				// Skip 00:00 so the chart can align with the section title on the left.
-				// Use every 6h on mobile (06/12/18) and every 3h on desktop. 12 is a
-				// multiple of both, so noon stays visible. Drop minutes; honor am/pm.
-				const stepHours = this.isMobile ? 6 : 3;
-				const h12 = is12hFormat();
+				// wider "4 PM" labels get double spacing
+				const stepHours = (this.isMobile ? 2 : 1) * (is12hFormat() ? 2 : 1);
 				return (t: number) => {
 					const d = new Date(t);
 					if (d.getMinutes() !== 0) return "";
 					const h = d.getHours();
-					if (h === 0) return "";
-					if (h % stepHours !== 0) return "";
-					if (h12) {
-						const hh = h % 12 || 12;
-						return `${hh} ${h < 12 ? "AM" : "PM"}`;
-					}
-					return String(h);
+					if (h === 0 || h % stepHours !== 0) return "";
+					return this.hourShort(d);
 				};
 			}
 			if (this.period === PERIODS.MONTH) {
@@ -399,6 +420,18 @@ export default defineComponent({
 			return this.isMobile
 				? (t: number) => this.fmtMonthNarrow(new Date(t))
 				: (t: number) => this.fmtMonth(new Date(t), true);
+		},
+		// Column headers for bidirectional tooltips (grid: imported/exported,
+		// battery: charged/discharged, meter: energy/reverse). Null when the group
+		// has no direction labels.
+		directionHeaders(): string[] | null {
+			if (!this.isBidirectional) return null;
+			const energyKey = `main.history.direction.${this.group}.energy`;
+			const returnEnergyKey = `main.history.direction.${this.group}.returnEnergy`;
+			const energy = this.$t(energyKey);
+			const returnEnergy = this.$t(returnEnergyKey);
+			if (energy === energyKey || returnEnergy === returnEnergyKey) return null;
+			return [String(energy), String(returnEnergy)];
 		},
 		tooltipDateLabel(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
@@ -422,7 +455,12 @@ export default defineComponent({
 				grid: { ...forecastGrid(), left: 0, right: 36 },
 				tooltip: {
 					trigger: "axis",
-					axisPointer: { type: "shadow", shadowStyle: { color: "transparent" } },
+					// transparent shadow snaps to slots without a band; triggerEmphasis off (it hard-codes notBlur), we dim slots in onChartMouseMove
+					axisPointer: {
+						type: "shadow",
+						triggerEmphasis: false,
+						shadowStyle: { color: "transparent" },
+					},
 					...tooltipStyle(this.tooltipColor),
 					// Allow the tooltip to float above the 180px chart container instead
 					// of being clamped by `confine: true` — otherwise tall bars push the
@@ -489,7 +527,7 @@ export default defineComponent({
 						const first = params.find((p) => p.dataIndex != null);
 						if (!first) return "";
 						const ts = cats[first.dataIndex];
-						const head = `<div>${ts != null ? tooltipDate(ts) : ""}</div>`;
+						const head = ts != null ? tooltipDate(ts) : "";
 						const formatValue = (v: number) => {
 							const watts = Math.abs(v) * 1000;
 							return this.period === PERIODS.DAY
@@ -521,31 +559,17 @@ export default defineComponent({
 						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
-						if (this.isBidirectional) {
-							const rows = indices
-								.map((i) => {
-									const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
-									const val = `<strong>${formatValue(t.energy)} / ${formatValue(t.returnEnergy)}</strong>`;
-									const name = nameByIdx.get(i) ?? "";
-									return showName
-										? `<div>${name}: ${val}</div>`
-										: `<div>${val}</div>`;
-								})
-								.join("");
-							return head + rows;
-						}
-
-						const rows = indices
-							.map((i) => {
-								const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
-								const val = `<strong>${formatValue(t.energy + t.returnEnergy)}</strong>`;
-								const name = nameByIdx.get(i) ?? "";
-								return showName
-									? `<div>${name}: ${val}</div>`
-									: `<div>${val}</div>`;
-							})
-							.join("");
-						return head + rows;
+						const rows = indices.map((i) => {
+							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+							const values = this.isBidirectional
+								? [formatValue(t.energy), formatValue(t.returnEnergy)]
+								: [formatValue(t.energy + t.returnEnergy)];
+							return {
+								name: showName ? (nameByIdx.get(i) ?? "") : undefined,
+								values,
+							};
+						});
+						return tooltipTable(head, rows, this.directionHeaders ?? undefined);
 					},
 				},
 				xAxis: {
@@ -561,11 +585,8 @@ export default defineComponent({
 					axisTick: { show: false },
 					splitLine: { show: false },
 					axisLabel: {
-						color: colors.muted || "",
-						fontSize: 11,
-						hideOverlap:
-							this.period !== PERIODS.DAY &&
-							!(this.period === PERIODS.YEAR && this.isMobile),
+						...xAxisLabelStyle(),
+						hideOverlap: !(this.period === PERIODS.YEAR && this.isMobile),
 						interval:
 							this.period === PERIODS.DAY ||
 							(this.period === PERIODS.YEAR && this.isMobile)
@@ -659,6 +680,9 @@ export default defineComponent({
 		const el = this.$refs["chartEl"] as HTMLElement;
 		this.chart = markRaw(echarts.init(el));
 		this.chart.setOption((this as unknown as WithChartOption).chartOption);
+		const zr = this.chart.getZr();
+		zr.on("mousemove", this.onChartMouseMove);
+		zr.on("globalout", this.clearHighlight);
 		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
 		this.isMobile = this.mediaQuery.matches;
 		this.mediaQuery.addEventListener("change", this.onMediaChange);
@@ -672,6 +696,31 @@ export default defineComponent({
 	methods: {
 		resize() {
 			this.chart?.resize();
+		},
+		// highlight hovered slot, dim rest. manual because built-in axis highlight hard-codes notBlur
+		onChartMouseMove(e: { offsetX: number; offsetY: number }) {
+			if (!this.chart) return;
+			const point: [number, number] = [e.offsetX, e.offsetY];
+			if (!this.chart.containPixel({ gridIndex: 0 }, point)) {
+				this.clearHighlight();
+				return;
+			}
+			const grid = this.chart.convertFromPixel({ gridIndex: 0 }, point) as number[];
+			const slot = Math.round(grid[0]!);
+			if (slot === this.activeSlot) return;
+			// Skip empty slots, else hovering a gap would dim the whole chart.
+			if (!this.slotsWithData[slot]) {
+				this.clearHighlight();
+				return;
+			}
+			this.activeSlot = slot;
+			this.chart.dispatchAction({ type: "downplay" });
+			this.chart.dispatchAction({ type: "highlight", dataIndex: slot });
+		},
+		clearHighlight() {
+			if (this.activeSlot === null) return;
+			this.activeSlot = null;
+			this.chart?.dispatchAction({ type: "downplay" });
 		},
 		onMediaChange(e: MediaQueryListEvent) {
 			this.isMobile = e.matches;

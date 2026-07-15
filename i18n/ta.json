@@ -972,8 +972,6 @@
       "batteryCharge": "மின்கலம் மின்சேர்வி",
       "batteryDischarge": "மின்கலம் மின்நீக்கி",
       "batteryDischargeHold": "மின்கலம் (பூட்டபட்டது)",
-      "batteryForecastEmpty": "காலியாக {time}",
-      "batteryForecastFull": "முழு {time}",
       "batteryGridChargeActive": "கிரிட் சார்சிங்: செயலில் உள்ளது",
       "batteryGridChargeLimit": "கிரிட் சார்சிங்: எப்போது",
       "batteryTooltip": "{energy} ({total}) இன் {soc}",

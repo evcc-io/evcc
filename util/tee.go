@@ -6,11 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// TeeAttacher allows attaching a listener to a tee
-type TeeAttacher interface {
-	Attach() <-chan Param
-}
-
 // Tee distributes parameters to subscribers
 type Tee struct {
 	mu   sync.Mutex

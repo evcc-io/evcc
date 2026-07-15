@@ -1,4 +1,5 @@
 template: solarprognose
+deprecated: true
 products:
   - brand: Solarprognose
 requirements:

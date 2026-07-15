@@ -309,3 +309,113 @@ func TestCreateEntityRefreshesTitle(t *testing.T) {
 	require.NoError(t, db.Instance.Model(new(entity)).Where("\"group\" = ? AND name = ?", "grid", "grid").Count(&count).Error)
 	require.EqualValues(t, 1, count, "must not duplicate existing rows")
 }
+
+func TestCollectorSetSocTemp(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Battery, "bat", "", WithClock(clk))
+	require.NoError(t, err)
+
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	require.NoError(t, col.SetSocTemp(50, false))
+	require.NoError(t, col.SetSocTemp(60, false)) // first reading per slot wins
+	require.Equal(t, 50.0, *col.accu.SocTemp)
+
+	// cross into the next slot: prior slot persisted, snapshot cleared
+	clk.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	require.Nil(t, col.accu.SocTemp)
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ?", col.entity.Id).First(&m).Error)
+	require.Equal(t, 50.0, *m.SocTemp)
+
+	// battery never marks is_temp, so the value is soc
+	require.False(t, col.entity.IsTemp)
+
+	// fresh slot captures its own start value
+	require.NoError(t, col.SetSocTemp(70, false))
+	require.Equal(t, 70.0, *col.accu.SocTemp)
+}
+
+func TestCollectorSetSocTempHeating(t *testing.T) {
+	clk := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Loadpoint, "lp", "", WithClock(clk))
+	require.NoError(t, err)
+
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+	require.NoError(t, col.SetSocTemp(21.5, true)) // heating charger: value is temperature
+	require.Equal(t, 21.5, *col.accu.SocTemp)
+
+	clk.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergy(nil, nil, 0))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ?", col.entity.Id).First(&m).Error)
+	require.Equal(t, 21.5, *m.SocTemp)
+
+	// is_temp persisted on the entity row
+	var e entity
+	require.NoError(t, db.Instance.Where("id = ?", col.entity.Id).First(&e).Error)
+	require.True(t, e.IsTemp)
+}
+
+// a meter regrouped to consumer keeps its id and history via in-place relabel
+func TestCreateEntityReconcilesExtToConsumer(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	// ext meter with a persisted history slot
+	ext, err := createEntity(Meter, "db:5", "Fridge")
+	require.NoError(t, err)
+	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil))
+
+	// reconfigured as consumer: same row relabeled, history intact
+	con, err := createEntity(Consumer, "db:5", "Fridge")
+	require.NoError(t, err)
+	require.Equal(t, ext.Id, con.Id, "must reuse the existing row")
+	require.Equal(t, Consumer, con.Group)
+
+	var stored entity
+	require.NoError(t, db.Instance.First(&stored, ext.Id).Error)
+	require.Equal(t, Consumer, stored.Group, "group must be persisted")
+
+	// no duplicate entity for the name
+	var entities int64
+	require.NoError(t, db.Instance.Model(new(entity)).Where("name = ?", "db:5").Count(&entities).Error)
+	require.EqualValues(t, 1, entities)
+
+	// history row still attached to the (now consumer) entity
+	var meters int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ?", ext.Id).Count(&meters).Error)
+	require.EqualValues(t, 1, meters)
+}
+
+// an existing consumer row blocks the relabel, leaving the meter row untouched
+func TestCreateEntityReconcileGuard(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	meterRow, err := createEntity(Meter, "db:7", "")
+	require.NoError(t, err)
+
+	// pre-existing consumer row blocks the in-place relabel
+	conRow := entity{Group: Consumer, Name: "db:7"}
+	require.NoError(t, db.Instance.Create(&conRow).Error)
+
+	got, err := createEntity(Consumer, "db:7", "")
+	require.NoError(t, err)
+	require.Equal(t, conRow.Id, got.Id, "must reuse existing consumer row")
+
+	// meter row untouched
+	var stored entity
+	require.NoError(t, db.Instance.First(&stored, meterRow.Id).Error)
+	require.Equal(t, Meter, stored.Group)
+}

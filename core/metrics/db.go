@@ -12,18 +12,20 @@ import (
 )
 
 type meter struct {
-	Meter        int     `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
-	Timestamp    int64   `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
-	Entity       entity  `json:"-" gorm:"foreignkey:Meter;references:Id"`
-	Energy       float64 `json:"energy" gorm:"column:energy"`
-	ReturnEnergy float64 `json:"returnEnergy" gorm:"column:return_energy"`
+	Meter        int      `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
+	Timestamp    int64    `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
+	Entity       entity   `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	Energy       float64  `json:"energy" gorm:"column:energy"`
+	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
+	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp"` // at start of slot
 }
 
 type entity struct {
-	Id    int    `gorm:"column:id;primarykey"`
-	Group string `gorm:"column:group;uniqueIndex:entities_group_name"`
-	Name  string `gorm:"column:name;uniqueIndex:entities_group_name"`
-	Title string `gorm:"column:title"`
+	Id     int    `gorm:"column:id;primarykey"`
+	Group  string `gorm:"column:group;uniqueIndex:entities_group_name"`
+	Name   string `gorm:"column:name;uniqueIndex:entities_group_name"`
+	Title  string `gorm:"column:title"`
+	IsTemp bool   `gorm:"column:is_temp"` // soc_temp holds temperature, not soc
 }
 
 func init() {
@@ -43,6 +45,11 @@ func SetupSchema() error {
 
 	// ensure home entity exists (reserves id=1 for legacy meter FK references)
 	if _, err := createEntity(Home, Home, Home); err != nil {
+		return err
+	}
+
+	// grid: migrate old entities (title was the device ref) to the fixed title
+	if err := db.Instance.Model(new(entity)).Where(`"group" = ? AND title <> ?`, Grid, Grid).Update("title", Grid).Error; err != nil {
 		return err
 	}
 
@@ -123,12 +130,23 @@ func SetupSchema() error {
 	return db.Instance.AutoMigrate(new(meter))
 }
 
-// persist stores 15min consumption in kWh
-func persist(entity entity, ts time.Time, energy, returnEnergy float64) error {
-	return db.Instance.Create(&meter{
+// OnPersist, if set, is called with the slot start after a slot is written.
+var OnPersist func(slot time.Time)
+
+// persist stores a completed 15min slot
+func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64) error {
+	slot := ts.Truncate(tariff.SlotDuration)
+	if err := db.Instance.Create(&meter{
 		Meter:        entity.Id,
-		Timestamp:    ts.Truncate(tariff.SlotDuration).Unix(),
+		Timestamp:    slot.Unix(),
 		Energy:       energy,
 		ReturnEnergy: returnEnergy,
-	}).Error
+		SocTemp:      socTemp,
+	}).Error; err != nil {
+		return err
+	}
+	if OnPersist != nil {
+		OnPersist(slot)
+	}
+	return nil
 }
