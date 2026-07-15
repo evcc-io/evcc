@@ -7,8 +7,12 @@ requirements:
   description:
     de: |
       Die Modbus-TCP-Schnittstelle muss in der Anker-App freigeschaltet werden.
+      Diese Konfiguration wurde mit mit der Firmware-Version 1.0.16.1 getestet.
+      Ältere oder neuere Firmware-Versionen können andere Registeradressen verwenden und daher falsche Daten liefern.
     en: |
       The Modbus TCP interface must be enabled in the Anker app.
+      This configuration was tested with the Firmware Version 1.0.16.1.
+      Older or newer Firmware Versions may use different register addresses and therefore deliver incorrect data.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -17,15 +21,6 @@ params:
     port: 502
     id: 1
   - name: maxacpower
-  - name: energyscale
-    default: 0.01
-    advanced: true
-    description:
-      de: Skalierungsfaktor Energieregister
-      en: Energy register scale factor
-    help:
-      de: kWh pro LSB der kumulativen Energieregister (PV, Batterieentladung, Netzbezug). X1-Firmware nutzt 0.01.
-      en: kWh per LSB of the cumulative energy registers (PV, battery discharge, grid import). X1 firmware uses 0.01.
   - preset: battery-params
 render: |
   type: custom
@@ -44,7 +39,7 @@ render: |
       address: 10656 # Meter Total Forward Active Energy (0.01 kWh/LSB on X1 firmware)
       type: input
       decode: uint32s
-    scale: {{ .energyscale }}
+    scale: 0.01
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -118,24 +113,13 @@ render: |
       type: input
       decode: int32s
   energy:
-    # total PV generation: firmware exposes it on either 10187 or 10189 (the other
-    # reads 0), so sum both to cover all firmware without a user-facing option
-    source: calc
-    add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 10187 # Total PV Generation (0.01 kWh/LSB)
-          type: input
-          decode: uint32s
-        scale: {{ .energyscale }}
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 10189 # Total PV Generation (alt firmware mapping; 0 otherwise)
-          type: input
-          decode: uint32s
-        scale: {{ .energyscale }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10187 # Total PV Generation (0.01 kWh/LSB)
+      type: input
+      decode: uint32s
+    scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -153,7 +137,7 @@ render: |
       address: 10264 # Battery Total Discharge Energy (0.01 kWh/LSB on X1 firmware)
       type: input
       decode: uint32s
-    scale: {{ .energyscale }}
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
