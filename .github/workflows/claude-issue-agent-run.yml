@@ -54,10 +54,11 @@ jobs:
           additional_permissions: |
             actions: read
           # analyze mode gets read + comment + api tools only; triage/fix
-          # additionally get git/PR tools (fix also gets gh api to resolve its
-          # invoking comment). Task is blocked in all modes so the agent can't
-          # offload work to a background sub-agent and exit before it returns.
-          claude_args: ${{ inputs.mode == 'analyze' && '--allowed-tools "Read,Grep,Glob,Bash(gh label list),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--allowed-tools "Read,Grep,Glob,Bash(gh label list),Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git status)" --disallowed-tools "Task"') }}
+          # additionally get Edit/Write + git/PR tools to actually make and push a
+          # fix (fix mode also gets gh api to resolve its invoking comment). Task
+          # is blocked in all modes so the agent can't offload work to a
+          # background sub-agent and exit before it returns.
+          claude_args: ${{ inputs.mode == 'analyze' && '--allowed-tools "Read,Grep,Glob,Bash(gh label list),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list),Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
