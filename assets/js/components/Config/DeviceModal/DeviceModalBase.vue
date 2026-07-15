@@ -293,8 +293,8 @@ export default defineComponent({
 		isTypeDeprecated: Function as PropType<(type: ConfigType) => boolean>,
 		// Optional: provide template options from parent (to avoid circular dependency)
 		provideTemplateOptions: Function as PropType<(products: Product[]) => TemplateGroup[]>,
-		// Optional: handle template change (receives event and values, allows setting values.yaml)
-		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => void>,
+		// Optional: handle template change (receives selected value and values, allows setting values.yaml)
+		onTemplateChange: Function as PropType<(value: string, values: DeviceValues) => void>,
 		// Optional: default template to select when opening modal for new devices
 		defaultTemplate: String,
 		// Optional: callback after configuration is loaded (receives values)
@@ -829,11 +829,11 @@ export default defineComponent({
 			this.$emit("close");
 			this.isModalVisible = false;
 		},
-		handleTemplateChange(e: Event) {
+		handleTemplateChange(value: string | null) {
 			// ensure this triggers after tempateName watcher
 			this.$nextTick(() => {
-				if (this.onTemplateChange) {
-					this.onTemplateChange(e, this.values);
+				if (this.onTemplateChange && value !== null) {
+					this.onTemplateChange(value, this.values);
 				}
 			});
 		},

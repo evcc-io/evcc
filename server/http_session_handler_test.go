@@ -13,15 +13,12 @@ import (
 )
 
 func TestSessionHandlerTimezoneFilter(t *testing.T) {
-	t.Setenv("TZ", "Europe/Berlin")
-	loc, err := time.LoadLocation("Europe/Berlin")
-	require.NoError(t, err)
-
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, db.Instance.AutoMigrate(new(session.Session)))
 
-	// 2026-05-01 00:01 CEST = 2026-04-30 22:01 UTC: local month=May, UTC month=April
-	ts := time.Date(2026, 5, 1, 0, 1, 0, 0, loc)
+	// Build in the process zone SQLite's 'localtime' uses (baked at startup).
+	// Just past local midnight May 1 is still April 30 UTC east of UTC.
+	ts := time.Date(2026, 5, 1, 0, 1, 0, 0, time.Local)
 	require.NoError(t, db.Instance.Create(&session.Session{
 		Created:       ts,
 		Finished:      ts.Add(time.Hour),

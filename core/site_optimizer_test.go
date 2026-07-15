@@ -27,6 +27,26 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
+func TestLoadpointCurrentAction(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		enabled bool
+		status  api.ChargeStatus
+		soc     float64
+		want    string
+	}{
+		{"charging", true, api.StatusC, 0, actionCharge},
+		{"enabled but idle (e.g. vehicle finished at limit)", true, api.StatusB, 0, actionStop},
+		{"disabled", false, api.StatusB, 0, actionStop},
+		{"charging at 100% soc with no explicit limit", true, api.StatusC, 100, actionStop},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := &Loadpoint{enabled: tc.enabled, status: tc.status, vehicleSoc: tc.soc}
+			assert.Equal(t, tc.want, loadpointCurrentAction(lp))
+		})
+	}
+}
+
 func TestAsTimestamps(t *testing.T) {
 	// now is 10 minutes into a 15-minute slot
 	now := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
@@ -162,4 +182,45 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	// valid change is applied (re-trigger is gated on sponsor/enabled, not unit-tested here)
 	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
+}
+
+func TestCurrentSlotSuggestion(t *testing.T) {
+	// slotHours 1 makes the per-slot Wh values map 1:1 to W
+	for _, tc := range []struct {
+		name              string
+		typ               batteryType
+		charge, disch     float32
+		importing, export bool
+		current           string // current operating mode
+		want              string
+		wantActionable    bool
+	}{
+		{"battery grid charge", batteryTypeBattery, 3000, 0, true, false, "normal", "charge", true},
+		{"battery grid charge unchanged", batteryTypeBattery, 3000, 0, true, false, "charge", "charge", false},
+		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, false, true, "normal", "normal", false},
+		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, true, false, "normal", "hold", true},
+		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, false, true, "normal", "holdcharge", true},
+		{"battery discharge", batteryTypeBattery, 0, 2000, true, false, "normal", "normal", false},
+		{"battery idle balanced", batteryTypeBattery, 0, 0, false, false, "normal", "normal", false},
+		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, false, false, "stop", "charge", true},
+		{"loadpoint charge unchanged", batteryTypeLoadpoint, 11000, 0, false, false, "charge", "charge", false},
+		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, false, false, "charge", "stop", true},
+		{"loadpoint stop unchanged", batteryTypeLoadpoint, 0, 0, false, false, "stop", "stop", false},
+		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, false, false, "charge", "stop", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := optimizer.BatteryResult{
+				ChargingPower:    []float32{tc.charge},
+				DischargingPower: []float32{tc.disch},
+			}
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.importing, tc.export, 1, tc.current)
+			assert.Equal(t, tc.want, s.Action)
+			assert.Equal(t, tc.wantActionable, s.Actionable)
+			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
+			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
+		})
+	}
+
+	// no result yields an empty suggestion
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1, ""))
 }

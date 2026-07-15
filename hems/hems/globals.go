@@ -2,6 +2,7 @@ package hems
 
 import "github.com/evcc-io/evcc/api"
 
+// Dimmed reports nil until MaxConsumptionPower is known (see api.HEMS).
 func Dimmed(hems api.HEMS) *bool {
 	dimmed := hems.MaxConsumptionPower()
 	if dimmed == nil {

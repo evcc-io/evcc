@@ -42,9 +42,9 @@ func TestTemplates(t *testing.T) {
 	})
 }
 
-// universalVehicleFeatures render via the shared vehicle-features include, so a
+// onlineVehicleFeatures render via the shared vehicle-features include, so a
 // stored config may carry them; dropping the param breaks reload (discussion #31291).
-var universalVehicleFeatures = []string{"climaterdisabled", "autodetectdisabled"}
+var onlineVehicleFeatures = []string{"climaterdisabled", "autodetectdisabled", "wakeupdisabled"}
 
 func TestVehicleFeatureParamsConsistent(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Vehicle, templates.WithDeprecated()) {
@@ -52,7 +52,12 @@ func TestVehicleFeatureParamsConsistent(t *testing.T) {
 			continue
 		}
 
-		for _, feat := range universalVehicleFeatures {
+		for _, feat := range onlineVehicleFeatures {
+			// not every template ever offered every feature (e.g. wakeupdisabled is new)
+			if i, _ := tmpl.ParamByName(feat); i < 0 {
+				continue
+			}
+
 			values := tmpl.Defaults(templates.RenderModeUnitTest)
 			values["template"] = tmpl.Template
 			values[feat] = true

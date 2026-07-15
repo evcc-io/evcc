@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,6 +42,7 @@ func newTestEEBus(t *testing.T) *EEBus {
 	return &EEBus{
 		log:                      util.NewLogger("test"),
 		site:                     &stubSite{},
+		Connector:                eebus.NewConnector(),
 		heartbeat:                util.NewValue[struct{}](time.Hour),
 		failsafeConsumptionLimit: testFailsafeConsumption,
 		failsafeProductionLimit:  &failsafeProduction,
@@ -49,7 +51,8 @@ func newTestEEBus(t *testing.T) *EEBus {
 	}
 }
 
-// assertConsumptionLimit checks the HEMS consumption state through the api.HEMS surface.
+// assertConsumptionLimit checks the HEMS consumption state through the api.HEMS
+// surface. Once run() has executed, MaxConsumptionPower is always known (non-nil).
 func assertConsumptionLimit(t *testing.T, c *EEBus, limit float64) {
 	t.Helper()
 	power := c.MaxConsumptionPower()
@@ -63,6 +66,20 @@ func assertProductionLimit(t *testing.T, c *EEBus, active bool) {
 	percent := c.CurtailedPercent()
 	require.NotNil(t, percent)
 	assert.Equal(t, active, *percent < 100)
+}
+
+// TestEEBusNoLimitContract verifies api.HEMS's "nil = limiting undefined" contract:
+// nil until the controlbox/EnergyGuard first connects, then 0 = no limit.
+func TestEEBusNoLimitContract(t *testing.T) {
+	c := newTestEEBus(t)
+
+	require.Nil(t, c.MaxConsumptionPower())
+	require.Nil(t, c.MaxProductionPower())
+
+	c.Connect(true)
+
+	assertConsumptionLimit(t, c, 0)
+	assertProductionLimit(t, c, false)
 }
 
 // TestRun_HeartbeatLost_EntersFailsafe verifies the LPC-911/LPP-911 transition:
@@ -164,6 +181,18 @@ func TestNotConnected(t *testing.T) {
 	assert.Nil(t, hems.Curtailed(c))
 }
 
+// TestRun_ProductionLimitWithoutNominalMax verifies an incoming LPP limit
+// errors instead of being silently ignored when productionNominalMax is unset (#31469).
+func TestRun_ProductionLimitWithoutNominalMax(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+	c.productionNominalMax = 0
+
+	c.productionLimit = ucapi.LoadLimit{Value: -2200, IsActive: true, Duration: time.Hour}
+	require.Error(t, c.run())
+	assert.Nil(t, c.CurtailedPercent())
+}
+
 // TestRun_ConsumptionLimitReleasedEarly is the LPC mirror of the LPP early-release
 // case: an active consumption limit must drop as soon as the EG deactivates it.
 func TestRun_ConsumptionLimitReleasedEarly(t *testing.T) {
@@ -179,4 +208,22 @@ func TestRun_ConsumptionLimitReleasedEarly(t *testing.T) {
 	c.consumptionLimit.IsActive = false
 	require.NoError(t, c.run())
 	assertConsumptionLimit(t, c, 0)
+}
+
+// TestEEBusEdgeTriggered verifies that applying a limit (passthrough) only
+// happens on a genuine transition, not on every steady-state run().
+func TestEEBusEdgeTriggered(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+
+	calls := 0
+	c.passthrough = func(bool) error { calls++; return nil }
+	c.consumptionLimit = ucapi.LoadLimit{Value: 3000, IsActive: true, Duration: time.Hour}
+
+	require.NoError(t, c.run())
+	require.NoError(t, c.run())
+	require.NoError(t, c.run())
+
+	require.Equal(t, 1, calls, "passthrough must fire once on the edge, not every tick")
+	assertConsumptionLimit(t, c, 3000)
 }

@@ -115,6 +115,11 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 			Modifier: func(resp *http.Response) error {
 				dropCacheBusting(resp, "Cache-Control")
 				dropCacheBusting(resp, "Pragma")
+				// httpcache derives freshness from the response Date; stamp one
+				// for devices that omit it, else every read is treated as stale
+				if resp.Header.Get("Date") == "" {
+					resp.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
+				}
 				return nil
 			},
 			Base: base,

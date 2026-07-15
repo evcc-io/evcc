@@ -1,9 +1,13 @@
 <template>
 	<div v-if="batteryAvailable" data-testid="battery-experimental">
-		<BatteryStatusCards class="mb-4" :battery="state.battery" />
+		<BatteryStatusCards
+			class="mb-4 box-pull-out"
+			:battery="state.battery"
+			:battery-mode="state.batteryMode"
+		/>
 
 		<BatteryHistoryCard
-			class="mb-4"
+			class="mb-4 box-pull-out"
 			:batteries="chartBatteries"
 			:now="now"
 			:kwh-available="kWhAvailable"
@@ -11,7 +15,7 @@
 		/>
 
 		<BatteryConfigCard
-			class="mb-4"
+			class="mb-4 box-pull-out"
 			:buffer-soc="state.bufferSoc"
 			:priority-soc="state.prioritySoc"
 			:buffer-start-soc="state.bufferStartSoc"
@@ -19,7 +23,11 @@
 			:battery="state.battery"
 		/>
 
-		<Card v-if="gridChargeVisible" :title="$t('batterySettings.gridChargeTab')">
+		<Card
+			v-if="gridChargeVisible"
+			class="box-pull-out"
+			:title="$t('batterySettings.gridChargeTab')"
+		>
 			<SmartCostLimit v-bind="smartCostLimitProps" />
 		</Card>
 	</div>

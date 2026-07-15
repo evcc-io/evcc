@@ -669,7 +669,7 @@ func configureDatabase(conf globalconfig.DB) error {
 	// persist unsaved settings on shutdown
 	shutdown.Register(persistSettings)
 
-	// persist unsaved settings every 30 minutes
+	// persist unsaved settings every minute
 	go func() {
 		for range time.Tick(time.Minute) {
 			persistSettings()
@@ -932,6 +932,18 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 
 		*conf = *cc
+		if err := settings.SetJson(keys.EEBus, conf); err != nil {
+			return err
+		}
+	}
+
+	// generate a SHIP pairing secret for configs that predate SHIP pairing
+	if conf.Secret == "" {
+		secret, err := eebus.CreatePairingSecret()
+		if err != nil {
+			return err
+		}
+		conf.Secret = secret
 		if err := settings.SetJson(keys.EEBus, conf); err != nil {
 			return err
 		}

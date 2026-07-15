@@ -51,7 +51,9 @@ export async function addDemoCharger(
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal
-    .getByRole("button", { name: type === LoadpointType.Heating ? "Add heater" : "Add charger" })
+    .getByRole("button", {
+      name: type === LoadpointType.Heating ? "Add heating device" : "Add charger",
+    })
     .click();
 
   const modal = page.getByTestId("charger-modal");
@@ -69,6 +71,7 @@ export async function addDemoCharger(
 
 export async function addDemoMeter(page: Page, power = "0"): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
   await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
 
   const modal = page.getByTestId("meter-modal");
@@ -96,14 +99,20 @@ export async function newLoadpoint(
   type: LoadpointType = LoadpointType.Charging
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
-  await page.getByRole("button", { name: "Add charger or heater" }).click();
+  await page.getByRole("button", { name: "Add charging point or heater" }).click();
   await expectModalVisible(lpModal);
   await lpModal
     .getByRole("button", {
-      name: type === LoadpointType.Heating ? "Add heating device" : "Add charging point",
+      name: type === LoadpointType.Heating ? "Add heater" : "Add charging point",
     })
     .click();
   await lpModal.getByLabel("Title").fill(title);
+}
+
+export async function finishLoadpoint(page: Page): Promise<void> {
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByText("Close", { exact: true }).click();
+  await expectModalHidden(lpModal);
 }
 
 export async function dragElement(
