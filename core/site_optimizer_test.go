@@ -232,6 +232,17 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(8000), req.SMax)
 	})
+
+	t.Run("empty maxSoc defaults to 100%", func(t *testing.T) {
+		soc := 50.0
+		dev := newBatteryDevice(t, 20, 0)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(2000), req.SMin)
+		assert.Equal(t, float32(10000), req.SMax)
+	})
 }
 
 func TestOptimizerChargingStrategy(t *testing.T) {
