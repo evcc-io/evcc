@@ -241,13 +241,16 @@ func (c *Zaptec) Enable(enable bool) error {
 		Code int
 	}
 
+	err := c.DoJSON(req, &res)
+
 	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
-	if err := c.DoJSON(req, &res); err == nil || res.Code == 528 {
+	if err == nil || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
+		return nil
 	}
 
-	return nil
+	return err
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
