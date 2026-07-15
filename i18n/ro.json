@@ -1105,19 +1105,11 @@
       "currents": "Curent încărcare",
       "default": "default",
       "disclaimerHint": "Nota:",
-      "limitSoc": {
-        "description": "Limita de incarcare care e folosita cand e conectat a aceasta masina.",
-        "label": "Limita default"
-      },
       "maxCurrent": {
         "label": "Amperaj maxim"
       },
       "minCurrent": {
         "label": "Amperaj minim"
-      },
-      "minSoc": {
-        "description": "Vehiculul primește încărcare rapida {0} din toata energia solara disponibilă, apoi continua încărcarea cu surplusul solar.",
-        "label": "Min. încărcare %"
       },
       "onlyForSocBasedCharging": "Aceste optiuni sunt active doar pentru masini carora le cunoaste gradul de incarcare.",
       "phasesConfigured": {

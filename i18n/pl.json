@@ -1156,19 +1156,11 @@
       "currents": "Prąd ładowania",
       "default": "domyślny",
       "disclaimerHint": "Uwaga:",
-      "limitSoc": {
-        "description": "Limit ładowania stosowany, gdy ten pojazd jest podłączony.",
-        "label": "Domyślny limit"
-      },
       "maxCurrent": {
         "label": "Maks. prąd"
       },
       "minCurrent": {
         "label": "Min. Prąd"
-      },
-      "minSoc": {
-        "description": "Pojazd będzie „szybko” naładowany do {0} w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną. Przydatne, aby zapewnić minimalny zasięg nawet w pochmurne dni.",
-        "label": "Minimalne naładowanie %"
       },
       "onlyForSocBasedCharging": "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania.",
       "phasesConfigured": {

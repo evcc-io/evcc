@@ -962,19 +962,11 @@
       "currents": "Polnilni tok",
       "default": "privzeto",
       "disclaimerHint": "Opomba:",
-      "limitSoc": {
-        "description": "Omejitev polnjenja, ki se uporablja, ko je to vozilo povezano.",
-        "label": "Privzeta omejitev"
-      },
       "maxCurrent": {
         "label": "Maks. tok"
       },
       "minCurrent": {
         "label": "Min. tok"
-      },
-      "minSoc": {
-        "description": "Za nujne primere. Vozilo se »hitro« napolni na {0} od vse razpoložljive solarne energije, nato pa nadaljuje samo s solarnim presežkom.",
-        "label": "Min. polnjenje %"
       },
       "onlyForSocBasedCharging": "Te možnosti so na voljo samo za vozila z znano stopnjo napolnjenosti.",
       "phasesConfigured": {

@@ -1297,19 +1297,11 @@
       "currents": "Uzlādes strāva",
       "default": "noklusējuma",
       "disclaimerHint": "Piezīme:",
-      "limitSoc": {
-        "description": "Uzlādes ierobežojums, kas tiek izmantots, kad šis transportlīdzeklis ir pievienots.",
-        "label": "Noklusējuma ierobežojums"
-      },
       "maxCurrent": {
         "label": "Maks. strāva"
       },
       "minCurrent": {
         "label": "Min. strāva"
-      },
-      "minSoc": {
-        "description": "Transportlīdzeklis tiek „ātri” uzlādēts līdz {0} saules režīmā. Pēc tam turpina ar saules enerģijas pārpalikumu. Noderīgi, lai nodrošinātu minimālu nobraukumu pat tumšākām dienām.",
-        "label": "Min. uzlāde %"
       },
       "onlyForSocBasedCharging": "Šīs iespējas ir pieejamas tikai transportlīdzekļiem ar zināmu uzlādes līmeni.",
       "phasesConfigured": {

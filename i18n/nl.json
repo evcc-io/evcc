@@ -1302,19 +1302,11 @@
       "currents": "Laadstroom",
       "default": "standaard",
       "disclaimerHint": "Let op:",
-      "limitSoc": {
-        "description": "Standaard laadlimiet wanneer dit voertuig aangesloten wordt.",
-        "label": "Standaard limiet"
-      },
       "maxCurrent": {
         "label": "Max. Stroomsterkte"
       },
       "minCurrent": {
         "label": "Min. Stroomsterkte"
-      },
-      "minSoc": {
-        "description": "Het voertuig wordt „snel” opgeladen tot {0} in zonne-modus. Het laden gaat daarna verder met zonneoverschot. Nuttig om een bepaald rijbereik te garanderen, ook gedurende periodes met weinig of geen zonnestroom.",
-        "label": "Min. batterij %"
       },
       "onlyForSocBasedCharging": "Deze instellingen zijn alleen beschikbaar bij voertuigen waar het batterijpercentage bekend is.",
       "phasesConfigured": {

@@ -152,10 +152,6 @@
       "minCurrent": {
         "label": "Corriente de carrega mínima"
       },
-      "minSoc": {
-        "description": "Marge per a emergències. El vehicle es carrega 'ràpidament' a {0} en mode solar. Després continua amb l'excedent fotovoltaic.",
-        "label": "Càrrega de min. %"
-      },
       "phasesConfigured": {
         "label": "Fases",
         "phases_0": "Canvi automàtic",

@@ -3,121 +3,117 @@
 		id="vehicleSettingsModal"
 		ref="modal"
 		size="lg"
+		:title="$t('main.vehicleSettings.title')"
 		data-testid="vehicle-settings-modal"
 		@open="modalVisible"
 		@closed="modalInvisible"
 	>
-		<template #title>
-			<i18n-t
-				v-if="multipleVehicles"
-				keypath="main.vehicleSettings.title"
-				tag="span"
-				scope="global"
+		<div v-if="isModalVisible">
+			<p class="text-gray mt-0 mb-4">
+				{{ $t("main.vehicleSettings.description") }}
+				<a :href="docsUrl" target="_blank" rel="noopener">
+					{{ $t("main.vehicleSettings.learnMore") }}
+				</a>
+			</p>
+			<div
+				v-for="(vehicle, index) in vehicles"
+				:key="vehicle.name"
+				role="group"
+				:aria-label="vehicle.title"
+				:class="{ 'border-top pt-4': index > 0 }"
+				class="mb-4"
 			>
-				<CustomSelect
-					id="vehicleSettingsVehicle"
-					inline
-					:aria-label="$t('main.vehicle.changeVehicle')"
-					:options="vehicleSelectOptions"
-					:selected="vehicleName"
-					@change="changeVehicle($event.target.value)"
+				<div class="d-flex flex-wrap align-items-center column-gap-2 row-gap-1 mb-3">
+					<VehicleIcon :name="vehicle.icon" class="flex-shrink-0" />
+					<strong class="text-truncate">{{ vehicle.title }}</strong>
+					<Badge v-if="connectedLoadpoint(vehicle)" class="flex-shrink-0">
+						{{
+							$t("main.vehicleSettings.connectedTo", [
+								connectedLoadpoint(vehicle)?.title ||
+									$t("main.loadpoint.fallbackName"),
+							])
+						}}
+					</Badge>
+					<Badge v-else variant="muted" class="flex-shrink-0">
+						{{ $t("main.vehicleSettings.notConnected") }}
+					</Badge>
+				</div>
+				<SettingsFormRow
+					:id="fieldId(vehicle, 'mode')"
+					:label="$t('main.vehicleSettings.mode')"
 				>
-					<span class="vehicle-title">{{ vehicleTitle }}</span>
-				</CustomSelect>
-			</i18n-t>
-			<span v-else>{{ $t("main.vehicleSettings.title", [vehicleTitle]) }}</span>
-		</template>
-		<div v-if="isModalVisible" class="container">
-			<div class="mb-3 row">
-				<label for="vehicleSettingsMode" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-					{{ $t("config.loadpoint.defaultModeLabel") }}
-				</label>
-				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
 					<select
-						id="vehicleSettingsMode"
-						v-model="selectedMode"
+						:id="fieldId(vehicle, 'mode')"
 						class="form-select form-select-sm"
-						@change="changeMode"
+						:value="vehicle.mode ?? ''"
+						@change="changeMode(vehicle, $event)"
 					>
 						<option v-for="opt in modeOptions" :key="opt.value" :value="opt.value">
 							{{ opt.name }}
 						</option>
 					</select>
-				</div>
-				<div class="col-sm-8 offset-sm-4 mt-1">
-					<small class="text-muted">{{ modeHelp }}</small>
-				</div>
-			</div>
-			<template v-if="socSettingsVisible">
-				<div class="mb-3 row">
-					<label for="vehicleSettingsMinSoc" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-						{{ $t("main.loadpointSettings.minSoc.label") }}
-					</label>
-					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
-						<select
-							id="vehicleSettingsMinSoc"
-							v-model.number="selectedMinSoc"
-							class="form-select form-select-sm"
-							@change="changeMinSoc"
-						>
-							<option
-								v-for="soc in minSocOptions"
-								:key="soc.value"
-								:value="soc.value"
-							>
-								{{ soc.name }}
-							</option>
-						</select>
-					</div>
-					<div class="col-sm-8 offset-sm-4 mt-1">
-						<small class="text-muted">
-							{{
-								$t("main.loadpointSettings.minSoc.description", [
-									selectedMinSoc ? fmtPercentage(selectedMinSoc) : "x",
-								])
-							}}
-						</small>
-					</div>
-				</div>
-				<div class="mb-3 row">
-					<label
-						for="vehicleSettingsLimitSoc"
-						class="col-sm-4 col-form-label pt-0 pt-sm-2"
+				</SettingsFormRow>
+				<template v-if="socSupported(vehicle)">
+					<SettingsFormRow
+						:id="fieldId(vehicle, 'limitSoc')"
+						:label="$t('main.vehicleSettings.limitSoc')"
 					>
-						{{ $t("main.loadpointSettings.limitSoc.label") }}
-					</label>
-					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
 						<select
-							id="vehicleSettingsLimitSoc"
-							v-model.number="selectedLimitSoc"
+							:id="fieldId(vehicle, 'limitSoc')"
 							class="form-select form-select-sm"
-							@change="changeLimitSoc"
+							:value="vehicle.limitSoc ?? 0"
+							@change="changeLimitSoc(vehicle, $event)"
 						>
 							<option
-								v-for="soc in limitSocOptions"
-								:key="soc.value"
-								:value="soc.value"
+								v-for="opt in socOptions(vehicle)"
+								:key="opt.value"
+								:value="opt.value"
 							>
-								{{ soc.name }}
+								{{ opt.name }}
 							</option>
 						</select>
-					</div>
-					<div class="col-sm-8 offset-sm-4 mt-1">
-						<small class="text-muted">
-							{{ $t("main.loadpointSettings.limitSoc.description") }}
-						</small>
-					</div>
-				</div>
-			</template>
+					</SettingsFormRow>
+					<SettingsFormRow
+						:id="fieldId(vehicle, 'minSoc')"
+						:label="$t('main.vehicleSettings.minSoc')"
+						:description="$t('main.vehicleSettings.minSocDescription')"
+					>
+						<select
+							:id="fieldId(vehicle, 'minSoc')"
+							class="form-select form-select-sm"
+							:value="vehicle.minSoc ?? 0"
+							@change="changeMinSoc(vehicle, $event)"
+						>
+							<option
+								v-for="opt in socOptions(vehicle)"
+								:key="opt.value"
+								:value="opt.value"
+							>
+								{{ opt.name }}
+							</option>
+						</select>
+					</SettingsFormRow>
+				</template>
+			</div>
+			<p class="mb-0 border-top pt-4">
+				<i18n-t keypath="main.vehicleSettings.editHint" tag="span" scope="global">
+					<router-link to="/config#vehicles" @click="closeModal">
+						{{ $t("config.main.title") }}
+					</router-link>
+				</i18n-t>
+			</p>
 		</div>
 	</GenericModal>
 </template>
 
 <script lang="ts">
+import Badge from "../Helper/Badge.vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import CustomSelect from "../Helper/CustomSelect.vue";
+import SettingsFormRow from "../Helper/SettingsFormRow.vue";
+import VehicleIcon from "../VehicleIcon";
 import api from "@/api";
 import formatter from "@/mixins/formatter";
+import { docsPrefix } from "@/i18n";
 import { distanceUnit } from "@/units";
 import { vehicleHasSoc, vehicleNotReachable } from "@/uiLoadpoints";
 import { CHARGE_MODE, type SelectOption, type UiLoadpoint, type Vehicle } from "@/types/evcc";
@@ -127,7 +123,7 @@ const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
 
 export default defineComponent({
 	name: "VehicleSettingsModal",
-	components: { GenericModal, CustomSelect },
+	components: { Badge, GenericModal, SettingsFormRow, VehicleIcon },
 	mixins: [formatter],
 	props: {
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
@@ -136,127 +132,76 @@ export default defineComponent({
 	data() {
 		return {
 			isModalVisible: false,
-			vehicleName: "",
-			selectedMinSoc: 0,
-			selectedLimitSoc: 0,
-			selectedMode: "",
 		};
 	},
 	computed: {
-		vehicle() {
-			return this.vehicles.find((v) => v.name === this.vehicleName);
-		},
-		loadpoint() {
-			return this.loadpoints.find((lp) => lp.vehicleName === this.vehicleName);
-		},
-		vehicleTitle(): string {
-			return this.vehicle?.title || "";
-		},
-		multipleVehicles(): boolean {
-			return this.vehicles.length > 1;
-		},
-		vehicleSelectOptions(): SelectOption<string>[] {
-			return this.vehicles.map((v) => ({ value: v.name, name: v.title }));
-		},
-		vehicleMinSoc(): number {
-			return this.vehicle?.minSoc ?? 0;
-		},
-		vehicleLimitSoc(): number {
-			return this.vehicle?.limitSoc ?? 0;
-		},
-		vehicleMode(): string {
-			return this.vehicle?.mode ?? "";
-		},
-		socSettingsVisible(): boolean {
-			if (this.loadpoint) {
-				return this.loadpoint.socBasedCharging || this.loadpoint.vehicleNotReachable;
-			}
-			return vehicleHasSoc(this.vehicle) || vehicleNotReachable(this.vehicle);
+		docsUrl(): string {
+			return `${docsPrefix()}/features/limits`;
 		},
 		modeOptions(): SelectOption<string>[] {
 			return [
-				{ value: "", name: "---" },
+				{ value: "", name: this.$t("main.vehicleSettings.keepAsIs") },
 				...[OFF, PV, MINPV, NOW].map((mode) => ({
 					value: mode,
 					name: this.$t(`main.mode.${mode}`),
 				})),
 			];
 		},
-		modeHelp(): string {
-			return this.selectedMode === ""
-				? this.$t("config.loadpoint.defaultModeHelpKeep")
-				: this.$t("config.loadpoint.defaultModeHelp.charging");
-		},
-		minSocOptions(): SelectOption<number>[] {
-			// a list of entries from 0 to 95 with a step of 5
-			return Array.from(Array(20).keys())
-				.map((i) => i * 5)
-				.map(this.socOption);
-		},
-		limitSocOptions(): SelectOption<number>[] {
-			// a list of entries from 0 to 100 with a step of 5
-			return Array.from(Array(21).keys())
-				.map((i) => i * 5)
-				.map(this.socOption);
-		},
-		apiVehicle(): string {
-			return `vehicles/${this.vehicleName}/`;
-		},
-	},
-	watch: {
-		vehicleMinSoc(value: number): void {
-			this.selectedMinSoc = value;
-		},
-		vehicleLimitSoc(value: number): void {
-			this.selectedLimitSoc = value;
-		},
-		vehicleMode(value: string): void {
-			this.selectedMode = value;
-		},
 	},
 	methods: {
-		open(vehicleName: string) {
-			this.vehicleName = vehicleName;
-			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
-			modalRef?.open();
-		},
-		changeVehicle(vehicleName: string) {
-			this.vehicleName = vehicleName;
-		},
 		modalVisible(): void {
 			this.isModalVisible = true;
 		},
 		modalInvisible(): void {
 			this.isModalVisible = false;
 		},
-		socOption(soc: number): SelectOption<number> {
-			return {
-				value: soc,
-				name:
-					soc === 0
-						? "---"
-						: this.fmtSocOption(soc, this.loadpoint?.rangePerSoc, distanceUnit()),
-			};
+		closeModal(): void {
+			(this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined)?.close();
 		},
-		changeMinSoc(): void {
-			api.post(`${this.apiVehicle}minsoc/${this.selectedMinSoc}`);
+		fieldId(vehicle: Vehicle, field: string): string {
+			return `vehicleSettings-${vehicle.name}-${field}`;
 		},
-		changeLimitSoc(): void {
-			api.post(`${this.apiVehicle}limitsoc/${this.selectedLimitSoc}`);
+		connectedLoadpoint(vehicle: Vehicle): UiLoadpoint | undefined {
+			return this.loadpoints.find((lp) => lp.vehicleName === vehicle.name && lp.connected);
 		},
-		changeMode(): void {
-			if (this.selectedMode === "") {
-				api.delete(`${this.apiVehicle}mode`);
-			} else {
-				api.post(`${this.apiVehicle}mode/${this.selectedMode}`);
+		socSupported(vehicle: Vehicle): boolean {
+			const loadpoint = this.connectedLoadpoint(vehicle);
+			if (loadpoint) {
+				return loadpoint.socBasedCharging || loadpoint.vehicleNotReachable;
 			}
+			return vehicleHasSoc(vehicle) || vehicleNotReachable(vehicle);
+		},
+		socOptions(vehicle: Vehicle): SelectOption<number>[] {
+			// 0 = none, then 5-100 in steps of 5
+			const rangePerSoc = this.connectedLoadpoint(vehicle)?.rangePerSoc;
+			return Array.from(Array(21).keys()).map((i) => {
+				const soc = i * 5;
+				return {
+					value: soc,
+					name:
+						soc === 0
+							? this.$t("general.none")
+							: this.fmtSocOption(soc, rangePerSoc, distanceUnit()),
+				};
+			});
+		},
+		selectValue(event: Event): string {
+			return (event.target as HTMLSelectElement).value;
+		},
+		changeMode(vehicle: Vehicle, event: Event): void {
+			const mode = this.selectValue(event);
+			if (mode === "") {
+				api.delete(`vehicles/${vehicle.name}/mode`);
+			} else {
+				api.post(`vehicles/${vehicle.name}/mode/${mode}`);
+			}
+		},
+		changeMinSoc(vehicle: Vehicle, event: Event): void {
+			api.post(`vehicles/${vehicle.name}/minsoc/${this.selectValue(event)}`);
+		},
+		changeLimitSoc(vehicle: Vehicle, event: Event): void {
+			api.post(`vehicles/${vehicle.name}/limitsoc/${this.selectValue(event)}`);
 		},
 	},
 });
 </script>
-<style scoped>
-.vehicle-title {
-	text-decoration: underline;
-	text-decoration-color: var(--evcc-gray);
-}
-</style>

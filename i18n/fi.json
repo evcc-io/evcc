@@ -1317,19 +1317,11 @@
       "currents": "Latausvirta",
       "default": "oletus",
       "disclaimerHint": "Huomautus:",
-      "limitSoc": {
-        "description": "Latausraja mitä käytetään kun ajoneuvo yhdistetty.",
-        "label": "Oletusraja"
-      },
       "maxCurrent": {
         "label": "Maksimivirta"
       },
       "minCurrent": {
         "label": "Minimivirta"
-      },
-      "minSoc": {
-        "description": "Ajoneuvo ladataan välittömästi {0} asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä.",
-        "label": "Minimi lataustaso"
       },
       "onlyForSocBasedCharging": "Nämä vaihtoehdot ovat käytettävissä vain ajoneuvoille, joiden lataustaso on tiedossa.",
       "phasesConfigured": {

@@ -1203,19 +1203,11 @@
       "currents": "Corrente de carga",
       "default": "predefinido",
       "disclaimerHint": "Aviso:",
-      "limitSoc": {
-        "description": "limite de partilha que é usado quando este veículo está conectado.",
-        "label": "Limite padrão"
-      },
       "maxCurrent": {
         "label": "Corrente de carga máxima"
       },
       "minCurrent": {
         "label": "Corrente de carga mínima"
-      },
-      "minSoc": {
-        "description": "O veículo é carregado “rápido” até {0} no modo solar. A seguir, continua com excedente solar. Útil para garantir um alcance mínimo mesmo em dias com pouco sol.",
-        "label": "Min. de carga %"
       },
       "onlyForSocBasedCharging": "Estas opções só estão disponíveis para veículos com nível de carregamento conhecido.",
       "phasesConfigured": {

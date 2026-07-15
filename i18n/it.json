@@ -1191,19 +1191,11 @@
       "currents": "Corrente di carica",
       "default": "default",
       "disclaimerHint": "Nota:",
-      "limitSoc": {
-        "description": "Limite di carica applicato quando il veicolo è connesso.",
-        "label": "Limite di default"
-      },
       "maxCurrent": {
         "label": "Corrente massima"
       },
       "minCurrent": {
         "label": "Corrente min."
-      },
-      "minSoc": {
-        "description": "Per le emergenze. Il veicolo viene caricato 'velocemente' al {0} da tutto il solare disponibile, e poi continua con solo il surplus solare.",
-        "label": "Carica min. %"
       },
       "onlyForSocBasedCharging": "Questa opzione è solo per i veicoli dei quali si sa lo stato di carica.",
       "phasesConfigured": {

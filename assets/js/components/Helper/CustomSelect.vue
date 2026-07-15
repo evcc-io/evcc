@@ -85,5 +85,7 @@ export default defineComponent({
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;
+	/* WebKit propagates the select's intrinsic option width as overflow, causing page scroll */
+	contain: paint;
 }
 </style>

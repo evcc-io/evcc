@@ -27,7 +27,6 @@
 				:selected="vehicleName"
 				@change-vehicle="changeVehicle"
 				@remove-vehicle="removeVehicle"
-				@open-settings="$emit('open-vehicle-settings')"
 			>
 				<span class="flex-grow-1 text-truncate vehicle-name" data-testid="vehicle-name">
 					{{ name }}
@@ -57,7 +56,7 @@ import "@h2d2/shopicons/es/regular/cablecharge";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import Modal from "bootstrap/js/dist/modal";
 import VehicleIcon from "../VehicleIcon";
-import Options from "./OptionsWithSettings.vue";
+import Options from "./Options.vue";
 import CloudOffline from "../MaterialIcon/CloudOffline.vue";
 import Sync from "../MaterialIcon/Sync.vue";
 import collector from "@/mixins/collector";
@@ -78,7 +77,7 @@ export default defineComponent({
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
 		title: String,
 	},
-	emits: ["change-vehicle", "remove-vehicle", "open-vehicle-settings"],
+	emits: ["change-vehicle", "remove-vehicle"],
 	data() {
 		return {
 			refreshTooltip: null as Tooltip | null,

@@ -1023,19 +1023,11 @@
       "currents": "மின்சேர்வி மின்னோட்டம்",
       "default": "இயல்புநிலை",
       "disclaimerHint": "குறிப்பு:",
-      "limitSoc": {
-        "description": "இந்த வாகனம் இணைக்கப்படும்போது பயன்படுத்தப்படும் மின்சேர்வி வரம்பு.",
-        "label": "இயல்புநிலை வரம்பு"
-      },
       "maxCurrent": {
         "label": "அதிக. மின்னோட்டம்"
       },
       "minCurrent": {
         "label": "குறை. மின்னோட்டம்"
-      },
-      "minSoc": {
-        "description": "The vehicle gets „fast” charged பெறுநர் {0} in solar mode. Then continues with solar surplus. Useful பெறுநர் ensure a சிறுமம் வீச்சு இரட்டை க்கு darker days.",
-        "label": "Min. மின்னூட்டு %"
       },
       "onlyForSocBasedCharging": "These விருப்பங்கள் அரே only available க்கு vehicles with known charging level.",
       "phasesConfigured": {

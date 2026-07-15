@@ -5,7 +5,6 @@
 			v-bind="vehicleTitleProps"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
-			@open-vehicle-settings="openVehicleSettings"
 		/>
 		<VehicleStatus
 			v-bind="vehicleStatus"
@@ -81,6 +80,7 @@
 </template>
 
 <script lang="ts">
+import Modal from "bootstrap/js/dist/modal";
 import collector from "@/mixins/collector.ts";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
@@ -191,7 +191,6 @@ export default defineComponent({
 		"change-vehicle",
 		"remove-vehicle",
 		"open-loadpoint-settings",
-		"open-vehicle-settings",
 		"batteryboost-updated",
 		"open-modal",
 	],
@@ -290,7 +289,9 @@ export default defineComponent({
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openVehicleSettings() {
-			this.$emit("open-vehicle-settings", this.vehicleName);
+			Modal.getOrCreateInstance(
+				document.getElementById("vehicleSettingsModal") as HTMLElement
+			).show();
 		},
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;

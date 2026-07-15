@@ -1320,19 +1320,11 @@
       "currents": "Ladestrøm",
       "default": "standard",
       "disclaimerHint": "Bemærk:",
-      "limitSoc": {
-        "description": "Opladningsgrænse som benyttes når dette køretøj er forbundet.",
-        "label": "standard opladningsgrænse"
-      },
       "maxCurrent": {
         "label": "Max. Nuværende"
       },
       "minCurrent": {
         "label": "Min. Nuværende"
-      },
-      "minSoc": {
-        "description": "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage.",
-        "label": "Min. opladning %"
       },
       "onlyForSocBasedCharging": "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau.",
       "phasesConfigured": {

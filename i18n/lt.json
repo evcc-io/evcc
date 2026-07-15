@@ -1324,19 +1324,11 @@
       "currents": "Įkrovimo Srovė",
       "default": "standartiškai",
       "disclaimerHint": "Pastaba:",
-      "limitSoc": {
-        "description": "Įkrovimo limitas, naudojamas, prijungus šį automobilį.",
-        "label": "Standartinis limitas"
-      },
       "maxCurrent": {
         "label": "Max. Srovė"
       },
       "minCurrent": {
         "label": "Min. Srovė"
-      },
-      "minSoc": {
-        "description": "Automobilis įkraunamas „Greitai” iki {0} nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės.",
-        "label": "Minimali įkrova %"
       },
       "onlyForSocBasedCharging": "Šie pasirinkimai galimi tik automobiliams su žinomu įkrovos lygiu.",
       "phasesConfigured": {

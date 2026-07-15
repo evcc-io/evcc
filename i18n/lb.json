@@ -1241,19 +1241,11 @@
       "currents": "Luedstroum",
       "default": "Standard",
       "disclaimerHint": "Notiz:",
-      "limitSoc": {
-        "description": "Luedzil dat benotzt gëtt, wann dëst Gefier verbonnen ass.",
-        "label": "Standard Luedzil"
-      },
       "maxCurrent": {
         "label": "Max. Stroum"
       },
       "minCurrent": {
         "label": "Min. Stroum"
-      },
-      "minSoc": {
-        "description": "D'Gefier gëtt \"séier\" op {0} am Solarmodus opgelueden. Da geet et weider mat Solariwwerschëss. Dëst ass nëtzlech fir eng Minimum-Reechwäit och wärend méi däischter Deeg ze garantéieren.",
-        "label": "Min. oplueden %"
       },
       "onlyForSocBasedCharging": "Dës Optioune sinn nëmme fir Gefierer mat bekannte Luedstatioune verfügbar.",
       "phasesConfigured": {

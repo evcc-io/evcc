@@ -1134,6 +1134,7 @@
   },
   "general": {
     "download": "Download",
+    "none": "keine",
     "note": "Hinweis:"
   },
   "header": {
@@ -1377,19 +1378,11 @@
       "currents": "Ladestrom",
       "default": "default",
       "heating": "Heizen",
-      "limitSoc": {
-        "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
-        "label": "Standard Ladelimit"
-      },
       "maxCurrent": {
         "label": "Max. Ladestrom"
       },
       "minCurrent": {
         "label": "Min. Ladestrom"
-      },
-      "minSoc": {
-        "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
-        "label": "Mindestladung"
       },
       "minTemp": {
         "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
@@ -1478,8 +1471,18 @@
       "vehicleSoc": "Ladestand"
     },
     "vehicleSettings": {
-      "entry": "Einstellungen",
-      "title": "Einstellungen {0}"
+      "connectedTo": "verbunden mit {0}",
+      "description": "Diese Standardwerte werden angewendet, wenn das Fahrzeug an einem Ladepunkt angeschlossen wird.",
+      "editHint": "Fahrzeuge unter {0} hinzufügen oder bearbeiten.",
+      "keepAsIs": "Beibehalten",
+      "learnMore": "Mehr erfahren.",
+      "limitSoc": "Standardlimit",
+      "menu": "Fahrzeuge",
+      "minSoc": "Minimale Ladung",
+      "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
+      "mode": "Standardmodus",
+      "notConnected": "nicht verbunden",
+      "title": "Fahrzeugeinstellungen"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Warte auf Autorisierung.",

@@ -981,19 +981,11 @@
       "currents": "Ladestrøm",
       "default": "forvalg",
       "disclaimerHint": "Merknad:",
-      "limitSoc": {
-        "description": "Ladegrense som brukes når dette kjøretøyet er tilkoblet.",
-        "label": "Standardgrense"
-      },
       "maxCurrent": {
         "label": "Maks. ladestrøm"
       },
       "minCurrent": {
         "label": "Min. ladestrøm"
-      },
-      "minSoc": {
-        "description": "For nødstilfeller. Kjøretøyet blir „raskt” ladet til {0} fra all tilgjengelig solenergi, og fortsetter deretter med bare solenergioverskuddet.",
-        "label": "Min. lading%"
       },
       "onlyForSocBasedCharging": "Disse alternativene er kun tilgjengelige for kjøretøy med kjent ladenivå.",
       "phasesConfigured": {

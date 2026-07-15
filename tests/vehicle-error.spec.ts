@@ -21,9 +21,9 @@ test.describe("vehicle startup error (using failing Tesla API)", async () => {
     await expect(page.getByTestId("vehicle-name")).toHaveText("Broken Tesla");
     await expect(page.getByTestId("vehicle-not-reachable-icon")).toBeVisible();
 
-    await page
-      .getByRole("combobox", { name: "Change vehicle" })
-      .selectOption({ label: "→ Settings" });
+    const moreTab = page.getByTestId("tab-more");
+    await moreTab.click();
+    await moreTab.getByRole("button", { name: "Vehicles" }).click();
     const modal = page.getByTestId("vehicle-settings-modal");
     await expectModalVisible(modal);
     await expect(modal.getByRole("combobox", { name: "Minimum charge" })).toBeEnabled();
@@ -32,7 +32,7 @@ test.describe("vehicle startup error (using failing Tesla API)", async () => {
 
   test("guest vehicle: normal title and no icon", async ({ page }) => {
     // switch to offline vehicle
-    await page.getByTestId("change-vehicle").locator("select").selectOption("Guest vehicle");
+    await page.getByRole("combobox", { name: "Change vehicle" }).selectOption("Guest vehicle");
 
     await expect(page.getByTestId("vehicle-name")).toHaveText("Guest vehicle");
     await expect(page.getByTestId("vehicle-not-reachable-icon")).not.toBeVisible();

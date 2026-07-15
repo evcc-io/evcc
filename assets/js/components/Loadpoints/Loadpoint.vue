@@ -89,7 +89,6 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
-			@open-vehicle-settings="(name) => $emit('open-vehicle-settings-modal', name)"
 			@batteryboost-updated="setBatteryBoost"
 			@open-modal="$emit('open-charging-plan-modal')"
 		/>
@@ -254,7 +253,7 @@ export default defineComponent({
 		rangePerSoc: Number,
 		socPerKwh: { type: Number, required: true },
 	},
-	emits: ["open-charging-plan-modal", "open-settings-modal", "open-vehicle-settings-modal"],
+	emits: ["open-charging-plan-modal", "open-settings-modal"],
 	data() {
 		return {
 			tickerHandler: null as Timeout,

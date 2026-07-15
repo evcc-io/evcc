@@ -1282,19 +1282,11 @@
       "currents": "Nabíjecí proud",
       "default": "výchozí",
       "disclaimerHint": "Poznámka:",
-      "limitSoc": {
-        "description": "Nabíjecí limit, který je použit, když je připojeno toto vozidlo.",
-        "label": "Výchozí limit nabití"
-      },
       "maxCurrent": {
         "label": "Max. Proud"
       },
       "minCurrent": {
         "label": "Min. Proud"
-      },
-      "minSoc": {
-        "description": "Vozidlo bude rychle nabito na {0} v solárním režimu. Poté bude pokračovat nabíjení z přebytku solární energie. Užitečné pro zajištění minimálního dojezdu i během zatažených dnů.",
-        "label": "Minimální úroveň nabití"
       },
       "onlyForSocBasedCharging": "Tyto volby jsou povolené pouze pro vozidla se známou nabíjecí úrovní.",
       "phasesConfigured": {

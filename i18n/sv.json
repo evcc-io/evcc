@@ -1295,19 +1295,11 @@
       "currents": "Laddström",
       "default": "förvald",
       "disclaimerHint": "Anmärkning:",
-      "limitSoc": {
-        "description": "Laddbegränsning när detta fordon är anslutet.",
-        "label": "Förvald laddgräns"
-      },
       "maxCurrent": {
         "label": "Max. ström"
       },
       "minCurrent": {
         "label": "Min. ström"
-      },
-      "minSoc": {
-        "description": "Fordonet laddas i sol-läge „snabbt” till {0} och sedan med endast solel. Användbart för att alltid ha en minsta räckvidd tillgänglig .",
-        "label": "Min. laddning %"
       },
       "onlyForSocBasedCharging": "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå.",
       "phasesConfigured": {

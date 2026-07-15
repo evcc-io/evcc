@@ -951,19 +951,11 @@
       "currents": "Töltőáram",
       "default": "alapértelmezett",
       "disclaimerHint": "Megjegyzés:",
-      "limitSoc": {
-        "description": "Töltési korlát, amikor a jármű csatlakoztatva van.",
-        "label": "Alapértelmezett limit"
-      },
       "maxCurrent": {
         "label": "Max. Áram"
       },
       "minCurrent": {
         "label": "Min. Áram"
-      },
-      "minSoc": {
-        "description": "A jármű gyorstöltve lesz {0}-ra szolár üzemmódban. Ezután folytatódik a töltés a napelemes többletenergiával. Hasznos egy minimum tartományt megadni a felhősebb napokra.",
-        "label": "Min. töltés %"
       },
       "onlyForSocBasedCharging": "Ezek a beállítások csak olyan járművekre elérhetőek, amiknek ismert a töltési szintje.",
       "phasesConfigured": {

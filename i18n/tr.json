@@ -1265,19 +1265,11 @@
       "currents": "Doldurma Akımı",
       "default": "varsayılan",
       "disclaimerHint": "Not:",
-      "limitSoc": {
-        "description": "Araç bağlandığında kullanılan dolum sınırı.",
-        "label": "Varsayılan dolum sınır"
-      },
       "maxCurrent": {
         "label": "Azami Akım"
       },
       "minCurrent": {
         "label": "Asgari Akım"
-      },
-      "minSoc": {
-        "description": "Araç, güneş enerjisi modunda {0} seviyesine hızlı doldurulur. Ardından güneş enerjisi fazlalığıyla devam eder. Karanlık havalarda dahi asgari bir menzil sağlamak için kullanışlıdır.",
-        "label": "Asgari dolum oranı"
       },
       "onlyForSocBasedCharging": "Bu seçenekler, sadece doluluk seviyesi bilinen araçlar için açık.",
       "phasesConfigured": {
