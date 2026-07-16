@@ -27,7 +27,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Generate CLI docs
-        run: go run main.go gendoc ./cli-docs
+        run: mkdir dist && touch dist/empty && go run main.go gendoc ./cli-docs
 
       - name: Format
         run: npx prettier@3 --write "./cli-docs/**/*.md"
