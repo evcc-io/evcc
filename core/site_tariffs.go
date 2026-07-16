@@ -121,6 +121,38 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
+
+	site.persistTariffs()
+}
+
+// persistTariffs stores tariff values once per 15min boundary. Like the meter
+// collectors it is driven by the update loop, skipping the partial boot slot.
+func (site *Site) persistTariffs() {
+	slot := time.Now().Truncate(tariff.SlotDuration)
+
+	last := site.tariffSlot
+	site.tariffSlot = slot
+
+	// skip repeat ticks within the slot and the partial boot slot
+	if last.IsZero() || !slot.After(last) {
+		return
+	}
+
+	value := func(u api.TariffUsage) *float64 {
+		if r, err := tariff.At(site.GetTariff(u), slot); err == nil {
+			return &r.Value
+		}
+		return nil
+	}
+
+	if err := metrics.PersistTariffs(slot,
+		value(api.TariffUsageGrid),
+		value(api.TariffUsageFeedIn),
+		value(api.TariffUsageCo2),
+		value(api.TariffUsageTemperature),
+	); err != nil {
+		site.log.ERROR.Printf("persist tariffs: %v", err)
+	}
 }
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
@@ -154,12 +186,6 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	if r, err := solar.At(time.Now()); err == nil {
 		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
 			site.log.ERROR.Printf("solar forecast collector: %v", err)
-		}
-	}
-
-	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {
-		if err := site.collectors[metrics.Temperature].SetSocTemp(r.Value, true); err != nil {
-			site.log.ERROR.Printf("temperature collector soc_temp: %v", err)
 		}
 	}
 
