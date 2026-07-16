@@ -38,6 +38,12 @@ func resolveBrand(name string) (brand, bool) {
 	return brand{}, false
 }
 
+// IsBrand reports whether name is a known VW group brand (case-insensitive)
+func IsBrand(name string) bool {
+	_, ok := resolveBrand(name)
+	return ok
+}
+
 // Vehicle is a single entry of the portal vehicle list. VIN and name carry
 // several alternative field names depending on the response variant.
 type Vehicle struct {
@@ -119,20 +125,19 @@ const (
 	FieldPlugState                    = "plug_state"
 
 	// soc
-	FieldBatteryStateReportSoc = "battery_state_report.soc"
-	FieldSoc                   = "state_of_charge"
-	FieldHvSoc                 = "hv_soc"
-	FieldHvBatteryLevelValue   = "battery_level_HV.value"
-	FieldHvBatteryLevelState   = "battery_level_HV.state"
+	FieldSoc                 = "state_of_charge"
+	FieldHvSoc               = "hv_soc"
+	FieldHvBatteryLevelValue = "battery_level_HV.value"
 
 	// target soc
 	FieldTargetSoc = "settings.target_soc"
 
 	// range
-	FieldRangeCombined  = "cruising_range_combined"
-	FieldRangePrimary   = "cruising_range_primary_engine"
-	FieldRangeSecondary = "cruising_range_secondary_engine"
-	KeyRangeID3         = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 cruising range, delivered as "value"
+	FieldRangeCombined       = "cruising_range_combined"
+	FieldRangePrimary        = "cruising_range_primary_engine"
+	FieldRangeSecondary      = "cruising_range_secondary_engine"
+	KeyRangeID3              = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 range
+	KeyBatteryStateReportSoc = "506cb83e-f99f-3af3-bbeb-0429b69a78d9" // VW ID.3 soc
 
 	// odo
 	FieldOdometer      = "mileage"
@@ -141,10 +146,6 @@ const (
 	// time
 	FieldRemainingTime = "remaining_charging_time"
 )
-
-// hvBatteryLevelValid is the battery_level_HV.state value that marks
-// battery_level_HV.value as a trustworthy SoC reading
-const hvBatteryLevelValid = "VALID"
 
 // contentDatasets returns the content datasets, sorted oldest to newest. The
 // portal emits "..._no_content_found.zip" placeholders while the vehicle is

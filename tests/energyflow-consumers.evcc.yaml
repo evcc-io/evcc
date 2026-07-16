@@ -2,7 +2,7 @@ site:
   title: Hello World
   meters:
     grid: grid
-    consumers:
+    consumer:
       - fridge
     aux:
       - heater

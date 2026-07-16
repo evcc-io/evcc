@@ -1,10 +1,8 @@
 <template>
-	<h3 class="fw-normal mb-4">{{ $t("sessions.overview") }}</h3>
-
-	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="mb-5">
+	<div v-if="sessions.length === 0" data-testid="sessions-nodata">
 		<p>{{ $t("sessions.noData") }}</p>
 	</div>
-	<div v-else class="mb-5 table-outer">
+	<div v-else class="table-outer">
 		<table class="table text-nowrap">
 			<thead class="sticky-top">
 				<tr data-testid="sessions-head">
@@ -479,7 +477,7 @@ export default defineComponent({
 }
 .table thead,
 .table tfoot {
-	background: var(--evcc-background);
+	background: var(--evcc-box);
 }
 .table tfoot th {
 	border-top-width: 2px;

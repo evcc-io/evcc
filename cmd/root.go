@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -353,28 +354,32 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
+	var hemsInstance hems.API
 	if err == nil {
-		if hems, errConf := configureHEMS(&conf.HEMS, site); errConf == nil && hems != nil {
+		hemsInstance, err = configureHEMS(&conf.HEMS, site)
+		if err != nil {
+			err = wrapErrorWithClass(ClassHEMS, err)
+		} else if hemsInstance != nil {
 			// republish when HEMS state updates
-			hems.SetUpdated(func() {
+			hemsInstance.SetUpdated(func() {
 				valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-					Config:     conf.HEMS.Redacted(),
+					Config: struct {
+						Configured bool `json:"configured"`
+					}{hemsInstance != nil},
 					YamlSource: yamlSource.hems,
 					Status: struct {
 						Dimmed              *bool    `json:"dimmed,omitempty"`
-						Curtailed           *bool    `json:"curtailed,omitempty"`
+						Curtailed           *int     `json:"curtailed,omitempty"`
 						MaxConsumptionPower float64  `json:"maxConsumptionPower,omitempty"`
 						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
 					}{
-						Dimmed:              hems.Dimmed(),
-						Curtailed:           hems.Curtailed(),
-						MaxConsumptionPower: hems.MaxConsumptionPower(),
-						MaxProductionPower:  hems.MaxProductionPower(),
+						Dimmed:              hemsInstance.Dimmed(),
+						Curtailed:           hemsInstance.CurtailedPercent(),
+						MaxConsumptionPower: hemsInstance.MaxConsumptionPower(),
+						MaxProductionPower:  hemsInstance.MaxProductionPower(),
 					},
 				}}
 			})
-		} else {
-			err = wrapErrorWithClass(ClassHEMS, errConf)
 		}
 	}
 
@@ -429,7 +434,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-		Config:     conf.HEMS.Redacted(),
+		Config: struct {
+			Configured bool `json:"configured"`
+		}{hemsInstance != nil},
 		YamlSource: yamlSource.hems,
 	}}
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{

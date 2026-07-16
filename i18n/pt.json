@@ -698,14 +698,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Chave de licença",
-      "activationKeyHint": "Enviado por e-mail. Pode ser consultado em {url}.",
       "addToken": "Insira token",
       "changeToken": "Alterar token",
       "description": "O modelo de apoio (sponsoring) ajuda-nos a manter o projeto e a desenvolver, de forma sustentável, novas funcionalidades. Como apoiante (sponsor), terá acesso às integrações de todos os Carregadores.",
       "descriptionToken": "Como patrocinado do GitHub, pode encontrar o seu token em {url}. Para começar, disponibilizamos um {trialToken}.",
-      "email": "E-mail",
-      "emailHint": "Endereço de e-mail que utilizou para {url}",
       "enterYourToken": "O teu token de patrocinador",
       "error": "O token de Apoiante (Sponsor) não é válido.",
       "invalid": "inválido",
@@ -1151,8 +1147,6 @@
       "batteryCharge": "Carga de Bateria",
       "batteryDischarge": "Descarga de Bateria",
       "batteryDischargeHold": "Bateria (suspensa)",
-      "batteryForecastEmpty": "vazio {time}",
-      "batteryForecastFull": "cheio {time}",
       "batteryGridChargeActive": "Carga da rede: ativa",
       "batteryGridChargeLimit": "Carga da rede: quando",
       "batteryTooltip": "{energy} de {total} ({soc})",
