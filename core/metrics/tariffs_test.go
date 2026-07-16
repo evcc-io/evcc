@@ -41,4 +41,15 @@ func TestPersistTariffs(t *testing.T) {
 	require.NoError(t, PersistTariffs(slot.Add(15*time.Minute), nil, nil, nil, nil))
 	require.NoError(t, db.Instance.Model(new(tariffValue)).Count(&count).Error)
 	require.Equal(t, int64(1), count)
+
+	// all values set: each column mapped independently
+	next := slot.Add(30 * time.Minute)
+	feedin, temp := 0.08, 21.5
+	require.NoError(t, PersistTariffs(next, &grid, &feedin, &co2, &temp))
+
+	require.NoError(t, db.Instance.Where("ts = ?", next.Unix()).First(&res).Error)
+	require.InDelta(t, 0.3, *res.Grid, 0.001)
+	require.InDelta(t, 0.08, *res.FeedIn, 0.001)
+	require.InDelta(t, 250, *res.Co2, 0.001)
+	require.InDelta(t, 21.5, *res.Temperature, 0.001)
 }
