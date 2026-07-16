@@ -21,6 +21,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		homeassistant.Config `mapstructure:",squash"`
 		Power                string
 		Energy               string
+		ReturnEnergy         string
 		Currents             []string
 		Voltages             []string
 		Powers               []string
@@ -65,11 +66,15 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	})
 
 	// decorators for optional interfaces
-	var energyG func() (float64, error)
+	var energyG, returnEnergyG func() (float64, error)
 	var currentsG, voltagesG, powersG func() (float64, float64, float64, error)
 
 	if cc.Energy != "" {
 		energyG = func() (float64, error) { return conn.GetFloatState(cc.Energy) }
+	}
+
+	if cc.ReturnEnergy != "" {
+		returnEnergyG = func() (float64, error) { return conn.GetFloatState(cc.ReturnEnergy) }
 	}
 
 	// phase currents (optional)
@@ -94,6 +99,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterReturnEnergy(returnEnergyG))
 
 	if cc.Soc != "" {
 		socG := func() (float64, error) { return conn.GetFloatState(cc.Soc) }
