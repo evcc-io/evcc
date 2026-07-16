@@ -568,8 +568,10 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
 
-	// re-arm battery boost if configured as default (opt-in, PV modes only)
-	if lp.GetBatteryBoostDefault() {
+	// re-arm battery boost if configured as default (opt-in, PV modes only).
+	// Skip integrated devices: their "connect" is just the socket switching on,
+	// not a real vehicle plug-in, so boost must stay manual there.
+	if lp.GetBatteryBoostDefault() && !lp.chargerHasFeature(api.IntegratedDevice) {
 		if err := lp.SetBatteryBoost(true); err != nil {
 			lp.log.DEBUG.Printf("battery boost default: %v", err)
 		}
