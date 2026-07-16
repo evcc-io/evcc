@@ -464,6 +464,9 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 			case api.TariffTypeSolar:
 				valueKey = "power"
 				ratesKey = "solarRates"
+			case api.TariffTypeTemperature:
+				valueKey = "outdoorTemp"
+				ratesKey = "temperatureRates"
 			default:
 				valueKey = "price"
 			}

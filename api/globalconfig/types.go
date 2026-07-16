@@ -176,7 +176,7 @@ type Tariffs struct {
 }
 
 func (c Tariffs) IsConfigured() bool {
-	return c.Currency != "" || c.Grid.Type != "" || c.FeedIn.Type != "" || c.Co2.Type != "" || c.Planner.Type != "" || len(c.Solar) > 0
+	return c.Currency != "" || c.Grid.Type != "" || c.FeedIn.Type != "" || c.Co2.Type != "" || c.Planner.Type != "" || len(c.Solar) > 0 || c.Temperature.Type != ""
 }
 
 type TariffRefs struct {

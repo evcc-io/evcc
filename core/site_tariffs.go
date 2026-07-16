@@ -84,6 +84,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageSolar)); err == nil {
 		site.publish(keys.TariffSolar, v)
 	}
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageTemperature)); err == nil {
+		site.publish(keys.TariffTemperature, v)
+	}
 	if v := site.effectivePrice(greenShareHome); v != nil {
 		site.publish(keys.TariffPriceHome, v)
 	}
@@ -98,16 +101,18 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2     api.Rates     `json:"co2,omitempty"`
-		FeedIn  api.Rates     `json:"feedin,omitempty"`
-		Grid    api.Rates     `json:"grid,omitempty"`
-		Planner api.Rates     `json:"planner,omitempty"`
-		Solar   *solarDetails `json:"solar,omitempty"`
+		Co2         api.Rates     `json:"co2,omitempty"`
+		FeedIn      api.Rates     `json:"feedin,omitempty"`
+		Grid        api.Rates     `json:"grid,omitempty"`
+		Planner     api.Rates     `json:"planner,omitempty"`
+		Solar       *solarDetails `json:"solar,omitempty"`
+		Temperature api.Rates     `json:"temperature,omitempty"`
 	}{
-		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:    tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
+		Co2:         tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn:      tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
+		Planner:     tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
+		Grid:        tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
+		Temperature: tariff.Rates(site.GetTariff(api.TariffUsageTemperature)),
 	}
 
 	// calculate adjusted solar rates

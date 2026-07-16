@@ -76,7 +76,7 @@ const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
-const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates"];
+const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
 
 export default {
 	name: "DeviceTags",
@@ -122,6 +122,7 @@ export default {
 				priceRates: "price",
 				co2Rates: "co2",
 				solarRates: "solar",
+				temperatureRates: "temperature",
 			};
 
 			// Find which forecast tag is present
@@ -214,6 +215,7 @@ export default {
 					return this.fmtPercentage(value, 1);
 				case "temp":
 				case "heaterTempLimit":
+				case "outdoorTemp":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
@@ -284,6 +286,8 @@ export default {
 					return short ? this.fmtCo2Short(value) : this.fmtCo2Medium(value);
 				case "solar":
 					return this.fmtW(value);
+				case "temperature":
+					return this.fmtTemperature(value);
 				default:
 					return value;
 			}
