@@ -191,7 +191,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	// (https://github.com/evcc-io/evcc/pull/26235)
 	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
 	if err != nil {
-		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+		cs, _ = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
 	}
 
 	if slices.Contains([]string{
