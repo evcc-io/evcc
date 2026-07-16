@@ -30,7 +30,7 @@ jobs:
         run: mkdir dist && touch dist/empty && go run main.go gendoc ./cli-docs
 
       - name: Format
-        run: npx prettier@3 --write "./cli-docs/**/*.md"
+        run: npx prettier@3 --no-config --write "./cli-docs/**/*.md"
 
       - name: Deploy CLI docs to docs repo
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
