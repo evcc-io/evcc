@@ -37,6 +37,39 @@
 				class="mt-2"
 				@batteryboostlimit-updated="setBatteryBoostLimit"
 			/>
+			<h6 v-if="heating">
+				{{ $t("main.loadpointSettings.heating") }}
+			</h6>
+			<div v-if="heating" class="mb-3 row">
+				<label :for="formId('mintemp')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+					{{ $t("main.loadpointSettings.minTemp.label") }}
+				</label>
+				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+					<select
+						:id="formId('mintemp')"
+						v-model.number="selectedMinTemp"
+						class="form-select form-select-sm"
+						@change="setMinTemp"
+					>
+						<option
+							v-for="{ value, name } in minTempOptions"
+							:key="value"
+							:value="value"
+						>
+							{{ name }}
+						</option>
+					</select>
+				</div>
+				<div class="col-sm-8 offset-sm-4 mt-1">
+					<small class="text-muted">
+						{{
+							$t("main.loadpointSettings.minTemp.description", [
+								selectedMinTemp ? fmtTemperature(selectedMinTemp) : "x °C",
+							])
+						}}
+					</small>
+				</div>
+			</div>
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
 			</h6>
@@ -81,7 +114,7 @@
 				</div>
 			</div>
 
-			<div class="mb-3 row">
+			<div v-if="!switchDevice" class="mb-3 row">
 				<label :for="formId('maxcurrent')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.maxCurrent.label") }}
 				</label>
@@ -180,6 +213,7 @@ export default defineComponent({
 			id: undefined as string | undefined,
 			selectedMaxCurrent: undefined as number | undefined,
 			selectedMinCurrent: undefined as number | undefined,
+			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
 			isModalVisible: false,
 		};
@@ -193,6 +227,27 @@ export default defineComponent({
 		},
 		minCurrent() {
 			return this.loadpoint?.minCurrent;
+		},
+		switchDevice() {
+			return this.loadpoint?.chargerFeatureSwitchDevice;
+		},
+		heating() {
+			return this.loadpoint?.chargerFeatureHeating;
+		},
+		minTemp() {
+			// stored as loadpoint minSoc, interpreted as temperature for heating devices
+			return this.loadpoint?.minSoc;
+		},
+		minTempOptions() {
+			let { minTemp = 0, maxTemp = 100 } = this.loadpoint?.ui ?? {};
+			if (minTemp >= maxTemp) {
+				minTemp = 0;
+				maxTemp = 100;
+			}
+			return [0, ...range(Math.max(minTemp, 1), maxTemp, 1)].map((value) => ({
+				value,
+				name: value === 0 ? "---" : this.fmtTemperature(value),
+			}));
 		},
 		batteryBoostLimit() {
 			return this.loadpoint?.batteryBoostLimit;
@@ -249,6 +304,9 @@ export default defineComponent({
 		minCurrent(value) {
 			this.selectedMinCurrent = value;
 		},
+		minTemp(value) {
+			this.selectedMinTemp = value;
+		},
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
@@ -259,6 +317,7 @@ export default defineComponent({
 			this.selectedPhases = this.phasesConfigured;
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
+			this.selectedMinTemp = this.minTemp;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
 		},
@@ -276,6 +335,9 @@ export default defineComponent({
 		},
 		setMinCurrent() {
 			api.post(this.apiPath("mincurrent") + "/" + this.selectedMinCurrent);
+		},
+		setMinTemp() {
+			api.post(this.apiPath("mintemp") + "/" + this.selectedMinTemp);
 		},
 		setPhasesConfigured() {
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);

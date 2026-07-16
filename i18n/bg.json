@@ -131,8 +131,6 @@
       "feedinPrice": "Цена за изкупуване",
       "gridPrice": "Цена на мрежата",
       "heaterTempLimit": "Лимит на загревателя",
-      "hemsActiveLimit": "Активен лимит",
-      "hemsType": "Комуникация",
       "identifier": "RFID идентификатор",
       "no": "не",
       "odometer": "одометър",
@@ -157,10 +155,6 @@
       "A": "А (не е свързан)",
       "B": "Б (свързан)",
       "C": "В (зарежда се)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "през EEBus",
-      "relay": "през реле"
     },
     "devices": {
       "auxMeter": "Смарт потребител",
@@ -896,9 +890,9 @@
       "battery": "Батерия",
       "batteryCharge": "Зареждане на батерията",
       "batteryDischarge": "Разреждане на батерията",
+      "batteryDischargeHold": "Батерия (заключена)",
       "batteryGridChargeActive": "зареждането от мрежата е актижно",
       "batteryGridChargeLimit": "зареждане от мрежата, когато",
-      "batteryHold": "Батерия (заключена)",
       "batteryTooltip": "{energy} от {total} ({soc})",
       "forecastTooltip": "прогноза: оставаща фотоволтаична продукция за днес",
       "gridImport": "Използвана енергия от мрежата",
@@ -918,7 +912,6 @@
       "waitForVehicle": "Готово. Чака се нагревателят …"
     },
     "hemsWarning": {
-      "description": "Намалено зареждане, което да не надвишава {limit}.",
       "title": "Външен лимит:"
     },
     "loadpoint": {

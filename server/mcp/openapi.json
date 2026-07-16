@@ -140,6 +140,15 @@
           "$ref": "#/components/schemas/Soc"
         }
       },
+      "temp": {
+        "description": "Temperature in °C",
+        "in": "path",
+        "name": "temp",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Temp"
+        }
+      },
       "threshold": {
         "description": "Power in W",
         "in": "path",
@@ -192,8 +201,8 @@
             "schema": {
               "properties": {
                 "result": {
-                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge",
-                  "maximum": 3,
+                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+                  "maximum": 4,
                   "minimum": 0,
                   "type": "integer"
                 }
@@ -366,7 +375,8 @@
           "unknown",
           "normal",
           "hold",
-          "charge"
+          "charge",
+          "holdcharge"
         ],
         "example": "normal",
         "type": "string"
@@ -717,6 +727,12 @@
           }
         },
         "type": "object"
+      },
+      "Temp": {
+        "description": "Temperature in °C",
+        "example": 50,
+        "minimum": 0,
+        "type": "number"
       },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
@@ -1350,6 +1366,7 @@
             "in": "query",
             "name": "from",
             "schema": {
+              "example": "2026-07-01T00:00:00Z",
               "format": "date-time",
               "type": "string"
             }
@@ -1359,6 +1376,7 @@
             "in": "query",
             "name": "to",
             "schema": {
+              "example": "2026-07-02T00:00:00Z",
               "format": "date-time",
               "type": "string"
             }
@@ -1369,6 +1387,7 @@
             "name": "aggregate",
             "schema": {
               "default": "15m",
+              "example": "1h",
               "type": "string"
             }
           },
@@ -1378,7 +1397,45 @@
             "name": "grouped",
             "schema": {
               "default": false,
+              "example": false,
               "type": "boolean"
+            }
+          },
+          {
+            "description": "Filter by entity group",
+            "in": "query",
+            "name": "group",
+            "schema": {
+              "enum": [
+                "forecast",
+                "battery",
+                "grid",
+                "pv",
+                "home",
+                "loadpoint",
+                "meter",
+                "consumer"
+              ],
+              "example": "battery",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity name",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "example": "db:8",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity title",
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "example": "Battery",
+              "type": "string"
             }
           },
           {
@@ -1391,6 +1448,7 @@
                 "json",
                 "csv"
               ],
+              "example": "json",
               "type": "string"
             }
           },
@@ -1399,6 +1457,7 @@
             "in": "query",
             "name": "lang",
             "schema": {
+              "example": "de",
               "type": "string"
             }
           }
@@ -1678,6 +1737,32 @@
           }
         },
         "summary": "Update minimum current",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/mintemp/{temp}": {
+      "post": {
+        "description": "Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/limit"
+        },
+        "operationId": "setLoadpointMinTemp",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/temp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update minimum temperature",
         "tags": [
           "loadpoints"
         ]
@@ -2815,6 +2900,67 @@
           }
         },
         "summary": "Set minimum SoC",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode": {
+      "delete": {
+        "description": "Resets the vehicle charge mode to keep the last selected mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "deleteVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Reset charge mode",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode/{mode}": {
+      "post": {
+        "description": "Sets the charge mode applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+        },
+        "operationId": "setVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/mode"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "mode": {
+                      "$ref": "#/components/schemas/Mode"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set charge mode",
         "tags": [
           "vehicles"
         ]

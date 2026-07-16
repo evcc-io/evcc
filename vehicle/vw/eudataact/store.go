@@ -1,8 +1,6 @@
 package eudataact
 
 import (
-	"log"
-	"maps"
 	"slices"
 	"sync"
 	"time"
@@ -27,8 +25,9 @@ type store struct {
 type vehicleState struct {
 	mu         sync.Mutex // guards the fields below
 	identifier string
-	data       map[string]point
+	data       []point
 	after      time.Time
+	seq        uint64 // delivery counter, incremented per merged dataset
 }
 
 var (
@@ -63,7 +62,7 @@ func (s *store) state(vin string) *vehicleState {
 
 	v := s.vehicles[vin]
 	if v == nil {
-		v = &vehicleState{data: make(map[string]point)}
+		v = &vehicleState{}
 		s.vehicles[vin] = v
 	}
 
@@ -74,7 +73,7 @@ func (s *store) state(vin string) *vehicleState {
 // merged and merges them into the vehicle's map oldest to newest. It returns the
 // newest dataset's delivery time (used to schedule the next poll).
 // On first poll latest maxBackfill content datasets are downloaded.
-func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
+func (s *store) update(vin string) (time.Time, error) {
 	v := s.state(vin)
 
 	v.mu.Lock()
@@ -93,10 +92,7 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	content, err := contentDatasets(list)
-	if err != nil {
-		return time.Time{}, err
-	}
+	content := contentDatasets(list)
 
 	var newest time.Time
 	for _, d := range list {
@@ -116,7 +112,7 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 			return newest, err
 		}
 
-		data, err := parseDataset(log, b)
+		data, err := parseDataset(b)
 		if err != nil {
 			return newest, err
 		}
@@ -127,7 +123,8 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 			v.after = d.CreatedOn
 		}
 
-		merge(v.data, data)
+		v.seq++
+		v.data = merge(v.data, data, v.seq)
 
 		if !initial {
 			logData(s.api.log, data)
@@ -146,21 +143,20 @@ func (s *store) update(log *log.Logger, vin string) (time.Time, error) {
 }
 
 // snapshot returns a copy of the merged data for vin
-func (s *store) snapshot(vin string) map[string]point {
+func (s *store) snapshot(vin string) []point {
 	v := s.state(vin)
 
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	return maps.Clone(v.data)
+	return slices.Clone(v.data)
 }
 
-// logData logs every field of data at DEBUG level, sorted by field name, with
-// its value and own timestamp in local time.
-func logData(log *util.Logger, data map[string]point) {
-	for _, k := range slices.Sorted(maps.Keys(data)) {
-		p := data[k]
-		log.DEBUG.Printf("recv %s: %s (%s)", k, p.Value, p.Timestamp.Local().Format("2006-01-02 15:04:05"))
+// logData logs every data point at DEBUG level in arrival order, with its value
+// and own timestamp in local time.
+func logData(log *util.Logger, data []point) {
+	for _, p := range data {
+		log.DEBUG.Printf("recv %s %s: %s (%s)", p.Key, p.Name, p.Value, p.Timestamp.Local().Format("2006-01-02 15:04:05"))
 	}
 }
 
@@ -187,13 +183,16 @@ func pending(content []dataset, after time.Time) []dataset {
 	return res
 }
 
-// merge copies the data points from src into dst, keeping the newest value per
-// field across datasets.
-func merge(dst, src map[string]point) {
-	for k, p := range src {
-		if cur, ok := dst[k]; ok && cur.Timestamp.After(p.Timestamp) {
-			continue
+// merge folds src (the newer dataset) into dst per id, stamping each point with
+// seq, the dataset's delivery sequence (timestampUtc is unreliable).
+func merge(dst, src []point, seq uint64) []point {
+	for _, p := range src {
+		p.Seq = seq
+		if e := find(dst, p.id()); e != nil {
+			*e = p
+		} else {
+			dst = append(dst, p)
 		}
-		dst[k] = p
 	}
+	return dst
 }

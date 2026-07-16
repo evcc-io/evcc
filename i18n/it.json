@@ -143,8 +143,6 @@
       "forecast": "Previsione",
       "gridPrice": "Prezzo d'acquisto",
       "heaterTempLimit": "Limite del dispositivo di riscaldamento",
-      "hemsActiveLimit": "Limite attivo",
-      "hemsType": "Comunicazione",
       "identifier": "Identificatore RFID",
       "loginBlocked": "Limite login raggiunto",
       "max": "max",
@@ -173,10 +171,6 @@
       "A": "A (non collegato)",
       "B": "B (collegato)",
       "C": "C (in carica)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "tramite EEBus",
-      "relay": "tramite Relay"
     },
     "devices": {
       "auxMeter": "Dispositivo smart",
@@ -697,14 +691,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Chiave di licenza",
-      "activationKeyHint": "Inviata via mail. Puoi trovarla in{url}.",
       "addToken": "Inserisci il token",
       "changeToken": "Modifica il token",
       "description": "Il modello di sponsorizzazione ci aiuta a mantenere il progetto e a introdurre in modo sostenibile nuove ed entusiasmanti funzionalità. Come sponsor hai accesso a tutte le implementazioni del caricabatterie.",
       "descriptionToken": "In qualità di sponsor su GitGub, trovi il tuo token in {url}. Offriamo anche un token di prova per i test {trialToken}.",
-      "email": "Email",
-      "emailHint": "Email usata per {url}",
       "enterYourToken": "Il tuo token Sponsor",
       "error": "Il token sponsor non è valido.",
       "invalid": "non valido",
@@ -1144,11 +1134,9 @@
       "battery": "Batteria",
       "batteryCharge": "Carica della batteria",
       "batteryDischarge": "Scarico della batteria",
-      "batteryForecastEmpty": "vuoto {time}",
-      "batteryForecastFull": "full {time}",
+      "batteryDischargeHold": "Batteria (locked)",
       "batteryGridChargeActive": "Ricarica dalla rete: attiva",
       "batteryGridChargeLimit": "Ricarica dalla rete: quando",
-      "batteryHold": "Batteria (locked)",
       "batteryTooltip": "{energy} di {total} ({soc})",
       "forecast": "Previsioni",
       "forecastTooltip": "previsioni: produzione solare rimanente per oggi",
@@ -1169,7 +1157,6 @@
       "waitForVehicle": "Pronto. In attesa del calorifero…"
     },
     "hemsWarning": {
-      "description": "Riduzione della ricarica fino a un massimo di {limit}.",
       "title": "Limite esterno:"
     },
     "loadpoint": {

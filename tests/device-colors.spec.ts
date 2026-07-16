@@ -8,6 +8,8 @@ const BLUE = "rgb(96, 165, 250)"; // #60A5FA — palette[0]
 const AMBER = "rgb(251, 191, 36)"; // #FBBF24 — palette[1]
 const CUSTOM_HEX = "FF0080";
 const CUSTOM_RGB = "rgb(255, 0, 128)";
+const CUSTOM_HEX2 = "00C8FF";
+const CUSTOM_RGB2 = "rgb(0, 200, 255)";
 
 test.beforeAll(async () => {
   await start("device-colors.evcc.yaml", "device-colors.sql");
@@ -24,6 +26,10 @@ function legendBadge(scope: Locator | Page, label: string): Locator {
 async function expectLegendColor(scope: Locator | Page, label: string, rgb: string): Promise<void> {
   const dot = legendBadge(scope, label).locator("span").first();
   await expect(dot).toHaveCSS("background-color", rgb);
+}
+
+function chartSection(page: Page, heading: string): Locator {
+  return page.locator("section").filter({ has: page.getByRole("heading", { name: heading }) });
 }
 
 test("device colors: autoassign, override, persistence", async ({ page }) => {
@@ -60,24 +66,31 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
   await expectLegendColor(lpSection, "Garage", AMBER);
   await expectLegendColor(lpSection, "Carport", BLUE);
 
-  // ---------- Step 4 — Custom hex on ext meter, reload ----------
-  const meterSection = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Consumption" }) });
-  await expect(meterSection).toBeVisible();
-  await legendBadge(meterSection, "Dishwasher").click();
+  // ---------- Step 4 — Custom hex on consumer meter (Consumption chart) ----------
+  const consumerSection = chartSection(page, "Consumption");
+  await expect(consumerSection).toBeVisible();
+  await legendBadge(consumerSection, "Dishwasher").click();
   const popover2 = page.getByRole("dialog");
   await expect(popover2).toBeVisible();
   // save-on-type fires when input matches hex regex
   await popover2.getByLabel("Hex color").fill(CUSTOM_HEX);
   await page.keyboard.press("Escape");
 
-  await expectLegendColor(meterSection, "Dishwasher", CUSTOM_RGB);
+  await expectLegendColor(consumerSection, "Dishwasher", CUSTOM_RGB);
 
-  // reload: color persists via settings DB
+  // ---------- Step 5 — Custom hex on ext meter (Additional meters chart) ----------
+  const meterSection = chartSection(page, "Additional meters");
+  await expect(meterSection).toBeVisible();
+  await legendBadge(meterSection, "Alternative grid").click();
+  const popover3 = page.getByRole("dialog");
+  await expect(popover3).toBeVisible();
+  await popover3.getByLabel("Hex color").fill(CUSTOM_HEX2);
+  await page.keyboard.press("Escape");
+
+  await expectLegendColor(meterSection, "Alternative grid", CUSTOM_RGB2);
+
+  // ---------- Step 6 — Reload: both colors persist via settings DB ----------
   await page.reload();
-  const meterSection2 = page
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Consumption" }) });
-  await expectLegendColor(meterSection2, "Dishwasher", CUSTOM_RGB);
+  await expectLegendColor(chartSection(page, "Consumption"), "Dishwasher", CUSTOM_RGB);
+  await expectLegendColor(chartSection(page, "Additional meters"), "Alternative grid", CUSTOM_RGB2);
 });

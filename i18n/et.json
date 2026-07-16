@@ -85,8 +85,6 @@
       "forecast": "Ennustus",
       "gridPrice": "Võrguhind",
       "heaterTempLimit": "Soojenduse piir",
-      "hemsActiveLimit": "Aktiivne piir",
-      "hemsType": "Suhtlusviis",
       "identifier": "RFID-tunnus",
       "loginBlocked": "Sisselogimiste piir on käes",
       "max": "enim",

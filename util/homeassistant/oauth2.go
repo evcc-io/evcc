@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
@@ -21,8 +23,9 @@ func init() {
 
 func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
-		URI  string
-		Home string // TODO remove deprecated
+		URI      string
+		Home     string // TODO remove deprecated
+		Insecure bool
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -38,10 +41,10 @@ func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error
 		}
 	}
 
-	return NewHomeAssistant(uri)
+	return NewHomeAssistant(uri, cc.Insecure)
 }
 
-func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
+func NewHomeAssistant(uri string, insecure bool) (oauth2.TokenSource, error) {
 	uri = strings.TrimRight(uri, "/") // normalize
 
 	extUrl := network.Config().ExternalURL()
@@ -75,6 +78,12 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 
 	log := util.NewLogger("homeassistant")
 	ctx := util.WithLogger(context.Background(), log)
+
+	if insecure {
+		log.WARN.Println("insecure mode enabled - TLS certificate verification is disabled, use only for trusted local/self-signed instances")
+		httpClient := &http.Client{Transport: transport.Insecure()}
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
+	}
 
 	return auth.NewOAuth(ctx, "HomeAssistant", host, &oc)
 }

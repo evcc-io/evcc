@@ -55,7 +55,7 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-nodata")).toHaveCount(0);
     await expect(page.getByRole("table")).toBeVisible();
     await expect(page.getByTestId("sessions-head")).toHaveCount(1);
-    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(9);
+    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(10);
 
     await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
     await expect(page.getByTestId("sessions-foot-energy")).toBeVisible();
@@ -77,10 +77,6 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-foot-chargeDuration")).toBeVisible();
     await expect(page.getByTestId("sessions-foot-chargeDuration")).toHaveText("1:30");
 
-    await page
-      .getByTestId("sessions-head-chargeDuration")
-      .getByRole("combobox")
-      .selectOption("⌀ Power");
     await expect(page.getByTestId("sessions-head-avgPower")).toContainText("⌀ PowerkW");
     await expect(page.getByTestId("sessions-foot-avgPower")).toBeVisible();
     await expect(page.getByTestId("sessions-foot-avgPower")).toHaveText("10.0");
@@ -252,11 +248,12 @@ test.describe("columns desktop", async () => {
     await expect(page.getByTestId("sessions-head-co2")).toBeVisible();
   });
   test("select odometer column if it has values", async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 800 });
     await page.goto("/#/sessions?year=2023&month=3");
     await expect(
-      page.getByTestId("sessions-head-co2").locator("option[value=odometer]")
+      page.getByTestId("sessions-head-avgPrice").locator("option[value=odometer]")
     ).toHaveCount(1);
-    await page.getByTestId("sessions-head-co2").getByRole("combobox").selectOption("odometer");
+    await page.getByTestId("sessions-head-avgPrice").getByRole("combobox").selectOption("odometer");
     await expect(page.getByTestId("sessions-head-odometer")).toBeVisible();
     await expect(page.getByTestId("sessions-entry").nth(0)).toContainText("12,345");
     await expect(page.getByTestId("sessions-foot-odometer")).toHaveText("");
@@ -274,43 +271,62 @@ test.describe("columns desktop", async () => {
 const date = new Date();
 const YEAR = date.getFullYear();
 const MONTH = date.getMonth() + 1;
-const MONTH_YEAR = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date);
+
+const openDownloadMenu = async (page: Page) => {
+  const toggle = page.getByRole("button", { name: "Download" });
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") {
+    await toggle.click();
+  }
+};
 
 test.describe("csv export", async () => {
   test("total export", async ({ page }) => {
     await page.goto("/#/sessions?period=total");
-    await expect(page.getByRole("link", { name: "Download total CSV" })).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
-      "./api/sessions?format=csv&lang=en"
+      "./api/sessions?lang=en&format=csv"
+    );
+    await expect(page.getByRole("link", { name: "XLSX" })).toHaveAttribute(
+      "href",
+      "./api/sessions?lang=en&format=xlsx"
+    );
+    await expect(page.getByRole("link", { name: "JSON" })).toHaveAttribute(
+      "href",
+      "./api/sessions?lang=en&format=json"
     );
   });
   test("year export", async ({ page }) => {
     // fixed year
     await page.goto("/#/sessions?period=year&year=2023");
-    await expect(page.getByRole("link", { name: "Download 2023 CSV" })).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
-      "./api/sessions?format=csv&lang=en&year=2023"
+      "./api/sessions?lang=en&year=2023&format=csv"
     );
 
     // current year
     await page.goto(`/#/sessions?period=year`);
-    await expect(page.getByRole("link", { name: `Download ${YEAR} CSV` })).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
-      `./api/sessions?format=csv&lang=en&year=${YEAR}`
+      `./api/sessions?lang=en&year=${YEAR}&format=csv`
     );
   });
   test("monthly export", async ({ page }) => {
     await page.goto("/#/sessions?&year=2023&month=5");
-    await expect(page.getByRole("link", { name: "Download May 2023 CSV" })).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
-      "./api/sessions?format=csv&lang=en&year=2023&month=5"
+      "./api/sessions?lang=en&year=2023&month=5&format=csv"
     );
 
     // current month
     await page.goto(`/#/sessions`);
-    await expect(page.getByRole("link", { name: `Download ${MONTH_YEAR} CSV` })).toHaveAttribute(
+    await openDownloadMenu(page);
+    await expect(page.getByRole("link", { name: "CSV" })).toHaveAttribute(
       "href",
-      `./api/sessions?format=csv&lang=en&year=${YEAR}&month=${MONTH}`
+      `./api/sessions?lang=en&year=${YEAR}&month=${MONTH}&format=csv`
     );
   });
 });
@@ -319,18 +335,40 @@ test.describe("csv export download", async () => {
   test("in browser context", async ({ page }) => {
     await page.goto("/#/sessions?period=total");
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("link", { name: "Download total CSV" }).click();
+    await openDownloadMenu(page);
+    await page.getByRole("link", { name: "CSV" }).click();
     const download = await downloadPromise;
-    expect(download.url()).toContain("/api/sessions?format=csv");
+    expect(download.url()).toContain("format=csv");
+    expect(download.suggestedFilename()).toBe("session.csv");
+  });
+
+  test("xlsx via default button", async ({ page }) => {
+    await page.goto("/#/sessions?period=total");
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("link", { name: "Download" }).click();
+    const download = await downloadPromise;
+    expect(download.url()).toContain("format=xlsx");
+    expect(download.suggestedFilename()).toBe("session.xlsx");
+  });
+
+  test("json with attachment header", async ({ page }) => {
+    await page.goto("/#/sessions?period=total");
+    const downloadPromise = page.waitForEvent("download");
+    await openDownloadMenu(page);
+    await page.getByRole("link", { name: "JSON" }).click();
+    const download = await downloadPromise;
+    expect(download.url()).toContain("format=json");
+    expect(download.suggestedFilename()).toBe("session.json");
   });
 
   test("in app context", async ({ page }) => {
     await enableAppContext(page);
     await page.goto("/#/sessions?period=total");
-    await page.getByRole("link", { name: "Download total CSV" }).click();
+    await openDownloadMenu(page);
+    await page.getByRole("link", { name: "CSV" }).click();
     expect(await expectAppEvent(page)).toMatchObject({
       type: "download",
-      url: expect.stringContaining("/api/sessions?format=csv&lang=en"),
+      url: expect.stringContaining("/api/sessions?lang=en&format=csv"),
     });
   });
 });
