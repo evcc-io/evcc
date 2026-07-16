@@ -131,7 +131,7 @@ func (suite *mqttSuite) TestMeasurement() {
 func (suite *mqttSuite) TestBatteryState() {
 	topics := lo.Map([]string{
 		"power", "energy", "capacity", "maxDischargePower", "soc",
-		"devices", "devices/1/name", "devices/1/title", "devices/1/icon", "devices/1/power", "devices/1/energy", "devices/1/returnEnergy", "devices/1/powers", "devices/1/currents", "devices/1/excessDCPower", "devices/1/capacity", "devices/1/soc", "devices/1/controllable", "devices/1/maxDischargePower", "devices/1/suggestion",
+		"devices", "devices/1/name", "devices/1/title", "devices/1/icon", "devices/1/power", "devices/1/energy", "devices/1/returnEnergy", "devices/1/powers", "devices/1/currents", "devices/1/excessDCPower", "devices/1/capacity", "devices/1/soc", "devices/1/controllable", "devices/1/suggestion", "devices/1/maxDischargePower",
 		"forecast",
 	}, func(s string, _ int) string {
 		return "test/" + s
@@ -147,5 +147,5 @@ func (suite *mqttSuite) TestBatteryState() {
 	})
 
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"2", "", "", "", "20", "1", "", "", "", "1", "", "", "", "", "", "", "10", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"2", "", "", "", "20", "1", "", "", "", "1", "", "", "", "", "", "", "10", "", "", "", ""}, suite.payloads, "payloads")
 }
