@@ -186,19 +186,6 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	port, err := v.String("vehicle.body.chargingPort.status")
-	if err != nil {
-		port, err = v.String("vehicle.body.chargingPort.combinedStatus")
-		if err != nil {
-			return api.StatusNone, err
-		}
-	}
-
-	status := api.StatusA // disconnected
-	if port == "CONNECTED" {
-		status = api.StatusB
-	}
-
 	// evaluate status first, since it's usually available through
 	// mqtt, while hvStatus might only be available through rest
 	// (https://github.com/evcc-io/evcc/pull/26235)
@@ -211,7 +198,6 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		"INITIALIZATION",         // vehicle.drivetrain.electricEngine.charging.status
 		"CHARGINGPAUSED",         // vehicle.drivetrain.electricEngine.charging.status
 		"CHARGINGENDED",          // vehicle.drivetrain.electricEngine.charging.status
-		"NOT_CHARGING",           // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"WAITING_FOR_CHARGING",   // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"FINISHED_FULLY_CHARGED", // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"FINISHED_NOT_FULL",      // vehicle.drivetrain.electricEngine.charging.hvStatus
@@ -224,6 +210,19 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
 	}, cs) {
 		return api.StatusC, nil
+	}
+
+	port, err := v.String("vehicle.body.chargingPort.status")
+	if err != nil {
+		port, err = v.String("vehicle.body.chargingPort.combinedStatus")
+		if err != nil {
+			return api.StatusNone, err
+		}
+	}
+
+	status := api.StatusA // disconnected
+	if port == "CONNECTED" {
+		status = api.StatusB
 	}
 
 	return status, err
