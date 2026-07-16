@@ -138,7 +138,7 @@ export default {
 		handlePaste(event, values) {
 			event.preventDefault();
 			const text = event.clipboardData.getData("text");
-			values.token = cleanYaml(text, "sponsortoken");
+			values.token = cleanYaml(text, "sponsortoken").trim();
 		},
 	},
 };
