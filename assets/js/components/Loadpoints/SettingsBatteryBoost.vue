@@ -25,6 +25,33 @@
 				<small class="text-muted">{{ description }}</small>
 			</div>
 		</div>
+
+		<div v-if="selectedLimit < 100" class="mb-3 row" data-testid="battery-boost-default">
+			<label
+				:for="formId('batteryBoostDefault')"
+				class="col-sm-4 col-form-label pt-0 pt-sm-2"
+			>
+				{{ $t("main.loadpointSettings.batteryBoost.autoLabel") }}
+			</label>
+			<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+				<div class="form-check form-switch">
+					<input
+						:id="formId('batteryBoostDefault')"
+						v-model="selectedDefault"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						data-testid="battery-boost-default-toggle"
+						@change="handleDefaultChange"
+					/>
+				</div>
+			</div>
+			<div class="col-sm-8 offset-sm-4 mt-1">
+				<small class="text-muted">{{
+					$t("main.loadpointSettings.batteryBoost.autoDescription")
+				}}</small>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -46,11 +73,13 @@ export default defineComponent({
 			default: (s: string) => s,
 		},
 		batteryBoostLimit: { type: Number, default: 100 },
+		batteryBoostDefault: { type: Boolean, default: false },
 	},
-	emits: ["batteryboostlimit-updated"],
+	emits: ["batteryboostlimit-updated", "batteryboostdefault-updated"],
 	data() {
 		return {
 			selectedLimit: this.batteryBoostLimit,
+			selectedDefault: this.batteryBoostDefault,
 		};
 	},
 	computed: {
@@ -83,10 +112,16 @@ export default defineComponent({
 		batteryBoostLimit(newVal: number) {
 			this.selectedLimit = newVal;
 		},
+		batteryBoostDefault(newVal: boolean) {
+			this.selectedDefault = newVal;
+		},
 	},
 	methods: {
 		handleLimitChange() {
 			this.$emit("batteryboostlimit-updated", this.selectedLimit);
+		},
+		handleDefaultChange() {
+			this.$emit("batteryboostdefault-updated", this.selectedDefault);
 		},
 	},
 });

@@ -36,6 +36,7 @@
 				v-bind="batteryBoostProps"
 				class="mt-2"
 				@batteryboostlimit-updated="setBatteryBoostLimit"
+				@batteryboostdefault-updated="setBatteryBoostDefault"
 			/>
 			<h6 v-if="heating">
 				{{ $t("main.loadpointSettings.heating") }}
@@ -252,6 +253,9 @@ export default defineComponent({
 		batteryBoostLimit() {
 			return this.loadpoint?.batteryBoostLimit;
 		},
+		batteryBoostDefault() {
+			return this.loadpoint?.batteryBoostDefault;
+		},
 		phasesConfigured() {
 			return this.loadpoint?.phasesConfigured;
 		},
@@ -344,6 +348,9 @@ export default defineComponent({
 		},
 		setBatteryBoostLimit(limit: number) {
 			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
+		},
+		setBatteryBoostDefault(value: boolean) {
+			api.post(this.apiPath("batteryboostdefault") + "/" + (value ? "1" : "0"));
 		},
 		currentOption(current: number, isDefault: boolean, phases?: number) {
 			const kw = this.fmtPhasePower(current, phases);

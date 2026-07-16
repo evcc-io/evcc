@@ -381,6 +381,7 @@ export interface Loadpoint {
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
   batteryBoostLimit: number;
+  batteryBoostDefault: boolean;
   ui?: LoadpointUi;
 }
 
