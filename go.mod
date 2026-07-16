@@ -101,6 +101,7 @@ require (
 	github.com/traefik/yaegi v0.16.1
 	github.com/volkszaehler/mbmd v0.0.0-20260623211432-fb8f9c22f121
 	github.com/warthog618/go-gpiocdev v0.9.1
+	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
 	go.bug.st/serial v1.7.1
 	go.uber.org/mock v0.6.0
@@ -216,6 +217,8 @@ require (
 	github.com/quic-go/webtransport-go v0.10.0 // indirect
 	github.com/relvacode/iso8601 v1.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/richardlehane/mscfb v1.0.7 // indirect
+	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rickb777/period v1.0.22 // indirect
 	github.com/rickb777/plural v1.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -230,8 +233,11 @@ require (
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/teivah/onecontext v1.3.0 // indirect
+	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/xuri/efp v0.0.1 // indirect
+	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect

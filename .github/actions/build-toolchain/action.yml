@@ -1,0 +1,41 @@
+name: Build toolchain
+description: Go and Node toolchain plus UI build, shared by the PR and nightly build commands. Requires the repo to be checked out first.
+
+inputs:
+  cache-scope:
+    description: >
+      Go cache namespace. "main" (default) writes the shared cache the nightly
+      build relies on. Untrusted callers (e.g. PR builds) should pass a
+      different value such as "pr": writes stay isolated so they cannot poison
+      the shared cache, while reads still fall back to it.
+    default: main
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+        cache: false # managed explicitly below to keep the scoped namespaces
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: "26"
+        cache: "npm"
+
+    # Writes are namespaced by cache-scope so a PR build cannot poison the
+    # shared "main" cache; PRs still read it through the fallback restore-key.
+    - name: Go module and build cache
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-toolchain-${{ inputs.cache-scope }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-toolchain-${{ inputs.cache-scope }}-
+          ${{ runner.os }}-go-toolchain-main-
+
+    - name: Build UI
+      shell: bash
+      run: make install-ui ui

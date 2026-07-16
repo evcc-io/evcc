@@ -1,6 +1,7 @@
 package core
 
 import (
+	"math"
 	"slices"
 	"time"
 
@@ -19,6 +20,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePlanStrategy, lp.EffectivePlanStrategy())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
+	lp.publish(keys.EffectiveMinSoc, lp.EffectiveMinSoc())
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
@@ -166,6 +168,11 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
 		if res, _, err := c.GetMinMaxPower(); err == nil && res > 0 {
 			chargerMin = res / (Voltage * float64(lp.minActivePhases()))
+			// coarse chargers truncate to full amps in setLimit, so round the
+			// demand up to keep the enable gate reachable (#31549)
+			if lp.coarseCurrent() {
+				chargerMin = math.Ceil(chargerMin)
+			}
 		}
 	}
 
@@ -197,11 +204,36 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 
 	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
 		if _, res, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			maxCurrent = min(maxCurrent, res/(Voltage*float64(lp.maxActivePhases())))
+			powerMax := res / (Voltage * float64(lp.maxActivePhases()))
+			// match effectiveMinCurrent's rounding so a fixed power request
+			// (min == max) doesn't yield min > max on coarse chargers (#31549)
+			if lp.coarseCurrent() {
+				powerMax = math.Ceil(powerMax)
+			}
+			maxCurrent = min(maxCurrent, powerMax)
 		}
 	}
 
 	return maxCurrent
+}
+
+// EffectiveMinSoc returns the effective min soc (heating: min temperature)
+func (lp *Loadpoint) EffectiveMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.effectiveMinSoc()
+}
+
+// effectiveMinSoc returns the effective min soc (heating: min temperature)
+func (lp *Loadpoint) effectiveMinSoc() int {
+	minSoc := lp.minSoc
+
+	// loadpoint and vehicle min soc are independent limits- honor both
+	if v := lp.GetVehicle(); v != nil {
+		minSoc = max(minSoc, vehicle.Settings(lp.log, v).GetMinSoc())
+	}
+
+	return minSoc
 }
 
 // EffectiveLimitSoc returns the effective session limit soc

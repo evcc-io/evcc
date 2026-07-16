@@ -669,7 +669,7 @@ func configureDatabase(conf globalconfig.DB) error {
 	// persist unsaved settings on shutdown
 	shutdown.Register(persistSettings)
 
-	// persist unsaved settings every 30 minutes
+	// persist unsaved settings every minute
 	go func() {
 		for range time.Tick(time.Minute) {
 			persistSettings()

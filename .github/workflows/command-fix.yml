@@ -1,0 +1,29 @@
+name: Claude Fix Command
+
+on:
+  issue_comment:
+    types: [created]
+
+# Triggered by a `/fix` comment on any issue or PR conversation, maintainers only.
+# Delegates to the shared issue agent in fix mode, which investigates, pushes a
+# fix branch, opens a PR, comments with the result, then minimizes the calling
+# `/fix` comment as RESOLVED — but only when it actually opened a PR.
+jobs:
+  fix:
+    name: Fix on demand
+    if: |
+      startsWith(github.event.comment.body, '/fix') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    permissions:
+      contents: write # create branch + push PR fix
+      issues: write # comment + minimize the calling comment
+      pull-requests: write # open PR fix, comment on PR conversations
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/claude-issue-agent-run.yml
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      mode: fix
+      comment_id: ${{ github.event.comment.id }}
+      comment_node_id: ${{ github.event.comment.node_id }}
+    secrets: inherit

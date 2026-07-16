@@ -6,7 +6,9 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,6 +27,26 @@ func TestLoadpointProfile(t *testing.T) {
 
 	// expected slots: 0.25 kWh...
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
+}
+
+func TestLoadpointCurrentAction(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		enabled bool
+		status  api.ChargeStatus
+		soc     float64
+		want    string
+	}{
+		{"charging", true, api.StatusC, 0, actionCharge},
+		{"enabled but idle (e.g. vehicle finished at limit)", true, api.StatusB, 0, actionStop},
+		{"disabled", false, api.StatusB, 0, actionStop},
+		{"charging at 100% soc with no explicit limit", true, api.StatusC, 100, actionStop},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := &Loadpoint{enabled: tc.enabled, status: tc.status, vehicleSoc: tc.soc}
+			assert.Equal(t, tc.want, loadpointCurrentAction(lp))
+		})
+	}
 }
 
 func TestAsTimestamps(t *testing.T) {
@@ -149,6 +171,80 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		})
 	}
 }
+
+// TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
+// the resulting [SMin, SMax] range, even when it lies outside the configured soc
+// limits (e.g. right after a firmware update changed the reported soc or the min/max
+// soc settings) - otherwise the optimizer is infeasible from the first slot.
+func TestBatteryRequestSocLimitsClamp(t *testing.T) {
+	newBatteryDevice := func(t *testing.T, minSoc, maxSoc float64) config.Device[api.Meter] {
+		ctrl := gomock.NewController(t)
+
+		var meter api.Meter
+		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc).AnyTimes()
+
+		bat := &struct {
+			api.Meter
+			api.BatterySocLimiter
+		}{
+			Meter:             meter,
+			BatterySocLimiter: batSocLimit,
+		}
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(bat))
+	}
+
+	site := &Site{log: util.NewLogger("foo")}
+	capacity := 10.0 // kWh
+
+	t.Run("soc below minSoc", func(t *testing.T) {
+		soc := 15.0
+		dev := newBatteryDevice(t, 20, 100)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(1500), req.SMin)
+		assert.Equal(t, float32(10000), req.SMax)
+		assert.LessOrEqual(t, req.SMin, req.SInitial)
+	})
+
+	t.Run("soc above maxSoc", func(t *testing.T) {
+		soc := 95.0
+		dev := newBatteryDevice(t, 0, 80)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(0), req.SMin)
+		assert.Equal(t, float32(9500), req.SMax)
+		assert.GreaterOrEqual(t, req.SMax, req.SInitial)
+	})
+
+	t.Run("soc within limits", func(t *testing.T) {
+		soc := 50.0
+		dev := newBatteryDevice(t, 20, 80)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(2000), req.SMin)
+		assert.Equal(t, float32(8000), req.SMax)
+	})
+
+	t.Run("empty maxSoc defaults to 100%", func(t *testing.T) {
+		soc := 50.0
+		dev := newBatteryDevice(t, 20, 0)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(2000), req.SMin)
+		assert.Equal(t, float32(10000), req.SMax)
+	})
+}
+
 func TestOptimizerChargingStrategy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
@@ -162,4 +258,45 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	// valid change is applied (re-trigger is gated on sponsor/enabled, not unit-tested here)
 	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
+}
+
+func TestCurrentSlotSuggestion(t *testing.T) {
+	// slotHours 1 makes the per-slot Wh values map 1:1 to W
+	for _, tc := range []struct {
+		name              string
+		typ               batteryType
+		charge, disch     float32
+		importing, export bool
+		current           string // current operating mode
+		want              string
+		wantActionable    bool
+	}{
+		{"battery grid charge", batteryTypeBattery, 3000, 0, true, false, "normal", "charge", true},
+		{"battery grid charge unchanged", batteryTypeBattery, 3000, 0, true, false, "charge", "charge", false},
+		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, false, true, "normal", "normal", false},
+		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, true, false, "normal", "hold", true},
+		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, false, true, "normal", "holdcharge", true},
+		{"battery discharge", batteryTypeBattery, 0, 2000, true, false, "normal", "normal", false},
+		{"battery idle balanced", batteryTypeBattery, 0, 0, false, false, "normal", "normal", false},
+		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, false, false, "stop", "charge", true},
+		{"loadpoint charge unchanged", batteryTypeLoadpoint, 11000, 0, false, false, "charge", "charge", false},
+		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, false, false, "charge", "stop", true},
+		{"loadpoint stop unchanged", batteryTypeLoadpoint, 0, 0, false, false, "stop", "stop", false},
+		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, false, false, "charge", "stop", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := optimizer.BatteryResult{
+				ChargingPower:    []float32{tc.charge},
+				DischargingPower: []float32{tc.disch},
+			}
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.importing, tc.export, 1, tc.current)
+			assert.Equal(t, tc.want, s.Action)
+			assert.Equal(t, tc.wantActionable, s.Actionable)
+			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
+			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
+		})
+	}
+
+	// no result yields an empty suggestion
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1, ""))
 }
