@@ -24,7 +24,7 @@ params:
   - name: generation
     type: choice
     choice: ["2", "3"]
-    default: "2"
+    required: true
     description:
       de: Generation
       en: Generation
