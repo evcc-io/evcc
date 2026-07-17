@@ -752,6 +752,18 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /solaradjusted/{enable}:
+    post:
+      operationId: setSolarAdjusted
+      summary: Adjust solar forecast
+      description: "Adjust the solar forecast to real production data of the current day."
+      tags:
+        - experimental
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
   /smartfeedinprioritylimit:
     delete:
       operationId: removeGlobalSmartFeedInPriorityLimit
