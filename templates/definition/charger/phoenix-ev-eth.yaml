@@ -41,6 +41,19 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 255
+  - name: millicurrentsupported
+    type: bool
+    default: false
+    advanced: true
+    description:
+      de: mA-Regelung unterstützt
+      en: mA regulation supported
+    help:
+      de: Erzwingt die mA-Regelung der erweiterten Wallbe-Firmware, falls die automatische Erkennung fehlschlägt.
+      en: Forces mA regulation of the extended Wallbe firmware in case autodetection fails.
 render: |
   type: phoenix-ev-eth
   {{- include "modbus" . }}
+  {{- if eq .millicurrentsupported "true" }}
+  millicurrentsupported: true
+  {{- end }}
