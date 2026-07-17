@@ -94,6 +94,7 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	collectors map[string]*metrics.Collector // keyed by meter ref
+	tariffSlot time.Time                     // last persisted tariff slot
 
 	// cached state
 	gridPower                float64                     // Grid power
