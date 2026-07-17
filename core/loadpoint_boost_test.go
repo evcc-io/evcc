@@ -79,4 +79,15 @@ func TestBoostPower(t *testing.T) {
 	lp.batteryBoost = boostStart
 	delta = lp.boostPower(-2000)
 	assert.Equal(t, 7000.0, delta)
+
+	// boostContinue while battery is charging (negative power)
+	// limit is 50W (less than the standard 790W delta)
+	// without raw negative power, delta would be restricted to 50W
+	// with raw negative power (-2000W), headroom is 2050W, so delta is allowed to be 790W
+	s.maxDischargePower = 50
+	s.residualPower = 0 // base delta = 100 + 690 = 790
+	lp.batteryBoost = boostContinue
+	delta = lp.boostPower(-2000)
+	// res = max(0, -2000) + 790 + 0 = 790W
+	assert.Equal(t, 790.0, delta)
 }
