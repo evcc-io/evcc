@@ -23,6 +23,7 @@ import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/clock";
 import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/thermometerhalf";
 import { type PropType } from "vue";
 import type { TariffType, CURRENCY } from "@/types/evcc";
 import DeviceCard from "./DeviceCard.vue";
@@ -49,7 +50,7 @@ export default {
 		hasError: { type: Boolean, default: false },
 		title: String,
 		tags: { type: Object, default: () => ({}) },
-		currency: { type: String as PropType<CURRENCY>, required: true },
+		currency: { type: String as PropType<CURRENCY> },
 	},
 	emits: ["edit"],
 	computed: {
@@ -69,6 +70,7 @@ export default {
 				co2: "shopicon-regular-eco1",
 				planner: "shopicon-regular-clock",
 				solar: "shopicon-regular-sun",
+				temperature: "shopicon-regular-thermometerhalf",
 			};
 			return iconMap[this.tariffType];
 		},
