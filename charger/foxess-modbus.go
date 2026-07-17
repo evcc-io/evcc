@@ -300,13 +300,31 @@ func (wb *FoxESSEVC) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(foxRegChargingControl, val)
-	if err == nil {
-		wb.mu.Lock()
-		wb.lastEnabled = enable
-		wb.mu.Unlock()
+	if err != nil {
+		return err
 	}
 
-	return err
+	wb.mu.Lock()
+	wb.lastEnabled = enable
+	cur := wb.current
+	pbox := wb.pbox
+	wb.mu.Unlock()
+
+	// Push the cached setpoint immediately after starting so the charger
+	// gets the correct limit while in charging state. The setpoint registers
+	// only take effect in charging state (spec §2.30/2.31), so this must
+	// come after the start command, not before.
+	if enable && cur != 0 {
+		reg := uint16(foxRegMaxPower)
+		if pbox {
+			reg = foxRegMaxCurrent
+		}
+		if err := wb.writeReg(reg, cur); err != nil {
+			wb.log.WARN.Printf("Enable: setpoint write failed: %v", err)
+		}
+	}
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -341,15 +359,20 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		val = uint16(voltage * current * float64(phases) / 100)
 	}
 
-	if err := wb.writeReg(reg, val); err != nil {
-		return err
-	}
-
+	// Always cache the setpoint so Enable(true) and the heartbeat can push it.
+	// Only write the register when enabled: the spec states setpoint registers
+	// take effect only in charging state, so writing before Enable(true) would
+	// return exception 3 and abort the enable sequence unnecessarily.
 	wb.mu.Lock()
 	wb.current = val
+	enabled := wb.enabled
 	wb.mu.Unlock()
 
-	return nil
+	if !enabled {
+		return nil
+	}
+
+	return wb.writeReg(reg, val)
 }
 
 var _ api.CurrentGetter = (*FoxESSEVC)(nil)
