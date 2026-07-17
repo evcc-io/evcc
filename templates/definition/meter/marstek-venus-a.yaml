@@ -17,6 +17,7 @@ params:
     comset: 8N1
   - preset: battery-params
   - name: capacity
+    required: true
     help:
       de: Venus A 2.12 kWh, Venus D 2.56 kWh je Basisgerät und je Erweiterung
       en: Venus A 2.12 kWh, Venus D 2.56 kWh per base unit and per extension
@@ -25,6 +26,7 @@ params:
   - name: maxsoc
     default: 100
   - name: maxchargepower
+    required: true
     help:
       de: Für erzwungenes Laden des Speichers. Venus A 1200 W, Venus D 2200 W
       en: For forced charging of the battery. Venus A 1200 W, Venus D 2200 W
