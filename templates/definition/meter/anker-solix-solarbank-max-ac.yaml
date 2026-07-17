@@ -175,3 +175,4 @@ render: |
                     encoding: int32
   {{- include "battery-params" . }}
   {{- end }}
+  
