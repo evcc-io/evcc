@@ -65,41 +65,19 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		return conn.GetFloatState(cc.Power)
 	})
 
-	// decorators for optional interfaces
-	var energyG, returnEnergyG func() (float64, error)
-	var currentsG, voltagesG, powersG func() (float64, float64, float64, error)
-
+	// energy
 	if cc.Energy != "" {
-		energyG = func() (float64, error) { return conn.GetFloatState(cc.Energy) }
+		implement.Has(m, implement.MeterEnergy(func() (float64, error) {
+			return conn.GetFloatState(cc.Energy)
+		}))
+
 	}
 
 	if cc.ReturnEnergy != "" {
-		returnEnergyG = func() (float64, error) { return conn.GetFloatState(cc.ReturnEnergy) }
+		implement.Has(m, implement.MeterReturnEnergy(func() (float64, error) {
+			return conn.GetFloatState(cc.ReturnEnergy)
+		}))
 	}
-
-	// phase currents (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); err != nil {
-		return nil, fmt.Errorf("currents: %w", err)
-	} else if len(phases) > 0 {
-		currentsG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	}
-
-	// phase voltages (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); err != nil {
-		return nil, fmt.Errorf("voltages: %w", err)
-	} else if len(phases) > 0 {
-		voltagesG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	}
-
-	// phase powers (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Powers); err != nil {
-		return nil, fmt.Errorf("powers: %w", err)
-	} else if len(phases) > 0 {
-		powersG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	}
-
-	implement.May(m, implement.MeterEnergy(energyG))
-	implement.May(m, implement.MeterReturnEnergy(returnEnergyG))
 
 	if cc.Soc != "" {
 		socG := func() (float64, error) { return conn.GetFloatState(cc.Soc) }
@@ -131,9 +109,33 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		return m, nil
 	}
 
-	implement.May(m, implement.PhaseCurrents(currentsG))
-	implement.May(m, implement.PhaseVoltages(voltagesG))
-	implement.May(m, implement.PhasePowers(powersG))
+	// phase currents (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); err != nil {
+		return nil, fmt.Errorf("currents: %w", err)
+	} else if len(phases) > 0 {
+		implement.Has(m, implement.PhaseCurrents(func() (float64, float64, float64, error) {
+			return conn.GetPhaseFloatStates(phases)
+		}))
+	}
+
+	// phase voltages (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); err != nil {
+		return nil, fmt.Errorf("voltages: %w", err)
+	} else if len(phases) > 0 {
+		implement.Has(m, implement.PhaseVoltages(func() (float64, float64, float64, error) {
+			return conn.GetPhaseFloatStates(phases)
+		}))
+	}
+
+	// phase powers (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Powers); err != nil {
+		return nil, fmt.Errorf("powers: %w", err)
+	} else if len(phases) > 0 {
+		implement.Has(m, implement.PhasePowers(func() (float64, float64, float64, error) {
+			return conn.GetPhaseFloatStates(phases)
+		}))
+	}
+
 	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
 
 	return m, nil
