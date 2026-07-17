@@ -99,7 +99,7 @@ export default defineComponent({
 	computed: {
 		modeOptions(): SelectOption<string>[] {
 			return [
-				{ value: "", name: "---" },
+				{ value: "", name: this.$t("config.loadpoint.defaultModeKeep") },
 				...[OFF, PV, MINPV, NOW].map((mode) => ({
 					value: mode,
 					name: this.$t(`main.mode.${mode}`),

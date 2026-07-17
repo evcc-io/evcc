@@ -500,6 +500,10 @@ func configureVehicles(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
+			if _, ok := instance.OnIdentified().GetMode(); ok {
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+			}
+
 			mu.Lock()
 			defer mu.Unlock()
 			devs1 = append(devs1, config.NewStaticDevice(cc, instance))
@@ -523,6 +527,16 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
 				return nil
+			}
+
+			// migrate deprecated mode property to vehicle mode setting
+			if mode, ok := cc.Other["mode"].(string); ok && mode != "" {
+				key := fmt.Sprintf("vehicle.%s.%s", cc.Name, keys.Mode)
+				if _, err := settings.String(key); err != nil {
+					if _, err := api.ChargeModeString(mode); err == nil {
+						settings.SetString(key, mode)
+					}
+				}
 			}
 
 			instance, err := vehicleInstance(cc)
