@@ -70,7 +70,6 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		implement.Has(m, implement.MeterEnergy(func() (float64, error) {
 			return conn.GetFloatState(cc.Energy)
 		}))
-
 	}
 
 	if cc.ReturnEnergy != "" {
