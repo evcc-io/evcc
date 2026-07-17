@@ -231,6 +231,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 	site.collectors[metrics.Forecast] = fc
 
+	// temperature forecast collector (populated when TariffUsageTemperature is configured)
+	tc, err := metrics.NewCollector(metrics.Temperature, metrics.Temperature, metrics.Temperature)
+	if err != nil {
+		return err
+	}
+	site.collectors[metrics.Temperature] = tc
+
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
 		dev, err := config.Meters().ByName(ref)

@@ -2,16 +2,16 @@
 	<div v-if="average" class="row gx-2 mt-1">
 		<div class="col-6">
 			<small>
-				<span class="text-gray">{{ $t("forecast.co2.range") }}</span>
+				<span class="text-gray">{{ $t(`forecast.${type}.range`) }}</span>
 				<br />
-				<span class="text-co2 fw-bold">{{ range }}</span>
+				<span :class="`text-${type}`" class="fw-bold">{{ range }}</span>
 			</small>
 		</div>
 		<div class="col-6 text-end">
 			<small>
-				<span class="text-gray">{{ $t("forecast.co2.average") }}</span>
+				<span class="text-gray">{{ $t(`forecast.${type}.average`) }}</span>
 				<br />
-				<span class="text-co2 fw-bold">{{ average }}</span>
+				<span :class="`text-${type}`" class="fw-bold">{{ average }}</span>
 			</small>
 		</div>
 	</div>
@@ -21,21 +21,23 @@
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import type { ForecastSlot } from "./types";
+import type { ValueChartType } from "./ValueChart.vue";
 
 const MAX_HOURS = 96;
 const SLOTS_PER_HOUR = 4;
 
 export default defineComponent({
-	name: "Co2Details",
+	name: "ValueDetails",
 	mixins: [formatter],
 	props: {
-		co2: { type: Array as PropType<ForecastSlot[]> },
+		type: { type: String as PropType<ValueChartType>, required: true },
+		rates: { type: Array as PropType<ForecastSlot[]> },
 	},
 	computed: {
 		upcomingSlots(): ForecastSlot[] {
-			if (!Array.isArray(this.co2)) return [];
+			if (!Array.isArray(this.rates)) return [];
 			const now = new Date();
-			return this.co2
+			return this.rates
 				.filter((slot) => new Date(slot.end) > now)
 				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
 		},
@@ -43,14 +45,22 @@ export default defineComponent({
 			if (this.upcomingSlots.length === 0) return "";
 			const avg =
 				this.upcomingSlots.reduce((a, s) => a + s.value, 0) / this.upcomingSlots.length;
-			return this.fmtCo2Medium(avg);
+			return this.fmtValue(avg);
 		},
 		range(): string {
 			if (this.upcomingSlots.length === 0) return "";
 			const values = this.upcomingSlots.map((s) => s.value);
 			const min = Math.min(...values);
 			const max = Math.max(...values);
-			return `${this.fmtNumber(min, 0)} – ${this.fmtCo2Medium(max)}`;
+			if (this.type === "co2") {
+				return `${this.fmtNumber(min, 0)} – ${this.fmtCo2Medium(max)}`;
+			}
+			return `${this.fmtValue(min)} – ${this.fmtValue(max)}`;
+		},
+	},
+	methods: {
+		fmtValue(value: number): string {
+			return this.type === "co2" ? this.fmtCo2Medium(value) : this.fmtTemperature(value);
 		},
 	},
 });

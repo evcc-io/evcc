@@ -9,14 +9,15 @@ import (
 
 const (
 	// groups
-	Forecast  = "forecast"
-	Battery   = "battery"
-	Grid      = "grid"
-	PV        = "pv"
-	Home      = "home" // meter and group (virtual measurement)
-	Loadpoint = "loadpoint"
-	Meter     = "meter"    // additional meter (ext, monitoring only)
-	Consumer  = "consumer" // consumer meter (consumers list or aux)
+	Forecast    = "forecast"
+	Temperature = "temperature"
+	Battery     = "battery"
+	Grid        = "grid"
+	PV          = "pv"
+	Home        = "home" // meter and group (virtual measurement)
+	Loadpoint   = "loadpoint"
+	Meter       = "meter"    // additional meter (ext, monitoring only)
+	Consumer    = "consumer" // consumer meter (consumers list or aux)
 )
 
 type Collector struct {
@@ -121,9 +122,12 @@ func (c *Collector) persist() error {
 	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp)
 }
 
-// SetSocTemp records the slot-start soc (temperature when isTemp). Call after AddEnergy.
+// SetSocTemp records the slot-start soc (temperature when isTemp).
+// Advances the slot via process() so it can be used without a prior AddEnergy call.
 func (c *Collector) SetSocTemp(value float64, isTemp bool) error {
-	c.accu.setSocTemp(value)
+	if err := c.process(func() { c.accu.setSocTemp(value) }); err != nil {
+		return err
+	}
 	return c.entity.updateIsTemp(isTemp)
 }
 
