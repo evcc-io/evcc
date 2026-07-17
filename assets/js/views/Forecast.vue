@@ -156,6 +156,7 @@ import GridDetails from "../components/Forecast/GridDetails.vue";
 import Co2Chart from "../components/Forecast/Co2Chart.vue";
 import Co2Details from "../components/Forecast/Co2Details.vue";
 import formatter from "@/mixins/formatter";
+import api from "@/api";
 import settings from "@/settings";
 import store from "../store";
 import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
@@ -234,7 +235,7 @@ export default defineComponent({
 			return store.state?.experimental;
 		},
 		solarAdjusted() {
-			return settings.solarAdjusted;
+			return store.state?.solarAdjusted;
 		},
 		priceZoom() {
 			return settings.priceZoom;
@@ -271,8 +272,14 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		changeAdjusted() {
-			settings.solarAdjusted = !settings.solarAdjusted;
+		async changeAdjusted(e: Event) {
+			try {
+				await api.post(
+					`solaradjusted/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
+				);
+			} catch (err) {
+				console.error(err);
+			}
 		},
 		togglePriceZoom() {
 			settings.priceZoom = !settings.priceZoom;
