@@ -35,6 +35,8 @@ Each tick the system evaluates which mode to apply, in priority order:
 
 When enabled, the site drives `SetBatteryChargePower` / `SetBatteryDischargePower` on each battery every tick via the `BatteryPowerController` API. This gives watt-level control instead of binary charge/discharge.
 
+The `BatteryPowerController` (and `BatteryController` mode switching) for Marstek Venus is implemented natively in `meter/marstek.go`, which owns the Modbus connection and writes the RS485 control registers (`42000` enable, `42010` direction, `42020`/`42021` charge/discharge watts) directly in Go. The `marstek-venus-e-v3` template is a thin wrapper that renders `type: marstek`; keeping the register sequences in Go (rather than template setters) decouples the fast loop from upstream's Marstek template changes. Read registers are generation-specific (Gen 3: power `30006`, SoC `34002`×0.1); control registers are generation-independent.
+
 ### 3.1 Surplus Calculation
 
 Two formulas are used depending on battery SoC relative to `prioritySoc`:
