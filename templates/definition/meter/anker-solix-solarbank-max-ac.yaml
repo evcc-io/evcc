@@ -19,10 +19,6 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
-  - name: maxchargepower
-    default: 2500
-  - name: maxdischargepower
-    default: 800
   - name: watchdog
     type: duration
     default: 60s
