@@ -100,16 +100,16 @@ export default {
 						!PHASE_TAGS.includes(name) &&
 						!FORECAST_TAGS.includes(name)
 				)
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
 		},
 		phaseEntries() {
 			return Object.entries(this.tags)
 				.filter(([name]) => PHASE_TAGS.includes(name))
 				.sort(([a], [b]) => a.localeCompare(b))
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
 		},
 		hasPhaseEntries() {
@@ -182,6 +182,9 @@ export default {
 				: "text-nowrap flex-shrink-0";
 		},
 		valueClasses(entry) {
+			if (entry.asleep) {
+				return "value--muted";
+			}
 			if (entry.error) {
 				return "value--error";
 			}
@@ -195,6 +198,9 @@ export default {
 		},
 		fmtDeviceValue(entry) {
 			const { name, value } = entry;
+			if (entry.asleep) {
+				return this.$t("config.deviceValue.asleep");
+			}
 			if (value === null || value === undefined) {
 				return "";
 			}
