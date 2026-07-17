@@ -20,7 +20,9 @@ params:
   - name: maxacpower
   - preset: battery-params
   - name: maxchargepower
-    default: 3500
+    default: 2500
+  - name: maxdischargepower
+    default: 800
   - name: watchdog
     type: duration
     default: 60s
@@ -108,21 +110,23 @@ render: |
                 value: 0
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 18 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10071
                     type: writemultiple
                     encoding: int32
+
               - source: const
                 value: 0 # self_consumption
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 18 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
                     type: writesingle
                     encoding: uint16
-        - case: 2 #hold
+
+        - case: 2 # hold
           set:
             source: sequence
             set:
@@ -130,21 +134,23 @@ render: |
                 value: 3 # third_party_control
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 18 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
                     type: writesingle
                     encoding: uint16
+
               - source: const
                 value: 0
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 18 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10071
                     type: writemultiple
                     encoding: int32
-        - case: 3 #charge
+
+        - case: 3 # charge
           set:
             source: sequence
             set:
@@ -152,16 +158,17 @@ render: |
                 value: 3 # third_party_control
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 18 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
                     type: writesingle
                     encoding: uint16
+
               - source: const
                 value: -{{ .maxchargepower }}
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 18 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10071
                     type: writemultiple
