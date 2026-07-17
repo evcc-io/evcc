@@ -188,6 +188,7 @@
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
+      "asleep": "sleeping",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacity",
