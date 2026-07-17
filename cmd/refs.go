@@ -97,19 +97,7 @@ func collectTariffRefs() error {
 	}
 
 	// Collect all non-empty refs
-	if refs.Grid != "" {
-		references.tariff = append(references.tariff, refs.Grid)
-	}
-	if refs.FeedIn != "" {
-		references.tariff = append(references.tariff, refs.FeedIn)
-	}
-	if refs.Co2 != "" {
-		references.tariff = append(references.tariff, refs.Co2)
-	}
-	if refs.Planner != "" {
-		references.tariff = append(references.tariff, refs.Planner)
-	}
-	references.tariff = append(references.tariff, refs.Solar...)
+	references.tariff = slices.AppendSeq(references.tariff, refs.Used())
 
 	return nil
 }

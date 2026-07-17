@@ -924,3 +924,6 @@ devicegroups:
   solar:
     de: PV Vorhersage
     en: PV forecast
+  temperature:
+    de: Temperaturvorhersage
+    en: Temperature forecast

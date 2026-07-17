@@ -94,6 +94,7 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	collectors map[string]*metrics.Collector // keyed by meter ref
+	tariffSlot time.Time                     // last persisted tariff slot
 
 	// cached state
 	gridPower                float64                     // Grid power
@@ -230,6 +231,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		return err
 	}
 	site.collectors[metrics.Forecast] = fc
+
+	// temperature forecast collector (populated when TariffUsageTemperature is configured)
+	tc, err := metrics.NewCollector(metrics.Temperature, metrics.Temperature, metrics.Temperature)
+	if err != nil {
+		return err
+	}
+	site.collectors[metrics.Temperature] = tc
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {

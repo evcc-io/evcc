@@ -1,0 +1,61 @@
+template: demo-temperature-forecast
+products:
+  - description:
+      de: Demo Temperatur-Vorhersage
+      en: Demo Temperature Forecast
+requirements:
+  description:
+    de: Zu Demonstrationszwecken. Liefert Außentemperaturdaten basierend auf einem typischen Tagesverlauf.
+    en: For demonstration purposes. Provides outdoor temperature data based on a typical daily cycle.
+  evcc: ["skiptest"]
+group: temperature
+params:
+  - name: min
+    type: float
+    unit: °C
+    default: 10
+    description:
+      en: Minimum temperature
+      de: Minimale Temperatur
+  - name: max
+    type: float
+    unit: °C
+    default: 20
+    description:
+      en: Maximum temperature
+      de: Maximale Temperatur
+render: |
+  type: custom
+  tariff: temperature
+  forecast:
+    source: js
+    script: |
+      // Generate temperature forecast for next 72 hours in 15-minute slots
+      // Sinusoidal daily cycle between min and max: coldest around 05:00, warmest around 17:00
+      var now = new Date();
+      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      var rates = [];
+      var min = parseFloat({{ .min }});
+      var max = parseFloat({{ .max }});
+      var base = (min + max) / 2;
+      var amplitude = (max - min) / 2;
+
+      var slotMinutes = 15;
+      var slotDuration = slotMinutes * 60 * 1000;
+      var slotsPerDay = (24 * 60) / slotMinutes;
+
+      for (var day = 0; day < 3; day++) {
+        for (var slot = 0; slot < slotsPerDay; slot++) {
+          var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
+          var hour = (slot * slotMinutes) / 60;
+          var temp = base - amplitude * Math.cos(((hour - 5) / 24) * 2 * Math.PI);
+
+          rates.push({
+            start: time.toISOString(),
+            end: new Date(time.getTime() + slotDuration).toISOString(),
+            value: Math.round(temp * 10) / 10
+          });
+        }
+      }
+
+      JSON.stringify(rates);

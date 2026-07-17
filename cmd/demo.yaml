@@ -272,3 +272,6 @@ tariffs:
     type: template
     template: demo-co2-forecast
     base: 350
+  temperature:
+    type: template
+    template: demo-temperature-forecast
