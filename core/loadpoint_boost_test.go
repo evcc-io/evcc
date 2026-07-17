@@ -71,4 +71,12 @@ func TestBoostPower(t *testing.T) {
 	// res = 6000 + 0 + 0 = 6000
 	delta = lp.boostPower(6000)
 	assert.Equal(t, 6000.0, delta)
+
+	// boostStart while battery is charging (negative power)
+	// battery charging at 2000W, limit is 5000W
+	// max discharge capacity = 5000 - (-2000) = 7000W
+	// res = max(0, -2000) + 7000 + 0 = 7000W
+	lp.batteryBoost = boostStart
+	delta = lp.boostPower(-2000)
+	assert.Equal(t, 7000.0, delta)
 }
