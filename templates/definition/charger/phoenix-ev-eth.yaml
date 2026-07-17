@@ -54,6 +54,6 @@ params:
 render: |
   type: phoenix-ev-eth
   {{- include "modbus" . }}
-  {{- if ne .millicurrentsupported "false" }}
+  {{- if eq .millicurrentsupported "true" }}
   millicurrentsupported: true
   {{- end }}
