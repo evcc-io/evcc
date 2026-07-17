@@ -115,7 +115,6 @@ render: |
                     address: 10071
                     type: writemultiple
                     encoding: int32
-
               - source: const
                 value: 0 # self_consumption
                 set:
@@ -125,7 +124,6 @@ render: |
                     address: 10064
                     type: writesingle
                     encoding: uint16
-
         - case: 2 # hold
           set:
             source: sequence
@@ -139,7 +137,6 @@ render: |
                     address: 10064
                     type: writesingle
                     encoding: uint16
-
               - source: const
                 value: 0
                 set:
@@ -149,7 +146,6 @@ render: |
                     address: 10071
                     type: writemultiple
                     encoding: int32
-
         - case: 3 # charge
           set:
             source: sequence
