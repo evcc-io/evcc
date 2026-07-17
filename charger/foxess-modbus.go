@@ -73,6 +73,10 @@ const (
 	foxChargingStart      = 1
 	foxChargingStop       = 2
 	foxTimeValidity       = 60 // maximum command validity window in seconds
+
+	// foxHeartbeatInterval is the interval at which the heartbeat runs.
+	// Must be less than foxTimeValidity so the charger never considers evcc offline.
+	foxHeartbeatInterval = 25 * time.Second
 )
 
 func init() {
@@ -178,14 +182,13 @@ func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
 }
 
 // heartbeat keeps the charger from considering evcc offline by sending a
-// message every half validity window. It always re-sends the last setpoint
-// (power or current) to keep the validity window alive. When the charger is
-// disabled the setpoint registers are inert (spec says they only take effect
-// in charging state), so this is safe. The stop command is sent once on the
-// transition from enabled to disabled; it is not repeated because 0x4001 is
-// write-only and the charger rejects redundant stop commands with exception 3.
+// message every foxHeartbeatInterval. When enabled it re-sends the last
+// setpoint to keep the validity window alive. When disabled it sends a
+// keepalive read of the status register so the charger stays online under
+// EMS control and does not fall back to the Default Current setting and
+// auto-start charging.
 func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
-	for tick := time.Tick(foxTimeValidity / 2 * time.Second); ; {
+	for tick := time.Tick(foxHeartbeatInterval); ; {
 		select {
 		case <-tick:
 		case <-ctx.Done():
@@ -208,6 +211,10 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 				wb.lastEnabled = false
 				wb.mu.Unlock()
 			}
+		} else if !enabled {
+			// keepalive read: resets the Time Validity timer so the charger stays
+			// online and does not fall back to Default Current and auto-start
+			_, err = wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
 		} else if cur != 0 {
 			// always re-send the setpoint to keep the validity window alive;
 			// setpoint registers are inert when not charging so this is safe
@@ -267,13 +274,18 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the api.Charger interface
+// Enabled implements the api.Charger interface.
+// The spec recommends reading the EVC status register to verify start/stop.
+// Statuses 2 (start), 3 (charging), 9 (auto phase switch) indicate the
+// charger is actively enabled; all others (idle, connected/waiting, pause,
+// finish, fault, locked) indicate it is not.
 func (wb *FoxESSEVC) Enabled() (bool, error) {
-	wb.mu.Lock()
-	enabled := wb.enabled
-	wb.mu.Unlock()
-
-	return verifyEnabled(wb, enabled)
+	b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
+	if err != nil {
+		return false, err
+	}
+	s := binary.BigEndian.Uint16(b)
+	return s == 2 || s == 3 || s == 9, nil
 }
 
 // Enable implements the api.Charger interface
