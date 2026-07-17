@@ -267,7 +267,13 @@ export default defineComponent({
 			this.challenge = null;
 			this.values = {};
 			try {
-				this.challenge = await fetchAuthChallenge(this.providerId);
+				const challenge = await fetchAuthChallenge(this.providerId);
+				if (challenge) {
+					this.challenge = challenge;
+				} else {
+					// no interactive form to show; nothing more to do here
+					this.interactiveError = this.$t("authProviders.loginFailed");
+				}
 			} catch (e: any) {
 				this.interactiveError = e.message || this.$t("authProviders.loginFailed");
 			}
