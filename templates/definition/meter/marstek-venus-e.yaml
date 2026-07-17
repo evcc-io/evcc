@@ -1,5 +1,5 @@
 template: marstek-venus-e
-covers: ["marstek-venus"]
+covers: ["marstek-venus", "marstek-venus-e-v3"]
 products:
   - brand: Marstek
     description:
@@ -7,6 +7,9 @@ products:
   - brand: Marstek
     description:
       generic: Venus E Gen 2.0
+  - brand: Marstek
+    description:
+      generic: Venus E Gen 3.0
   - brand: Marstek
     description:
       generic: Venus C
@@ -18,6 +21,16 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 115200
     comset: 8N1
+  - name: generation
+    type: choice
+    choice: ["2", "3"]
+    default: "2"
+    description:
+      de: Generation
+      en: Generation
+    help:
+      de: Venus E, Venus E Gen 2.0 und Venus C sind Generation 2. Generation 3 verwendet andere Register.
+      en: Venus E, Venus E Gen 2.0 and Venus C are generation 2. Generation 3 uses different registers.
   - preset: battery-params
   - name: capacity
     default: 5.12
@@ -41,10 +54,17 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    {{- if eq .generation "3" }}
+    register:
+      address: 30006 # AC Power (W)
+      type: holding
+      decode: int16
+    {{- else }}
     register:
       address: 32202 # AC Power (W)
       type: holding
       decode: int32
+    {{- end }}
     scale: 1
   energy:
     source: modbus
@@ -57,11 +77,19 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    {{- if eq .generation "3" }}
+    register:
+      address: 34002 # Battery SOC (%)
+      type: holding
+      decode: uint16
+    scale: 0.1
+    {{- else }}
     register:
       address: 32104 # Battery SOC (%)
       type: holding
       decode: uint16
     scale: 1
+    {{- end }}
   batterymode:
     source: switch
     switch:
