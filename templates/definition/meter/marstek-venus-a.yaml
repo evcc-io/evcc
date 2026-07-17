@@ -1,8 +1,12 @@
 template: marstek-venus-a
+covers: ["marstek-venus-d"]
 products:
   - brand: Marstek
     description:
       generic: Venus A
+  - brand: Marstek
+    description:
+      generic: Venus D
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -13,16 +17,17 @@ params:
     comset: 8N1
   - preset: battery-params
   - name: capacity
-    default: 2.12
     help:
-      de: Basisgerät 2.12 kWh, jede Erweiterung zzgl. 2.12 kWh
-      en: Base unit 2.12 kWh, each extension plus 2.12 kWh
+      de: Venus A 2.12 kWh, Venus D 2.56 kWh je Basisgerät und je Erweiterung
+      en: Venus A 2.12 kWh, Venus D 2.56 kWh per base unit and per extension
   - name: minsoc
     default: 11
   - name: maxsoc
     default: 100
   - name: maxchargepower
-    default: 1200
+    help:
+      de: Für erzwungenes Laden des Speichers. Venus A 1200 W, Venus D 2200 W
+      en: For forced charging of the battery. Venus A 1200 W, Venus D 2200 W
   - name: work_mode_normal
     default: 1
     advanced: true
