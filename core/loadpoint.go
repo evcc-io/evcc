@@ -1558,7 +1558,7 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	}
 
 	res := max(0, batteryBoostPower) + delta + lp.site.GetResidualPower()
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost - %.0fW residual", -res, max(0, batteryBoostPower), delta, lp.site.GetResidualPower())
 
 	return res
 }
