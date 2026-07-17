@@ -144,8 +144,8 @@ export default defineComponent({
 		rates(): Rate[] {
 			if (this.tariff?.length) {
 				return this.tariff.map((slot: any) => ({
-					start: new Date(slot.start),
-					end: new Date(slot.end),
+					start: new Date(slot.start * 1000),
+					end: new Date(slot.end * 1000),
 					value: slot.value,
 				}));
 			}

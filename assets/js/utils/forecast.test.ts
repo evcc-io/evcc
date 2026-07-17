@@ -67,18 +67,18 @@ describe("isStaticTariff", () => {
 
   test("returns true when all values are identical", () => {
     const slots = [
-      { start: "2025-01-01T00:00:00Z", end: "2025-01-01T00:15:00Z", value: 0.25 },
-      { start: "2025-01-01T00:15:00Z", end: "2025-01-01T00:30:00Z", value: 0.25 },
-      { start: "2025-01-01T00:30:00Z", end: "2025-01-01T00:45:00Z", value: 0.25 },
+      { start: 1735689600, end: 1735690500, value: 0.25 },
+      { start: 1735690500, end: 1735691400, value: 0.25 },
+      { start: 1735691400, end: 1735692300, value: 0.25 },
     ];
     expect(isStaticTariff(slots)).toBe(true);
   });
 
   test("returns false when values differ", () => {
     const slots = [
-      { start: "2025-01-01T00:00:00Z", end: "2025-01-01T00:15:00Z", value: 0.25 },
-      { start: "2025-01-01T00:15:00Z", end: "2025-01-01T00:30:00Z", value: 0.3 },
-      { start: "2025-01-01T00:30:00Z", end: "2025-01-01T00:45:00Z", value: 0.25 },
+      { start: 1735689600, end: 1735690500, value: 0.25 },
+      { start: 1735690500, end: 1735691400, value: 0.3 },
+      { start: 1735691400, end: 1735692300, value: 0.25 },
     ];
     expect(isStaticTariff(slots)).toBe(false);
   });

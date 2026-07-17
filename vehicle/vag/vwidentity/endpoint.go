@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
@@ -42,7 +41,7 @@ func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password
 	var verify func(url.Values)
 
 	// add code challenge
-	q = urlvalues.Copy(q)
+	q = q.Clone()
 	if rt := q.Get("response_type"); strings.Contains(rt, "code") {
 		verify = vag.ChallengeAndVerifier(q)
 	}

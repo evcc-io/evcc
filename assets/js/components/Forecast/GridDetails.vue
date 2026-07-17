@@ -99,7 +99,7 @@ export default defineComponent({
 			if (!Array.isArray(slots)) return [];
 			const now = new Date();
 			return slots
-				.filter((slot) => new Date(slot.end) > now)
+				.filter((slot) => new Date(slot.end * 1000) > now)
 				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
 		},
 	},

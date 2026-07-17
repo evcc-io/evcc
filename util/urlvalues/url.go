@@ -8,6 +8,15 @@ import (
 	"strings"
 )
 
+// Merge copies multiple from url values into to
+func Merge(to url.Values, from ...url.Values) {
+	for _, vv := range from {
+		for k, v := range vv {
+			to[k] = append(to[k], v...)
+		}
+	}
+}
+
 // Copy creates a deep copy of url values
 func Copy(q url.Values) url.Values {
 	res := make(url.Values, len(q))

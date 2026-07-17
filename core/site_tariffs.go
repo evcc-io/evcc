@@ -1,7 +1,9 @@
 package core
 
 import (
+	jsonv2 "encoding/json/v2"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
+	"github.com/samber/lo"
 )
 
 type solarDetails struct {
@@ -23,6 +26,30 @@ type solarDetails struct {
 type dailyDetails struct {
 	Yield    float64 `json:"energy"`
 	Complete bool    `json:"complete"`
+}
+
+// unixTimeMarshalers formats every time.Time in a Marshal call as unix
+// seconds, recursively, without per-field struct tags. Requires Go 1.27
+// (encoding/json/v2 baseline).
+var unixTimeMarshalers = jsonv2.WithMarshalers(jsonv2.MarshalFunc(func(t time.Time) ([]byte, error) {
+	return strconv.AppendInt(nil, t.Unix(), 10), nil
+}))
+
+// forecastRate is api.Rate with a custom JSON encoding that publishes
+// Start/End as unix timestamps instead of RFC3339 strings, to keep the
+// forecast payload compact.
+type forecastRate api.Rate
+
+func (r forecastRate) MarshalJSON() ([]byte, error) {
+	return jsonv2.Marshal(api.Rate(r), unixTimeMarshalers)
+}
+
+func forecastRates(rr api.Rates) []forecastRate {
+	// keep nil for empty rates: shards are published without omitempty
+	if len(rr) == 0 {
+		return nil
+	}
+	return lo.Map(rr, func(r api.Rate, _ int) forecastRate { return forecastRate(r) })
 }
 
 // greenShare returns
@@ -98,16 +125,16 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2     api.Rates     `json:"co2,omitempty"`
-		FeedIn  api.Rates     `json:"feedin,omitempty"`
-		Grid    api.Rates     `json:"grid,omitempty"`
-		Planner api.Rates     `json:"planner,omitempty"`
-		Solar   *solarDetails `json:"solar,omitempty"`
+		Co2     []forecastRate `json:"co2,omitempty"`
+		FeedIn  []forecastRate `json:"feedin,omitempty"`
+		Grid    []forecastRate `json:"grid,omitempty"`
+		Planner []forecastRate `json:"planner,omitempty"`
+		Solar   *solarDetails  `json:"solar,omitempty"`
 	}{
-		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:    tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
+		Co2:     forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageCo2))),
+		FeedIn:  forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageFeedIn))),
+		Planner: forecastRates(tariff.Rates(site.GetTariff(api.TariffUsagePlanner))),
+		Grid:    forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageGrid))),
 	}
 
 	// calculate adjusted solar rates

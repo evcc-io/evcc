@@ -31,7 +31,7 @@ export const FONT_FAMILY = "Montserrat, sans-serif";
 
 export function markPointLabel(
   color: string,
-  data: { coord: [string, number]; value: string; label?: { offset?: [number, number] } }[],
+  data: { coord: [number, number]; value: string; label?: { offset?: [number, number] } }[],
   startDate?: Date,
   endDate?: Date
 ) {
@@ -236,8 +236,11 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function clampStart(ts: string, startDate: Date): string {
-  return new Date(ts) < startDate ? startDate.toISOString() : ts;
+// clampStart works in the same unit as ts (unix seconds); callers convert to
+// milliseconds at the chart/Date boundary.
+export function clampStart(ts: number, startDate: Date): number {
+  const startTs = startDate.getTime() / 1000;
+  return ts < startTs ? startTs : ts;
 }
 
 export function filterForecastSlots(
@@ -246,7 +249,9 @@ export function filterForecastSlots(
   endDate: Date
 ): ForecastSlot[] {
   if (!Array.isArray(slots)) return [];
-  return slots.filter((s) => new Date(s.end) > startDate && new Date(s.start) <= endDate);
+  return slots.filter(
+    (s) => new Date(s.end * 1000) > startDate && new Date(s.start * 1000) <= endDate
+  );
 }
 
 export function minSlotIndex(slots: ForecastSlot[]): number {

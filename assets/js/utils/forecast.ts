@@ -22,8 +22,8 @@ export function filterEntriesByDate(
 ): TimeseriesEntry[] {
   const now = new Date();
   return entries.filter(({ ts }) => {
-    const isPast = new Date(ts) < now;
-    const dateMatches = toDayString(new Date(ts)) === dayString;
+    const isPast = new Date(ts * 1000) < now;
+    const dateMatches = toDayString(new Date(ts * 1000)) === dayString;
     return !isPast && dateMatches;
   });
 }
