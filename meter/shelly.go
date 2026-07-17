@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"math"
 	"strings"
 	"time"
 
@@ -48,8 +47,14 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 	// Three-phase Shelly energy meters count each phase separately (non-balanced),
 	// making their totals unsuitable for bidirectional grid metering.
 	if !(c.usage == "grid" && c.conn.IsThreePhase()) {
-		implement.Has(c, implement.MeterEnergy(c.conn.TotalEnergy))
-		implement.Has(c, implement.MeterReturnEnergy(c.conn.ReturnEnergy))
+		if c.usage == "pv" {
+			// reverse direction
+			implement.Has(c, implement.MeterEnergy(c.conn.ReturnEnergy))
+			implement.Has(c, implement.MeterReturnEnergy(c.conn.TotalEnergy))
+		} else {
+			implement.Has(c, implement.MeterEnergy(c.conn.TotalEnergy))
+			implement.Has(c, implement.MeterReturnEnergy(c.conn.ReturnEnergy))
+		}
 	}
 
 	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
@@ -84,7 +89,7 @@ func (c *Shelly) CurrentPower() (float64, error) {
 		return 0, err
 	}
 	if c.usage == "pv" {
-		power = math.Abs(power)
+		power = -power
 	}
 	return power, nil
 }
