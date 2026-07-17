@@ -13,7 +13,7 @@ import (
 )
 
 type solarDetails struct {
-	Scale            *float64     `json:"scale,omitempty"`            // scale factor yield/forecasted today
+	Scale            float64      `json:"scale"`                      // scale factor yield/forecasted today, 1 if unscaled
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
@@ -163,11 +163,18 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		}
 	}
 
-	if scale := site.solarScale(); scale != 1 {
-		res.Scale = &scale
-	}
+	res.Scale = site.solarScale()
 
 	return res
+}
+
+// effectiveSolarScale returns the solar forecast scale if forecast adjustment
+// is enabled, 1 otherwise.
+func (site *Site) effectiveSolarScale() float64 {
+	if !site.GetSolarAdjusted() {
+		return 1
+	}
+	return site.solarScale()
 }
 
 // solarScale returns the ratio of produced solar energy to forecasted solar
