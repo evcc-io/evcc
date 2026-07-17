@@ -143,6 +143,7 @@ import GridDetails from "../components/Forecast/GridDetails.vue";
 import ValueChart, { type ValueChartType } from "../components/Forecast/ValueChart.vue";
 import ValueDetails from "../components/Forecast/ValueDetails.vue";
 import formatter from "@/mixins/formatter";
+import api from "@/api";
 import settings from "@/settings";
 import store from "../store";
 import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
@@ -237,7 +238,7 @@ export default defineComponent({
 			return store.state?.experimental;
 		},
 		solarAdjusted() {
-			return settings.solarAdjusted;
+			return store.state?.solarAdjusted;
 		},
 		priceZoom() {
 			return settings.priceZoom;
@@ -274,8 +275,14 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		changeAdjusted() {
-			settings.solarAdjusted = !settings.solarAdjusted;
+		async changeAdjusted(e: Event) {
+			try {
+				await api.post(
+					`solaradjusted/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
+				);
+			} catch (err) {
+				console.error(err);
+			}
 		},
 		togglePriceZoom() {
 			settings.priceZoom = !settings.priceZoom;

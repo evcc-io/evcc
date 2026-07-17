@@ -48,6 +48,9 @@ const (
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
 
+	// forecast settings
+	SolarAdjusted = "solarAdjusted"
+
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"
 	OptimizerChargingStrategies = "optimizerChargingStrategies"
