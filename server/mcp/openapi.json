@@ -2578,6 +2578,26 @@
         ]
       }
     },
+    "/solaradjusted/{enable}": {
+      "post": {
+        "description": "Adjust the solar forecast to real production data of the current day.",
+        "operationId": "setSolarAdjusted",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Adjust solar forecast",
+        "tags": [
+          "experimental"
+        ]
+      }
+    },
     "/state": {
       "get": {
         "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.",
