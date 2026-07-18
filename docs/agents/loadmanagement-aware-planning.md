@@ -118,10 +118,14 @@ sequence stays untouched.
       where `>= minPower` is free (`planCapped` skip); `evcc-io/optimizer#91` rule.
 - [x] Tests (`TestAllocateShared`): joint feasibility (Σ/slot ≤ budget),
       full-power loadpoints can't share, small ones do, forced beats priority.
-- [ ] **Live wiring (remaining):** site gathers a `SharedPlanRequest` per
-      loadpoint on each circuit, calls `AllocateShared`, and feeds each plan back
-      into the loadpoint. Needs the parent/child circuit tree, dynamic limits,
-      and real-hardware validation on the breaker-protection path.
+- [x] Live wiring (`site.computeSharedPlans`): each cycle the site groups
+      planning loadpoints by circuit, calls `AllocateShared`, and stores each
+      plan on the loadpoint (`setSharedPlan`); `GetPlan` returns it when set.
+      Only power-limited circuits with 2+ contending loadpoints are allocated;
+      single/no-circuit, precondition, continuous and no-tariff cases keep the
+      independent path. The reactive circuit clamp remains the safety backstop.
+      Still TODO: parent/child circuit tree, per-phase current + dynamic limits,
+      and real-hardware validation.
 
 ### Phase 3 — Joint optimisation (Option A), only if greedy proves insufficient
 - [ ] Extend the `optimizer` service with a shared-capacity constraint; keep B

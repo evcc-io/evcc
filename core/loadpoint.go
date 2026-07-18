@@ -158,6 +158,7 @@ type Loadpoint struct {
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
+	sharedPlan       api.Rates        // circuit-aware plan set by the site, nil = plan independently
 
 	// cached state
 	status         api.ChargeStatus // Charger status
