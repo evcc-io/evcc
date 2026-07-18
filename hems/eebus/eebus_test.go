@@ -6,6 +6,7 @@ import (
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -166,6 +167,18 @@ func TestRun_ProductionLimitReleasedEarly(t *testing.T) {
 	c.productionLimit.IsActive = false
 	require.NoError(t, c.run())
 	assertProductionLimit(t, c, false)
+}
+
+// TestNotConnected verifies that all api.HEMS getters make no statement while
+// no upstream controlbox has connected yet.
+func TestNotConnected(t *testing.T) {
+	c := newTestEEBus(t) // Connector never connected
+
+	assert.Nil(t, c.MaxConsumptionPower())
+	assert.Nil(t, c.MaxProductionPower())
+	assert.Nil(t, c.CurtailedPercent())
+	assert.Nil(t, hems.Dimmed(c))
+	assert.Nil(t, hems.Curtailed(c))
 }
 
 // TestRun_ProductionLimitWithoutNominalMax verifies an incoming LPP limit

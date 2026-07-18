@@ -24,6 +24,8 @@ type Collector struct {
 	entity     entity
 	accu       *Accumulator
 	started    time.Time
+	restored   bool      // meter readings seeded from db
+	lastSlot   time.Time // last persisted slot at restore, for contiguity check
 	statsCache EnergyStats
 }
 
@@ -36,6 +38,17 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 	c := &Collector{
 		entity: entity,
 		accu:   NewAccumulator(opt...),
+	}
+
+	// seed saved readings so the first delta covers the downtime
+	if state := (AccumulatorState{entity.EnergyMeter, entity.ReturnEnergyMeter}); state.CompleteFor(group) {
+		c.accu.Restore(state)
+		c.restored = true
+		// last persisted slot distinguishes a contiguous restart (energy stays
+		// time-correct) from one that skipped whole slots (inflated catchup)
+		var lastTs int64
+		db.Instance.Model(new(meter)).Where("meter = ?", entity.Id).Select("COALESCE(max(ts), 0)").Scan(&lastTs)
+		c.lastSlot = time.Unix(lastTs, 0)
 	}
 
 	return c, nil
@@ -94,6 +107,11 @@ func (c *Collector) process(fun func()) error {
 
 	switch {
 	case c.started.IsZero():
+		if c.restored {
+			// seeded readings make the mid-slot start complete energy-wise
+			c.started = slotStart
+			return nil
+		}
 		// keep started un-truncated so a mid-slot start stays distinguishable
 		c.started = now
 
@@ -102,11 +120,16 @@ func (c *Collector) process(fun func()) error {
 		// preceding slot boundary - false for the mid-slot first slot and
 		// for a slot reached after a data gap
 		if c.started.Equal(slotStart.Add(-tariff.SlotDuration)) {
-			if err := c.persist(); err != nil {
+			// a restore that skipped whole slots dumps the downtime energy into
+			// this single slot, inflating it - a contiguous restart keeps the
+			// slot's meter delta time-correct, so only the former is recovered
+			recovered := c.restored && !c.started.Equal(c.lastSlot.Add(tariff.SlotDuration))
+			if err := c.persist(recovered); err != nil {
 				return err
 			}
 		}
 
+		c.restored = false // only the first slot inherits recovery energy
 		c.started = slotStart
 
 	default:
@@ -119,8 +142,19 @@ func (c *Collector) process(fun func()) error {
 	return nil
 }
 
-func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp)
+func (c *Collector) persist(recovered bool) error {
+	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp, recovered); err != nil {
+		return err
+	}
+
+	// checkpoint meter readings for downtime recovery (scoped write, keeps identity intact)
+	s := c.accu.Snapshot()
+	c.entity.EnergyMeter = s.EnergyMeter
+	c.entity.ReturnEnergyMeter = s.ReturnEnergyMeter
+	return db.Instance.Model(&c.entity).UpdateColumns(map[string]any{
+		"energy_meter":        s.EnergyMeter,
+		"return_energy_meter": s.ReturnEnergyMeter,
+	}).Error
 }
 
 // SetSocTemp records the slot-start soc (temperature when isTemp).
