@@ -71,7 +71,7 @@ circuit capacity over time, which no planner sees.
 - [ ] Test harness: 2 loadpoints on one circuit (`maxPower < 2 × Pmax`), one
       with minSoc, both plan-charging the same cheap slot; assert the current
       bug (combined clamp → deadline miss / over-current warning).
-- [ ] Log/metric when the circuit clamps a **plan-active** or **minSoc**
+- [x] Log/metric when the circuit clamps a **plan-active** or **minSoc**
       loadpoint, to detect this in the wild.
 
 ### Phase 1 — Deterministic priority-aware clamp (Option C)
