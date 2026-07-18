@@ -32,22 +32,15 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 		return nil, err
 	}
 
-	restored := entity.EnergyMeter != nil || entity.ReturnEnergyMeter != nil
-	// bidirectional groups need both readings for a complete restore, (bidi chargers later)
-	if group == Battery || group == Grid {
-		restored = entity.EnergyMeter != nil && entity.ReturnEnergyMeter != nil
-	}
-
 	c := &Collector{
-		entity:   entity,
-		accu:     NewAccumulator(opt...),
-		restored: restored,
+		entity: entity,
+		accu:   NewAccumulator(opt...),
 	}
 
 	// seed saved readings so the first delta covers the downtime
-	if restored {
-		c.accu.energyMeter = entity.EnergyMeter
-		c.accu.returnEnergyMeter = entity.ReturnEnergyMeter
+	if state := (AccumulatorState{entity.EnergyMeter, entity.ReturnEnergyMeter}); state.CompleteFor(group) {
+		c.accu.Restore(state)
+		c.restored = true
 	}
 
 	return c, nil
@@ -141,10 +134,14 @@ func (c *Collector) persist() error {
 		return err
 	}
 
-	// save readings for downtime recovery
-	c.entity.EnergyMeter = c.accu.energyMeter
-	c.entity.ReturnEnergyMeter = c.accu.returnEnergyMeter
-	return db.Instance.Save(&c.entity).Error
+	// checkpoint meter readings for downtime recovery (scoped write, keeps identity intact)
+	s := c.accu.Snapshot()
+	c.entity.EnergyMeter = s.EnergyMeter
+	c.entity.ReturnEnergyMeter = s.ReturnEnergyMeter
+	return db.Instance.Model(&c.entity).UpdateColumns(map[string]any{
+		"energy_meter":        s.EnergyMeter,
+		"return_energy_meter": s.ReturnEnergyMeter,
+	}).Error
 }
 
 // SetSocTemp records the slot-start soc (temperature when isTemp). Call after AddEnergy.
