@@ -14,6 +14,7 @@ const (
 	Shm                = "shm"
 	Messaging          = "messaging"
 	MessagingEvents    = "messagingEvents"
+	PushTokens         = "pushTokens"
 	ModbusProxy        = "modbusproxy"
 	Ocpp               = "ocpp"
 	OcppForwarder      = "ocppforwarder"

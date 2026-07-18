@@ -973,7 +973,7 @@ func configureEEBus(conf *eebus.Config) error {
 	return nil
 }
 
-func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, *messenger.AppPush, error) {
 	// yaml config from file
 	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
 		yamlSource.messaging = globalconfig.YamlSourceFile
@@ -987,7 +987,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 		*confMessaging = globalconfig.Messaging{}
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &confMessaging); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		yamlSource.messaging = globalconfig.YamlSourceDb
 	}
@@ -995,10 +995,10 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	if settings.Exists(keys.MessagingEvents) {
 		*confEvents = globalconfig.MessagingEvents{}
 		if err := settings.Json(keys.MessagingEvents, &confEvents); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if yamlSource.messaging != globalconfig.YamlSourceNone && confEvents != nil {
-			return nil, errors.New("yaml and device config exists for messaging; remove yaml config")
+			return nil, nil, errors.New("yaml and device config exists for messaging; remove yaml config")
 		}
 	}
 
@@ -1022,7 +1022,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	// append devices from database
 	configurable, err := config.ConfigurationsByClass(templates.Messenger)
 	if err != nil {
-		return messageChan, err
+		return messageChan, nil, err
 	}
 
 	for _, conf := range configurable {
@@ -1032,7 +1032,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	}
 
 	if err := eg.Wait(); err != nil {
-		return messageChan, &ClassError{ClassMessenger, err}
+		return messageChan, nil, &ClassError{ClassMessenger, err}
 	}
 
 	var events globalconfig.MessagingEvents
@@ -1046,7 +1046,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	messageHub, err := messenger.NewHub(events, vehicles, cache)
 
 	if err != nil {
-		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
+		return messageChan, nil, fmt.Errorf("failed configuring push services: %w", err)
 	}
 
 	for _, dev := range config.Messengers().Devices() {
@@ -1055,9 +1055,13 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
+	// companion app push devices are an implicit messenger
+	appPush := messenger.NewAppPushFromSettings()
+	messageHub.Add(appPush)
+
 	go messageHub.Run(messageChan, valueChan)
 
-	return messageChan, nil
+	return messageChan, appPush, nil
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
