@@ -77,7 +77,11 @@ func (lp *Loadpoint) identifyVehicle() {
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.stopVehicleDetection()
-			lp.setActiveVehicle(vehicle)
+
+			// already active via a different detection path - avoid reapplying its mode
+			if lp.GetVehicle() != vehicle {
+				lp.setActiveVehicle(vehicle)
+			}
 		}
 	}
 }
@@ -148,7 +152,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
 
-		if mode, ok := v.OnIdentified().GetMode(); ok {
+		// vehicle mode overrides the yaml onIdentify action
+		mode, ok := v.OnIdentified().GetMode()
+		if m := vehicle.Settings(lp.log, v).GetMode(); m != "" {
+			mode, ok = m, true
+		}
+		if ok && mode != "" {
 			lp.SetMode(mode)
 		}
 

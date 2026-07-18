@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Lädt",
-      "discharging": "Entlädt",
+      "charging": "lädt",
+      "discharging": "entlädt",
       "energy": "Energie",
+      "gridCharge": "Netzladen",
+      "hold": "Entladesperre",
+      "holdCharge": "Ladesperre",
       "ofTotal": "von {total}",
       "power": "Leistung",
       "soc": "Ladestand"
@@ -45,17 +48,16 @@
     },
     "optimizer": {
       "action": {
-        "charge": "Netzladen",
-        "hold": "Entladung gesperrt",
-        "holdcharge": "Laden pausiert",
-        "normal": "PV-Überschuss folgen"
+        "charge": "Aus dem Netz laden",
+        "hold": "Entladen verhindern",
+        "holdcharge": "Laden verhindern",
+        "normal": "Normaler Betrieb"
       },
       "empty": "leer",
       "full": "voll",
       "highest": "Höchststand ({value})",
       "lowest": "Tiefststand ({value})",
-      "suggestion": "Vorschlag",
-      "title": "Optimizer"
+      "suggestion": "Vorschlag"
     }
   },
   "batterySettings": {
@@ -141,16 +143,16 @@
       "template": "Hersteller",
       "titleAdd": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizung hinzufügen"
+        "heating": "Heizgerät hinzufügen"
       },
       "titleEdit": {
         "charging": "Wallbox bearbeiten",
-        "heating": "Heizung bearbeiten"
+        "heating": "Heizgerät bearbeiten"
       },
       "type": {
         "custom": {
           "charging": "Benutzerdefinierte Wallbox",
-          "heating": "Benutzerdefinierte Heizung"
+          "heating": "Benutzerdefiniertes Heizgerät"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
         "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready über Plugins)",
@@ -186,6 +188,7 @@
     "deviceValue": {
       "activeClients": "Aktive Clients",
       "amount": "Anzahl",
+      "asleep": "schläft",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Kapazität",
@@ -224,6 +227,7 @@
       "no": "Nein",
       "odometer": "Kilometerstand",
       "org": "Organisation",
+      "outdoorTemp": "Außentemperatur",
       "phaseCurrents": "Strom",
       "phasePowers": "Leistung",
       "phaseVoltages": "Spannung",
@@ -233,6 +237,7 @@
       "price": "Preis",
       "productionLimited": "Erzeugung begrenzt",
       "range": "Reichweite",
+      "remoteEnabled": "Aktiviert",
       "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
@@ -367,6 +372,8 @@
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "integrations": "Integrationen",
       "lastEvent": "Letzter Eintrag {timeAgo}.",
+      "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
+      "recordedEvents": "Aufgezeichnete Ereignisse",
       "template": "Integration",
       "title": "Externe Begrenzung"
     },
@@ -393,17 +400,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizung hinzufügen"
+        "heating": "Heizgerät hinzufügen"
       },
       "addMeter": "Zusätzlichen Energiezähler hinzufügen",
+      "advancedConfig": "Erweiterte Konfiguration",
       "cancel": "Abbrechen",
       "chargerError": {
         "charging": "Wallbox muss konfiguriert sein.",
-        "heating": "Heizung muss konfiguriert sein."
+        "heating": "Heizgerät muss konfiguriert sein."
       },
       "chargerLabel": {
         "charging": "Wallbox",
-        "heating": "Heizung"
+        "heating": "Heizgerät"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
@@ -417,14 +425,22 @@
       "circuitInvalid": "Stromkreis existiert nicht",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
+      "created": "„{name}“ wurde angelegt und verwendet sinnvolle Standardwerte.",
+      "createdTitle": {
+        "charging": "Ladepunkt erstellt",
+        "heating": "Heizung erstellt"
+      },
+      "creating": {
+        "charging": "Wallbox gespeichert. Ladepunkt wird erstellt …",
+        "heating": "Heizgerät gespeichert. Heizung wird erstellt …"
+      },
       "defaultModeHelp": {
         "charging": "Lademodus beim Anschließen des Fahrzeugs.",
         "heating": "Wird beim Systemstart gesetzt."
       },
       "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
+      "defaultModeKeep": "beibehalten",
       "defaultModeLabel": "Standard-Modus",
-      "defaultsHint": "Standardmodus, PV-Überschussverhalten und elektrische Details verwenden sinnvolle Standardwerte.",
-      "defaultsHintLink": "Einstellungen anpassen",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrik",
@@ -441,7 +457,7 @@
       "noVehicles": "Keine Fahrzeuge konfiguriert.",
       "option": {
         "charging": "Ladepunkt hinzufügen",
-        "heating": "Heizungsgerät hinzufügen"
+        "heating": "Heizung hinzufügen"
       },
       "phases1p": "1-phasig",
       "phases3p": "3-phasig",
@@ -482,12 +498,12 @@
       "titleAdd": {
         "charging": "Ladepunkt hinzufügen",
         "heating": "Heizung hinzufügen",
-        "unknown": "Wallbox oder Heizung hinzufügen"
+        "unknown": "Ladepunkt oder Heizung hinzufügen"
       },
       "titleEdit": {
         "charging": "Ladepunkt bearbeiten",
         "heating": "Heizung bearbeiten",
-        "unknown": "Wallbox oder Heizung bearbeiten"
+        "unknown": "Ladepunkt oder Heizung bearbeiten"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -505,7 +521,7 @@
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addConsumer": "Verbraucher hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
-      "addLoadpoint": "Wallbox oder Heizung hinzufügen",
+      "addLoadpoint": "Ladepunkt oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
       "addTariffs": "Tarife hinzufügen",
       "addVehicle": "Fahrzeug hinzufügen",
@@ -798,7 +814,7 @@
       "general": "Allgemein",
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
-      "loadpoints": "Laden & Heizen",
+      "loadpoints": "Ladepunkte & Heizungen",
       "meter": "PV & Batterie",
       "services": "Dienste",
       "system": "System",
@@ -827,14 +843,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Lizenzschlüssel",
-      "activationKeyHint": "Per E-Mail zugesandt. Kann im {url} gefunden werden.",
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
       "descriptionToken": "Als GitHub-Sponsor findest du dein Token auf {url}. Zum Ausprobieren gibt's ein {trialToken}.",
-      "email": "E-Mail",
-      "emailHint": "E-Mail-Adresse, die du für {url} verwendet hast",
       "enterYourToken": "Dein Sponsor Token",
       "error": "Das Sponsortoken ist ungültig.",
       "invalid": "ungültig",
@@ -917,7 +929,8 @@
         "feedIn": "Einspeisevergütung hinzufügen",
         "grid": "Netzbezugstarif hinzufügen",
         "planner": "Planer-Vorhersage hinzufügen",
-        "solar": "Solar-Vorhersage hinzufügen"
+        "solar": "Solar-Vorhersage hinzufügen",
+        "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
         "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
@@ -930,6 +943,11 @@
         "titleAdd": "Solar-Vorhersage hinzufügen",
         "titleEdit": "Solar-Vorhersage bearbeiten"
       },
+      "temperature": {
+        "description": "Vorhersage der Außentemperatur am Standort. Wird in der Oberfläche angezeigt und für die Prognose des Heizbedarfs verwendet.",
+        "titleAdd": "Temperatur-Vorhersage hinzufügen",
+        "titleEdit": "Temperatur-Vorhersage bearbeiten"
+      },
       "template": "Anbieter",
       "title": "Tarife & Vorhersagen",
       "titleChoice": "Was möchtest du hinzufügen?",
@@ -938,7 +956,8 @@
         "feedIn": "Einspeisevergütung",
         "grid": "Netzbezugspreis",
         "planner": "Planer",
-        "solar": "Solar"
+        "solar": "Solar",
+        "temperature": "Temperaturvorhersage"
       },
       "zones": {
         "add": "Zone hinzufügen",
@@ -1091,7 +1110,8 @@
       "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
       "price": "Dynamischen Stromtarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
       "setup": "Tarife und Vorhersagen einrichten",
-      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
+      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
+      "temperature": "Zeigt die erwartete Außentemperatur am Standort. Wird für die Prognose des Heizbedarfs verwendet."
     },
     "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
@@ -1113,13 +1133,19 @@
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
     "solarAdjustMedium": "an reale Produktionsdaten anpassen",
     "solarAdjustShort": "anpassen",
+    "temperature": {
+      "average": "Durchschnitt",
+      "range": "Bereich"
+    },
     "type": {
       "co2": "CO₂-Emissionen",
       "price": "Netzpreis",
-      "solar": "Solarproduktion"
+      "solar": "Solarproduktion",
+      "temperature": "Außentemperatur"
     }
   },
   "general": {
+    "download": "Download",
     "note": "Hinweis:"
   },
   "header": {
@@ -1276,10 +1302,6 @@
       "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
       "batteryDischargeHold": "Batterie (Entladesperre)",
-      "batteryForecastEmpty": "Leer",
-      "batteryForecastFull": "Voll",
-      "batteryForecastNextHigh": "Hoch",
-      "batteryForecastNextLow": "Tief",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryTooltip": "{energy} von {total} ({soc})",
@@ -1298,6 +1320,9 @@
     "heatingStatus": {
       "charging": "Heize …",
       "connected": "Standby.",
+      "minTemp": "Mindestheizung auf {temp}.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu heizen.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Heizen zu pausieren.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit zum Heizen …"
     },
@@ -1343,12 +1368,15 @@
       "emission": "Emission",
       "fallbackName": "Ladepunkt",
       "finished": "Ladeende",
+      "last24hEnergy": "Letzte 24h",
+      "last7dEnergy": "Letzte 7 Tage",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
       "remoteDisabledHard": "{source}: Deaktiviert",
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
-      "solar": "Sonne"
+      "solar": "Sonne",
+      "todayEnergy": "Heute"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1366,7 +1394,7 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
-      "disclaimerHint": "Hinweis:",
+      "heating": "Heizen",
       "limitSoc": {
         "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
         "label": "Standard Ladelimit"
@@ -1381,7 +1409,10 @@
         "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
         "label": "Min. Ladung %"
       },
-      "onlyForSocBasedCharging": "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar.",
+      "minTemp": {
+        "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
+        "label": "Min. Temperatur"
+      },
       "phasesConfigured": {
         "label": "Phasen",
         "no1p3pSupport": "Wie ist deine Wallbox angeschlossen?",
@@ -1490,6 +1521,8 @@
       "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
       "scale1p": "Reduziere gleich auf 1-phasiges Laden.",
       "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu laden.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Laden zu pausieren.",
       "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
       "targetChargePlanned": "Ladeplan startet in {duration}.",
       "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",

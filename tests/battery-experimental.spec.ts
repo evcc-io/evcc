@@ -28,11 +28,11 @@ test.describe("experimental battery page", async () => {
 
     // per-battery: soc, charge/discharge state and energy of total
     const charging = cards.filter({ hasText: "76%" });
-    await expect(charging).toContainText("Charging"); // battery1 power -800 W
+    await expect(charging).toContainText("charging"); // battery1 power -800 W
     await expect(charging).toContainText("13.5 kWh"); // of total capacity
 
     const discharging = cards.filter({ hasText: "40%" });
-    await expect(discharging).toContainText("Discharging"); // battery2 power 1200 W
+    await expect(discharging).toContainText("discharging"); // battery2 power 1200 W
   });
 
   test("history chart: unit toggle persists and window pages", async ({ page }) => {
@@ -72,6 +72,22 @@ test.describe("experimental battery page", async () => {
     // changing priority updates the picker value
     await prioritySoc.selectOption("30");
     await expect(prioritySoc).toHaveValue("30");
+
+    // values crossing the other threshold are not selectable (prioritySoc 30, bufferSoc 80)
+    await expect(prioritySoc.getByRole("option", { name: "85%", exact: true })).toHaveAttribute(
+      "disabled",
+      ""
+    );
+    await expect(bufferSoc.getByRole("option", { name: "25%", exact: true })).toHaveAttribute(
+      "disabled",
+      ""
+    );
+
+    // equal values unlock higher priorities; selecting one raises the buffer instead
+    await prioritySoc.selectOption("80");
+    await prioritySoc.selectOption("85");
+    await expect(bufferSoc).toHaveValue("85");
+    await expect(prioritySoc).toHaveValue("80");
 
     // discharge control is offered for the controllable battery and toggles on
     const discharge = page.getByRole("switch", { name: /Prevent home battery/ });

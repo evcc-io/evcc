@@ -1,18 +1,15 @@
 package metrics
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"slices"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/util/export"
 )
 
 // Slot represents an aggregated energy time slot
@@ -37,12 +34,12 @@ type Series struct {
 	Data   []Slot `json:"data"`
 }
 
-// SeriesCSV wraps a slice of Series for CSV export.
-type SeriesCSV []Series
+// SeriesExport wraps a slice of Series for tabular export.
+type SeriesExport []Series
 
 // GroupOrder is the canonical display order of metric groups, mirroring the
 // frontend GROUP_ORDER plus home/forecast.
-var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Consumer, Meter, Home, Forecast}
+var GroupOrder = []string{PV, Battery, Grid, Loadpoint, Consumer, Meter, Home, Forecast, Temperature}
 
 var aggregateFormats = map[string]string{
 	"15m":   "%Y-%m-%d %H:%M",
@@ -164,28 +161,17 @@ func seriesHasSocTemp(s *Series) bool {
 	return slices.ContainsFunc(s.Data, func(slot Slot) bool { return slot.SocTemp != nil })
 }
 
-// formatSocTemp renders a soc/temp value rounded to 0.1, empty when unset.
-func formatSocTemp(v *float64) string {
+// socTempValue rounds a soc/temp value to 0.1, nil when unset
+func socTempValue(v *float64) any {
 	if v == nil {
-		return ""
+		return nil
 	}
-	return strconv.FormatFloat(math.Round(*v*10)/10, 'f', -1, 64)
+	return math.Round(*v*10) / 10
 }
 
-// WriteCsv emits a wide-table CSV with columns
-//
-//	time.start, time.end, <group>.<entity>.energy.Wh[, <group>.<entity>.returnEnergy.Wh], …
-//
-// Only grid and battery contribute a second returnEnergy column.
-// Values are plain Wh integers (the DB is already rounded to milli-kWh) — no
-// decimal point, no thousands separator, so they survive locale-mismatched
-// spreadsheet importers unambiguously.
-func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
-	ww, _, err := csvutil.NewLocalizedWriter(ctx, w)
-	if err != nil {
-		return err
-	}
-
+// Write emits the wide table to ww: time.start, time.end, then one energy.Wh
+// column per entity (grid/battery add returnEnergy.Wh) as plain locale-safe Wh ints.
+func (s SeriesExport) Write(ww export.RowWriter) error {
 	byGroup := make(map[string][]*Series)
 	for i := range s {
 		g := s[i].Group
@@ -215,7 +201,7 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 		}
 	})
 
-	header := []string{"time.start", "time.end"}
+	header := []any{"time.start", "time.end"}
 	type col struct {
 		series       *Series
 		returnEnergy bool
@@ -292,28 +278,28 @@ func (s SeriesCSV) WriteCsv(ctx context.Context, w io.Writer) error {
 		}
 	}
 
-	row := make([]string, len(cols))
+	row := make([]any, len(cols))
 	for _, ts := range timestamps {
-		row[0] = ts.Local().Format("2006-01-02 15:04:05")
-		row[1] = endByStart[ts.UnixNano()].Local().Format("2006-01-02 15:04:05")
+		row[0] = ts.Local()
+		row[1] = endByStart[ts.UnixNano()].Local()
 		for i := 2; i < len(cols); i++ {
 			c := cols[i]
 			if c.series == nil {
-				row[i] = ""
+				row[i] = nil
 				continue
 			}
 			slot, ok := slotIdx[c.series][ts.UnixNano()]
 			if !ok {
-				row[i] = ""
+				row[i] = nil
 				continue
 			}
 			switch {
 			case c.socTemp:
-				row[i] = formatSocTemp(slot.SocTemp)
+				row[i] = socTempValue(slot.SocTemp)
 			case c.returnEnergy:
-				row[i] = strconv.FormatInt(int64(math.Round(slot.ReturnEnergy*1000)), 10)
+				row[i] = int64(math.Round(slot.ReturnEnergy * 1000))
 			default:
-				row[i] = strconv.FormatInt(int64(math.Round(slot.Energy*1000)), 10)
+				row[i] = int64(math.Round(slot.Energy * 1000))
 			}
 		}
 		if err := ww.Write(row); err != nil {

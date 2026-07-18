@@ -81,6 +81,9 @@ type Site struct {
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
 
+	// forecast settings
+	solarAdjusted bool // adjust solar forecast to real production data
+
 	// optimizer settings
 	optimizerChargingStrategy string // optimizer grid charging strategy
 
@@ -91,26 +94,28 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	collectors map[string]*metrics.Collector // keyed by meter ref
+	tariffSlot time.Time                     // last persisted tariff slot
 
 	// cached state
-	gridPower                float64            // Grid power
-	pvPower                  float64            // PV power
-	excessDCPower            float64            // PV excess DC charge power (hybrid only)
-	auxPower                 float64            // Aux power
-	battery                  types.BatteryState // Battery cached and published state
-	batteryMode              api.BatteryMode    // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode    // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time          // Battery mode timer for external control
+	gridPower                float64                     // Grid power
+	pvPower                  float64                     // PV power
+	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
+	auxPower                 float64                     // Aux power
+	battery                  types.BatteryState          // Battery cached and published state
+	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
+	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
 }
 
 // MetersConfig contains the site's meter configuration
 type MetersConfig struct {
-	GridMeterRef      string   `mapstructure:"grid"`      // Grid usage meter
-	PVMetersRef       []string `mapstructure:"pv"`        // PV meter
-	BatteryMetersRef  []string `mapstructure:"battery"`   // Battery charging meter
-	ExtMetersRef      []string `mapstructure:"ext"`       // Meters used only for monitoring
-	AuxMetersRef      []string `mapstructure:"aux"`       // Auxiliary meters
-	ConsumerMetersRef []string `mapstructure:"consumers"` // Consumer meters
+	GridMeterRef      string   `mapstructure:"grid"`     // Grid usage meter
+	PVMetersRef       []string `mapstructure:"pv"`       // PV meter
+	BatteryMetersRef  []string `mapstructure:"battery"`  // Battery charging meter
+	ExtMetersRef      []string `mapstructure:"ext"`      // Meters used only for monitoring
+	AuxMetersRef      []string `mapstructure:"aux"`      // Auxiliary meters
+	ConsumerMetersRef []string `mapstructure:"consumer"` // Consumer meters
 }
 
 // NewSiteFromConfig creates a new site
@@ -197,7 +202,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return errors.New("missing grid meter instance")
 		}
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, deviceTitleOrName(dev))
+		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
 		if err != nil {
 			return err
 		}
@@ -226,6 +231,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		return err
 	}
 	site.collectors[metrics.Forecast] = fc
+
+	// temperature forecast collector (populated when TariffUsageTemperature is configured)
+	tc, err := metrics.NewCollector(metrics.Temperature, metrics.Temperature, metrics.Temperature)
+	if err != nil {
+		return err
+	}
+	site.collectors[metrics.Temperature] = tc
 
 	// multiple batteries
 	for _, ref := range site.Meters.BatteryMetersRef {
@@ -373,6 +385,9 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
+	if v, err := settings.Bool(keys.SolarAdjusted); err == nil {
+		site.SetSolarAdjusted(v)
+	}
 	if v, err := settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
 		if err := site.SetOptimizerChargingStrategy(v); err != nil {
 			site.log.WARN.Printf("optimizer charging strategy: %v", err)
@@ -515,6 +530,16 @@ func (site *Site) publish(key string, val any) {
 // publish sends values to UI and databases
 func (site *Site) Publish(key string, val any) {
 	site.publish(key, val)
+}
+
+// publishLoadpoint sends a value into the given loadpoint's state
+func (site *Site) publishLoadpoint(id int, key string, val any) {
+	// test helper
+	if site.valueChan == nil {
+		return
+	}
+
+	site.valueChan <- util.Param{Loadpoint: &id, Key: key, Val: val}
 }
 
 // clearPlanLocks clears locked plan goals for all loadpoints
@@ -723,6 +748,15 @@ func (site *Site) updateBatteryMeters() {
 		if mm[i].Soc != nil {
 			c.SetSocTemp(*mm[i].Soc, false)
 		}
+	}
+
+	site.publishBattery()
+}
+
+// publishBattery applies the optimizer suggestions and publishes the battery state
+func (site *Site) publishBattery() {
+	for i, d := range site.battery.Devices {
+		site.battery.Devices[i].Suggestion = site.batterySuggestion(d.Name)
 	}
 
 	site.publish(keys.Battery, site.battery)
@@ -991,6 +1025,32 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	return sum
 }
 
+// reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
+// that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
+func (site *Site) reservedPVPower(lp updater) float64 {
+	if lp.GetMode() != api.ModePV {
+		return 0
+	}
+
+	prio := lp.EffectivePriority()
+
+	var reserved float64
+	for _, other := range site.loadpoints {
+		if other == lp {
+			continue
+		}
+		if other.EffectivePriority() > prio && other.PvChargeStarting() {
+			reserved += other.EffectiveMaxPower()
+		}
+	}
+
+	if reserved > 0 {
+		site.log.DEBUG.Printf("lp %s reserves %.0fW for higher-priority loadpoints starting up", lp.GetTitle(), reserved)
+	}
+
+	return reserved
+}
+
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -1021,14 +1081,18 @@ func (site *Site) update(lp updater) {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
-			if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
-				site.log.ERROR.Println(err)
+			if dim := hemsDimmed(site.hems); dim != nil {
+				if err := site.dimMeters(*dim); err != nil {
+					site.log.ERROR.Println(err)
+				}
 			}
 		})
 
 		wg.Go(func() {
-			if err := site.curtailPV(hemsCurtailed(site.hems)); err != nil {
-				site.log.ERROR.Println(err)
+			if hemsCurtailed(site.hems) != nil {
+				if err := site.curtailPV(site.hems.CurtailedPercent()); err != nil {
+					site.log.ERROR.Println(err)
+				}
 			}
 		})
 
@@ -1061,6 +1125,9 @@ func (site *Site) update(lp updater) {
 
 		// TODO
 		if lp != nil {
+			// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
+			sitePower += site.reservedPVPower(lp)
+
 			lp.Update(
 				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
@@ -1118,6 +1185,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
+	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))

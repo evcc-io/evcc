@@ -19,12 +19,36 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write # allow Claude to push fixes when asked
+      pull-requests: write # comment + open/edit PRs
+      issues: write # comment + react to the invoking comment/issue
       id-token: write
       actions: read # Required for Claude to read CI results on PRs
     steps:
+      - name: React to invoking comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions \
+            -f content=eyes
+
+      - name: React to invoking review comment
+        if: github.event_name == 'pull_request_review_comment'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/pulls/comments/${{ github.event.comment.id }}/reactions \
+            -f content=eyes
+
+      - name: React to invoking issue
+        if: github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions \
+            -f content=eyes
+
       - name: Checkout repository
         uses: actions/checkout@v7
         with:

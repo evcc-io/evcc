@@ -15,6 +15,11 @@ type API interface {
 	// Name returns the vehicle name
 	Name() string
 
+	// GetMode returns the charge mode
+	GetMode() api.ChargeMode
+	// SetMode sets the charge mode
+	SetMode(api.ChargeMode)
+
 	// GetMinSoc returns the min soc
 	GetMinSoc() int
 	// SetMinSoc sets the min soc

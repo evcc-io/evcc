@@ -140,13 +140,25 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	}
 
 	switch event {
+	case ohpcf.DataUpdateConsumptionState:
+		c.mu.Lock()
+		c.compressor = entity
+		c.mu.Unlock()
+
+		// react immediately to a freshly announced schedule/resume opportunity
+		// instead of waiting for the next reboost tick, which may miss it (#31549)
+		if c.lastEnabled() {
+			if err := c.apply(); err != nil {
+				c.log.DEBUG.Printf("apply: %v", err)
+			}
+		}
+
 	case ohpcf.UseCaseSupportUpdate,
 		ohpcf.DataUpdateRequestedPowerEstimate,
 		ohpcf.DataUpdateRequestedPowerMax,
 		ohpcf.DataUpdateConsumptionIsStoppable,
 		ohpcf.DataUpdateConsumptionIsPausable,
 		ohpcf.DataUpdateConsumptionStartTime,
-		ohpcf.DataUpdateConsumptionState,
 		ohpcf.DataUpdateMinimalRunDuration,
 		ohpcf.DataUpdateMinimalPauseDuration:
 		c.mu.Lock()

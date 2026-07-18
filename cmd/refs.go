@@ -29,6 +29,11 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
+	// circuits
+	if err := collectCircuitRefs(conf.Circuits); err != nil {
+		return err
+	}
+
 	// loadpoints
 	if err := collectLoadpointRefs(slices.Values(conf.Loadpoints)); err != nil {
 		return err
@@ -92,19 +97,7 @@ func collectTariffRefs() error {
 	}
 
 	// Collect all non-empty refs
-	if refs.Grid != "" {
-		references.tariff = append(references.tariff, refs.Grid)
-	}
-	if refs.FeedIn != "" {
-		references.tariff = append(references.tariff, refs.FeedIn)
-	}
-	if refs.Co2 != "" {
-		references.tariff = append(references.tariff, refs.Co2)
-	}
-	if refs.Planner != "" {
-		references.tariff = append(references.tariff, refs.Planner)
-	}
-	references.tariff = append(references.tariff, refs.Solar...)
+	references.tariff = slices.AppendSeq(references.tariff, refs.Used())
 
 	return nil
 }
@@ -127,6 +120,23 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 		references.charger = append(references.charger, refs.ChargerRef)
 		references.vehicle = append(references.vehicle, refs.VehicleRef)
 		references.circuit = append(references.circuit, refs.CircuitRef)
+	}
+
+	return nil
+}
+
+func collectCircuitRefs(circuits []config.Named) error {
+	for _, cc := range circuits {
+		var refs struct {
+			MeterRef string         `mapstructure:"meter"` // Circuit meter reference
+			Other    map[string]any `mapstructure:",remain"`
+		}
+
+		if err := util.DecodeOther(cc.Other, &refs); err != nil {
+			return err
+		}
+
+		references.meter = append(references.meter, refs.MeterRef)
 	}
 
 	return nil

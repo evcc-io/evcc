@@ -370,10 +370,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 					Status: struct {
 						Dimmed              *bool    `json:"dimmed,omitempty"`
 						Curtailed           *int     `json:"curtailed,omitempty"`
-						MaxConsumptionPower float64  `json:"maxConsumptionPower,omitempty"`
+						MaxConsumptionPower *float64 `json:"maxConsumptionPower,omitempty"`
 						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
 					}{
-						Dimmed:              hemsInstance.Dimmed(),
+						Dimmed:              hems.Dimmed(hemsInstance),
 						Curtailed:           hemsInstance.CurtailedPercent(),
 						MaxConsumptionPower: hemsInstance.MaxConsumptionPower(),
 						MaxProductionPower:  hemsInstance.MaxProductionPower(),
