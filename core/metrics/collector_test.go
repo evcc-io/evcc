@@ -355,7 +355,7 @@ func TestCollectorRecoveryWithinCurrentSlot(t *testing.T) {
 	col2, err := NewCollector(Grid, "within", "", WithClock(clk))
 	require.NoError(t, err)
 	require.True(t, col2.restored)
-	require.EqualValues(t, 15*60, col2.lastSlot, "last persisted slot is 00:15")
+	require.EqualValues(t, 15*60, col2.lastSlot.Unix(), "last persisted slot is 00:15")
 
 	// recovery happens during the current slot: the meter delta is applied but
 	// no boundary was skipped, so nothing is persisted yet
