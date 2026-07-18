@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
+import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalHidden, expectModalVisible } from "./utils";
+
+const CONFIG = "heating.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start("heating.evcc.yaml");
+  await start(CONFIG);
 });
 test.afterAll(async () => {
   await stop();
@@ -51,6 +53,16 @@ test.describe("integrated device", async () => {
     // temp 40 below minimum 50 -> forced heating indicator
     await expect(lp.getByTestId("vehicle-status-minsoc")).toContainText("50.0°C");
 
+    await page.reload();
+    await expect(lp.getByTestId("vehicle-status-minsoc")).toContainText("50.0°C");
+    await lp.getByTestId("loadpoint-settings-button").last().click();
+    await expectModalVisible(modal);
+    await expect(modal.getByLabel("Min. temperature")).toHaveValue("50");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    // value survives restart
+    await restart(CONFIG);
     await page.reload();
     await expect(lp.getByTestId("vehicle-status-minsoc")).toContainText("50.0°C");
     await lp.getByTestId("loadpoint-settings-button").last().click();

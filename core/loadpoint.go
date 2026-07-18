@@ -97,7 +97,7 @@ type Loadpoint struct {
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
-	ui              loadpoint.UIConfig // display-only, not used in control logic
+	Ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
 	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
@@ -389,7 +389,7 @@ func (lp *Loadpoint) restoreSettings() {
 
 	var ui loadpoint.UIConfig
 	if err := lp.settings.Json(keys.UI, &ui); err == nil {
-		lp.ui = ui
+		lp.Ui = ui
 	}
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
@@ -705,7 +705,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.EnableDelay, lp.Enable.Delay)
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
 
-	lp.publish(keys.UI, lp.ui)
+	lp.publish(keys.UI, lp.Ui)
 
 	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
 		if lp.phasesConfigured != phases && lp.phasesConfigured != 0 {
@@ -723,6 +723,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.SmartFeedInPriorityLimit, lp.smartFeedInPriorityLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
+	lp.publishEnergyStats()
 
 	// charger features
 	for _, f := range api.FeatureValues() {
@@ -1034,22 +1035,24 @@ func (lp *Loadpoint) charging() bool {
 // PvChargeStarting reports a PV loadpoint that claimed surplus via a running
 // enable timer but is not yet drawing it and has not reached its goal. See #31194, #31684.
 func (lp *Loadpoint) PvChargeStarting() bool {
-	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached() {
+	lp.RLock()
+	enabled := lp.enabled
+	pvTimerRunning := !lp.pvTimer.IsZero()
+	lp.RUnlock()
+
+	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached(enabled) {
 		return false
 	}
 
-	lp.RLock()
-	defer lp.RUnlock()
-
 	// enable timer running (not yet enabled)
-	return !lp.enabled && !lp.pvTimer.IsZero()
+	return !enabled && pvTimerRunning
 }
 
 // chargeGoalReached reports whether the loadpoint will not draw more: enabled
 // but not charging, an energy limit reached, or soc at/above the limit (#31684).
-func (lp *Loadpoint) chargeGoalReached() bool {
+func (lp *Loadpoint) chargeGoalReached(enabled bool) bool {
 	// enabled but drawing nothing: it won't ramp up
-	if lp.IsEnabled() && !lp.charging() {
+	if enabled && !lp.charging() {
 		return true
 	}
 
@@ -1849,6 +1852,25 @@ func (lp *Loadpoint) publishChargeProgress() {
 			lp.chargeEnergy.SetSocTemp(v, lp.chargerHasFeature(api.Heating))
 		}
 	}
+
+	lp.publishEnergyStats()
+}
+
+// publishEnergyStats publishes time-based energy statistics in Wh
+func (lp *Loadpoint) publishEnergyStats() {
+	if lp.chargeEnergy == nil {
+		return
+	}
+
+	stats, err := lp.chargeEnergy.EnergyStats()
+	if err != nil {
+		lp.log.ERROR.Printf("energy stats: %v", err)
+		return
+	}
+
+	lp.publish(keys.TodayEnergy, math.Round(stats.Today*1e3))
+	lp.publish(keys.Last24hEnergy, math.Round(stats.Last24h*1e3))
+	lp.publish(keys.Last7dEnergy, math.Round(stats.Last7d*1e3))
 }
 
 // publish state of charge, remaining charge duration and range

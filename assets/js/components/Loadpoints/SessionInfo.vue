@@ -31,7 +31,7 @@
 import { defineComponent, type PropType } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import formatter from "@/mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { getLoadpointSessionInfo, setLoadpointSessionInfo } from "@/uiLoadpoints";
 import type { CURRENCY, SelectOption, SessionInfoKey } from "@/types/evcc";
 
@@ -52,6 +52,8 @@ export default defineComponent({
 		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
 		chargeDurationInterpolated: Number,
 		sessionEnergy: { type: Number, default: 0 },
+		last24hEnergy: Number,
+		last7dEnergy: Number,
 		tariffCo2: Number,
 		tariffGrid: Number,
 	},
@@ -107,6 +109,16 @@ export default defineComponent({
 					key: "emission" as const,
 					value: this.emissionFormatted,
 					available: this.tariffCo2 !== undefined,
+				},
+				{
+					key: "last24hEnergy" as const,
+					value: this.fmtWh(this.last24hEnergy ?? 0, POWER_UNIT.AUTO),
+					available: this.last24hEnergy !== undefined,
+				},
+				{
+					key: "last7dEnergy" as const,
+					value: this.fmtWh(this.last7dEnergy ?? 0, POWER_UNIT.AUTO),
+					available: this.last7dEnergy !== undefined,
 				},
 			];
 			// only show options that are available

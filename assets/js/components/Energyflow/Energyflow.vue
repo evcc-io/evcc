@@ -343,6 +343,7 @@ export default defineComponent({
 	props: {
 		gridConfigured: Boolean,
 		experimental: Boolean,
+		solarAdjusted: Boolean,
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
@@ -532,7 +533,7 @@ export default defineComponent({
 				return undefined;
 			}
 			const { today, scale } = this.forecast.solar || {};
-			const factor = this.experimental && settings.solarAdjusted && scale ? scale : 1;
+			const factor = this.experimental && this.solarAdjusted && scale ? scale : 1;
 			const energy = today?.energy || 0;
 			return energy * factor;
 		},

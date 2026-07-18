@@ -769,14 +769,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licences atslēga",
-      "activationKeyHint": "Nostūtīts jums pa e-pastu. Atrodams {url}.",
       "addToken": "Ievadiet marķieri",
       "changeToken": "Mainīt marķieri",
       "description": "Sponsorēšanas modelis palīdz mums uzturēt projektu un ilgtspējīgi veidot jaunas un aizraujošas funkcijas. Kā sponsors jūs iegūstat piekļuvi visām lādētāju implementācijām.",
       "descriptionToken": "Kā GitHub Sponsors jūs atrodat savu marķieri {url}. Iesākumam piedāvājam {trialToken}.",
-      "email": "E-pasts",
-      "emailHint": "E-pasta adrese ko izmantojāt {url}",
       "enterYourToken": "Jūsu sponsora marķieris",
       "error": "Sponsora marķieris nav derīgs.",
       "invalid": "nederīgs",
