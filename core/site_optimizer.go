@@ -119,6 +119,35 @@ const (
 // evSuggestion notifies when the optimizer's advisory action for a device changes
 const evSuggestion = "suggestion"
 
+// pendingSuggestion pairs a device's current-run suggestion with the
+// notification event to emit if it represents an actionable change.
+type pendingSuggestion struct {
+	suggestion types.Suggestion
+	event      messenger.Event
+}
+
+// suggestionEvent builds the notification key and event for a device suggestion.
+// The key ("loadpoint:<id>" / "battery:<name>") identifies the device across
+// runs; an empty key means the device can't act on a suggestion.
+func suggestionEvent(detail batteryDetail, s types.Suggestion) (string, messenger.Event) {
+	ev := messenger.Event{Event: evSuggestion, Attributes: map[string]any{
+		"suggestionAction": s.Action,
+		"suggestionTitle":  detail.Title,
+	}}
+
+	switch {
+	case detail.Type == batteryTypeBattery:
+		ev.Attributes["suggestionName"] = detail.Name
+		return "battery:" + detail.Name, ev
+	case detail.loadpoint != nil:
+		id := *detail.loadpoint
+		ev.Loadpoint = &id
+		return fmt.Sprintf("loadpoint:%d", id), ev
+	default:
+		return "", ev
+	}
+}
+
 // currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
 // Because the optimization is linear, the first slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
@@ -218,10 +247,10 @@ func (site *Site) pushEvent(ev messenger.Event) {
 }
 
 // diffSuggestions updates the tracked actionable optimizer suggestions and
-// returns the device keys whose actionable action changed since the last run.
-// Non-actionable or vanished devices are pruned so a later actionable change
-// re-notifies.
-func (site *Site) diffSuggestions(seen map[string]types.Suggestion) []string {
+// returns the events to send for devices whose actionable action changed since
+// the last run. Non-actionable or vanished devices are pruned so a later
+// actionable change re-notifies.
+func (site *Site) diffSuggestions(pending map[string]pendingSuggestion) []messenger.Event {
 	site.Lock()
 	defer site.Unlock()
 
@@ -231,20 +260,20 @@ func (site *Site) diffSuggestions(seen map[string]types.Suggestion) []string {
 
 	// prune devices that are gone or no longer actionable
 	for key := range site.suggestionActions {
-		if s, ok := seen[key]; !ok || !s.Actionable {
+		if p, ok := pending[key]; !ok || !p.suggestion.Actionable {
 			delete(site.suggestionActions, key)
 		}
 	}
 
-	var changed []string
-	for key, s := range seen {
-		if !s.Actionable || site.suggestionActions[key] == s.Action {
+	var events []messenger.Event
+	for key, p := range pending {
+		if !p.suggestion.Actionable || site.suggestionActions[key] == p.suggestion.Action {
 			continue
 		}
-		site.suggestionActions[key] = s.Action
-		changed = append(changed, key)
+		site.suggestionActions[key] = p.suggestion.Action
+		events = append(events, p.event)
 	}
-	return changed
+	return events
 }
 
 type requestDetails struct {
@@ -464,8 +493,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
 	lpSuggestions := make(map[int]types.Suggestion)
-	seen := make(map[string]types.Suggestion, len(req.Batteries))
-	suggestionEvents := make(map[string]messenger.Event, len(req.Batteries))
+	pending := make(map[string]pendingSuggestion, len(req.Batteries))
 
 	for i, batReq := range req.Batteries {
 		batResp := resp.JSON200.Batteries[i]
@@ -495,32 +523,22 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		if suggestion.Action == "" {
 			continue
 		}
-		var key string
-		ev := messenger.Event{Event: evSuggestion, Attributes: map[string]any{
-			"suggestionAction": suggestion.Action,
-		}}
 
-		if detail.Type == batteryTypeBattery {
+		switch {
+		case detail.Type == batteryTypeBattery:
 			// uncontrollable batteries can't act on a suggestion
 			if !detail.controllable {
 				continue
 			}
 			suggestions[detail.Name] = suggestion
-			key = "battery:" + detail.Name
-			ev.Attributes["suggestionTitle"] = detail.Title
-			ev.Attributes["suggestionName"] = detail.Name
-		} else if detail.loadpoint != nil {
+		case detail.loadpoint != nil:
 			lpSuggestions[*detail.loadpoint] = suggestion
-			id := *detail.loadpoint
-			key = fmt.Sprintf("loadpoint:%d", id)
-			ev.Loadpoint = &id
-			ev.Attributes["suggestionTitle"] = detail.Title
-		} else {
+		default:
 			continue
 		}
 
-		seen[key] = suggestion
-		suggestionEvents[key] = ev
+		key, ev := suggestionEvent(detail, suggestion)
+		pending[key] = pendingSuggestion{suggestion: suggestion, event: ev}
 	}
 
 	site.publish("evopt-batteries", batteries)
@@ -540,8 +558,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
-	for _, key := range site.diffSuggestions(seen) {
-		site.pushEvent(suggestionEvents[key])
+	for _, ev := range site.diffSuggestions(pending) {
+		site.pushEvent(ev)
 	}
 	return nil
 }
