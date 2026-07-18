@@ -271,6 +271,74 @@ func TestChargeAfterTargetTime(t *testing.T) {
 	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
+func TestGappedRatesCoverage(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	// two 1h slots separated by a 4h gap: 2h of real coverage spanning 6h
+	rr := api.Rates{
+		{Start: clock.Now(), End: clock.Now().Add(time.Hour), Value: 10},
+		{Start: clock.Now().Add(5 * time.Hour), End: clock.Now().Add(6 * time.Hour), Value: 10},
+	}
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rr, nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	requiredDuration := 3 * time.Hour
+
+	// summed coverage (2h) is below requiredDuration (3h), so the planner must
+	// fall back to simplePlan and still cover the full duration rather than
+	// returning an under-covered plan based on the wall-clock span (6h)
+	for _, continuous := range []bool{false, true} {
+		plan := p.Plan(requiredDuration, 0, clock.Now().Add(6*time.Hour), continuous)
+		assert.GreaterOrEqual(t, Duration(plan), requiredDuration,
+			"plan must cover requiredDuration even when the rate series has gaps (continuous=%v)", continuous)
+	}
+}
+
+func TestExactCoverageNoFallback(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	// 3h of real coverage inside a 4h window (1h gap), exactly equal to
+	// requiredDuration. Duration(rates) == requiredDuration must NOT trigger the
+	// simplePlan fallback (the guard uses a strict <), so the planner builds a
+	// plan from the real rates instead. Locks the < behavior against a slip to <=.
+	rr := api.Rates{
+		{Start: clock.Now(), End: clock.Now().Add(time.Hour), Value: 10},
+		{Start: clock.Now().Add(time.Hour), End: clock.Now().Add(2 * time.Hour), Value: 20},
+		{Start: clock.Now().Add(3 * time.Hour), End: clock.Now().Add(4 * time.Hour), Value: 30},
+	}
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rr, nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	requiredDuration := 3 * time.Hour // == Duration(rr)
+	targetTime := clock.Now().Add(4 * time.Hour)
+
+	simplePlan := api.Rates{
+		{Start: targetTime.Add(-requiredDuration), End: targetTime},
+	}
+
+	for _, continuous := range []bool{false, true} {
+		plan := p.Plan(requiredDuration, 0, targetTime, continuous)
+		assert.NotEqual(t, simplePlan, plan,
+			"exact coverage (Duration == requiredDuration) must not fall back to simplePlan (continuous=%v)", continuous)
+	}
+}
+
 func TestPrecondition(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
