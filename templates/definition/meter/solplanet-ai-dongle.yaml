@@ -8,9 +8,22 @@ requirements:
     de: |
       Nutzt die lokale HTTP-Schnittstelle des AI-Dongle (z.B. BA121T-30) statt Modbus TCP.
       Die Seriennummer (isn) des Wechselrichters kann über `http://<host>:8484/getdev.cgi?device=2` ausgelesen werden.
+
+      Die Batteriesteuerung (normal/hold/charge/holdcharge) tunnelt rohe Modbus-RTU-Frames über die
+      ebenfalls undokumentierte `fdbg.cgi`-Schnittstelle mittels des `modbushttp`-Plugins
+      ([Hintergrund und weitere Tester in Diskussion #17680](https://github.com/evcc-io/evcc/discussions/17680)).
+      Ladeleistung und SOC-Grenzen sind über maxchargepower/minsoc/maxsoc konfigurierbar und werden zur
+      Laufzeit berechnet und CRC-geprüft statt fest kodierter Befehle zu nutzen.
     en: |
       Uses the AI-Dongle local HTTP API (e.g. BA121T-30) instead of Modbus TCP.
       The inverter serial number (isn) can be read via `http://<host>:8484/getdev.cgi?device=2`.
+
+      Battery control (normal/hold/charge/holdcharge) tunnels raw Modbus-RTU frames through the
+      equally undocumented `fdbg.cgi` endpoint using the `modbushttp` plugin
+      ([background and more testers in discussion #17680](https://github.com/evcc-io/evcc/discussions/17680)).
+      Charge power and SOC limits are configurable via maxchargepower/minsoc/maxsoc, computed and
+      CRC-checked at runtime rather than relying on pre-baked commands.
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -20,7 +33,25 @@ params:
       en: Inverter serial number (isn)
       de: Seriennummer des Wechselrichters (isn)
     required: true
+  - name: slaveid
+    description:
+      en: Modbus slave ID
+      de: Modbus-Slave-ID
+    help:
+      en: Usually 3 for Solplanet/AISWEI hybrid inverters
+      de: Bei Solplanet/AISWEI-Hybrid-Wechselrichtern meist 3
+    default: 3
+    advanced: true
   - preset: battery-params
+  - name: maxchargepower
+    description:
+      en: Max. charge power
+      de: Max. Ladeleistung
+    help:
+      en: Used in watts when forcing a battery charge
+      de: In Watt, genutzt beim erzwungenen Laden
+    required: true
+    example: 5000
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -44,5 +75,107 @@ render: |
     source: http
     uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
     jq: .soc
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal / self-use
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: 2 # 2 = self-use
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1103 # battery run mode
+                  decode: uint16
+            - source: const
+              value: {{ .maxsoc }} # reset charging SOC upper limit, undoes any prior holdcharge
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1153 # charging SOC upper limit, %
+                  decode: uint16
+                  scale: 0.01
+      - case: 2 # hold: custom mode + 0 W setpoint
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: 4 # 4 = customer defined / manual power control
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1103 # battery run mode
+                  decode: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1152 # battery power setpoint, W, positive=discharge/negative=charge
+                  decode: int16
+            - source: const
+              value: {{ .maxsoc }} # reset charging SOC upper limit, undoes any prior holdcharge
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1153
+                  decode: uint16
+                  scale: 0.01
+      - case: 3 # charge at configured maxchargepower
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: 4
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1103
+                  decode: uint16
+            - source: const
+              value: -{{ .maxchargepower }} # negative setpoint charges
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1152
+                  decode: int16
+            - source: const
+              value: {{ .maxsoc }} # reset charging SOC upper limit, undoes any prior holdcharge
+              set:
+                source: modbushttp
+                uri: http://{{ .host }}:8484/fdbg.cgi
+                id: {{ .slaveid }}
+                register:
+                  address: 1153
+                  decode: uint16
+                  scale: 0.01
+      - case: 4 # holdcharge: cap charging at user-configured minsoc, discharge stays free
+        set:
+          source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbushttp
+            uri: http://{{ .host }}:8484/fdbg.cgi
+            id: {{ .slaveid }}
+            register:
+              address: 1153 # charging SOC upper limit, %
+              decode: uint16
+              scale: 0.01
   {{- include "battery-params" . }}
   {{- end }}
