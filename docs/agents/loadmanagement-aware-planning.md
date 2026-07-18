@@ -6,38 +6,52 @@ change yet — this document scaffolds the work.
 
 ## Problem
 
-Planning is per-loadpoint and circuit-blind. Each loadpoint's
-`plannerActive()` → `GetPlan()` → `planner.Plan(requiredDuration, …)`
+Planning is per-loadpoint and unaware of *shared* circuit capacity. Each
+loadpoint's `plannerActive()` → `GetPlan()` → `planner.Plan(requiredDuration, …)`
 (`core/loadpoint_plan.go`, `core/planner/planner.go`) independently picks the
-globally cheapest slots to meet its own target by its own deadline. No
-loadpoint knows the shared circuit budget or the other loadpoints' plans.
+globally cheapest slots to meet its own target.
 
-Circuit enforcement is reactive and order-greedy, not priority-aware.
-`setLimit` (`core/loadpoint.go`, `Loadpoint.setLimit`) calls
-`circuit.ValidateCurrent` / `ValidatePower` (`core/circuit/circuit.go`), which
-caps each loadpoint's delta to the remaining headroom
-(`potential = maxCurrent - c.current`) where `c.current` is the running sum of
-already-processed loadpoints **in site iteration order**. First loadpoint to
-run grabs budget; later ones get the remainder. Priority drives PV-surplus
-allocation, not this clamp.
+Load management does reach planning in one narrow way: `requiredDuration`
+derives from `EffectiveMaxPower()`, which clamps to
+`min(loadpoint max, circuit.GetMaxPower())` (`core/loadpoint_effective.go`). So a
+single loadpoint won't plan beyond the circuit's **total** max. That total-clamp
+is acceptable as-is — the gap is **shared, per-slot** capacity:
+
+- each loadpoint assumes it owns the whole circuit — no subtraction of other
+  loadpoints' concurrent draw or plans;
+- only the loadpoint's **direct** circuit is considered, not the parent chain;
+- per-phase **current** limits and **dynamic** limits (`getMaxCurrent`) are
+  ignored;
+- it is a single scalar clamp on total duration, not a per-time-slot allocation,
+  so the planner never sees how much budget is free in a given slot; minSoc
+  forced charging is invisible to it.
+
+Circuit enforcement is reactive, lagging feedback. Loadpoints are controlled
+sequentially, one per tick (`Run` → `loopLoadpoints` → single `site.update(lp)`),
+each after a fresh `circuit.Update`. `setLimit` clamps a loadpoint's current to
+the remaining headroom via `circuit.ValidateCurrent` / `ValidatePower`
+(`core/circuit/circuit.go`). Because it only reacts to already-measured draw, a
+loadpoint that ramps into a slot the planner over-committed is throttled a cycle
+late — it can never un-miss the resulting deadline.
 
 ### Failure chain
 
 1. LP-A and LP-B each independently pick the same cheap slot X (both saw it as
-   cheapest). Combined demand `2 × Pmax > circuit Pmax`.
-2. Plans assumed full power in slot X. At runtime the circuit clamps them —
-   each gets roughly half.
-3. Both under-deliver in their cheap slots → reach deadline short of target.
-   The plan was infeasible w.r.t. the circuit and nothing reconciled it.
+   cheapest). Combined demand `2 × Pmax > circuit Pmax`, yet each plan looks
+   individually feasible against the circuit's total.
+2. In slot X both ramp up; the reactive clamp throttles them a cycle late,
+   so combined draw briefly exceeds the limit before it catches up.
+3. Throttled below plan, they under-deliver in their cheap slots → reach
+   deadline short of target. Nothing reconciled the plans up front.
 4. minSoc compounds it: `minSocNotReached()` (`core/loadpoint.go`) forces fast
    charging now (`IsFastChargingActive`), consuming budget another loadpoint's
-   planned charging assumed it had. Simultaneous ramp of planned + forced
-   before the next control cycle clamps → transient `over current detected`
-   warning (`core/circuit/circuit.go`), and with a slow real meter, a breaker
-   trip.
+   plan assumed it had — invisible to that plan. Simultaneous ramp of planned +
+   forced → transient `over current detected` warning
+   (`core/circuit/circuit.go`), and with a slow real meter, a breaker trip.
 
-Root gap: plans optimise against the tariff; the binding constraint is shared
-circuit capacity over time, which no planner sees.
+Root gap: plans optimise against the tariff and clamp only to the circuit's
+**total** capacity; the binding constraint is **shared** circuit capacity
+**per slot over time**, which no planner sees.
 
 ## Options
 
