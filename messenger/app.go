@@ -46,6 +46,10 @@ func ValidPushToken(token string) bool {
 
 // Register adds a device token
 func (m *AppPush) Register(token string) {
+	if !ValidPushToken(token) {
+		return
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
