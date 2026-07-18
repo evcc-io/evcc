@@ -45,7 +45,7 @@ func TestAllocateShared(t *testing.T) {
 			{Priority: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
 			{Priority: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
 		}
-		plans := AllocateShared(11000, rates(), reqs)
+		plans := AllocateShared(start, 11000, rates(), reqs)
 		require.Len(t, plans, 2)
 		assert.Equal(t, time.Hour, Duration(plans[0]))
 		assert.Equal(t, time.Hour, Duration(plans[1]))
@@ -59,7 +59,7 @@ func TestAllocateShared(t *testing.T) {
 			{Priority: 0, MaxPower: 3700, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
 			{Priority: 0, MaxPower: 3700, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
 		}
-		plans := AllocateShared(11000, rates(), reqs)
+		plans := AllocateShared(start, 11000, rates(), reqs)
 		assert.True(t, plans[0][0].Start.Equal(plans[1][0].Start), "should share the cheapest slot")
 		assertFeasible(t, 11000, 3700, plans)
 	})
@@ -75,10 +75,24 @@ func TestAllocateShared(t *testing.T) {
 			{Priority: 9, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target}, // high prio
 			{Forced: true, Priority: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
 		}
-		plans := AllocateShared(11000, cheap, reqs)
+		plans := AllocateShared(start, 11000, cheap, reqs)
 		// forced (index 1) grabs the cheapest slot ahead of the high-priority peer
 		assert.True(t, plans[1][0].Start.Equal(cheapStart), "forced load takes the cheapest slot")
 		assert.False(t, plans[0][0].Start.Equal(cheapStart), "high-priority peer yields the cheapest slot")
 		assertFeasible(t, 11000, 11000, plans)
+	})
+
+	t.Run("does not schedule past the target", func(t *testing.T) {
+		// target in 2h but rates span 6h: no slot may start at/after the target
+		near := start.Add(2 * time.Hour)
+		reqs := []SharedPlanRequest{
+			{MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: near},
+		}
+		plans := AllocateShared(start, 11000, rates(), reqs)
+		require.Equal(t, time.Hour, Duration(plans[0]))
+		for _, s := range plans[0] {
+			assert.False(t, s.Start.Before(start), "slot before now")
+			assert.False(t, !s.End.After(start) || s.Start.After(near) || s.End.After(near), "slot outside [now,target]")
+		}
 	})
 }

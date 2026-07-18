@@ -21,8 +21,8 @@ type SharedPlanRequest struct {
 // AllocateShared plans loadpoints sharing one circuit against a per-slot power
 // budget: forced first, then descending priority, each scheduled only where its
 // MinPower fits and reserving its actual draw. Returns one plan per request, in
-// input order. Rates must be pre-clamped; single circuit + static budget only.
-func AllocateShared(budget float64, rates api.Rates, reqs []SharedPlanRequest) []api.Rates {
+// input order. Clamped to [now, target] per request; single circuit + static budget.
+func AllocateShared(now time.Time, budget float64, rates api.Rates, reqs []SharedPlanRequest) []api.Rates {
 	ledger := NewCapacityLedger(budget, tariff.SlotDuration)
 
 	// plan forced first, then highest priority, keeping input order for the result
@@ -45,7 +45,8 @@ func AllocateShared(budget float64, rates api.Rates, reqs []SharedPlanRequest) [
 	for _, i := range order {
 		r := reqs[i]
 
-		sorted := slices.Clone(rates)
+		// restrict to this request's [now, target] window, then cheapest-first
+		sorted := clampRates(rates, now, r.TargetTime)
 		slices.SortStableFunc(sorted, sortByCost)
 
 		avail := func(t time.Time) float64 { return ledger.Available(t) }
