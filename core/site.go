@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -1254,6 +1255,24 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	}
 }
 
+// prioritizedLoadpoints orders loadpoints for the update round so that, on a
+// shared circuit, forced/deadline-bound then higher-priority loadpoints claim
+// budget first and the reactive clamp throttles the rest - deterministic instead
+// of config order. See docs/agents/loadmanagement-aware-planning.md.
+func (site *Site) prioritizedLoadpoints() []*Loadpoint {
+	lps := slices.Clone(site.loadpoints)
+	slices.SortStableFunc(lps, func(a, b *Loadpoint) int {
+		if af, bf := a.IsFastChargingActive(), b.IsFastChargingActive(); af != bf {
+			if af {
+				return -1
+			}
+			return 1
+		}
+		return b.EffectivePriority() - a.EffectivePriority()
+	})
+	return lps
+}
+
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
@@ -1265,7 +1284,7 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 			})
 			next <- nil
 		} else {
-			for _, lp := range site.loadpoints {
+			for _, lp := range site.prioritizedLoadpoints() {
 				next <- lp
 			}
 		}

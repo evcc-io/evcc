@@ -92,10 +92,13 @@ Root gap: plans optimise against the tariff and clamp only to the circuit's
       eventually overruns.
 
 ### Phase 1 — Deterministic priority-aware clamp (Option C)
-- [ ] Order circuit-budget allocation by (forced > plan-active > priority) in
-      the site/circuit update instead of iteration order.
-- [ ] Regression test: contention resolves toward the loadpoint that needs it,
-      deterministically.
+- [x] Order the update round by priority instead of config order
+      (`site.prioritizedLoadpoints`): fast/deadline-bound (`IsFastChargingActive`)
+      first, then descending `EffectivePriority`. So on a shared circuit the
+      higher-priority loadpoints establish draw first and the reactive clamp
+      throttles the rest. Note: forced and plan-active are folded into one tier
+      here; a strict forced > plan-active sub-order can be added later.
+- [x] Regression test (`TestPrioritizedLoadpoints`): fast first, then priority.
 
 ### Phase 2 — Capacity ledger + priority-ordered planning (Option B)
 - [ ] Per-circuit, per-slot residual-capacity ledger, mirroring the parent/child
