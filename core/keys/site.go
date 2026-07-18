@@ -30,6 +30,7 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	TariffSolar           = "tariffSolar"
+	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
 
 	// meters
@@ -46,6 +47,9 @@ const (
 	BatteryGridChargeActive = "batteryGridChargeActive"
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
+
+	// forecast settings
+	SolarAdjusted = "solarAdjusted"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

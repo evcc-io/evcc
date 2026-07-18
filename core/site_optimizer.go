@@ -297,7 +297,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			return err
 		}
 
-		ft = prorate(scaleAndPrune(solarEnergy, site.solarScale(), minLen), firstSlotDuration)
+		ft = prorate(scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen), firstSlotDuration)
 	}
 
 	req := optimizer.OptimizationInput{
