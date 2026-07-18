@@ -343,6 +343,7 @@ func (c *EEBus) CurtailedPercent() *int {
 	if c.productionLimitActivated == nil {
 		return nil
 	}
+
 	// without a nominal reference the W limit cannot be expressed as a percent
 	if c.productionNominalMax <= 0 {
 		return nil
