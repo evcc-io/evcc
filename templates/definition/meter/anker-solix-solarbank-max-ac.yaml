@@ -3,6 +3,8 @@ products:
   - brand: Anker
     description:
       generic: SOLIX Solarbank Max AC
+capabilities:
+  - battery-control
 requirements:
   description:
     de: |
@@ -18,6 +20,10 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    default: 2500
+  - name: watchdog
+    default: 60s
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -86,5 +92,78 @@ render: |
       address: 10014 # SOC (%)
       type: input
       decode: uint16
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }}
+    reset: 1
+    set:
+      source: switch
+      switch:
+        - case: 1 # normal
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+              - source: const
+                value: 0 # self_consumption
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+        - case: 2 # hold
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+        - case: 3 # charge
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: -{{ .maxchargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
   {{- include "battery-params" . }}
   {{- end }}

@@ -120,6 +120,7 @@ export default defineComponent({
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
+		solarAdjusted: Boolean,
 		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String as PropType<BATTERY_MODE>,

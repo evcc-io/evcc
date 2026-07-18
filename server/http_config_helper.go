@@ -245,8 +245,9 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 }
 
 type testResult = struct {
-	Value any    `json:"value"`
-	Error string `json:"error"`
+	Value  any    `json:"value"`
+	Error  string `json:"error"`
+	Asleep bool   `json:"asleep,omitempty"`
 }
 
 func hasFeature(instance any, f api.Feature) bool {
@@ -266,7 +267,12 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 			if errors.Is(err, api.ErrNotAvailable) {
 				return
 			}
-			tr.Error = err.Error()
+			// asleep is a valid vehicle state, not an error
+			if errors.Is(err, api.ErrAsleep) {
+				tr.Asleep = true
+			} else {
+				tr.Error = err.Error()
+			}
 		}
 		resMu.Lock()
 		res[key] = tr
@@ -464,6 +470,9 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 			case api.TariffTypeSolar:
 				valueKey = "power"
 				ratesKey = "solarRates"
+			case api.TariffTypeTemperature:
+				valueKey = "outdoorTemp"
+				ratesKey = "temperatureRates"
 			default:
 				valueKey = "price"
 			}

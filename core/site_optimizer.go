@@ -157,6 +157,21 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 	return s
 }
 
+// loadpointCurrentAction returns the loadpoint's current operating mode for
+// suggestion comparison, reusing chargeGoalReached so a loadpoint left
+// enabled while idle (e.g. vehicle finished at its limit) is treated as
+// stopped instead of triggering a spurious pause suggestion.
+func loadpointCurrentAction(lp *Loadpoint) string {
+	lp.RLock()
+	enabled := lp.enabled
+	lp.RUnlock()
+
+	if enabled && !lp.chargeGoalReached(enabled) {
+		return actionCharge
+	}
+	return actionStop
+}
+
 // setBatterySuggestions replaces the suggestions applied on each battery publish
 func (site *Site) setBatterySuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
@@ -282,7 +297,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			return err
 		}
 
-		ft = prorate(scaleAndPrune(solarEnergy, site.solarScale(), minLen), firstSlotDuration)
+		ft = prorate(scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen), firstSlotDuration)
 	}
 
 	req := optimizer.OptimizationInput{
@@ -425,11 +440,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		if detail.Type == batteryTypeBattery {
 			current = site.GetBatteryMode().String()
 		} else if detail.loadpoint != nil {
-			if site.loadpoints[*detail.loadpoint].IsEnabled() {
-				current = actionCharge
-			} else {
-				current = actionStop
-			}
+			current = loadpointCurrentAction(site.loadpoints[*detail.loadpoint])
 		}
 
 		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours, current)
@@ -646,8 +657,12 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
 		minSoc, maxSoc := m.GetSocLimits()
-		bat.SMin = float32(*b.Capacity * minSoc * 10) // Wh
-		bat.SMax = float32(*b.Capacity * maxSoc * 10) // Wh
+		if maxSoc == 0 {
+			maxSoc = 100 // empty/unset maxsoc means no upper limit
+		}
+		// clamp against current soc to prevent infeasible if it is outside the configured limits
+		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
+		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
 	}
 
 	detail := batteryDetail{
