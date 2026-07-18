@@ -32,15 +32,23 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 		return nil, err
 	}
 
+	restored := entity.EnergyMeter != nil || entity.ReturnEnergyMeter != nil
+	// bidirectional groups need both readings for a complete restore, (bidi chargers later)
+	if group == Battery || group == Grid {
+		restored = entity.EnergyMeter != nil && entity.ReturnEnergyMeter != nil
+	}
+
 	c := &Collector{
 		entity:   entity,
 		accu:     NewAccumulator(opt...),
-		restored: entity.EnergyMeter != nil || entity.ReturnEnergyMeter != nil,
+		restored: restored,
 	}
 
 	// seed saved readings so the first delta covers the downtime
-	c.accu.energyMeter = entity.EnergyMeter
-	c.accu.returnEnergyMeter = entity.ReturnEnergyMeter
+	if restored {
+		c.accu.energyMeter = entity.EnergyMeter
+		c.accu.returnEnergyMeter = entity.ReturnEnergyMeter
+	}
 
 	return c, nil
 }
