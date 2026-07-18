@@ -316,6 +316,13 @@ func TestCollectorRecoversDowntimeViaMeterReadings(t *testing.T) {
 	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
 	require.InDelta(t, 2.5, m.Energy, 1e-10)
 	require.InDelta(t, 1.0, m.ReturnEnergy, 1e-10)
+	require.True(t, m.Recovered, "catchup slot must be flagged recovered")
+
+	// the recovered slot is excluded from the household profile
+	require.False(t, col2.restored, "recovery flag cleared after first slot")
+	var recovered int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND recovered", col2.entity.Id).Count(&recovered).Error)
+	require.EqualValues(t, 1, recovered, "only the catchup slot is recovered")
 
 	// readings advanced with the persisted slot
 	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
@@ -432,7 +439,7 @@ func TestCreateEntityReconcilesExtToConsumer(t *testing.T) {
 	// ext meter with a persisted history slot
 	ext, err := createEntity(Meter, "db:5", "Fridge")
 	require.NoError(t, err)
-	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil))
+	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil, false))
 
 	// reconfigured as consumer: same row relabeled, history intact
 	con, err := createEntity(Consumer, "db:5", "Fridge")

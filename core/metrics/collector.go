@@ -114,11 +114,13 @@ func (c *Collector) process(fun func()) error {
 		// preceding slot boundary - false for the mid-slot first slot and
 		// for a slot reached after a data gap
 		if c.started.Equal(slotStart.Add(-tariff.SlotDuration)) {
-			if err := c.persist(); err != nil {
+			// the first slot after a restore carries the downtime catchup energy
+			if err := c.persist(c.restored); err != nil {
 				return err
 			}
 		}
 
+		c.restored = false // only the first slot inherits recovery energy
 		c.started = slotStart
 
 	default:
@@ -131,8 +133,8 @@ func (c *Collector) process(fun func()) error {
 	return nil
 }
 
-func (c *Collector) persist() error {
-	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp); err != nil {
+func (c *Collector) persist(recovered bool) error {
+	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp, recovered); err != nil {
 		return err
 	}
 
