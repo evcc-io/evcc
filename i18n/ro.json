@@ -139,8 +139,6 @@
       "forecast": "Prognoză",
       "gridPrice": "Prețul rețelei",
       "heaterTempLimit": "Limită încălzitor",
-      "hemsActiveLimit": "Limită activă",
-      "hemsType": "Comunicare",
       "identifier": "Identificator RFID",
       "max": "max",
       "messengers": "Servicii",
@@ -168,10 +166,6 @@
       "A": "A (neconectat)",
       "B": "B (conectat)",
       "C": "C (încărcare)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "prin EEBus",
-      "relay": "prin releu"
     },
     "devices": {
       "auxMeter": "Consumator inteligent",
@@ -801,32 +795,13 @@
       "validate": "valideaza"
     },
     "vehicle": {
-      "cancel": "Anulare",
-      "chargingSettings": "Setări de încărcare",
-      "defaultMode": "Mod implicit",
-      "defaultModeHelp": "Modul de încărcare la conectarea vehiculului.",
-      "delete": "Sterge",
       "generic": "Alte integrari",
-      "identifiers": "Identificatori RFID",
-      "identifiersHelp": "Lista șirurilor RFID pentru identificarea vehiculului. O intrare pe linie. Identificatorul actual poate fi găsit la punctul de încărcare respectiv pe pagina de prezentare generală.",
-      "maximumCurrent": "Curent maxim",
-      "maximumCurrentHelp": "Trebuie să fie mai mare decât curentul minim.",
-      "maximumPhases": "Faze maxime",
-      "maximumPhasesHelp": "Cu câte faze se poate încărca acest vehicul? Se utilizează pentru a calcula surplusul solar minim necesar și durata planului.",
-      "maximumPower": "Putere maximă de încărcare",
-      "maximumPowerHelp": "Puterea maximă pe care o poate consuma vehiculul",
-      "minimumCurrent": "Curent minim",
-      "minimumCurrentHelp": "Nu coborâți sub 6A decât dacă știți ce faceți.",
       "online": "Masini cu API oline",
       "primary": "Integrări generice",
-      "priority": "Prioritate",
-      "priorityHelp": "Prioritate mai mare înseamnă că acest vehicul beneficiază de acces preferențial la surplusul de energie solară.",
-      "save": "Salveaza",
       "scooter": "Scuter",
       "template": "Producator",
       "titleAdd": "Adauga Masina",
-      "titleEdit": "Editeaza Masina",
-      "validateSave": "Valideaza si salveaza"
+      "titleEdit": "Editeaza Masina"
     }
   },
   "footer": {
@@ -1078,13 +1053,11 @@
       "battery": "Baterie",
       "batteryCharge": "Incarca bateria",
       "batteryDischarge": "Descărcare baterie",
-      "batteryForecastEmpty": "gol {time}",
-      "batteryForecastFull": "plin {time}",
+      "batteryDischargeHold": "Baterie (inchisa)",
       "batteryGridChargeActive": "Încărcare din rețea: activă",
       "batteryGridChargeLimit": "Încărcare din rețea: când",
-      "batteryHold": "Baterie (inchisa)",
       "batteryTooltip": "{energy} din {total} ({soc})",
-      "forecast": "Prognoză: ",
+      "forecast": "Prognoză",
       "forecastTooltip": "prognoză: producția solară rămasă astăzi",
       "gridImport": "Folosirea rețelei",
       "homePower": "Consum",
@@ -1103,7 +1076,6 @@
       "waitForVehicle": "Pregatit. Astept dupa incalzitor…"
     },
     "hemsWarning": {
-      "description": "Încărcare redusă pentru a nu depăși {limit}.",
       "title": "Limită externă:"
     },
     "loadpoint": {

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
+	krakengql "github.com/evcc-io/evcc/tariff/octopuskraken/graphql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,19 +52,19 @@ var t0 = time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 // dynamicAgreement builds an agreement that uses a dynamic tariff:
 // the unitRateForecast field contains two half-hour forecast slots with
 // per-slot prices stored in TimeOfUseProductUnitRateInformation.
-func dynamicAgreement() octoDeGql.Agreement {
+func dynamicAgreement() krakengql.Agreement {
 	t1 := t0
 	t2 := t0.Add(15 * time.Minute)
 	t3 := t2.Add(15 * time.Minute)
-	return octoDeGql.Agreement{
+	return krakengql.Agreement{
 		IsActive: true,
-		UnitRateForecast: []octoDeGql.UnitRateForecast{
+		UnitRateForecast: []krakengql.UnitRateForecast{
 			{
 				ValidFrom: t1,
 				ValidTo:   t2,
-				UnitRateInformation: octoDeGql.ForecastUnitRateInformation{
-					TimeOfUseProductUnitRateInformation: octoDeGql.TimeOfUseProductUnitRateInformation{
-						Rates: []octoDeGql.Rate{
+				UnitRateInformation: krakengql.ForecastUnitRateInformation{
+					TimeOfUseProductUnitRateInformation: krakengql.TimeOfUseProductUnitRateInformation{
+						Rates: []krakengql.Rate{
 							{NetUnitRateCentsPerKwh: "10.50", LatestGrossUnitRateCentsPerKwh: "12.495"},
 						},
 					},
@@ -73,9 +73,9 @@ func dynamicAgreement() octoDeGql.Agreement {
 			{
 				ValidFrom: t2,
 				ValidTo:   t3,
-				UnitRateInformation: octoDeGql.ForecastUnitRateInformation{
-					TimeOfUseProductUnitRateInformation: octoDeGql.TimeOfUseProductUnitRateInformation{
-						Rates: []octoDeGql.Rate{
+				UnitRateInformation: krakengql.ForecastUnitRateInformation{
+					TimeOfUseProductUnitRateInformation: krakengql.TimeOfUseProductUnitRateInformation{
+						Rates: []krakengql.Rate{
 							{NetUnitRateCentsPerKwh: "8.00", LatestGrossUnitRateCentsPerKwh: "9.52"},
 						},
 					},
@@ -86,13 +86,13 @@ func dynamicAgreement() octoDeGql.Agreement {
 }
 
 // simpleAgreement builds an agreement with a single fixed rate covering one year.
-func simpleAgreement() octoDeGql.Agreement {
-	return octoDeGql.Agreement{
+func simpleAgreement() krakengql.Agreement {
+	return krakengql.Agreement{
 		IsActive:  true,
 		ValidFrom: t0,
 		ValidTo:   t0.AddDate(1, 0, 0),
-		UnitRateInformation: octoDeGql.AgreementUnitRateInformation{
-			SimpleProductUnitRateInformation: octoDeGql.SimpleProductUnitRateInformation{
+		UnitRateInformation: krakengql.AgreementUnitRateInformation{
+			SimpleProductUnitRateInformation: krakengql.SimpleProductUnitRateInformation{
 				NetUnitRateCentsPerKwh:         "25.00",
 				LatestGrossUnitRateCentsPerKwh: "29.75",
 			},
@@ -103,17 +103,17 @@ func simpleAgreement() octoDeGql.Agreement {
 // touAgreement builds an agreement with a two-slot time-of-use tariff:
 //   - Day rate  06:00–22:00
 //   - Night rate 22:00–06:00 (wraps past midnight)
-func touAgreement() octoDeGql.Agreement {
-	return octoDeGql.Agreement{
+func touAgreement() krakengql.Agreement {
+	return krakengql.Agreement{
 		IsActive: true,
-		UnitRateInformation: octoDeGql.AgreementUnitRateInformation{
-			TimeOfUseProductUnitRateInformation: octoDeGql.TouAgreementUnitRateInformation{
-				Rates: []octoDeGql.TouRate{
+		UnitRateInformation: krakengql.AgreementUnitRateInformation{
+			TimeOfUseProductUnitRateInformation: krakengql.TouAgreementUnitRateInformation{
+				Rates: []krakengql.TouRate{
 					{
 						TimeslotName:                   "Day",
 						NetUnitRateCentsPerKwh:         "30.00",
 						LatestGrossUnitRateCentsPerKwh: "35.70",
-						TimeslotActivationRules: []octoDeGql.TimeslotActivationRule{
+						TimeslotActivationRules: []krakengql.TimeslotActivationRule{
 							{ActiveFromTime: "06:00:00", ActiveToTime: "22:00:00"},
 						},
 					},
@@ -121,7 +121,7 @@ func touAgreement() octoDeGql.Agreement {
 						TimeslotName:                   "Night",
 						NetUnitRateCentsPerKwh:         "15.00",
 						LatestGrossUnitRateCentsPerKwh: "17.85",
-						TimeslotActivationRules: []octoDeGql.TimeslotActivationRule{
+						TimeslotActivationRules: []krakengql.TimeslotActivationRule{
 							// 22:00 → 06:00 wraps past midnight
 							{ActiveFromTime: "22:00:00", ActiveToTime: "06:00:00"},
 						},
@@ -151,16 +151,48 @@ func TestRatesForAgreement_Dynamic(t *testing.T) {
 }
 
 // TestRatesForAgreement_Simple verifies that a simple fixed-rate agreement returns
-// a single RatePeriod spanning the full agreement validity window.
+// a single RatePeriod capped to the planning horizon (7 days), not the full
+// agreement validity window. This prevents the planner from expanding a multi-year
+// agreement into thousands of 15-minute intervals.
 func TestRatesForAgreement_Simple(t *testing.T) {
 	rates, err := ratesForAgreement(simpleAgreement(), t0)
 	require.NoError(t, err)
 	require.Len(t, rates, 1)
 
 	assert.Equal(t, t0, rates[0].ValidFrom)
-	assert.Equal(t, t0.AddDate(1, 0, 0), rates[0].ValidTo)
+	assert.Equal(t, t0.AddDate(0, 0, planDays), rates[0].ValidTo)
 	assert.InDelta(t, 25.00, rates[0].NetUnitRateCentsPerKwh, 0.001)
 	assert.InDelta(t, 29.75, rates[0].GrossUnitRateCentsPerKwh, 0.001)
+}
+
+// TestSimpleRateIndefiniteEnd verifies that a simple tariff with no end date (ValidTo
+// is zero) is also capped to the planning horizon rather than being handled as
+// indefinite (which would have previously resulted in run() adding one year).
+func TestSimpleRateIndefiniteEndCappedToPlanningHorizon(t *testing.T) {
+	agr := simpleAgreement()
+	agr.ValidTo = time.Time{}
+
+	rates, err := ratesForAgreement(agr, t0)
+	require.NoError(t, err)
+	require.Len(t, rates, 1)
+
+	// A zero ValidTo has no cap from the agreement; computeHorizon returns now+planDays.
+	assert.Equal(t, t0.AddDate(0, 0, planDays), rates[0].ValidTo)
+}
+
+// TestSimpleRateStartCappedToNow verifies that when now is after the agreement's
+// ValidFrom, the rate period begins at now rather than the (past) agreement start.
+func TestSimpleRateStartCappedToNow(t *testing.T) {
+	now := t0.Add(48 * time.Hour) // 2 days after agreement start
+	agr := simpleAgreement()
+
+	rates, err := ratesForAgreement(agr, now)
+	require.NoError(t, err)
+	require.Len(t, rates, 1)
+
+	// ValidFrom should be now, not the past agreement start t0.
+	assert.Equal(t, now, rates[0].ValidFrom)
+	assert.Equal(t, now.AddDate(0, 0, planDays), rates[0].ValidTo)
 }
 
 // TestRatesForAgreement_TimeOfUse verifies that a two-slot ToU tariff is expanded
@@ -196,4 +228,32 @@ func TestRatesForAgreement_TimeOfUse(t *testing.T) {
 	// --- Day-6 night slot (starts before the 7-day horizon, so included) ---
 	assert.Equal(t, day6.Add(22*time.Hour), rates[13].ValidFrom)
 	assert.Equal(t, day6.Add(30*time.Hour), rates[13].ValidTo)
+}
+
+// TestRatesForAgreement_InvalidAgreement verifies that an agreement with ValidFrom
+// after the planning horizon end returns an error.
+func TestRatesForAgreement_InvalidAgreement_NotYetStarted(t *testing.T) {
+	// Create an agreement that starts well into the future, beyond the 7-day planning horizon
+	futureStart := t0.AddDate(0, 0, planDays+10)
+	agr := simpleAgreement()
+	agr.ValidFrom = futureStart
+
+	rates, err := ratesForAgreement(agr, t0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
+	assert.Nil(t, rates)
+}
+
+func TestRatesForAgreement_InvalidAgreement_AlreadyCompleted(t *testing.T) {
+	// Create an agreement that ended before the current time, beyond the 7-day planning horizon
+	pastStart := t0.AddDate(0, 0, -10)
+	pastEnd := t0.AddDate(0, 0, -3)
+	agr := simpleAgreement()
+	agr.ValidFrom = pastStart
+	agr.ValidTo = pastEnd
+
+	rates, err := ratesForAgreement(agr, t0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
+	assert.Nil(t, rates)
 }

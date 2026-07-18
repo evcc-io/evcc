@@ -19,13 +19,17 @@ package sponsor
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
+	"github.com/evcc-io/evcc/util/machine"
+	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -36,10 +40,11 @@ var (
 	ExpiresAt      time.Time
 )
 
-const (
-	unavailable = "sponsorship unavailable"
-	victron     = "victron"
-)
+func machineID() string {
+	return machine.ProtectedID("evcc-sponsor")
+}
+
+const unavailable = "sponsorship unavailable"
 
 func IsAuthorized() bool {
 	mu.RLock()
@@ -64,13 +69,27 @@ func ConfigureSponsorship(token string) error {
 			return nil
 		}
 
+		if os.Getenv("HEMSPRO") != "" {
+			if sub := checkHemsPro(); sub != "" {
+				Subject = sub
+				return nil
+			}
+		}
+
 		var err error
-		if token, err = readSerial(); token == "" || err != nil {
+		if token, err = checkPulsares(); token == "" || err != nil {
 			return err
 		}
 	}
 
 	Token = token
+
+	// check expiry locally to avoid cloud roundtrip
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser().ParseUnverified(token, &claims); err == nil &&
+		claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+		return errors.New("token is expired - get a fresh one from https://sponsor.evcc.io")
+	}
 
 	conn, err := cloud.Connection()
 	if err != nil {
@@ -82,7 +101,7 @@ func ConfigureSponsorship(token string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, MachineId: machineID()})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ExpiresAt = res.ExpiresAt.AsTime()

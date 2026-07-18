@@ -1,0 +1,34 @@
+interval: 0.1s
+
+site:
+  title: Colors
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: 200
+
+loadpoints:
+  - title: Garage
+    charger: charger1
+    vehicle: honda
+  - title: Carport
+    charger: charger2
+    vehicle: honda
+
+vehicles:
+  - name: honda
+    title: Honda
+
+chargers:
+  - name: charger1
+    type: template
+    template: demo-charger
+    status: B
+  - name: charger2
+    type: template
+    template: demo-charger
+    status: B

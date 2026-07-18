@@ -1,6 +1,7 @@
 template: homematic
 products:
   - brand: Homematic IP
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host
@@ -47,7 +48,6 @@ params:
       de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
     example: HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1
   - name: cache
-    advanced: true
     default: 1s
     description:
       en: XML-RPC API cache duration
@@ -58,7 +58,7 @@ params:
   - preset: switchsocket
 render: |
   type: homematic
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   device: {{ .device }}
   user: {{ .user }}
   password: {{ .password }}

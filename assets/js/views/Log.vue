@@ -1,6 +1,6 @@
 <template>
 	<div class="root safe-area-inset">
-		<div class="container d-flex h-100 flex-column px-0 pb-4">
+		<div class="container d-flex h-100 flex-column px-0 pb-0 pb-md-3">
 			<TopHeader :title="$t('log.title')" class="mx-4" />
 			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4 mx-2 mx-sm-4">
 				<div class="flex-grow-0 row py-4">
@@ -15,11 +15,11 @@
 								<span class="text-nowrap text-truncate">
 									{{ $t("log.update") }}
 								</span>
-								<Record
+								<ProgressRing
 									v-if="autoFollow"
-									ref="spin"
-									class="spin flex-shrink-0"
-									:style="{ animationDuration: `${updateInterval}ms` }"
+									:key="tick"
+									class="flex-shrink-0"
+									:duration="updateInterval"
 								/>
 								<Play v-else class="flex-shrink-0 play" />
 							</button>
@@ -28,6 +28,7 @@
 								:aria-label="$t('log.download')"
 								:href="downloadUrl"
 								download
+								@click="handleDownloadClick($event, downloadUrl)"
 							>
 								<shopicon-regular-download
 									size="s"
@@ -60,6 +61,7 @@
 					<div class="filterAreas col-6 col-lg-2">
 						<MultiSelect
 							id="logAreasSelect"
+							isTopLevel
 							:modelValue="areas"
 							:options="areaOptions"
 							:selectAllLabel="$t('log.selectAll')"
@@ -110,13 +112,14 @@
 import "@h2d2/shopicons/es/regular/download";
 import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
-import Record from "../components/MaterialIcon/Record.vue";
+import ProgressRing from "../components/MaterialIcon/ProgressRing.vue";
 import MultiSelect from "../components/Helper/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 import { defineComponent, type PropType } from "vue";
 import type { Timeout } from "@/types/evcc";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
+import { handleDownloadClick } from "@/utils/native";
 const DEFAULT_COUNT = 1000;
 
 const levelMatcher = new RegExp(`\\[.*?\\] (${LOG_LEVELS.map((l) => l.toUpperCase()).join("|")})`);
@@ -126,7 +129,7 @@ export default defineComponent({
 	components: {
 		TopHeader: Header,
 		Play,
-		Record,
+		ProgressRing,
 		MultiSelect,
 	},
 	props: {
@@ -141,6 +144,7 @@ export default defineComponent({
 			timeout: null as Timeout,
 			levels: LOG_LEVELS,
 			busy: false,
+			tick: 0,
 		};
 	},
 	head() {
@@ -169,7 +173,10 @@ export default defineComponent({
 			});
 		},
 		areaOptions() {
-			return this.availableAreas.map((area) => ({ name: area, value: area }));
+			return this.availableAreas
+				.slice()
+				.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+				.map((area) => ({ name: area, value: area }));
 		},
 		areasLabel() {
 			if (this.areas.length === 0) {
@@ -217,10 +224,12 @@ export default defineComponent({
 		this.stopInterval();
 	},
 	methods: {
+		handleDownloadClick,
 		async updateLogs(showAll: boolean = false) {
 			// prevent concurrent requests
 			if (this.busy) return;
 
+			this.tick++;
 			try {
 				this.busy = true;
 				const response = await api.get("/system/log", {
@@ -326,17 +335,6 @@ export default defineComponent({
 }
 .play {
 	transform: scale(1.2);
-}
-.spin {
-	animation: rotation 3s infinite ease-in-out;
-}
-@keyframes rotation {
-	from {
-		transform: rotate(0deg) scale(1, -1);
-	}
-	to {
-		transform: rotate(1440deg) scale(1, -1);
-	}
 }
 @keyframes fadeIn {
 	from {

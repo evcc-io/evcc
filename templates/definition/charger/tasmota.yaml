@@ -4,6 +4,7 @@ products:
     description:
       de: einphasig
       en: single phase
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host
@@ -13,7 +14,6 @@ params:
       en: admin is default
   - name: password
   - name: channel
-    type: int
     default: 1
     required: true
     description:

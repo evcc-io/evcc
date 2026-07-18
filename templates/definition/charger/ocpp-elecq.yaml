@@ -9,6 +9,7 @@ products:
   - brand: Elecq
     description:
       generic: Station
+capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

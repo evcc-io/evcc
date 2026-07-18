@@ -85,19 +85,12 @@
 										</div>
 									</h5>
 								</div>
-								<Modbus
-									v-model:baudrate="c.settings.baudrate"
-									v-model:comset="c.settings.comset"
-									v-model:device="c.settings.device"
-									:modbus="getModbus(c.settings)"
-									:component-id="`proxy-${index}`"
-									:host="getHost(c.settings.uri)"
-									:port="getPort(c.settings.uri)"
-									:capabilities="['rs485', 'tcpip']"
-									hide-modbus-id
-									@update:host="(host) => updateHost(host, c.settings)"
-									@update:port="(port) => updatePort(port, c.settings)"
-									@update:modbus="(modbus) => updateModbus(c.settings, modbus)"
+								<ModbusProxyConnection
+									:connection="c"
+									:index="index"
+									@update:connection="
+										(connection) => (values[index] = connection)
+									"
 								/>
 							</div>
 						</div>
@@ -143,17 +136,13 @@ import "@h2d2/shopicons/es/regular/arrowdown";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
-import {
-	MODBUS_COMSET,
-	MODBUS_CONNECTION,
-	MODBUS_PROTOCOL,
-	MODBUS_PROXY_READONLY,
-	MODBUS_TYPE,
-	type ModbusProxy,
-	type ModbusProxySettings,
-} from "@/types/evcc";
+import { MODBUS_PROXY_READONLY, type ModbusProxy } from "@/types/evcc";
 import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
-import Modbus from "./DeviceModal/Modbus.vue";
+import ModbusProxyConnection, {
+	DEFAULT_BAUDRATE,
+	DEFAULT_COMSET,
+	DEFAULT_PORT,
+} from "./ModbusProxyConnection.vue";
 import PropertyField from "./PropertyField.vue";
 import FormRow from "./FormRow.vue";
 import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
@@ -162,7 +151,14 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "ModbusProxyModal",
-	components: { JsonModal, Modbus, FormRow, PropertyField, SponsorTokenRequired, SelectGroup },
+	components: {
+		JsonModal,
+		ModbusProxyConnection,
+		FormRow,
+		PropertyField,
+		SponsorTokenRequired,
+		SelectGroup,
+	},
 	props: {
 		isSponsor: Boolean,
 	},
@@ -170,10 +166,6 @@ export default defineComponent({
 	data() {
 		return {
 			ASCII_DIAGRAM,
-			MODBUS_PROXY_READONLY,
-			MODBUS_CONNECTION,
-			MODBUS_PROTOCOL,
-			MODBUS_TYPE,
 		};
 	},
 	computed: {
@@ -188,12 +180,6 @@ export default defineComponent({
 		formId(index: number, name: string) {
 			return `modbusproxy-connection-${index}-${name}`;
 		},
-		getModbus(s: ModbusProxySettings) {
-			if (s.device) {
-				return MODBUS_TYPE.RS485_SERIAL;
-			}
-			return s.rtu ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
-		},
 		getReadonlyHelp(readonly = MODBUS_PROXY_READONLY.FALSE): string {
 			return this.$t(`config.modbusproxy.readonly.help.${readonly}`);
 		},
@@ -203,40 +189,11 @@ export default defineComponent({
 				port: highestPort + 1,
 				readonly: MODBUS_PROXY_READONLY.FALSE,
 				settings: {
-					uri: ":502",
-					baudrate: 9600,
-					comset: "8N1" as MODBUS_COMSET,
+					uri: `:${DEFAULT_PORT}`,
+					baudrate: DEFAULT_BAUDRATE,
+					comset: DEFAULT_COMSET,
 				},
 			});
-		},
-		getHost(uri?: string) {
-			return uri?.split(":")[0] || "";
-		},
-		getPort(uri?: string) {
-			return uri?.split(":")[1] || "";
-		},
-		updateHost(newHost: string, settings: ModbusProxySettings) {
-			const port = this.getPort(settings.uri);
-			settings.uri = `${newHost}:${port}`;
-		},
-		updatePort(newPort: string | number, settings: ModbusProxySettings) {
-			const host = this.getHost(settings.uri);
-			settings.uri = `${host}:${newPort}`;
-		},
-		updateModbus(settings: ModbusProxySettings, modbus: MODBUS_TYPE) {
-			switch (modbus) {
-				case MODBUS_TYPE.RS485_SERIAL:
-					settings.uri = undefined;
-					settings.rtu = undefined;
-					break;
-				case MODBUS_TYPE.RS485_TCPIP:
-				case MODBUS_TYPE.TCPIP:
-					settings.device = undefined;
-					settings.baudrate = undefined;
-					settings.comset = undefined;
-					settings.rtu = modbus === MODBUS_TYPE.RS485_TCPIP;
-					break;
-			}
 		},
 	},
 });

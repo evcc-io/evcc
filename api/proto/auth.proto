@@ -8,14 +8,28 @@ option go_package = "proto/pb";
 
 service Auth {
 	rpc IsAuthorized (AuthRequest) returns (AuthReply) {}
+	rpc IsAuthorizedHardware (HardwareRequest) returns (HardwareReply) {}
 }
 
 message AuthRequest {
 	string token = 1;
+	string machine_id = 2;
 }
 
 message AuthReply {
+	reserved 4; // was activation_key
 	bool authorized = 1;
 	string subject = 2;
 	google.protobuf.Timestamp expires_at = 3;
+}
+
+message HardwareRequest {
+	string machine_id = 1;
+	string vendor = 2;
+	map<string, string> metadata = 3;
+}
+
+message HardwareReply {
+	bool authorized = 1;
+	string subject = 2;
 }

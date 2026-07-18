@@ -29,7 +29,7 @@ const (
 	flagCustomCssDescription = "Additional user-defined CSS file for custom styling. No compatibility guarantees."
 
 	flagBatteryMode                = "battery-mode"
-	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
+	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge, holdcharge)"
 	flagBatteryModeWait            = "battery-mode-wait"
 	flagBatteryModeWaitDescription = "Wait given duration during which potential watchdogs are active"
 
@@ -50,6 +50,12 @@ const (
 
 	flagDiagnose            = "diagnose"
 	flagDiagnoseDescription = "Diagnose"
+
+	flagCurtail            = "curtail"
+	flagCurtailDescription = "Curtail feed-in to percent (0-100, only available if supported by device)"
+
+	flagDim            = "dim"
+	flagDimDescription = "Dim (0/1 to switch, only available if supported by device)"
 
 	flagWakeup            = "wakeup"
 	flagWakeupDescription = "Wake up"

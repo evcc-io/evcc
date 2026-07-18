@@ -219,7 +219,7 @@ func (c *gen2) Enable(enable bool) error {
 	return c.execEnableCmd(c.switchchannel, "Switch.Set", enable, &res)
 }
 
-// TotalEnergy implements the api.Meter interface
+// TotalEnergy implements the api.MeterEnergy interface
 func (c *gen2) TotalEnergy() (float64, error) {
 	switch {
 	case c.hasEM1Endpoint():
@@ -233,6 +233,26 @@ func (c *gen2) TotalEnergy() (float64, error) {
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Aenergy.Total / 1000, err
+
+	default:
+		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
+	}
+}
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (c *gen2) ReturnEnergy() (float64, error) {
+	switch {
+	case c.hasEM1Endpoint():
+		res, err := c.em1data()
+		return res.TotalActRetEnergy / 1000, err
+
+	case c.hasEMEndpoint():
+		res, err := c.emdata()
+		return res.TotalActRet / 1000, err
+
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return res.Ret_Aenergy.Total / 1000, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -310,6 +330,11 @@ func (c *gen2) hasEM1Endpoint() bool {
 
 func (c *gen2) hasEMEndpoint() bool {
 	return c.hasMethod("EM.GetStatus")
+}
+
+// IsThreePhase reports whether the device is a three-phase energy meter
+func (c *gen2) IsThreePhase() bool {
+	return c.hasEMEndpoint()
 }
 
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy

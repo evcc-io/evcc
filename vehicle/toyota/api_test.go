@@ -21,12 +21,12 @@ func TestAPI(t *testing.T) {
 
 	// Create and login identity
 	log := util.NewLogger("foo")
-	identity := NewIdentity(log)
+	identity := NewIdentity(log, "T")
 	err := identity.Login(user, password)
 	require.NoError(t, err)
 
 	// Create API client
-	api := NewAPI(log, identity)
+	api := NewAPI(log, identity, "T")
 
 	// Test Vehicles method
 	vehicles, err := api.Vehicles()

@@ -5,10 +5,11 @@ products:
 group: generic
 requirements:
   description:
-    de: Open Source Tesla Datenlogger https://github.com/bassmaster187/TeslaLogger
-    en: Open source Tesla data logger https://github.com/bassmaster187/TeslaLogger
+    de: Open Source Tesla Datenlogger [github.com/bassmaster187/TeslaLogger](https://github.com/bassmaster187/TeslaLogger)
+    en: Open source Tesla data logger [github.com/bassmaster187/TeslaLogger](https://github.com/bassmaster187/TeslaLogger)
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: id
     description:
       de: TeslaLogger CarID
@@ -65,3 +66,4 @@ render: |
   maxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps?${maxcurrent}
+  {{ include "vehicle-features" . }}

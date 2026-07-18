@@ -27,15 +27,13 @@ params:
   - name: maxdischargepower
     default: 4000
   - name: watchdog
-    type: duration
     default: 120s
     usages: ["battery"]
-    advanced: true
 render: |
   type: custom
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
   {{- if eq .usage "grid" }}
     id: 255
     register:
@@ -60,7 +58,7 @@ render: |
     scale: -1
   soc:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 255
     register:
       address: 1068 # SOC
@@ -81,7 +79,7 @@ render: |
                 value: -{{- .maxdischargepower }} # value must be negative
                 set:
                   source: modbus
-                  uri: {{ .host }}:{{ .port }}
+                  uri: {{ joinHostPort .host .port }}
                   id: 255
                   register:
                     address: 1074  # max discharge power
@@ -95,7 +93,7 @@ render: |
                 value: 0
                 set:
                   source: modbus
-                  uri: {{ .host }}:{{ .port }}
+                  uri: {{ joinHostPort .host .port }}
                   id: 255
                   register:
                     address: 1074  # max discharge power

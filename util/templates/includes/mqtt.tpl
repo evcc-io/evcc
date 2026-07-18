@@ -1,5 +1,5 @@
 {{ define "mqtt" }}
-broker: {{ .host }}:{{ .port }}
+broker: {{ joinHostPort .host .port }}
 {{- if .user }}
 user: {{ .user }}
 {{- end }}

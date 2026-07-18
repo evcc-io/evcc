@@ -3,31 +3,25 @@
 		<TopHeader :title="$t('sessions.title')" :notifications="notifications" />
 		<div class="row">
 			<main class="col-12">
-				<div class="header-outer sticky-top">
-					<div class="container px-4">
-						<div
-							class="row py-3 py-sm-3 d-flex flex-column flex-sm-row gap-3 gap-lg-0 mb-lg-2"
-						>
-							<div class="col-lg-5 d-flex mb-lg-0">
-								<PeriodSelector
-									:period="period"
-									:periodOptions="periodOptions"
-									@update:period="changePeriod"
-								/>
-							</div>
-							<div v-if="showDateNavigator" class="col-lg-6 offset-lg-1">
-								<DateNavigator
-									:month="month"
-									:year="year"
-									:startDate="startDate"
-									:showMonth="showMonthNavigation"
-									:showYear="showYearNavigation"
-									@update-date="updateDate"
-								/>
-							</div>
-						</div>
-					</div>
-				</div>
+				<PeriodHeader>
+					<template #period>
+						<PeriodSelector
+							:period="period"
+							:periodOptions="periodOptions"
+							@update:period="changePeriod"
+						/>
+					</template>
+					<template v-if="showDateNavigator" #navigator>
+						<DateNavigator
+							:month="month"
+							:year="year"
+							:startDate="startDate"
+							:showMonth="showMonthNavigation"
+							:showYear="showYearNavigation"
+							@update-date="updateDate"
+						/>
+					</template>
+				</PeriodHeader>
 
 				<div class="d-flex gap-3 mb-5 justify-content-between flex-wrap pt-1">
 					<IconSelectGroup>
@@ -71,97 +65,100 @@
 					</IconSelectGroup>
 				</div>
 
-				<h3
-					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden"
+				<Card
+					:title="historyTitle"
+					:subtitle="historySubTitle"
+					edge-to-edge
+					class="box-pull-out mb-4"
 				>
-					<span v-if="historyTitle" class="d-block no-wrap text-truncate">
-						{{ historyTitle }}
-					</span>
-					<small class="d-block no-wrap text-truncate">{{ historySubTitle }}</small>
-				</h3>
-				<EnergyHistoryChart
-					v-if="activeType === types.SOLAR"
-					class="mb-5"
-					:sessions="currentSessions"
-					:color-mappings="colorMappings"
-					:group-by="selectedGroup"
-					:period="period"
-				/>
-				<CostHistoryChart
-					v-else
-					class="mb-5"
-					:sessions="currentTypeSessions"
-					:color-mappings="colorMappings"
-					:group-by="selectedGroup"
-					:cost-type="activeType"
-					:currency="currency"
-					:period="period"
-					:suggested-max-avg-cost="suggestedMaxAvgCost"
-					:suggested-max-cost="suggestedMaxCost"
-				/>
-				<div v-if="showExtraCharts" class="row align-items-start">
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ firstExtraTitle }}</h3>
-						<div v-if="activeType === types.SOLAR">
-							<SolarYearChart
-								v-if="showSolarYearChart"
-								:period="period"
-								:sessions="currentSessions"
-							/>
-							<SolarGroupedChart
-								v-else
-								:sessions="currentSessions"
-								:color-mappings="colorMappings"
-								:group-by="selectedGroupWithoutNone"
-							/>
+					<EnergyHistoryChart
+						v-if="activeType === types.SOLAR"
+						:sessions="currentSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:period="period"
+					/>
+					<CostHistoryChart
+						v-else
+						:sessions="currentTypeSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:cost-type="activeType"
+						:currency="currency"
+						:period="period"
+					/>
+				</Card>
+				<div v-if="showExtraCharts" class="box-pull-out">
+					<div class="row align-items-start">
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="firstExtraTitle" edge-to-edge>
+								<div v-if="activeType === types.SOLAR">
+									<SolarYearChart
+										v-if="showSolarYearChart"
+										:period="period"
+										:sessions="currentSessions"
+									/>
+									<SolarGroupedChart
+										v-else
+										:sessions="currentSessions"
+										:color-mappings="colorMappings"
+										:device-colors="deviceColors"
+										:group-by="selectedGroupWithoutNone"
+									/>
+								</div>
+								<AvgCostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:suggested-max-price="suggestedMaxAvgCost"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
 						</div>
-						<AvgCostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:suggested-max-price="suggestedMaxAvgCost"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
-					</div>
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ secondExtraTitle }}</h3>
-						<EnergyGroupedChart
-							v-if="activeType === types.SOLAR"
-							:sessions="currentSessions"
-							:color-mappings="colorMappings"
-							:group-by="selectedGroupWithoutNone"
-						/>
-						<CostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="secondExtraTitle" edge-to-edge>
+								<EnergyGroupedChart
+									v-if="activeType === types.SOLAR"
+									:sessions="currentSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+								/>
+								<CostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
+						</div>
 					</div>
 				</div>
 
-				<SessionTable
+				<Card
 					v-if="showTable"
-					:sessions="currentSessions"
-					:vehicleFilter="vehicleFilter"
-					:loadpointFilter="loadpointFilter"
-					:currency="currency"
-					@show-session="showDetails"
-				/>
-				<div class="d-flex gap-2 mt-1 mb-5">
-					<a
-						class="btn btn-outline-secondary"
-						tabindex="0"
-						:href="csvLink"
-						download
-						data-testid="sessions-download"
-					>
-						{{ csvLinkLabel }}
-					</a>
+					:title="$t('sessions.overview')"
+					edge-to-edge
+					class="box-pull-out mb-4"
+				>
+					<SessionTable
+						:sessions="currentSessions"
+						:vehicleFilter="vehicleFilter"
+						:loadpointFilter="loadpointFilter"
+						:currency="currency"
+						@show-session="showDetails"
+					/>
+				</Card>
+				<div class="d-flex align-items-baseline gap-2 my-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
 					<button
 						v-if="!showTable"
 						class="btn btn-link text-muted"
@@ -188,6 +185,7 @@ import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/lightning";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -201,16 +199,19 @@ import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
 import CostGroupedChart from "../components/Sessions/CostGroupedChart.vue";
 import AvgCostGroupedChart from "../components/Sessions/AvgCostGroupedChart.vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
 import CustomSelect from "../components/Helper/CustomSelect.vue";
-import colors from "../colors";
+import colors, { resolveColors, deviceColorMap } from "../colors";
+import type { DeviceColors } from "@/types/evcc";
 import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
+import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
-import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
 import { CURRENCY, type Notification } from "@/types/evcc";
@@ -221,6 +222,8 @@ export default defineComponent({
 		SessionDetailsModal,
 		SessionTable,
 		TopHeader: Header,
+		Card,
+		DownloadButton,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,
@@ -231,6 +234,7 @@ export default defineComponent({
 		SolarYearChart,
 		PeriodSelector,
 		DateNavigator,
+		PeriodHeader,
 		DynamicPriceIcon,
 		CostHistoryChart,
 		CostGroupedChart,
@@ -342,10 +346,12 @@ export default defineComponent({
 			});
 		},
 		periodOptions() {
-			return Object.entries(PERIODS).map(([key, value]) => ({
-				name: this.$t(`sessions.period.${key.toLowerCase()}`),
-				value,
-			}));
+			return Object.entries(PERIODS)
+				.filter(([, value]) => value !== PERIODS.DAY)
+				.map(([key, value]) => ({
+					name: this.$t(`sessions.period.${key.toLowerCase()}`),
+					value,
+				}));
 		},
 		typeOptions() {
 			const options = Object.values(TYPES).map((value) => {
@@ -477,27 +483,8 @@ export default defineComponent({
 			date.setMonth(this.month - 1, 1);
 			return this.fmtMonth(date, false);
 		},
-		csvLinkLabel() {
-			if (this.period === PERIODS.MONTH) {
-				const date = new Date();
-				date.setMonth(this.month - 1, 1);
-				date.setFullYear(this.year);
-				const period = this.fmtMonthYear(date);
-				return this.$t("sessions.csvPeriod", { period });
-			} else if (this.period === PERIODS.YEAR) {
-				const period = this.year;
-				return this.$t("sessions.csvPeriod", { period });
-			} else {
-				return this.$t("sessions.csvTotal");
-			}
-		},
-		csvLink() {
-			if (this.period === PERIODS.MONTH) {
-				return this.csvHrefLink(this.year, this.month);
-			} else if (this.period === PERIODS.YEAR) {
-				return this.csvHrefLink(this.year);
-			}
-			return this.csvHrefLink();
+		deviceColors(): DeviceColors {
+			return deviceColorMap(store.state.deviceColors);
 		},
 		colorMappings() {
 			const lastThreeMonths = new Date();
@@ -514,40 +501,36 @@ export default defineComponent({
 				}, {});
 			};
 
-			// Assign colors based on energy usage
-			const assignColors = (
+			// Ordered key list: sessions ranked by recent energy first, then any
+			// remaining keys encountered in the dataset.
+			const orderedKeys = (
 				energyAggregation: Record<string, number>,
 				colorType: Exclude<GROUPS, GROUPS.NONE>
-			) => {
-				const result: Record<string, string> = {};
-				let colorIndex = 0;
-
-				// Assign colors by used energy in the last three months
-				const sortedEntries = Object.entries(energyAggregation).sort((a, b) => b[1] - a[1]);
-				sortedEntries.forEach(([key]) => {
-					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
-						colorIndex++;
+			): string[] => {
+				const ranked = Object.entries(energyAggregation)
+					.sort((a, b) => b[1] - a[1])
+					.map(([k]) => k)
+					.filter(Boolean);
+				const seen = new Set(ranked);
+				for (const s of this.sessionsWithDefaults) {
+					const k = s[colorType];
+					if (k && !seen.has(k)) {
+						ranked.push(k);
+						seen.add(k);
 					}
-				});
-
-				// Assign colors to remaining entries
-				this.sessionsWithDefaults.forEach((session) => {
-					const key = session[colorType];
-					if (key && !result[key]) {
-						result[key] = colors.palette[colorIndex % colors.palette.length] || "";
-						colorIndex++;
-					}
-				});
-
-				return result;
+				}
+				return ranked;
 			};
 
-			const loadpointEnergy = aggregateEnergy(GROUPS.LOADPOINT);
-			const loadpointColors = assignColors(loadpointEnergy, GROUPS.LOADPOINT);
-
-			const vehicleEnergy = aggregateEnergy(GROUPS.VEHICLE);
-			const vehicleColors = assignColors(vehicleEnergy, GROUPS.VEHICLE);
+			const overrides = this.deviceColors;
+			const loadpointColors = resolveColors(
+				orderedKeys(aggregateEnergy(GROUPS.LOADPOINT), GROUPS.LOADPOINT),
+				overrides
+			);
+			const vehicleColors = resolveColors(
+				orderedKeys(aggregateEnergy(GROUPS.VEHICLE), GROUPS.VEHICLE),
+				overrides
+			);
 
 			const solar = { self: colors.self, grid: colors.grid };
 			const cost = { price: colors.price, co2: colors.co2 };
@@ -561,14 +544,14 @@ export default defineComponent({
 		},
 		groupIcons() {
 			return {
-				[GROUPS.NONE]: TotalIcon,
+				[GROUPS.NONE]: "shopicon-regular-sun",
 				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
 				[GROUPS.VEHICLE]: "shopicon-regular-car3",
 			};
 		},
 		typeIcons() {
 			return {
-				[TYPES.SOLAR]: "shopicon-regular-sun",
+				[TYPES.SOLAR]: "shopicon-regular-lightning",
 				[TYPES.PRICE]: DynamicPriceIcon,
 				[TYPES.CO2]: "shopicon-regular-eco1",
 			};
@@ -634,29 +617,6 @@ export default defineComponent({
 				? this.suggestedMaxAvgPrice
 				: this.suggestedMaxAvgCo2;
 		},
-		suggestedMaxCo2() {
-			// returns the 98th percentile of total co2 emissions by time period
-			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2Map = sessionsWithCo2.reduce((acc: Record<string, number>, s) => {
-				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + (s.co2PerKWh ?? 0) * s.chargedEnergy;
-				return acc;
-			}, {});
-			return Math.max(this.percentile(Object.values(co2Map), 98) ?? 0, 5); // 5kg default
-		},
-		suggestedMaxPrice() {
-			// returns the 98th percentile of total price by time period
-			const sessionsWithPrice = this.sessions.filter((s) => s.price !== null);
-			const priceMap = sessionsWithPrice.reduce((acc: Record<string, number>, s) => {
-				const key = this.dateToPeriodKey(new Date(s.created));
-				acc[key] = (acc[key] || 0) + (s.price || 0);
-				return acc;
-			}, {});
-			return Math.max(this.percentile(Object.values(priceMap), 98) ?? 0, 1); // 1 CURRENCY default
-		},
-		suggestedMaxCost() {
-			return this.activeType === TYPES.PRICE ? this.suggestedMaxPrice : this.suggestedMaxCo2;
-		},
 	},
 	watch: {
 		offline() {
@@ -684,16 +644,6 @@ export default defineComponent({
 			}
 			this.$router.push({ query: { ...this.$route.query, period, month, year } });
 		},
-		dateToPeriodKey(date: Date) {
-			const options: Intl.DateTimeFormatOptions = {
-				year: "numeric",
-				month: "numeric",
-				day: "numeric",
-			};
-			if (this.period === PERIODS.YEAR) options.day = undefined;
-			if (this.period === PERIODS.TOTAL) options.month = undefined;
-			return date.toLocaleDateString(undefined, options);
-		},
 		async loadSessions() {
 			const response = await api.get("sessions");
 			// ensure sessions are sorted by created date
@@ -709,13 +659,14 @@ export default defineComponent({
 			);
 			modal.show();
 		},
-		csvHrefLink(year?: number, month?: number) {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-			});
-			if (year) params.append("year", year.toString());
-			if (month) params.append("month", month.toString());
+		downloadHref() {
+			const params = new URLSearchParams({ lang: this.$i18n?.locale });
+			if (this.period === PERIODS.MONTH || this.period === PERIODS.YEAR) {
+				params.append("year", this.year.toString());
+			}
+			if (this.period === PERIODS.MONTH) {
+				params.append("month", this.month.toString());
+			}
 			return `./api/sessions?${params.toString()}`;
 		},
 		updateType(type: TYPES) {
@@ -741,46 +692,4 @@ export default defineComponent({
 
 <style scoped>
 @import "../../css/breakpoints.css";
-
-.header-outer {
-	--vertical-shift: 0rem;
-	left: 0;
-	right: 0;
-	top: max(0rem, env(safe-area-inset-top)) !important;
-	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
-	-webkit-backdrop-filter: blur(35px);
-	backdrop-filter: blur(35px);
-	background-color: #0000;
-	box-shadow: 0 1px 8px 0px var(--evcc-background);
-}
-
-@media (--sm-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 560px) / 2);
-	}
-}
-
-@media (--md-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 740px) / 2);
-	}
-}
-
-@media (--lg-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 980px) / 2);
-	}
-}
-
-@media (--xl-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 1160px) / 2);
-	}
-}
-
-@media (--xxl-and-up) {
-	.header-outer {
-		--vertical-shift: calc((100vw - 1340px) / 2);
-	}
-}
 </style>

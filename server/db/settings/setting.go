@@ -210,7 +210,7 @@ func DecodeOtherSliceOrMap(other, res any) error {
 	val := reflect.ValueOf(other)
 	typ := reflect.TypeOf(other)
 
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 		val = reflect.Indirect(val)
 	}

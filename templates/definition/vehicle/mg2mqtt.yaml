@@ -5,14 +5,15 @@ products:
 group: generic
 requirements:
   description:
-    en: Required MQTT broker configuration and a SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway or https://github.com/SAIC-iSmart-API/saic-java-client)
-    de: Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway oder https://github.com/SAIC-iSmart-API/saic-java-client)
+    en: Required MQTT broker configuration and a SAIC/MQTT Gateway ([github.com/SAIC-iSmart-API/saic-python-mqtt-gateway](https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway) or [github.com/SAIC-iSmart-API/saic-java-client](https://github.com/SAIC-iSmart-API/saic-java-client))
+    de: Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway ([github.com/SAIC-iSmart-API/saic-python-mqtt-gateway](https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway) oder [github.com/SAIC-iSmart-API/saic-java-client](https://github.com/SAIC-iSmart-API/saic-java-client))
 params:
   - name: user
     required: true
   - name: vin
     required: true
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: timeout
     default: 1h
 render: |
@@ -62,3 +63,4 @@ render: |
           source: mqtt
           topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
           timeout: {{ .timeout }}
+  {{ include "vehicle-features" . }}

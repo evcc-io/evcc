@@ -5,7 +5,7 @@ products:
       generic: "FRITZ!Smart Energy 250"
 params:
   - name: usage
-    choice: ["grid"]
+    choice: ["grid", "pv"]
   - name: uri
     default: https://fritz.box
   - name: user
@@ -13,10 +13,22 @@ params:
   - name: password
     required: true
   - name: ain
-    required: true
+    service: fritz/devices?uri={uri}&user={user}&password={password}
+  - name: unit
+    advanced: true
+    type: int
+    default: 1
+    description:
+      de: Einheit
+      en: Unit
+    help:
+      de: Index der Einheit für Geräte mit mehreren Einheiten
+      en: Unit index for multi-unit devices
 render: |
   type: fritzdect
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
   ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
+  firmware82: true
+  unit: {{ .unit }}

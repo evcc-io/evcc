@@ -10,7 +10,7 @@
 				<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
 					{{ $t(`config.deviceValue.${entry.name}`) }}
 				</div>
-				<div class="value overflow-hidden text-truncate" :class="valueClasses(entry)">
+				<div class="value" :class="[valueClasses(entry), truncateClasses(entry)]">
 					{{ fmtDeviceValue(entry) }}
 				</div>
 			</span>
@@ -70,12 +70,13 @@
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
+import { distanceValue, distanceUnit } from "@/units";
 
 const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
-const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates"];
+const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
 
 export default {
 	name: "DeviceTags",
@@ -99,15 +100,16 @@ export default {
 						!PHASE_TAGS.includes(name) &&
 						!FORECAST_TAGS.includes(name)
 				)
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
 		},
 		phaseEntries() {
 			return Object.entries(this.tags)
 				.filter(([name]) => PHASE_TAGS.includes(name))
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.sort(([a], [b]) => a.localeCompare(b))
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
 		},
 		hasPhaseEntries() {
@@ -120,6 +122,7 @@ export default {
 				priceRates: "price",
 				co2Rates: "co2",
 				solarRates: "solar",
+				temperatureRates: "temperature",
 			};
 
 			// Find which forecast tag is present
@@ -173,24 +176,43 @@ export default {
 		},
 	},
 	methods: {
+		truncateClasses(entry) {
+			// don't truncate numeric values
+			return typeof entry.value === "string"
+				? "overflow-hidden text-truncate"
+				: "text-nowrap flex-shrink-0";
+		},
 		valueClasses(entry) {
-			return {
-				"value--error": !!entry.error,
-				"value--warning": entry.warning,
-				"value--muted": entry.muted || entry.value === false,
-			};
+			if (entry.asleep) {
+				return "value--muted";
+			}
+			if (entry.error) {
+				return "value--error";
+			}
+			if (entry.warning) {
+				return "value--warning";
+			}
+			if (entry.muted || entry.value === null || entry.value === undefined) {
+				return "value--muted";
+			}
+			return "";
 		},
 		fmtDeviceValue(entry) {
 			const { name, value } = entry;
+			if (entry.asleep) {
+				return this.$t("config.deviceValue.asleep");
+			}
 			if (value === null || value === undefined) {
 				return "";
 			}
 			switch (name) {
 				case "power":
 				case "solarForecast":
-				case "hemsActiveLimit":
+				case "dimLimit":
+				case "curtailLimit":
 					return this.fmtW(value);
 				case "energy":
+				case "returnEnergy":
 				case "capacity":
 				case "chargedEnergy":
 					return this.fmtWh(value * 1e3);
@@ -199,12 +221,16 @@ export default {
 					return this.fmtPercentage(value, 1);
 				case "temp":
 				case "heaterTempLimit":
+				case "outdoorTemp":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
-					return `${this.fmtNumber(value, 0)} km`;
+					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
+				case "switchDevice":
+					// switch device means no current control
+					return this.$t(`config.deviceValue.${value ? "no" : "yes"}`);
 				case "price":
 				case "gridPrice":
 				case "feedinPrice":
@@ -216,16 +242,19 @@ export default {
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":
+				case "curtailable":
 				case "phases1p3p":
 				case "singlePhase":
 				case "enabled":
 				case "configured":
+				case "connected":
 				case "dimmed":
+				case "curtailed":
+				case "loginBlocked":
+				case "remoteEnabled":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
-				case "hemsType":
-					return this.$t(`config.deviceValueHemsType.${value}`);
 			}
 			return value;
 		},
@@ -263,6 +292,8 @@ export default {
 					return short ? this.fmtCo2Short(value) : this.fmtCo2Medium(value);
 				case "solar":
 					return this.fmtW(value);
+				case "temperature":
+					return this.fmtTemperature(value);
 				default:
 					return value;
 			}

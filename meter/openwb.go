@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb"
 	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
@@ -140,8 +141,12 @@ func NewOpenWBFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if strings.ToLower(cc.Usage) == "battery" {
-		return m.DecorateBattery(nil, soc, capacity, nil, nil, nil), nil
+		implement.Has(m, implement.Battery(soc))
+		implement.May(m, implement.BatteryCapacity(capacity))
+		return m, nil
 	}
 
-	return m.Decorate(nil, currents, nil, nil, nil), nil
+	implement.May(m, implement.PhaseCurrents(currents))
+
+	return m, nil
 }

@@ -22,6 +22,9 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   USD: "$",
   DKK: "kr",
   SEK: "kr",
+  ZAR: "R",
+  TRY: "₺",
+  MYR: "RM",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -39,6 +42,8 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   USD: "¢", // US cent
   DKK: "øre", // Danish øre
   SEK: "öre", // Swedish öre
+  ZAR: "c", // South African cent
+  TRY: "krş", // Türkiye kuruş
 };
 
 export enum POWER_UNIT {
@@ -180,6 +185,10 @@ export default defineComponent({
       const formatter = new Intl.DurationFormat(this.$i18n?.locale, { style });
       return formatter.format({ minutes, hours });
     },
+    fmtDurationParts(parts: Record<string, number>) {
+      // @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types
+      return new Intl.DurationFormat(this.$i18n?.locale, { style: "long" }).format(parts);
+    },
     fmtDayString(date: Date) {
       const YY = `${date.getFullYear()}`;
       const MM = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -204,17 +213,24 @@ export default defineComponent({
       }).format(date);
     },
     hourShort(date: Date) {
-      const locale = this.$i18n?.locale;
-      // special: use shorter german format
-      if (locale === "de") return date.getHours();
-      return new Intl.DateTimeFormat(locale, {
+      // keep only hour and AM/PM; drops locale noise like "Uhr" (de), "h" (fr) and leading zeros
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         hour: "numeric",
         hour12: is12hFormat(),
-      }).format(date);
+      })
+        .formatToParts(date)
+        .filter(({ type }) => type === "hour" || type === "dayPeriod")
+        .map(({ value }) => value.replace(/^0(?=\d)/, ""))
+        .join(" ");
     },
     weekdayShort(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
+      }).format(date);
+    },
+    weekdayLong(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "long",
       }).format(date);
     },
     fmtAbsoluteDate(date: Date) {
@@ -226,6 +242,22 @@ export default defineComponent({
       }).format(date);
 
       return `${weekday} ${hour}`.trim();
+    },
+    // "gestern"/"heute"/"morgen" within one day of now, null otherwise
+    relativeDayName(date: Date) {
+      const startOfDay = (d: Date) => new Date(d).setHours(0, 0, 0, 0);
+      const days = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
+      if (Math.abs(days) > 1) return null;
+      return new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" }).format(
+        days,
+        "day"
+      );
+    },
+    // relative day plus time, e.g. "heute 16:30", "morgen 5:00", "Freitag 12:15"
+    fmtDayTime(date: Date) {
+      const time = this.fmtHourMinute(date);
+      const day = this.relativeDayName(date);
+      return `${day ?? this.weekdayLong(date)} ${time}`;
     },
     fmtHourMinute(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -269,6 +301,30 @@ export default defineComponent({
         day: "numeric",
         month: "short",
       }).format(date);
+    },
+    fmtDayMonthYear(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+    },
+    fmtDayMonthShort(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
+    fmtMonthNarrow(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        month: "narrow",
+      }).format(date);
+    },
+    // "HH:mm – HH:mm" honoring 12h/24h preference.
+    fmtTimeSlot(start: Date, durationMs: number) {
+      const end = new Date(start.getTime() + durationMs);
+      return `${this.fmtHourMinute(start)} – ${this.fmtHourMinute(end)}`;
     },
     fmtDurationUnit(value: number, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {
@@ -379,12 +435,12 @@ export default defineComponent({
       const day = index === 0 ? 6 : 6 + index;
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: format,
-      }).format(new Date(Date.UTC(2021, 5, day)));
+      }).format(new Date(2021, 5, day)); // local date avoids UTC timezone day shift
     },
     fmtMonthByIndex(index: number, format: Intl.DateTimeFormatOptions["month"]) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         month: format,
-      }).format(new Date(Date.UTC(2021, index, 1)));
+      }).format(new Date(2021, index, 1)); // local date avoids UTC timezone day shift
     },
     getWeekdaysList(
       format: Intl.DateTimeFormatOptions["weekday"]

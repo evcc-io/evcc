@@ -1,0 +1,228 @@
+template: goodwe-wifi-et
+covers: ["goodwe-wifi"]
+requirements:
+  evcc: ["skiptest"]
+products:
+  - brand: GoodWe
+    description:
+      generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: uri
+    deprecated: true
+  - name: delay
+    type: duration
+    default: 0.1s
+    advanced: true
+  - preset: battery-params
+  - name: maxchargepower
+    default: 10000
+  - name: maxdischargepower
+    default: 10000
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 100
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:               # READ 125 @ 0x891C
+      register: 35100
+      count: 125
+    register:
+      address: 35139     # grid power
+      decode: int32
+    scale: -1
+    delay: {{ .delay }}
+  energy:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    register:
+      address: 36017
+      decode: float32
+    scale: 0.001
+    delay: {{ .delay }}
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:             # READ 125 @ 0x891C
+        register: 35100
+        count: 125
+      register:
+        address: 35105   # Ppv1
+        decode: uint32nan
+      delay: {{ .delay }}
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register:
+        address: 35109   # Ppv2
+        decode: uint32nan
+      delay: {{ .delay }}
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register:
+        address: 35113   # Ppv3
+        decode: uint32nan
+      delay: {{ .delay }}
+    - source: aa55udp
+      host: {{ or .host .uri }}
+      id: 247
+      block:
+        register: 35100
+        count: 125
+      register:
+        address: 35117   # Ppv4
+        decode: uint32nan
+      delay: {{ .delay }}
+  energy:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:
+      register: 35100
+      count: 125
+    register:
+      address: 35191     # pv energy
+      decode: uint32nan
+    scale: 0.1
+    delay: {{ .delay }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:               # READ 125 @ 0x891C
+      register: 35100
+      count: 125
+    register:
+      address: 35182     # battery power
+      decode: int32
+    delay: {{ .delay }}
+  energy:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:
+      register: 35100
+      count: 125
+    register:
+      address: 35209     # battery discharge energy
+      decode: uint32nan
+    scale: 0.1
+    delay: {{ .delay }}
+  soc:
+    source: aa55udp
+    host: {{ or .host .uri }}
+    id: 247
+    block:               # READ 13 @ 0x9088
+      register: 37000
+      count: 13
+    register:
+      address: 37007     # soc
+      decode: uint16nan
+    delay: {{ .delay }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1 # Normal operation mode
+          set:
+            source: aa55udp
+            host: {{ or .host .uri }}
+            id: 247
+            register:
+              address: 47511 # EMSPowerMode
+              type: writesingle
+              encoding: uint16
+            delay: {{ .delay }}
+        - source: const
+          value: 0 # Maximum allowed power from Grid in W.
+          set:
+            source: aa55udp
+            host: {{ or .host .uri }}
+            id: 247
+            register:
+              address: 47512 # EMSPowerSet [0-10000]
+              type: writemultiple
+              encoding: uint16
+            delay: {{ .delay }}
+    - case: 2 # discharge hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # EMSPowerMode 2 "Charge-PV"-Mode. If EMSPowerSet=0 only PV is used to charge.
+          set:
+            source: aa55udp
+            host: {{ or .host .uri }}
+            id: 247
+            register:
+              address: 47511 # EMSPowerMode
+              type: writesingle
+              encoding: uint16
+            delay: {{ .delay }}
+        - source: const
+          value: 0 # Maximum allowed power from Grid in W. If >0 battery will be charged also from Grid in Standby mode.
+          set:
+            source: aa55udp
+            host: {{ or .host .uri }}
+            id: 247
+            register:
+              address: 47512 # EMSPowerSet [0-10000]
+              type: writemultiple
+              encoding: uint16
+            delay: {{ .delay }}
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # Charge from PV+AC according to the EMSPowerSet below. PV-Preferred.
+          set:
+            source: aa55udp
+            host: {{ or .host .uri }}
+            id: 247
+            register:
+              address: 47511 # EMSPowerMode
+              type: writesingle
+              encoding: uint16
+            delay: {{ .delay }}
+        - source: const
+          value: {{ .maxchargepower }} # For charge battery mode: Maximum allowed power from Grid in W
+          set:
+            source: aa55udp
+            host: {{ or .host .uri }}
+            id: 247
+            register:
+              address: 47512 # EMSPowerSet [0-10000]
+              type: writemultiple
+              encoding: uint16
+            delay: {{ .delay }}
+  {{- include "battery-params" . }}
+  {{- end }}

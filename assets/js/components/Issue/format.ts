@@ -1,5 +1,5 @@
 function sortedEntries(obj: object): [string, any][] {
-  const firstKeys = ["id", "name"];
+  const firstKeys = ["id", "name", "type", "template"];
   return Object.entries(obj).sort(([a], [b]) => {
     const ai = firstKeys.indexOf(a);
     const bi = firstKeys.indexOf(b);
@@ -8,6 +8,17 @@ function sortedEntries(obj: object): [string, any][] {
     }
     return a.localeCompare(b);
   });
+}
+
+// recursively reorder keys so priority keys (e.g. template) stay first at every nesting level
+function sortedDeep(value: any): any {
+  if (Array.isArray(value)) {
+    return value.map(sortedDeep);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(sortedEntries(value).map(([k, v]) => [k, sortedDeep(v)]));
+  }
+  return value;
 }
 
 export function formatJson(obj: any, expandKeys: string[] = []): string {
@@ -31,10 +42,7 @@ export function formatJson(obj: any, expandKeys: string[] = []): string {
           valueStr = "[]";
         } else {
           const arrayItems = value.map((item) => {
-            const itemStr =
-              item && typeof item === "object" && !Array.isArray(item)
-                ? JSON.stringify(Object.fromEntries(sortedEntries(item)))
-                : JSON.stringify(item);
+            const itemStr = JSON.stringify(sortedDeep(item));
             return `    ${itemStr.replace(/\\n/g, "\n")}`;
           });
           valueStr = `[\n${arrayItems.join(",\n")}\n  ]`;
@@ -47,7 +55,7 @@ export function formatJson(obj: any, expandKeys: string[] = []): string {
           valueStr = "{}";
         } else {
           const objItems = objEntries.map(([k, v]) => {
-            const itemStr = JSON.stringify(v);
+            const itemStr = JSON.stringify(sortedDeep(v));
             return `    ${JSON.stringify(k)}: ${itemStr.replace(/\\n/g, "\n")}`;
           });
           valueStr = `{\n${objItems.join(",\n")}\n  }`;
@@ -55,7 +63,7 @@ export function formatJson(obj: any, expandKeys: string[] = []): string {
       }
     } else {
       // Single line for everything else
-      valueStr = JSON.stringify(value).replace(/\\n/g, "\n");
+      valueStr = JSON.stringify(sortedDeep(value)).replace(/\\n/g, "\n");
     }
 
     lines.push(`  ${JSON.stringify(key)}: ${valueStr}`);

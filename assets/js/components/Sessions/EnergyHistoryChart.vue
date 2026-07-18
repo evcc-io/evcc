@@ -3,7 +3,7 @@
 		<div style="position: relative; height: 300px" class="my-3">
 			<Bar :data="chartData" :options="options" />
 		</div>
-		<LegendList :legends="legends" />
+		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
@@ -18,6 +18,7 @@ import {
 	Legend,
 	Tooltip,
 	type ChartData,
+	type ScriptableContext,
 	type TooltipModel,
 	type TooltipItem,
 } from "chart.js";
@@ -26,7 +27,7 @@ import LegendList from "./LegendList.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
 import { GROUPS, PERIODS, type Session } from "./types";
-import type { Context } from "chartjs-plugin-datalabels";
+import type { DeviceColors } from "@/types/evcc";
 
 registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
 
@@ -39,6 +40,7 @@ export default defineComponent({
 		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
 		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
 		firstDay() {
@@ -128,7 +130,7 @@ export default defineComponent({
 					backgroundColor,
 					label,
 					data: Object.values(result).map((day) => day[group] || 0),
-					borderRadius: (context: Context) => {
+					borderRadius: (context: ScriptableContext<"bar">) => {
 						const threshold = 0.04; // 400 Wh
 						const { dataIndex, datasetIndex } = context;
 						const currentValue = context.dataset.data[dataIndex] as number;
@@ -148,6 +150,7 @@ export default defineComponent({
 			};
 		},
 		legends() {
+			const pickable = this.groupBy !== GROUPS.NONE;
 			return this.chartData.datasets.map((dataset) => ({
 				label: dataset.label || "",
 				color: dataset.backgroundColor,
@@ -155,6 +158,7 @@ export default defineComponent({
 					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
 					POWER_UNIT.AUTO
 				),
+				id: pickable ? dataset.label || undefined : undefined,
 			}));
 		},
 		options() {

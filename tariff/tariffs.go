@@ -8,8 +8,8 @@ import (
 )
 
 type Tariffs struct {
-	Currency                          currency.Unit
-	Grid, FeedIn, Co2, Planner, Solar api.Tariff
+	Currency                                       currency.Unit
+	Grid, FeedIn, Co2, Planner, Solar, Temperature api.Tariff
 }
 
 // At returns the rate at the given time
@@ -42,6 +42,32 @@ func Rates(t api.Tariff) api.Rates {
 	}
 
 	return rr
+}
+
+// AverageRate returns the arithmetic mean of rates in [now, now+d), or nil if unavailable.
+func AverageRate(t api.Tariff, d time.Duration) *float64 {
+	rr := Rates(t)
+	if rr == nil {
+		return nil
+	}
+
+	now := time.Now()
+	end := now.Add(d)
+
+	var sum float64
+	var count int
+	for _, r := range rr {
+		if r.Start.Before(end) && r.End.After(now) {
+			sum += r.Value
+			count++
+		}
+	}
+
+	if count == 0 {
+		return nil
+	}
+
+	return new(sum / float64(count))
 }
 
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
@@ -82,6 +108,9 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 
 	case api.TariffUsageSolar:
 		return t.Solar
+
+	case api.TariffUsageTemperature:
+		return t.Temperature
 
 	default:
 		return nil

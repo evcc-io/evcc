@@ -10,6 +10,19 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+func setOptimizer(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.Optimizer, b)
+		pub(keys.Optimizer, b)
+		return nil
+	}
+}
+
+func getOptimizer() bool {
+	b, _ := settings.Bool(keys.Optimizer)
+	return b
+}
+
 func setExperimental(pub publisher) func(bool) error {
 	return func(b bool) error {
 		settings.SetBool(keys.Experimental, b)
@@ -34,8 +47,10 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 			return
 		}
 
-		if req.Token != "" {
-			if err := sponsor.ConfigureSponsorship(req.Token); err != nil {
+		token := req.Token
+
+		if token != "" {
+			if err := sponsor.ConfigureSponsorship(token); err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
@@ -47,7 +62,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		}
 
 		// TODO find better place
-		settings.SetString(keys.SponsorToken, req.Token)
+		settings.SetString(keys.SponsorToken, token)
 		setConfigDirty()
 
 		jsonWrite(w, sponsor.RedactedStatus())

@@ -2,19 +2,18 @@ template: enphase
 products:
   - brand: Enphase
     description:
-      generic: IQ Envoy
+      generic: IQ Gateway
 requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
   - name: schema
-    default: https
     advanced: true
   - name: token
     help:
-      en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
-      de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
+      en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: [enphase.com](https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication)"
+      de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): [enphase.com](https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication)"
   - name: battery_type
     description:
       en: "Enphase Battery Type (AC or IQ)"
@@ -25,9 +24,9 @@ params:
     default: ac
     choice: ["ac", "iq"]
     advanced: true
+    usages: ["battery"]
   - preset: battery-params
   - name: cache
-    advanced: true
     default: 1s
   - name: timeout
     advanced: true
@@ -47,6 +46,40 @@ render: |
     cache: {{ .cache }}
     timeout: {{ .timeout }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
+  voltages:
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 1 )) then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 2 )) then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 3 )) then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsVoltage else 0 end
   currents:
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1
@@ -108,6 +141,40 @@ render: |
     timeout: {{ .timeout }}
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").whLifetime else .production[] | select(.type == "inverters").whLifetime end
     scale: 0.001
+  voltages:
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 1 )) then .production[] | select(.measurementType == "production").lines[0].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 2 )) then .production[] | select(.measurementType == "production").lines[1].rmsVoltage else 0 end
+    - source: http
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
+      {{- if .token }}
+      auth:
+        type: bearer
+        token: {{ .token }}
+      insecure: true
+      {{- end }}
+      cache: {{ .cache }}
+      timeout: {{ .timeout }}
+      jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 3 )) then .production[] | select(.measurementType == "production").lines[2].rmsVoltage else 0 end
   currents:
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1

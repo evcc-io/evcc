@@ -1,5 +1,7 @@
 import type { AxiosResponse } from "axios";
 import sleep from "@/utils/sleep";
+import { ADMIN_PASSWORD_REQUIRED } from "../DeviceModal/index";
+import { reportValidityInModal } from "./reportValidityInModal";
 
 export type TestState = {
   isUnknown: boolean;
@@ -28,13 +30,17 @@ export const performTest = async (
   api: () => Promise<AxiosResponse<any, any>>,
   form: HTMLElement | undefined
 ) => {
-  if (form && !(form as HTMLFormElement).reportValidity()) return false;
+  if (form && !reportValidityInModal(form as HTMLFormElement)) return false;
   state.isUnknown = false;
   state.isSuccess = false;
   state.isRunning = true;
   const startTime = Date.now();
   try {
     const res = await api();
+    if (res.status === ADMIN_PASSWORD_REQUIRED) {
+      state.isUnknown = true; // not testable until the admin password is provided
+      return false;
+    }
     state.isError = false;
     state.error = null;
     state.errorLine = null;

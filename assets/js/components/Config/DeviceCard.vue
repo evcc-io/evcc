@@ -26,21 +26,32 @@
 				@edit="$emit('edit')"
 			/>
 		</div>
-		<div v-if="$slots.tags">
-			<hr class="my-3 divide" />
-			<slot name="tags" />
+		<div v-if="$slots.tags" ref="tagsContainer" :style="tagsStyle">
+			<hr class="my-3 divide" :class="{ 'border-warning': banner }" />
+			<div
+				v-if="banner"
+				class="limit-stripe banner fw-bold text-center text-warning"
+				data-testid="device-banner"
+			>
+				{{ banner }}
+			</div>
+			<div ref="tagsContent">
+				<slot name="tags" />
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
 import DeviceCardEditIcon from "./DeviceCardEditIcon.vue";
+import settings from "../../settings";
 
 export default {
 	name: "DeviceCard",
 	components: { DeviceCardEditIcon },
 	props: {
 		name: String,
+		id: String,
 		title: String,
 		editable: Boolean,
 		error: Boolean,
@@ -48,8 +59,49 @@ export default {
 		warning: Boolean,
 		noEditButton: Boolean,
 		badge: Boolean,
+		banner: String,
 	},
 	emits: ["edit"],
+	data() {
+		return {
+			tagsMinHeight: null,
+			resizeObserver: null,
+		};
+	},
+	computed: {
+		tagsStyle() {
+			return this.tagsMinHeight ? { minHeight: `${this.tagsMinHeight}px` } : undefined;
+		},
+	},
+	mounted() {
+		if (!this.id) return;
+		const cached = settings.cardHeights[this.id];
+		if (cached > 0) {
+			this.tagsMinHeight = cached;
+		}
+		// Cache tag heights to reduce layout shift. Hold cached min-height
+		// until async data fills the space, then save and release.
+		this.$nextTick(() => {
+			const el = this.$refs.tagsContainer;
+			const content = this.$refs.tagsContent;
+			if (!el || !content) return;
+			const minContentHeight = 10;
+			const check = () => {
+				if (content.offsetHeight <= minContentHeight) return;
+				// measure natural height without cached min-height
+				el.style.minHeight = "";
+				settings.cardHeights[this.id] = Math.round(el.getBoundingClientRect().height);
+				this.tagsMinHeight = null;
+				this.resizeObserver?.disconnect();
+				this.resizeObserver = null;
+			};
+			this.resizeObserver = new ResizeObserver(check);
+			this.resizeObserver.observe(content);
+		});
+	},
+	unmounted() {
+		this.resizeObserver?.disconnect();
+	},
 };
 </script>
 
@@ -83,5 +135,32 @@ export default {
 .divide {
 	margin-left: -1.5rem;
 	margin-right: -1.5rem;
+}
+/* bleed edge-to-edge over the card padding, flush below the divider */
+.banner {
+	margin: -1rem -1.5rem 1rem;
+	padding: 0.5rem 1.5rem;
+}
+/* animated throttle stripe, echoes the charging bar */
+.limit-stripe {
+	background-color: color-mix(in srgb, var(--evcc-orange) 9%, transparent);
+	background-image: repeating-linear-gradient(
+		-45deg,
+		color-mix(in srgb, var(--evcc-orange) 20%, transparent) 0 8px,
+		transparent 8px 20px
+	);
+	background-size: 28.28px 28.28px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.limit-stripe {
+		animation: limit-stripe-move 1.5s linear infinite;
+	}
+}
+
+@keyframes limit-stripe-move {
+	to {
+		background-position: 28.28px 0;
+	}
 }
 </style>

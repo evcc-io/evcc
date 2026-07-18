@@ -545,13 +545,13 @@ test.describe("repeating", async () => {
     await modal.getByTestId("repeating-plan-weekdays").click(); // close
 
     // activate
-    await modal.getByTestId("repeating-plan-time").fill("02:22");
+    await modal.getByTestId("repeating-plan-time").fill("09:22");
     await modal.getByTestId("repeating-plan-active").click();
     await page.waitForLoadState("networkidle");
 
     // specific weekday and time
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
-    await expect(modal.getByTestId("target-text")).toContainText("Thu 02:22");
+    await expect(modal.getByTestId("target-text")).toContainText("Thu 09:22");
   });
 
   test("next plan", async ({ page }) => {

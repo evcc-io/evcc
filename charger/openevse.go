@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openevse"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -18,17 +20,17 @@ import (
 // OpenEVSE charger implementation
 type OpenEVSE struct {
 	*request.Helper
+	implement.Caps
 	uri     string
 	statusG util.Cacheable[openevse.Status]
 	current int
 	enabled bool
+	lp      loadpoint.API
 }
 
 func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
-
-//go:generate go tool decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t api.PhaseSwitcher
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
@@ -59,6 +61,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 
 	c := &OpenEVSE{
 		Helper: request.NewHelper(log),
+		Caps:   implement.New(),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 
@@ -75,9 +78,8 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 		return res, err
 	}, cache)
 
-	var phases1p3p func(int) error
 	if err := c.hasPhaseSwitchCapabilities(); err == nil {
-		phases1p3p = c.phases1p3p
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 
 		// disable EVSE's own 1/3-phase auto-switching
 		if err := c.rapiCommand("$S8 0"); err != nil {
@@ -85,7 +87,7 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 		}
 	}
 
-	return decorateOpenEVSE(c, phases1p3p), nil
+	return c, nil
 }
 
 func (c *OpenEVSE) setOverride() error {
@@ -93,7 +95,7 @@ func (c *OpenEVSE) setOverride() error {
 	uri := fmt.Sprintf("%s/override", c.uri)
 
 	if err := c.GetJSON(uri, &data); err != nil {
-		if err.Error() != "unexpected status: 404 (Not Found)" {
+		if se, ok := errors.AsType[*request.StatusError](err); !ok || !se.HasStatus(404) {
 			return err
 		}
 	}
@@ -210,7 +212,7 @@ func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(res.SessionElapsed) * time.Second, err
+	return time.Duration(res.Elapsed) * time.Second, err
 }
 
 var _ api.MeterEnergy = (*OpenEVSE)(nil)
@@ -233,7 +235,22 @@ func (c *OpenEVSE) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return res.Power, err
+	// status only reports a single phase current, scale by the loadpoint phases
+	phases := 1
+	if c.lp != nil {
+		if p := c.lp.GetPhases(); p != 0 {
+			phases = p
+		}
+	}
+
+	return res.Amp * res.Voltage / 1e3 * float64(phases), err
+}
+
+var _ loadpoint.Controller = (*OpenEVSE)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (c *OpenEVSE) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface

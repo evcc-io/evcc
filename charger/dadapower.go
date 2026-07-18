@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"encoding/binary"
@@ -20,6 +37,7 @@ const (
 	dadapowerRegChargingAllowed     = 1000
 	dadapowerRegChargeCurrentLimit  = 1001
 	dadapowerRegActivePhases        = 1002
+	dadapowerRegVolts               = 1003
 	dadapowerRegCurrents            = 1006
 	dadapowerRegActiveEnergy        = 1009
 	dadapowerRegChargingPortState   = 1015
@@ -213,6 +231,21 @@ var _ api.PhaseCurrents = (*Dadapower)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (wb *Dadapower) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(dadapowerRegCurrents+wb.regOffset, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *Dadapower) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegVolts+wb.regOffset, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}

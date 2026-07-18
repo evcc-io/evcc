@@ -1,8 +1,12 @@
+<!--
+	Layout and style changes here need manual visual confirmation in Storybook (Energyflow.stories),
+	including thin-segment and label edge cases.
+-->
 <template>
 	<div
 		data-testid="visualization"
 		class="visualization"
-		:class="{ 'visualization--ready': visualizationReady }"
+		:class="{ 'visualization--ready': transitionsEnabled }"
 	>
 		<div class="label-scale d-flex">
 			<div class="d-flex justify-content-start flex-grow-1">
@@ -22,7 +26,7 @@
 			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
-			<div class="site-progress-bar self-pv" :style="{ width: widthTotal(selfPvAdjusted) }">
+			<div class="site-progress-bar self-pv" :style="{ width: widthTotal(selfPv) }">
 				<AnimatedNumber
 					v-if="selfPv && visualizationReady"
 					class="power"
@@ -30,10 +34,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar self-battery"
-				:style="{ width: widthTotal(selfBatteryAdjusted) }"
-			>
+			<div class="site-progress-bar self-battery" :style="{ width: widthTotal(selfBattery) }">
 				<AnimatedNumber
 					v-if="selfBattery && visualizationReady"
 					class="power"
@@ -41,10 +42,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar grid-import"
-				:style="{ width: widthTotal(gridImportAdjusted) }"
-			>
+			<div class="site-progress-bar grid-import" :style="{ width: widthTotal(gridImport) }">
 				<AnimatedNumber
 					v-if="gridImport && visualizationReady"
 					class="power"
@@ -52,10 +50,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar pv-export"
-				:style="{ width: widthTotal(pvExportAdjusted) }"
-			>
+			<div class="site-progress-bar pv-export" :style="{ width: widthTotal(pvExport) }">
 				<AnimatedNumber
 					v-if="pvExport && visualizationReady"
 					class="power"
@@ -74,7 +69,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div v-if="totalAdjusted <= 0" class="site-progress-bar w-100 grid-import">
+			<div v-if="total <= 0" class="site-progress-bar w-100 grid-import">
 				<span>{{ fmtW(0, POWER_UNIT.AUTO, true) }}</span>
 			</div>
 		</div>
@@ -93,7 +88,7 @@
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
+				<LabelBar v-bind="labelBarProps('bottom', 'pvExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'unknownOutput')">
@@ -140,34 +135,11 @@ export default defineComponent({
 		outPower: { type: Number, default: 0 },
 	},
 	data() {
-		return { width: 0 };
+		return { width: 0, transitionsEnabled: false };
 	},
 	computed: {
-		gridExport() {
-			return this.applyThreshold(this.pvExport);
-		},
-		totalRaw() {
+		total() {
 			return this.gridImport + this.selfPv + this.selfBattery + this.pvExport;
-		},
-		gridImportAdjusted() {
-			return this.applyThreshold(this.gridImport);
-		},
-		selfPvAdjusted() {
-			return this.applyThreshold(this.selfPv);
-		},
-		selfBatteryAdjusted() {
-			return this.applyThreshold(this.selfBattery);
-		},
-		pvExportAdjusted() {
-			return this.applyThreshold(this.pvExport);
-		},
-		totalAdjusted() {
-			return (
-				this.gridImportAdjusted +
-				this.selfPvAdjusted +
-				this.selfBatteryAdjusted +
-				this.pvExportAdjusted
-			);
 		},
 		unknownImport() {
 			// input/output mismatch > 10%
@@ -180,15 +152,27 @@ export default defineComponent({
 		unknownPower() {
 			if (this.unknownImport || this.unknownOutput) {
 				const total = Math.max(this.inPower, this.outPower);
-				return Math.abs(total - this.totalAdjusted);
+				return Math.abs(total - this.total);
 			}
 			return 0;
 		},
 		visualizationReady() {
-			return this.totalAdjusted > 0 && this.width > 0;
+			return this.total > 0 && this.width > 0;
 		},
 	},
 
+	watch: {
+		visualizationReady(newVal: boolean) {
+			if (newVal && !this.transitionsEnabled) {
+				// ensure screen is drawn before enabling transitions
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						this.transitionsEnabled = true;
+					});
+				});
+			}
+		},
+	},
 	mounted() {
 		this.$nextTick(function () {
 			window.addEventListener("resize", this.updateElementWidth);
@@ -200,8 +184,8 @@ export default defineComponent({
 	},
 	methods: {
 		widthTotal(power: number) {
-			if (this.totalAdjusted === 0 || power === 0) return "0";
-			return (100 / this.totalAdjusted) * power + "%";
+			if (this.total === 0 || power === 0) return "0";
+			return (100 / this.total) * power + "%";
 		},
 		fmtBarValue(watt: number) {
 			if (!this.enoughSpaceForValue(watt)) {
@@ -211,8 +195,8 @@ export default defineComponent({
 			return this.fmtW(watt, this.powerUnit, withUnit);
 		},
 		powerLabelAvailableSpace(power: number) {
-			if (this.totalAdjusted === 0) return 0;
-			const percent = (100 / this.totalAdjusted) * power;
+			if (this.total === 0) return 0;
+			const percent = (100 / this.total) * power;
 			return (this.width / 100) * percent;
 		},
 		enoughSpaceForValue(power: number) {
@@ -221,13 +205,8 @@ export default defineComponent({
 		enoughSpaceForUnit(power: number) {
 			return this.powerLabelAvailableSpace(power) > 60;
 		},
-		hideLabelIcon(power: number, minWidth = 32) {
-			if (this.totalAdjusted === 0) return true;
-			const percent = (100 / this.totalAdjusted) * power;
-			return (this.width / 100) * percent < minWidth;
-		},
 		applyThreshold(power: number, threshold = 2) {
-			const percent = (100 / this.totalRaw) * power;
+			const percent = (100 / this.total) * power;
 			return percent < threshold ? 0 : power;
 		},
 		updateElementWidth() {
@@ -235,10 +214,13 @@ export default defineComponent({
 		},
 		labelBarProps(position: string, name: string, val?: number) {
 			const value = val === undefined ? (this as any)[name] : val;
-			const minWidth = 40;
+			const space = this.powerLabelAvailableSpace(value);
 			return {
 				value,
-				hideIcon: this.hideLabelIcon(value, minWidth),
+				// shrink the icon to an anonymous dot when the bar gets narrow,
+				// drop the dot once the bar is too thin to render it cleanly
+				hideIcon: space < 40,
+				hideDot: space < 16,
 				style: { "flex-basis": this.widthTotal(value) },
 				[position]: true,
 			};
@@ -321,6 +303,8 @@ html.dark .grid-import {
 	right: -0.25rem;
 	color: var(--evcc-gray);
 	opacity: 0;
+}
+.visualization--ready .battery-hold {
 	transition-property: opacity;
 	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: linear;

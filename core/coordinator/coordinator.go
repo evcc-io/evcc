@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -116,7 +117,7 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 
 	for _, vv := range c.vehicles {
 		// status api available
-		if _, ok := vv.(api.ChargeState); ok {
+		if api.HasCap[api.ChargeState](vv) && !slices.Contains(vv.Features(), api.AutodetectDisabled) {
 			// available or associated to current loadpoint
 			if o, ok := c.tracked[vv]; o == owner || !ok {
 				res = append(res, vv)
@@ -128,14 +129,15 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 }
 
 // identifyVehicleByStatus finds active vehicle by charge state
-func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehicle {
-	var res api.Vehicle
+func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle, lpStatus api.ChargeStatus) api.Vehicle {
+	var exactMatch api.Vehicle
+	var approximateMatches []api.Vehicle
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	for _, vehicle := range available {
-		if vs, ok := vehicle.(api.ChargeState); ok {
+		if vs, ok := api.Cap[api.ChargeState](vehicle); ok {
 			status, err := vs.Status()
 			if err != nil {
 				if !loadpoint.AcceptableError(err) {
@@ -146,17 +148,32 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 
 			c.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.GetTitle())
 
-			// vehicle is plugged or charging, so it should be the right one
+			// vehicle is plugged or charging and has the same state as the charger, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
-				if res != nil {
-					c.log.WARN.Println("vehicle status: >1 matches, giving up")
-					return nil
-				}
+				if status == lpStatus {
+					if exactMatch != nil {
+						c.log.WARN.Println("vehicle status: >1 matches, giving up")
+						return nil
+					}
 
-				res = vehicle
+					exactMatch = vehicle
+				} else {
+					// vehicle is plugged or charging, so it should be the right one if there is no exact match
+					approximateMatches = append(approximateMatches, vehicle)
+				}
 			}
 		}
 	}
 
-	return res
+	if exactMatch != nil {
+		return exactMatch
+	}
+	if len(approximateMatches) == 1 {
+		return approximateMatches[0]
+	}
+	if len(approximateMatches) > 1 {
+		c.log.WARN.Println("vehicle status: >1 matches, giving up")
+	}
+
+	return nil
 }

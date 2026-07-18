@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -32,6 +33,7 @@ import (
 
 // ETEK EKEPC2 charger implementation
 type Etek struct {
+	implement.Caps
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -65,8 +67,6 @@ func init() {
 	registry.AddCtx("etek", NewEtekFromConfig)
 }
 
-//go:generate go tool decorate -f decorateEtek -b *Etek -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseVoltages
-
 // NewEtekFromConfig creates an ETEK EKEPC2 charger from generic config
 func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
@@ -84,23 +84,18 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	// Check if external meter is configured
 	// If register value is 65535 (0xffff), no external meter is configured
-	var (
-		currentPower func() (float64, error)
-		totalEnergy  func() (float64, error)
-		voltages     func() (float64, float64, float64, error)
-	)
 
 	// Check power register (94)
 	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterPowerAddr, 1); err == nil {
 		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-			currentPower = wb.currentPower
+			implement.Has(wb, implement.Meter(wb.currentPower))
 		}
 	}
 
 	// Check energy register (95)
 	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterEnergyAddr, 1); err == nil {
 		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-			totalEnergy = wb.totalEnergy
+			implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 		}
 	}
 
@@ -110,11 +105,11 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		l2 := binary.BigEndian.Uint16(b[2:4])
 		l3 := binary.BigEndian.Uint16(b[4:6])
 		if l1 != etekRegInvalidMeterAddr && l2 != etekRegInvalidMeterAddr && l3 != etekRegInvalidMeterAddr {
-			voltages = wb.voltages
+			implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 		}
 	}
 
-	return decorateEtek(wb, currentPower, totalEnergy, voltages), nil
+	return wb, nil
 }
 
 // NewEtek creates an ETEK EKEPC2 charger
@@ -128,6 +123,7 @@ func NewEtek(ctx context.Context, uri, device, comset string, baudrate int, prot
 	conn.Logger(log.TRACE)
 
 	wb := &Etek{
+		Caps: implement.New(),
 		log:  log,
 		conn: conn,
 	}

@@ -19,25 +19,12 @@
 			</div>
 			<hr class="my-4" />
 			<div v-if="showTokenForm">
-				<div class="d-flex justify-content-between align-items-center">
-					<label for="sponsorToken" class="fw-bold my-2">{{
-						$t("config.sponsor.enterYourToken")
-					}}</label>
-					<button
-						v-if="hasUiToken"
-						type="button"
-						class="btn btn-link btn-sm text-nowrap text-muted"
-						@click="
-							editMode = false;
-							values.token = '';
-						"
-					>
-						{{ $t("config.general.cancel") }}
-					</button>
-				</div>
+				<label for="sponsorToken" class="my-2">
+					{{ $t("config.sponsor.enterYourToken") }}
+				</label>
 				<textarea
 					id="sponsorToken"
-					v-model="values.token"
+					v-model.trim="values.token"
 					class="form-control mb-1"
 					required
 					rows="5"
@@ -54,12 +41,24 @@
 						}}</a>
 					</template>
 				</i18n-t>
+				<div v-if="hasUiToken" class="d-flex justify-content-end mt-3">
+					<button
+						type="button"
+						class="btn btn-link text-nowrap text-muted"
+						@click="
+							editMode = false;
+							values.token = '';
+						"
+					>
+						{{ $t("config.general.cancel") }}
+					</button>
+				</div>
 			</div>
 			<div v-else-if="token">
 				<label for="existingToken" class="fw-bold my-2">{{
 					$t("config.sponsor.yourToken")
 				}}</label>
-				<div class="d-flex align-items-start gap-2 text-muted">
+				<div class="text-muted">
 					<input
 						id="existingToken"
 						:value="token"
@@ -68,7 +67,9 @@
 						class="form-control"
 						:class="{ 'is-invalid': error }"
 					/>
-					<span v-if="fromYaml" class="text-muted text-nowrap align-self-center ms-2">
+				</div>
+				<div class="d-flex justify-content-end mt-2">
+					<span v-if="fromYaml" class="text-nowrap small text-muted">
 						{{ $t("config.sponsor.viaYaml") }}
 					</span>
 					<button
@@ -137,8 +138,7 @@ export default {
 		handlePaste(event, values) {
 			event.preventDefault();
 			const text = event.clipboardData.getData("text");
-			const cleaned = cleanYaml(text, "sponsortoken");
-			values.token = cleaned;
+			values.token = cleanYaml(text, "sponsortoken").trim();
 		},
 	},
 };

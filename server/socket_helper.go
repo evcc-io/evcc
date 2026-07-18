@@ -30,7 +30,7 @@ func encodeSliceAsString(v any) (string, error) {
 	return fmt.Sprintf("[%s]", strings.Join(res, ",")), nil
 }
 
-func socketEncode(pval any) string {
+func socketEncode(key string, pval any) string {
 	var (
 		val string
 		err error
@@ -44,7 +44,8 @@ func socketEncode(pval any) string {
 	}
 
 	if err != nil {
-		panic(err)
+		log.ERROR.Printf("invalid data for key %s in socket encode: %v", key, pval)
+		return "null"
 	}
 
 	return val

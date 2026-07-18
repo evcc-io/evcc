@@ -22,10 +22,27 @@ The following describes each possible element in a yaml file
 
 Each product contains:
 
-- `brand`: an optional brand description of the product
-- `description`: an optional description e.g. of the product model. Expects `generic`, `de`, `en`: an optional description of the product
+- `brand`: company that makes the product or offers the service. No regions, variants, or API names — those, if required for clarity, belong in `description`.
+- `description`: product, service, model, or API name. Expects `generic`, `de`, `en`.
 
-Either `brand`, or `description` need to be set.
+Either `brand` or `description` needs to be set. Examples by device class:
+
+- Vehicles — `brand` is the make, `description` the connected service:
+  - `brand: Hyundai`, `description.generic: Bluelink`
+  - `brand: Hyundai`, `description.generic: Bluelink (US)`
+- Chargers — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABL`, `description.generic: eMH1`
+  - `brand: ABL`, `description.generic: eMH2`
+  - `brand: Alfen`, `description.generic: Eve`
+- Meters — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABB`, `description.generic: A43`
+  - `brand: my-PV`, `description.generic: AC ELWA 2`
+- Tariffs — `brand` is the service provider, `description` the API variant:
+  - `brand: Electricity Maps`, `description.generic: Commercial API`
+  - `brand: Electricity Maps`, `description.generic: Free API`
+- Generic integrations (OSS tools, community projects): omit `brand`, put the project name in `description.generic`, set `group: generic`. Keep upstream casing (e.g. `TeslaFi`, `ioBroker.bmw`, `mg2mqtt`).
+
+Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
 
 ## `group`
 
@@ -33,14 +50,40 @@ Either `brand`, or `description` need to be set.
 
 ## `capabilities`
 
-`capabilities` provides an option to define special capabilities of the device as a list of strings
+`capabilities` provides an option to define special capabilities of the device as a list of strings.
 
-**Possible Values**:
+**Possible values**:
 
-- `iso151182`: If the charger supports communicating via ISO15118-2
-- `rfid`: If the charger supports RFID
-- `1p3p`: If the charger supports 1P/3P-phase switching
-- `smahems`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
+- `iso151182`: The device supports communicating via ISO 15118-2.
+- `mA`: The device supports granular (milliamp) current control.
+- `rfid`: The device supports RFID.
+- `1p3p`: The device supports 1P/3P phase switching.
+- `battery-control`: The device supports battery control.
+- `meter`: The device has a built-in energy meter.
+- `dim`: The device supports EnWG §14a dimming.
+- `curtail`: The device supports EEG §9 curtailment.
+
+`capabilities` can be set at two levels:
+
+- **Template level** (next to `template`): applies to every product.
+- **Product level** (under a `products` entry): applies to that product only.
+
+Both levels are merged, not overwritten: template-level capabilities are appended to each product's own list. A product cannot remove an inherited capability, and duplicates are rejected, so do not repeat a template-level capability on a product.
+
+**Example** (all products get `1p3p`; only the second product additionally gets `meter`):
+
+```yaml
+template: demo-charger
+capabilities: ["1p3p"]
+products:
+  - brand: Demo
+    description:
+      generic: Basic
+  - brand: Demo
+    description:
+      generic: Plus
+    capabilities: ["meter"] # effective: ["meter", "1p3p"]
+```
 
 ## `requirements`
 
@@ -65,7 +108,12 @@ Either `brand`, or `description` need to be set.
 - The content can be multiline
 - The content supports Markdown formatting
 - External URLs should always use Markdown link format with the hostname as display text: `[docs.example.com](https://docs.example.com/path/to/page)`. This provides clear context while keeping the text readable.
+- Omit `www.` from the display text: `[example.com](https://www.example.com/path)`
+- GitHub URLs use `github.com/user/repo` as display text: `[github.com/user/repo](https://github.com/user/repo)`
 - Use code formatting `` `text` `` for technical identifiers, tokens, configuration values, and entity patterns
+- Placeholder and example URLs (IP addresses, hostnames, device endpoints) should also use code formatting: `` `http://<charger-host>:8000/semp` ``, `` `ws://<evcc-host>:8887/` ``
+- Use angle-bracket placeholders for device addresses: `<evcc-host>`, `<charger-host>`, `<meter-host>`, `<inverter-host>`
+- Use only plain ASCII quotes (`”`, `’`) — never typographic/curly quotes (`”`, `”`, `„`, `’`, `’`)
 - Use bold formatting `**text**` sparingly and only for important warnings or critical information
 
 Example:
@@ -73,8 +121,34 @@ Example:
 ```
 en: |
   Requires `hcaptcha` token from [developer.example.com](https://developer.example.com/tokens).
+  Configure the SEMP base URL (`http://<charger-host>:8000/semp`).
+  Set the backend URL to `ws://<evcc-host>:8887/`.
 
   **Attention**: Token is only valid for 2 minutes.
+```
+
+## `caveats`
+
+`caveats` documents known limitations or unreliable behaviour of a device that otherwise works. This is distinct from `requirements.description`, which covers setup steps the user must perform.
+
+It is a list, so a device can have multiple caveats. Each entry has a language-specific `description` (`de`, `en`) and a `link`.
+
+Guidelines:
+
+- Add **one entry per distinct problem** (e.g. "unreliable meter" and "occasional reboots" are two entries); don't list the same problem twice.
+- Keep descriptions **as concise as possible** while still understandable.
+- Use **factual wording** describing the observed behaviour.
+- Always add a `link` to the single issue or discussion that best documents the problem, so the situation can be re-verified later. It is technically optional, but omitting it should be a rare exception.
+- The `description` follows the same Markdown formatting rules as `requirements.description` above.
+
+Example:
+
+```yaml
+caveats:
+  - description:
+      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+      en: Phase switching occasionally disables itself.
+    link: https://github.com/evcc-io/evcc/issues/21708
 ```
 
 ## `auth`

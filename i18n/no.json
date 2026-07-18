@@ -39,10 +39,19 @@
     "legendTopAutostart": "starter automatisk",
     "legendTopName": "batteriassistert lading",
     "legendTopSubline": "når hjemmebatteriet er over {soc}.",
+    "legendTopSublineAbove": "hvis over {soc}",
+    "legendTopSublineDisabled": "er {soc}.",
+    "legendTopSublineDisabledState": "deaktivert",
     "modalTitle": "Batteriinnstillinger",
+    "noBattery": "Ingen konfigurerte batterier.",
     "usageTab": "Batteribruk"
   },
   "config": {
+    "apiKey": {
+      "keyLabel": "API-nøkkel",
+      "regenerate": "Forny API-nøkkel",
+      "revealTitle": "API-nøkkel generert"
+    },
     "aux": {
       "description": "Enhet som justerer forbruket basert på tilgjengelig overskudd (som smarte varmtvannsberedere). evcc forventer at denne enheten reduserer strømforbruket ved behov.",
       "titleAdd": "Legg til selvregulerende forbruker",
@@ -57,9 +66,9 @@
       "titleEdit": "Rediger ladningsmåler"
     },
     "charger": {
-      "chargers": "EV-ladere",
+      "chargers": "Elbilladere",
       "generic": "Generiske integrasjoner",
-      "heatingdevices": "Oppvarmingsenheter",
+      "heatingdevices": "Varmeapparater",
       "ocppConfirmContinue": "Laderen din er ikke koblet til evcc ennå. Er du sikker på at du vil fortsette?",
       "ocppConnected": "Koblet til!",
       "ocppDescription": "evcc har en innebygd OCPP-server. Følg disse trinnene:",
@@ -70,7 +79,7 @@
       "ocppStep2": "Vent til laderen din kobles til evcc.",
       "ocppStep3": "Fortsett og fullfør konfigurasjonen.",
       "ocppWaiting": "Venter på tilkobling",
-      "switchsockets": "Omkoblingsbare stikkontakter",
+      "switchsockets": "Stikkontakter med bryter",
       "template": "Produsent",
       "titleAdd": {
         "charging": "Legg til lader",
@@ -97,6 +106,10 @@
       "title": "Laststyring",
       "usableMeters": "Brukbare målerreferanser"
     },
+    "consumer": {
+      "titleAdd": "Ny forbruksmåler",
+      "titleEdit": "Redigere forbruksmåler"
+    },
     "control": {
       "description": "Vanligvis er standardverdiene fine. Endre dem bare hvis du vet hva du gjør.",
       "descriptionInterval": "Oppdateringssyklus i sekunder. Definerer hvor ofte evcc leser målerdata og justerer ladingen. Standardverdien på 30 sekunder er et trygt valg. Enheter som kjøretøy, veggbokser og omformere trenger vanligvis flere sekunder på å justere sin atferd. Hvis komponentene dine reagerer raskt, kan du bruke lavere verdier. Vi anbefaler på det sterkeste at du ikke går under 10 sekunder. Hvis du observerer uregelmessig kontrollatferd eller hoppende effektverdier, velg et større intervall.",
@@ -105,7 +118,14 @@
       "labelResidualPower": "Restkraft",
       "title": "Kontrollatferd"
     },
+    "currency": {
+      "description": "Brukes til å formatere energipriser, kostnader og besparelser basert på din tariff.",
+      "example": "Ladeprisen din var {price}. Du sparte {amount}.",
+      "label": "Valuta",
+      "title": "Valuta"
+    },
     "deviceValue": {
+      "activeClients": "Aktive tilkoblinger",
       "amount": "Beløp",
       "broker": "Megler",
       "bucket": "Bucket",
@@ -119,21 +139,25 @@
       "chargedEnergy": "Ladet",
       "co2": "Nett CO₂",
       "configured": "Konfigurert",
+      "connected": "Tilkoblet",
       "connections": "Tilkoblinger",
       "controllable": "Kontrollerbar",
       "currency": "Valuta",
       "current": "Nåværende",
       "currentRange": "Nåværende",
+      "curtailLimit": "Grensen for innmatning",
       "detected": "Oppdaget",
       "dimmed": "Dempet",
       "enabled": "Aktivert",
       "energy": "Energi",
+      "events": "Hendelser",
       "feedinPrice": "Innmatingspris",
+      "forecast": "Varsel",
       "gridPrice": "Nettpris",
       "heaterTempLimit": "Varmebegrensning",
-      "hemsActiveLimit": "Aktiv grense",
-      "hemsType": "Kommunikasjon",
       "identifier": "RFID-Identifikator",
+      "max": "maks",
+      "messengers": "Tjenester",
       "no": "nei",
       "odometer": "Kilometer teller",
       "org": "Organisasjon",
@@ -143,6 +167,8 @@
       "phases1p3p": "Faseomkobler",
       "power": "Effekt",
       "powerRange": "Effekt",
+      "price": "Pris",
+      "productionLimited": "Produksjon begrenset",
       "range": "Rekkevidde",
       "singlePhase": "Enfase",
       "soc": "Lade",
@@ -158,10 +184,6 @@
       "B": "B (tilkoblet)",
       "C": "C (lading)"
     },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via relé"
-    },
     "devices": {
       "auxMeter": "Smart forbruker",
       "batteryStorage": "Batterilagring",
@@ -172,11 +194,28 @@
       "loading": "Laster YAML-editor…"
     },
     "eebus": {
-      "description": "Konfigurasjon som gjør det mulig for evcc å kommunisere med andre EEBus-enheter.",
+      "certificate": {
+        "private": "Privat nøkkel",
+        "public": "Offentlig sertifikat",
+        "title": "Sertifikater"
+      },
+      "description": "Konfigurasjon som gjør det mulig for evcc å kommunisere med EEBus-kompatible enheter som ladere, eller en kontrollenhet fra nettselskapet ditt. All relevant initialisering og generering av sertifikater gjøres automatisk ved første oppstart.",
+      "descriptionAdvanced": "Ingen endringer nødvendig. Bare gjør endringer dersom du virkelig vet hva du driver med. Hvis du endrer enten SHIP-iden eller sertifikatene må du pare enhetene dine på nytt.",
+      "interfaces": "Grensesnitt",
+      "interfacesHelp": "Begrens nettverksgrensesnittene EEBus bruker for å unngå kommunikasjonsproblemer. La feltet stå tomt for å bruke alle grensesnitt. Kun én oppføring per linje.",
+      "port": "Port",
+      "portHelp": "Porten som skal brukes.",
+      "qr": "Paringskode",
+      "removeConfirm": "All konfigurasjon av EEBus vil fjernes. Nye sertifikater og identifikatorer genereres ved neste oppstart. Er du sikker?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanent enhetsidentifikator for identifisering på EEBus-nettverket.",
+      "shipidHelp": "Denne SHIP-IDen er koblet til sertifikatet under.",
+      "ski": "SKI",
+      "skiExplain": "Unik sikkerhetsidentifikator for paring av EEBus-enheter.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Aktiver brukergrensesnitt for funksjoner som fortsatt er under testing og kan endres i fremtidige versjoner.",
+      "description": "Gir tidlig tilgang til funksjoner som fortsatt er under testing. Disse kan være ustabile og kan endres eller fjernes i fremtidige versjoner.",
       "title": "Eksperimentell"
     },
     "ext": {
@@ -196,17 +235,21 @@
       "authPerformHint": "Åpnes i en ny fane. Gå tilbake hit for å fortsette.",
       "authPrepare": "Forbered tilkobling",
       "cancel": "Avbryt",
+      "change": "Endring",
       "clear": "Tydelig",
       "close": "Lukk",
+      "confirmSave": "Du har ulagrede endringer. Lagre nå?",
       "copied": "Kopiert!",
       "copy": "Kopier",
       "customHelp": "Opprett en brukerdefinert enhet ved hjelp av evccs plugin-system.",
       "customOption": "Brukerdefinert enhet",
       "delete": "Slett",
+      "dismiss": "Avvise",
       "docsLink": "Se documentasjonen.",
       "dragHandle": "Dra i håndtaket",
       "dragItem": "Draggable: {title}",
       "dragList": "Omordningsbar liste",
+      "error": "Feil",
       "experimental": "Eksperimentell",
       "forceSave": "Lagre likevel",
       "fromYamlHint": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her.",
@@ -637,32 +680,13 @@
       "validate": "bekreft"
     },
     "vehicle": {
-      "cancel": "Avbryt",
-      "chargingSettings": "Ladingsinnstillinger",
-      "defaultMode": "Standardmodus",
-      "defaultModeHelp": "Lademodus ved tilkobling av kjøretøyet.",
-      "delete": "Slett kjøretøy",
       "generic": "Andre integreringer",
-      "identifiers": "RFID-identifikatorer",
-      "identifiersHelp": "Liste over RFID-strenger for å identifisere kjøretøyet. Én oppføring per linje. Den gjeldende identifikatoren finner du på det respektive ladepunktet på oversiktssiden.",
-      "maximumCurrent": "Maksimal strøm",
-      "maximumCurrentHelp": "Må være større enn minimumsstrøm.",
-      "maximumPhases": "Maksimale faser",
-      "maximumPhasesHelp": "Hvor mange faser kan dette kjøretøyet lade med? Brukes til å beregne nødvendig minimum solenergioverskudd og planlegge varighet.",
-      "maximumPower": "Maksimal ladeeffekt",
-      "maximumPowerHelp": "Maksimal effekt kjøretøyet kan forbruke",
-      "minimumCurrent": "Minimum strøm",
-      "minimumCurrentHelp": "Gå kun under 6A hvis du vet hva du gjør.",
       "online": "Kjøretøy med nettbasert API",
       "primary": "Generiske integrasjoner",
-      "priority": "Prioritet",
-      "priorityHelp": "Høyere prioritet betyr at dette kjøretøyet får fortrinnsrett til overskuddsstrøm fra solceller.",
-      "save": "Lagre",
       "scooter": "Scooter",
       "template": "Fabrikat",
       "titleAdd": "Legg til kjøretøy",
-      "titleEdit": "Rediger kjøretøy",
-      "validateSave": "Bekreft og lagre"
+      "titleEdit": "Rediger kjøretøy"
     }
   },
   "footer": {
@@ -756,9 +780,9 @@
     },
     "solarAdjust": "Juster solprognosen basert på reelle produksjonsdata{percent}.",
     "type": {
-      "co2": "CO₂",
-      "price": "Pris",
-      "solar": "Solenergi"
+      "co2": "CO₂-Utslipp",
+      "price": "Nettpris",
+      "solar": "Solarproduksjon"
     }
   },
   "general": {
@@ -912,9 +936,9 @@
       "battery": "Batteri",
       "batteryCharge": "Batterilading",
       "batteryDischarge": "Batteri utlading",
+      "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "nettlading aktiv",
       "batteryGridChargeLimit": "nettlading når",
-      "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} av {total} ({soc})",
       "forecastTooltip": "prognose: gjenværende solenergiproduksjon i dag",
       "gridImport": "Lysnettimport",
@@ -934,8 +958,7 @@
       "waitForVehicle": "Klar. Venter på varmeapparatet…"
     },
     "hemsWarning": {
-      "description": "Redusert lading til ikke over {limit}.",
-      "title": "Ekstern grense:"
+      "title": "Ekstern grense aktiv"
     },
     "loadpoint": {
       "avgPrice": "⌀-pris",

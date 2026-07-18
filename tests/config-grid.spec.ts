@@ -62,7 +62,7 @@ test.describe("grid meter", async () => {
     // check in main ui
     await page.goto("/");
     await page.getByTestId("visualization").click();
-    await expect(page.getByTestId("energyflow")).toContainText(["Grid use", "5.0 kW"].join(""));
+    await expect(page.getByTestId("energyflow")).toContainText(["Grid import", "5.0 kW"].join(""));
 
     // delete #1
     await page.goto("/#/config");

@@ -104,6 +104,9 @@ grid:
         "-10.0 öre",
         "Grid CO₂",
         "300 g",
+        "Solar forecast",
+        "Outdoor temperature",
+        "15.5°C",
       ].join("")
     );
   });
@@ -117,6 +120,7 @@ grid:
     const tariffFeedin = page.getByTestId("tariff-feedIn");
     const tariffCo2 = page.getByTestId("tariff-co2");
     const tariffSolar = page.getByTestId("tariff-solar");
+    const tariffTemperature = page.getByTestId("tariff-temperature");
     const tariffPlanner = page.getByTestId("tariff-planner");
     const addTariff = page.getByRole("button", { name: "Add tariff" });
     const addForecast = page.getByRole("button", { name: "Add forecast" });
@@ -126,6 +130,9 @@ grid:
     const addGridExport = modal.getByRole("button", { name: "Add grid export tariff" });
     const addCo2Forecast = modal.getByRole("button", { name: "Add CO₂ forecast" });
     const addSolarForecast = modal.getByRole("button", { name: "Add solar forecast" });
+    const addTemperatureForecast = modal.getByRole("button", {
+      name: "Add temperature forecast",
+    });
     const addPlannerForecast = modal.getByRole("button", { name: "Add planner forecast" });
     const save = modal.getByRole("button", { name: "Validate & save" });
 
@@ -184,11 +191,22 @@ grid:
     await expectModalHidden(modal);
     await expect(tariffSolar.nth(1)).toContainText("Roof West");
 
+    // create temperature forecast
+    await addForecast.click();
+    await expectModalVisible(modal);
+    await addTemperatureForecast.click();
+    await modal.getByLabel("Provider").selectOption("Demo Temperature Forecast");
+    await save.click();
+    await expectModalHidden(modal);
+    await expect(tariffTemperature).toContainText("Outdoor temperature");
+    await expect(tariffTemperature).toContainText(["Forecast", "10.0°C – 20.0°C"].join(""));
+
     // create planner forecast
     await addForecast.click();
     await expectModalVisible(modal);
-    // co2 already exists, should not be offered
+    // co2 and temperature already exist, should not be offered
     await expect(addCo2Forecast).not.toBeVisible();
+    await expect(addTemperatureForecast).not.toBeVisible();
     await expect(addSolarForecast).toBeVisible();
     await expect(addPlannerForecast).toBeVisible();
     await addPlannerForecast.click();
@@ -214,12 +232,16 @@ grid:
     await expect(tariffSolar).toHaveCount(2);
     await expect(tariffSolar.nth(0)).toContainText("Roof South");
     await expect(tariffSolar.nth(1)).toContainText("Roof West");
+    await expect(tariffTemperature).toBeVisible();
+    await expect(tariffTemperature).toContainText("Outdoor temperature");
     await expect(tariffPlanner).toBeVisible();
     await expect(tariffPlanner).toContainText("Price");
 
     // delete all in reverse order
     await deleteTariff(modal, tariffPlanner);
     await expect(tariffPlanner).toHaveCount(0);
+    await deleteTariff(modal, tariffTemperature);
+    await expect(tariffTemperature).toHaveCount(0);
     await deleteTariff(modal, tariffSolar, 1);
     await expect(tariffSolar).toHaveCount(1);
     await deleteTariff(modal, tariffSolar, 0);
@@ -233,6 +255,12 @@ grid:
     await expect(tariffGrid).toHaveCount(0);
 
     // final state: both add buttons visible again
+    await expect(addTariff).toBeVisible();
+    await expect(addForecast).toBeVisible();
+
+    // deletes must not leave stale refs behind that break the next start
+    await restart();
+    await page.reload();
     await expect(addTariff).toBeVisible();
     await expect(addForecast).toBeVisible();
   });
@@ -336,5 +364,56 @@ grid:
     await expectModalHidden(modal);
     await expect(tariffGrid).toBeVisible();
     await expect(tariffGrid).toContainText(["Forecast", "10.0 ct – 30.0 ct"].join(""));
+  });
+
+  test("charges zones", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const modal = page.getByTestId("tariff-modal");
+    const tariffGrid = page.getByTestId("tariff-grid");
+    const save = modal.getByRole("button", { name: "Validate & save" });
+
+    await page.getByRole("button", { name: "Add tariff" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Add grid import tariff" }).click();
+    await modal.getByLabel("Provider").selectOption("Demo Market Price");
+
+    // expand advanced settings to reveal charges + chargesZones
+    await modal.getByRole("button", { name: "Advanced" }).click();
+    await expect(modal.getByText("Charges zones")).toBeVisible();
+
+    // base charge applies when no zone matches
+    await modal.getByLabel("Charge").fill("20");
+
+    // chargesZones uses the "Charge" label override (not "Price"). Negative
+    // values must be accepted to support reduced peak-hour grid fees.
+    await modal.getByRole("button", { name: "Add zone" }).click();
+    const zoneForm = modal.getByTestId("property-zone");
+    await expect(zoneForm.getByLabel("Charge")).toBeVisible();
+    await expect(zoneForm.getByLabel("Price")).not.toBeVisible();
+    await zoneForm.getByLabel("Charge").fill("-2.5");
+    await zoneForm.getByLabel("From", { exact: true }).fill("00:00");
+    await zoneForm.getByLabel("To", { exact: true }).fill("06:00");
+    await zoneForm.getByRole("button", { name: "Save", exact: true }).click();
+
+    const zones = modal.getByTestId("property-zone");
+    await expect(zones).toHaveCount(1);
+    await expect(zones.first()).toContainText(["-2.5 ct", "00:00 – 06:00"].join(""));
+
+    // round-trip persistence
+    await save.click();
+    await expectModalHidden(modal);
+    await expect(tariffGrid).toBeVisible();
+
+    await restart();
+    await page.reload();
+
+    await tariffGrid.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await modal.getByRole("button", { name: "Advanced" }).click();
+    await expect(modal.getByLabel("Charge")).toHaveValue("20");
+    await expect(zones).toHaveCount(1);
+    await expect(zones.first()).toContainText(["-2.5 ct", "00:00 – 06:00"].join(""));
   });
 });

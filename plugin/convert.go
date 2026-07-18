@@ -71,3 +71,23 @@ func (o *convertPlugin) IntSetter(param string) (func(int64) error, error) {
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
 }
+
+var _ BoolSetter = (*convertPlugin)(nil)
+
+func (o *convertPlugin) BoolSetter(param string) (func(bool) error, error) {
+	switch o.Convert {
+	case "bool2int":
+		set, err := o.Set.IntSetter(o.ctx, param)
+
+		return func(val bool) error {
+			var i int64
+			if val {
+				i = 1
+			}
+			return set(i)
+		}, err
+
+	default:
+		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
+	}
+}

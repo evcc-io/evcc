@@ -59,9 +59,14 @@ params:
       de: Passwort
       en: Password
     help:
-      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
-      en: Use single quotes in case of leading zeros
+      de: Zugangspasswort des Dienstes
+      en: Service account password
     mask: true
+  - name: email
+    description:
+      de: E-Mail-Adresse
+      en: Email address
+    example: "user@example.com"
   - name: capacity
     unit: kWh
     description:
@@ -94,11 +99,12 @@ params:
       de: Maximale Phasenanzahl
       en: Maximum number of phases
     help:
-      de: Die maximale Anzahl der Phasen welche genutzt werden können
-      en: The maximum number of phases which can be used
-    example: 3
-    type: int
+      de: Wird für die Bestimmung des minimalen Solar-Überschusses und der Planungsdauer verwendet.
+      en: Used to determine the minimum solar surplus and plan duration.
+    type: choice
+    choice: ["1", "2", "3"]
   - name: connector
+    type: int
     description:
       en: Connector number
       de: Anschlussnummer
@@ -124,12 +130,13 @@ params:
     example: 10s
     type: duration
   - name: mode
+    deprecated: true
     description:
       de: Standardlademodus
       en: Default charging mode
     help:
-      de: Wird beim Anschließen eines Fahrzeugs verwendet. Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
-      en: Used when a vehicle is connected. Possible values are Off, Now, MinPV and PV, or empty if none should be set
+      de: Wird beim Anschließen eines Fahrzeugs gesetzt. Leer lassen, um den aktuellen Modus beizubehalten.
+      en: Applied when a vehicle is connected. Leave empty to keep the current mode.
     type: chargemodes
   - name: minsoc
     unit: "%"
@@ -157,20 +164,20 @@ params:
     unit: A
     description:
       de: Minimale Stromstärke
-      en: Minimum amperage
+      en: Minimum current
     help:
       de: Definiert die minimale Stromstärke pro angeschlossener Phase die genutzt werden kann
-      en: The minimum amperage per connected phase that can be used
+      en: The minimum current per connected phase that can be used
     example: 6
     type: int
   - name: maxcurrent
     unit: A
     description:
       de: Maximale Stromstärke
-      en: Maximum amperage
+      en: Maximum current
     help:
       de: Definiert die maximale Stromstärke pro angeschlossener Phase die genutzt werden kann
-      en: The maximum amperage per connected phase that can be used
+      en: The maximum current per connected phase that can be used
     example: 16
     type: int
   - name: maxpower
@@ -182,21 +189,22 @@ params:
       de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. _Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst._
       en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. _The offered current of the loadpoint is not affected._
     type: int
+    example: 10000
   - name: identifiers
     description:
-      de: Identifikation
-      en: Identification
+      de: RFID-Identifikation
+      en: RFID identification
     help:
-      de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/features/vehicle"
-      en: "Mostly this can be added later, see: https://docs.evcc.io/en/docs/features/vehicle"
+      de: "Für die Zuordnung des Fahrzeugs an einen Ladepunkt via RFID-Karte. Die Kennung wird am Ladepunkt angezeigt. Übernehme den Wert von dort. [Mehr erfahren.](https://docs.evcc.io/docs/features/vehicle)"
+      en: "Used to assign the vehicle to a loadpoint via RFID card. The identifier is shown on the loadpoint. Copy the value from there. [Learn more.](https://docs.evcc.io/en/docs/features/vehicle)"
     type: list
   - name: priority
     description:
       de: Priorität
       en: Priority
     help:
-      de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von PV-Energie
-      en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating pv energy
+      de: Priorität des Ladepunktes oder Fahrzeugs in Relation zu anderen Ladepunkten oder Fahrzeugen für die Zuweisung von Überschussenergie (höhere Werte, höhere Priorität).
+      en: Priority of the loadpoint or vehicle in relation to other loadpoints or vehicles for allocating surplus energy (higher values, higher priority).
     type: int
   - name: standbypower
     unit: W
@@ -286,13 +294,14 @@ params:
       generic: URL
   - name: ain
     private: true
+    required: true
     example: "307788992233"
     description:
       en: Actor Identification Number (AIN)
       de: Aktoridentifikationsnummer (AIN)
     help:
-      en: Printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: Printed on the type label on the back of the device.
+      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
   - name: coarsecurrent
     type: bool
     description:
@@ -311,14 +320,62 @@ params:
       de: Streaming Datenempfang erfolgt asynchron
   - name: welcomecharge
     type: bool
+    advanced: true
     description:
       en: Charge on connection
       de: Laden bei Verbindung
     help:
       en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
       de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
+  - name: climaterdisabled
+    type: bool
+    description:
+      en: Disable climater detection
+      de: Klimatisierungserkennung deaktivieren
+    help:
+      en: Ignore the vehicle's climater state for charge control, so charging stops at the SoC or energy limit even when the vehicle signals an active climater request.
+      de: Klimatisierungsstatus des Fahrzeugs für die Ladesteuerung ignorieren, sodass der Ladevorgang am SoC- oder Energielimit endet, auch wenn das Fahrzeug einen aktiven Klimatisierungswunsch signalisiert.
+  - name: autodetectdisabled
+    type: bool
+    description:
+      en: Exclude from auto detection
+      de: Von automatischer Erkennung ausschließen
+    help:
+      en: Ignore the vehicle for auto detection of connected vehicles
+      de: Das Fahrzeug von der automatischen Erkennung beim Anschließen eines Fahrzeugs ausschließen
+  - name: wakeupdisabled
+    type: bool
+    description:
+      en: Disable wake-up calls
+      de: Aufweck-Aufrufe deaktivieren
+    help:
+      en: Do not send wake-up calls to the vehicle or charger, useful for vehicles that refuse to charge after repeated wake-ups.
+      de: Keine Aufweck-Aufrufe an Fahrzeug oder Ladegerät senden, hilfreich bei Fahrzeugen, die nach wiederholtem Aufwecken das Laden verweigern.
+  - name: heating
+    type: bool
+    description:
+      en: Heating device
+      de: Wärmeerzeuger
+    help:
+      en: Shows °C instead of %
+      de: Zeigt °C anstatt % an
+  - name: integrateddevice
+    type: bool
+    description:
+      en: Integrated device
+      de: Integriertes Gerät
+    help:
+      en: Integrated device. No charging sessions
+      de: Fest angeschlossenes Gerät. Keine Ladevorgänge
+  - name: insecure
+    type: bool
+    advanced: true
+    description:
+      en: Accept self-signed certificates
+      de: Selbstsignierte Zertifikate akzeptieren
   - name: defaultmode
     type: int
+    advanced: true
     usages: ["battery"]
     description:
       de: Standardmodus für die aktive Batteriesteuerung
@@ -383,10 +440,12 @@ params:
       de: Kanal
     type: int
   - name: clientid
+    required: true
     description:
       generic: Client ID
   - name: clientsecret
     mask: true
+    required: true
     description:
       generic: Client Secret
   - name: token
@@ -394,6 +453,7 @@ params:
     description:
       generic: Token
   - name: interval
+    type: duration
     description:
       de: Intervall
       en: Interval
@@ -406,12 +466,9 @@ params:
     mask: true
     description:
       generic: PIN
-  - name: serial_number
-    private: true
-    description:
-      en: Serial Number
-      de: Seriennummer
   - name: watchdog
+    type: duration
+    advanced: true
     description:
       generic: Watchdog
   - name: uuid
@@ -483,6 +540,26 @@ params:
     description:
       en: Price zones
       de: Preiszonen
+  - name: baudrate
+    description:
+      de: Baudrate
+      en: Baudrate
+    help:
+      de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+      en: Typical values are 9600, 19200, 38400, 57600, 115200
+    default: 9600
+    type: int
+  - name: currency
+    type: choice
+    default: EUR
+    required: true
+    description:
+      en: Currency
+      de: Währung
+  - name: redirecturi
+    required: true
+    description:
+      generic: Redirect URI
 
 presets:
   vehicle-base:
@@ -540,6 +617,24 @@ presets:
       advanced: true
     - name: welcomecharge
       advanced: true
+    - name: climaterdisabled
+      advanced: true
+    - name: autodetectdisabled
+      advanced: true
+    - name: wakeupdisabled
+      advanced: true
+  vehicle-online:
+    - name: climaterdisabled
+      advanced: true
+    - name: autodetectdisabled
+      advanced: true
+    - name: wakeupdisabled
+      advanced: true
+  charger-features:
+    - name: heating
+      advanced: true
+    - name: integrateddevice
+      advanced: true
   vehicle-language:
     - name: language
   tariff-base:
@@ -552,6 +647,15 @@ presets:
       help:
         de: Zusätzlicher fester Aufschlag pro kWh
         en: Additional fixed charge per kWh
+    - name: chargesZones
+      type: zones
+      advanced: true
+      description:
+        en: Charges zones
+        de: Aufschlagszonen
+      help:
+        de: Zeitabhängige Aufschläge, die den Standardaufschlag überschreiben.
+        en: Time-based grid fees that override the default charge.
     - name: tax
       type: float
       advanced: true
@@ -619,23 +723,9 @@ presets:
     - name: standbypower
       default: 15
     - name: integrateddevice
-      type: bool
       advanced: true
-      description:
-        en: Integrated device
-        de: Integriertes Gerät
-      help:
-        de: Fest angeschlossenes Gerät. Keine Ladevorgänge
-        en: Integrated device. No charging sessions
     - name: heating
-      type: bool
       advanced: true
-      description:
-        en: Heating device
-        de: Wärmeerzeuger
-      help:
-        de: Zeigt °C anstatt % an
-        en: Shows °C instead of %
     - name: icon
       advanced: true
 
@@ -734,6 +824,17 @@ presets:
     - name: maxchargepower
     - name: maxdischargepower
 
+  battery-capacity:
+    - name: capacity
+
+  battery-minmaxsoc:
+    - name: minsoc
+    - name: maxsoc
+
+  battery-power:
+    - name: maxchargepower
+    - name: maxdischargepower
+
 modbus:
   interfaces:
     rs485: ["rs485serial", "rs485tcpip"]
@@ -759,8 +860,8 @@ modbus:
         de: Baudrate
         en: Baudrate
       help:
-        de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-        en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+        de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+        en: Typical values are 9600, 19200, 38400, 57600, 115200
       default: 9600
       type: int
     - name: comset
@@ -836,3 +937,6 @@ devicegroups:
   solar:
     de: PV Vorhersage
     en: PV forecast
+  temperature:
+    de: Temperaturvorhersage
+    en: Temperature forecast
