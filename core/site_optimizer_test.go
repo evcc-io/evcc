@@ -300,3 +300,30 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	// no result yields an empty suggestion
 	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1, ""))
 }
+
+func TestDiffSuggestions(t *testing.T) {
+	site := &Site{}
+
+	charge := types.Suggestion{Action: actionCharge, Actionable: true}
+	chargeSame := types.Suggestion{Action: actionCharge, Actionable: true}
+	stop := types.Suggestion{Action: actionStop, Actionable: true}
+	notActionable := types.Suggestion{Action: actionCharge, Actionable: false}
+
+	// first actionable suggestion fires
+	assert.ElementsMatch(t, []string{"loadpoint:0"}, site.diffSuggestions(map[string]types.Suggestion{"loadpoint:0": charge}))
+
+	// unchanged action does not fire again
+	assert.Empty(t, site.diffSuggestions(map[string]types.Suggestion{"loadpoint:0": chargeSame}))
+
+	// changed action fires
+	assert.ElementsMatch(t, []string{"loadpoint:0"}, site.diffSuggestions(map[string]types.Suggestion{"loadpoint:0": stop}))
+
+	// non-actionable suggestion does not fire and clears tracking so the same
+	// action re-notifies when it becomes actionable again
+	assert.Empty(t, site.diffSuggestions(map[string]types.Suggestion{"loadpoint:0": notActionable}))
+	assert.ElementsMatch(t, []string{"loadpoint:0"}, site.diffSuggestions(map[string]types.Suggestion{"loadpoint:0": stop}))
+
+	// vanished device is pruned and re-notifies on return
+	assert.Empty(t, site.diffSuggestions(map[string]types.Suggestion{}))
+	assert.ElementsMatch(t, []string{"loadpoint:0"}, site.diffSuggestions(map[string]types.Suggestion{"loadpoint:0": stop}))
+}

@@ -585,6 +585,11 @@
           "messageDefault": "Finished charging {chargedEnergy}kWh in {chargeDuration}.",
           "title": "When charging stops",
           "titleDefault": "Charge finished"
+        },
+        "suggestion": {
+          "messageDefault": "Optimizer suggestion for {suggestionTitle}: if optimizer control were active it would apply '{suggestionAction}' now. Advisory only, nothing was changed. Experimental — feedback welcome at https://github.com/evcc-io/evcc/issues/31903",
+          "title": "When the optimizer's advisory action changes",
+          "titleDefault": "Optimizer suggestion"
         }
       },
       "eventMessage": "Message",
