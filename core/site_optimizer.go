@@ -375,7 +375,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		// meters configured but measurements not in yet: retry instead of
 		// consuming the slot gate
 		if len(site.batteryMeters) > 0 {
-			site.log.DEBUG.Printf("optimizer: battery data not ready for now: %s", site.batteryMeters)
+			site.log.DEBUG.Printf("optimizer: battery data not ready for now: %v", site.batteryMeters)
 			return errOptimizerNotReady
 		}
 		site.log.DEBUG.Printf("optimizer: no battery data skipping")
