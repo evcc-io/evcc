@@ -360,6 +360,8 @@ export interface Loadpoint {
   priority: number;
   pvAction: PV_ACTION;
   pvRemaining: number;
+  last24hEnergy?: number;
+  last7dEnergy?: number;
   sessionCo2PerKWh: number | null;
   sessionEnergy: number;
   sessionPrice: number | null;
@@ -373,6 +375,7 @@ export interface Loadpoint {
   smartFeedInPriorityNextStart: string | null;
   suggestion?: LoadpointSuggestion | null;
   title: string;
+  todayEnergy?: number;
   vehicleClimaterActive: boolean | null;
   vehicleDetectionActive: boolean;
   vehicleLimitSoc: number;
@@ -503,7 +506,9 @@ export type SessionInfoKey =
   | "avgPrice"
   | "price"
   | "emission"
-  | "co2";
+  | "co2"
+  | "last24hEnergy"
+  | "last7dEnergy";
 
 export interface SponsorStatus {
   name?: string;

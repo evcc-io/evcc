@@ -76,6 +76,9 @@ const (
 	ChargedEnergy     = "chargedEnergy"     // charged energy
 	ChargeDuration    = "chargeDuration"    // charge duration
 	ChargeTotalImport = "chargeTotalImport" // charge meter total import
+	TodayEnergy       = "todayEnergy"       // energy since midnight
+	Last24hEnergy     = "last24hEnergy"     // energy, rolling 24h
+	Last7dEnergy      = "last7dEnergy"      // energy, rolling 7 days
 
 	// session
 	ConnectedDuration       = "connectedDuration"       // connected duration
