@@ -452,6 +452,7 @@ params:
     description:
       generic: Token
   - name: interval
+    type: duration
     description:
       de: Intervall
       en: Interval
