@@ -111,16 +111,17 @@ sequence stays untouched.
       unchanged); with a cap a slot delivers `min(maxPower, avail)` and is skipped
       below `minPower`, so a power-limited slot counts proportionally less and the
       plan spills into more slots. Not yet wired into `Plan` (needs the ledger).
-- [ ] Site orchestration: reserve forced load → plan loadpoints in priority
-      order against the ledger, subtracting each reservation.
-- [ ] Allocate the shared budget in whole `EffectiveMinPower()` chunks
-      (semi-continuous, same rule as `evcc-io/optimizer#91`): a charger runs at
-      `>= effectiveMinPower` or off, never below. So at most
-      `floor(circuitBudget / effectiveMinPower)` planned sessions can run in a
-      slot; a loadpoint that cannot be granted its `effectiveMinPower` must be
-      left off for that slot and its plan shifted, not run sub-minimum.
-- [ ] Tests: joint feasibility (Σ planned power/slot ≤ circuit limit), deadline
-      met for all loadpoints, minSoc reserved first.
+- [x] Allocation algorithm (`planner.AllocateShared`): builds a `CapacityLedger`,
+      orders `SharedPlanRequest`s forced-first then priority-desc, plans each with
+      `planCapped` against the residual, and reserves its actual per-slot draw.
+- [x] Semi-continuous `EffectiveMinPower` chunks: a loadpoint is scheduled only
+      where `>= minPower` is free (`planCapped` skip); `evcc-io/optimizer#91` rule.
+- [x] Tests (`TestAllocateShared`): joint feasibility (Σ/slot ≤ budget),
+      full-power loadpoints can't share, small ones do, forced beats priority.
+- [ ] **Live wiring (remaining):** site gathers a `SharedPlanRequest` per
+      loadpoint on each circuit, calls `AllocateShared`, and feeds each plan back
+      into the loadpoint. Needs the parent/child circuit tree, dynamic limits,
+      and real-hardware validation on the breaker-protection path.
 
 ### Phase 3 — Joint optimisation (Option A), only if greedy proves insufficient
 - [ ] Extend the `optimizer` service with a shared-capacity constraint; keep B
