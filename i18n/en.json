@@ -447,6 +447,7 @@
         "heating": "Is set when on system start."
       },
       "defaultModeHelpKeep": "Keeps the last selected mode.",
+      "defaultModeKeep": "keep as is",
       "defaultModeLabel": "Default mode",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
@@ -1375,12 +1376,15 @@
       "emission": "Emission",
       "fallbackName": "Charging point",
       "finished": "Finish time",
+      "last24hEnergy": "Last 24h",
+      "last7dEnergy": "Last 7 days",
       "power": "Power",
       "price": "Cost",
       "remaining": "Remaining",
       "remoteDisabledHard": "{source}: turned off",
       "remoteDisabledSoft": "{source}: turned off adaptive solar-charging",
-      "solar": "Solar"
+      "solar": "Solar",
+      "todayEnergy": "Today"
     },
     "loadpointSettings": {
       "batteryBoost": {

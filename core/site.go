@@ -1081,14 +1081,18 @@ func (site *Site) update(lp updater) {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
-			if err := site.dimMeters(hemsDimmed(site.hems)); err != nil {
-				site.log.ERROR.Println(err)
+			if dim := hemsDimmed(site.hems); dim != nil {
+				if err := site.dimMeters(*dim); err != nil {
+					site.log.ERROR.Println(err)
+				}
 			}
 		})
 
 		wg.Go(func() {
-			if err := site.curtailPV(hemsCurtailed(site.hems)); err != nil {
-				site.log.ERROR.Println(err)
+			if hemsCurtailed(site.hems) != nil {
+				if err := site.curtailPV(site.hems.CurtailedPercent()); err != nil {
+					site.log.ERROR.Println(err)
+				}
 			}
 		})
 
