@@ -40,7 +40,8 @@ export function hasAppCapability(capability: string): boolean {
 
 type ToAppMessage =
   | { type: "online" | "offline" | "settings" }
-  | { type: "download"; url: string; headers?: Record<string, string> };
+  | { type: "download"; url: string; headers?: Record<string, string> }
+  | { type: "notification"; title?: string; message: string };
 
 export function sendToApp(data: ToAppMessage) {
   window.ReactNativeWebView?.postMessage(JSON.stringify(data));
@@ -56,5 +57,11 @@ export function dispatchDownload(url: string, headers?: Record<string, string>):
   if (!hasAppCapability("download")) return false;
   const absolute = new URL(url, window.location.href).toString();
   sendToApp({ type: "download", url: absolute, headers });
+  return true;
+}
+
+export function dispatchNotification(title: string, message: string): boolean {
+  if (!hasAppCapability("notification")) return false;
+  sendToApp({ type: "notification", title, message });
   return true;
 }

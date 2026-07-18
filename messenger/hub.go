@@ -112,10 +112,6 @@ func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
-		if len(h.sender) == 0 {
-			continue
-		}
-
 		definition, ok := h.definitions[ev.Event]
 		if !ok {
 			continue
@@ -141,6 +137,12 @@ func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 		if strings.TrimSpace(msg) == "" {
 			continue
 		}
+
+		// forward to connected UIs, e.g. the app routes this to native notifications
+		valueChan <- util.Param{Key: "message", Val: struct {
+			Title   string `json:"title"`
+			Message string `json:"message"`
+		}{title, msg}}
 
 		for _, sender := range h.sender {
 			go sender.Send(title, msg)

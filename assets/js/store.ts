@@ -3,6 +3,7 @@ import type { State } from "./types/evcc";
 import { convertToUiLoadpoints } from "./uiLoadpoints";
 import { useDebouncedComputed } from "./utils/useDebouncedComputed";
 import settings from "./settings";
+import { dispatchNotification } from "./utils/native";
 
 function setProperty(obj: object, props: string[], value: any) {
   const prop = props.shift();
@@ -61,6 +62,8 @@ const store: Store = {
     Object.keys(msg).forEach(function (k) {
       if (k === "log") {
         window.app.raise(msg[k]);
+      } else if (k === "message") {
+        dispatchNotification(msg[k].title, msg[k].message);
       } else {
         setProperty(state, k.split("."), msg[k]);
       }
