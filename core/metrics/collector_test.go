@@ -330,6 +330,56 @@ func TestCollectorRecoversDowntimeViaMeterReadings(t *testing.T) {
 	require.Equal(t, 201.4, *e.ReturnEnergyMeter)
 }
 
+// TestCollectorRecoveryWithinCurrentSlot verifies that a restart that stays
+// within the slot after the last persisted one keeps its meter delta
+// time-correct: the catchup slot is persisted normally and not flagged
+// recovered, so it stays in the household profile.
+func TestCollectorRecoveryWithinCurrentSlot(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Grid, "within", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// seed meters, advance a slot, cross into 00:30 to persist slot 00:15
+	require.NoError(t, col.AddEnergy(new(100.0), new(200.0), 0))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(100.5), new(200.2), 0))
+	clk.Add(15 * time.Minute) // 00:30
+	require.NoError(t, col.AddEnergy(new(101.0), new(200.4), 0))
+
+	// restart 10min into slot 00:30 - the slot right after the last persisted
+	clk.Add(10 * time.Minute) // 00:40
+	col2, err := NewCollector(Grid, "within", "", WithClock(clk))
+	require.NoError(t, err)
+	require.True(t, col2.restored)
+	require.EqualValues(t, 15*60, col2.lastSlot, "last persisted slot is 00:15")
+
+	// recovery happens during the current slot: the meter delta is applied but
+	// no boundary was skipped, so nothing is persisted yet
+	require.NoError(t, col2.AddEnergy(new(103.0), new(201.4), 0))
+	require.InDelta(t, 2.0, col2.accu.Energy, 1e-10)
+	var count int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ?", col2.entity.Id).Count(&count).Error)
+	require.EqualValues(t, 2, count, "current slot not persisted mid-slot")
+
+	// cross into 00:45: slot 00:30 persisted with the full slot delta, not recovered
+	clk.Add(5 * time.Minute) // 00:45
+	require.NoError(t, col2.AddEnergy(new(103.5), new(201.4), 0))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 30*60).First(&m).Error)
+	require.InDelta(t, 2.5, m.Energy, 1e-10)
+	require.False(t, m.Recovered, "contiguous restart with meter totals is not recovered")
+
+	// no slot is excluded from the household profile
+	var recovered int64
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND recovered", col2.entity.Id).Count(&recovered).Error)
+	require.Zero(t, recovered)
+}
+
 // TestCreateEntityRefreshesTitle verifies that a second call to createEntity
 // with a non-empty title fills in (or updates) the title on an existing row,
 // and that passing an empty title never clears a previously stored value.

@@ -24,7 +24,8 @@ type Collector struct {
 	entity     entity
 	accu       *Accumulator
 	started    time.Time
-	restored   bool // meter readings seeded from db
+	restored   bool  // meter readings seeded from db
+	lastSlot   int64 // ts of the last persisted slot at restore, for contiguity check
 	statsCache EnergyStats
 }
 
@@ -43,6 +44,9 @@ func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collec
 	if state := (AccumulatorState{entity.EnergyMeter, entity.ReturnEnergyMeter}); state.CompleteFor(group) {
 		c.accu.Restore(state)
 		c.restored = true
+		// last persisted slot distinguishes a contiguous restart (energy stays
+		// time-correct) from one that skipped whole slots (inflated catchup)
+		db.Instance.Model(new(meter)).Where("meter = ?", entity.Id).Select("COALESCE(max(ts), 0)").Scan(&c.lastSlot)
 	}
 
 	return c, nil
@@ -114,8 +118,11 @@ func (c *Collector) process(fun func()) error {
 		// preceding slot boundary - false for the mid-slot first slot and
 		// for a slot reached after a data gap
 		if c.started.Equal(slotStart.Add(-tariff.SlotDuration)) {
-			// the first slot after a restore carries the downtime catchup energy
-			if err := c.persist(c.restored); err != nil {
+			// a restore that skipped whole slots dumps the downtime energy into
+			// this single slot, inflating it - a contiguous restart keeps the
+			// slot's meter delta time-correct, so only the former is recovered
+			recovered := c.restored && c.started.Unix() != c.lastSlot+int64(tariff.SlotDuration.Seconds())
+			if err := c.persist(recovered); err != nil {
 				return err
 			}
 		}
