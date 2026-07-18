@@ -108,7 +108,7 @@ func (m *hoymilesDTUModbusTCP) panelPower(panelIndex int) (float64, float64, boo
 
 func (m *hoymilesDTUModbusTCP) readCurrentValues() (hoymilesDTUValues, error) {
 	var values hoymilesDTUValues
-	for i := 0; i < hoymilesMaxPanels; i++ {
+	for i := range hoymilesMaxPanels {
 		power, cumulative, found, err := m.panelPower(i)
 		if err != nil {
 			return hoymilesDTUValues{}, err

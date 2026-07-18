@@ -22,6 +22,7 @@ type ModbusSunspec struct {
 	device *sunsdev.SunSpec
 	op     modbus.SunSpecOperation
 	scale  float64
+	mask   uint64
 }
 
 func init() {
@@ -34,6 +35,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		modbus.Settings `mapstructure:",squash"`
 		Value           []string
 		Scale           float64
+		BitMask         string
 		Delay           time.Duration
 		ConnectDelay    time.Duration
 		Timeout         time.Duration
@@ -43,6 +45,14 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	var mask uint64
+	if cc.BitMask != "" {
+		var err error
+		if mask, err = modbus.DecodeMask(cc.BitMask); err != nil {
+			return nil, err
+		}
 	}
 
 	modbus.Lock()
@@ -104,6 +114,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		conn:   conn,
 		device: device,
 		scale:  cc.Scale,
+		mask:   mask,
 	}
 
 	for _, op := range ops {
@@ -116,12 +127,15 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	return nil, fmt.Errorf("sunspec model not found: %v", ops)
 }
 
+// recoverToError converts a panic into *err, for sunspec point access that panics on type mismatch.
+func recoverToError(err *error) {
+	if r := recover(); r != nil {
+		*err = fmt.Errorf("panic: %v", r)
+	}
+}
+
 func (m *ModbusSunspec) floatGetter() (f float64, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
-		}
-	}()
+	defer recoverToError(&err)
 
 	res, err := m.device.QueryPoint(
 		m.conn,
@@ -157,12 +171,65 @@ func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
-func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
+var _ BoolGetter = (*ModbusSunspec)(nil)
+
+// BoolGetter treats any non-zero raw value as true, ANDing an optional bitmask in first.
+// Reads the point directly since FloatGetter's ScaledValue panics on enum/bitfield points.
+func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
+	return func() (res bool, err error) {
+		defer recoverToError(&err)
+
+		_, point, err := m.blockPoint()
+		if err != nil {
+			return false, err
 		}
-	}()
+
+		val, err := pointInt64(point)
+		if err != nil {
+			return false, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
+		}
+
+		return sunspecBool(val, m.mask), nil
+	}, nil
+}
+
+// pointInt64 reads a sunspec point's raw (unscaled) value as int64.
+func pointInt64(point sunspec.Point) (int64, error) {
+	switch point.Type() {
+	case typelabel.Bitfield16:
+		return int64(point.Bitfield16()), nil
+	case typelabel.Bitfield32:
+		return int64(point.Bitfield32()), nil
+	case typelabel.Enum16:
+		return int64(point.Enum16()), nil
+	case typelabel.Enum32:
+		return int64(point.Enum32()), nil
+	case typelabel.Int16:
+		return int64(point.Int16()), nil
+	case typelabel.Int32:
+		return int64(point.Int32()), nil
+	case typelabel.Int64:
+		return point.Int64(), nil
+	case typelabel.Uint16:
+		return int64(point.Uint16()), nil
+	case typelabel.Uint32:
+		return int64(point.Uint32()), nil
+	case typelabel.Uint64:
+		return int64(point.Uint64()), nil
+	default:
+		return 0, fmt.Errorf("unsupported type: %s", point.Type())
+	}
+}
+
+func sunspecBool(val int64, mask uint64) bool {
+	if mask != 0 {
+		return uint64(val)&mask != 0
+	}
+	return val != 0
+}
+
+func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
+	defer recoverToError(&err)
 
 	block, point, err = m.device.QueryPointAny(
 		m.conn,
@@ -189,11 +256,7 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 	typ := point.Type()
 
 	return func(val float64) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic: %v", r)
-			}
-		}()
+		defer recoverToError(&err)
 
 		val = val * m.scale
 		switch typ {
@@ -219,11 +282,7 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 	typ := point.Type()
 
 	return func(val int64) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic: %v", r)
-			}
-		}()
+		defer recoverToError(&err)
 
 		val = int64(float64(val) * m.scale)
 

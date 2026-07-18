@@ -218,6 +218,7 @@ func TestPvScalePhases(t *testing.T) {
 		vehicle := api.NewMockVehicle(ctrl)
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 		vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+		vehicle.EXPECT().Features().AnyTimes()
 
 		lp := &Loadpoint{
 			log:              util.NewLogger("foo"),
@@ -689,10 +690,10 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 	attachListeners(t, lp)
 
 	// first cycle attempts the switch, gets api.ErrNotAvailable, adopts 3p
-	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.Equal(t, 3, lp.GetPhases(), "configured phases should be adopted")
 
 	// second cycle must not attempt the switch again (Phases1p3p .Times(1))
-	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.Equal(t, 3, lp.GetPhases())
 }

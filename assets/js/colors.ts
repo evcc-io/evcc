@@ -24,11 +24,13 @@ const colors: {
   pricePerKWh: string | null;
   price: string | null;
   co2: string | null;
+  temperature: string | null;
   export: string | null;
   background: string | null;
   light: string | null;
   selfPalette: string[];
   palette: string[];
+  batteryPalette: string[];
 } = reactive({
   text: null,
   muted: null,
@@ -39,6 +41,7 @@ const colors: {
   pricePerKWh: null,
   price: null,
   co2: null,
+  temperature: null,
   export: null,
   background: null,
   light: null,
@@ -69,10 +72,11 @@ const colors: {
     "#6D28D9", // violet
     "#334155", // gray
   ],
+  batteryPalette: ["#0BA631", "#7FC41B", "#0A6E63", "#34D399", "#0E9E8F"],
 });
 
 // normalize 6-digit hex to 8-digit, then replace alpha
-const setAlpha = (color: string | null, alpha: string): string | undefined => {
+export const setAlpha = (color: string | null, alpha: string): string | undefined => {
   if (!color) return undefined;
   const c = color.trim().toLowerCase();
   // #rrggbb → append alpha, #rrggbbaa → replace alpha
@@ -113,11 +117,28 @@ export function resolveColors(ids: string[], overrides: DeviceColors = {}): Devi
   return result;
 }
 
+// dedicated battery palette, assigned by index (battery page + history battery group)
+export function batteryColor(index: number): string {
+  const p = colors.batteryPalette;
+  return p[index % p.length] || "";
+}
+
 export const dimColor = (color: string | null) => setAlpha(color, "20");
 
 export const lighterColor = (color: string | null) => setAlpha(color, "aa");
 
 export const fullColor = (color: string | null) => setAlpha(color, "ff");
+
+// Darken an opaque hex color: scale rgb toward black by `factor` (0-1), stays opaque.
+export function darken(color: string, factor: number): string {
+  if (!/^#[0-9a-f]{6}$/i.test(color)) return color;
+  const f = Math.max(0, Math.min(1, factor));
+  const channel = (o: number) =>
+    Math.round(parseInt(color.slice(o, o + 2), 16) * f)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${channel(1)}${channel(3)}${channel(5)}`;
+}
 
 export function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
@@ -128,6 +149,7 @@ export function updateCssColors() {
   colors.grid = style.getPropertyValue("--evcc-grid");
   colors.price = style.getPropertyValue("--evcc-price");
   colors.co2 = style.getPropertyValue("--evcc-co2");
+  colors.temperature = style.getPropertyValue("--evcc-temperature");
   colors.export = style.getPropertyValue("--evcc-export-contrast");
   colors.background = style.getPropertyValue("--evcc-background");
   colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");

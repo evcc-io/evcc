@@ -93,6 +93,11 @@ func (r *Remote) Enabled() bool {
 }
 
 func (r *Remote) connect() {
+	if !sponsor.IsAuthorizedForApi() {
+		r.log.WARN.Println("remote access requires a sponsor token")
+		return
+	}
+
 	r.mu.Lock()
 	token := r.settings.Token
 	r.mu.Unlock()

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -54,8 +55,14 @@ func (m *Monitor[T]) SetFunc(set func(T) T) {
 
 // Get returns the current value or ErrOutdated if timeout exceeded
 func (m *Monitor[T]) Get() (T, error) {
+	return m.GetContext(context.Background())
+}
+
+// GetContext returns the current value or ErrOutdated if timeout exceeded.
+// The context can cancel the blocking first-call wait.
+func (m *Monitor[T]) GetContext(ctx context.Context) (T, error) {
 	var res T
-	err := m.GetFunc(func(v T) {
+	err := m.GetFuncContext(ctx, func(v T) {
 		res = v
 	})
 	return res, err
@@ -63,6 +70,12 @@ func (m *Monitor[T]) Get() (T, error) {
 
 // GetFunc returns the current value or ErrOutdated if timeout exceeded while holding the lock
 func (m *Monitor[T]) GetFunc(get func(T)) error {
+	return m.GetFuncContext(context.Background(), get)
+}
+
+// GetFuncContext returns the current value or ErrOutdated if timeout exceeded while holding the lock.
+// The context can cancel the blocking first-call wait.
+func (m *Monitor[T]) GetFuncContext(ctx context.Context, get func(T)) error {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -94,6 +107,8 @@ func (m *Monitor[T]) GetFunc(get func(T)) error {
 			case <-m.done:
 				// got value and updated timestamp
 				err = nil
+			case <-ctx.Done():
+				err = ctx.Err()
 			case <-m.clock.After(m.timeout):
 			}
 

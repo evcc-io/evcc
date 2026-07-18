@@ -18,9 +18,7 @@ params:
   - name: apiKey
     deprecated: true
   - name: clientid
-    required: true
   - name: clientsecret
-    required: true
   - name: zone
     description:
       de: Zonencode
@@ -40,11 +38,11 @@ render: |
       clientsecret: {{ .clientsecret }}
       tokenurl: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
       scopes: [esp]
-    uri: https://explore.traxes.io/greengrid-compass/v1/co2-intensity-forecast?zone={{ .zone }}&start={{ `{{ now | date "2006-01-02T" }}` }}00:00:00Z&end={{ `{{ addDate now 0 0 5 | date "2006-01-02T" }}` }}00:00:00Z&time-resolution=hourly&calculation-type=production&emission-type=operational&forecast-type=actual
+    uri: https://explore.traxes.io/explore/greengrid-compass/v1/co2-intensity-forecast?zone={{ .zone }}&start={{ `{{ now | date "2006-01-02T" }}` }}00:00:00Z&end={{ `{{ addDate now 0 0 5 | date "2006-01-02T" }}` }}00:00:00Z&time-resolution=hourly&calculation-type=production&emission-type=operational&forecast-type=actual
     jq: |
       .measurements[0].measurementValues |  map({ 
         "start": .timestamp,
-        "end": (.timestamp | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime + 3600 | strftime("%FT%TZ")),
+        "end": (.timestamp | fromdateiso8601 + 3600 | todateiso8601),
         "value": .value
       }) | tostring
     cache: 1h

@@ -259,7 +259,7 @@ export default defineComponent({
 		selectedModbus(newValue: MODBUS_TYPE) {
 			this.$emit("update:modbus", newValue);
 		},
-		options(newValue: ModbusCapability[]) {
+		capabilities(newValue: ModbusCapability[]) {
 			this.setProtocolByCapabilities(newValue);
 			this.$emit("update:modbus", this.selectedModbus);
 		},
@@ -288,7 +288,12 @@ export default defineComponent({
 	},
 	mounted() {
 		this.localDevice = this.device;
-		this.setConnectionAndProtocolByModbus(this.modbus);
+		if (this.modbus) {
+			this.setConnectionAndProtocolByModbus(this.modbus);
+		} else {
+			// new device: rs485-only templates default to RTU, not native TCP
+			this.setProtocolByCapabilities(this.capabilities);
+		}
 		this.$emit("update:modbus", this.selectedModbus);
 		this.updateServiceValues();
 	},

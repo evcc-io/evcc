@@ -296,23 +296,25 @@ func validateConfigurableCircuits(children []config.Config) error {
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name))) //nolint:govet
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
 
 	instance, err := newFromConf(ctx, cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 	}
 
+	// ctx lives for the device lifetime- only release it on failure
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
+
 	if e := h.Add(config.NewStaticDevice(cc, instance)); e != nil && err == nil {
 		err = &DeviceError{cc.Name, e}
 	}
 
-	// release resources
-	if err != nil {
-		cancel()
-	}
-
-	return err //nolint:govet
+	return err
 }
 
 // loggerForConfig creates a logger with sensible name for (custom) configurable device
@@ -326,12 +328,19 @@ func loggerForConfig(conf *config.Config) *util.Logger {
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf))) //nolint:govet
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf)))
 
 	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
 		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
 	}
+
+	// ctx lives for the device lifetime- only release it on failure
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
 
 	var instance T
 	if err == nil {
@@ -345,12 +354,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 		err = &DeviceError{cc.Name, e}
 	}
 
-	// release resources
-	if err != nil {
-		cancel()
-	}
-
-	return err //nolint:govet
+	return err
 }
 
 func configureMeters(static []config.Named, names ...string) error {
@@ -496,6 +500,10 @@ func configureVehicles(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
+			if _, ok := instance.OnIdentified().GetMode(); ok {
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+			}
+
 			mu.Lock()
 			defer mu.Unlock()
 			devs1 = append(devs1, config.NewStaticDevice(cc, instance))
@@ -519,6 +527,16 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
 				return nil
+			}
+
+			// migrate deprecated mode property to vehicle mode setting
+			if mode, ok := cc.Other["mode"].(string); ok && mode != "" {
+				key := fmt.Sprintf("vehicle.%s.%s", cc.Name, keys.Mode)
+				if _, err := settings.String(key); err != nil {
+					if _, err := api.ChargeModeString(mode); err == nil {
+						settings.SetString(key, mode)
+					}
+				}
 			}
 
 			instance, err := vehicleInstance(cc)
@@ -665,7 +683,7 @@ func configureDatabase(conf globalconfig.DB) error {
 	// persist unsaved settings on shutdown
 	shutdown.Register(persistSettings)
 
-	// persist unsaved settings every 30 minutes
+	// persist unsaved settings every minute
 	go func() {
 		for range time.Tick(time.Minute) {
 			persistSettings()
@@ -775,36 +793,85 @@ func configureGo(conf []globalconfig.Go) error {
 
 // setup HEMS
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
-	// use yaml if configured
-	if conf.Type == "" {
-		if settings.Exists(keys.Hems) {
-			*conf = globalconfig.Hems{}
-			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
-				return nil, err
-			}
-			yamlSource.hems = globalconfig.YamlSourceDb
-		}
-	} else {
+	if conf.Type != "" {
 		yamlSource.hems = globalconfig.YamlSourceFile
+
+		typ, other, err := config.CustomDevice(conf.Type, conf.Other)
+		if err != nil {
+			return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+		}
+
+		instance, err := hems.NewFromConfig(context.TODO(), typ, other, site)
+		if err != nil {
+			return nil, fmt.Errorf("failed configuring hems: %w", err)
+		}
+
+		site.SetHEMS(instance)
+
+		go instance.Run()
+
+		return instance, nil
 	}
 
-	if conf.Type == "" {
-		return nil, nil
+	// migrate legacy keys.Hems setting (pre-UI) to a device-managed custom entry
+	if err := migrateLegacyHemsSetting(); err != nil {
+		return nil, fmt.Errorf("migrating legacy hems setting: %w", err)
 	}
 
-	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
+	return configureDbHems(site)
+}
+
+// migrateLegacyHemsSetting moves a keys.Hems YAML setting to a device-managed custom hems entry.
+func migrateLegacyHemsSetting() error {
+	raw, err := settings.String(keys.Hems)
+	if err != nil || strings.TrimSpace(raw) == "" {
+		return nil
+	}
+
+	_, err = config.AddConfig(templates.Hems,
+		map[string]any{"yaml": raw},
+		config.WithProperties(config.Properties{Type: "custom"}),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+		return err
 	}
 
-	hems, err := hems.NewFromConfig(context.TODO(), typ, other, site)
+	log.INFO.Println("migrated legacy hems yaml setting to device config")
+	return settings.Delete(keys.Hems)
+}
+
+func configureDbHems(site *core.Site) (hemsapi.API, error) {
+	dev, err := config.ConfigurationByClass(templates.Hems)
+	if err != nil || dev == nil {
+		return nil, err
+	}
+
+	cc := dev.Named()
+
+	var instance hemsapi.API
+	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
-		return nil, fmt.Errorf("failed configuring hems: %w", err)
+		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
+	} else {
+		instance, err = hems.NewFromConfig(context.TODO(), typ, other, site)
+		if err != nil {
+			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
+		}
 	}
 
-	go hems.Run()
+	// register device even on factory error so UI can edit/delete the broken config
+	if addErr := config.Hems().Add(config.NewConfigurableDevice(dev, instance)); addErr != nil && err == nil {
+		err = &DeviceError{cc.Name, addErr}
+	}
 
-	return hems, nil
+	if err != nil {
+		return nil, err
+	}
+
+	site.SetHEMS(instance)
+
+	go instance.Run()
+	return instance, nil
 }
 
 // networkSettings reads/migrates network settings
@@ -842,7 +909,23 @@ func configureMDNS(conf globalconfig.Network) error {
 
 // setup OCPP
 func configureOCPP(cfg *ocpp.Config, externalUrl string) {
-	ocpp.Init(*cfg, externalUrl)
+	if settings.Exists(keys.Ocpp) {
+		if err := settings.Json(keys.Ocpp, cfg); err != nil {
+			log.WARN.Printf("ocpp: failed to load settings: %v", err)
+		}
+	}
+	ocpp.NewServer(*cfg, externalUrl)
+
+	// Load proxy forwarding rules from DB if present.
+	var rules []ocpp.ForwarderRule
+	if err := settings.Json(keys.OcppForwarder, &rules); err == nil && len(rules) > 0 {
+		// the forwarder relays through the central system; abort if it failed to start
+		if _, err := ocpp.Instance(); err != nil {
+			log.ERROR.Printf("ocpp: forwarder disabled: %v", err)
+			return
+		}
+		ocpp.ApplyForwarderRules(rules)
+	}
 }
 
 // setup EEBus
@@ -868,13 +951,24 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 	}
 
-	var err error
-	if eebus.Instance, err = eebus.NewServer(*conf); err != nil {
+	// generate a SHIP pairing secret for configs that predate SHIP pairing
+	if conf.Secret == "" {
+		secret, err := eebus.CreatePairingSecret()
+		if err != nil {
+			return err
+		}
+		conf.Secret = secret
+		if err := settings.SetJson(keys.EEBus, conf); err != nil {
+			return err
+		}
+	}
+
+	srv, err := eebus.NewServer(*conf)
+	if err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 
-	eebus.Instance.Run()
-	shutdown.Register(eebus.Instance.Shutdown)
+	shutdown.Register(srv.Shutdown)
 
 	return nil
 }
@@ -1134,6 +1228,7 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(conf.Planner, refs.Planner, &tariffs.Planner) })
 	eg.Go(func() error { return configureSolarTariffs(conf.Solar, refs.Solar, &tariffs.Solar) })
+	eg.Go(func() error { return configureTariff(conf.Temperature, refs.Temperature, &tariffs.Temperature) })
 	if err := eg.Wait(); err != nil {
 		return &tariffs, &ClassError{ClassTariff, err}
 	}
@@ -1305,12 +1400,17 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*util.Logger) coresettings.Settings) (*core.Loadpoint, error) {
 	log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(idx), idx)
 
-	collector, err := metrics.NewCollector(metrics.Loadpoint, name)
+	collector, err := metrics.NewCollector(metrics.Loadpoint, name, "")
 	if err != nil {
 		return nil, err
 	}
 
-	return core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+	lp, err := core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+	if err != nil {
+		return lp, err
+	}
+
+	return lp, nil
 }
 
 func configureLoadpoints(conf globalconfig.All) error {

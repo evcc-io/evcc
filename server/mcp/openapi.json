@@ -1,6 +1,14 @@
 {
   "components": {
     "parameters": {
+      "adminPassword": {
+        "description": "Admin password (required for session auth, not needed for API key)",
+        "in": "header",
+        "name": "X-Admin-Password",
+        "schema": {
+          "$ref": "#/components/schemas/Password"
+        }
+      },
       "batteryMode": {
         "in": "path",
         "name": "batteryMode",
@@ -132,6 +140,15 @@
           "$ref": "#/components/schemas/Soc"
         }
       },
+      "temp": {
+        "description": "Temperature in °C",
+        "in": "path",
+        "name": "temp",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Temp"
+        }
+      },
       "threshold": {
         "description": "Power in W",
         "in": "path",
@@ -184,8 +201,8 @@
             "schema": {
               "properties": {
                 "result": {
-                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge",
-                  "maximum": 3,
+                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+                  "maximum": 4,
                   "minimum": 0,
                   "type": "integer"
                 }
@@ -358,7 +375,8 @@
           "unknown",
           "normal",
           "hold",
-          "charge"
+          "charge",
+          "holdcharge"
         ],
         "example": "normal",
         "type": "string"
@@ -510,13 +528,13 @@
       "LoadpointName": {
         "example": "Garage",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#title"
+          "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#title"
         },
         "type": "string"
       },
       "LogArea": {
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#levels"
+          "url": "https://docs.evcc.io/en/reference/configuration/log#levels"
         },
         "type": "string"
       },
@@ -527,7 +545,7 @@
           "db"
         ],
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#levels"
+          "url": "https://docs.evcc.io/en/reference/configuration/log#levels"
         },
         "items": {
           "$ref": "#/components/schemas/LogArea"
@@ -545,7 +563,7 @@
         ],
         "example": "DEBUG",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/log#log"
+          "url": "https://docs.evcc.io/en/reference/configuration/log#log"
         },
         "type": "string"
       },
@@ -649,7 +667,7 @@
       },
       "RepeatingPlan": {
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans#repeating-plans"
+          "url": "https://docs.evcc.io/en/features/plans#repeating-plans"
         },
         "properties": {
           "active": {
@@ -684,7 +702,7 @@
       },
       "StaticEnergyPlan": {
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans#energy-amount-plan"
+          "url": "https://docs.evcc.io/en/features/plans#energy-amount-plan"
         },
         "properties": {
           "energy": {
@@ -698,7 +716,7 @@
       },
       "StaticSocPlan": {
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans#create-charging-plan"
+          "url": "https://docs.evcc.io/en/features/plans#create-charging-plan"
         },
         "properties": {
           "soc": {
@@ -710,16 +728,21 @@
         },
         "type": "object"
       },
+      "Temp": {
+        "description": "Temperature in °C",
+        "example": 50,
+        "minimum": 0,
+        "type": "number"
+      },
       "Timestamp": {
         "description": "Timestamp in RFC3339 format",
-        "example": "2025-07-19T12:30:00Z",
         "format": "date-time",
         "type": "string"
       },
       "VehicleName": {
         "example": "vehicle_1",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/vehicles#name"
+          "url": "https://docs.evcc.io/en/reference/configuration/vehicles#name"
         },
         "minLength": 1,
         "pattern": "[a-zA-Z0-9_.:-]+",
@@ -728,7 +751,7 @@
       "VehicleTitle": {
         "example": "blauer e-Golf",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/vehicles#title"
+          "url": "https://docs.evcc.io/en/reference/configuration/vehicles#title"
         },
         "type": "string"
       },
@@ -750,6 +773,11 @@
       }
     },
     "securitySchemes": {
+      "bearerAuth": {
+        "description": "Long-lived API key (prefixed `evcc_`, managed via /auth/apikey).\nGrants access to /api/db/* without requiring the X-Admin-Password header.\n",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "cookieAuth": {
         "in": "cookie",
         "name": "auth",
@@ -767,6 +795,100 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/auth/apikey": {
+      "get": {
+        "description": "Reports whether an API key has been generated. The key itself is\nonly returned once at creation time (POST), never on subsequent\nreads.\n",
+        "operationId": "getApiKeyStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "configured": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "API key status",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Generates a fresh API key, replacing any existing one. The\nreturned key is shown only once; store it immediately.\n\nEven when the request is authenticated via API key (Bearer), the\nadmin password must be supplied in the request body to prevent a\nleaked key from rotating itself. The password check is skipped\nwhen the server is started with `--disable-auth`.\n",
+        "operationId": "regenerateApiKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "$ref": "#/components/schemas/Password"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "key": {
+                      "description": "The new API key (cleartext, shown once).",
+                      "example": "evcc_aB3xYz7k0Pq2sN5mWtR4",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "description": "Invalid admin password"
+          },
+          "403": {
+            "description": "Forbidden in demo mode"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Generate or rotate the API key",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Administrator login. Returns authorization cookie required for all protected endpoints.",
@@ -893,7 +1015,7 @@
       "post": {
         "description": "Prevent home battery discharge during vehicle fast charging.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery"
+          "url": "https://docs.evcc.io/en/features/battery"
         },
         "operationId": "setBatteryDischargeControl",
         "parameters": [
@@ -916,7 +1038,7 @@
       "delete": {
         "description": "Remove battery grid charge limit.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery"
+          "url": "https://docs.evcc.io/en/features/battery"
         },
         "operationId": "removeBatteryGridChargeLimit",
         "responses": {
@@ -934,7 +1056,7 @@
       "post": {
         "description": "Charge home battery from grid when price or emissions are below the threshold. Uses price if a dynamic tariff exists. Uses emissions if a CO₂-tariff is configured. Ignored otherwise.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery"
+          "url": "https://docs.evcc.io/en/features/battery"
         },
         "operationId": "setBatteryGridChargeLimit",
         "parameters": [
@@ -992,7 +1114,7 @@
       "post": {
         "description": "Set battery buffer SoC.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery"
+          "url": "https://docs.evcc.io/en/features/battery"
         },
         "operationId": "setBufferSoc",
         "parameters": [
@@ -1015,7 +1137,7 @@
       "post": {
         "description": "Set battery buffer start SoC.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery"
+          "url": "https://docs.evcc.io/en/features/battery"
         },
         "operationId": "setBufferStartSoc",
         "parameters": [
@@ -1031,6 +1153,150 @@
         "summary": "Set battery buffer start SoC",
         "tags": [
           "battery"
+        ]
+      }
+    },
+    "/db/backup": {
+      "get": {
+        "description": "Downloads the SQLite database as a backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.",
+        "operationId": "downloadBackup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "SQLite database file"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Download database backup",
+        "tags": [
+          "db"
+        ]
+      }
+    },
+    "/db/reset": {
+      "post": {
+        "description": "Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
+        "operationId": "resetDatabase",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "sessions": {
+                    "description": "Delete all charging sessions",
+                    "type": "boolean"
+                  },
+                  "settings": {
+                    "description": "Delete all settings, configs, and meters",
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Reset successful, instance is restarting"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reset database",
+        "tags": [
+          "db"
+        ]
+      }
+    },
+    "/db/restore": {
+      "post": {
+        "description": "Restores the database from a previously downloaded backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful restore.",
+        "operationId": "restoreBackup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "description": "SQLite database backup file",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Restore successful, instance is restarting"
+          },
+          "400": {
+            "description": "Invalid file or missing fields"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Restore database backup",
+        "tags": [
+          "db"
         ]
       }
     },
@@ -1090,11 +1356,143 @@
         ]
       }
     },
+    "/history/energy": {
+      "get": {
+        "description": "Returns aggregated energy history data. Aggregate granularity defaults to 15 minutes. Supports CSV export.",
+        "operationId": "getEnergyHistory",
+        "parameters": [
+          {
+            "description": "Start time (RFC3339)",
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "example": "2026-07-01T00:00:00Z",
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "End time (RFC3339)",
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "example": "2026-07-02T00:00:00Z",
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Aggregation interval. Examples: 15m, 1h, day, month",
+            "in": "query",
+            "name": "aggregate",
+            "schema": {
+              "default": "15m",
+              "example": "1h",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Group results by loadpoint",
+            "in": "query",
+            "name": "grouped",
+            "schema": {
+              "default": false,
+              "example": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Filter by entity group",
+            "in": "query",
+            "name": "group",
+            "schema": {
+              "enum": [
+                "forecast",
+                "battery",
+                "grid",
+                "pv",
+                "home",
+                "loadpoint",
+                "meter",
+                "consumer"
+              ],
+              "example": "battery",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity name",
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "example": "db:8",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by entity title",
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "example": "Battery",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Response format",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "default": "json",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "example": "json",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header.",
+            "in": "query",
+            "name": "lang",
+            "schema": {
+              "example": "de",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Energy history data"
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          }
+        },
+        "summary": "Energy history",
+        "tags": [
+          "experimental"
+        ]
+      }
+    },
     "/loadpoints/{id}/batteryboost/{enable}": {
       "post": {
         "description": "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled).",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery#battery-boost"
+          "url": "https://docs.evcc.io/en/features/battery#battery-boost"
         },
         "operationId": "setLoadpointBatteryBoost",
         "parameters": [
@@ -1120,7 +1518,7 @@
       "post": {
         "description": "Set the SoC limit for battery boost. Home battery will be used to support charging up to this SoC level. A value of 100 (default) disabled the boost feature in UI and API.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery#battery-boost"
+          "url": "https://docs.evcc.io/en/features/battery#battery-boost"
         },
         "operationId": "setLoadpointBatteryBoostLimit",
         "parameters": [
@@ -1146,7 +1544,7 @@
       "post": {
         "description": "Delay before charging stops in solar mode.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints"
+          "url": "https://docs.evcc.io/en/reference/configuration/loadpoints"
         },
         "operationId": "setLoadpointDisableDelay",
         "parameters": [
@@ -1172,7 +1570,7 @@
       "post": {
         "description": "Specifies the grid draw power to stop charging in solar mode.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold-1"
+          "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#threshold-1"
         },
         "operationId": "setLoadpointDisableThreshold",
         "parameters": [
@@ -1198,7 +1596,7 @@
       "post": {
         "description": "Delay before charging starts in solar mode.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay"
+          "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#delay"
         },
         "operationId": "setLoadpointEnableDelay",
         "parameters": [
@@ -1224,7 +1622,7 @@
       "post": {
         "description": "Specifies the available surplus power to start charging in solar mode.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold"
+          "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#threshold"
         },
         "operationId": "setLoadpointEnableThreshold",
         "parameters": [
@@ -1250,7 +1648,7 @@
       "post": {
         "description": "Updates the energy limit of the loadpoint. Only available for guest vehicles and vehicles with unknown SoC. Limit is removed on vehicle disconnect.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/limit"
+          "url": "https://docs.evcc.io/en/features/limits"
         },
         "operationId": "setLoadpointEnergyLimit",
         "parameters": [
@@ -1276,7 +1674,7 @@
       "post": {
         "description": "Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/limit"
+          "url": "https://docs.evcc.io/en/features/limits"
         },
         "operationId": "setLoadpointSocLimit",
         "parameters": [
@@ -1344,11 +1742,37 @@
         ]
       }
     },
+    "/loadpoints/{id}/mintemp/{temp}": {
+      "post": {
+        "description": "Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/limits"
+        },
+        "operationId": "setLoadpointMinTemp",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/temp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Update minimum temperature",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
     "/loadpoints/{id}/mode/{mode}": {
       "post": {
         "description": "Changes the charging behavior of the loadpoint.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/solar-charging"
+          "url": "https://docs.evcc.io/en/features/solar-charging"
         },
         "operationId": "setLoadpointMode",
         "parameters": [
@@ -1386,7 +1810,7 @@
       "post": {
         "description": "Updates the allowed phases of the loadpoint. Selects the desired phase mode for chargers with automatic phase switching. For manual phase switching chargers (via cable or Lasttrennschalter) this value tells evcc the actual phases.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases"
+          "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#phases"
         },
         "operationId": "setLoadpointPhases",
         "parameters": [
@@ -1415,7 +1839,7 @@
       "get": {
         "description": "Returns the current charging plan for this loadpoint.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "getLoadpointPlan",
         "parameters": [
@@ -1462,7 +1886,7 @@
       "delete": {
         "description": "Delete charging plan. Only available when a vehicle without SoC is connected.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "deleteLoadpointEnergyPlan",
         "parameters": [
@@ -1485,7 +1909,7 @@
       "post": {
         "description": "Create charging plan with fixed time and energy target. Only available when a vehicle without SoC is connected.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "setLoadpointEnergyPlan",
         "parameters": [
@@ -1526,7 +1950,7 @@
       "get": {
         "description": "Simulate repeating charging plan and return the result. Does not alter the actual charging plan.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "previewLoadpointRepeatingPlan",
         "parameters": [
@@ -1561,7 +1985,7 @@
       "get": {
         "description": "Simulate charging plan based on energy goal. Does not alter the actual charging plan.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "previewLoadpointEnergyPlan",
         "parameters": [
@@ -1590,7 +2014,7 @@
       "get": {
         "description": "Simulate charging plan based on SoC goal. Does not alter the actual charging plan.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "previewLoadpointSocPlan",
         "parameters": [
@@ -1619,7 +2043,7 @@
       "post": {
         "description": "Updates the charging plan strategy for the loadpoint.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "setLoadpointPlanStrategy",
         "parameters": [
@@ -1664,7 +2088,7 @@
       "post": {
         "description": "Set loadpoint priority.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+          "url": "https://docs.evcc.io/en/reference/configuration/loadpoints#priority"
         },
         "operationId": "setLoadpointPriority",
         "parameters": [
@@ -1698,7 +2122,7 @@
       "delete": {
         "description": "Delete cost or emission limit for fast-charging with grid energy.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/dynamic-prices"
+          "url": "https://docs.evcc.io/en/features/dynamic-prices"
         },
         "operationId": "deleteLoadpointSmartCostLimit",
         "parameters": [
@@ -1721,7 +2145,7 @@
       "post": {
         "description": "Set cost or emission limit for fast-charging with grid energy.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/dynamic-prices"
+          "url": "https://docs.evcc.io/en/features/dynamic-prices"
         },
         "operationId": "setLoadpointSmartCostLimit",
         "parameters": [
@@ -1790,7 +2214,7 @@
       "delete": {
         "description": "Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+          "url": "https://docs.evcc.io/en/features/vehicle"
         },
         "operationId": "removeLoadpointVehicle",
         "parameters": [
@@ -1811,7 +2235,7 @@
       "patch": {
         "description": "Starts the automatic vehicle detection process.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+          "url": "https://docs.evcc.io/en/features/vehicle"
         },
         "operationId": "startLoadpointVehicleDetection",
         "parameters": [
@@ -1834,7 +2258,7 @@
       "post": {
         "description": "Assigns vehicle to loadpoint.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/vehicle"
+          "url": "https://docs.evcc.io/en/features/vehicle"
         },
         "operationId": "assignLoadpointVehicle",
         "parameters": [
@@ -1877,7 +2301,7 @@
       "post": {
         "description": "Set battery priority SoC.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/battery"
+          "url": "https://docs.evcc.io/en/features/battery"
         },
         "operationId": "setPrioritySoc",
         "parameters": [
@@ -1900,7 +2324,7 @@
       "post": {
         "description": "Set grid connection operating point.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/site#residualpower"
+          "url": "https://docs.evcc.io/en/reference/configuration/site#residualpower"
         },
         "operationId": "setResidualPower",
         "parameters": [
@@ -1923,7 +2347,7 @@
       "delete": {
         "description": "Delete charging session.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/sessions"
+          "url": "https://docs.evcc.io/en/features/sessions"
         },
         "operationId": "deleteSession",
         "responses": {
@@ -1944,7 +2368,7 @@
       "put": {
         "description": "Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/sessions"
+          "url": "https://docs.evcc.io/en/features/sessions"
         },
         "operationId": "updateSession",
         "requestBody": {
@@ -1983,7 +2407,7 @@
       "get": {
         "description": "Returns a list of charging sessions.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/sessions"
+          "url": "https://docs.evcc.io/en/features/sessions"
         },
         "operationId": "getSessions",
         "parameters": [
@@ -2062,7 +2486,7 @@
       "post": {
         "description": "Enable or disable telemetry. Note: Telemetry requires sponsorship.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
+          "url": "https://docs.evcc.io/en/reference/configuration/telemetry"
         },
         "operationId": "setTelemetryStatus",
         "parameters": [
@@ -2154,11 +2578,31 @@
         ]
       }
     },
+    "/solaradjusted/{enable}": {
+      "post": {
+        "description": "Adjust the solar forecast to real production data of the current day.",
+        "operationId": "setSolarAdjusted",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Adjust solar forecast",
+        "tags": [
+          "experimental"
+        ]
+      }
+    },
     "/state": {
       "get": {
         "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/state"
+          "url": "https://docs.evcc.io/integrations/rest-api"
         },
         "operationId": "getState",
         "parameters": [
@@ -2219,6 +2663,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Clear cache",
@@ -2231,7 +2678,7 @@
       "get": {
         "description": "Returns the latest log lines.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/log"
+          "url": "https://docs.evcc.io/en/reference/configuration/log"
         },
         "operationId": "getSystemLogs",
         "parameters": [
@@ -2295,6 +2742,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Logs",
@@ -2330,6 +2780,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "List of all log areas",
@@ -2353,6 +2806,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Shutdown evcc",
@@ -2365,7 +2821,7 @@
       "get": {
         "description": "Returns the prices or emission values for the upcoming hours",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/devices/tariffs"
+          "url": "https://docs.evcc.io/en/tariffs"
         },
         "operationId": "getTariffInfo",
         "parameters": [
@@ -2421,7 +2877,7 @@
       "post": {
         "description": "Charging will stop when this SoC is reached.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/limits"
+          "url": "https://docs.evcc.io/en/features/limits"
         },
         "operationId": "setVehicleSocLimit",
         "parameters": [
@@ -2447,7 +2903,7 @@
       "post": {
         "description": "Vehicle will be fast-charged until this SoC is reached.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/limits"
+          "url": "https://docs.evcc.io/en/features/limits"
         },
         "operationId": "setVehicleMinSoc",
         "parameters": [
@@ -2469,11 +2925,72 @@
         ]
       }
     },
+    "/vehicles/{name}/mode": {
+      "delete": {
+        "description": "Resets the vehicle charge mode to keep the last selected mode.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "operationId": "deleteVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Reset charge mode",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/mode/{mode}": {
+      "post": {
+        "description": "Sets the charge mode applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "operationId": "setVehicleMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/mode"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "mode": {
+                      "$ref": "#/components/schemas/Mode"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set charge mode",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
     "/vehicles/{name}/plan/repeating": {
       "post": {
         "description": "Updates the repeating charging plan.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "updateVehicleRepeatingPlans",
         "parameters": [
@@ -2524,7 +3041,7 @@
       "delete": {
         "description": "Delete the charging plan",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "deleteVehicleSocPlan",
         "parameters": [
@@ -2547,7 +3064,7 @@
       "post": {
         "description": "Create charging plan with fixed time and SoC target.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "setVehicleSocPlan",
         "parameters": [
@@ -2596,7 +3113,7 @@
       "post": {
         "description": "Updates the charging plan strategy for the vehicle.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/features/plans"
+          "url": "https://docs.evcc.io/en/features/plans"
         },
         "operationId": "setVehiclePlanStrategy",
         "parameters": [
@@ -2644,6 +3161,12 @@
     },
     {
       "name": "battery"
+    },
+    {
+      "name": "db"
+    },
+    {
+      "name": "experimental"
     },
     {
       "name": "general"

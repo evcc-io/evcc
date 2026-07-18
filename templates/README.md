@@ -50,14 +50,40 @@ Note: The official website of the manufacturer or service provider is the refere
 
 ## `capabilities`
 
-`capabilities` provides an option to define special capabilities of the device as a list of strings
+`capabilities` provides an option to define special capabilities of the device as a list of strings.
 
-**Possible Values**:
+**Possible values**:
 
-- `iso151182`: If the charger supports communicating via ISO15118-2
-- `rfid`: If the charger supports RFID
-- `1p3p`: If the charger supports 1P/3P-phase switching
-- `smahems`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
+- `iso151182`: The device supports communicating via ISO 15118-2.
+- `mA`: The device supports granular (milliamp) current control.
+- `rfid`: The device supports RFID.
+- `1p3p`: The device supports 1P/3P phase switching.
+- `battery-control`: The device supports battery control.
+- `meter`: The device has a built-in energy meter.
+- `dim`: The device supports EnWG §14a dimming.
+- `curtail`: The device supports EEG §9 curtailment.
+
+`capabilities` can be set at two levels:
+
+- **Template level** (next to `template`): applies to every product.
+- **Product level** (under a `products` entry): applies to that product only.
+
+Both levels are merged, not overwritten: template-level capabilities are appended to each product's own list. A product cannot remove an inherited capability, and duplicates are rejected, so do not repeat a template-level capability on a product.
+
+**Example** (all products get `1p3p`; only the second product additionally gets `meter`):
+
+```yaml
+template: demo-charger
+capabilities: ["1p3p"]
+products:
+  - brand: Demo
+    description:
+      generic: Basic
+  - brand: Demo
+    description:
+      generic: Plus
+    capabilities: ["meter"] # effective: ["meter", "1p3p"]
+```
 
 ## `requirements`
 
@@ -99,6 +125,30 @@ en: |
   Set the backend URL to `ws://<evcc-host>:8887/`.
 
   **Attention**: Token is only valid for 2 minutes.
+```
+
+## `caveats`
+
+`caveats` documents known limitations or unreliable behaviour of a device that otherwise works. This is distinct from `requirements.description`, which covers setup steps the user must perform.
+
+It is a list, so a device can have multiple caveats. Each entry has a language-specific `description` (`de`, `en`) and a `link`.
+
+Guidelines:
+
+- Add **one entry per distinct problem** (e.g. "unreliable meter" and "occasional reboots" are two entries); don't list the same problem twice.
+- Keep descriptions **as concise as possible** while still understandable.
+- Use **factual wording** describing the observed behaviour.
+- Always add a `link` to the single issue or discussion that best documents the problem, so the situation can be re-verified later. It is technically optional, but omitting it should be a rare exception.
+- The `description` follows the same Markdown formatting rules as `requirements.description` above.
+
+Example:
+
+```yaml
+caveats:
+  - description:
+      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+      en: Phase switching occasionally disables itself.
+    link: https://github.com/evcc-io/evcc/issues/21708
 ```
 
 ## `auth`

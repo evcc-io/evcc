@@ -150,8 +150,6 @@
       "forecast": "Previsioun",
       "gridPrice": "Netz Präis",
       "heaterTempLimit": "Limitt vun der Heizung",
-      "hemsActiveLimit": "Aktiivt Limit",
-      "hemsType": "Communicatioun",
       "identifier": "RFID-Identifikatioun",
       "loginBlocked": "Login-Limit erreecht",
       "max": "max",
@@ -180,10 +178,6 @@
       "A": "A (net verbonnen)",
       "B": "B (verbonnen)",
       "C": "C (luet)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
     },
     "devices": {
       "auxMeter": "Smarte Verbraucher",
@@ -524,7 +518,7 @@
       "usage": {
         "aux": "Intelligente Verbraucher",
         "battery": "Batterie",
-        "charge": "Verbraucher / Luedgerät",
+        "charge": "Luedgerät",
         "grid": "Réseau",
         "label": "Benotzung",
         "pv": "Productioun"
@@ -712,14 +706,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Lizenzschlëssel",
-      "activationKeyHint": "Per E-Mail un Iech geschéckt. Op der {url} ze fannen.",
       "addToken": "Token aginn",
       "changeToken": "Token änneren",
       "description": "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg nei a spannend Fonctiounen z'entwéckelen. Als Sponsor kriss du Zougank zu all Wallbox-Implementatiounen.",
       "descriptionToken": "Als GitHub-Sponsor fannt Dir Ären Token op {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
-      "email": "E-Mail",
-      "emailHint": "E-Mail-Adress, déi Dir fir {url} benotzt hutt",
       "enterYourToken": "Äre Sponsor-Token",
       "error": "De Sponsortoken ass ongülteg.",
       "invalid": "ongülteg",
@@ -1170,13 +1160,9 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie oplueden",
       "batteryDischarge": "Batterie entlueden",
-      "batteryForecastEmpty": "Eidel",
-      "batteryForecastFull": "Voll",
-      "batteryForecastNextHigh": "Héich",
-      "batteryForecastNextLow": "Déif",
+      "batteryDischargeHold": "Batterie (gespäert)",
       "batteryGridChargeActive": "Oluede vum Netz: aktiv",
       "batteryGridChargeLimit": "Opluede vum Netz: wann",
-      "batteryHold": "Batterie (gespäert)",
       "batteryTooltip": "{energy} vun {total} ({soc})",
       "forecast": "Viraussoen",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
@@ -1197,7 +1183,6 @@
       "waitForVehicle": "Prett fir ze Heizen…"
     },
     "hemsWarning": {
-      "description": "Reduzéier d'Luedleeschtung, fir {limit} net ze iwwerschreiden.",
       "title": "Extern Begrenzung:"
     },
     "history": {

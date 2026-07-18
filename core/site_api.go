@@ -2,6 +2,8 @@ package core
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -127,6 +129,22 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
+// GetConsumerMeterRefs returns the ConsumerMeterRef
+func (site *Site) GetConsumerMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ConsumerMetersRef
+}
+
+// SetConsumerMeterRefs sets the ConsumerMeterRef
+func (site *Site) SetConsumerMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ConsumerMetersRef = ref
+	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
 // GetExtMeterRefs returns the ExtMeterRef
 func (site *Site) GetExtMeterRefs() []string {
 	site.RLock()
@@ -180,11 +198,15 @@ func (site *Site) GetCircuit() api.Circuit {
 	return site.circuit
 }
 
-// SetCircuit sets the root circuit
-func (site *Site) SetCircuit(circuit api.Circuit) {
+// SetHEMS attaches the configured HEMS to the site and the root circuit
+func (site *Site) SetHEMS(hems api.HEMS) {
 	site.Lock()
 	defer site.Unlock()
-	site.circuit = circuit
+	site.hems = hems
+
+	if site.circuit != nil {
+		site.circuit.SetHEMS(hems)
+	}
 }
 
 // GetPrioritySoc returns the PrioritySoc
@@ -284,6 +306,13 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 	return nil
 }
 
+// GetGridPower returns the most recent grid power reading in W (positive = import)
+func (site *Site) GetGridPower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridPower
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()
@@ -341,6 +370,27 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	return nil
 }
 
+// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+func (site *Site) GetSolarAdjusted() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.solarAdjusted
+}
+
+// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+func (site *Site) SetSolarAdjusted(val bool) {
+	site.log.DEBUG.Println("set solar adjusted:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.solarAdjusted != val {
+		site.solarAdjusted = val
+		settings.SetBool(keys.SolarAdjusted, val)
+		site.publish(keys.SolarAdjusted, val)
+	}
+}
+
 func (site *Site) GetBatteryGridChargeLimit() *float64 {
 	site.RLock()
 	defer site.RUnlock()
@@ -367,6 +417,43 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+	}
+
+	return nil
+}
+
+// GetOptimizerChargingStrategy returns the optimizer grid charging strategy,
+// falling back to the default when unset.
+func (site *Site) GetOptimizerChargingStrategy() string {
+	site.RLock()
+	defer site.RUnlock()
+	if site.optimizerChargingStrategy == "" {
+		return defaultOptimizerChargingStrategy
+	}
+	return site.optimizerChargingStrategy
+}
+
+// SetOptimizerChargingStrategy validates and persists the optimizer grid
+// charging strategy and re-runs the optimizer when it changes.
+func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
+	if !slices.Contains(optimizerChargingStrategies, strategy) {
+		return fmt.Errorf("invalid optimizer charging strategy: %s", strategy)
+	}
+
+	site.Lock()
+	changed := site.optimizerChargingStrategy != strategy
+	if changed {
+		site.optimizerChargingStrategy = strategy
+	}
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set optimizer charging strategy:", strategy)
+		settings.SetString(keys.OptimizerChargingStrategy, strategy)
+		site.publish(keys.OptimizerChargingStrategy, strategy)
+
+		// re-run the optimizer so the new strategy takes effect immediately
+		site.triggerOptimizer()
 	}
 
 	return nil

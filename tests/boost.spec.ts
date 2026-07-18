@@ -5,6 +5,7 @@ import {
   expectModalVisible,
   newLoadpoint,
   addDemoCharger,
+  finishLoadpoint,
   ChargerStatus,
 } from "./utils";
 test.use({ baseURL: baseUrl() });
@@ -120,9 +121,7 @@ test.describe("boost", async () => {
     await page.goto("/#/config");
     await newLoadpoint(page, "New Charger");
     await addDemoCharger(page, undefined, ChargerStatus.Connected);
-    const lpModal = page.getByTestId("loadpoint-modal");
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
 
     // restart evcc to apply new loadpoint
     await restart(CONFIG_BATTERY);

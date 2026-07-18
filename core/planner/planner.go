@@ -124,11 +124,16 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	// treat like normal target charging if we don't have rates
 	if len(rates) == 0 || err != nil {
+		t.log.DEBUG.Printf("planner: no rates available (count=%d, err=%v)- falling back to simple plan", len(rates), err)
 		return simplePlan
 	}
 
+	t.log.TRACE.Printf("planner: %d rates available from %v to %v",
+		len(rates), rates[0].Start.Local(), rates[len(rates)-1].End.Local())
+
 	// consume remaining time
 	if t.clock.Until(targetTime) <= requiredDuration {
+		t.log.DEBUG.Printf("planner: insufficient time until target- charging continuously from now")
 		return continuousPlan(rates, latestStart, targetTime)
 	}
 
@@ -159,6 +164,8 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// (missing/stale slots) correctly falls back to simplePlan instead of
 	// returning a plan shorter than requiredDuration
 	if len(rates) == 0 || Duration(rates) < requiredDuration {
+		t.log.DEBUG.Printf("planner: rate coverage in [%v,%v] insufficient for required duration %v- falling back to simple plan",
+			now.Local(), targetTime.Local(), requiredDuration.Round(time.Second))
 		return simplePlan
 	}
 
