@@ -439,6 +439,7 @@
         "heating": "Is set when on system start."
       },
       "defaultModeHelpKeep": "Keeps the last selected mode.",
+      "defaultModeKeep": "keep as is",
       "defaultModeLabel": "Default mode",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
