@@ -91,18 +91,21 @@ Root gap: plans optimise against the tariff and clamp only to the circuit's
       a throttled loadpoint charges slower than `maxPower` assumed, so its plan
       eventually overruns.
 
-### Phase 1 — Deterministic priority-aware clamp (Option C)
-- [x] Order the update round by priority instead of config order
-      (`site.prioritizedLoadpoints`): fast/deadline-bound (`IsFastChargingActive`)
-      first, then descending `EffectivePriority`. So on a shared circuit the
-      higher-priority loadpoints establish draw first and the reactive clamp
-      throttles the rest. Note: forced and plan-active are folded into one tier
-      here; a strict forced > plan-active sub-order can be added later.
-- [x] Regression test (`TestPrioritizedLoadpoints`): fast first, then priority.
+### Phase 1 — Deterministic priority-aware clamp (Option C) — dropped
+
+Reordering the round-robin update sequence by priority was tried and reverted:
+it does not help. Updates are round-robin (one loadpoint per tick) and also
+event-driven (`lpUpdateChan`), and the clamp reacts to *measured* power, so in
+steady state allocation is order-independent and the reorder is a near no-op.
+
+Priority must instead drive **planner allocation** (Phase 2): plan loadpoints in
+priority order against the shared-capacity ledger. The round-robin control
+sequence stays untouched.
 
 ### Phase 2 — Capacity ledger + priority-ordered planning (Option B)
-- [ ] Per-circuit, per-slot residual-capacity ledger, mirroring the parent/child
-      circuit tree (like `ValidatePower` recursion).
+- [x] Per-slot residual-capacity ledger (`planner.CapacityLedger`): `Available`,
+      `Reserve`, and `CanHost` (semi-continuous min-power gate). Single circuit,
+      static budget for now; parent/child tree still TODO.
 - [ ] Extend `planner.Plan` / `optimalPlan` to accept a per-slot power cap.
       Today a slot equals full Pmax; a capped slot delivers
       `min(Pmax, residual) × slotLen`, so a partially-available slot must spill
