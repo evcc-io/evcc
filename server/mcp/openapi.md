@@ -344,6 +344,26 @@ call getEnergyHistory {
 }
 ```
 
+## setSolarAdjusted
+
+Adjust the solar forecast to real production data of the current day.
+
+**Tags:** experimental
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setSolarAdjusted {
+  "enable": "true"
+}
+```
+
 ## getState
 
 Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.

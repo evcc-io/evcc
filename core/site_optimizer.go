@@ -297,7 +297,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			return err
 		}
 
-		ft = prorate(scaleAndPrune(solarEnergy, site.solarScale(), minLen), firstSlotDuration)
+		ft = prorate(scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen), firstSlotDuration)
 	}
 
 	req := optimizer.OptimizationInput{
@@ -657,8 +657,12 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
 		minSoc, maxSoc := m.GetSocLimits()
-		bat.SMin = float32(*b.Capacity * minSoc * 10) // Wh
-		bat.SMax = float32(*b.Capacity * maxSoc * 10) // Wh
+		if maxSoc == 0 {
+			maxSoc = 100 // empty/unset maxsoc means no upper limit
+		}
+		// clamp against current soc to prevent infeasible if it is outside the configured limits
+		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
+		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
 	}
 
 	detail := batteryDetail{

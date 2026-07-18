@@ -100,6 +100,7 @@ export interface State {
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
+  tariffTemperature?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
   hems?: ConfigStatus<HemsConfig, HemsStatus>;
@@ -116,6 +117,7 @@ export interface State {
   prioritySoc?: number;
   bufferStartSoc?: number;
   batteryDischargeControl?: boolean;
+  solarAdjusted?: boolean;
   batteryGridChargeLimit?: number | null;
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
@@ -743,6 +745,7 @@ export interface Forecast {
   solar?: SolarDetails;
   planner?: ForecastSlot[];
   feedin?: ForecastSlot[];
+  temperature?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {
@@ -762,7 +765,7 @@ export type DeviceType =
   | "hems";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
-export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";
+export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;

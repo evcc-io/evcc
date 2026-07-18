@@ -6,7 +6,9 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -169,6 +171,80 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		})
 	}
 }
+
+// TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
+// the resulting [SMin, SMax] range, even when it lies outside the configured soc
+// limits (e.g. right after a firmware update changed the reported soc or the min/max
+// soc settings) - otherwise the optimizer is infeasible from the first slot.
+func TestBatteryRequestSocLimitsClamp(t *testing.T) {
+	newBatteryDevice := func(t *testing.T, minSoc, maxSoc float64) config.Device[api.Meter] {
+		ctrl := gomock.NewController(t)
+
+		var meter api.Meter
+		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc).AnyTimes()
+
+		bat := &struct {
+			api.Meter
+			api.BatterySocLimiter
+		}{
+			Meter:             meter,
+			BatterySocLimiter: batSocLimit,
+		}
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(bat))
+	}
+
+	site := &Site{log: util.NewLogger("foo")}
+	capacity := 10.0 // kWh
+
+	t.Run("soc below minSoc", func(t *testing.T) {
+		soc := 15.0
+		dev := newBatteryDevice(t, 20, 100)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(1500), req.SMin)
+		assert.Equal(t, float32(10000), req.SMax)
+		assert.LessOrEqual(t, req.SMin, req.SInitial)
+	})
+
+	t.Run("soc above maxSoc", func(t *testing.T) {
+		soc := 95.0
+		dev := newBatteryDevice(t, 0, 80)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(0), req.SMin)
+		assert.Equal(t, float32(9500), req.SMax)
+		assert.GreaterOrEqual(t, req.SMax, req.SInitial)
+	})
+
+	t.Run("soc within limits", func(t *testing.T) {
+		soc := 50.0
+		dev := newBatteryDevice(t, 20, 80)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(2000), req.SMin)
+		assert.Equal(t, float32(8000), req.SMax)
+	})
+
+	t.Run("empty maxSoc defaults to 100%", func(t *testing.T) {
+		soc := 50.0
+		dev := newBatteryDevice(t, 20, 0)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(2000), req.SMin)
+		assert.Equal(t, float32(10000), req.SMax)
+	})
+}
+
 func TestOptimizerChargingStrategy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
