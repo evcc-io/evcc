@@ -15,6 +15,8 @@ type Planner struct {
 	log    *util.Logger
 	clock  clock.Clock // mockable time
 	tariff api.Tariff
+
+	overrunWarned time.Time // target last warned as unreachable, avoids per-cycle spam
 }
 
 // New creates a price planner
@@ -103,8 +105,17 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	latestStart := targetTime.Add(-requiredDuration)
 	if latestStart.Before(now) {
+		// goal missed: required duration no longer fits before the target, so
+		// charging will overrun. warn once per target to avoid per-cycle spam.
+		if !t.overrunWarned.Equal(targetTime) {
+			t.log.WARN.Printf("planner: target not reachable in time - need %v but only %v until %v",
+				requiredDuration.Round(time.Second), t.clock.Until(targetTime).Round(time.Second), targetTime.Local())
+			t.overrunWarned = targetTime
+		}
 		latestStart = now
 		targetTime = latestStart.Add(requiredDuration)
+	} else {
+		t.overrunWarned = time.Time{}
 	}
 
 	// simplePlan only considers time, but not cost

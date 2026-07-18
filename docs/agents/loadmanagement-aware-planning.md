@@ -71,8 +71,11 @@ circuit capacity over time, which no planner sees.
 - [ ] Test harness: 2 loadpoints on one circuit (`maxPower < 2 × Pmax`), one
       with minSoc, both plan-charging the same cheap slot; assert the current
       bug (combined clamp → deadline miss / over-current warning).
-- [x] Log/metric when the circuit clamps a **plan-active** or **minSoc**
-      loadpoint, to detect this in the wild.
+- [x] Warn (in the planner) when a plan actually misses its goal — the required
+      duration no longer fits before the target, so charging will overrun.
+      Warned once per target. This surfaces load-management-induced misses too:
+      a throttled loadpoint charges slower than `maxPower` assumed, so its plan
+      eventually overruns.
 
 ### Phase 1 — Deterministic priority-aware clamp (Option C)
 - [ ] Order circuit-budget allocation by (forced > plan-active > priority) in

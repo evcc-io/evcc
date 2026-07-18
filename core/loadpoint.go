@@ -934,8 +934,6 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		requested := current
-
 		var actualCurrent float64
 		if lp.chargeCurrents != nil {
 			actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
@@ -950,14 +948,6 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
-
-		// surface load management throttling a deadline-bound charge: per-loadpoint
-		// plans do not account for shared circuit capacity, so a planned or minSoc
-		// charge can be silently capped and miss its target.
-		// see docs/agents/loadmanagement-aware-planning.md
-		if current < requested && (lp.planActive || lp.minSocNotReached()) {
-			lp.log.WARN.Printf("load management limited charge to %.3gA (needed %.3gA) - plan/minSoc target may be missed", current, requested)
-		}
 	}
 
 	// https://github.com/evcc-io/evcc/issues/16309
