@@ -3,7 +3,8 @@ products:
   - brand: Anker
     description:
       generic: SOLIX Solarbank Max AC
-capabilities: ["battery-control"]
+capabilities:
+  - battery-control
 requirements:
   description:
     de: |
@@ -19,10 +20,10 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    default: 2500
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -155,7 +156,6 @@ render: |
                     address: 10064
                     type: writesingle
                     encoding: uint16
-
               - source: const
                 value: -{{ .maxchargepower }}
                 set:
