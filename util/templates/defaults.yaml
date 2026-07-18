@@ -824,6 +824,17 @@ presets:
     - name: maxchargepower
     - name: maxdischargepower
 
+  battery-capacity:
+    - name: capacity
+
+  battery-minmaxsoc:
+    - name: minsoc
+    - name: maxsoc
+
+  battery-power:
+    - name: maxchargepower
+    - name: maxdischargepower
+
 modbus:
   interfaces:
     rs485: ["rs485serial", "rs485tcpip"]
