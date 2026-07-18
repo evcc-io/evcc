@@ -59,7 +59,5 @@ export default defineComponent({
 <style scoped>
 .dropdown-menu {
 	--bs-dropdown-min-width: 0;
-	/* above bottom tab bar (z-index 1030), else hidden behind footer */
-	z-index: 1031;
 }
 </style>
