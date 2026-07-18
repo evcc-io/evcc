@@ -339,6 +339,10 @@ func (c *EEBus) CurtailedPercent() *int {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
+	// no statement until first connected
+	if c.productionLimitActivated == nil {
+		return nil
+	}
 	// without a nominal reference the W limit cannot be expressed as a percent
 	if c.productionNominalMax <= 0 {
 		return nil
