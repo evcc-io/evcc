@@ -106,10 +106,11 @@ sequence stays untouched.
 - [x] Per-slot residual-capacity ledger (`planner.CapacityLedger`): `Available`,
       `Reserve`, and `CanHost` (semi-continuous min-power gate). Single circuit,
       static budget for now; parent/child tree still TODO.
-- [ ] Extend `planner.Plan` / `optimalPlan` to accept a per-slot power cap.
-      Today a slot equals full Pmax; a capped slot delivers
-      `min(Pmax, residual) × slotLen`, so a partially-available slot must spill
-      the plan into more slots. This is the core rework.
+- [x] `planner.planCapped` (per-slot power cap): with `avail==nil` it is the old
+      full-power duration accounting (`optimalPlan` delegates, behaviour
+      unchanged); with a cap a slot delivers `min(maxPower, avail)` and is skipped
+      below `minPower`, so a power-limited slot counts proportionally less and the
+      plan spills into more slots. Not yet wired into `Plan` (needs the ledger).
 - [ ] Site orchestration: reserve forced load → plan loadpoints in priority
       order against the ledger, subtracting each reservation.
 - [ ] Allocate the shared budget in whole `EffectiveMinPower()` chunks

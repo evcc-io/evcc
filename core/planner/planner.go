@@ -39,19 +39,37 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
 // - rates are filtered to [now, targetTime] window by caller
 func optimalPlan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
+	return planCapped(rates, requiredDuration, targetTime, nil, 0, 0)
+}
+
+// planCapped builds a lowest-cost plan; with avail==nil each slot is full power
+// (duration accounting), else min(maxPower, avail) and skipped below minPower.
+func planCapped(rates api.Rates, requiredDuration time.Duration, targetTime time.Time, avail func(time.Time) float64, maxPower, minPower float64) api.Rates {
 	plan := make(api.Rates, 0, int64(requiredDuration)/int64(tariff.SlotDuration)+3)
 
 	for _, slot := range rates {
 		slotDuration := slot.End.Sub(slot.Start)
-		requiredDuration -= slotDuration
+
+		// per-slot power factor: full unless a capacity cap applies
+		factor := 1.0
+		if avail != nil && maxPower > 0 {
+			p := avail(slot.Start)
+			if p < minPower {
+				continue // semi-continuous: charge >= min or not at all
+			}
+			factor = min(maxPower, p) / maxPower
+		}
+
+		requiredDuration -= time.Duration(float64(slotDuration) * factor)
 
 		// slot covers more than we need, so shorten it
 		if requiredDuration < 0 {
+			trim := time.Duration(float64(-requiredDuration) / factor)
 			// the first (if not single) slot should start as late as possible
 			if IsFirst(slot, plan) && len(plan) > 0 {
-				slot.Start = slot.Start.Add(-requiredDuration)
+				slot.Start = slot.Start.Add(trim)
 			} else {
-				slot.End = slot.End.Add(requiredDuration)
+				slot.End = slot.End.Add(-trim)
 			}
 			requiredDuration = 0
 		}
