@@ -112,10 +112,51 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 		return nil
 	}
 
+	// use the circuit-aware plan when the site computed one for this cycle
+	if lp.sharedPlan != nil {
+		return lp.sharedPlan
+	}
+
 	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v",
 		continuous, precondition, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
 
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
+}
+
+// setSharedPlan stores a circuit-aware plan computed by the site (nil clears it).
+func (lp *Loadpoint) setSharedPlan(plan api.Rates) {
+	lp.sharedPlan = plan
+}
+
+// sharedPlanRequest returns this loadpoint's input for circuit-aware allocation,
+// or false when it should plan independently (no goal, precondition or continuous).
+func (lp *Loadpoint) sharedPlanRequest() (planner.SharedPlanRequest, bool) {
+	planTime := lp.EffectivePlanTime()
+	if planTime.IsZero() {
+		return planner.SharedPlanRequest{}, false
+	}
+
+	// keep precondition/continuous plans on the independent path
+	strategy := lp.getEffectivePlanStrategy()
+	if strategy.Precondition > 0 || strategy.Continuous {
+		return planner.SharedPlanRequest{}, false
+	}
+
+	goal, _ := lp.GetPlanGoal()
+	maxPower := lp.EffectiveMaxPower()
+	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+	if requiredDuration <= 0 {
+		return planner.SharedPlanRequest{}, false
+	}
+
+	return planner.SharedPlanRequest{
+		Forced:           lp.IsFastChargingActive(),
+		Priority:         lp.EffectivePriority(),
+		MaxPower:         maxPower,
+		MinPower:         lp.EffectiveMinPower(),
+		RequiredDuration: requiredDuration,
+		TargetTime:       planTime,
+	}, true
 }
 
 // plannerActive checks if the charging plan has a currently active slot

@@ -621,3 +621,27 @@ func TestEmptyRatesAfterClamping(t *testing.T) {
 	require.Len(t, plan, 1)
 	assert.Equal(t, c.Now().Add(30*time.Minute), plan[0].Start)
 }
+
+// TestPlanOverrunWarnOnce verifies the planner records an unreachable target so
+// the goal-miss warning fires once, and clears it once the target is reachable.
+func TestPlanOverrunWarnOnce(t *testing.T) {
+	clock := clock.NewMock()
+
+	p := &Planner{
+		log:   util.NewLogger("foo"),
+		clock: clock,
+	}
+
+	// need 1h but target only 30min away -> unreachable, records the warned target
+	target := clock.Now().Add(30 * time.Minute)
+	p.Plan(time.Hour, 0, target, false)
+	assert.Equal(t, target, p.overrunWarned)
+
+	// same unreachable target again: state unchanged, no re-warn
+	p.Plan(time.Hour, 0, target, false)
+	assert.Equal(t, target, p.overrunWarned)
+
+	// reachable target resets the warn state
+	p.Plan(time.Hour, 0, clock.Now().Add(2*time.Hour), false)
+	assert.True(t, p.overrunWarned.IsZero())
+}

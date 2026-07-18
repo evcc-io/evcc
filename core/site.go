@@ -1051,6 +1051,53 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	return reserved
 }
 
+// computeSharedPlans assigns circuit-aware plans to loadpoints that share a
+// circuit with another planning loadpoint, so their plans do not overcommit it.
+// Loadpoints without contention keep planning independently (sharedPlan cleared).
+func (site *Site) computeSharedPlans(rates api.Rates) {
+	// clear last cycle's assignments
+	for _, lp := range site.loadpoints {
+		lp.setSharedPlan(nil)
+	}
+
+	// without a tariff the independent path handles simple target charging
+	if len(rates) == 0 {
+		return
+	}
+
+	// group planning loadpoints by circuit
+	byCircuit := map[api.Circuit][]*Loadpoint{}
+	for _, lp := range site.loadpoints {
+		if c := lp.GetCircuit(); c != nil {
+			if _, ok := lp.sharedPlanRequest(); ok {
+				byCircuit[c] = append(byCircuit[c], lp)
+			}
+		}
+	}
+
+	now := time.Now()
+	for c, lps := range byCircuit {
+		// power-limited circuit with contention only
+		if len(lps) < 2 {
+			continue
+		}
+		budget := circuitMaxPower(c)
+		if budget <= 0 {
+			continue
+		}
+
+		reqs := make([]planner.SharedPlanRequest, len(lps))
+		for i, lp := range lps {
+			reqs[i], _ = lp.sharedPlanRequest()
+		}
+
+		plans := planner.AllocateShared(now, budget, rates, reqs)
+		for i, lp := range lps {
+			lp.setSharedPlan(plans[i])
+		}
+	}
+}
+
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -1127,6 +1174,9 @@ func (site *Site) update(lp updater) {
 		if lp != nil {
 			// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
 			sitePower += site.reservedPVPower(lp)
+
+			// circuit-aware plans so shared-circuit loadpoints do not overcommit
+			site.computeSharedPlans(consumption)
 
 			lp.Update(
 				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
