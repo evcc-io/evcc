@@ -277,18 +277,19 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	dt := timeSteps(minLen, now)
 	firstSlotDuration := time.Duration(dt[0]) * time.Second
 
-	site.log.DEBUG.Printf("optimizer: optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
+	site.log.DEBUG.Printf("Optimizer: optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
 		minLen,
 		grid[minLen-1].End.Local(),
 		len(grid), len(feedIn), len(solar),
 		firstSlotDuration,
 	)
-
+	
 	gt, err := site.homeProfile(minLen)
 	if err != nil {
+		site.log.ERROR.Printf("Optimizer: failed to get home profile: %v", err)
 		return err
 	}
-
+	
 	// allow empty solar forecast
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
 	if solarTariff != nil && len(solar) > 0 {
@@ -331,7 +332,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			}
 		}
 	}
-
+	
 	add := func(battery optimizer.BatteryConfig, detail batteryDetail) {
 		battery.PA = pa
 		req.Batteries = append(req.Batteries, battery)
@@ -363,6 +364,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		b := battery[i]
 
 		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
+			site.log.DEBUG.Printf("optimizer: skipping battery %s with missing capacity or soc: %+v", b.Name, b)
 			continue
 		}
 
@@ -373,11 +375,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		// meters configured but measurements not in yet: retry instead of
 		// consuming the slot gate
 		if len(site.batteryMeters) > 0 {
+			site.log.DEBUG.Printf("Optimizer: battery data not ready for now: %s", site.batteryMeters)
 			return errOptimizerNotReady
 		}
+		site.log.DEBUG.Printf("Optimizer: no battery data skipping")
 		return nil // nothing to optimize
 	}
 
+	site.log.TRACE.Printf("Optimizer: request: %+v", req)
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 90 * time.Second
 
@@ -395,6 +400,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if err != nil {
 		return err
 	}
+	site.log.TRACE.Printf("Optimizer: result: %+v", resp)
 
 	if resp.StatusCode() != http.StatusOK {
 		return apiError(resp)
