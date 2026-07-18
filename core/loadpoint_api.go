@@ -498,11 +498,11 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.ui
+	return lp.Ui
 }
 
 func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
-	lp.ui = ui
+	lp.Ui = ui
 	lp.publish(keys.UI, ui)
 	lp.settings.SetJson(keys.UI, ui)
 }

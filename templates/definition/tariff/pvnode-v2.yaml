@@ -35,6 +35,9 @@ params:
     type: int
     default: 1
     advanced: true
+  - name: interval
+    default: 1h
+    advanced: true
 
 render: |
   type: custom
@@ -54,3 +57,4 @@ render: |
           value: (.pv_power | round )
         }
       ] | tostring
+  interval: {{ .interval }}

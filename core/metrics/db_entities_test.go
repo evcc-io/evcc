@@ -19,8 +19,8 @@ func TestListEntities(t *testing.T) {
 	require.NoError(t, db.Instance.Create(&pv).Error)
 
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
-	require.NoError(t, persist(grid, base, 1, 0, nil))
-	require.NoError(t, persist(grid, base.Add(time.Hour), 2, 0, nil))
+	require.NoError(t, persist(grid, base, 1, 0, nil, false))
+	require.NoError(t, persist(grid, base.Add(time.Hour), 2, 0, nil, false))
 
 	entities, err := ListEntities()
 	require.NoError(t, err)

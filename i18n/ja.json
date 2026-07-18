@@ -700,14 +700,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "ライセンスキー",
-      "activationKeyHint": "メールにて送付されます。{url} で確認することも可能です。",
       "addToken": "トークンを入力",
       "changeToken": "トークンを変更",
       "description": "スポンサーシップモデルは、プロジェクトの維持や、新しい魅力的な機能の継続的な開発に役立ちます。スポンサーになると、すべての充電器の統合機能にアクセスできるようになります。",
       "descriptionToken": "GitHubスポンサーの方は、{url} でトークンを確認できます。まず試してみたい方のために、{trialToken} もご用意しています。",
-      "email": "メールアドレス",
-      "emailHint": "{url} で使用したメールアドレス",
       "enterYourToken": "スポンサートークンを入力",
       "error": "スポンサートークンが無効です。",
       "invalid": "無効",
