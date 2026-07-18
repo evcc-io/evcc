@@ -37,9 +37,6 @@ params:
     description:
       en: Modbus slave ID
       de: Modbus-Slave-ID
-    help:
-      en: Usually 3 for Solplanet/AISWEI hybrid inverters
-      de: Bei Solplanet/AISWEI-Hybrid-Wechselrichtern meist 3
     default: 3
     advanced: true
   - preset: battery-params
