@@ -106,6 +106,12 @@ Root gap: plans optimise against the tariff and clamp only to the circuit's
       the plan into more slots. This is the core rework.
 - [ ] Site orchestration: reserve forced load → plan loadpoints in priority
       order against the ledger, subtracting each reservation.
+- [ ] Allocate the shared budget in whole `EffectiveMinPower()` chunks
+      (semi-continuous, same rule as `evcc-io/optimizer#91`): a charger runs at
+      `>= effectiveMinPower` or off, never below. So at most
+      `floor(circuitBudget / effectiveMinPower)` planned sessions can run in a
+      slot; a loadpoint that cannot be granted its `effectiveMinPower` must be
+      left off for that slot and its plan shifted, not run sub-minimum.
 - [ ] Tests: joint feasibility (Σ planned power/slot ≤ circuit limit), deadline
       met for all loadpoints, minSoc reserved first.
 
@@ -124,3 +130,7 @@ Root gap: plans optimise against the tariff and clamp only to the circuit's
 - Dynamic circuit limits vary over time; planning needs a forecast that may not
   exist. Static-only first.
 - Loadpoints on no circuit stay unconstrained (current behaviour).
+- Semi-continuous allocation makes some parallel-plan sets simply infeasible:
+  when `floor(circuitBudget / effectiveMinPower)` is fewer than the loadpoints
+  that must charge at once, a plan cannot fit and the goal-miss warning fires.
+  Allocation cannot hand out sub-`effectiveMinPower` slivers to paper over this.
