@@ -769,14 +769,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licences atslēga",
-      "activationKeyHint": "Nostūtīts jums pa e-pastu. Atrodams {url}.",
       "addToken": "Ievadiet marķieri",
       "changeToken": "Mainīt marķieri",
       "description": "Sponsorēšanas modelis palīdz mums uzturēt projektu un ilgtspējīgi veidot jaunas un aizraujošas funkcijas. Kā sponsors jūs iegūstat piekļuvi visām lādētāju implementācijām.",
       "descriptionToken": "Kā GitHub Sponsors jūs atrodat savu marķieri {url}. Iesākumam piedāvājam {trialToken}.",
-      "email": "E-pasts",
-      "emailHint": "E-pasta adrese ko izmantojāt {url}",
       "enterYourToken": "Jūsu sponsora marķieris",
       "error": "Sponsora marķieris nav derīgs.",
       "invalid": "nederīgs",
@@ -1175,9 +1171,7 @@
     "chargingPlan": {
       "active": "Aktīvs",
       "addRepeatingPlan": "Pievienot atkārtojošu plānu",
-      "arrivalTab": "Ierašanās",
       "day": "Diena",
-      "departureTab": "Izbraukšana",
       "goal": "Uzlādes mērķis",
       "modalTitle": "Uzlādes plāns",
       "none": "nav",
@@ -1201,8 +1195,6 @@
       "strategySettings": "Stratēģijas iestatījumi",
       "time": "Laiks",
       "title": "Plāns",
-      "titleMinSoc": "Min. uzlāde",
-      "titleTargetCharge": "Izbraukšana",
       "unsavedChanges": "Ir nesaglabātas izmaiņas. Piemērot tagad?",
       "update": "Piemērot",
       "weekdays": "Dienas"
@@ -1301,19 +1293,11 @@
       "currents": "Uzlādes strāva",
       "default": "noklusējuma",
       "disclaimerHint": "Piezīme:",
-      "limitSoc": {
-        "description": "Uzlādes ierobežojums, kas tiek izmantots, kad šis transportlīdzeklis ir pievienots.",
-        "label": "Noklusējuma ierobežojums"
-      },
       "maxCurrent": {
         "label": "Maks. strāva"
       },
       "minCurrent": {
         "label": "Min. strāva"
-      },
-      "minSoc": {
-        "description": "Transportlīdzeklis tiek „ātri” uzlādēts līdz {0} saules režīmā. Pēc tam turpina ar saules enerģijas pārpalikumu. Noderīgi, lai nodrošinātu minimālu nobraukumu pat tumšākām dienām.",
-        "label": "Min. uzlāde %"
       },
       "onlyForSocBasedCharging": "Šīs iespējas ir pieejamas tikai transportlīdzekļiem ar zināmu uzlādes līmeni.",
       "phasesConfigured": {

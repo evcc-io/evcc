@@ -58,7 +58,14 @@ func energyHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if q.Get("format") == "csv" {
+	format := q.Get("format")
+
+	if format == "json" {
+		jsonAttachment(w, res, historyFilename(from, aggregate))
+		return
+	}
+
+	if format == "csv" || format == "xlsx" {
 		lang := q.Get("lang")
 		if lang == "" {
 			if tags, _, err := language.ParseAcceptLanguage(r.Header.Get("Accept-Language")); err == nil && len(tags) > 0 {
@@ -66,7 +73,7 @@ func energyHistoryHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, metrics.SeriesCSV(res), historyFilename(from, aggregate))
+		exportResult(ctx, w, format, metrics.SeriesExport(res), historyFilename(from, aggregate))
 		return
 	}
 

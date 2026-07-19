@@ -249,7 +249,8 @@ func (r Register) Operation() (RegisterOperation, error) {
 func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
 	return func(v []byte) float64 {
 		res := float64(f(v))
-		if math.IsNaN(res) || math.IsInf(res, 0) {
+		// keep NaN so callers can map it to "not available"; sanitize Inf to 0
+		if math.IsInf(res, 0) {
 			res = 0
 		}
 		return res

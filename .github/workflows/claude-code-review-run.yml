@@ -113,7 +113,16 @@ jobs:
           allowed_bots: "dependabot[bot]"
           plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
           plugins: "code-review@claude-code-plugins"
-          prompt: "/code-review:code-review ${{ github.repository }}/pull/${{ needs.gate.outputs.number }}"
+          # --comment lets the plugin post to the PR; without it the review only
+          # prints to the hidden CI log. By default the plugin also posts a "No
+          # issues found" summary on clean reviews - the override below drops that
+          # so a comment appears only when there are actual findings.
+          prompt: |
+            /code-review:code-review ${{ github.repository }}/pull/${{ needs.gate.outputs.number }} --comment
+
+            Only post a PR comment if you find issues. If the review is clean with
+            no findings, do not post any comment - skip the "No issues found"
+            summary and stop silently.
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 

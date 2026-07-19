@@ -162,6 +162,33 @@ VehicleLimitReached.args = {
   vehicleSoc: 80,
 };
 
+export const MinSocCharging = Template.bind({});
+MinSocCharging.args = {
+  ...baseState,
+  enabled: true,
+  charging: true,
+  vehicleSoc: 17.3,
+  vehicleRange: 92,
+  minSocNotReached: true,
+  effectiveMinSoc: 30,
+};
+
+export const HeatingMinTemp = Template.bind({});
+HeatingMinTemp.args = {
+  ...baseState,
+  vehicle: { ...baseState.vehicle, title: "Warmwasser", icon: "waterheater" },
+  heating: true,
+  integratedDevice: true,
+  enabled: true,
+  charging: true,
+  vehicleSoc: 38,
+  vehicleRange: 0,
+  effectiveLimitSoc: 60,
+  minSocNotReached: true,
+  effectiveMinSoc: 40,
+  ui: { minTemp: 35, maxTemp: 70 },
+};
+
 export const TargetChargePlanned = Template.bind({});
 TargetChargePlanned.args = {
   ...baseState,
@@ -188,7 +215,7 @@ SmartChargeCostLimitActive.args = {
 export const SuggestionCharge = Template.bind({});
 SuggestionCharge.args = {
   ...baseState,
-  suggestion: { action: "charge" },
+  suggestion: { action: "charge", actionable: true },
 };
 
 export const SuggestionPause = Template.bind({});
@@ -196,7 +223,7 @@ SuggestionPause.args = {
   ...baseState,
   enabled: true,
   charging: true,
-  suggestion: { action: "stop" },
+  suggestion: { action: "stop", actionable: true },
 };
 
 export const SuggestionCombination = Template.bind({});
@@ -204,7 +231,7 @@ SuggestionCombination.args = {
   ...baseState,
   enabled: true,
   charging: true,
-  suggestion: { action: "stop" },
+  suggestion: { action: "stop", actionable: true },
   currency: "EUR",
   tariffGrid: 0.32,
   smartCostLimit: 0.12,

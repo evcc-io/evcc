@@ -30,6 +30,8 @@ type Suggestion struct {
 	Action    string  `json:"action"`
 	Charge    float64 `json:"charge"`    // recommended charge power, W
 	Discharge float64 `json:"discharge"` // recommended discharge power, W
+	// Actionable indicates the suggestion differs from the current operating mode.
+	Actionable bool `json:"actionable"`
 }
 
 type BatteryForecast struct {

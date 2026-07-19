@@ -779,14 +779,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licensnøgle",
-      "activationKeyHint": "Er sendt via email. Findes i {url}.",
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
       "description": "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne.",
       "descriptionToken": "Som GitHub sponsor finder du din token på {url}. For at komme i gang tilbyder vi en {trialToken}.",
-      "email": "Email",
-      "emailHint": "Den email adresse du benyttede for {url}",
       "enterYourToken": "Din Sponsor token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
       "invalid": "ugyldig",
@@ -1198,9 +1194,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Tilføj plan for gentagelse",
-      "arrivalTab": "Ankomst",
       "day": "Dag",
-      "departureTab": "Afgang",
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
@@ -1224,8 +1218,6 @@
       "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
-      "titleMinSoc": "Min. ladning",
-      "titleTargetCharge": "Afgang",
       "unsavedChanges": "Der er ændringer som ikke er gemt. Skal de benyttes nu?",
       "update": "Anvend",
       "weekdays": "Dage"
@@ -1324,19 +1316,11 @@
       "currents": "Ladestrøm",
       "default": "standard",
       "disclaimerHint": "Bemærk:",
-      "limitSoc": {
-        "description": "Opladningsgrænse som benyttes når dette køretøj er forbundet.",
-        "label": "standard opladningsgrænse"
-      },
       "maxCurrent": {
         "label": "Max. Nuværende"
       },
       "minCurrent": {
         "label": "Min. Nuværende"
-      },
-      "minSoc": {
-        "description": "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage.",
-        "label": "Min. opladning %"
       },
       "onlyForSocBasedCharging": "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau.",
       "phasesConfigured": {

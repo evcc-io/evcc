@@ -92,6 +92,11 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, err
 	}
 
+	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
+	if s, _ := utf16BEBytesAsString(c); err != nil || s == "" {
+		return nil, api.ErrSponsorRequired
+	}
+
 	log := util.NewLogger("daheimladen")
 	conn.Logger(log.TRACE)
 
@@ -197,8 +202,20 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
+	if err != nil {
+		return false, err
+	}
 
-	return curr >= 60, err
+	// a charger restart resets the current limit to 0A which triggers
+	// unauthorised autostart. restore the safe disabled value.
+	if curr == 0 {
+		if err := wb.setCurrent(1); err != nil {
+			return false, err
+		}
+		curr = 1
+	}
+
+	return curr >= 60, nil
 }
 
 // Enable implements the api.Charger interface
