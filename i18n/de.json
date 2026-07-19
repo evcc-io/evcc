@@ -188,6 +188,7 @@
     "deviceValue": {
       "activeClients": "Aktive Clients",
       "amount": "Anzahl",
+      "asleep": "schläft",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Kapazität",
@@ -226,6 +227,7 @@
       "no": "Nein",
       "odometer": "Kilometerstand",
       "org": "Organisation",
+      "outdoorTemp": "Außentemperatur",
       "phaseCurrents": "Strom",
       "phasePowers": "Leistung",
       "phaseVoltages": "Spannung",
@@ -437,6 +439,7 @@
         "heating": "Wird beim Systemstart gesetzt."
       },
       "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
+      "defaultModeKeep": "beibehalten",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
@@ -926,7 +929,8 @@
         "feedIn": "Einspeisevergütung hinzufügen",
         "grid": "Netzbezugstarif hinzufügen",
         "planner": "Planer-Vorhersage hinzufügen",
-        "solar": "Solar-Vorhersage hinzufügen"
+        "solar": "Solar-Vorhersage hinzufügen",
+        "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
         "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
@@ -939,6 +943,11 @@
         "titleAdd": "Solar-Vorhersage hinzufügen",
         "titleEdit": "Solar-Vorhersage bearbeiten"
       },
+      "temperature": {
+        "description": "Vorhersage der Außentemperatur am Standort. Wird in der Oberfläche angezeigt und für die Prognose des Heizbedarfs verwendet.",
+        "titleAdd": "Temperatur-Vorhersage hinzufügen",
+        "titleEdit": "Temperatur-Vorhersage bearbeiten"
+      },
       "template": "Anbieter",
       "title": "Tarife & Vorhersagen",
       "titleChoice": "Was möchtest du hinzufügen?",
@@ -947,7 +956,8 @@
         "feedIn": "Einspeisevergütung",
         "grid": "Netzbezugspreis",
         "planner": "Planer",
-        "solar": "Solar"
+        "solar": "Solar",
+        "temperature": "Temperaturvorhersage"
       },
       "zones": {
         "add": "Zone hinzufügen",
@@ -1100,7 +1110,8 @@
       "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
       "price": "Dynamischen Stromtarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
       "setup": "Tarife und Vorhersagen einrichten",
-      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
+      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
+      "temperature": "Zeigt die erwartete Außentemperatur am Standort. Wird für die Prognose des Heizbedarfs verwendet."
     },
     "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
@@ -1122,10 +1133,15 @@
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
     "solarAdjustMedium": "an reale Produktionsdaten anpassen",
     "solarAdjustShort": "anpassen",
+    "temperature": {
+      "average": "Durchschnitt",
+      "range": "Bereich"
+    },
     "type": {
       "co2": "CO₂-Emissionen",
       "price": "Netzpreis",
-      "solar": "Solarproduktion"
+      "solar": "Solarproduktion",
+      "temperature": "Außentemperatur"
     }
   },
   "general": {
@@ -1352,12 +1368,15 @@
       "emission": "Emission",
       "fallbackName": "Ladepunkt",
       "finished": "Ladeende",
+      "last24hEnergy": "Letzte 24h",
+      "last7dEnergy": "Letzte 7 Tage",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
       "remoteDisabledHard": "{source}: Deaktiviert",
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
-      "solar": "Sonne"
+      "solar": "Sonne",
+      "todayEnergy": "Heute"
     },
     "loadpointSettings": {
       "batteryBoost": {

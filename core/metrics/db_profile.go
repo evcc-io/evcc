@@ -21,7 +21,7 @@ func energyProfile(entity entity, from time.Time) (*[96]float64, error) {
 	// COALESCE guards against legacy rows with NULL energy
 	rows, err := db.Query(`SELECT min(ts) AS ts, COALESCE(avg(energy), 0) AS energy
 		FROM meters
-		WHERE meter = ? AND ts >= ?
+		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0
 		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')
 		ORDER BY strftime("%H:%M", ts, 'unixepoch', 'localtime') ASC`,
 		entity.Id, from.Unix(),
