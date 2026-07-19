@@ -222,7 +222,6 @@
 						tariff-type="co2"
 						:has-error="hasDeviceError('tariff', co2Tariff.name)"
 						:tags="deviceTags('tariff', co2Tariff.name)"
-						:currency="currency"
 						@edit="openModal('tariff', { type: 'co2', id: co2Tariff.id })"
 					/>
 					<TariffCard
@@ -234,6 +233,16 @@
 						:tags="deviceTags('tariff', tariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'solar', id: tariff.id })"
+					/>
+					<TariffCard
+						v-if="temperatureTariff"
+						:tariff="temperatureTariff"
+						tariff-type="temperature"
+						:has-error="hasDeviceError('tariff', temperatureTariff.name)"
+						:tags="deviceTags('tariff', temperatureTariff.name)"
+						@edit="
+							openModal('tariff', { type: 'temperature', id: temperatureTariff.id })
+						"
 					/>
 					<TariffCard
 						v-if="plannerTariff"
@@ -671,6 +680,7 @@ export default defineComponent({
 				co2: "",
 				planner: "",
 				solar: [] as string[],
+				temperature: "",
 			},
 			site: {
 				grid: "",
@@ -755,6 +765,10 @@ export default defineComponent({
 			const name = this.tariffRefs?.planner;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
 		},
+		temperatureTariff() {
+			const name = this.tariffRefs?.temperature;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
 		solarTariffs() {
 			const names = this.tariffRefs?.solar || [];
 			return names.map((name) => this.tariffs.find((t) => t.name === name)).filter(Boolean);
@@ -769,16 +783,19 @@ export default defineComponent({
 			const types: TariffType[] = [];
 			if (!this.co2Tariff) types.push("co2");
 			types.push("solar"); // Solar can have multiple
+			if (!this.temperatureTariff) types.push("temperature");
 			if (!this.plannerTariff) types.push("planner");
 			return types;
 		},
 		tariffTags(): DeviceTags {
-			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar, tariffTemperature } =
+				store.state;
 			if (
 				tariffGrid === undefined &&
 				tariffFeedIn === undefined &&
 				tariffCo2 === undefined &&
-				tariffSolar === undefined
+				tariffSolar === undefined &&
+				tariffTemperature === undefined
 			) {
 				return { configured: { value: false } };
 			}
@@ -787,6 +804,7 @@ export default defineComponent({
 				feedinPrice: {},
 				co2: {},
 				solarForecast: {},
+				outdoorTemp: {},
 			};
 			if (tariffGrid) {
 				tags.gridPrice = { value: tariffGrid };
@@ -799,6 +817,9 @@ export default defineComponent({
 			}
 			if (tariffSolar) {
 				tags.solarForecast = { value: tariffSolar };
+			}
+			if (tariffTemperature !== undefined) {
+				tags.outdoorTemp = { value: tariffTemperature };
 			}
 			return tags;
 		},

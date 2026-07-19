@@ -95,9 +95,12 @@ jobs:
                - If you reached a high-certainty conclusion, post the result: a short
                  summary of the problem, the most likely root cause or affected files
                  (with paths), and whether it looks fixable.
-               - If information needed to diagnose is missing from the report (e.g. no
-                 log, no reproduction, no version), instead ask the user for the
-                 specific missing details, and do not assert a root cause.
+               - PUSH FOR MISSING INFORMATION. If anything needed to diagnose is
+                 missing or incomplete — no log, no reproduction steps, no config, no
+                 version, or a screenshot in place of data — do NOT assert a root
+                 cause. Ask the user for the specific missing details instead. When in
+                 doubt whether you have enough to conclude, always err toward asking
+                 rather than guessing.
                Format the comment as valid GitHub-flavored Markdown. Use GitHub's
                autolink forms: `#<number>` for issues/PRs in this repo,
                `owner/repo#<number>` across repos, a bare 7–40 char SHA for commits in
@@ -114,11 +117,19 @@ jobs:
                bug, enhancement, documentation, question, device, tariff, vehicle, heating.
                Only ever apply a label from this existing set — never create a new label.
                Skip this step if the issue already has one of these labels.
-               - Only classify as a bug when the evidence shows a genuine software
-                 defect. If the report is missing information, or you cannot tell
-                 whether it is a software bug versus a configuration/user error, do NOT
-                 apply `bug` — pick a better fit (e.g. question) or leave it unlabeled,
-                 and explain why in your comment.
+               - Be reluctant to classify as a bug. Apply `bug` (or type Bug) ONLY
+                 when the report gives clear, reproducible evidence of a genuine
+                 software defect that you could confirm against the code. Missing
+                 information, an unreproducible report, a screenshot in place of
+                 logs/data, or any doubt between a software defect and a
+                 configuration/user error all mean: do NOT apply `bug` — pick a better
+                 fit (e.g. `question`) or leave it unlabeled, and explain why in your
+                 comment. Default away from `bug`.
+               - If in step 2 you asked for missing information needed to diagnose,
+                 add the `waiting for feedback` label
+                 (`gh issue edit ${{ inputs.issue_number }} --add-label "waiting for feedback"`)
+                 and do not apply `bug`. `waiting for feedback` is an allowed existing
+                 label, additional to the set above.
                - When you do classify it as a bug, prefer setting the issue type to Bug
                  (`gh issue edit ${{ inputs.issue_number }} --type Bug`) over the plain
                  `bug` label.

@@ -165,7 +165,7 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 			if tc.hemsLimit > 0 {
 				ctrl := gomock.NewController(t)
 				hems := api.NewMockHEMS(ctrl)
-				hems.EXPECT().MaxConsumptionPower().Return(tc.hemsLimit).AnyTimes()
+				hems.EXPECT().MaxConsumptionPower().Return(&tc.hemsLimit).AnyTimes()
 				c.hems = hems
 			}
 
