@@ -109,6 +109,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	for k, v := range ev.Attributes {
 		attr[k] = v
 	}
+
 	return util.ReplaceFormatted(tmpl, attr)
 }
 
