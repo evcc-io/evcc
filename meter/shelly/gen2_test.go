@@ -8,6 +8,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type fakeConnectionGeneration struct{ gen int }
+
+func (f fakeConnectionGeneration) Enabled() (bool, error)         { return false, nil }
+func (f fakeConnectionGeneration) Enable(bool) error              { return nil }
+func (f fakeConnectionGeneration) CurrentPower() (float64, error) { return 0, nil }
+func (f fakeConnectionGeneration) TotalEnergy() (float64, error)  { return 0, nil }
+func (f fakeConnectionGeneration) ReturnEnergy() (float64, error) { return 0, nil }
+func (f fakeConnectionGeneration) IsThreePhase() bool             { return false }
+func (f fakeConnectionGeneration) Gen() int                       { return f.gen }
+
+func TestConnectionGen(t *testing.T) {
+	c := &Connection{Generation: fakeConnectionGeneration{gen: 3}}
+	assert.Equal(t, 3, c.Gen())
+}
+
+func TestSwitchEnergyTotal(t *testing.T) {
+	c := &gen2{}
+	assert.Equal(t, 0.0, c.switchEnergyTotal(Gen2SwitchStatus{Aenergy: struct{ Total float64 }{Total: 10}, Ret_Aenergy: struct{ Total float64 }{Total: 20}}))
+	assert.Equal(t, 5.0, c.switchEnergyTotal(Gen2SwitchStatus{Aenergy: struct{ Total float64 }{Total: 15}, Ret_Aenergy: struct{ Total float64 }{Total: 10}}))
+}
+
 // Test Gen2+ status responses
 func TestUnmarshalGen2StatusResponse(t *testing.T) {
 	{

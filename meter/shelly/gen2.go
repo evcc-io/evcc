@@ -237,7 +237,7 @@ func (c *gen2) TotalEnergy() (float64, error) {
 		// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
 		// NOTE: ret_aenergy - the active energy added to this container is also added to aenergy container.
 		// All the consumed energy is collected in aenergy regardless of the direction(consumed or returned) of the active energy.
-		return (res.Aenergy.Total - res.Ret_Aenergy.Total) / 1000, err
+		return c.switchEnergyTotal(res) / 1000, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -365,6 +365,14 @@ func parseAddOnSwitchID(channel int, res Gen2ProAddOnGetPeripherals) int {
 
 	// if no switch ID is found, return the channel as default
 	return channel
+}
+
+func (c *gen2) switchEnergyTotal(res Gen2SwitchStatus) float64 {
+	netEnergy := res.Aenergy.Total - res.Ret_Aenergy.Total
+	if netEnergy < 0 {
+		return 0
+	}
+	return netEnergy
 }
 
 func (c *gen2) Gen() int {

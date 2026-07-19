@@ -19,7 +19,6 @@ type Generation interface {
 	api.MeterEnergy
 	api.MeterReturnEnergy
 	IsThreePhase() bool
-	Gen() int
 }
 
 type Phases interface {
@@ -28,9 +27,14 @@ type Phases interface {
 	api.PhasePowers
 }
 
+type generationInfo interface {
+	Gen() int
+}
+
 // Connection is the Shelly connection
 type Connection struct {
 	Generation
+	generation int
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -80,7 +84,14 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		}
 	}
 
-	conn := &Connection{gen}
+	conn := &Connection{Generation: gen, generation: resp.Gen}
 
 	return conn, nil
+}
+
+func (c *Connection) Gen() int {
+	if gen, ok := c.Generation.(generationInfo); ok {
+		return gen.Gen()
+	}
+	return c.generation
 }

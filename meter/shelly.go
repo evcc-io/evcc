@@ -92,14 +92,16 @@ func (c *Shelly) CurrentPower() (float64, error) {
 	return c.currentPowerForUsage(power), nil
 }
 
+// Shelly PV usage uses absolute power for Gen1 and Gen2 switch-based devices, but preserves the sign for Gen3.
 func (c *Shelly) currentPowerForUsage(power float64) float64 {
 	if c.usage != "pv" {
 		return power
 	}
 
-	if c.conn.Generation.Gen() > 2 {
+	switch c.conn.Gen() {
+	case 3:
 		return -power
+	default:
+		return math.Abs(power)
 	}
-
-	return math.Abs(power)
 }
