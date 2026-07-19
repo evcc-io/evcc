@@ -1345,8 +1345,8 @@
       "power": "Výkon",
       "price": "Výdavky",
       "remaining": "Zostávajúce",
-      "remoteDisabledHard": "{zdroj}: vypnuté",
-      "remoteDisabledSoft": "{zdroj}: vypnuté adaptívne solárne nabíjanie",
+      "remoteDisabledHard": "{source}: vypnuté",
+      "remoteDisabledSoft": "{source}: vypnuté adaptívne solárne nabíjanie",
       "solar": "Solár"
     },
     "loadpointSettings": {
@@ -1442,7 +1442,7 @@
       "chargeDuration": "Doba nabíjania",
       "co2Label": "CO2 emisie ⌀",
       "priceLabel": "Cena energie",
-      "timeRange": "{deň} {range} h",
+      "timeRange": "{day} {range} h",
       "unknownPrice": "stále neznáme"
     },
     "targetEnergy": {
@@ -1555,8 +1555,8 @@
       "energy": "Nabitá energia",
       "energyGrouped": "Solárna verzus energia zo siete",
       "energyGroupedByGroup": "Energia {byGroup}",
-      "energySubSolar": "{hodnota} solár",
-      "energySubTotal": "{hodnota} celkom",
+      "energySubSolar": "{value} solár",
+      "energySubTotal": "{value} celkom",
       "groupedCo2ByGroup": "Množstvo CO₂ {byGroup}",
       "groupedPriceByGroup": "Celkové náklady {byGroup}",
       "historyCo2": "CO₂-Emisie",
