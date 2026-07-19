@@ -188,14 +188,25 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate,
 // the current config, then publishes a snapshot for the fast loop under batteryPlanMu. It
 // commands no power and chooses no direction - those are the fast loop's job.
 func (site *Site) buildBatterySnapshot(rate api.Rate) {
-	var evPower, evPowerFast float64
+	var evPower, evPowerFast, boostPower float64
 	for _, lp := range site.loadpoints {
-		if !lp.IsHeating() {
-			p := lp.GetChargePower()
-			evPower += p
-			if lp.GetStatus() != api.StatusA && lp.IsFastChargingActive() {
-				evPowerFast += p
-			}
+		if lp.IsHeating() {
+			continue
+		}
+		p := lp.GetChargePower()
+
+		// active battery boost: the user explicitly wants the battery drained into
+		// this vehicle (down to the boost soc limit), so the fast loop covers it even
+		// below bufferSoc / with discharge control. It is therefore NOT part of the
+		// excluded EV power. boostHold (limit reached) stops pushing, so treat it as off.
+		if b := lp.GetBatteryBoost(); b != boostDisabled && b != boostHold {
+			boostPower += p
+			continue
+		}
+
+		evPower += p
+		if lp.GetStatus() != api.StatusA && lp.IsFastChargingActive() {
+			evPowerFast += p
 		}
 	}
 
@@ -215,6 +226,9 @@ func (site *Site) buildBatterySnapshot(rate api.Rate) {
 	if site.battery.Soc >= site.prioritySoc {
 		chargeOffset = residual
 	}
+	// boosting loadpoints are already excluded from evPower/evPowerFast above, so the
+	// battery covers them; the boost soc floor is enforced loadpoint-side (boostHold,
+	// #31922) and the fast loop's own minSoc fail-closed remains the hard floor.
 	var dischargeEvExcluded float64
 	if site.dischargeControlActive(rate) {
 		dischargeEvExcluded = evPowerFast
@@ -261,8 +275,8 @@ func (site *Site) buildBatterySnapshot(rate api.Rate) {
 	site.batterySnapshot = snap
 	site.batteryPlanMu.Unlock()
 
-	batteryLog.TRACE.Printf("battery snapshot: %d batteries soc=%.0f%% chargeOff=%.0fW dischargeOff=%.0fW evExcl=%.0fW threshold=%.0fW",
-		len(snap.batteries), site.battery.Soc, chargeOffset, residual, dischargeEvExcluded, snap.threshold)
+	batteryLog.TRACE.Printf("battery snapshot: %d batteries soc=%.0f%% chargeOff=%.0fW dischargeOff=%.0fW evExcl=%.0fW boost=%.0fW threshold=%.0fW",
+		len(snap.batteries), site.battery.Soc, chargeOffset, residual, dischargeEvExcluded, boostPower, snap.threshold)
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge, rate, and site power
