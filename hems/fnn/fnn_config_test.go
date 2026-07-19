@@ -34,7 +34,7 @@ func TestPowerParamFallback(t *testing.T) {
 
 			fnn, err := NewFromConfig(t.Context(), conf, &stubSite{})
 			require.NoError(t, err)
-			assert.Equal(t, tc.want, fnn.maxCurtailPower)
+			assert.Equal(t, tc.want, fnn.productionNominalMax)
 		})
 	}
 }
