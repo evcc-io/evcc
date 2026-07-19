@@ -18,6 +18,7 @@ const (
 	Rtu
 	Ascii
 	Udp
+	Tls
 
 	CoilOn uint16 = 0xFF00
 )
@@ -41,6 +42,16 @@ type Settings struct {
 	Baudrate  int    `json:"baudrate,omitempty" yaml:",omitempty"`
 	UDP       bool   `json:"udp,omitempty" yaml:",omitempty"`
 	RTU       *bool  `json:"rtu,omitempty" yaml:",omitempty"`
+	// TLS: when Cert and Key are set, the TCP connection is wrapped in TLS
+	// (Modbus over TLS). If unset, no TLS is used.
+	Cert   string `json:"cert,omitempty" yaml:",omitempty"`
+	Key    string `json:"key,omitempty" yaml:",omitempty"`
+	CACert string `json:"cacert,omitempty" yaml:",omitempty"`
+}
+
+// TLS reports whether TLS is configured (client certificate present)
+func (s Settings) TLS() bool {
+	return s.Cert != "" && s.Key != ""
 }
 
 // Protocol identifies the wire format from the RTU setting
