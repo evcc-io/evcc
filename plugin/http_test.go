@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -161,4 +162,17 @@ func (suite *httpTestSuite) TestSetPath() {
 	suite.Require().NoError(err)
 	suite.Require().NoError(s("4711"))
 	suite.Require().Equal("/foo/bar/4711", suite.h.req.URL.String())
+}
+
+func TestRepeatedGet(t *testing.T) {
+	url := "http://repeated.test/uncached"
+	t0 := time.Now()
+
+	require.False(t, repeatedGet(url, t0))                           // first sighting
+	require.True(t, repeatedGet(url, t0.Add(500*time.Millisecond)))  // repeated within 1s: warn
+	require.False(t, repeatedGet(url, t0.Add(600*time.Millisecond))) // already warned: silent
+
+	spaced := "http://repeated.test/spaced"
+	require.False(t, repeatedGet(spaced, t0))
+	require.False(t, repeatedGet(spaced, t0.Add(2*time.Second))) // >1s apart: no warn
 }

@@ -27,6 +27,7 @@ type HTTP struct {
 	body        string
 	pipeline    *pipeline.Pipeline
 	mu          *sync.Mutex
+	log         *util.Logger
 }
 
 func init() {
@@ -100,6 +101,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		Helper: request.NewHelper(log),
 		url:    uri,
 		method: method,
+		log:    log,
 	}
 
 	// build the cache stack without logging so the logging tripper
@@ -219,6 +221,11 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 		return []byte{}, err
 	}
 
+	// warn on uncached GET polling: a configured cache would spare the roundtrip
+	if p.method == http.MethodGet && p.mu == nil && repeatedGet(url, time.Now()) {
+		p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", url)
+	}
+
 	val, err := p.DoBody(req)
 	if err != nil {
 		if err2 := knownErrors(val); err2 != nil {
@@ -227,6 +234,29 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	}
 
 	return val, err
+}
+
+var (
+	httpSeenMu sync.Mutex
+	httpSeen   = make(map[string]time.Time)
+	httpWarned = make(map[string]struct{})
+)
+
+// repeatedGet reports the first time url is fetched again within a second, a sign
+// the response should be cached. It fires once per url to avoid log spam.
+func repeatedGet(url string, now time.Time) bool {
+	httpSeenMu.Lock()
+	defer httpSeenMu.Unlock()
+
+	last, seen := httpSeen[url]
+	httpSeen[url] = now
+
+	if _, warned := httpWarned[url]; warned || !seen || now.Sub(last) >= time.Second {
+		return false
+	}
+
+	httpWarned[url] = struct{}{}
+	return true
 }
 
 var _ Getters = (*HTTP)(nil)
