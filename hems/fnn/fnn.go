@@ -23,14 +23,16 @@ func init() {
 // NewFromConfig creates an FNN HEMS from generic config.
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
-		MaxPower        float64 // TODO deprecated
-		MaxDimPower     float64
-		MaxCurtailPower float64
-		W3              *plugin.Config
-		S1              *plugin.Config
-		S2              *plugin.Config
-		W4              *plugin.Config
-		Interval        time.Duration
+		MaxPower                            float64 // TODO deprecated
+		MaxDimPower                         float64
+		MaxCurtailPower                     float64
+		W3                                  *plugin.Config
+		S1                                  *plugin.Config
+		S2                                  *plugin.Config
+		W4                                  *plugin.Config
+		Interval                            time.Duration
+		FailsafeConsumptionActivePowerLimit float64
+		FailsafeDurationMinimum             time.Duration
 	}{
 		Interval: 10 * time.Second,
 	}
@@ -69,25 +71,27 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		maxCurtailPower = cc.MaxPower
 	}
 
-	return NewFnn(site, math.Abs(cc.MaxDimPower), maxCurtailPower, w3G, s1G, s2G, w4G, cc.Interval)
+	return NewFnn(site, math.Abs(cc.MaxDimPower), maxCurtailPower, w3G, s1G, s2G, w4G, cc.Interval, math.Abs(cc.FailsafeConsumptionActivePowerLimit), cc.FailsafeDurationMinimum)
 }
 
-func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, w4G func() (bool, error), interval time.Duration) (*Fnn, error) {
+func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, w4G func() (bool, error), interval time.Duration, failsafeConsumptionLimit float64, failsafeDurationMinimum time.Duration) (*Fnn, error) {
 	if w4G != nil && maxDimPower == 0 {
 		return nil, errors.New("cannot have w4 without power limit")
 	}
 
 	c := &Fnn{
-		log:               util.NewLogger("fnn"),
-		site:              site,
-		maxDimPower:       maxDimPower,
-		maxCurtailPower:   maxCurtailPower,
-		s1:                s1G,
-		s2:                s2G,
-		w3:                w3G,
-		w4:                w4G,
-		productionPercent: 100,
-		interval:          interval,
+		log:                     util.NewLogger("fnn"),
+		site:                    site,
+		maxDimPower:             maxDimPower,
+		maxCurtailPower:         maxCurtailPower,
+		s1:                      s1G,
+		s2:                      s2G,
+		w3:                      w3G,
+		w4:                      w4G,
+		productionPercent:       100,
+		interval:                interval,
+		failsafeConsumptionLimit:  failsafeConsumptionLimit,
+		failsafeDurationMinimum:   failsafeDurationMinimum,
 	}
 
 	// read the relays once synchronously so limits are valid as soon as NewFnn returns
@@ -121,6 +125,11 @@ type Fnn struct {
 	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
 
 	interval time.Duration
+
+	failsafeConsumptionLimit float64
+	failsafeDurationMinimum  time.Duration
+	failsafeActive           bool
+	failsafeEnteredAt        time.Time
 }
 
 func (c *Fnn) SetUpdated(f func()) {
@@ -183,6 +192,8 @@ func (c *Fnn) runCurtail() error {
 
 // runDim evaluates the dimming rule and applies the dim limit.
 // No-op if dim input is not configured.
+// On read error, enters failsafe mode and applies failsafeConsumptionLimit if configured.
+// Failsafe remains active for at least failsafeDurationMinimum after the first error.
 func (c *Fnn) runDim() error {
 	if c.w4 == nil {
 		return nil
@@ -190,7 +201,33 @@ func (c *Fnn) runDim() error {
 
 	active, err := c.w4()
 	if err != nil {
-		return err
+		if c.failsafeConsumptionLimit <= 0 {
+			return err
+		}
+		c.mu.Lock()
+		if !c.failsafeActive {
+			c.log.WARN.Println("w4 read error, entering failsafe mode")
+			c.failsafeActive = true
+			c.failsafeEnteredAt = time.Now()
+		}
+		c.mu.Unlock()
+		return c.setConsumptionLimit(c.failsafeConsumptionLimit)
+	}
+
+	c.mu.Lock()
+	inFailsafe := false
+	if c.failsafeActive {
+		if time.Since(c.failsafeEnteredAt) >= c.failsafeDurationMinimum {
+			c.log.DEBUG.Println("leaving failsafe mode")
+			c.failsafeActive = false
+		} else {
+			inFailsafe = true
+		}
+	}
+	c.mu.Unlock()
+
+	if inFailsafe {
+		return nil
 	}
 
 	limit := 0.0
