@@ -5,7 +5,13 @@
 		role="button"
 		data-testid="change-vehicle"
 	>
-		<select :id="dropdownId" :value="selected" class="custom-select" @change="change">
+		<select
+			:id="dropdownId"
+			:value="selected"
+			:aria-label="$t('main.vehicle.changeVehicle')"
+			class="custom-select"
+			@change="change"
+		>
 			<option
 				v-for="{ name, value } in vehicleOptions"
 				:key="name"

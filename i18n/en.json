@@ -1154,6 +1154,7 @@
   },
   "general": {
     "download": "Download",
+    "none": "none",
     "note": "Note:"
   },
   "header": {
@@ -1267,9 +1268,7 @@
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
-      "arrivalTab": "Arrival",
       "day": "Day",
-      "departureTab": "Departure",
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
@@ -1293,8 +1292,6 @@
       "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
-      "titleMinSoc": "Min charge",
-      "titleTargetCharge": "Departure",
       "unsavedChanges": "There are unsaved changes. Apply now?",
       "update": "Apply",
       "weekdays": "Days"
@@ -1323,7 +1320,8 @@
       "pv": "Solar system",
       "pvExport": "Grid export",
       "pvProduction": "Production",
-      "selfConsumption": "Self-consumption"
+      "selfConsumption": "Self-consumption",
+      "toggleDetails": "Energy flow details"
     },
     "heatingStatus": {
       "charging": "Heating…",
@@ -1403,19 +1401,11 @@
       "currents": "Charging Current",
       "default": "default",
       "heating": "Heating",
-      "limitSoc": {
-        "description": "Charging limit that is used when this vehicle is connected.",
-        "label": "Default limit"
-      },
       "maxCurrent": {
         "label": "Max. Current"
       },
       "minCurrent": {
         "label": "Min. Current"
-      },
-      "minSoc": {
-        "description": "The vehicle gets „fast” charged to {0} in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days.",
-        "label": "Min. charge %"
       },
       "minTemp": {
         "description": "Below {0} battery and grid power are also used in solar mode to maintain this temperature.",
@@ -1502,6 +1492,20 @@
       "tempLimit": "Temp. limit",
       "unknown": "Guest vehicle",
       "vehicleSoc": "Charge"
+    },
+    "vehicleSettings": {
+      "connectedTo": "connected to {0}",
+      "description": "These defaults are applied when the vehicle connects to a charging point.",
+      "editHint": "Add or edit vehicles in {0}.",
+      "keepAsIs": "Keep as is",
+      "learnMore": "Learn more.",
+      "limitSoc": "Default limit",
+      "menu": "Vehicles",
+      "minSoc": "Minimum charge",
+      "minSocDescription": "Fast charge to this level in solar mode.",
+      "mode": "Default mode",
+      "notConnected": "not connected",
+      "title": "Vehicle Settings"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Waiting for authorization.",

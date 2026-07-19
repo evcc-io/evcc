@@ -14,7 +14,7 @@
 		</div>
 		<div v-if="forecast?.highest" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
-				<BatteryIcon :soc="95" />
+				<BatteryIcon :soc="forecast.highest.soc" />
 				{{ pointLabel(forecast.highest, true) }}
 			</span>
 			<span class="text-muted text-end">{{
@@ -23,7 +23,7 @@
 		</div>
 		<div v-if="forecast?.lowest" class="d-flex justify-content-between gap-3">
 			<span class="d-flex align-items-center gap-2 fw-bold">
-				<BatteryIcon :soc="10" />
+				<BatteryIcon :soc="forecast.lowest.soc" />
 				{{ pointLabel(forecast.lowest, false) }}
 			</span>
 			<span class="text-muted text-end">{{

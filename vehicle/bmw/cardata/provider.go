@@ -141,13 +141,13 @@ func (v *Provider) any(key string) (any, error) {
 	return nil, api.ErrNotAvailable
 }
 
-func isNilOrEmtpy(val any) bool {
+func isNilOrEmpty(val any) bool {
 	return val == nil || val == ""
 }
 
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return "", api.ErrNotAvailable
 	}
 
@@ -156,7 +156,7 @@ func (v *Provider) String(key string) (string, error) {
 
 func (v *Provider) Int(key string) (int64, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -165,7 +165,7 @@ func (v *Provider) Int(key string) (int64, error) {
 
 func (v *Provider) Float(key string) (float64, error) {
 	res, err := v.any(key)
-	if err != nil || isNilOrEmtpy(res) {
+	if err != nil || isNilOrEmpty(res) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -186,22 +186,23 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	port, err := v.String("vehicle.body.chargingPort.status")
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	status := api.StatusA // disconnected
-	if port == "CONNECTED" {
-		status = api.StatusB
-	}
-
 	// evaluate status first, since it's usually available through
 	// mqtt, while hvStatus might only be available through rest
 	// (https://github.com/evcc-io/evcc/pull/26235)
 	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
 	if err != nil {
-		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+		cs, _ = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	}
+
+	if slices.Contains([]string{
+		"INITIALIZATION",         // vehicle.drivetrain.electricEngine.charging.status
+		"CHARGINGPAUSED",         // vehicle.drivetrain.electricEngine.charging.status
+		"CHARGINGENDED",          // vehicle.drivetrain.electricEngine.charging.status
+		"WAITING_FOR_CHARGING",   // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_FULLY_CHARGED", // vehicle.drivetrain.electricEngine.charging.hvStatus
+		"FINISHED_NOT_FULL",      // vehicle.drivetrain.electricEngine.charging.hvStatus
+	}, cs) {
+		return api.StatusB, nil
 	}
 
 	if slices.Contains([]string{
@@ -209,6 +210,19 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
 	}, cs) {
 		return api.StatusC, nil
+	}
+
+	port, err := v.String("vehicle.body.chargingPort.status")
+	if err != nil {
+		port, err = v.String("vehicle.body.chargingPort.combinedStatus")
+		if err != nil {
+			return api.StatusNone, err
+		}
+	}
+
+	status := api.StatusA // disconnected
+	if port == "CONNECTED" {
+		status = api.StatusB
 	}
 
 	return status, err
