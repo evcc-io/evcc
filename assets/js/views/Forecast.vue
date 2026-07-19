@@ -7,31 +7,15 @@
 		<div v-if="!forecastAvailable" class="flex-grow-1 d-flex">
 			<div class="empty-box d-flex flex-column p-5">
 				<ul class="list-unstyled mb-4">
-					<li class="d-flex align-items-start gap-2 mb-3">
-						<shopicon-regular-sun
-							size="s"
-							class="text-muted flex-shrink-0"
-						></shopicon-regular-sun>
+					<li
+						v-for="{ type, icon } in emptyItems"
+						:key="type"
+						class="d-flex align-items-start gap-2 mb-3"
+					>
+						<component :is="icon" size="s" class="text-muted flex-shrink-0" />
 						<div>
-							<strong>{{ $t("forecast.type.solar") }}</strong>
-							<div class="text-muted">{{ $t("forecast.empty.solar") }}</div>
-						</div>
-					</li>
-					<li class="d-flex align-items-start gap-2 mb-3">
-						<DynamicPriceIcon class="text-muted flex-shrink-0" />
-						<div>
-							<strong>{{ $t("forecast.type.price") }}</strong>
-							<div class="text-muted">{{ $t("forecast.empty.price") }}</div>
-						</div>
-					</li>
-					<li class="d-flex align-items-start gap-2 mb-3">
-						<shopicon-regular-eco1
-							size="s"
-							class="text-muted flex-shrink-0"
-						></shopicon-regular-eco1>
-						<div>
-							<strong>{{ $t("forecast.type.co2") }}</strong>
-							<div class="text-muted">{{ $t("forecast.empty.co2") }}</div>
+							<strong>{{ $t(`forecast.type.${type}`) }}</strong>
+							<div class="text-muted">{{ $t(`forecast.empty.${type}`) }}</div>
 						</div>
 					</li>
 				</ul>
@@ -42,13 +26,14 @@
 		</div>
 		<div v-else class="row">
 			<main class="col-12 d-flex flex-column">
-				<section v-if="forecast.solar" class="mb-5">
-					<div class="d-flex align-items-baseline my-4">
-						<h3 class="fw-normal mb-0">{{ $t("forecast.type.solar") }}</h3>
-						<div
-							v-if="showSolarAdjust"
-							class="form-check form-switch ms-auto mb-0 text-nowrap"
-						>
+				<Card
+					v-if="forecast.solar"
+					:title="$t('forecast.type.solar')"
+					edge-to-edge
+					class="box-pull-out mb-4"
+				>
+					<template v-if="showSolarAdjust" #actions>
+						<div class="form-check form-switch mb-0 text-nowrap">
 							<input
 								id="solarForecastAdjust"
 								:checked="solarAdjusted"
@@ -62,7 +47,7 @@
 								<span class="d-none d-md-inline">{{ solarAdjustTextMedium }}</span>
 							</label>
 						</div>
-					</div>
+					</template>
 					<div class="chart-edge">
 						<SolarChart
 							:solar="solar"
@@ -74,16 +59,17 @@
 						/>
 					</div>
 					<SolarDetails :solar="solar" />
-				</section>
+				</Card>
 
-				<section
+				<Card
 					v-if="forecast.grid"
-					class="mb-5"
+					:title="$t('forecast.type.price')"
+					edge-to-edge
+					class="box-pull-out mb-4"
 					:style="isGridStatic ? { order: 1 } : undefined"
 				>
-					<div class="d-flex align-items-baseline my-4">
-						<h3 class="fw-normal mb-0">{{ $t("forecast.type.price") }}</h3>
-						<div class="form-check form-switch ms-auto mb-0 text-nowrap">
+					<template #actions>
+						<div class="form-check form-switch mb-0 text-nowrap">
 							<input
 								id="priceZoom"
 								:checked="priceZoom"
@@ -96,7 +82,7 @@
 								{{ $t("forecast.priceZoom") }}
 							</label>
 						</div>
-					</div>
+					</template>
 					<div class="chart-edge">
 						<PriceChart
 							:grid="forecast.grid"
@@ -116,21 +102,27 @@
 						:show-feedin="showFeedin"
 						@toggle-feedin="toggleFeedin"
 					/>
-				</section>
+				</Card>
 
-				<section v-if="forecast.co2" class="mb-5">
-					<h3 class="fw-normal my-4">{{ $t("forecast.type.co2") }}</h3>
+				<Card
+					v-for="t in valueForecastTypes"
+					:key="t"
+					:title="$t(`forecast.type.${t}`)"
+					edge-to-edge
+					class="box-pull-out mb-4"
+				>
 					<div class="chart-edge">
-						<Co2Chart
-							:co2="forecast.co2"
+						<ValueChart
+							:type="t"
+							:rates="forecast[t]!"
 							:chart-width="chartWidth"
 							:end-date="chartEndDate"
 							:scroll-left="scrollLeft"
 							@scroll="onChartScroll"
 						/>
 					</div>
-					<Co2Details :co2="forecast.co2" />
-				</section>
+					<ValueDetails :type="t" :rates="forecast[t]" />
+				</Card>
 			</main>
 		</div>
 	</div>
@@ -139,16 +131,19 @@
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/eco1";
-import { defineComponent } from "vue";
+import "@h2d2/shopicons/es/regular/thermometerhalf";
+import { defineComponent, markRaw } from "vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import SolarChart from "../components/Forecast/SolarChart.vue";
 import SolarDetails from "../components/Forecast/SolarDetails.vue";
 import PriceChart from "../components/Forecast/PriceChart.vue";
 import GridDetails from "../components/Forecast/GridDetails.vue";
-import Co2Chart from "../components/Forecast/Co2Chart.vue";
-import Co2Details from "../components/Forecast/Co2Details.vue";
+import ValueChart, { type ValueChartType } from "../components/Forecast/ValueChart.vue";
+import ValueDetails from "../components/Forecast/ValueDetails.vue";
 import formatter from "@/mixins/formatter";
+import api from "@/api";
 import settings from "@/settings";
 import store from "../store";
 import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
@@ -160,13 +155,14 @@ export default defineComponent({
 	name: "Forecast",
 	components: {
 		TopHeader: Header,
+		Card,
 		DynamicPriceIcon,
 		SolarChart,
 		SolarDetails,
 		PriceChart,
 		GridDetails,
-		Co2Chart,
-		Co2Details,
+		ValueChart,
+		ValueDetails,
 	},
 	mixins: [formatter],
 	data() {
@@ -180,7 +176,23 @@ export default defineComponent({
 			return store.state?.forecast || {};
 		},
 		forecastAvailable() {
-			return !!(this.forecast.grid || this.forecast.solar || this.forecast.co2);
+			return !!(
+				this.forecast.grid ||
+				this.forecast.solar ||
+				this.forecast.co2 ||
+				this.forecast.temperature
+			);
+		},
+		valueForecastTypes(): ValueChartType[] {
+			return (["co2", "temperature"] as ValueChartType[]).filter((t) => this.forecast[t]);
+		},
+		emptyItems() {
+			return [
+				{ type: "solar", icon: "shopicon-regular-sun" },
+				{ type: "price", icon: markRaw(DynamicPriceIcon) },
+				{ type: "co2", icon: "shopicon-regular-eco1" },
+				{ type: "temperature", icon: "shopicon-regular-thermometerhalf" },
+			];
 		},
 		startDate(): Date {
 			const now = new Date();
@@ -194,11 +206,11 @@ export default defineComponent({
 		},
 		dataEndDate(): Date {
 			let latest = this.startDate.getTime();
-			for (const s of this.forecast.grid || []) {
-				const t = new Date(s.end).getTime();
-				if (t > latest) latest = t;
-			}
-			for (const s of this.forecast.co2 || []) {
+			for (const s of [
+				...(this.forecast.grid || []),
+				...(this.forecast.co2 || []),
+				...(this.forecast.temperature || []),
+			]) {
 				const t = new Date(s.end).getTime();
 				if (t > latest) latest = t;
 			}
@@ -226,7 +238,7 @@ export default defineComponent({
 			return store.state?.experimental;
 		},
 		solarAdjusted() {
-			return settings.solarAdjusted;
+			return store.state?.solarAdjusted;
 		},
 		priceZoom() {
 			return settings.priceZoom;
@@ -263,8 +275,14 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		changeAdjusted() {
-			settings.solarAdjusted = !settings.solarAdjusted;
+		async changeAdjusted(e: Event) {
+			try {
+				await api.post(
+					`solaradjusted/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
+				);
+			} catch (err) {
+				console.error(err);
+			}
 		},
 		togglePriceZoom() {
 			settings.priceZoom = !settings.priceZoom;
@@ -295,9 +313,17 @@ export default defineComponent({
 	max-width: 480px;
 }
 @media (max-width: 575.98px) {
+	/* cancel the card's padding for full-bleed charts */
 	.chart-edge {
 		margin-left: -1.5rem;
 		margin-right: -1.5rem;
+	}
+}
+@media (min-width: 576px) {
+	/* compensate the card border so the chart width fits without scrolling on wide screens */
+	.chart-edge {
+		margin-left: -1px;
+		margin-right: -1px;
 	}
 }
 </style>

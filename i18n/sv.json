@@ -19,6 +19,48 @@
     "successCloseTab": "Du kan nu stänga denna flik.",
     "title": "Auktoriseringsstatus"
   },
+  "battery": {
+    "card": {
+      "charging": "laddar",
+      "discharging": "laddar ur",
+      "energy": "Energi",
+      "gridCharge": "elnätsladdning",
+      "hold": "urladdning låst",
+      "holdCharge": "laddning låst",
+      "ofTotal": "av {total}",
+      "power": "Effekt",
+      "soc": "Batterinivå"
+    },
+    "combined": "Sammanlagt",
+    "config": {
+      "buffer": "Hembatteriets energi över {soc} får användas för att stödja laddning och fördröjer avstängning i solcellsläge. Starta solcellsladdning automatiskt {start}.",
+      "bufferNone": "Hemmabatteriets energi används inte för billaddning. Ställ in ett värde under {soc} för att aktivera stöd.",
+      "bufferStart": {
+        "above": "när batteriet är över {soc}",
+        "full": "när batteriet är fullt",
+        "never": "enbart vid tillräckligt överskott"
+      },
+      "bufferTitle": "Batteriet som laddningsbuffert",
+      "discharge": "Förhindra att hemmabatteriet laddas ur i snabbläge och under planerad laddning.",
+      "priority": "Hemmabatteriet har prioritet så länge det är under {soc}. Därefter får billaddarna överskottet.",
+      "priorityNone": "Solelens överskott går direkt till billaddarna. Ställ in ett värde över {soc} för att prioritera hemmabatteriet.",
+      "priorityTitle": "Vart ska överskottet gå i första hand?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Laddning från nätet",
+        "hold": "Urladdning spärrad",
+        "holdcharge": "Laddning pausad",
+        "normal": "Vid solelöverskott"
+      },
+      "empty": "tom",
+      "full": "full",
+      "highest": "Högsta ({value})",
+      "lowest": "Lägsta ({value})",
+      "suggestion": "Förslag",
+      "title": "Optimizer"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Batterinivå",
     "bufferStart": {
@@ -51,6 +93,11 @@
     "hex": "Hex-färg"
   },
   "config": {
+    "adminPassword": {
+      "description": "Skriptpluginet kör ett systemkommando som körs med evcc-processens behörigheter. Ange ditt administratörslösenord igen för att fortsätta.",
+      "invalid": "Fel lösenord. Försök igen.",
+      "title": "Potentiellt farlig åtgärd"
+    },
     "apiKey": {
       "description": "Ge skript och automatiseringsuppgifter, som schemalagda säkerhetskopior, säker åtkomst utan att dela ditt administratörslösenord.",
       "exampleLabel": "Pröva: ladda hem en backup med curl",
@@ -220,15 +267,21 @@
         "public": "Publikt certifikat",
         "title": "Certifikat"
       },
+      "configuredDevices": "Konfigurerade enheter",
       "description": "Inställning som tillåter evcc att kommunicera med EEBus-kompatibla enheter som laddare eller kontrollenheter från din nätoperatör. Initiering och generering av certifikat sker vid första uppstart.",
       "descriptionAdvanced": "Inga ändringar behövs. Gör enbart ändringar om du är säker på vad du gör. Om du ändrar SHIP-id eller certifikat så måste enheterna paras igen.",
       "interfaces": "Gränssnitt",
       "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBus kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
+      "noConfiguredDevices": "Inga enheter konfigurerade av SKI.",
+      "noPairings": "Inga enheter parade.",
+      "pairings": "Parade enheter",
       "port": "Port",
       "portHelp": "Port som ska användas.",
       "qr": "Kopplingskod",
       "qrExplain": "Skanna från en annan EEBus-enhet vid installationen för automatisk parkoppling – du behöver då inte ange SKI manuellt.",
       "removeConfirm": "All EEBus konfiguration kommer raderas. Nya certifikat och id kommer att genereras vid nästa start. Är du säker?",
+      "removePairing": "Ta bort parning",
+      "removePairingConfirm": "Enheten kommer kopplas bort och måste bli ihopparad igen. Är du säker?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhets-id för identifiering i EEBus-nätverket.",
       "shipidHelp": "Detta SHIP-ID är länkat till certifikatet nedan.",
@@ -241,9 +294,9 @@
       "title": "Experimentell"
     },
     "ext": {
-      "description": "Registrerar energivärden för brukare som inte hanteras av evcc (t.ex. kylskåp, tvättmaskin etc.) för statistiska ändamål. Mätarna kan också användas för lastreglering (t.ex. underdistribution).",
-      "titleAdd": "Lägg till extern förbrukares mätare",
-      "titleEdit": "Ändra extern förbrukares mätare"
+      "description": "Spårar mätare som inte används för reglering eller visas i gränssnittet (undermätare, alternativa elnätsmätare eller solcellsmätare, ...). Deras data loggas och exporteras precis som för andra mätare.",
+      "titleAdd": "Lägg till extra mätare",
+      "titleEdit": "Ändra extra mätare"
     },
     "form": {
       "danger": "Fara",
@@ -303,6 +356,7 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
+      "changeConfirm": "Nuvarande konfiguration kommer raderas. Fortsätta?",
       "csv": {
         "created": "Skapad",
         "finished": "Klar",
@@ -310,10 +364,14 @@
         "limitpower": "Begränsning (kW)",
         "type": "Typ"
       },
-      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med lasthanteringsfunktionen.",
+      "customOption": "Användardefinerad integration",
+      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med lasthanteringsfunktionen. Begränsning av solproduktion stöds även för valda enheter. Den faktiska begränsningsnivån måste ställas in i konfigurationen för varje växelriktare.",
       "downloadCsv": "Hämta CSV",
       "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
+      "generic": "Generiska integrationer",
+      "integrations": "Integrationer",
       "lastEvent": "Senaste {timeAgo}.",
+      "template": "Integration",
       "title": "Extern gräns"
     },
     "icon": {
@@ -536,11 +594,16 @@
     },
     "meter": {
       "cancel": "Avbryt",
+      "convertToConsumer": {
+        "confirm": "Konvertera denna \"externa mätare\" till en \"förbrukare\".",
+        "link": "Konvertera till förbrukare"
+      },
       "delete": "Radera",
       "generic": "Generisk integration",
       "option": {
         "aux": "Lägg till enhet som själv anpassar förbrukning",
         "battery": "Lägg till batterimätare",
+        "consumer": "Lägg till standardförbrukare",
         "ext": "Lägg till vanlig förbrukare",
         "pv": "Lägg till solenergimätare"
       },
@@ -552,7 +615,7 @@
       "usage": {
         "aux": "Själv-reglerande förbrukare",
         "battery": "Batteri",
-        "charge": "Förbrukare / Laddare",
+        "charge": "Laddare",
         "grid": "Elnät",
         "label": "Användning",
         "pv": "Produktion"
@@ -638,8 +701,13 @@
       "connectionStatusHelp": "Anslutningsstatus för konfigurerade laddare.",
       "detectedChargers": "Upptäckta IDn",
       "detectedHelp": "Dessa laddare har försökt ansluta till evcc. För att använda en laddare, skapa en laddplats med dess ID.",
+      "forwardingConfigured": "Vidaresändning är konfigurerad",
+      "forwardingError": "Fel vid vidaresändning",
+      "forwardingOff": "Vidaresändning ej konfigurerat",
       "noChargers": "Inga OCPP-laddare hittades.",
       "noStations": "Inga laddare är anslutna",
+      "stations": "Station ID",
+      "stationsHelp": "Konfigurerade och upptäckta OCPP-laddare. Utöver lokal styrning kan du vidarebefordra meddelanden till en extern server (t.ex. för fakturering).",
       "status": {
         "configured": "Ej ansluten",
         "connected": "Ansluten",
@@ -650,9 +718,28 @@
       "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
     "ocppforwarder": {
+      "description": "Vidarebefordra denna laddares OCPP-meddelanden till en extern server (faktureringsplattform, nätägare/nätoperatör, etc.) utöver evcc.",
+      "editTitle": "OCPP vidaresändning",
+      "labelCaCert": "Server certificate (CA)",
+      "labelCheckInsecure": "Tillåt egensignerade certifikat",
+      "labelInsecure": "Certifikat-validering",
+      "password": "Lösenord",
+      "passwordHelp": "För HTTP Basic-autentisering mot den externa servern.",
+      "readOnly": {
+        "check": "Blockera kommandon från den externa server",
+        "help": {
+          "false": "Den externa server kan skicka kommandon till laddaren via evcc.",
+          "true": "Den externa servern mottager alla meddelanden men kan inte skicka kommandon. evcc behåller exklusiv kontroll."
+        },
+        "label": "Externa kommandon"
+      },
       "status": "Status",
       "upstreamStationId": "Stations-ID",
-      "username": "Användarnamn"
+      "upstreamStationIdHelp": "Laddarens ID skickas till den externa servern.",
+      "upstreamUrl": "Extern server URL",
+      "upstreamUrlHelp": "OCPP WebSocket på den externa servern.",
+      "username": "Användarnamn",
+      "usernameHelp": "Till HTTP Basic Authentication mot den överordnade servern."
     },
     "optimizer": {
       "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning. Beräknar och visualiserar för närvarande endast. Styr ännu inga enheter.",
@@ -721,6 +808,7 @@
     },
     "section": {
       "additionalMeter": "Ytterligare mätare",
+      "consumers": "Förbrukare",
       "general": "Allmänna inställningar",
       "grid": "Elnät",
       "integrations": "Integrationer",
@@ -753,14 +841,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licensnyckel",
-      "activationKeyHint": "Skickas med epost. Finns här {url}.",
       "addToken": "Ange sponsor-token",
       "changeToken": "Ändra sponsor-token",
       "description": "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter.",
       "descriptionToken": "Som GitHub-sponsor hittar du din token på {url}. För att komma igång erbjuder vi en {trialToken}.",
-      "email": "Epost",
-      "emailHint": "Epost du använt för {url}",
       "enterYourToken": "Din sponsor-token",
       "error": "Din sponsor-token är inte giltig.",
       "invalid": "ogiltig",
@@ -1173,9 +1257,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Lägg till en återkommande laddplan",
-      "arrivalTab": "Ankomst",
       "day": "Dag",
-      "departureTab": "Avfärd",
       "goal": "Laddmål",
       "modalTitle": "Laddplan",
       "none": "ingen",
@@ -1199,8 +1281,6 @@
       "strategySettings": "Strategiinställningar",
       "time": "Tid",
       "title": "Plan",
-      "titleMinSoc": "Min. laddning",
-      "titleTargetCharge": "Avfärd",
       "unsavedChanges": "Det finns ej sparade ändringar. Spara nu?",
       "update": "Verkställ",
       "weekdays": "Dagar"
@@ -1216,10 +1296,6 @@
       "batteryChargeHold": "Batteri (laddning blockerad)",
       "batteryDischarge": "Batteri laddas ur",
       "batteryDischargeHold": "Batteri (låst)",
-      "batteryForecastEmpty": "Tom",
-      "batteryForecastFull": "Full",
-      "batteryForecastNextHigh": "Högsta",
-      "batteryForecastNextLow": "Lägsta",
       "batteryGridChargeActive": "Nätladdning: aktiv",
       "batteryGridChargeLimit": "Nätladdning: när",
       "batteryTooltip": "{energy} av {total} ({soc})",
@@ -1244,7 +1320,7 @@
     "hemsWarning": {
       "consumption": "Förbrukning",
       "feedIn": "Inmatning",
-      "title": "Extern begränsning:"
+      "title": "Extern begränsning"
     },
     "history": {
       "direction": {
@@ -1255,6 +1331,10 @@
         "grid": {
           "energy": "importerad",
           "returnEnergy": "exporterad"
+        },
+        "meter": {
+          "energy": "Energi",
+          "returnEnergy": "Energi (baklänges)"
         }
       },
       "downloadCsv": "Ladda ner CSV",
@@ -1265,7 +1345,7 @@
         "forecast": "Prognos",
         "grid": "Nät",
         "loadpoint": "Laddning & uppvärmning",
-        "meter": "Konsumtion",
+        "meter": "Extra mätare",
         "pv": "Produktion"
       },
       "otherConsumers": "Andra",
@@ -1303,19 +1383,11 @@
       "currents": "Laddström",
       "default": "förvald",
       "disclaimerHint": "Anmärkning:",
-      "limitSoc": {
-        "description": "Laddbegränsning när detta fordon är anslutet.",
-        "label": "Förvald laddgräns"
-      },
       "maxCurrent": {
         "label": "Max. ström"
       },
       "minCurrent": {
         "label": "Min. ström"
-      },
-      "minSoc": {
-        "description": "Fordonet laddas i sol-läge „snabbt” till {0} och sedan med endast solel. Användbart för att alltid ha en minsta räckvidd tillgänglig .",
-        "label": "Min. laddning %"
       },
       "onlyForSocBasedCharging": "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå.",
       "phasesConfigured": {
@@ -1539,7 +1611,7 @@
     },
     "groupBy": {
       "loadpoint": "Laddare",
-      "none": "Total",
+      "none": "Sol",
       "vehicle": "Fordon"
     },
     "loadpoint": "Laddplats",
@@ -1561,7 +1633,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Kostnad",
-      "solar": "Sol"
+      "solar": "Energi"
     },
     "vehicle": "Fordon"
   },

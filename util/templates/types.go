@@ -321,8 +321,9 @@ func (p Param) MarshalJSON() ([]byte, error) {
 
 // Product contains naming information about a product a template supports
 type Product struct {
-	Brand       string       // product brand
-	Description TextLanguage `json:",omitempty"` // product name
+	Brand        string       // product brand
+	Description  TextLanguage `json:",omitempty"` // product name
+	Capabilities []Capability `json:",omitempty"` // appended to template-level capabilities
 }
 
 // Title returns the product title in the given language

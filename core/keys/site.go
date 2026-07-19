@@ -11,6 +11,7 @@ const (
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
 	Grid                  = "grid"
+	HistoryUpdated        = "historyUpdated"
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
@@ -29,6 +30,7 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	TariffSolar           = "tariffSolar"
+	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
 
 	// meters
@@ -45,6 +47,9 @@ const (
 	BatteryGridChargeActive = "batteryGridChargeActive"
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
+
+	// forecast settings
+	SolarAdjusted = "solarAdjusted"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

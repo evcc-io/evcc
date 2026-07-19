@@ -7,8 +7,12 @@ requirements:
   description:
     de: |
       Die Modbus-TCP-Schnittstelle muss in der Anker-App freigeschaltet werden.
+      Diese Konfiguration wurde mit der Firmware-Version 1.0.16.1 getestet.
+      Ältere oder neuere Firmware-Versionen können andere Registeradressen verwenden und daher falsche Daten liefern.
     en: |
       The Modbus TCP interface must be enabled in the Anker app.
+      This configuration was tested with the Firmware Version 1.0.16.1.
+      Older or newer Firmware Versions may use different register addresses and therefore deliver incorrect data.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -32,10 +36,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10656 # Meter Total Forward Active Energy (kWh)
+      address: 10656 # Meter Total Forward Active Energy (0.01 kWh/LSB on X1 firmware)
       type: input
       decode: uint32s
-    scale: 0.1
+    scale: 0.01
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -112,10 +116,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10187 # Total PV Generation (kWh)
+      address: 10187 # Total PV Generation (0.01 kWh/LSB)
       type: input
       decode: uint32s
-    scale: 0.1
+    scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -130,10 +134,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10264 # Battery Total Discharge Energy (kWh)
+      address: 10264 # Battery Total Discharge Energy (0.01 kWh/LSB on X1 firmware)
       type: input
       decode: uint32s
-    scale: 0.1
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}

@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -90,6 +91,14 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
+	}
+
+	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
+	if err != nil {
+		return nil, fmt.Errorf("station id: %w", err)
+	}
+	if s, _ := utf16BEBytesAsString(c); s == "" {
+		return nil, errors.New("station id not found, device may not be a DaheimLaden")
 	}
 
 	log := util.NewLogger("daheimladen")
@@ -197,8 +206,20 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
+	if err != nil {
+		return false, err
+	}
 
-	return curr >= 60, err
+	// a charger restart resets the current limit to 0A which triggers
+	// unauthorised autostart. restore the safe disabled value.
+	if curr == 0 {
+		if err := wb.setCurrent(1); err != nil {
+			return false, err
+		}
+		curr = 1
+	}
+
+	return curr >= 60, nil
 }
 
 // Enable implements the api.Charger interface

@@ -19,6 +19,45 @@
     "successCloseTab": "Du kan nu lukke denne fane.",
     "title": "Godkendelsesstatus"
   },
+  "battery": {
+    "card": {
+      "charging": "Lader",
+      "discharging": "Aflader",
+      "energy": "Energi",
+      "ofTotal": "af {total}",
+      "power": "Effekt",
+      "soc": "Batteriniveau"
+    },
+    "combined": "Samlet",
+    "config": {
+      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i soltilstand. Start solopladning automatisk {start}.",
+      "bufferNone": "Hjemmets batteri bruges ikke til ladestederne. Sæt en værdi under {soc} for at aktivere støtte.",
+      "bufferStart": {
+        "above": "når batteriet er over {soc}",
+        "full": "når batteriet er fyldt",
+        "never": "kun ved nok overskud"
+      },
+      "bufferTitle": "Batteri som opladningsbuffer",
+      "discharge": "Forhindrer hjemmebatteriet at aflade i hurtig mode og ved planlagt opladning.",
+      "priority": "Hjemmebatteriet har prioritet, mens det er under {soc}. Derefter får ladepunkterne overskuddet.",
+      "priorityNone": "Soloverskud går direkte til ladepunkterne. Sæt en værdi over {soc} for at prioritere hjemmebatteriet.",
+      "priorityTitle": "Hvor sendes overskuddet først hen?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Opladning fra nettet",
+        "hold": "Afladning låst",
+        "holdcharge": "Opladning pauseres",
+        "normal": "I takt med soloverskud"
+      },
+      "empty": "tom",
+      "full": "fyldt",
+      "highest": "Højeste ({value})",
+      "lowest": "Laveste ({value})",
+      "suggestion": "Forslag",
+      "title": "Optimizer"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Batteri-niveau",
     "bufferStart": {
@@ -51,6 +90,11 @@
     "hex": "Hex farve"
   },
   "config": {
+    "adminPassword": {
+      "description": "Script-pluginet udfører en kommando på systemniveau, som kører med de samme rettigheder som evcc-processen. Indtast din administratoradgangskode igen for at fortsætte.",
+      "invalid": "Ugyldig adgangskode. Prøv igen.",
+      "title": "Potentielt farlig handling"
+    },
     "apiKey": {
       "description": "Giv scripts og automatiseringsopgaver, såsom planlagte sikkerhedskopier, sikker adgang uden at dele din administratoradgangskode.",
       "exampleLabel": "Prøv det: Hent en backup med curl",
@@ -220,15 +264,21 @@
         "public": "Offentligt certifikat",
         "title": "Certifikater"
       },
+      "configuredDevices": "Konfigurerede enheder",
       "description": "Konfiguration, der gør det muligt for evcc at kommunikere med EEBus-kompatible enheder som ladere eller en styreenhed fra din netoperatør. Al nødvendig initialisering og dannelse af certifikater udføres automatisk ved første opstart.",
       "descriptionAdvanced": "Ingen ændringer nødvendige. Foretag kun ændringer, hvis du virkelig ved, hvad du laver. Hvis du ændrer enten SHIP-id’et eller certifikaterne, skal dine enheder parres igen.",
       "interfaces": "Grænseflader",
       "interfacesHelp": "Begræns de netværksgrænseflader, som EEBus skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
+      "noConfiguredDevices": "Ingen enheder konfigureret af SKI.",
+      "noPairings": "Ingen enheder tilknyttet.",
+      "pairings": "Tilknyttede enheder",
       "port": "Port",
       "portHelp": "Porten, der skal bruges.",
       "qr": "koblingskode",
       "qrExplain": "Skan fra en anden EEBus-enhed under installationen for automatisk parring uden manuel indtastning af SKI.",
       "removeConfirm": "Hele EEBus-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
+      "removePairing": "Fjern tilknytning",
+      "removePairingConfirm": "Forbindelsen til enheden brydes, og skal tilknyttes igen. Er du sikker?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBus-netværket.",
       "shipidHelp": "Dette SHIP-id er knyttet til certifikaterne nedenfor.",
@@ -303,6 +353,7 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
+      "changeConfirm": "Eksisterende konfiguration slettes. Fortsæt?",
       "csv": {
         "created": "Oprettet",
         "finished": "Afsluttet",
@@ -310,10 +361,14 @@
         "limitpower": "Grænse (kW)",
         "type": "Type"
       },
-      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen.",
+      "customOption": "Brugerdefineret integration",
+      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen. Begrænsning af solproduktionen understøttes også for udvalgte enheder. Den faktiske begrænsningsgrænse skal konfigureres for hver enkelt inverter.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "generic": "Generelle integrationer",
+      "integrations": "Integrationer",
       "lastEvent": "Sidst {timeAgo}.",
+      "template": "Integration",
       "title": "Ekstern grænse"
     },
     "icon": {
@@ -536,6 +591,10 @@
     },
     "meter": {
       "cancel": "Afbryd",
+      "convertToConsumer": {
+        "confirm": "Konverterer denne \"ekstra måler\" til en \"forbrugsenhed\".",
+        "link": "Konverter til forbrugsenhed"
+      },
       "delete": "Slet",
       "generic": "Generiske integrationer",
       "option": {
@@ -553,7 +612,7 @@
       "usage": {
         "aux": "Selvregulerende forbrugsenhed",
         "battery": "Batteri",
-        "charge": "Forbrugsenhed/Lader",
+        "charge": "Lader",
         "grid": "Elnet",
         "label": "Brug",
         "pv": "Produktion"
@@ -779,14 +838,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licensnøgle",
-      "activationKeyHint": "Er sendt via email. Findes i {url}.",
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
       "description": "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne.",
       "descriptionToken": "Som GitHub sponsor finder du din token på {url}. For at komme i gang tilbyder vi en {trialToken}.",
-      "email": "Email",
-      "emailHint": "Den email adresse du benyttede for {url}",
       "enterYourToken": "Din Sponsor token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
       "invalid": "ugyldig",
@@ -1198,9 +1253,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Tilføj plan for gentagelse",
-      "arrivalTab": "Ankomst",
       "day": "Dag",
-      "departureTab": "Afgang",
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
@@ -1224,8 +1277,6 @@
       "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
-      "titleMinSoc": "Min. ladning",
-      "titleTargetCharge": "Afgang",
       "unsavedChanges": "Der er ændringer som ikke er gemt. Skal de benyttes nu?",
       "update": "Anvend",
       "weekdays": "Dage"
@@ -1241,10 +1292,6 @@
       "batteryChargeHold": "Batteri (opladning blokeret)",
       "batteryDischarge": "Batteriet aflades",
       "batteryDischargeHold": "Batteri (låst)",
-      "batteryForecastEmpty": "Tømt",
-      "batteryForecastFull": "Fyldt",
-      "batteryForecastNextHigh": "Højdepunkt",
-      "batteryForecastNextLow": "Lavpunkt",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
       "batteryTooltip": "{energy} af {total} ({soc})",
@@ -1280,6 +1327,10 @@
         "grid": {
           "energy": "importeret",
           "returnEnergy": "eksporteret"
+        },
+        "meter": {
+          "energy": "Energi",
+          "returnEnergy": "Energi (eksport)"
         }
       },
       "downloadCsv": "Download CSV",
@@ -1328,19 +1379,11 @@
       "currents": "Ladestrøm",
       "default": "standard",
       "disclaimerHint": "Bemærk:",
-      "limitSoc": {
-        "description": "Opladningsgrænse som benyttes når dette køretøj er forbundet.",
-        "label": "standard opladningsgrænse"
-      },
       "maxCurrent": {
         "label": "Max. Nuværende"
       },
       "minCurrent": {
         "label": "Min. Nuværende"
-      },
-      "minSoc": {
-        "description": "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage.",
-        "label": "Min. opladning %"
       },
       "onlyForSocBasedCharging": "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau.",
       "phasesConfigured": {

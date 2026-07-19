@@ -92,7 +92,7 @@ func (r Register) DecodeFunc() (func([]byte) float64, error) {
 	case "uint16nan":
 		return decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1), nil
 	case "bool16":
-		mask, err := decodeMask(r.BitMask)
+		mask, err := DecodeMask(r.BitMask)
 		if err != nil {
 			return nil, err
 		}
@@ -125,6 +125,8 @@ func (r Register) DecodeFunc() (func([]byte) float64, error) {
 		return asFloat64(encoding.Uint64), nil
 	case "uint64s":
 		return asFloat64(uint64LswFirst), nil
+	case "uint64snan":
+		return decodeNaN64(asFloat64(uint64LswFirst), 1<<64-1), nil
 	case "uint64nan":
 		return decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1), nil
 	case "float64":
@@ -247,7 +249,8 @@ func (r Register) Operation() (RegisterOperation, error) {
 func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
 	return func(v []byte) float64 {
 		res := float64(f(v))
-		if math.IsNaN(res) || math.IsInf(res, 0) {
+		// keep NaN so callers can map it to "not available"; sanitize Inf to 0
+		if math.IsInf(res, 0) {
 			res = 0
 		}
 		return res

@@ -1,0 +1,27 @@
+name: Claude Analyze Command
+
+on:
+  issue_comment:
+    types: [created]
+
+# Triggered by a `/analyze` comment on any issue or PR conversation. Delegates to
+# the shared issue agent in analyze mode, which investigates, posts one answer
+# comment, then minimizes the calling `/analyze` comment as RESOLVED — but only
+# when it actually answered.
+jobs:
+  analyze:
+    name: Analyze on demand
+    if: startsWith(github.event.comment.body, '/analyze')
+    permissions:
+      contents: read # explore the codebase for the answer; no fix/PR in analyze mode
+      issues: write # comment + minimize the calling comment
+      pull-requests: write # comment on PR conversations
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/claude-issue-agent-run.yml
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      mode: analyze
+      comment_id: ${{ github.event.comment.id }}
+      comment_node_id: ${{ github.event.comment.node_id }}
+    secrets: inherit

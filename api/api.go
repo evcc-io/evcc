@@ -1,15 +1,13 @@
 package api
 
 import (
-	"context"
-	"io"
 	"net/url"
 	"time"
 
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -192,6 +190,11 @@ type CurrentLimiter interface {
 	GetMinMaxCurrent() (float64, float64, error)
 }
 
+// PowerLimiter returns the power limits in W
+type PowerLimiter interface {
+	GetMinMaxPower() (float64, float64, error)
+}
+
 // SocLimiter returns the soc limit
 type SocLimiter interface {
 	GetLimitSoc() (int64, error)
@@ -205,8 +208,8 @@ type Dimmer interface {
 
 // Curtailer provides EEG §9 curtailment
 type Curtailer interface {
-	Curtailed() (bool, error)
-	Curtail(bool) error
+	Curtailed() (bool, error)    // curtailed if feed-in is limited to less than nominal (<100%)
+	SetCurtailPercent(int) error // limit feed-in to the given percent of nominal (0..100, 100 = uncurtailed)
 }
 
 // ChargeController allows to start/stop the charging session on the vehicle side
@@ -249,11 +252,6 @@ type TitleDescriber interface {
 	GetTitle() string
 }
 
-// CsvWriter converts to csv
-type CsvWriter interface {
-	WriteCsv(context.Context, io.Writer) error
-}
-
 // CircuitMeasurements is the measurements a circuit or load must deliver
 type CircuitMeasurements interface {
 	GetChargePower() float64
@@ -287,10 +285,9 @@ type Circuit interface {
 // HEMS exposes the runtime state of the home energy management system.
 type HEMS interface {
 	SetUpdated(func())
-	Dimmed() *bool                // nil = no statement
-	Curtailed() *bool             // nil = no statement
-	MaxConsumptionPower() float64 // 0 = no limit
-	MaxProductionPower() *float64 // nil = no limit
+	CurtailedPercent() *int        // allowed feed-in percent of nominal production power (0..100), nil = no statement
+	MaxProductionPower() *float64  // nil = limiting undefined, else active limit
+	MaxConsumptionPower() *float64 // nil = limiting undefined, else active limit (0 = none)
 }
 
 // Redactor is an interface to redact sensitive data

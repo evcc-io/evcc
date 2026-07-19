@@ -1,17 +1,7 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div
-				class="d-flex justify-content-between align-items-center my-3 my-md-4"
-				data-testid="header"
-			>
-				<h1 class="d-block my-0">
-					<span v-if="!setupRequired">
-						{{ siteTitle || "evcc" }}
-					</span>
-				</h1>
-				<TopNavigationArea :notifications="notifications" />
-			</div>
+			<TopHeader :title="headerTitle" :notifications="notifications" />
 			<HemsWarning :status="hems?.status" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
@@ -77,7 +67,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import TopNavigationArea from "../Top/TopNavigationArea.vue";
+import TopHeader from "../Top/Header.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
@@ -99,7 +89,9 @@ import type {
 	FatalError,
 	EvOpt,
 	BATTERY_MODE,
+	Vehicle,
 } from "@/types/evcc";
+import vehicleList from "@/utils/vehicleList";
 import store from "@/store";
 import type { Grid } from "./types";
 
@@ -109,7 +101,7 @@ export default defineComponent({
 		Loadpoints,
 		Energyflow,
 		HemsWarning,
-		TopNavigationArea,
+		TopHeader,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
@@ -130,6 +122,7 @@ export default defineComponent({
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
+		solarAdjusted: Boolean,
 		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String as PropType<BATTERY_MODE>,
@@ -139,7 +132,7 @@ export default defineComponent({
 		bufferSoc: Number,
 		bufferStartSoc: Number,
 		siteTitle: String,
-		vehicles: Object,
+		vehicles: Object as PropType<Record<string, Vehicle>>,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
 		tariffFeedIn: Number,
@@ -159,6 +152,9 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
+		headerTitle() {
+			return this.setupRequired ? "" : this.siteTitle || "evcc";
+		},
 		loadpoints() {
 			return store.uiLoadpoints.value || [];
 		},
@@ -184,8 +180,7 @@ export default defineComponent({
 			return this.collectProps(Energyflow);
 		},
 		vehicleList() {
-			const vehicles = this.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
+			return vehicleList(this.vehicles);
 		},
 		showParkingLot() {
 			// work in progess

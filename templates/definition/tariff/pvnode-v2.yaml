@@ -1,0 +1,60 @@
+template: pvnode-v2
+products:
+  - brand: pvnode V2 API
+requirements:
+  description:
+    en: |
+      [pvnode V2 API](https://pvnode.com) provides 15-minute PV production forecasts via REST API Version 2 with site ID and easy configuration via web app.
+      An API key is required (free plan available).
+      **Attention**: The free plan only allows one fixed site with forecasts for today & tomorrow and only one update per day and 250 cached queries.
+    de: |
+      [pvnode V2 API](https://pvnode.com) liefert 15-Minuten PV Vorhersagen per REST API Version 2 mit Standort-ID und leichter Konfiguration über Web-App
+      Ein API-Key ist erforderlich (kostenloser Plan möglich)
+      **Achtung**: Mit dem kostenlosen Plan ist nur ein Standort (fest) möglich mit einer Prognose für Heute & Morgen und nur einem Update pro Tag und 250 gecached Abfragen.
+  evcc: ["skiptest"]
+group: solar
+
+params:
+  - name: site_id
+    description:
+      en: Site ID
+      de: Standort-ID
+    required: true
+  - name: apikey
+    description:
+      en: pvnode API key
+      de: pvnode API Key
+    required: true
+  - name: forecast_days
+    description:
+      en: Forecast days
+      de: Vorhersagetage
+    help:
+      en: The free plan of pvnode only allows 1 forecast day (1 = today + tomorrow).
+      de: Der kostenlose Plan von pvnode erlaubt nur 1 Vorhersagetag (1 = heute + morgen).
+    type: int
+    default: 1
+    advanced: true
+  - name: interval
+    default: 1h
+    advanced: true
+
+render: |
+  type: custom
+  tariff: solar
+  features: ["cacheable"]
+  forecast:
+    source: http
+    uri: https://api.pvnode.com/v2/forecast/{{ .site_id }}?forecast_days={{ .forecast_days }}&past_days=0&timezone=utc
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    jq: |
+      [.values[] |
+        {
+          start: (.timestamp),
+          end:   (.timestamp | fromdateiso8601 + 900 | todateiso8601 ),
+          value: (.pv_power | round )
+        }
+      ] | tostring
+  interval: {{ .interval }}

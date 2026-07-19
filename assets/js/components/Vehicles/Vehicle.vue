@@ -10,8 +10,8 @@
 			v-bind="vehicleStatus"
 			class="mb-2"
 			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
-			@open-minsoc-settings="openPlanModal(true)"
-			@open-plan-modal="openPlanModal"
+			@open-minsoc-settings="openVehicleSettings"
+			@open-plan-modal="$emit('open-modal')"
 		/>
 		<div class="mt-2 mb-4 d-flex gap-2">
 			<BatteryBoostButton
@@ -26,7 +26,7 @@
 				v-bind="vehicleSocProps"
 				@limit-soc-updated="limitSocUpdated"
 				@limit-soc-drag="limitSocDrag"
-				@plan-clicked="openPlanModal"
+				@plan-clicked="$emit('open-modal')"
 			/>
 		</div>
 		<div class="details d-flex flex-wrap justify-content-between">
@@ -80,6 +80,7 @@
 </template>
 
 <script lang="ts">
+import Modal from "bootstrap/js/dist/modal";
 import collector from "@/mixins/collector.ts";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
@@ -98,6 +99,7 @@ import {
 	type VehicleStatus,
 	type Vehicle,
 	type LoadpointUi,
+	type LoadpointSuggestion,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
@@ -124,6 +126,7 @@ export default defineComponent({
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
+		effectiveMinSoc: { type: Number, default: 0 },
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,
@@ -162,6 +165,7 @@ export default defineComponent({
 		smartFeedInPriorityNextStart: String,
 		smartFeedInPriorityLimit: Number,
 		socBasedCharging: Boolean,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
 		tariffGrid: Number,
@@ -207,7 +211,7 @@ export default defineComponent({
 			return this.vehicle?.icon || "";
 		},
 		minSoc() {
-			return this.vehicle?.minSoc || 0;
+			return this.effectiveMinSoc;
 		},
 		vehicleSocProps() {
 			return this.collectProps(Soc);
@@ -284,8 +288,10 @@ export default defineComponent({
 		fmtEnergy(value: number) {
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
-		openPlanModal(openArrivalTab = false) {
-			this.$emit("open-modal", openArrivalTab);
+		openVehicleSettings() {
+			Modal.getOrCreateInstance(
+				document.getElementById("vehicleSettingsModal") as HTMLElement
+			).show();
 		},
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;

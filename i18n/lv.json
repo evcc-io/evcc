@@ -19,6 +19,45 @@
     "successCloseTab": "Tagad varat aizvērt šo cilni.",
     "title": "Autorizācijas statuss"
   },
+  "battery": {
+    "card": {
+      "charging": "Uzlādējas",
+      "discharging": "Izlādējas",
+      "energy": "Enerģija",
+      "ofTotal": "no {total}",
+      "power": "Jauda",
+      "soc": "Akumulatora līmenis"
+    },
+    "combined": "Kombinēti",
+    "config": {
+      "buffer": "Mājas akumulatora enerģiju virs {soc} var izmantot uzlādes punktu atbalstam un aizkavē izslēgšanu saules režīmā. Sākt saules uzlādi automātiski {start}.",
+      "bufferNone": "Mājas akumulatora enerģija netiek izmantota uzlādes punktiem. Iestatiet vērtību zem {soc}, lai iespējotu atbalstu.",
+      "bufferStart": {
+        "above": "kad akumulators ir virs {soc}",
+        "full": "kad akumulators ir pilns",
+        "never": "tikai ar pietiekamu pārpalikumu"
+      },
+      "bufferTitle": "Akumulators kā uzlādes buferis",
+      "discharge": "Novērst mājas akumulatora izlādi ātrajā režīmā un plānotās uzlādes laikā.",
+      "priority": "Mājas akumulatoram ir prioritāte, kamēr tas ir zem {soc}. Pēc tam uzlādes punkti saņem pārpalikumu.",
+      "priorityNone": "Saules pārpalikums nonāk tieši uzlādes punktos. Iestatiet vērtību virs {soc}, lai dotu priekšroku mājas akumulatoram.",
+      "priorityTitle": "Kur pārpalikums nonāk vispirms?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Tīkla uzlāde",
+        "hold": "Izlāde bloķēta",
+        "holdcharge": "Uzlāde apturēta",
+        "normal": "Seko saules pārpalikumam"
+      },
+      "empty": "tukšs",
+      "full": "pilns",
+      "highest": "Augstākais ({value})",
+      "lowest": "Zemākais ({value})",
+      "suggestion": "Ieteikums",
+      "title": "Optimizētājs"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Akumulatora līmenis",
     "bufferStart": {
@@ -32,9 +71,9 @@
     "disclaimerHint": "Piezīme:",
     "disclaimerText": "Šie iestatījumi ietekmē tikai saules enerģijas režīmu. Uzlādes uzvedība tiek attiecīgi pielāgota.",
     "gridChargeTab": "Tīkla uzlāde",
-    "legendBottomName": "Prioritizēt mājas akumulatora uzlādi",
+    "legendBottomName": "Dot priekšroku mājas akumulatora uzlādei",
     "legendBottomSubline": "līdz tas sasniedz {soc}.",
-    "legendMiddleName": "Prioritizēt transportlīdzekļa uzlādi",
+    "legendMiddleName": "Dot priekšroku transportlīdzekļa uzlādei",
     "legendMiddleSubline": "kad mājas akumulators ir virs {soc}.",
     "legendTopAutostart": "Sākt automātiski",
     "legendTopName": "Ar akumulatoru atbalstīta uzlāde",
@@ -51,6 +90,11 @@
     "hex": "Hex krāsa"
   },
   "config": {
+    "adminPassword": {
+      "description": "Skripta spraudnis izpilda sistēmas līmeņa komandu, kas darbojas ar evcc procesa atļaujām. Atkārtoti ievadiet administratora paroli, lai turpinātu.",
+      "invalid": "Nederīga parole. Lūdzu, mēģiniet vēlreiz.",
+      "title": "Potenciāli bīstama darbība"
+    },
     "apiKey": {
       "description": "Dodiet skriptiem un automatizācijas uzdevumiem drošu piekļuvi bez administratora paroles koplietošanas.",
       "exampleLabel": "Izmēģiniet: lejupielādējiet rezerves kopiju ar curl",
@@ -220,15 +264,21 @@
         "public": "Publiskais sertifikāts",
         "title": "Sertifikāti"
       },
+      "configuredDevices": "Konfigurētās ierīces",
       "description": "Konfigurācija, kas ļauj evcc sazināties ar EEBus saderīgām ierīcēm piemēram lādētājiem vai tīkla operatora vadības bloku. Visa nepieciešamā inicializācija un sertifikātu ģenerēšana tiek veikta automātiski pirmajā startēšanas reizē.",
       "descriptionAdvanced": "Izmaiņas nav nepieciešamas. Veiciet izmaiņas tikai, ja patiešām zināt ko darāt. Ja maināt SHIP-id vai sertifikātus ierīces būs jāsavieno pārī no jauna.",
       "interfaces": "Saskarnes",
       "interfacesHelp": "Ierobežojiet tīkla saskarnes ko EEBus izmantos, lai izvairītos no komunikācijas problēmām. Atstājiet tukšu, lai izmantotu visas saskarnes. Viens ieraksts katrā rindā.",
+      "noConfiguredDevices": "Nav ar SKI konfigurētu ierīču.",
+      "noPairings": "Nav savienotu ierīču.",
+      "pairings": "Savienotās ierīces",
       "port": "Ports",
       "portHelp": "Izmantojamais ports.",
       "qr": "Savienošanas kods",
       "qrExplain": "Instalēšanas laikā skenējiet no citas EEBus ierīces, lai automātiski savienotu pārī bez manuālas SKI ievades.",
       "removeConfirm": "Visa EEBus konfigurācija tiks noņemta. Jauni sertifikāti un identifikatori tiks ģenerēti nākamajā startēšanas reizē. Vai esat pārliecināts?",
+      "removePairing": "Noņemt savienojumu",
+      "removePairingConfirm": "Ierīce tiks atvienota un tā būs jāsavieno no jauna. Vai esat pārliecināts?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Pastāvīgs ierīces identifikators atpazīšanai EEBus tīklā.",
       "shipidHelp": "Šis SHIP-ID ir piesaistīts zemāk esošajiem sertifikātiem.",
@@ -302,6 +352,7 @@
       "titleEdit": "Rediģēt tīkla skaitītāju"
     },
     "hems": {
+      "changeConfirm": "Esošā konfigurācija tiks dzēsta. Vai turpināt?",
       "csv": {
         "created": "Izveidots",
         "finished": "Pabeigts",
@@ -309,10 +360,14 @@
         "limitpower": "Ierobežojums (kW)",
         "type": "Tips"
       },
-      "description": "Jaudas ierobežošana no ārējām sistēmām (piem. §14a EnWG §9 EEG saskarne vai augstāka līmeņa enerģijas pārvaldības sistēma). Darbojas kopā ar slodzes pārvaldības funkciju.",
+      "customOption": "Lietotāja definēta integrācija",
+      "description": "Jaudas ierobežošana no ārējām sistēmām (piem. §14a EnWG §9 EEG saskarne vai augstāka līmeņa enerģijas pārvaldības sistēma). Darbojas kopā ar slodzes pārvaldības funkciju. Saules ražošanas ierobežošana ir pieejama arī atlasītām ierīcēm. Faktiskais atdeves ierobežojums jāiestata katrā invertora konfigurācijā.",
       "downloadCsv": "Lejupielādēt CSV",
       "eventsRecorded": "Saglabāti {count} tīkla ierobežošanas notikumi.",
+      "generic": "Vispārīgās integrācijas",
+      "integrations": "Integrācijas",
       "lastEvent": "Pēdējais pirms {timeAgo}.",
+      "template": "Integrācija",
       "title": "Ārējais ierobežojums"
     },
     "icon": {
@@ -534,6 +589,10 @@
     },
     "meter": {
       "cancel": "Atcelt",
+      "convertToConsumer": {
+        "confirm": "Pārveido šo \"papildu skaitītāju\" par \"patērētāju\".",
+        "link": "Pievienot patērētāju"
+      },
       "delete": "Dzēst",
       "generic": "Vispārīgās integrācijas",
       "option": {
@@ -551,7 +610,7 @@
       "usage": {
         "aux": "Pašregulējošs patērētājs",
         "battery": "Akumulators",
-        "charge": "Patērētājs / lādētājs",
+        "charge": "Lādētājs",
         "grid": "Tīkls",
         "label": "Lietojums",
         "pv": "Ražošana"
@@ -769,14 +828,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licences atslēga",
-      "activationKeyHint": "Nostūtīts jums pa e-pastu. Atrodams {url}.",
       "addToken": "Ievadiet marķieri",
       "changeToken": "Mainīt marķieri",
       "description": "Sponsorēšanas modelis palīdz mums uzturēt projektu un ilgtspējīgi veidot jaunas un aizraujošas funkcijas. Kā sponsors jūs iegūstat piekļuvi visām lādētāju implementācijām.",
       "descriptionToken": "Kā GitHub Sponsors jūs atrodat savu marķieri {url}. Iesākumam piedāvājam {trialToken}.",
-      "email": "E-pasts",
-      "emailHint": "E-pasta adrese ko izmantojāt {url}",
       "enterYourToken": "Jūsu sponsora marķieris",
       "error": "Sponsora marķieris nav derīgs.",
       "invalid": "nederīgs",
@@ -1175,9 +1230,7 @@
     "chargingPlan": {
       "active": "Aktīvs",
       "addRepeatingPlan": "Pievienot atkārtojošu plānu",
-      "arrivalTab": "Ierašanās",
       "day": "Diena",
-      "departureTab": "Izbraukšana",
       "goal": "Uzlādes mērķis",
       "modalTitle": "Uzlādes plāns",
       "none": "nav",
@@ -1201,8 +1254,6 @@
       "strategySettings": "Stratēģijas iestatījumi",
       "time": "Laiks",
       "title": "Plāns",
-      "titleMinSoc": "Min. uzlāde",
-      "titleTargetCharge": "Izbraukšana",
       "unsavedChanges": "Ir nesaglabātas izmaiņas. Piemērot tagad?",
       "update": "Piemērot",
       "weekdays": "Dienas"
@@ -1218,10 +1269,6 @@
       "batteryChargeHold": "Akumulators (uzlāde bloķēta)",
       "batteryDischarge": "Akumulatora izlāde",
       "batteryDischargeHold": "Akumulators (izlāde bloķēta)",
-      "batteryForecastEmpty": "Tukšs",
-      "batteryForecastFull": "Pilns",
-      "batteryForecastNextHigh": "Augsts",
-      "batteryForecastNextLow": "Zems",
       "batteryGridChargeActive": "Tīkla uzlāde: aktīva",
       "batteryGridChargeLimit": "Tīkla uzlāde: kad",
       "batteryTooltip": "{energy} no {total} ({soc})",
@@ -1257,6 +1304,10 @@
         "grid": {
           "energy": "importēts",
           "returnEnergy": "eksportēts"
+        },
+        "meter": {
+          "energy": "Enerģija",
+          "returnEnergy": "Enerģija (atpakaļvirzienā)"
         }
       },
       "downloadCsv": "Lejupielādēt CSV",
@@ -1305,19 +1356,11 @@
       "currents": "Uzlādes strāva",
       "default": "noklusējuma",
       "disclaimerHint": "Piezīme:",
-      "limitSoc": {
-        "description": "Uzlādes ierobežojums, kas tiek izmantots, kad šis transportlīdzeklis ir pievienots.",
-        "label": "Noklusējuma ierobežojums"
-      },
       "maxCurrent": {
         "label": "Maks. strāva"
       },
       "minCurrent": {
         "label": "Min. strāva"
-      },
-      "minSoc": {
-        "description": "Transportlīdzeklis tiek „ātri” uzlādēts līdz {0} saules režīmā. Pēc tam turpina ar saules enerģijas pārpalikumu. Noderīgi, lai nodrošinātu minimālu nobraukumu pat tumšākām dienām.",
-        "label": "Min. uzlāde %"
       },
       "onlyForSocBasedCharging": "Šīs iespējas ir pieejamas tikai transportlīdzekļiem ar zināmu uzlādes līmeni.",
       "phasesConfigured": {
@@ -1637,7 +1680,7 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Apturētais laiks",
-    "description": "Aptur uzlādi augstu cenu laikā, lai prioritizētu izdevīgu atdevi tīklā.",
+    "description": "Aptur uzlādi augstu cenu laikā, lai dotu priekšroku izdevīgai atdevei tīklā.",
     "priceLabel": "Atdeves likme",
     "priceLimit": "Atdeves ierobežojums",
     "resetWarning": "Nav konfigurēts dinamisks atdeves tarifs. Tomēr joprojām ir ierobežojums {limit}. Rediģēt konfigurāciju?",

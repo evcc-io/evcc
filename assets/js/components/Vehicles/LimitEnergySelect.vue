@@ -6,17 +6,7 @@
 		data-testid="limit-energy"
 	>
 		<h3 class="value m-0">
-			<label class="position-relative" role="button">
-				<select :value="limitEnergy" class="custom-select" @change="change">
-					<option
-						v-for="{ energy, text, disabled } in options"
-						:key="energy"
-						:value="energy"
-						:disabled="disabled"
-					>
-						{{ text }}
-					</option>
-				</select>
+			<CustomSelect inline :options="selectOptions" :selected="limitEnergy" @change="change">
 				<span
 					class="text-decoration-underline"
 					:class="{ 'text-gray fw-normal': !limitEnergy }"
@@ -24,7 +14,7 @@
 				>
 					<AnimatedNumber :to="limitEnergy" :format="fmtEnergy" />
 				</span>
-			</label>
+			</CustomSelect>
 
 			<div v-if="estimated" class="extraValue text-nowrap">
 				<AnimatedNumber :to="estimated" :format="fmtSoc" />
@@ -36,13 +26,14 @@
 <script lang="ts">
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter from "@/mixins/formatter";
 import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "LimitEnergySelect",
-	components: { LabelAndValue, AnimatedNumber },
+	components: { LabelAndValue, AnimatedNumber, CustomSelect },
 	mixins: [formatter],
 	props: {
 		limitEnergy: { type: Number, default: 0 },
@@ -61,6 +52,13 @@ export default defineComponent({
 				this.$t("main.targetEnergy.noLimit"),
 				this.socPerKwh
 			);
+		},
+		selectOptions() {
+			return this.options.map(({ energy, text, disabled }) => ({
+				value: energy,
+				name: text,
+				disabled,
+			}));
 		},
 		step() {
 			return optionStep(this.capacity || 100);
@@ -91,16 +89,9 @@ export default defineComponent({
 	font-size: 18px;
 }
 .extraValue {
+	margin-top: 0.1rem;
 	color: var(--evcc-gray);
 	font-size: 14px;
-}
-.custom-select {
-	left: 0;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	cursor: pointer;
-	position: absolute;
-	opacity: 0;
+	font-weight: normal;
 }
 </style>

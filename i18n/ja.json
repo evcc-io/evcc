@@ -700,14 +700,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "ライセンスキー",
-      "activationKeyHint": "メールにて送付されます。{url} で確認することも可能です。",
       "addToken": "トークンを入力",
       "changeToken": "トークンを変更",
       "description": "スポンサーシップモデルは、プロジェクトの維持や、新しい魅力的な機能の継続的な開発に役立ちます。スポンサーになると、すべての充電器の統合機能にアクセスできるようになります。",
       "descriptionToken": "GitHubスポンサーの方は、{url} でトークンを確認できます。まず試してみたい方のために、{trialToken} もご用意しています。",
-      "email": "メールアドレス",
-      "emailHint": "{url} で使用したメールアドレス",
       "enterYourToken": "スポンサートークンを入力",
       "error": "スポンサートークンが無効です。",
       "invalid": "無効",
@@ -1125,9 +1121,7 @@
     "chargingPlan": {
       "active": "アクティブ",
       "addRepeatingPlan": "繰り返しプランを追加",
-      "arrivalTab": "到着",
       "day": "日",
-      "departureTab": "出発",
       "goal": "充電目標",
       "modalTitle": "充電プラン",
       "none": "なし",
@@ -1151,8 +1145,6 @@
       "strategySettings": "戦略設定",
       "time": "時間",
       "title": "プラン",
-      "titleMinSoc": "最小充電",
-      "titleTargetCharge": "出発",
       "unsavedChanges": "保存されていない変更があります。今すぐ適用しますか？",
       "update": "適用",
       "weekdays": "日"
@@ -1167,10 +1159,6 @@
       "batteryCharge": "蓄電池充電中",
       "batteryDischarge": "蓄電池放電中",
       "batteryDischargeHold": "蓄電池 (制限中)",
-      "batteryForecastEmpty": "{time} 以降 残量ゼロ",
-      "batteryForecastFull": "{time} 以降 満充電",
-      "batteryForecastNextHigh": "次の最高値",
-      "batteryForecastNextLow": "次の最低値",
       "batteryGridChargeActive": "系統充電: アクティブ",
       "batteryGridChargeLimit": "系統充電: 条件待ち",
       "batteryTooltip": "{energy} / {total} ({soc})",
@@ -1251,19 +1239,11 @@
       "currents": "充電電流",
       "default": "デフォルト",
       "disclaimerHint": "注：",
-      "limitSoc": {
-        "description": "この車両が接続されたときに使用される充電制限。",
-        "label": "デフォルト制限"
-      },
       "maxCurrent": {
         "label": "最大電流"
       },
       "minCurrent": {
         "label": "最小電流"
-      },
-      "minSoc": {
-        "description": "太陽光モード時、車両はまず „高速” で {0} まで充電されます。その後は太陽光の余剰電力で充電を継続します。日照の少ない日でも最低限の航続距離を確保するのに役立ちます。",
-        "label": "最小充電 %"
       },
       "onlyForSocBasedCharging": "これらのオプションは、バッテリー残量が取得できている車両でのみ利用可能です。",
       "phasesConfigured": {

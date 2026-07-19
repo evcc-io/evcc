@@ -28,6 +28,7 @@
 
 			<MoreItem
 				:active="moreActive"
+				:vehicles="vehicles"
 				:auth-providers="authProviders"
 				:sponsor="sponsor"
 				:fatal="fatal"
@@ -50,7 +51,15 @@ import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Item from "./Item.vue";
 import MoreItem from "./MoreItem.vue";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Forecast, Sponsor, EvOpt, AuthProviders, Battery } from "@/types/evcc";
+import type {
+	FatalError,
+	Forecast,
+	Sponsor,
+	EvOpt,
+	AuthProviders,
+	Battery,
+	Vehicle,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "BottomTabBar",
@@ -66,6 +75,7 @@ export default defineComponent({
 		batteryGridChargeActive: Boolean,
 		batteryMode: { type: String as PropType<string> },
 		forecast: { type: Object as PropType<Forecast> },
+		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },

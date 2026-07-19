@@ -19,6 +19,20 @@
     "successCloseTab": "Nyní můžete tuto kartu zavřít.",
     "title": "Stav autorizace"
   },
+  "battery": {
+    "card": {
+      "charging": "nabíjení",
+      "discharging": "vybíjení",
+      "energy": "Energie",
+      "gridCharge": "nabíjení z distribuční sítě",
+      "hold": "vybíjení zamčené",
+      "holdCharge": "nabíjení zamčené",
+      "ofTotal": "ze {total}",
+      "power": "Výkon",
+      "soc": "Nabití baterie"
+    },
+    "combined": "Kombinovaný"
+  },
   "batterySettings": {
     "batteryLevel": "Nabití baterie",
     "bufferStart": {
@@ -51,6 +65,9 @@
     "hex": "Hex barva"
   },
   "config": {
+    "adminPassword": {
+      "invalid": "Neplatné heslo. Zkuste to prosím znovu."
+    },
     "apiKey": {
       "description": "Předává skriptům a automatizacím bezpečný přístup bez poskytování admin hesla.",
       "exampleLabel": "Zkuste to: stáhněte si zálohu curl",
@@ -60,6 +77,8 @@
       "regenerate": "Znovu vygenerovat API klíč",
       "regenerateConfirm": "Zadejte heslo správce k obnovení API klíče.",
       "regenerateLink": "Regenerovat",
+      "revealSuccess": "Váš nový API klíč je připraven k použití.",
+      "revealTitle": "API klíč vytvořen",
       "shownOnce": "Tento klíč je zobrazen pouze jednou. Uchovávejte někde v bezpečí. Nemůžete ho později načíst.",
       "title": "API klíč"
     },
@@ -153,8 +172,10 @@
       "current": "Proud",
       "currentRange": "Proud",
       "curtailLimit": "Limit dodávky energie",
+      "curtailable": "Omezitelné",
       "curtailed": "Limitováno výkupem energie",
       "detected": "Detekováno",
+      "dimLimit": "Limit spotřeby",
       "dimmed": "Spotřeba snížena",
       "enabled": "Zapnuto",
       "energy": "Energie",
@@ -231,8 +252,8 @@
     },
     "ext": {
       "description": "Zaznamenávat hodnoty energie neřízených spotřebičů (např. mrazák, myčka nádobí, atd.) pro statistické účely. Tyto měřáky je možné použít pro správu příkonu (např. dílčí distribuci).",
-      "titleAdd": "Přidat měřič spotřebiče",
-      "titleEdit": "Upravit měřič spotřebiče"
+      "titleAdd": "Přidat ďalší měřič spotřebiče",
+      "titleEdit": "Upravit ďalší měřič spotřebiče"
     },
     "form": {
       "danger": "Nebezpečí",
@@ -302,7 +323,9 @@
       "description": "Omezení výkonu externími systémy (např. §14a EnWG, §9 EEG rozhraní nebo nadřazený systém řízení energie). Spolupracuje s funkcí řízení zátěže.",
       "downloadCsv": "Stáhnout CSV",
       "eventsRecorded": "Zaznamenáno {count} událostí omezení mřížky.",
+      "integrations": "Integrace",
       "lastEvent": "Nejnovější {timeAgo}.",
+      "template": "Integrace",
       "title": "Vnější limit"
     },
     "icon": {
@@ -368,6 +391,7 @@
       "estimateLabel": "Odhadovat úroveň nabití vozu mezi aktualizacemi z API",
       "maxCurrentHelp": "Musí být větší než nastavený minimální proud.",
       "maxCurrentLabel": "Maximální proud",
+      "maxTempHelp": "Musí být vyšší než minimální teplota.",
       "maxTempLabel": "Maximální teplota",
       "minCurrentHelp": "Nastavení nižší než 6 A využijte pouze, pokud víte, co děláte.",
       "minCurrentLabel": "Minimální proud",
@@ -524,6 +548,10 @@
     },
     "meter": {
       "cancel": "Zrušit",
+      "convertToConsumer": {
+        "confirm": "Konvertuje tento „další měřič“ na „spotřebitele“.",
+        "link": "Konvertovat na spotřebič"
+      },
       "delete": "Smazat",
       "generic": "Obecné integrace",
       "option": {
@@ -541,7 +569,7 @@
       "usage": {
         "aux": "Samoregulační spotřebič",
         "battery": "Baterie",
-        "charge": "Spotřebič/ Nabíjecí stanice",
+        "charge": "Nabíjecí stanice",
         "grid": "Distribuční síť",
         "label": "Využití",
         "pv": "Produkce"
@@ -744,14 +772,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licenční klíč",
-      "activationKeyHint": "Odesláno e-mailem. Najdete na adrese {url}.",
       "addToken": "Zadejte token",
       "changeToken": "Změnit token",
       "description": "Sponzorský model nám pomáhá udržovat projekt a udržitelně vyvíjet nové a vzrušující funkce. Jako sponzor získáte přístup ke všem implementacím nabíječek.",
       "descriptionToken": "Sponzorský token získáte na {url}. Pro začátek nabízíme také zkušební token {trialToken}.",
-      "email": "E-mail",
-      "emailHint": "E-mailová adresa, kterou jste použili pro {url}",
       "enterYourToken": "Váš sponzorský token",
       "error": "Sponzorský token není platný.",
       "invalid": "Neplatný sponzorský token",
@@ -1161,9 +1185,7 @@
     "chargingPlan": {
       "active": "Aktivní",
       "addRepeatingPlan": "Přidat opakující se plán",
-      "arrivalTab": "Příchod",
       "day": "Den",
-      "departureTab": "Odchod",
       "goal": "Cílový stav nabíjení",
       "modalTitle": "Plán nabíjení",
       "none": "Žádný",
@@ -1187,8 +1209,6 @@
       "strategySettings": "Nastavení strategie",
       "time": "Čas",
       "title": "Plán",
-      "titleMinSoc": "Min. nabíjení",
-      "titleTargetCharge": "Odjezd",
       "unsavedChanges": "Jsou zde neuložené změny. Použít nyní?",
       "update": "Nastavit",
       "weekdays": "Dny"
@@ -1204,10 +1224,6 @@
       "batteryChargeHold": "Baterie (nabíjení uzamčeno)",
       "batteryDischarge": "Vybíjení baterie",
       "batteryDischargeHold": "Baterie (udržování stavu nabití)",
-      "batteryForecastEmpty": "Prázdné",
-      "batteryForecastFull": "Plný",
-      "batteryForecastNextHigh": "Špička",
-      "batteryForecastNextLow": "Minimum",
       "batteryGridChargeActive": "nabíjení domácí baterie ze sítě je aktivní",
       "batteryGridChargeLimit": "nabíjení ze sítě, když",
       "batteryTooltip": "{energy} z {total} ({soc})",
@@ -1252,7 +1268,7 @@
         "forecast": "Předpověď",
         "grid": "Distribuční síť",
         "loadpoint": "Nabíjení a vytápění",
-        "meter": "Spotřeba",
+        "meter": "Ďalší měřiče",
         "pv": "Výroba"
       },
       "otherConsumers": "Ostatní",
@@ -1290,19 +1306,11 @@
       "currents": "Nabíjecí proud",
       "default": "výchozí",
       "disclaimerHint": "Poznámka:",
-      "limitSoc": {
-        "description": "Nabíjecí limit, který je použit, když je připojeno toto vozidlo.",
-        "label": "Výchozí limit nabití"
-      },
       "maxCurrent": {
         "label": "Max. Proud"
       },
       "minCurrent": {
         "label": "Min. Proud"
-      },
-      "minSoc": {
-        "description": "Vozidlo bude rychle nabito na {0} v solárním režimu. Poté bude pokračovat nabíjení z přebytku solární energie. Užitečné pro zajištění minimálního dojezdu i během zatažených dnů.",
-        "label": "Minimální úroveň nabití"
       },
       "onlyForSocBasedCharging": "Tyto volby jsou povolené pouze pro vozidla se známou nabíjecí úrovní.",
       "phasesConfigured": {

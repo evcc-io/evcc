@@ -1,16 +1,11 @@
 <template>
 	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="limit-soc">
 		<h3 class="value m-0">
-			<label class="position-relative" role="button">
-				<select :value="limitSoc" class="custom-select" @change="change">
-					<option v-for="{ soc, text } in options" :key="soc" :value="soc">
-						{{ text }}
-					</option>
-				</select>
+			<CustomSelect inline :options="options" :selected="limitSoc" @change="change">
 				<span class="text-decoration-underline" data-testid="limit-soc-value">
 					<AnimatedNumber :to="limitSoc" :format="formatSoc" />
 				</span>
-			</label>
+			</CustomSelect>
 
 			<div v-if="estimatedTargetRange" class="extraValue text-nowrap">
 				<AnimatedNumber :to="estimatedTargetRange" :format="formatKm" />
@@ -23,12 +18,13 @@
 import { defineComponent } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
+import CustomSelect from "../Helper/CustomSelect.vue";
 import { distanceUnit } from "@/units";
 import formatter from "@/mixins/formatter";
 
 export default defineComponent({
 	name: "LimitSocSelect",
-	components: { LabelAndValue, AnimatedNumber },
+	components: { LabelAndValue, AnimatedNumber, CustomSelect },
 	mixins: [formatter],
 	props: {
 		limitSoc: { type: Number, default: 0 },
@@ -47,8 +43,8 @@ export default defineComponent({
 			const start = this.rangeActive ? this.minTemp : 20;
 			const end = this.rangeActive ? this.maxTemp : 100;
 			for (let soc = start; soc <= end; soc += this.step) {
-				const text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
-				result.push({ soc, text });
+				const name = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
+				result.push({ value: soc, name });
 			}
 			return result;
 		},
@@ -90,20 +86,11 @@ export default defineComponent({
 <style scoped>
 .value {
 	font-size: 18px;
-	overflow: hidden;
 }
 .extraValue {
+	margin-top: 0.1rem;
 	color: var(--evcc-gray);
 	font-size: 14px;
-}
-.custom-select {
-	left: 0;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	cursor: pointer;
-	position: absolute;
-	opacity: 0;
-	max-width: 100%;
+	font-weight: normal;
 }
 </style>

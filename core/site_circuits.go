@@ -56,11 +56,7 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
-func (site *Site) dimMeters(dim *bool) error {
-	if dim == nil {
-		return nil
-	}
-
+func (site *Site) dimMeters(dim bool) error {
 	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
 		m, ok := api.Cap[api.Dimmer](dev.Instance())
@@ -69,7 +65,7 @@ func (site *Site) dimMeters(dim *bool) error {
 		}
 
 		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
-			if *dim == dimmed {
+			if dim == dimmed {
 				continue
 			}
 		} else {
@@ -79,8 +75,8 @@ func (site *Site) dimMeters(dim *bool) error {
 			continue
 		}
 
-		if err := m.Dim(*dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), *dim)
+		if err := m.Dim(dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
 		}
@@ -89,10 +85,12 @@ func (site *Site) dimMeters(dim *bool) error {
 	return errs
 }
 
-func (site *Site) curtailPV(curtail *bool) error {
-	if curtail == nil {
+func (site *Site) curtailPV(percent *int) error {
+	if percent == nil {
 		return nil
 	}
+
+	curtail := *percent < 100
 
 	var errs error
 	for _, dev := range site.pvMeters {
@@ -102,7 +100,7 @@ func (site *Site) curtailPV(curtail *bool) error {
 		}
 
 		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			if *curtail == curtailed {
+			if curtail == curtailed {
 				continue
 			}
 		} else {
@@ -112,8 +110,8 @@ func (site *Site) curtailPV(curtail *bool) error {
 			continue
 		}
 
-		if err := m.Curtail(*curtail); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %t", deviceTitleOrName(dev), *curtail)
+		if err := m.SetCurtailPercent(*percent); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %d%%", deviceTitleOrName(dev), *percent)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
 		}

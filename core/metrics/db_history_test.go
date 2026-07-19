@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	"io"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	csvexport "github.com/evcc-io/evcc/util/export/csv"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/stretchr/testify/require"
 )
@@ -17,11 +19,18 @@ func mkSlot(t time.Time, energy, returnEnergy float64) Slot {
 	return Slot{Start: t, End: t.Add(15 * time.Minute), Energy: energy, ReturnEnergy: returnEnergy}
 }
 
-func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
+// writeSeriesCsv exports s to w as localized CSV via the csv row writer.
+func writeSeriesCsv(t *testing.T, ctx context.Context, s SeriesExport, w io.Writer) error {
+	ww, err := csvexport.New(ctx, w)
+	require.NoError(t, err)
+	return s.Write(ww)
+}
+
+func TestSeriesExport_HeaderAndLayout(t *testing.T) {
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	t1 := t0.Add(15 * time.Minute)
 
-	series := SeriesCSV{
+	series := SeriesExport{
 		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2.5, 0), mkSlot(t1, 3.0, 0)}},
 		{Group: Battery, Title: "battery-home", Data: []Slot{mkSlot(t0, 0, 0.7800), mkSlot(t1, 0.5300, 0)}},
 		{Group: Battery, Title: "battery-garage", Data: []Slot{mkSlot(t0, 0, 1.2500), mkSlot(t1, 0, 0)}},
@@ -30,7 +39,7 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	require.NoError(t, series.WriteCsv(context.Background(), &buf))
+	require.NoError(t, writeSeriesCsv(t, context.Background(), series, &buf))
 
 	// UTF-8 BOM
 	require.True(t, bytes.HasPrefix(buf.Bytes(), []byte{0xEF, 0xBB, 0xBF}), "expected UTF-8 BOM")
@@ -66,38 +75,36 @@ func TestSeriesCSV_HeaderAndLayout(t *testing.T) {
 	require.Equal(t, "366", rows[1][9])  // home energy
 }
 
-func TestSeriesCSV_GermanLocale(t *testing.T) {
+func TestSeriesExport_GermanLocale(t *testing.T) {
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
-	series := SeriesCSV{
+	series := SeriesExport{
 		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2.5, 0)}},
 	}
 
 	var buf bytes.Buffer
 	ctx := context.WithValue(context.Background(), locale.Locale, "de")
-	require.NoError(t, series.WriteCsv(ctx, &buf))
+	require.NoError(t, writeSeriesCsv(t, ctx, series, &buf))
 
 	s := string(bytes.TrimPrefix(buf.Bytes(), []byte{0xEF, 0xBB, 0xBF}))
-	require.True(t, strings.Contains(s, ";"), "german CSV must use ';' separator")
-	// Values are plain Wh integers so they're locale-agnostic. We just check
-	// no decimal point / comma snuck in.
+	require.False(t, strings.Contains(s, ";"), "delimiter is ',' regardless of locale")
 	require.True(t, strings.Contains(s, "2500"), "value should be Wh integer")
 	require.False(t, strings.Contains(s, "2.500"), "no '.' decimal/thousands")
 	require.False(t, strings.Contains(s, "2,500"), "no ',' decimal/thousands")
 }
 
-func TestSeriesCSV_MissingSlotIsEmpty(t *testing.T) {
+func TestSeriesExport_MissingSlotIsEmpty(t *testing.T) {
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	t1 := t0.Add(15 * time.Minute)
 
 	// Two entities, second one only has data for the first timestamp → second
 	// timestamp must produce an empty cell rather than 0.000.
-	series := SeriesCSV{
+	series := SeriesExport{
 		{Group: PV, Title: "a", Data: []Slot{mkSlot(t0, 1, 0), mkSlot(t1, 2, 0)}},
 		{Group: PV, Title: "b", Data: []Slot{mkSlot(t0, 3, 0)}},
 	}
 
 	var buf bytes.Buffer
-	require.NoError(t, series.WriteCsv(context.Background(), &buf))
+	require.NoError(t, writeSeriesCsv(t, context.Background(), series, &buf))
 
 	r := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(buf.Bytes(), []byte{0xEF, 0xBB, 0xBF})))
 	rows, err := r.ReadAll()
@@ -115,16 +122,16 @@ func TestSeriesCSV_MissingSlotIsEmpty(t *testing.T) {
 	require.Equal(t, "", rows[2][3], "missing slot must be empty, not zero")
 }
 
-func TestSeriesCSV_BatteryHasReturnEnergyColumn(t *testing.T) {
+func TestSeriesExport_BatteryHasReturnEnergyColumn(t *testing.T) {
 	// Battery is bidirectional, so even a series with zero discharge keeps the
 	// returnEnergy column.
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
-	series := SeriesCSV{
+	series := SeriesExport{
 		{Group: Battery, Title: "bat", Data: []Slot{mkSlot(t0, 0.5, 0)}},
 	}
 
 	var buf bytes.Buffer
-	require.NoError(t, series.WriteCsv(context.Background(), &buf))
+	require.NoError(t, writeSeriesCsv(t, context.Background(), series, &buf))
 
 	r := csv.NewReader(bytes.NewReader(bytes.TrimPrefix(buf.Bytes(), []byte{0xEF, 0xBB, 0xBF})))
 	rows, err := r.ReadAll()
@@ -134,7 +141,7 @@ func TestSeriesCSV_BatteryHasReturnEnergyColumn(t *testing.T) {
 	require.Equal(t, "0", rows[1][3])
 }
 
-func TestSeriesCSV_SocTempColumns(t *testing.T) {
+func TestSeriesExport_SocTempColumns(t *testing.T) {
 	t0 := time.Date(2026, 5, 14, 12, 0, 0, 0, time.UTC)
 	t1 := t0.Add(15 * time.Minute)
 
@@ -144,14 +151,14 @@ func TestSeriesCSV_SocTempColumns(t *testing.T) {
 		return s
 	}
 
-	series := SeriesCSV{
+	series := SeriesExport{
 		{Group: Battery, Title: "bat", Data: []Slot{slot(t0, new(90.0)), slot(t1, new(80.0))}},
 		{Group: Loadpoint, Title: "heater", IsTemp: true, Data: []Slot{slot(t0, new(45.0)), slot(t1, new(46.0))}},
 		{Group: PV, Title: "pv", Data: []Slot{mkSlot(t0, 2, 0), mkSlot(t1, 3, 0)}},
 	}
 
 	var buf bytes.Buffer
-	require.NoError(t, series.WriteCsv(context.Background(), &buf))
+	require.NoError(t, writeSeriesCsv(t, context.Background(), series, &buf))
 	out := buf.String()
 
 	require.Contains(t, out, "battery.bat.soc.pct")
@@ -168,8 +175,8 @@ func TestQueryEnergySoc(t *testing.T) {
 	require.NoError(t, db.Instance.Create(&e).Error)
 
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
-	require.NoError(t, persist(e, base, 1, 0, new(80.0)))
-	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0)))
+	require.NoError(t, persist(e, base, 1, 0, new(80.0), false))
+	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0), false))
 
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(time.Hour).UTC()

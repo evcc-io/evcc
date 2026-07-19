@@ -19,6 +19,48 @@
     "successCloseTab": "Dabar galite uždaryti šį skirtuką.",
     "title": "Autorizacijos būsena"
   },
+  "battery": {
+    "card": {
+      "charging": "įkrauna",
+      "discharging": "iškrauna",
+      "energy": "Energija",
+      "gridCharge": "įkraunama iš tinklo",
+      "hold": "iškrovimas blokuojamas",
+      "holdCharge": "įkrovimas blokuojamas",
+      "ofTotal": "iš {total}",
+      "power": "Galia",
+      "soc": "Akumuliatoriaus įkrova"
+    },
+    "combined": "Sudėta",
+    "config": {
+      "buffer": "Kaupiklio energija, viršijanti {soc}, gali būti naudojama įkrovikliams palaikyti ir saulės energijos režime atidėti įkrovimo išjungimą. Saulės energijos įkrovimas pradedamas automatiškai {start}.",
+      "bufferNone": "Kaupiklio energija nenaudojama automobilio įkrovimui. Norėdami įjungti šią funkciją, nustatykite mažesnę nei {soc} reikšmę.",
+      "bufferStart": {
+        "above": "kai kaupiklio įkrovos lygis viršija {soc}",
+        "full": "kai kaupiklis pilnas",
+        "never": "tik esant pakankamam pertekliui"
+      },
+      "bufferTitle": "Kaupiklis kaip įkrovimo buferis",
+      "discharge": "Neleiskite iškrauti kaupiklio greituoju režimu ir planuojamo įkrovimo metu.",
+      "priority": "Kaupiklis turi prioritetą, kol jo įkrova yra mažesnė nei {soc}. Po to įkrovikliai gauna perteklių.",
+      "priorityNone": "Saulės energijos perteklius patenka tiesiai į įkroviklius. Nustatykite reikšmę, didesnę nei {soc}, kad pirmenybė būtų teikiama kaupikliui.",
+      "priorityTitle": "Kur pirmiausia nukeliaus perteklius?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Įkrovimas iš tinklo",
+        "hold": "Iškrovimas blokuojamas",
+        "holdcharge": "Įkrovimas pristabdytas",
+        "normal": "Pagal saulės energijos perteklių"
+      },
+      "empty": "tuščia",
+      "full": "pilna",
+      "highest": "Daugiausia ({value})",
+      "lowest": "Mažiausia ({value})",
+      "suggestion": "Siūloma",
+      "title": "Optimizatorius"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Kaupiklio įkrova",
     "bufferStart": {
@@ -51,6 +93,11 @@
     "hex": "Hex spalva"
   },
   "config": {
+    "adminPassword": {
+      "description": "Scenarijaus įskiepis vykdo sistemos lygio komandą, kuri veikia su evcc proceso leidimais. Norėdami tęsti, dar kartą įveskite administratoriaus slaptažodį.",
+      "invalid": "Neteisingas slaptažodis. Bandykite dar kartą.",
+      "title": "Galimai pavojingas veiksmas"
+    },
     "apiKey": {
       "description": "Suteikite saugią prieigą nebendrindami administratoriaus slaptažodžio scenarijams ir automatizavimo užduotims, pvz., suplanuotoms atsarginėms kopijoms.",
       "exampleLabel": "Išbandykite: atsisiųskite atsarginę kopiją naudodami curl",
@@ -122,7 +169,7 @@
     },
     "consumer": {
       "description": "Seka mažesnius, nevaldomus prietaisus (šaldytuvą, skalbimo mašiną ir kt.). Suteikia geresnį supratimą apie jūsų namų suvartojimą.",
-      "titleAdd": "Pridėkite Vartotojo Skaitiklį",
+      "titleAdd": "Pridėti Vartotojo Skaitiklį",
       "titleEdit": "Redaguoti Vartotojo Skaitiklį"
     },
     "control": {
@@ -220,15 +267,21 @@
         "public": "Viešas sertifikatas",
         "title": "Sertifikatai"
       },
+      "configuredDevices": "Sukonfigūruoti įrenginiai",
       "description": "Konfigūracija, leidžianti evcc bendrauti su EEBus suderinamais įrenginiais, tokiais kaip įkrovikliai arba jūsų tinklo operatoriaus valdiklis. Visas reikalingas inicijavimas ir sertifikatų generavimas atliekami automatiškai pirmą kartą paleidus.",
       "descriptionAdvanced": "Nereikia jokių pakeitimų. Atlikite pakeitimus tik tuo atveju, jei tikrai žinote, ką darote. Jei pakeisite SHIP-id arba sertifikatus, turėsite iš naujo susieti įrenginius.",
       "interfaces": "Sąsajos",
       "interfacesHelp": "Apribokite tinklo sąsajas, kurias turėtų naudoti EEBus, kad išvengtumėte ryšio problemų. Palikite lauką tuščią, jei norite naudoti visas sąsajas. Vienas įrašas vienoje eilutėje.",
+      "noConfiguredDevices": "Nėra sukonfigūruotų įrenginių.",
+      "noPairings": "Nėra suporuotų įrenginių.",
+      "pairings": "Suporuoti įrenginiai",
       "port": "EEBus prievadas",
       "portHelp": "Naudojamas prievadas.",
       "qr": "Poravimo kodas",
       "qrExplain": "Diegimo metu nuskaitykite iš kito EEBus įrenginio, kad susietumėte automatiškai, nereikės įvesti SKI rankiniu būdu.",
       "removeConfirm": "Visa EEBus konfigūracija bus pašalinta. Kitą kartą paleidus bus sugeneruoti nauji sertifikatai ir identifikatoriai. Ar tikrai tęsti?",
+      "removePairing": "Panaikinti poravimą",
+      "removePairingConfirm": "Įrenginys bus atjungtas ir turės būti susietas iš naujo. Ar tikrai?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Nuolatinis įrenginio identifikatorius, skirtas identifikuoti EEBus tinkle.",
       "shipidHelp": "Šis SHIP-ID yra susietas su toliau pateiktais sertifikatais.",
@@ -303,6 +356,7 @@
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
     "hems": {
+      "changeConfirm": "Dabartinė konfigūracija bus ištrinta. Tęsti?",
       "csv": {
         "created": "Sukurta",
         "finished": "Baigta",
@@ -310,10 +364,14 @@
         "limitpower": "Limitas (kW)",
         "type": "Tipas"
       },
-      "description": "Galios ribojimas išorinėmis sistemomis (pvz., §14a EnWG, §9 EEG sąsaja arba aukštesnio lygio energijos valdymo sistema). Veikia kartu su apkrovos valdymo funkcija.",
+      "customOption": "Vartotojo sukurta integracija",
+      "description": "Galios ribojimas išorinėmis sistemomis (pvz., §14a EnWG, §9 EEG sąsaja arba aukštesnio lygio energijos valdymo sistema). Veikia kartu su apkrovos valdymo funkcija. Kai kuriems inverteriams taip pat galima apriboti gamybos galią, ji nustatoma kiekvieno inverterio konfigūracijoje.",
       "downloadCsv": "Atsisiųsti CSV failą",
       "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
+      "generic": "Standartinės integracijos",
+      "integrations": "Integracijos",
       "lastEvent": "Naujausias {timeAgo}.",
+      "template": "Integracija",
       "title": "Išorinė riba"
     },
     "icon": {
@@ -783,14 +841,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licencijos Raktas",
-      "activationKeyHint": "Išsiųstas jums el. paštu. Galima rasti adresu {url}.",
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs galite valdyti įkroviklius, kurių naudojimui reikia rėmimo.",
       "descriptionToken": "GitHub rėmėjai gali matyti savo žetoną (token) {url}. Pradžiai - pasibandymui siūlome {trialToken}.",
-      "email": "El. paštas",
-      "emailHint": "El. pašto adresas, kurį naudojote {url}",
       "enterYourToken": "Jūsų rėmėjo žetonas",
       "error": "Rėmėjo žetonas (token) negalioja.",
       "invalid": "negalioja",
@@ -1202,9 +1256,7 @@
     "chargingPlan": {
       "active": "Aktyvus",
       "addRepeatingPlan": "Pridėti pasikartojantį įkrovimo planą",
-      "arrivalTab": "Atvykimas",
       "day": "Diena",
-      "departureTab": "Išvykimas",
       "goal": "Įkrovimo tikslas",
       "modalTitle": "Įkrovimo planas",
       "none": "nėra",
@@ -1228,8 +1280,6 @@
       "strategySettings": "Strategijos pasirinkimai",
       "time": "Laikas",
       "title": "Planas",
-      "titleMinSoc": "Minimali įkrova",
-      "titleTargetCharge": "Išvykimas",
       "unsavedChanges": "Yra neišsaugotų pakeitimų. Išsaugoti dabar?",
       "update": "Patvirtinti",
       "weekdays": "Dienos"
@@ -1245,10 +1295,6 @@
       "batteryChargeHold": "Įkroviklis (įkrovimas užblokuotas)",
       "batteryDischarge": "Kaupiklis iškraunamas",
       "batteryDischargeHold": "Kaupiklis (iškrovimas užblokuotas)",
-      "batteryForecastEmpty": "Tuščias",
-      "batteryForecastFull": "Pilnas",
-      "batteryForecastNextHigh": "Didelė",
-      "batteryForecastNextLow": "Žema",
       "batteryGridChargeActive": "Įkrovimas iš tinklo: aktyvus",
       "batteryGridChargeLimit": "Įkrauti iš tinklo: kai",
       "batteryTooltip": "{energy} iš {total} ({soc})",
@@ -1284,6 +1330,10 @@
         "grid": {
           "energy": "iš tinklo",
           "returnEnergy": "į tinklą"
+        },
+        "meter": {
+          "energy": "Energija iš tinklo",
+          "returnEnergy": "Energija (patiekta į tinklą)"
         }
       },
       "downloadCsv": "Parsisiųsti CSV failą",
@@ -1332,19 +1382,11 @@
       "currents": "Įkrovimo Srovė",
       "default": "standartiškai",
       "disclaimerHint": "Pastaba:",
-      "limitSoc": {
-        "description": "Įkrovimo limitas, naudojamas, prijungus šį automobilį.",
-        "label": "Standartinis limitas"
-      },
       "maxCurrent": {
         "label": "Max. Srovė"
       },
       "minCurrent": {
         "label": "Min. Srovė"
-      },
-      "minSoc": {
-        "description": "Automobilis įkraunamas „Greitai” iki {0} nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės.",
-        "label": "Minimali įkrova %"
       },
       "onlyForSocBasedCharging": "Šie pasirinkimai galimi tik automobiliams su žinomu įkrovos lygiu.",
       "phasesConfigured": {

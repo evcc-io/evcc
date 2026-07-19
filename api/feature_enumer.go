@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingScaleLoadByTemperatureForecastContinuousAverageCacheableOfflineRetryableStreamingWelcomeChargeClimaterDisabledAutodetectDisabled"
+const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingScaleLoadByTemperatureForecastContinuousAverageCacheableOfflineRetryableStreamingWelcomeChargeClimaterDisabledAutodetectDisabledWakeUpDisabled"
 
-var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 78, 88, 95, 104, 111, 120, 129, 142, 158, 176}
+var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 78, 88, 95, 104, 111, 120, 129, 142, 158, 176, 190}
 
-const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingscaleloadbytemperatureforecastcontinuousaveragecacheableofflineretryablestreamingwelcomechargeclimaterdisabledautodetectdisabled"
+const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingscaleloadbytemperatureforecastcontinuousaveragecacheableofflineretryablestreamingwelcomechargeclimaterdisabledautodetectdisabledwakeupdisabled"
 
 func (i Feature) String() string {
 	i -= 1
@@ -39,9 +39,10 @@ func _FeatureNoOp() {
 	_ = x[WelcomeCharge-(12)]
 	_ = x[ClimaterDisabled-(13)]
 	_ = x[AutodetectDisabled-(14)]
+	_ = x[WakeUpDisabled-(15)]
 }
 
-var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, ScaleLoadByTemperatureForecast, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge, ClimaterDisabled, AutodetectDisabled}
+var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, ScaleLoadByTemperatureForecast, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge, ClimaterDisabled, AutodetectDisabled, WakeUpDisabled}
 
 var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureName[0:13]:         CoarseCurrent,
@@ -72,6 +73,8 @@ var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureLowerName[142:158]: ClimaterDisabled,
 	_FeatureName[158:176]:      AutodetectDisabled,
 	_FeatureLowerName[158:176]: AutodetectDisabled,
+	_FeatureName[176:190]:      WakeUpDisabled,
+	_FeatureLowerName[176:190]: WakeUpDisabled,
 }
 
 var _FeatureNames = []string{
@@ -89,6 +92,7 @@ var _FeatureNames = []string{
 	_FeatureName[129:142],
 	_FeatureName[142:158],
 	_FeatureName[158:176],
+	_FeatureName[176:190],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.

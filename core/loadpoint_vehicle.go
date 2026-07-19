@@ -77,7 +77,11 @@ func (lp *Loadpoint) identifyVehicle() {
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.stopVehicleDetection()
-			lp.setActiveVehicle(vehicle)
+
+			// already active via a different detection path - avoid reapplying its mode
+			if lp.GetVehicle() != vehicle {
+				lp.setActiveVehicle(vehicle)
+			}
 		}
 	}
 }
@@ -119,6 +123,8 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.vmu.Lock()
 
+	prev := lp.vehicle
+
 	from := "unknown"
 	if lp.vehicle != nil {
 		lp.coordinator.Release(lp.vehicle)
@@ -148,7 +154,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
 
-		if mode, ok := v.OnIdentified().GetMode(); ok {
+		// vehicle mode overrides the yaml onIdentify action
+		mode, ok := v.OnIdentified().GetMode()
+		if m := vehicle.Settings(lp.log, v).GetMode(); m != "" {
+			mode, ok = m, true
+		}
+		if ok && mode != "" {
 			lp.SetMode(mode)
 		}
 
@@ -162,7 +173,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 	// re-publish vehicle settings
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
-	lp.unpublishVehicle()
+
+	// only reset published vehicle data when the active vehicle actually changes.
+	// re-assigning the same default vehicle on reconnect must keep a known soc.
+	if prev != v {
+		lp.unpublishVehicle()
+	}
 
 	// publish effective values
 	lp.PublishEffectiveValues()

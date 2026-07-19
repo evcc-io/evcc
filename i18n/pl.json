@@ -184,7 +184,7 @@
     },
     "devices": {
       "auxMeter": "Inteligentne urządzenie konsumujące",
-      "batteryStorage": "Magazyn energii",
+      "batteryStorage": "Magazynowanie energii",
       "consumer": "Konsumenci",
       "solarSystem": "System PV"
     },
@@ -1041,9 +1041,7 @@
     "chargingPlan": {
       "active": "Aktywny",
       "addRepeatingPlan": "Dodaj plan powtarzalny",
-      "arrivalTab": "Przyjazd",
       "day": "Dzień",
-      "departureTab": "Wyjazd",
       "goal": "Cel ładowania",
       "modalTitle": "Plan ładowania",
       "none": "brak",
@@ -1067,8 +1065,6 @@
       "strategySettings": "Ustawienia strategii",
       "time": "Czas",
       "title": "Plan",
-      "titleMinSoc": "Minimalne ładowanie",
-      "titleTargetCharge": "Wyjazd",
       "unsavedChanges": "Są niezapisane zmiany. Zastosować teraz?",
       "update": "Zastosuj",
       "weekdays": "Dni"
@@ -1078,8 +1074,6 @@
       "batteryCharge": "Ładowanie magazynu energii",
       "batteryDischarge": "Rozładowywanie magazynu energii",
       "batteryDischargeHold": "Magazyn energii (chroniony)",
-      "batteryForecastEmpty": "Pusty",
-      "batteryForecastFull": "Pełny",
       "batteryGridChargeActive": "Ładowanie z sieci: aktywne",
       "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
       "batteryTooltip": "{energy} z {total} ({soc})",
@@ -1162,19 +1156,11 @@
       "currents": "Prąd ładowania",
       "default": "domyślny",
       "disclaimerHint": "Uwaga:",
-      "limitSoc": {
-        "description": "Limit ładowania stosowany, gdy ten pojazd jest podłączony.",
-        "label": "Domyślny limit"
-      },
       "maxCurrent": {
         "label": "Maks. prąd"
       },
       "minCurrent": {
         "label": "Min. Prąd"
-      },
-      "minSoc": {
-        "description": "Pojazd będzie „szybko” naładowany do {0} w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną. Przydatne, aby zapewnić minimalny zasięg nawet w pochmurne dni.",
-        "label": "Minimalne naładowanie %"
       },
       "onlyForSocBasedCharging": "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania.",
       "phasesConfigured": {
@@ -1510,5 +1496,12 @@
     "lineErrorLink": "wiersz {0}",
     "restartButton": "Restartuj",
     "title": "Błąd uruchamiania"
+  },
+  "tabBar": {
+    "battery": "Magazyn energii",
+    "charge": "Obciążenie",
+    "forecast": "Prognoza",
+    "more": "Więcej",
+    "sessions": "Sesje"
   }
 }
