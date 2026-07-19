@@ -71,9 +71,9 @@ func TestDecoding(t *testing.T) {
 		out float64
 	}{
 		{Register{Decode: "float32"}, []byte{0x4b, 0x3c, 0x61, 0x4e}, 12345678},
-		{Register{Decode: "float32"}, []byte{0xff, 0xff, 0xff, 0x7f}, 0}, // IEEE NaN -> 0
+		{Register{Decode: "float32"}, []byte{0xff, 0xff, 0xff, 0x7f}, math.NaN()}, // IEEE NaN preserved
 		{Register{Decode: "float32s"}, []byte{0x61, 0x4e, 0x4b, 0x3c}, 12345678},
-		{Register{Decode: "float32s"}, []byte{0xff, 0x7f, 0xff, 0xff}, 0}, // IEEE NaN swapped -> 0
+		{Register{Decode: "float32s"}, []byte{0xff, 0x7f, 0xff, 0xff}, math.NaN()}, // IEEE NaN swapped preserved
 		// "*nan" sentinel decodes to NaN so callers can map it to "not available"
 		{Register{Decode: "float32nans"}, []byte{0xff, 0xff, 0xff, 0x7f}, math.NaN()},
 		{Register{Decode: "uint16nan"}, []byte{0xff, 0xff}, math.NaN()},
