@@ -793,14 +793,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Chave de licença",
-      "activationKeyHint": "Enviado por e-mail. Pode ser consultado em {url}.",
       "addToken": "Insira token",
       "changeToken": "Alterar token",
       "description": "O modelo de apoio (sponsoring) ajuda-nos a manter o projeto e a desenvolver, de forma sustentável, novas funcionalidades. Como apoiante (sponsor), terá acesso às integrações de todos os Carregadores.",
       "descriptionToken": "Como patrocinado do GitHub, pode encontrar o seu token em {url}. Para começar, disponibilizamos um {trialToken}.",
-      "email": "E-mail",
-      "emailHint": "Endereço de e-mail que utilizou para {url}",
       "enterYourToken": "O teu token de patrocinador",
       "error": "O token de Apoiante (Sponsor) não é válido.",
       "invalid": "inválido",
@@ -1210,9 +1206,7 @@
     "chargingPlan": {
       "active": "Ativo",
       "addRepeatingPlan": "Adicionar planos iguais",
-      "arrivalTab": "Fim",
       "day": "Dia",
-      "departureTab": "Inicio",
       "goal": "Carga pretendida",
       "modalTitle": "Plano de carga",
       "none": "nenhum",
@@ -1236,8 +1230,6 @@
       "strategySettings": "Definições da estratégia",
       "time": "Hora",
       "title": "Plano",
-      "titleMinSoc": "Carga mínima",
-      "titleTargetCharge": "Inicio",
       "unsavedChanges": "Há alterações não salvas. Aplicar agora?",
       "update": "Aplicar",
       "weekdays": "Dias"
@@ -1340,19 +1332,11 @@
       "currents": "Corrente de carga",
       "default": "predefinido",
       "disclaimerHint": "Aviso:",
-      "limitSoc": {
-        "description": "limite de partilha que é usado quando este veículo está conectado.",
-        "label": "Limite padrão"
-      },
       "maxCurrent": {
         "label": "Corrente de carga máxima"
       },
       "minCurrent": {
         "label": "Corrente de carga mínima"
-      },
-      "minSoc": {
-        "description": "O veículo é carregado “rápido” até {0} no modo solar. A seguir, continua com excedente solar. Útil para garantir um alcance mínimo mesmo em dias com pouco sol.",
-        "label": "Min. de carga %"
       },
       "onlyForSocBasedCharging": "Estas opções só estão disponíveis para veículos com nível de carregamento conhecido.",
       "phasesConfigured": {

@@ -870,9 +870,7 @@
     "chargingPlan": {
       "active": "Aktív",
       "addRepeatingPlan": "Ismétlődő terv hozzáadása",
-      "arrivalTab": "Érkezés",
       "day": "Nap",
-      "departureTab": "Indulás",
       "goal": "Töltési cél",
       "modalTitle": "Töltési Tervezet",
       "none": "nincs",
@@ -896,8 +894,6 @@
       "strategySettings": "Stratégiai beállítások",
       "time": "Idő",
       "title": "Terv",
-      "titleMinSoc": "Min töltés",
-      "titleTargetCharge": "Indulás",
       "unsavedChanges": "Vannak nem mentett módosítások. Alkalmazza most?",
       "update": "Alkalmazás",
       "weekdays": "Napok"
@@ -955,19 +951,11 @@
       "currents": "Töltőáram",
       "default": "alapértelmezett",
       "disclaimerHint": "Megjegyzés:",
-      "limitSoc": {
-        "description": "Töltési korlát, amikor a jármű csatlakoztatva van.",
-        "label": "Alapértelmezett limit"
-      },
       "maxCurrent": {
         "label": "Max. Áram"
       },
       "minCurrent": {
         "label": "Min. Áram"
-      },
-      "minSoc": {
-        "description": "A jármű gyorstöltve lesz {0}-ra szolár üzemmódban. Ezután folytatódik a töltés a napelemes többletenergiával. Hasznos egy minimum tartományt megadni a felhősebb napokra.",
-        "label": "Min. töltés %"
       },
       "onlyForSocBasedCharging": "Ezek a beállítások csak olyan járművekre elérhetőek, amiknek ismert a töltési szintje.",
       "phasesConfigured": {

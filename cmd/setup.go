@@ -500,6 +500,10 @@ func configureVehicles(static []config.Named, names ...string) error {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
+			if _, ok := instance.OnIdentified().GetMode(); ok {
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+			}
+
 			mu.Lock()
 			defer mu.Unlock()
 			devs1 = append(devs1, config.NewStaticDevice(cc, instance))
@@ -523,6 +527,16 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
 				return nil
+			}
+
+			// migrate deprecated mode property to vehicle mode setting
+			if mode, ok := cc.Other["mode"].(string); ok && mode != "" {
+				key := fmt.Sprintf("vehicle.%s.%s", cc.Name, keys.Mode)
+				if _, err := settings.String(key); err != nil {
+					if _, err := api.ChargeModeString(mode); err == nil {
+						settings.SetString(key, mode)
+					}
+				}
 			}
 
 			instance, err := vehicleInstance(cc)
@@ -669,7 +683,7 @@ func configureDatabase(conf globalconfig.DB) error {
 	// persist unsaved settings on shutdown
 	shutdown.Register(persistSettings)
 
-	// persist unsaved settings every 30 minutes
+	// persist unsaved settings every minute
 	go func() {
 		for range time.Tick(time.Minute) {
 			persistSettings()
@@ -1214,6 +1228,7 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(conf.Planner, refs.Planner, &tariffs.Planner) })
 	eg.Go(func() error { return configureSolarTariffs(conf.Solar, refs.Solar, &tariffs.Solar) })
+	eg.Go(func() error { return configureTariff(conf.Temperature, refs.Temperature, &tariffs.Temperature) })
 	if err := eg.Wait(); err != nil {
 		return &tariffs, &ClassError{ClassTariff, err}
 	}

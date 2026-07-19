@@ -31,6 +31,7 @@ type DynamicConfig struct {
 	BatteryBoostLimit        int       `json:"batteryBoostLimit"`
 	LimitEnergy              float64   `json:"limitEnergy"`
 	LimitSoc                 int       `json:"limitSoc"`
+	MinSoc                   int       `json:"minSoc"`
 
 	PlanStrategy api.PlanStrategy `json:"planStrategy"`
 
@@ -75,6 +76,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetBatteryBoostLimit(payload.BatteryBoostLimit)
 	lp.SetLimitEnergy(payload.LimitEnergy)
 	lp.SetLimitSoc(payload.LimitSoc)
+	lp.SetMinSoc(payload.MinSoc)
 
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)

@@ -20,7 +20,7 @@ func TestSqliteTimestamp(t *testing.T) {
 	entity := entity{Name: "foo"}
 	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
 
-	persist(entity, clock.Now(), 0, 0, nil)
+	persist(entity, clock.Now(), 0, 0, nil, false)
 
 	db, err := db.Instance.DB()
 	require.NoError(t, err)
@@ -55,8 +55,8 @@ func TestQueryEnergyUTCFilter(t *testing.T) {
 	loc := time.Now().Location()
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
 
-	require.NoError(t, persist(e, base, 0, 1, nil))
-	require.NoError(t, persist(e, base.Add(time.Hour), 0, 2, nil))
+	require.NoError(t, persist(e, base, 0, 1, nil, false))
+	require.NoError(t, persist(e, base.Add(time.Hour), 0, 2, nil, false))
 
 	// query with UTC times spanning both slots
 	from := base.Add(-time.Hour).UTC()
@@ -83,10 +83,10 @@ func TestQueryEnergyGrouped(t *testing.T) {
 	loc := time.Now().Location()
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
 
-	require.NoError(t, persist(e1, base, 1, 0, nil))
-	require.NoError(t, persist(e2, base, 2, 0, nil))
-	require.NoError(t, persist(e1, base.Add(time.Hour), 3, 0, nil))
-	require.NoError(t, persist(e2, base.Add(time.Hour), 4, 0, nil))
+	require.NoError(t, persist(e1, base, 1, 0, nil, false))
+	require.NoError(t, persist(e2, base, 2, 0, nil, false))
+	require.NoError(t, persist(e1, base.Add(time.Hour), 3, 0, nil, false))
+	require.NoError(t, persist(e2, base.Add(time.Hour), 4, 0, nil, false))
 
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(3 * time.Hour).UTC()
@@ -125,9 +125,9 @@ func TestQueryEnergyMultipleSeries(t *testing.T) {
 	// 2 hourly slots per entity
 	for i := range 2 {
 		ts := base.Add(time.Duration(i) * time.Hour)
-		require.NoError(t, persist(eGrid, ts, float64(1+i), 0, nil))
-		require.NoError(t, persist(ePv1, ts, 0, float64(10+i), nil))
-		require.NoError(t, persist(ePv2, ts, 0, float64(20+i), nil))
+		require.NoError(t, persist(eGrid, ts, float64(1+i), 0, nil, false))
+		require.NoError(t, persist(ePv1, ts, 0, float64(10+i), nil, false))
+		require.NoError(t, persist(ePv2, ts, 0, float64(20+i), nil, false))
 	}
 
 	from := base.Add(-time.Hour).UTC()
@@ -187,9 +187,9 @@ func TestQueryEnergyFilter(t *testing.T) {
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
 	for i := range 2 {
 		ts := base.Add(time.Duration(i) * time.Hour)
-		require.NoError(t, persist(eGrid, ts, float64(1+i), 0, nil))
-		require.NoError(t, persist(ePv, ts, 0, float64(10+i), nil))
-		require.NoError(t, persist(eBat, ts, float64(5+i), 0, nil))
+		require.NoError(t, persist(eGrid, ts, float64(1+i), 0, nil, false))
+		require.NoError(t, persist(ePv, ts, 0, float64(10+i), nil, false))
+		require.NoError(t, persist(eBat, ts, float64(5+i), 0, nil, false))
 	}
 
 	from := base.Add(-time.Hour).UTC()
@@ -237,7 +237,7 @@ func TestUpdateProfile(t *testing.T) {
 	// day 1:   0 ...  95
 	// day 2:  96 ... 181
 	for i := range 4 * 2 * 24 {
-		persist(entity, clock.Now(), float64(i), float64(i), nil)
+		persist(entity, clock.Now(), float64(i), float64(i), nil, false)
 		clock.Add(15 * time.Minute)
 	}
 

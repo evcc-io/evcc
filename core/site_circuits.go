@@ -56,11 +56,7 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
-func (site *Site) dimMeters(dim *bool) error {
-	if dim == nil {
-		return nil
-	}
-
+func (site *Site) dimMeters(dim bool) error {
 	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
 		m, ok := api.Cap[api.Dimmer](dev.Instance())
@@ -69,7 +65,7 @@ func (site *Site) dimMeters(dim *bool) error {
 		}
 
 		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
-			if *dim == dimmed {
+			if dim == dimmed {
 				continue
 			}
 		} else {
@@ -79,8 +75,8 @@ func (site *Site) dimMeters(dim *bool) error {
 			continue
 		}
 
-		if err := m.Dim(*dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), *dim)
+		if err := m.Dim(dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
 		}

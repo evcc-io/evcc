@@ -841,14 +841,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licencijos Raktas",
-      "activationKeyHint": "Išsiųstas jums el. paštu. Galima rasti adresu {url}.",
       "addToken": "Įveskite žetoną",
       "changeToken": "Pakeisti žetoną",
       "description": "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs galite valdyti įkroviklius, kurių naudojimui reikia rėmimo.",
       "descriptionToken": "GitHub rėmėjai gali matyti savo žetoną (token) {url}. Pradžiai - pasibandymui siūlome {trialToken}.",
-      "email": "El. paštas",
-      "emailHint": "El. pašto adresas, kurį naudojote {url}",
       "enterYourToken": "Jūsų rėmėjo žetonas",
       "error": "Rėmėjo žetonas (token) negalioja.",
       "invalid": "negalioja",
@@ -1260,9 +1256,7 @@
     "chargingPlan": {
       "active": "Aktyvus",
       "addRepeatingPlan": "Pridėti pasikartojantį įkrovimo planą",
-      "arrivalTab": "Atvykimas",
       "day": "Diena",
-      "departureTab": "Išvykimas",
       "goal": "Įkrovimo tikslas",
       "modalTitle": "Įkrovimo planas",
       "none": "nėra",
@@ -1286,8 +1280,6 @@
       "strategySettings": "Strategijos pasirinkimai",
       "time": "Laikas",
       "title": "Planas",
-      "titleMinSoc": "Minimali įkrova",
-      "titleTargetCharge": "Išvykimas",
       "unsavedChanges": "Yra neišsaugotų pakeitimų. Išsaugoti dabar?",
       "update": "Patvirtinti",
       "weekdays": "Dienos"
@@ -1390,19 +1382,11 @@
       "currents": "Įkrovimo Srovė",
       "default": "standartiškai",
       "disclaimerHint": "Pastaba:",
-      "limitSoc": {
-        "description": "Įkrovimo limitas, naudojamas, prijungus šį automobilį.",
-        "label": "Standartinis limitas"
-      },
       "maxCurrent": {
         "label": "Max. Srovė"
       },
       "minCurrent": {
         "label": "Min. Srovė"
-      },
-      "minSoc": {
-        "description": "Automobilis įkraunamas „Greitai” iki {0} nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės.",
-        "label": "Minimali įkrova %"
       },
       "onlyForSocBasedCharging": "Šie pasirinkimai galimi tik automobiliams su žinomu įkrovos lygiu.",
       "phasesConfigured": {

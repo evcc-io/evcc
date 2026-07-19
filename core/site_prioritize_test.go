@@ -28,21 +28,26 @@ func newPVLoadpoint(prio int, mode api.ChargeMode, status api.ChargeStatus, enab
 func TestPvChargeStarting(t *testing.T) {
 	now := clock.NewMock().Now()
 
+	// enable timer running but car already full (soc at default 100% limit): not starting up
+	enablePendingFull := newPVLoadpoint(0, api.ModePV, api.StatusB, false, now)
+	enablePendingFull.vehicleSoc = 100
+
 	tc := []struct {
 		name     string
 		lp       *Loadpoint
 		starting bool
 	}{
 		{"enable timer running", newPVLoadpoint(0, api.ModePV, api.StatusB, false, now), true},
-		{"enabled not charging", newPVLoadpoint(0, api.ModePV, api.StatusB, true, time.Time{}), true},
+		{"enabled not charging", newPVLoadpoint(0, api.ModePV, api.StatusB, true, time.Time{}), false},
 		{"enabled and charging", newPVLoadpoint(0, api.ModePV, api.StatusC, true, time.Time{}), false},
 		{"disabled idle", newPVLoadpoint(0, api.ModePV, api.StatusB, false, time.Time{}), false},
 		{"disconnected", newPVLoadpoint(0, api.ModePV, api.StatusA, false, now), false},
 		{"not pv mode", newPVLoadpoint(0, api.ModeNow, api.StatusB, false, now), false},
+		{"enable pending but car full", enablePendingFull, false},
 	}
 
 	for _, tc := range tc {
-		if got := tc.lp.pvChargeStarting(); got != tc.starting {
+		if got := tc.lp.PvChargeStarting(); got != tc.starting {
 			t.Errorf("%s: want %v, got %v", tc.name, tc.starting, got)
 		}
 	}
@@ -77,6 +82,12 @@ func TestReservedPVPower(t *testing.T) {
 	high.pvTimer = time.Time{}
 	if got := site.reservedPVPower(low); got != 0 {
 		t.Errorf("low after high charging: want 0, got %.0f", got)
+	}
+
+	// high stays enabled and connected but no longer draws (car full): no reservation (#31684)
+	high.status = api.StatusB
+	if got := site.reservedPVPower(low); got != 0 {
+		t.Errorf("low after high stopped drawing: want 0, got %.0f", got)
 	}
 }
 

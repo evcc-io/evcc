@@ -138,13 +138,9 @@
   },
   "main": {
     "chargingPlan": {
-      "arrivalTab": "Arribades",
-      "departureTab": "Sortides",
       "modalTitle": "Plà de càrrega",
       "none": "no definit",
-      "title": "Plà",
-      "titleMinSoc": "Càrrega mínima",
-      "titleTargetCharge": "Sortides"
+      "title": "Plà"
     },
     "energyflow": {
       "battery": "Bateria",
@@ -177,10 +173,6 @@
       },
       "minCurrent": {
         "label": "Corriente de carrega mínima"
-      },
-      "minSoc": {
-        "description": "Marge per a emergències. El vehicle es carrega 'ràpidament' a {0} en mode solar. Després continua amb l'excedent fotovoltaic.",
-        "label": "Càrrega de min. %"
       },
       "phasesConfigured": {
         "label": "Fases",

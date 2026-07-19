@@ -188,6 +188,7 @@
     "deviceValue": {
       "activeClients": "Aktive Clients",
       "amount": "Anzahl",
+      "asleep": "schläft",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Kapazität",
@@ -226,6 +227,7 @@
       "no": "Nein",
       "odometer": "Kilometerstand",
       "org": "Organisation",
+      "outdoorTemp": "Außentemperatur",
       "phaseCurrents": "Strom",
       "phasePowers": "Leistung",
       "phaseVoltages": "Spannung",
@@ -438,6 +440,7 @@
         "heating": "Wird beim Systemstart gesetzt."
       },
       "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
+      "defaultModeKeep": "beibehalten",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
@@ -841,14 +844,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Lizenzschlüssel",
-      "activationKeyHint": "Per E-Mail zugesandt. Kann im {url} gefunden werden.",
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
       "descriptionToken": "Als GitHub-Sponsor findest du dein Token auf {url}. Zum Ausprobieren gibt's ein {trialToken}.",
-      "email": "E-Mail",
-      "emailHint": "E-Mail-Adresse, die du für {url} verwendet hast",
       "enterYourToken": "Dein Sponsor Token",
       "error": "Das Sponsortoken ist ungültig.",
       "invalid": "ungültig",
@@ -931,7 +930,8 @@
         "feedIn": "Einspeisevergütung hinzufügen",
         "grid": "Netzbezugstarif hinzufügen",
         "planner": "Planer-Vorhersage hinzufügen",
-        "solar": "Solar-Vorhersage hinzufügen"
+        "solar": "Solar-Vorhersage hinzufügen",
+        "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
         "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
@@ -944,6 +944,11 @@
         "titleAdd": "Solar-Vorhersage hinzufügen",
         "titleEdit": "Solar-Vorhersage bearbeiten"
       },
+      "temperature": {
+        "description": "Vorhersage der Außentemperatur am Standort. Wird in der Oberfläche angezeigt und für die Prognose des Heizbedarfs verwendet.",
+        "titleAdd": "Temperatur-Vorhersage hinzufügen",
+        "titleEdit": "Temperatur-Vorhersage bearbeiten"
+      },
       "template": "Anbieter",
       "title": "Tarife & Vorhersagen",
       "titleChoice": "Was möchtest du hinzufügen?",
@@ -952,7 +957,8 @@
         "feedIn": "Einspeisevergütung",
         "grid": "Netzbezugspreis",
         "planner": "Planer",
-        "solar": "Solar"
+        "solar": "Solar",
+        "temperature": "Temperaturvorhersage"
       },
       "zones": {
         "add": "Zone hinzufügen",
@@ -1105,7 +1111,8 @@
       "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
       "price": "Dynamischen Stromtarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
       "setup": "Tarife und Vorhersagen einrichten",
-      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
+      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
+      "temperature": "Zeigt die erwartete Außentemperatur am Standort. Wird für die Prognose des Heizbedarfs verwendet."
     },
     "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
@@ -1127,14 +1134,20 @@
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
     "solarAdjustMedium": "an reale Produktionsdaten anpassen",
     "solarAdjustShort": "anpassen",
+    "temperature": {
+      "average": "Durchschnitt",
+      "range": "Bereich"
+    },
     "type": {
       "co2": "CO₂-Emissionen",
       "price": "Netzpreis",
-      "solar": "Solarproduktion"
+      "solar": "Solarproduktion",
+      "temperature": "Außentemperatur"
     }
   },
   "general": {
     "download": "Download",
+    "none": "keine",
     "note": "Hinweis:"
   },
   "header": {
@@ -1248,9 +1261,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
-      "arrivalTab": "Ankunft",
       "day": "Tag",
-      "departureTab": "Abfahrt",
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
@@ -1274,8 +1285,6 @@
       "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
-      "titleMinSoc": "Min. Ladung",
-      "titleTargetCharge": "Abfahrt",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
       "update": "Anwenden",
       "weekdays": "Tage"
@@ -1304,11 +1313,13 @@
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
       "pvProduction": "Erzeugung",
-      "selfConsumption": "Eigenverbrauch"
+      "selfConsumption": "Eigenverbrauch",
+      "toggleDetails": "Energiefluss-Details"
     },
     "heatingStatus": {
       "charging": "Heize …",
       "connected": "Standby.",
+      "minTemp": "Mindestheizung auf {temp}.",
       "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu heizen.",
       "suggestionStopTooltip": "Der Optimizer empfiehlt, das Heizen zu pausieren.",
       "vehicleLimit": "Heizungslimit",
@@ -1356,12 +1367,15 @@
       "emission": "Emission",
       "fallbackName": "Ladepunkt",
       "finished": "Ladeende",
+      "last24hEnergy": "Letzte 24h",
+      "last7dEnergy": "Letzte 7 Tage",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
       "remoteDisabledHard": "{source}: Deaktiviert",
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
-      "solar": "Sonne"
+      "solar": "Sonne",
+      "todayEnergy": "Heute"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1379,19 +1393,16 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
-      "limitSoc": {
-        "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
-        "label": "Standard Ladelimit"
-      },
+      "heating": "Heizen",
       "maxCurrent": {
         "label": "Max. Ladestrom"
       },
       "minCurrent": {
         "label": "Min. Ladestrom"
       },
-      "minSoc": {
-        "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
-        "label": "Min. Ladung %"
+      "minTemp": {
+        "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
+        "label": "Min. Temperatur"
       },
       "phasesConfigured": {
         "label": "Phasen",
@@ -1474,6 +1485,20 @@
       "tempLimit": "Temperaturlimit",
       "unknown": "Gastfahrzeug",
       "vehicleSoc": "Ladestand"
+    },
+    "vehicleSettings": {
+      "connectedTo": "verbunden mit {0}",
+      "description": "Diese Standardwerte werden angewendet, wenn das Fahrzeug an einem Ladepunkt angeschlossen wird.",
+      "editHint": "Fahrzeuge unter {0} hinzufügen oder bearbeiten.",
+      "keepAsIs": "Beibehalten",
+      "learnMore": "Mehr erfahren.",
+      "limitSoc": "Standardlimit",
+      "menu": "Fahrzeuge",
+      "minSoc": "Minimale Ladung",
+      "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
+      "mode": "Standardmodus",
+      "notConnected": "nicht verbunden",
+      "title": "Fahrzeugeinstellungen"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Warte auf Autorisierung.",

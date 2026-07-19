@@ -793,14 +793,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Lizenzschlëssel",
-      "activationKeyHint": "Per E-Mail un Iech geschéckt. Op der {url} ze fannen.",
       "addToken": "Token aginn",
       "changeToken": "Token änneren",
       "description": "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg nei a spannend Fonctiounen z'entwéckelen. Als Sponsor kriss du Zougank zu all Wallbox-Implementatiounen.",
       "descriptionToken": "Als GitHub-Sponsor fannt Dir Ären Token op {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
-      "email": "E-Mail",
-      "emailHint": "E-Mail-Adress, déi Dir fir {url} benotzt hutt",
       "enterYourToken": "Äre Sponsor-Token",
       "error": "De Sponsortoken ass ongülteg.",
       "invalid": "ongülteg",
@@ -1210,9 +1206,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Widderhuelte Planifikatioun derbäi fügen",
-      "arrivalTab": "Arrivée",
       "day": "Dag",
-      "departureTab": "Depart",
       "goal": "Luedzil",
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
@@ -1236,8 +1230,6 @@
       "strategySettings": "Strategie-Astellungen",
       "time": "Zäit",
       "title": "Planifikatioun",
-      "titleMinSoc": "Min. Oplueden",
-      "titleTargetCharge": "Depart",
       "unsavedChanges": "Net gespäichert Ännerungen leie vir. Elo uwennen?",
       "update": "Uwennen",
       "weekdays": "Deeg"
@@ -1340,19 +1332,11 @@
       "currents": "Luedstroum",
       "default": "Standard",
       "disclaimerHint": "Notiz:",
-      "limitSoc": {
-        "description": "Luedzil dat benotzt gëtt, wann dëst Gefier verbonnen ass.",
-        "label": "Standard Luedzil"
-      },
       "maxCurrent": {
         "label": "Max. Stroum"
       },
       "minCurrent": {
         "label": "Min. Stroum"
-      },
-      "minSoc": {
-        "description": "D'Gefier gëtt \"séier\" op {0} am Solarmodus opgelueden. Da geet et weider mat Solariwwerschëss. Dëst ass nëtzlech fir eng Minimum-Reechwäit och wärend méi däischter Deeg ze garantéieren.",
-        "label": "Min. oplueden %"
       },
       "onlyForSocBasedCharging": "Dës Optioune sinn nëmme fir Gefierer mat bekannte Luedstatioune verfügbar.",
       "phasesConfigured": {

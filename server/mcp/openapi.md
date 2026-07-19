@@ -344,6 +344,26 @@ call getEnergyHistory {
 }
 ```
 
+## setSolarAdjusted
+
+Adjust the solar forecast to real production data of the current day.
+
+**Tags:** experimental
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setSolarAdjusted {
+  "enable": "true"
+}
+```
+
 ## getState
 
 Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.
@@ -837,6 +857,28 @@ Updates the minimum current of the loadpoint.
 call setLoadpointMinCurrent {
   "current": 16,
   "id": 1
+}
+```
+
+## setLoadpointMinTemp
+
+Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| temp | number | Temperature in °C |
+
+**Example call:**
+
+```json
+call setLoadpointMinTemp {
+  "id": 1,
+  "temp": 50
 }
 ```
 

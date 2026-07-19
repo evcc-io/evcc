@@ -857,14 +857,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Clé de licence",
-      "activationKeyHint": "Vous a été envoyé par email. Peut être trouvé via {url}.",
       "addToken": "Entrer le jeton",
       "changeToken": "Modifier le jeton",
       "description": "Le modèle de parrainage nous aide à maintenir le projet et à construire de manière durable de nouvelles fonctionnalités passionnantes. En tant que parrain, vous avez accès à toutes les implémentations de chargeurs.",
       "descriptionToken": "En tant que sponsor GitHub, vous pouvez obtenir un jeton sur {url}. Pour démarrer, nous offrons également un jeton d’essai pour les tests {trialToken}.",
-      "email": "Email",
-      "emailHint": "L’adresse email que vous avez utilisé pour {url}",
       "enterYourToken": "Votre jeton de sponsor",
       "error": "Le jeton de parrain n’est pas valide.",
       "invalid": "invalide",
@@ -1275,9 +1271,7 @@
     "chargingPlan": {
       "active": "Actif",
       "addRepeatingPlan": "Ajouter un plan récurrent",
-      "arrivalTab": "Arrivée",
       "day": "Jour",
-      "departureTab": "Départ",
       "goal": "Objectif de charge",
       "modalTitle": "Planification de la charge",
       "none": "aucune",
@@ -1301,8 +1295,6 @@
       "strategySettings": "Paramètres de stratégie",
       "time": "Heure",
       "title": "Planification",
-      "titleMinSoc": "Charge min",
-      "titleTargetCharge": "Départ",
       "unsavedChanges": "Il y a des modifications non sauvegardées. Appliquer ?",
       "update": "Appliquer",
       "weekdays": "Jours"
@@ -1405,19 +1397,11 @@
       "currents": "Courant de charge",
       "default": "défaut",
       "disclaimerHint": "Remarque :",
-      "limitSoc": {
-        "description": "Limite de charge à utiliser quand ce véhicule est connecté.",
-        "label": "Limite par défaut"
-      },
       "maxCurrent": {
         "label": "Courant max."
       },
       "minCurrent": {
         "label": "Courant min."
-      },
-      "minSoc": {
-        "description": "Le véhicule est chargé en mode „Rapide” à {0} en mode solaire, puis avec le surplus solaire. Utile pour s'assurer d'un minimum d'autonomie, même pour les jours plus sombres.",
-        "label": "Charge min. %"
       },
       "onlyForSocBasedCharging": "Ces options sont disponibles uniquement pour les véhicules avec un niveau de charge connu.",
       "phasesConfigured": {
