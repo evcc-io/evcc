@@ -555,6 +555,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			site.pushChan <- ev
 		}
 	}
+
 	return nil
 }
 
