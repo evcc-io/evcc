@@ -238,14 +238,6 @@ func (site *Site) clearSuggestions() {
 	site.Unlock()
 }
 
-// pushEvent sends a notification event on behalf of the site
-func (site *Site) pushEvent(ev messenger.Event) {
-	if site.pushChan == nil {
-		return
-	}
-	site.pushChan <- ev
-}
-
 // diffSuggestions updates the tracked actionable optimizer suggestions and
 // returns the events to send for devices whose actionable action changed since
 // the last run. Non-actionable or vanished devices are pruned so a later
@@ -558,8 +550,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
-	for _, ev := range site.diffSuggestions(pending) {
-		site.pushEvent(ev)
+	if site.pushChan != nil {
+		for _, ev := range site.diffSuggestions(pending) {
+			site.pushChan <- ev
+		}
 	}
 	return nil
 }
