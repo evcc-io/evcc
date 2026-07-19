@@ -21,6 +21,7 @@ type Measurement struct {
 	Soc               *float64    `json:"soc,omitempty"`
 	Controllable      *bool       `json:"controllable,omitempty"`
 	Suggestion        *Suggestion `json:"suggestion,omitempty"`
+	MaxChargePower    *float64    `json:"maxchargepower,omitempty"`
 	MaxDischargePower *float64    `json:"maxdischargepower,omitempty"`
 }
 
@@ -60,6 +61,7 @@ type BatteryState struct {
 	Power             float64          `json:"power"`
 	Energy            float64          `json:"energy,omitempty"`
 	Capacity          float64          `json:"capacity,omitempty"`
+	MaxChargePower    float64          `json:"maxchargepower,omitempty"`
 	MaxDischargePower float64          `json:"maxdischargepower,omitempty"`
 	Soc               float64          `json:"soc"`
 	Devices           []Measurement    `json:"devices,omitempty" influxdb:"battery"`
