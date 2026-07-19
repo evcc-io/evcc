@@ -236,10 +236,14 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	return val, err
 }
 
+type httpAccess struct {
+	last   time.Time
+	warned bool
+}
+
 var (
 	httpSeenMu sync.Mutex
-	httpSeen   = make(map[string]time.Time)
-	httpWarned = make(map[string]struct{})
+	httpSeen   = make(map[string]httpAccess)
 )
 
 // stripQuery drops the query and fragment so cache-busting params do not make
@@ -257,15 +261,10 @@ func repeatedGet(url string, now time.Time) bool {
 	httpSeenMu.Lock()
 	defer httpSeenMu.Unlock()
 
-	last, seen := httpSeen[url]
-	httpSeen[url] = now
-
-	if _, warned := httpWarned[url]; warned || !seen || now.Sub(last) >= time.Second {
-		return false
-	}
-
-	httpWarned[url] = struct{}{}
-	return true
+	a, seen := httpSeen[url]
+	warn := seen && !a.warned && now.Sub(a.last) < time.Second
+	httpSeen[url] = httpAccess{last: now, warned: a.warned || warn}
+	return warn
 }
 
 var _ Getters = (*HTTP)(nil)
