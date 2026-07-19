@@ -106,6 +106,46 @@ Remove battery grid charge limit.
 
 **Tags:** battery
 
+## setBatteryCalibrationCharge
+
+Bypass maxSoc and charge all batteries to 100% once for BMS/LFP calibration. Auto-clears when aggregate SoC reaches 100%.
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatteryCalibrationCharge {
+  "enable": "true"
+}
+```
+
+## setBatteryControlDeadBand
+
+Minimum surplus/deficit in watts before the fast loop starts charging or discharging (stability dead band).
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| power | number | Dead band in watts |
+
+**Example call:**
+
+```json
+call setBatteryControlDeadBand {
+  "power": 123.45
+}
+```
+
 ## setBatteryDischargeControl
 
 Prevent home battery discharge during vehicle fast charging.
@@ -143,6 +183,106 @@ Charge home battery from grid when price or emissions are below the threshold. U
 ```json
 call setBatteryGridChargeLimit {
   "cost": 123.45
+}
+```
+
+## setBatterySolarControl
+
+Enable watt-level solar control: actively charge the home battery from surplus and discharge it to cover loads via RS485. Required for batteries without a grid CT (e.g. Marstek). Disabling returns batteries to their autonomous mode.
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatterySolarControl {
+  "enable": "true"
+}
+```
+
+## setBatterySolarPool
+
+Distribute power equally across all batteries instead of per-battery tiering/selection.
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatterySolarPool {
+  "enable": "true"
+}
+```
+
+## setBatterySolarSticky
+
+Keep the same battery selection across ticks; swap only on significant SoC divergence.
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatterySolarSticky {
+  "enable": "true"
+}
+```
+
+## setBatterySolarTapering
+
+Linearly reduce charge power in the last SoC band before maxSoc to protect cells (CC/CV safety net).
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatterySolarTapering {
+  "enable": "true"
+}
+```
+
+## setBatterySolarTiering
+
+Activate only the number of batteries needed for the target power, sized off each unit's rated power with hysteresis.
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatterySolarTiering {
+  "enable": "true"
 }
 ```
 

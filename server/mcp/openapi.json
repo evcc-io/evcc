@@ -966,6 +966,53 @@
         ]
       }
     },
+    "/batterycalibrationcharge/{enable}": {
+      "post": {
+        "description": "Bypass maxSoc and charge all batteries to 100% once for BMS/LFP calibration. Auto-clears when aggregate SoC reaches 100%.",
+        "operationId": "setBatteryCalibrationCharge",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "One-shot LFP calibration charge (FORK)",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterycontroldeadband/{power}": {
+      "post": {
+        "description": "Minimum surplus/deficit in watts before the fast loop starts charging or discharging (stability dead band).",
+        "operationId": "setBatteryControlDeadBand",
+        "parameters": [
+          {
+            "description": "Dead band in watts",
+            "example": 50,
+            "in": "path",
+            "name": "power",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Battery solar control dead band (FORK)",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
     "/batterydischargecontrol/{enable}": {
       "post": {
         "description": "Prevent home battery discharge during vehicle fast charging.",
@@ -1060,6 +1107,106 @@
           }
         },
         "summary": "Set external battery mode",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterysolarcontrol/{enable}": {
+      "post": {
+        "description": "Enable watt-level solar control: actively charge the home battery from surplus and discharge it to cover loads via RS485. Required for batteries without a grid CT (e.g. Marstek). Disabling returns batteries to their autonomous mode.",
+        "operationId": "setBatterySolarControl",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Control watt-level battery solar control (FORK)",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterysolarpool/{enable}": {
+      "post": {
+        "description": "Distribute power equally across all batteries instead of per-battery tiering/selection.",
+        "operationId": "setBatterySolarPool",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Pool mode for battery solar control (FORK)",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterysolarsticky/{enable}": {
+      "post": {
+        "description": "Keep the same battery selection across ticks; swap only on significant SoC divergence.",
+        "operationId": "setBatterySolarSticky",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Sticky selection for battery solar control (FORK)",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterysolartapering/{enable}": {
+      "post": {
+        "description": "Linearly reduce charge power in the last SoC band before maxSoc to protect cells (CC/CV safety net).",
+        "operationId": "setBatterySolarTapering",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Charge tapering for battery solar control (FORK)",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
+    "/batterysolartiering/{enable}": {
+      "post": {
+        "description": "Activate only the number of batteries needed for the target power, sized off each unit's rated power with hysteresis.",
+        "operationId": "setBatterySolarTiering",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Tiering for battery solar control (FORK)",
         "tags": [
           "battery"
         ]
