@@ -1745,7 +1745,7 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 	if lp.charging() && lp.phaseSwitchCompleted() {
 		var phases int
 		for _, i := range lp.chargeCurrents {
-			if i >= minActiveCurrent {
+			if i > minActiveCurrent {
 				phases++
 			}
 		}
