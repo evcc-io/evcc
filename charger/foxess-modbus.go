@@ -64,6 +64,7 @@ const (
 	foxRegMaxCurrent   = 0x3001 // max charging current, 0.1A
 	foxRegMaxPower     = 0x3002 // max charging power, 0.1kW
 	foxRegTimeValidity = 0x3005 // command validity window, seconds
+	foxRegAutoSwitch   = 0x300A // single/three-phase automatic switching (no PBOX)
 
 	// write-only registers (write with 0x06)
 	foxRegChargingControl = 0x4001 // start/stop charging
@@ -134,10 +135,19 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 	// time validity window, so we must re-send the setpoint periodically
 	go wb.heartbeat(ctx)
 
-	// phase switching is only available with an external phase-cutting box
 	if pbox {
+		// phase switching is commanded explicitly via the phase-cutting box
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+	} else {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3pAuto))
+
+		// without a phase-cutting box the charger switches phases autonomously
+		// based on the power setpoint (spec §2.38); the register defaults to
+		// enabled, so a failed write here is not fatal
+		if err := wb.ensureReg(foxRegAutoSwitch, 1); err != nil {
+			wb.log.WARN.Printf("auto switch: %v", err)
+		}
 	}
 
 	// seed current setpoint and enabled state from the charger so the heartbeat
@@ -480,6 +490,14 @@ func (wb *FoxESSEVC) phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(foxRegPhaseSwitching, val)
 
 	return err
+}
+
+// phases1p3pAuto implements the api.PhaseSwitcher interface as a no-op.
+// Without a phase-cutting box the charger switches phases autonomously based
+// on the power setpoint (spec §2.38); this only updates evcc's internal phase
+// bookkeeping so pvScalePhases can compute correct 1p/3p current thresholds.
+func (wb *FoxESSEVC) phases1p3pAuto(_ int) error {
+	return nil
 }
 
 // getPhases implements the api.PhaseGetter interface
