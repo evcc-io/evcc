@@ -325,10 +325,16 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	if site.circuit != nil {
 		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
-			req.Grid = optimizer.GridConfig{
-				// hard grid import limit if no price penalty is set by PrcPExcImp
-				PMaxImp: float32(pMaxImp),
-			}
+			// hard grid import limit if no price penalty is set by PrcPExcImp
+			req.Grid.PMaxImp = float32(pMaxImp)
+		}
+	}
+
+	// soft grid feed-in cap from active HEMS curtailment (e.g. German 70% rule):
+	// export is capped at this power, excess PV is curtailed instead of exported
+	if site.hems != nil {
+		if p := site.hems.MaxProductionPower(); p != nil && *p > 0 {
+			req.Grid.PMaxExp = float32(*p)
 		}
 	}
 
