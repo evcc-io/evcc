@@ -242,7 +242,7 @@ func (m *Client) Publish(topic string, retained bool, payload any) {
 			return
 		}
 
-		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
+		m.log.TRACE.Printf("send %s: '%v'", topic, truncate(payload))
 		token := m.client.Publish(topic, m.Qos, retained, payload)
 
 		select {
@@ -290,7 +290,7 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 func (m *Client) listen(topic string) paho.Token {
 	token := m.client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		payload := string(msg.Payload())
-		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
+		m.log.TRACE.Printf("recv %s: '%v'", topic, truncate(payload))
 		if len(payload) > 0 {
 			m.mux.Lock()
 			callbacks := m.listener[topic]
@@ -302,4 +302,13 @@ func (m *Client) listen(topic string) paho.Token {
 		}
 	})
 	return token
+}
+
+// truncate limits payload length in trace logs, matching HTTP logging
+func truncate(v any) string {
+	s := fmt.Sprint(v)
+	if len(s) > request.LogMaxLen {
+		s = s[:request.LogMaxLen] + "..."
+	}
+	return s
 }
