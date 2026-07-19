@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -93,8 +94,11 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	}
 
 	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
-	if s, _ := utf16BEBytesAsString(c); err != nil || s == "" {
-		return nil, api.ErrSponsorRequired
+	if err != nil {
+		return nil, fmt.Errorf("station id: %w", err)
+	}
+	if s, _ := utf16BEBytesAsString(c); s == "" {
+		return nil, errors.New("station id not found, device may not be a DaheimLaden")
 	}
 
 	log := util.NewLogger("daheimladen")
