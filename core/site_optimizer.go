@@ -752,29 +752,15 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	from := now.BeginningOfDay().AddDate(0, 0, -7)
-
-	// base load (excludes loadpoints) - kWh over last 30 days
+	// base load (excludes loadpoints) - averaged over last 30 days
 	gt_base, err := site.collectors[metrics.Home].EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
 	}
 
-	gt_heater_temp_sensitive, gt_heater_non_sensitive := site.extractHeaterProfile(from, time.Now())
-
-	hasHeaterData := false
-	if len(gt_heater_temp_sensitive) > 0 {
-		site.log.DEBUG.Printf("home profile: extracted temperature-sensitive heater profile with %d slots", len(gt_heater_temp_sensitive))
-		hasHeaterData = true
-	}
-	if len(gt_heater_non_sensitive) > 0 {
-		site.log.DEBUG.Printf("home profile: extracted non-temperature-sensitive heater profile with %d slots", len(gt_heater_non_sensitive))
-		hasHeaterData = true
-	}
-
-	// max 4 days
+	// max 4 days of base slots (allow for prorating first day)
 	slots := make([]float64, 0, minLen+1)
-	for len(slots) <= minLen+24*4 { // allow for prorating first day
+	for len(slots) <= minLen+24*4 {
 		slots = append(slots, gt_base[:]...)
 	}
 
@@ -786,124 +772,104 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
-	if !hasHeaterData {
+	tempProfile, weeklyProfile := site.extractHeaterProfiles()
+
+	if len(tempProfile) == 0 && len(weeklyProfile) == 0 {
 		site.log.DEBUG.Println("home profile: no heating devices, returning base load only")
-		return lo.Map(res, func(v float64, i int) float64 {
-			return v * 1e3
-		}), nil
+		return lo.Map(res, func(v float64, i int) float64 { return v * 1e3 }), nil
 	}
 
 	gt_final := make([]float64, len(res))
 	copy(gt_final, res)
 
-	if len(gt_heater_temp_sensitive) > 0 {
-		tempSensitiveSlots := make([]float64, 0, minLen+1)
-		for len(tempSensitiveSlots) <= minLen+24*4 {
-			tempSensitiveSlots = append(tempSensitiveSlots, gt_heater_temp_sensitive[:]...)
-		}
-		gt_temp_sensitive := profileSlotsFromNow(tempSensitiveSlots)
-		if len(gt_temp_sensitive) > len(res) {
-			gt_temp_sensitive = gt_temp_sensitive[:len(res)]
-		}
-
-		site.log.DEBUG.Println("home profile: applying temperature correction")
-		gt_temp_sensitive_corrected := site.applyTemperatureCorrection(gt_temp_sensitive)
-
+	// DemandProfileTemperature: daily-averaged profile scaled by outdoor temp forecast
+	if len(tempProfile) > 0 {
+		p := tileAndTrim(tempProfile, minLen)
+		site.log.DEBUG.Printf("home profile: applying temperature correction to %d slots", len(p))
+		p = site.applyTemperatureCorrection(p)
 		for i := range gt_final {
-			if i < len(gt_temp_sensitive_corrected) {
-				gt_final[i] += gt_temp_sensitive_corrected[i]
+			if i < len(p) {
+				gt_final[i] += p[i]
 			}
 		}
 	}
 
-	if len(gt_heater_non_sensitive) > 0 {
-		nonSensitiveSlots := make([]float64, 0, minLen+1)
-		for len(nonSensitiveSlots) <= minLen+24*4 {
-			nonSensitiveSlots = append(nonSensitiveSlots, gt_heater_non_sensitive[:]...)
-		}
-		gt_non_sensitive := profileSlotsFromNow(nonSensitiveSlots)
-		if len(gt_non_sensitive) > len(res) {
-			gt_non_sensitive = gt_non_sensitive[:len(res)]
-		}
-
+	// DemandProfileWeekly: same-weekday-last-week actual profile, tiled as-is
+	if len(weeklyProfile) > 0 {
+		p := tileAndTrim(weeklyProfile, minLen)
+		site.log.DEBUG.Printf("home profile: adding weekly demand profile with %d slots", len(p))
 		for i := range gt_final {
-			if i < len(gt_non_sensitive) {
-				gt_final[i] += gt_non_sensitive[i]
+			if i < len(p) {
+				gt_final[i] += p[i]
 			}
 		}
 	}
 
 	// convert to Wh
-	return lo.Map(gt_final, func(v float64, i int) float64 {
-		return v * 1e3
-	}), nil
+	return lo.Map(gt_final, func(v float64, i int) float64 { return v * 1e3 }), nil
 }
 
-// getHeatingLoadpoints returns indices of loadpoints with Heating feature
-func (site *Site) getHeatingLoadpoints() []int {
-	var heatingLPs []int
+// tileAndTrim repeats profile until it covers minLen slots, then trims and aligns to now.
+func tileAndTrim(profile []float64, minLen int) []float64 {
+	slots := make([]float64, 0, minLen+1)
+	for len(slots) <= minLen+24*4 {
+		slots = append(slots, profile...)
+	}
+	res := profileSlotsFromNow(slots)
+	if len(res) > minLen {
+		res = res[:minLen]
+	}
+	return res
+}
+
+// extractHeaterProfiles returns aggregated per-strategy heating profiles.
+// tempProfile: loadpoints with DemandProfileTemperature (daily avg, scaled by outdoor temp).
+// weeklyProfile: loadpoints with DemandProfileWeekly (same weekday last week).
+func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64) {
+	var tempProfiles, weeklyProfiles [][]float64
+
 	for i, lp := range site.loadpoints {
-		if hasFeature(lp.charger, api.Heating) {
-			heatingLPs = append(heatingLPs, i)
+		if lp.chargeEnergy == nil || !hasFeature(lp.charger, api.Heating) {
+			continue
 		}
-	}
-	return heatingLPs
-}
 
-// extractHeaterProfile returns temperature-sensitive and non-sensitive heating profiles
-func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSensitive []float64) {
-	heatingLPs := site.getHeatingLoadpoints()
-	if len(heatingLPs) == 0 {
-		site.log.DEBUG.Println("heater profile: no heating loadpoints configured")
-		return nil, nil
-	}
+		if hasFeature(lp.charger, api.DemandProfileTemperature) {
+			profile, err := lp.chargeEnergy.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -7))
+			switch {
+			case err == nil:
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: temperature strategy, %d slots", i, len(profile))
+				tempProfiles = append(tempProfiles, profile[:])
+			case errors.Is(err, metrics.ErrIncomplete):
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: temperature strategy, insufficient data", i)
+			default:
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: temperature strategy, no data (%v)", i, err)
+			}
+		}
 
-	site.log.DEBUG.Printf("heater profile: querying %d heating loadpoint(s)", len(heatingLPs))
-
-	tempSensitiveProfiles := make([][]float64, 0)
-	nonSensitiveProfiles := make([][]float64, 0)
-
-	for _, lpID := range heatingLPs {
-		lp := site.loadpoints[lpID]
-
-		if lp.chargeEnergy != nil {
-			profile, err := lp.chargeEnergy.EnergyProfile(from)
-			if err == nil && profile != nil {
-				isTempSensitive := hasFeature(lp.charger, api.ScaleLoadByTemperatureForecast)
-
-				site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data (temperature-sensitive: %v)",
-					lpID, len(profile), isTempSensitive)
-
-				if isTempSensitive {
-					tempSensitiveProfiles = append(tempSensitiveProfiles, profile[:])
-				} else {
-					nonSensitiveProfiles = append(nonSensitiveProfiles, profile[:])
-				}
-			} else {
-				if errors.Is(err, metrics.ErrIncomplete) {
-					site.log.DEBUG.Printf("heater profile: loadpoint %d insufficient data", lpID)
-				} else if err != nil {
-					site.log.DEBUG.Printf("heater profile: loadpoint %d no data (%v)", lpID, err)
-				}
+		if hasFeature(lp.charger, api.DemandProfileWeekly) {
+			profile, err := lp.chargeEnergy.EnergyProfileWeekday()
+			switch {
+			case err == nil:
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: weekly strategy, %d slots", i, len(profile))
+				weeklyProfiles = append(weeklyProfiles, profile[:])
+			case errors.Is(err, metrics.ErrIncomplete):
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: weekly strategy, insufficient data", i)
+			default:
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: weekly strategy, no data (%v)", i, err)
 			}
 		}
 	}
 
-	var tempSensitiveResult, nonSensitiveResult []float64
-
-	if len(tempSensitiveProfiles) > 0 {
-		tempSensitiveResult = sumProfiles(tempSensitiveProfiles)
-		site.log.DEBUG.Printf("heater profile: aggregated %d temperature-sensitive heating loadpoint(s) into %d slots",
-			len(tempSensitiveProfiles), len(tempSensitiveResult))
+	if len(tempProfiles) > 0 {
+		tempProfile = sumProfiles(tempProfiles)
+		site.log.DEBUG.Printf("heater profile: aggregated %d temperature loadpoint(s)", len(tempProfiles))
+	}
+	if len(weeklyProfiles) > 0 {
+		weeklyProfile = sumProfiles(weeklyProfiles)
+		site.log.DEBUG.Printf("heater profile: aggregated %d weekly loadpoint(s)", len(weeklyProfiles))
 	}
 
-	if len(nonSensitiveProfiles) > 0 {
-		nonSensitiveResult = sumProfiles(nonSensitiveProfiles)
-		site.log.DEBUG.Printf("heater profile: aggregated %d non-temperature-sensitive heating loadpoint(s) into %d slots",
-			len(nonSensitiveProfiles), len(nonSensitiveResult))
-	}
-
-	return tempSensitiveResult, nonSensitiveResult
+	return tempProfile, weeklyProfile
 }
 
 func sumProfiles(profiles [][]float64) []float64 {

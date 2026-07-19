@@ -170,6 +170,10 @@ func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
 	return energyProfile(c.entity, from)
 }
 
+func (c *Collector) EnergyProfileWeekday() (*[96]float64, error) {
+	return energyProfileWeekday(c.entity)
+}
+
 func (c *Collector) SetEnergyMeterTotal(v float64) error {
 	return c.process(func() {
 		c.accu.SetEnergyMeterTotal(v)

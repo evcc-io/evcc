@@ -12,7 +12,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
+func TestApplyTemperatureCorrection(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
