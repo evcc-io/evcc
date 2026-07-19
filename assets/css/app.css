@@ -745,6 +745,14 @@ html.app .modal-dialog {
 	outline: revert;
 }
 
+/* selects match :focus-visible on click, CustomSelect sets .focus-ring-visible instead */
+.keyboard-focus-ring:focus-visible,
+.keyboard-focus-ring.focus-ring-visible {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-offset: 2px;
+	border-radius: var(--bs-border-radius);
+}
+
 .round-box {
 	border-radius: 1rem;
 	color: var(--evcc-default-text);
