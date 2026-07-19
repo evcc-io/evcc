@@ -133,6 +133,8 @@ components:
         tariffCo2Loadpoints:
           description: Current CO₂ emissions of charging in g/kWh, taking the green energy share into account.
           type: number
+        tariffTemperature:
+          type: number
         mqtt:
           $ref: "#/components/schemas/MqttConfig"
           description: MQTT integration configuration.
@@ -190,6 +192,8 @@ components:
           type: number
         batteryDischargeControl:
           description: Home battery discharge is prevented during fast charging and planned charging.
+          type: boolean
+        solarAdjusted:
           type: boolean
         batteryGridChargeLimit:
           description: Price or emission limit for charging the home battery from grid.
@@ -611,6 +615,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ForecastSlot"
+        temperature:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForecastSlot"
     ForecastSlot:
       description: A forecast value for a time slot.
       type: object
@@ -940,6 +948,10 @@ components:
         pvRemaining:
           description: Remaining time until the pending charge start or stop action executes, in seconds.
           type: number
+        last24hEnergy:
+          type: number
+        last7dEnergy:
+          type: number
         sessionCo2PerKWh:
           description: Average CO₂ emissions of the current charging session in g/kWh.
           type: number
@@ -990,6 +1002,8 @@ components:
         title:
           description: Loadpoint title for UI display.
           type: string
+        todayEnergy:
+          type: number
         vehicleClimaterActive:
           description: Climater of the connected vehicle is active.
           type: boolean

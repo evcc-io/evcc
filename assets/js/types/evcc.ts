@@ -227,6 +227,7 @@ export interface State {
   tariffCo2Home?: number;
   /** Current CO₂ emissions of charging in g/kWh, taking the green energy share into account. */
   tariffCo2Loadpoints?: number;
+  tariffTemperature?: number;
   /** MQTT integration configuration. */
   mqtt?: MqttConfig;
   /** InfluxDB integration configuration. */
@@ -261,6 +262,7 @@ export interface State {
   bufferStartSoc?: number;
   /** Home battery discharge is prevented during fast charging and planned charging. */
   batteryDischargeControl?: boolean;
+  solarAdjusted?: boolean;
   /** Price or emission limit for charging the home battery from grid. */
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */
@@ -670,6 +672,8 @@ export interface Loadpoint {
   pvAction: PV_ACTION;
   /** Remaining time until the pending charge start or stop action executes, in seconds. */
   pvRemaining: number;
+  last24hEnergy?: number;
+  last7dEnergy?: number;
   /** Average CO₂ emissions of the current charging session in g/kWh. */
   sessionCo2PerKWh: number | null;
   /** Energy charged in the current charging session in kWh. */
@@ -702,6 +706,7 @@ export interface Loadpoint {
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
   title: string;
+  todayEnergy?: number;
   /** Climater of the connected vehicle is active. */
   vehicleClimaterActive: boolean | null;
   /** Automatic vehicle detection is running. */
@@ -849,7 +854,9 @@ export type SessionInfoKey =
   | "avgPrice"
   | "price"
   | "emission"
-  | "co2";
+  | "co2"
+  | "last24hEnergy"
+  | "last7dEnergy";
 
 /** Sponsorship status. */
 export interface SponsorStatus {
@@ -1308,6 +1315,7 @@ export interface Forecast {
   planner?: ForecastSlot[];
   /** Feed-in rate forecast. Rate per kWh in the configured currency per time slot. */
   feedin?: ForecastSlot[];
+  temperature?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {
@@ -1327,7 +1335,7 @@ export type DeviceType =
   | "hems";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
-export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";
+export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;

@@ -99,12 +99,14 @@ jobs:
           go build -trimpath -tags release \
             -ldflags "-X github.com/evcc-io/evcc/util.Version=pr-${NUM}-${SHA:0:7} -X github.com/evcc-io/evcc/util.Commit=${SHA:0:7} -s -w" \
             -o "evcc-linux-${{ matrix.arch }}" .
+          gzip -9 "evcc-linux-${{ matrix.arch }}"
 
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
           name: evcc-pr-${{ github.event.issue.number }}-linux-${{ matrix.arch }}
-          path: evcc-linux-${{ matrix.arch }}
+          path: evcc-linux-${{ matrix.arch }}.gz
+          compression-level: 0 # already gzip'd, skip redundant zip compression
           retention-days: 14
 
   docker:

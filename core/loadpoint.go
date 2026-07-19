@@ -63,6 +63,7 @@ const (
 	boostDisabled = 0
 	boostStart    = 1
 	boostContinue = 2
+	boostHold     = 3 // soc limit reached: stop draining but keep vehicle priority over recharging
 )
 
 // elapsed is the time an expired timer will be set to
@@ -97,7 +98,7 @@ type Loadpoint struct {
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
-	ui              loadpoint.UIConfig // display-only, not used in control logic
+	Ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
 	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
@@ -389,7 +390,7 @@ func (lp *Loadpoint) restoreSettings() {
 
 	var ui loadpoint.UIConfig
 	if err := lp.settings.Json(keys.UI, &ui); err == nil {
-		lp.ui = ui
+		lp.Ui = ui
 	}
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
@@ -705,7 +706,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.EnableDelay, lp.Enable.Delay)
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
 
-	lp.publish(keys.UI, lp.ui)
+	lp.publish(keys.UI, lp.Ui)
 
 	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
 		if lp.phasesConfigured != phases && lp.phasesConfigured != 0 {
@@ -723,6 +724,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.SmartFeedInPriorityLimit, lp.smartFeedInPriorityLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
+	lp.publishEnergyStats()
 
 	// charger features
 	for _, f := range api.FeatureValues() {
@@ -1031,19 +1033,32 @@ func (lp *Loadpoint) charging() bool {
 	return lp.GetStatus() == api.StatusC
 }
 
-// pvChargeStarting reports a PV loadpoint claiming surplus but not yet drawing it
-// (enable timer running, or enabled but not yet charging). See #31194.
-func (lp *Loadpoint) pvChargeStarting() bool {
-	if lp.GetMode() != api.ModePV || !lp.connected() {
+// PvChargeStarting reports a PV loadpoint that claimed surplus via a running
+// enable timer but is not yet drawing it and has not reached its goal. See #31194, #31684.
+func (lp *Loadpoint) PvChargeStarting() bool {
+	lp.RLock()
+	enabled := lp.enabled
+	pvTimerRunning := !lp.pvTimer.IsZero()
+	lp.RUnlock()
+
+	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached(enabled) {
 		return false
 	}
 
-	lp.RLock()
-	enabled, timer := lp.enabled, lp.pvTimer
-	lp.RUnlock()
+	// enable timer running (not yet enabled)
+	return !enabled && pvTimerRunning
+}
 
-	// enable timer running (not yet enabled), or enabled but vehicle not yet charging
-	return (!enabled && !timer.IsZero()) || (enabled && !lp.charging())
+// chargeGoalReached reports whether the loadpoint will not draw more: enabled
+// but not charging, an energy limit reached, or soc at/above the limit (#31684).
+func (lp *Loadpoint) chargeGoalReached(enabled bool) bool {
+	// enabled but drawing nothing: it won't ramp up
+	if enabled && !lp.charging() {
+		return true
+	}
+
+	soc := lp.GetSoc()
+	return lp.LimitEnergyReached() || (soc > 0 && soc >= float64(lp.EffectiveLimitSoc()))
 }
 
 // setStatus updates the internal charging state according to EV
@@ -1509,7 +1524,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 // boostPower returns the additional power that the loadpoint should draw from the battery
 func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	boost := lp.GetBatteryBoost()
-	if boost == boostDisabled {
+	if boost == boostDisabled || boost == boostHold {
 		return 0
 	}
 
@@ -1838,6 +1853,25 @@ func (lp *Loadpoint) publishChargeProgress() {
 			lp.chargeEnergy.SetSocTemp(v, lp.chargerHasFeature(api.Heating))
 		}
 	}
+
+	lp.publishEnergyStats()
+}
+
+// publishEnergyStats publishes time-based energy statistics in Wh
+func (lp *Loadpoint) publishEnergyStats() {
+	if lp.chargeEnergy == nil {
+		return
+	}
+
+	stats, err := lp.chargeEnergy.EnergyStats()
+	if err != nil {
+		lp.log.ERROR.Printf("energy stats: %v", err)
+		return
+	}
+
+	lp.publish(keys.TodayEnergy, math.Round(stats.Today*1e3))
+	lp.publish(keys.Last24hEnergy, math.Round(stats.Last24h*1e3))
+	lp.publish(keys.Last7dEnergy, math.Round(stats.Last7d*1e3))
 }
 
 // publish state of charge, remaining charge duration and range
@@ -2009,15 +2043,15 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
-	// auto-disable battery boost when SOC drops below limit
-	if lp.GetBatteryBoost() != boostDisabled {
+	// hold battery boost when SOC drops below the limit: stop draining the battery, but
+	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
+	// until the vehicle disconnects. This holds the battery at the configured level
+	// instead of the naive on/off which lets the battery recharge and oscillate (#30558).
+	if boost := lp.GetBatteryBoost(); boost != boostDisabled && boost != boostHold {
 		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
 			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
-				lp.log.DEBUG.Printf("battery boost disabled: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
-
-				if err := lp.SetBatteryBoost(false); err != nil {
-					lp.log.ERROR.Printf("set battery boost: %v", err)
-				}
+				lp.log.DEBUG.Printf("battery boost hold: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
+				lp.setBatteryBoost(boostHold)
 			}
 		}
 	}

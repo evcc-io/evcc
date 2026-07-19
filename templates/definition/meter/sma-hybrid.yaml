@@ -366,5 +366,63 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
+      - case: 4 # holdcharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 2424 # Voreinstellung (Dft)
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40236 # CmpBMS.OpMod - Betriebsart des BMS
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40793 # CmpBMS.BatChaMinW - Minimale Batterieladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40795 # CmpBMS.BatChaMaxW - Maximale Batterieladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40797 # CmpBMS.BatDschMinW - Minimale Batterieentladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: {{ .maxdischargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40799 # CmpBMS.BatDschMaxW - Maximale Batterieentladeleistung
+                type: writemultiple
+                decode: uint32
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
+                type: writemultiple
+                decode: uint32
   {{- include "battery-params" . }}
   {{- end }}

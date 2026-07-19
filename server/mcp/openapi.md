@@ -344,6 +344,26 @@ call getEnergyHistory {
 }
 ```
 
+## setSolarAdjusted
+
+Adjust the solar forecast to real production data of the current day.
+
+**Tags:** experimental
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setSolarAdjusted {
+  "enable": "true"
+}
+```
+
 ## removeGlobalSmartCostLimit
 
 Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.

@@ -52,7 +52,7 @@ test.describe("session info", async () => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
     // by click on value
     await page.getByTestId("sessionInfoValue").first().click();
-    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Last 24h");
   });
   test("keep selection on reload", async ({ page }) => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");

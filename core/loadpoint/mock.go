@@ -767,6 +767,20 @@ func (mr *MockAPIMockRecorder) PublishEffectiveValues() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishEffectiveValues", reflect.TypeOf((*MockAPI)(nil).PublishEffectiveValues))
 }
 
+// PvChargeStarting mocks base method.
+func (m *MockAPI) PvChargeStarting() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PvChargeStarting")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// PvChargeStarting indicates an expected call of PvChargeStarting.
+func (mr *MockAPIMockRecorder) PvChargeStarting() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PvChargeStarting", reflect.TypeOf((*MockAPI)(nil).PvChargeStarting))
+}
+
 // SetBatteryBoost mocks base method.
 func (m *MockAPI) SetBatteryBoost(enable bool) error {
 	m.ctrl.T.Helper()

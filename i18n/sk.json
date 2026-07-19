@@ -772,14 +772,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licenčný kľúč",
-      "activationKeyHint": "Odoslané e-mailom. Nájdete ho na adrese {url}.",
       "addToken": "Zadajte token",
       "changeToken": "Zmena tokenu",
       "description": "Model sponzorstva nám pomáha udržiavať projekt a trvalo vytvárať nové a zaujímavé funkcie. Ako sponzor získate prístup ku všetkým implementáciám nabíjačiek.",
       "descriptionToken": "Ako GitHub sponzor nájdete token na {url}. Pre začiatok ponúkame {trialToken}.",
-      "email": "E-mail",
-      "emailHint": "E-mailová adresa, ktorú ste použili pre {url}",
       "enterYourToken": "Váš sponzorský Token",
       "error": "Sponzorský token nie je platný.",
       "invalid": "neplatný",

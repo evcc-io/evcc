@@ -142,13 +142,6 @@ func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 	return lp.status
 }
 
-// IsEnabled returns the charger enabled state
-func (lp *Loadpoint) IsEnabled() bool {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.enabled
-}
-
 // GetMode returns loadpoint charge mode
 func (lp *Loadpoint) GetMode() api.ChargeMode {
 	lp.RLock()
@@ -505,11 +498,11 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.ui
+	return lp.Ui
 }
 
 func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
-	lp.ui = ui
+	lp.Ui = ui
 	lp.publish(keys.UI, ui)
 	lp.settings.SetJson(keys.UI, ui)
 }
