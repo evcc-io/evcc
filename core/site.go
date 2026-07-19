@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -1105,7 +1106,7 @@ func (site *Site) update(lp updater) {
 		var wg sync.WaitGroup
 
 		wg.Go(func() {
-			if dim := hemsDimmed(site.hems); dim != nil {
+			if dim := hems.Dimmed(site.hems); dim != nil {
 				if err := site.dimMeters(*dim); err != nil {
 					site.log.ERROR.Println(err)
 				}
@@ -1113,7 +1114,7 @@ func (site *Site) update(lp updater) {
 		})
 
 		wg.Go(func() {
-			if hemsCurtailed(site.hems) != nil {
+			if hems.Curtailed(site.hems) != nil {
 				if err := site.curtailPV(site.hems.CurtailedPercent()); err != nil {
 					site.log.ERROR.Println(err)
 				}
@@ -1161,7 +1162,7 @@ func (site *Site) update(lp updater) {
 			lp.Update(
 				sitePower, site.battery.Power, consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
-				hemsDimmed(site.hems),
+				hems.Dimmed(site.hems),
 			)
 		}
 

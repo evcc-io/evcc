@@ -1177,9 +1177,7 @@
     "chargingPlan": {
       "active": "Actief",
       "addRepeatingPlan": "Herhalend schema toevoegen",
-      "arrivalTab": "Aankomst",
       "day": "Dag",
-      "departureTab": "Vertrek",
       "goal": "Laaddoel",
       "modalTitle": "Laad Plan",
       "none": "geen",
@@ -1203,8 +1201,6 @@
       "strategySettings": "Strategie-instellingen",
       "time": "Tijd",
       "title": "Plan",
-      "titleMinSoc": "Min lading",
-      "titleTargetCharge": "Vertrek",
       "unsavedChanges": "Wijzigingen nog niet opgeslagen. Nu toepassen?",
       "update": "Toepassen",
       "weekdays": "Dagen"
@@ -1302,19 +1298,11 @@
       "currents": "Laadstroom",
       "default": "standaard",
       "disclaimerHint": "Let op:",
-      "limitSoc": {
-        "description": "Standaard laadlimiet wanneer dit voertuig aangesloten wordt.",
-        "label": "Standaard limiet"
-      },
       "maxCurrent": {
         "label": "Max. Stroomsterkte"
       },
       "minCurrent": {
         "label": "Min. Stroomsterkte"
-      },
-      "minSoc": {
-        "description": "Het voertuig wordt „snel” opgeladen tot {0} in zonne-modus. Het laden gaat daarna verder met zonneoverschot. Nuttig om een bepaald rijbereik te garanderen, ook gedurende periodes met weinig of geen zonnestroom.",
-        "label": "Min. batterij %"
       },
       "onlyForSocBasedCharging": "Deze instellingen zijn alleen beschikbaar bij voertuigen waar het batterijpercentage bekend is.",
       "phasesConfigured": {
