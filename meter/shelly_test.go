@@ -30,7 +30,7 @@ func TestShellyCurrentPowerForUsage(t *testing.T) {
 		{name: "gen2 pv uses absolute value for positive values", usage: "pv", gen: 2, power: 350, want: 350},
 		{name: "gen2 pv uses absolute value for negative values", usage: "pv", gen: 2, power: -350, want: 350},
 		{name: "gen3 pv turns the sign 1", usage: "pv", gen: 3, power: 350, want: -350},
-		{name: "gen3 pv turns the sign", usage: "pv", gen: 3, power: -350, want: 350},
+		{name: "gen3 pv turns the sign 2", usage: "pv", gen: 3, power: -350, want: 350},
 	}
 
 	for _, tc := range tests {
