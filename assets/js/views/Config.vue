@@ -55,7 +55,7 @@
 					/>
 				</div>
 
-				<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
+				<h2 id="vehicles" class="my-4">{{ $t("config.section.vehicles") }}</h2>
 				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="vehicle in vehicles"

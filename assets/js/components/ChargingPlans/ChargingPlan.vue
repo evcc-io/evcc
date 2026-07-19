@@ -8,7 +8,7 @@
 		>
 			<div class="value m-0 d-block align-items-baseline justify-content-center">
 				<button
-					class="value-button p-0"
+					class="value-button p-0 keyboard-focus-ring"
 					:class="buttonColor"
 					data-testid="charging-plan-button"
 					@click="openModal"

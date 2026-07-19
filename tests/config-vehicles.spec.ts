@@ -181,11 +181,14 @@ test.describe("vehicles", async () => {
       /active/
     );
 
-    await lp.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    const modal = page.getByTestId("charging-plan-modal");
+    const moreTab = page.getByTestId("tab-more");
+    await moreTab.click();
+    await moreTab.getByRole("button", { name: "Vehicles" }).click();
+    const modal = page.getByTestId("vehicle-settings-modal");
     await expectModalVisible(modal);
-    await modal.getByRole("link", { name: "Arrival" }).click();
-    await expect(modal.getByRole("combobox", { name: "Default mode" })).toHaveValue("now");
+    await expect(
+      modal.getByRole("group", { name: "Grey Car" }).getByRole("combobox", { name: "Default mode" })
+    ).toHaveValue("now");
   });
 
   test("save and restore rfid identifiers", async ({ page }) => {

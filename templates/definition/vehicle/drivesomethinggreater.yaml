@@ -46,7 +46,13 @@ params:
     description:
       de: Marke
       en: Brand
-  - preset: vehicle-features
+  - name: coarsecurrent
+    advanced: true
+    deprecated: true
+  - name: welcomecharge
+    advanced: true
+    deprecated: true
+  - preset: vehicle-online
 render: |
   type: drivesomethinggreater
   brand: {{ .brand }}
