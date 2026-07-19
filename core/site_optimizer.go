@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
@@ -325,10 +326,16 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	if site.circuit != nil {
 		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
-			req.Grid = optimizer.GridConfig{
-				// hard grid import limit if no price penalty is set by PrcPExcImp
-				PMaxImp: float32(pMaxImp),
-			}
+			// hard grid import limit if no price penalty is set by PrcPExcImp
+			req.Grid.PMaxImp = float32(pMaxImp)
+		}
+	}
+
+	// soft grid feed-in cap from active HEMS curtailment (e.g. German 70% rule):
+	// export is capped at this power, excess PV is curtailed instead of exported
+	if curtailed := hems.Curtailed(site.hems); curtailed != nil && *curtailed {
+		if pMaxExp := site.hems.MaxProductionPower(); pMaxExp != nil {
+			req.Grid.PMaxExp = float32(*pMaxExp)
 		}
 	}
 
