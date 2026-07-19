@@ -224,7 +224,7 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 }
 
 // Publish asynchronously publishes payload using client qos
-func (m *Client) Publish(topic string, retained bool, payload any) {
+func (m *Client) Publish(topic string, retained bool, payload string) {
 	connCtx := m.connContext()
 	go func() {
 		ctx, cancel := context.WithTimeout(connCtx, request.Timeout)
@@ -305,8 +305,7 @@ func (m *Client) listen(topic string) paho.Token {
 }
 
 // truncate limits payload length in trace logs, matching HTTP logging
-func truncate(v any) string {
-	s := fmt.Sprint(v)
+func truncate(s string) string {
 	if len(s) > request.LogMaxLen {
 		s = s[:request.LogMaxLen] + "..."
 	}
