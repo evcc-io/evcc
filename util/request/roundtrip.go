@@ -141,8 +141,8 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 	if w.Len() > 0 && len(body) > 0 {
 		w.WriteString("\n--\n")
 	}
-	w.WriteString(Truncate(strings.TrimSpace(string(body))))
-	return nil
+	_, err = w.WriteString(Truncate(strings.TrimSpace(string(body))))
+	return err
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
