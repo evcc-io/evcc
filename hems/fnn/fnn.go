@@ -32,6 +32,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		W4                                  *plugin.Config
 		Interval                            time.Duration
 		FailsafeConsumptionActivePowerLimit float64
+		FailsafeProductionActivePowerLimit  float64
 		FailsafeDurationMinimum             time.Duration
 	}{
 		Interval: 10 * time.Second,
@@ -39,6 +40,12 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+	if cc.FailsafeConsumptionActivePowerLimit < 0 {
+		return nil, errors.New("failsafe consumption limit cannot be negative")
+	}
+	if cc.FailsafeProductionActivePowerLimit < 0 {
+		return nil, errors.New("failsafe production limit cannot be negative")
 	}
 
 	w3G, err := cc.W3.BoolGetter(ctx)
@@ -71,27 +78,40 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		maxCurtailPower = cc.MaxPower
 	}
 
-	return NewFnn(site, math.Abs(cc.MaxDimPower), maxCurtailPower, w3G, s1G, s2G, w4G, cc.Interval, math.Abs(cc.FailsafeConsumptionActivePowerLimit), cc.FailsafeDurationMinimum)
+	return NewFnn(
+		site,
+		math.Abs(cc.MaxDimPower),
+		maxCurtailPower,
+		w3G, s1G, s2G, w4G,
+		cc.Interval,
+		cc.FailsafeConsumptionActivePowerLimit,
+		cc.FailsafeProductionActivePowerLimit,
+		cc.FailsafeDurationMinimum,
+	)
 }
 
-func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, w4G func() (bool, error), interval time.Duration, failsafeConsumptionLimit float64, failsafeDurationMinimum time.Duration) (*Fnn, error) {
+func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, w4G func() (bool, error), interval time.Duration, failsafeConsumptionLimit, failsafeProductionLimit float64, failsafeDurationMinimum time.Duration) (*Fnn, error) {
 	if w4G != nil && maxDimPower == 0 {
 		return nil, errors.New("cannot have w4 without power limit")
 	}
+	if failsafeDurationMinimum < 0 {
+		return nil, errors.New("failsafe duration cannot be negative")
+	}
 
 	c := &Fnn{
-		log:                     util.NewLogger("fnn"),
-		site:                    site,
-		maxDimPower:             maxDimPower,
-		maxCurtailPower:         maxCurtailPower,
-		s1:                      s1G,
-		s2:                      s2G,
-		w3:                      w3G,
-		w4:                      w4G,
-		productionPercent:       100,
-		interval:                interval,
-		failsafeConsumptionLimit:  failsafeConsumptionLimit,
-		failsafeDurationMinimum:   failsafeDurationMinimum,
+		log:                      util.NewLogger("fnn"),
+		site:                     site,
+		maxDimPower:              maxDimPower,
+		maxCurtailPower:          maxCurtailPower,
+		s1:                       s1G,
+		s2:                       s2G,
+		w3:                       w3G,
+		w4:                       w4G,
+		productionPercent:        100,
+		interval:                 interval,
+		failsafeConsumptionLimit: failsafeConsumptionLimit,
+		failsafeProductionLimit:  failsafeProductionLimit,
+		failsafeDurationMinimum:  failsafeDurationMinimum,
 	}
 
 	// read the relays once synchronously so limits are valid as soon as NewFnn returns
@@ -122,14 +142,23 @@ type Fnn struct {
 	smartgridProductionID  uint
 
 	consumptionLimit  *float64
+	productionLimit   *float64
 	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
 
 	interval time.Duration
 
-	failsafeConsumptionLimit float64
-	failsafeDurationMinimum  time.Duration
-	failsafeActive           bool
-	failsafeEnteredAt        time.Time
+	failsafeConsumptionLimit  float64
+	failsafeProductionLimit   float64
+	failsafeDurationMinimum   time.Duration
+	consumptionFailsafeActive bool
+	productionFailsafeActive  bool
+	consumptionFailsafeSince  time.Time
+	productionFailsafeSince   time.Time
+}
+
+type curtailmentState struct {
+	percent int
+	active  bool
 }
 
 func (c *Fnn) SetUpdated(f func()) {
@@ -171,6 +200,8 @@ func (c *Fnn) runCurtail() error {
 		{get: c.s1, percent: 60},
 	}
 
+	states := make([]curtailmentState, 0, len(rules))
+
 	for _, rule := range rules {
 		if rule.get == nil {
 			continue
@@ -178,16 +209,49 @@ func (c *Fnn) runCurtail() error {
 
 		active, err := rule.get()
 		if err != nil {
-			return err
+			if !c.hasProductionFailsafe() {
+				return err
+			}
+			c.mu.Lock()
+			if !c.productionFailsafeActive {
+				c.log.WARN.Printf("curtail read error, entering failsafe mode: %v", err)
+				c.productionFailsafeActive = true
+				c.productionFailsafeSince = time.Now()
+			}
+			c.mu.Unlock()
+			return c.setProductionPowerLimit(c.failsafeProductionLimit)
 		}
 
-		if active {
-			return c.setProductionLimit(rule.percent)
+		states = append(states, curtailmentState{
+			percent: rule.percent,
+			active:  active,
+		})
+	}
+
+	c.mu.Lock()
+	inFailsafe := false
+	if c.productionFailsafeActive {
+		if time.Since(c.productionFailsafeSince) >= c.failsafeDurationMinimum {
+			c.log.DEBUG.Println("leaving production failsafe mode")
+			c.productionFailsafeActive = false
+		} else {
+			inFailsafe = true
+		}
+	}
+	c.mu.Unlock()
+
+	if inFailsafe {
+		return nil
+	}
+
+	for _, state := range states {
+		if state.active {
+			return c.setProductionPercent(state.percent)
 		}
 	}
 
 	// 100%
-	return c.setProductionLimit(100)
+	return c.setProductionPercent(100)
 }
 
 // runDim evaluates the dimming rule and applies the dim limit.
@@ -201,14 +265,14 @@ func (c *Fnn) runDim() error {
 
 	active, err := c.w4()
 	if err != nil {
-		if c.failsafeConsumptionLimit <= 0 {
+		if !c.hasConsumptionFailsafe() {
 			return err
 		}
 		c.mu.Lock()
-		if !c.failsafeActive {
-			c.log.WARN.Println("w4 read error, entering failsafe mode")
-			c.failsafeActive = true
-			c.failsafeEnteredAt = time.Now()
+		if !c.consumptionFailsafeActive {
+			c.log.WARN.Printf("w4 read error, entering failsafe mode: %v", err)
+			c.consumptionFailsafeActive = true
+			c.consumptionFailsafeSince = time.Now()
 		}
 		c.mu.Unlock()
 		return c.setConsumptionLimit(c.failsafeConsumptionLimit)
@@ -216,10 +280,10 @@ func (c *Fnn) runDim() error {
 
 	c.mu.Lock()
 	inFailsafe := false
-	if c.failsafeActive {
-		if time.Since(c.failsafeEnteredAt) >= c.failsafeDurationMinimum {
-			c.log.DEBUG.Println("leaving failsafe mode")
-			c.failsafeActive = false
+	if c.consumptionFailsafeActive {
+		if time.Since(c.consumptionFailsafeSince) >= c.failsafeDurationMinimum {
+			c.log.DEBUG.Println("leaving consumption failsafe mode")
+			c.consumptionFailsafeActive = false
 		} else {
 			inFailsafe = true
 		}
@@ -238,17 +302,30 @@ func (c *Fnn) runDim() error {
 	return c.setConsumptionLimit(limit)
 }
 
-// setProductionLimit applies the curtailment limit.
-func (c *Fnn) setProductionLimit(percent int) error {
+// setProductionPercent applies the curtailment limit.
+func (c *Fnn) setProductionPercent(percent int) error {
+	active := percent < 100
+	return c.setProductionState(percent, c.percentToProductionLimit(percent), active)
+}
+
+func (c *Fnn) setProductionPowerLimit(limit float64) error {
+	percent := 100
+	active := limit > 0
+	if active {
+		percent = c.productionLimitToPercent(limit)
+	}
+
+	return c.setProductionState(percent, limit, active)
+}
+
+func (c *Fnn) setProductionState(percent int, limit float64, active bool) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	active := percent < 100
 	c.productionPercent = percent
-
-	limit := 0.0
+	c.productionLimit = nil
 	if active {
-		limit = float64(percent) / 100 * c.maxCurtailPower
+		c.productionLimit = &limit
 	}
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionID, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
@@ -256,6 +333,31 @@ func (c *Fnn) setProductionLimit(percent int) error {
 	}
 
 	return nil
+}
+
+func (c *Fnn) hasConsumptionFailsafe() bool {
+	return c.failsafeConsumptionLimit > 0
+}
+
+func (c *Fnn) hasProductionFailsafe() bool {
+	return c.failsafeProductionLimit > 0
+}
+
+func (c *Fnn) percentToProductionLimit(percent int) float64 {
+	if percent >= 100 {
+		return 0
+	}
+
+	return float64(percent) / 100 * c.maxCurtailPower
+}
+
+func (c *Fnn) productionLimitToPercent(limit float64) int {
+	if c.maxCurtailPower <= 0 {
+		return 0
+	}
+
+	percent := int(math.Round(limit / c.maxCurtailPower * 100))
+	return max(0, min(100, percent))
 }
 
 // setConsumptionLimit applies the dimming limit.
@@ -316,5 +418,9 @@ func (c *Fnn) MaxProductionPower() *float64 {
 		return new(0.0)
 	}
 
-	return new(float64(c.productionPercent) / 100 * c.maxCurtailPower)
+	if c.productionLimit == nil {
+		return new(0.0)
+	}
+
+	return new(*c.productionLimit)
 }

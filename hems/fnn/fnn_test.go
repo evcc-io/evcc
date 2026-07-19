@@ -33,7 +33,7 @@ func errG() func() (bool, error) {
 func TestCurtailmentNotConfigured(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	fnn, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, boolG(true), 0, 0, 0)
+	fnn, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, boolG(true), 0, 0, 0, 0)
 	require.NoError(t, err)
 
 	assert.Nil(t, fnn.CurtailedPercent())
@@ -47,7 +47,7 @@ func TestCurtailmentNotConfigured(t *testing.T) {
 // TestDimmingNotConfigured verifies that without W4 no dimming statement is
 // made, while curtailment via W3 remains available.
 func TestDimmingNotConfigured(t *testing.T) {
-	fnn, err := NewFnn(&stubSite{}, 0, 1e3, boolG(false), nil, nil, nil, 0, 0, 0)
+	fnn, err := NewFnn(&stubSite{}, 0, 1e3, boolG(false), nil, nil, nil, 0, 0, 0, 0)
 	require.NoError(t, err)
 
 	assert.Nil(t, fnn.MaxConsumptionPower())
@@ -64,8 +64,14 @@ func TestDecodeConfig(t *testing.T) {
 
 	other := map[string]any{
 		"maxDimPower":                         4200,
+		"maxCurtailPower":                     10000,
 		"failsafeConsumptionActivePowerLimit": 4200,
+		"failsafeProductionActivePowerLimit":  2500,
 		"failsafeDurationMinimum":             "30m",
+		"w3": map[string]any{
+			"source": "const",
+			"value":  false,
+		},
 		"w4": map[string]any{
 			"source": "const",
 			"value":  false,
@@ -75,6 +81,7 @@ func TestDecodeConfig(t *testing.T) {
 	f, err := NewFromConfig(t.Context(), other, &stubSite{})
 	require.NoError(t, err)
 	assert.Equal(t, 4200.0, f.failsafeConsumptionLimit)
+	assert.Equal(t, 2500.0, f.failsafeProductionLimit)
 	assert.Equal(t, 30*time.Minute, f.failsafeDurationMinimum)
 }
 
@@ -84,11 +91,12 @@ func TestFailsafeActivatesOnReadError(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
 	const failsafeLimit = 4200.0
-	fnn, err := NewFnn(&stubSite{}, failsafeLimit, 0, nil, nil, nil, errG(), 0, failsafeLimit, 0)
+	fnn, err := NewFnn(&stubSite{}, failsafeLimit, 0, nil, nil, nil, boolG(false), 0, failsafeLimit, 0, 0)
 	require.NoError(t, err)
+	fnn.w4 = errG()
+	require.NoError(t, fnn.runDim())
 
-	// construction calls runDim once — failsafe should already be active
-	assert.True(t, fnn.failsafeActive)
+	assert.True(t, fnn.consumptionFailsafeActive)
 	require.NotNil(t, fnn.MaxConsumptionPower())
 	assert.Equal(t, failsafeLimit, *fnn.MaxConsumptionPower())
 }
@@ -99,16 +107,16 @@ func TestFailsafeExitsAfterDuration(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
 	const failsafeLimit = 4200.0
-	// duration of 0 means failsafe exits on next successful read
-	fnn, err := NewFnn(&stubSite{}, failsafeLimit, 0, nil, nil, nil, errG(), 0, failsafeLimit, 0)
+	fnn, err := NewFnn(&stubSite{}, failsafeLimit, 0, nil, nil, nil, boolG(false), 0, failsafeLimit, 0, 0)
 	require.NoError(t, err)
-	assert.True(t, fnn.failsafeActive)
+	fnn.w4 = errG()
+	require.NoError(t, fnn.runDim())
+	assert.True(t, fnn.consumptionFailsafeActive)
 
-	// switch to successful read
 	fnn.w4 = boolG(false)
 	require.NoError(t, fnn.runDim())
 
-	assert.False(t, fnn.failsafeActive)
+	assert.False(t, fnn.consumptionFailsafeActive)
 	require.NotNil(t, fnn.MaxConsumptionPower())
 	assert.Equal(t, 0.0, *fnn.MaxConsumptionPower())
 }
@@ -119,25 +127,119 @@ func TestFailsafeRemainsActiveDuringDuration(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
 	const failsafeLimit = 4200.0
-	fnn, err := NewFnn(&stubSite{}, failsafeLimit, 0, nil, nil, nil, errG(), 0, failsafeLimit, time.Hour)
+	fnn, err := NewFnn(&stubSite{}, failsafeLimit, 0, nil, nil, nil, boolG(false), 0, failsafeLimit, 0, time.Hour)
 	require.NoError(t, err)
-	assert.True(t, fnn.failsafeActive)
+	fnn.w4 = errG()
+	require.NoError(t, fnn.runDim())
+	assert.True(t, fnn.consumptionFailsafeActive)
 
-	// switch to successful read, but duration not yet elapsed
 	fnn.w4 = boolG(false)
 	require.NoError(t, fnn.runDim())
 
-	assert.True(t, fnn.failsafeActive)
+	assert.True(t, fnn.consumptionFailsafeActive)
 	require.NotNil(t, fnn.MaxConsumptionPower())
 	assert.Equal(t, failsafeLimit, *fnn.MaxConsumptionPower())
 }
 
 // TestFailsafeNotConfiguredPropagatesError verifies that without a configured
-// failsafe limit, a W4 read error is returned to the caller unchanged.
+// failsafe limit, runDim returns the original W4 read error.
 func TestFailsafeNotConfiguredPropagatesError(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	// no failsafe limit: construction error because runDim is called in NewFnn
-	_, err := NewFnn(&stubSite{}, 1e3, 0, nil, nil, nil, errG(), 0, 0, 0)
-	assert.Error(t, err)
+	fnn, err := NewFnn(&stubSite{}, 1e3, 0, nil, nil, nil, boolG(false), 0, 0, 0, 0)
+	require.NoError(t, err)
+
+	want := errors.New("w4 read error")
+	fnn.w4 = func() (bool, error) { return false, want }
+
+	assert.ErrorIs(t, fnn.runDim(), want)
+}
+
+// TestProductionFailsafeActivatesOnReadError verifies that a curtailment input
+// read error triggers the production failsafe and applies the configured limit.
+func TestProductionFailsafeActivatesOnReadError(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	const (
+		maxCurtailPower = 10000.0
+		failsafeLimit   = 2500.0
+	)
+
+	fnn, err := NewFnn(&stubSite{}, 0, maxCurtailPower, boolG(false), nil, nil, nil, 0, 0, failsafeLimit, 0)
+	require.NoError(t, err)
+	fnn.w3 = errG()
+	require.NoError(t, fnn.runCurtail())
+
+	assert.True(t, fnn.productionFailsafeActive)
+	require.NotNil(t, fnn.MaxProductionPower())
+	assert.Equal(t, failsafeLimit, *fnn.MaxProductionPower())
+	assert.Equal(t, 25, *fnn.CurtailedPercent())
+}
+
+// TestProductionFailsafeExitsAfterDuration verifies that the production
+// failsafe clears once the minimum duration has elapsed and reads succeed.
+func TestProductionFailsafeExitsAfterDuration(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	const (
+		maxCurtailPower = 10000.0
+		failsafeLimit   = 2500.0
+	)
+
+	fnn, err := NewFnn(&stubSite{}, 0, maxCurtailPower, boolG(false), nil, nil, nil, 0, 0, failsafeLimit, 0)
+	require.NoError(t, err)
+	fnn.w3 = errG()
+	require.NoError(t, fnn.runCurtail())
+	assert.True(t, fnn.productionFailsafeActive)
+
+	fnn.w3 = boolG(false)
+	require.NoError(t, fnn.runCurtail())
+
+	assert.False(t, fnn.productionFailsafeActive)
+	require.NotNil(t, fnn.MaxProductionPower())
+	assert.Equal(t, 0.0, *fnn.MaxProductionPower())
+	assert.Equal(t, 100, *fnn.CurtailedPercent())
+}
+
+// TestProductionFailsafeRemainsActiveDuringDuration verifies that production
+// failsafe stays active until the minimum duration has elapsed.
+func TestProductionFailsafeRemainsActiveDuringDuration(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	const (
+		maxCurtailPower = 10000.0
+		failsafeLimit   = 2500.0
+	)
+
+	fnn, err := NewFnn(&stubSite{}, 0, maxCurtailPower, boolG(false), nil, nil, nil, 0, 0, failsafeLimit, time.Hour)
+	require.NoError(t, err)
+	fnn.w3 = errG()
+	require.NoError(t, fnn.runCurtail())
+	assert.True(t, fnn.productionFailsafeActive)
+
+	fnn.w3 = boolG(false)
+	require.NoError(t, fnn.runCurtail())
+
+	assert.True(t, fnn.productionFailsafeActive)
+	require.NotNil(t, fnn.MaxProductionPower())
+	assert.Equal(t, failsafeLimit, *fnn.MaxProductionPower())
+}
+
+func TestFailsafeNegativeDurationRejected(t *testing.T) {
+	_, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, boolG(false), 0, 0, 0, -time.Second)
+	assert.ErrorContains(t, err, "failsafe duration cannot be negative")
+}
+
+func TestDecodeRejectsNegativeFailsafeLimits(t *testing.T) {
+	other := map[string]any{
+		"maxDimPower":                         4200,
+		"failsafeConsumptionActivePowerLimit": -1,
+		"w4": map[string]any{
+			"source": "const",
+			"value":  false,
+		},
+	}
+
+	_, err := NewFromConfig(t.Context(), other, &stubSite{})
+	assert.ErrorContains(t, err, "failsafe consumption limit cannot be negative")
 }
