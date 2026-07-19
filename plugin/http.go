@@ -221,12 +221,20 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	// warn on uncached GET polling: a configured cache would spare the roundtrip
-	if key := stripQuery(url); p.method == http.MethodGet && p.mu == nil && repeatedGet(key, time.Now()) {
-		p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", key)
+	resp, err := p.Do(req)
+	if err != nil {
+		return nil, err
 	}
 
-	val, err := p.DoBody(req)
+	// warn on uncached GET polling: a repeated roundtrip means neither a configured
+	// cache nor the device's own response headers spared it. cache hits are exempt.
+	if p.method == http.MethodGet && p.mu == nil && resp.Header.Get(httpcache.XFromCache) == "" {
+		if key := stripQuery(url); repeatedGet(key, time.Now()) {
+			p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", key)
+		}
+	}
+
+	val, err := request.ReadBody(resp)
 	if err != nil {
 		if err2 := knownErrors(val); err2 != nil {
 			err = err2
