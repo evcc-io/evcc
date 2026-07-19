@@ -19,6 +19,7 @@ type Generation interface {
 	api.MeterEnergy
 	api.MeterReturnEnergy
 	IsThreePhase() bool
+	Gen() int
 }
 
 type Phases interface {
@@ -73,7 +74,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		// https://shelly-api-docs.shelly.cloud/gen2/
 
 		var err error
-		gen, err = newGen2(client, uri, model, channel, user, password, cache)
+		gen, err = newGen2(client, uri, model, resp.Gen, channel, user, password, cache)
 		if err != nil {
 			return nil, err
 		}

@@ -83,6 +83,7 @@ type gen2 struct {
 	uri           string
 	switchchannel int
 	model         string
+	gen           int
 	methods       []string
 	switchstatus  util.Cacheable[Gen2SwitchStatus]
 	em1status     func() (Gen2EM1Status, error)
@@ -102,7 +103,7 @@ func apiCall[T any](c *gen2, id int, method string) func() (T, error) {
 }
 
 // gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
-func newGen2(helper *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) (*gen2, error) {
+func newGen2(helper *request.Helper, uri, model string, gen int, channel int, user, password string, cache time.Duration) (*gen2, error) {
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c := &gen2{
@@ -110,6 +111,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		uri:           fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
 		switchchannel: channel,
 		model:         model,
+		gen:           gen,
 	}
 
 	// Shelly gen 2 rfc7616 authentication
@@ -232,7 +234,10 @@ func (c *gen2) TotalEnergy() (float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Aenergy.Total / 1000, err
+		// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
+		// NOTE: ret_aenergy - the active energy added to this container is also added to aenergy container.
+		// All the consumed energy is collected in aenergy regardless of the direction(consumed or returned) of the active energy.
+		return (res.Aenergy.Total - res.Ret_Aenergy.Total) / 1000, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -360,4 +365,8 @@ func parseAddOnSwitchID(channel int, res Gen2ProAddOnGetPeripherals) int {
 
 	// if no switch ID is found, return the channel as default
 	return channel
+}
+
+func (c *gen2) Gen() int {
+	return c.gen
 }
