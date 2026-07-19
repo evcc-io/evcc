@@ -175,4 +175,9 @@ func TestRepeatedGet(t *testing.T) {
 	spaced := "http://repeated.test/spaced"
 	require.False(t, repeatedGet(spaced, t0))
 	require.False(t, repeatedGet(spaced, t0.Add(2*time.Second))) // >1s apart: no warn
+
+	// query params are stripped before keying, so cache-busting still counts as a repeat
+	require.Equal(t, "http://q.test/path", stripQuery("http://q.test/path?ts=1&x=2#frag"))
+	require.False(t, repeatedGet(stripQuery("http://q.test/path?ts=1"), t0))
+	require.True(t, repeatedGet(stripQuery("http://q.test/path?ts=2"), t0.Add(300*time.Millisecond)))
 }

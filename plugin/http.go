@@ -222,8 +222,8 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	}
 
 	// warn on uncached GET polling: a configured cache would spare the roundtrip
-	if p.method == http.MethodGet && p.mu == nil && repeatedGet(url, time.Now()) {
-		p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", url)
+	if key := stripQuery(url); p.method == http.MethodGet && p.mu == nil && repeatedGet(key, time.Now()) {
+		p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", key)
 	}
 
 	val, err := p.DoBody(req)
@@ -241,6 +241,15 @@ var (
 	httpSeen   = make(map[string]time.Time)
 	httpWarned = make(map[string]struct{})
 )
+
+// stripQuery drops the query and fragment so cache-busting params do not make
+// each poll look like a distinct url.
+func stripQuery(url string) string {
+	if i := strings.IndexAny(url, "?#"); i >= 0 {
+		return url[:i]
+	}
+	return url
+}
 
 // repeatedGet reports the first time url is fetched again within a second, a sign
 // the response should be cached. It fires once per url to avoid log spam.
