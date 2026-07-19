@@ -763,11 +763,11 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	gt_heater_temp_sensitive, gt_heater_non_sensitive := site.extractHeaterProfile(from, time.Now())
 
 	hasHeaterData := false
-	if gt_heater_temp_sensitive != nil && len(gt_heater_temp_sensitive) > 0 {
+	if len(gt_heater_temp_sensitive) > 0 {
 		site.log.DEBUG.Printf("home profile: extracted temperature-sensitive heater profile with %d slots", len(gt_heater_temp_sensitive))
 		hasHeaterData = true
 	}
-	if gt_heater_non_sensitive != nil && len(gt_heater_non_sensitive) > 0 {
+	if len(gt_heater_non_sensitive) > 0 {
 		site.log.DEBUG.Printf("home profile: extracted non-temperature-sensitive heater profile with %d slots", len(gt_heater_non_sensitive))
 		hasHeaterData = true
 	}
@@ -796,7 +796,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	gt_final := make([]float64, len(res))
 	copy(gt_final, res)
 
-	if gt_heater_temp_sensitive != nil && len(gt_heater_temp_sensitive) > 0 {
+	if len(gt_heater_temp_sensitive) > 0 {
 		tempSensitiveSlots := make([]float64, 0, minLen+1)
 		for len(tempSensitiveSlots) <= minLen+24*4 {
 			tempSensitiveSlots = append(tempSensitiveSlots, gt_heater_temp_sensitive[:]...)
@@ -816,7 +816,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		}
 	}
 
-	if gt_heater_non_sensitive != nil && len(gt_heater_non_sensitive) > 0 {
+	if len(gt_heater_non_sensitive) > 0 {
 		nonSensitiveSlots := make([]float64, 0, minLen+1)
 		for len(nonSensitiveSlots) <= minLen+24*4 {
 			nonSensitiveSlots = append(nonSensitiveSlots, gt_heater_non_sensitive[:]...)
@@ -869,7 +869,6 @@ func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSe
 		if lp.chargeEnergy != nil {
 			profile, err := lp.chargeEnergy.EnergyProfile(from)
 			if err == nil && profile != nil {
-				lp := site.loadpoints[lpID]
 				isTempSensitive := hasFeature(lp.charger, api.ScaleLoadByTemperatureForecast)
 
 				site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data (temperature-sensitive: %v)",
