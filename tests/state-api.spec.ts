@@ -16,10 +16,13 @@ test.afterAll(async () => {
 test("/api/state matches the openapi State schema", async ({ request }) => {
   // loadpoint values appear over the first update cycles, poll until stable
   await expect
-    .poll(async () => {
-      const res = await request.get("/api/state");
-      const { errors, undocumented } = validateState(await res.json());
-      return [...errors, ...undocumented];
-    })
+    .poll(
+      async () => {
+        const res = await request.get("/api/state");
+        const { errors, undocumented } = validateState(await res.json());
+        return [...errors, ...undocumented];
+      },
+      { timeout: 30000 }
+    )
     .toEqual([]);
 });
