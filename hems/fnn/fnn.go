@@ -23,14 +23,15 @@ func init() {
 // NewFromConfig creates an FNN HEMS from generic config.
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
-		MaxPower        float64 // TODO deprecated
-		MaxDimPower     float64
-		MaxCurtailPower float64
-		W3              *plugin.Config
-		S1              *plugin.Config
-		S2              *plugin.Config
-		W4              *plugin.Config
-		Interval        time.Duration
+		MaxPower             float64 // TODO deprecated
+		MaxDimPower          float64
+		MaxCurtailPower      float64 // TODO deprecated
+		ProductionNominalMax float64
+		W3                   *plugin.Config
+		S1                   *plugin.Config
+		S2                   *plugin.Config
+		W4                   *plugin.Config
+		Interval             time.Duration
 	}{
 		Interval: 10 * time.Second,
 	}
@@ -67,6 +68,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 	maxCurtailPower := math.Abs(cc.MaxCurtailPower)
 	if cc.MaxPower > 0 {
 		maxCurtailPower = cc.MaxPower
+	}
+	// ProductionNominalMax supersedes deprecated MaxCurtailPower/MaxPower
+	if cc.ProductionNominalMax > 0 {
+		maxCurtailPower = math.Abs(cc.ProductionNominalMax)
 	}
 
 	return NewFnn(site, math.Abs(cc.MaxDimPower), maxCurtailPower, w3G, s1G, s2G, w4G, cc.Interval)

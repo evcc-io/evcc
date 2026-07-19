@@ -31,7 +31,7 @@ render: |
     source: gpio
     pin: 13
     function: read
-  maxcurtailpower: {{ .maxproductionpower }}
+  productionnominalmax: {{ .maxproductionpower }}
   w3:
     source: gpio
     pin: 5
