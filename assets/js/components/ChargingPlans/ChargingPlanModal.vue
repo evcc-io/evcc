@@ -9,72 +9,33 @@
 			@open="modalVisible"
 			@closed="modalInvisible"
 		>
-			<div class="pt-2">
-				<ul v-if="vehicle" class="nav nav-tabs">
-					<li class="nav-item">
-						<a
-							class="nav-link"
-							:class="{ active: departureTabActive }"
-							href="#"
-							@click.prevent="showDepartureTab"
-						>
-							{{ $t("main.chargingPlan.departureTab") }}
-						</a>
-					</li>
-					<li v-if="vehicle" class="nav-item">
-						<a
-							class="nav-link"
-							:class="{ active: arrivalTabActive }"
-							href="#"
-							@click.prevent="showArrivalTab"
-						>
-							{{ $t("main.chargingPlan.arrivalTab") }}
-						</a>
-					</li>
-				</ul>
-				<div v-if="isModalVisible">
-					<PlansSettings
-						v-if="departureTabActive"
-						:id="id"
-						:staticPlan="staticPlan"
-						:repeatingPlans="repeatingPlans"
-						:effectiveLimitSoc="loadpoint?.effectiveLimitSoc"
-						:effectivePlanTime="loadpoint?.effectivePlanTime ?? undefined"
-						:effectivePlanSoc="loadpoint?.effectivePlanSoc"
-						:effectivePlanStrategy="loadpoint?.effectivePlanStrategy"
-						:planEnergy="loadpoint?.planEnergy"
-						:limitEnergy="loadpoint?.limitEnergy"
-						:socBasedPlanning="!!loadpoint?.socBasedPlanning"
-						:socPerKwh="loadpoint?.socPerKwh"
-						:rangePerSoc="loadpoint?.rangePerSoc"
-						:smartCostType="smartCostType"
-						:currency="currency"
-						:mode="loadpoint?.mode"
-						:capacity="vehicle?.capacity"
-						:vehicle="vehicle"
-						:vehicleLimitSoc="loadpoint?.vehicleLimitSoc"
-						:planOverrun="loadpoint?.planOverrun"
-						:forecast="forecast"
-						@static-plan-updated="updateStaticPlan"
-						@static-plan-removed="removeStaticPlan"
-						@repeating-plans-updated="updateRepeatingPlans"
-						@plan-strategy-updated="updatePlanStrategy"
-					/>
-					<Arrival
-						v-if="arrivalTabActive"
-						:id="id"
-						:minSoc="vehicle?.minSoc"
-						:limitSoc="vehicle?.limitSoc"
-						:mode="vehicle?.mode"
-						:vehicleName="vehicle?.name"
-						:vehicleNotReachable="loadpoint?.vehicleNotReachable"
-						:socBasedCharging="loadpoint?.socBasedCharging"
-						:rangePerSoc="loadpoint?.rangePerSoc"
-						@minsoc-updated="setMinSoc"
-						@limitsoc-updated="setLimitSoc"
-						@mode-updated="setMode"
-					/>
-				</div>
+			<div v-if="isModalVisible">
+				<PlansSettings
+					:id="id"
+					:staticPlan="staticPlan"
+					:repeatingPlans="repeatingPlans"
+					:effectiveLimitSoc="loadpoint?.effectiveLimitSoc"
+					:effectivePlanTime="loadpoint?.effectivePlanTime ?? undefined"
+					:effectivePlanSoc="loadpoint?.effectivePlanSoc"
+					:effectivePlanStrategy="loadpoint?.effectivePlanStrategy"
+					:planEnergy="loadpoint?.planEnergy"
+					:limitEnergy="loadpoint?.limitEnergy"
+					:socBasedPlanning="!!loadpoint?.socBasedPlanning"
+					:socPerKwh="loadpoint?.socPerKwh"
+					:rangePerSoc="loadpoint?.rangePerSoc"
+					:smartCostType="smartCostType"
+					:currency="currency"
+					:mode="loadpoint?.mode"
+					:capacity="vehicle?.capacity"
+					:vehicle="vehicle"
+					:vehicleLimitSoc="loadpoint?.vehicleLimitSoc"
+					:planOverrun="loadpoint?.planOverrun"
+					:forecast="forecast"
+					@static-plan-updated="updateStaticPlan"
+					@static-plan-removed="removeStaticPlan"
+					@repeating-plans-updated="updateRepeatingPlans"
+					@plan-strategy-updated="updatePlanStrategy"
+				/>
 			</div>
 		</GenericModal>
 	</Teleport>
@@ -84,7 +45,6 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import PlansSettings from "./PlansSettings.vue";
-import Arrival from "./Arrival.vue";
 import api from "@/api";
 import type {
 	PlanStrategy,
@@ -93,21 +53,13 @@ import type {
 	StaticPlan,
 	StaticSocPlan,
 } from "./types";
-import type {
-	CHARGE_MODE,
-	CURRENCY,
-	Forecast,
-	SMART_COST_TYPE,
-	UiLoadpoint,
-	Vehicle,
-} from "@/types/evcc";
+import type { CURRENCY, Forecast, SMART_COST_TYPE, UiLoadpoint, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanModal",
 	components: {
 		GenericModal,
 		PlansSettings,
-		Arrival,
 	},
 	props: {
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
@@ -119,7 +71,6 @@ export default defineComponent({
 	data() {
 		return {
 			isModalVisible: false,
-			activeTab: "departure",
 			id: undefined as string | number | undefined,
 		};
 	},
@@ -151,17 +102,10 @@ export default defineComponent({
 		},
 		modalTitle(): string {
 			const baseTitle = this.$t("main.chargingPlan.modalTitle");
-			const withVehicle = this.arrivalTabActive || this.loadpoint?.socBasedPlanning;
-			if (withVehicle && this.vehicle) {
+			if (this.loadpoint?.socBasedPlanning && this.vehicle) {
 				return `${baseTitle}: ${this.vehicle.title}`;
 			}
 			return baseTitle;
-		},
-		departureTabActive(): boolean {
-			return this.activeTab === "departure" || !this.vehicle;
-		},
-		arrivalTabActive(): boolean {
-			return this.activeTab === "arrival" && !!this.vehicle;
 		},
 		apiVehicle(): string {
 			return `vehicles/${this.vehicle?.name}/`;
@@ -192,19 +136,6 @@ export default defineComponent({
 		modalInvisible(): void {
 			this.isModalVisible = false;
 		},
-		setMinSoc(soc: number): void {
-			api.post(`${this.apiVehicle}minsoc/${soc}`);
-		},
-		setLimitSoc(soc: number): void {
-			api.post(`${this.apiVehicle}limitsoc/${soc}`);
-		},
-		setMode(mode: CHARGE_MODE | ""): void {
-			if (mode === "") {
-				api.delete(`${this.apiVehicle}mode`);
-			} else {
-				api.post(`${this.apiVehicle}mode/${mode}`);
-			}
-		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
 			if (this.loadpoint?.socBasedPlanning) {
@@ -231,12 +162,6 @@ export default defineComponent({
 			} else {
 				api.post(`${this.apiLoadpoint}plan/strategy`, strategy);
 			}
-		},
-		showDepartureTab(): void {
-			this.activeTab = "departure";
-		},
-		showArrivalTab(): void {
-			this.activeTab = "arrival";
 		},
 	},
 });
