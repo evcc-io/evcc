@@ -286,8 +286,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	gt, err := site.homeProfile(minLen)
 	if err != nil {
-		site.log.ERROR.Printf("optimizer: failed to get home profile: %v", err)
-		return err
+		// home profile is required for optimization; if not available, skip the optimizer run
+		// Error will be logged by the caller, but we wrap it to provide context for the failure.
+		return fmt.Errorf("aborting while getting the home profile due to %w", err)
 	}
 
 	// allow empty solar forecast
