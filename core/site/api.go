@@ -61,11 +61,6 @@ type API interface {
 	// SetOptimizerChargingStrategy sets the optimizer grid charging strategy
 	SetOptimizerChargingStrategy(strategy string) error
 
-	// GetOptimizerDecaySlots gets the number of slots to decay measured values into the forecast
-	GetOptimizerDecaySlots() int
-	// SetOptimizerDecaySlots sets the number of slots to decay measured values into the forecast
-	SetOptimizerDecaySlots(slots int) error
-
 	//
 	// power and energy
 	//
