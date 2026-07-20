@@ -87,7 +87,6 @@ type Site struct {
 
 	// optimizer settings
 	optimizerChargingStrategy string // optimizer grid charging strategy
-	optimizerDecaySlots       int    // slots to decay measured values into the forecast
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -397,12 +396,6 @@ func (site *Site) restoreSettings() error {
 	}
 	site.publish(keys.OptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
 	site.publish(keys.OptimizerChargingStrategies, optimizerChargingStrategies)
-	if v, err := settings.Int(keys.OptimizerDecaySlots); err == nil && v > 0 {
-		if err := site.SetOptimizerDecaySlots(int(v)); err != nil {
-			site.log.WARN.Printf("optimizer decay slots: %v", err)
-		}
-	}
-	site.publish(keys.OptimizerDecaySlots, site.GetOptimizerDecaySlots())
 
 	// drop legacy accumulator-based forecast settings (now stored via metrics collector)
 	settings.Delete("solarAccForecast")

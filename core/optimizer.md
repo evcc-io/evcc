@@ -32,8 +32,7 @@ Collected 15min energy profile averaged over the last 30 days.
 
 The solar forecast and the base load profile are anchored to the current situation:
 the measured energy of the last completed 15min metrics slot (PV production and home
-consumption) replaces the first slot and decays linearly into the forecast over a
-configurable number of slots (`optimizerDecaySlots`, default 4).
+consumption) replaces the first slot and decays linearly into the forecast over 4 slots.
 
 ### End of forecast commercial value
 

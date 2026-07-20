@@ -47,8 +47,8 @@ var optimizerChargingStrategies = []string{
 
 const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport)
 
-// defaultOptimizerDecaySlots is the number of slots over which measured values decay into the forecast
-const defaultOptimizerDecaySlots = 4
+// optimizerDecaySlots is the number of slots over which measured values decay into the forecast
+const optimizerDecaySlots = 4
 
 // triggerOptimizer re-runs the optimizer immediately so a changed setting takes
 // effect without waiting for the next slot. It is a no-op when the optimizer is
@@ -294,9 +294,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	// blend measured energy of the last metrics slot into the first slots
-	decaySlots := site.GetOptimizerDecaySlots()
 	if v, ok := site.measuredSlotEnergy(metrics.Home); ok {
-		blendMeasured(gt, v, decaySlots)
+		blendMeasured(gt, v, optimizerDecaySlots)
 	}
 
 	// allow empty solar forecast
@@ -309,7 +308,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 		ftSlots := scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen)
 		if v, ok := site.measuredSlotEnergy(site.Meters.PVMetersRef...); ok {
-			blendMeasured(ftSlots, float32(v), decaySlots)
+			blendMeasured(ftSlots, float32(v), optimizerDecaySlots)
 		}
 		ft = prorate(ftSlots, firstSlotDuration)
 	}
