@@ -47,6 +47,9 @@ var optimizerChargingStrategies = []string{
 
 const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport)
 
+// defaultOptimizerDecaySlots is the number of slots over which measured values decay into the forecast
+const defaultOptimizerDecaySlots = 4
+
 // triggerOptimizer re-runs the optimizer immediately so a changed setting takes
 // effect without waiting for the next slot. It is a no-op when the optimizer is
 // not active or a run is already in progress; the running update reflects the
@@ -290,6 +293,12 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return err
 	}
 
+	// blend measured energy of the last metrics slot into the first slots
+	decaySlots := site.GetOptimizerDecaySlots()
+	if v, ok := site.measuredSlotEnergy(metrics.Home); ok {
+		blendMeasured(gt, v, decaySlots)
+	}
+
 	// allow empty solar forecast
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
 	if solarTariff != nil && len(solar) > 0 {
@@ -298,7 +307,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			return err
 		}
 
-		ft = prorate(scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen), firstSlotDuration)
+		ftSlots := scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen)
+		if v, ok := site.measuredSlotEnergy(site.Meters.PVMetersRef...); ok {
+			blendMeasured(ftSlots, float32(v), decaySlots)
+		}
+		ft = prorate(ftSlots, firstSlotDuration)
 	}
 
 	req := optimizer.OptimizationInput{
@@ -782,6 +795,40 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 func profileSlotsFromNow(profile []float64) []float64 {
 	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
 	return profile[firstSlot:]
+}
+
+// measuredSlotEnergy returns the summed energy in Wh of the last completed
+// metrics slot for the given collector refs
+func (site *Site) measuredSlotEnergy(refs ...string) (float64, bool) {
+	if len(refs) == 0 {
+		return 0, false
+	}
+
+	var sum float64
+	for _, ref := range refs {
+		c, ok := site.collectors[ref]
+		if !ok {
+			return 0, false
+		}
+
+		v, ok := c.LastSlotEnergy()
+		if !ok {
+			return 0, false
+		}
+		sum += v
+	}
+
+	return sum * 1e3, true
+}
+
+// blendMeasured decays the first slots from the measured value into the
+// forecast. Slot 0 uses the measured value, the forecast takes over from
+// slot decaySlots on.
+func blendMeasured[T constraints.Float](slots []T, measured T, decaySlots int) {
+	for i := range min(decaySlots, len(slots)) {
+		w := T(decaySlots-i) / T(decaySlots)
+		slots[i] = w*measured + (1-w)*slots[i]
+	}
 }
 
 // prorate adjusts the first slot's energy amount according to remaining duration

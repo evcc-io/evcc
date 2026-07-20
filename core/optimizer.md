@@ -28,6 +28,13 @@ TODO
 
 Collected 15min energy profile averaged over the last 30 days.
 
+### Measured value blending
+
+The solar forecast and the base load profile are anchored to the current situation:
+the measured energy of the last completed 15min metrics slot (PV production and home
+consumption) replaces the first slot and decays linearly into the forecast over a
+configurable number of slots (`optimizerDecaySlots`, default 4).
+
 ### End of forecast commercial value
 
 Use minimum of energy consumption cost.

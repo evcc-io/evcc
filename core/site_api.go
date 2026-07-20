@@ -459,6 +459,43 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 	return nil
 }
 
+// GetOptimizerDecaySlots returns the number of slots over which measured
+// values decay into the forecast, falling back to the default when unset.
+func (site *Site) GetOptimizerDecaySlots() int {
+	site.RLock()
+	defer site.RUnlock()
+	if site.optimizerDecaySlots == 0 {
+		return defaultOptimizerDecaySlots
+	}
+	return site.optimizerDecaySlots
+}
+
+// SetOptimizerDecaySlots validates and persists the number of slots over which
+// measured values decay into the forecast and re-runs the optimizer when it changes.
+func (site *Site) SetOptimizerDecaySlots(slots int) error {
+	if slots < 1 || slots > 96 {
+		return fmt.Errorf("invalid optimizer decay slots: %d", slots)
+	}
+
+	site.Lock()
+	changed := site.optimizerDecaySlots != slots
+	if changed {
+		site.optimizerDecaySlots = slots
+	}
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set optimizer decay slots:", slots)
+		settings.SetInt(keys.OptimizerDecaySlots, int64(slots))
+		site.publish(keys.OptimizerDecaySlots, slots)
+
+		// re-run the optimizer so the new setting takes effect immediately
+		site.triggerOptimizer()
+	}
+
+	return nil
+}
+
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {
 	site.RLock()

@@ -260,6 +260,33 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
 }
 
+func TestOptimizerDecaySlots(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// default when unset
+	assert.Equal(t, defaultOptimizerDecaySlots, site.GetOptimizerDecaySlots())
+
+	// invalid values rejected, setting unchanged
+	require.Error(t, site.SetOptimizerDecaySlots(0))
+	require.Error(t, site.SetOptimizerDecaySlots(97))
+	assert.Equal(t, defaultOptimizerDecaySlots, site.GetOptimizerDecaySlots())
+
+	// valid change is applied
+	require.NoError(t, site.SetOptimizerDecaySlots(8))
+	assert.Equal(t, 8, site.GetOptimizerDecaySlots())
+}
+
+func TestBlendMeasured(t *testing.T) {
+	slots := []float64{100, 100, 100, 100, 100, 100}
+	blendMeasured(slots, 200, 4)
+	assert.Equal(t, []float64{200, 175, 150, 125, 100, 100}, slots)
+
+	// fewer slots than decay length
+	short := []float32{100, 100}
+	blendMeasured(short, 200, 4)
+	assert.Equal(t, []float32{200, 175}, short)
+}
+
 func TestCurrentSlotSuggestion(t *testing.T) {
 	// slotHours 1 makes the per-slot Wh values map 1:1 to W
 	for _, tc := range []struct {
