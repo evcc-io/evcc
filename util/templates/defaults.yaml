@@ -888,10 +888,6 @@ modbus:
       type: duration
       advanced: true
     - name: timeout
-      description:
-        de: Zeitüberschreitung
-        en: Timeout
-      type: duration
       advanced: true
   types:
     rs485serial:
