@@ -879,9 +879,6 @@ modbus:
       default: 502
       type: int
     - name: delay
-      description:
-        de: Verzögerung
-        en: Delay
       help:
         de: Wartezeit vor jedem Registerzugriff
         en: Wait time before each register access

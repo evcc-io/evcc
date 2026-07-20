@@ -92,8 +92,10 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 
 		for _, p := range typeParams {
 			// don't overwrite custom values
-			if v, ok := values[p.Name]; ok && v != nil && v != "" {
-				continue
+			if v, ok := values[p.Name]; ok && v != nil {
+				if s, isString := v.(string); !isString || s != "" {
+					continue
+				}
 			}
 
 			values[p.Name] = p.DefaultValue(renderMode)
