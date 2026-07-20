@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.26.3
+go 1.27rc1
 
 require (
 	dario.cat/mergo v1.0.2
@@ -46,7 +46,6 @@ require (
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v32 v32.1.0
-	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.15.0
@@ -69,14 +68,14 @@ require (
 	github.com/koron/go-ssdp v0.9.0
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/libtnb/sqlite v1.1.2
+	github.com/libtnb/sqlite v1.1.1
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modelcontextprotocol/go-sdk v1.6.1
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/nicholas-fedor/shoutrrr v0.16.1
+	github.com/nicholas-fedor/shoutrrr v0.16.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/philippseith/signalr v0.8.0
@@ -145,6 +144,7 @@ require (
 	github.com/clipperhouse/displaywidth v0.10.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.6.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
+	github.com/creack/pty v1.1.18 // indirect
 	github.com/cronokirby/saferith v0.33.0 // indirect
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22 // indirect
@@ -176,6 +176,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/govalues/decimal v0.1.36 // indirect
