@@ -295,8 +295,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	// blend measured energy of the last metrics slot into the first slots
 	if v := site.measuredSlotEnergy(metrics.Home); v > 0 {
+		orig := slices.Clone(gt[:min(optimizerDecaySlots, len(gt))])
 		blendMeasured(gt, v, optimizerDecaySlots)
-		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f", v, gt[:min(optimizerDecaySlots, len(gt))])
+		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, gt[:len(orig)])
 	}
 
 	// allow empty solar forecast
@@ -309,8 +310,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 		ftSlots := scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen)
 		if v := site.measuredSlotEnergy(site.Meters.PVMetersRef...); v > 0 {
+			orig := slices.Clone(ftSlots[:min(optimizerDecaySlots, len(ftSlots))])
 			blendMeasured(ftSlots, float32(v), optimizerDecaySlots)
-			site.log.DEBUG.Printf("optimizer: pv slots updated with measured %.0fWh: %.0f", v, ftSlots[:min(optimizerDecaySlots, len(ftSlots))])
+			site.log.DEBUG.Printf("optimizer: pv slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, ftSlots[:len(orig)])
 		}
 		ft = prorate(ftSlots, firstSlotDuration)
 	}
