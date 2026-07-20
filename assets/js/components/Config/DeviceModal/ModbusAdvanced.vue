@@ -1,19 +1,5 @@
 <template>
 	<FormRow
-		:id="formId('modbusDelay')"
-		:label="$t('config.modbus.delay')"
-		:help="$t('config.modbus.delayHint')"
-	>
-		<PropertyField
-			:id="formId('modbusDelay')"
-			property="delay"
-			type="Duration"
-			class="me-2"
-			:model-value="delay"
-			@update:model-value="(v) => $emit('update:delay', v)"
-		/>
-	</FormRow>
-	<FormRow
 		:id="formId('modbusTimeout')"
 		:label="$t('config.modbus.timeout')"
 		:help="$t('config.modbus.timeoutHint')"
@@ -25,6 +11,20 @@
 			class="me-2"
 			:model-value="timeout"
 			@update:model-value="(v) => $emit('update:timeout', v)"
+		/>
+	</FormRow>
+	<FormRow
+		:id="formId('modbusDelay')"
+		:label="$t('config.modbus.delay')"
+		:help="$t('config.modbus.delayHint')"
+	>
+		<PropertyField
+			:id="formId('modbusDelay')"
+			property="delay"
+			type="Duration"
+			class="me-2"
+			:model-value="delay"
+			@update:model-value="(v) => $emit('update:delay', v)"
 		/>
 	</FormRow>
 </template>
