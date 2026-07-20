@@ -81,12 +81,13 @@ type Site struct {
 	curtailPercent *int
 
 	// battery settings
-	prioritySoc             float64  // prefer battery up to this Soc
-	bufferSoc               float64  // continue charging on battery above this Soc
-	bufferStartSoc          float64  // start charging on battery above this Soc
-	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
-	batteryGridChargeLimit  *float64 // grid charging limit
-	batteryGridDischarge    bool     // allow battery discharge to grid (experimental)
+	prioritySoc               float64  // prefer battery up to this Soc
+	bufferSoc                 float64  // continue charging on battery above this Soc
+	bufferStartSoc            float64  // start charging on battery above this Soc
+	batteryDischargeControl   bool     // prevent battery discharge for fast and planned charging
+	batteryGridChargeLimit    *float64 // grid charging limit
+	batteryGridDischargeLimit *float64 // grid discharging (feed-in) limit
+	batteryGridDischarge      bool     // allow battery discharge to grid (experimental)
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -396,6 +397,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
 		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.BatteryGridDischargeLimit); err == nil {
+		if err := site.SetBatteryGridDischargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -1189,7 +1195,13 @@ func (site *Site) update(lp updater) {
 	// update battery after reading meters to ensure that (modbus) connection is open
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
-	site.updateBatteryMode(batteryGridChargeActive, rate)
+
+	// grid discharge (feed-in arbitrage) uses the feed-in rate, not the grid rate
+	feedinRate, _ := feedin.At(time.Now())
+	batteryGridDischargeActive := site.batteryGridDischargeActive(feedinRate)
+	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
+
+	site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
 	// re-evaluate against the updated loadpoint state
 	site.publishSuggestions()

@@ -230,6 +230,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 			}
 		}))},
 		{"batteryGridChargeLimit", floatPtrSetter(site.SetBatteryGridChargeLimit)},
+		{"batteryGridDischargeLimit", floatPtrSetter(site.SetBatteryGridDischargeLimit)},
 		{"batteryMode", ptrSetter(api.BatteryModeString, func(m *api.BatteryMode) error {
 			if m == nil {
 				m = new(api.BatteryUnknown)

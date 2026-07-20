@@ -185,23 +185,34 @@ func TestGreenShare(t *testing.T) {
 
 func TestRequiredBatteryMode(t *testing.T) {
 	tc := []struct {
-		gridChargeActive bool
-		mode, res        api.BatteryMode
+		gridChargeActive    bool
+		gridDischargeActive bool
+		mode, res           api.BatteryMode
 	}{
-		{false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
-		{false, api.BatteryNormal, api.BatteryUnknown},  // ignore
-		{false, api.BatteryHold, api.BatteryNormal},
-		{false, api.BatteryCharge, api.BatteryNormal},
+		{false, false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
+		{false, false, api.BatteryNormal, api.BatteryUnknown},  // ignore
+		{false, false, api.BatteryHold, api.BatteryNormal},
+		{false, false, api.BatteryCharge, api.BatteryNormal},
 
-		{true, api.BatteryUnknown, api.BatteryCharge},
-		{true, api.BatteryNormal, api.BatteryCharge},
-		{true, api.BatteryHold, api.BatteryCharge},
-		{true, api.BatteryCharge, api.BatteryUnknown}, // ignore
+		{true, false, api.BatteryUnknown, api.BatteryCharge},
+		{true, false, api.BatteryNormal, api.BatteryCharge},
+		{true, false, api.BatteryHold, api.BatteryCharge},
+		{true, false, api.BatteryCharge, api.BatteryUnknown}, // ignore
+
+		// grid discharge (feed-in arbitrage)
+		{false, true, api.BatteryUnknown, api.BatteryDischarge},
+		{false, true, api.BatteryNormal, api.BatteryDischarge},
+		{false, true, api.BatteryHold, api.BatteryDischarge},
+		{false, true, api.BatteryDischarge, api.BatteryUnknown}, // ignore
+		{false, true, api.BatteryCharge, api.BatteryDischarge},
+
+		// grid charge wins over grid discharge when both active
+		{true, true, api.BatteryNormal, api.BatteryCharge},
 	}
 
 	{
 		// no battery
-		res := new(Site).requiredBatteryMode(true, api.Rate{})
+		res := new(Site).requiredBatteryMode(true, false, api.Rate{})
 		assert.Equal(t, api.BatteryUnknown, res, "expected %s, got %s", api.BatteryUnknown, res)
 	}
 
@@ -213,7 +224,7 @@ func TestRequiredBatteryMode(t *testing.T) {
 			batteryMode:   tc.mode,
 		}
 
-		res := s.requiredBatteryMode(tc.gridChargeActive, api.Rate{})
+		res := s.requiredBatteryMode(tc.gridChargeActive, tc.gridDischargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
 }
