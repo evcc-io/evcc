@@ -895,8 +895,6 @@ modbus:
         - name: device
         - name: baudrate
         - name: comset
-        - name: delay
-        - name: timeout
     rs485tcpip:
       description:
         generic: Serial (Ethernet-RS485 Adapter)
@@ -905,8 +903,6 @@ modbus:
         - name: host
         - name: port
           default: 502
-        - name: delay
-        - name: timeout
     tcpip:
       description:
         generic: TCP/IP
@@ -915,8 +911,6 @@ modbus:
         - name: host
         - name: port
           default: 502
-        - name: delay
-        - name: timeout
     udp:
       description:
         generic: UDP
@@ -925,8 +919,6 @@ modbus:
         - name: host
         - name: port
           default: 502
-        - name: delay
-        - name: timeout
 
 devicegroups:
   generic:
