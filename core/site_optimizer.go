@@ -296,6 +296,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	// blend measured energy of the last metrics slot into the first slots
 	if v := site.measuredSlotEnergy(metrics.Home); v > 0 {
 		blendMeasured(gt, v, optimizerDecaySlots)
+		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f", v, gt[:min(optimizerDecaySlots, len(gt))])
 	}
 
 	// allow empty solar forecast
@@ -309,6 +310,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		ftSlots := scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen)
 		if v := site.measuredSlotEnergy(site.Meters.PVMetersRef...); v > 0 {
 			blendMeasured(ftSlots, float32(v), optimizerDecaySlots)
+			site.log.DEBUG.Printf("optimizer: pv slots updated with measured %.0fWh: %.0f", v, ftSlots[:min(optimizerDecaySlots, len(ftSlots))])
 		}
 		ft = prorate(ftSlots, firstSlotDuration)
 	}
