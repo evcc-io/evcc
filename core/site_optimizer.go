@@ -294,7 +294,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	// blend measured energy of the last metrics slot into the first slots
-	if v, ok := site.measuredSlotEnergy(metrics.Home); ok {
+	if v := site.measuredSlotEnergy(metrics.Home); v > 0 {
 		blendMeasured(gt, v, optimizerDecaySlots)
 	}
 
@@ -307,7 +307,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 
 		ftSlots := scaleAndPrune(solarEnergy, site.effectiveSolarScale(), minLen)
-		if v, ok := site.measuredSlotEnergy(site.Meters.PVMetersRef...); ok {
+		if v := site.measuredSlotEnergy(site.Meters.PVMetersRef...); v > 0 {
 			blendMeasured(ftSlots, float32(v), optimizerDecaySlots)
 		}
 		ft = prorate(ftSlots, firstSlotDuration)
@@ -797,27 +797,23 @@ func profileSlotsFromNow(profile []float64) []float64 {
 }
 
 // measuredSlotEnergy returns the summed energy in Wh of the last completed
-// metrics slot for the given collector refs
-func (site *Site) measuredSlotEnergy(refs ...string) (float64, bool) {
-	if len(refs) == 0 {
-		return 0, false
-	}
-
+// metrics slot for the given collector refs, 0 when not available
+func (site *Site) measuredSlotEnergy(refs ...string) float64 {
 	var sum float64
 	for _, ref := range refs {
 		c, ok := site.collectors[ref]
 		if !ok {
-			return 0, false
+			return 0
 		}
 
 		v, ok := c.LastSlotEnergy()
 		if !ok {
-			return 0, false
+			return 0
 		}
 		sum += v
 	}
 
-	return sum * 1e3, true
+	return sum * 1e3
 }
 
 // blendMeasured decays the first slots from the measured value into the
