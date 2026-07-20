@@ -182,6 +182,10 @@ type API interface {
 	GetBatteryBoostLimit() int
 	// SetBatteryBoostLimit sets the battery boost soc limit
 	SetBatteryBoostLimit(int)
+	// GetBatteryBoostDefault returns whether battery boost is auto-enabled on connect
+	GetBatteryBoostDefault() bool
+	// SetBatteryBoostDefault sets whether battery boost is auto-enabled on connect
+	SetBatteryBoostDefault(bool)
 
 	//
 	// smart grid charging

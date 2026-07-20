@@ -694,6 +694,27 @@ func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	}
 }
 
+// GetBatteryBoostDefault returns whether battery boost is auto-enabled on connect
+func (lp *Loadpoint) GetBatteryBoostDefault() bool {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.batteryBoostDefault
+}
+
+// SetBatteryBoostDefault sets whether battery boost is auto-enabled on connect
+func (lp *Loadpoint) SetBatteryBoostDefault(enable bool) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set battery boost default:", enable)
+
+	if lp.batteryBoostDefault != enable {
+		lp.batteryBoostDefault = enable
+		lp.settings.SetBool(keys.BatteryBoostDefault, enable)
+		lp.publish(keys.BatteryBoostDefault, enable)
+	}
+}
+
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)

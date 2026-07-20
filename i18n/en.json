@@ -1378,6 +1378,8 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
+        "autoDescription": "Automatically enable Battery Boost whenever a vehicle connects.",
+        "autoLabel": "Enable automatically on connect",
         "description": "Allow fast charging from home battery until it's drained to {limit}.",
         "descriptionDisabled": "Select a limit to allow fast charging from home battery.",
         "disabled": "Disabled",
