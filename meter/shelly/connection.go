@@ -27,14 +27,15 @@ type Phases interface {
 	api.PhasePowers
 }
 
-type generationInfo interface {
-	Gen() int
-}
-
 // Connection is the Shelly connection
 type Connection struct {
 	Generation
-	generation int
+	gen int
+}
+
+// SignedPower reports whether the device returns directional (signed) power.
+func (c *Connection) SignedPower() bool {
+	return c.gen >= 3
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -78,20 +79,13 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		// https://shelly-api-docs.shelly.cloud/gen2/
 
 		var err error
-		gen, err = newGen2(client, uri, model, resp.Gen, channel, user, password, cache)
+		gen, err = newGen2(client, uri, model, channel, user, password, cache)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	conn := &Connection{Generation: gen, generation: resp.Gen}
+	conn := &Connection{Generation: gen, gen: resp.Gen}
 
 	return conn, nil
-}
-
-func (c *Connection) Gen() int {
-	if gen, ok := c.Generation.(generationInfo); ok {
-		return gen.Gen()
-	}
-	return c.generation
 }

@@ -158,7 +158,3 @@ func (c *gen1) energy(energy float64) float64 {
 	}
 	return energy
 }
-
-func (c *gen1) Gen() int {
-	return 1
-}
