@@ -1,0 +1,60 @@
+template: sma-homemanager-modbus
+products:
+  - brand: SMA
+    description:
+      generic: Sunny Home Manager 2.0 Modbus
+capabilities: ["curtail"]
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 2
+    help:
+      en: ModbusTCP server needs to be enabled.
+      de: Der ModbusTCP Server muss aktiviert sein.
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 30865 # SMA Modbus Profile: Metering.GridMs.TotWIn
+          type: input
+          decode: int32nan
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 30867 # SMA Modbus Profile: Metering.GridMs.TotWOut
+          type: input
+          decode: int32nan
+        scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30581 # SMA Modbus Profile: Metering.GridMs.TotWhIn
+      type: holding
+      decode: int32nan
+    scale: 0.001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30583 # SMA Modbus Profile: Metering.GridMs.TotWhOut
+      type: holding
+      decode: int32nan
+    scale: 0.001
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40016 # Wirkleistungssollwert P, in % der maximalen Wirkleistung (PMAX) der PV-Anlage.
+      type: writesingle
+      decode: uint16
+  curtailed:
+    source: const
+    value: -1   # not known
