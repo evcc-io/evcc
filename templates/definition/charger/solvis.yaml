@@ -9,26 +9,16 @@ requirements:
   description:
     de: |
       Modbus TCP muss am SolvisControl unter „Einstellungen / Netzwerk“ aktiviert sein.
-      Die Ansteuerung erfolgt über die Warmwasser-Solltemperatur oder die Warmwasser-Nachheizung.
+      Die Ansteuerung erfolgt über die Warmwasser-Solltemperatur.
       Eine Leistungsreduzierung (dim) unterstützt der Regler nicht.
     en: |
       Modbus TCP must be enabled at the SolvisControl under "Settings / Network".
-      Control is done via the hot water target temperature or the hot water reheat.
+      Control is done via the hot water target temperature.
       The controller does not support power reduction (dim).
 params:
   - name: host
   - name: port
     default: 502
-  - name: control
-    type: choice
-    choice: ["temp", "reheat"]
-    default: temp
-    description:
-      de: Ansteuerung
-      en: Control
-    help:
-      de: Warmwasser-Solltemperatur (temp) oder Nachheizung (reheat)
-      en: Hot water target temperature (temp) or reheat (reheat)
   - name: tempnormal
     type: int
     default: 48
@@ -49,7 +39,7 @@ params:
 render: |
   type: sgready
   # The controller has no mode register, the mode is tracked by evcc.
-  # For control: temp it could be read back from 2305:
+  # It could be read back from 2305:
   # getmode:
   #   source: map
   #   values:
@@ -69,25 +59,25 @@ render: |
     - case: 2 # normal
       set:
         source: const
-        value: {{ if eq .control "temp" }}{{ .tempnormal }}{{ else }}0{{ end }}
+        value: {{ .tempnormal }}
         set:
           source: modbus
           uri: {{ joinHostPort .host .port }}
           id: 1
           register:
-            address: {{ if eq .control "temp" }}2305{{ else }}2322{{ end }} # 2305 Warmwasser Solltemperatur, 2322 Warmwasser Nachheizung
+            address: 2305 # Warmwasser Solltemperatur
             type: writesingle
             encoding: uint16
     - case: 3 # boost
       set:
         source: const
-        value: {{ if eq .control "temp" }}{{ .tempboost }}{{ else }}1{{ end }}
+        value: {{ .tempboost }}
         set:
           source: modbus
           uri: {{ joinHostPort .host .port }}
           id: 1
           register:
-            address: {{ if eq .control "temp" }}2305{{ else }}2322{{ end }} # 2305 Warmwasser Solltemperatur, 2322 Warmwasser Nachheizung
+            address: 2305 # Warmwasser Solltemperatur
             type: writesingle
             encoding: uint16
     - case: 1 # dim
