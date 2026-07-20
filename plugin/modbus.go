@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
@@ -157,12 +156,7 @@ func (m *Modbus) FloatGetter() (func() (f float64, err error), error) {
 			return 0, fmt.Errorf("read failed: %w", err)
 		}
 
-		// a "*nan" sentinel decodes to NaN - the device reports no valid value
-		if res := m.scale * decode(bytes); !math.IsNaN(res) {
-			return res, nil
-		}
-
-		return 0, api.ErrNotAvailable
+		return m.scale * decode(bytes), nil
 	}, nil
 }
 
