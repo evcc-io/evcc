@@ -30,50 +30,14 @@ func (t *Template) ModbusParams(modbusType string, values map[string]any) {
 		return
 	}
 
-	modbusParams := ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params
+	// skip params the template already defines (e.g. deprecated delay, timeout)
+	modbusParams := slices.DeleteFunc(slices.Clone(ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params), func(p Param) bool {
+		i, _ := t.ParamByName(p.Name)
+		return i >= 0
+	})
 
 	// add the modbus params at the beginning
 	t.Params = append(modbusParams, t.Params...)
-}
-
-// AddModbusCommonParams adds the connection-independent modbus params (delay,
-// timeout) so they are available as regular advanced params. Device-specific
-// defaults from the modbus param are applied to existing params, too.
-func (t *Template) AddModbusCommonParams() error {
-	if len(t.ModbusChoices()) == 0 {
-		return nil
-	}
-
-	_, modbusParam := t.ParamByName(ParamModbus)
-
-	for _, common := range []struct {
-		name, def string
-	}{
-		{ModbusParamDelay, modbusParam.Delay},
-		{ModbusParamTimeout, modbusParam.Timeout},
-	} {
-		name, def := common.name, common.def
-
-		if i, _ := t.ParamByName(name); i >= 0 {
-			// existing (typically deprecated) param: only apply the default
-			if def != "" {
-				t.SetParamDefault(name, def)
-			}
-			continue
-		}
-
-		if i := slices.IndexFunc(ConfigDefaults.Modbus.Definitions, func(p Param) bool {
-			return p.Name == name
-		}); i >= 0 {
-			p := ConfigDefaults.Modbus.Definitions[i]
-			if def != "" {
-				p.Default = def
-			}
-			t.Params = append(t.Params, p)
-		}
-	}
-
-	return nil
 }
 
 // ModbusValues adds the values required for modbus.tpl to the value map
@@ -130,6 +94,14 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 			case ModbusParamComset:
 				if modbusParam.Comset != "" {
 					defaultValue = modbusParam.Comset
+				}
+			case ModbusParamDelay:
+				if modbusParam.Delay != "" {
+					defaultValue = modbusParam.Delay
+				}
+			case ModbusParamTimeout:
+				if modbusParam.Timeout != "" {
+					defaultValue = modbusParam.Timeout
 				}
 			}
 
