@@ -14,6 +14,8 @@ params:
     port: 502
     id: 247
     delay: 100ms
+  - name: delay
+    deprecated: true
   - preset: battery-params
 render: |
   type: custom

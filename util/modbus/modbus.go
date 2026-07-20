@@ -30,7 +30,6 @@ type TcpSettings struct {
 	URI     string
 	ID      uint8
 	RTU     *bool `mapstructure:"rtu"`
-	Cache   time.Duration
 	Delay   time.Duration
 	Timeout time.Duration
 }
@@ -41,7 +40,6 @@ func (s TcpSettings) Connection(ctx context.Context) (*Connection, error) {
 		ID:      s.ID,
 		URI:     s.URI,
 		RTU:     s.RTU,
-		Cache:   s.Cache,
 		Delay:   s.Delay,
 		Timeout: s.Timeout,
 	}
@@ -59,12 +57,11 @@ type Settings struct {
 	Baudrate  int           `json:"baudrate,omitempty" yaml:",omitempty"`
 	UDP       bool          `json:"udp,omitempty" yaml:",omitempty"`
 	RTU       *bool         `json:"rtu,omitempty" yaml:",omitempty"`
-	Cache     time.Duration `json:"cache,omitempty" yaml:",omitempty"`
 	Delay     time.Duration `json:"delay,omitempty" yaml:",omitempty"`
 	Timeout   time.Duration `json:"timeout,omitempty" yaml:",omitempty"`
 }
 
-// Connection creates a modbus connection from the settings, applying delay, timeout and cache.
+// Connection creates a modbus connection from the settings, applying delay and timeout.
 // The optional proto overrides the protocol derived from the settings.
 func (s Settings) Connection(ctx context.Context, proto ...Protocol) (*Connection, error) {
 	p := s.Protocol()
@@ -79,7 +76,6 @@ func (s Settings) Connection(ctx context.Context, proto ...Protocol) (*Connectio
 
 	conn.Timeout(s.Timeout)
 	conn.Delay(s.Delay)
-	conn.Cache(s.Cache)
 
 	return conn, nil
 }

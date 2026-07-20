@@ -878,15 +878,6 @@ modbus:
         en: Port
       default: 502
       type: int
-    - name: cache
-      description:
-        de: Cache
-        en: Cache
-      help:
-        de: Zeitintervall für erneute Datenabfrage
-        en: Time interval for data refresh
-      type: duration
-      advanced: true
     - name: delay
       description:
         de: Verzögerung
@@ -911,7 +902,6 @@ modbus:
         - name: device
         - name: baudrate
         - name: comset
-        - name: cache
         - name: delay
         - name: timeout
     rs485tcpip:
@@ -922,7 +912,6 @@ modbus:
         - name: host
         - name: port
           default: 502
-        - name: cache
         - name: delay
         - name: timeout
     tcpip:
@@ -933,7 +922,6 @@ modbus:
         - name: host
         - name: port
           default: 502
-        - name: cache
         - name: delay
         - name: timeout
     udp:
@@ -944,7 +932,6 @@ modbus:
         - name: host
         - name: port
           default: 502
-        - name: cache
         - name: delay
         - name: timeout
 

@@ -40,6 +40,8 @@ params:
   - name: modbus
     choice: ["tcpip"]
     timeout: 10s
+  - name: timeout
+    deprecated: true
   - name: wwoffset
     type: float
     unit: K

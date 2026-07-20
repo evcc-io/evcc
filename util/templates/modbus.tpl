@@ -22,9 +22,6 @@ rtu: true
 # configuration error - should not happen
 modbusConnectionTypeNotDefined: {{ .modbus }}
 {{- end }}
-{{- if .cache }}
-cache: {{ .cache }}
-{{- end }}
 {{- if .delay }}
 delay: {{ .delay }}
 {{- end }}

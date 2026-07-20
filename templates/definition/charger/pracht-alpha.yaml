@@ -22,6 +22,8 @@ params:
     comset: 8N1
     id: 1
   - name: connector
+  - name: timeout
+    deprecated: true
 render: |
   type: pracht-alpha
   {{- include "modbus" . }}

@@ -94,11 +94,8 @@ func NewAmbiboxFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int
 	}{
-		TcpSettings: modbus.TcpSettings{
-			ID:    1,
-			Cache: time.Second,
-		},
-		Connector: 1,
+		TcpSettings: modbus.TcpSettings{ID: 1},
+		Connector:   1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -136,7 +133,7 @@ func NewAmbibox(ctx context.Context, settings modbus.TcpSettings, connector int)
 	// share a single bulk read of the input block across all decoders
 	wb.input = util.Cached(func() ([]byte, error) {
 		return wb.conn.ReadInputRegisters(wb.inputBase, ambiInputLength)
-	}, settings.Cache)
+	}, time.Second)
 
 	return wb, nil
 }

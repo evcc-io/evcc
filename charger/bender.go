@@ -97,22 +97,23 @@ func init() {
 func NewBenderCCFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
+		Cache              time.Duration
 	}{
 		TcpSettings: modbus.TcpSettings{
-			ID:    255, // default
-			Cache: 5 * time.Second,
+			ID: 255, // default
 		},
+		Cache: 5 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewBenderCC(ctx, cc.TcpSettings)
+	return NewBenderCC(ctx, cc.TcpSettings, cc.Cache)
 }
 
 // NewBenderCC creates BenderCC charger
-func NewBenderCC(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+func NewBenderCC(ctx context.Context, settings modbus.TcpSettings, cache time.Duration) (api.Charger, error) {
 	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -173,7 +174,7 @@ func NewBenderCC(ctx context.Context, settings modbus.TcpSettings) (api.Charger,
 		implement.Has(wb, implement.PhaseGetter(wb.getPhasesMennekes))
 	} else {
 		// check feature semp phase switching
-		if wb.supportsSEMPPhaseSwitching(settings.URI, settings.Cache) {
+		if wb.supportsSEMPPhaseSwitching(settings.URI, cache) {
 			// set initial SEMP power limit to max so modbus control from 6 to 16 A is possible
 			if err := wb.semp.conn.SendDeviceControl(wb.semp.deviceID, 0xffff); err == nil {
 				implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3pSEMP))

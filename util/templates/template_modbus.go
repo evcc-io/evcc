@@ -30,7 +30,7 @@ func (t *Template) ModbusParams(modbusType string, values map[string]any) {
 		return
 	}
 
-	// skip params the template already defines (e.g. cache, delay, timeout)
+	// skip params the template already defines (e.g. delay, timeout)
 	modbusParams := slices.DeleteFunc(slices.Clone(ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params), func(p Param) bool {
 		i, _ := t.ParamByName(p.Name)
 		return i >= 0
@@ -40,14 +40,14 @@ func (t *Template) ModbusParams(modbusType string, values map[string]any) {
 	t.Params = append(modbusParams, t.Params...)
 }
 
-// AddModbusCommonParams appends the connection-independent modbus params (cache,
-// delay, timeout) so they are available as regular advanced params
+// AddModbusCommonParams appends the connection-independent modbus params (delay,
+// timeout) so they are available as regular advanced params
 func (t *Template) AddModbusCommonParams() error {
 	if len(t.ModbusChoices()) == 0 {
 		return nil
 	}
 
-	for _, name := range []string{ModbusParamCache, ModbusParamDelay, ModbusParamTimeout} {
+	for _, name := range []string{ModbusParamDelay, ModbusParamTimeout} {
 		if i, _ := t.ParamByName(name); i >= 0 {
 			continue
 		}
@@ -116,10 +116,6 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 			case ModbusParamComset:
 				if modbusParam.Comset != "" {
 					defaultValue = modbusParam.Comset
-				}
-			case ModbusParamCache:
-				if modbusParam.Cache != "" {
-					defaultValue = modbusParam.Cache
 				}
 			case ModbusParamDelay:
 				if modbusParam.Delay != "" {

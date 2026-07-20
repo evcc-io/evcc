@@ -21,6 +21,8 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     timeout: 15s
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   power:

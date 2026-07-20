@@ -28,6 +28,8 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     timeout: 15s
+  - name: timeout
+    deprecated: true
   - name: maxacpower
     service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
   - name: curtailpercent
