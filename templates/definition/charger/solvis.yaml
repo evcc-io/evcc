@@ -42,8 +42,10 @@ params:
       de: Solltemperatur Boost
       en: Target temperature boost
   - name: tempsource
+    required: true
     type: choice
     choice: ["warmwater", "buffer"]
+    default: warmwater
 render: |
   type: sgready
   # The controller has no mode register, the mode is tracked by evcc.
@@ -64,57 +66,30 @@ render: |
   setmode:
     source: switch
     switch:
-    {{- if eq .control "temp" }}
     - case: 2 # normal
       set:
         source: const
-        value: {{ .tempnormal }}
+        value: {{ if eq .control "temp" }}{{ .tempnormal }}{{ else }}0{{ end }}
         set:
           source: modbus
           uri: {{ joinHostPort .host .port }}
           id: 1
           register:
-            address: 2305 # Warmwasser Solltemperatur
+            address: {{ if eq .control "temp" }}2305{{ else }}2322{{ end }} # 2305 Warmwasser Solltemperatur, 2322 Warmwasser Nachheizung
             type: writesingle
             encoding: uint16
     - case: 3 # boost
       set:
         source: const
-        value: {{ .tempboost }}
+        value: {{ if eq .control "temp" }}{{ .tempboost }}{{ else }}1{{ end }}
         set:
           source: modbus
           uri: {{ joinHostPort .host .port }}
           id: 1
           register:
-            address: 2305 # Warmwasser Solltemperatur
+            address: {{ if eq .control "temp" }}2305{{ else }}2322{{ end }} # 2305 Warmwasser Solltemperatur, 2322 Warmwasser Nachheizung
             type: writesingle
             encoding: uint16
-    {{- else }}
-    - case: 2 # normal
-      set:
-        source: const
-        value: 0
-        set:
-          source: modbus
-          uri: {{ joinHostPort .host .port }}
-          id: 1
-          register:
-            address: 2322 # Warmwasser Nachheizung
-            type: writesingle
-            encoding: uint16
-    - case: 3 # boost
-      set:
-        source: const
-        value: 1
-        set:
-          source: modbus
-          uri: {{ joinHostPort .host .port }}
-          id: 1
-          register:
-            address: 2322 # Warmwasser Nachheizung
-            type: writesingle
-            encoding: uint16
-    {{- end }}
     - case: 1 # dim
       set:
         source: error
@@ -128,7 +103,6 @@ render: |
       type: holding
       encoding: uint16
     scale: 100 # 0.1 kW -> W
-  {{- if .tempsource }}
   temp:
     source: modbus
     uri: {{ joinHostPort .host .port }}
@@ -146,5 +120,4 @@ render: |
       address: 2305 # Warmwasser Solltemperatur
       type: holding
       encoding: uint16
-  {{- end }}
   {{ include "heatpumpswitch" . }}
