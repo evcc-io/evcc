@@ -42,27 +42,3 @@ render: |
       type: input
       decode: float32s
     scale: 0.001
-  currents:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: {{ $addr := add 2005 ( mul 20 .channel ) }}{{ $addr }} # Current (A)
-        type: input
-        decode: float32s
-      scale: 1
-    - source: const
-      value: 0
-    - source: const
-      value: 0
-  voltages:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: {{ $addr := add 2003 ( mul 20 .channel ) }}{{ $addr }} # Voltage (V)
-        type: input
-        decode: float32s
-      scale: 1
-    - source: const
-      value: 0
-    - source: const
-      value: 0
