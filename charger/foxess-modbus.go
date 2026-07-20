@@ -55,9 +55,10 @@ const (
 	foxRegCurrents      = 0x100B // A/B/C phase current, 3 registers, 0.1A
 	foxRegPower         = 0x100E // active power, 0.1kW
 	foxRegPhaseSequence = 0x1010 // current phase sequence
-	foxRegCurrentEnergy = 0x1016 // session energy, uint32, 0.1kWh
-	foxRegTotalEnergy   = 0x1018 // total energy, uint32, 0.1kWh
-	foxRegRFID          = 0x101C // last RFID card, uint32
+	// foxRegTotalEnergy is a cumulative meter reading that never resets on plug-in; evcc's generic
+	// wrapper.ChargeRater derives session energy from it instead of relying on a charger-reported value
+	foxRegTotalEnergy = 0x1018 // total energy, uint32, 0.1kWh
+	foxRegRFID        = 0x101C // last RFID card, uint32
 
 	// read/write registers (write with 0x10)
 	foxRegWorkMode     = 0x3000 // work mode
@@ -423,18 +424,6 @@ func (wb *FoxESSEVC) CurrentPower() (float64, error) {
 	}
 
 	return float64(binary.BigEndian.Uint16(b)) * 100, nil
-}
-
-var _ api.ChargeRater = (*FoxESSEVC)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *FoxESSEVC) ChargedEnergy() (float64, error) {
-	energy, err := wb.readUint32(foxRegCurrentEnergy)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(energy) / 10, nil
 }
 
 var _ api.MeterEnergy = (*FoxESSEVC)(nil)
