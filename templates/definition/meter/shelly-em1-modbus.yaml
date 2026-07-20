@@ -1,0 +1,44 @@
+template: shelly-em1-modbus
+products:
+  - { brand: Shelly, description: { generic: EM1-based (Modbus) } }
+group: switchsockets
+requirements:
+  description:
+    de: |
+      Shelly EM1-basierte Geräte für einphasige Messungen.
+    en: |
+      Shelly EM1-based devices for single phase measurements.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: channel
+    default: 0
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $addr := add 2007 ( mul 20 .channel ) }}{{ $addr }} # Active Power (W)
+      type: input
+      decode: float32s
+    scale: 1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $addr := add 2310 ( mul 20 .channel ) }}{{ $addr }} # Total Active Energy (Wh)
+      type: input
+      decode: float32s
+    scale: 0.001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $addr := add 2312 ( mul 20 .channel ) }}{{ $addr }} # Total Active Returned Energy (Wh)
+      type: input
+      decode: float32s
+    scale: 0.001
