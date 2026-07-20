@@ -73,12 +73,12 @@ func NewAlpitronicHYCFromConfig(ctx context.Context, other map[string]any) (api.
 		return nil, err
 	}
 
-	return NewAlpitronicHYC(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewAlpitronicHYC(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewAlpitronicHYC creates Alpitronic charger
-func NewAlpitronicHYC(ctx context.Context, uri string, id uint8, connector uint16) (*AlpitronicHYC, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewAlpitronicHYC(ctx context.Context, settings modbus.TcpSettings, connector uint16) (*AlpitronicHYC, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

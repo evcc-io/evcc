@@ -81,14 +81,12 @@ func NewGoodWeFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	return NewGoodWe(ctx, cc.URI, cc.ID)
+	return NewGoodWe(ctx, cc.TcpSettings)
 }
 
 // NewGoodWe creates a GoodWe wallbox charger.
-func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewGoodWe(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -73,12 +73,12 @@ func NewVoltieFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	return NewVoltie(ctx, cc.URI, cc.ID)
+	return NewVoltie(ctx, cc.TcpSettings)
 }
 
 // NewVoltie creates a Voltie charger
-func NewVoltie(ctx context.Context, uri string, slaveID uint8) (*Voltie, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewVoltie(ctx context.Context, settings modbus.TcpSettings) (*Voltie, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

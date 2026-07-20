@@ -20,14 +20,12 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["rs485", "tcpip"]
-  - name: timeout
-    default: 15s
+    timeout: 15s
 render: |
   type: custom
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 32080 # Active generation power AC
@@ -36,7 +34,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 32106 # Accumulated energy yield
       type: holding

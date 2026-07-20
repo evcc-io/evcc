@@ -38,21 +38,22 @@ func NewHoymilesDTUModbusTcpFromConfig(ctx context.Context, other map[string]any
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		pvMaxACPower       `mapstructure:",squash"`
-		Cache              time.Duration
 	}{
-		TcpSettings: modbus.TcpSettings{ID: 1},
-		Cache:       15 * time.Second,
+		TcpSettings: modbus.TcpSettings{
+			ID:    1,
+			Cache: 15 * time.Second,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return newHoymilesDTUModbusTCP(ctx, cc.URI, cc.ID, cc.pvMaxACPower.Decorator(), cc.Cache)
+	return newHoymilesDTUModbusTCP(ctx, cc.TcpSettings, cc.pvMaxACPower.Decorator())
 }
 
-func newHoymilesDTUModbusTCP(ctx context.Context, uri string, id uint8, maxACPower func() float64, cache time.Duration) (api.Meter, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func newHoymilesDTUModbusTCP(ctx context.Context, settings modbus.TcpSettings, maxACPower func() float64) (api.Meter, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func newHoymilesDTUModbusTCP(ctx context.Context, uri string, id uint8, maxACPow
 		conn: conn,
 	}
 
-	m.valuesG = util.Cached(m.readCurrentValues, cache)
+	m.valuesG = util.Cached(m.readCurrentValues, settings.Cache)
 
 	meter, _ := NewConfigurable(m.CurrentPower)
 	implement.Has(meter, implement.MeterEnergy(m.TotalEnergy))

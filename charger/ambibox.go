@@ -94,8 +94,11 @@ func NewAmbiboxFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int
 	}{
-		TcpSettings: modbus.TcpSettings{ID: 1},
-		Connector:   1,
+		TcpSettings: modbus.TcpSettings{
+			ID:    1,
+			Cache: time.Second,
+		},
+		Connector: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -110,12 +113,12 @@ func NewAmbiboxFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, api.ErrSponsorRequired
 	}
 
-	return NewAmbibox(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewAmbibox(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewAmbibox creates an Ambibox charger
-func NewAmbibox(ctx context.Context, uri string, id uint8, connector int) (*Ambibox, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewAmbibox(ctx context.Context, settings modbus.TcpSettings, connector int) (*Ambibox, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +136,7 @@ func NewAmbibox(ctx context.Context, uri string, id uint8, connector int) (*Ambi
 	// share a single bulk read of the input block across all decoders
 	wb.input = util.Cached(func() ([]byte, error) {
 		return wb.conn.ReadInputRegisters(wb.inputBase, ambiInputLength)
-	}, time.Second)
+	}, settings.Cache)
 
 	return wb, nil
 }

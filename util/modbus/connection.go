@@ -14,6 +14,7 @@ type Connection struct {
 	slaveID uint8 // duplicated from meters.Connection
 	logical meters.Logger
 	delay   time.Duration
+	cache   *Cache
 }
 
 func (c *Connection) Addr() string {
@@ -26,6 +27,13 @@ func (c *Connection) Logger(logger meters.Logger) {
 
 func (c *Connection) Delay(delay time.Duration) {
 	c.delay = delay
+}
+
+// Cache enables caching read responses for the given TTL. Writes invalidate the cache.
+func (c *Connection) Cache(ttl time.Duration) {
+	if ttl > 0 {
+		c.cache = NewCache(ttl)
+	}
 }
 
 func (c *Connection) Clone(slaveID uint8) *Connection {
@@ -62,62 +70,84 @@ func (c *Connection) exec(fun func() ([]byte, error)) ([]byte, error) {
 	})
 }
 
+// cached serves reads from the cache if enabled
+func (c *Connection) cached(op string, address, quantity uint16, fun func() ([]byte, error)) ([]byte, error) {
+	if c.cache == nil {
+		return c.exec(fun)
+	}
+
+	key := fmt.Sprintf("%s/%d/%d", op, address, quantity)
+	payload, _, err := c.cache.Fetch(key, func() ([]byte, error) {
+		return c.exec(fun)
+	})
+
+	return payload, err
+}
+
+// invalidating clears the cache after a write
+func (c *Connection) invalidating(fun func() ([]byte, error)) ([]byte, error) {
+	if c.cache != nil {
+		defer c.cache.Clear()
+	}
+	return c.exec(fun)
+}
+
 func (c *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
-	return c.exec(func() ([]byte, error) {
+	return c.cached("coil", address, quantity, func() ([]byte, error) {
 		return c.ModbusClient().ReadCoils(address, quantity)
 	})
 }
 
 func (c *Connection) WriteSingleCoil(address, value uint16) ([]byte, error) {
-	return c.exec(func() ([]byte, error) {
+	return c.invalidating(func() ([]byte, error) {
 		return c.ModbusClient().WriteSingleCoil(address, value)
 	})
 }
 
 func (c *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
-	return c.exec(func() ([]byte, error) {
+	return c.cached("input", address, quantity, func() ([]byte, error) {
 		return c.ModbusClient().ReadInputRegisters(address, quantity)
 	})
 }
 
 func (c *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
-	return c.exec(func() ([]byte, error) {
+	return c.cached("holding", address, quantity, func() ([]byte, error) {
 		return c.ModbusClient().ReadHoldingRegisters(address, quantity)
 	})
 }
 
 func (c *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
-	return c.exec(func() ([]byte, error) {
+	return c.invalidating(func() ([]byte, error) {
 		return c.ModbusClient().WriteSingleRegister(address, value)
 	})
 }
 
 func (c *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
-	return c.exec(func() ([]byte, error) {
+	return c.invalidating(func() ([]byte, error) {
 		return c.ModbusClient().WriteMultipleRegisters(address, quantity, value)
 	})
 }
 
 func (c *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
-	return c.exec(func() ([]byte, error) {
+	return c.cached("discrete", address, quantity, func() ([]byte, error) {
 		return c.ModbusClient().ReadDiscreteInputs(address, quantity)
 	})
 }
 
 func (c *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
-	return c.exec(func() ([]byte, error) {
+	return c.invalidating(func() ([]byte, error) {
 		return c.ModbusClient().WriteMultipleCoils(address, quantity, value)
 	})
 }
 
 func (c *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
-	return c.exec(func() ([]byte, error) {
+	return c.invalidating(func() ([]byte, error) {
 		return c.ModbusClient().ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity, value)
 	})
 }
 
 func (c *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
-	return c.exec(func() ([]byte, error) {
+	return c.invalidating(func() ([]byte, error) {
 		return c.ModbusClient().MaskWriteRegister(address, andMask, orMask)
 	})
 }

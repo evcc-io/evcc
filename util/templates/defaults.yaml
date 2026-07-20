@@ -878,6 +878,30 @@ modbus:
         en: Port
       default: 502
       type: int
+    - name: cache
+      description:
+        de: Cache
+        en: Cache
+      help:
+        de: Zeitintervall für erneute Datenabfrage
+        en: Time interval for data refresh
+      type: duration
+      advanced: true
+    - name: delay
+      description:
+        de: Verzögerung
+        en: Delay
+      help:
+        de: Wartezeit vor jedem Registerzugriff
+        en: Wait time before each register access
+      type: duration
+      advanced: true
+    - name: timeout
+      description:
+        de: Zeitüberschreitung
+        en: Timeout
+      type: duration
+      advanced: true
   types:
     rs485serial:
       description:
@@ -887,6 +911,9 @@ modbus:
         - name: device
         - name: baudrate
         - name: comset
+        - name: cache
+        - name: delay
+        - name: timeout
     rs485tcpip:
       description:
         generic: Serial (Ethernet-RS485 Adapter)
@@ -895,6 +922,9 @@ modbus:
         - name: host
         - name: port
           default: 502
+        - name: cache
+        - name: delay
+        - name: timeout
     tcpip:
       description:
         generic: TCP/IP
@@ -903,6 +933,9 @@ modbus:
         - name: host
         - name: port
           default: 502
+        - name: cache
+        - name: delay
+        - name: timeout
     udp:
       description:
         generic: UDP
@@ -911,6 +944,9 @@ modbus:
         - name: host
         - name: port
           default: 502
+        - name: cache
+        - name: delay
+        - name: timeout
 
 devicegroups:
   generic:
