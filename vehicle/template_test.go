@@ -54,7 +54,7 @@ var requiredFeatureParams = map[string][]string{
 	"vw":                    {"streaming", "coarsecurrent", "welcomecharge"},
 	"audi":                  {"streaming", "coarsecurrent", "welcomecharge"},
 	"seat":                  {"streaming", "coarsecurrent", "welcomecharge"},
-	"seat-cupra":            {"streaming", "coarsecurrent", "welcomecharge"},
+	"cupra":                 {"streaming", "coarsecurrent", "welcomecharge"},
 	"drivesomethinggreater": {"streaming", "coarsecurrent", "welcomecharge"},
 }
 
