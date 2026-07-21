@@ -264,18 +264,28 @@ func (c *EEBus) Dim(dim bool) error {
 
 var _ api.Curtailer = (*EEBus)(nil)
 
-// Curtailed implements the api.Curtailer interface
-func (c *EEBus) Curtailed() (bool, error) {
+// CurtailedPercent implements the api.Curtailer interface
+func (c *EEBus) CurtailedPercent() (int, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	limit, err := eebusReadValue(c.eg.EgLPPInterface, c.egLppEntity, eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	// Check if limit is active and has a valid power value (valid is zero or negative)
-	return limit.IsActive && limit.Value <= 0, nil
+	// production limits are negative watts, a positive value is invalid
+	if !limit.IsActive || limit.Value > 0 {
+		return 100, nil
+	}
+
+	// without a nominal reference the limit cannot be expressed as a percent
+	nominal, err := c.eg.EgLPPInterface.ProductionNominalMax(c.egLppEntity)
+	if err != nil || nominal <= 0 {
+		return 0, api.ErrNotAvailable
+	}
+
+	return int(-limit.Value / nominal * 100), nil
 }
 
 // SetCurtailPercent implements the api.Curtailer interface

@@ -174,7 +174,7 @@ render: |
               address: 60322 # Photovoltaic Maximum Power (kW * 1000)
               type: writemultiple
               encoding: uint32
-  curtailed:
+  curtailed: # the power limit is expressed as percent of nominal AC power
     source: go
     in:
       - name: limit
@@ -186,7 +186,17 @@ render: |
             address: 60322 # Photovoltaic Maximum Power (kW * 1000)
             type: holding
             decode: uint32
-    script: limit != 0xFFFFFFFF
+      - name: maxacpower
+        type: int
+        config:
+          source: const
+          value: {{ .maxacpower }}
+    script: |
+      percent := 100
+      if limit != 0xFFFFFFFF && maxacpower > 0 {
+        percent = limit * 100 / maxacpower
+      }
+      percent
   {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
