@@ -1,6 +1,8 @@
 package messenger
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/nicholas-fedor/shoutrrr"
@@ -9,7 +11,7 @@ import (
 )
 
 func init() {
-	registry.Add("shout", NewShoutrrrFromConfig)
+	registry.AddCtx("shout", NewShoutrrrFromConfig)
 }
 
 // Shoutrrr implements the shoutrrr messaging aggregator
@@ -19,7 +21,7 @@ type Shoutrrr struct {
 }
 
 // NewShoutrrrFromConfig creates new Shoutrrr messenger
-func NewShoutrrrFromConfig(other map[string]any) (api.Messenger, error) {
+func NewShoutrrrFromConfig(ctx context.Context, other map[string]any) (api.Messenger, error) {
 	var cc struct {
 		URI string
 	}
@@ -34,7 +36,7 @@ func NewShoutrrrFromConfig(other map[string]any) (api.Messenger, error) {
 	}
 
 	m := &Shoutrrr{
-		log: util.NewLogger("shoutrrr"),
+		log: util.LoggerFromContext(ctx, "shoutrrr"),
 		app: app,
 	}
 

@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -20,15 +21,15 @@ type LgEss struct {
 }
 
 func init() {
-	registry.Add("lgess8", NewLgEss8FromConfig)
-	registry.Add("lgess15", NewLgEss15FromConfig)
+	registry.AddCtx("lgess8", NewLgEss8FromConfig)
+	registry.AddCtx("lgess15", NewLgEss15FromConfig)
 }
 
-func NewLgEss8FromConfig(other map[string]any) (api.Meter, error) {
+func NewLgEss8FromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss8)
 }
 
-func NewLgEss15FromConfig(other map[string]any) (api.Meter, error) {
+func NewLgEss15FromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss15)
 }
 

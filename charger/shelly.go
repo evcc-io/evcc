@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -18,11 +19,11 @@ type Shelly struct {
 }
 
 func init() {
-	registry.Add("shelly", NewShellyFromConfig)
+	registry.AddCtx("shelly", NewShellyFromConfig)
 }
 
 // NewShellyFromConfig creates a Shelly charger from generic config
-func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
+func NewShellyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string

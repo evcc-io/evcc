@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"slices"
 	"sync"
@@ -23,10 +24,10 @@ type Ngeso struct {
 var _ api.Tariff = (*Ngeso)(nil)
 
 func init() {
-	registry.Add("ngeso", NewNgesoFromConfig)
+	registry.AddCtx("ngeso", NewNgesoFromConfig)
 }
 
-func NewNgesoFromConfig(other map[string]any) (api.Tariff, error) {
+func NewNgesoFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		Region   string
 		Postcode string
@@ -41,7 +42,7 @@ func NewNgesoFromConfig(other map[string]any) (api.Tariff, error) {
 	}
 
 	t := &Ngeso{
-		log:            util.NewLogger("ngeso"),
+		log:            util.LoggerFromContext(ctx, "ngeso"),
 		regionId:       cc.Region,
 		regionPostcode: cc.Postcode,
 		data:           util.NewMonitor[api.Rates](2 * time.Hour),

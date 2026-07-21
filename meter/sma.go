@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -25,11 +26,11 @@ type SMA struct {
 }
 
 func init() {
-	registry.Add("sma", NewSMAFromConfig)
+	registry.AddCtx("sma", NewSMAFromConfig)
 }
 
 // NewSMAFromConfig creates an SMA meter from generic config
-func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
+func NewSMAFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity          `mapstructure:",squash"`
 		batteryPowerLimits       `mapstructure:",squash"`

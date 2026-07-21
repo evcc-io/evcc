@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/mystrom"
 	"github.com/evcc-io/evcc/util"
@@ -10,11 +12,11 @@ import (
 // https://api.mystrom.ch/#fbb2c698-e37a-4584-9324-3f8b2f615fe2
 
 func init() {
-	registry.Add("mystrom", NewMyStromFromConfig)
+	registry.AddCtx("mystrom", NewMyStromFromConfig)
 }
 
 // NewMyStromFromConfig creates a myStrom meter from generic config
-func NewMyStromFromConfig(other map[string]any) (api.Meter, error) {
+func NewMyStromFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
 		URI   string
 		Token string

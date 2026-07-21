@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 )
 
 func init() {
-	registry.Add("tq-em", NewTqEmFromConfig)
+	registry.AddCtx("tq-em", NewTqEmFromConfig)
 }
 
 type tqemData struct {
@@ -57,7 +58,7 @@ type TqEm struct {
 }
 
 // NewTqEmFromConfig creates a new configurable meter
-func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
+func NewTqEmFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		Password string
@@ -70,7 +71,7 @@ func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("tq-em").Redact(cc.Password)
+	log := util.LoggerFromContext(ctx, "tq-em").Redact(cc.Password)
 
 	client := request.NewHelper(log)
 	client.Jar, _ = cookiejar.New(nil)

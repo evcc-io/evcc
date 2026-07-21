@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"net"
 	"strconv"
@@ -28,10 +29,10 @@ type E3dc struct {
 }
 
 func init() {
-	registry.Add("e3dc-rscp", NewE3dcFromConfig)
+	registry.AddCtx("e3dc-rscp", NewE3dcFromConfig)
 }
 
-func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
+func NewE3dcFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity    `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
@@ -71,14 +72,14 @@ func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewE3dc(ctx, cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (api.Meter, error) {
+func NewE3dc(ctx context.Context, cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (api.Meter, error) {
 	e3dcOnce.Do(func() {
-		log := util.NewLogger("e3dc")
+		log := util.LoggerFromContext(ctx, "e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
 		rscp.Log.SetOutput(log.TRACE.Writer())
 	})

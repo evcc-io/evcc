@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -19,11 +20,11 @@ type Skoda struct {
 }
 
 func init() {
-	registry.Add("skoda", NewSkodaFromConfig)
+	registry.AddCtx("skoda", NewSkodaFromConfig)
 }
 
 // NewSkodaFromConfig creates a new vehicle
-func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewSkodaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -47,7 +48,7 @@ func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	var err error
-	log := util.NewLogger("skoda").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, "skoda").Redact(cc.User, cc.Password, cc.VIN)
 
 	// use Skoda api to resolve list of vehicles
 	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)

@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -37,10 +38,10 @@ type CarbonIntensitySlot struct {
 var _ api.Tariff = (*ElectricityMaps)(nil)
 
 func init() {
-	registry.Add("electricitymaps", NewElectricityMapsFromConfig)
+	registry.AddCtx("electricitymaps", NewElectricityMapsFromConfig)
 }
 
-func NewElectricityMapsFromConfig(other map[string]any) (api.Tariff, error) {
+func NewElectricityMapsFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		Uri   string
 		Token string
@@ -53,7 +54,7 @@ func NewElectricityMapsFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("em").Redact(cc.Token)
+	log := util.LoggerFromContext(ctx, "em").Redact(cc.Token)
 
 	t := &ElectricityMaps{
 		log:    log,

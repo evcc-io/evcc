@@ -20,6 +20,7 @@ package charger
 // https://v2charge.com/trydan/
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -73,11 +74,11 @@ type Trydan struct {
 }
 
 func init() {
-	registry.Add("trydan", NewTrydanFromConfig)
+	registry.AddCtx("trydan", NewTrydanFromConfig)
 }
 
 // NewTrydanFromConfig creates a Trydan charger from generic config
-func NewTrydanFromConfig(other map[string]any) (api.Charger, error) {
+func NewTrydanFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -93,17 +94,17 @@ func NewTrydanFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewTrydan(cc.URI, cc.Cache)
+	return NewTrydan(ctx, cc.URI, cc.Cache)
 }
 
 // NewTrydan creates Trydan charger
-func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
+func NewTrydan(ctx context.Context, uri string, cache time.Duration) (api.Charger, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
 	c := &Trydan{
-		Helper: request.NewHelper(util.NewLogger("trydan")),
+		Helper: request.NewHelper(util.LoggerFromContext(ctx, "trydan")),
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 	}
 

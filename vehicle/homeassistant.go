@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -20,11 +21,11 @@ type HomeAssistant struct {
 
 // Register on startup
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantVehicleFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantVehicleFromConfig)
 }
 
 // Constructor from YAML config
-func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewHomeAssistantVehicleFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed                `mapstructure:",squash"`
 		homeassistant.Config `mapstructure:",squash"`
@@ -53,7 +54,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, errors.New("missing soc sensor")
 	}
 
-	log := util.NewLogger("ha-vehicle")
+	log := util.LoggerFromContext(ctx, "ha-vehicle")
 
 	conn, err := cc.Config.NewConnection(log)
 	if err != nil {

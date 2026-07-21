@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -27,11 +28,11 @@ type NRGKickConnect struct {
 }
 
 func init() {
-	registry.Add("nrgkick-connect", NewNRGKickConnectFromConfig)
+	registry.AddCtx("nrgkick-connect", NewNRGKickConnectFromConfig)
 }
 
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
-func NewNRGKickConnectFromConfig(other map[string]any) (api.Charger, error) {
+func NewNRGKickConnectFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI, Mac, Password string
 		Cache              time.Duration
@@ -43,13 +44,13 @@ func NewNRGKickConnectFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewNRGKickConnect(cc.URI, cc.Mac, cc.Password, cc.Cache)
+	return NewNRGKickConnect(ctx, cc.URI, cc.Mac, cc.Password, cc.Cache)
 }
 
 // NewNRGKickConnect creates NRGKickConnect charger
-func NewNRGKickConnect(uri, mac, password string, cache time.Duration) (*NRGKickConnect, error) {
+func NewNRGKickConnect(ctx context.Context, uri, mac, password string, cache time.Duration) (*NRGKickConnect, error) {
 	nrg := &NRGKickConnect{
-		Helper:   request.NewHelper(util.NewLogger("nrgconn")),
+		Helper:   request.NewHelper(util.LoggerFromContext(ctx, "nrgconn")),
 		uri:      util.DefaultScheme(uri, "http"),
 		mac:      mac,
 		password: password,

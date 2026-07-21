@@ -18,11 +18,11 @@ type FordConnectQuery struct {
 }
 
 func init() {
-	registry.Add("ford-connect-query", NewFordConnectQueryFromConfig)
+	registry.AddCtx("ford-connect-query", NewFordConnectQueryFromConfig)
 }
 
 // NewFordConnectQueryFromConfig creates a new vehicle
-func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewFordConnectQueryFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials ClientCredentials
@@ -45,7 +45,7 @@ func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ford").Redact(cc.Credentials.ID, cc.VIN)
+	log := util.LoggerFromContext(ctx, "ford").Redact(cc.Credentials.ID, cc.VIN)
 
 	oc := query.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectURI)
 	ts, err := query.NewOAuth(util.WithLogger(context.Background(), log), oc, cc.embed.GetTitle())

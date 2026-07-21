@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"math"
 	"strings"
 	"time"
@@ -20,11 +21,11 @@ type Shelly struct {
 
 // Shelly meter implementation
 func init() {
-	registry.Add("shelly", NewShellyFromConfig)
+	registry.AddCtx("shelly", NewShellyFromConfig)
 }
 
 // NewShellyFromConfig creates a Shelly charger from generic config
-func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
+func NewShellyFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		User     string

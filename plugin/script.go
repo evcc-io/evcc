@@ -27,11 +27,11 @@ type Script struct {
 }
 
 func init() {
-	registry.Add("script", NewScriptPluginFromConfig)
+	registry.AddCtx("script", NewScriptPluginFromConfig)
 }
 
 // NewScriptPluginFromConfig creates a script plugin.
-func NewScriptPluginFromConfig(other map[string]any) (Plugin, error) {
+func NewScriptPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Cmd               string
 		pipeline.Settings `mapstructure:",squash"`
@@ -47,7 +47,7 @@ func NewScriptPluginFromConfig(other map[string]any) (Plugin, error) {
 		return nil, err
 	}
 
-	p, err := NewScriptPlugin(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
+	p, err := NewScriptPlugin(ctx, cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
 	p.getter = defaultGetters(p, cc.Scale)
 
 	if err == nil {
@@ -61,13 +61,13 @@ func NewScriptPluginFromConfig(other map[string]any) (Plugin, error) {
 
 // NewScriptProvider creates a script plugin.
 // Script execution is aborted after given timeout.
-func NewScriptPlugin(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
+func NewScriptPlugin(ctx context.Context, script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
 	if strings.TrimSpace(script) == "" {
 		return nil, errors.New("script is required")
 	}
 
 	s := &Script{
-		log:     util.NewLogger("script"),
+		log:     util.PluginLoggerFromContext(ctx, "script"),
 		script:  script,
 		timeout: timeout,
 		cache:   cache,

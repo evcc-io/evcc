@@ -1,6 +1,7 @@
 package messenger
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -14,7 +15,7 @@ import (
 )
 
 func init() {
-	registry.Add("ntfy", NewNtfyFromConfig)
+	registry.AddCtx("ntfy", NewNtfyFromConfig)
 }
 
 // Ntfy implements the ntfy messaging aggregator
@@ -26,7 +27,7 @@ type Ntfy struct {
 }
 
 // NewNtfyFromConfig creates new Ntfy messenger
-func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
+func NewNtfyFromConfig(ctx context.Context, other map[string]any) (api.Messenger, error) {
 	var cc struct {
 		URI       string
 		Priority  string
@@ -47,7 +48,7 @@ func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ntfy")
+	log := util.LoggerFromContext(ctx, "ntfy")
 
 	if cc.AuthToken != "" {
 		bearer := "Bearer " + cc.AuthToken

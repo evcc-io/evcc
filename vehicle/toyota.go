@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,16 +17,16 @@ type Toyota struct {
 }
 
 func init() {
-	registry.Add("toyota", func(other map[string]any) (api.Vehicle, error) {
-		return newToyotaFromConfig("toyota", "T", other)
+	registry.AddCtx("toyota", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newToyotaFromConfig(ctx, "toyota", "T", other)
 	})
-	registry.Add("lexus", func(other map[string]any) (api.Vehicle, error) {
-		return newToyotaFromConfig("lexus", "L", other)
+	registry.AddCtx("lexus", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newToyotaFromConfig(ctx, "lexus", "L", other)
 	})
 }
 
 // newToyotaFromConfig creates a new vehicle
-func newToyotaFromConfig(brand, brandCode string, other map[string]any) (api.Vehicle, error) {
+func newToyotaFromConfig(ctx context.Context, brand, brandCode string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -46,7 +47,7 @@ func newToyotaFromConfig(brand, brandCode string, other map[string]any) (api.Veh
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := toyota.NewIdentity(log, brandCode)
 
 	err := identity.Login(cc.User, cc.Password)

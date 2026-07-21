@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -29,11 +30,11 @@ type Ovms struct {
 }
 
 func init() {
-	registry.Add("ovms", NewOvmsFromConfig)
+	registry.AddCtx("ovms", NewOvmsFromConfig)
 }
 
 // NewOVMSFromConfig creates a new vehicle
-func NewOvmsFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewOvmsFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                             `mapstructure:",squash"`
 		User, Password, VehicleID, Server string
@@ -46,7 +47,7 @@ func NewOvmsFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ovms").Redact(cc.User, cc.Password, cc.VehicleID)
+	log := util.LoggerFromContext(ctx, "ovms").Redact(cc.User, cc.Password, cc.VehicleID)
 
 	v := &Ovms{
 		embed:     &cc.embed,

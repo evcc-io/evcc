@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -27,10 +28,10 @@ type Solcast struct {
 var _ api.Tariff = (*Solcast)(nil)
 
 func init() {
-	registry.Add("solcast", NewSolcastFromConfig)
+	registry.AddCtx("solcast", NewSolcastFromConfig)
 }
 
-func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
+func NewSolcastFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		Site     string
 		Token    string
@@ -52,7 +53,7 @@ func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, errors.New("missing token")
 	}
 
-	log := util.NewLogger("solcast").Redact(cc.Token)
+	log := util.LoggerFromContext(ctx, "solcast").Redact(cc.Token)
 
 	t := &Solcast{
 		log:    log,

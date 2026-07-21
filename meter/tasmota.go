@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"math"
 	"strings"
 	"time"
@@ -20,11 +21,11 @@ type Tasmota struct {
 
 // Tasmota meter implementation
 func init() {
-	registry.Add("tasmota", NewTasmotaFromConfig)
+	registry.AddCtx("tasmota", NewTasmotaFromConfig)
 }
 
 // NewTasmotaFromConfig creates a Tasmota meter from generic config
-func NewTasmotaFromConfig(other map[string]any) (api.Meter, error) {
+func NewTasmotaFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		User     string

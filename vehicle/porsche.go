@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -17,11 +18,11 @@ type Porsche struct {
 }
 
 func init() {
-	registry.Add("porsche", NewPorscheFromConfig)
+	registry.AddCtx("porsche", NewPorscheFromConfig)
 }
 
 // NewPorscheFromConfig creates a new vehicle
-func NewPorscheFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewPorscheFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -38,7 +39,7 @@ func NewPorscheFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, "porsche").Redact(cc.User, cc.Password, cc.VIN)
 	ts, err := porsche.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)

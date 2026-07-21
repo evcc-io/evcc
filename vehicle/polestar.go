@@ -18,11 +18,11 @@ type Polestar struct {
 }
 
 func init() {
-	registry.Add("polestar", NewPolestarFromConfig)
+	registry.AddCtx("polestar", NewPolestarFromConfig)
 }
 
 // NewPolestarFromConfig creates a new vehicle
-func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewPolestarFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -38,7 +38,7 @@ func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("polestar").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, "polestar").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Polestar{
 		embed: &cc.embed,

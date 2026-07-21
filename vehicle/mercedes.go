@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -16,16 +17,16 @@ type Mercedes struct {
 }
 
 func init() {
-	registry.Add("mercedes", func(other map[string]any) (api.Vehicle, error) {
-		return newMercedesFromConfig("mercedes", other)
+	registry.AddCtx("mercedes", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newMercedesFromConfig(ctx, "mercedes", other)
 	})
-	registry.Add("smart-eq", func(other map[string]any) (api.Vehicle, error) {
-		return newMercedesFromConfig("smart-eq", other)
+	registry.AddCtx("smart-eq", func(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+		return newMercedesFromConfig(ctx, "smart-eq", other)
 	})
 }
 
 // newMercedesFromConfig creates a new vehicle
-func newMercedesFromConfig(brand string, other map[string]any) (api.Vehicle, error) {
+func newMercedesFromConfig(ctx context.Context, brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		Tokens   Tokens
@@ -51,7 +52,7 @@ func newMercedesFromConfig(brand string, other map[string]any) (api.Vehicle, err
 		cc.User = cc.Account_
 	}
 
-	log := util.NewLogger(brand).Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	log := util.LoggerFromContext(ctx, brand).Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	identity, err := mercedes.NewIdentity(log, token, cc.User, cc.Region)
 	if err != nil {
 		return nil, err

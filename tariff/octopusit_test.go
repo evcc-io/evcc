@@ -16,7 +16,7 @@ func TestOctopusItConfigParse(t *testing.T) {
 		"accountNumber": "A-12345678",
 	}
 
-	tariff, err := buildOctopusItFromConfig(validConfig)
+	tariff, err := buildOctopusItFromConfig(t.Context(), validConfig)
 	require.NoError(t, err)
 	require.NotNil(t, tariff)
 
@@ -24,7 +24,7 @@ func TestOctopusItConfigParse(t *testing.T) {
 		"password":      "testpassword",
 		"accountNumber": "A-12345678",
 	}
-	_, err = buildOctopusItFromConfig(missingEmailConfig)
+	_, err = buildOctopusItFromConfig(t.Context(), missingEmailConfig)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "missing email")
 
@@ -32,7 +32,7 @@ func TestOctopusItConfigParse(t *testing.T) {
 		"email":         "test@example.com",
 		"accountNumber": "A-12345678",
 	}
-	_, err = buildOctopusItFromConfig(missingPasswordConfig)
+	_, err = buildOctopusItFromConfig(t.Context(), missingPasswordConfig)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "missing password")
 
@@ -40,7 +40,7 @@ func TestOctopusItConfigParse(t *testing.T) {
 		"email":    "test@example.com",
 		"password": "testpassword",
 	}
-	_, err = buildOctopusItFromConfig(missingAccountNumberConfig)
+	_, err = buildOctopusItFromConfig(t.Context(), missingAccountNumberConfig)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "missing account number")
 }

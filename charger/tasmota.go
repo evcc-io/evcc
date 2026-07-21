@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,11 +23,11 @@ type Tasmota struct {
 }
 
 func init() {
-	registry.Add("tasmota", NewTasmotaFromConfig)
+	registry.AddCtx("tasmota", NewTasmotaFromConfig)
 }
 
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
-func NewTasmotaFromConfig(other map[string]any) (api.Charger, error) {
+func NewTasmotaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
