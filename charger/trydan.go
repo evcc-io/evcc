@@ -62,14 +62,14 @@ type RealTimeData struct {
 	VoltageMeasureL3   float64 `json:"VoltageMeasure_L3"`
 }
 
-// hasPhaseMeasurements reports whether the firmware populates per-phase current/voltage
-// (added in firmware 2.5.0). Older firmware omits these JSON fields, which unmarshal to
-// zero, indistinguishable from a real zero reading unless power is actually flowing.
-func (data RealTimeData) hasPhaseMeasurements() bool {
-	if data.ChargePower <= 0 {
-		return true
-	}
-	return data.IntensityMeasureL1+data.IntensityMeasureL2+data.IntensityMeasureL3 > 0
+// phaseMeasurementsUnavailable reports whether the firmware clearly does not populate
+// per-phase current/voltage: power is flowing but every phase current still reads zero,
+// which is physically impossible on firmware that actually reports these fields (added
+// in 2.5.0; older firmware just omits them, unmarshalling to zero). A zero reading while
+// idle is inconclusive either way, so it is not treated as unavailable.
+func (data RealTimeData) phaseMeasurementsUnavailable() bool {
+	return data.ChargePower > 0 &&
+		data.IntensityMeasureL1+data.IntensityMeasureL2+data.IntensityMeasureL3 == 0
 }
 
 // Trydan ChargeMode values
@@ -273,7 +273,7 @@ func (c Trydan) Currents() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if !data.hasPhaseMeasurements() {
+	if data.phaseMeasurementsUnavailable() {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 	return data.IntensityMeasureL1, data.IntensityMeasureL2, data.IntensityMeasureL3, nil
@@ -287,7 +287,7 @@ func (c Trydan) Voltages() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if !data.hasPhaseMeasurements() {
+	if data.phaseMeasurementsUnavailable() {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 	return data.VoltageMeasureL1, data.VoltageMeasureL2, data.VoltageMeasureL3, nil
