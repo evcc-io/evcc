@@ -82,10 +82,12 @@ const (
 // Trydan charger implementation
 type Trydan struct {
 	*request.Helper
-	uri     string
-	statusG util.Cacheable[RealTimeData]
-	current int
-	enabled bool
+	uri        string
+	statusG    util.Cacheable[RealTimeData]
+	current    int
+	enabled    bool
+	autoUnlock bool
+	wasLocked  bool
 }
 
 func init() {
@@ -95,8 +97,9 @@ func init() {
 // NewTrydanFromConfig creates a Trydan charger from generic config
 func NewTrydanFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		Cache time.Duration
+		URI        string
+		Cache      time.Duration
+		AutoUnlock bool
 	}{
 		Cache: time.Second,
 	}
@@ -109,18 +112,19 @@ func NewTrydanFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewTrydan(cc.URI, cc.Cache)
+	return NewTrydan(cc.URI, cc.Cache, cc.AutoUnlock)
 }
 
 // NewTrydan creates Trydan charger
-func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
+func NewTrydan(uri string, cache time.Duration, autoUnlock bool) (api.Charger, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
 	c := &Trydan{
-		Helper: request.NewHelper(util.NewLogger("trydan")),
-		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		Helper:     request.NewHelper(util.NewLogger("trydan")),
+		uri:        util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		autoUnlock: autoUnlock,
 	}
 
 	c.statusG = util.ResettableCached(func() (RealTimeData, error) {
@@ -173,7 +177,7 @@ func (c *Trydan) setValue(param string, value int) error {
 }
 
 // Enable implements the api.Charger interface
-func (c Trydan) Enable(enable bool) error {
+func (c *Trydan) Enable(enable bool) error {
 	var pause, pauseDynamic int
 	if !enable {
 		pause = 1
@@ -181,19 +185,41 @@ func (c Trydan) Enable(enable bool) error {
 		pauseDynamic = 1
 	}
 
-	// Locked disables the EVSE entirely and is independent of Paused; it must not
-	// be toggled here, or the charger resets its session energy/time counters.
+	data, err := c.statusG.Get()
+	if err != nil {
+		return err
+	}
+
+	// Locked disables the EVSE entirely and is independent of Paused; it must not be
+	// coupled to Paused here, or the charger resets its session energy/time counters.
+	// It may still be locked by the owner (manually, or via V2C's autolock feature) for
+	// security reasons (e.g. public installations). Opt-in via autoUnlock: unlock only
+	// when we actually need to start charging, and only re-lock afterwards if we're the
+	// ones who unlocked it - this way we never override a lock state the owner set
+	// independently of evcc. Left off by default since unlocking releases the physical
+	// cable latch on some vehicles (e.g. Tesla), which some setups already handle via
+	// their own means (e.g. phone-proximity autolock) and don't want evcc to duplicate.
+	if c.autoUnlock {
+		switch {
+		case enable && data.Locked == 1:
+			if err := c.setValue("Locked", 0); err != nil {
+				return err
+			}
+			c.wasLocked = true
+		case !enable && c.wasLocked:
+			if err := c.setValue("Locked", 1); err != nil {
+				return err
+			}
+			c.wasLocked = false
+		}
+	}
+
 	if err := c.setValue("Paused", pause); err != nil {
 		return err
 	}
 	// Pause/Unpause Dynamic Power Control if enabled.
 	// This is needed to let EVCC taking over charging power control.
 	// Charger will stop returning power readings if 'Dynamic' is disabled.
-	data, err := c.statusG.Get()
-	if err != nil {
-		return err
-	}
-
 	if data.Dynamic == 1 {
 		if err := c.setValue("PauseDynamic", pauseDynamic); err != nil {
 			// Pause V2C 'PauseDynamic' when EVCC charging is active and vice versa.
