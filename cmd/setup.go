@@ -327,18 +327,18 @@ func loggerForConfig(conf *config.Config, typ string) *util.Logger {
 	if t := conf.Title; t != "" && t != res {
 		res += "-" + t
 	}
-	log := util.NewLogger(res).With("device", typ)
+	log := util.NewLogger(res).With(util.DeviceKey, typ)
 	if conf.Title != "" {
-		log = log.With("title", conf.Title)
+		log = log.With(util.TitleKey, conf.Title)
 	}
 	return log
 }
 
 // loggerForDevice creates a logger with device kind and title attributes
 func loggerForDevice(name, typ string, other map[string]any) *util.Logger {
-	log := util.NewLogger(name).With("device", typ)
+	log := util.NewLogger(name).With(util.DeviceKey, typ)
 	if t, ok := other["title"].(string); ok && t != "" {
-		log = log.With("title", t)
+		log = log.With(util.TitleKey, t)
 	}
 	return log
 }

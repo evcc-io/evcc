@@ -196,7 +196,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	}
 
 	if lp.Title != "" {
-		lp.log = lp.log.With("title", lp.Title)
+		lp.log = lp.log.With(util.TitleKey, lp.Title)
 	}
 
 	// set vehicle polling mode

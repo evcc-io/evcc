@@ -34,6 +34,15 @@ var (
 // LogAreaPadding of log areas
 var LogAreaPadding = 6
 
+// Attribute keys for structured log entries
+const (
+	ComponentKey = "component" // core component: site, loadpoint
+	DeviceKey    = "device"    // device class: meter, charger, vehicle, tariff, circuit, messenger
+	TitleKey     = "title"     // user-facing title
+	IdKey        = "id"        // loadpoint id
+	TransportKey = "transport" // trace transport: http, mqtt, modbus
+)
+
 // Logger provides slog-based, leveled logging per log area. The printf-style
 // level loggers remain for legacy call sites; new code should prefer slog.
 type Logger struct {
@@ -52,7 +61,7 @@ func NewLogger(area string) *Logger {
 
 // NewLoggerWithLoadpoint creates a logger with reference to at loadpoint
 func NewLoggerWithLoadpoint(area string, lp int) *Logger {
-	return newLogger(area, lp).With("component", "loadpoint", "id", lp)
+	return newLogger(area, lp).With(ComponentKey, "loadpoint", IdKey, lp)
 }
 
 func newLogger(area string, lp int) *Logger {
