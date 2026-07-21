@@ -75,9 +75,26 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 704:WMaxLimPctEna
-  curtailed:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value: 704:WMaxLimPctEna
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+      - name: ena
+        type: bool
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPctEna
+      - name: limit
+        type: float
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
   maxacpower: {{ .maxacpower }}
   {{- end }}
