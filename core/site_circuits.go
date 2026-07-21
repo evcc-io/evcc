@@ -56,7 +56,16 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
+// dimMeters applies the HEMS dim state to all dimmable aux and ext meters.
+// Devices are only queried when the state changes or after a failed attempt.
 func (site *Site) dimMeters(dim bool) error {
+	if site.dimmed != nil && *site.dimmed == dim {
+		return nil
+	}
+
+	// invalidate until successfully applied
+	site.dimmed = nil
+
 	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
 		m, ok := api.Cap[api.Dimmer](dev.Instance())
@@ -82,13 +91,22 @@ func (site *Site) dimMeters(dim bool) error {
 		}
 	}
 
+	if errs == nil {
+		site.dimmed = &dim
+	}
+
 	return errs
 }
 
+// curtailPV applies the HEMS curtailment percent to all curtailable pv meters.
+// Devices are only queried when the percent changes or after a failed attempt.
 func (site *Site) curtailPV(percent *int) error {
-	if percent == nil {
+	if percent == nil || site.curtailPercent != nil && *site.curtailPercent == *percent {
 		return nil
 	}
+
+	// invalidate until successfully applied
+	site.curtailPercent = nil
 
 	var errs error
 	for _, dev := range site.pvMeters {
@@ -113,6 +131,10 @@ func (site *Site) curtailPV(percent *int) error {
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
 		}
+	}
+
+	if errs == nil {
+		site.curtailPercent = new(*percent)
 	}
 
 	return errs
