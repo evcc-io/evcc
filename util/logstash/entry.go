@@ -3,13 +3,12 @@ package logstash
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"maps"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
-
-	"log/slog"
 )
 
 // Entry is a single structured log record
