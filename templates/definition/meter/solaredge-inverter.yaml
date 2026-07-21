@@ -4,6 +4,7 @@ products:
     description:
       de: Wechselrichter
       en: Inverter
+capabilities: ["curtail"]
 requirements:
   description:
     de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
@@ -11,6 +12,13 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv"]
+  - name: curtail
+    type: bool
+    advanced: true
+    description:
+      de: Aktiviert die Einspeisebegrenzung
+      en: Enables feed-in limitation
+    usages: ["pv"]
   - name: modbus
     choice: ["tcpip", "rs485"]
     id: 1
@@ -127,4 +135,45 @@ render: |
       value:
         - 101:AphC
         - 103:AphC
+  {{- if .curtail }}
+  curtail:
+    source: sequence
+    set:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 61441 # Active Power Limit (%)
+          type: writesingle
+          encoding: uint16
+      - source: const
+        value: 1
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 61696 # Commit Power Control Settings
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 61441 # Active Power Limit (%)
+            type: holding
+            decode: uint16
+    script: |
+      percent := int(limit)
+      if percent < 0 {
+        percent = 0
+      }
+      if percent > 100 {
+        percent = 100
+      }
+      percent
+  {{- end }}
   {{- end }}

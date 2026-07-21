@@ -3,7 +3,9 @@ products:
   - brand: SolarEdge
     description:
       generic: Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities:
+  - battery-control
+  - curtail
 requirements:
   description:
     de: |
@@ -20,6 +22,13 @@ params:
     id: 1
     port: 1502
   - name: maxacpower
+  - name: curtail
+    type: bool
+    advanced: true
+    description:
+      de: Aktiviert die Einspeisebegrenzung
+      en: Enables feed-in limitation
+    usages: ["pv"]
   - preset: battery-params
   - name: maxdischargepower
     default: 5000
@@ -106,6 +115,87 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
+
+  {{- if .curtail }}
+  curtail:
+    source: sequence
+    set:
+      - source: switch
+        switch:
+          - case: 100
+            set:
+              source: const
+              value: 0 # Disabled
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 57344 # Export Control Mode
+                  type: writesingle
+                  encoding: uint16
+        default:
+          source: const
+          value: 1 # Export Control using Import/Export Meter
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 57344 # Export Control Mode
+              type: writesingle
+              encoding: uint16
+      - source: const
+        value: 0 # Total
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57345 # Export Control Limit Mode
+            type: writesingle
+            encoding: uint16
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 57346 # Export Control Site Limit
+          type: writemultiple
+          encoding: float32s
+        scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+
+  curtailed:
+    source: go
+    in:
+      - name: mode
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57344 # Export Control Mode
+            type: holding
+            decode: uint16
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57346 # Export Control Site Limit
+            type: holding
+            decode: float32s
+    script: |
+      percent := 100.0
+      if mode&1 != 0 {
+        percent = limit * 100 / {{ .maxacpower }}
+      }
+      p := int(percent + 0.5)
+      if p < 0 {
+        p = 0
+      }
+      if p > 100 {
+        p = 100
+      }
+      p
+  {{- end }}
+
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -113,7 +203,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0xE174 # Battery 1 Instantaneous Power
+      address: 57716 # Battery 1 Instantaneous Power
       type: holding
       decode: float32nans
     scale: -1
@@ -121,14 +211,14 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0xE184 # Battery 1 State of Energy (SOE)
+      address: 57732 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32nans
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0xE176 # Battery 1 Lifetime Export Energy Counter (discharged)
+      address: 57718 # Battery 1 Lifetime Export Energy Counter (discharged)
       type: holding
       decode: uint64snan
     scale: 0.001
@@ -136,7 +226,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0xE17A # Battery 1 Lifetime Import Energy Counter (charged)
+      address: 57722 # Battery 1 Lifetime Import Energy Counter (charged)
       type: holding
       decode: uint64snan
     scale: 0.001
@@ -157,7 +247,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                address: 57357 # StorageRemoteCtrl_CommandMode
                 type: writesingle
                 encoding: uint16
           - source: const
@@ -166,7 +256,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                address: 57360 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
       - case: 2 # hold
