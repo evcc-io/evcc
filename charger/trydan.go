@@ -62,6 +62,16 @@ type RealTimeData struct {
 	VoltageMeasureL3   float64 `json:"VoltageMeasure_L3"`
 }
 
+// hasPhaseMeasurements reports whether the firmware populates per-phase current/voltage
+// (added in firmware 2.5.0). Older firmware omits these JSON fields, which unmarshal to
+// zero, indistinguishable from a real zero reading unless power is actually flowing.
+func (data RealTimeData) hasPhaseMeasurements() bool {
+	if data.ChargePower <= 0 {
+		return true
+	}
+	return data.IntensityMeasureL1+data.IntensityMeasureL2+data.IntensityMeasureL3 > 0
+}
+
 // Trydan ChargeMode values
 const (
 	trydanChargeModeMono  = 0
@@ -260,7 +270,13 @@ var _ api.PhaseCurrents = (*Trydan)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (c Trydan) Currents() (float64, float64, float64, error) {
 	data, err := c.statusG.Get()
-	return data.IntensityMeasureL1, data.IntensityMeasureL2, data.IntensityMeasureL3, err
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if !data.hasPhaseMeasurements() {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	return data.IntensityMeasureL1, data.IntensityMeasureL2, data.IntensityMeasureL3, nil
 }
 
 var _ api.PhaseVoltages = (*Trydan)(nil)
@@ -268,7 +284,13 @@ var _ api.PhaseVoltages = (*Trydan)(nil)
 // Voltages implements the api.PhaseVoltages interface
 func (c Trydan) Voltages() (float64, float64, float64, error) {
 	data, err := c.statusG.Get()
-	return data.VoltageMeasureL1, data.VoltageMeasureL2, data.VoltageMeasureL3, err
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if !data.hasPhaseMeasurements() {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	return data.VoltageMeasureL1, data.VoltageMeasureL2, data.VoltageMeasureL3, nil
 }
 
 var _ api.Diagnosis = (*Trydan)(nil)
