@@ -92,7 +92,7 @@ func NewEgo(ctx context.Context, embed *embed, uri string, slaveID uint8) (api.C
 	}
 
 	log := util.NewLogger("ego")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Ego{
 		embed: embed,

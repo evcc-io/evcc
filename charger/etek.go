@@ -120,7 +120,7 @@ func NewEtek(ctx context.Context, uri, device, comset string, baudrate int, prot
 	}
 
 	log := util.NewLogger("etek")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Etek{
 		Caps: implement.New(),

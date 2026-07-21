@@ -88,7 +88,7 @@ func NewVoltie(ctx context.Context, uri string, slaveID uint8) (*Voltie, error) 
 	}
 
 	log := util.NewLogger("voltie")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Voltie{
 		conn: conn,

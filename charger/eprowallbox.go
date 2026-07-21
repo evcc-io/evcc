@@ -71,7 +71,7 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 	}
 
 	log := util.NewLogger("eprowallbox")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &EProWallbox{
 		conn: conn,

@@ -88,7 +88,7 @@ func NewAlpitronicHYC(ctx context.Context, uri string, id uint8, connector uint1
 	}
 
 	log := util.NewLogger("alpitronic")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &AlpitronicHYC{
 		log:       log,

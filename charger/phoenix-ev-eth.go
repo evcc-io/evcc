@@ -94,7 +94,7 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8, milliCurren
 	}
 
 	log := util.NewLogger("ev-eth")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &PhoenixEVEth{
 		Caps: implement.New(),

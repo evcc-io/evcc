@@ -94,7 +94,7 @@ func NewEtrel(ctx context.Context, uri string, id uint8, connector int) (*Etrel,
 	}
 
 	log := util.NewLogger("etrel")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Etrel{
 		log:     log,

@@ -85,7 +85,7 @@ func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slave
 	}
 
 	log := util.NewLogger("kse")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &KSE{
 		Caps: implement.New(),

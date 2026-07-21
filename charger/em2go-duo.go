@@ -92,7 +92,7 @@ func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) 
 	conn.Delay(60 * time.Millisecond)
 
 	log := util.NewLogger("em2go-duo")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Em2GoDuo{
 		log:       log,

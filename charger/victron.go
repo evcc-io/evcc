@@ -109,7 +109,7 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 	}
 
 	log := util.NewLogger("victron")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Victron{
 		Caps: implement.New(),

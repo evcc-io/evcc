@@ -73,7 +73,7 @@ func NewAlphatec(ctx context.Context, uri, device, comset string, baudrate int, 
 	}
 
 	log := util.NewLogger("alphatec")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Alphatec{
 		conn: conn,

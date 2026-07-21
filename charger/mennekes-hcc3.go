@@ -79,7 +79,7 @@ func NewMennekesHcc3(ctx context.Context, uri string, slaveID uint8) (api.Charge
 	}
 
 	log := util.NewLogger("mennekes-hcc3")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &MennekesHcc3{
 		conn: conn,

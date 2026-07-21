@@ -71,7 +71,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 	conn.ConnectDelay(cc.ConnectDelay)
 
 	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("modbus"))
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	if err := cc.Register.Error(); err != nil {
 		return nil, err

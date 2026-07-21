@@ -121,7 +121,7 @@ func NewAmbibox(ctx context.Context, uri string, id uint8, connector int) (*Ambi
 	}
 
 	log := util.NewLogger("ambibox")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Ambibox{
 		log:         log,

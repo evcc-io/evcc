@@ -105,7 +105,7 @@ func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrat
 	}
 
 	log := util.NewLogger("mennekes")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &MennekesCompact{
 		Caps: implement.New(),

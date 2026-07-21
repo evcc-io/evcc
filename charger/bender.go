@@ -124,7 +124,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	}
 
 	log := util.NewLogger("bender")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &BenderCC{
 		Caps:    implement.New(),

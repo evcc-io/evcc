@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
 )
 
@@ -20,8 +21,9 @@ func (c *Connection) Addr() string {
 	return fmt.Sprintf("%s::%d", c.Connection.String(), c.slaveID)
 }
 
-func (c *Connection) Logger(logger meters.Logger) {
-	c.logical = logger
+// Logger sets the tracing logger; traces carry the modbus transport attribute
+func (c *Connection) Logger(log *util.Logger) {
+	c.logical = log.With("transport", "modbus").TRACE
 }
 
 func (c *Connection) Delay(delay time.Duration) {

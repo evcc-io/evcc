@@ -111,7 +111,7 @@ func NewDelta(ctx context.Context, uri, device, comset string, baudrate int, pro
 	}
 
 	log := util.NewLogger("delta")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Delta{
 		log:  log,

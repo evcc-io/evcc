@@ -86,7 +86,7 @@ func NewPrachtAlpha(ctx context.Context, uri, device, comset string, baudrate in
 	}
 
 	log := util.NewLogger("pracht")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &PrachtAlpha{
 		conn:    conn,

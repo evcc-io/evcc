@@ -93,7 +93,7 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 	}
 
 	log := util.NewLogger("charx")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &PhoenixCharx{
 		Caps:      implement.New(),

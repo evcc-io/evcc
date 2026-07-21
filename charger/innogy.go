@@ -94,7 +94,7 @@ func NewInnogy(ctx context.Context, uri string, id uint8) (*Innogy, error) {
 	}
 
 	log := util.NewLogger("innogy")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Innogy{
 		Caps: implement.New(),

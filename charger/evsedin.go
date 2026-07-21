@@ -57,7 +57,7 @@ func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, p
 		return nil, err
 	}
 
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 	conn.Delay(200 * time.Millisecond)
 
 	evse := &EvseDIN{

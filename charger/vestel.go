@@ -96,7 +96,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 
 	log := util.NewLogger("vestel")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Vestel{
 		Caps:    implement.New(),

@@ -114,7 +114,7 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 	}
 
 	log := util.NewLogger("abl")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &ABLeMH{
 		Caps: implement.New(),

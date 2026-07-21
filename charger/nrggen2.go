@@ -113,7 +113,7 @@ func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen
 	}
 
 	log := util.NewLogger("nrggen2")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	nrg := &NRGKickGen2{
 		Caps: implement.New(),

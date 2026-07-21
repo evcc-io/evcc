@@ -72,7 +72,7 @@ func NewSigenergy(ctx context.Context, uri string, slaveID uint8) (*Sigenergy, e
 	}
 
 	log := util.NewLogger("sigenergy")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Sigenergy{
 		log:  log,

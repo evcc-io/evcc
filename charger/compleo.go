@@ -91,7 +91,7 @@ func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16
 	}
 
 	log := util.NewLogger("compleo")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	b, err := conn.ReadInputRegisters(compleoRegConnectors, 1)
 	if err != nil {

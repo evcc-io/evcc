@@ -187,7 +187,7 @@ func NewKathrein(ctx context.Context, uri string, id uint8) (*Kathrein, error) {
 	}
 
 	log := util.NewLogger("kathrein")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Kathrein{
 		log:  log,

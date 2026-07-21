@@ -73,7 +73,7 @@ func NewRaedian(ctx context.Context, uri, device, comset string, baudrate int, p
 	}
 
 	log := util.NewLogger("raedian")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Raedian{
 		log:  log,

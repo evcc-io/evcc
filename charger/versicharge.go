@@ -84,7 +84,7 @@ func NewVersicharge(ctx context.Context, uri string, id uint8) (*Versicharge, er
 	}
 
 	log := util.NewLogger("versicharge")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Versicharge{
 		conn: conn,

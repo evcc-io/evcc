@@ -116,7 +116,7 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource in
 	}
 
 	log := util.NewLogger(name)
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &MyPv{
 		log:     log,

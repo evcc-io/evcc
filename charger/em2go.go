@@ -101,7 +101,7 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	conn.Delay(60 * time.Millisecond)
 
 	log := util.NewLogger("em2go")
-	conn.Logger(log.TRACE)
+	conn.Logger(log)
 
 	wb := &Em2Go{
 		Caps:    implement.New(),
