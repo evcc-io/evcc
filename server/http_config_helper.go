@@ -441,8 +441,9 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Curtailer](instance); ok {
 			makeResult("curtailable", true, nil)
+			// only reported while actually curtailing
 			if val, err := dev.CurtailedPercent(); err != nil || val < 100 {
-				makeResult("curtailed", true, err)
+				makeResult("curtailed", val, err)
 			}
 		}
 	})
