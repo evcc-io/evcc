@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 )
 
@@ -13,7 +14,7 @@ type Connection struct {
 	*logger
 	meters.Connection
 	slaveID uint8 // duplicated from meters.Connection
-	logical meters.Logger
+	logical *util.Logger
 	delay   time.Duration
 }
 
@@ -23,7 +24,7 @@ func (c *Connection) Addr() string {
 
 // Logger sets the tracing logger; traces carry the modbus transport attribute
 func (c *Connection) Logger(log *util.Logger) {
-	c.logical = log.With("transport", "modbus").TRACE
+	c.logical = log.With("transport", "modbus")
 }
 
 func (c *Connection) Delay(delay time.Duration) {
@@ -53,7 +54,12 @@ func (c *Connection) Timeout(timeout time.Duration) {
 }
 
 func (c *Connection) exec(fun func() ([]byte, error)) ([]byte, error) {
-	return c.WithLogger(c.logical, func() ([]byte, error) {
+	var trace modbus.Logger
+	if c.logical != nil {
+		trace = c.logical.TRACE
+	}
+
+	return c.WithLogger(trace, func() ([]byte, error) {
 		time.Sleep(c.delay)
 
 		b, err := fun()
