@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -49,22 +48,22 @@ func TestCurtailPVCache(t *testing.T) {
 	m := &curtailableMeter{percent: 100}
 	site := curtailSite(m)
 
-	require.NoError(t, site.curtailPV(lo.ToPtr(60)))
+	require.NoError(t, site.curtailPV(new(60)))
 	assert.Equal(t, []int{60}, m.setCalls)
 	assert.Equal(t, 1, m.gets)
 
 	// unchanged: device is not queried again
 	for range 3 {
-		require.NoError(t, site.curtailPV(lo.ToPtr(60)))
+		require.NoError(t, site.curtailPV(new(60)))
 	}
 	assert.Equal(t, []int{60}, m.setCalls)
 	assert.Equal(t, 1, m.gets)
 
 	// changed: applied again. A bool device state could not distinguish 60 from 30
-	require.NoError(t, site.curtailPV(lo.ToPtr(30)))
+	require.NoError(t, site.curtailPV(new(30)))
 	assert.Equal(t, []int{60, 30}, m.setCalls)
 
-	require.NoError(t, site.curtailPV(lo.ToPtr(100)))
+	require.NoError(t, site.curtailPV(new(100)))
 	assert.Equal(t, []int{60, 30, 100}, m.setCalls)
 }
 
@@ -73,13 +72,13 @@ func TestCurtailPVCacheRetriesAfterError(t *testing.T) {
 	m := &curtailableMeter{percent: 100, setErr: errors.New("nope")}
 	site := curtailSite(m)
 
-	require.Error(t, site.curtailPV(lo.ToPtr(60)))
-	require.Error(t, site.curtailPV(lo.ToPtr(60)))
+	require.Error(t, site.curtailPV(new(60)))
+	require.Error(t, site.curtailPV(new(60)))
 	assert.Equal(t, []int{60, 60}, m.setCalls)
 
 	m.setErr = nil
-	require.NoError(t, site.curtailPV(lo.ToPtr(60)))
-	require.NoError(t, site.curtailPV(lo.ToPtr(60)))
+	require.NoError(t, site.curtailPV(new(60)))
+	require.NoError(t, site.curtailPV(new(60)))
 	assert.Equal(t, []int{60, 60, 60}, m.setCalls)
 }
 
@@ -88,9 +87,9 @@ func TestCurtailPVNoStatement(t *testing.T) {
 	m := &curtailableMeter{percent: 100}
 	site := curtailSite(m)
 
-	require.NoError(t, site.curtailPV(lo.ToPtr(60)))
+	require.NoError(t, site.curtailPV(new(60)))
 	require.NoError(t, site.curtailPV(nil))
-	require.NoError(t, site.curtailPV(lo.ToPtr(60)))
+	require.NoError(t, site.curtailPV(new(60)))
 	assert.Equal(t, []int{60}, m.setCalls)
 }
 

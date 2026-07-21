@@ -134,7 +134,7 @@ func (site *Site) curtailPV(percent *int) error {
 	}
 
 	if errs == nil {
-		site.curtailPercent = lo.ToPtr(*percent)
+		site.curtailPercent = new(*percent)
 	}
 
 	return errs
