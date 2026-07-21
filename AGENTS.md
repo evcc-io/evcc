@@ -313,6 +313,16 @@ Structure PR descriptions in this order. No headlines. Be concise.
    - [ ] item b
    ```
 
-Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers, no generator footers.
+Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers.
 
 Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.
+
+## AI Attribution
+
+Work produced by an AI agent must be attributable as such on GitHub. Append the tool's attribution footer to every PR description, issue body, review, and comment written by an agent, for example:
+
+```
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+Commit messages are the exception: no footer, and no `Co-Authored-By` trailer. Never dress agent work up as human review (e.g. "PR by an agent but looks good to me") in place of the footer.
