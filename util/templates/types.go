@@ -324,6 +324,7 @@ type Product struct {
 	Brand        string       // product brand
 	Description  TextLanguage `json:",omitempty"` // product name
 	Capabilities []Capability `json:",omitempty"` // appended to template-level capabilities
+	Link         string       `json:",omitempty"` // integration provider link, overrides template-level link
 }
 
 // Title returns the product title in the given language

@@ -36,6 +36,17 @@
 					</template>
 				</TemplateSelector>
 
+				<a
+					v-if="productLink"
+					:href="productLink"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="d-inline-block mb-3"
+					data-testid="device-link"
+				>
+					{{ productLinkHost }}
+				</a>
+
 				<p v-if="showDeprecatedWarning" class="text-danger">
 					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
 				</p>
@@ -409,6 +420,18 @@ export default defineComponent({
 				return this.getProductName(this.values, this.templateName);
 			}
 			return this.values.deviceProduct || this.templateName || "";
+		},
+		productLink(): string | undefined {
+			const matching = this.products.filter((p) => p.template === this.templateName);
+			const product = matching.find((p) => p.name === this.productName) ?? matching[0];
+			return product?.link || this.template?.Link;
+		},
+		productLinkHost(): string {
+			try {
+				return new URL(this.productLink!).hostname.replace(/^www\./, "");
+			} catch {
+				return "";
+			}
 		},
 		sponsorTokenRequired() {
 			const requirements = this.template?.Requirements as any;
