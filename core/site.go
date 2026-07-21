@@ -75,6 +75,10 @@ type Site struct {
 	auxMeters      []config.Device[api.Meter] // Auxiliary meters
 	consumerMeters []config.Device[api.Meter] // Consumer meters
 
+	// last applied HEMS state, nil until applied or after a failed attempt
+	dimmed         *bool
+	curtailPercent *int
+
 	// battery settings
 	prioritySoc             float64  // prefer battery up to this Soc
 	bufferSoc               float64  // continue charging on battery above this Soc
