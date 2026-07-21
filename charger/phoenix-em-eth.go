@@ -69,7 +69,7 @@ func NewPhoenixEMEth(ctx context.Context, uri string, slaveID uint8) (*PhoenixEM
 		return nil, err
 	}
 
-	log := util.NewLogger("em-eth")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("em-eth"))
 	conn.Logger(log)
 
 	wb := &PhoenixEMEth{

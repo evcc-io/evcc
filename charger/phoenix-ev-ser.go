@@ -45,7 +45,7 @@ func NewPhoenixEVSer(ctx context.Context, uri, device, comset string, baudrate i
 		return nil, err
 	}
 
-	log := util.NewLogger("ev-ser")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("ev-ser"))
 	conn.Logger(log)
 
 	wb := &PhoenixEVSer{

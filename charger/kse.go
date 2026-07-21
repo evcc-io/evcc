@@ -84,7 +84,7 @@ func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slave
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("kse")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("kse"))
 	conn.Logger(log)
 
 	wb := &KSE{

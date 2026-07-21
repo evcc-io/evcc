@@ -46,7 +46,7 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 	}
 
 	t := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.ContextLoggerWithDefault(ctx, util.NewLogger("merged")),
 		primary:   primary,
 		secondary: secondary,
 	}

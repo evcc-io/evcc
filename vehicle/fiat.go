@@ -47,7 +47,7 @@ func NewFiatFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, 
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("fiat").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("fiat")).Redact(cc.User, cc.Password, cc.VIN)
 	identity := fiat.NewIdentity(log, ctx, cc.User, cc.Password)
 
 	err := identity.Login()

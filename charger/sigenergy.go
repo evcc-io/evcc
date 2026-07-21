@@ -71,7 +71,7 @@ func NewSigenergy(ctx context.Context, uri string, slaveID uint8) (*Sigenergy, e
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("sigenergy")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("sigenergy"))
 	conn.Logger(log)
 
 	wb := &Sigenergy{

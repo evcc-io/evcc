@@ -123,7 +123,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("bender")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("bender"))
 	conn.Logger(log)
 
 	wb := &BenderCC{

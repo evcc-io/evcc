@@ -90,7 +90,7 @@ func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("compleo")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("compleo"))
 	conn.Logger(log)
 
 	b, err := conn.ReadInputRegisters(compleoRegConnectors, 1)

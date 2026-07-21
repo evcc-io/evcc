@@ -36,7 +36,7 @@ func NewTessieFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	log := util.NewLogger("tessie")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("tessie"))
 
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cc.Token})
 	oauthClient := oauth2.NewClient(ctx, tokenSource)

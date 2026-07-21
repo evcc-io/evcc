@@ -93,7 +93,7 @@ func NewEtrel(ctx context.Context, uri string, id uint8, connector int) (*Etrel,
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("etrel")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("etrel"))
 	conn.Logger(log)
 
 	wb := &Etrel{

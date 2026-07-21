@@ -85,7 +85,7 @@ func NewSchneiderV3(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("schneider")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("schneider"))
 	conn.Logger(log)
 
 	wb := &Schneider{

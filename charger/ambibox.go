@@ -120,7 +120,7 @@ func NewAmbibox(ctx context.Context, uri string, id uint8, connector int) (*Ambi
 		return nil, err
 	}
 
-	log := util.NewLogger("ambibox")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("ambibox"))
 	conn.Logger(log)
 
 	wb := &Ambibox{

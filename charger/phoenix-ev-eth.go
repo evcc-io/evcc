@@ -93,7 +93,7 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8, milliCurren
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("ev-eth")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("ev-eth"))
 	conn.Logger(log)
 
 	wb := &PhoenixEVEth{

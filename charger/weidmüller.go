@@ -83,7 +83,7 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("weidmüller")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("weidmüller"))
 	conn.Logger(log)
 
 	wb := &Weidmüller{

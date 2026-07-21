@@ -87,7 +87,7 @@ func NewSungrow(ctx context.Context, uri, device, comset string, baudrate int, p
 		return nil, err
 	}
 
-	log := util.NewLogger("sungrow")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("sungrow"))
 	conn.Logger(log)
 
 	wb := &Sungrow{

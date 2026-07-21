@@ -186,7 +186,7 @@ func NewKathrein(ctx context.Context, uri string, id uint8) (*Kathrein, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("kathrein")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("kathrein"))
 	conn.Logger(log)
 
 	wb := &Kathrein{

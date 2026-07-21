@@ -91,7 +91,7 @@ func NewEgo(ctx context.Context, embed *embed, uri string, slaveID uint8) (api.C
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("ego")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("ego"))
 	conn.Logger(log)
 
 	wb := &Ego{

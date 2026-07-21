@@ -93,7 +93,7 @@ func NewInnogy(ctx context.Context, uri string, id uint8) (*Innogy, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("innogy")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("innogy"))
 	conn.Logger(log)
 
 	wb := &Innogy{

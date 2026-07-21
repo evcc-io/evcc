@@ -84,7 +84,7 @@ func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate i
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("heidel")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("heidel"))
 	conn.Logger(log)
 
 	wb := &HeidelbergEC{

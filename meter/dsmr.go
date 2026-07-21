@@ -72,7 +72,7 @@ func NewDsmrFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 func NewDsmr(ctx context.Context, uri string, timeout time.Duration) (api.Meter, error) {
 	dial := dsmrDialer(ctx, uri)
 
-	m, err := newDsmr(ctx, util.NewLogger("dsmr"), dial, timeout)
+	m, err := newDsmr(ctx, util.ContextLoggerWithDefault(ctx, util.NewLogger("dsmr")), dial, timeout)
 	if err != nil {
 		return nil, err
 	}

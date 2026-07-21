@@ -44,7 +44,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Vehicle
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("tibber").Redact(cc.ClientID, cc.ClientSecret)
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("tibber")).Redact(cc.ClientID, cc.ClientSecret)
 
 	authCtx := util.WithLogger(context.Background(), log)
 	ts, err := tibber.NewOAuth(authCtx, cc.ClientID, cc.ClientSecret, cc.RedirectURI, cc.embed.GetTitle())

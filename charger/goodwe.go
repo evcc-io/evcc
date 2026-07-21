@@ -97,7 +97,7 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("goodwe")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("goodwe"))
 	conn.Logger(log)
 
 	// defaults if hardware capability registers can't be read:

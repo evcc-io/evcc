@@ -87,7 +87,7 @@ func NewAlpitronicHYC(ctx context.Context, uri string, id uint8, connector uint1
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alpitronic")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("alpitronic"))
 	conn.Logger(log)
 
 	wb := &AlpitronicHYC{

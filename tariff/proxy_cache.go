@@ -68,7 +68,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	}
 
 	if data != nil {
-		log := util.NewLogger("tariff")
+		log := util.ContextLoggerWithDefault(ctx, util.NewLogger("tariff"))
 		log.DEBUG.Printf("using cache: %s (start: %s, end: %s)", p.key,
 			data.Rates[0].Start.Local(), data.Rates[len(data.Rates)-1].End.Local(),
 		)

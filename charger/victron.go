@@ -108,7 +108,7 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, err
 	}
 
-	log := util.NewLogger("victron")
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("victron"))
 	conn.Logger(log)
 
 	wb := &Victron{
