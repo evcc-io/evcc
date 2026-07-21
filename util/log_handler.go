@@ -3,12 +3,28 @@ package util
 import (
 	"context"
 	"log/slog"
+	"maps"
 	"os"
 	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/logstash"
 )
+
+// slogOutput switches stdout to the slog default text format (opt-in via SLOG=1)
+var slogOutput = os.Getenv("SLOG") != ""
+
+var textHandler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	Level: logstash.LevelTrace,
+	ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.LevelKey {
+			if l, ok := a.Value.Any().(slog.Level); ok {
+				a.Value = slog.StringValue(logstash.LevelString(l))
+			}
+		}
+		return a
+	},
+})
 
 // handler implements slog.Handler. It applies redaction and fans out structured
 // records to stdout (gated by area level), the logstash ring and the ui (warn+).
@@ -86,7 +102,7 @@ func (h *handler) redact(s string) string {
 	return string(h.redactor.redacted([]byte(s)))
 }
 
-func (h *handler) Handle(_ context.Context, r slog.Record) error {
+func (h *handler) Handle(ctx context.Context, r slog.Record) error {
 	var attrs map[string]string
 	addAttr := func(a slog.Attr) {
 		if a.Equal(slog.Attr{}) {
@@ -125,7 +141,17 @@ func (h *handler) Handle(_ context.Context, r slog.Record) error {
 	}
 
 	if r.Level >= h.level.Level() {
-		if _, err := os.Stdout.Write([]byte(e.String())); err != nil {
+		if slogOutput {
+			rr := slog.NewRecord(r.Time, r.Level, e.Message, 0)
+			rr.AddAttrs(slog.String("area", h.area))
+			for _, k := range slices.Sorted(maps.Keys(e.Attrs)) {
+				rr.AddAttrs(slog.String(k, e.Attrs[k]))
+			}
+
+			if err := textHandler.Handle(ctx, rr); err != nil {
+				return err
+			}
+		} else if _, err := os.Stdout.Write([]byte(e.String())); err != nil {
 			return err
 		}
 	}
