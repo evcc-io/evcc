@@ -435,10 +435,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/Mode"
+                $ref: "#/components/schemas/Mode"
   /loadpoints/{id}/phases/{phases}:
     post:
       operationId: setLoadpointPhases
@@ -473,15 +470,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    allOf:
-                      - type: object
-                        properties:
-                          planId:
-                            $ref: "#/components/schemas/Id"
-                      - $ref: "#/components/schemas/PlanRates"
+                allOf:
+                  - type: object
+                    properties:
+                      planId:
+                        $ref: "#/components/schemas/Id"
+                  - $ref: "#/components/schemas/PlanRates"
   /loadpoints/{id}/plan/energy:
     delete:
       operationId: deleteLoadpointEnergyPlan
@@ -515,10 +509,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/StaticEnergyPlan"
+                $ref: "#/components/schemas/StaticEnergyPlan"
   /loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}:
     get:
       operationId: previewLoadpointRepeatingPlan
@@ -587,15 +578,12 @@ paths:
             schema:
               $ref: "#/components/schemas/PlanStrategy"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/PlanStrategy"
+                $ref: "#/components/schemas/PlanStrategy"
   /loadpoints/{id}/priority/{priority}:
     post:
       operationId: setLoadpointPriority
@@ -719,11 +707,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      vehicle:
-                        $ref: "#/components/schemas/VehicleTitle"
+                  vehicle:
+                    $ref: "#/components/schemas/VehicleTitle"
   /prioritysoc/{soc}:
     post:
       operationId: setPrioritySoc
@@ -851,10 +836,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/GridSessions"
+                $ref: "#/components/schemas/GridSessions"
             text/csv:
               schema:
                 description: Download csv-file
@@ -903,10 +885,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/ChargingSessions"
+                $ref: "#/components/schemas/ChargingSessions"
             text/csv:
               schema:
                 description: Download csv-file
@@ -978,10 +957,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/State"
+                $ref: "#/components/schemas/State"
   /system/log:
     get:
       operationId: getSystemLogs
@@ -1016,12 +992,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: array
-                    items:
-                      type: string
+                type: array
+                items:
+                  type: string
             text/plain:
               schema:
                 description: Download txt-file
@@ -1045,10 +1018,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/LogAreas"
+                $ref: "#/components/schemas/LogAreas"
         "401":
           $ref: "#/components/responses/Unauthorized"
   /system/cache:
@@ -1111,11 +1081,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      rates:
-                        $ref: "#/components/schemas/Rates"
+                  rates:
+                    $ref: "#/components/schemas/Rates"
         "404":
           description: Tariff not defined
   /vehicles/{name}/limitsoc/{soc}:
@@ -1209,12 +1176,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/RepeatingPlan"
+                type: array
+                items:
+                  $ref: "#/components/schemas/RepeatingPlan"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan
@@ -1250,13 +1214,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      soc:
-                        $ref: "#/components/schemas/Soc"
-                      time:
-                        $ref: "#/components/schemas/Timestamp"
+                  soc:
+                    $ref: "#/components/schemas/Soc"
+                  time:
+                    $ref: "#/components/schemas/Timestamp"
   /vehicles/{name}/plan/strategy:
     post:
       operationId: setVehiclePlanStrategy
@@ -1275,15 +1236,12 @@ paths:
             schema:
               $ref: "#/components/schemas/PlanStrategy"
       responses:
-        200:
+        "200":
           description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/PlanStrategy"
+                $ref: "#/components/schemas/PlanStrategy"
   /db/backup:
     get:
       operationId: downloadBackup
@@ -1916,28 +1874,19 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: integer
+            type: integer
     NumberResult:
       description: Success - Number result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: number
+            type: number
     IntegerResult:
       description: Success - Integer result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: integer
+            type: integer
     SocResult:
       description: Success - Soc result
       content:
@@ -1945,40 +1894,28 @@ components:
           schema:
             type: object
             properties:
-              result:
-                type: object
-                properties:
-                  soc:
-                    $ref: "#/components/schemas/Soc"
+              soc:
+                $ref: "#/components/schemas/Soc"
     PlanRatesResult:
       description: Success - PlanRates result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                $ref: "#/components/schemas/PlanRates"
+            $ref: "#/components/schemas/PlanRates"
     BooleanResult:
       description: Success - Boolean result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: boolean
+            type: boolean
     NullResult:
       description: Success - Null result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                description: Value is always null
-                nullable: true
-                type: "object"
+            description: Value is always null
+            nullable: true
+            type: "object"
     BlankResponse:
       description: Success - Blank response
     SuccessResult:
@@ -1986,11 +1923,8 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: string
-                example: "OK"
+            type: string
+            example: "OK"
     EmptyResult:
       description: Success - Empty result
       content:
@@ -2010,13 +1944,10 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: integer
-                description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
-                minimum: 0
-                maximum: 4
+            type: integer
+            description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
+            minimum: 0
+            maximum: 4
   securitySchemes:
     cookieAuth:
       type: apiKey

@@ -199,15 +199,10 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
-                  "maximum": 4,
-                  "minimum": 0,
-                  "type": "integer"
-                }
-              },
-              "type": "object"
+              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+              "maximum": 4,
+              "minimum": 0,
+              "type": "integer"
             }
           }
         },
@@ -220,12 +215,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "boolean"
-                }
-              },
-              "type": "object"
+              "type": "boolean"
             }
           }
         },
@@ -245,12 +235,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "integer"
-                }
-              },
-              "type": "object"
+              "type": "integer"
             }
           }
         },
@@ -260,12 +245,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "integer"
-                }
-              },
-              "type": "object"
+              "type": "integer"
             }
           }
         },
@@ -275,13 +255,8 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "description": "Value is always null",
-                  "nullable": true,
-                  "type": "object"
-                }
-              },
+              "description": "Value is always null",
+              "nullable": true,
               "type": "object"
             }
           }
@@ -292,12 +267,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "type": "number"
-                }
-              },
-              "type": "object"
+              "type": "number"
             }
           }
         },
@@ -307,12 +277,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "$ref": "#/components/schemas/PlanRates"
-                }
-              },
-              "type": "object"
+              "$ref": "#/components/schemas/PlanRates"
             }
           }
         },
@@ -323,13 +288,8 @@
           "application/json": {
             "schema": {
               "properties": {
-                "result": {
-                  "properties": {
-                    "soc": {
-                      "$ref": "#/components/schemas/Soc"
-                    }
-                  },
-                  "type": "object"
+                "soc": {
+                  "$ref": "#/components/schemas/Soc"
                 }
               },
               "type": "object"
@@ -342,13 +302,8 @@
         "content": {
           "application/json": {
             "schema": {
-              "properties": {
-                "result": {
-                  "example": "OK",
-                  "type": "string"
-                }
-              },
-              "type": "object"
+              "example": "OK",
+              "type": "string"
             }
           }
         },
@@ -1331,12 +1286,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/GridSessions"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/GridSessions"
                 }
               },
               "text/csv": {
@@ -1788,12 +1738,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/Mode"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/Mode"
                 }
               }
             },
@@ -1852,24 +1797,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "allOf": [
-                        {
-                          "properties": {
-                            "planId": {
-                              "$ref": "#/components/schemas/Id"
-                            }
-                          },
-                          "type": "object"
-                        },
-                        {
-                          "$ref": "#/components/schemas/PlanRates"
+                  "allOf": [
+                    {
+                      "properties": {
+                        "planId": {
+                          "$ref": "#/components/schemas/Id"
                         }
-                      ]
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PlanRates"
                     }
-                  },
-                  "type": "object"
+                  ]
                 }
               }
             },
@@ -1928,12 +1868,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/StaticEnergyPlan"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/StaticEnergyPlan"
                 }
               }
             },
@@ -2066,12 +2001,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/PlanStrategy"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/PlanStrategy"
                 }
               }
             },
@@ -2275,13 +2205,8 @@
               "application/json": {
                 "schema": {
                   "properties": {
-                    "result": {
-                      "properties": {
-                        "vehicle": {
-                          "$ref": "#/components/schemas/VehicleTitle"
-                        }
-                      },
-                      "type": "object"
+                    "vehicle": {
+                      "$ref": "#/components/schemas/VehicleTitle"
                     }
                   },
                   "type": "object"
@@ -2457,12 +2382,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/ChargingSessions"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/ChargingSessions"
                 }
               },
               "text/csv": {
@@ -2630,12 +2550,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/State"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/State"
                 }
               }
             },
@@ -2714,15 +2629,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": "array"
-                    }
+                  "items": {
+                    "type": "string"
                   },
-                  "type": "object"
+                  "type": "array"
                 }
               },
               "text/plain": {
@@ -2762,12 +2672,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/LogAreas"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/LogAreas"
                 }
               }
             },
@@ -2848,13 +2753,8 @@
               "application/json": {
                 "schema": {
                   "properties": {
-                    "result": {
-                      "properties": {
-                        "rates": {
-                          "$ref": "#/components/schemas/Rates"
-                        }
-                      },
-                      "type": "object"
+                    "rates": {
+                      "$ref": "#/components/schemas/Rates"
                     }
                   },
                   "type": "object"
@@ -3016,15 +2916,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "items": {
-                        "$ref": "#/components/schemas/RepeatingPlan"
-                      },
-                      "type": "array"
-                    }
+                  "items": {
+                    "$ref": "#/components/schemas/RepeatingPlan"
                   },
-                  "type": "object"
+                  "type": "array"
                 }
               }
             },
@@ -3084,16 +2979,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
-                    "result": {
-                      "properties": {
-                        "soc": {
-                          "$ref": "#/components/schemas/Soc"
-                        },
-                        "time": {
-                          "$ref": "#/components/schemas/Timestamp"
-                        }
-                      },
-                      "type": "object"
+                    "soc": {
+                      "$ref": "#/components/schemas/Soc"
+                    },
+                    "time": {
+                      "$ref": "#/components/schemas/Timestamp"
                     }
                   },
                   "type": "object"
@@ -3136,12 +3026,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/PlanStrategy"
-                    }
-                  },
-                  "type": "object"
+                  "$ref": "#/components/schemas/PlanStrategy"
                 }
               }
             },
