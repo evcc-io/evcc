@@ -174,6 +174,19 @@ func (c *Collector) EnergyProfileWeekday() (*[96]float64, error) {
 	return energyProfileWeekday(c.entity)
 }
 
+// LastSlotEnergy returns the energy in kWh of the most recently completed
+// 15min slot, or false when it has not been persisted (boot, data gap) or
+// contains recovered downtime energy.
+func (c *Collector) LastSlotEnergy() (float64, bool) {
+	ts := c.accu.clock.Now().Truncate(tariff.SlotDuration).Add(-tariff.SlotDuration)
+
+	var m meter
+	if db.Instance.Where("meter = ? AND ts = ? AND COALESCE(recovered, 0) = 0", c.entity.Id, ts.Unix()).Limit(1).Find(&m).RowsAffected == 0 {
+		return 0, false
+	}
+	return m.Energy, true
+}
+
 func (c *Collector) SetEnergyMeterTotal(v float64) error {
 	return c.process(func() {
 		c.accu.SetEnergyMeterTotal(v)
