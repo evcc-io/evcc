@@ -1,4 +1,5 @@
 template: energinet-price
+link: https://www.energidataservice.dk
 covers: ["energinet"]
 products:
   - brand: Energinet

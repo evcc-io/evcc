@@ -6,6 +6,7 @@
 # - Public "/tariffs" endpoint is used. Protected "/customerTariffs" is not supported.
 
 template: ekz
+link: https://www.ekz.ch
 products:
   - brand: EKZ
 requirements:

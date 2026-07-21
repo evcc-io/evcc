@@ -1,4 +1,5 @@
 template: energy-charts-api
+link: https://www.energy-charts.info
 products:
   - brand: Energy-Charts
     description:

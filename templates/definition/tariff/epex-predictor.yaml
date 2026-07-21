@@ -1,4 +1,5 @@
 template: epex-predictor
+link: https://epexpredictor.batzill.com
 products:
   - brand: EPEX Predictor
     description:

@@ -1,4 +1,5 @@
 template: energinet-co2
+link: https://www.energidataservice.dk
 products:
   - brand: Energinet
     description:
