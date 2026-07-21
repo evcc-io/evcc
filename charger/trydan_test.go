@@ -64,13 +64,14 @@ func (ts *trydanTestServer) wrote(call string) bool {
 	return false
 }
 
-func TestTrydanAutoUnlock(t *testing.T) {
+// By default (autoUnlock false) evcc manages Locked itself: save/restore around a session.
+func TestTrydanManagesLockByDefault(t *testing.T) {
 	sponsor.Subject = "foo"
 
 	srv, ts := newTrydanTestServer(1, 1) // locked and paused
 	defer srv.Close()
 
-	wb, err := NewTrydan(srv.URL, 0, true)
+	wb, err := NewTrydan(srv.URL, 0, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,13 +94,15 @@ func TestTrydanAutoUnlock(t *testing.T) {
 	}
 }
 
-func TestTrydanAutoUnlockDisabled(t *testing.T) {
+// autoUnlock signals the charger already has its own auto-unlock mechanism, so evcc
+// must leave Locked alone entirely and only manage Paused.
+func TestTrydanAutoUnlockLeavesLockAlone(t *testing.T) {
 	sponsor.Subject = "foo"
 
 	srv, ts := newTrydanTestServer(1, 1) // locked and paused
 	defer srv.Close()
 
-	wb, err := NewTrydan(srv.URL, 0, false) // autoUnlock off
+	wb, err := NewTrydan(srv.URL, 0, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,17 +111,17 @@ func TestTrydanAutoUnlockDisabled(t *testing.T) {
 		t.Fatal(err)
 	}
 	if ts.wrote("Locked=0") {
-		t.Error("Enable(true) must not touch Locked unless autoUnlock is enabled")
+		t.Error("Enable(true) must not touch Locked when autoUnlock is set")
 	}
 }
 
-func TestTrydanAutoUnlockNotNeeded(t *testing.T) {
+func TestTrydanManagedLockNotNeeded(t *testing.T) {
 	sponsor.Subject = "foo"
 
 	srv, ts := newTrydanTestServer(0, 1) // already unlocked, paused
 	defer srv.Close()
 
-	wb, err := NewTrydan(srv.URL, 0, true)
+	wb, err := NewTrydan(srv.URL, 0, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,6 +147,8 @@ func trydanTestServerWithBody(body string) *httptest.Server {
 	}))
 }
 
+// ChargeState maps directly to api.ChargeStatus, except firmware 2.5.0 keeps it at
+// "charging" even after Paused=1, so that specific combination must fall back to StatusB.
 func TestTrydanStatus(t *testing.T) {
 	sponsor.Subject = "foo"
 
@@ -182,6 +187,9 @@ func TestTrydanStatus(t *testing.T) {
 	}
 }
 
+// Currents()/Voltages() must trust a zero reading while idle, but treat it as
+// unavailable (older firmware without these fields) whenever real power is flowing,
+// since ChargePower>0 with all phases at zero is otherwise physically impossible.
 func TestTrydanPhaseMeasurementsUnavailable(t *testing.T) {
 	sponsor.Subject = "foo"
 
