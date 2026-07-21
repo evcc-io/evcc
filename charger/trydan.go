@@ -87,7 +87,9 @@ type Trydan struct {
 	current    int
 	enabled    bool
 	autoUnlock bool
-	wasLocked  bool
+	// wasLocked is true iff evcc unlocked the EVSE itself and must restore
+	// Locked=1 once charging stops; never true when autoUnlock is set.
+	wasLocked bool
 }
 
 func init() {
@@ -176,6 +178,42 @@ func (c *Trydan) setValue(param string, value int) error {
 	return err
 }
 
+// manageLock handles Locked ownership around a charging session. Locked disables the
+// EVSE entirely and is independent of Paused; it must not be coupled to Paused
+// unconditionally, or the charger resets its session energy/time counters. By default
+// (autoUnlock false) evcc manages Locked itself: unlock only when we actually need to
+// start charging, and only re-lock afterwards if we're the ones who unlocked it - this
+// way we never override a lock state the owner set independently of evcc, e.g. via the
+// V2C app. This matches evcc's behaviour prior to this coupling being removed, just
+// without the bugs that coupling caused.
+//
+// autoUnlock signals that the charger already has its own auto-unlock mechanism (e.g.
+// V2C's phone-proximity autolock) that evcc would otherwise duplicate or fight with;
+// set it to leave Locked alone entirely and only manage Paused. Also needed on setups
+// where unlocking releases the physical cable latch on the vehicle (confirmed on a
+// Tesla + firmware 2.5.0), since evcc re-locking at the end of a session can then
+// trigger an unwanted unlatch/reconnect cycle.
+func (c *Trydan) manageLock(enable bool, data RealTimeData) error {
+	if c.autoUnlock {
+		return nil
+	}
+
+	switch {
+	case enable && data.Locked == 1:
+		if err := c.setValue("Locked", 0); err != nil {
+			return err
+		}
+		c.wasLocked = true
+	case !enable && c.wasLocked:
+		if err := c.setValue("Locked", 1); err != nil {
+			return err
+		}
+		c.wasLocked = false
+	}
+
+	return nil
+}
+
 // Enable implements the api.Charger interface
 func (c *Trydan) Enable(enable bool) error {
 	var pause, pauseDynamic int
@@ -190,33 +228,8 @@ func (c *Trydan) Enable(enable bool) error {
 		return err
 	}
 
-	// Locked disables the EVSE entirely and is independent of Paused; it must not be
-	// coupled to Paused unconditionally, or the charger resets its session energy/time
-	// counters. By default (autoUnlock false) evcc manages Locked itself: unlock only
-	// when we actually need to start charging, and only re-lock afterwards if we're the
-	// ones who unlocked it - this way we never override a lock state the owner set
-	// independently of evcc, e.g. via the V2C app. This matches evcc's behaviour prior
-	// to this coupling being removed, just without the bugs that coupling caused.
-	//
-	// autoUnlock signals that the charger already has its own auto-unlock mechanism
-	// (e.g. V2C's phone-proximity autolock) that evcc would otherwise duplicate or
-	// fight with; set it to leave Locked alone entirely and only manage Paused. Also
-	// needed on setups where unlocking releases the physical cable latch on the
-	// vehicle (confirmed on a Tesla + firmware 2.5.0), since evcc re-locking at the
-	// end of a session can then trigger an unwanted unlatch/reconnect cycle.
-	if !c.autoUnlock {
-		switch {
-		case enable && data.Locked == 1:
-			if err := c.setValue("Locked", 0); err != nil {
-				return err
-			}
-			c.wasLocked = true
-		case !enable && c.wasLocked:
-			if err := c.setValue("Locked", 1); err != nil {
-				return err
-			}
-			c.wasLocked = false
-		}
+	if err := c.manageLock(enable, data); err != nil {
+		return err
 	}
 
 	if err := c.setValue("Paused", pause); err != nil {
