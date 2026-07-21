@@ -276,7 +276,9 @@ NEXT:
 func validateStaticCircuits(children []config.Named) error {
 	return validateCircuitConfigs(
 		children,
-		func(cc config.Named) (config.Named, *util.Logger) { return cc, util.NewLogger(cc.Name) },
+		func(cc config.Named) (config.Named, *util.Logger) {
+			return cc, loggerForDevice(cc.Name, "circuit", cc.Other)
+		},
 		func(cc config.Named, instance api.Circuit) config.Device[api.Circuit] {
 			return config.NewStaticDevice(cc, instance)
 		},
@@ -286,7 +288,9 @@ func validateStaticCircuits(children []config.Named) error {
 func validateConfigurableCircuits(children []config.Config) error {
 	return validateCircuitConfigs(
 		children,
-		func(cc config.Config) (config.Named, *util.Logger) { return cc.Named(), loggerForConfig(&cc) },
+		func(cc config.Config) (config.Named, *util.Logger) {
+			return cc.Named(), loggerForConfig(&cc, "circuit")
+		},
 		func(cc config.Config, instance api.Circuit) config.Device[api.Circuit] {
 			return config.NewConfigurableDevice(&cc, instance)
 		},
@@ -296,7 +300,7 @@ func validateConfigurableCircuits(children []config.Config) error {
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForDevice(cc.Name, typ, cc.Other)))
 
 	instance, err := newFromConf(ctx, cc.Type, cc.Other)
 	if err != nil {
@@ -318,17 +322,30 @@ func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfF
 }
 
 // loggerForConfig creates a logger with sensible name for (custom) configurable device
-func loggerForConfig(conf *config.Config) *util.Logger {
+func loggerForConfig(conf *config.Config, typ string) *util.Logger {
 	res := conf.Named().Name
 	if t := conf.Title; t != "" && t != res {
 		res += "-" + t
 	}
-	return util.NewLogger(res)
+	log := util.NewLogger(res).With("device", typ)
+	if conf.Title != "" {
+		log = log.With("title", conf.Title)
+	}
+	return log
+}
+
+// loggerForDevice creates a logger with device kind and title attributes
+func loggerForDevice(name, typ string, other map[string]any) *util.Logger {
+	log := util.NewLogger(name).With("device", typ)
+	if t, ok := other["title"].(string); ok && t != "" {
+		log = log.With("title", t)
+	}
+	return log
 }
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf)))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf, typ)))
 
 	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 	if err != nil {
@@ -446,7 +463,7 @@ func configureChargers(static []config.Named, names ...string) error {
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+	ctx := util.WithLogger(context.TODO(), loggerForDevice(cc.Name, "vehicle", cc.Other))
 
 	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
 
@@ -1061,7 +1078,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(name))
+	ctx := util.WithLogger(context.TODO(), loggerForDevice(name, "tariff", conf.Other))
 
 	typ, other, err := config.CustomDevice(conf.Type, conf.Other)
 	if err != nil {
