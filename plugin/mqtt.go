@@ -118,6 +118,14 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	}
 
 	err := m.client.Listen(m.topic, h.receive)
+
+	// without timeout, wait for a pending retained message before first read
+	if err == nil && m.timeout == 0 {
+		if err := m.client.Barrier(m.ctx); err != nil {
+			m.log.WARN.Printf("sync %s: %v", m.topic, err)
+		}
+	}
+
 	return h, err
 }
 
