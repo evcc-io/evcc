@@ -67,6 +67,9 @@ const (
 	// smallest field-verified working setpoint; 0 puts VW vehicles into an
 	// unrecoverable error state, values below 1000 W are untested
 	evdcMinPower = 1000 // W
+
+	// evcc current setpoints are converted using the 3-phase AC convention
+	evdcPowerPerAmp = 230 * 3 // W/A
 )
 
 // running states of evdcRegRunningState
@@ -166,9 +169,10 @@ func newSigenergyEVDC(conn *modbus.Connection) *SigenergyEVDC {
 	return wb
 }
 
-// input returns the byte slice of the given register within the cached bulk read
-func evdcInput(b []byte, reg uint16) []byte {
-	return b[2*(reg-evdcBase):]
+// evdcInput returns the bytes of the given register within the cached bulk read
+func evdcInput(b []byte, reg uint16, n int) []byte {
+	off := 2 * int(reg-evdcBase)
+	return b[off : off+n]
 }
 
 // Status implements the api.Charger interface
@@ -178,7 +182,7 @@ func (wb *SigenergyEVDC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch state := encoding.Uint16(evdcInput(b, evdcRegRunningState)); state {
+	switch state := encoding.Uint16(evdcInput(b, evdcRegRunningState, 2)); state {
 	case evdcStateIdle:
 		return api.StatusA, nil
 	case evdcStateOccupied, evdcStatePreparing, evdcStateScheduled, evdcStateEnded, evdcStateInsulation:
@@ -233,7 +237,7 @@ func (wb *SigenergyEVDC) MaxCurrentMillis(current float64) error {
 
 	// evcc current setpoint to DC power, clamped to [1000 W, rated]:
 	// writing 0 puts vehicles into an unrecoverable error state
-	power := min(max(uint32(current*230*3), evdcMinPower), wb.ratedPower)
+	power := min(max(uint32(current*evdcPowerPerAmp), evdcMinPower), wb.ratedPower)
 
 	b := make([]byte, 4)
 	encoding.PutUint32(b, power)
@@ -246,7 +250,7 @@ var _ api.CurrentLimiter = (*SigenergyEVDC)(nil)
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (wb *SigenergyEVDC) GetMinMaxCurrent() (float64, float64, error) {
-	return float64(evdcMinPower) / (230 * 3), float64(wb.ratedPower) / (230 * 3), nil
+	return float64(evdcMinPower) / evdcPowerPerAmp, float64(wb.ratedPower) / evdcPowerPerAmp, nil
 }
 
 var _ api.Meter = (*SigenergyEVDC)(nil)
@@ -259,7 +263,7 @@ func (wb *SigenergyEVDC) CurrentPower() (float64, error) {
 	}
 
 	// S32, negative while discharging (to be confirmed on hardware, see spec)
-	return float64(encoding.Int32(evdcInput(b, evdcRegOutputPower))), nil
+	return float64(encoding.Int32(evdcInput(b, evdcRegOutputPower, 4))), nil
 }
 
 var _ api.MeterEnergy = (*SigenergyEVDC)(nil)
@@ -271,7 +275,7 @@ func (wb *SigenergyEVDC) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32(evdcInput(b, evdcRegTotalEnergy))) / 100, nil
+	return float64(encoding.Uint32(evdcInput(b, evdcRegTotalEnergy, 4))) / 100, nil
 }
 
 var _ api.ChargeRater = (*SigenergyEVDC)(nil)
@@ -283,7 +287,7 @@ func (wb *SigenergyEVDC) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32(evdcInput(b, evdcRegSessionEnergy))) / 100, nil
+	return float64(encoding.Uint32(evdcInput(b, evdcRegSessionEnergy, 4))) / 100, nil
 }
 
 var _ api.ChargeTimer = (*SigenergyEVDC)(nil)
@@ -295,7 +299,7 @@ func (wb *SigenergyEVDC) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(encoding.Uint32(evdcInput(b, evdcRegSessionDuration))) * time.Second, nil
+	return time.Duration(encoding.Uint32(evdcInput(b, evdcRegSessionDuration, 4))) * time.Second, nil
 }
 
 var _ api.Battery = (*SigenergyEVDC)(nil)
@@ -307,7 +311,7 @@ func (wb *SigenergyEVDC) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if soc := float64(encoding.Uint16(evdcInput(b, evdcRegVehicleSoc))) / 10; soc > 0 {
+	if soc := float64(encoding.Uint16(evdcInput(b, evdcRegVehicleSoc, 2))) / 10; soc > 0 {
 		return soc, nil
 	}
 
