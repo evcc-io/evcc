@@ -14,6 +14,15 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+// withSponsor authorizes the sponsor-gated Trydan charger for the duration of the test,
+// restoring the previous value afterwards so tests don't leak global state between them.
+func withSponsor(t *testing.T) {
+	t.Helper()
+	orig := sponsor.Subject
+	sponsor.Subject = "foo"
+	t.Cleanup(func() { sponsor.Subject = orig })
+}
+
 // trydanTestServer serves a minimal, stateful mock of the Trydan HTTP API,
 // tracking every /write/ call so tests can assert on the exact sequence.
 type trydanTestServer struct {
@@ -66,7 +75,7 @@ func (ts *trydanTestServer) wrote(call string) bool {
 
 // By default (autoUnlock false) evcc manages Locked itself: save/restore around a session.
 func TestTrydanManagesLockByDefault(t *testing.T) {
-	sponsor.Subject = "foo"
+	withSponsor(t)
 
 	srv, ts := newTrydanTestServer(1, 1) // locked and paused
 	defer srv.Close()
@@ -97,7 +106,7 @@ func TestTrydanManagesLockByDefault(t *testing.T) {
 // autoUnlock signals the charger already has its own auto-unlock mechanism, so evcc
 // must leave Locked alone entirely and only manage Paused.
 func TestTrydanAutoUnlockLeavesLockAlone(t *testing.T) {
-	sponsor.Subject = "foo"
+	withSponsor(t)
 
 	srv, ts := newTrydanTestServer(1, 1) // locked and paused
 	defer srv.Close()
@@ -116,7 +125,7 @@ func TestTrydanAutoUnlockLeavesLockAlone(t *testing.T) {
 }
 
 func TestTrydanManagedLockNotNeeded(t *testing.T) {
-	sponsor.Subject = "foo"
+	withSponsor(t)
 
 	srv, ts := newTrydanTestServer(0, 1) // already unlocked, paused
 	defer srv.Close()
@@ -150,7 +159,7 @@ func trydanTestServerWithBody(body string) *httptest.Server {
 // ChargeState maps directly to api.ChargeStatus, except firmware 2.5.0 keeps it at
 // "charging" even after Paused=1, so that specific combination must fall back to StatusB.
 func TestTrydanStatus(t *testing.T) {
-	sponsor.Subject = "foo"
+	withSponsor(t)
 
 	tests := []struct {
 		name    string
@@ -191,7 +200,7 @@ func TestTrydanStatus(t *testing.T) {
 // unavailable (older firmware without these fields) whenever real power is flowing,
 // since ChargePower>0 with all phases at zero is otherwise physically impossible.
 func TestTrydanPhaseMeasurementsUnavailable(t *testing.T) {
-	sponsor.Subject = "foo"
+	withSponsor(t)
 
 	tests := []struct {
 		name            string
