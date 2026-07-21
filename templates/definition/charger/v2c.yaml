@@ -9,6 +9,17 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: host
+  - name: autoUnlock
+    type: bool
+    default: false
+    advanced: true
+    description:
+      de: Charger hat eigene automatische Entsperrung
+      en: Charger has its own auto-unlock
+    help:
+      de: Aktivieren, falls der Charger bereits selbst automatisch entsperrt (z.B. V2C Näherungssperre per App). Sonst übernimmt evcc das Sperren/Entsperren selbst rund um Ladevorgänge.
+      en: Enable if the charger already unlocks itself automatically (e.g. V2C's phone-proximity autolock). Otherwise evcc manages locking/unlocking itself around charging sessions.
 render: |
   type: trydan
   uri: http://{{ .host }}
+  autoUnlock: {{ .autoUnlock }}
