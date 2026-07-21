@@ -186,7 +186,7 @@ render: |
     # the percentage register is only meaningful while a limit mode is active
     script: |
       limit := percent
-      if mode == 0 {
+      if mode != 7 {
         limit = 100
       }
       limit
