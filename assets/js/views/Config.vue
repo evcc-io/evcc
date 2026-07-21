@@ -1296,7 +1296,8 @@ export default defineComponent({
 			return this.deviceValues[type][id] || {};
 		},
 		meterBanner(name: string): string | undefined {
-			return this.deviceTags("meter", name)["curtailed"]?.value
+			// the tag is only present while curtailing, a zero percent limit is still one
+			return this.deviceTags("meter", name)["curtailed"]?.value !== undefined
 				? this.$t("config.deviceValue.productionLimited")
 				: undefined;
 		},
