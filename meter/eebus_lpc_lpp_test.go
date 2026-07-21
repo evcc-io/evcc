@@ -217,6 +217,24 @@ func TestLPP_CurtailedPercent(t *testing.T) {
 	}
 }
 
+// The watt conversion must reproduce the written percent, else the site would
+// rewrite the same limit on every update.
+func TestLPP_CurtailedPercent_RoundTrip(t *testing.T) {
+	const nominal = 4600.0
+
+	for percent := range 101 {
+		c, _, lpp, entity := newEGMeter(t)
+		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
+		lpp.EXPECT().ProductionLimit(entity).
+			Return(ucapi.LoadLimit{IsActive: true, Value: -float64(percent) / 100 * nominal}, nil)
+		lpp.EXPECT().ProductionNominalMax(entity).Return(nominal, nil)
+
+		got, err := c.CurtailedPercent()
+		require.NoError(t, err)
+		assert.Equal(t, percent, got)
+	}
+}
+
 // Without a nominal reference the watt limit cannot be expressed as a percent.
 func TestLPP_CurtailedPercent_NoNominal(t *testing.T) {
 	c, _, lpp, entity := newEGMeter(t)
