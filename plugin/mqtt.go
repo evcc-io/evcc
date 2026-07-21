@@ -119,10 +119,12 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 
 	err := m.client.Listen(m.topic, h.receive)
 
-	// without timeout, wait for a pending retained message before first read
+	// without timeout, wait briefly for a retained message- it arrives right after suback
 	if err == nil && m.timeout == 0 {
-		if err := m.client.Barrier(m.ctx); err != nil {
-			m.log.WARN.Printf("sync %s: %v", m.topic, err)
+		select {
+		case <-h.val.Done():
+		case <-m.ctx.Done():
+		case <-time.After(100 * time.Millisecond):
 		}
 	}
 

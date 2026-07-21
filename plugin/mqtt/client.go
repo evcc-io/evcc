@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"cmp"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -50,11 +49,6 @@ type Client struct {
 	listener map[string][]func(string)
 	inflight *semaphore.Weighted
 
-	syncTopic string
-	syncOnce  sync.Once
-	syncMu    sync.Mutex
-	syncWait  map[string]chan struct{}
-
 	connMu     sync.Mutex
 	connCtx    context.Context
 	connCancel context.CancelFunc
@@ -75,12 +69,10 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	}
 
 	mc := &Client{
-		log:       log,
-		Qos:       qos,
-		listener:  make(map[string][]func(string)),
-		inflight:  semaphore.NewWeighted(parallelInflightLimit),
-		syncTopic: cmp.Or(clientID, ClientID()) + "/sync",
-		syncWait:  make(map[string]chan struct{}),
+		log:      log,
+		Qos:      qos,
+		listener: make(map[string][]func(string)),
+		inflight: semaphore.NewWeighted(parallelInflightLimit),
 	}
 
 	options := paho.NewClientOptions()
@@ -264,45 +256,6 @@ func (m *Client) Publish(topic string, retained bool, payload string) {
 			m.log.ERROR.Printf("send: %s: timeout", topic)
 		}
 	}()
-}
-
-// Barrier waits until pending retained messages of prior subscriptions have been
-// delivered. It publishes a marker to a client-private sync topic and waits for
-// its echo, relying on the broker delivering a connection's messages in order.
-func (m *Client) Barrier(ctx context.Context) error {
-	var err error
-	m.syncOnce.Do(func() {
-		err = m.Listen(m.syncTopic, func(payload string) {
-			m.syncMu.Lock()
-			defer m.syncMu.Unlock()
-
-			if ch, ok := m.syncWait[payload]; ok {
-				close(ch)
-				delete(m.syncWait, payload)
-			}
-		})
-	})
-	if err != nil {
-		return err
-	}
-
-	nonce := fmt.Sprintf("%d", rand.Int64())
-	ch := make(chan struct{})
-
-	m.syncMu.Lock()
-	m.syncWait[nonce] = ch
-	m.syncMu.Unlock()
-
-	m.client.Publish(m.syncTopic, m.Qos, false, nonce)
-
-	select {
-	case <-ch:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-time.After(request.Timeout):
-		return fmt.Errorf("sync %s: %w", m.syncTopic, api.ErrTimeout)
-	}
 }
 
 // Listen attaches listener to slice of listeners for given topic
