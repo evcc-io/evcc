@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -285,7 +286,8 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	return int(-limit.Value / nominal * 100), nil
+	// round, the watt conversion does not reproduce the written percent exactly
+	return int(math.Round(-limit.Value / nominal * 100)), nil
 }
 
 // SetCurtailPercent implements the api.Curtailer interface
