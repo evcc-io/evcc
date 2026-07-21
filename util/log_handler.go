@@ -5,15 +5,15 @@ import (
 	"log/slog"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/logstash"
 )
 
-// handler implements slog.Handler. It renders the evcc log line format, applies redaction
-// and fans out to stdout (gated by area level), the logstash ring and the ui (warn+).
+// handler implements slog.Handler. It applies redaction and fans out structured
+// records to stdout (gated by area level), the logstash ring and the ui (warn+).
 type handler struct {
+	area     string
 	padded   string
 	level    *slog.LevelVar // stdout threshold
 	redactor *Redactor
@@ -69,37 +69,70 @@ func (h *handler) with(args []any) *handler {
 	return h.withAttrs(attrs)
 }
 
+func (h *handler) redact(s string) string {
+	return string(h.redactor.redacted([]byte(s)))
+}
+
 func (h *handler) Handle(_ context.Context, r slog.Record) error {
+	msg := h.redact(r.Message)
+
 	text := new(strings.Builder)
-	text.WriteString(r.Message)
+	text.WriteString(msg)
+
+	var attrs map[string]string
+	appendAttr := func(a slog.Attr) {
+		if a.Equal(slog.Attr{}) {
+			return
+		}
+
+		key := a.Key
+		if len(h.groups) > 0 {
+			key = strings.Join(h.groups, ".") + "." + key
+		}
+		val := h.redact(a.Value.Resolve().String())
+
+		if attrs == nil {
+			attrs = make(map[string]string)
+		}
+		attrs[key] = val
+
+		text.WriteByte(' ')
+		text.WriteString(key)
+		text.WriteByte('=')
+		text.WriteString(logstash.QuoteAttr(val))
+	}
 
 	for _, a := range h.attrs {
-		h.appendAttr(text, a)
+		appendAttr(a)
 	}
 	r.Attrs(func(a slog.Attr) bool {
-		h.appendAttr(text, a)
+		appendAttr(a)
 		return true
 	})
 
-	line := new(strings.Builder)
-	line.WriteByte('[')
-	line.WriteString(h.padded)
-	line.WriteString("] ")
-	line.WriteString(levelString(r.Level))
-	line.WriteByte(' ')
-	line.WriteString(r.Time.Format("2006/01/02 15:04:05"))
-	line.WriteByte(' ')
-	line.WriteString(text.String())
-	line.WriteByte('\n')
-
-	b := h.redactor.redacted([]byte(line.String()))
-
-	if _, err := logstash.DefaultHandler.Write(b); err != nil {
-		return err
+	if h.area != "cache" {
+		logstash.DefaultHandler.Add(logstash.Entry{
+			Time:    r.Time,
+			Area:    h.area,
+			Level:   r.Level,
+			Message: msg,
+			Attrs:   attrs,
+		})
 	}
 
 	if r.Level >= h.level.Level() {
-		if _, err := os.Stdout.Write(b); err != nil {
+		line := new(strings.Builder)
+		line.WriteByte('[')
+		line.WriteString(h.padded)
+		line.WriteString("] ")
+		line.WriteString(logstash.LevelString(r.Level))
+		line.WriteByte(' ')
+		line.WriteString(r.Time.Format("2006/01/02 15:04:05"))
+		line.WriteByte(' ')
+		line.WriteString(text.String())
+		line.WriteByte('\n')
+
+		if _, err := os.Stdout.Write([]byte(line.String())); err != nil {
 			return err
 		}
 	}
@@ -109,46 +142,8 @@ func (h *handler) Handle(_ context.Context, r slog.Record) error {
 		if r.Level >= slog.LevelError {
 			level = "error"
 		}
-		uiCapture(level, h.lp, string(h.redactor.redacted([]byte(text.String()))))
+		uiCapture(level, h.lp, text.String())
 	}
 
 	return nil
-}
-
-func (h *handler) appendAttr(sb *strings.Builder, a slog.Attr) {
-	if a.Equal(slog.Attr{}) {
-		return
-	}
-
-	key := a.Key
-	if len(h.groups) > 0 {
-		key = strings.Join(h.groups, ".") + "." + key
-	}
-
-	val := a.Value.Resolve().String()
-	if strings.ContainsAny(val, " \t\n\"=") {
-		val = strconv.Quote(val)
-	}
-
-	sb.WriteByte(' ')
-	sb.WriteString(key)
-	sb.WriteByte('=')
-	sb.WriteString(val)
-}
-
-func levelString(l slog.Level) string {
-	switch {
-	case l < LevelDebug:
-		return "TRACE"
-	case l < LevelInfo:
-		return "DEBUG"
-	case l < LevelWarn:
-		return "INFO"
-	case l < LevelError:
-		return "WARN"
-	case l < LevelFatal:
-		return "ERROR"
-	default:
-		return "FATAL"
-	}
 }

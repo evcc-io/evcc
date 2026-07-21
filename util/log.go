@@ -67,6 +67,7 @@ func newLogger(area string, lp int) *Logger {
 	level.Set(logLevelForArea(area))
 
 	h := &handler{
+		area:     area,
 		padded:   fmt.Sprintf("%-*s", LogAreaPadding, area),
 		level:    level,
 		redactor: new(Redactor),

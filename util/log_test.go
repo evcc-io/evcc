@@ -21,9 +21,22 @@ func TestLogFormat(t *testing.T) {
 
 	all := logstash.All([]string{"fmt"}, logstash.LevelTrace, 0)
 	require.Len(t, all, 1)
-	require.Regexp(t, `^\[fmt   \] WARN \d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} hello component=loadpoint title="Garage 1"\n$`, all[0])
+
+	e := all[0]
+	require.Equal(t, "fmt", e.Area)
+	require.Equal(t, slog.LevelWarn, e.Level)
+	require.Equal(t, "hello", e.Message)
+	require.Equal(t, map[string]string{"component": "loadpoint", "title": "Garage 1"}, e.Attrs)
+	require.Regexp(t, `^\[fmt   \] WARN \d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} hello component=loadpoint title="Garage 1"\n$`, e.String())
 
 	// level filter
 	require.Empty(t, logstash.All([]string{"fmt"}, logstash.LevelFatal, 0))
 	require.Len(t, logstash.All([]string{"fmt"}, slog.LevelWarn, 0), 1)
+}
+
+func TestLogCacheAreaSkipped(t *testing.T) {
+	log := NewLogger("cache")
+	log.INFO.Println("noise")
+
+	require.Empty(t, logstash.All([]string{"cache"}, logstash.LevelTrace, 0))
 }

@@ -118,11 +118,9 @@ import api from "../api";
 import store from "../store";
 import { defineComponent, type PropType } from "vue";
 import type { Timeout } from "@/types/evcc";
-import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
+import { LOG_LEVELS, DEFAULT_LOG_LEVEL, formatLogEntry, type LogEntry } from "@/utils/log";
 import { handleDownloadClick } from "@/utils/native";
 const DEFAULT_COUNT = 1000;
-
-const levelMatcher = new RegExp(`\\[.*?\\] (${LOG_LEVELS.map((l) => l.toUpperCase()).join("|")})`);
 
 export default defineComponent({
 	name: "Log",
@@ -138,7 +136,7 @@ export default defineComponent({
 	},
 	data() {
 		return {
-			lines: [] as string[],
+			entries: [] as LogEntry[],
 			availableAreas: [] as string[],
 			search: "",
 			timeout: null as Timeout,
@@ -152,22 +150,23 @@ export default defineComponent({
 	},
 	computed: {
 		filteredLines() {
-			return this.lines.filter(
-				(line) =>
-					!this.search || line.toLowerCase().includes(this.search.toLocaleLowerCase())
-			);
+			return this.entries
+				.map((entry) => ({ entry, line: formatLogEntry(entry) }))
+				.filter(
+					({ line }) =>
+						!this.search || line.toLowerCase().includes(this.search.toLocaleLowerCase())
+				);
 		},
 		lineEntries() {
 			const occurrences = new Map();
-			return this.filteredLines.map((line) => {
+			return this.filteredLines.map(({ entry, line }) => {
 				// generate a unique key per line for performant dom updates
 				let key = line.substring(0, 50);
 				const count = occurrences.get(key) || 0;
 				occurrences.set(key, count + 1);
 				key = `${key}-${count + 1}`;
 
-				const match = levelMatcher.exec(line)?.[1];
-				const className = `log log-${match?.toLowerCase() || "none"}`;
+				const className = `log log-${entry.level || "none"}`;
 
 				return { key, className, line };
 			});
@@ -188,7 +187,7 @@ export default defineComponent({
 			}
 		},
 		showMoreButton() {
-			return this.lines.length === DEFAULT_COUNT;
+			return this.entries.length === DEFAULT_COUNT;
 		},
 		updateInterval() {
 			return (store.state?.interval || 10) * 1000;
@@ -239,7 +238,7 @@ export default defineComponent({
 						count: showAll ? null : DEFAULT_COUNT,
 					},
 				});
-				this.lines = response.data || [];
+				this.entries = response.data || [];
 				this.$nextTick(() => {
 					if (showAll) {
 						this.scrollToTop();
