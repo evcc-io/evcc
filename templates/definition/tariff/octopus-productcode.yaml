@@ -1,4 +1,5 @@
 template: octopus-productcode
+link: https://octopus.energy
 products:
   - brand: Octopus Energy
     description:

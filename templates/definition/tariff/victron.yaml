@@ -1,4 +1,5 @@
 template: victron
+link: https://www.victronenergy.com
 products:
   - brand: Victron
     description:

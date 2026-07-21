@@ -1,4 +1,5 @@
 template: esios
+link: https://www.esios.ree.es
 covers: [esios-tariff-api]
 products:
   - brand: REE

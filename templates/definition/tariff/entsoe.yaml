@@ -1,4 +1,5 @@
 template: entsoe
+link: https://transparency.entsoe.eu
 products:
   - brand: ENTSO-E
 requirements:

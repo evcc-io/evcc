@@ -1,4 +1,5 @@
 template: ned
+link: https://ned.nl
 products:
   - brand: Nationaal Energie Dashboard
 requirements:

@@ -1,4 +1,5 @@
 template: energypriceforecast
+link: https://energypriceforecast.eu
 products:
   - brand: Energy Price Forecast EU
     description:
