@@ -78,11 +78,6 @@ func NewRelay(site site.API, w1 func() (bool, error), passthrough func(bool) err
 		return nil, errors.New("missing power limit")
 	}
 
-	// read the relay once synchronously so the limit is valid as soon as NewRelay returns
-	if err := c.run(); err != nil {
-		return nil, err
-	}
-
 	return c, nil
 }
 
@@ -92,9 +87,9 @@ func (c *Relay) SetUpdated(f func()) {
 	c.publishFunc = f
 }
 
-// Run starts the relay control loop. NewRelay already ran the first pass.
 func (c *Relay) Run() {
-	for range time.Tick(c.interval) {
+	// run immediately, then on every tick
+	for tick := time.Tick(c.interval); ; <-tick {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -131,10 +126,7 @@ func (c *Relay) setConsumptionLimit(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.limit = nil
-	if limit > 0 {
-		c.limit = new(limit)
-	}
+	c.limit = new(limit)
 
 	if c.passthrough != nil {
 		if err := c.passthrough(limit > 0); err != nil {
@@ -154,11 +146,12 @@ func (c *Relay) CurtailedPercent() *int {
 }
 
 // MaxConsumptionPower implements api.HEMS, returning the active wattage cap.
+// nil until the relay has been read for the first time.
 func (c *Relay) MaxConsumptionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.limit == nil {
-		return new(0.0)
+		return nil
 	}
 	return new(*c.limit)
 }
