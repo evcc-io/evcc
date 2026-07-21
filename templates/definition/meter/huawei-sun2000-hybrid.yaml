@@ -298,11 +298,7 @@ render: |
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37743
-      {{- else }}
-      address: 37001
-      {{- end }}
+      address: 37765
       type: holding
       decode: int32nan
     scale: -1
@@ -311,11 +307,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37755 # [Energy storage unit 2] Total discharge
-      {{- else }}
-      address: 37068 # [Energy storage unit 1] Total discharge
-      {{- end }}
+      address: 37782 # Total discharge
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -324,11 +316,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37753 # [Energy storage unit 2] Total charge
-      {{- else }}
-      address: 37066 # [Energy storage unit 1] Total charge
-      {{- end }}
+      address: 37780 # Total charge
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -337,11 +325,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37738
-      {{- else }}
-      address: 37004
-      {{- end }}
+      address: 37760
       type: holding
       decode: uint16nan
     scale: 0.1
