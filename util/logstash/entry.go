@@ -56,15 +56,19 @@ func (e Entry) MarshalJSON() ([]byte, error) {
 	}{e.Time, e.Area, strings.ToLower(LevelString(e.Level)), e.Message, e.Attrs})
 }
 
-// String renders the entry in the console log line format
-func (e Entry) String() string {
+// Text renders message and attributes without the line prefix
+func (e Entry) Text() string {
 	b := new(strings.Builder)
-	fmt.Fprintf(b, "[%-6s] %s %s %s", e.Area, LevelString(e.Level), e.Time.Format("2006/01/02 15:04:05"), e.Message)
+	b.WriteString(e.Message)
 	for _, k := range slices.Sorted(maps.Keys(e.Attrs)) {
 		fmt.Fprintf(b, " %s=%s", k, QuoteAttr(e.Attrs[k]))
 	}
-	b.WriteByte('\n')
 	return b.String()
+}
+
+// String renders the entry in the console log line format
+func (e Entry) String() string {
+	return fmt.Sprintf("[%-6s] %s %s %s\n", e.Area, LevelString(e.Level), e.Time.Format("2006/01/02 15:04:05"), e.Text())
 }
 
 func (e Entry) match(areas []string, level slog.Level) bool {

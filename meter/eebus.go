@@ -111,7 +111,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	}
 
 	c := &EEBus{
-		log:       util.ContextLoggerWithDefault(ctx, util.NewLogger("eebus-"+useCase)),
+		log:       util.LoggerFromContext(ctx, "eebus-"+useCase),
 		ma:        ma,
 		eg:        inst.EnergyGuard(),
 		mm:        mm,

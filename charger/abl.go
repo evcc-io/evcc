@@ -113,7 +113,7 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("abl"))
+	log := util.LoggerFromContext(ctx, "abl")
 	conn.Logger(log)
 
 	wb := &ABLeMH{

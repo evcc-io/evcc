@@ -95,7 +95,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("vestel"))
+	log := util.LoggerFromContext(ctx, "vestel")
 	conn.Logger(log)
 
 	wb := &Vestel{

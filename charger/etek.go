@@ -119,7 +119,7 @@ func NewEtek(ctx context.Context, uri, device, comset string, baudrate int, prot
 		return nil, err
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("etek"))
+	log := util.LoggerFromContext(ctx, "etek")
 	conn.Logger(log)
 
 	wb := &Etek{

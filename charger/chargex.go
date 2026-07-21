@@ -91,7 +91,7 @@ func NewChargeX(ctx context.Context, uri string, id uint8, connector uint16) (ap
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("chargex"))
+	log := util.LoggerFromContext(ctx, "chargex")
 	conn.Logger(log)
 
 	wb := &ChargeX{

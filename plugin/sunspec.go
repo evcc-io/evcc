@@ -72,7 +72,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	// set non-default connect delay
 	conn.ConnectDelay(cc.ConnectDelay)
 
-	log := util.NewLogger("sunspec")
+	log := util.PluginLoggerFromContext(ctx, "sunspec")
 	conn.Logger(log)
 
 	if len(cc.Value) == 0 {

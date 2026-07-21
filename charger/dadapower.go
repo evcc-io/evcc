@@ -80,7 +80,7 @@ func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error)
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("dadapower"))
+	log := util.LoggerFromContext(ctx, "dadapower")
 	conn.Logger(log)
 
 	wb := &Dadapower{

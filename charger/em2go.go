@@ -100,7 +100,7 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	// Add delay of 60 milliseconds between requests
 	conn.Delay(60 * time.Millisecond)
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("em2go"))
+	log := util.LoggerFromContext(ctx, "em2go")
 	conn.Logger(log)
 
 	wb := &Em2Go{

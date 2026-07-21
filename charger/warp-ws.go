@@ -124,7 +124,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 }
 
 func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("warp-ws"))
+	log := util.LoggerFromContext(ctx, "warp-ws")
 
 	w := &WarpWS{
 		Connection: warp.NewConnection(log, uri, user, pass),

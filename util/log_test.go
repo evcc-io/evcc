@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"log/slog"
 	"testing"
 
@@ -32,6 +33,20 @@ func TestLogFormat(t *testing.T) {
 	// level filter
 	require.Empty(t, logstash.All([]string{"fmt"}, logstash.LevelFatal, 0))
 	require.Len(t, logstash.All([]string{"fmt"}, slog.LevelWarn, 0), 1)
+}
+
+func TestLoggerFromContext(t *testing.T) {
+	base := NewLogger("wallbox9").With(ComponentKey, "charger")
+	ctx := WithLogger(context.Background(), base)
+
+	LoggerFromContext(ctx, "abb").WARN.Println("hi")
+
+	all := logstash.All([]string{"wallbox9"}, logstash.LevelTrace, 0)
+	require.Len(t, all, 1)
+	require.Equal(t, "charger/abb", all[0].Attrs["component"])
+
+	// fallback without context logger
+	require.Empty(t, LoggerFromContext(context.Background(), "abb2").handler.attrs)
 }
 
 func TestLogCacheAreaSkipped(t *testing.T) {

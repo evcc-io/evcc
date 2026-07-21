@@ -93,7 +93,7 @@ func NewEVSEMasterFromConfig(ctx context.Context, other map[string]any) (api.Cha
 // broadcast – check serial, password, and that the charger is on the same
 // network segment (UDP broadcast does not cross VLANs).
 func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, error) {
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("evsemaster"))
+	log := util.LoggerFromContext(ctx, "evsemaster")
 
 	if len(serial) != 16 {
 		return nil, fmt.Errorf("serial must be a 16-character hex string, got %q", serial)

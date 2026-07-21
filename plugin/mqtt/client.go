@@ -69,7 +69,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	}
 
 	mc := &Client{
-		log:      log.With(util.TransportKey, "mqtt"),
+		log:      log.With(util.PluginKey, "mqtt"),
 		Qos:      qos,
 		listener: make(map[string][]func(string)),
 		inflight: semaphore.NewWeighted(parallelInflightLimit),

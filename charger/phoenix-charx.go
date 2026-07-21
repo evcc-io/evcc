@@ -92,7 +92,7 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 		return nil, err
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("charx"))
+	log := util.LoggerFromContext(ctx, "charx")
 	conn.Logger(log)
 
 	wb := &PhoenixCharx{

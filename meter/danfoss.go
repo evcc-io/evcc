@@ -64,7 +64,7 @@ func NewDanfossTLXFromConfig(ctx context.Context, other map[string]any) (api.Met
 }
 
 func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() float64) (api.Meter, error) {
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("danfoss-tlx"))
+	log := util.LoggerFromContext(ctx, "danfoss-tlx")
 
 	conn, err := comlynx.New(log.TRACE.Printf, cfg)
 	if err != nil {

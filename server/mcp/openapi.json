@@ -517,7 +517,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "description": "Structured attributes (e.g. component, device, title, transport)",
+            "description": "Structured attributes (e.g. component, plugin, title)",
             "type": "object"
           },
           "level": {

@@ -73,7 +73,7 @@ func NewSEMPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 // NewSEMP creates a SEMP charger
 func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (api.Charger, error) {
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("semp"))
+	log := util.LoggerFromContext(ctx, "semp")
 
 	wb := &SEMP{
 		Caps:     implement.New(),

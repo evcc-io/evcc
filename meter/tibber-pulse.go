@@ -64,7 +64,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 		return nil, api.ErrMissingToken
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("pulse")).Redact(cc.Token, cc.HomeID)
+	log := util.LoggerFromContext(ctx, "pulse").Redact(cc.Token, cc.HomeID)
 
 	// query client
 	qclient := tibber.NewClient(log, cc.Token)

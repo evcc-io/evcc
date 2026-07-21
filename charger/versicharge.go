@@ -83,7 +83,7 @@ func NewVersicharge(ctx context.Context, uri string, id uint8) (*Versicharge, er
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("versicharge"))
+	log := util.LoggerFromContext(ctx, "versicharge")
 	conn.Logger(log)
 
 	wb := &Versicharge{

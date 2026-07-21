@@ -85,7 +85,7 @@ func NewPrachtAlpha(ctx context.Context, uri, device, comset string, baudrate in
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("pracht"))
+	log := util.LoggerFromContext(ctx, "pracht")
 	conn.Logger(log)
 
 	wb := &PrachtAlpha{

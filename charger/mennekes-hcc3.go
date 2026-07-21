@@ -78,7 +78,7 @@ func NewMennekesHcc3(ctx context.Context, uri string, slaveID uint8) (api.Charge
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("mennekes-hcc3"))
+	log := util.LoggerFromContext(ctx, "mennekes-hcc3")
 	conn.Logger(log)
 
 	wb := &MennekesHcc3{

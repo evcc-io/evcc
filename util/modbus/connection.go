@@ -24,7 +24,7 @@ func (c *Connection) Addr() string {
 
 // Logger sets the tracing logger; traces carry the modbus transport attribute
 func (c *Connection) Logger(log *util.Logger) {
-	c.logical = log.With(util.TransportKey, "modbus")
+	c.logical = log.With(util.PluginKey, "modbus")
 }
 
 func (c *Connection) Delay(delay time.Duration) {

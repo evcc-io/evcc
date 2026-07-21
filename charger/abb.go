@@ -80,7 +80,7 @@ func NewABB(ctx context.Context, uri, device, comset string, baudrate int, proto
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("abb"))
+	log := util.LoggerFromContext(ctx, "abb")
 	conn.Logger(log)
 
 	wb := &ABB{

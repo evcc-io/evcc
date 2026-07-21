@@ -87,7 +87,7 @@ func NewVoltie(ctx context.Context, uri string, slaveID uint8) (*Voltie, error) 
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("voltie"))
+	log := util.LoggerFromContext(ctx, "voltie")
 	conn.Logger(log)
 
 	wb := &Voltie{

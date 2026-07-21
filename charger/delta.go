@@ -110,7 +110,7 @@ func NewDelta(ctx context.Context, uri, device, comset string, baudrate int, pro
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("delta"))
+	log := util.LoggerFromContext(ctx, "delta")
 	conn.Logger(log)
 
 	wb := &Delta{

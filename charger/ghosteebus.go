@@ -57,7 +57,7 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 		return nil, err
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("ghost-eebus")).Redact(user, password)
+	log := util.LoggerFromContext(ctx, "ghost-eebus").Redact(user, password)
 
 	uri := "https://" + ip + "/api/v2"
 

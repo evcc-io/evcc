@@ -119,7 +119,7 @@ var e3dcOnce sync.Once
 
 // NewE3dc creates E3DC charger
 func NewE3dc(ctx context.Context, cfg rscp.ClientConfig, id uint8) (*E3dc, error) {
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("e3dc"))
+	log := util.LoggerFromContext(ctx, "e3dc")
 
 	// Configure RSCP library logging to use evcc's TRACE level.
 	// Setting DebugLevel ensures we get detailed RSCP protocol output,

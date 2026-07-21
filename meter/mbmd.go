@@ -73,7 +73,7 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 	// set non-default delay
 	conn.Delay(cc.Delay)
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("modbus"))
+	log := util.LoggerFromContext(ctx, "modbus")
 	conn.Logger(log)
 
 	// prepare device

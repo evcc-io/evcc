@@ -83,7 +83,7 @@ func NewHesotec(ctx context.Context, uri string, id uint8) (api.Charger, error) 
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("hesotec"))
+	log := util.LoggerFromContext(ctx, "hesotec")
 	conn.Logger(log)
 
 	wb := &Hesotec{

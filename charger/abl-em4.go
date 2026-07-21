@@ -82,7 +82,7 @@ func NewAblEm4(ctx context.Context, uri string, id uint8, connector uint16) (*Ab
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("abl-em4"))
+	log := util.LoggerFromContext(ctx, "abl-em4")
 	conn.Logger(log)
 
 	wb := &AblEm4{

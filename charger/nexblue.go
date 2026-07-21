@@ -84,7 +84,7 @@ func NewNexblueFromConfig(ctx context.Context, other map[string]any) (api.Charge
 
 // NewNexblue creates Nexblue charger
 func NewNexblue(ctx context.Context, user, password, serial string, cache time.Duration) (api.Charger, error) {
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("nexblue")).Redact(user, password)
+	log := util.LoggerFromContext(ctx, "nexblue").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired

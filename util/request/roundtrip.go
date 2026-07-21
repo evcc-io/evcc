@@ -55,7 +55,7 @@ func init() {
 // NewTripper creates a logging roundtrip handler
 func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
 	tripper := &roundTripper{
-		log:  log.With(util.TransportKey, "http"),
+		log:  log.With(util.PluginKey, "http"),
 		base: base,
 	}
 

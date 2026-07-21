@@ -82,7 +82,7 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("alfen"))
+	log := util.LoggerFromContext(ctx, "alfen")
 	conn.Logger(log)
 
 	wb := &Alfen{

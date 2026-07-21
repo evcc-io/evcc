@@ -79,7 +79,7 @@ func NewWebastoNext(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("webasto-next"))
+	log := util.LoggerFromContext(ctx, "webasto-next")
 	conn.Logger(log)
 
 	wb := &WebastoNext{

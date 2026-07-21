@@ -77,7 +77,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("vaillant")).Redact(cc.User, cc.Password)
+	log := util.LoggerFromContext(ctx, "vaillant").Redact(cc.User, cc.Password)
 	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)

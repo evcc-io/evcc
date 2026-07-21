@@ -14,7 +14,6 @@ import (
 // records to stdout (gated by area level), the logstash ring and the ui (warn+).
 type handler struct {
 	area     string
-	padded   string
 	level    *slog.LevelVar // stdout threshold
 	redactor *Redactor
 	lp       int
@@ -40,6 +39,20 @@ func (h *handler) WithGroup(name string) slog.Handler {
 func (h *handler) withAttrs(attrs []slog.Attr) *handler {
 	c := *h
 	c.attrs = append(slices.Clip(h.attrs), attrs...)
+	return &c
+}
+
+// withComponentSubtype extends the component attribute by a subtype, e.g. charger -> charger/abb
+func (h *handler) withComponentSubtype(sub string) *handler {
+	c := *h
+	c.attrs = slices.Clone(h.attrs)
+	for i, a := range c.attrs {
+		if a.Key == ComponentKey {
+			c.attrs[i] = slog.String(ComponentKey, a.Value.Resolve().String()+"/"+sub)
+			return &c
+		}
+	}
+	c.attrs = append(c.attrs, slog.String(ComponentKey, sub))
 	return &c
 }
 
@@ -74,13 +87,8 @@ func (h *handler) redact(s string) string {
 }
 
 func (h *handler) Handle(_ context.Context, r slog.Record) error {
-	msg := h.redact(r.Message)
-
-	text := new(strings.Builder)
-	text.WriteString(msg)
-
 	var attrs map[string]string
-	appendAttr := func(a slog.Attr) {
+	addAttr := func(a slog.Attr) {
 		if a.Equal(slog.Attr{}) {
 			return
 		}
@@ -89,50 +97,35 @@ func (h *handler) Handle(_ context.Context, r slog.Record) error {
 		if len(h.groups) > 0 {
 			key = strings.Join(h.groups, ".") + "." + key
 		}
-		val := h.redact(a.Value.Resolve().String())
 
 		if attrs == nil {
 			attrs = make(map[string]string)
 		}
-		attrs[key] = val
-
-		text.WriteByte(' ')
-		text.WriteString(key)
-		text.WriteByte('=')
-		text.WriteString(logstash.QuoteAttr(val))
+		attrs[key] = h.redact(a.Value.Resolve().String())
 	}
 
 	for _, a := range h.attrs {
-		appendAttr(a)
+		addAttr(a)
 	}
 	r.Attrs(func(a slog.Attr) bool {
-		appendAttr(a)
+		addAttr(a)
 		return true
 	})
 
+	e := logstash.Entry{
+		Time:    r.Time,
+		Area:    h.area,
+		Level:   r.Level,
+		Message: h.redact(r.Message),
+		Attrs:   attrs,
+	}
+
 	if h.area != "cache" {
-		logstash.DefaultHandler.Add(logstash.Entry{
-			Time:    r.Time,
-			Area:    h.area,
-			Level:   r.Level,
-			Message: msg,
-			Attrs:   attrs,
-		})
+		logstash.DefaultHandler.Add(e)
 	}
 
 	if r.Level >= h.level.Level() {
-		line := new(strings.Builder)
-		line.WriteByte('[')
-		line.WriteString(h.padded)
-		line.WriteString("] ")
-		line.WriteString(logstash.LevelString(r.Level))
-		line.WriteByte(' ')
-		line.WriteString(r.Time.Format("2006/01/02 15:04:05"))
-		line.WriteByte(' ')
-		line.WriteString(text.String())
-		line.WriteByte('\n')
-
-		if _, err := os.Stdout.Write([]byte(line.String())); err != nil {
+		if _, err := os.Stdout.Write([]byte(e.String())); err != nil {
 			return err
 		}
 	}
@@ -142,7 +135,7 @@ func (h *handler) Handle(_ context.Context, r slog.Record) error {
 		if r.Level >= slog.LevelError {
 			level = "error"
 		}
-		uiCapture(level, h.lp, text.String())
+		uiCapture(level, h.lp, e.Text())
 	}
 
 	return nil

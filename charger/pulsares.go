@@ -82,7 +82,7 @@ func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, 
 		return nil, err
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("pulsares"))
+	log := util.LoggerFromContext(ctx, "pulsares")
 	conn.Logger(log)
 
 	wb := &Pulsares{

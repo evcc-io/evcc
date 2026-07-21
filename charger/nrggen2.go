@@ -112,7 +112,7 @@ func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("nrggen2"))
+	log := util.LoggerFromContext(ctx, "nrggen2")
 	conn.Logger(log)
 
 	nrg := &NRGKickGen2{

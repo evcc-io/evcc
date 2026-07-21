@@ -70,7 +70,7 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 		return nil, err
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("eprowallbox"))
+	log := util.LoggerFromContext(ctx, "eprowallbox")
 	conn.Logger(log)
 
 	wb := &EProWallbox{

@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"log"
 	"log/slog"
 	"strconv"
@@ -31,16 +30,12 @@ var (
 	OutThreshold = slog.LevelInfo
 )
 
-// LogAreaPadding of log areas
-var LogAreaPadding = 6
-
 // Attribute keys for structured log entries
 const (
-	ComponentKey = "component" // core component: site, loadpoint
-	DeviceKey    = "device"    // device class: meter, charger, vehicle, tariff, circuit, messenger
+	ComponentKey = "component" // component with optional subtype: site, loadpoint, charger/abb, vehicle/tesla, ...
+	PluginKey    = "plugin"    // plugin type incl. transports: http, mqtt, modbus, ...
 	TitleKey     = "title"     // user-facing title
 	IdKey        = "id"        // loadpoint id
-	TransportKey = "transport" // trace transport: http, mqtt, modbus
 )
 
 // Logger provides slog-based, leveled logging per log area. The printf-style
@@ -77,7 +72,6 @@ func newLogger(area string, lp int) *Logger {
 
 	h := &handler{
 		area:     area,
-		padded:   fmt.Sprintf("%-*s", LogAreaPadding, area),
 		level:    level,
 		redactor: new(Redactor),
 		lp:       lp,

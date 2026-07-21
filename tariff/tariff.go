@@ -67,7 +67,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.T
 	}
 
 	t := &Tariff{
-		log:    util.ContextLoggerWithDefault(ctx, util.NewLogger("tariff")),
+		log:    util.LoggerFromContext(ctx, "tariff"),
 		embed:  &cc.embed,
 		typ:    cc.Type,
 		priceG: priceG,

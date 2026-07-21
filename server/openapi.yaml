@@ -1566,7 +1566,7 @@ components:
           type: string
         attrs:
           type: object
-          description: Structured attributes (e.g. component, device, title, transport)
+          description: Structured attributes (e.g. component, plugin, title)
           additionalProperties:
             type: string
       required:

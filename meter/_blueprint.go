@@ -34,7 +34,7 @@ func NewBlueprintFromConfig(other map[string]any) (api.Meter, error) {
 
 // NewBlueprint creates Blueprint charger
 func NewBlueprint(uri string, cache time.Duration) (api.Meter, error) {
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("foo"))
+	log := util.LoggerFromContext(ctx, "foo")
 
 	m := &Blueprint{
 		Helper: request.NewHelper(log),

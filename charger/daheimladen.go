@@ -101,7 +101,7 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, errors.New("station id not found, device may not be a DaheimLaden")
 	}
 
-	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("daheimladen"))
+	log := util.LoggerFromContext(ctx, "daheimladen")
 	conn.Logger(log)
 
 	wb := &DaheimLaden{
