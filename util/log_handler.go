@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util/logstash"
 )
@@ -17,9 +18,14 @@ var slogOutput = os.Getenv("SLOG") != ""
 var textHandler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 	Level: logstash.LevelTrace,
 	ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-		if a.Key == slog.LevelKey {
+		switch a.Key {
+		case slog.LevelKey:
 			if l, ok := a.Value.Any().(slog.Level); ok {
 				a.Value = slog.StringValue(logstash.LevelString(l))
+			}
+		case slog.TimeKey:
+			if t, ok := a.Value.Any().(time.Time); ok {
+				a.Value = slog.StringValue(t.Format(time.RFC3339))
 			}
 		}
 		return a
