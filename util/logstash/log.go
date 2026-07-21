@@ -3,12 +3,11 @@ package logstash
 import (
 	"container/ring"
 	"io"
+	"log/slog"
 	"maps"
 	"slices"
 	"strings"
 	"sync"
-
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 var DefaultHandler = New(10000)
@@ -17,7 +16,7 @@ func Areas() []string {
 	return DefaultHandler.Areas()
 }
 
-func All(areas []string, level jww.Threshold, count int) []string {
+func All(areas []string, level slog.Level, count int) []string {
 	return DefaultHandler.All(areas, level, count)
 }
 
@@ -105,12 +104,12 @@ func (l *logger) Areas() []string {
 	return slices.Sorted(maps.Keys(areas))
 }
 
-func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
+func (l *logger) All(areas []string, level slog.Level, count int) []string {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
 	r := l.data
-	all := len(areas) == 0 && level == jww.LevelTrace
+	all := len(areas) == 0 && level <= LevelTrace
 
 	res := make([]string, 0, r.Len())
 	for range r.Len() {

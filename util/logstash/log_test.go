@@ -3,7 +3,6 @@ package logstash
 import (
 	"testing"
 
-	jww "github.com/spf13/jwalterweatherman"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,14 +22,14 @@ func TestLog(t *testing.T) {
 
 	idx := log.data
 
-	assert.Equal(t, []string{s1, s2, s3}, log.All(nil, jww.LevelTrace, 0))
-	assert.Equal(t, []string{s1, s2, s3}, log.All([]string{}, jww.LevelTrace, 0))
+	assert.Equal(t, []string{s1, s2, s3}, log.All(nil, LevelTrace, 0))
+	assert.Equal(t, []string{s1, s2, s3}, log.All([]string{}, LevelTrace, 0))
 
-	assert.Equal(t, []string{s1, s3}, log.All([]string{"test1"}, jww.LevelTrace, 0))
-	assert.Equal(t, []string{s1, s2, s3}, log.All(nil, jww.LevelTrace, 0))
-	assert.Equal(t, []string{s3}, log.All(nil, jww.LevelTrace, 1))
+	assert.Equal(t, []string{s1, s3}, log.All([]string{"test1"}, LevelTrace, 0))
+	assert.Equal(t, []string{s1, s2, s3}, log.All(nil, LevelTrace, 0))
+	assert.Equal(t, []string{s3}, log.All(nil, LevelTrace, 1))
 
-	assert.Equal(t, []string{}, log.All(nil, jww.LevelFatal, 0))
+	assert.Equal(t, []string{}, log.All(nil, LevelFatal, 0))
 
 	assert.Equal(t, idx, log.data, "data should not be changed after All() call")
 	assert.Equal(t, []string{"test1", "test2"}, log.Areas())
@@ -55,7 +54,7 @@ func TestRingGrowsThenCaps(t *testing.T) {
 	}
 
 	// only the last `size` lines survive, in chronological order
-	got := log.All(nil, jww.LevelTrace, 0)
+	got := log.All(nil, LevelTrace, 0)
 	assert.Len(t, got, size, "ring must not exceed configured size")
 	assert.Equal(t, lines[len(lines)-size:], got)
 }
@@ -71,7 +70,7 @@ func TestRingSkipCacheLinesDoesNotGrow(t *testing.T) {
 	log.Write([]byte(s1))
 	log.Write([]byte(s2))
 
-	stored := log.All(nil, jww.LevelTrace, 0)
+	stored := log.All(nil, LevelTrace, 0)
 	lenBefore := log.length
 	cursorBefore := log.data
 
@@ -79,7 +78,7 @@ func TestRingSkipCacheLinesDoesNotGrow(t *testing.T) {
 		log.Write([]byte("[cache ] cache line"))
 	}
 
-	assert.Equal(t, stored, log.All(nil, jww.LevelTrace, 0), "cache lines must not change stored content")
+	assert.Equal(t, stored, log.All(nil, LevelTrace, 0), "cache lines must not change stored content")
 	assert.Equal(t, log.data.Len(), log.length, "length counter must stay in sync with the ring")
 	assert.Equal(t, lenBefore, log.length, "cache lines must not grow the ring")
 	assert.Same(t, cursorBefore, log.data, "cache lines must not advance the write cursor")
@@ -94,6 +93,6 @@ func BenchmarkLog(b *testing.B) {
 	log.Write([]byte(s3))
 
 	for b.Loop() {
-		log.All(nil, jww.LevelTrace, 1)
+		log.All(nil, LevelTrace, 1)
 	}
 }

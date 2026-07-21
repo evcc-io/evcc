@@ -1,36 +1,48 @@
 package util
 
 import (
-	"io"
+	"fmt"
 	"log"
-	"os"
-	"regexp"
+	"log/slog"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/util/logstash"
-	jww "github.com/spf13/jwalterweatherman"
+)
+
+// Log levels, extending slog by Trace and Fatal
+const (
+	LevelTrace = logstash.LevelTrace
+	LevelDebug = slog.LevelDebug
+	LevelInfo  = slog.LevelInfo
+	LevelWarn  = slog.LevelWarn
+	LevelError = slog.LevelError
+	LevelFatal = logstash.LevelFatal
 )
 
 var (
 	loggers = map[string]*Logger{}
-	levels  = map[string]jww.Threshold{}
+	levels  = map[string]slog.Level{}
 
 	loggersMux sync.Mutex
 
 	// OutThreshold is the default console log level
-	OutThreshold = jww.LevelInfo
+	OutThreshold = slog.LevelInfo
 )
 
 // LogAreaPadding of log areas
 var LogAreaPadding = 6
 
-// Logger wraps a jww notepad to avoid leaking implementation detail
+// Logger provides slog-based, leveled logging per log area. The printf-style
+// level loggers remain for legacy call sites; new code should prefer slog.
 type Logger struct {
-	*jww.Notepad
+	*slog.Logger
 	*Redactor
-	lp int
+
+	TRACE, DEBUG, INFO, WARN, ERROR, FATAL *log.Logger
+
+	handler *handler
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
@@ -51,32 +63,40 @@ func newLogger(area string, lp int) *Logger {
 		return logger
 	}
 
-	padded := area
-	for len(padded) < LogAreaPadding {
-		padded += " "
-	}
+	level := new(slog.LevelVar)
+	level.Set(logLevelForArea(area))
 
-	level := logLevelForArea(area)
-	redactor := new(Redactor)
-	notepad := jww.NewNotepad(
-		level, jww.LevelTrace,
-		&redactWriter{os.Stdout, redactor}, &redactWriter{logstash.DefaultHandler, redactor},
-		padded, log.Ldate|log.Ltime)
-
-	logger := &Logger{
-		Notepad:  notepad,
-		Redactor: redactor,
+	h := &handler{
+		padded:   fmt.Sprintf("%-*s", LogAreaPadding, area),
+		level:    level,
+		redactor: new(Redactor),
 		lp:       lp,
 	}
 
-	// capture loggers created after uiChan is initialized
-	if uiChan != nil {
-		captureLogger(logger)
-	}
-
+	logger := newHandlerLogger(h)
 	loggers[area] = logger
 
 	return logger
+}
+
+func newHandlerLogger(h *handler) *Logger {
+	return &Logger{
+		Logger:   slog.New(h),
+		Redactor: h.redactor,
+		TRACE:    slog.NewLogLogger(h, LevelTrace),
+		DEBUG:    slog.NewLogLogger(h, LevelDebug),
+		INFO:     slog.NewLogLogger(h, LevelInfo),
+		WARN:     slog.NewLogLogger(h, LevelWarn),
+		ERROR:    slog.NewLogLogger(h, LevelError),
+		FATAL:    slog.NewLogLogger(h, LevelFatal),
+		handler:  h,
+	}
+}
+
+// With returns a derived logger carrying additional attributes. It shares
+// area, log level and redaction with its parent.
+func (l *Logger) With(args ...any) *Logger {
+	return newHandlerLogger(l.handler.with(args))
 }
 
 // Redact adds items for redaction
@@ -93,7 +113,7 @@ func Loggers(cb func(string, *Logger)) {
 }
 
 // logLevelForArea gets the log level for given log area
-func logLevelForArea(area string) jww.Threshold {
+func logLevelForArea(area string) slog.Level {
 	level, ok := levels[strings.ToLower(area)]
 	if !ok {
 		level = OutThreshold
@@ -113,73 +133,42 @@ func LogLevel(defaultLevel string, areaLevels map[string]string) {
 	}
 
 	Loggers(func(name string, logger *Logger) {
-		logger.SetStdoutThreshold(logLevelForArea(name))
+		logger.handler.level.Set(logLevelForArea(name))
 	})
 }
 
-var uiChan chan<- Param
+var (
+	uiChanMux sync.RWMutex
+	uiChan    chan<- Param
+)
 
-type uiWriter struct {
-	re    *regexp.Regexp
-	level string
-	lp    int
+// CaptureLogs routes warnings and errors to the ui
+func CaptureLogs(c chan<- Param) {
+	uiChanMux.Lock()
+	defer uiChanMux.Unlock()
+
+	if uiChan == nil {
+		uiChan = c
+	}
 }
 
-func (w *uiWriter) Write(p []byte) (n int, err error) {
-	// trim level and timestamp
-	s := string(w.re.ReplaceAll(p, []byte{}))
+func uiCapture(level string, lp int, msg string) {
+	uiChanMux.RLock()
+	defer uiChanMux.RUnlock()
+
+	if uiChan == nil {
+		return
+	}
 
 	val := struct {
 		Message   string `json:"message"`
 		Level     string `json:"level"`
 		Loadpoint int    `json:"lp,omitempty"`
 	}{
-		Message:   strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
-		Level:     w.level,
-		Loadpoint: w.lp,
+		Message:   strings.Trim(strconv.Quote(strings.TrimSpace(msg)), "\""),
+		Level:     level,
+		Loadpoint: lp,
 	}
 
-	param := Param{
-		Key: "log",
-		Val: val,
-	}
-
-	uiChan <- param
-	return 0, nil
-}
-
-// CaptureLogs appends uiWriter to relevant log levels for
-// loggers created before uiChan is initialized
-func CaptureLogs(c chan<- Param) {
-	loggersMux.Lock()
-	defer loggersMux.Unlock()
-
-	if uiChan != nil {
-		return
-	}
-
-	uiChan = c
-
-	for _, l := range loggers {
-		captureLogger(l)
-	}
-}
-
-func captureLogger(l *Logger) {
-	captureLogLevel("warn", l.lp, l.Notepad.WARN)
-	captureLogLevel("error", l.lp, l.Notepad.ERROR)
-	captureLogLevel("error", l.lp, l.Notepad.FATAL)
-}
-
-func captureLogLevel(level string, lp int, l *log.Logger) {
-	re := regexp.MustCompile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
-
-	ui := uiWriter{
-		lp:    lp,
-		re:    re,
-		level: level,
-	}
-
-	mw := io.MultiWriter(l.Writer(), &ui)
-	l.SetOutput(mw)
+	uiChan <- Param{Key: "log", Val: val}
 }

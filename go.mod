@@ -93,7 +93,6 @@ require (
 	github.com/spali/go-rscp v0.2.2
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
-	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teslamotors/vehicle-command v0.4.1
