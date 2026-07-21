@@ -1667,6 +1667,13 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "DD/MM/YYYY",
+      "label": "Date format",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",
