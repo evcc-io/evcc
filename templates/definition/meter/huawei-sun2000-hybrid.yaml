@@ -39,6 +39,7 @@ params:
     usages: ["pv"]
     deprecated: true # curtailment now applies the HEMS-distributed percent directly
   - name: storageunit
+    deprecated: true
   - name: forceaccharging
     default: false
     advanced: true
