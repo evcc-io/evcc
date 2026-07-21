@@ -228,6 +228,96 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BatteryModeResult"
+  /batterysolarcontrol/{enable}:
+    post:
+      operationId: setBatterySolarControl
+      summary: Control watt-level battery solar control (FORK)
+      description: "Enable watt-level solar control: actively charge the home battery from surplus and discharge it to cover loads via RS485. Required for batteries without a grid CT (e.g. Marstek). Disabling returns batteries to their autonomous mode."
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
+  /batterycalibrationcharge/{enable}:
+    post:
+      operationId: setBatteryCalibrationCharge
+      summary: One-shot LFP calibration charge (FORK)
+      description: "Bypass maxSoc and charge all batteries to 100% once for BMS/LFP calibration. Auto-clears when aggregate SoC reaches 100%."
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
+  /batterysolarpool/{enable}:
+    post:
+      operationId: setBatterySolarPool
+      summary: Pool mode for battery solar control (FORK)
+      description: "Distribute power equally across all batteries instead of per-battery tiering/selection."
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
+  /batterysolartiering/{enable}:
+    post:
+      operationId: setBatterySolarTiering
+      summary: Tiering for battery solar control (FORK)
+      description: "Activate only the number of batteries needed for the target power, sized off each unit's rated power with hysteresis."
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
+  /batterysolarsticky/{enable}:
+    post:
+      operationId: setBatterySolarSticky
+      summary: Sticky selection for battery solar control (FORK)
+      description: "Keep the same battery selection across ticks; swap only on significant SoC divergence."
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
+  /batterysolartapering/{enable}:
+    post:
+      operationId: setBatterySolarTapering
+      summary: Charge tapering for battery solar control (FORK)
+      description: "Linearly reduce charge power in the last SoC band before maxSoc to protect cells (CC/CV safety net)."
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
+  /batterycontroldeadband/{power}:
+    post:
+      operationId: setBatteryControlDeadBand
+      summary: Battery solar control dead band (FORK)
+      description: "Minimum surplus/deficit in watts before the fast loop starts charging or discharging (stability dead band)."
+      tags:
+        - battery
+      parameters:
+        - name: power
+          in: path
+          required: true
+          description: Dead band in watts
+          example: 50
+          schema:
+            type: number
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /buffersoc/{soc}:
     post:
       operationId: setBufferSoc

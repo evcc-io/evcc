@@ -1,0 +1,52 @@
+template: marstek-venus-e-v3
+products:
+  - brand: Marstek
+    description:
+      generic: Venus E Gen 3.0 (RS485 watt control)
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 115200
+    comset: 8N1
+  - preset: battery-params
+  - name: capacity
+    default: 5.12
+  - name: minsoc
+    default: 11
+  - name: maxsoc
+    default: 100
+  - name: maxchargepower
+    default: 2500
+  - name: maxdischargepower
+    default: 800
+  - name: generation
+    default: 3
+    advanced: true
+    description:
+      en: Device generation
+      de: Gerätegeneration
+    help:
+      en: Marstek Venus hardware generation (register layout). 3 for Venus E Gen 3.0.
+      de: Marstek Venus Hardware-Generation (Register-Layout). 3 für Venus E Gen 3.0.
+  - name: work_mode_normal
+    default: 1
+    advanced: true
+    description:
+      en: Work mode for Normal state
+      de: Work mode für Normal-Modus
+    help:
+      en: 0=manual, 1=anti-feed, 2=trade mode.
+      de: 0=manuell, 1=Eigenverbrauch, 2=AI-Optimierung.
+render: |
+  type: marstek
+  {{- include "modbus" . }}
+  generation: {{ .generation }}
+  workmodenormal: {{ .work_mode_normal }}
+  maxchargepower: {{ .maxchargepower }}
+  maxdischargepower: {{ .maxdischargepower }}
+  minsoc: {{ .minsoc }}
+  maxsoc: {{ .maxsoc }}
+  capacity: {{ .capacity }}

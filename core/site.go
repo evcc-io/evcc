@@ -80,11 +80,30 @@ type Site struct {
 	curtailPercent *int
 
 	// battery settings
-	prioritySoc             float64  // prefer battery up to this Soc
-	bufferSoc               float64  // continue charging on battery above this Soc
-	bufferStartSoc          float64  // start charging on battery above this Soc
-	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
-	batteryGridChargeLimit  *float64 // grid charging limit
+	prioritySoc              float64              // prefer battery up to this Soc
+	bufferSoc                float64              // continue charging on battery above this Soc (EV loadpoints)
+	bufferStartSoc           float64              // start charging on battery above this Soc (EV loadpoints)
+	batteryDischargeControl  bool                 // prevent battery discharge for fast and planned charging
+	batterySolarControl      bool                 // actively charge from surplus / discharge to cover loads
+	batteryCalibrationCharge bool                 // one-shot: bypass maxSoc and charge to 100% for LFP calibration (not persisted)
+	batteryControlDeadBand   float64              // minimum surplus/deficit (W) to start charge or discharge (stability dead band)
+	batteryGridChargeLimit   *float64             // grid charging limit
+	batterySolarPool         bool                 // distribute power equally across all batteries (no per-battery selection)
+	batterySolarTiering      bool                 // activate minimum number of batteries needed to stay above inverter's effective power floor
+	batterySolarSticky       bool                 // keep the same battery selection across ticks; swap only on significant SoC divergence
+	batterySolarTapering     bool                 // linearly reduce charge power in the last SoC band before maxSoc to protect cells
+	batteryChargeTier        int                  // tiered activation: current number of batteries charging (0 = uninitialised)
+	batteryDischargeTier     int                  // tiered activation: current number of batteries discharging (0 = uninitialised)
+	batteryChargeActive      []string             // sticky selection: names of batteries currently in the charge tier
+	batteryDischargeActive   []string             // sticky selection: names of batteries currently in the discharge tier
+	batteryStopped           map[string]int       // ticks since stop was last sent per battery; skips redundant re-stops
+	batteryPlanMu            sync.Mutex           // guards batterySnapshot and serializes snapshot build vs fast loop
+	batterySnapshot          *batterySnapshot     // main loop → fast loop contract (SoC/limits/caps + config, no power)
+	batteryFastDirection     batteryPlanDirection // direction the fast loop is currently committed to
+	batteryLastGrid          float64              // fast loop meter guard: previous grid reading
+	batteryLastBatt          float64              // fast loop meter guard: previous total battery reading
+	batteryGuardValid        bool                 // fast loop meter guard: previous readings are valid
+	batteryFlipSince         time.Time            // fast loop: when the opposite direction first became wanted
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -111,6 +130,8 @@ type Site struct {
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
+	lastBatteryFlipRequest   time.Time                   // fast loop: last direction flip; adaptive spacing to bound thrash
+	batteryFlipBackoff       time.Duration               // fast loop: current minimum spacing between flips; grows on rapid re-flips, resets when calm
 }
 
 // MetersConfig contains the site's meter configuration
@@ -379,6 +400,33 @@ func (site *Site) restoreSettings() error {
 		if err := site.SetBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
+	}
+	if v, err := settings.Bool(keys.BatterySolarControl); err == nil {
+		if err := site.SetBatterySolarControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.BatteryControlDeadBand); err == nil {
+		if err := site.SetBatteryControlDeadBand(v); err != nil {
+			return err
+		}
+	}
+	// battery solar control sub-features: default all enabled except pool mode
+	site.batterySolarPool = false
+	site.batterySolarTiering = true
+	site.batterySolarSticky = true
+	site.batterySolarTapering = true
+	if v, err := settings.Bool(keys.BatterySolarPool); err == nil {
+		site.batterySolarPool = v
+	}
+	if v, err := settings.Bool(keys.BatterySolarTiering); err == nil {
+		site.batterySolarTiering = v
+	}
+	if v, err := settings.Bool(keys.BatterySolarSticky); err == nil {
+		site.batterySolarSticky = v
+	}
+	if v, err := settings.Bool(keys.BatterySolarTapering); err == nil {
+		site.batterySolarTapering = v
 	}
 	if v, err := settings.Float(keys.ResidualPower); err == nil {
 		if err := site.SetResidualPower(v); err != nil {
@@ -982,7 +1030,6 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	batteryPower := site.battery.Power
 	excessDCPower := site.excessDCPower
 
-	// handed to loadpoint
 	var batteryBuffered, batteryStart bool
 
 	if len(site.batteryMeters) > 0 {
@@ -995,6 +1042,11 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 			priorityAdjustment += batteryPower + excessDCPower
 			batteryPower = 0
 			excessDCPower = 0
+		} else if site.battery.Soc < site.prioritySoc && site.batterySolarControl && site.gridPower < 0 && batteryPower < standbyPower {
+			// solar control: battery in Hold mode (not yet responding to charge command)
+			// absorb surplus into residualPower so loadpoints see no available surplus
+			site.log.DEBUG.Printf("battery solar priority at soc %.0f%% (< %.0f%%): claiming %.0fW surplus", site.battery.Soc, site.prioritySoc, -site.gridPower)
+			residualPower = max(residualPower, -site.gridPower)
 		} else {
 			// if battery is above bufferSoc allow using it for charging
 			batteryBuffered = site.bufferSoc > 0 && site.battery.Soc > site.bufferSoc
@@ -1118,7 +1170,11 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
+	var latestSitePower float64 // captured for battery solar control
+	var sitePowerValid bool     // false on failed meter read: solar control must skip the tick
 	if sitePower, batteryBuffered, batteryStart, priorityAdjustment, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
+		latestSitePower = sitePower
+		sitePowerValid = true
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + max(0, site.pvPower) + site.battery.Power - totalChargePower
 		homePower = max(homePower, 0)
@@ -1180,7 +1236,7 @@ func (site *Site) update(lp updater) {
 	// update battery after reading meters to ensure that (modbus) connection is open
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
-	site.updateBatteryMode(batteryGridChargeActive, rate)
+	site.updateBatteryMode(batteryGridChargeActive, rate, latestSitePower, sitePowerValid)
 
 	site.stats.Update(site)
 }
@@ -1205,6 +1261,13 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
+	site.publish(keys.BatterySolarControl, site.batterySolarControl)
+	site.publish(keys.BatteryCalibrationCharge, site.batteryCalibrationCharge)
+	site.publish(keys.BatteryControlDeadBand, site.batteryControlDeadBand)
+	site.publish(keys.BatterySolarPool, site.batterySolarPool)
+	site.publish(keys.BatterySolarTiering, site.batterySolarTiering)
+	site.publish(keys.BatterySolarSticky, site.batterySolarSticky)
+	site.publish(keys.BatterySolarTapering, site.batterySolarTapering)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
@@ -1301,6 +1364,10 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	loadpointChan := make(chan updater)
 	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
+	}
+
+	if site.batteryConfigured() {
+		go site.batteryFastLoop(stopC)
 	}
 
 	site.update(<-loadpointChan) // start immediately

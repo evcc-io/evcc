@@ -10,6 +10,11 @@ func (lp *Loadpoint) chargerHasFeature(f api.Feature) bool {
 	return hasFeature(lp.charger, f)
 }
 
+// IsHeating returns true when the charger has the api.Heating feature
+func (lp *Loadpoint) IsHeating() bool {
+	return lp.chargerHasFeature(api.Heating)
+}
+
 // publishChargerFeature publishes availability of charger features
 func (lp *Loadpoint) publishChargerFeature(f api.Feature) {
 	lp.publish(keys.ChargerFeature+f.String(), lp.chargerHasFeature(f))

@@ -31,6 +31,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | File | When to load |
 |------|-------------|
 | [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
+| [Battery Management](docs/agents/battery-management.md) | Multi-battery solar control (tiering, sticky selection, swaps, fast loop, modes, calibration) |
 | [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
 | [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
 | [OCPP Forwarder](docs/agents/ocpp-forwarder.md) | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |

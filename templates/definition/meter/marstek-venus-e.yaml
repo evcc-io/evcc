@@ -1,5 +1,5 @@
 template: marstek-venus-e
-covers: ["marstek-venus", "marstek-venus-e-v3"]
+covers: ["marstek-venus"] # FORK: marstek-venus-e-v3 kept as a separate native watt-control template
 products:
   - brand: Marstek
     description:

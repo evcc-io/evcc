@@ -75,7 +75,7 @@ func TestApplyBatteryMode(t *testing.T) {
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
 		}
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, api.Rate{}, 0, true)
 
 		if tc.internal != api.BatteryNormal {
 			assert.Equal(t, tc.expected, site.batteryMode)
@@ -111,7 +111,7 @@ func TestRequiredExternalBatteryMode(t *testing.T) {
 		site.batteryMode = tc.internal
 		site.batteryModeExternal = tc.external
 
-		mode := site.requiredBatteryMode(false, api.Rate{})
+		mode := site.requiredBatteryMode(false, api.Rate{}, 0)
 		assert.Equal(t, tc.new.String(), mode.String(), "internal mode expected %s got %s", tc.new, mode)
 	}
 }
@@ -165,13 +165,13 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
 		}
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, api.Rate{}, 0, true)
 		if !ctrl.Satisfied() {
 			ctrl.Finish()
 		}
 
 		// 3. verify required external mode only applied once
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, api.Rate{}, 0, true)
 		if !ctrl.Satisfied() {
 			ctrl.Finish()
 		}
@@ -186,7 +186,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 
 		// battery switched back to normal mode
 		batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, api.Rate{}, 0, true)
 
 		// timer disabled
 		assert.True(t, site.batteryModeExternalTimer.IsZero())
@@ -248,7 +248,7 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
 		}
 
-		site.updateBatteryMode(true, api.Rate{})
+		site.updateBatteryMode(true, api.Rate{}, 0, true)
 
 		ctrl.Finish()
 	}

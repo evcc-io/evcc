@@ -29,6 +29,7 @@
 import { defineComponent, type PropType } from "vue";
 import { BATTERY_MODE, CHARGE_MODE, type Timeout } from "@/types/evcc";
 import BatteryBoost from "../MaterialIcon/BatteryBoost.vue";
+import store from "@/store";
 
 export default defineComponent({
 	name: "BatteryBoostButton",
@@ -68,7 +69,10 @@ export default defineComponent({
 			return this.batterySoc < this.batteryBoostLimit;
 		},
 		batteryHold(): boolean {
-			return this.batteryMode === BATTERY_MODE.HOLD;
+			// FORK (feat/battery_loop): under watt-level solar control the battery sits
+			// in HOLD while the fast loop actively drives it, so boost is not blocked -
+			// the fast loop covers the boosting vehicle from the battery.
+			return this.batteryMode === BATTERY_MODE.HOLD && !store.state.batterySolarControl;
 		},
 		available(): boolean {
 			return !this.belowLimit && !this.batteryHold;
