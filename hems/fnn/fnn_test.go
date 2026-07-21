@@ -3,6 +3,7 @@ package fnn
 import (
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/server/db"
@@ -21,6 +22,18 @@ func boolG(v bool) func() (bool, error) {
 	return func() (bool, error) { return v, nil }
 }
 
+// TestNewFnnDoesNotReadRelays verifies that construction does not read the
+// relay sources. Blocking or failing here would stall startup, see #31999.
+func TestNewFnnDoesNotReadRelays(t *testing.T) {
+	relay := func() (bool, error) { return false, api.ErrOutdated }
+
+	fnn, err := NewFnn(nil, 1e3, 1e3, relay, nil, nil, relay, 0)
+	require.NoError(t, err)
+	assert.Nil(t, fnn.MaxConsumptionPower())
+	assert.Nil(t, fnn.CurtailedPercent())
+	assert.Nil(t, fnn.MaxProductionPower())
+}
+
 // TestCurtailmentNotConfigured verifies that without W3 no curtailment
 // statement is made, while dimming via W4 remains available.
 func TestCurtailmentNotConfigured(t *testing.T) {
@@ -33,6 +46,11 @@ func TestCurtailmentNotConfigured(t *testing.T) {
 	assert.Nil(t, fnn.MaxProductionPower())
 	assert.Nil(t, hems.Curtailed(fnn))
 
+	// no statement before the relays have been read
+	assert.Nil(t, fnn.MaxConsumptionPower())
+	assert.Nil(t, hems.Dimmed(fnn))
+
+	require.NoError(t, fnn.runDim())
 	assert.NotNil(t, fnn.MaxConsumptionPower())
 	assert.NotNil(t, hems.Dimmed(fnn))
 }
@@ -46,6 +64,11 @@ func TestDimmingNotConfigured(t *testing.T) {
 	assert.Nil(t, fnn.MaxConsumptionPower())
 	assert.Nil(t, hems.Dimmed(fnn))
 
+	// no statement before the relays have been read
+	assert.Nil(t, fnn.CurtailedPercent())
+	assert.Nil(t, hems.Curtailed(fnn))
+
+	require.NoError(t, fnn.runCurtail())
 	assert.NotNil(t, fnn.CurtailedPercent())
 	assert.NotNil(t, hems.Curtailed(fnn))
 }

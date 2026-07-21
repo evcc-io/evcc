@@ -78,24 +78,15 @@ func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, 
 	}
 
 	c := &Fnn{
-		log:               util.NewLogger("fnn"),
-		site:              site,
-		maxDimPower:       maxDimPower,
-		maxCurtailPower:   maxCurtailPower,
-		s1:                s1G,
-		s2:                s2G,
-		w3:                w3G,
-		w4:                w4G,
-		productionPercent: 100,
-		interval:          interval,
-	}
-
-	// read the relays once synchronously so limits are valid as soon as NewFnn returns
-	if err := c.runCurtail(); err != nil {
-		return nil, err
-	}
-	if err := c.runDim(); err != nil {
-		return nil, err
+		log:             util.NewLogger("fnn"),
+		site:            site,
+		maxDimPower:     maxDimPower,
+		maxCurtailPower: maxCurtailPower,
+		s1:              s1G,
+		s2:              s2G,
+		w3:              w3G,
+		w4:              w4G,
+		interval:        interval,
 	}
 
 	return c, nil
@@ -117,8 +108,8 @@ type Fnn struct {
 	smartgridConsumptionID uint
 	smartgridProductionID  uint
 
-	consumptionLimit  *float64
-	productionPercent int // allowed feed-in percent (0..100), 100 = uncurtailed
+	consumptionLimit  *float64 // nil until first dim read
+	productionPercent *int     // allowed feed-in percent (0..100), 100 = uncurtailed, nil until first curtail read
 
 	interval time.Duration
 }
@@ -129,9 +120,9 @@ func (c *Fnn) SetUpdated(f func()) {
 	c.publishFunc = f
 }
 
-// Run starts the FNN control loop. NewFnn already ran the first pass.
 func (c *Fnn) Run() {
-	for range time.Tick(c.interval) {
+	// run immediately, then on every tick
+	for tick := time.Tick(c.interval); ; <-tick {
 		if err := c.runCurtail(); err != nil {
 			c.log.ERROR.Println(err)
 		}
@@ -207,7 +198,7 @@ func (c *Fnn) setProductionLimit(percent int) error {
 	defer c.mu.Unlock()
 
 	active := percent < 100
-	c.productionPercent = percent
+	c.productionPercent = new(percent)
 
 	limit := 0.0
 	if active {
@@ -227,10 +218,7 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 	defer c.mu.Unlock()
 
 	active := limit > 0
-	c.consumptionLimit = nil
-	if active {
-		c.consumptionLimit = &limit
-	}
+	c.consumptionLimit = new(limit)
 
 	if err := smartgrid.UpdateSession(&c.smartgridConsumptionID, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
@@ -242,6 +230,7 @@ func (c *Fnn) setConsumptionLimit(limit float64) error {
 var _ api.HEMS = (*Fnn)(nil)
 
 // CurtailedPercent implements api.HEMS, returning the allowed production percent.
+// nil until the relays have been read for the first time.
 func (c *Fnn) CurtailedPercent() *int {
 	if c.w3 == nil {
 		return nil
@@ -249,11 +238,14 @@ func (c *Fnn) CurtailedPercent() *int {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
-	return new(c.productionPercent)
+	if c.productionPercent == nil {
+		return nil
+	}
+	return new(*c.productionPercent)
 }
 
 // MaxConsumptionPower implements api.HEMS.
+// nil until the relays have been read for the first time.
 func (c *Fnn) MaxConsumptionPower() *float64 {
 	if c.w4 == nil {
 		return nil
@@ -262,12 +254,13 @@ func (c *Fnn) MaxConsumptionPower() *float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.consumptionLimit == nil {
-		return new(0.0)
+		return nil
 	}
 	return new(*c.consumptionLimit)
 }
 
 // MaxProductionPower implements api.HEMS.
+// nil until the relays have been read for the first time.
 func (c *Fnn) MaxProductionPower() *float64 {
 	if c.w3 == nil {
 		return nil
@@ -275,9 +268,12 @@ func (c *Fnn) MaxProductionPower() *float64 {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.productionPercent >= 100 {
+	if c.productionPercent == nil {
+		return nil
+	}
+	if *c.productionPercent >= 100 {
 		return new(0.0)
 	}
 
-	return new(float64(c.productionPercent) / 100 * c.maxCurtailPower)
+	return new(float64(*c.productionPercent) / 100 * c.maxCurtailPower)
 }
