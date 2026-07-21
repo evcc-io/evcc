@@ -90,8 +90,6 @@ func (site *Site) curtailPV(percent *int) error {
 		return nil
 	}
 
-	curtail := *percent < 100
-
 	var errs error
 	for _, dev := range site.pvMeters {
 		m, ok := api.Cap[api.Curtailer](dev.Instance())
@@ -99,8 +97,8 @@ func (site *Site) curtailPV(percent *int) error {
 			continue
 		}
 
-		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			if curtail == curtailed {
+		if curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff()); err == nil {
+			if curtailed == *percent {
 				continue
 			}
 		} else {
