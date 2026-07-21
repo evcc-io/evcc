@@ -138,7 +138,7 @@ func (t Trydan) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c Trydan) Enabled() (bool, error) {
 	data, err := c.statusG.Get()
-	return data.Paused == 0 && data.Locked == 0, err
+	return data.Paused == 0, err
 }
 
 func (c *Trydan) setValue(param string, value int) error {
@@ -159,10 +159,9 @@ func (c Trydan) Enable(enable bool) error {
 		pauseDynamic = 1
 	}
 
+	// Locked disables the EVSE entirely and is independent of Paused; it must not
+	// be toggled here, or the charger resets its session energy/time counters.
 	if err := c.setValue("Paused", pause); err != nil {
-		return err
-	}
-	if err := c.setValue("Locked", pause); err != nil {
 		return err
 	}
 	// Pause/Unpause Dynamic Power Control if enabled.
