@@ -8,6 +8,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDecodeEnv(t *testing.T) {
+	t.Setenv("TEST_TOKEN", "secret")
+
+	var dst struct {
+		User, Password, Token string
+	}
+
+	require.NoError(t, DecodeOther(map[string]any{
+		"user":     "${env:TEST_TOKEN}suffix",
+		"password": "${maxcurrent}",
+		"token":    "${env:TEST_TOKEN}",
+	}, &dst))
+
+	assert.Equal(t, "${env:TEST_TOKEN}suffix", dst.User)
+	assert.Equal(t, "${maxcurrent}", dst.Password)
+	assert.Equal(t, "secret", dst.Token)
+
+	require.Error(t, DecodeOther(map[string]any{"token": "${env:TEST_MISSING}"}, &dst))
+}
+
 func TestDecodeNil(t *testing.T) {
 	var dst struct {
 		User, Password string
