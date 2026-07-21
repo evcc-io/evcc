@@ -752,8 +752,8 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	// base load (excludes loadpoints) - averaged over last 7 days
-	gt_base, err := site.collectors[metrics.Home].EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -7))
+	// base load (excludes loadpoints) - averaged over last 30 days
+	gt_base, err := site.collectors[metrics.Home].EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
 	}
