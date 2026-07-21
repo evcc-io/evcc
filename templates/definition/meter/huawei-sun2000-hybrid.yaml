@@ -299,7 +299,7 @@ render: |
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
-      address: 37765
+      address: 37765 # overall power
       type: holding
       decode: int32nan
     scale: -1
@@ -308,7 +308,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 37782 # Total discharge
+      address: 37782 # overall energy discharged
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -317,7 +317,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 37780 # Total charge
+      address: 37780 # overall energy charged
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -326,7 +326,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 37760
+      address: 37760 # overall SoC
       type: holding
       decode: uint16nan
     scale: 0.1
