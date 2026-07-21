@@ -52,7 +52,7 @@ func NewLogger(area string) *Logger {
 
 // NewLoggerWithLoadpoint creates a logger with reference to at loadpoint
 func NewLoggerWithLoadpoint(area string, lp int) *Logger {
-	return newLogger(area, lp)
+	return newLogger(area, lp).With("component", "loadpoint", "id", lp)
 }
 
 func newLogger(area string, lp int) *Logger {
