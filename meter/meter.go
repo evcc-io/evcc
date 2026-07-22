@@ -28,6 +28,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 
 		// battery
 		batteryCapacityCtx    `mapstructure:",squash"`
+		batteryEfficiency     `mapstructure:",squash"`
 		batterySocLimitsCtx   `mapstructure:",squash"`
 		batteryPowerLimitsCtx `mapstructure:",squash"`
 		Soc                   *plugin.Config // optional
@@ -90,6 +91,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
+		implement.May(m, implement.BatteryEfficiency(cc.batteryEfficiency.Decorator()))
 
 		switch {
 		case cc.Soc != nil && cc.LimitSoc != nil:

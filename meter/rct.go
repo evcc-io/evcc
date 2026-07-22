@@ -69,6 +69,7 @@ func init() {
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
+		batteryEfficiency  `mapstructure:",squash"`
 		batterySocLimits   `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
 		pvMaxACPower       `mapstructure:",squash"`
@@ -97,11 +98,11 @@ func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, err
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batterySocLimits, cc.batteryPowerLimits, cc.Cache, cc.ExternalPower, cc.Capacity, cc.Capacity2, cc.pvMaxACPower.Decorator())
+	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batteryEfficiency, cc.batterySocLimits, cc.batteryPowerLimits, cc.Cache, cc.ExternalPower, cc.Capacity, cc.Capacity2, cc.pvMaxACPower.Decorator())
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, cache time.Duration, externalPower bool, capacity, capacity2 float64, maxACPower func() float64) (api.Meter, error) {
+func NewRCT(ctx context.Context, uri, usage string, batteryEfficiency batteryEfficiency, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, cache time.Duration, externalPower bool, capacity, capacity2 float64, maxACPower func() float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
 	// re-use connections
@@ -174,6 +175,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		implement.Has(m, implement.Battery(batterySoc))
 		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
+		implement.May(m, implement.BatteryEfficiency(batteryEfficiency.Decorator()))
 
 		if capacity != 0 {
 			implement.Has(m, implement.BatteryCapacity(func() float64 { return capacity + capacity2 }))

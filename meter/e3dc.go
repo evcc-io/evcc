@@ -34,6 +34,7 @@ func init() {
 func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity    `mapstructure:",squash"`
+		batteryEfficiency  `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
 		batterySocLimits   `mapstructure:",squash"`
 		pvMaxACPower       `mapstructure:",squash"`
@@ -71,12 +72,12 @@ func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batteryEfficiency.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64, efficiency func() int64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -108,6 +109,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 
 	if usage == templates.UsageBattery {
 		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.May(m, implement.BatteryEfficiency(efficiency))
 		implement.Has(m, implement.Battery(m.batterySoc))
 		implement.Has(m, implement.BatteryController(m.setBatteryMode))
 	}

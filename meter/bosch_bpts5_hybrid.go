@@ -25,6 +25,7 @@ func init() {
 func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
 		batteryCapacity    `mapstructure:",squash"`
+		batteryEfficiency  `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
 		batterySocLimits   `mapstructure:",squash"`
 		URI                string
@@ -40,11 +41,11 @@ func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache, cc.batteryCapacity.Decorator(), cc.batteryEfficiency.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
-func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*BoschBpts5Hybrid, error) {
+func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration, capacity func() float64, efficiency func() int64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*BoschBpts5Hybrid, error) {
 	log := util.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
@@ -65,6 +66,7 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration, capacity func()
 		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.May(m, implement.BatterySocLimiter(batterySocLimits))
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
+		implement.May(m, implement.BatteryEfficiency(efficiency))
 	}
 
 	return m, nil
