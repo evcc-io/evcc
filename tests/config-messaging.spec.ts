@@ -114,7 +114,8 @@ test.describe("messaging", async () => {
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
-    await expect(card).toContainText(["Events", "1", "Services", "0"].join(""));
+    // start plus the opt-out suggestion event
+    await expect(card).toContainText(["Events", "2", "Services", "0"].join(""));
 
     // restart button appears
     const restartButton = page
@@ -165,7 +166,8 @@ test.describe("messaging", async () => {
     await expect(messengerBox).toHaveText(["#1", "User-defined service"].join(""));
     await modal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
-    await expect(card).toContainText(["Events", "0", "Services", "1"].join(""));
+    // suggestion event is enabled by default
+    await expect(card).toContainText(["Events", "1", "Services", "1"].join(""));
 
     await card.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
@@ -179,6 +181,7 @@ test.describe("messaging", async () => {
     await page.keyboard.press("Escape");
     await expectModalHidden(modal);
 
-    await expect(card).toContainText(["Configured", "no"].join(""));
+    // service gone, saved suggestion event remains
+    await expect(card).toContainText(["Events", "1", "Services", "0"].join(""));
   });
 });
