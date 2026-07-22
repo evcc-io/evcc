@@ -4,7 +4,9 @@ products:
     description:
       de: Wechselrichter
       en: Inverter
-capabilities: ["curtail"]
+capabilities:
+  - battery-control
+  - curtail
 requirements:
   description:
     de: Nur ein System kann und darf auf den Wechselrichter zugreifen!

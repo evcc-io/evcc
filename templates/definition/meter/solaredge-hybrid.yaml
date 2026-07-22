@@ -3,9 +3,7 @@ products:
   - brand: SolarEdge
     description:
       generic: Hybrid Inverter
-capabilities:
-  - battery-control
-  - curtail
+capabilities: ["battery-control"]
 requirements:
   description:
     de: |
@@ -21,9 +19,8 @@ params:
     choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
-  - name: maxacpower
-    required: true
   - preset: battery-params
+  - name: maxacpower
   - name: maxdischargepower
     default: 5000
   - name: watchdog
@@ -109,6 +106,7 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
+  maxacpower: {{ .maxacpower }} # W
   curtail:
     source: sequence
     set:
@@ -120,7 +118,7 @@ render: |
               value: 0 # Disabled
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 57344 # Export Control Mode
                   type: writesingle
@@ -186,8 +184,6 @@ render: |
         p = 100
       }
       p
-
-  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
