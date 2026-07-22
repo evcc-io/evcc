@@ -85,8 +85,6 @@ type Trydan struct {
 	*request.Helper
 	uri     string
 	statusG util.Cacheable[RealTimeData]
-	current int
-	enabled bool
 }
 
 func init() {
@@ -131,6 +129,20 @@ func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
 		return res, err
 	}, cache)
 
+	data, err := c.statusG.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	// Permanently pause the chargers internal Dynamic Power Control to let evcc take over
+	// charging power control. It is not disabled entirely since the charger would then stop
+	// returning power readings.
+	if data.Dynamic == 1 {
+		if err := c.setValue("PauseDynamic", 1); err != nil {
+			return nil, err
+		}
+	}
+
 	return c, nil
 }
 
@@ -173,43 +185,17 @@ func (c *Trydan) setValue(param string, value int) error {
 
 // Enable implements the api.Charger interface
 func (c Trydan) Enable(enable bool) error {
-	var pause, pauseDynamic int
+	var pause int
 	if !enable {
 		pause = 1
-	} else {
-		pauseDynamic = 1
 	}
 
-	if err := c.setValue("Paused", pause); err != nil {
-		return err
-	}
-
-	data, err := c.statusG.Get()
-	if err != nil {
-		return err
-	}
-
-	// Pause/Unpause Dynamic Power Control if enabled.
-	// This is needed to let EVCC taking over charging power control.
-	// Charger will stop returning power readings if 'Dynamic' is disabled.
-	if data.Dynamic == 1 {
-		if err := c.setValue("PauseDynamic", pauseDynamic); err != nil {
-			// Pause V2C 'PauseDynamic' when EVCC charging is active and vice versa.
-			return err
-		}
-	}
-	c.enabled = enable
-
-	return nil
+	return c.setValue("Paused", pause)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c Trydan) MaxCurrent(current int64) error {
-	err := c.setValue("Intensity", int(current))
-	if err == nil {
-		c.current = int(current)
-	}
-	return err
+	return c.setValue("Intensity", int(current))
 }
 
 // removed broken interfaces https://github.com/evcc-io/evcc/issues/28047
