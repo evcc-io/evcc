@@ -328,25 +328,20 @@ type effMeter struct {
 }
 
 func (m effMeter) Efficiency() int64 {
-	return 100
+	return 95
 }
 
-func TestBatteryEta(t *testing.T) {
-	device := func(m api.Meter) config.Device[api.Meter] {
-		return config.NewStaticDevice(config.Named{}, m)
-	}
-	measurement := func(capacity float64) types.Measurement {
-		return types.Measurement{Capacity: &capacity}
-	}
+func TestBatteryEfficiency(t *testing.T) {
+	site := &Site{}
+	capacity, soc := 10.0, 50.0
+	b := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-	// no batteries
-	assert.Equal(t, eta, (&Site{}).batteryEta(nil))
+	// unconfigured battery leaves the request default
+	bat, _ := site.batteryRequest(config.NewStaticDevice[api.Meter](config.Named{}, nil), b, nil, 1, time.Hour)
+	assert.Zero(t, bat.EtaC)
+	assert.Zero(t, bat.EtaD)
 
-	// unconfigured battery uses the default
-	site := &Site{batteryMeters: []config.Device[api.Meter]{device(nil)}}
-	assert.Equal(t, eta, site.batteryEta([]types.Measurement{measurement(10)}))
-
-	// capacity-weighted average of 100% (10 kWh) and default 90% (30 kWh)
-	site = &Site{batteryMeters: []config.Device[api.Meter]{device(effMeter{}), device(nil)}}
-	assert.InDelta(t, 0.925, site.batteryEta([]types.Measurement{measurement(10), measurement(30)}), 1e-6)
+	bat, _ = site.batteryRequest(config.NewStaticDevice[api.Meter](config.Named{}, effMeter{}), b, nil, 1, time.Hour)
+	assert.Equal(t, float32(0.95), bat.EtaC)
+	assert.Equal(t, float32(0.95), bat.EtaD)
 }
