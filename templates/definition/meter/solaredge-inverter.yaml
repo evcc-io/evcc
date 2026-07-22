@@ -12,13 +12,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv"]
-  - name: curtail
-    type: bool
-    advanced: true
-    description:
-      de: Aktiviert die Einspeisebegrenzung
-      en: Enables feed-in limitation
-    usages: ["pv"]
   - name: modbus
     choice: ["tcpip", "rs485"]
     id: 1
@@ -135,7 +128,6 @@ render: |
       value:
         - 101:AphC
         - 103:AphC
-  {{- if .curtail }}
   curtail:
     source: sequence
     set:
@@ -172,5 +164,4 @@ render: |
         percent = 100
       }
       percent
-  {{- end }}
   {{- end }}

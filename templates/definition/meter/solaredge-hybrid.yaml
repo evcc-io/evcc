@@ -22,13 +22,7 @@ params:
     id: 1
     port: 1502
   - name: maxacpower
-  - name: curtail
-    type: bool
-    advanced: true
-    description:
-      de: Aktiviert die Einspeisebegrenzung
-      en: Enables feed-in limitation
-    usages: ["pv"]
+    required: true
   - preset: battery-params
   - name: maxdischargepower
     default: 5000
@@ -115,8 +109,6 @@ render: |
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
-
-  {{- if .curtail }}
   curtail:
     source: sequence
     set:
@@ -194,7 +186,6 @@ render: |
         p = 100
       }
       p
-  {{- end }}
 
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
