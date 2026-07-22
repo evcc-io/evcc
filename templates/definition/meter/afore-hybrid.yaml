@@ -79,6 +79,14 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1018 # Etogrid total (U32, 0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -118,6 +126,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 2013 # Battery total discharge (U32, 0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2011 # Battery total charge (U32, 0.1 kWh)
       type: input
       decode: uint32
     scale: 0.1
