@@ -674,7 +674,9 @@ func (site *Site) batteryEta(battery []types.Measurement) float32 {
 
 		e := float64(eta)
 		if m, ok := api.Cap[api.BatteryEfficiency](dev.Instance()); ok {
-			e = m.GetEfficiency() / 100
+			if v := m.Efficiency(); v > 0 {
+				e = float64(v) / 100
+			}
 		}
 
 		sum += e * c

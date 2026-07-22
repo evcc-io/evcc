@@ -28,13 +28,12 @@ func TestEfficiency(t *testing.T) {
 
 	for _, tc := range []struct {
 		val      any
-		expected float64
+		expected int64
 	}{
 		{nil, 0},
 		{"", 0},
 		{95, 95},
 		{"95", 95},
-		{95.5, 95.5},
 	} {
 		m, err := NewFromConfig(context.TODO(), "test-efficiency", map[string]any{"efficiency": tc.val, "foo": "bar"})
 		require.NoError(t, err, tc)
@@ -50,7 +49,7 @@ func TestEfficiency(t *testing.T) {
 		}
 
 		require.True(t, ok, tc)
-		assert.Equal(t, tc.expected, eff.GetEfficiency(), tc)
+		assert.Equal(t, tc.expected, eff.Efficiency(), tc)
 	}
 
 	for _, val := range []any{0, -1, 101, "foo"} {

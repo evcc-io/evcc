@@ -64,5 +64,5 @@ func TestTemplateEfficiency(t *testing.T) {
 
 	eff, ok := api.Cap[api.BatteryEfficiency](m)
 	require.True(t, ok)
-	assert.Equal(t, 95.0, eff.GetEfficiency())
+	assert.Equal(t, int64(95), eff.Efficiency())
 }

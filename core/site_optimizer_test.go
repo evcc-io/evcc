@@ -327,7 +327,7 @@ type effMeter struct {
 	api.Meter
 }
 
-func (m effMeter) GetEfficiency() float64 {
+func (m effMeter) Efficiency() int64 {
 	return 100
 }
 

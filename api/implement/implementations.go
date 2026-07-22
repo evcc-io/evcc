@@ -53,7 +53,7 @@ func (i *iBatteryController) SetBatteryMode(p0 api.BatteryMode) error {
 	return i.batteryController0(p0)
 }
 
-func BatteryEfficiency(batteryEfficiency0 func() float64) api.BatteryEfficiency {
+func BatteryEfficiency(batteryEfficiency0 func() int64) api.BatteryEfficiency {
 	if batteryEfficiency0 == nil {
 		return nil
 	}
@@ -61,10 +61,10 @@ func BatteryEfficiency(batteryEfficiency0 func() float64) api.BatteryEfficiency 
 }
 
 type iBatteryEfficiency struct {
-	batteryEfficiency0 func() float64
+	batteryEfficiency0 func() int64
 }
 
-func (i *iBatteryEfficiency) GetEfficiency() float64 {
+func (i *iBatteryEfficiency) Efficiency() int64 {
 	return i.batteryEfficiency0()
 }
 

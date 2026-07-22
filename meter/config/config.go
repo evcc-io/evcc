@@ -27,7 +27,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.M
 	}
 
 	// templates are re-entered with the rendered config, hence handled there
-	var efficiency float64
+	var efficiency int64
 	if !strings.EqualFold(typ, "template") {
 		if efficiency, other, err = extractEfficiency(other); err != nil {
 			return nil, fmt.Errorf("cannot create meter type '%s': %w", typ, err)
@@ -44,7 +44,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.M
 		if !ok {
 			return nil, fmt.Errorf("cannot create meter type '%s': %s not supported", typ, efficiencyParam)
 		}
-		implement.Has(caps, implement.BatteryEfficiency(func() float64 { return efficiency }))
+		implement.Has(caps, implement.BatteryEfficiency(func() int64 { return efficiency }))
 	}
 
 	return v, nil
@@ -52,7 +52,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.M
 
 // extractEfficiency removes the efficiency setting from the config and returns its
 // value in %. It returns 0 if the setting is not configured.
-func extractEfficiency(other map[string]any) (float64, map[string]any, error) {
+func extractEfficiency(other map[string]any) (int64, map[string]any, error) {
 	val, ok := other[efficiencyParam]
 	if !ok {
 		return 0, other, nil
@@ -65,7 +65,7 @@ func extractEfficiency(other map[string]any) (float64, map[string]any, error) {
 		return 0, res, nil
 	}
 
-	efficiency, err := cast.ToFloat64E(val)
+	efficiency, err := cast.ToInt64E(val)
 	if err != nil {
 		return 0, nil, fmt.Errorf("%s: %w", efficiencyParam, err)
 	}
