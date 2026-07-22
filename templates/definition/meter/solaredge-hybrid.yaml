@@ -21,6 +21,7 @@ params:
     port: 1502
   - preset: battery-params
   - name: maxacpower
+    required: true
   - name: maxdischargepower
     default: 5000
   - name: watchdog
