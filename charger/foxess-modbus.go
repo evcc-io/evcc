@@ -42,6 +42,7 @@ type FoxESSEVC struct {
 	conn           *modbus.Connection
 	mu             sync.Mutex
 	current        uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
+	currentPhases  int    // phase count used to derive current from the power setpoint (non-pbox only)
 	enabled        bool   // tracks enabled state for the heartbeat
 	lastEnabled    bool   // last enabled state successfully sent to the charger
 	pbox           bool   // phase-cutting box present; uses current register instead of power
@@ -383,6 +384,13 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		}
 		reg = foxRegMaxPower
 		val = uint16(voltage * current * float64(phases) / 100)
+
+		// cache the phase count used for this setpoint so GetMaxCurrent can invert
+		// the power register with the same value; lp.GetPhases() may have moved on
+		// by the time GetMaxCurrent runs, which would otherwise yield a bogus result
+		wb.mu.Lock()
+		wb.currentPhases = phases
+		wb.mu.Unlock()
 	}
 
 	// Always cache the setpoint so Enable(true) and the heartbeat can push it.
@@ -418,14 +426,17 @@ func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
 		return 0, err
 	}
 
-	phases := 1
-	if wb.lp != nil {
-		if p := wb.lp.GetPhases(); p != 0 {
-			phases = p
-		}
+	wb.mu.Lock()
+	phases := wb.currentPhases
+	wb.mu.Unlock()
+	if phases == 0 {
+		phases = 1
 	}
 
-	// invert the MaxCurrentMillis formula: val (0.1kW) -> amps
+	// invert the MaxCurrentMillis formula: val (0.1kW) -> amps. Uses the phase
+	// count cached at write time (see MaxCurrentMillis), not the loadpoint's
+	// current phase count, since the charger may not have completed its
+	// autonomous phase switch yet and lp.GetPhases() may have moved on.
 	return float64(binary.BigEndian.Uint16(b)) * 100 / (voltage * float64(phases)), nil
 }
 
