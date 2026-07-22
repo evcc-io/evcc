@@ -160,6 +160,18 @@ params:
     example: 95
     type: int
     usages: ["battery"]
+  - name: efficiency
+    unit: "%"
+    description:
+      de: Wirkungsgrad
+      en: Efficiency
+    help:
+      de: Lade- und Entladewirkungsgrad der Batterie für die Optimierung
+      en: Charge and discharge efficiency of the battery used for optimization
+    default: 90
+    advanced: true
+    type: int
+    usages: ["battery"]
   - name: mincurrent
     unit: A
     description:
@@ -823,6 +835,7 @@ presets:
     - name: maxsoc
     - name: maxchargepower
     - name: maxdischargepower
+    - name: efficiency
 
   battery-capacity:
     - name: capacity

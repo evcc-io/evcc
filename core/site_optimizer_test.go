@@ -322,3 +322,31 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	// no result yields an empty suggestion
 	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1, ""))
 }
+
+type effMeter struct {
+	api.Meter
+}
+
+func (m effMeter) GetEfficiency() float64 {
+	return 100
+}
+
+func TestBatteryEta(t *testing.T) {
+	device := func(m api.Meter) config.Device[api.Meter] {
+		return config.NewStaticDevice(config.Named{}, m)
+	}
+	measurement := func(capacity float64) types.Measurement {
+		return types.Measurement{Capacity: &capacity}
+	}
+
+	// no batteries
+	assert.Equal(t, eta, (&Site{}).batteryEta(nil))
+
+	// unconfigured battery uses the default
+	site := &Site{batteryMeters: []config.Device[api.Meter]{device(nil)}}
+	assert.Equal(t, eta, site.batteryEta([]types.Measurement{measurement(10)}))
+
+	// capacity-weighted average of 100% (10 kWh) and default 90% (30 kWh)
+	site = &Site{batteryMeters: []config.Device[api.Meter]{device(effMeter{}), device(nil)}}
+	assert.InDelta(t, 0.925, site.batteryEta([]types.Measurement{measurement(10), measurement(30)}), 1e-6)
+}

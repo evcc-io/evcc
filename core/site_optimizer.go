@@ -320,13 +320,15 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		ft = prorate(ftSlots, firstSlotDuration)
 	}
 
+	batteryEta := site.batteryEta(battery)
+
 	req := optimizer.OptimizationInput{
 		Strategy: optimizer.OptimizerStrategy{
 			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategy(site.GetOptimizerChargingStrategy()),
 			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
-		EtaC: eta,
-		EtaD: eta,
+		EtaC: batteryEta,
+		EtaD: batteryEta,
 		TimeSeries: optimizer.TimeSeries{
 			Dt: dt,
 			Gt: prorate(gt, firstSlotDuration),
@@ -337,7 +339,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	// end of horizon Wh value
-	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
+	pa := lo.Min(req.TimeSeries.PN) * batteryEta * 0.99
 
 	details := requestDetails{
 		Timestamps: asTimestamps(dt, now),
@@ -657,6 +659,33 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	return bat, detail
+}
+
+// batteryEta returns the capacity-weighted charge/discharge efficiency of the home
+// batteries. Weighted since the optimizer api only accepts a single global value.
+func (site *Site) batteryEta(battery []types.Measurement) float32 {
+	var sum, capacity float64
+
+	for i, dev := range site.batteryMeters {
+		if i >= len(battery) || battery[i].Capacity == nil {
+			continue
+		}
+		c := *battery[i].Capacity
+
+		e := float64(eta)
+		if m, ok := api.Cap[api.BatteryEfficiency](dev.Instance()); ok {
+			e = m.GetEfficiency() / 100
+		}
+
+		sum += e * c
+		capacity += c
+	}
+
+	if capacity == 0 {
+		return eta
+	}
+
+	return float32(sum / capacity)
 }
 
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
