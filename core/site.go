@@ -111,6 +111,7 @@ type Site struct {
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
+	loadpointSuggestions     map[int]types.Suggestion    // Optimizer suggestions by loadpoint id
 }
 
 // MetersConfig contains the site's meter configuration
@@ -1181,6 +1182,9 @@ func (site *Site) update(lp updater) {
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 	site.updateBatteryMode(batteryGridChargeActive, rate)
+
+	// re-evaluate against the updated loadpoint state
+	site.publishSuggestions()
 
 	site.stats.Update(site)
 }
