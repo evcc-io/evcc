@@ -66,9 +66,11 @@ func TestTrydanStatus(t *testing.T) {
 	}
 }
 
-// Currents()/Voltages() must trust a zero reading while idle, but treat it as
-// unavailable (older firmware without these fields) whenever real power is flowing,
-// since ChargePower>0 with all phases at zero is otherwise physically impossible.
+// Currents() must trust a zero reading while idle, but treat it as unavailable
+// (older firmware without these fields) whenever real power is flowing, since
+// ChargePower>0 with all phases at zero is otherwise physically impossible.
+// Voltages() is always unavailable when all phases read zero, since a
+// grid-connected charger always sees mains voltage.
 func TestTrydanPhaseMeasurementsUnavailable(t *testing.T) {
 	withSponsor(t)
 
@@ -80,10 +82,11 @@ func TestTrydanPhaseMeasurementsUnavailable(t *testing.T) {
 		wantVoltageL1   float64
 	}{
 		{
-			name: "idle, zero readings are trusted",
+			name: "idle, zero current readings are trusted",
 			json: `{"ChargeState":1,"ChargePower":0,
 				"IntensityMeasure_L1":0,"IntensityMeasure_L2":0,"IntensityMeasure_L3":0,
-				"VoltageMeasure_L1":0,"VoltageMeasure_L2":0,"VoltageMeasure_L3":0}`,
+				"VoltageMeasure_L1":230.2,"VoltageMeasure_L2":229.8,"VoltageMeasure_L3":231.1}`,
+			wantVoltageL1: 230.2,
 		},
 		{
 			name: "charging but all phases read zero - unsupported firmware",
