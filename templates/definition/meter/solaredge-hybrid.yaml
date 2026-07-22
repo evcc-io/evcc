@@ -128,7 +128,7 @@ render: |
               value: 0 # Disabled
               set:
                 source: modbus
-                {{- include "modbus" . | indent 14 }}
+                {{- include "modbus" . | indent 10 }}
                 register:
                   address: 57344 # Export Control Mode
                   type: writesingle
@@ -184,7 +184,7 @@ render: |
     script: |
       percent := 100.0
       if mode&1 != 0 {
-        percent = limit * 100 / {{ .maxacpower }}
+        percent = limit * 100 / {{ maxf .maxacpower 1 }}
       }
       p := int(percent + 0.5)
       if p < 0 {

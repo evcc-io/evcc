@@ -168,9 +168,6 @@ render: |
             decode: uint16
     script: |
       percent := int(limit)
-      if percent < 0 {
-        percent = 0
-      }
       if percent > 100 {
         percent = 100
       }
