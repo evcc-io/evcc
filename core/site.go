@@ -53,7 +53,8 @@ var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	valueChan    chan<- util.Param // client push messages
+	valueChan    chan<- util.Param      // client push messages
+	pushChan     chan<- messenger.Event // notification events
 	lpUpdateChan chan *Loadpoint
 
 	sync.RWMutex
@@ -112,6 +113,7 @@ type Site struct {
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
 	loadpointSuggestions     map[int]types.Suggestion    // Optimizer suggestions by loadpoint id
+	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 }
 
 // MetersConfig contains the site's meter configuration
@@ -1228,6 +1230,7 @@ func (site *Site) prepare() {
 
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger.Event) {
+	site.pushChan = pushChan
 	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
 	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
 

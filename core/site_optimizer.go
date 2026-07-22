@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/hems/hems"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
@@ -118,6 +119,38 @@ const (
 	actionStop   = "stop"
 	actionCharge = "charge"
 )
+
+// evSuggestion notifies when the optimizer's advisory action for a device changes
+const evSuggestion = "suggestion"
+
+// pendingSuggestion pairs a device's current-run suggestion with the
+// notification event to emit if it represents an actionable change.
+type pendingSuggestion struct {
+	suggestion types.Suggestion
+	event      messenger.Event
+}
+
+// suggestionEvent builds the notification key and event for a device suggestion.
+// The key ("loadpoint:<id>" / "battery:<name>") identifies the device across
+// runs; an empty key means the device can't act on a suggestion.
+func suggestionEvent(detail batteryDetail, s types.Suggestion) (string, messenger.Event) {
+	ev := messenger.Event{Event: evSuggestion, Attributes: map[string]any{
+		"suggestionAction": s.Action,
+		"suggestionTitle":  detail.Title,
+	}}
+
+	switch {
+	case detail.Type == batteryTypeBattery:
+		ev.Attributes["suggestionName"] = detail.Name
+		return "battery:" + detail.Name, ev
+	case detail.loadpoint != nil:
+		id := *detail.loadpoint
+		ev.Loadpoint = &id
+		return fmt.Sprintf("loadpoint:%d", id), ev
+	default:
+		return "", ev
+	}
+}
 
 // currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
 // Because the optimization is linear, the first slot is at an operating-range extreme, so it
@@ -235,6 +268,66 @@ func (site *Site) clearSuggestions() {
 
 	site.publishBattery()
 	site.publishSuggestions()
+
+	site.Lock()
+	site.suggestionActions = nil
+	site.Unlock()
+}
+
+// pendingSuggestions collects the stored suggestions with their actionable flag
+// evaluated against the devices' current operating mode
+func (site *Site) pendingSuggestions(details []batteryDetail) map[string]pendingSuggestion {
+	pending := make(map[string]pendingSuggestion, len(details))
+
+	for _, detail := range details {
+		var s *types.Suggestion
+
+		switch {
+		case detail.Type == batteryTypeBattery:
+			s = site.batterySuggestion(detail.Name)
+		case detail.loadpoint != nil:
+			s = site.loadpointSuggestion(*detail.loadpoint)
+		}
+
+		if s == nil {
+			continue
+		}
+
+		key, ev := suggestionEvent(detail, *s)
+		pending[key] = pendingSuggestion{suggestion: *s, event: ev}
+	}
+
+	return pending
+}
+
+// diffSuggestions updates the tracked actionable optimizer suggestions and
+// returns the events to send for devices whose actionable action changed since
+// the last run. Non-actionable or vanished devices are pruned so a later
+// actionable change re-notifies.
+func (site *Site) diffSuggestions(pending map[string]pendingSuggestion) []messenger.Event {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.suggestionActions == nil {
+		site.suggestionActions = make(map[string]string)
+	}
+
+	// prune devices that are gone or no longer actionable
+	for key := range site.suggestionActions {
+		if p, ok := pending[key]; !ok || !p.suggestion.Actionable {
+			delete(site.suggestionActions, key)
+		}
+	}
+
+	var events []messenger.Event
+	for key, p := range pending {
+		if !p.suggestion.Actionable || site.suggestionActions[key] == p.suggestion.Action {
+			continue
+		}
+		site.suggestionActions[key] = p.suggestion.Action
+		events = append(events, p.event)
+	}
+	return events
 }
 
 type requestDetails struct {
@@ -497,12 +590,15 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		if suggestion.Action == "" {
 			continue
 		}
-		if detail.Type == batteryTypeBattery {
+
+		switch {
+		case detail.Type == batteryTypeBattery:
 			// uncontrollable batteries can't act on a suggestion
-			if detail.controllable {
-				suggestions[detail.Name] = suggestion
+			if !detail.controllable {
+				continue
 			}
-		} else if detail.loadpoint != nil {
+			suggestions[detail.Name] = suggestion
+		case detail.loadpoint != nil:
 			lpSuggestions[*detail.loadpoint] = suggestion
 		}
 	}
@@ -516,6 +612,13 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	// publish for all loadpoints so suggestions of dropped-out loadpoints clear
 	site.publishSuggestions()
+
+	// notify on actionable suggestion changes (advisory only, see #31903)
+	if site.pushChan != nil {
+		for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
+			site.pushChan <- ev
+		}
+	}
 
 	return nil
 }
