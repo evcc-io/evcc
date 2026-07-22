@@ -353,3 +353,54 @@ func TestSuggestionActionable(t *testing.T) {
 
 	assert.Nil(t, site.loadpointSuggestion(1))
 }
+
+func TestSuggestionEvent(t *testing.T) {
+	id := 2
+
+	// battery: no loadpoint id, carries name
+	key, ev := suggestionEvent(batteryDetail{Type: batteryTypeBattery, Name: "home", Title: "Home"}, types.Suggestion{Action: api.BatteryCharge.String()})
+	assert.Equal(t, "battery:home", key)
+	assert.Nil(t, ev.Loadpoint)
+	assert.Equal(t, evSuggestion, ev.Event)
+	assert.Equal(t, api.BatteryCharge.String(), ev.Attributes["suggestionAction"])
+	assert.Equal(t, "home", ev.Attributes["suggestionName"])
+	assert.Equal(t, "Home", ev.Attributes["suggestionTitle"])
+
+	// loadpoint: carries id, no name
+	key, ev = suggestionEvent(batteryDetail{Type: batteryTypeVehicle, loadpoint: &id, Title: "Garage"}, types.Suggestion{Action: actionCharge})
+	assert.Equal(t, "loadpoint:2", key)
+	require.NotNil(t, ev.Loadpoint)
+	assert.Equal(t, id, *ev.Loadpoint)
+	assert.NotContains(t, ev.Attributes, "suggestionName")
+}
+
+func TestDiffSuggestions(t *testing.T) {
+	site := &Site{}
+
+	pending := func(s types.Suggestion) map[string]pendingSuggestion {
+		_, ev := suggestionEvent(batteryDetail{loadpoint: new(int)}, s)
+		return map[string]pendingSuggestion{"loadpoint:0": {suggestion: s, event: ev}}
+	}
+
+	charge := types.Suggestion{Action: actionCharge, Actionable: true}
+	stop := types.Suggestion{Action: actionStop, Actionable: true}
+	notActionable := types.Suggestion{Action: actionCharge, Actionable: false}
+
+	// first actionable suggestion fires
+	assert.Len(t, site.diffSuggestions(pending(charge)), 1)
+
+	// unchanged action does not fire again
+	assert.Empty(t, site.diffSuggestions(pending(charge)))
+
+	// changed action fires
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+
+	// non-actionable suggestion does not fire and clears tracking so the same
+	// action re-notifies when it becomes actionable again
+	assert.Empty(t, site.diffSuggestions(pending(notActionable)))
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+
+	// vanished device is pruned and re-notifies on return
+	assert.Empty(t, site.diffSuggestions(map[string]pendingSuggestion{}))
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+}
