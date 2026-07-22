@@ -289,6 +289,18 @@ var _ api.Diagnosis = (*Trydan)(nil)
 func (c *Trydan) Diagnose() {
 	data, err := c.statusG.Get()
 	if err != nil {
-		fmt.Printf("%#v", data)
+		return
 	}
+
+	fmt.Printf("\tID:\t%s\n", data.ID)
+	fmt.Printf("\tFirmware:\t%s\n", data.FirmwareVersion)
+	fmt.Printf("\tCharge mode:\t%d\n", data.ChargeMode)
+	fmt.Printf("\tMin current:\t%dA\n", data.MinIntensity)
+	fmt.Printf("\tMax current:\t%dA\n", data.MaxIntensity)
+	fmt.Printf("\tContracted power:\t%dW\n", data.ContractedPower)
+	fmt.Printf("\tDynamic:\t%d\n", data.Dynamic)
+	fmt.Printf("\tPause dynamic:\t%d\n", data.PauseDynamic)
+	fmt.Printf("\tDynamic power mode:\t%d\n", data.DynamicPowerMode)
+	fmt.Printf("\tLocked:\t%d\n", data.Locked)
+	fmt.Printf("\tSlave error:\t%d\n", data.SlaveError)
 }
