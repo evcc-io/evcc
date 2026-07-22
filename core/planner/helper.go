@@ -134,9 +134,8 @@ func clampRatesSeq(rates api.Rates, start, end time.Time) iter.Seq[api.Rate] {
 	}
 }
 
-// windowCost returns the cost of the given window.
-// Durations are summed per price before multiplication, hence windows of equal composition
-// yield the identical result no matter how their slots are clamped.
+// windowCost returns the cost of the given window. Durations are summed per price before
+// multiplication, hence the result does not depend on how the window's slots are clamped.
 func windowCost(rates api.Rates, start, end time.Time) float64 {
 	type pricedDuration struct {
 		value float64
