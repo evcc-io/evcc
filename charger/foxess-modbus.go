@@ -38,14 +38,18 @@ import (
 // FoxESSEVC charger implementation
 type FoxESSEVC struct {
 	implement.Caps
-	log         *util.Logger
-	conn        *modbus.Connection
-	mu          sync.Mutex
-	current     uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
-	enabled     bool   // tracks enabled state for the heartbeat
-	lastEnabled bool   // last enabled state successfully sent to the charger
-	pbox        bool   // phase-cutting box present; uses current register instead of power
-	lp          loadpoint.API
+	log            *util.Logger
+	conn           *modbus.Connection
+	mu             sync.Mutex
+	current        uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
+	enabled        bool   // tracks enabled state for the heartbeat
+	lastEnabled    bool   // last enabled state successfully sent to the charger
+	pbox           bool   // phase-cutting box present; uses current register instead of power
+	haveEnergyBase bool   // whether energyBase has been latched for the current session
+	energyBase     uint32 // foxRegCurrentEnergy reading latched at session start, in register units
+	energyAccum    uint32 // delta banked across meter resets within the current session
+	lastEnergy     uint32 // last successfully read foxRegCurrentEnergy value
+	lp             loadpoint.API
 }
 
 const (
@@ -55,10 +59,13 @@ const (
 	foxRegCurrents      = 0x100B // A/B/C phase current, 3 registers, 0.1A
 	foxRegPower         = 0x100E // active power, 0.1kW
 	foxRegPhaseSequence = 0x1010 // current phase sequence
-	// foxRegTotalEnergy is a cumulative meter reading that never resets on plug-in; evcc's generic
-	// wrapper.ChargeRater derives session energy from it instead of relying on a charger-reported value
-	foxRegTotalEnergy = 0x1018 // total energy, uint32, 0.1kWh
-	foxRegRFID        = 0x101C // last RFID card, uint32
+	// foxRegCurrentEnergy is a cumulative meter reading that never resets on plug-in or on
+	// start/stop; ChargedEnergy derives session energy from it by latching a baseline at the
+	// start of each session (see haveEnergyBase/energyBase), since foxRegTotalEnergy (0x1018)
+	// resets to zero as soon as charging stops rather than only when the car disconnects.
+	foxRegCurrentEnergy = 0x1016 // session-independent meter reading, uint32, 0.1kWh
+	foxRegTotalEnergy   = 0x1018 // total energy, uint32, 0.1kWh; resets on charging stop
+	foxRegRFID          = 0x101C // last RFID card, uint32
 
 	// read/write registers (write with 0x10)
 	foxRegWorkMode     = 0x3000 // work mode
@@ -275,6 +282,14 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 
 	switch s := binary.BigEndian.Uint16(b); s {
 	case 0: // idle
+		// car disconnected: drop the latched session state so the next connection
+		// starts a fresh session instead of continuing to subtract a stale baseline
+		wb.mu.Lock()
+		wb.haveEnergyBase = false
+		wb.energyAccum = 0
+		wb.lastEnergy = 0
+		wb.mu.Unlock()
+
 		return api.StatusA, nil
 	case 1, 4, 5: // connect, pause, finish
 		return api.StatusB, nil
@@ -436,6 +451,43 @@ func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 	}
 
 	return float64(energy) / 10, nil
+}
+
+var _ api.ChargeRater = (*FoxESSEVC)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface.
+// foxRegTotalEnergy (0x1018) resets to zero as soon as charging stops rather than only when
+// the car disconnects, and foxRegCurrentEnergy (0x1016) is a cumulative meter reading that never
+// resets at all. Session energy is therefore derived by latching the current reading of
+// foxRegCurrentEnergy as a baseline on first use after connecting (see Status, which clears the
+// session state once the car disconnects) and returning the delta on every subsequent call. If
+// the reading ever goes backwards (e.g. a charger restart mid-session), the delta accumulated so
+// far is banked into energyAccum before restarting the baseline, so the session total survives.
+func (wb *FoxESSEVC) ChargedEnergy() (float64, error) {
+	energy, err := wb.readUint32(foxRegCurrentEnergy)
+	if err != nil {
+		return 0, err
+	}
+
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	if !wb.haveEnergyBase {
+		wb.energyBase = energy
+		wb.lastEnergy = energy
+		wb.haveEnergyBase = true
+	}
+
+	if energy < wb.energyBase {
+		// meter reset mid-session: bank the delta accumulated up to the last good
+		// reading, then restart the baseline from the new, lower reading
+		wb.energyAccum += wb.lastEnergy - wb.energyBase
+		wb.energyBase = energy
+	}
+
+	wb.lastEnergy = energy
+
+	return float64(wb.energyAccum+energy-wb.energyBase) / 10, nil
 }
 
 var _ api.PhaseCurrents = (*FoxESSEVC)(nil)
