@@ -560,18 +560,18 @@
           "titleDefault": "Vehicle asleep"
         },
         "connect": {
-          "messageDefault": "Car connected at {pvPower}kW PV",
-          "title": "When a car connects",
-          "titleDefault": "Car connected"
+          "messageDefault": "Vehicle connected at {pvPower}kW PV",
+          "title": "When a vehicle connects",
+          "titleDefault": "Vehicle connected"
         },
         "disconnect": {
-          "messageDefault": "Car disconnected after {connectedDuration}",
-          "title": "When a car disconnects",
-          "titleDefault": "Car disconnected"
+          "messageDefault": "Vehicle disconnected after {connectedDuration}",
+          "title": "When a vehicle disconnects",
+          "titleDefault": "Vehicle disconnected"
         },
         "guest": {
           "messageDefault": "Unknown vehicle, guest connected?",
-          "title": "When an unknown car connects",
+          "title": "When an unknown vehicle connects",
           "titleDefault": "Unknown vehicle"
         },
         "planoverrun": {
@@ -593,6 +593,11 @@
           "messageDefault": "Finished charging {chargedEnergy}kWh in {chargeDuration}.",
           "title": "When charging stops",
           "titleDefault": "Charge finished"
+        },
+        "suggestion": {
+          "messageDefault": "Optimizer suggestion for {suggestionTitle}: if optimizer control were active it would apply '{suggestionAction}' now. Advisory only, nothing was changed. Experimental — feedback welcome at https://github.com/evcc-io/evcc/issues/31903",
+          "title": "When the optimizer's advisory action changes",
+          "titleDefault": "Optimizer suggestion"
         }
       },
       "eventMessage": "Message",

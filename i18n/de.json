@@ -561,18 +561,18 @@
           "titleDefault": "Fahrzeug schläft"
         },
         "connect": {
-          "messageDefault": "Auto verbunden bei {pvPower}kW PV",
-          "title": "Wenn ein Auto verbunden wird",
-          "titleDefault": "Auto verbunden"
+          "messageDefault": "Fahrzeug verbunden bei {pvPower}kW PV",
+          "title": "Wenn ein Fahrzeug verbunden wird",
+          "titleDefault": "Fahrzeug verbunden"
         },
         "disconnect": {
-          "messageDefault": "Auto getrennt nach {connectedDuration}",
-          "title": "Wenn ein Auto getrennt wird",
-          "titleDefault": "Auto getrennt"
+          "messageDefault": "Fahrzeug getrennt nach {connectedDuration}",
+          "title": "Wenn ein Fahrzeug getrennt wird",
+          "titleDefault": "Fahrzeug getrennt"
         },
         "guest": {
           "messageDefault": "Unbekanntes Fahrzeug, Gast verbunden?",
-          "title": "Wenn ein unbekanntes Auto verbunden wird",
+          "title": "Wenn ein unbekanntes Fahrzeug verbunden wird",
           "titleDefault": "Unbekanntes Fahrzeug"
         },
         "planoverrun": {
