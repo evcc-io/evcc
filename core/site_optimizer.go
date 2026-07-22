@@ -157,7 +157,7 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) (string, messenge
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64, current string) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64) types.Suggestion {
 	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
 		return types.Suggestion{}
 	}
@@ -188,9 +188,6 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 		s.Action = actionStop
 	}
 
-	// actionable when the suggested action differs from the current operating mode
-	s.Actionable = s.Action != current
-
 	return s
 }
 
@@ -209,37 +206,98 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 	return actionStop
 }
 
-// setBatterySuggestions replaces the suggestions applied on each battery publish
-func (site *Site) setBatterySuggestions(suggestions map[string]types.Suggestion) {
+// setSuggestions replaces the suggestions applied on each publish
+func (site *Site) setSuggestions(batteries map[string]types.Suggestion, loadpoints map[int]types.Suggestion) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.batterySuggestions = suggestions
+	site.batterySuggestions = batteries
+	site.loadpointSuggestions = loadpoints
 }
 
-// batterySuggestion returns the optimizer suggestion for the given battery meter
+// batterySuggestion returns the optimizer suggestion for the given battery meter.
+// The actionable flag is evaluated on read since the battery mode changes between
+// optimizer runs.
 func (site *Site) batterySuggestion(name string) *types.Suggestion {
+	mode := site.GetBatteryMode().String()
+
 	site.RLock()
 	defer site.RUnlock()
 
-	if s, ok := site.batterySuggestions[name]; ok {
-		return &s
+	s, ok := site.batterySuggestions[name]
+	if !ok {
+		return nil
 	}
-	return nil
+
+	s.Actionable = s.Action != mode
+
+	return &s
+}
+
+// loadpointSuggestion returns the optimizer suggestion for the given loadpoint.
+// The actionable flag is evaluated on read since the loadpoint's action changes
+// between optimizer runs.
+func (site *Site) loadpointSuggestion(id int) *types.Suggestion {
+	site.RLock()
+	s, ok := site.loadpointSuggestions[id]
+	site.RUnlock()
+
+	if !ok {
+		return nil
+	}
+
+	s.Actionable = s.Action != loadpointCurrentAction(site.loadpoints[id])
+
+	return &s
+}
+
+// publishSuggestions publishes the loadpoints' suggestions
+func (site *Site) publishSuggestions() {
+	for id := range site.loadpoints {
+		var val any
+		if s := site.loadpointSuggestion(id); s != nil {
+			val = *s
+		}
+		site.publishLoadpoint(id, keys.Suggestion, val)
+	}
 }
 
 // clearSuggestions removes all suggestions when the optimizer result is stale
 func (site *Site) clearSuggestions() {
-	site.setBatterySuggestions(nil)
-	site.publishBattery()
+	site.setSuggestions(nil, nil)
 
-	for id := range site.Loadpoints() {
-		site.publishLoadpoint(id, keys.Suggestion, nil)
-	}
+	site.publishBattery()
+	site.publishSuggestions()
 
 	site.Lock()
 	site.suggestionActions = nil
 	site.Unlock()
+}
+
+// pendingSuggestions collects the stored suggestions with their actionable flag
+// evaluated against the devices' current operating mode
+func (site *Site) pendingSuggestions(details []batteryDetail) map[string]pendingSuggestion {
+	pending := make(map[string]pendingSuggestion, len(details))
+
+	for _, detail := range details {
+		var s *types.Suggestion
+
+		switch {
+		case detail.Type == batteryTypeBattery:
+			s = site.batterySuggestion(detail.Name)
+		case detail.loadpoint != nil:
+			s = site.loadpointSuggestion(*detail.loadpoint)
+		}
+
+		if s == nil {
+			continue
+		}
+
+		key, ev := suggestionEvent(detail, *s)
+		pending[key] = pendingSuggestion{suggestion: *s, event: ev}
+	}
+
+	return pending
 }
 
 // diffSuggestions updates the tracked actionable optimizer suggestions and
@@ -511,7 +569,6 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
 	lpSuggestions := make(map[int]types.Suggestion)
-	pending := make(map[string]pendingSuggestion, len(req.Batteries))
 
 	for i, batReq := range req.Batteries {
 		batResp := resp.JSON200.Batteries[i]
@@ -529,15 +586,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 		batteries = append(batteries, batResult)
 
-		// current operating mode to detect an actionable change
-		var current string
-		if detail.Type == batteryTypeBattery {
-			current = site.GetBatteryMode().String()
-		} else if detail.loadpoint != nil {
-			current = loadpointCurrentAction(site.loadpoints[*detail.loadpoint])
-		}
-
-		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours, current)
+		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
@@ -551,33 +600,22 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			suggestions[detail.Name] = suggestion
 		case detail.loadpoint != nil:
 			lpSuggestions[*detail.loadpoint] = suggestion
-		default:
-			continue
 		}
-
-		key, ev := suggestionEvent(detail, suggestion)
-		pending[key] = pendingSuggestion{suggestion: suggestion, event: ev}
 	}
 
 	site.publish("evopt-batteries", batteries)
 
-	site.setBatterySuggestions(suggestions)
+	site.setSuggestions(suggestions, lpSuggestions)
 	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
 
 	site.publishBattery()
 
 	// publish for all loadpoints so suggestions of dropped-out loadpoints clear
-	for id := range site.Loadpoints() {
-		var val any
-		if s, ok := lpSuggestions[id]; ok {
-			val = s
-		}
-		site.publishLoadpoint(id, keys.Suggestion, val)
-	}
+	site.publishSuggestions()
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
 	if site.pushChan != nil {
-		for _, ev := range site.diffSuggestions(pending) {
+		for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
 			site.pushChan <- ev
 		}
 	}
