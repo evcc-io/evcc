@@ -1,0 +1,156 @@
+# Used API docs for SunEnergyXT 500 Series: https://github.com/SunEnergyXT/SunEnergyXT-500-Series/blob/main/API.en.md
+template: sunenergyxt-500
+products:
+  - brand: SunEnergyXT
+    description:
+      generic: SunEnergyXT 500
+  - brand: SunEnergyXT
+    description:
+      generic: SunEnergyXT 500 PRO
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: |
+      The battery's local mode must be enabled in the manufacturer's app.
+      Furthermore, the device's IP address must be set to a fixed, permanent IP address in the router.
+      If the `grid` mode is used, an external meter (e.g., Shelly) must be connected to the battery to measure the grid connection point (via the manufacturer's app).
+    de: |
+      Der lokale Modus der Batterie muss in der Hersteller-App aktiviert werden.
+      Des Weiteren muss die IP-Adresse des Geräts im Router auf eine feste, dauerhafte IP-Adresse eingestellt werden.
+      Wenn der `grid` Modus verwendet wird, muss mit der Batterie ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst (dieser wird über die Hersteller-App hinzugefügt).
+caveats:
+  - description:
+      de: |
+        Aktuell muss jeder Kopfspeicher einzeln in EVCC angelegt werden.
+        Mehrere Kopfspeicher in ein System zu verbinden, ist vom Hersteller angekündigt, jedoch softwareseitig noch nicht umgesetzt.
+      en: |
+        Currently, each head storage must be individually added in EVCC.
+        Connecting multiple head storages into one system has been announced by the manufacturer but is not yet implemented on the software side.
+    # link:
+params:
+  - name: usage
+    type: choice
+    choice: ["grid", "pv", "battery"]
+    required: true
+  - name: host
+    required: true
+  - name: maxacpower
+    default: 800.0
+  - preset: battery-params
+  - name: capacity
+    default: 4.8
+  - name: maxchargepower
+    default: 2400.0
+  - name: maxdischargepower
+    default: 800.0
+  - name: discharge_strategy
+    type: choice
+    choice: ["self_consumption", "fix"]
+    default: "fix"
+    description:
+      en: "Battery discharge strategy"
+      de: "Batterieentladungsstrategie"
+    help:
+      en: |
+        Defines how the battery is discharged in normal operation.
+
+        With `self_consumption`, the battery is controlled to maximize self-consumption and the discharge power is adjusted to the house consumption.
+        For this, an external meter (e.g., Shelly) must be connected in the manufacturer's app to measure the house connection point.
+        (This control is performed by the battery itself, not EVCC.)
+
+        With `fix`, the battery is discharged constantly with the power defined in `fix_discharge_power` as long as it is charged.
+      de: |
+        Definiert, wie die Batterie im Normalbetrieb entladen wird.
+
+        Bei `self_consumption` wird die Batterie so gesteuert, dass der Eigenverbrauch maximiert und die Entladeleistung dem Hausverbrauch angepasst wird.
+        Dafür muss in der Hersteller-App ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst.
+        (Diese Steuerung übernimmt die Batterie selbst, nicht EVCC.)
+
+        Bei `fix` wird die Batterie konstant mit der in `fix_discharge_power` definierten Leistung entladen, solange sie geladen ist.
+    usages: ["battery"]
+  - name: fix_discharge_power
+    type: int
+    default: 200
+    description:
+      en: "Fixed discharge power of the battery."
+      de: "Feste Entladeleistung der Batterie."
+    help:
+      en: |
+        If `discharge_strategy` is set to `fix`, the battery will be discharged with this constant power (as long as it is charged).
+        The value cannot exceed `maxdischargepower`.
+      de: |
+        Wenn `discharge_strategy` auf `fix` eingestellt ist, wird die Batterie mit dieser konstanten Leistung entladen (solange sie geladen ist).
+        Der Wert kann `maxdischargepower` nicht überschreiten.
+    usages: ["battery"]
+  - name: cache
+    advanced: true
+    default: 1s
+  - name: timeout
+    advanced: true
+    default: 10s
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.GP
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.BP
+    scale: -1
+  soc:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.SC
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        method: POST
+        uri: http://{{ .host }}/write
+        headers:
+          - Content-Type: application/json
+        {{- if eq .discharge_strategy "self_consumption" }}
+        body: '{"state":{"MM":1}}'
+        {{- else }}
+        body: '{"state":{"MM":0,"GS":{{ .fix_discharge_power }}}}'
+        {{- end }}
+    - case: 2 # hold 
+      set:
+        source: http
+        method: POST
+        uri: http://{{ .host }}/write
+        headers:
+          - Content-Type: application/json
+        body: '{"state":{"MM":0,"GS":0}}'
+    - case: 3 # charges
+      set:
+        source: http
+        method: POST
+        uri: http://{{ .host }}/write
+        headers:
+          - Content-Type: application/json
+        body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}}}'
+  {{- include "battery-params" . }}
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/read
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    jq: .state.reported.PV
+  {{- end }}
