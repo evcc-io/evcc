@@ -55,7 +55,7 @@
 					/>
 				</div>
 
-				<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
+				<h2 id="vehicles" class="my-4">{{ $t("config.section.vehicles") }}</h2>
 				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="vehicle in vehicles"
@@ -1271,7 +1271,8 @@ export default defineComponent({
 			return this.deviceValues[type][id] || {};
 		},
 		meterBanner(name: string): string | undefined {
-			return this.deviceTags("meter", name)["curtailed"]?.value
+			// the tag is only present while curtailing, a zero percent limit is still one
+			return this.deviceTags("meter", name)["curtailed"]?.value !== undefined
 				? this.$t("config.deviceValue.productionLimited")
 				: undefined;
 		},

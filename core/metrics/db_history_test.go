@@ -175,8 +175,8 @@ func TestQueryEnergySoc(t *testing.T) {
 	require.NoError(t, db.Instance.Create(&e).Error)
 
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
-	require.NoError(t, persist(e, base, 1, 0, new(80.0)))
-	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0)))
+	require.NoError(t, persist(e, base, 1, 0, new(80.0), false))
+	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0), false))
 
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(time.Hour).UTC()

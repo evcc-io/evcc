@@ -370,6 +370,7 @@
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
       "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "generic": "Generische Integrationen",
       "integrations": "Integrationen",
       "lastEvent": "Letzter Eintrag {timeAgo}.",
       "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
@@ -1146,6 +1147,7 @@
   },
   "general": {
     "download": "Download",
+    "none": "keine",
     "note": "Hinweis:"
   },
   "header": {
@@ -1259,9 +1261,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
-      "arrivalTab": "Ankunft",
       "day": "Tag",
-      "departureTab": "Abfahrt",
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
@@ -1285,8 +1285,6 @@
       "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
-      "titleMinSoc": "Min. Ladung",
-      "titleTargetCharge": "Abfahrt",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
       "update": "Anwenden",
       "weekdays": "Tage"
@@ -1315,7 +1313,8 @@
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
       "pvProduction": "Erzeugung",
-      "selfConsumption": "Eigenverbrauch"
+      "selfConsumption": "Eigenverbrauch",
+      "toggleDetails": "Energiefluss-Details"
     },
     "heatingStatus": {
       "charging": "Heize …",
@@ -1395,19 +1394,11 @@
       "currents": "Ladestrom",
       "default": "default",
       "heating": "Heizen",
-      "limitSoc": {
-        "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
-        "label": "Standard Ladelimit"
-      },
       "maxCurrent": {
         "label": "Max. Ladestrom"
       },
       "minCurrent": {
         "label": "Min. Ladestrom"
-      },
-      "minSoc": {
-        "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
-        "label": "Min. Ladung %"
       },
       "minTemp": {
         "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
@@ -1494,6 +1485,20 @@
       "tempLimit": "Temperaturlimit",
       "unknown": "Gastfahrzeug",
       "vehicleSoc": "Ladestand"
+    },
+    "vehicleSettings": {
+      "connectedTo": "verbunden mit {0}",
+      "description": "Diese Standardwerte werden angewendet, wenn das Fahrzeug an einem Ladepunkt angeschlossen wird.",
+      "editHint": "Fahrzeuge unter {0} hinzufügen oder bearbeiten.",
+      "keepAsIs": "Beibehalten",
+      "learnMore": "Mehr erfahren.",
+      "limitSoc": "Standardlimit",
+      "menu": "Fahrzeuge",
+      "minSoc": "Minimale Ladung",
+      "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
+      "mode": "Standardmodus",
+      "notConnected": "nicht verbunden",
+      "title": "Fahrzeugeinstellungen"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Warte auf Autorisierung.",
@@ -1728,7 +1733,7 @@
     "priceLimit": "Preisgrenze",
     "resetAction": "Grenze löschen",
     "resetWarning": "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
-    "saved": "Gepeichert."
+    "saved": "Gespeichert."
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pausierte Zeit",

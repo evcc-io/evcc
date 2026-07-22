@@ -15,7 +15,29 @@
     "modalDescriptionLogin": "Completeu el procés d'autorització per establir la connexió amb {provider}.",
     "modalDescriptionLogout": "Això desconnectarà el vostre compte de {provider} i suprimirà l'accés a les seves dades.",
     "success": "{title} ja està connectat i a punt per utilitzar.",
-    "successCloseModal": "Ara ja pots tancar aquest diàleg."
+    "successCloseModal": "Ara ja pots tancar aquest diàleg.",
+    "successCloseTab": "Ara ja pots tancar aquesta pestanya.",
+    "title": "Estat d'autorització"
+  },
+  "battery": {
+    "card": {
+      "charging": "Carregant",
+      "discharging": "Descarregant",
+      "energy": "Energia",
+      "ofTotal": "de {total}",
+      "power": "Energia",
+      "soc": "Nivell de bateria"
+    },
+    "combined": "Combinada",
+    "config": {
+      "buffer": "Nivell de bateria de la casa per sobre de {soc} pot ser utilitzada per a mantenir la carrega i retardar l'apagat del mode solar. Inicia el mode de càrrega solar autimaticament {start}.",
+      "bufferNone": "L'energia de les bateries de casa no s'utilitza per a la càrrega. Indica valor inferior a {soc} per a habilitar el suport.",
+      "bufferStart": {
+        "above": "quan la bateria es troba per sobre de {soc}",
+        "full": "quan la bateria està plena",
+        "never": "només amb suficient excedent"
+      }
+    }
   },
   "batterySettings": {
     "batteryLevel": "Nivell de bateria",
@@ -116,13 +138,9 @@
   },
   "main": {
     "chargingPlan": {
-      "arrivalTab": "Arribades",
-      "departureTab": "Sortides",
       "modalTitle": "Plà de càrrega",
       "none": "no definit",
-      "title": "Plà",
-      "titleMinSoc": "Càrrega mínima",
-      "titleTargetCharge": "Sortides"
+      "title": "Plà"
     },
     "energyflow": {
       "battery": "Bateria",
@@ -155,10 +173,6 @@
       },
       "minCurrent": {
         "label": "Corriente de carrega mínima"
-      },
-      "minSoc": {
-        "description": "Marge per a emergències. El vehicle es carrega 'ràpidament' a {0} en mode solar. Després continua amb l'excedent fotovoltaic.",
-        "label": "Càrrega de min. %"
       },
       "phasesConfigured": {
         "label": "Fases",

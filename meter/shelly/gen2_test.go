@@ -8,6 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestSignedPower(t *testing.T) {
+	assert.False(t, (&Connection{gen: 1}).SignedPower())
+	assert.False(t, (&Connection{gen: 2}).SignedPower())
+	assert.True(t, (&Connection{gen: 3}).SignedPower())
+}
+
 // Test Gen2+ status responses
 func TestUnmarshalGen2StatusResponse(t *testing.T) {
 	{

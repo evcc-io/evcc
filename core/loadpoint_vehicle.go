@@ -123,6 +123,8 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.vmu.Lock()
 
+	prev := lp.vehicle
+
 	from := "unknown"
 	if lp.vehicle != nil {
 		lp.coordinator.Release(lp.vehicle)
@@ -171,7 +173,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 	// re-publish vehicle settings
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
-	lp.unpublishVehicle()
+
+	// only reset published vehicle data when the active vehicle actually changes.
+	// re-assigning the same default vehicle on reconnect must keep a known soc.
+	if prev != v {
+		lp.unpublishVehicle()
+	}
 
 	// publish effective values
 	lp.PublishEffectiveValues()

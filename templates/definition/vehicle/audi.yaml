@@ -28,7 +28,15 @@ params:
   - preset: vehicle-base
   - name: vin
     example: WAUZZZ...
-  - preset: vehicle-features
+  - name: coarsecurrent
+    advanced: true
+    deprecated: true
+  - name: welcomecharge
+    advanced: true
+    deprecated: true
+  - name: streaming
+    deprecated: true
+  - preset: vehicle-online
 render: |
   type: drivesomethinggreater
   brand: Audi

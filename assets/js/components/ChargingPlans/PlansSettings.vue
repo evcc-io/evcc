@@ -1,5 +1,5 @@
 <template>
-	<div class="mt-4">
+	<div>
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
 			<div class="container px-0">
 				<ChargingPlanStaticSettings
