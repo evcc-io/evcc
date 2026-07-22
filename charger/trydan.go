@@ -62,14 +62,15 @@ type RealTimeData struct {
 	VoltageMeasureL3   float64 `json:"VoltageMeasure_L3"`
 }
 
-// phaseMeasurementsUnavailable reports whether the firmware clearly does not populate
-// per-phase current/voltage: power is flowing but every phase current still reads zero,
-// which is physically impossible on firmware that actually reports these fields (added
-// in 2.5.0; older firmware just omits them, unmarshalling to zero). A zero reading while
-// idle is inconclusive either way, so it is not treated as unavailable.
+// phaseMeasurementsUnavailable reports whether the firmware does not populate the per-phase
+// current/voltage fields (added in 2.5.0; older firmware just omits them, unmarshalling to
+// zero). A grid-connected charger always sees mains voltage, so an all-zero voltage sum can
+// only mean the fields are missing. Currents are checked additionally while power is flowing,
+// where an all-zero reading is equally impossible; zero currents while idle are legitimate.
 func (data RealTimeData) phaseMeasurementsUnavailable() bool {
-	return data.ChargePower > 0 &&
-		data.IntensityMeasureL1+data.IntensityMeasureL2+data.IntensityMeasureL3 == 0
+	return data.VoltageMeasureL1+data.VoltageMeasureL2+data.VoltageMeasureL3 == 0 ||
+		data.ChargePower > 0 &&
+			data.IntensityMeasureL1+data.IntensityMeasureL2+data.IntensityMeasureL3 == 0
 }
 
 // Trydan ChargeMode values
