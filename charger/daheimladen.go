@@ -20,7 +20,6 @@ package charger
 import (
 	"context"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // DaheimLaden charger implementation
@@ -37,15 +37,19 @@ type DaheimLaden struct {
 	conn   *modbus.Connection
 	curr   uint16
 	phases uint16
+	dl     bool
 }
 
 const (
 	dlRegChargingState   = 0   // Uint16 RO ENUM
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
+	dlRegErrorCode       = 4   // Uint16 RO ENUM
 	dlRegCurrents        = 6   // 3xUint16 plus placeholder RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
+	dlRegPowers          = 16  // 3xUint32 plus placeholder RO 1W
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
+	dlRegEvseMinCurrent  = 34  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	dlRegStationId       = 38  // Chr[16] RO UTF16
 	dlRegCardId          = 54  // Chr[16] RO UTF16
@@ -93,14 +97,6 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, err
 	}
 
-	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
-	if err != nil {
-		return nil, fmt.Errorf("station id: %w", err)
-	}
-	if s, _ := utf16BEBytesAsString(c); s == "" {
-		return nil, errors.New("station id not found, device may not be a DaheimLaden")
-	}
-
 	log := util.NewLogger("daheimladen")
 	conn.Logger(log.TRACE)
 
@@ -110,6 +106,10 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		conn:   conn,
 		curr:   60, // assume min current
 		phases: 3,  // assume 3p
+	}
+
+	if !sponsor.IsAuthorized() {
+		wb.checkStation()
 	}
 
 	// get initial state from charger
@@ -156,9 +156,13 @@ func (wb *DaheimLaden) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, current)
 
-	_, err := wb.conn.WriteMultipleRegisters(dlRegCurrentLimit, 1, b)
+	if wb.dl {
+		_, err := wb.conn.WriteMultipleRegisters(dlRegCurrentLimit, 1, b)
 
-	return err
+		return err
+	}
+
+	return nil
 }
 
 func (wb *DaheimLaden) getCurrent() (uint16, error) {
@@ -356,6 +360,25 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 	}
 
 	return int(wb.phases), nil
+}
+
+func (wb *DaheimLaden) checkStation() {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16)
+	if err != nil {
+		return
+	}
+	s, err := utf16BEBytesAsString(b)
+	if err != nil || s == "" {
+		return
+	}
+
+	for _, r := range s {
+		if r < 0x20 || r > 0x7e {
+			return
+		}
+	}
+
+	wb.dl = true
 }
 
 var _ api.Diagnosis = (*DaheimLaden)(nil)
