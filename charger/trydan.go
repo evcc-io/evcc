@@ -146,9 +146,7 @@ func (t Trydan) Status() (api.ChargeStatus, error) {
 	case 1:
 		return api.StatusB, nil
 	case 2:
-		// firmware keeps ChargeState at "charging" even after Paused=1, so fall
-		// back to StatusB while paused to avoid reporting charging when the
-		// charger itself confirms no power is flowing (ChargePower drops to 0)
+		// firmware keeps ChargeState at "charging" even after Paused=1
 		if data.Paused == 1 {
 			return api.StatusB, nil
 		}
