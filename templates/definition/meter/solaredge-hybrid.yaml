@@ -203,7 +203,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 57716 # Battery 1 Instantaneous Power
+      address: 0xE174 # Battery 1 Instantaneous Power
       type: holding
       decode: float32nans
     scale: -1
@@ -211,14 +211,14 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 57732 # Battery 1 State of Energy (SOE)
+      address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32nans
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 57718 # Battery 1 Lifetime Export Energy Counter (discharged)
+      address: 0xE1D6 # Battery 1 Lifetime Export Energy Counter (discharged)
       type: holding
       decode: uint64snan
     scale: 0.001
@@ -226,7 +226,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 57722 # Battery 1 Lifetime Import Energy Counter (charged)
+      address: 0xE1D2 # Battery 1 Lifetime Import Energy Counter (charged)
       type: holding
       decode: uint64snan
     scale: 0.001
@@ -247,7 +247,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 57357 # StorageRemoteCtrl_CommandMode
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
                 type: writesingle
                 encoding: uint16
           - source: const
@@ -256,7 +256,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 57360 # StorageRemoteCtrl_DischargeLimit
+                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
       - case: 2 # hold
