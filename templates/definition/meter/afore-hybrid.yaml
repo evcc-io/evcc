@@ -3,6 +3,7 @@ products:
   - brand: Afore
     description:
       generic: Hybrid Inverter
+capabilities: ["battery-control"]
 requirements:
   description:
     en: |
@@ -20,6 +21,8 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -137,5 +140,169 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0xBB # ChgCmd stop (default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2501 # ChgCmd (U16)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # EMSMode self-consumption (default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2500 # EMSMode (U16)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 1000 # PChgMax 100%
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2507 # PChgMax (U16, 0.1 %)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 1000 # PDisChgMax 100%
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2508 # PDisChgMax (U16, 0.1 %)
+              type: writesingle
+              decode: uint16
+    - case: 2 # hold, discharge blocked, pv charging still allowed
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0xBB # ChgCmd stop (default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2501 # ChgCmd (U16)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # EMSMode self-consumption (default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2500 # EMSMode (U16)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 1000 # PChgMax 100%
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2507 # PChgMax (U16, 0.1 %)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # PDisChgMax 0%
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2508 # PDisChgMax (U16, 0.1 %)
+              type: writesingle
+              decode: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1000 # PChgMax 100%
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2507 # PChgMax (U16, 0.1 %)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 4 # EMSMode command mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2500 # EMSMode (U16)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2502 # ChgPowerSet (S32, W), no single register write
+              type: writemultiple
+              decode: int32
+            scale: -1 # negative = charging (like Pbat)
+        - source: const
+          value: 0xAA # ChgCmd charge/discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2501 # ChgCmd (U16)
+              type: writesingle
+              decode: uint16
+    - case: 4 # holdcharge, charge blocked, discharge allowed
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0xBB # ChgCmd stop (default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2501 # ChgCmd (U16)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # EMSMode self-consumption (default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2500 # EMSMode (U16)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # PChgMax 0%
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2507 # PChgMax (U16, 0.1 %)
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 1000 # PDisChgMax 100%
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2508 # PDisChgMax (U16, 0.1 %)
+              type: writesingle
+              decode: uint16
   {{- include "battery-params" . }}
   {{- end }}
