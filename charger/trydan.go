@@ -181,9 +181,6 @@ func (c Trydan) Enable(enable bool) error {
 		pauseDynamic = 1
 	}
 
-	// Locked disables the EVSE entirely (e.g. a public installation, or V2C's own
-	// autolock) and is independent of Paused; evcc only manages charging via Paused
-	// and never touches Locked, so it never fights with however Locked is managed.
 	if err := c.setValue("Paused", pause); err != nil {
 		return err
 	}
