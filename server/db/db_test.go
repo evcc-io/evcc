@@ -1,6 +1,7 @@
 package db
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -82,7 +83,12 @@ func (migrationChild) TableName() string { return "migration_children" }
 // TestUnitMigrateConstraint guards against migrator implementations that pin a
 // connection and then query the pool again: the single connection deadlocks.
 func TestUnitMigrateConstraint(t *testing.T) {
-	db, err := New("sqlite", t.TempDir()+"/evcc.db")
+	f, err := os.CreateTemp("", "evcc-*.db")
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+	t.Cleanup(func() { os.Remove(f.Name()) })
+
+	db, err := New("sqlite", f.Name())
 	require.NoError(t, err)
 
 	// existing table without the foreign key, forces the migrator to recreate it
