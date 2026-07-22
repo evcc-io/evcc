@@ -865,13 +865,13 @@ export default defineComponent({
 			} else if (status.dimmed !== undefined) {
 				result["dimmed"] = { value: status.dimmed };
 			}
-			if ((status.curtailed ?? 100) < 100 && status.maxProductionPower !== undefined) {
+			if ((status.curtailed ?? 100) < 100 && (status.curtailed ?? 100) >= 0 && status.maxProductionPower !== undefined) {
 				result["curtailLimit"] = {
 					value: status.maxProductionPower,
 					warning: true,
 				};
 			} else if (status.curtailed !== undefined) {
-				result["curtailed"] = { value: status.curtailed < 100 };
+				result["curtailed"] = { value: status.curtailed < 100 && status.curtailed >= 0};
 			}
 
 			return result;
@@ -1278,7 +1278,7 @@ export default defineComponent({
 		},
 		meterBanner(name: string): string | undefined {
 			// the tag is only present while curtailing, a zero percent limit is still one
-			return this.deviceTags("meter", name)["curtailed"]?.value !== undefined
+			return this.deviceTags("meter", name)["curtailed"]?.value !== undefined && ["curtailed"]?.value >= 0
 				? this.$t("config.deviceValue.productionLimited")
 				: undefined;
 		},
