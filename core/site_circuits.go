@@ -133,9 +133,42 @@ func (site *Site) curtailPV(percent *int) error {
 		}
 	}
 
+	errGrid := curtailGrid(site, percent)
+	errs = errors.Join(errs, errGrid)
+
 	if errs == nil {
 		site.curtailPercent = new(*percent)
 	}
 
+	return errs
+}
+
+func curtailGrid(site *Site, percent *int) error {
+
+	var errs error
+
+	if site.gridMeter != nil {
+		m, ok := api.Cap[api.Curtailer](site.gridMeter)
+		if !ok {
+			return errs
+		}
+
+		if curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff()); err == nil {
+			if curtailed == *percent {
+				return errs
+			}
+		} else {
+			if !errors.Is(err, api.ErrNotAvailable) {
+				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", "grid", err))
+			}
+			return errs
+		}
+
+		if err := m.SetCurtailPercent(*percent); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %d%%", "grid", *percent)
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", "grid", err))
+		}
+	}
 	return errs
 }
