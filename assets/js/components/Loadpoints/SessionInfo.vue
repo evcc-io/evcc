@@ -4,6 +4,7 @@
 			<template #label>
 				<CustomSelect
 					inline
+					class="labelSelect"
 					:selected="selectedKey"
 					:options="selectOptions"
 					data-testid="sessionInfoSelect"
@@ -200,6 +201,14 @@ export default defineComponent({
 .sessionInfo * {
 	user-select: none;
 	-webkit-user-select: none;
+}
+/* Truncation (overflow: hidden via .text-truncate-xs-only) moves the baseline of the
+   inline select to its bottom edge, growing the label's line box and pushing the value
+   below the other loadpoint values on narrow screens (#31993). Top-align the select to
+   keep the label at its normal line height. !important is needed to win over the
+   Bootstrap .align-baseline utility set by CustomSelect. */
+.sessionInfo :deep(.labelSelect) {
+	vertical-align: top !important;
 }
 .sessionInfo .value {
 	cursor: pointer;
