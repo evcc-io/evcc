@@ -189,29 +189,61 @@ func TestLPP_SetCurtailPercent_Gating(t *testing.T) {
 	})
 }
 
-// Curtailed reports an active production limit. Per LPP-TS-001 valid values are ≤ 0,
-// so a positive value is not treated as curtailed.
-func TestLPP_Curtailed(t *testing.T) {
+// CurtailedPercent expresses an active production limit as percent of nominal.
+// Per LPP-TS-001 valid values are ≤ 0, so a positive value is not treated as curtailed.
+func TestLPP_CurtailedPercent(t *testing.T) {
 	for _, tc := range []struct {
 		name  string
 		limit ucapi.LoadLimit
-		want  bool
+		want  int
 	}{
-		{"active_negative", ucapi.LoadLimit{IsActive: true, Value: -2000}, true},
-		{"active_zero", ucapi.LoadLimit{IsActive: true, Value: 0}, true},
-		{"active_positive_invalid", ucapi.LoadLimit{IsActive: true, Value: 100}, false},
-		{"inactive", ucapi.LoadLimit{IsActive: false, Value: -2000}, false},
+		{"active_negative", ucapi.LoadLimit{IsActive: true, Value: -2000}, 40},
+		{"active_zero", ucapi.LoadLimit{IsActive: true, Value: 0}, 0},
+		{"active_positive_invalid", ucapi.LoadLimit{IsActive: true, Value: 100}, 100},
+		{"inactive", ucapi.LoadLimit{IsActive: false, Value: -2000}, 100},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, _, lpp, entity := newEGMeter(t)
 			lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 			lpp.EXPECT().ProductionLimit(entity).Return(tc.limit, nil)
+			if tc.want != 100 {
+				lpp.EXPECT().ProductionNominalMax(entity).Return(5000.0, nil)
+			}
 
-			got, err := c.Curtailed()
+			got, err := c.CurtailedPercent()
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
 		})
 	}
+}
+
+// The watt conversion must reproduce the written percent, else the site would
+// rewrite the same limit on every update.
+func TestLPP_CurtailedPercent_RoundTrip(t *testing.T) {
+	const nominal = 4600.0
+
+	for percent := range 101 {
+		c, _, lpp, entity := newEGMeter(t)
+		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
+		lpp.EXPECT().ProductionLimit(entity).
+			Return(ucapi.LoadLimit{IsActive: true, Value: -float64(percent) / 100 * nominal}, nil)
+		lpp.EXPECT().ProductionNominalMax(entity).Return(nominal, nil)
+
+		got, err := c.CurtailedPercent()
+		require.NoError(t, err)
+		assert.Equal(t, percent, got)
+	}
+}
+
+// Without a nominal reference the watt limit cannot be expressed as a percent.
+func TestLPP_CurtailedPercent_NoNominal(t *testing.T) {
+	c, _, lpp, entity := newEGMeter(t)
+	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
+	lpp.EXPECT().ProductionLimit(entity).Return(ucapi.LoadLimit{IsActive: true, Value: -2000}, nil)
+	lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
+
+	_, err := c.CurtailedPercent()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
 // TestLPC_LPP_NonCoverage records the Controllable-System and connection/heartbeat
