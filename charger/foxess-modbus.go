@@ -50,6 +50,7 @@ type FoxESSEVC struct {
 	energyBase     uint32 // foxRegCurrentEnergy reading latched at session start, in register units
 	energyAccum    uint32 // delta banked across meter resets within the current session
 	lastEnergy     uint32 // last successfully read foxRegCurrentEnergy value
+	finished       bool   // charger reported status 5 (finish); cleared only once the car disconnects
 	lp             loadpoint.API
 }
 
@@ -289,10 +290,19 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 		wb.haveEnergyBase = false
 		wb.energyAccum = 0
 		wb.lastEnergy = 0
+		wb.finished = false
 		wb.mu.Unlock()
 
 		return api.StatusA, nil
-	case 1, 4, 5: // connect, pause, finish
+	case 1, 4: // connect, pause
+		return api.StatusB, nil
+	case 5: // finish
+		// the charger will reject a restart until the car disconnects; remember this
+		// so Enable(true) can refuse early instead of hitting a modbus exception
+		wb.mu.Lock()
+		wb.finished = true
+		wb.mu.Unlock()
+
 		return api.StatusB, nil
 	case 2, 3, 9: // start, charging, auto phase switch in progress
 		return api.StatusC, nil
@@ -317,6 +327,16 @@ func (wb *FoxESSEVC) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *FoxESSEVC) Enable(enable bool) error {
+	wb.mu.Lock()
+	finished := wb.finished
+	wb.mu.Unlock()
+
+	// the charger refuses a restart command with a modbus exception once it has
+	// finished the session; the car must disconnect before it will accept one again
+	if enable && finished {
+		return api.ErrNotAvailable
+	}
+
 	wb.mu.Lock()
 	wb.enabled = enable
 	wb.mu.Unlock()
