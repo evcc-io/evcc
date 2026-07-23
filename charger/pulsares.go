@@ -63,7 +63,7 @@ func NewPulsaresFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	wb, err := NewPulsares(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	wb, err := NewPulsares(ctx, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func NewPulsaresFromConfig(ctx context.Context, other map[string]any) (api.Charg
 }
 
 // NewPulsares creates Pulsares charger
-func NewPulsares(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Pulsares, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewPulsares(ctx context.Context, settings modbus.Settings) (*Pulsares, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

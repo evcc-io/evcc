@@ -81,12 +81,12 @@ func NewVestelFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	return NewVestel(ctx, cc.URI, cc.ID)
+	return NewVestel(ctx, cc)
 }
 
 // NewVestel creates a Vestel charger
-func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewVestel(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

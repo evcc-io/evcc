@@ -36,9 +36,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		Value           []string
 		Scale           float64
 		BitMask         string
-		Delay           time.Duration
 		ConnectDelay    time.Duration
-		Timeout         time.Duration
 	}{
 		Scale: 1,
 	}
@@ -58,16 +56,10 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := cc.Settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// set non-default timeout
-	conn.Timeout(cc.Timeout)
-
-	// set non-default delay
-	conn.Delay(cc.Delay)
 
 	// set non-default connect delay
 	conn.ConnectDelay(cc.ConnectDelay)

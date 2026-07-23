@@ -65,12 +65,12 @@ func NewWebastoNextFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewWebastoNext(ctx, cc.URI, cc.ID)
+	return NewWebastoNext(ctx, cc)
 }
 
 // NewWebastoNext creates WebastoNext charger
-func NewWebastoNext(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewWebastoNext(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

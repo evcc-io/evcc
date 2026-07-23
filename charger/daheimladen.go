@@ -87,12 +87,12 @@ func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewDaheimLaden(ctx, cc.URI, cc.ID, cc.Phases1p3p)
+	return NewDaheimLaden(ctx, cc.TcpSettings, cc.Phases1p3p)
 }
 
 // NewDaheimLaden creates DaheimLaden charger
-func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases bool) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
