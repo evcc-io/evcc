@@ -866,20 +866,20 @@ func (site *Site) updateGridMeter() error {
 		return fmt.Errorf("grid power: %v", err)
 	}
 
-	// grid phase powers
-	var p1, p2, p3 float64
-	if phaseMeter, ok := api.Cap[api.PhasePowers](site.gridMeter); ok {
-		var err error // phases needed for signed currents
-		if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
-			mm.Powers = []float64{p1, p2, p3}
-			site.log.DEBUG.Printf("grid powers: %.0fW", mm.Powers)
-		} else if !errors.Is(err, api.ErrNotAvailable) {
-			site.log.ERROR.Printf("grid powers: %v", err)
-		}
-	}
-
 	// grid phase currents (signed)
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](site.gridMeter); ok {
+		// grid phase powers
+		var p1, p2, p3 float64
+		if phaseMeter, ok := api.Cap[api.PhasePowers](site.gridMeter); ok {
+			var err error // phases needed for signed currents
+			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
+				mm.Powers = []float64{p1, p2, p3}
+				site.log.DEBUG.Printf("grid powers: %.0fW", mm.Powers)
+			} else if !errors.Is(err, api.ErrNotAvailable) {
+				site.log.ERROR.Printf("grid powers: %v", err)
+			}
+		}
+
 		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
 			mm.Currents = []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 			site.log.DEBUG.Printf("grid currents: %.3gA", mm.Currents)
