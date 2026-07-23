@@ -270,8 +270,13 @@ render: |
           type: holding
           decode: uint16
         scale: 0.1
-    # mode 7 (percentage limit) at 100% means limited-grid-connection is enabled but not actually curtailing
-    script: mode != 0 && !(mode == 7 && percent == 100)
+    # the percentage register is only meaningful while a limit mode is active
+    script: |
+      limit := percent
+      if mode == 0 {
+        limit = 100
+      }
+      limit
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
