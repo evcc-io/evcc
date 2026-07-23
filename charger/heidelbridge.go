@@ -178,7 +178,8 @@ func (wb *HeidelBridge) Status() (api.ChargeStatus, error) {
 func (wb *HeidelBridge) Enabled() (bool, error) {
 	// HeidelBridge does not publish the enable/charging-current state
 	// (0A is never reported), so the last set state is tracked locally
-	return wb.enabled, nil
+	// and verified against the charger status
+	return verifyEnabled(wb, wb.enabled)
 }
 
 // Enable implements the api.Charger interface
