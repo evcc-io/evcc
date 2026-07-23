@@ -69,7 +69,7 @@ func NewHeidelBridge(ctx context.Context, mqttconf mqtt.Config, topic string, ti
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("heidel")
+	log := util.NewLogger("heidelbridge")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
 	if err != nil {
