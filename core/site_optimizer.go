@@ -796,6 +796,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	controllable := api.HasCap[api.BatteryController](instance)
 	if controllable {
 		bat.ChargeFromGrid = true
+		bat.DischargeToGrid = site.GetBatteryGridDischarge()
 	}
 
 	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
