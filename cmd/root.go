@@ -398,8 +398,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup messaging
 	var pushChan chan messenger.Event
+	var appPush *messenger.AppPush
 	if err == nil {
-		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
+		pushChan, appPush, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 
@@ -492,6 +493,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
 	}, viper.ConfigFileUsed(), remoteAccess)
+
+	// companion app push token registration
+	if appPush != nil {
+		httpd.RegisterAppPushHandlers(appPush)
+	}
 
 	// show and check version, reduce api load during development
 	if util.Version != util.DevVersion {
