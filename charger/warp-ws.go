@@ -49,8 +49,9 @@ type WarpWS struct {
 	maxCurrent int64 // input from evcc
 
 	// meter
-	meter    warp.MeterValues
-	meterMap map[int]int
+	meter                    warp.MeterValues
+	meterMap                 map[int]int
+	hasCurrents, hasVoltages bool // meter actually reports per-phase currents/voltages
 
 	// nfc
 	chargeTracker warp.ChargeTrackerCurrentCharge
@@ -311,6 +312,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		if len(w.meter.TmpValues) > 5 {
 			copy(w.meter.Voltages[:], w.meter.TmpValues[:3])
 			copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
+			w.hasVoltages, w.hasCurrents = true, true
 		}
 	case "meter/values":
 		if !w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
@@ -348,9 +350,11 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		for p, ids := range s.Phases {
 			if v, ok := get(ids.CurrentID); ok {
 				w.meter.Currents[p] = v
+				w.hasCurrents = true
 			}
 			if v, ok := get(ids.VoltageID); ok {
 				w.meter.Voltages[p] = v
+				w.hasVoltages = true
 			}
 		}
 	case "power_manager/state":
@@ -435,12 +439,18 @@ func (w *WarpWS) totalEnergy() (float64, error) {
 func (w *WarpWS) currents() (float64, float64, float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+	if !w.hasCurrents {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
 	return w.meter.Currents[0], w.meter.Currents[1], w.meter.Currents[2], nil
 }
 
 func (w *WarpWS) voltages() (float64, float64, float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+	if !w.hasVoltages {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
 	return w.meter.Voltages[0], w.meter.Voltages[1], w.meter.Voltages[2], nil
 }
 
