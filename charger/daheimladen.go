@@ -93,7 +93,10 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	}
 
 	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
-	if s, _ := utf16BEBytesAsString(c); err != nil || s == "" {
+	if s, _ := utf16BEBytesAsString(c); err != nil || s == "" || s == "heidelbridge" {
+		if s == "heidelbridge" {
+			return nil, fmt.Errorf("heidelbridge detected: %w", api.ErrSponsorRequired)
+		}
 		return nil, api.ErrSponsorRequired
 	}
 
