@@ -53,7 +53,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 
 	v.Sessionid = uuid.New().String()
 	v.Helper.Transport = &transport.Decorator{
-		Base:      v.Helper.Transport, //.NewTripper(log, transport.Insecure()),
+		Base:      newTransport(log),
 		Decorator: transport.DecorateHeaders(mbheaders(true, region)),
 	}
 

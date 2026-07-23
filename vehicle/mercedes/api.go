@@ -24,7 +24,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	client.Transport = &transport.Decorator{
 		Base: &oauth2.Transport{
 			Source: identity,
-			Base:   client.Transport,
+			Base:   newTransport(log),
 		},
 		Decorator: transport.DecorateHeaders(mbheaders(false, identity.region)),
 	}
