@@ -1809,28 +1809,19 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: integer
+            type: integer
     NumberResult:
       description: Success - Number result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: number
+            type: number
     IntegerResult:
       description: Success - Integer result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: integer
+            type: integer
     SocResult:
       description: Success - Soc result
       content:
@@ -1838,40 +1829,28 @@ components:
           schema:
             type: object
             properties:
-              result:
-                type: object
-                properties:
-                  soc:
-                    $ref: "#/components/schemas/Soc"
+              soc:
+                $ref: "#/components/schemas/Soc"
     PlanRatesResult:
       description: Success - PlanRates result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                $ref: "#/components/schemas/PlanRates"
+            $ref: "#/components/schemas/PlanRates"
     BooleanResult:
       description: Success - Boolean result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: boolean
+            type: boolean
     NullResult:
       description: Success - Null result
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                description: Value is always null
-                nullable: true
-                type: "object"
+            description: Value is always null
+            nullable: true
+            type: "object"
     BlankResponse:
       description: Success - Blank response
     SuccessResult:
@@ -1879,11 +1858,8 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: string
-                example: "OK"
+            type: string
+            example: "OK"
     EmptyResult:
       description: Success - Empty result
       content:
@@ -1903,13 +1879,10 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              result:
-                type: integer
-                description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
-                minimum: 0
-                maximum: 4
+            type: integer
+            description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
+            minimum: 0
+            maximum: 4
   securitySchemes:
     cookieAuth:
       type: apiKey
