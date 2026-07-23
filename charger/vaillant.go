@@ -81,7 +81,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
-	token, err := oc.PasswordCredentialsToken(logCtx, cc.User, cc.Password)
+	token, err := vaillantLogin(logCtx, log, oc, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
