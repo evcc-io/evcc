@@ -46,7 +46,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -700,9 +700,25 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok {
+			_, discharge := bpl.GetPowerLimits()
+			mm[i].MaxDischargePower = &discharge
+		}
+
 		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
 	}
+
+	var maxDischargePower float64
+	for _, m := range mm {
+		// only consider max discharge power if all battery meters provide it, otherwise ignore
+		if m.MaxDischargePower == nil {
+			maxDischargePower = 0
+			break
+		}
+		maxDischargePower += *m.MaxDischargePower
+	}
+	site.battery.MaxDischargePower = maxDischargePower
 
 	// retain the last known soc when every battery read failed this cycle, so a
 	// transient meter error does not report the pack as empty (0%)
@@ -1151,7 +1167,7 @@ func (site *Site) update(lp updater) {
 			}
 
 			lp.Update(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				sitePower, site.battery.Power, consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 				hems.Dimmed(site.hems),
 			)
