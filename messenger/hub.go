@@ -15,8 +15,9 @@ import (
 
 // Event is a notification event
 type Event struct {
-	Loadpoint *int // optional loadpoint id
-	Event     string
+	Loadpoint  *int // optional loadpoint id
+	Event      string
+	Attributes map[string]any // optional event-specific template attributes
 }
 
 type Vehicles interface {
@@ -102,6 +103,11 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 			attr["vehicleIcon"] = instance.Icon()
 			attr["vehicleCapacity"] = instance.Capacity()
 		}
+	}
+
+	// event-specific attributes override cache values
+	for k, v := range ev.Attributes {
+		attr[k] = v
 	}
 
 	return util.ReplaceFormatted(tmpl, attr)

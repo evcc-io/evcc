@@ -1013,6 +1013,7 @@ export enum MESSAGING_EVENTS {
   GUEST = "guest",
   ASLEEP = "asleep",
   PLANOVERRUN = "planoverrun",
+  SUGGESTION = "suggestion",
 }
 
 /** A configured notification message. */

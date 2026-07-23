@@ -1194,6 +1194,8 @@ components:
           $ref: "#/components/schemas/MessagingEvent"
         planoverrun:
           $ref: "#/components/schemas/MessagingEvent"
+        suggestion:
+          $ref: "#/components/schemas/MessagingEvent"
       required:
         - start
         - stop
@@ -1203,6 +1205,7 @@ components:
         - guest
         - asleep
         - planoverrun
+        - suggestion
       additionalProperties: false
     Meter:
       description: Measurement data of a single meter.

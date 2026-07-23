@@ -260,6 +260,28 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
 }
 
+func TestBlendMeasured(t *testing.T) {
+	slots := []float64{100, 100, 100, 100, 100, 100}
+	blendMeasured(slots, 200, 4)
+	assert.Equal(t, []float64{200, 175, 150, 125, 100, 100}, slots)
+
+	// fewer slots than decay length
+	short := []float32{100, 100}
+	blendMeasured(short, 200, 4)
+	assert.Equal(t, []float32{200, 175}, short)
+}
+
+func TestBlendScale(t *testing.T) {
+	slots := []float32{100, 100, 100, 100, 100, 100}
+	blendScale(slots, 2, 4)
+	assert.Equal(t, []float32{200, 175, 150, 125, 100, 100}, slots)
+
+	// fewer slots than decay length
+	short := []float64{100, 100}
+	blendScale(short, 0.5, 4)
+	assert.Equal(t, []float64{50, 62.5}, short)
+}
+
 func TestCurrentSlotSuggestion(t *testing.T) {
 	// slotHours 1 makes the per-slot Wh values map 1:1 to W
 	for _, tc := range []struct {
@@ -267,36 +289,118 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 		typ               batteryType
 		charge, disch     float32
 		importing, export bool
-		current           string // current operating mode
 		want              string
-		wantActionable    bool
 	}{
-		{"battery grid charge", batteryTypeBattery, 3000, 0, true, false, "normal", "charge", true},
-		{"battery grid charge unchanged", batteryTypeBattery, 3000, 0, true, false, "charge", "charge", false},
-		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, false, true, "normal", "normal", false},
-		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, true, false, "normal", "hold", true},
-		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, false, true, "normal", "holdcharge", true},
-		{"battery discharge", batteryTypeBattery, 0, 2000, true, false, "normal", "normal", false},
-		{"battery idle balanced", batteryTypeBattery, 0, 0, false, false, "normal", "normal", false},
-		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, false, false, "stop", "charge", true},
-		{"loadpoint charge unchanged", batteryTypeLoadpoint, 11000, 0, false, false, "charge", "charge", false},
-		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, false, false, "charge", "stop", true},
-		{"loadpoint stop unchanged", batteryTypeLoadpoint, 0, 0, false, false, "stop", "stop", false},
-		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, false, false, "charge", "stop", true},
+		{"battery grid charge", batteryTypeBattery, 3000, 0, true, false, "charge"},
+		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, false, true, "normal"},
+		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, true, false, "hold"},
+		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, false, true, "holdcharge"},
+		{"battery discharge", batteryTypeBattery, 0, 2000, true, false, "normal"},
+		{"battery idle balanced", batteryTypeBattery, 0, 0, false, false, "normal"},
+		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, false, false, "charge"},
+		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, false, false, "stop"},
+		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, false, false, "stop"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			res := optimizer.BatteryResult{
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.importing, tc.export, 1, tc.current)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.importing, tc.export, 1)
 			assert.Equal(t, tc.want, s.Action)
-			assert.Equal(t, tc.wantActionable, s.Actionable)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
 		})
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1, ""))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1))
+}
+
+// TestSuggestionActionable ensures the actionable flag follows the current state
+// instead of the state at optimizer run time
+func TestSuggestionActionable(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+
+	site := &Site{
+		batteryMode: api.BatteryNormal,
+		loadpoints:  []*Loadpoint{lp},
+	}
+	site.setSuggestions(
+		map[string]types.Suggestion{"bat": {Action: api.BatteryCharge.String()}},
+		map[int]types.Suggestion{0: {Action: actionCharge}},
+	)
+
+	// battery mode differs from suggestion
+	s := site.batterySuggestion("bat")
+	require.NotNil(t, s)
+	assert.True(t, s.Actionable)
+
+	site.batteryMode = api.BatteryCharge
+	assert.False(t, site.batterySuggestion("bat").Actionable)
+
+	assert.Nil(t, site.batterySuggestion("unknown"))
+
+	// loadpoint stopped, suggestion is to charge
+	s = site.loadpointSuggestion(0)
+	require.NotNil(t, s)
+	assert.True(t, s.Actionable)
+
+	// loadpoint charging matches the suggestion
+	lp.enabled = true
+	lp.status = api.StatusC
+	assert.False(t, site.loadpointSuggestion(0).Actionable)
+
+	assert.Nil(t, site.loadpointSuggestion(1))
+}
+
+func TestSuggestionEvent(t *testing.T) {
+	id := 2
+
+	// battery: no loadpoint id, carries name
+	key, ev := suggestionEvent(batteryDetail{Type: batteryTypeBattery, Name: "home", Title: "Home"}, types.Suggestion{Action: api.BatteryCharge.String()})
+	assert.Equal(t, "battery:home", key)
+	assert.Nil(t, ev.Loadpoint)
+	assert.Equal(t, evSuggestion, ev.Event)
+	assert.Equal(t, api.BatteryCharge.String(), ev.Attributes["suggestionAction"])
+	assert.Equal(t, "home", ev.Attributes["suggestionName"])
+	assert.Equal(t, "Home", ev.Attributes["suggestionTitle"])
+
+	// loadpoint: carries id, no name
+	key, ev = suggestionEvent(batteryDetail{Type: batteryTypeVehicle, loadpoint: &id, Title: "Garage"}, types.Suggestion{Action: actionCharge})
+	assert.Equal(t, "loadpoint:2", key)
+	require.NotNil(t, ev.Loadpoint)
+	assert.Equal(t, id, *ev.Loadpoint)
+	assert.NotContains(t, ev.Attributes, "suggestionName")
+}
+
+func TestDiffSuggestions(t *testing.T) {
+	site := &Site{}
+
+	pending := func(s types.Suggestion) map[string]pendingSuggestion {
+		_, ev := suggestionEvent(batteryDetail{loadpoint: new(int)}, s)
+		return map[string]pendingSuggestion{"loadpoint:0": {suggestion: s, event: ev}}
+	}
+
+	charge := types.Suggestion{Action: actionCharge, Actionable: true}
+	stop := types.Suggestion{Action: actionStop, Actionable: true}
+	notActionable := types.Suggestion{Action: actionCharge, Actionable: false}
+
+	// first actionable suggestion fires
+	assert.Len(t, site.diffSuggestions(pending(charge)), 1)
+
+	// unchanged action does not fire again
+	assert.Empty(t, site.diffSuggestions(pending(charge)))
+
+	// changed action fires
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+
+	// non-actionable suggestion does not fire and clears tracking so the same
+	// action re-notifies when it becomes actionable again
+	assert.Empty(t, site.diffSuggestions(pending(notActionable)))
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+
+	// vanished device is pruned and re-notifies on return
+	assert.Empty(t, site.diffSuggestions(map[string]pendingSuggestion{}))
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
 }

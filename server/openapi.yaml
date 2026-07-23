@@ -436,10 +436,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
+                $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
   /loadpoints/{id}/phases/{phases}:
     post:
       operationId: setLoadpointPhases
@@ -474,15 +471,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    allOf:
-                      - type: object
-                        properties:
-                          planId:
-                            $ref: "#/components/schemas/Id"
-                      - $ref: "#/components/schemas/PlanRates"
+                allOf:
+                  - type: object
+                    properties:
+                      planId:
+                        $ref: "#/components/schemas/Id"
+                  - $ref: "#/components/schemas/PlanRates"
   /loadpoints/{id}/plan/energy:
     delete:
       operationId: deleteLoadpointEnergyPlan
@@ -516,10 +510,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "./openapi.state.yaml#/components/schemas/StaticEnergyPlan"
+                $ref: "./openapi.state.yaml#/components/schemas/StaticEnergyPlan"
   /loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}:
     get:
       operationId: previewLoadpointRepeatingPlan
@@ -593,10 +584,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
+                $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
   /loadpoints/{id}/priority/{priority}:
     post:
       operationId: setLoadpointPriority
@@ -720,11 +708,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      vehicle:
-                        $ref: "#/components/schemas/VehicleTitle"
+                  vehicle:
+                    $ref: "#/components/schemas/VehicleTitle"
   /prioritysoc/{soc}:
     post:
       operationId: setPrioritySoc
@@ -852,10 +837,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/GridSessions"
+                $ref: "#/components/schemas/GridSessions"
             text/csv:
               schema:
                 description: Download csv-file
@@ -904,10 +886,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/ChargingSessions"
+                $ref: "#/components/schemas/ChargingSessions"
             text/csv:
               schema:
                 description: Download csv-file
@@ -1014,12 +993,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: array
-                    items:
-                      type: string
+                type: array
+                items:
+                  type: string
             text/plain:
               schema:
                 description: Download txt-file
@@ -1043,10 +1019,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/LogAreas"
+                $ref: "#/components/schemas/LogAreas"
         "401":
           $ref: "#/components/responses/Unauthorized"
   /system/cache:
@@ -1109,11 +1082,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      rates:
-                        $ref: "#/components/schemas/Rates"
+                  rates:
+                    $ref: "#/components/schemas/Rates"
         "404":
           description: Tariff not defined
   /vehicles/{name}/limitsoc/{soc}:
@@ -1207,12 +1177,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: array
-                    items:
-                      $ref: "./openapi.state.yaml#/components/schemas/RepeatingPlan"
+                type: array
+                items:
+                  $ref: "./openapi.state.yaml#/components/schemas/RepeatingPlan"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan
@@ -1248,13 +1215,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      soc:
-                        $ref: "#/components/schemas/Soc"
-                      time:
-                        $ref: "#/components/schemas/Timestamp"
+                  soc:
+                    $ref: "#/components/schemas/Soc"
+                  time:
+                    $ref: "#/components/schemas/Timestamp"
   /vehicles/{name}/plan/strategy:
     post:
       operationId: setVehiclePlanStrategy
@@ -1278,10 +1242,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
+                $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
   /db/backup:
     get:
       operationId: downloadBackup

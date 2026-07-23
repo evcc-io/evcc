@@ -370,6 +370,7 @@
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
       "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "generic": "Generische Integrationen",
       "integrations": "Integrationen",
       "lastEvent": "Letzter Eintrag {timeAgo}.",
       "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
@@ -552,18 +553,18 @@
           "titleDefault": "Fahrzeug schläft"
         },
         "connect": {
-          "messageDefault": "Auto verbunden bei {pvPower}kW PV",
-          "title": "Wenn ein Auto verbunden wird",
-          "titleDefault": "Auto verbunden"
+          "messageDefault": "Fahrzeug verbunden bei {pvPower}kW PV",
+          "title": "Wenn ein Fahrzeug verbunden wird",
+          "titleDefault": "Fahrzeug verbunden"
         },
         "disconnect": {
-          "messageDefault": "Auto getrennt nach {connectedDuration}",
-          "title": "Wenn ein Auto getrennt wird",
-          "titleDefault": "Auto getrennt"
+          "messageDefault": "Fahrzeug getrennt nach {connectedDuration}",
+          "title": "Wenn ein Fahrzeug getrennt wird",
+          "titleDefault": "Fahrzeug getrennt"
         },
         "guest": {
           "messageDefault": "Unbekanntes Fahrzeug, Gast verbunden?",
-          "title": "Wenn ein unbekanntes Auto verbunden wird",
+          "title": "Wenn ein unbekanntes Fahrzeug verbunden wird",
           "titleDefault": "Unbekanntes Fahrzeug"
         },
         "planoverrun": {
@@ -1732,7 +1733,7 @@
     "priceLimit": "Preisgrenze",
     "resetAction": "Grenze löschen",
     "resetWarning": "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
-    "saved": "Gepeichert."
+    "saved": "Gespeichert."
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pausierte Zeit",

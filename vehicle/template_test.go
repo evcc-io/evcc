@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -44,7 +45,18 @@ func TestTemplates(t *testing.T) {
 
 // onlineVehicleFeatures render via the shared vehicle-features include, so a
 // stored config may carry them; dropping the param breaks reload (discussion #31291).
-var onlineVehicleFeatures = []string{"climaterdisabled", "autodetectdisabled", "wakeupdisabled"}
+var onlineVehicleFeatures = []string{"streaming", "coarsecurrent", "welcomecharge", "climaterdisabled", "autodetectdisabled", "wakeupdisabled"}
+
+// requiredFeatureParams lists features these templates once offered as user
+// params. Stored configs carry the key, so undeclaring it makes evcc fail to
+// boot on the next restart (#31962). Deprecate such params, never remove them.
+var requiredFeatureParams = map[string][]string{
+	"vw":                    {"streaming", "coarsecurrent", "welcomecharge"},
+	"audi":                  {"streaming", "coarsecurrent", "welcomecharge"},
+	"seat":                  {"streaming", "coarsecurrent", "welcomecharge"},
+	"cupra":                 {"streaming", "coarsecurrent", "welcomecharge"},
+	"drivesomethinggreater": {"streaming", "coarsecurrent", "welcomecharge"},
+}
 
 func TestVehicleFeatureParamsConsistent(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Vehicle, templates.WithDeprecated()) {
@@ -55,6 +67,9 @@ func TestVehicleFeatureParamsConsistent(t *testing.T) {
 		for _, feat := range onlineVehicleFeatures {
 			// not every template ever offered every feature (e.g. wakeupdisabled is new)
 			if i, _ := tmpl.ParamByName(feat); i < 0 {
+				if slices.Contains(requiredFeatureParams[tmpl.Template], feat) {
+					t.Errorf("%s: feature %q must stay a declared param", tmpl.Template, feat)
+				}
 				continue
 			}
 

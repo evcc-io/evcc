@@ -710,12 +710,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/ChargeMode"
-                    }
-                  }
+                  "$ref": "#/components/schemas/ChargeMode"
                 }
               }
             }
@@ -774,24 +769,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "allOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "planId": {
-                              "$ref": "#/components/schemas/Id"
-                            }
-                          }
-                        },
-                        {
-                          "$ref": "#/components/schemas/PlanRates"
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "planId": {
+                          "$ref": "#/components/schemas/Id"
                         }
-                      ]
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/PlanRates"
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -850,12 +840,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/StaticEnergyPlan"
-                    }
-                  }
+                  "$ref": "#/components/schemas/StaticEnergyPlan"
                 }
               }
             }
@@ -988,12 +973,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/PlanStrategy"
-                    }
-                  }
+                  "$ref": "#/components/schemas/PlanStrategy"
                 }
               }
             }
@@ -1198,13 +1178,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "result": {
-                      "type": "object",
-                      "properties": {
-                        "vehicle": {
-                          "$ref": "#/components/schemas/VehicleTitle"
-                        }
-                      }
+                    "vehicle": {
+                      "$ref": "#/components/schemas/VehicleTitle"
                     }
                   }
                 }
@@ -1411,12 +1386,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/GridSessions"
-                    }
-                  }
+                  "$ref": "#/components/schemas/GridSessions"
                 }
               },
               "text/csv": {
@@ -1490,12 +1460,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/ChargingSessions"
-                    }
-                  }
+                  "$ref": "#/components/schemas/ChargingSessions"
                 }
               },
               "text/csv": {
@@ -1669,14 +1634,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    }
+                  "type": "array",
+                  "items": {
+                    "type": "string"
                   }
                 }
               },
@@ -1717,12 +1677,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/LogAreas"
-                    }
-                  }
+                  "$ref": "#/components/schemas/LogAreas"
                 }
               }
             }
@@ -1822,13 +1777,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "result": {
-                      "type": "object",
-                      "properties": {
-                        "rates": {
-                          "$ref": "#/components/schemas/Rates"
-                        }
-                      }
+                    "rates": {
+                      "$ref": "#/components/schemas/Rates"
                     }
                   }
                 }
@@ -1989,14 +1939,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/RepeatingPlan"
-                      }
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RepeatingPlan"
                   }
                 }
               }
@@ -2058,16 +2003,11 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "result": {
-                      "type": "object",
-                      "properties": {
-                        "soc": {
-                          "$ref": "#/components/schemas/Soc"
-                        },
-                        "time": {
-                          "$ref": "#/components/schemas/Timestamp"
-                        }
-                      }
+                    "soc": {
+                      "$ref": "#/components/schemas/Soc"
+                    },
+                    "time": {
+                      "$ref": "#/components/schemas/Timestamp"
                     }
                   }
                 }
@@ -2109,12 +2049,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/PlanStrategy"
-                    }
-                  }
+                  "$ref": "#/components/schemas/PlanStrategy"
                 }
               }
             }
@@ -4321,6 +4256,9 @@
           },
           "planoverrun": {
             "$ref": "#/components/schemas/MessagingEvent"
+          },
+          "suggestion": {
+            "$ref": "#/components/schemas/MessagingEvent"
           }
         },
         "required": [
@@ -4331,7 +4269,8 @@
           "soc",
           "guest",
           "asleep",
-          "planoverrun"
+          "planoverrun",
+          "suggestion"
         ],
         "additionalProperties": false
       },
