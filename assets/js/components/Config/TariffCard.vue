@@ -5,8 +5,10 @@
 		:name="tariff.name"
 		:editable="!!tariff.id"
 		:error="hasError"
+		:disabled="!!tariff.deviceDisable"
 		:data-testid="`tariff-${tariffType}`"
 		@edit="$emit('edit', tariffType, tariff.id)"
+		@enable="$emit('enable')"
 	>
 		<template #icon>
 			<component :is="iconComponent" />
@@ -33,6 +35,7 @@ type ConfigTariff = {
 	id: number;
 	name: string;
 	deviceTitle?: string;
+	deviceDisable?: boolean;
 	config?: {
 		template?: string;
 	};
@@ -52,7 +55,7 @@ export default {
 		tags: { type: Object, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
 	},
-	emits: ["edit"],
+	emits: ["edit", "enable"],
 	computed: {
 		cardTitle(): string {
 			if (this.title) {

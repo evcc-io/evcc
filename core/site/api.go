@@ -1,6 +1,8 @@
 package site
 
 import (
+	"iter"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
@@ -15,6 +17,7 @@ type API interface {
 	Publisher
 
 	Loadpoints() []loadpoint.API
+	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
 	Optimize() error
 

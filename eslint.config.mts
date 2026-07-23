@@ -30,6 +30,10 @@ export default [
 				"no-param-reassign": "error",
 				"vue/block-lang": "off",
 				"@typescript-eslint/no-explicit-any": "off",
+				"@typescript-eslint/no-unused-vars": [
+					"error",
+					{ ignoreRestSiblings: true },
+				],
 			},
 		}
 	).map((config) => ({

@@ -173,6 +173,8 @@
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
+					:is-disabled="isDisabled"
+					:can-disable="canDisable"
 					:test-state="test"
 					:is-saving="saving"
 					:is-succeeded="succeeded"
@@ -182,6 +184,7 @@
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
+					@disable="handleDisable"
 				>
 					<template #before-test>
 						<AdminPasswordPrompt
@@ -203,7 +206,7 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
 import DeviceInfoButton from "./DeviceInfoButton.vue";
-import { closeModal } from "@/configModal";
+import { closeModal, isNestedIn } from "@/configModal";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
@@ -314,6 +317,7 @@ export default defineComponent({
 		"added",
 		"updated",
 		"removed",
+		"disable",
 		"open",
 		"close",
 		"template-changed",
@@ -447,6 +451,12 @@ export default defineComponent({
 		},
 		isDeletable() {
 			return !this.isNew && !this.hideDelete;
+		},
+		isDisabled() {
+			return Boolean(this.values.deviceDisable);
+		},
+		canDisable(): boolean {
+			return !isNestedIn("loadpoint");
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -638,6 +648,9 @@ export default defineComponent({
 				if (device.deviceIcon !== undefined) {
 					this.values.deviceIcon = device.deviceIcon;
 				}
+				if (device.deviceDisable !== undefined) {
+					this.values.deviceDisable = device.deviceDisable;
+				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
 
@@ -818,6 +831,11 @@ export default defineComponent({
 			} catch (e) {
 				handleError(e, "remove failed");
 			}
+		},
+		async handleDisable(disable: boolean) {
+			if (this.id === undefined) return;
+			this.$emit("disable", { id: this.id, disable });
+			await closeModal();
 		},
 		handleOpen() {
 			this.isModalVisible = true;

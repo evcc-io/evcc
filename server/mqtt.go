@@ -192,7 +192,7 @@ func (m *MQTT) Listen(site site.API) error {
 	}
 
 	// loadpoint setters
-	for id, lp := range site.Loadpoints() {
+	for id, lp := range site.ActiveLoadpoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		if err := m.listenLoadpointSetters(topic, site, lp); err != nil {
 			return err
@@ -219,12 +219,12 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"residualPower", floatSetter(site.SetResidualPower)},
 		{"solarAdjusted", boolSetter(pass(site.SetSolarAdjusted))},
 		{"smartCostLimit", floatPtrSetter(pass(func(limit *float64) {
-			for _, lp := range site.Loadpoints() {
+			for _, lp := range site.ActiveLoadpoints() {
 				lp.SetSmartCostLimit(limit)
 			}
 		}))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(func(limit *float64) {
-			for _, lp := range site.Loadpoints() {
+			for _, lp := range site.ActiveLoadpoints() {
 				lp.SetSmartFeedInPriorityLimit(limit)
 			}
 		}))},

@@ -489,7 +489,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		details.BatteryDetails = append(details.BatteryDetails, detail)
 	}
 
-	for id, lp := range site.Loadpoints() {
+	for id, lp := range site.ActiveLoadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
