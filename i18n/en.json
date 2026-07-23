@@ -143,16 +143,16 @@
       "template": "Manufacturer",
       "titleAdd": {
         "charging": "Add Charger",
-        "heating": "Add Heater"
+        "heating": "Add Heating Device"
       },
       "titleEdit": {
         "charging": "Edit Charger",
-        "heating": "Edit Heater"
+        "heating": "Edit Heating Device"
       },
       "type": {
         "custom": {
           "charging": "User-defined charger",
-          "heating": "User-defined heater"
+          "heating": "User-defined heating device"
         },
         "heatpump": "User-defined heat pump",
         "sgready": "User-defined heat pump (sg-ready via plugins)",
@@ -188,6 +188,7 @@
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
+      "asleep": "sleeping",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacity",
@@ -226,6 +227,7 @@
       "no": "no",
       "odometer": "Odometer",
       "org": "Organization",
+      "outdoorTemp": "Outdoor temperature",
       "phaseCurrents": "Current",
       "phasePowers": "Power",
       "phaseVoltages": "Voltage",
@@ -365,11 +367,13 @@
       },
       "customOption": "User-defined integration",
       "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature. Curtailing solar production is also supported for selected devices. The actual curtailment limit must be set on each inverter configuration.",
-      "downloadCsv": "Download CSV",
+      "download": "Download",
       "eventsRecorded": "Recorded {count} grid limitation events.",
       "generic": "Generic integrations",
       "integrations": "Integrations",
       "lastEvent": "Most recent {timeAgo}.",
+      "noEvents": "No events recorded yet.",
+      "recordedEvents": "Recorded events",
       "template": "Integration",
       "title": "External Limit"
     },
@@ -396,17 +400,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Add charger",
-        "heating": "Add heater"
+        "heating": "Add heating device"
       },
       "addMeter": "Add dedicated energy meter",
+      "advancedConfig": "Advanced configuration",
       "cancel": "Cancel",
       "chargerError": {
         "charging": "Configuring a charger is required.",
-        "heating": "Configuring a heater is required."
+        "heating": "Configuring a heating device is required."
       },
       "chargerLabel": {
         "charging": "Charger",
-        "heating": "Heater"
+        "heating": "Heating device"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
@@ -420,14 +425,22 @@
       "circuitInvalid": "Circuit does not exist",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
+      "created": "“{name}” was created and uses sensible defaults.",
+      "createdTitle": {
+        "charging": "Charging point created",
+        "heating": "Heater created"
+      },
+      "creating": {
+        "charging": "Charger saved. Creating charging point …",
+        "heating": "Heating device saved. Creating heater …"
+      },
       "defaultModeHelp": {
         "charging": "Charging mode when connecting the vehicle.",
         "heating": "Is set when on system start."
       },
       "defaultModeHelpKeep": "Keeps the last selected mode.",
+      "defaultModeKeep": "keep as is",
       "defaultModeLabel": "Default mode",
-      "defaultsHint": "Default mode, solar behaviour and electrical details use sensible defaults.",
-      "defaultsHintLink": "Adjust settings",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
       "electricalTitle": "Electrics",
@@ -444,7 +457,7 @@
       "noVehicles": "No vehicles are configured.",
       "option": {
         "charging": "Add charging point",
-        "heating": "Add heating device"
+        "heating": "Add heater"
       },
       "phases1p": "1-phase",
       "phases3p": "3-phase",
@@ -484,13 +497,13 @@
       "thresholdEnableLabel": "Enable grid power",
       "titleAdd": {
         "charging": "Add Charging Point",
-        "heating": "Add Heating Device",
-        "unknown": "Add Charger or Heater"
+        "heating": "Add Heater",
+        "unknown": "Add Charging Point or Heater"
       },
       "titleEdit": {
         "charging": "Edit Charging Point",
-        "heating": "Edit Heating Device",
-        "unknown": "Edit Charger or Heater"
+        "heating": "Edit Heater",
+        "unknown": "Edit Charging Point or Heater"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -508,7 +521,7 @@
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
       "addGrid": "Add grid meter",
-      "addLoadpoint": "Add charger or heater",
+      "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
       "addVehicle": "Add vehicle",
@@ -539,18 +552,18 @@
           "titleDefault": "Vehicle asleep"
         },
         "connect": {
-          "messageDefault": "Car connected at {pvPower}kW PV",
-          "title": "When a car connects",
-          "titleDefault": "Car connected"
+          "messageDefault": "Vehicle connected at {pvPower}kW PV",
+          "title": "When a vehicle connects",
+          "titleDefault": "Vehicle connected"
         },
         "disconnect": {
-          "messageDefault": "Car disconnected after {connectedDuration}",
-          "title": "When a car disconnects",
-          "titleDefault": "Car disconnected"
+          "messageDefault": "Vehicle disconnected after {connectedDuration}",
+          "title": "When a vehicle disconnects",
+          "titleDefault": "Vehicle disconnected"
         },
         "guest": {
           "messageDefault": "Unknown vehicle, guest connected?",
-          "title": "When an unknown car connects",
+          "title": "When an unknown vehicle connects",
           "titleDefault": "Unknown vehicle"
         },
         "planoverrun": {
@@ -572,6 +585,11 @@
           "messageDefault": "Finished charging {chargedEnergy}kWh in {chargeDuration}.",
           "title": "When charging stops",
           "titleDefault": "Charge finished"
+        },
+        "suggestion": {
+          "messageDefault": "Optimizer suggestion for {suggestionTitle}: if optimizer control were active it would apply '{suggestionAction}' now. Advisory only, nothing was changed. Experimental — feedback welcome at https://github.com/evcc-io/evcc/issues/31903",
+          "title": "When the optimizer's advisory action changes",
+          "titleDefault": "Optimizer suggestion"
         }
       },
       "eventMessage": "Message",
@@ -801,7 +819,7 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging & Heating",
+      "loadpoints": "Charging points & Heaters",
       "meter": "Solar & Battery",
       "services": "Services",
       "system": "System",
@@ -830,14 +848,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "License Key",
-      "activationKeyHint": "Sent to you via email. Can be found in the {url}.",
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
       "descriptionToken": "As GitHub Sponsor you find your token on {url}. For getting-started, we offer a {trialToken}.",
-      "email": "Email",
-      "emailHint": "Email address you used for {url}",
       "enterYourToken": "Your Sponsor Token",
       "error": "The sponsor token is not valid.",
       "invalid": "invalid",
@@ -920,7 +934,8 @@
         "feedIn": "Add grid export tariff",
         "grid": "Add grid import tariff",
         "planner": "Add planner forecast",
-        "solar": "Add solar forecast"
+        "solar": "Add solar forecast",
+        "temperature": "Add temperature forecast"
       },
       "planner": {
         "description": "Advanced setting. Usually not needed as dynamic electricity tariffs or CO₂ forecasts are used automatically. Enables an additional data source that's only used for charge planning, not for statistics and price calculations.",
@@ -933,6 +948,11 @@
         "titleAdd": "Add Solar Forecast",
         "titleEdit": "Edit Solar Forecast"
       },
+      "temperature": {
+        "description": "Outdoor temperature forecast for your location. Displayed in the interface and used to predict heating demand.",
+        "titleAdd": "Add Temperature Forecast",
+        "titleEdit": "Edit Temperature Forecast"
+      },
       "template": "Provider",
       "title": "Tariffs & Forecasts",
       "titleChoice": "What Do You Want To Add?",
@@ -941,7 +961,8 @@
         "feedIn": "Grid Export Price",
         "grid": "Grid Import Price",
         "planner": "Planner",
-        "solar": "Solar"
+        "solar": "Solar",
+        "temperature": "Temperature Forecast"
       },
       "zones": {
         "add": "Add zone",
@@ -1094,7 +1115,8 @@
       "co2": "See when grid energy in your region is clean. Charging plans will optimize for low emissions and calculate CO₂ savings.",
       "price": "Configure your dynamic electricity tariff to automatically optimize charging plans and calculate savings.",
       "setup": "Set up tariffs and forecasts",
-      "solar": "See expected solar production for today and the coming days. Will also be used for automatic charging optimization in the future."
+      "solar": "See expected solar production for today and the coming days. Will also be used for automatic charging optimization in the future.",
+      "temperature": "See the expected outdoor temperature for your location. Used to predict heating demand."
     },
     "hideLine": "hide line",
     "modalTitle": "Forecast",
@@ -1116,13 +1138,20 @@
     "solarAdjust": "Adjust solar forecast based on real production data{percent}.",
     "solarAdjustMedium": "real data adjust",
     "solarAdjustShort": "adjust",
+    "temperature": {
+      "average": "Average",
+      "range": "Range"
+    },
     "type": {
       "co2": "CO₂ Emissions",
       "price": "Grid Price",
-      "solar": "Solar Production"
+      "solar": "Solar Production",
+      "temperature": "Outdoor Temperature"
     }
   },
   "general": {
+    "download": "Download",
+    "none": "none",
     "note": "Note:"
   },
   "header": {
@@ -1236,9 +1265,7 @@
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
-      "arrivalTab": "Arrival",
       "day": "Day",
-      "departureTab": "Departure",
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
@@ -1262,8 +1289,6 @@
       "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
-      "titleMinSoc": "Min charge",
-      "titleTargetCharge": "Departure",
       "unsavedChanges": "There are unsaved changes. Apply now?",
       "update": "Apply",
       "weekdays": "Days"
@@ -1292,11 +1317,13 @@
       "pv": "Solar system",
       "pvExport": "Grid export",
       "pvProduction": "Production",
-      "selfConsumption": "Self-consumption"
+      "selfConsumption": "Self-consumption",
+      "toggleDetails": "Energy flow details"
     },
     "heatingStatus": {
       "charging": "Heating…",
       "connected": "Standby.",
+      "minTemp": "Minimum heating to {temp}.",
       "suggestionStartTooltip": "Optimizer recommends heating now.",
       "suggestionStopTooltip": "Optimizer recommends pausing the heating.",
       "vehicleLimit": "Heater limit",
@@ -1322,7 +1349,7 @@
           "returnEnergy": "Energy (reverse)"
         }
       },
-      "downloadCsv": "Download CSV",
+      "download": "Download",
       "empty": "No history data available for this time range.",
       "group": {
         "battery": "Battery",
@@ -1344,12 +1371,15 @@
       "emission": "Emission",
       "fallbackName": "Charging point",
       "finished": "Finish time",
+      "last24hEnergy": "Last 24h",
+      "last7dEnergy": "Last 7 days",
       "power": "Power",
       "price": "Cost",
       "remaining": "Remaining",
       "remoteDisabledHard": "{source}: turned off",
       "remoteDisabledSoft": "{source}: turned off adaptive solar-charging",
-      "solar": "Solar"
+      "solar": "Solar",
+      "todayEnergy": "Today"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1367,19 +1397,16 @@
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
       "default": "default",
-      "limitSoc": {
-        "description": "Charging limit that is used when this vehicle is connected.",
-        "label": "Default limit"
-      },
+      "heating": "Heating",
       "maxCurrent": {
         "label": "Max. Current"
       },
       "minCurrent": {
         "label": "Min. Current"
       },
-      "minSoc": {
-        "description": "The vehicle gets „fast” charged to {0} in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days.",
-        "label": "Min. charge %"
+      "minTemp": {
+        "description": "Below {0} battery and grid power are also used in solar mode to maintain this temperature.",
+        "label": "Min. temperature"
       },
       "phasesConfigured": {
         "label": "Phases",
@@ -1462,6 +1489,20 @@
       "tempLimit": "Temp. limit",
       "unknown": "Guest vehicle",
       "vehicleSoc": "Charge"
+    },
+    "vehicleSettings": {
+      "connectedTo": "connected to {0}",
+      "description": "These defaults are applied when the vehicle connects to a charging point.",
+      "editHint": "Add or edit vehicles in {0}.",
+      "keepAsIs": "Keep as is",
+      "learnMore": "Learn more.",
+      "limitSoc": "Default limit",
+      "menu": "Vehicles",
+      "minSoc": "Minimum charge",
+      "minSocDescription": "Fast charge to this level in solar mode.",
+      "mode": "Default mode",
+      "notConnected": "not connected",
+      "title": "Vehicle Settings"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Waiting for authorization.",
@@ -1587,9 +1628,9 @@
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },
-    "csvPeriod": "Download {period} CSV",
-    "csvTotal": "Download total CSV",
     "date": "Start",
+    "download": "Download {period}",
+    "downloadTotal": "Download total",
     "energy": "Charged",
     "filter": {
       "allLoadpoints": "all charging points",

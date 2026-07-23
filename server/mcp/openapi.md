@@ -196,13 +196,13 @@ Directly controls the mode of all controllable batteries. evcc behavior like 'pr
 
 | Name | Type | Description |
 |------|------|-------------|
-| batteryMode | string | Battery mode |
+| batteryMode | string | Battery operation mode. |
 
 **Example call:**
 
 ```json
 call setExternalBatteryMode {
-  "batteryMode": "normal"
+  "batteryMode": "unknown"
 }
 ```
 
@@ -344,23 +344,23 @@ call getEnergyHistory {
 }
 ```
 
-## getState
+## setSolarAdjusted
 
-Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.
+Adjust the solar forecast to real production data of the current day.
 
-**Tags:** general
+**Tags:** experimental
 
 **Arguments:**
 
 | Name | Type | Description |
 |------|------|-------------|
-| jq | string | Filter the state with JQ |
+| enable | string | Charging mode. |
 
 **Example call:**
 
 ```json
-call getState {
-  "jq": "example"
+call setSolarAdjusted {
+  "enable": "true"
 }
 ```
 
@@ -840,6 +840,28 @@ call setLoadpointMinCurrent {
 }
 ```
 
+## setLoadpointMinTemp
+
+Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| temp | number | Temperature in °C |
+
+**Example call:**
+
+```json
+call setLoadpointMinTemp {
+  "id": 1,
+  "temp": 50
+}
+```
+
 ## setLoadpointMode
 
 Changes the charging behavior of the loadpoint.
@@ -1101,6 +1123,26 @@ Update vehicle, loadpoint or odometer of a charging session. Only provided field
 call updateSession {
   "id": 1,
   "requestBody": "..."
+}
+```
+
+## state
+
+Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.
+
+**Tags:** state
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| jq | string | Filter the state with JQ |
+
+**Example call:**
+
+```json
+call state {
+  "jq": "example"
 }
 ```
 

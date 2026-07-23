@@ -50,7 +50,10 @@ func (site *Site) effectiveCurtailPercent() *int {
 	if site.SmartFeedInDisableActive() {
 		return new(0)
 	}
-	return hemsCurtailed(site.hems)
+	if site.hems == nil {
+		return nil
+	}
+	return site.hems.CurtailedPercent()
 }
 
 // revertSmartFeedInCurtail drops smart feed-in's curtailment and restores the
@@ -61,8 +64,10 @@ func (site *Site) revertSmartFeedInCurtail() error {
 	}
 
 	percent := 100
-	if p := hemsCurtailed(site.hems); p != nil {
-		percent = *p
+	if site.hems != nil {
+		if p := site.hems.CurtailedPercent(); p != nil {
+			percent = *p
+		}
 	}
 
 	return site.curtailPV(&percent)

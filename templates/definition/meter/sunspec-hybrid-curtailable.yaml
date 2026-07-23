@@ -63,7 +63,7 @@ render: |
             value:
               - 704:WMaxLimPctEna
               - 123:WMaxLim_Ena
-  curtailed: # curtailed only while the limit is enabled and below nominal (< 100 %)
+  curtailed: # the limit percentage only applies while the limit is enabled
     source: go
     in:
     - name: ena
@@ -82,5 +82,10 @@ render: |
         value:
           - 704:WMaxLimPct
           - 123:WMaxLimPct
-    script: ena && limit < 100
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
   maxacpower: {{ .maxacpower }} # W

@@ -1,11 +1,25 @@
 <template>
 	<label
-		class="root position-relative"
-		:class="inline ? 'd-inline-block align-baseline' : 'd-block'"
+		class="root position-relative keyboard-focus-ring"
+		:class="[
+			inline ? 'd-inline-block align-baseline' : 'd-block',
+			{ 'focus-ring-visible': showFocusRing },
+		]"
 		:for="id"
 		role="button"
+		@mousedown="mouseDown = true"
 	>
-		<select :id="id" :value="selected" class="custom-select" tabindex="0" @change="change">
+		<select
+			:id="id"
+			:value="selected"
+			:aria-label="ariaLabel"
+			class="custom-select"
+			tabindex="0"
+			@change="change"
+			@focus="handleFocus"
+			@keydown="showFocusRing = true"
+			@blur="handleBlur"
+		>
 			<option
 				v-for="{ name, value, count, disabled } in options"
 				:key="value"
@@ -30,8 +44,16 @@ export default defineComponent({
 		selected: { type: [String, Number] },
 		id: { type: String },
 		inline: Boolean,
+		ariaLabel: { type: String },
 	},
 	emits: ["change"],
+	data() {
+		return {
+			// selects match :focus-visible even on mouse interaction, track modality manually
+			mouseDown: false,
+			showFocusRing: false,
+		};
+	},
 	methods: {
 		text(name: string, count?: number) {
 			if (count === undefined) {
@@ -41,6 +63,14 @@ export default defineComponent({
 		},
 		change(event: Event) {
 			this.$emit("change", event);
+		},
+		handleFocus() {
+			this.showFocusRing = !this.mouseDown;
+			this.mouseDown = false;
+		},
+		handleBlur() {
+			this.showFocusRing = false;
+			this.mouseDown = false;
 		},
 	},
 });
@@ -55,13 +85,7 @@ export default defineComponent({
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;
-}
-.root {
-	border-radius: var(--bs-border-radius);
-}
-.root:focus-within {
-	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
-	outline-width: var(--bs-focus-ring-width);
-	outline-offset: var(--bs-focus-ring-width);
+	/* WebKit propagates the select's intrinsic option width as overflow, causing page scroll */
+	contain: paint;
 }
 </style>

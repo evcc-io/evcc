@@ -11,65 +11,59 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// curtailSite builds a Site with a single PV meter that also implements api.Curtailer
-func curtailSite(t *testing.T) (*Site, *api.MockCurtailer) {
-	t.Helper()
-	ctrl := gomock.NewController(t)
-
-	cm := &struct {
-		api.Meter
-		api.Curtailer
-	}{
-		Meter:     api.NewMockMeter(ctrl),
-		Curtailer: api.NewMockCurtailer(ctrl),
-	}
-
-	s := &Site{
+// curtailSiteWithMeter builds a Site with a single curtailable PV meter.
+func curtailSiteWithMeter(m *curtailableMeter) *Site {
+	return &Site{
 		log:      util.NewLogger("foo"),
-		pvMeters: []config.Device[api.Meter]{config.NewStaticDevice[api.Meter](config.Named{}, cm)},
+		pvMeters: []config.Device[api.Meter]{config.NewStaticDevice[api.Meter](config.Named{}, api.Meter(m))},
 	}
-
-	return s, cm.Curtailer.(*api.MockCurtailer)
 }
 
 func TestCurtailPV(t *testing.T) {
-	s, mc := curtailSite(t)
+	m := &curtailableMeter{percent: 100}
+	s := curtailSiteWithMeter(m)
 
 	// first apply writes
-	mc.EXPECT().SetCurtailPercent(60).Return(nil)
 	require.NoError(t, s.curtailPV(new(60)))
+	require.Equal(t, []int{60}, m.setCalls)
 
 	// unchanged: no write
 	require.NoError(t, s.curtailPV(new(60)))
+	require.Equal(t, []int{60}, m.setCalls)
 
 	// changed: writes
-	mc.EXPECT().SetCurtailPercent(100).Return(nil)
 	require.NoError(t, s.curtailPV(new(100)))
+	require.Equal(t, []int{60, 100}, m.setCalls)
 }
 
 func TestCurtailPVReapplyOnError(t *testing.T) {
-	s, mc := curtailSite(t)
+	m := &curtailableMeter{percent: 100}
+	s := curtailSiteWithMeter(m)
 
 	// error: cache not advanced
-	mc.EXPECT().SetCurtailPercent(0).Return(errors.New("nope"))
+	m.setErr = errors.New("nope")
 	require.Error(t, s.curtailPV(new(0)))
 
 	// same percent reapplied because previous attempt failed
-	mc.EXPECT().SetCurtailPercent(0).Return(nil)
+	m.setErr = nil
 	require.NoError(t, s.curtailPV(new(0)))
+	require.Equal(t, []int{0, 0}, m.setCalls)
 }
 
 func TestRevertSmartFeedInCurtail(t *testing.T) {
 	// inactive: nothing happens
-	s, _ := curtailSite(t)
+	m := &curtailableMeter{percent: 100}
+	s := curtailSiteWithMeter(m)
 	require.NoError(t, s.revertSmartFeedInCurtail())
+	require.Empty(t, m.setCalls)
 
 	// active without HEMS: restore to uncurtailed (100%)
-	s, mc := curtailSite(t)
+	m = &curtailableMeter{percent: 0}
+	s = curtailSiteWithMeter(m)
 	s.smartFeedInDisableActive = true
 	s.curtailPercent = new(0) // feed-in previously curtailed to 0%
-	mc.EXPECT().SetCurtailPercent(100).Return(nil)
 	require.NoError(t, s.revertSmartFeedInCurtail())
+	require.Equal(t, []int{100}, m.setCalls)
 }
 
 func TestDimming(t *testing.T) {
@@ -110,9 +104,9 @@ func TestDimming(t *testing.T) {
 			if tc.has != *tc.want {
 				dimmer.EXPECT().Dim(*tc.want).Return(nil)
 			}
-		}
 
-		require.NoError(t, s.dimMeters(tc.want))
+			require.NoError(t, s.dimMeters(*tc.want))
+		}
 
 		if !ctrl.Satisfied() {
 			ctrl.Finish()

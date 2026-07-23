@@ -3,9 +3,36 @@ products:
   - brand: Cupra
     description:
       generic: EU Data Act
+requirements:
+  description:
+    de: |
+      Nutzt die im Rahmen des EU Data Act bereitgestellten Fahrzeugdaten über das
+      [VW-Konzern-Portal](https://eu-data-act.drivesomethinggreater.com). Die Anmeldung
+      erfolgt mit den Zugangsdaten der My CUPRA App.
+
+      Voraussetzung (einmalig im Browser): im Portal anmelden, die Einwilligung
+      bestätigen, das Fahrzeug verknüpfen und eine fortlaufende Datenanfrage
+      (alle 15 Minuten) aktivieren. Ohne diese Aktivierung liefert das Portal
+      keine Daten. Die Daten werden ca. alle 15 Minuten im Portal bereitgestellt.
+    en: |
+      Uses the vehicle data provided under the EU Data Act through the [VW group
+      portal](https://eu-data-act.drivesomethinggreater.com). Log in with the credentials
+      of the My CUPRA App.
+
+      Prerequisite (one-time, in a browser): log in to the portal, confirm the
+      consent screen, link the vehicle and enable a continuous data request
+      (every 15 minutes). Without this activation the portal returns no data.
+      Data is provided on the portal roughly every 15 minutes.
 params:
   - preset: vehicle-base
-  - preset: vehicle-features
+  - name: coarsecurrent
+    advanced: true
+  - name: welcomecharge
+    advanced: true
+    deprecated: true
+  - name: streaming
+    deprecated: true
+  - preset: vehicle-online
 render: |
   type: drivesomethinggreater
   brand: Cupra

@@ -1,5 +1,5 @@
 <template>
-	<div class="mt-4">
+	<div>
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
 			<div class="container px-0">
 				<ChargingPlanStaticSettings
@@ -81,16 +81,18 @@ import api from "@/api";
 import deepEqual from "@/utils/deepEqual";
 import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle, CURRENCY, Forecast } from "@/types/evcc";
 import type {
-	StaticPlan,
-	RepeatingPlan,
-	PlanWrapper,
-	StaticSocPlan,
-	StaticEnergyPlan,
+	CURRENCY,
+	Forecast,
 	PlanResponse,
 	PlanStrategy,
-} from "./types";
+	PlanWrapper,
+	RepeatingPlan,
+	StaticEnergyPlan,
+	StaticPlan,
+	StaticSocPlan,
+	Vehicle,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlansSettings",

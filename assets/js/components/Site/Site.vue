@@ -89,7 +89,9 @@ import type {
 	FatalError,
 	EvOpt,
 	BATTERY_MODE,
+	Vehicle,
 } from "@/types/evcc";
+import vehicleList from "@/utils/vehicleList";
 import store from "@/store";
 import type { Grid } from "./types";
 
@@ -120,6 +122,7 @@ export default defineComponent({
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
+		solarAdjusted: Boolean,
 		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String as PropType<BATTERY_MODE>,
@@ -129,7 +132,7 @@ export default defineComponent({
 		bufferSoc: Number,
 		bufferStartSoc: Number,
 		siteTitle: String,
-		vehicles: Object,
+		vehicles: Object as PropType<Record<string, Vehicle>>,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
 		tariffFeedIn: Number,
@@ -177,8 +180,7 @@ export default defineComponent({
 			return this.collectProps(Energyflow);
 		},
 		vehicleList() {
-			const vehicles = this.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
+			return vehicleList(this.vehicles);
 		},
 		showParkingLot() {
 			// work in progess

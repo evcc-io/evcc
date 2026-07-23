@@ -23,7 +23,7 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { title: string }) => s.title === "Grid");
+    const grid = data.find((s: { title: string }) => s.title === "grid");
     const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();
@@ -46,7 +46,7 @@ test.describe("api", () => {
     const data = await res.json();
     expect(data).toHaveLength(2);
 
-    const grid = data.find((s: { title: string }) => s.title === "Grid");
+    const grid = data.find((s: { title: string }) => s.title === "grid");
     const home = data.find((s: { title: string }) => s.title === "home");
     expect(grid).toBeDefined();
     expect(home).toBeDefined();

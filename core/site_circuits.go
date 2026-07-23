@@ -56,10 +56,15 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
-func (site *Site) dimMeters(dim *bool) error {
-	if dim == nil {
+// dimMeters applies the HEMS dim state to all dimmable aux and ext meters.
+// Devices are only queried when the state changes or after a failed attempt.
+func (site *Site) dimMeters(dim bool) error {
+	if site.dimmed != nil && *site.dimmed == dim {
 		return nil
 	}
+
+	// invalidate until successfully applied
+	site.dimmed = nil
 
 	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
@@ -69,7 +74,7 @@ func (site *Site) dimMeters(dim *bool) error {
 		}
 
 		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
-			if *dim == dimmed {
+			if dim == dimmed {
 				continue
 			}
 		} else {
@@ -79,33 +84,45 @@ func (site *Site) dimMeters(dim *bool) error {
 			continue
 		}
 
-		if err := m.Dim(*dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), *dim)
+		if err := m.Dim(dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
 		}
 	}
 
+	if errs == nil {
+		site.dimmed = &dim
+	}
+
 	return errs
 }
 
+// curtailPV applies the HEMS curtailment percent to all curtailable pv meters.
+// Devices are only queried when the percent changes or after a failed attempt.
 func (site *Site) curtailPV(percent *int) error {
-	if percent == nil {
+	if percent == nil || site.curtailPercent != nil && *site.curtailPercent == *percent {
 		return nil
 	}
 
-	// skip if unchanged since the last successful apply
-	site.RLock()
-	unchanged := site.curtailPercent != nil && *site.curtailPercent == *percent
-	site.RUnlock()
-	if unchanged {
-		return nil
-	}
+	// invalidate until successfully applied
+	site.curtailPercent = nil
 
 	var errs error
 	for _, dev := range site.pvMeters {
 		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
+			continue
+		}
+
+		if curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff()); err == nil {
+			if curtailed == *percent {
+				continue
+			}
+		} else {
+			if !errors.Is(err, api.ErrNotAvailable) {
+				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
+			}
 			continue
 		}
 
@@ -116,11 +133,8 @@ func (site *Site) curtailPV(percent *int) error {
 		}
 	}
 
-	// cache only on full success, so any error reapplies next cycle
 	if errs == nil {
-		site.Lock()
-		site.curtailPercent = percent
-		site.Unlock()
+		site.curtailPercent = new(*percent)
 	}
 
 	return errs

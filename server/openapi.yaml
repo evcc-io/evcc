@@ -8,6 +8,7 @@ info:
 servers:
   - url: https://demo.evcc.io/api
 tags:
+  - name: state
   - name: auth
   - name: battery
   - name: db
@@ -172,7 +173,7 @@ paths:
       summary: Control battery-discharge
       description: "Prevent home battery discharge during vehicle fast charging."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery
+        url: https://docs.evcc.io/en/features/battery
       tags:
         - battery
       parameters:
@@ -186,7 +187,7 @@ paths:
       summary: Remove battery grid charge limit
       description: "Remove battery grid charge limit."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery
+        url: https://docs.evcc.io/en/features/battery
       tags:
         - battery
       responses:
@@ -198,7 +199,7 @@ paths:
       summary: Set battery grid charge limit
       description: "Charge home battery from grid when price or emissions are below the threshold. Uses price if a dynamic tariff exists. Uses emissions if a CO₂-tariff is configured. Ignored otherwise."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery
+        url: https://docs.evcc.io/en/features/battery
       tags:
         - battery
       parameters:
@@ -234,7 +235,7 @@ paths:
       summary: Set battery buffer SoC
       description: "Set battery buffer SoC."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery
+        url: https://docs.evcc.io/en/features/battery
       tags:
         - battery
       parameters:
@@ -248,7 +249,7 @@ paths:
       summary: Set battery buffer start SoC
       description: "Set battery buffer start SoC."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery
+        url: https://docs.evcc.io/en/features/battery
       tags:
         - battery
       parameters:
@@ -262,7 +263,7 @@ paths:
       summary: Set battery boost
       description: "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled)."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery#battery-boost
+        url: https://docs.evcc.io/en/features/battery#battery-boost
       tags:
         - loadpoints
       parameters:
@@ -277,7 +278,7 @@ paths:
       summary: Set battery boost SoC limit
       description: "Set the SoC limit for battery boost. Home battery will be used to support charging up to this SoC level. A value of 100 (default) disabled the boost feature in UI and API."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery#battery-boost
+        url: https://docs.evcc.io/en/features/battery#battery-boost
       tags:
         - loadpoints
       parameters:
@@ -292,7 +293,7 @@ paths:
       summary: Disable threshold-delay
       description: "Delay before charging stops in solar mode."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints
+        url: https://docs.evcc.io/en/reference/configuration/loadpoints
       tags:
         - loadpoints
       parameters:
@@ -307,7 +308,7 @@ paths:
       summary: Disable threshold
       description: "Specifies the grid draw power to stop charging in solar mode."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold-1
+        url: https://docs.evcc.io/en/reference/configuration/loadpoints#threshold-1
       tags:
         - loadpoints
       parameters:
@@ -322,7 +323,7 @@ paths:
       summary: Enable threshold-delay
       description: "Delay before charging starts in solar mode."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#delay
+        url: https://docs.evcc.io/en/reference/configuration/loadpoints#delay
       tags:
         - loadpoints
       parameters:
@@ -337,7 +338,7 @@ paths:
       summary: Enable threshold
       description: "Specifies the available surplus power to start charging in solar mode."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#threshold
+        url: https://docs.evcc.io/en/reference/configuration/loadpoints#threshold
       tags:
         - loadpoints
       parameters:
@@ -352,7 +353,7 @@ paths:
       summary: Update energy limit
       description: "Updates the energy limit of the loadpoint. Only available for guest vehicles and vehicles with unknown SoC. Limit is removed on vehicle disconnect."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/limit
+        url: https://docs.evcc.io/en/features/limits
       tags:
         - loadpoints
       parameters:
@@ -367,7 +368,7 @@ paths:
       summary: Update session SoC limit
       description: "Sets the session SoC limit. Cleared on disconnect. Takes precedence over the vehicle's configured limit while set; once cleared (set to 0), the vehicle limit applies again."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/limit
+        url: https://docs.evcc.io/en/features/limits
       tags:
         - loadpoints
       parameters:
@@ -402,13 +403,28 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/mintemp/{temp}:
+    post:
+      operationId: setLoadpointMinTemp
+      summary: Update minimum temperature
+      description: "Sets the minimum temperature for heating devices. The device is heated as fast as possible while below this value. Set to 0 to disable."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/limits
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/temp"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/mode/{mode}:
     post:
       operationId: setLoadpointMode
       summary: Update charge mode
       description: "Changes the charging behavior of the loadpoint."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/solar-charging
+        url: https://docs.evcc.io/en/features/solar-charging
       tags:
         - loadpoints
       parameters:
@@ -420,17 +436,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/Mode"
+                $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
   /loadpoints/{id}/phases/{phases}:
     post:
       operationId: setLoadpointPhases
       summary: Update allowed phases
       description: "Updates the allowed phases of the loadpoint. Selects the desired phase mode for chargers with automatic phase switching. For manual phase switching chargers (via cable or Lasttrennschalter) this value tells evcc the actual phases."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#phases
+        url: https://docs.evcc.io/en/reference/configuration/loadpoints#phases
       tags:
         - loadpoints
       parameters:
@@ -447,7 +460,7 @@ paths:
       summary: Get charging plan
       description: "Returns the current charging plan for this loadpoint."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - loadpoints
       parameters:
@@ -458,22 +471,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    allOf:
-                      - type: object
-                        properties:
-                          planId:
-                            $ref: "#/components/schemas/Id"
-                      - $ref: "#/components/schemas/PlanRates"
+                allOf:
+                  - type: object
+                    properties:
+                      planId:
+                        $ref: "#/components/schemas/Id"
+                  - $ref: "#/components/schemas/PlanRates"
   /loadpoints/{id}/plan/energy:
     delete:
       operationId: deleteLoadpointEnergyPlan
       summary: Delete energy-based charging plan
       description: "Delete charging plan. Only available when a vehicle without SoC is connected."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - loadpoints
       parameters:
@@ -487,7 +497,7 @@ paths:
       summary: Set energy-based charging plan
       description: "Create charging plan with fixed time and energy target. Only available when a vehicle without SoC is connected."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - loadpoints
       parameters:
@@ -500,17 +510,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/StaticEnergyPlan"
+                $ref: "./openapi.state.yaml#/components/schemas/StaticEnergyPlan"
   /loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}:
     get:
       operationId: previewLoadpointRepeatingPlan
       summary: Repeating plan preview
       description: "Simulate repeating charging plan and return the result. Does not alter the actual charging plan."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - loadpoints
       parameters:
@@ -528,7 +535,7 @@ paths:
       summary: Simulate soc-based charging plan
       description: "Simulate charging plan based on SoC goal. Does not alter the actual charging plan."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - loadpoints
       parameters:
@@ -544,7 +551,7 @@ paths:
       summary: Simulate energy-based charging plan
       description: "Simulate charging plan based on energy goal. Does not alter the actual charging plan."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - loadpoints
       parameters:
@@ -560,7 +567,7 @@ paths:
       summary: Set plan strategy
       description: "Updates the charging plan strategy for the loadpoint."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - loadpoints
       parameters:
@@ -570,24 +577,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlanStrategy"
+              $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/PlanStrategy"
+                $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
   /loadpoints/{id}/priority/{priority}:
     post:
       operationId: setLoadpointPriority
       summary: Set priority
       description: "Set loadpoint priority."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority
+        url: https://docs.evcc.io/en/reference/configuration/loadpoints#priority
       tags:
         - loadpoints
       parameters:
@@ -609,7 +613,7 @@ paths:
       summary: Delete smart charging cost limit
       description: "Delete cost or emission limit for fast-charging with grid energy."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/dynamic-prices
+        url: https://docs.evcc.io/en/features/dynamic-prices
       tags:
         - loadpoints
       parameters:
@@ -623,7 +627,7 @@ paths:
       summary: Set smart charging cost limit
       description: "Set cost or emission limit for fast-charging with grid energy."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/dynamic-prices
+        url: https://docs.evcc.io/en/features/dynamic-prices
       tags:
         - loadpoints
       parameters:
@@ -663,7 +667,7 @@ paths:
       summary: Remove vehicle
       description: "Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/vehicle
+        url: https://docs.evcc.io/en/features/vehicle
       tags:
         - loadpoints
       parameters:
@@ -676,7 +680,7 @@ paths:
       summary: Start vehicle detection
       description: "Starts the automatic vehicle detection process."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/vehicle
+        url: https://docs.evcc.io/en/features/vehicle
       tags:
         - loadpoints
       parameters:
@@ -690,7 +694,7 @@ paths:
       summary: Assign vehicle
       description: "Assigns vehicle to loadpoint."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/vehicle
+        url: https://docs.evcc.io/en/features/vehicle
       tags:
         - loadpoints
       parameters:
@@ -704,18 +708,15 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      vehicle:
-                        $ref: "#/components/schemas/VehicleTitle"
+                  vehicle:
+                    $ref: "#/components/schemas/VehicleTitle"
   /prioritysoc/{soc}:
     post:
       operationId: setPrioritySoc
       summary: Set battery priority SoC
       description: "Set battery priority SoC."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/battery
+        url: https://docs.evcc.io/en/features/battery
       tags:
         - battery
       parameters:
@@ -729,7 +730,7 @@ paths:
       summary: Set grid residual power
       description: "Set grid connection operating point."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/site#residualpower
+        url: https://docs.evcc.io/en/reference/configuration/site#residualpower
       tags:
         - battery
       parameters:
@@ -737,6 +738,18 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /solaradjusted/{enable}:
+    post:
+      operationId: setSolarAdjusted
+      summary: Adjust solar forecast
+      description: "Adjust the solar forecast to real production data of the current day."
+      tags:
+        - experimental
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
   /smartfeedinprioritylimit:
     delete:
       operationId: removeGlobalSmartFeedInPriorityLimit
@@ -767,7 +780,7 @@ paths:
       summary: Update charging session
       description: "Update vehicle, loadpoint or odometer of a charging session. Only provided fields are changed; a null odometer clears the stored value."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/sessions
+        url: https://docs.evcc.io/en/features/sessions
       tags:
         - sessions
       requestBody:
@@ -791,7 +804,7 @@ paths:
       summary: Delete charging session
       description: "Delete charging session."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/sessions
+        url: https://docs.evcc.io/en/features/sessions
       tags:
         - sessions
       responses:
@@ -824,10 +837,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/GridSessions"
+                $ref: "#/components/schemas/GridSessions"
             text/csv:
               schema:
                 description: Download csv-file
@@ -839,7 +849,7 @@ paths:
       summary: Charging sessions
       description: "Returns a list of charging sessions."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/sessions
+        url: https://docs.evcc.io/en/features/sessions
       tags:
         - sessions
       parameters:
@@ -876,10 +886,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/ChargingSessions"
+                $ref: "#/components/schemas/ChargingSessions"
             text/csv:
               schema:
                 description: Download csv-file
@@ -891,7 +898,7 @@ paths:
       summary: Enable/disable telemetry
       description: "Enable or disable telemetry. Note: Telemetry requires sponsorship."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/telemetry
+        url: https://docs.evcc.io/en/reference/configuration/telemetry
       tags:
         - system
       parameters:
@@ -925,13 +932,13 @@ paths:
           $ref: "#/components/responses/NumberResult"
   /state:
     get:
-      operationId: getState
+      operationId: state
       summary: System state
-      description: "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data."
+      description: "Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/state
+        url: https://docs.evcc.io/integrations/rest-api
       tags:
-        - general
+        - state
       parameters:
         - name: jq
           in: query
@@ -951,17 +958,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/State"
+                $ref: "./openapi.state.yaml#/components/schemas/State"
   /system/log:
     get:
       operationId: getSystemLogs
       summary: Logs
       description: "Returns the latest log lines."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/log
+        url: https://docs.evcc.io/en/reference/configuration/log
       security:
         - cookieAuth: []
         - bearerAuth: []
@@ -989,12 +993,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: array
-                    items:
-                      type: string
+                type: array
+                items:
+                  type: string
             text/plain:
               schema:
                 description: Download txt-file
@@ -1018,10 +1019,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/LogAreas"
+                $ref: "#/components/schemas/LogAreas"
         "401":
           $ref: "#/components/responses/Unauthorized"
   /system/cache:
@@ -1060,7 +1058,7 @@ paths:
       summary: Tariff information
       description: "Returns the prices or emission values for the upcoming hours"
       externalDocs:
-        url: https://docs.evcc.io/en/docs/devices/tariffs
+        url: https://docs.evcc.io/en/tariffs
       tags:
         - tariffs
       parameters:
@@ -1084,11 +1082,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      rates:
-                        $ref: "#/components/schemas/Rates"
+                  rates:
+                    $ref: "#/components/schemas/Rates"
         "404":
           description: Tariff not defined
   /vehicles/{name}/limitsoc/{soc}:
@@ -1097,7 +1092,7 @@ paths:
       summary: Set SoC limit
       description: "Charging will stop when this SoC is reached."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/limits
+        url: https://docs.evcc.io/en/features/limits
       tags:
         - vehicles
       parameters:
@@ -1112,7 +1107,7 @@ paths:
       summary: Set minimum SoC
       description: "Vehicle will be fast-charged until this SoC is reached."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/limits
+        url: https://docs.evcc.io/en/features/limits
       tags:
         - vehicles
       parameters:
@@ -1127,7 +1122,7 @@ paths:
       summary: Reset charge mode
       description: "Resets the vehicle charge mode to keep the last selected mode."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/solar-charging
+        url: https://docs.evcc.io/en/features/solar-charging
       tags:
         - vehicles
       parameters:
@@ -1141,7 +1136,7 @@ paths:
       summary: Set charge mode
       description: "Sets the charge mode applied when this vehicle becomes active on a loadpoint."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/solar-charging
+        url: https://docs.evcc.io/en/features/solar-charging
       tags:
         - vehicles
       parameters:
@@ -1156,14 +1151,14 @@ paths:
                 type: object
                 properties:
                   mode:
-                    $ref: "#/components/schemas/Mode"
+                    $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
   /vehicles/{name}/plan/repeating:
     post:
       operationId: updateVehicleRepeatingPlans
       summary: Update repeating plans
       description: "Updates the repeating charging plan."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - vehicles
       parameters:
@@ -1175,26 +1170,23 @@ paths:
             schema:
               type: array
               items:
-                $ref: "#/components/schemas/RepeatingPlan"
+                $ref: "./openapi.state.yaml#/components/schemas/RepeatingPlan"
       responses:
         "200":
           description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/RepeatingPlan"
+                type: array
+                items:
+                  $ref: "./openapi.state.yaml#/components/schemas/RepeatingPlan"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan
       summary: Delete a SoC-based charging plan
       description: "Delete the charging plan"
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - vehicles
       parameters:
@@ -1208,7 +1200,7 @@ paths:
       summary: Set a SoC-based charging plan
       description: "Create charging plan with fixed time and SoC target."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - vehicles
       parameters:
@@ -1223,20 +1215,17 @@ paths:
               schema:
                 type: object
                 properties:
-                  result:
-                    type: object
-                    properties:
-                      soc:
-                        $ref: "#/components/schemas/Soc"
-                      time:
-                        $ref: "#/components/schemas/Timestamp"
+                  soc:
+                    $ref: "#/components/schemas/Soc"
+                  time:
+                    $ref: "#/components/schemas/Timestamp"
   /vehicles/{name}/plan/strategy:
     post:
       operationId: setVehiclePlanStrategy
       summary: Set plan strategy
       description: "Updates the charging plan strategy for the vehicle."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans
+        url: https://docs.evcc.io/en/features/plans
       tags:
         - vehicles
       parameters:
@@ -1246,17 +1235,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlanStrategy"
+              $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/PlanStrategy"
+                $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
   /db/backup:
     get:
       operationId: downloadBackup
@@ -1434,16 +1420,6 @@ paths:
           description: Invalid parameters or database offline
 components:
   schemas:
-    BatteryMode:
-      description: Battery mode
-      type: string
-      example: normal
-      enum:
-        - unknown
-        - normal
-        - hold
-        - charge
-        - holdcharge
     ChangePassword:
       type: object
       properties:
@@ -1552,16 +1528,16 @@ components:
       minimum: 1
     LoadpointName:
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#title
+        url: https://docs.evcc.io/en/reference/configuration/loadpoints#title
       type: string
       example: Garage
     LogArea:
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/log#levels
+        url: https://docs.evcc.io/en/reference/configuration/log#levels
       type: string
     LogAreas:
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/log#levels
+        url: https://docs.evcc.io/en/reference/configuration/log#levels
       type: array
       example:
         - lp-1
@@ -1571,7 +1547,7 @@ components:
         $ref: "#/components/schemas/LogArea"
     LogLevel:
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/log#log
+        url: https://docs.evcc.io/en/reference/configuration/log#log
       type: string
       example: DEBUG
       enum:
@@ -1581,14 +1557,6 @@ components:
         - INFO
         - DEBUG
         - TRACE
-    Mode:
-      description: "Charging mode."
-      type: string
-      enum:
-        - "off"
-        - "now"
-        - "minpv"
-        - "pv"
     Odometer:
       nullable: true
       type: "number"
@@ -1627,92 +1595,35 @@ components:
       type: integer
       example: 3600
       minimum: 0
-    Rate:
-      type: object
-      description: A charging interval
-      properties:
-        start:
-          description: Start
-          $ref: "#/components/schemas/Timestamp"
-        end:
-          description: End
-          $ref: "#/components/schemas/Timestamp"
-        value:
-          description: Cost
-          type: number
-          minimum: 0
     Rates:
       type: array
       items:
-        $ref: "#/components/schemas/Rate"
-    PlanStrategy:
-      description: Charging plan strategy configuration
-      type: object
-      properties:
-        continuous:
-          description: "Force continuous planning"
-          type: boolean
-        precondition:
-          description: "Precondition duration in seconds"
-          type: integer
-          minimum: 0
-    RepeatingPlan:
-      externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans#repeating-plans
-      type: object
-      properties:
-        active:
-          description: "Set plan active."
-          type: boolean
-        soc:
-          $ref: "#/components/schemas/Soc"
-        time:
-          $ref: "#/components/schemas/HourMinuteTime"
-        tz:
-          $ref: "#/components/schemas/IANATimeZone"
-        weekdays:
-          $ref: "#/components/schemas/Weekdays"
+        $ref: "./openapi.state.yaml#/components/schemas/Rate"
     Soc:
       description: SOC in %
       type: number
       example: 60
       minimum: 0
       maximum: 100
-    State:
-      description: "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases."
-      type: object
-    StaticEnergyPlan:
-      externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans#energy-amount-plan
-      type: object
-      properties:
-        energy:
-          $ref: "#/components/schemas/Energy"
-        time:
-          $ref: "#/components/schemas/Timestamp"
-    StaticSocPlan:
-      externalDocs:
-        url: https://docs.evcc.io/en/docs/features/plans#create-charging-plan
-      type: object
-      properties:
-        soc:
-          $ref: "#/components/schemas/Soc"
-        time:
-          $ref: "#/components/schemas/Timestamp"
+    Temp:
+      description: Temperature in °C
+      type: number
+      example: 50
+      minimum: 0
     Timestamp:
       description: Timestamp in RFC3339 format
       type: string
       format: date-time
     VehicleName:
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/vehicles#name
+        url: https://docs.evcc.io/en/reference/configuration/vehicles#name
       type: string
       minLength: 1
       pattern: "[a-zA-Z0-9_.:-]+"
       example: vehicle_1
     VehicleTitle:
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/vehicles#title
+        url: https://docs.evcc.io/en/reference/configuration/vehicles#title
       type: string
       example: blauer e-Golf
     Weekdays:
@@ -1795,7 +1706,7 @@ components:
       in: path
       required: true
       schema:
-        $ref: "#/components/schemas/Mode"
+        $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
     soc:
       name: soc
       description: SOC in %
@@ -1803,6 +1714,13 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/Soc"
+    temp:
+      name: temp
+      description: Temperature in °C
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/Temp"
     timestamp:
       name: timestamp
       description: Timestamp in RFC3339 format
@@ -1850,7 +1768,7 @@ components:
       in: path
       required: true
       schema:
-        $ref: "#/components/schemas/BatteryMode"
+        $ref: "./openapi.state.yaml#/components/schemas/BatteryMode"
     costLimit:
       name: cost
       description: Cost limit in configured currency (default EUR) or CO2 limit in g/kWh

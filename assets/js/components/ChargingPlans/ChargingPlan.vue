@@ -8,7 +8,7 @@
 		>
 			<div class="value m-0 d-block align-items-baseline justify-content-center">
 				<button
-					class="value-button p-0"
+					class="value-button p-0 keyboard-focus-ring"
 					:class="buttonColor"
 					data-testid="charging-plan-button"
 					@click="openModal"
@@ -38,9 +38,7 @@ import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent, type PropType } from "vue";
-import type { CURRENCY, Vehicle } from "@/types/evcc";
-import type { PlanStrategy } from "./types";
-import type { Forecast } from "@/types/evcc.ts";
+import type { CURRENCY, Forecast, PlanStrategy, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlan",

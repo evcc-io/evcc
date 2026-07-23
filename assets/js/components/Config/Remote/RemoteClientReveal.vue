@@ -81,6 +81,7 @@ export default defineComponent({
 	props: {
 		client: { type: Object as PropType<RemoteClientCreated>, required: true },
 		serverUrl: { type: String, required: true },
+		siteTitle: String,
 	},
 	emits: ["done"],
 	data() {
@@ -95,6 +96,7 @@ export default defineComponent({
 				url: this.serverUrl,
 				username: this.client.username,
 				password: this.client.password,
+				title: this.siteTitle || "",
 			});
 			return `evcc://server?${params.toString()}`;
 		},

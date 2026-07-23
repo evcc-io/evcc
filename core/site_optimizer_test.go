@@ -6,7 +6,9 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,6 +27,26 @@ func TestLoadpointProfile(t *testing.T) {
 
 	// expected slots: 0.25 kWh...
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
+}
+
+func TestLoadpointCurrentAction(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		enabled bool
+		status  api.ChargeStatus
+		soc     float64
+		want    string
+	}{
+		{"charging", true, api.StatusC, 0, actionCharge},
+		{"enabled but idle (e.g. vehicle finished at limit)", true, api.StatusB, 0, actionStop},
+		{"disabled", false, api.StatusB, 0, actionStop},
+		{"charging at 100% soc with no explicit limit", true, api.StatusC, 100, actionStop},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := &Loadpoint{enabled: tc.enabled, status: tc.status, vehicleSoc: tc.soc}
+			assert.Equal(t, tc.want, loadpointCurrentAction(lp))
+		})
+	}
 }
 
 func TestAsTimestamps(t *testing.T) {
@@ -149,6 +171,80 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		})
 	}
 }
+
+// TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
+// the resulting [SMin, SMax] range, even when it lies outside the configured soc
+// limits (e.g. right after a firmware update changed the reported soc or the min/max
+// soc settings) - otherwise the optimizer is infeasible from the first slot.
+func TestBatteryRequestSocLimitsClamp(t *testing.T) {
+	newBatteryDevice := func(t *testing.T, minSoc, maxSoc float64) config.Device[api.Meter] {
+		ctrl := gomock.NewController(t)
+
+		var meter api.Meter
+		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+		batSocLimit.EXPECT().GetSocLimits().Return(minSoc, maxSoc).AnyTimes()
+
+		bat := &struct {
+			api.Meter
+			api.BatterySocLimiter
+		}{
+			Meter:             meter,
+			BatterySocLimiter: batSocLimit,
+		}
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(bat))
+	}
+
+	site := &Site{log: util.NewLogger("foo")}
+	capacity := 10.0 // kWh
+
+	t.Run("soc below minSoc", func(t *testing.T) {
+		soc := 15.0
+		dev := newBatteryDevice(t, 20, 100)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(1500), req.SMin)
+		assert.Equal(t, float32(10000), req.SMax)
+		assert.LessOrEqual(t, req.SMin, req.SInitial)
+	})
+
+	t.Run("soc above maxSoc", func(t *testing.T) {
+		soc := 95.0
+		dev := newBatteryDevice(t, 0, 80)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(0), req.SMin)
+		assert.Equal(t, float32(9500), req.SMax)
+		assert.GreaterOrEqual(t, req.SMax, req.SInitial)
+	})
+
+	t.Run("soc within limits", func(t *testing.T) {
+		soc := 50.0
+		dev := newBatteryDevice(t, 20, 80)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(2000), req.SMin)
+		assert.Equal(t, float32(8000), req.SMax)
+	})
+
+	t.Run("empty maxSoc defaults to 100%", func(t *testing.T) {
+		soc := 50.0
+		dev := newBatteryDevice(t, 20, 0)
+		m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+
+		assert.Equal(t, float32(2000), req.SMin)
+		assert.Equal(t, float32(10000), req.SMax)
+	})
+}
+
 func TestOptimizerChargingStrategy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
@@ -162,6 +258,28 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	// valid change is applied (re-trigger is gated on sponsor/enabled, not unit-tested here)
 	require.NoError(t, site.SetOptimizerChargingStrategy(string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks)))
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
+}
+
+func TestBlendMeasured(t *testing.T) {
+	slots := []float64{100, 100, 100, 100, 100, 100}
+	blendMeasured(slots, 200, 4)
+	assert.Equal(t, []float64{200, 175, 150, 125, 100, 100}, slots)
+
+	// fewer slots than decay length
+	short := []float32{100, 100}
+	blendMeasured(short, 200, 4)
+	assert.Equal(t, []float32{200, 175}, short)
+}
+
+func TestBlendScale(t *testing.T) {
+	slots := []float32{100, 100, 100, 100, 100, 100}
+	blendScale(slots, 2, 4)
+	assert.Equal(t, []float32{200, 175, 150, 125, 100, 100}, slots)
+
+	// fewer slots than decay length
+	short := []float64{100, 100}
+	blendScale(short, 0.5, 4)
+	assert.Equal(t, []float64{50, 62.5}, short)
 }
 
 func TestCurrentSlotSuggestion(t *testing.T) {
@@ -197,4 +315,92 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 
 	// no result yields an empty suggestion
 	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, true, false, 1))
+}
+
+// TestSuggestionActionable ensures the actionable flag follows the current state
+// instead of the state at optimizer run time
+func TestSuggestionActionable(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+
+	site := &Site{
+		batteryMode: api.BatteryNormal,
+		loadpoints:  []*Loadpoint{lp},
+	}
+	site.setSuggestions(
+		map[string]types.Suggestion{"bat": {Action: api.BatteryCharge.String()}},
+		map[int]types.Suggestion{0: {Action: actionCharge}},
+	)
+
+	// battery mode differs from suggestion
+	s := site.batterySuggestion("bat")
+	require.NotNil(t, s)
+	assert.True(t, s.Actionable)
+
+	site.batteryMode = api.BatteryCharge
+	assert.False(t, site.batterySuggestion("bat").Actionable)
+
+	assert.Nil(t, site.batterySuggestion("unknown"))
+
+	// loadpoint stopped, suggestion is to charge
+	s = site.loadpointSuggestion(0)
+	require.NotNil(t, s)
+	assert.True(t, s.Actionable)
+
+	// loadpoint charging matches the suggestion
+	lp.enabled = true
+	lp.status = api.StatusC
+	assert.False(t, site.loadpointSuggestion(0).Actionable)
+
+	assert.Nil(t, site.loadpointSuggestion(1))
+}
+
+func TestSuggestionEvent(t *testing.T) {
+	id := 2
+
+	// battery: no loadpoint id, carries name
+	key, ev := suggestionEvent(batteryDetail{Type: batteryTypeBattery, Name: "home", Title: "Home"}, types.Suggestion{Action: api.BatteryCharge.String()})
+	assert.Equal(t, "battery:home", key)
+	assert.Nil(t, ev.Loadpoint)
+	assert.Equal(t, evSuggestion, ev.Event)
+	assert.Equal(t, api.BatteryCharge.String(), ev.Attributes["suggestionAction"])
+	assert.Equal(t, "home", ev.Attributes["suggestionName"])
+	assert.Equal(t, "Home", ev.Attributes["suggestionTitle"])
+
+	// loadpoint: carries id, no name
+	key, ev = suggestionEvent(batteryDetail{Type: batteryTypeVehicle, loadpoint: &id, Title: "Garage"}, types.Suggestion{Action: actionCharge})
+	assert.Equal(t, "loadpoint:2", key)
+	require.NotNil(t, ev.Loadpoint)
+	assert.Equal(t, id, *ev.Loadpoint)
+	assert.NotContains(t, ev.Attributes, "suggestionName")
+}
+
+func TestDiffSuggestions(t *testing.T) {
+	site := &Site{}
+
+	pending := func(s types.Suggestion) map[string]pendingSuggestion {
+		_, ev := suggestionEvent(batteryDetail{loadpoint: new(int)}, s)
+		return map[string]pendingSuggestion{"loadpoint:0": {suggestion: s, event: ev}}
+	}
+
+	charge := types.Suggestion{Action: actionCharge, Actionable: true}
+	stop := types.Suggestion{Action: actionStop, Actionable: true}
+	notActionable := types.Suggestion{Action: actionCharge, Actionable: false}
+
+	// first actionable suggestion fires
+	assert.Len(t, site.diffSuggestions(pending(charge)), 1)
+
+	// unchanged action does not fire again
+	assert.Empty(t, site.diffSuggestions(pending(charge)))
+
+	// changed action fires
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+
+	// non-actionable suggestion does not fire and clears tracking so the same
+	// action re-notifies when it becomes actionable again
+	assert.Empty(t, site.diffSuggestions(pending(notActionable)))
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+
+	// vanished device is pruned and re-notifies on return
+	assert.Empty(t, site.diffSuggestions(map[string]pendingSuggestion{}))
+	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
 }

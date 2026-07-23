@@ -35,12 +35,15 @@
 				:class="{ 'layer--active': isCharging || isDischarging }"
 				:style="{ '--rotate': arrowRotate }"
 			/>
-			<Pause
-				:size="ICON_SIZE.S"
+			<BatteryHold
+				:size="ICON_SIZE.M"
 				class="layer"
-				:class="{
-					'layer--active': mode === BATTERY_MODE.HOLD || mode === BATTERY_MODE.HOLDCHARGE,
-				}"
+				:class="{ 'layer--active': mode === BATTERY_MODE.HOLD }"
+			/>
+			<BatteryHoldCharge
+				:size="ICON_SIZE.M"
+				class="layer"
+				:class="{ 'layer--active': mode === BATTERY_MODE.HOLDCHARGE }"
 			/>
 			<Dot :size="ICON_SIZE.S" class="layer" :class="{ 'layer--active': isIdle }" />
 		</span>
@@ -52,7 +55,8 @@ import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/powersupply";
 import { BATTERY_MODE, ICON_SIZE } from "@/types/evcc";
 import ArrowDown from "../MaterialIcon/ArrowDown.vue";
-import Pause from "../MaterialIcon/Pause.vue";
+import BatteryHold from "../MaterialIcon/BatteryHold.vue";
+import BatteryHoldCharge from "../MaterialIcon/BatteryHoldCharge.vue";
 import Dot from "../MaterialIcon/Dot.vue";
 
 // fixed ring geometry, computed once rather than per instance
@@ -72,7 +76,7 @@ const LOCKED_MODES: BATTERY_MODE[] = [
 // tweens instead of hard-swapping
 export default defineComponent({
 	name: "SocGauge",
-	components: { ArrowDown, Pause, Dot },
+	components: { ArrowDown, BatteryHold, BatteryHoldCharge, Dot },
 	props: {
 		soc: { type: Number, default: 0 },
 		color: { type: String, default: "" },
