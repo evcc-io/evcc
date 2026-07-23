@@ -422,6 +422,22 @@
 							</FormRow>
 						</template>
 
+						<FormRow
+							v-if="showPhaseConfigured"
+							id="loadpointParamPhaseConfigured"
+							:label="$t('config.loadpoint.phaseConfiguredLabel')"
+							:help="$t('config.loadpoint.phaseConfiguredHelp')"
+						>
+							<SelectGroup
+								id="loadpointParamPhaseConfigured"
+								v-model="values.phaseConfigured"
+								class="w-100"
+								:options="phaseOptions"
+								transparent
+								equal-width
+							/>
+						</FormRow>
+
 						<div v-if="showCircuit">
 							<FormRow
 								id="loadpointParamCircuit"
@@ -662,6 +678,7 @@ const defaultValues = {
 	id: undefined,
 	title: "",
 	phasesConfigured: 3,
+	phaseConfigured: 0,
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
@@ -776,6 +793,12 @@ export default {
 		chargerIsSinglePhase() {
 			return this.chargerStatus?.singlePhase?.value || false;
 		},
+		showPhaseConfigured() {
+			return this.chargerIsSinglePhase || this.values.phasesConfigured === 1 || this.chargerSupports1p3p;
+		},
+		chargerPhaseConfigured() {
+			return this.values.phaseConfigured;
+		},
 		chargerIsIntegratedDevice() {
 			return this.chargerStatus?.integratedDevice?.value || false;
 		},
@@ -814,6 +837,14 @@ export default {
 			return [
 				{ value: 1, name: this.$t("config.loadpoint.phases1p") },
 				{ value: 3, name: this.$t("config.loadpoint.phases3p") },
+			];
+		},
+		phaseOptions() {
+			return [
+				{ value: 0, name: this.$t("config.loadpoint.phaseConfiguredAutomatic") },
+				{ value: 1, name: "1" },
+				{ value: 2, name: "2" },
+				{ value: 3, name: "3" },
 			];
 		},
 		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {

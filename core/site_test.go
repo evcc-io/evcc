@@ -68,6 +68,40 @@ func TestSitePowerPriorityAdjustment(t *testing.T) {
 	}
 }
 
+func TestPhasePowerForLoadpoint(t *testing.T) {
+	site := &Site{
+		gridPhasePowers: []float64{1302, -1717, -1858},
+	}
+
+	lp := &Loadpoint{
+		chargeCurrents:   []float64{16, 0, 0},
+		phases:           1,
+		measuredPhases:   1,
+		phasesConfigured: 1,
+	}
+
+	power, ok := site.phasePowerForLoadpoint(lp)
+	assert.True(t, ok, "phase power should be available")
+	assert.Equal(t, 1302.0, power)
+
+	lp = &Loadpoint{
+		phaseConfigured:  2,
+		phases:           1,
+		measuredPhases:   1,
+		phasesConfigured: 1,
+	}
+
+	power, ok = site.phasePowerForLoadpoint(lp)
+	assert.True(t, ok, "phase power should use configured phase when current data is unavailable")
+	assert.Equal(t, -1717.0, power)
+
+	// fallback to total site power when grid phase powers are not available
+	site2 := &Site{}
+	power, ok = site2.phasePowerForLoadpoint(lp)
+	assert.False(t, ok)
+	assert.Equal(t, 0.0, power)
+}
+
 func TestGreenShare(t *testing.T) {
 	tc := []struct {
 		title                                                 string

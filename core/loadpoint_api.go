@@ -196,6 +196,32 @@ func (lp *Loadpoint) GetDefaultMode() api.ChargeMode {
 	return lp.DefaultMode
 }
 
+// GetPhaseConfigured returns the configured phase index
+func (lp *Loadpoint) GetPhaseConfigured() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.phaseConfigured
+}
+
+// SetPhaseConfigured sets the configured phase index
+func (lp *Loadpoint) SetPhaseConfigured(phase int) error {
+	if !lp.isConfigurable() {
+		lp.log.ERROR.Println("cannot set configured phase: not configurable")
+		return nil
+	}
+
+	if phase < 0 || phase > 3 {
+		return fmt.Errorf("invalid configured phase: %d", phase)
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+	lp.phaseConfigured = phase
+	lp.settings.SetInt(keys.PhaseConfigured, int64(lp.phaseConfigured))
+	lp.publish(keys.PhaseConfigured, lp.phaseConfigured)
+	return nil
+}
+
 // SetDefaultMode sets the default charge mode
 func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 	lp.Lock()

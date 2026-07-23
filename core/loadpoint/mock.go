@@ -487,6 +487,20 @@ func (mr *MockAPIMockRecorder) GetPhasesConfigured() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhasesConfigured", reflect.TypeOf((*MockAPI)(nil).GetPhasesConfigured))
 }
 
+// GetPhaseConfigured mocks base method.
+func (m *MockAPI) GetPhaseConfigured() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPhaseConfigured")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetPhaseConfigured indicates an expected call of GetPhaseConfigured.
+func (mr *MockAPIMockRecorder) GetPhaseConfigured() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhaseConfigured", reflect.TypeOf((*MockAPI)(nil).GetPhaseConfigured))
+}
+
 // GetPlan mocks base method.
 func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates {
 	m.ctrl.T.Helper()
@@ -1003,6 +1017,20 @@ func (m *MockAPI) SetPhasesConfigured(arg0 int) error {
 func (mr *MockAPIMockRecorder) SetPhasesConfigured(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhasesConfigured", reflect.TypeOf((*MockAPI)(nil).SetPhasesConfigured), arg0)
+}
+
+// SetPhaseConfigured mocks base method.
+func (m *MockAPI) SetPhaseConfigured(arg0 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPhaseConfigured", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPhaseConfigured indicates an expected call of SetPhaseConfigured.
+func (mr *MockAPIMockRecorder) SetPhaseConfigured(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhaseConfigured", reflect.TypeOf((*MockAPI)(nil).SetPhaseConfigured), arg0)
 }
 
 // SetPlanEnergy mocks base method.

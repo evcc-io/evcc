@@ -80,6 +80,10 @@ type API interface {
 	GetPhasesConfigured() int
 	// SetPhasesConfigured sets the configured phases
 	SetPhasesConfigured(int) error
+	// GetPhaseConfigured returns the configured phase index
+	GetPhaseConfigured() int
+	// SetPhaseConfigured sets the configured phase index
+	SetPhaseConfigured(int) error
 	// ActivePhases returns the active phases for the current vehicle
 	ActivePhases() int
 

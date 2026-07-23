@@ -104,6 +104,7 @@ type Site struct {
 
 	// cached state
 	gridPower                float64                     // Grid power
+	gridPhasePowers          []float64                   // Grid phase powers from the grid meter
 	pvPower                  float64                     // PV power
 	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
 	auxPower                 float64                     // Aux power
@@ -867,6 +868,7 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid phase currents (signed)
+	site.gridPhasePowers = nil
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](site.gridMeter); ok {
 		// grid phase powers
 		var p1, p2, p3 float64
@@ -874,6 +876,7 @@ func (site *Site) updateGridMeter() error {
 			var err error // phases needed for signed currents
 			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 				mm.Powers = []float64{p1, p2, p3}
+				site.gridPhasePowers = mm.Powers
 				site.log.DEBUG.Printf("grid powers: %.0fW", mm.Powers)
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				site.log.ERROR.Printf("grid powers: %v", err)
@@ -1041,6 +1044,59 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	return sum
 }
 
+func (site *Site) phasePowerForLoadpoint(lp *Loadpoint) (float64, bool) {
+	// automatically use charger phase surplus calculation when grid phase powers
+	// are available and the loadpoint has a configured phase setting
+	if len(site.gridPhasePowers) != 3 {
+		return 0, false
+	}
+
+	// require an explicit per-loadpoint configuration: either configured phases
+	// (1 or 3) or a configured single phase index
+	if lp.GetPhasesConfigured() == 0 && lp.GetPhaseConfigured() == 0 {
+		return 0, false
+	}
+
+	activePhases := lp.ActivePhases()
+	if activePhases <= 0 {
+		return 0, false
+	}
+
+	if activePhases == 1 {
+		if phase := lp.GetPhaseConfigured(); phase > 0 {
+			if phase-1 < len(site.gridPhasePowers) {
+				return site.gridPhasePowers[phase-1], true
+			}
+			return 0, false
+		}
+	}
+
+	if lp.chargeCurrents == nil {
+		return 0, false
+	}
+
+	var indexes []int
+	for i, current := range lp.chargeCurrents {
+		if current > minActiveCurrent {
+			indexes = append(indexes, i)
+		}
+	}
+
+	if len(indexes) != activePhases || len(indexes) == 0 {
+		return 0, false
+	}
+
+	var power float64
+	for _, idx := range indexes {
+		if idx < 0 || idx >= len(site.gridPhasePowers) {
+			return 0, false
+		}
+		power += site.gridPhasePowers[idx]
+	}
+
+	return power, true
+}
+
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
 // that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
 func (site *Site) reservedPVPower(lp updater) float64 {
@@ -1139,19 +1195,29 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		// TODO
 		if lp != nil {
-			// reserve surplus claimed by higher-priority loadpoints that are starting up (#31194)
-			sitePower += site.reservedPVPower(lp)
+			// optionally use the charger phase power instead of the summed grid power
+			sitePowerForLP := sitePower
+			if lpCore, ok := lp.(*Loadpoint); ok {
+				if phasePower, ok := site.phasePowerForLoadpoint(lpCore); ok {
+					sitePowerForLP = sitePower + phasePower - site.gridPower
+					site.log.DEBUG.Printf("phase surplus: using grid phase power %.0fW instead of total grid power %.0fW", phasePower, site.gridPower)
+				} else {
+					site.log.DEBUG.Printf("phase surplus: using all phases with total power %.0fW", site.gridPower)
+				}
+			}
+
+			// reserve surplus claimed by higher-priority PV loadpoints that are starting up (#31194)
+			sitePowerForLP += site.reservedPVPower(lp)
 
 			// battery boost deliberately drains the battery, hence battery priority
 			// below prioritySoc does not apply to the boosting loadpoint (#30541)
 			if lp.GetBatteryBoost() != boostDisabled {
-				sitePower += priorityAdjustment
+				sitePowerForLP += priorityAdjustment
 			}
 
 			lp.Update(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				sitePowerForLP, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 				hems.Dimmed(site.hems),
 			)
