@@ -65,7 +65,8 @@ func (m *Accumulator) EnabledFraction() *float64 {
 	if m.totalTime <= 0 {
 		return nil
 	}
-	f := m.enabledTime.Seconds() / m.totalTime.Seconds()
+	// clamp to the documented 0..1 contract, robust to any future timing changes
+	f := max(0, min(1, m.enabledTime.Seconds()/m.totalTime.Seconds()))
 	return &f
 }
 
