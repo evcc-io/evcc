@@ -365,7 +365,8 @@ func (wb *DaheimLaden) checkStation() error {
 	if err != nil {
 		return api.ErrSponsorRequired
 	}
-	s, err := utf16BEBytesAsString(b[6:])
+	// station id starts (dlRegStationId-dlRegEvseMaxCurrent) registers into the block
+	s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
 	if err != nil || s == "" {
 		return api.ErrSponsorRequired
 	}
