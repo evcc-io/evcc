@@ -11,8 +11,11 @@ products:
     description:
       generic: 3p AIO Series GEN3
   - brand: Sunways
+    description:
+      generic: STH Series GEN3
   - brand: A-Tronix
-  - brand: St-ems
+    description:
+      generic: Hybridpower AX2 GEN3
 capabilities: ["battery-control"]
 params:
   - name: usage

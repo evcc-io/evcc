@@ -10,9 +10,6 @@ products:
   - brand: Wattsonic
     description:
       generic: 3p AIO Series GEN2
-  - brand: Sunways
-  - brand: A-Tronix
-  - brand: St-ems
 capabilities: ["battery-control"]
 params:
   - name: usage
