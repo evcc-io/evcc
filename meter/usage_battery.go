@@ -82,6 +82,22 @@ func floatOr0(g func() float64) float64 {
 	return g()
 }
 
+type batteryEfficiency struct {
+	Efficiency int64 // %
+}
+
+// var _ api.BatteryEfficiency = (*batteryEfficiency)(nil)
+
+// Decorator returns an api.BatteryEfficiency decorator
+func (m *batteryEfficiency) Decorator() func() int64 {
+	if m.Efficiency <= 0 || m.Efficiency > 100 {
+		return nil
+	}
+	return func() int64 {
+		return m.Efficiency
+	}
+}
+
 type batteryPowerLimits struct {
 	MaxChargePower    float64
 	MaxDischargePower float64

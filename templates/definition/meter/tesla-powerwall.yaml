@@ -42,6 +42,7 @@ params:
     advanced: true
   - name: maxchargepower
   - name: maxdischargepower
+  - name: efficiency
 render: |
   type: powerwall
   uri: {{ .host }}
@@ -54,3 +55,4 @@ render: |
   maxsoc: {{ .maxsoc }}
   maxchargepower: {{ .maxchargepower }}
   maxdischargepower: {{ .maxdischargepower }}
+  efficiency: {{ .efficiency }}

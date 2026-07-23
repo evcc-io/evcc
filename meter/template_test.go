@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var acceptable = []string{
@@ -47,4 +49,20 @@ func TestTemplates(t *testing.T) {
 			t.Error(err)
 		}
 	})
+}
+
+// TestTemplateEfficiency ensures the efficiency setting survives template rendering
+func TestTemplateEfficiency(t *testing.T) {
+	m, err := NewFromConfig(t.Context(), "template", map[string]any{
+		"template":   "demo-battery",
+		"usage":      "battery",
+		"power":      1000,
+		"soc":        50,
+		"efficiency": 95,
+	})
+	require.NoError(t, err)
+
+	eff, ok := api.Cap[api.BatteryEfficiency](m)
+	require.True(t, ok)
+	assert.Equal(t, int64(95), eff.Efficiency())
 }

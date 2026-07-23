@@ -25,6 +25,7 @@ type Zendure struct {
 func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity                `mapstructure:",squash"`
+		batteryEfficiency              `mapstructure:",squash"`
 		batteryPowerLimits             `mapstructure:",squash"`
 		batterySocLimits               `mapstructure:",squash"`
 		Usage, Account, Serial, Region string
@@ -55,6 +56,7 @@ func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
 		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
+		implement.May(m, implement.BatteryEfficiency(cc.batteryEfficiency.Decorator()))
 	}
 
 	return m, nil

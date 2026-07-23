@@ -404,3 +404,26 @@ func TestDiffSuggestions(t *testing.T) {
 	assert.Empty(t, site.diffSuggestions(map[string]pendingSuggestion{}))
 	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
 }
+
+type effMeter struct {
+	api.Meter
+}
+
+func (m effMeter) Efficiency() int64 {
+	return 95
+}
+
+func TestBatteryEfficiency(t *testing.T) {
+	site := &Site{}
+	capacity, soc := 10.0, 50.0
+	b := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+	// unconfigured battery leaves the request default
+	bat, _ := site.batteryRequest(config.NewStaticDevice[api.Meter](config.Named{}, nil), b, nil, 1, time.Hour)
+	assert.Zero(t, bat.EtaC)
+	assert.Zero(t, bat.EtaD)
+
+	bat, _ = site.batteryRequest(config.NewStaticDevice[api.Meter](config.Named{}, effMeter{}), b, nil, 1, time.Hour)
+	assert.Equal(t, float32(0.95), bat.EtaC)
+	assert.Equal(t, float32(0.95), bat.EtaD)
+}

@@ -40,6 +40,7 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		Cache                      time.Duration
 		RefreshToken               string
 		SiteId                     int64
+		batteryEfficiency          `mapstructure:",squash"`
 		batterySocLimits           `mapstructure:",squash"`
 		batteryPowerLimits         `mapstructure:",squash"`
 	}{
@@ -74,11 +75,11 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits, cc.batteryPowerLimits)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batteryEfficiency, cc.batterySocLimits, cc.batteryPowerLimits)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batteryEfficiency batteryEfficiency, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
 	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
 
 	httpClient := &http.Client{
@@ -150,6 +151,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		implement.Has(m, implement.Battery(m.batterySoc))
 		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
+		implement.May(m, implement.BatteryEfficiency(batteryEfficiency.Decorator()))
 
 		res, err := m.client.GetSystemStatus()
 		if err != nil {

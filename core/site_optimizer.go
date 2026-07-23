@@ -804,6 +804,13 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		bat.DMax = float32(discharge)
 	}
 
+	if m, ok := api.Cap[api.BatteryEfficiency](instance); ok {
+		if e := m.Efficiency(); e > 0 {
+			bat.EtaC = float32(e) / 100
+			bat.EtaD = bat.EtaC
+		}
+	}
+
 	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
 		minSoc, maxSoc := m.GetSocLimits()
 		if maxSoc == 0 {

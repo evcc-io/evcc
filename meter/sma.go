@@ -32,6 +32,7 @@ func init() {
 func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity          `mapstructure:",squash"`
+		batteryEfficiency        `mapstructure:",squash"`
 		batteryPowerLimits       `mapstructure:",squash"`
 		batterySocLimits         `mapstructure:",squash"`
 		URI, Password, Interface string
@@ -48,11 +49,11 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.Usage, cc.DC, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.Usage, cc.DC, cc.batteryCapacity.Decorator(), cc.batteryEfficiency.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, dc bool, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, dc bool, capacity func() float64, efficiency func() int64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
 	sm := &SMA{
 		Caps:  implement.New(),
 		uri:   uri,
@@ -97,6 +98,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 		implement.May(sm, implement.BatteryCapacity(capacity))
 		implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
 		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
+		implement.May(sm, implement.BatteryEfficiency(efficiency))
 	}
 
 	if isHybridInverter && usage == "pv" {
