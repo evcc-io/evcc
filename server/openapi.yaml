@@ -181,6 +181,20 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+  /batterygriddischarge/{enable}:
+    post:
+      operationId: setBatteryGridDischarge
+      summary: Control battery grid discharge
+      description: "Allow the home battery to discharge to the grid (experimental)."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/battery
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/enable"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
   /batterygridchargelimit:
     delete:
       operationId: removeBatteryGridChargeLimit
