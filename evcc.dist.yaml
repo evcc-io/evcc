@@ -203,7 +203,7 @@ messaging:
     connect: # vehicle connect event
       title: Vehicle connected
       msg: "Vehicle connected at ${pvPower:%.1fk}kW PV"
-    disconnect: # vehicle connected event
+    disconnect: # vehicle disconnect event
       title: Vehicle disconnected
       msg: Vehicle disconnected after ${connectedDuration}
     soc: # vehicle soc update event
