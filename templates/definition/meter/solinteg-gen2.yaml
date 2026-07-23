@@ -61,6 +61,24 @@ render: |
         type: holding
         decode: int32
       scale: -1
+  energy: # import energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41104 # Grid Energy Purchased Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  returnenergy: # export energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41102 # Grid Energy Injected Total
+      type: holding
+      decode: uint32
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power: # power (W)
@@ -70,7 +88,7 @@ render: |
     register:
       address: 11028 # PV Input Total Power
       type: holding
-      decode: int32
+      decode: uint32
   energy: # energy (kWh)
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -99,6 +117,24 @@ render: |
       type: holding
       decode: uint16
     scale: 0.01
+  energy: # discharge energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41110 # Battery Energy Discharged Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  returnenergy: # charge energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41108 # Battery Energy Charged Total
+      type: holding
+      decode: uint32
+    scale: 0.1
   batterymode:
     source: switch
     switch:
