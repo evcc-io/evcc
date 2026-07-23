@@ -112,7 +112,7 @@ func TestSigenergyEVDCStatus(t *testing.T) {
 		{evdcStateScheduled, api.StatusB, false},
 		{evdcStateEnded, api.StatusB, false},
 		{evdcStateInsulation, api.StatusB, false},
-		{evdcStateDischarging, api.StatusB, false},
+		{evdcStateDischarging, api.StatusC, false},
 		{evdcStateFault, api.StatusNone, true},
 		{evdcStateUnavailable, api.StatusNone, true},
 		{evdcStateAlarm, api.StatusNone, true},
@@ -143,6 +143,8 @@ func TestSigenergyEVDCMeasurements(t *testing.T) {
 	regs[evdcRegSessionDuration+1] = 3600 // 1h
 	regs[evdcRegTotalEnergy] = 1
 	regs[evdcRegTotalEnergy+1] = 34464 // 65536+34464 = 100000 -> 1000.00 kWh
+	regs[evdcRegTotalDischargeEnergy] = 0
+	regs[evdcRegTotalDischargeEnergy+1] = 500 // 5.00 kWh
 
 	wb, _ := evdcTestCharger(t, regs)
 
@@ -165,6 +167,10 @@ func TestSigenergyEVDCMeasurements(t *testing.T) {
 	total, err := wb.TotalEnergy()
 	require.NoError(t, err)
 	assert.Equal(t, 1000.0, total)
+
+	returned, err := wb.ReturnEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 5.0, returned)
 }
 
 func TestSigenergyEVDCNegativePower(t *testing.T) {
@@ -249,7 +255,7 @@ func TestSigenergyEVDCMaxCurrent(t *testing.T) {
 		{6, 4140},
 		{16, 11040},
 		{1.45, 1000}, // 1000.5 W truncated to 1000
-		{1.0, 1000},  // 690 W clamped up to the 1000 W floor
+		{1.0, 690},   // minimum current -> 690 W
 		{40, 25000},  // 27600 W clamped down to rated power
 	}
 
@@ -269,6 +275,7 @@ func TestSigenergyEVDCMaxCurrent(t *testing.T) {
 func TestSigenergyEVDCMaxCurrentInvalid(t *testing.T) {
 	wb, h := evdcTestCharger(t, evdcRegs(evdcStateCharging))
 
+	assert.Error(t, wb.MaxCurrentMillis(0.9))
 	assert.Error(t, wb.MaxCurrentMillis(0))
 	assert.Error(t, wb.MaxCurrentMillis(-1))
 	assert.Empty(t, h.writes)
@@ -279,8 +286,8 @@ func TestSigenergyEVDCMinMaxCurrent(t *testing.T) {
 
 	minA, maxA, err := wb.GetMinMaxCurrent()
 	require.NoError(t, err)
-	assert.InDelta(t, 1.449, minA, 0.001) // 1000 W / 690
-	assert.InDelta(t, 36.23, maxA, 0.01)  // 25000 W / 690
+	assert.InDelta(t, 1.0, minA, 0.001)  // evdcMinCurrent
+	assert.InDelta(t, 36.23, maxA, 0.01) // 25000 W / 690
 }
 
 func TestSigenergyEVDCSponsorGate(t *testing.T) {
@@ -306,24 +313,6 @@ func TestSigenergyEVDCReadFailure(t *testing.T) {
 
 	_, err = wb.CurrentPower()
 	assert.Error(t, err)
-}
-
-func TestSigenergyEVDCRatedPowerGuard(t *testing.T) {
-	// rated power below the 1000 W floor must abort construction
-	old := sponsor.Subject
-	sponsor.Subject = "test"
-	t.Cleanup(func() { sponsor.Subject = old })
-
-	regs := evdcRegs(evdcStateIdle)
-	regs[evdcRegRatedPower] = 0
-	regs[evdcRegRatedPower+1] = 500 // 500 W < 1000 W floor
-
-	// ensure the shared server is up and holds these registers
-	_, h := evdcTestCharger(t, regs)
-	_ = h
-
-	_, err := NewSigenergyEVDC(context.Background(), evdcURI, 1)
-	assert.ErrorContains(t, err, "invalid rated charging power")
 }
 
 func TestSigenergyEVDCWakeUp(t *testing.T) {
