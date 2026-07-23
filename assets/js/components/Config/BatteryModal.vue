@@ -45,12 +45,14 @@ export default defineComponent({
 	},
 	methods: {
 		async change(e: Event) {
+			const target = e.target as HTMLInputElement;
 			try {
 				this.error = null;
-				await api.post(`batterygriddischarge/${(e.target as HTMLInputElement).checked}`);
+				await api.post(`batterygriddischarge/${target.checked}`);
 			} catch (err) {
-				const e = err as AxiosError<{ error: string }>;
-				this.error = e.response?.data?.error || e.message;
+				target.checked = this.gridDischarge; // revert on failure to stay in sync with state
+				const axiosErr = err as AxiosError<{ error: string }>;
+				this.error = axiosErr.response?.data?.error || axiosErr.message;
 			}
 		},
 	},
