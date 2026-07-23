@@ -62,11 +62,12 @@ const (
 	evdcRegPowerLimit     = 41002 // U32, W, RW, FC10; clamped to [evdcMinPower, rated] — never write 0!
 	evdcRegDischargeLimit = 41004 // U32, W, RW; discharge control is out of scope
 
-	evdcInputLen = 21 // registers 31500-31520 in a single FC04 read
+	evdcInputLen = 23 // registers 31500-31522 in a single FC04 read
 
-	// smallest field-verified working setpoint; 0 puts VW vehicles into an
-	// unrecoverable error state, values below 1000 W are untested
-	evdcMinPower = 1000 // W
+	// minimum setpoint
+	evdcMinPower = 500 // 1A@500V per DC CCS Power Classes
+
+	evdcMinCurrent = 1.0 // A
 
 	// evcc current setpoints are converted using the 3-phase AC convention
 	evdcPowerPerAmp = 230 * 3 // W/A
@@ -140,9 +141,6 @@ func NewSigenergyEVDC(ctx context.Context, uri string, slaveID uint8) (*Sigenerg
 		return nil, fmt.Errorf("no DC charger present or firmware too old (requires Modbus protocol V2.9): %w", err)
 	}
 	wb.ratedPower = encoding.Uint32(b)
-	if wb.ratedPower < evdcMinPower {
-		return nil, fmt.Errorf("invalid rated charging power %d W", wb.ratedPower)
-	}
 
 	// seed enabled state so evcc restarts mid-session report the true state
 	b, err = conn.ReadInputRegisters(evdcRegRunningState, 1)
@@ -191,9 +189,7 @@ func (wb *SigenergyEVDC) Status() (api.ChargeStatus, error) {
 		wb.enabled = true
 		return api.StatusC, nil
 	case evdcStateDischarging:
-		// vendor/EMS-initiated V2X discharge is not an evcc charging session;
-		// deliberately no enabled sync either, see spec
-		return api.StatusB, nil
+		return api.StatusC, nil
 	case evdcStateFault, evdcStateUnavailable, evdcStateAlarm:
 		return api.StatusNone, fmt.Errorf("device state: %s", evdcStateNames[state])
 	default:
@@ -231,12 +227,10 @@ var _ api.ChargerEx = (*SigenergyEVDC)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *SigenergyEVDC) MaxCurrentMillis(current float64) error {
-	if current <= 0 {
+	if current < evdcMinCurrent {
 		return fmt.Errorf("invalid current %.3g", current)
 	}
 
-	// evcc current setpoint to DC power, clamped to [1000 W, rated]:
-	// writing 0 puts vehicles into an unrecoverable error state
 	power := min(max(uint32(current*evdcPowerPerAmp), evdcMinPower), wb.ratedPower)
 
 	b := make([]byte, 4)
@@ -250,7 +244,7 @@ var _ api.CurrentLimiter = (*SigenergyEVDC)(nil)
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (wb *SigenergyEVDC) GetMinMaxCurrent() (float64, float64, error) {
-	return float64(evdcMinPower) / evdcPowerPerAmp, float64(wb.ratedPower) / evdcPowerPerAmp, nil
+	return evdcMinCurrent, float64(wb.ratedPower) / evdcPowerPerAmp, nil
 }
 
 var _ api.Meter = (*SigenergyEVDC)(nil)
@@ -276,6 +270,18 @@ func (wb *SigenergyEVDC) TotalEnergy() (float64, error) {
 	}
 
 	return float64(encoding.Uint32(evdcInput(b, evdcRegTotalEnergy, 4))) / 100, nil
+}
+
+var _ api.MeterReturnEnergy = (*SigenergyEVDC)(nil)
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (wb *SigenergyEVDC) ReturnEnergy() (float64, error) {
+	b, err := wb.inputG()
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(encoding.Uint32(evdcInput(b, evdcRegTotalDischargeEnergy, 4))) / 100, nil
 }
 
 var _ api.ChargeRater = (*SigenergyEVDC)(nil)
