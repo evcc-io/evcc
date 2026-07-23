@@ -3530,7 +3530,8 @@
               "normal",
               "hold",
               "charge",
-              "holdcharge"
+              "holdcharge",
+              "discharge"
             ]
           },
           "charge": {
