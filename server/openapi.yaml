@@ -8,6 +8,7 @@ info:
 servers:
   - url: https://demo.evcc.io/api
 tags:
+  - name: state
   - name: auth
   - name: battery
   - name: db
@@ -435,7 +436,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Mode"
+                $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
   /loadpoints/{id}/phases/{phases}:
     post:
       operationId: setLoadpointPhases
@@ -509,7 +510,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StaticEnergyPlan"
+                $ref: "./openapi.state.yaml#/components/schemas/StaticEnergyPlan"
   /loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}:
     get:
       operationId: previewLoadpointRepeatingPlan
@@ -576,14 +577,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlanStrategy"
+              $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
       responses:
-        "200":
+        200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PlanStrategy"
+                $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
   /loadpoints/{id}/priority/{priority}:
     post:
       operationId: setLoadpointPriority
@@ -931,13 +932,13 @@ paths:
           $ref: "#/components/responses/NumberResult"
   /state:
     get:
-      operationId: getState
+      operationId: state
       summary: System state
-      description: "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data."
+      description: "Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases."
       externalDocs:
         url: https://docs.evcc.io/integrations/rest-api
       tags:
-        - general
+        - state
       parameters:
         - name: jq
           in: query
@@ -957,7 +958,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/State"
+                $ref: "./openapi.state.yaml#/components/schemas/State"
   /system/log:
     get:
       operationId: getSystemLogs
@@ -1150,7 +1151,7 @@ paths:
                 type: object
                 properties:
                   mode:
-                    $ref: "#/components/schemas/Mode"
+                    $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
   /vehicles/{name}/plan/repeating:
     post:
       operationId: updateVehicleRepeatingPlans
@@ -1169,7 +1170,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: "#/components/schemas/RepeatingPlan"
+                $ref: "./openapi.state.yaml#/components/schemas/RepeatingPlan"
       responses:
         "200":
           description: Success
@@ -1178,7 +1179,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RepeatingPlan"
+                  $ref: "./openapi.state.yaml#/components/schemas/RepeatingPlan"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan
@@ -1234,14 +1235,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlanStrategy"
+              $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
       responses:
-        "200":
+        200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PlanStrategy"
+                $ref: "./openapi.state.yaml#/components/schemas/PlanStrategy"
   /db/backup:
     get:
       operationId: downloadBackup
@@ -1419,16 +1420,6 @@ paths:
           description: Invalid parameters or database offline
 components:
   schemas:
-    BatteryMode:
-      description: Battery mode
-      type: string
-      example: normal
-      enum:
-        - unknown
-        - normal
-        - hold
-        - charge
-        - holdcharge
     ChangePassword:
       type: object
       properties:
@@ -1566,14 +1557,6 @@ components:
         - INFO
         - DEBUG
         - TRACE
-    Mode:
-      description: "Charging mode."
-      type: string
-      enum:
-        - "off"
-        - "now"
-        - "minpv"
-        - "pv"
     Odometer:
       nullable: true
       type: "number"
@@ -1612,51 +1595,10 @@ components:
       type: integer
       example: 3600
       minimum: 0
-    Rate:
-      type: object
-      description: A charging interval
-      properties:
-        start:
-          description: Start
-          $ref: "#/components/schemas/Timestamp"
-        end:
-          description: End
-          $ref: "#/components/schemas/Timestamp"
-        value:
-          description: Cost
-          type: number
-          minimum: 0
     Rates:
       type: array
       items:
-        $ref: "#/components/schemas/Rate"
-    PlanStrategy:
-      description: Charging plan strategy configuration
-      type: object
-      properties:
-        continuous:
-          description: "Force continuous planning"
-          type: boolean
-        precondition:
-          description: "Precondition duration in seconds"
-          type: integer
-          minimum: 0
-    RepeatingPlan:
-      externalDocs:
-        url: https://docs.evcc.io/en/features/plans#repeating-plans
-      type: object
-      properties:
-        active:
-          description: "Set plan active."
-          type: boolean
-        soc:
-          $ref: "#/components/schemas/Soc"
-        time:
-          $ref: "#/components/schemas/HourMinuteTime"
-        tz:
-          $ref: "#/components/schemas/IANATimeZone"
-        weekdays:
-          $ref: "#/components/schemas/Weekdays"
+        $ref: "./openapi.state.yaml#/components/schemas/Rate"
     Soc:
       description: SOC in %
       type: number
@@ -1668,27 +1610,6 @@ components:
       type: number
       example: 50
       minimum: 0
-    State:
-      description: "The actual state structure is not documented yet. Most values should be self-explanatory. Note: While the overall structure is quite stable, details may change between releases."
-      type: object
-    StaticEnergyPlan:
-      externalDocs:
-        url: https://docs.evcc.io/en/features/plans#energy-amount-plan
-      type: object
-      properties:
-        energy:
-          $ref: "#/components/schemas/Energy"
-        time:
-          $ref: "#/components/schemas/Timestamp"
-    StaticSocPlan:
-      externalDocs:
-        url: https://docs.evcc.io/en/features/plans#create-charging-plan
-      type: object
-      properties:
-        soc:
-          $ref: "#/components/schemas/Soc"
-        time:
-          $ref: "#/components/schemas/Timestamp"
     Timestamp:
       description: Timestamp in RFC3339 format
       type: string
@@ -1785,7 +1706,7 @@ components:
       in: path
       required: true
       schema:
-        $ref: "#/components/schemas/Mode"
+        $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
     soc:
       name: soc
       description: SOC in %
@@ -1847,7 +1768,7 @@ components:
       in: path
       required: true
       schema:
-        $ref: "#/components/schemas/BatteryMode"
+        $ref: "./openapi.state.yaml#/components/schemas/BatteryMode"
     costLimit:
       name: cost
       description: Cost limit in configured currency (default EUR) or CO2 limit in g/kWh
@@ -1874,19 +1795,28 @@ components:
       content:
         application/json:
           schema:
-            type: integer
+            type: object
+            properties:
+              result:
+                type: integer
     NumberResult:
       description: Success - Number result
       content:
         application/json:
           schema:
-            type: number
+            type: object
+            properties:
+              result:
+                type: number
     IntegerResult:
       description: Success - Integer result
       content:
         application/json:
           schema:
-            type: integer
+            type: object
+            properties:
+              result:
+                type: integer
     SocResult:
       description: Success - Soc result
       content:
@@ -1894,28 +1824,40 @@ components:
           schema:
             type: object
             properties:
-              soc:
-                $ref: "#/components/schemas/Soc"
+              result:
+                type: object
+                properties:
+                  soc:
+                    $ref: "#/components/schemas/Soc"
     PlanRatesResult:
       description: Success - PlanRates result
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/PlanRates"
+            type: object
+            properties:
+              result:
+                $ref: "#/components/schemas/PlanRates"
     BooleanResult:
       description: Success - Boolean result
       content:
         application/json:
           schema:
-            type: boolean
+            type: object
+            properties:
+              result:
+                type: boolean
     NullResult:
       description: Success - Null result
       content:
         application/json:
           schema:
-            description: Value is always null
-            nullable: true
-            type: "object"
+            type: object
+            properties:
+              result:
+                description: Value is always null
+                nullable: true
+                type: "object"
     BlankResponse:
       description: Success - Blank response
     SuccessResult:
@@ -1923,8 +1865,11 @@ components:
       content:
         application/json:
           schema:
-            type: string
-            example: "OK"
+            type: object
+            properties:
+              result:
+                type: string
+                example: "OK"
     EmptyResult:
       description: Success - Empty result
       content:
@@ -1944,10 +1889,13 @@ components:
       content:
         application/json:
           schema:
-            type: integer
-            description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
-            minimum: 0
-            maximum: 4
+            type: object
+            properties:
+              result:
+                type: integer
+                description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
+                minimum: 0
+                maximum: 4
   securitySchemes:
     cookieAuth:
       type: apiKey
