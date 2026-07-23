@@ -5287,12 +5287,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "type": "integer"
-                }
-              }
+              "type": "integer"
             }
           }
         }
@@ -5302,12 +5297,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "type": "number"
-                }
-              }
+              "type": "number"
             }
           }
         }
@@ -5317,12 +5307,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "type": "integer"
-                }
-              }
+              "type": "integer"
             }
           }
         }
@@ -5334,13 +5319,8 @@
             "schema": {
               "type": "object",
               "properties": {
-                "result": {
-                  "type": "object",
-                  "properties": {
-                    "soc": {
-                      "$ref": "#/components/schemas/Soc"
-                    }
-                  }
+                "soc": {
+                  "$ref": "#/components/schemas/Soc"
                 }
               }
             }
@@ -5352,12 +5332,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "$ref": "#/components/schemas/PlanRates"
-                }
-              }
+              "$ref": "#/components/schemas/PlanRates"
             }
           }
         }
@@ -5367,12 +5342,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "type": "boolean"
-                }
-              }
+              "type": "boolean"
             }
           }
         }
@@ -5382,14 +5352,9 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "description": "Value is always null",
-                  "nullable": true,
-                  "type": "object"
-                }
-              }
+              "description": "Value is always null",
+              "nullable": true,
+              "type": "object"
             }
           }
         }
@@ -5402,13 +5367,8 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "type": "string",
-                  "example": "OK"
-                }
-              }
+              "type": "string",
+              "example": "OK"
             }
           }
         }
@@ -5441,15 +5401,10 @@
         "content": {
           "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "result": {
-                  "type": "integer",
-                  "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
-                  "minimum": 0,
-                  "maximum": 4
-                }
-              }
+              "type": "integer",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+              "minimum": 0,
+              "maximum": 4
             }
           }
         }
