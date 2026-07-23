@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -37,7 +38,6 @@ type DaheimLaden struct {
 	conn   *modbus.Connection
 	curr   uint16
 	phases uint16
-	dl     bool
 }
 
 const (
@@ -109,7 +109,9 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	}
 
 	if !sponsor.IsAuthorized() {
-		wb.checkStation()
+		if err := wb.checkStation(); err != nil {
+			return nil, err
+		}
 	}
 
 	// get initial state from charger
@@ -156,13 +158,9 @@ func (wb *DaheimLaden) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, current)
 
-	if wb.dl {
-		_, err := wb.conn.WriteMultipleRegisters(dlRegCurrentLimit, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(dlRegCurrentLimit, 1, b)
 
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (wb *DaheimLaden) getCurrent() (uint16, error) {
@@ -362,23 +360,27 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 	return int(wb.phases), nil
 }
 
-func (wb *DaheimLaden) checkStation() {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16)
+func (wb *DaheimLaden) checkStation() error {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
 	if err != nil {
-		return
+		return api.ErrSponsorRequired
 	}
-	s, err := utf16BEBytesAsString(b)
+	s, err := utf16BEBytesAsString(b[6:])
 	if err != nil || s == "" {
-		return
+		return api.ErrSponsorRequired
 	}
 
 	for _, r := range s {
 		if r < 0x20 || r > 0x7e {
-			return
+			return api.ErrSponsorRequired
 		}
 	}
 
-	wb.dl = true
+	if strings.Contains(strings.ToLower(s), "heidelbridge") {
+		return api.ErrSponsorRequired
+	}
+
+	return nil
 }
 
 var _ api.Diagnosis = (*DaheimLaden)(nil)
