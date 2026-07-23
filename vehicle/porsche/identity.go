@@ -2,180 +2,220 @@ package porsche
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
+	"sync"
 
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
-const (
-	OAuthURI = "https://identity.porsche.com"
-	ClientID = "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig"
-)
+// subject is the stable provider id; a single Porsche account serves all of the
+// user's Porsche vehicles, so the identity (and its token) is a singleton.
+const subject = "porsche"
 
-// https://identity.porsche.com/.well-known/openid-configuration
 var (
-	OAuth2Config = &oauth2.Config{
-		ClientID:    ClientID,
-		RedirectURL: "https://my.porsche.com/",
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   OAuthURI + "/authorize",
-			TokenURL:  OAuthURI + "/oauth/token",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
-		Scopes: []string{
-			"openid", "offline_access", "profile", "email",
-			"pid:user_profile.vehicles:read",
-			// "pid:user_profile.addresses:read",
-			// "pid:user_profile.birthdate:read",
-			// "pid:user_profile.dealers:read",
-			// "pid:user_profile.emails:read",
-			// "pid:user_profile.locale:read",
-			// "pid:user_profile.name:read",
-			// "pid:user_profile.phones:read",
-			// "pid:user_profile.porscheid:read",
-			// "pid:user_profile.vehicles:read",
-			// "pid:user_profile.vehicles:register",
-		},
-	}
+	mu       sync.Mutex
+	identity *Identity
 )
 
-// https://github.com/CJNE/pyporscheconnectapi
-
-// Identity is the Porsche Identity client
+// Identity is the Porsche Connect auth provider. It implements both
+// api.AuthProvider (browser login via evcc's providerauth) and
+// oauth2.TokenSource (used by the API client), persisting the token in the
+// settings database.
 type Identity struct {
-	*request.Helper
-	user, password string
+	mu      sync.Mutex
+	log     *util.Logger
+	oc      *oauth2.Config
+	ctx     context.Context
+	token   *oauth2.Token
+	onlineC chan<- bool
+
+	loginMu sync.Mutex
+	pending *LoginSession // in-progress interactive (captcha) login
 }
 
-// NewIdentity creates Porsche identity
-func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
-	v := &Identity{
-		Helper:   request.NewHelper(log),
-		user:     user,
-		password: password,
+var (
+	_ api.AuthProvider   = (*Identity)(nil)
+	_ oauth2.TokenSource = (*Identity)(nil)
+)
+
+// NewIdentity returns the (singleton) Porsche identity, registering it with
+// evcc's provider-auth handler on first creation. A non-nil seed token (e.g.
+// from `evcc token` in the config) is used when the database has none yet.
+func NewIdentity(ctx context.Context, log *util.Logger, seed *oauth2.Token) (*Identity, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if identity != nil {
+		return identity, nil
 	}
 
-	token, err := v.login()
+	// inject X-Client-ID on all token-endpoint calls (exchange + refresh)
+	client := request.NewClient(log)
+	client.Transport = &headerRoundTripper{base: client.Transport}
+	authCtx := context.WithValue(ctx, oauth2.HTTPClient, client)
+
+	o := &Identity{
+		log: log,
+		oc:  Oauth2Config(),
+		ctx: authCtx,
+	}
+
+	// load persisted token, else fall back to the seed token
+	var token oauth2.Token
+	if settings.Exists(subject) {
+		if err := settings.Json(subject, &token); err != nil {
+			return nil, err
+		}
+	} else if seed != nil && seed.RefreshToken != "" {
+		token = *seed
+	}
+	if token.RefreshToken != "" {
+		o.token = &token
+		if !settings.Exists(subject) {
+			o.persist(&token)
+		}
+	}
+
+	onlineC, err := providerauth.Register(subject, o)
 	if err != nil {
-		return nil, fmt.Errorf("login failed: %w", err)
+		return nil, err
 	}
+	o.onlineC = onlineC
+	o.setOnline(o.token.Valid())
 
-	return oauth.RefreshTokenSource(token, v.refreshToken), nil
+	identity = o
+	return o, nil
 }
 
-func (v *Identity) login() (*oauth2.Token, error) {
-	cv := oauth2.GenerateVerifier()
+// Token implements oauth2.TokenSource.
+func (o *Identity) Token() (*oauth2.Token, error) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 
-	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
-		oauth2.SetAuthURLParam("audience", ApiURI),
-		oauth2.SetAuthURLParam("ui_locales", "de-DE"),
-	)
-
-	v.Client.Jar, _ = cookiejar.New(nil)
-	v.Client.CheckRedirect = request.DontFollow
-	defer func() {
-		v.Client.Jar = nil
-		v.Client.CheckRedirect = nil
-	}()
-
-	resp, err := v.Client.Get(uri)
-	if err != nil {
-		return nil, err
+	if o.token == nil {
+		return nil, api.LoginRequiredError(subject)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusFound {
-		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
+	if o.token.Valid() {
+		return o.token, nil
+	}
+	if o.token.RefreshToken == "" {
+		return nil, api.LoginRequiredError(subject)
 	}
 
-	// username
-	u, err := url.Parse(resp.Header.Get("Location"))
+	// oauth2 handles the refresh via o.ctx's client, which injects the required
+	// X-Client-ID header (same path as the initial code exchange)
+	token, err := o.oc.TokenSource(o.ctx, &oauth2.Token{RefreshToken: o.token.RefreshToken}).Token()
 	if err != nil {
 		return nil, err
 	}
 
-	query := u.Query()
-	query.Set("username", v.user)
-	query.Set("js-available", "true")
-	query.Set("webauthn-available", "false")
-	query.Set("is-brave", "false")
-	query.Set("webauthn-platform-available", "false")
-	query.Set("action", "default")
-
-	resp, err = v.PostForm(OAuthURI+u.String(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusFound {
-		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
-	}
-
-	// password
-	u, err = url.Parse(resp.Header.Get("Location"))
-	if err != nil {
-		return nil, err
-	}
-
-	query = u.Query()
-	query.Set("username", v.user)
-	query.Set("password", v.password)
-	query.Set("action", "default")
-
-	resp, err = v.PostForm(OAuthURI+u.String(), query)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusFound {
-		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
-	}
-
-	var param request.InterceptResult
-	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
-
-	// resume
-	u, err = url.Parse(resp.Header.Get("Location"))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err = v.Get(OAuthURI + u.String())
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	code, err := param()
-	if err != nil {
-		return nil, err
-	}
-
-	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-	ctx, cancel := context.WithTimeout(cctx, request.Timeout)
-	defer cancel()
-
-	return OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	o.update(token)
+	return token, nil
 }
 
-func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-	ts := oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token))
+// Login implements api.AuthProvider. No PKCE (the Porsche Auth0 client does not
+// use it); audience scopes the access token to the Porsche API.
+func (o *Identity) Login(state string) (string, *oauth2.DeviceAuthResponse, error) {
+	return o.oc.AuthCodeURL(state, oauth2.SetAuthURLParam("audience", Audience)), nil, nil
+}
 
-	token, err := ts.Token()
-	if err != nil {
-		token, err = v.login()
+// HandleCallback implements api.AuthProvider.
+func (o *Identity) HandleCallback(params url.Values) error {
+	if e := params.Get("error"); e != "" {
+		return fmt.Errorf("%s: %s", e, params.Get("error_description"))
 	}
 
-	return token, err
+	code := params.Get("code")
+	if code == "" {
+		return errors.New("missing authorization code")
+	}
+
+	token, err := o.oc.Exchange(o.ctx, code)
+	if err != nil {
+		return err
+	}
+
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.update(token)
+	return nil
+}
+
+// Logout implements api.AuthProvider.
+func (o *Identity) Logout() error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	o.token = nil
+	if settings.Exists(subject) {
+		if err := settings.Delete(subject); err != nil {
+			o.log.ERROR.Println(err)
+		}
+	}
+	o.setOnline(false)
+	return nil
+}
+
+// Authenticated implements api.AuthProvider.
+func (o *Identity) Authenticated() bool {
+	token, err := o.Token()
+	return err == nil && token.Valid()
+}
+
+// DisplayName implements api.AuthProvider.
+func (o *Identity) DisplayName() string {
+	return "Porsche"
+}
+
+// update stores the token and signals online status. Caller must hold o.mu.
+func (o *Identity) update(token *oauth2.Token) {
+	if token.RefreshToken == "" && o.token != nil {
+		token.RefreshToken = o.token.RefreshToken
+	}
+	o.token = token
+	o.persist(token)
+	o.setOnline(token.Valid())
+}
+
+func (o *Identity) persist(token *oauth2.Token) {
+	if err := settings.SetJson(subject, token); err != nil {
+		o.log.ERROR.Printf("saving token: %v", err)
+		return
+	}
+	// flush immediately so the token survives a restart right after login/refresh
+	if err := settings.Persist(); err != nil {
+		o.log.ERROR.Printf("persisting token: %v", err)
+	}
+}
+
+// setOnline signals the auth handler without blocking (a blocking send under
+// o.mu would deadlock via Authenticated()->Token()).
+func (o *Identity) setOnline(online bool) {
+	select {
+	case o.onlineC <- online:
+	default:
+	}
+}
+
+// headerRoundTripper adds the X-Client-ID header required by the Porsche token
+// endpoint to every request (used for the OAuth code exchange).
+type headerRoundTripper struct {
+	base http.RoundTripper
+}
+
+func (t *headerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("X-Client-ID", XClientID)
+	base := t.base
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	return base.RoundTrip(req)
 }

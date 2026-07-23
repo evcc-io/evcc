@@ -21,7 +21,20 @@ declare global {
   }
 }
 
-export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
+export type AuthProviders = Record<
+  string,
+  { id: string; authenticated: boolean; interactive?: boolean }
+>;
+
+export interface AuthField {
+  name: string;
+  type: string;
+}
+
+export interface AuthChallenge {
+  image?: string;
+  fields: AuthField[];
+}
 
 export type DeviceColors = Record<string, string>;
 export type DeviceColorEntry = { title: string; color: string };

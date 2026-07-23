@@ -1181,9 +1181,34 @@ export default defineComponent({
 			await this.loadMeters();
 			this.updateValues();
 		},
-		vehicleChanged() {
-			this.loadVehicles();
+		async vehicleChanged(name?: string) {
+			// snapshot known providers before reload so we only react to a new one
+			const knownProviders = new Set(
+				Object.values(store.state?.authProviders || {}).map((p) => p.id)
+			);
+			await this.loadVehicles();
 			this.loadDirty();
+
+			// if adding a vehicle registers a new auth provider that needs login,
+			// open it right away instead of making the user find the auth card
+			// (name is only passed on add, not on update/remove)
+			if (name) {
+				this.openNewAuthProvider(knownProviders);
+			}
+		},
+		async openNewAuthProvider(knownIds: Set<string>) {
+			// the provider registers once the backend constructs the vehicle, which
+			// arrives via websocket shortly after the save response
+			for (let i = 0; i < 60; i++) {
+				const provider = Object.values(store.state?.authProviders || {}).find(
+					(p) => !knownIds.has(p.id) && !p.authenticated
+				);
+				if (provider) {
+					this.handleProviderAuthRequest(provider.id);
+					return;
+				}
+				await new Promise((resolve) => setTimeout(resolve, 100));
+			}
 		},
 		async tariffChanged(result: ModalResult) {
 			if (result.action === "added") {
