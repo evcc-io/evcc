@@ -308,10 +308,10 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {
 			return nil
 		}
-		err = json.Unmarshal(payload, &w.meter.TmpValues)
-		if len(w.meter.TmpValues) > 5 {
-			copy(w.meter.Voltages[:], w.meter.TmpValues[:3])
-			copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
+		var values []float64
+		if err = json.Unmarshal(payload, &values); err == nil && len(values) > 5 {
+			copy(w.meter.Voltages[:], values[:3])
+			copy(w.meter.Currents[:], values[3:6])
 			w.hasVoltages, w.hasCurrents = true, true
 		}
 	case "meter/values":
@@ -329,13 +329,14 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			w.meterMap[id] = i
 		}
 	case metersValuesTopic:
-		if err := json.Unmarshal(payload, &w.meter.TmpValues); err != nil {
+		var values []float64
+		if err := json.Unmarshal(payload, &values); err != nil {
 			return err
 		}
 
 		get := func(id int) (float64, bool) {
-			if idx, ok := w.meterMap[id]; ok && idx < len(w.meter.TmpValues) {
-				return w.meter.TmpValues[idx], true
+			if idx, ok := w.meterMap[id]; ok && idx < len(values) {
+				return values[idx], true
 			}
 			return 0, false
 		}
