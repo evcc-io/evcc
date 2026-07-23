@@ -16,6 +16,9 @@ products:
   - brand: A-Tronix
     description:
       generic: Hybridpower AX2 GEN3
+  - brand: SunEnergyBox
+    description:
+      generic: SEB Series GEN3
 capabilities: ["battery-control"]
 params:
   - name: usage
