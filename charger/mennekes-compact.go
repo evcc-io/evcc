@@ -71,21 +71,17 @@ func init() {
 
 // NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
 func NewMennekesCompactFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			Baudrate: 57600,
-			Comset:   "8N2",
-			ID:       50,
-		},
+	cc := modbus.Settings{
+		Baudrate: 57600,
+		Comset:   "8N2",
+		ID:       50,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewMennekesCompact(ctx, cc.Settings)
+	return NewMennekesCompact(ctx, cc)
 }
 
 // NewMennekesCompact creates Mennekes charger

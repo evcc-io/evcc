@@ -71,17 +71,13 @@ func init() {
 
 // NewGoodWeFromConfig creates a GoodWe wallbox charger from generic config.
 func NewGoodWeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-	}{
-		TcpSettings: modbus.TcpSettings{ID: 247},
-	}
+	cc := modbus.TcpSettings{ID: 247}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewGoodWe(ctx, cc.TcpSettings)
+	return NewGoodWe(ctx, cc)
 }
 
 // NewGoodWe creates a GoodWe wallbox charger.

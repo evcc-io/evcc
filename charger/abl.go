@@ -82,19 +82,15 @@ func init() {
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
 func NewABLeMHFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewABLeMH(ctx, cc.Settings)
+	return NewABLeMH(ctx, cc)
 }
 
 // NewABLeMH creates ABLeMH charger
