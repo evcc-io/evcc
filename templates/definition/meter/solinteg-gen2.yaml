@@ -1,0 +1,175 @@
+template: solinteg-gen2
+covers: ["mtec-eb-gen2", "wattsonic"]
+products:
+  - brand: Solinteg
+    description:
+      generic: Integ ONE GEN2
+  - brand: M-TEC
+    description:
+      generic: Energy Butler GEN2
+  - brand: Wattsonic
+    description:
+      generic: 3p AIO Series GEN2
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+    id: 247
+  - preset: battery-params
+  - name: delay
+    default: 100ms
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power: # power (W)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 11000 # Total Power on Meter
+      type: holding
+      decode: int32
+    scale: -1
+  powers:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      delay: {{ .delay }}
+      register:
+        address: 10994 # Phase A Power on Meter
+        type: holding
+        decode: int32
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      delay: {{ .delay }}
+      register:
+        address: 10996 # Phase B Power on Meter
+        type: holding
+        decode: int32
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      delay: {{ .delay }}
+      register:
+        address: 10998 # Phase C Power on Meter
+        type: holding
+        decode: int32
+      scale: -1
+  energy: # import energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41104 # Grid Energy Purchased Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  returnenergy: # export energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41102 # Grid Energy Injected Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power: # power (W)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 11028 # PV Input Total Power
+      type: holding
+      decode: uint32
+  energy: # energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41112 # PV Input Total Energy
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power: # power (W)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 40258 # Battery_P
+      type: holding
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 43000 # State of Charge (SOC)
+      type: holding
+      decode: uint16
+    scale: 0.01
+  energy: # discharge energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41110 # Battery Energy Discharged Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  returnenergy: # charge energy (kWh)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 41108 # Battery Energy Charged Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: const
+        value: 257
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          delay: {{ .delay }}
+          register:
+            address: 50000
+            type: writesingle
+            decode: uint16
+    - case: 2 # eco mode (hold)
+      set:
+        source: const
+        value: 258
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          delay: {{ .delay }}
+          register:
+            address: 50000
+            type: writesingle
+            decode: uint16
+    - case: 3 # usp mode (charge)
+      set:
+        source: const
+        value: 259
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          delay: {{ .delay }}
+          register:
+            address: 50000
+            type: writesingle
+            decode: uint16
+  {{- include "battery-params" . }}
+  {{- end }}
