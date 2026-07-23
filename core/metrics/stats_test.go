@@ -25,13 +25,13 @@ func TestCollectorEnergyStats(t *testing.T) {
 	require.NoError(t, err)
 
 	e := col.entity
-	require.NoError(t, persist(e, slotStart.AddDate(0, 0, -8), 100, 0, nil, false))               // outside 7d
-	require.NoError(t, persist(e, slotStart.Add(-24*time.Hour-15*time.Minute), 5, 0, nil, false)) // 7d only
-	require.NoError(t, persist(e, slotStart.Add(-24*time.Hour), 7, 0, nil, false))                // 24h window start
-	require.NoError(t, persist(e, slotStart.Add(-12*time.Hour), 3, 0, nil, false))                // yesterday, within 24h
-	require.NoError(t, persist(e, midnight, 1, 0, nil, false))                                    // first slot today
-	require.NoError(t, persist(e, slotStart.Add(-15*time.Minute), 2, 0, nil, false))              // last completed slot
-	require.NoError(t, persist(e, slotStart, 4, 0, nil, false))                                   // current slot, excluded
+	require.NoError(t, persist(e, slotStart.AddDate(0, 0, -8), 100, 0, nil, nil, false))               // outside 7d
+	require.NoError(t, persist(e, slotStart.Add(-24*time.Hour-15*time.Minute), 5, 0, nil, nil, false)) // 7d only
+	require.NoError(t, persist(e, slotStart.Add(-24*time.Hour), 7, 0, nil, nil, false))                // 24h window start
+	require.NoError(t, persist(e, slotStart.Add(-12*time.Hour), 3, 0, nil, nil, false))                // yesterday, within 24h
+	require.NoError(t, persist(e, midnight, 1, 0, nil, nil, false))                                    // first slot today
+	require.NoError(t, persist(e, slotStart.Add(-15*time.Minute), 2, 0, nil, nil, false))              // last completed slot
+	require.NoError(t, persist(e, slotStart, 4, 0, nil, nil, false))                                   // current slot, excluded
 
 	stats, err := col.EnergyStats()
 	require.NoError(t, err)

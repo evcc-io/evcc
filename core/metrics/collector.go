@@ -139,11 +139,18 @@ func (c *Collector) process(fun func()) error {
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
 	c.accu.SocTemp = nil
+	c.accu.enabledTime = 0
+	c.accu.totalTime = 0
 	return nil
 }
 
 func (c *Collector) persist(recovered bool) error {
-	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp, recovered); err != nil {
+	// recovered slots are downtime catchup with no meaningful enabled sampling
+	enabled := c.accu.EnabledFraction()
+	if recovered {
+		enabled = nil
+	}
+	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp, enabled, recovered); err != nil {
 		return err
 	}
 
@@ -201,26 +208,40 @@ func (c *Collector) SetReturnEnergyMeterTotal(v float64) error {
 // so a transient failure is recovered via the next delta and not double-counted.
 func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power float64) error {
 	return c.process(func() {
-		// a direction that ever reported a total is metered, so a nil read is a
-		// transient failure rather than a power-only meter
-		hasEnergyMeter := energyTotal != nil || c.accu.energyMeter != nil
-		hasReturnMeter := returnEnergyTotal != nil || c.accu.returnEnergyMeter != nil
+		c.addEnergy(energyTotal, returnEnergyTotal, power)
+	})
+}
 
-		// integrate power for the unmetered direction first, since applying a
-		// meter total advances the accumulator clock
-		if power >= 0 {
-			if !hasEnergyMeter {
-				c.accu.AddPower(power)
-			}
-		} else if !hasReturnMeter {
+// AddEnergyEnabled behaves like AddEnergy and additionally integrates the
+// loadpoint enabled state into the slot. Enabled is sampled before the meter
+// totals advance the accumulator clock, so it shares this cycle's interval.
+func (c *Collector) AddEnergyEnabled(energyTotal, returnEnergyTotal *float64, power float64, enabled bool) error {
+	return c.process(func() {
+		c.accu.AddEnabled(enabled)
+		c.addEnergy(energyTotal, returnEnergyTotal, power)
+	})
+}
+
+func (c *Collector) addEnergy(energyTotal, returnEnergyTotal *float64, power float64) {
+	// a direction that ever reported a total is metered, so a nil read is a
+	// transient failure rather than a power-only meter
+	hasEnergyMeter := energyTotal != nil || c.accu.energyMeter != nil
+	hasReturnMeter := returnEnergyTotal != nil || c.accu.returnEnergyMeter != nil
+
+	// integrate power for the unmetered direction first, since applying a
+	// meter total advances the accumulator clock
+	if power >= 0 {
+		if !hasEnergyMeter {
 			c.accu.AddPower(power)
 		}
+	} else if !hasReturnMeter {
+		c.accu.AddPower(power)
+	}
 
-		if energyTotal != nil {
-			c.accu.SetEnergyMeterTotal(*energyTotal)
-		}
-		if returnEnergyTotal != nil {
-			c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
-		}
-	})
+	if energyTotal != nil {
+		c.accu.SetEnergyMeterTotal(*energyTotal)
+	}
+	if returnEnergyTotal != nil {
+		c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
+	}
 }

@@ -18,6 +18,7 @@ type meter struct {
 	Energy       float64  `json:"energy" gorm:"column:energy"`
 	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
 	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp"`    // at start of slot
+	Enabled      *float64 `json:"enabled,omitempty" gorm:"column:enabled"`     // fraction 0..1 of slot the loadpoint was enabled (loadpoints only)
 	Recovered    bool     `json:"recovered,omitempty" gorm:"column:recovered"` // downtime catchup slot, excluded from profile
 }
 
@@ -137,7 +138,7 @@ func SetupSchema() error {
 var OnPersist func(slot time.Time)
 
 // persist stores a completed 15min slot
-func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64, recovered bool) error {
+func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp, enabled *float64, recovered bool) error {
 	slot := ts.Truncate(tariff.SlotDuration)
 	if err := db.Instance.Create(&meter{
 		Meter:        entity.Id,
@@ -145,6 +146,7 @@ func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp 
 		Energy:       energy,
 		ReturnEnergy: returnEnergy,
 		SocTemp:      socTemp,
+		Enabled:      enabled,
 		Recovered:    recovered,
 	}).Error; err != nil {
 		return err

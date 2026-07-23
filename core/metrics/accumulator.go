@@ -11,11 +11,13 @@ import (
 type Accumulator struct {
 	clock             clock.Clock
 	updated           time.Time
-	energyMeter       *float64 // kWh
-	returnEnergyMeter *float64 // kWh
-	Energy            float64  `json:"energy"`       // kWh
-	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
-	SocTemp           *float64 `json:"socTemp,omitempty"`
+	energyMeter       *float64      // kWh
+	returnEnergyMeter *float64      // kWh
+	Energy            float64       `json:"energy"`       // kWh
+	ReturnEnergy      float64       `json:"returnEnergy"` // kWh
+	SocTemp           *float64      `json:"socTemp,omitempty"`
+	enabledTime       time.Duration // time enabled within the current slot
+	totalTime         time.Duration // sampled time within the current slot
 }
 
 // AccumulatorState is the resumable meter-reading checkpoint of an Accumulator.
@@ -42,6 +44,30 @@ func (s AccumulatorState) CompleteFor(group string) bool {
 		return s.EnergyMeter != nil && s.ReturnEnergyMeter != nil
 	}
 	return s.EnergyMeter != nil || s.ReturnEnergyMeter != nil
+}
+
+// AddEnabled integrates the enabled state over the interval since the last
+// update, weighting by elapsed time like AddPower.
+func (m *Accumulator) AddEnabled(enabled bool) {
+	if m.updated.IsZero() {
+		return
+	}
+	dt := m.clock.Since(m.updated)
+	m.totalTime += dt
+	if enabled {
+		m.enabledTime += dt
+	}
+}
+
+// EnabledFraction returns the 0..1 fraction of the slot the loadpoint was
+// enabled, or nil when the state was never sampled (non-loadpoint entities).
+func (m *Accumulator) EnabledFraction() *float64 {
+	if m.totalTime <= 0 {
+		return nil
+	}
+	// clamp to the documented 0..1 contract, robust to any future timing changes
+	f := max(0, min(1, m.enabledTime.Seconds()/m.totalTime.Seconds()))
+	return &f
 }
 
 // setSocTemp keeps the first reading per slot.
