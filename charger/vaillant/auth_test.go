@@ -1,4 +1,4 @@
-package charger
+package vaillant
 
 import (
 	"bytes"

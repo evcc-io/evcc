@@ -1,4 +1,4 @@
-package charger
+package vaillant
 
 import (
 	"bytes"
@@ -27,9 +27,9 @@ import (
 
 const altchaChallengeURL = "https://identity.vaillant-group.com/api/altcha/challenge"
 
-// vaillantLogin replicates sensonet.Oauth2Config.PasswordCredentialsToken with the
+// Login replicates sensonet.Oauth2Config.PasswordCredentialsToken with the
 // ALTCHA proof-of-work the Vaillant login requires (https://github.com/signalkraft/myPyllant/pull/162)
-func vaillantLogin(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Config, username, password string) (*oauth2.Token, error) {
+func Login(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Config, username, password string) (*oauth2.Token, error) {
 	client := new(http.Client)
 	if c, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); ok {
 		// shallow copy to avoid mutating the shared client
@@ -68,7 +68,7 @@ func vaillantLogin(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Con
 	}
 
 	// best-effort like myPyllant: continue without altcha if challenge cannot be obtained
-	if altcha, err := vaillantAltcha(client); err == nil {
+	if altcha, err := altcha(client); err == nil {
 		params.Set("altcha", altcha)
 	} else {
 		log.WARN.Printf("altcha challenge failed, continuing without: %v", err)
@@ -95,8 +95,8 @@ func vaillantLogin(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Con
 	return oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 }
 
-// vaillantAltcha fetches and solves the ALTCHA challenge for the login form
-func vaillantAltcha(client *http.Client) (string, error) {
+// altcha fetches and solves the ALTCHA challenge for the login form
+func altcha(client *http.Client) (string, error) {
 	resp, err := client.Get(altchaChallengeURL)
 	if err != nil {
 		return "", err
