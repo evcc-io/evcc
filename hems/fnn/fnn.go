@@ -23,14 +23,15 @@ func init() {
 // NewFromConfig creates an FNN HEMS from generic config.
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn, error) {
 	cc := struct {
-		MaxPower        float64 // TODO deprecated
-		MaxDimPower     float64
-		MaxCurtailPower float64
-		W3              *plugin.Config
-		S1              *plugin.Config
-		S2              *plugin.Config
-		W4              *plugin.Config
-		Interval        time.Duration
+		MaxPower             float64 // TODO deprecated
+		MaxDimPower          float64
+		MaxCurtailPower      float64 // TODO deprecated
+		ProductionNominalMax float64
+		W3                   *plugin.Config
+		S1                   *plugin.Config
+		S2                   *plugin.Config
+		W4                   *plugin.Config
+		Interval             time.Duration
 	}{
 		Interval: 10 * time.Second,
 	}
@@ -64,30 +65,34 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	maxCurtailPower := math.Abs(cc.MaxCurtailPower)
+	productionNominalMax := math.Abs(cc.MaxCurtailPower)
 	if cc.MaxPower > 0 {
-		maxCurtailPower = cc.MaxPower
+		productionNominalMax = cc.MaxPower
+	}
+	// ProductionNominalMax supersedes deprecated MaxCurtailPower/MaxPower
+	if cc.ProductionNominalMax > 0 {
+		productionNominalMax = math.Abs(cc.ProductionNominalMax)
 	}
 
-	return NewFnn(site, math.Abs(cc.MaxDimPower), maxCurtailPower, w3G, s1G, s2G, w4G, cc.Interval)
+	return NewFnn(site, math.Abs(cc.MaxDimPower), productionNominalMax, w3G, s1G, s2G, w4G, cc.Interval)
 }
 
-func NewFnn(site site.API, maxDimPower, maxCurtailPower float64, w3G, s1G, s2G, w4G func() (bool, error), interval time.Duration) (*Fnn, error) {
+func NewFnn(site site.API, maxDimPower, productionNominalMax float64, w3G, s1G, s2G, w4G func() (bool, error), interval time.Duration) (*Fnn, error) {
 	if w4G != nil && maxDimPower == 0 {
 		return nil, errors.New("cannot have w4 without power limit")
 	}
 
 	c := &Fnn{
-		log:               util.NewLogger("fnn"),
-		site:              site,
-		maxDimPower:       maxDimPower,
-		maxCurtailPower:   maxCurtailPower,
-		s1:                s1G,
-		s2:                s2G,
-		w3:                w3G,
-		w4:                w4G,
-		productionPercent: 100,
-		interval:          interval,
+		log:                  util.NewLogger("fnn"),
+		site:                 site,
+		maxDimPower:          maxDimPower,
+		productionNominalMax: productionNominalMax,
+		s1:                   s1G,
+		s2:                   s2G,
+		w3:                   w3G,
+		w4:                   w4G,
+		productionPercent:    100,
+		interval:             interval,
 	}
 
 	// read the relays once synchronously so limits are valid as soon as NewFnn returns
@@ -111,8 +116,8 @@ type Fnn struct {
 	w4          func() (bool, error)
 	publishFunc func()
 
-	maxDimPower     float64
-	maxCurtailPower float64
+	maxDimPower          float64
+	productionNominalMax float64
 
 	smartgridConsumptionID uint
 	smartgridProductionID  uint
@@ -211,7 +216,7 @@ func (c *Fnn) setProductionLimit(percent int) error {
 
 	limit := 0.0
 	if active {
-		limit = float64(percent) / 100 * c.maxCurtailPower
+		limit = float64(percent) / 100 * c.productionNominalMax
 	}
 
 	if err := smartgrid.UpdateSession(&c.smartgridProductionID, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
@@ -279,5 +284,5 @@ func (c *Fnn) MaxProductionPower() *float64 {
 		return new(0.0)
 	}
 
-	return new(float64(c.productionPercent) / 100 * c.maxCurtailPower)
+	return new(float64(c.productionPercent) / 100 * c.productionNominalMax)
 }

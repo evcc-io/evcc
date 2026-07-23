@@ -30,6 +30,7 @@ export default [
 				"no-param-reassign": "error",
 				"vue/block-lang": "off",
 				"@typescript-eslint/no-explicit-any": "off",
+				"@typescript-eslint/no-empty-object-type": ["error", { allowInterfaces: "with-single-extends" }],
 			},
 		}
 	).map((config) => ({
