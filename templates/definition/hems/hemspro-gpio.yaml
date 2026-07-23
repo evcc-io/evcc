@@ -24,12 +24,7 @@ params:
       en: Rated generator/module power (Wp) of the installation.
       de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
   - name: maxproductionpower
-    type: float
-    unit: W
     deprecated: true
-    description:
-      en: Installed generator power (Wp)
-      de: Installierte Generatorleistung (Wp)
 render: |
   type: fnn
   maxdimpower: {{ .maxconsumptionpower }}
