@@ -53,9 +53,12 @@ func TestSolveAltcha(t *testing.T) {
 	require.Equal(t, "some-server-signature", decoded.Challenge.Signature)
 
 	p := decoded.Challenge.Parameters
-	nonce, _ := hex.DecodeString(p.Nonce)
-	salt, _ := hex.DecodeString(p.Salt)
-	prefix, _ := hex.DecodeString(p.KeyPrefix)
+	nonce, err := hex.DecodeString(p.Nonce)
+	require.NoError(t, err)
+	salt, err := hex.DecodeString(p.Salt)
+	require.NoError(t, err)
+	prefix, err := hex.DecodeString(p.KeyPrefix)
+	require.NoError(t, err)
 
 	password := binary.BigEndian.AppendUint32(nonce, decoded.Solution.Counter)
 	key, err := pbkdf2.Key(sha256.New, string(password), salt, p.Cost, p.KeyLength)

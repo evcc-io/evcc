@@ -30,9 +30,11 @@ const altchaChallengeURL = "https://identity.vaillant-group.com/api/altcha/chall
 // vaillantLogin replicates sensonet.Oauth2Config.PasswordCredentialsToken with the
 // ALTCHA proof-of-work the Vaillant login requires (https://github.com/signalkraft/myPyllant/pull/162)
 func vaillantLogin(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Config, username, password string) (*oauth2.Token, error) {
-	client, ok := ctx.Value(oauth2.HTTPClient).(*http.Client)
-	if !ok {
-		client = new(http.Client)
+	client := new(http.Client)
+	if c, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); ok {
+		// shallow copy to avoid mutating the shared client
+		clone := *c
+		client = &clone
 	}
 
 	client.Jar, _ = cookiejar.New(nil)
@@ -72,7 +74,10 @@ func vaillantLogin(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Con
 		log.WARN.Printf("altcha challenge failed, continuing without: %v", err)
 	}
 
-	req, _ := http.NewRequest("POST", match[1], strings.NewReader(params.Encode()))
+	req, err := http.NewRequest("POST", match[1], strings.NewReader(params.Encode()))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err = client.Do(req)
