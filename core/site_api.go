@@ -449,6 +449,37 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 	return nil
 }
 
+func (site *Site) GetBatteryGridDischargeLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischargeLimit
+}
+
+func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
+	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.1f", val))
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.batteryGridDischargeLimit, val) {
+		site.batteryGridDischargeLimit = val
+
+		if val == nil {
+			settings.SetString(keys.BatteryGridDischargeLimit, "")
+			site.publish(keys.BatteryGridDischargeLimit, nil)
+		} else {
+			settings.SetFloat(keys.BatteryGridDischargeLimit, *val)
+			site.publish(keys.BatteryGridDischargeLimit, *val)
+		}
+	}
+
+	return nil
+}
+
 // GetOptimizerChargingStrategy returns the optimizer grid charging strategy,
 // falling back to the default when unset.
 func (site *Site) GetOptimizerChargingStrategy() string {

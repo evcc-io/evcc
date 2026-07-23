@@ -53,8 +53,8 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
-func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
-	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
+func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
+	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
 	// put battery into hold mode when charging is active and HEMS dimmed
 	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
@@ -75,8 +75,8 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 	}
 }
 
-// requiredBatteryMode determines required battery mode based on grid charge and rate
-func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rate) api.BatteryMode {
+// requiredBatteryMode determines required battery mode based on grid charge/discharge and rate
+func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) api.BatteryMode {
 	var res api.BatteryMode
 	batMode := site.GetBatteryMode()
 	extMode := site.GetBatteryModeExternal()
@@ -106,7 +106,10 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	case batteryGridChargeActive:
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
+		// EV/house priority: hold wins over feed-in discharge
 		res = keepUnlessModified(api.BatteryHold)
+	case batteryGridDischargeActive:
+		res = keepUnlessModified(api.BatteryDischarge)
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
 	}
@@ -114,8 +117,13 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	return res
 }
 
-// batteryMaxSocReached checks is battery has exceed max soc limit
-func (site *Site) batteryMaxSocReached(dev config.Device[api.Meter]) (bool, error) {
+// batterySocLimitReached reports whether the battery has reached the soc bound
+// that should stop the requested mode: the max soc when charging, or the min
+// soc reserve when discharging to grid. A configured limit of 0 disables the
+// respective check (max is also disabled at 100). Returns api.ErrNotAvailable
+// when the device advertises soc limits but exposes no soc reading, so the
+// caller can skip the check rather than fail the whole battery mode update.
+func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge bool) (bool, error) {
 	meter := dev.Instance()
 
 	batLimiter, ok := api.Cap[api.BatterySocLimiter](meter)
@@ -125,7 +133,7 @@ func (site *Site) batteryMaxSocReached(dev config.Device[api.Meter]) (bool, erro
 
 	batSoc, ok := api.Cap[api.Battery](meter)
 	if !ok {
-		return false, errors.New("battery with soc limits must have soc")
+		return false, api.ErrNotAvailable
 	}
 
 	soc, err := batSoc.Soc()
@@ -133,22 +141,33 @@ func (site *Site) batteryMaxSocReached(dev config.Device[api.Meter]) (bool, erro
 		return false, err
 	}
 
-	if _, max := batLimiter.GetSocLimits(); max > 0 && max < 100 && soc >= max {
-		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f > %.0f)", deviceTitleOrName(dev), soc, max)
+	min, max := batLimiter.GetSocLimits()
+
+	if discharge {
+		if min > 0 && soc <= min {
+			site.log.DEBUG.Printf("battery %s: reserve soc reached (%.0f <= %.0f)", deviceTitleOrName(dev), soc, min)
+			return true, nil
+		}
+		return false, nil
+	}
+
+	if max > 0 && max < 100 && soc >= max {
+		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f >= %.0f)", deviceTitleOrName(dev), soc, max)
 		return true, nil
 	}
 
 	return false, nil
 }
 
-// applyBatteryMode applies the mode to each battery
+// applyBatteryMode applies the mode to each battery.
 //
-// api.BatteryCharge:
-//
-//	The current soc is validated against max soc.
-//	In case max soc is reached, hold mode is applied.
+// A battery that reached the soc bound of the requested mode is held instead:
+// the max soc when charging, the min soc reserve when discharging to grid. This
+// is decided per device, so one battery reaching its bound does not force the
+// others into hold.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	fromToCharge := mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+	fromToDischarge := mode == api.BatteryDischarge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryDischarge
 
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
@@ -158,23 +177,23 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			continue
 		}
 
-		// validate max soc
-		if fromToCharge && mode != api.BatteryHold {
-			ok, err := site.batteryMaxSocReached(dev)
+		// per-device mode so one battery reaching its soc bound does not affect the others
+		deviceMode := mode
+
+		// hold at the soc bound of the requested mode (max soc for charge, min soc reserve for grid discharge)
+		if (fromToCharge || fromToDischarge) && deviceMode != api.BatteryHold {
+			hold, err := site.batterySocLimitReached(dev, fromToDischarge)
 			if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
-
-			// put battery into hold mode when soc limit reached
-			if ok {
-				// TODO do this only once
-				mode = api.BatteryHold
+			if hold {
+				deviceMode = api.BatteryHold
 			}
 		}
 
-		if mode != api.BatteryUnknown {
-			if err := batCtrl.SetBatteryMode(mode); err == nil {
-				site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), mode)
+		if deviceMode != api.BatteryUnknown {
+			if err := batCtrl.SetBatteryMode(deviceMode); err == nil {
+				site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), deviceMode)
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
@@ -201,6 +220,13 @@ func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
+}
+
+// batteryGridDischargeActive is the feed-in counterpart of batteryGridChargeActive:
+// discharge to grid when the feed-in rate is at or above the configured limit.
+func (site *Site) batteryGridDischargeActive(rate api.Rate) bool {
+	limit := site.GetBatteryGridDischargeLimit()
+	return limit != nil && !rate.IsZero() && rate.Value >= *limit
 }
 
 func (site *Site) dischargeControlActive(rate api.Rate) bool {

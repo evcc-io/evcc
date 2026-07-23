@@ -42,12 +42,14 @@ const (
 	ConsumerMeters = "consumerMeters"
 
 	// battery settings
-	BatteryDischargeControl = "batteryDischargeControl"
-	BatteryGridChargeLimit  = "batteryGridChargeLimit"
-	BatteryGridChargeActive = "batteryGridChargeActive"
-	BatteryGridDischarge    = "batteryGridDischarge"
-	BufferSoc               = "bufferSoc"
-	BufferStartSoc          = "bufferStartSoc"
+	BatteryDischargeControl    = "batteryDischargeControl"
+	BatteryGridChargeLimit     = "batteryGridChargeLimit"
+	BatteryGridChargeActive    = "batteryGridChargeActive"
+	BatteryGridDischargeLimit  = "batteryGridDischargeLimit"
+	BatteryGridDischargeActive = "batteryGridDischargeActive"
+	BatteryGridDischarge       = "batteryGridDischarge"
+	BufferSoc                  = "bufferSoc"
+	BufferStartSoc             = "bufferStartSoc"
 
 	// forecast settings
 	SolarAdjusted = "solarAdjusted"

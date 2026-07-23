@@ -55,6 +55,10 @@ type API interface {
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
+	// GetBatteryGridDischargeLimit get the grid discharge (feed-in) limit
+	GetBatteryGridDischargeLimit() *float64
+	// SetBatteryGridDischargeLimit sets the grid discharge (feed-in) limit
+	SetBatteryGridDischargeLimit(limit *float64) error
 
 	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
 	GetOptimizerChargingStrategy() string
