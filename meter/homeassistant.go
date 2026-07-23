@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -12,11 +13,11 @@ import (
 )
 
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 }
 
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
-func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
+func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Power                string
@@ -54,7 +55,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, errors.New("missing power sensor entity")
 	}
 
-	log := util.NewLogger("ha-meter")
+	log := util.LoggerFromContext(ctx, "ha-meter")
 
 	conn, err := cc.Config.NewConnection(log)
 	if err != nil {

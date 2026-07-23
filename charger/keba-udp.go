@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,11 +32,11 @@ type KebaUdp struct {
 }
 
 func init() {
-	registry.Add("keba-udp", NewKebaUdpFromConfig)
+	registry.AddCtx("keba-udp", NewKebaUdpFromConfig)
 }
 
 // NewKebaUdpFromConfig creates a new Keba UDP charger
-func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
+func NewKebaUdpFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI     string
 		Serial  string
@@ -49,7 +50,7 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	k, err := NewKebaUdp(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	k, err := NewKebaUdp(ctx, cc.URI, cc.Serial, cc.RFID, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +70,8 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewKebaUdp creates a new charger
-func NewKebaUdp(uri, serial string, rfid keba.RFID, timeout time.Duration) (*KebaUdp, error) {
-	log := util.NewLogger("keba")
+func NewKebaUdp(ctx context.Context, uri, serial string, rfid keba.RFID, timeout time.Duration) (*KebaUdp, error) {
+	log := util.LoggerFromContext(ctx, "keba")
 
 	instance, err := keba.Instance(log)
 	if err != nil {

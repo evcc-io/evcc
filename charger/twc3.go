@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -21,7 +22,7 @@ type Twc3 struct {
 }
 
 func init() {
-	registry.Add("twc3", NewTwc3FromConfig)
+	registry.AddCtx("twc3", NewTwc3FromConfig)
 }
 
 // Vitals is the /api/1/vitals response
@@ -55,7 +56,7 @@ type Vitals struct {
 }
 
 // NewTwc3FromConfig creates a new charger
-func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
+func NewTwc3FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -69,7 +70,7 @@ func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 
 	c := &Twc3{}
 
-	client := request.NewHelper(util.NewLogger("twc3"))
+	client := request.NewHelper(util.LoggerFromContext(ctx, "twc3"))
 	uri := fmt.Sprintf("%s/api/1/vitals", util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http"))
 
 	c.vitalsG = util.Cached(func() (Vitals, error) {

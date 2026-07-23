@@ -2,6 +2,7 @@ package charger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strconv"
 	"sync"
@@ -36,11 +37,11 @@ type NRGKickBLE struct {
 }
 
 func init() {
-	registry.Add("nrgkick-bluetooth", NewNRGKickBLEFromConfig)
+	registry.AddCtx("nrgkick-bluetooth", NewNRGKickBLEFromConfig)
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
-func NewNRGKickBLEFromConfig(other map[string]any) (api.Charger, error) {
+func NewNRGKickBLEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct{ Device, Mac, PIN string }{
 		Device: "hci0",
 	}
@@ -54,12 +55,12 @@ func NewNRGKickBLEFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("invalid pin: %s", cc.PIN)
 	}
 
-	return NewNRGKickBLE(cc.Device, cc.Mac, pin)
+	return NewNRGKickBLE(ctx, cc.Device, cc.Mac, pin)
 }
 
 // NewNRGKickBLE creates NRGKickBLE charger
-func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
-	logger := util.NewLogger("nrg-bt")
+func NewNRGKickBLE(ctx context.Context, device, mac string, pin int) (*NRGKickBLE, error) {
+	logger := util.LoggerFromContext(ctx, "nrg-bt")
 
 	ainfo, err := hw.GetAdapter(device)
 	if err != nil {

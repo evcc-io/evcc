@@ -97,8 +97,8 @@ func NewGoodWe(ctx context.Context, uri string, slaveID uint8) (api.Charger, err
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("goodwe")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "goodwe")
+	conn.Logger(log)
 
 	// defaults if hardware capability registers can't be read:
 	// assume 3-phase wallbox without phase switching at typical 11 kW class.

@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -40,16 +41,16 @@ type GoE struct {
 }
 
 func init() {
-	registry.Add("go-e", func(other map[string]any) (api.Charger, error) {
-		return newGoEFromConfig(true, other)
+	registry.AddCtx("go-e", func(ctx context.Context, other map[string]any) (api.Charger, error) {
+		return newGoEFromConfig(ctx, true, other)
 	})
-	registry.Add("go-e-v3", func(other map[string]any) (api.Charger, error) {
-		return newGoEFromConfig(false, other)
+	registry.AddCtx("go-e-v3", func(ctx context.Context, other map[string]any) (api.Charger, error) {
+		return newGoEFromConfig(ctx, false, other)
 	})
 }
 
 // newGoEFromConfig creates a go-e charger from generic config
-func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
+func newGoEFromConfig(ctx context.Context, v2 bool, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Token string
 		URI   string
@@ -66,7 +67,7 @@ func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
 		return nil, errors.New("must have either uri or token")
 	}
 
-	c, err := NewGoE(cc.URI, cc.Token, cc.Cache)
+	c, err := NewGoE(ctx, cc.URI, cc.Token, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -83,12 +84,12 @@ func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
+func NewGoE(ctx context.Context, uri, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{
 		Caps: implement.New(),
 	}
 
-	log := util.NewLogger("go-e").Redact(token)
+	log := util.LoggerFromContext(ctx, "go-e").Redact(token)
 
 	if token != "" {
 		c.api = goe.NewCloud(log, token, cache)

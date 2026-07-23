@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -17,11 +18,11 @@ type FordConnect struct {
 }
 
 func init() {
-	registry.Add("ford-connect", NewFordConnectFromConfig)
+	registry.AddCtx("ford-connect", NewFordConnectFromConfig)
 }
 
 // NewFordConnectFromConfig creates a new vehicle
-func NewFordConnectFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewFordConnectFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials ClientCredentials
@@ -49,7 +50,7 @@ func NewFordConnectFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ford").Redact(cc.VIN)
+	log := util.LoggerFromContext(ctx, "ford").Redact(cc.VIN)
 	identity := connect.NewIdentity(log, cc.Credentials.ID, cc.Credentials.Secret, token)
 
 	api := connect.NewAPI(log, identity)

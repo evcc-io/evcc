@@ -83,8 +83,8 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("cfos")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "cfos")
+	conn.Logger(log)
 
 	wb := &CfosPowerBrain{
 		Caps: implement.New(),

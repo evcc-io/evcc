@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,11 +16,11 @@ type CCU struct {
 }
 
 func init() {
-	registry.Add("homematic", NewCCUFromConfig)
+	registry.AddCtx("homematic", NewCCUFromConfig)
 }
 
 // NewCCUFromConfig creates a Homematic meter from generic config
-func NewCCUFromConfig(other map[string]any) (api.Meter, error) {
+func NewCCUFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI           string
 		Device        string

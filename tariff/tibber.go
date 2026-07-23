@@ -25,10 +25,10 @@ type Tibber struct {
 var _ api.Tariff = (*Tibber)(nil)
 
 func init() {
-	registry.Add("tibber", NewTibberFromConfig)
+	registry.AddCtx("tibber", NewTibberFromConfig)
 }
 
-func NewTibberFromConfig(other map[string]any) (api.Tariff, error) {
+func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
 		Token  string
@@ -47,7 +47,7 @@ func NewTibberFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
+	log := util.LoggerFromContext(ctx, "tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{
 		embed:  &cc.embed,

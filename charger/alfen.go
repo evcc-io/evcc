@@ -82,8 +82,8 @@ func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alfen")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "alfen")
+	conn.Logger(log)
 
 	wb := &Alfen{
 		Caps: implement.New(),

@@ -2,13 +2,10 @@ package logstash
 
 import (
 	"container/ring"
-	"io"
+	"log/slog"
 	"maps"
 	"slices"
-	"strings"
 	"sync"
-
-	jww "github.com/spf13/jwalterweatherman"
 )
 
 var DefaultHandler = New(10000)
@@ -17,20 +14,16 @@ func Areas() []string {
 	return DefaultHandler.Areas()
 }
 
-func All(areas []string, level jww.Threshold, count int) []string {
+func All(areas []string, level slog.Level, count int) []Entry {
 	return DefaultHandler.All(areas, level, count)
-}
-
-func Size() int64 {
-	return DefaultHandler.Size()
 }
 
 type logger struct {
 	mu   sync.RWMutex
 	data *ring.Ring
 	size int
-	// length mirrors data.Len() so Write avoids an O(n) ring.Len() call on every
-	// log line (see Write). Invariant: any code that changes the number of nodes
+	// length mirrors data.Len() so Add avoids an O(n) ring.Len() call on every
+	// log line (see Add). Invariant: any code that changes the number of nodes
 	// in data must keep length in sync.
 	length int
 }
@@ -44,46 +37,24 @@ func New(size int) *logger {
 	return l
 }
 
-var _ io.Writer = (*logger)(nil)
-
-func (l *logger) Write(p []byte) (n int, err error) {
+// Add appends a log entry to the ring buffer
+func (l *logger) Add(e Entry) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if !strings.HasPrefix(string(p), "[cache ]") {
-		l.data.Value = element(string(p))
+	l.data.Value = e
 
-		// dynamically grow the ring until it reaches the configured size.
-		// Track the length in O(1) instead of calling ring.Len(), which walks
-		// the whole ring on every write — once the ring is full (size 10000)
-		// that is 10000 pointer chases per log line and dominates CPU on weak
-		// hardware (e.g. Victron Venus OS / ARMv7) under verbose trace logging.
-		if l.length < l.size {
-			l.data.Link(ring.New(1))
-			l.length++
-		}
-
-		l.data = l.data.Next()
+	// dynamically grow the ring until it reaches the configured size.
+	// Track the length in O(1) instead of calling ring.Len(), which walks
+	// the whole ring on every write — once the ring is full (size 10000)
+	// that is 10000 pointer chases per log line and dominates CPU on weak
+	// hardware (e.g. Victron Venus OS / ARMv7) under verbose trace logging.
+	if l.length < l.size {
+		l.data.Link(ring.New(1))
+		l.length++
 	}
 
-	return len(p), nil
-}
-
-func (l *logger) Size() int64 {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-
-	r := l.data
-	var size int64
-
-	for range r.Len() {
-		if e, ok := r.Value.(element); ok {
-			size += int64(len(e))
-		}
-		r = r.Next()
-	}
-
-	return size
+	l.data = l.data.Next()
 }
 
 func (l *logger) Areas() []string {
@@ -95,27 +66,25 @@ func (l *logger) Areas() []string {
 	areas := make(map[string]struct{})
 	for range r.Len() {
 		r = r.Prev()
-		if e, ok := r.Value.(element); ok && e != "" {
-			if a, _ := e.areaLevel(); a != "" {
-				areas[a] = struct{}{}
-			}
+		if e, ok := r.Value.(Entry); ok && e.Area != "" {
+			areas[e.Area] = struct{}{}
 		}
 	}
 
 	return slices.Sorted(maps.Keys(areas))
 }
 
-func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
+func (l *logger) All(areas []string, level slog.Level, count int) []Entry {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
 	r := l.data
-	all := len(areas) == 0 && level == jww.LevelTrace
+	all := len(areas) == 0 && level <= LevelTrace
 
-	res := make([]string, 0, r.Len())
+	res := make([]Entry, 0, r.Len())
 	for range r.Len() {
-		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, level)) {
-			res = append(res, string(e))
+		if e, ok := r.Value.(Entry); ok && (all || e.match(areas, level)) {
+			res = append(res, e)
 		}
 		r = r.Next()
 	}

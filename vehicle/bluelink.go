@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -20,13 +21,13 @@ type Bluelink struct {
 }
 
 func init() {
-	registry.Add("kia", NewKiaFromConfig)
-	registry.Add("hyundai", NewHyundaiFromConfig)
-	registry.Add("genesis", NewGenesisFromConfig)
+	registry.AddCtx("kia", NewKiaFromConfig)
+	registry.AddCtx("hyundai", NewHyundaiFromConfig)
+	registry.AddCtx("genesis", NewGenesisFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
-func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewHyundaiFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	// Decode region early so we can select the right config
 	cc := struct {
 		Region string
@@ -69,11 +70,11 @@ func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, fmt.Errorf("unknown region: %s", cc.Region)
 	}
 
-	return newBluelinkFromConfig("hyundai", other, settings)
+	return newBluelinkFromConfig(ctx, "hyundai", other, settings)
 }
 
 // NewKiaFromConfig creates a new vehicle
-func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewKiaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.kia.com:8080",
 		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
@@ -86,12 +87,12 @@ func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
 		Brand:             "kia",
 	}
 
-	return newBluelinkFromConfig("kia", other, settings)
+	return newBluelinkFromConfig(ctx, "kia", other, settings)
 }
 
 // NewGenesisFromConfig creates a new vehicle
 // Constants sourced from hyundai_kia_connect_api (KiaUvoApiEU.py, BRAND_GENESIS, Europe)
-func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewGenesisFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd-eu-ccapi.genesis.com:443",
 		CCSPServiceID:     "3020afa2-30ff-412a-aa51-d28fbe901e10",
@@ -104,11 +105,11 @@ func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
 		Brand:             "genesis",
 	}
 
-	return newBluelinkFromConfig("genesis", other, settings)
+	return newBluelinkFromConfig(ctx, "genesis", other, settings)
 }
 
 // newBluelinkFromConfig creates a new Vehicle
-func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink.Config) (api.Vehicle, error) {
+func newBluelinkFromConfig(ctx context.Context, brand string, other map[string]any, settings bluelink.Config) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -127,7 +128,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 		return nil, err
 	}
 
-	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bluelink.NewIdentity(log, settings)
 
 	if err := identity.Login(cc.User, cc.Password, cc.Language, brand); err != nil {

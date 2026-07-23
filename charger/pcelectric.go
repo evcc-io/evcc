@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -45,12 +46,12 @@ type PCElectric struct {
 }
 
 func init() {
-	registry.Add("garo", NewPCElectricFromConfig)
-	registry.Add("pcelectric", NewPCElectricFromConfig)
+	registry.AddCtx("garo", NewPCElectricFromConfig)
+	registry.AddCtx("pcelectric", NewPCElectricFromConfig)
 }
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
-func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
+func NewPCElectricFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI        string
 		SlaveIndex int
@@ -63,7 +64,7 @@ func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"), cc.SlaveIndex, cc.Meter)
+	wb, err := NewPCElectric(ctx, util.DefaultScheme(cc.URI, "http"), cc.SlaveIndex, cc.Meter)
 	if err == nil && wb.slaveIndex == 0 { // Nur Master hat den Zähler...leider
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
@@ -80,8 +81,8 @@ func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewPCElectric creates PCElectric charger
-func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error) {
-	log := util.NewLogger("pce")
+func NewPCElectric(ctx context.Context, uri string, slaveIndex int, meter string) (*PCElectric, error) {
+	log := util.LoggerFromContext(ctx, "pce")
 	uri = strings.TrimSuffix(strings.TrimRight(uri, "/"), "/servlet") + "/servlet/rest/chargebox"
 
 	if !sponsor.IsAuthorized() {

@@ -1160,7 +1160,7 @@ Returns a list of all log areas (e.g. `lp-1`, `site`, `db`).
 
 ## getSystemLogs
 
-Returns the latest log lines.
+Returns the latest log entries.
 
 **Tags:** system
 
@@ -1169,7 +1169,7 @@ Returns the latest log lines.
 | Name | Type | Description |
 |------|------|-------------|
 | areas | array | Comma-separated list of log areas |
-| count | integer | Number of log lines to return |
+| count | integer | Number of log entries to return |
 | format | string | File type |
 | level | string | Log level |
 

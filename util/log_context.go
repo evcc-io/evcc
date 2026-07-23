@@ -20,10 +20,23 @@ func contextLogger(ctx context.Context) *Logger {
 	return nil
 }
 
-func ContextLoggerWithDefault(ctx context.Context, log *Logger) *Logger {
-	if log := contextLogger(ctx); log != nil {
-		return log
+// LoggerFromContext returns the context logger with its component attribute extended
+// by the given subtype (e.g. charger -> charger/abb), or a plain logger with the
+// subtype as area if the context carries no logger.
+func LoggerFromContext(ctx context.Context, sub string) *Logger {
+	if l := contextLogger(ctx); l != nil {
+		return newHandlerLogger(l.handler.withComponentSubtype(sub))
 	}
 
-	return log
+	return NewLogger(sub)
+}
+
+// PluginLoggerFromContext returns the context logger with the plugin attribute added,
+// or a plain logger with the given area if the context carries no logger.
+func PluginLoggerFromContext(ctx context.Context, area string) *Logger {
+	if l := contextLogger(ctx); l != nil {
+		return l.With(PluginKey, area)
+	}
+
+	return NewLogger(area)
 }

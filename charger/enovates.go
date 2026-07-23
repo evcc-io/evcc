@@ -85,8 +85,8 @@ func NewEnovates(ctx context.Context, uri string, slaveID uint8) (api.Charger, e
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("enovates")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "enovates")
+	conn.Logger(log)
 
 	wb := &Enovates{
 		log:     log,

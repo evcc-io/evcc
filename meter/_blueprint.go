@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,11 +16,11 @@ type Blueprint struct {
 }
 
 func init() {
-	// registry.Add("foo", NewBlueprintFromConfig)
+	// registry.AddCtx("foo", NewBlueprintFromConfig)
 }
 
 // NewBlueprintFromConfig creates a blueprint meter from generic config
-func NewBlueprintFromConfig(other map[string]any) (api.Meter, error) {
+func NewBlueprintFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
 		URI   string
 		Cache time.Duration
@@ -34,7 +35,7 @@ func NewBlueprintFromConfig(other map[string]any) (api.Meter, error) {
 
 // NewBlueprint creates Blueprint charger
 func NewBlueprint(uri string, cache time.Duration) (api.Meter, error) {
-	log := util.NewLogger("foo")
+	log := util.LoggerFromContext(ctx, "foo")
 
 	m := &Blueprint{
 		Helper: request.NewHelper(log),

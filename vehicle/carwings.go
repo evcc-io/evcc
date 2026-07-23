@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -31,11 +32,11 @@ type CarWings struct {
 }
 
 func init() {
-	registry.Add("carwings", NewCarWingsFromConfig)
+	registry.AddCtx("carwings", NewCarWingsFromConfig)
 }
 
 // NewCarWingsFromConfig creates a new vehicle
-func NewCarWingsFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewCarWingsFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
@@ -53,7 +54,7 @@ func NewCarWingsFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("carwings").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.LoggerFromContext(ctx, "carwings").Redact(cc.User, cc.Password, cc.VIN)
 
 	// http client with high dial/handshake timeout
 	transport := request.NewTripper(log, &http.Transport{

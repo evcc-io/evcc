@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -36,7 +37,7 @@ type Ostrom struct {
 var _ api.Tariff = (*Ostrom)(nil)
 
 func init() {
-	registry.Add("ostrom", NewOstromFromConfig)
+	registry.AddCtx("ostrom", NewOstromFromConfig)
 }
 
 // Search for a contract in list of contracts
@@ -58,7 +59,7 @@ func ensureContractEx(cid int64, contracts []ostrom.Contract) (ostrom.Contract, 
 	return zero, errors.New("cannot find contract")
 }
 
-func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
+func NewOstromFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		ClientId     string
 		ClientSecret string
@@ -77,7 +78,7 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 	}
 
 	basic := transport.BasicAuthHeader(cc.ClientId, cc.ClientSecret)
-	log := util.NewLogger("ostrom").Redact(basic)
+	log := util.LoggerFromContext(ctx, "ostrom").Redact(basic)
 
 	t := &Ostrom{
 		log:    log,

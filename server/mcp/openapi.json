@@ -507,6 +507,46 @@
         },
         "type": "array"
       },
+      "LogEntry": {
+        "description": "Structured log entry",
+        "properties": {
+          "area": {
+            "$ref": "#/components/schemas/LogArea"
+          },
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Structured attributes (e.g. component, plugin, title)",
+            "type": "object"
+          },
+          "level": {
+            "enum": [
+              "trace",
+              "debug",
+              "info",
+              "warn",
+              "error",
+              "fatal"
+            ],
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "time": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "time",
+          "area",
+          "level",
+          "message"
+        ],
+        "type": "object"
+      },
       "LogLevel": {
         "enum": [
           "FATAL",
@@ -2591,7 +2631,7 @@
     },
     "/system/log": {
       "get": {
-        "description": "Returns the latest log lines.",
+        "description": "Returns the latest log entries.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/reference/configuration/log"
         },
@@ -2604,7 +2644,7 @@
             "$ref": "#/components/parameters/logLevel"
           },
           {
-            "description": "Number of log lines to return",
+            "description": "Number of log entries to return",
             "example": 100,
             "in": "query",
             "name": "count",
@@ -2630,7 +2670,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "type": "string"
+                    "$ref": "#/components/schemas/LogEntry"
                   },
                   "type": "array"
                 }

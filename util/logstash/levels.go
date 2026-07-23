@@ -1,27 +1,32 @@
 package logstash
 
 import (
+	"log/slog"
 	"strings"
-
-	jww "github.com/spf13/jwalterweatherman"
 )
 
-// LogLevelToThreshold converts log level string to a jww Threshold
-func LogLevelToThreshold(level string) jww.Threshold {
+// Log levels, extending slog by Trace and Fatal
+const (
+	LevelTrace = slog.Level(-8)
+	LevelFatal = slog.Level(12)
+)
+
+// LogLevelToThreshold converts log level string to a slog.Level
+func LogLevelToThreshold(level string) slog.Level {
 	switch strings.ToUpper(level) {
 	case "FATAL":
-		return jww.LevelFatal
+		return LevelFatal
 	case "ERROR":
-		return jww.LevelError
+		return slog.LevelError
 	case "WARN":
-		return jww.LevelWarn
+		return slog.LevelWarn
 	case "INFO":
-		return jww.LevelInfo
+		return slog.LevelInfo
 	case "DEBUG":
-		return jww.LevelDebug
+		return slog.LevelDebug
 	case "TRACE":
-		return jww.LevelTrace
+		return LevelTrace
 	default:
-		return jww.LevelError
+		return slog.LevelError
 	}
 }

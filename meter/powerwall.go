@@ -29,12 +29,12 @@ type PowerWall struct {
 }
 
 func init() {
-	registry.Add("tesla", NewPowerWallFromConfig)
-	registry.Add("powerwall", NewPowerWallFromConfig)
+	registry.AddCtx("tesla", NewPowerWallFromConfig)
+	registry.AddCtx("powerwall", NewPowerWallFromConfig)
 }
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
-func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
+func NewPowerWallFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI, Usage, User, Password string
 		Cache                      time.Duration
@@ -74,12 +74,12 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits, cc.batteryPowerLimits)
+	return NewPowerWall(ctx, cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits, cc.batteryPowerLimits)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
-	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
+func NewPowerWall(ctx context.Context, uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
+	log := util.LoggerFromContext(ctx, "powerwall").Redact(user, password, refreshToken)
 
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),

@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"slices"
 	"sync"
 	"time"
@@ -21,10 +22,10 @@ type SmartEnergy struct {
 var _ api.Tariff = (*SmartEnergy)(nil)
 
 func init() {
-	registry.Add("smartenergy", NewSmartEnergyFromConfig)
+	registry.AddCtx("smartenergy", NewSmartEnergyFromConfig)
 }
 
-func NewSmartEnergyFromConfig(other map[string]any) (api.Tariff, error) {
+func NewSmartEnergyFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed `mapstructure:",squash"`
 	}
@@ -39,7 +40,7 @@ func NewSmartEnergyFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t := &SmartEnergy{
 		embed: &cc.embed,
-		log:   util.NewLogger("smartenergy"),
+		log:   util.LoggerFromContext(ctx, "smartenergy"),
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 

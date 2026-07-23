@@ -37,7 +37,7 @@ func TestGoEV1(t *testing.T) {
 
 	sponsor.Subject = "foo"
 
-	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
+	wb, err := newGoEFromConfig(t.Context(), false, map[string]any{"uri": srv.URL})
 	if err != nil {
 		t.Error(err)
 	}
@@ -61,7 +61,7 @@ func TestGoEV2(t *testing.T) {
 
 	sponsor.Subject = "foo"
 
-	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
+	wb, err := newGoEFromConfig(t.Context(), false, map[string]any{"uri": srv.URL})
 	if err != nil {
 		t.Error(err)
 	}

@@ -322,7 +322,7 @@ import SummaryModal from "@/components/Issue/SummaryModal.vue";
 import Modal from "bootstrap/js/dist/modal";
 import api from "@/api";
 import store from "@/store";
-import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
+import { LOG_LEVELS, DEFAULT_LOG_LEVEL, formatLogEntry, type LogEntry } from "@/utils/log";
 import { formatJson } from "@/components/Issue/format";
 import type { HelpType, IssueData } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
@@ -572,11 +572,8 @@ export default defineComponent({
 				};
 
 				const response = await api.get("/system/log", { params });
-				const logs = response.data || [];
-				this.sections.logs.content = logs
-					.filter((entry: string) => entry && entry.trim())
-					.map((entry: string) => entry.trim())
-					.join("\n");
+				const logs: LogEntry[] = response.data || [];
+				this.sections.logs.content = logs.map(formatLogEntry).join("\n");
 			} catch (error) {
 				console.error("Failed to fetch logs:", error);
 				this.sections.logs.content = "Failed to load logs";

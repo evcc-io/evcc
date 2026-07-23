@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"math"
 	"time"
@@ -21,11 +22,11 @@ type VehicleApi struct {
 }
 
 func init() {
-	registry.Add("vehicle-api", NewVehicleApiFromConfig)
+	registry.AddCtx("vehicle-api", NewVehicleApiFromConfig)
 }
 
 // NewVehicleApiFromConfig creates a new vehicle-api charger
-func NewVehicleApiFromConfig(other map[string]any) (api.Charger, error) {
+func NewVehicleApiFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		GeofenceEnabled bool    `mapstructure:"geofence_enabled"`
 		Lat             float64 `mapstructure:"lat"`

@@ -81,7 +81,7 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 
 	c := &EEBus{
 		Caps:    implement.New(),
-		log:     util.NewLogger("eebus"),
+		log:     util.LoggerFromContext(ctx, "eebus"),
 		current: 6,
 		cem:     inst.CustomerEnergyManagement(),
 	}

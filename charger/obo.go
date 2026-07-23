@@ -50,8 +50,8 @@ func NewObo(ctx context.Context, uri, device, comset string, baudrate int, proto
 		return nil, err
 	}
 
-	log := util.NewLogger("obo")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "obo")
+	conn.Logger(log)
 
 	wb := &Obo{
 		log:  log,

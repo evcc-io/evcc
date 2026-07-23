@@ -78,7 +78,7 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 
 // NewOpenWbNative creates OpenWbNative charger
 func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int, chip string) (api.Charger, error) {
-	log := util.NewLogger("openwb-native")
+	log := util.LoggerFromContext(ctx, "openwb-native")
 
 	evse, err := NewEvseDIN(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {

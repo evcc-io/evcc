@@ -1,17 +1,19 @@
 package meter
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tplink"
 	"github.com/evcc-io/evcc/util"
 )
 
 func init() {
-	registry.Add("tplink", NewTPLinkFromConfig)
+	registry.AddCtx("tplink", NewTPLinkFromConfig)
 }
 
 // NewTPLinkFromConfig creates a tapo meter from generic config
-func NewTPLinkFromConfig(other map[string]any) (api.Meter, error) {
+func NewTPLinkFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
 		URI string
 	}

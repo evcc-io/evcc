@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -48,11 +49,11 @@ type HardyBarth struct {
 }
 
 func init() {
-	registry.Add("hardybarth-ecb1", NewHardyBarthFromConfig)
+	registry.AddCtx("hardybarth-ecb1", NewHardyBarthFromConfig)
 }
 
 // NewHardyBarthFromConfig creates a HardyBarth cPH1 charger from generic config
-func NewHardyBarthFromConfig(other map[string]any) (api.Charger, error) {
+func NewHardyBarthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI           string
 		ChargeControl int
@@ -68,12 +69,12 @@ func NewHardyBarthFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewHardyBarth(cc.URI, cc.ChargeControl, cc.Meter, cc.Cache)
+	return NewHardyBarth(ctx, cc.URI, cc.ChargeControl, cc.Meter, cc.Cache)
 }
 
 // NewHardyBarth creates HardyBarth charger
-func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("ecb1")
+func NewHardyBarth(ctx context.Context, uri string, chargecontrol, meter int, cache time.Duration) (api.Charger, error) {
+	log := util.LoggerFromContext(ctx, "ecb1")
 
 	uri = strings.TrimSuffix(uri, "/") + "/api/v1"
 

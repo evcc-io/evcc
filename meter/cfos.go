@@ -47,8 +47,8 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (*CfosPowerBra
 		return nil, err
 	}
 
-	log := util.NewLogger("cfos")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "cfos")
+	conn.Logger(log)
 
 	wb := &CfosPowerBrain{
 		conn: conn,

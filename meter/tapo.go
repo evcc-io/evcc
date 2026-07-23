@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tapo"
 	"github.com/evcc-io/evcc/util"
@@ -8,11 +10,11 @@ import (
 
 // TP-Link Tapo meter implementation
 func init() {
-	registry.Add("tapo", NewTapoFromConfig)
+	registry.AddCtx("tapo", NewTapoFromConfig)
 }
 
 // NewTapoFromConfig creates a tapo meter from generic config
-func NewTapoFromConfig(other map[string]any) (api.Meter, error) {
+func NewTapoFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
 		Host     string
 		User     string

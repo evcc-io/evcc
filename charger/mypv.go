@@ -115,8 +115,8 @@ func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource in
 		return nil, fmt.Errorf("invalid temp source: %d", tempSource)
 	}
 
-	log := util.NewLogger(name)
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, name)
+	conn.Logger(log)
 
 	wb := &MyPv{
 		log:     log,

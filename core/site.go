@@ -138,6 +138,10 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	// add meters from config
 	site.restoreMetersAndTitle()
 
+	if site.Title != "" {
+		site.log = site.log.With(util.TitleKey, site.Title)
+	}
+
 	// TODO title
 	Voltage = site.Voltage
 
@@ -322,7 +326,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
+		log:        util.NewLogger("site").With(util.ComponentKey, "site"),
 		Voltage:    230, // V
 		collectors: make(map[string]*metrics.Collector),
 	}

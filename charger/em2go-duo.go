@@ -91,8 +91,8 @@ func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) 
 	// Add delay of 60 milliseconds between requests
 	conn.Delay(60 * time.Millisecond)
 
-	log := util.NewLogger("em2go-duo")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "em2go-duo")
+	conn.Logger(log)
 
 	wb := &Em2GoDuo{
 		log:       log,

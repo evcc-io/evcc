@@ -22,11 +22,11 @@ type Tesla struct {
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig)
+	registry.AddCtx("tesla", NewTeslaFromConfig)
 }
 
 // NewTeslaFromConfig creates a new vehicle
-func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewTeslaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		Credentials  ClientCredentials
@@ -55,7 +55,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("tesla").Redact(
+	log := util.LoggerFromContext(ctx, "tesla").Redact(
 		cc.Tokens.Access, cc.Tokens.Refresh, cc.ProxyToken,
 		cc.Credentials.ID, cc.Credentials.Secret,
 	)

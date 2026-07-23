@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -18,11 +19,11 @@ type Wattpilot struct {
 }
 
 func init() {
-	registry.Add("wattpilot", NewWattpilotFromConfig)
+	registry.AddCtx("wattpilot", NewWattpilotFromConfig)
 }
 
 // NewWattpilotFromConfig creates a wattpilot charger from generic config
-func NewWattpilotFromConfig(other map[string]any) (api.Charger, error) {
+func NewWattpilotFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		URI      string
 		Password string
@@ -37,12 +38,12 @@ func NewWattpilotFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New("must have uri and password")
 	}
 
-	return NewWattpilot(cc.URI, cc.Password, cc.Cache)
+	return NewWattpilot(ctx, cc.URI, cc.Password, cc.Cache)
 }
 
 // NewWattpilot creates Wattpilot charger
-func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("wattpilot").Redact(password)
+func NewWattpilot(ctx context.Context, uri, password string, cache time.Duration) (api.Charger, error) {
+	log := util.LoggerFromContext(ctx, "wattpilot").Redact(password)
 
 	c := &Wattpilot{
 		api: wattpilot.New(uri, password),

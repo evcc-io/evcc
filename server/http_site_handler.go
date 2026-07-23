@@ -309,8 +309,8 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
-		for _, s := range log {
-			if _, err := w.Write([]byte(s)); err != nil {
+		for _, e := range log {
+			if _, err := w.Write([]byte(e.String())); err != nil {
 				return
 			}
 		}

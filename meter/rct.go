@@ -102,7 +102,7 @@ func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, err
 
 // NewRCT creates an RCT meter
 func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, cache time.Duration, externalPower bool, capacity, capacity2 float64, maxACPower func() float64) (api.Meter, error) {
-	log := util.NewLogger("rct")
+	log := util.LoggerFromContext(ctx, "rct")
 
 	// re-use connections
 	rctMu.Lock()

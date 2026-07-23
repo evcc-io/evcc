@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 // https://api.mystrom.ch/#fbb2c698-e37a-4584-9324-3f8b2f615fe2
 
 func init() {
-	registry.Add("mystrom", NewMyStromFromConfig)
+	registry.AddCtx("mystrom", NewMyStromFromConfig)
 }
 
 // MyStrom charger implementation
@@ -24,7 +25,7 @@ type MyStrom struct {
 }
 
 // NewMyStromFromConfig creates a myStrom charger from generic config
-func NewMyStromFromConfig(other map[string]any) (api.Charger, error) {
+func NewMyStromFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string

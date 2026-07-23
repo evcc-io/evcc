@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -47,11 +48,11 @@ type Smaevcharger struct {
 
 func init() {
 	// TODO remove deprecated
-	registry.Add("smaevcharger", NewSmaevchargerFromConfig)
+	registry.AddCtx("smaevcharger", NewSmaevchargerFromConfig)
 }
 
 // NewSmaevchargerFromConfig creates a SMA EV Charger from generic config
-func NewSmaevchargerFromConfig(other map[string]any) (api.Charger, error) {
+func NewSmaevchargerFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Uri      string
 		User     string
@@ -77,12 +78,12 @@ func NewSmaevchargerFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New(`user "admin" not allowed, create new user`)
 	}
 
-	return NewSmaevcharger(cc.Uri, cc.User, cc.Password, cc.Cache)
+	return NewSmaevcharger(ctx, cc.Uri, cc.User, cc.Password, cc.Cache)
 }
 
 // NewSmaevcharger creates an SMA EV Charger
-func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("smaevcharger").Redact(user, password)
+func NewSmaevcharger(ctx context.Context, uri, user, password string, cache time.Duration) (api.Charger, error) {
+	log := util.LoggerFromContext(ctx, "smaevcharger").Redact(user, password)
 
 	wb := &Smaevcharger{
 		Helper: request.NewHelper(log),

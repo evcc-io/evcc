@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -45,7 +46,7 @@ type EVECUBE struct {
 }
 
 func init() {
-	registry.Add("evecube", NewEVECUBEFromConfig)
+	registry.AddCtx("evecube", NewEVECUBEFromConfig)
 }
 
 // EVECUBEUnitConfig is the /api/admin/unitconfig response
@@ -102,7 +103,7 @@ type EVECUBEUnitConfigRequest struct {
 }
 
 // NewEVECUBEFromConfig creates a EVECUBE charger from generic config
-func NewEVECUBEFromConfig(other map[string]any) (api.Charger, error) {
+func NewEVECUBEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI       string
 		User      string
@@ -118,7 +119,7 @@ func NewEVECUBEFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewEVECUBE(cc.URI, cc.User, cc.Password, cc.Connector, cc.Cache)
+	wb, err := NewEVECUBE(ctx, cc.URI, cc.User, cc.Password, cc.Connector, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +145,8 @@ func NewEVECUBEFromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewEVECUBE creates EVECUBE charger
-func NewEVECUBE(uri, user, password string, connector int, cache time.Duration) (*EVECUBE, error) {
-	log := util.NewLogger("evecube")
+func NewEVECUBE(ctx context.Context, uri, user, password string, connector int, cache time.Duration) (*EVECUBE, error) {
+	log := util.LoggerFromContext(ctx, "evecube")
 
 	wb := &EVECUBE{
 		Caps:         implement.New(),

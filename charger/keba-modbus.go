@@ -172,8 +172,8 @@ func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("keba")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "keba")
+	conn.Logger(log)
 
 	wb := &Keba{
 		embed:        &embed,

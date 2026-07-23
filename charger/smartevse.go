@@ -89,8 +89,8 @@ func NewsmartEVSE(ctx context.Context, uri, device, comset string, baudrate int,
 		return nil, err
 	}
 
-	log := util.NewLogger("smartevse")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "smartevse")
+	conn.Logger(log)
 
 	wb := &smartEVSE{
 		log:  log,

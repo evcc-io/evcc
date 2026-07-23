@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -24,12 +25,12 @@ type OctopusIt struct {
 var _ api.Tariff = (*OctopusIt)(nil)
 
 func init() {
-	registry.Add("octopus-it", NewOctopusItFromConfig)
+	registry.AddCtx("octopus-it", NewOctopusItFromConfig)
 }
 
 // NewOctopusItFromConfig creates the tariff provider from the given config map, and runs it.
-func NewOctopusItFromConfig(other map[string]any) (api.Tariff, error) {
-	t, err := buildOctopusItFromConfig(other)
+func NewOctopusItFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
+	t, err := buildOctopusItFromConfig(ctx, other)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,7 @@ func NewOctopusItFromConfig(other map[string]any) (api.Tariff, error) {
 
 // buildOctopusItFromConfig creates the Tariff provider from the given config map.
 // Split out to allow for testing.
-func buildOctopusItFromConfig(other map[string]any) (*OctopusIt, error) {
+func buildOctopusItFromConfig(ctx context.Context, other map[string]any) (*OctopusIt, error) {
 	var cc struct {
 		Email         string
 		Password      string
@@ -62,7 +63,7 @@ func buildOctopusItFromConfig(other map[string]any) (*OctopusIt, error) {
 		return nil, errors.New("missing account number")
 	}
 
-	log := util.NewLogger("octopus-it")
+	log := util.LoggerFromContext(ctx, "octopus-it")
 
 	gqlClient, err := krakengql.NewClient(log, krakengql.ItBaseURI, cc.Email, cc.Password, cc.AccountNumber)
 	if err != nil {

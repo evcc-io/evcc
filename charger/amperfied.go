@@ -90,8 +90,8 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("amperfied")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "amperfied")
+	conn.Logger(log)
 
 	wb := &Amperfied{
 		Caps:    implement.New(),

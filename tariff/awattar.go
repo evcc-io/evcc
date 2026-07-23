@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -24,10 +25,10 @@ type Awattar struct {
 var _ api.Tariff = (*Awattar)(nil)
 
 func init() {
-	registry.Add("awattar", NewAwattarFromConfig)
+	registry.AddCtx("awattar", NewAwattarFromConfig)
 }
 
-func NewAwattarFromConfig(other map[string]any) (api.Tariff, error) {
+func NewAwattarFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		embed  `mapstructure:",squash"`
 		Region string
@@ -45,7 +46,7 @@ func NewAwattarFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t := &Awattar{
 		embed: &cc.embed,
-		log:   util.NewLogger("awattar"),
+		log:   util.LoggerFromContext(ctx, "awattar"),
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}

@@ -100,8 +100,8 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("daheimladen")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "daheimladen")
+	conn.Logger(log)
 
 	wb := &DaheimLaden{
 		Caps:   implement.New(),

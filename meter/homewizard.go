@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,11 +16,11 @@ type HomeWizard struct {
 
 // HomeWizard meter implementation
 func init() {
-	registry.Add("homewizard", NewHomeWizardFromConfig)
+	registry.AddCtx("homewizard", NewHomeWizardFromConfig)
 }
 
 // NewHomeWizardFromConfig creates a HomeWizard meter from generic config
-func NewHomeWizardFromConfig(other map[string]any) (api.Meter, error) {
+func NewHomeWizardFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI   string
 		Usage string

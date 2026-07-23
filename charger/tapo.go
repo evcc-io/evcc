@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tapo"
 	"github.com/evcc-io/evcc/util"
@@ -13,11 +15,11 @@ type Tapo struct {
 }
 
 func init() {
-	registry.Add("tapo", NewTapoFromConfig)
+	registry.AddCtx("tapo", NewTapoFromConfig)
 }
 
 // NewTapoFromConfig creates a Tapo charger from generic config
-func NewTapoFromConfig(other map[string]any) (api.Charger, error) {
+func NewTapoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		Host         string

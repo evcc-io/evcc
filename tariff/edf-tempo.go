@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,10 +33,10 @@ type EdfTempo struct {
 var _ api.Tariff = (*EdfTempo)(nil)
 
 func init() {
-	registry.Add("edf-tempo", NewEdfTempoFromConfig)
+	registry.AddCtx("edf-tempo", NewEdfTempoFromConfig)
 }
 
-func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
+func NewEdfTempoFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		ClientID     string
@@ -58,7 +59,7 @@ func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 	}
 
 	basic := transport.BasicAuthHeader(cc.ClientID, cc.ClientSecret)
-	log := util.NewLogger("edf-tempo").Redact(basic)
+	log := util.LoggerFromContext(ctx, "edf-tempo").Redact(basic)
 
 	t := &EdfTempo{
 		embed:  &cc.embed,

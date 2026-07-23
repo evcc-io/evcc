@@ -28,12 +28,12 @@ type Socket struct {
 }
 
 func init() {
-	registry.Add("ws", NewSocketPluginFromConfig)
-	registry.Add("websocket", NewSocketPluginFromConfig)
+	registry.AddCtx("ws", NewSocketPluginFromConfig)
+	registry.AddCtx("websocket", NewSocketPluginFromConfig)
 }
 
 // NewSocketPluginFromConfig creates a HTTP provider
-func NewSocketPluginFromConfig(other map[string]any) (Plugin, error) {
+func NewSocketPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		URI               string
 		Headers           map[string]string
@@ -51,7 +51,7 @@ func NewSocketPluginFromConfig(other map[string]any) (Plugin, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ws")
+	log := util.PluginLoggerFromContext(ctx, "ws")
 
 	url := util.DefaultScheme(cc.URI, "ws")
 	if url != cc.URI {

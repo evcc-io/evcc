@@ -60,7 +60,7 @@ func NewOpenWBProFromConfig(ctx context.Context, other map[string]any) (api.Char
 
 // NewOpenWBPro creates OpenWBPro charger
 func NewOpenWBPro(ctx context.Context, uri string, cache time.Duration) (*OpenWBPro, error) {
-	log := util.NewLogger("owbpro")
+	log := util.LoggerFromContext(ctx, "owbpro")
 
 	wb := &OpenWBPro{
 		Caps:    implement.New(),

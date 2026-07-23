@@ -110,8 +110,8 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("solax")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "solax")
+	conn.Logger(log)
 
 	wb := &Solax{
 		Caps:       implement.New(),

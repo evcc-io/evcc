@@ -20,7 +20,7 @@ func TestOctopusConfigParse(t *testing.T) {
 		"directDebit": "True",
 	}
 
-	_, err := buildOctopusFromConfig(validTariffConfig)
+	_, err := buildOctopusFromConfig(t.Context(), validTariffConfig)
 	require.NoError(t, err)
 
 	validProductCodeConfig := map[string]any{
@@ -29,7 +29,7 @@ func TestOctopusConfigParse(t *testing.T) {
 		"directDebit": "False",
 	}
 
-	_, err = buildOctopusFromConfig(validProductCodeConfig)
+	_, err = buildOctopusFromConfig(t.Context(), validProductCodeConfig)
 	require.NoError(t, err)
 
 	invalidApiAndProductCodeConfig := map[string]any{
@@ -38,27 +38,27 @@ func TestOctopusConfigParse(t *testing.T) {
 		"tariffDirection": "import",
 		"apikey":          "invalid_key",
 	}
-	_, err = buildOctopusFromConfig(invalidApiAndProductCodeConfig)
+	_, err = buildOctopusFromConfig(t.Context(), invalidApiAndProductCodeConfig)
 	require.Error(t, err)
 
 	invalidTariffDirectionConfig := map[string]any{
 		"tariffDirection": "invalid",
 		"apikey":          validTestApiKey32,
 	}
-	_, err = buildOctopusFromConfig(invalidTariffDirectionConfig)
+	_, err = buildOctopusFromConfig(t.Context(), invalidTariffDirectionConfig)
 	require.Errorf(t, err, "invalid tariff type")
 
 	validApiExportConfig32 := map[string]any{
 		"tariffDirection": "export",
 		"apikey":          validTestApiKey32,
 	}
-	_, err = buildOctopusFromConfig(validApiExportConfig32)
+	_, err = buildOctopusFromConfig(t.Context(), validApiExportConfig32)
 	require.NoError(t, err)
 
 	validApiExportConfig40 := map[string]any{
 		"tariffDirection": "export",
 		"apikey":          validTestApiKey40,
 	}
-	_, err = buildOctopusFromConfig(validApiExportConfig40)
+	_, err = buildOctopusFromConfig(t.Context(), validApiExportConfig40)
 	require.NoError(t, err)
 }

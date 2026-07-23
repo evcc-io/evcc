@@ -69,8 +69,8 @@ func NewPhoenixEMEth(ctx context.Context, uri string, slaveID uint8) (*PhoenixEM
 		return nil, err
 	}
 
-	log := util.NewLogger("em-eth")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "em-eth")
+	conn.Logger(log)
 
 	wb := &PhoenixEMEth{
 		Caps: implement.New(),

@@ -27,11 +27,11 @@ type EcoFlow struct {
 }
 
 func init() {
-	registry.Add("ecoflow", NewEcoFlowFromConfig)
+	registry.AddCtx("ecoflow", NewEcoFlowFromConfig)
 }
 
 // NewEcoFlowFromConfig creates an EcoFlow  meter from generic config
-func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
+func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity                      `mapstructure:",squash"`
 		batteryPowerLimits                   `mapstructure:",squash"`
@@ -72,13 +72,13 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	return NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewEcoFlow(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 // NewEcoFlow constructs the EcoFlow struct
-func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
+func NewEcoFlow(ctx context.Context, accessKey, secretKey, serial, usage, uri string,
 	power, soc string, cache time.Duration, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*EcoFlow, error) {
-	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
+	log := util.LoggerFromContext(ctx, "ecoflow").Redact(accessKey, secretKey, serial)
 
 	m := &EcoFlow{
 		Caps:   implement.New(),

@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -22,11 +23,11 @@ type HomeAssistant struct {
 }
 
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 }
 
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
-func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
+func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Status               string   // required - sensor for charge status
@@ -57,7 +58,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New("missing maxcurrent number entity")
 	}
 
-	log := util.NewLogger("ha-charger")
+	log := util.LoggerFromContext(ctx, "ha-charger")
 
 	conn, err := cc.Config.NewConnection(log)
 	if err != nil {

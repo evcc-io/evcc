@@ -83,8 +83,8 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("weidmüller")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "weidmüller")
+	conn.Logger(log)
 
 	wb := &Weidmüller{
 		Caps: implement.New(),

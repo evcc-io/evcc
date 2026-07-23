@@ -86,8 +86,8 @@ func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint1
 		return nil, err
 	}
 
-	log := util.NewLogger("openwb-2.0")
-	conn.Logger(log.TRACE)
+	log := util.LoggerFromContext(ctx, "openwb-2.0")
+	conn.Logger(log)
 
 	wb := &OpenWB20{
 		Caps: implement.New(),

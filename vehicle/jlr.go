@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -22,12 +23,12 @@ type JLR struct {
 }
 
 func init() {
-	registry.Add("jaguar", NewJLRFromConfig)
-	registry.Add("landrover", NewJLRFromConfig)
+	registry.AddCtx("jaguar", NewJLRFromConfig)
+	registry.AddCtx("landrover", NewJLRFromConfig)
 }
 
 // NewJLRFromConfig creates a new vehicle
-func NewJLRFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewJLRFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -51,7 +52,7 @@ func NewJLRFromConfig(other map[string]any) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
+	log := util.LoggerFromContext(ctx, "jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
 
 	if cc.DeviceID == "" {
 		cc.DeviceID = uuid.NewString()

@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -29,11 +30,11 @@ type OpenEVSE struct {
 }
 
 func init() {
-	registry.Add("openevse", NewOpenEVSEFromConfig)
+	registry.AddCtx("openevse", NewOpenEVSEFromConfig)
 }
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
-func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
+func NewOpenEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
@@ -51,13 +52,13 @@ func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewOpenEVSE(cc.URI, cc.User, cc.Password, cc.Cache)
+	return NewOpenEVSE(ctx, cc.URI, cc.User, cc.Password, cc.Cache)
 }
 
 // NewOpenEVSE creates OpenEVSE charger
-func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, error) {
+func NewOpenEVSE(ctx context.Context, uri, user, password string, cache time.Duration) (api.Charger, error) {
 	basicAuth := transport.BasicAuthHeader(user, password)
-	log := util.NewLogger("openevse").Redact(user, password, basicAuth)
+	log := util.LoggerFromContext(ctx, "openevse").Redact(user, password, basicAuth)
 
 	c := &OpenEVSE{
 		Helper: request.NewHelper(log),

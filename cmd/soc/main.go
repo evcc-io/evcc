@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -65,7 +66,7 @@ func main() {
 		log.Fatal("unexpected number of parameters")
 	}
 
-	v, err := vehicle.NewCloudFromConfig(params)
+	v, err := vehicle.NewCloudFromConfig(context.Background(), params)
 	if err != nil {
 		log.Fatal(err)
 	}

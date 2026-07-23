@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
@@ -32,12 +33,12 @@ type planningHorizon struct {
 var _ api.Tariff = (*OctopusDe)(nil)
 
 func init() {
-	registry.Add("octopus-de", NewOctopusDeFromConfig)
+	registry.AddCtx("octopus-de", NewOctopusDeFromConfig)
 }
 
 // NewOctopusDeFromConfig creates the tariff provider from the given config map, and runs it.
-func NewOctopusDeFromConfig(other map[string]any) (api.Tariff, error) {
-	t, err := buildOctopusDeFromConfig(other)
+func NewOctopusDeFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
+	t, err := buildOctopusDeFromConfig(ctx, other)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +48,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Tariff, error) {
 
 // buildOctopusDeFromConfig creates the Tariff provider from the given config map.
 // Split out to allow for testing.
-func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
+func buildOctopusDeFromConfig(ctx context.Context, other map[string]any) (*OctopusDe, error) {
 	var cc struct {
 		Email         string
 		Password      string
@@ -70,7 +71,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		return nil, errors.New("missing account number")
 	}
 
-	log := util.NewLogger("octopus-de")
+	log := util.LoggerFromContext(ctx, "octopus-de")
 
 	// Create GraphQL client
 	gqlClient, err := krakengql.NewClient(log, krakengql.BaseURI, cc.Email, cc.Password, cc.AccountNumber)

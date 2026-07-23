@@ -15,7 +15,7 @@ func TestEvseWifi(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	wb, err := NewEVSEWifiFromConfig(map[string]any{
+	wb, err := NewEVSEWifiFromConfig(t.Context(), map[string]any{
 		"uri": ts.URL,
 		"meter": map[string]any{
 			"power":    true,
@@ -51,7 +51,7 @@ func TestEvseWifiEx(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	wb, err := NewEVSEWifiFromConfig(map[string]any{
+	wb, err := NewEVSEWifiFromConfig(t.Context(), map[string]any{
 		"uri": ts.URL,
 	})
 	if err != nil {
