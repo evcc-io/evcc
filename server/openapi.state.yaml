@@ -408,6 +408,7 @@ components:
             - hold
             - charge
             - holdcharge
+            - discharge
         charge:
           description: Recommended charge power in W.
           type: number

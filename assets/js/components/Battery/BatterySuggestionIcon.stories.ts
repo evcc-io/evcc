@@ -2,7 +2,7 @@ import BatterySuggestionIcon from "./BatterySuggestionIcon.vue";
 import { ICON_SIZE } from "@/types/evcc";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
-const actions = ["normal", "hold", "charge", "holdcharge"] as const;
+const actions = ["normal", "hold", "charge", "holdcharge", "discharge"] as const;
 
 export default {
   title: "Battery/BatterySuggestionIcon",

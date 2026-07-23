@@ -1110,7 +1110,7 @@ export interface Battery {
 /** Battery optimizer suggestion for a home battery. */
 export interface BatterySuggestion {
   /** Suggested operation mode. */
-  action: "normal" | "hold" | "charge" | "holdcharge";
+  action: "normal" | "hold" | "charge" | "holdcharge" | "discharge";
   /** Recommended charge power in W. */
   charge?: number;
   /** Recommended discharge power in W. */

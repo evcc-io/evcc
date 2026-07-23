@@ -49,6 +49,7 @@
     "optimizer": {
       "action": {
         "charge": "Charge from grid",
+        "discharge": "Discharge to grid",
         "hold": "Prevent discharging",
         "holdcharge": "Prevent charging",
         "normal": "Normal operation"
