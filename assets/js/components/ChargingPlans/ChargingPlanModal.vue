@@ -49,6 +49,7 @@ import api from "@/api";
 import type {
 	PlanStrategy,
 	RepeatingPlan,
+	StaticDurationPlan,
 	StaticEnergyPlan,
 	StaticPlan,
 	StaticSocPlan,
@@ -86,11 +87,19 @@ export default defineComponent({
 				}
 				return undefined;
 			}
-			if (this.loadpoint?.planEnergy && this.loadpoint?.planTime) {
-				return {
-					energy: this.loadpoint.planEnergy,
-					time: new Date(this.loadpoint.planTime),
-				};
+			if (this.loadpoint?.planTime) {
+				if (this.loadpoint.planDuration) {
+					return {
+						duration: this.loadpoint.planDuration,
+						time: new Date(this.loadpoint.planTime),
+					};
+				}
+				if (this.loadpoint.planEnergy) {
+					return {
+						energy: this.loadpoint.planEnergy,
+						time: new Date(this.loadpoint.planTime),
+					};
+				}
 			}
 			return undefined;
 		},
@@ -141,6 +150,9 @@ export default defineComponent({
 			if (this.loadpoint?.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
 				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null);
+			} else if ("duration" in plan) {
+				const p = plan as StaticDurationPlan;
+				api.post(`${this.apiLoadpoint}plan/duration/${p.duration}/${timeISO}`, null);
 			} else {
 				const p = plan as StaticEnergyPlan;
 				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`, null);
@@ -149,6 +161,8 @@ export default defineComponent({
 		removeStaticPlan(): void {
 			if (this.loadpoint?.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
+			} else if (this.loadpoint?.planDuration) {
+				api.delete(`${this.apiLoadpoint}plan/duration`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}

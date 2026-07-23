@@ -1267,6 +1267,8 @@
       "addRepeatingPlan": "Add repeating plan",
       "day": "Day",
       "goal": "Charging goal",
+      "goalDuration": "Duration",
+      "goalEnergy": "Energy",
       "modalTitle": "Charging Plan",
       "none": "none",
       "optimization": {

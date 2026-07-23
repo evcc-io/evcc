@@ -60,7 +60,11 @@ func (lp *Loadpoint) finishPlan() {
 	if lp.repeatingPlanning() {
 		return // noting to do
 	} else if !lp.socBasedPlanning() {
-		lp.setPlanEnergy(time.Time{}, 0)
+		if lp.planDuration > 0 {
+			lp.setPlanDuration(time.Time{}, 0)
+		} else {
+			lp.setPlanEnergy(time.Time{}, 0)
+		}
 	} else if v := lp.GetVehicle(); v != nil {
 		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
 	}
@@ -69,6 +73,11 @@ func (lp *Loadpoint) finishPlan() {
 // remainingPlanEnergy returns missing energy amount in kWh
 func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
 	return max(0, planEnergy-(lp.getChargedEnergy()/1e3-lp.planEnergyOffset))
+}
+
+// remainingPlanDuration returns the missing run time to reach the plan duration
+func (lp *Loadpoint) remainingPlanDuration() time.Duration {
+	return max(0, lp.planDuration-(lp.chargeDuration-lp.planDurationOffset))
 }
 
 // GetPlanRequiredDuration is the estimated total charging duration
@@ -85,6 +94,11 @@ func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Durati
 			return soc.RemainingChargeDuration(goal, maxPower, lp.vehicleSoc, lp.GetVehicle().Capacity())
 		}
 		return lp.socEstimator.RemainingChargeDuration(goal, maxPower)
+	}
+
+	// duration-based plan: run time is the goal, no energy conversion
+	if lp.planDuration > 0 {
+		return lp.remainingPlanDuration()
 	}
 
 	energy := lp.remainingPlanEnergy(goal)

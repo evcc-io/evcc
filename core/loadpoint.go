@@ -150,15 +150,17 @@ type Loadpoint struct {
 	socEstimator   *soc.Estimator
 
 	// charge planning
-	planner          *planner.Planner
-	planTime         time.Time        // time goal
-	planStrategy     api.PlanStrategy // plan strategy (precondition, continuous)
-	planEnergy       float64          // Plan charge energy in kWh (dumb vehicles)
-	planEnergyOffset float64          // already charged energy in kWh when plan was set
-	planSlotEnd      time.Time        // current plan slot end time
-	planActive       bool             // charge plan exists and has a currently active slot
-	planOverrunSent  bool             // notification has been sent already
-	planLocked       PlanLock         // locked plan
+	planner            *planner.Planner
+	planTime           time.Time        // time goal
+	planStrategy       api.PlanStrategy // plan strategy (precondition, continuous)
+	planEnergy         float64          // Plan charge energy in kWh (dumb vehicles)
+	planEnergyOffset   float64          // already charged energy in kWh when plan was set
+	planDuration       time.Duration    // Plan charge duration (switch loads, no capacity)
+	planDurationOffset time.Duration    // charge duration already elapsed when plan was set
+	planSlotEnd        time.Time        // current plan slot end time
+	planActive         bool             // charge plan exists and has a currently active slot
+	planOverrunSent    bool             // notification has been sent already
+	planLocked         PlanLock         // locked plan
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -395,8 +397,10 @@ func (lp *Loadpoint) restoreSettings() {
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
-	if err1 == nil && err2 == nil {
+	if err1 == nil && err2 == nil && v > 0 {
 		lp.setPlanEnergy(t, v)
+	} else if d, err := lp.settings.Int(keys.PlanDuration); err1 == nil && err == nil && d > 0 {
+		lp.setPlanDuration(t, time.Duration(d)*time.Second)
 	}
 
 	// load plan strategy (continuous mode and precondition duration)
@@ -570,6 +574,8 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// reset energy-based charging plan offset
 	lp.planEnergyOffset = 0
+	// reset duration-based charging plan offset
+	lp.planDurationOffset = 0
 }
 
 // evVehicleDisconnectHandler sends external start event

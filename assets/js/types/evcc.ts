@@ -262,6 +262,7 @@ export interface ConfigLoadpoint {
   maxCurrent: number;
   smartCostLimit: number | null;
   planEnergy?: number;
+  planDuration?: number;
   planTime?: string;
   planStrategy?: PlanStrategy;
   limitEnergy?: number;
@@ -352,6 +353,7 @@ export interface Loadpoint {
   phasesConfigured: number;
   planActive: boolean;
   planEnergy: number;
+  planDuration: number;
   planOverrun: number;
   planStrategy: PlanStrategy;
   planProjectedEnd: string | null;

@@ -393,6 +393,11 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	// clear locked goal when energy plan changes
 	lp.clearPlanLock()
 
+	// energy and duration plans are mutually exclusive
+	if energy > 0 {
+		lp.setPlanDurationValue(0)
+	}
+
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -426,6 +431,72 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	// apply immediately
 	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
 		lp.setPlanEnergy(finishAt, energy)
+		lp.requestUpdate()
+	}
+
+	return nil
+}
+
+// GetPlanDuration returns plan target time and duration
+func (lp *Loadpoint) GetPlanDuration() (time.Time, time.Duration) {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.getPlanDuration()
+}
+
+// getPlanDuration returns plan target time and duration
+func (lp *Loadpoint) getPlanDuration() (time.Time, time.Duration) {
+	return lp.planTime, lp.planDuration
+}
+
+// setPlanDurationValue persists the plan duration without touching the plan time (no mutex)
+func (lp *Loadpoint) setPlanDurationValue(duration time.Duration) {
+	lp.planDuration = duration
+	lp.publish(keys.PlanDuration, int64(duration.Seconds()))
+	lp.settings.SetInt(keys.PlanDuration, int64(duration.Seconds()))
+}
+
+// setPlanDuration sets plan target duration (no mutex)
+func (lp *Loadpoint) setPlanDuration(finishAt time.Time, duration time.Duration) {
+	// clear locked goal when duration plan changes
+	lp.clearPlanLock()
+
+	// energy and duration plans are mutually exclusive
+	if duration > 0 {
+		lp.setPlanEnergy(time.Time{}, 0)
+	}
+
+	lp.setPlanDurationValue(duration)
+
+	// remove plan
+	if duration == 0 {
+		finishAt = time.Time{}
+	}
+
+	lp.planTime = finishAt
+	lp.planDurationOffset = lp.chargeDuration
+	lp.publish(keys.PlanTime, finishAt)
+	lp.settings.SetTime(keys.PlanTime, finishAt)
+
+	if finishAt.IsZero() {
+		lp.setPlanActive(false)
+	}
+}
+
+// SetPlanDuration sets plan target duration
+func (lp *Loadpoint) SetPlanDuration(finishAt time.Time, duration time.Duration) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if !finishAt.IsZero() && finishAt.Before(lp.clock.Now()) {
+		return errors.New("timestamp is in the past")
+	}
+
+	lp.log.DEBUG.Printf("set plan duration: %v @ %v", duration.Round(time.Second), finishAt.Round(time.Second).Local())
+
+	// apply immediately
+	if lp.planDuration != duration || !lp.planTime.Equal(finishAt) {
+		lp.setPlanDuration(finishAt, duration)
 		lp.requestUpdate()
 	}
 
