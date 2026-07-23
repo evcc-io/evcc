@@ -30,7 +30,7 @@
 		/>
 
 		<GeneralConfigEntry
-			v-if="batteryControllable"
+			v-if="experimental && batteryControllable"
 			test-id="generalconfig-battery"
 			:label="$t('config.battery.title')"
 			:text="$t(`config.general.${batteryGridDischarge ? 'on' : 'off'}`)"
