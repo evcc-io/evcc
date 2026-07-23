@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
+	"encoding/base32"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +15,7 @@ import (
 const stateValidity = 2 * time.Minute
 
 type State struct {
-	Created time.Time
+	Created time.Time `json:"time"`
 }
 
 func NewState() State {
@@ -24,8 +24,12 @@ func NewState() State {
 	}
 }
 
+// Use base32 to avoid special characters. Changed from base64 with padding for
+// compatibility with FordConnect Query in https://github.com/evcc-io/evcc/pull/25462
+var encoding = base32.StdEncoding.WithPadding(base32.NoPadding)
+
 func DecryptState(enc string, key []byte) (*State, error) {
-	ciphertext, err := base64.URLEncoding.DecodeString(enc)
+	ciphertext, err := encoding.DecodeString(enc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to base64 decode encrypted state: %w", err)
 	}
@@ -79,7 +83,7 @@ func (c *State) Encrypt(key []byte) string {
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plain)
 
 	// convert to base64
-	return base64.URLEncoding.EncodeToString(ciphertext)
+	return encoding.EncodeToString(ciphertext)
 }
 
 func (c *State) Valid() bool {

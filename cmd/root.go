@@ -12,13 +12,20 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/hems/hems"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
+	"github.com/evcc-io/evcc/server/network"
+	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/updater"
+	"github.com/evcc-io/evcc/ui"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/pipe"
@@ -26,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util/telemetry"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -51,12 +59,17 @@ var (
 	runAsService bool
 )
 
+const rootName = "evcc"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "evcc",
+	Use:     rootName,
 	Short:   "evcc - open source solar charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
+	// always allow Ctrl-C in child commands
+	PersistentPreRun:  allowCtrlC,
+	PersistentPostRun: awaitShutdown,
 }
 
 func init() {
@@ -70,16 +83,14 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 
+	withCustomTemplate(rootCmd)
+
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
-	rootCmd.PersistentFlags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
-	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
-	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
-	rootCmd.PersistentFlags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -91,10 +102,9 @@ func init() {
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
 
-	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
-	bind(rootCmd, "mcp")
-
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
+	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
+	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -127,6 +137,34 @@ func Execute() {
 	}
 }
 
+func withCustomTemplate(cmd *cobra.Command) {
+	cmd.Flags().String(flagTemplate, "", flagTemplateDescription)
+	cmd.Flags().String(flagTemplateType, "", flagTemplateTypeDescription)
+}
+
+func allowCtrlC(cmd *cobra.Command, args []string) {
+	if cmd.Name() == rootName {
+		return
+	}
+
+	go func() {
+		signalC := make(chan os.Signal, 1)
+		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
+
+		<-signalC // wait for signal
+		os.Exit(1)
+	}()
+}
+
+func awaitShutdown(cmd *cobra.Command, args []string) {
+	if cmd.Name() == rootName {
+		return
+	}
+
+	// wait for shutdown
+	<-shutdownDoneC()
+}
+
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
@@ -152,17 +190,51 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureEnvironment(cmd, &conf)
 	}
 
-	// configure network
+	// configure plugin external url
 	if err == nil {
-		err = networkSettings(&conf.Network)
+		// network configuration complete, start dependent services like HomeAssistant discovery
+		network.Start(conf.Network)
 	}
-
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
+
+	// start OCPP and EEBus servers (skipped in degraded mode where setup failed,
+	// so a misconfigured instance serves only the offline UI)
+	if err == nil {
+		cs, ocppErr := ocpp.Instance()
+		if ocppErr != nil {
+			log.ERROR.Println("ocpp:", ocppErr)
+		} else {
+			cs.SetUpdated(func() {
+				// republish when OCPP state updates
+				valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+					Config: ocpp.CurrentConfig(),
+					Status: ocpp.GetStatus(),
+				}}
+			})
+			log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+			if ocpp.ExternalUrl() != "" {
+				log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+			}
+		}
+		// register the callback even with no rules so runtime additions are pushed
+		ocpp.SetForwarderUpdated(func() {
+			valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+				Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+				Status: ocpp.GetForwarderStatus(),
+			}}
+		})
+		if ocpp.ForwarderEnabled() {
+			log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
+		}
+
+		if _, eebusErr := eebus.Instance(); eebusErr != nil {
+			log.ERROR.Println("eebus:", eebusErr)
+		}
+	}
 
 	// value cache
 	cache := util.NewParamCache()
@@ -171,6 +243,28 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// create web server
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+
+	// start serving in background, watch for “routine‐only” errors
+	go func() {
+		if err := wrapFatalError(httpd.Server.ListenAndServe()); err != nil && err != http.ErrServerClosed {
+			log.FATAL.Println(err)
+			os.Exit(1)
+		}
+	}()
+	log.INFO.Printf("UI local url:      http://127.0.0.1:%d", conf.Network.Port)
+	if conf.Network.ExternalUrl != "" {
+		log.INFO.Printf("UI external url:   %s", conf.Network.ExternalURL())
+	}
+
+	// publish to UI
+	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
+
+	// remote access tunnel
+	remoteAccess := remote.New(util.Getenv("EVCC_REMOTE_ACCESS", "api.evcc.cloud"), httpd.Router(), valueChan)
+
+	// signal ui listening
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
+	valueChan <- util.Param{Key: keys.ApiReady, Val: false}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -181,9 +275,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if viper.GetBool("profile") {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
-
-	// publish to UI
-	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
@@ -236,8 +327,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// signal restart
-	valueChan <- util.Param{Key: keys.Startup, Val: true}
+	// signal devices initialized
+	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
+	// show onboarding UI
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || !site.IsConfigured()}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
@@ -249,22 +342,49 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// announce on mDNS
-	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {
-		err = configureMDNS(conf.Network)
+	if err == nil {
+		if err := configureMDNS(conf.Network); err != nil {
+			log.WARN.Println("mDNS:", err)
+		}
 	}
 
 	// start SHM server
 	if err == nil {
-		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, site, httpd))
+		err = wrapErrorWithClass(ClassSHM, configureSHM(&conf.SHM, conf.Network.ExternalURL(), site, httpd))
 	}
 
 	// start HEMS server
+	var hemsInstance hems.API
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
+		hemsInstance, err = configureHEMS(&conf.HEMS, site)
+		if err != nil {
+			err = wrapErrorWithClass(ClassHEMS, err)
+		} else if hemsInstance != nil {
+			// republish when HEMS state updates
+			hemsInstance.SetUpdated(func() {
+				valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
+					Config: struct {
+						Configured bool `json:"configured"`
+					}{hemsInstance != nil},
+					YamlSource: yamlSource.hems,
+					Status: struct {
+						Dimmed              *bool    `json:"dimmed,omitempty"`
+						Curtailed           *int     `json:"curtailed,omitempty"`
+						MaxConsumptionPower *float64 `json:"maxConsumptionPower,omitempty"`
+						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
+					}{
+						Dimmed:              hems.Dimmed(hemsInstance),
+						Curtailed:           hemsInstance.CurtailedPercent(),
+						MaxConsumptionPower: hemsInstance.MaxConsumptionPower(),
+						MaxProductionPower:  hemsInstance.MaxProductionPower(),
+					},
+				}}
+			})
+		}
 	}
 
 	// setup MCP
-	if viper.GetBool("mcp") {
+	if err == nil && isMcp() {
 		router := httpd.Router()
 
 		var handler http.Handler
@@ -272,30 +392,69 @@ func runRoot(cmd *cobra.Command, args []string) {
 			router.PathPrefix("/mcp").Handler(handler)
 		}
 	}
+	if conf.Mcp {
+		log.WARN.Println("mcp: yaml config is deprecated")
+	}
 
 	// setup messaging
-	var pushChan chan push.Event
+	var pushChan chan messenger.Event
 	if err == nil {
-		pushChan, err = configureMessengers(&conf.Messaging, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 
 	// publish initial settings
-	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
-	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.DeviceColors, Val: ui.DeviceColorList()}
+	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
+		Config:     conf.EEBus.Redacted(),
+		Status:     eebus.GetStatus(),
+		YamlSource: yamlSource.eebus,
+	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
+	valueChan <- util.Param{Key: keys.Messaging, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.messaging,
+	}}
+	valueChan <- util.Param{Key: keys.MessagingEvents, Val: conf.MessagingEvents}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
+	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+		Config: ocpp.CurrentConfig(),
+		Status: ocpp.GetStatus(),
+	}}
+	valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+		Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+		Status: ocpp.GetForwarderStatus(),
+	}}
+	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
+		Status:     sponsor.RedactedStatus(),
+		YamlSource: yamlSource.sponsor,
+	}}
+
+	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
+		Config: struct {
+			Configured bool `json:"configured"`
+		}{hemsInstance != nil},
+		YamlSource: yamlSource.hems,
+	}}
+	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.tariffs,
+	}}
+
+	// publish remote access status
+	valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
-	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath()}
+	valueChan <- util.Param{Key: keys.System, Val: util.System()}
+	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
+	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
+	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
+	valueChan <- util.Param{Key: keys.Mcp, Val: isMcp()}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -308,19 +467,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		<-signalC                        // wait for signal
 		once.Do(func() { close(stopC) }) // signal loop to end
-	}()
-
-	// wait for shutdown
-	go func() {
-		<-stopC
-
-		select {
-		case <-shutdownDoneC(): // wait for shutdown
-		case <-time.After(conf.Interval):
-		}
-
-		// exit code 1 on error
-		os.Exit(cast.ToInt(err != nil))
 	}()
 
 	// allow web access for vehicles
@@ -339,11 +485,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 		valueChan <- util.Param{Key: keys.DemoMode, Val: true}
 	}
 
-	httpd.RegisterSystemHandler(site, valueChan, cache, authObject, func() {
+	httpd.RegisterSystemHandler(site, func(k string, v any) {
+		valueChan <- util.Param{Key: k, Val: v}
+	}, cache, authObject, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
-	}, viper.ConfigFileUsed())
+	}, viper.ConfigFileUsed(), remoteAccess)
 
 	// show and check version, reduce api load during development
 	if util.Version != util.DevVersion {
@@ -356,12 +504,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		httpd.RegisterSiteHandlers(site, valueChan)
+		httpd.RegisterSiteHandlers(site)
 
 		go func() {
 			site.Run(stopC, conf.Interval)
 		}()
 	}
+
+	// signal HTTP API ready
+	valueChan <- util.Param{Key: keys.ApiReady, Val: true}
 
 	if err != nil {
 		if uw, ok := err.(interface{ Unwrap() []error }); ok {
@@ -380,8 +531,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}()
 	}
 
-	// uds health check listener
-	go server.HealthListener(site)
+	// wait for shutdown
+	<-stopC
 
-	log.FATAL.Println(wrapFatalError(httpd.ListenAndServe()))
+	select {
+	case <-shutdownDoneC(): // wait for shutdown
+	case <-time.After(conf.Interval):
+	}
+
+	// exit code 1 on error
+	os.Exit(cast.ToInt(err != nil))
 }

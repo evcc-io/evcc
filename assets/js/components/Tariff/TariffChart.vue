@@ -1,6 +1,9 @@
 <template>
 	<div class="root position-relative">
-		<div class="chart position-relative" :class="{ 'chart--with-target': targetText }">
+		<div
+			class="chart scroll-overlay-fix position-relative"
+			:class="{ 'chart--with-target': targetText, inactive }"
+		>
 			<div
 				v-for="(slot, index) in slots"
 				:key="`${slot.day}-${fmtHourMinute(slot.start)}`"
@@ -28,7 +31,7 @@
 					:class="{ unknown: slot.value === undefined && avgValue }"
 				></div>
 				<div class="slot-label">
-					<span v-if="slot.start.getMinutes() === 0">{{
+					<span v-if="slot.start.getMinutes() === 0 && slot.start.getHours() % 2 === 0">{{
 						formatHour(slot.start.getHours())
 					}}</span>
 					<br />
@@ -73,6 +76,7 @@ export default defineComponent({
 		slots: { type: Array as PropType<Slot[]>, default: () => [] },
 		targetText: [String, null],
 		targetOffset: { type: Number, default: 0 },
+		inactive: { type: Boolean, default: false },
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
@@ -254,8 +258,8 @@ export default defineComponent({
 	line-height: 1.1;
 	position: absolute;
 	top: 100%;
-	left: -100%;
-	width: 200%;
+	left: 50%;
+	transform: translateX(-50%);
 	text-align: center;
 }
 .slot.active .slot-bar {
@@ -281,5 +285,13 @@ export default defineComponent({
 }
 .slot.faded {
 	opacity: 0.33;
+}
+.chart.inactive .slot.active .slot-bar,
+.chart.inactive .slot.warning .slot-bar {
+	background: var(--bs-gray-medium);
+}
+.chart.inactive .slot.active .slot-label,
+.chart.inactive .slot.warning .slot-label {
+	color: var(--bs-gray-medium);
 }
 </style>

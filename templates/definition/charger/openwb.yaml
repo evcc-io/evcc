@@ -3,6 +3,7 @@ products:
   - brand: openWB
     description:
       generic: series2
+capabilities: ["meter", "dim"]
 requirements:
   description:
     en: The wallbox has to be configured as loadpoint.
@@ -20,9 +21,7 @@ params:
 render: |
   type: openwb
   broker: {{ .host }}
-  {{- if ne .connector "1" }}
   id: {{ .connector }} # loadpoint id
-  {{- end }}
   {{- if ne .phases1p3p "false" }}
   phases1p3p: true
   {{- end }}

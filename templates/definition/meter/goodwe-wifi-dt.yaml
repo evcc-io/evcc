@@ -1,0 +1,26 @@
+template: goodwe-wifi-dt
+requirements:
+  evcc: ["skiptest"]
+products:
+  - brand: GoodWe
+    description:
+      generic: SDT/DT Inverter (WiFi)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+render: |
+  type: custom
+  power:
+    source: aa55udp
+    host: {{ .host }}
+    register:
+      address: 30127
+      decode: int32
+  energy:
+    source: aa55udp
+    host: {{ .host }}
+    register:
+      address: 30145
+      decode: uint32
+    scale: 0.1

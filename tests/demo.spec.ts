@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalHidden, openTopNavigation, expectTopNavigationClosed } from "./utils";
+import { expectModalHidden, expectModalVisible, openMoreMenu } from "./utils";
 import { ChildProcess } from "child_process";
 
 test.use({ baseURL: baseUrl() });
@@ -28,18 +28,18 @@ test.describe("demo mode", async () => {
     await expect(page.getByRole("heading", { name: "Demo Mode" })).toBeVisible();
   });
 
-  test("two loadpoints", async ({ page }) => {
-    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+  test("three loadpoints", async ({ page }) => {
+    await expect(page.getByTestId("loadpoint")).toHaveCount(3);
     await expect(page.getByTestId("loadpoint").nth(0)).toContainText("Carport");
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Garage");
+    await expect(page.getByTestId("loadpoint").nth(2)).toContainText("Heat pump");
   });
 
   test("auth is locked", async ({ page }) => {
-    await openTopNavigation(page);
+    await openMoreMenu(page);
     await page.getByRole("link", { name: "Configuration" }).click();
-    await expectTopNavigationClosed(page);
     const loginModal = page.getByTestId("login-modal");
-    await expect(loginModal).toBeVisible();
+    await expectModalVisible(loginModal);
     await expect(loginModal).toContainText("Login is not supported in demo mode.");
   });
 });

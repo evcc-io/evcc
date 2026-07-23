@@ -1,7 +1,6 @@
 <template>
 	<button
 		class="root d-flex align-items-center justify-content-center"
-		:class="{ attention }"
 		tabindex="0"
 		@click="$emit('click')"
 	>
@@ -17,7 +16,6 @@ export default {
 	name: "NewDeviceButton",
 	props: {
 		title: String,
-		attention: Boolean,
 	},
 	emits: ["click"],
 };
@@ -39,26 +37,5 @@ export default {
 .root:focus-within {
 	border-color: var(--evcc-default-text);
 	color: var(--evcc-default-text);
-}
-.attention {
-	animation: wiggle 3s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
-}
-
-@keyframes wiggle {
-	0%,
-	100% {
-		transform: rotate(0deg);
-	}
-	5%,
-	15% {
-		transform: rotate(-2deg);
-	}
-	10%,
-	20% {
-		transform: rotate(2deg);
-	}
-	25% {
-		transform: rotate(0deg);
-	}
 }
 </style>

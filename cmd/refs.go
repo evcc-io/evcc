@@ -15,12 +15,22 @@ import (
 )
 
 var references struct {
-	meter, charger, vehicle, circuit []string
+	meter, charger, vehicle, circuit, tariff []string
 }
 
 func collectRefs(conf globalconfig.All) error {
 	// site
 	if err := collectSiteRefs(conf); err != nil {
+		return err
+	}
+
+	// tariffs
+	if err := collectTariffRefs(); err != nil {
+		return err
+	}
+
+	// circuits
+	if err := collectCircuitRefs(conf.Circuits); err != nil {
 		return err
 	}
 
@@ -59,17 +69,35 @@ func collectSiteRefs(conf globalconfig.All) error {
 	references.meter = append(references.meter, refs.Meters.BatteryMetersRef...)
 	references.meter = append(references.meter, refs.Meters.ExtMetersRef...)
 	references.meter = append(references.meter, refs.Meters.AuxMetersRef...)
+	references.meter = append(references.meter, refs.Meters.ConsumerMetersRef...)
 
 	// append devices from settings
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
 		references.meter = append(references.meter, v)
 	}
 
-	for _, key := range []string{keys.PvMeters, keys.BatteryMeters, keys.ExtMeters, keys.AuxMeters} {
+	for _, key := range []string{keys.PvMeters, keys.BatteryMeters, keys.ExtMeters, keys.AuxMeters, keys.ConsumerMeters} {
 		if v, err := settings.String(key); err == nil && v != "" {
 			references.meter = append(references.meter, strings.Split(v, ",")...)
 		}
 	}
+
+	return nil
+}
+
+func collectTariffRefs() error {
+	// Load tariff device references from settings
+	if !settings.Exists(keys.TariffRefs) {
+		return nil
+	}
+
+	var refs globalconfig.TariffRefs
+	if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+		return err
+	}
+
+	// Collect all non-empty refs
+	references.tariff = slices.AppendSeq(references.tariff, refs.Used())
 
 	return nil
 }
@@ -92,6 +120,23 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 		references.charger = append(references.charger, refs.ChargerRef)
 		references.vehicle = append(references.vehicle, refs.VehicleRef)
 		references.circuit = append(references.circuit, refs.CircuitRef)
+	}
+
+	return nil
+}
+
+func collectCircuitRefs(circuits []config.Named) error {
+	for _, cc := range circuits {
+		var refs struct {
+			MeterRef string         `mapstructure:"meter"` // Circuit meter reference
+			Other    map[string]any `mapstructure:",remain"`
+		}
+
+		if err := util.DecodeOther(cc.Other, &refs); err != nil {
+			return err
+		}
+
+		references.meter = append(references.meter, refs.MeterRef)
 	}
 
 	return nil

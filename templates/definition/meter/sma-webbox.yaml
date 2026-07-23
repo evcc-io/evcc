@@ -6,7 +6,6 @@ products:
 params:
   - name: usage
     choice: ["pv"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     port: 502

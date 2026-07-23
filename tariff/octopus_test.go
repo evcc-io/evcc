@@ -10,6 +10,9 @@ import (
 func TestOctopusConfigParse(t *testing.T) {
 	test.SkipCI(t)
 
+	validTestApiKey32 := "oe_test_testingYqLeoRu2xsn9WEiv6"
+	validTestApiKey40 := "oe_test_testingYBsFMxfqXG9guAdTVgFssdJmv"
+
 	// This test will start failing if you remove the deprecated "tariff" config var.
 	validTariffConfig := map[string]any{
 		"region":      "H",
@@ -40,15 +43,22 @@ func TestOctopusConfigParse(t *testing.T) {
 
 	invalidTariffDirectionConfig := map[string]any{
 		"tariffDirection": "invalid",
-		"apikey":          "test",
+		"apikey":          validTestApiKey32,
 	}
 	_, err = buildOctopusFromConfig(invalidTariffDirectionConfig)
 	require.Errorf(t, err, "invalid tariff type")
 
-	validApiExportConfig := map[string]any{
+	validApiExportConfig32 := map[string]any{
 		"tariffDirection": "export",
-		"apikey":          "test",
+		"apikey":          validTestApiKey32,
 	}
-	_, err = buildOctopusFromConfig(validApiExportConfig)
+	_, err = buildOctopusFromConfig(validApiExportConfig32)
+	require.NoError(t, err)
+
+	validApiExportConfig40 := map[string]any{
+		"tariffDirection": "export",
+		"apikey":          validTestApiKey40,
+	}
+	_, err = buildOctopusFromConfig(validApiExportConfig40)
 	require.NoError(t, err)
 }

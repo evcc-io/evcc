@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -19,8 +20,15 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
+// ErrPunDataNotAvailable indicates that GME has not yet published prices for the requested day.
+var ErrPunDataNotAvailable = errors.New("PUN data not available")
+
+// romeLocation is resolved once at package init to avoid repeated filesystem lookups.
+var romeLocation *time.Location
+
 type Pun struct {
 	*embed
+	zone string
 	log  *util.Logger
 	data *util.Monitor[api.Rates]
 }
@@ -30,10 +38,15 @@ type NewDataSet struct {
 	Prezzi  []Prezzo `xml:"Prezzi"`
 }
 
+type Zone struct {
+	XMLName xml.Name
+	Value   string `xml:",chardata"`
+}
+
 type Prezzo struct {
-	Data string `xml:"Data"`
-	Ora  string `xml:"Ora"`
-	PUN  string `xml:"PUN"`
+	Data  string `xml:"Data"`
+	Ora   string `xml:"Ora"`
+	Zones []Zone `xml:",any"`
 }
 
 type Rate struct {
@@ -46,10 +59,16 @@ var _ api.Tariff = (*Pun)(nil)
 
 func init() {
 	registry.Add("pun", NewPunFromConfig)
+	romeLocation, _ = time.LoadLocation("Europe/Rome")
 }
 
 func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
-	var cc embed
+	var cc struct {
+		embed `mapstructure:",squash"`
+		Zone  string
+	}
+
+	logger := util.NewLogger("pun")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -59,9 +78,15 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	var zone = strings.ToUpper(strings.TrimSpace(cc.Zone))
+	if cc.Zone == "" {
+		zone = "PUN"
+	}
+
 	t := &Pun{
-		log:   util.NewLogger("pun"),
-		embed: &cc,
+		log:   logger,
+		zone:  zone,
+		embed: &cc.embed,
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
@@ -78,18 +103,25 @@ func (t *Pun) run(done chan error) {
 			return res, backoffPermanentError(err)
 		}, bo())
 		if err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println(err)
 			continue
 		}
 
-		// get tomorrow data
+		// get tomorrow data (may not be available before ~13:00 CET)
 		res, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
+			if errors.Is(err, ErrPunDataNotAvailable) {
+				return res, backoff.Permanent(err)
+			}
 			return res, backoffPermanentError(err)
 		}, bo())
-		if err != nil {
-			once.Do(func() { done <- err })
+		if err != nil && !errors.Is(err, ErrPunDataNotAvailable) {
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println(err)
 			continue
 		}
@@ -116,6 +148,16 @@ func (t *Pun) Type() api.TariffType {
 	return api.TariffTypePriceForecast
 }
 
+func (t *Pun) priceForZone(p Prezzo) (float64, error) {
+	for _, z := range p.Zones {
+		if strings.ToUpper(strings.TrimSpace(z.XMLName.Local)) == t.zone {
+			price, err := strconv.ParseFloat(strings.ReplaceAll(z.Value, ",", "."), 64)
+			return price, err
+		}
+	}
+	return 0, fmt.Errorf("zone %s not found for hour %s", t.zone, p.Ora)
+}
+
 func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	client := request.NewClient(t.log)
 	client.Jar, _ = cookiejar.New(nil)
@@ -137,8 +179,13 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	}
 
 	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode == http.StatusNotFound {
+	if err != nil {
 		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("%w: %s", ErrPunDataNotAvailable, day.Format("2006-01-02"))
 	}
 
 	body, err := request.ReadBody(resp)
@@ -193,17 +240,12 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			date = date.AddDate(0, 0, -1)
 		}
 
-		location, err := time.LoadLocation("Europe/Rome")
-		if err != nil {
-			return nil, fmt.Errorf("load location: %w", err)
-		}
-
-		price, err := strconv.ParseFloat(strings.ReplaceAll(p.PUN, ",", "."), 64)
+		price, err := t.priceForZone(p)
 		if err != nil {
 			return nil, fmt.Errorf("parse price: %w", err)
 		}
 
-		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
+		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, romeLocation)
 		ar := api.Rate{
 			Start: ts,
 			End:   ts.Add(time.Hour),

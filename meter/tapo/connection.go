@@ -2,8 +2,6 @@ package tapo
 
 import (
 	"fmt"
-	"net/netip"
-	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,15 +20,9 @@ type Connection struct {
 // NewConnection creates a new Tapo device connection.
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
-func NewConnection(uri, user, password string) (*Connection, error) {
-	url, err := url.Parse(uri)
-	if err != nil {
-		return nil, fmt.Errorf("invalid url: %s", uri)
-	}
-
-	addr, err := netip.ParseAddr(url.Hostname())
-	if err != nil {
-		return nil, fmt.Errorf("invalid ip address: %s", uri)
+func NewConnection(host, user, password string) (*Connection, error) {
+	if host == "" {
+		return nil, fmt.Errorf("missing host")
 	}
 
 	if user == "" || password == "" {
@@ -39,7 +31,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 
 	log := util.NewLogger("tapo").Redact(user, password)
 
-	plug := tapo.NewPlug(addr, nil)
+	plug := tapo.NewPlug(host, nil)
 	if err := plug.Handshake(user, password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
@@ -65,24 +57,14 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
-	resp, err := c.plug.GetDeviceInfo()
-	if err != nil {
-		return false, err
-	}
-
-	return resp.DeviceON, nil
+	return c.plug.IsOn()
 }
 
 // CurrentPower provides current power consuption
 func (c *Connection) CurrentPower() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
-		} else {
-			return 0, err
-		}
+		return 0, c.checkMeterError(err)
 	}
 
 	return float64(resp.CurrentPower) / 1e3, nil
@@ -92,12 +74,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
-		} else {
-			return 0, err
-		}
+		return 0, c.checkMeterError(err)
 	}
 
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
@@ -106,4 +83,13 @@ func (c *Connection) ChargedEnergy() (float64, error) {
 	c.lasttodayenergy = int64(resp.TodayEnergy)
 
 	return float64(c.energy) / 1000, nil
+}
+
+// checkMeterError checks for missing meter error
+func (c *Connection) checkMeterError(err error) error {
+	if strings.Contains(err.Error(), "-1001") {
+		return nil
+	}
+
+	return err
 }

@@ -1,40 +1,10 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
-export async function enableExperimental(page: Page, inline = true): Promise<void> {
-  if (inline) {
-    await page.getByRole("button", { name: "Enable Experimental Features" }).click();
-  } else {
-    await openTopNavigation(page);
-    await page.getByTestId("topnavigation-settings").click();
-    const modal = page.getByTestId("global-settings-modal");
-    await expectModalVisible(modal);
-    await modal.getByLabel("Experimental 🧪").click();
-    await modal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(modal);
-    await expect(page.locator(".modal-backdrop")).not.toBeVisible();
-  }
-}
-
-export async function openTopNavigation(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toBeVisible();
-  await page.getByTestId("topnavigation-button").click();
-  await expectTopNavigationOpened(page);
-}
-
-export async function closeTopNavigation(page: Page): Promise<void> {
-  await expectTopNavigationOpened(page);
-  await page.getByTestId("topnavigation-button").click();
-  await expectTopNavigationClosed(page);
-}
-
-export async function expectTopNavigationOpened(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-dropdown")).toBeVisible();
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
-}
-
-export async function expectTopNavigationClosed(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByTestId("topnavigation-dropdown")).not.toBeVisible();
+export async function openMoreMenu(page: Page): Promise<Locator> {
+  const moreButton = page.getByTestId("tab-more");
+  await expect(moreButton).toBeVisible();
+  await moreButton.click();
+  return moreButton;
 }
 
 export async function expectModalVisible(modal: Locator): Promise<void> {
@@ -47,18 +17,20 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
   await expect(modal).toHaveAttribute("aria-hidden", "true");
 }
 
-export async function editorClear(editor: Locator, iterations = 10): Promise<void> {
-  for (let i = 0; i < iterations; i++) {
-    await editor.locator(".view-line").nth(0).click();
-    await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 50 });
-    await editor.page().keyboard.press("Backspace", { delay: 50 });
-  }
+export async function editorClear(editor: Locator): Promise<void> {
+  const content = editor.locator(".cm-content");
+  // wait for the async content load, otherwise clearing races the arriving text
+  await expect(content).not.toHaveText("");
+  await content.click();
+  await editor.page().keyboard.press("ControlOrMeta+KeyA");
+  await editor.page().keyboard.press("Backspace");
+  await expect(content, "editor should be empty after clearing").toHaveText("");
 }
 
 export async function editorPaste(editor: Locator, page: Page, text: string): Promise<void> {
-  await editor.locator(".view-line").nth(0).click();
+  await editor.locator(".cm-content").click();
   await page.evaluate((text) => navigator.clipboard.writeText(text), text);
-  await page.keyboard.press("ControlOrMeta+KeyV", { delay: 100 });
+  await page.keyboard.press("ControlOrMeta+KeyV");
 }
 
 export enum LoadpointType {
@@ -66,13 +38,22 @@ export enum LoadpointType {
   Heating = "heating",
 }
 
+export enum ChargerStatus {
+  Disconnected = "A",
+  Connected = "B",
+  Charging = "C",
+}
+
 export async function addDemoCharger(
   page: Page,
-  type: LoadpointType = LoadpointType.Charging
+  type: LoadpointType = LoadpointType.Charging,
+  status?: ChargerStatus
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal
-    .getByRole("button", { name: type === LoadpointType.Heating ? "Add heater" : "Add charger" })
+    .getByRole("button", {
+      name: type === LoadpointType.Heating ? "Add heating device" : "Add charger",
+    })
     .click();
 
   const modal = page.getByTestId("charger-modal");
@@ -80,6 +61,9 @@ export async function addDemoCharger(
   await modal
     .getByLabel("Manufacturer")
     .selectOption(type === LoadpointType.Heating ? "Demo heat pump" : "Demo charger");
+  if (status) {
+    await modal.getByLabel("Charge status").selectOption(status);
+  }
   await modal.getByRole("button", { name: "Save" }).click();
   await expectModalHidden(modal);
   await expectModalVisible(lpModal);
@@ -87,6 +71,7 @@ export async function addDemoCharger(
 
 export async function addDemoMeter(page: Page, power = "0"): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
   await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
 
   const modal = page.getByTestId("meter-modal");
@@ -114,14 +99,20 @@ export async function newLoadpoint(
   type: LoadpointType = LoadpointType.Charging
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
-  await page.getByRole("button", { name: "Add charger or heater" }).click();
+  await page.getByRole("button", { name: "Add charging point or heater" }).click();
   await expectModalVisible(lpModal);
   await lpModal
     .getByRole("button", {
-      name: type === LoadpointType.Heating ? "Add heating device" : "Add charging point",
+      name: type === LoadpointType.Heating ? "Add heater" : "Add charging point",
     })
     .click();
   await lpModal.getByLabel("Title").fill(title);
+}
+
+export async function finishLoadpoint(page: Page): Promise<void> {
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByText("Close", { exact: true }).click();
+  await expectModalHidden(lpModal);
 }
 
 export async function dragElement(
@@ -129,20 +120,54 @@ export async function dragElement(
   sourceElement: Locator,
   targetElement: Locator
 ): Promise<void> {
-  // Get bounding boxes to calculate actual positions
-  const sourceBox = await sourceElement.boundingBox();
+  // hover() waits for animations to settle before grabbing the source —
+  // avoids stale coordinates during the modal slide-in.
+  await sourceElement.hover();
+  await page.mouse.down();
+
   const targetBox = await targetElement.boundingBox();
+  if (!targetBox) throw new Error("dragElement: target has no bounding box");
+  await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2, {
+    steps: 10,
+  });
+  await page.mouse.up();
+}
 
-  if (sourceBox && targetBox) {
-    // Move from center of source item to center of target item
-    const startX = sourceBox.x + sourceBox.width / 2;
-    const startY = sourceBox.y + sourceBox.height / 2;
-    const endX = targetBox.x + targetBox.width / 2;
-    const endY = targetBox.y + targetBox.height / 2;
+export async function getDatalistOptions(input: Locator): Promise<string[]> {
+  return input.evaluate((element: HTMLInputElement) => {
+    const datalistId = element.getAttribute("list");
+    if (!datalistId) return [];
+    const datalist = document.getElementById(datalistId);
+    return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
+  });
+}
 
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(endX, endY, { steps: 10 });
-    await page.mouse.up();
-  }
+type AppState = {
+  evccAppCapabilities: string[];
+  __appEvent: unknown;
+  ReactNativeWebView: { postMessage: (m: string) => void };
+};
+
+export async function enableAppContext(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      value: "evcc/playwright",
+      configurable: true,
+    });
+    const w = window as unknown as AppState;
+    w.evccAppCapabilities = ["download"];
+    w.__appEvent = undefined;
+    w.ReactNativeWebView = {
+      postMessage: (msg: string) => {
+        w.__appEvent = JSON.parse(msg);
+      },
+    };
+  });
+}
+
+export async function expectAppEvent(page: Page): Promise<unknown> {
+  await expect
+    .poll(async () => page.evaluate(() => (window as unknown as AppState).__appEvent !== undefined))
+    .toBe(true);
+  return page.evaluate(() => (window as unknown as AppState).__appEvent);
 }

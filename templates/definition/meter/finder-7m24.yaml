@@ -1,0 +1,23 @@
+template: finder-7m24
+products:
+  - brand: Finder
+    description:
+      generic: 7M.24
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: find7m24
+  {{- if ne .usage "pv" }}
+  power: Power
+  energy: Import
+  returnenergy: Export
+  {{- else }}
+  power: -Power
+  energy: Export
+  returnenergy: Import
+  {{- end }}

@@ -1,13 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
-import {
-  expectModalVisible,
-  expectModalHidden,
-  enableExperimental,
-  addDemoCharger,
-  newLoadpoint,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, addDemoCharger, newLoadpoint } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -21,14 +15,13 @@ test.describe("fatal config handling", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // create meter
     await page.getByRole("button", { name: "Add solar or battery" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await meterModal.getByRole("button", { name: "Add solar meter" }).click();
     await meterModal.getByLabel("Title").fill("North Roof");
-    await meterModal.getByLabel("Manufacturer").selectOption("shelly-1pm");
+    await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
@@ -42,6 +35,13 @@ test.describe("fatal config handling", async () => {
 
     // remove meter
     await expect(page.getByTestId("fatal-error")).toBeVisible();
+
+    // dismiss hides the banner; reload restores it while the error persists
+    await page.getByRole("button", { name: "Dismiss" }).click();
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
+    await page.reload();
+    await expect(page.getByTestId("fatal-error")).toBeVisible();
+
     await expect(page.getByTestId("pv")).toBeVisible();
     await page.getByTestId("pv").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);
@@ -61,7 +61,6 @@ test.describe("fatal config handling", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const lpModal = page.getByTestId("loadpoint-modal");
 
@@ -70,10 +69,11 @@ test.describe("fatal config handling", async () => {
     await addDemoCharger(page);
 
     // add shelly meter
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Manufacturer").selectOption("shelly-1pm");
+    await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);
@@ -91,7 +91,7 @@ test.describe("fatal config handling", async () => {
     // verify loadpoint still visible with error
     await expect(page.getByTestId("fatal-error")).toBeVisible();
     await expect(page.getByTestId("fatal-error")).toContainText(
-      /meter: .+? cannot create meter .+?: cannot create meter type 'template': cannot create meter type 'shelly'/
+      /meter: .+? cannot create template .+?: cannot create meter type 'template:shelly-1pm': cannot create meter type 'shelly'/
     );
     await expect(page.getByTestId("fatal-error")).toContainText(
       /loadpoint: .+? missing charge meter instance/
@@ -101,8 +101,8 @@ test.describe("fatal config handling", async () => {
     // open modal and delete meter
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("textbox", { name: "Energy meter" })).toHaveClass(/is-invalid/);
-    await lpModal.getByRole("textbox", { name: "Energy meter" }).click();
+    await expect(lpModal.getByText("Shelly 1PM")).toBeVisible();
+    await lpModal.getByText("Shelly 1PM").click();
     await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);
@@ -124,12 +124,11 @@ test.describe("fatal config handling", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByLabel("Manufacturer").selectOption("shelly-1pm");
+    await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(meterModal);

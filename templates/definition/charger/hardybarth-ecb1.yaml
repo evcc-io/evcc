@@ -6,6 +6,7 @@ products:
   - brand: echarge
     description:
       generic: cPH1
+capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
   description:
@@ -14,8 +15,6 @@ requirements:
 params:
   - name: host
   - name: connector
-    default: 1
-    advanced: true
 render: |
   type: hardybarth-ecb1
   uri: http://{{ .host }}

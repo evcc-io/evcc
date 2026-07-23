@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	reg "github.com/evcc-io/evcc/util/registry"
 )
 
@@ -25,7 +26,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.T
 
 	v, err := factory(ctx, other)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create tariff type '%s': %w", typ, err)
+		return nil, fmt.Errorf("cannot create tariff type '%s': %w", util.TypeWithTemplateName(typ, other), err)
 	}
 
 	// check slot length

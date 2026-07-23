@@ -27,7 +27,7 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 }
 
 func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
-	planTime, planPrecondition, planEnergy := lp.GetPlanEnergy()
+	planTime, planEnergy := lp.GetPlanEnergy()
 	return loadpoint.DynamicConfig{
 		Title:                    lp.GetTitle(),
 		DefaultMode:              string(lp.GetDefaultMode()),
@@ -39,9 +39,11 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
 		Thresholds:               lp.GetThresholds(),
 		Soc:                      lp.GetSocConfig(),
+		UI:                       lp.GetUI(),
 		PlanEnergy:               planEnergy,
 		PlanTime:                 planTime,
-		PlanPrecondition:         int64(planPrecondition.Seconds()),
+		PlanStrategy:             lp.GetPlanStrategy(),
+		BatteryBoostLimit:        lp.GetBatteryBoostLimit(),
 		LimitEnergy:              lp.GetLimitEnergy(),
 		LimitSoc:                 lp.GetLimitSoc(),
 	}
@@ -164,7 +166,8 @@ func newLoadpointHandler() http.HandlerFunc {
 		}
 
 		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+
+		instance, err := core.NewLoadpointFromConfig(log, settings, nil, static)
 		if err != nil {
 			conf.Delete()
 			jsonError(w, http.StatusBadRequest, err)
@@ -186,7 +189,9 @@ func newLoadpointHandler() http.HandlerFunc {
 
 		setConfigDirty()
 
-		w.WriteHeader(http.StatusOK)
+		jsonWrite(w, struct {
+			ID int `json:"id"`
+		}{ID: conf.ID})
 	}
 }
 

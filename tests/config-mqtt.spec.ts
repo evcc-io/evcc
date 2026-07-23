@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 import { isMqttReachable } from "./mqtt";
 
 test.use({ baseURL: baseUrl() });
@@ -9,7 +9,6 @@ test.describe.configure({ mode: "parallel" });
 test.beforeEach(async ({ page }) => {
   await start();
   await page.goto("/#/config");
-  await enableExperimental(page, false);
 });
 
 test.afterEach(async () => {

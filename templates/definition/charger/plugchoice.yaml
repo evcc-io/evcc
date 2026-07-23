@@ -1,6 +1,7 @@
 template: plugchoice
 products:
   - brand: Plugchoice
+capabilities: ["meter", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
   description:
@@ -36,7 +37,6 @@ params:
     example: AA123456
   - name: connector
     required: true
-    default: 1
     description:
       de: Anschluss-ID
       en: Connector ID

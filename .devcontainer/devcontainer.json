@@ -5,7 +5,7 @@
 	"image": "mcr.microsoft.com/devcontainers/go",
 	"features": {
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-			"moby": true,
+			"moby": false,
 			"installDockerBuildx": true,
 			"installDockerComposeSwitch": true,
 			"version": "latest",
@@ -14,7 +14,7 @@
 		"ghcr.io/devcontainers/features/node:1": {
 			"nodeGypDependencies": true,
 			"installYarnUsingApt": true,
-			"version": "lts",
+			"version": "26",
 			"pnpmVersion": "latest",
 			"nvmVersion": "latest"
 		}

@@ -3,7 +3,7 @@ products:
   - brand: EV Expert
     description:
       generic: EVECUBE
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   description:
     en: Requires HTTP API access.
@@ -21,25 +21,16 @@ params:
       de: Benutzername für Admin-API
     example: admin
   - name: password
-    mask: true
     help:
       en: Password for admin API
       de: Passwort für Admin-API
   - name: connector
-    default: 1
-    advanced: true
     help:
       en: Connector number (1-4)
       de: Anschluss-Nummer (1-4)
 render: |
   type: evecube
   uri: http://{{ .host }}
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
-  {{- if ne .connector "1" }}
   connector: {{ .connector }}
-  {{- end }}

@@ -1,0 +1,7 @@
+encoding: json
+send:
+  # Plugin Typ
+  source: script
+  # Plugin-spezifische Konfiguration.
+  # {{.send}} enthält die JSON Nachricht
+  cmd: /usr/local/bin/evcc_message "{{.send}}"

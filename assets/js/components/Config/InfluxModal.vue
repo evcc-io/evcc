@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="influxModal"
+		name="influx"
 		:title="$t('config.influx.title')"
 		:description="$t('config.influx.description')"
 		docs="/docs/reference/configuration/influx"
 		endpoint="/config/influx"
 		state-key="influx"
-		data-testid="influx-modal"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">

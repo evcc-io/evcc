@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { findLowestSumSlotIndex } from "./forecast";
+import { findLowestSumSlotIndex, isStaticTariff } from "./forecast";
 
 describe("findLowestSumSlotIndex", () => {
   test("finds lowest sum with span of 4", () => {
@@ -53,5 +53,33 @@ describe("findLowestSumSlotIndex", () => {
       { start: "2025-01-01T00:45:00Z", value: 2 },
     ];
     expect(findLowestSumSlotIndex(slots, 2)).toBe(0);
+  });
+});
+
+describe("isStaticTariff", () => {
+  test("returns false for undefined", () => {
+    expect(isStaticTariff(undefined)).toBe(false);
+  });
+
+  test("returns false for empty array", () => {
+    expect(isStaticTariff([])).toBe(false);
+  });
+
+  test("returns true when all values are identical", () => {
+    const slots = [
+      { start: "2025-01-01T00:00:00Z", end: "2025-01-01T00:15:00Z", value: 0.25 },
+      { start: "2025-01-01T00:15:00Z", end: "2025-01-01T00:30:00Z", value: 0.25 },
+      { start: "2025-01-01T00:30:00Z", end: "2025-01-01T00:45:00Z", value: 0.25 },
+    ];
+    expect(isStaticTariff(slots)).toBe(true);
+  });
+
+  test("returns false when values differ", () => {
+    const slots = [
+      { start: "2025-01-01T00:00:00Z", end: "2025-01-01T00:15:00Z", value: 0.25 },
+      { start: "2025-01-01T00:15:00Z", end: "2025-01-01T00:30:00Z", value: 0.3 },
+      { start: "2025-01-01T00:30:00Z", end: "2025-01-01T00:45:00Z", value: 0.25 },
+    ];
+    expect(isStaticTariff(slots)).toBe(false);
   });
 });

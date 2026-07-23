@@ -4,6 +4,7 @@ products:
     description:
       de: einphasig
       en: single phase
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: host
@@ -12,25 +13,17 @@ params:
       de: Standard-User ist admin
       en: admin is default
   - name: password
-    mask: true
   - name: channel
     default: 1
     required: true
     description:
-      de: Schaltkanal Nummer
-      en: Relaychannel number
-    help:
       de: Schaltkanal (1-8)
-      en: Relaychannel number (1-8)
+      en: Relay channel (1-8)
   - preset: switchsocket
 render: |
   type: tasmota
   uri: http://{{ .host }}
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
   channel: [{{ .channel }}]  # list of relay channels [1,2,....,8]
   {{ include "switchsocket" . }}

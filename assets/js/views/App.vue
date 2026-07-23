@@ -1,10 +1,16 @@
 <template>
 	<div class="app">
-		<router-view :notifications="notifications" :offline="offline"></router-view>
+		<router-view
+			v-if="showRoutes"
+			:notifications="notifications"
+			:offline="offline"
+		></router-view>
+
+		<BottomTabBar v-bind="bottomTabBarProps" />
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
-		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
-		<ForecastModal v-bind="forecastModalProps" />
+		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
+		<AboutModal v-bind="aboutModalProps" />
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
@@ -14,14 +20,16 @@
 
 <script lang="ts">
 import store from "../store";
+import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
-import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
-import ForecastModal from "../components/Forecast/ForecastModal.vue";
+import VehicleSettingsModal from "../components/Vehicles/SettingsModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
+import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
+import vehicleList from "@/utils/vehicleList";
 import { defineComponent } from "vue";
 
 // assume offline if not data received for 5 minutes
@@ -37,10 +45,11 @@ setInterval(() => {
 export default defineComponent({
 	name: "App",
 	components: {
+		AboutModal,
+		BottomTabBar,
 		GlobalSettingsModal,
+		VehicleSettingsModal,
 		HelpModal,
-		BatterySettingsModal,
-		ForecastModal,
 		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
@@ -55,6 +64,7 @@ export default defineComponent({
 			reconnectTimeout: null as number | null,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
+			currentVersion: undefined as string | undefined,
 		};
 	},
 	head() {
@@ -64,33 +74,54 @@ export default defineComponent({
 		version() {
 			return store.state.version;
 		},
-		batteryModalAvailabe() {
-			return store.state.battery?.length;
+		showRoutes() {
+			return this.state.startupCompleted;
 		},
 		state() {
 			const { state, uiLoadpoints } = store;
 			return { ...state, uiLoadpoints: uiLoadpoints.value };
 		},
+		vehicleList() {
+			return vehicleList(this.state.vehicles);
+		},
 		globalSettingsProps() {
 			return this.collectProps(GlobalSettingsModal, this.state);
-		},
-		batterySettingsProps() {
-			return this.collectProps(BatterySettingsModal, this.state);
 		},
 		offlineIndicatorProps() {
 			return this.collectProps(OfflineIndicator, this.state);
 		},
-		forecastModalProps() {
-			return this.collectProps(ForecastModal, this.state);
-		},
 		loginModalProps() {
 			return this.collectProps(LoginModal, this.state);
 		},
+		aboutModalProps() {
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(AboutModal, this.state),
+			};
+		},
+		bottomTabBarProps() {
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(BottomTabBar, this.state),
+			};
+		},
 	},
 	watch: {
-		version(now, prev) {
-			if (!!prev && !!now) {
-				console.log("new version detected. reloading browser", { now, prev });
+		version(now) {
+			if (!now) return;
+
+			if (!this.currentVersion) {
+				this.currentVersion = now;
+				return;
+			}
+
+			if (now !== this.currentVersion) {
+				console.log("new version detected. reloading browser", {
+					now,
+					prev: this.currentVersion,
+				});
 				this.reload();
 			}
 		},
@@ -104,11 +135,13 @@ export default defineComponent({
 	mounted() {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		window.addEventListener("pageshow", this.pageShowHandler);
 	},
 	unmounted() {
 		this.disconnect();
 		this.clearReconnectTimeout();
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		window.removeEventListener("pageshow", this.pageShowHandler);
 	},
 	methods: {
 		clearReconnectTimeout() {
@@ -116,11 +149,18 @@ export default defineComponent({
 				window.clearTimeout(this.reconnectTimeout);
 			}
 		},
-		pageVisibilityChanged() {
-			if (document.hidden) {
+		pageShowHandler(event: PageTransitionEvent) {
+			if (event.persisted) {
 				this.clearReconnectTimeout();
 				this.disconnect();
-			} else {
+				this.connect();
+			}
+		},
+		pageVisibilityChanged() {
+			// disconnect in any case to ensure fresh connection
+			this.clearReconnectTimeout();
+			this.disconnect();
+			if (!document.hidden) {
 				this.connect();
 			}
 		},
@@ -156,17 +196,10 @@ export default defineComponent({
 				return;
 			}
 
-			const loc = window.location;
-			const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-			const uri =
-				protocol +
-				"//" +
-				loc.hostname +
-				(loc.port ? ":" + loc.port : "") +
-				loc.pathname +
-				"ws";
+			const loc = new URL("ws", window.location.href);
+			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
-			this.ws = new WebSocket(uri);
+			this.ws = new WebSocket(loc.href);
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws?.close();
@@ -182,7 +215,7 @@ export default defineComponent({
 			this.ws.onmessage = (evt) => {
 				try {
 					const msg = JSON.parse(evt.data);
-					if (msg.startup) {
+					if (msg.startupCompleted) {
 						store.reset();
 					}
 					store.update(msg);

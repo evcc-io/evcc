@@ -11,7 +11,7 @@ const LOG_ENABLED = !process.env["GITHUB_ACTIONS"];
 
 function workerPort() {
   const index = parseInt(process.env["TEST_WORKER_INDEX"] ?? "-1");
-  return 12000 + index;
+  return 13000 + index;
 }
 
 function logPrefix() {
@@ -49,7 +49,8 @@ export function simulatorConfig() {
   const input = "./tests/simulator.evcc.yaml";
   const content = fs.readFileSync(input, "utf8");
   const result = content.replace(/localhost:7072/g, simulatorHost());
-  const resultName = "simulator.evcc.generated.yaml";
+  // per-worker file name, multiple workers write their own port concurrently
+  const resultName = `simulator-${workerPort()}.evcc.generated.yaml`;
   const resultPath = path.join(os.tmpdir(), resultName);
   fs.writeFileSync(resultPath, result);
   return resultPath;

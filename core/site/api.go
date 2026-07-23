@@ -5,11 +5,18 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
+// publisher gives access to the site's publish function
+type Publisher interface {
+	Publish(key string, val any)
+}
+
 // API is the external site API
 type API interface {
-	Healthy() bool
+	Publisher
+
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
+	Optimize() error
 
 	// Meta
 	GetTitle() string
@@ -26,15 +33,17 @@ type API interface {
 	SetAuxMeterRefs([]string)
 	GetExtMeterRefs() []string
 	SetExtMeterRefs([]string)
+	GetConsumerMeterRefs() []string
+	SetConsumerMeterRefs([]string)
 
 	// circuits
 	GetCircuit() api.Circuit
-	SetCircuit(api.Circuit)
 
 	//
 	// battery
 	//
 
+	GetBatterySoc() float64
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 	GetBufferSoc() float64
@@ -47,10 +56,16 @@ type API interface {
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
 
+	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
+	GetOptimizerChargingStrategy() string
+	// SetOptimizerChargingStrategy sets the optimizer grid charging strategy
+	SetOptimizerChargingStrategy(strategy string) error
+
 	//
 	// power and energy
 	//
 
+	GetGridPower() float64
 	GetResidualPower() float64
 	SetResidualPower(float64) error
 
@@ -60,6 +75,15 @@ type API interface {
 
 	// GetTariff returns the respective tariff
 	GetTariff(api.TariffUsage) api.Tariff
+
+	//
+	// forecast
+	//
+
+	// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+	GetSolarAdjusted() bool
+	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+	SetSolarAdjusted(bool)
 
 	//
 	// battery control

@@ -1,0 +1,666 @@
+template: huawei-sun2000-hybrid
+covers: ["huawei-sun2000", "huawei-dongle-powersensor", "huawei-sun2000-rs485"]
+products:
+  - brand: Huawei
+    description:
+      de: SUN2000 Hybrid-Wechselrichter
+      en: SUN2000 Hybrid Inverter
+capabilities: ["battery-control", "curtail", "dim"]
+requirements:
+  description:
+    de: |
+      Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 oder SmartPS).
+
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+    en: |
+      Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+caveats:
+  - description:
+      de: |
+        Parallele, via Modbus Proxy auf das Huawei System zugreifende Anwendungen (z.B. Home Assistant) können Fehler in der Kommunikation verursachen.
+      en: |
+        Parallel clients (e.g. Home Assistant) accessing the Huawei solar system via Modbus proxy may cause communication errors.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+  - name: timeout
+    default: 15s
+  - name: maxacpower
+    service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
+  - name: curtailpercent
+    description:
+      de: Wirkleistungsbegrenzung in Prozent
+      en: Active power limit in percent
+    advanced: true
+    usages: ["pv"]
+    deprecated: true # curtailment now applies the HEMS-distributed percent directly
+  - name: storageunit
+  - name: forceaccharging
+    default: false
+    advanced: true
+    type: bool
+    usages: ["battery"]
+    description:
+      en: Inverter cascade
+      de: Wechselrichterkaskade
+    help:
+      en: Keep AC charging active (except for when being dimmed) to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
+      de: AC-Laden bleibt aktiv (außer bei einer aktiven Leistungsreduzierung) zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
+  - preset: battery-params
+  - name: capacity
+    service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
+  - name: maxchargepower
+    service: modbus/read?address=37046&type=holding&encoding=uint32&{modbus}
+    required: true
+  - name: maxdischargepower
+    service: modbus/read?address=37048&type=holding&encoding=uint32&{modbus}
+    required: true
+  - name: minsoc
+    service: modbus/read?address=47082&type=holding&encoding=uint16&scale=0.1&{modbus}
+  - name: maxsoc
+    service: modbus/read?address=47081&type=holding&encoding=uint16&scale=0.1&{modbus}
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    connectdelay: 1s
+    register:
+      address: 37113 # Grid import/export power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37121 # Active energy imported from the grid
+      type: holding
+      decode: uint32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37119 # Active energy exported to the grid
+      type: holding
+      decode: uint32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.01
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37107 # Huawei phase A grid current
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37109 # Huawei phase B grid current
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37111 # Huawei phase C grid current
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -0.01
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37101 # Huawei phase A grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37103 # Huawei phase B grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37105 # Huawei phase C grid voltage
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: 0.1
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37132 # Huawei phase A grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37134 # Huawei phase B grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 37136 # Huawei phase C grid active power
+      type: holding
+      decode: int32nan
+    block: # 37101-37137
+      register: 37101
+      count: 37
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    connectdelay: 1s
+    register:
+      address: 32064 # Input power DC
+      type: holding
+      decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 32108 # Total DC Input Energy
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  maxacpower: {{ .maxacpower }}
+  curtail:
+    source: sequence
+    set:
+    # allowed feed-in power as percent of nominal (0-100 %)
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 47418 # Maximum Feed Grid Power (0-100 %)
+        type: writesingle
+        encoding: uint16
+      scale: 10
+    # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
+    - source: switch
+      switch:
+        - case: 100 # uncurtailed
+          set:
+            source: const
+            value: 0 # Unlimited
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47415 # Active power control mode
+                type: writesingle
+                encoding: uint16
+      default:
+        source: const
+        value: 7 # Power-limited grid connection (%)
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47415 # Active power control mode
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: go
+    in:
+    - name: mode
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47415 # Active power control mode (0=no curtailment)
+          type: holding
+          decode: uint16
+    - name: percent
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47418 # Maximum Feed Grid Power (0-100 %)
+          type: holding
+          decode: uint16
+        scale: 0.1
+    # the percentage register is only meaningful while a limit mode is active
+    script: |
+      limit := percent
+      if mode == 0 {
+        limit = 100
+      }
+      limit
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    connectdelay: 1s
+    register:
+      {{- if eq .storageunit "2" }}
+      address: 37743
+      {{- else }}
+      address: 37001
+      {{- end }}
+      type: holding
+      decode: int32nan
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "2" }}
+      address: 37755 # [Energy storage unit 2] Total discharge
+      {{- else }}
+      address: 37068 # [Energy storage unit 1] Total discharge
+      {{- end }}
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "2" }}
+      address: 37753 # [Energy storage unit 2] Total charge
+      {{- else }}
+      address: 37066 # [Energy storage unit 1] Total charge
+      {{- end }}
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "2" }}
+      address: 37738
+      {{- else }}
+      address: 37004
+      {{- end }}
+      type: holding
+      decode: uint16nan
+    scale: 0.1
+  dim:
+    source: ifelse
+    if:
+      source: convert
+      convert: bool2int
+      set:
+        source: const
+        value: 0 # Disable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+    else:
+      source: convert
+      convert: bool2int
+      set:
+        {{- if eq .forceaccharging "true" }}
+        source: const
+        value: 1 # Enable
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47087 # Charge from grid
+            type: writesingle
+            encoding: uint16
+        {{- else }}
+        source: sleep
+        duration: 0s
+        {{- end }}
+  dimmed:
+    source: go
+    in:
+    - name: v
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47087 # Charge from grid (0=disabled → dimmed, 1=enabled → not dimmed)
+          type: holding
+          decode: uint16
+    script: v == 0
+  batterymode:
+    source: sequence
+    set:
+      - source: switch
+        switch:
+          - case: 1 # normal
+            set:
+              source: sequence
+              set:
+              # register 47075 is range-checked: a maxchargepower above the
+              # inverter rated max (37046) is rejected, so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37046 # [ESS] Maximum charge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47075 # Max. Charge Power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxchargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+              # register 47077 is range-checked: a maxdischargepower above the
+              # inverter rated max (37048) is rejected, so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37048 # [ESS] Maximum discharge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47077 # Max. Discharge Power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxdischargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+          - case: 2 # hold
+            set:
+              source: sequence
+              set:
+              # register 47075 is range-checked: a maxchargepower above the
+              # inverter rated max (37046) is rejected, so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37046 # [ESS] Maximum charge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47075 # Max. Charge Power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxchargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+              - source: const
+                value: 0 # W Discharge Power
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47077 # Max. Discharge Power
+                    type: writemultiple
+                    encoding: uint32
+          - case: 3 # charge
+            set:
+              source: sequence
+              set:
+              # register 47075 is range-checked: a maxchargepower above the
+              # inverter rated max (37046) is rejected, so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37046 # [ESS] Maximum charge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47075 # Max. Charge Power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxchargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+              # clamp maxchargepower to the inverter rated max (37046) for parity
+              # with discharge, avoiding a stale out-of-range value
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37046 # [ESS] Maximum charge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47247 # Forcible charge power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxchargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+              - source: const
+                value: 1 # Minute
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47083 # Forced charging and discharging period
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0 # duration
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47246 # Forcible charge/discharge setting mode
+                    type: writesingle
+                    encoding: uint16
+          - case: 4 # holdcharge
+            set:
+              source: sequence
+              set:
+              - source: const
+                value: 0 # W
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47075 # Max. Charge Power
+                    type: writemultiple
+                    encoding: uint32
+              # register 47077 is range-checked: a maxdischargepower above the
+              # inverter rated max (37048) is rejected, so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37048 # [ESS] Maximum discharge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47077 # Max. Discharge Power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxdischargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+      # single watchdog wraps the ENTIRE 47100 lifecycle, not just case 3
+      - source: watchdog
+        timeout: 30s
+        reset: [1, 2, 4]
+        set:
+          source: switch
+          switch:
+            - case: 3 # charge
+              set:
+                source: const
+                value: 1 # charge
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+          default:
+            source: const
+            value: 0 # stop
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47100 # Forcible charge/discharge
+                type: writesingle
+                encoding: uint16
+  {{- include "battery-params" . }}
+  {{- end }}

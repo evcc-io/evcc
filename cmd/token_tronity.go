@@ -120,7 +120,7 @@ func tronityToken(conf globalconfig.All, vehicleConf config.Named) (*oauth2.Toke
 	}
 
 	if oc.RedirectURL = cc.RedirectURI; oc.RedirectURL == "" {
-		oc.RedirectURL = fmt.Sprintf("%s/auth/tronity", conf.Network.URI())
+		oc.RedirectURL = fmt.Sprintf("%s/auth/tronity", conf.Network.ExternalURL())
 	}
 
 	return tronityAuthorize(conf.Network.HostPort(), oc)

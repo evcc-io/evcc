@@ -6,11 +6,11 @@
 #    title: Charge finished
 #    msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
 #  connect:
-#    title: Car connected
-#    msg: "Car connected at ${pvPower:%.1fk}kW PV"
+#    title: Vehicle connected
+#    msg: "Vehicle connected at ${pvPower:%.1fk}kW PV"
 #  disconnect:
-#    title: Car disconnected
-#    msg: Car disconnected after ${connectedDuration}
+#    title: Vehicle disconnected
+#    msg: Vehicle disconnected after ${connectedDuration}
 #  soc:
 #    title: Soc updated
 #    msg: Battery charged to ${vehicleSoc:%.0f}%
@@ -20,6 +20,9 @@
 #  asleep:
 #    title: Vehicle asleep
 #    msg: Charge release, vehicle {{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}not charging.
+#  planoverrun:
+#    title: Plan overrun
+#    msg: "Plan {{- if .vehicleTitle }} for {{ .vehicleTitle }} will overrun.{{ else }} will overrun.{{end}}"
 
 #services:
 #- type: pushover
@@ -34,5 +37,6 @@
 #  uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
 #- type: ntfy
 #  uri: https://<host>/<topics>
+#  authtoken: <auth_token>
 #  priority: <priority>
 #  tags: <tags>

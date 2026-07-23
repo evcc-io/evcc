@@ -1,36 +1,27 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div
-				class="d-flex justify-content-between align-items-center my-3 my-md-4"
-				data-testid="header"
-			>
-				<h1 class="d-block my-0">
-					<span v-if="!isInitialSetup">
-						{{ siteTitle || "evcc" }}
-					</span>
-				</h1>
-				<div class="d-flex">
-					<Notifications
-						:notifications="notifications"
-						:loadpointTitles="loadpointTitles"
-						class="me-2"
-					/>
-					<TopNavigation v-bind="topNavigation" />
-				</div>
-			</div>
-			<HemsWarning :circuits="circuits" />
-			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
+			<TopHeader :title="headerTitle" :notifications="notifications" />
+			<HemsWarning :status="hems?.status" />
+			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div
 				v-if="hasFatalError"
 				class="flex-grow-1 align-items-center d-flex justify-content-center"
 			>
-				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
+				<div class="d-flex flex-column align-items-center mb-5 gap-4 mx-4 text-center">
+					<h1 class="text-gray fs-4 my-0">{{ $t("startupError.title") }}</h1>
+					<p v-for="fatalText in fatalTexts" :key="fatalText" class="text-break my-0">
+						{{ fatalText }}
+					</p>
+					<router-link class="btn btn-secondary" to="/config">
+						{{ $t("startupError.editConfiguration") }}
+					</router-link>
+				</div>
 			</div>
 			<div
-				v-else-if="isInitialSetup"
+				v-else-if="setupRequired"
 				class="flex-grow-1 d-flex align-items-center justify-content-center p-3"
 			>
 				<div
@@ -49,7 +40,8 @@
 				</div>
 			</div>
 			<Loadpoints
-				v-else-if="loadpoints.length > 0"
+				v-else
+				:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="orderedVisibleLoadpoints"
 				:vehicles="vehicleList"
@@ -64,40 +56,42 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:batteryMode="batteryMode"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import Navigation from "../Top/Navigation.vue";
-import Notifications from "../Top/Notifications.vue";
+import TopHeader from "../Top/Header.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
-import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
 	AuthProviders,
-	BatteryMeter,
+	Battery,
 	Meter,
 	CURRENCY,
 	Forecast,
 	Notification,
-	Circuit,
+	ConfigStatus,
+	HemsConfig,
+	HemsStatus,
 	SMART_COST_TYPE,
-	Sponsor,
 	FatalError,
 	EvOpt,
+	BATTERY_MODE,
+	Vehicle,
 } from "@/types/evcc";
+import vehicleList from "@/utils/vehicleList";
 import store from "@/store";
 import type { Grid } from "./types";
 
@@ -106,10 +100,8 @@ export default defineComponent({
 	components: {
 		Loadpoints,
 		Energyflow,
-		Footer,
 		HemsWarning,
-		Notifications,
-		TopNavigation: Navigation,
+		TopHeader,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
@@ -118,6 +110,7 @@ export default defineComponent({
 
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
+		setupRequired: Boolean,
 
 		// details
 		gridConfigured: Boolean,
@@ -127,22 +120,21 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
-		batteryPower: Number,
-		batterySoc: Number,
+		consumers: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
-		batteryGridChargeLimit: { type: Number, default: null },
+		solarAdjusted: Boolean,
+		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
-		batteryMode: String,
-		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
+		batteryMode: String as PropType<BATTERY_MODE>,
+		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
 		bufferStartSoc: Number,
 		siteTitle: String,
-		vehicles: Object,
+		vehicles: Object as PropType<Record<string, Vehicle>>,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
-		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -151,30 +143,29 @@ export default defineComponent({
 		tariffPriceLoadpoints: Number,
 		tariffCo2Loadpoints: Number,
 
-		availableVersion: String,
-		releaseNotes: String,
-		hasUpdater: Boolean,
-		uploadMessage: String,
-		uploadProgress: Number,
-		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
-		circuits: Object as PropType<Record<string, Circuit>>,
-		telemetry: Boolean,
+		hems: Object as PropType<ConfigStatus<HemsConfig, HemsStatus>>,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
+		headerTitle() {
+			return this.setupRequired ? "" : this.siteTitle || "evcc";
+		},
 		loadpoints() {
 			return store.uiLoadpoints.value || [];
 		},
 		orderedVisibleLoadpoints() {
 			return this.loadpoints.filter((lp) => lp.visible);
 		},
+		batterySoc() {
+			return this.battery?.soc;
+		},
 		batteryConfigured() {
-			return this.battery?.length > 0;
+			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		pvConfigured() {
 			return this.pv?.length > 0;
@@ -182,49 +173,26 @@ export default defineComponent({
 		gridPower() {
 			return this.grid?.power || 0;
 		},
+		experimental() {
+			return store.state?.experimental;
+		},
 		energyflow() {
 			return this.collectProps(Energyflow);
 		},
-		loadpointTitles() {
-			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
-		},
 		vehicleList() {
-			const vehicles = this.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
-		},
-		topNavigation() {
-			return this.collectProps(Navigation);
+			return vehicleList(this.vehicles);
 		},
 		showParkingLot() {
 			// work in progess
 			return false;
 		},
-		isInitialSetup() {
-			return this.loadpoints.length === 0;
-		},
-		footer() {
-			return {
-				version: {
-					installed: window.evcc.version,
-					commit: window.evcc.commit,
-					available: this.availableVersion,
-					releaseNotes: this.releaseNotes,
-					hasUpdater: this.hasUpdater,
-					uploadMessage: this.uploadMessage,
-					uploadProgress: this.uploadProgress,
-				},
-				savings: {
-					sponsor: this.sponsor,
-					statistics: this.statistics,
-					co2Configured: this.tariffCo2 !== undefined,
-					priceConfigured: this.tariffGrid !== undefined,
-					currency: this.currency,
-					telemetry: this.telemetry,
-				},
-			};
-		},
 		hasFatalError() {
 			return this.fatal.length > 0;
+		},
+		fatalTexts() {
+			return this.fatal.map(({ error, class: errorClass }) =>
+				errorClass ? `${errorClass}: ${error}` : error
+			);
 		},
 	},
 	methods: {

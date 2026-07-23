@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="titleModal"
+		name="title"
 		:title="$t('config.title.title')"
 		endpoint="/config/site"
 		state-key="siteTitle"
 		save-method="put"
 		:transform-read-values="transformReadValues"
-		data-testid="title-modal"
 		disable-remove
 		@changed="$emit('changed')"
 	>

@@ -33,7 +33,7 @@ func init() {
 
 	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
-	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
+	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger, Circuit, Hems} {
 		load(class)
 	}
 }
@@ -68,18 +68,27 @@ func fromBytes(b []byte) (Template, error) {
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
 
-	var definition TemplateDefinition
-	if err := dec.Decode(&definition); err != nil {
+	var tmpl Template
+	if err := dec.Decode(&tmpl); err != nil {
 		return Template{}, err
 	}
 
-	tmpl := Template{
-		TemplateDefinition: definition,
-	}
-
-	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.Validate} {
+	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.Validate} {
 		if err := f(); err != nil {
 			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
+		}
+	}
+
+	// push down capabilities to products
+	for i := range tmpl.Products {
+		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
+
+		seen := make(map[Capability]struct{}, len(tmpl.Products[i].Capabilities))
+		for _, c := range tmpl.Products[i].Capabilities {
+			if _, ok := seen[c]; ok {
+				return Template{}, fmt.Errorf("template '%s': duplicate capability '%s' for product '%s'", tmpl.Template, c, tmpl.Products[i].Identifier())
+			}
+			seen[c] = struct{}{}
 		}
 	}
 

@@ -1,14 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
-import {
-  enableExperimental,
-  expectModalHidden,
-  expectModalVisible,
-  openTopNavigation,
-  expectTopNavigationClosed,
-} from "./utils";
+import { start, stop, restart, baseUrl } from "./evcc";
+import { expectModalHidden, expectModalVisible, openMoreMenu } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
+const NETWORK_HOST = "somehostname.local";
+const NETWORK_EXTERNAL_URL = "https://ext.evcc.example";
 
 test.use({ baseURL: baseUrl() });
 
@@ -22,9 +18,8 @@ test.afterAll(async () => {
 test.describe("basics", async () => {
   test("navigation to config", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
+    await openMoreMenu(page);
     await page.getByRole("link", { name: "Configuration" }).click();
-    await expectTopNavigationClosed(page);
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
 });
@@ -37,7 +32,6 @@ test.describe("general", async () => {
 
     // change value in config
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
@@ -59,7 +53,76 @@ test.describe("general", async () => {
     await expect(page.getByTestId("generalconfig-title")).toContainText("Ahoy World");
 
     // check changed value on main ui
-    await page.getByTestId("home-link").click();
+    await page.getByRole("link", { name: "Charge" }).click();
     await expect(page.getByRole("heading", { name: "Ahoy World" })).toBeVisible();
+  });
+  test("enable experimental", async ({ page }) => {
+    await page.goto("/#/config");
+
+    const experimentalEntry = page.getByTestId("generalconfig-experimental");
+
+    await expect(experimentalEntry).toContainText("off");
+    await experimentalEntry.getByRole("button", { name: "edit" }).click();
+
+    const modal = page.getByTestId("experimental-modal");
+    await expectModalVisible(modal);
+
+    const experimentalInput = modal.getByLabel("Enable experimental features.");
+    await expect(experimentalInput).not.toBeChecked();
+    await experimentalInput.click();
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+    await expect(experimentalEntry).toContainText("on");
+
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(experimentalEntry).toContainText("on");
+    await experimentalEntry.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await expect(experimentalInput).toBeChecked();
+  });
+});
+
+test.describe("network modal", async () => {
+  test("persists host and external url across restart", async ({ page }) => {
+    await page.goto("/#/config");
+
+    const networkEntry = page.getByTestId("generalconfig-network");
+    await expect(networkEntry).toBeVisible();
+    await networkEntry.getByRole("button", { name: "edit" }).click();
+
+    const modal = page.getByTestId("network-modal");
+    await expectModalVisible(modal);
+
+    const portValue = await modal.getByLabel("Port").inputValue();
+    await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL + "/somepath");
+    await expect(modal.getByRole("status")).toContainText("doesn't need a path");
+    await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL);
+    await expect(modal.getByRole("status")).not.toBeVisible();
+    await modal.getByLabel("mDNS Hostname").fill(NETWORK_HOST);
+
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+
+    // values immediatelly visible
+    await expect(networkEntry).toContainText(portValue);
+
+    // check persistance
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(networkEntry).toBeVisible();
+    await networkEntry.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+
+    await expect(modal.getByLabel("mDNS Hostname")).toHaveValue(NETWORK_HOST);
+    await expect(modal.getByLabel("Port")).toHaveValue(portValue);
+    await expect(modal.getByLabel("External URL")).toHaveValue(NETWORK_EXTERNAL_URL);
+    const internalUrl = await modal.getByLabel("Internal URL").inputValue();
+    expect(internalUrl).toContain(`:${portValue}`);
+
+    await modal.getByRole("button", { name: "Cancel" }).click();
+    await expectModalHidden(modal);
   });
 });

@@ -11,4 +11,6 @@ const (
 	Tariff
 	Loadpoint
 	Circuit
+	Messenger
+	Hems
 )

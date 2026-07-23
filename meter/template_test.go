@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -34,6 +33,7 @@ var acceptable = []string{
 	"no Speedwire ping response for 127.0.0.1",                             // SMA
 	"no such network interface",                                            // SMA
 	"missing config values: username, password, key",                       // E3DC
+	"missing access key",                                                   // Ecoflow
 	"eebus not configured",                                                 // EEBus
 	"missing token",                                                        // HomeAssistant
 }
@@ -42,7 +42,7 @@ func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Meter, func(t *testing.T, values map[string]any) {
 		t.Helper()
 
-		if _, err := NewFromConfig(context.TODO(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
+		if _, err := NewFromConfig(t.Context(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)
 		}

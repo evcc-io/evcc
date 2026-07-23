@@ -3,6 +3,7 @@
 		<LabelAndValue class="d-block" align="end">
 			<template #label>
 				<CustomSelect
+					inline
 					:selected="selectedKey"
 					:options="selectOptions"
 					data-testid="sessionInfoSelect"
@@ -30,7 +31,7 @@
 import { defineComponent, type PropType } from "vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import formatter from "@/mixins/formatter";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { getLoadpointSessionInfo, setLoadpointSessionInfo } from "@/uiLoadpoints";
 import type { CURRENCY, SelectOption, SessionInfoKey } from "@/types/evcc";
 
@@ -50,6 +51,9 @@ export default defineComponent({
 		sessionSolarPercentage: { type: Number, default: 0 },
 		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
 		chargeDurationInterpolated: Number,
+		sessionEnergy: { type: Number, default: 0 },
+		last24hEnergy: Number,
+		last7dEnergy: Number,
 		tariffCo2: Number,
 		tariffGrid: Number,
 	},
@@ -101,6 +105,21 @@ export default defineComponent({
 					valueSm: this.fmtCo2Short(this.sessionCo2PerKWh),
 					available: this.tariffCo2 !== undefined,
 				},
+				{
+					key: "emission" as const,
+					value: this.emissionFormatted,
+					available: this.tariffCo2 !== undefined,
+				},
+				{
+					key: "last24hEnergy" as const,
+					value: this.fmtWh(this.last24hEnergy ?? 0, POWER_UNIT.AUTO),
+					available: this.last24hEnergy !== undefined,
+				},
+				{
+					key: "last7dEnergy" as const,
+					value: this.fmtWh(this.last7dEnergy ?? 0, POWER_UNIT.AUTO),
+					available: this.last7dEnergy !== undefined,
+				},
 			];
 			// only show options that are available
 			return result.filter(({ available }) => available === undefined || available);
@@ -142,6 +161,10 @@ export default defineComponent({
 		solarFormatted() {
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);
 		},
+		emissionFormatted() {
+			const kWh = this.sessionEnergy / 1000;
+			return this.fmtGrams(this.sessionCo2PerKWh * kWh);
+		},
 		priceFormatted() {
 			return `${this.fmtMoney(this.sessionPrice, this.currency)} ${this.fmtCurrencySymbol(
 				this.currency
@@ -175,8 +198,10 @@ export default defineComponent({
 
 <style scoped>
 .sessionInfo * {
-	cursor: pointer;
 	user-select: none;
 	-webkit-user-select: none;
+}
+.sessionInfo .value {
+	cursor: pointer;
 }
 </style>

@@ -74,22 +74,6 @@
 				{{ $t("settings.fullscreen.enter") }}
 			</button>
 		</FormRow>
-		<FormRow id="hiddenFeaturesEnabled" :label="`${$t('settings.hiddenFeatures.label')} 🧪`">
-			<div class="form-check form-switch my-1">
-				<input
-					id="hiddenFeaturesEnabled"
-					v-model="hiddenFeatures"
-					class="form-check-input"
-					type="checkbox"
-					role="switch"
-				/>
-				<div class="form-check-label">
-					<label for="hiddenFeaturesEnabled">
-						{{ $t("settings.hiddenFeatures.value") }}
-					</label>
-				</div>
-			</div>
-		</FormRow>
 		<div class="small text-muted mb-3">
 			{{ $t("settings.deviceInfo") }}
 		</div>
@@ -108,13 +92,9 @@ import {
 } from "@/i18n.ts";
 import { getThemePreference, setThemePreference } from "@/theme.ts";
 import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
-import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
-
-const TIME_12H = "12";
-const TIME_24H = "24";
+import { LENGTH_UNIT, THEME, TIME_FORMAT, type UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",
@@ -127,12 +107,11 @@ export default defineComponent({
 			theme: getThemePreference(),
 			language: getLocalePreference() || "",
 			unit: getUnits(),
-			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
-			hiddenFeatures: getHiddenFeatures(),
+			timeFormat: is12hFormat() ? TIME_FORMAT.H12 : TIME_FORMAT.H24,
 			fullscreenActive: false,
 			THEMES: Object.values(THEME),
 			UNITS: Object.values(LENGTH_UNIT),
-			TIME_FORMATS: [TIME_24H, TIME_12H],
+			TIME_FORMATS: [TIME_FORMAT.H24, TIME_FORMAT.H12],
 		};
 	},
 	computed: {
@@ -157,13 +136,10 @@ export default defineComponent({
 			setUnits(value);
 		},
 		timeFormat(value) {
-			set12hFormat(value === TIME_12H);
+			set12hFormat(value === TIME_FORMAT.H12);
 		},
 		theme(value) {
 			setThemePreference(value);
-		},
-		hiddenFeatures(value) {
-			setHiddenFeatures(value);
 		},
 		language(value) {
 			const i18n = this.$root?.$i18n;

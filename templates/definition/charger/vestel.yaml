@@ -16,12 +16,17 @@ products:
   - brand: E.ON Drive
     description:
       generic: vBox
-capabilities: ["rfid", "1p3p"]
+capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   description:
     de: 1P3P erfordert Firmware 3.187.0 oder neuer, RFID erfordert 3.156.0 oder neuer.
     en: 1P3P requires at least firmware version 3.187.0, RFID at least 3.156.0.
   evcc: ["sponsorship"]
+caveats:
+  - description:
+      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+      en: Phase switching occasionally disables itself.
+    link: https://github.com/evcc-io/evcc/issues/21708
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -6,13 +6,15 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/shelly"
 	"github.com/evcc-io/evcc/util"
 )
 
 // Shelly meter considering usage
 type Shelly struct {
-	shelly.Connection
+	implement.Caps
+	conn  *shelly.Connection
 	usage string
 }
 
@@ -20,8 +22,6 @@ type Shelly struct {
 func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
-
-//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
@@ -45,14 +45,25 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	var vol, cur, pow func() (float64, float64, float64, error)
-	if phases, ok := c.Connection.Generation.(shelly.Phases); ok {
-		vol = phases.Voltages
-		cur = phases.Currents
-		pow = phases.Powers
+	// Three-phase Shelly energy meters count each phase separately (non-balanced),
+	// making their totals unsuitable for bidirectional grid metering.
+	if !(c.usage == "grid" && c.conn.IsThreePhase()) {
+		total, ret := c.conn.TotalEnergy, c.conn.ReturnEnergy
+		if c.usage == "pv" {
+			// reverse direction
+			total, ret = ret, total
+		}
+		implement.Has(c, implement.MeterEnergy(total))
+		implement.Has(c, implement.MeterReturnEnergy(ret))
 	}
 
-	return decorateShelly(c, vol, cur, pow), nil
+	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
+		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
+		implement.Has(c, implement.PhaseCurrents(phases.Currents))
+		implement.Has(c, implement.PhasePowers(phases.Powers))
+	}
+
+	return c, nil
 }
 
 // NewShelly creates Shelly meter
@@ -62,8 +73,9 @@ func NewShelly(uri, user, password, usage string, channel int, cache time.Durati
 		return nil, err
 	}
 	c := &Shelly{
-		Connection: *conn,
-		usage:      usage,
+		Caps:  implement.New(),
+		conn:  conn,
+		usage: usage,
 	}
 	return c, nil
 }
@@ -72,12 +84,20 @@ var _ api.Meter = (*Shelly)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Shelly) CurrentPower() (float64, error) {
-	power, err := c.Connection.CurrentPower()
+	power, err := c.conn.CurrentPower()
 	if err != nil {
 		return 0, err
 	}
-	if c.usage == "pv" {
-		power = math.Abs(power)
+	return c.currentPowerForUsage(power, c.conn.SignedPower()), nil
+}
+
+// PV usage inverts directional power, otherwise the magnitude is used.
+func (c *Shelly) currentPowerForUsage(power float64, signed bool) float64 {
+	if c.usage != "pv" {
+		return power
 	}
-	return power, nil
+	if signed {
+		return -power
+	}
+	return math.Abs(power)
 }

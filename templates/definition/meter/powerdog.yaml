@@ -5,7 +5,6 @@ products:
 params:
   - name: usage
     choice: ["grid", "pv"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
 render: |

@@ -91,6 +91,10 @@ type API interface {
 	GetLimitEnergy() float64
 	// SetLimitEnergy sets the session limit energy
 	SetLimitEnergy(energy float64)
+	// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+	GetMinSoc() int
+	// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+	SetMinSoc(soc int)
 
 	//
 	// effective values
@@ -108,6 +112,10 @@ type API interface {
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
+	// PvChargeStarting reports a PV loadpoint claiming surplus but not yet drawing it
+	PvChargeStarting() bool
+	// EffectivePlanStrategy returns the effective plan strategy
+	EffectivePlanStrategy() api.PlanStrategy
 	// PublishEffectiveValues publishes effective values for currently attached vehicle
 	PublishEffectiveValues()
 
@@ -116,24 +124,33 @@ type API interface {
 	//
 
 	// GetPlanEnergy returns the charge plan energy
-	GetPlanEnergy() (time.Time, time.Duration, float64)
+	GetPlanEnergy() (time.Time, float64)
 	// SetPlanEnergy sets the charge plan energy
-	SetPlanEnergy(time.Time, time.Duration, float64) error
+	SetPlanEnergy(time.Time, float64) error
+	// ClearPlanLock clears the locked plan goal
+	ClearPlanLock()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
-	// GetPlanPreCondDuration returns the precondition duration
-	GetPlanPreCondDuration() time.Duration
+	// GetPlanStrategy returns the plan strategy
+	GetPlanStrategy() api.PlanStrategy
+	// SetPlanStrategy sets the plan strategy
+	SetPlanStrategy(api.PlanStrategy) error
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates
+	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig
 	// SetSocConfig sets the soc poll settings
 	SetSocConfig(soc SocConfig)
+
+	// GetUI returns the display-only ui settings
+	GetUI() UIConfig
+	// SetUI sets the display-only ui settings
+	SetUI(ui UIConfig)
 
 	// GetThresholds returns the PV mode threshold settings
 	GetThresholds() ThresholdsConfig
@@ -161,6 +178,10 @@ type API interface {
 	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
+	// GetBatteryBoostLimit returns the battery boost soc limit
+	GetBatteryBoostLimit() int
+	// SetBatteryBoostLimit sets the battery boost soc limit
+	SetBatteryBoostLimit(int)
 
 	//
 	// smart grid charging

@@ -10,16 +10,6 @@ requirements:
 group: solar
 params:
   - preset: forecast-base
-  - name: az
-    description:
-      en: Azimuth
-      de: Azimut
-    help:
-      en: Orientation of PV modules in azimuth in degree. -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
-      de: Ausrichtung der PV-Module im Azimut in Grad. -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
-    type: int
-    example: 0
-    required: true
   - name: ac
     description:
       en: AC Power [kW]
@@ -75,8 +65,8 @@ params:
       en: Simulate terrain shadows
       de: Simuliert Verschattung durch Umgebung
     help:
-      en: Each number representing the horizon height in degrees. see https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast and  https://doc.forecast.solar/horizon
-      de: Jede Zahl steht für die Horizonthöhe in Grad. Siehe https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast und https://doc.forecast.solar/horizon
+      en: Each number representing the horizon height in degrees. See [api.akkudoktor.net](https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast) and [doc.forecast.solar](https://doc.forecast.solar/horizon)
+      de: Jede Zahl steht für die Horizonthöhe in Grad. Siehe [api.akkudoktor.net](https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast) und [doc.forecast.solar](https://doc.forecast.solar/horizon)
     type: string
     example: "10,0,10,15"
     advanced: true

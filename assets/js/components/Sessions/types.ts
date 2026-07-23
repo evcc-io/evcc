@@ -10,6 +10,8 @@ export interface Session {
   meterStop: number;
   chargedEnergy: number;
   chargeDuration: number;
+  socStart: number | null;
+  socEnd: number | null;
   solarPercentage: number;
   price: number | null;
   pricePerKWh: number | null;
@@ -21,6 +23,10 @@ export interface Legend {
   color: any;
   value: string | string[];
   type?: "area" | "line";
+  id?: string;
+  dim?: boolean;
+  focusable?: boolean;
+  focusKey?: string | number;
 }
 
 export interface Column {
@@ -44,6 +50,7 @@ export enum GROUPS {
 }
 
 export enum PERIODS {
+  DAY = "day",
   MONTH = "month",
   YEAR = "year",
   TOTAL = "total",

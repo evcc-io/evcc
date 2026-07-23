@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -309,29 +308,11 @@ func (wb *Kathrein) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(kathreinRegVoltages, 1)
 }
 
-var _ api.ChargeTimer = (*Kathrein)(nil)
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25934
+// var _ api.ChargeTimer = (*Kathrein)(nil)
 
-// ChargeDuration implements the api.ChargeTimer interface
-func (wb *Kathrein) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingDuration, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
-}
-
-var _ api.ChargeRater = (*Kathrein)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Kathrein) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
-}
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25427
+// var _ api.ChargeRater = (*Kathrein)(nil)
 
 var _ api.MeterEnergy = (*Kathrein)(nil)
 

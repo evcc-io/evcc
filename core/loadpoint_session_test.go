@@ -258,3 +258,88 @@ func TestResetHeatingSession(t *testing.T) {
 	assert.Equal(t, 1.0, *lp.session.MeterStart)
 	assert.Equal(t, 3.0, *lp.session.MeterStop)
 }
+
+func TestFinalizeSessionEnergy(t *testing.T) {
+	setup := func(t *testing.T) (*Loadpoint, *api.MockMeterEnergy, *api.MockChargeRater) {
+		t.Helper()
+		var err error
+		serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
+		require.NoError(t, err)
+		db, err := session.NewStore("foo", serverdb.Instance)
+		require.NoError(t, err)
+
+		ctrl := gomock.NewController(t)
+		mm := api.NewMockMeter(ctrl)
+		me := api.NewMockMeterEnergy(ctrl)
+		rater := api.NewMockChargeRater(ctrl)
+
+		type EnergyDecorator struct {
+			api.Meter
+			api.MeterEnergy
+		}
+
+		cm := &EnergyDecorator{
+			Meter:       mm,
+			MeterEnergy: me,
+		}
+
+		lp := &Loadpoint{
+			log:         util.NewLogger("foo"),
+			clock:       clock.NewMock(),
+			db:          db,
+			chargeRater: rater,
+			chargeMeter: cm,
+		}
+		return lp, me, rater
+	}
+
+	t.Run("corrects session when ChargedEnergy increased", func(t *testing.T) {
+		lp, me, rater := setup(t)
+
+		me.EXPECT().TotalEnergy().Return(9157.3, nil)
+		lp.createSession()
+		lp.session.Created = lp.clock.Now()
+
+		lp.energyMetrics.Update(15.3)
+		me.EXPECT().TotalEnergy().Return(9164.0, nil)
+		lp.stopSession()
+		require.Equal(t, 15.3, lp.session.ChargedEnergy)
+
+		rater.EXPECT().ChargedEnergy().Return(16.2, nil)
+		me.EXPECT().TotalEnergy().Return(9173.5, nil)
+		lp.finalizeSessionEnergy()
+
+		assert.Equal(t, 16.2, lp.session.ChargedEnergy)
+		assert.Equal(t, 9173.5, *lp.session.MeterStop)
+		assert.Equal(t, 9157.3, *lp.session.MeterStart)
+	})
+
+	t.Run("no-op when ChargedEnergy unchanged", func(t *testing.T) {
+		lp, me, rater := setup(t)
+
+		me.EXPECT().TotalEnergy().Return(9154.4, nil)
+		lp.createSession()
+		lp.session.Created = lp.clock.Now()
+
+		lp.energyMetrics.Update(15.3)
+		me.EXPECT().TotalEnergy().Return(9164.0, nil)
+		lp.stopSession()
+		require.Equal(t, 15.3, lp.session.ChargedEnergy)
+
+		rater.EXPECT().ChargedEnergy().Return(15.3, nil)
+		lp.finalizeSessionEnergy()
+
+		assert.Equal(t, 15.3, lp.session.ChargedEnergy)
+		assert.Equal(t, 9164.0, *lp.session.MeterStop)
+	})
+
+	t.Run("no-op when session nil or uncreated", func(t *testing.T) {
+		lp, _, _ := setup(t)
+
+		lp.session = nil
+		assert.NotPanics(t, func() { lp.finalizeSessionEnergy() })
+
+		lp.session = &session.Session{}
+		assert.NotPanics(t, func() { lp.finalizeSessionEnergy() })
+	})
+}

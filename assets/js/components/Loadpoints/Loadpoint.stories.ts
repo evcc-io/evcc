@@ -14,6 +14,12 @@ export default {
   parameters: {
     layout: "centered",
   },
+  argTypes: {
+    vehicleSoc: { control: { type: "range", min: 0, max: 100, step: 1 } },
+    limitSoc: { control: { type: "range", min: 0, max: 100, step: 1 } },
+    effectiveLimitSoc: { control: { type: "range", min: 0, max: 100, step: 1 } },
+    vehicleLimitSoc: { control: { type: "range", min: 0, max: 100, step: 1 } },
+  },
 } as Meta<typeof Loadpoint>;
 
 // Based on actual API state structure from demo.evcc.io
@@ -51,7 +57,7 @@ const baseState = {
   planActive: false,
   planEnergy: 0,
   planOverrun: 0,
-  planPrecondition: 0,
+  planStrategy: { continuous: false, precondition: 0 },
   planProjectedEnd: undefined,
   planProjectedStart: undefined,
   planTime: undefined,
@@ -67,6 +73,7 @@ const baseState = {
   vehicleClimaterActive: false,
   vehicleDetectionActive: false,
   vehicleWelcomeActive: false,
+  chargerFeatureContinuous: false,
   chargerFeatureHeating: false,
   chargerFeatureIntegratedDevice: false,
   chargerIcon: "",
@@ -82,6 +89,10 @@ const baseState = {
       capacity: 8,
       features: ["Offline"],
       repeatingPlans: [],
+      planStrategy: {
+        continuous: false,
+        precondition: 0,
+      },
     },
     {
       name: "vehicle_4",
@@ -90,6 +101,10 @@ const baseState = {
       capacity: 80,
       features: ["Offline"],
       repeatingPlans: [],
+      planStrategy: {
+        continuous: true,
+        precondition: 0,
+      },
     },
   ],
   smartCostType: SMART_COST_TYPE.PRICE_FORECAST,
@@ -160,4 +175,24 @@ ChargerIconNoVehicle.args = {
   chargerFeatureIntegratedDevice: true,
   vehicleName: "",
   vehicles: [],
+};
+
+// integrated heater: temperature bar (30..70 range), device limit marker
+export const Heating = Template.bind({});
+Heating.args = {
+  ...baseState,
+  title: "Warmwasser",
+  chargerIcon: "heater",
+  mode: CHARGE_MODE.NOW,
+  chargerFeatureHeating: true,
+  chargerFeatureIntegratedDevice: true,
+  vehicleName: "",
+  vehicles: [],
+  ui: { minTemp: 30, maxTemp: 70 },
+  vehicleSoc: 48,
+  effectiveLimitSoc: 60,
+  vehicleLimitSoc: 65,
+  todayEnergy: 3200,
+  last24hEnergy: 4100,
+  last7dEnergy: 26500,
 };

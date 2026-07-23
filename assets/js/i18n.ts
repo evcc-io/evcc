@@ -8,6 +8,7 @@ import settings from "./settings";
 export const LOCALES = {
   ar: ["Arabic", "العربية"],
   bg: ["Bulgarian", "Български"],
+  bs: ["Bosnian", "Bosanski"],
   ca: ["Catalan", "Català"],
   cs: ["Czech", "Česky"],
   da: ["Danish", "Dansk"],
@@ -21,8 +22,10 @@ export const LOCALES = {
   hr: ["Croatian", "Hrvatski"],
   hu: ["Hungarian", "Magyar"],
   it: ["Italian", "Italiano"],
+  ja: ["Japanese", "日本語"],
   lb: ["Luxembourgish", "Lëtzebuergesch"],
   lt: ["Lithuanian", "Lietuvių"],
+  lv: ["Latvian", "Latviešu"],
   nl: ["Dutch", "Nederlands"],
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],

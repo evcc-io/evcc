@@ -6,7 +6,7 @@ products:
   - brand: Autoaid
     description:
       generic: Business Wallbox
-capabilities: ["rfid"]
+capabilities: ["rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

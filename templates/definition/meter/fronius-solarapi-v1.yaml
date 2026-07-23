@@ -21,10 +21,7 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
-  - name: capacity
-    advanced: true
   - name: user
     default: customer
     description:
@@ -44,6 +41,7 @@ params:
     help:
       de: Firmware Versionen ab 1.36.5-1 erfordern /api/config.
       en: Firmware starting with 1.36.5-1 requires /api/config.
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -112,6 +110,10 @@ render: |
           body: '{"timeofuse":[]}'
         - source: error
           error: ErrNotAvailable
+    - case: 4 # holdcharge (not implemented)
+      set:
+        source: error
+        error: ErrNotAvailable
   {{- end }}
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

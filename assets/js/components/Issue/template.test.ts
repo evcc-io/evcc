@@ -8,6 +8,8 @@ describe("Issue Utils", () => {
     description: "This is a test description",
     steps: "1. Do something\n2. See error",
     version: "v1.0.0",
+    system: "Linux/amd64",
+    timezone: "MST -07:00",
   };
 
   const mockSections: Sections = {
@@ -51,7 +53,11 @@ other: test
 
 ## Version
 
-v1.0.0`);
+v1.0.0
+
+## System
+
+Linux/amd64, MST -07:00`);
       expect(result.additional).toBeUndefined();
     });
 

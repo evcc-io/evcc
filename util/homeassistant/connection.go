@@ -7,66 +7,90 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
+	"golang.org/x/oauth2"
 )
 
 // Connection represents a Home Assistant API connection
 type Connection struct {
 	*request.Helper
-	uri string
+	instance *proxyInstance
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, uri, token string) (*Connection, error) {
-	if uri == "" {
-		return nil, errors.New("missing uri")
+func NewConnection(log *util.Logger, uri, home string, insecure bool) (*Connection, error) {
+	if home != "" {
+		log.WARN.Printf("using deprecated 'home' parameter '%s', please use 'uri' instead", home)
 	}
-	if token == "" {
-		return nil, errors.New("missing token")
+
+	if uri == "" && home == "" {
+		return nil, errors.New("missing either uri or home")
 	}
 
 	c := &Connection{
-		Helper: request.NewHelper(log.Redact(token)),
-		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		Helper: request.NewHelper(log),
+		instance: &proxyInstance{
+			home:     home,
+			uri:      util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+			insecure: insecure,
+		},
+	}
+
+	// override the transport to accept self-signed certificates
+	if insecure {
+		c.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	// Set up authentication headers
-	c.Client.Transport = &transport.Decorator{
-		Base: c.Client.Transport,
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization": "Bearer " + token,
-			"Content-Type":  "application/json",
-		}),
+	c.Client.Transport = &oauth2.Transport{
+		Base:   c.Client.Transport,
+		Source: c.instance,
 	}
 
 	return c, nil
 }
 
-// StateResponse represents a Home Assistant entity state
-type StateResponse struct {
-	State      string         `json:"state"`
-	Attributes map[string]any `json:"attributes"`
+// URI returns the base URI of the Home Assistant instance
+func (c *Connection) URI() string {
+	return c.instance.URI()
+}
+
+// GetStates retrieves the list of entities
+func (c *Connection) GetStates() ([]StateResponse, error) {
+	var res []StateResponse
+	uri := fmt.Sprintf("%s/api/states", c.instance.URI())
+	err := c.GetJSON(uri, &res)
+	return res, err
+}
+
+// GetServices retrieves the list of callable services
+func (c *Connection) GetServices() ([]ServiceDomainResponse, error) {
+	var res []ServiceDomainResponse
+	uri := fmt.Sprintf("%s/api/services", c.instance.URI())
+	err := c.GetJSON(uri, &res)
+	return res, err
 }
 
 // GetState retrieves the state of an entity
-func (c *Connection) GetState(entity string) (string, error) {
+func (c *Connection) GetState(entity string) (StateResponse, error) {
 	var res StateResponse
-	uri := fmt.Sprintf("%s/api/states/%s", c.uri, url.PathEscape(entity))
+	uri := fmt.Sprintf("%s/api/states/%s", c.instance.URI(), url.PathEscape(entity))
 
 	if err := c.GetJSON(uri, &res); err != nil {
-		return "", err
+		return res, err
 	}
 
 	if res.State == "unknown" || res.State == "unavailable" {
-		return "", api.ErrNotAvailable
+		return res, api.ErrNotAvailable
 	}
 
-	return res.State, nil
+	return res, nil
 }
 
 // GetIntState retrieves the state of an entity as int64
@@ -76,9 +100,9 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 		return 0, err
 	}
 
-	value, err := strconv.ParseInt(state, 10, 64)
+	value, err := strconv.ParseInt(state.State, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state.State, entity, err)
 	}
 
 	return value, nil
@@ -86,17 +110,29 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 
 // GetFloatState retrieves the state of an entity as float64
 func (c *Connection) GetFloatState(entity string) (float64, error) {
+	// leading minus sign?
+	entity, invert := strings.CutPrefix(entity, "-")
+
 	state, err := c.GetState(entity)
 	if err != nil {
 		return 0, err
 	}
 
-	value, err := strconv.ParseFloat(state, 64)
+	value, err := strconv.ParseFloat(state.State, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state.State, entity, err)
 	}
 
-	return value, nil
+	scale, err := state.scale()
+	if err != nil {
+		return 0, fmt.Errorf("%w for entity %s", err, entity)
+	}
+
+	if invert {
+		value = -value
+	}
+
+	return scale * value, nil
 }
 
 // GetBoolState retrieves the state of an entity as boolean
@@ -106,8 +142,8 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 		return false, err
 	}
 
-	state = strings.ToLower(state)
-	switch state {
+	res := strings.ToLower(state.State)
+	switch res {
 	case "on", "true", "1", "active", "yes":
 		return true, nil
 	case "off", "false", "0", "inactive", "no":
@@ -115,6 +151,20 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 	default:
 		return false, fmt.Errorf("invalid boolean state '%s' for entity %s", state, entity)
 	}
+}
+
+// GetTimeState retrieves the state of an entity as time
+func (c *Connection) GetTimeState(entity string) (time.Time, error) {
+	state, err := c.GetState(entity)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if ts, err := strconv.ParseInt(state.State, 10, 64); err == nil {
+		return time.Unix(ts, 0), nil
+	}
+
+	return time.Parse(time.RFC3339, state.State)
 }
 
 // chargeStatusMap maps Home Assistant states to EVCC charge status
@@ -136,6 +186,11 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"initialising":       api.StatusB,
 	"preparing":          api.StatusB,
 	"2":                  api.StatusB,
+	"no_power":           api.StatusB,
+	"complete":           api.StatusB,
+	"stopped":            api.StatusB,
+	"starting":           api.StatusB,
+	"paused":             api.StatusB,
 
 	// Status A - Disconnected
 	"a":                   api.StatusA,
@@ -156,7 +211,7 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state))]; ok {
+	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state.State))]; ok {
 		return status, nil
 	}
 
@@ -165,7 +220,7 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 
 // CallService calls a Home Assistant service
 func (c *Connection) CallService(domain, service string, data map[string]any) error {
-	uri := fmt.Sprintf("%s/api/services/%s/%s", c.uri, domain, service)
+	uri := fmt.Sprintf("%s/api/services/%s/%s", c.instance.URI(), domain, service)
 
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
@@ -176,17 +231,37 @@ func (c *Connection) CallService(domain, service string, data map[string]any) er
 	return err
 }
 
-// CallSwitchService is a convenience method for switch services
-func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
-	parts := strings.Split(entity, ".")
-	if len(parts) == 0 {
-		return fmt.Errorf("invalid entity format: %s", entity)
+func domain(entity string) (string, error) {
+	domain, _, ok := strings.Cut(entity, ".")
+	if !ok {
+		return "", fmt.Errorf("invalid entity format: %s", entity)
 	}
 
-	domain := parts[0]
-	service := "turn_off"
-	if turnOn {
-		service = "turn_on"
+	return domain, nil
+}
+
+// CallSwitchService is a convenience method for switch-like services. The
+// service name depends on the entity domain: stateless button domains expose
+// only `press`, while switch-style domains use `turn_on` / `turn_off`.
+func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
+	domain, err := domain(entity)
+	if err != nil {
+		return err
+	}
+
+	var service string
+	switch domain {
+	case "button", "input_button":
+		// Buttons are stateless — they only have a press action.
+		if !turnOn {
+			return fmt.Errorf("entity %s has no off action", entity)
+		}
+		service = "press"
+	default:
+		service = "turn_off"
+		if turnOn {
+			service = "turn_on"
+		}
 	}
 
 	data := map[string]any{
@@ -198,12 +273,32 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 
 // CallNumberService is a convenience method for setting number entity values
 func (c *Connection) CallNumberService(entity string, value float64) error {
+	domain, err := domain(entity)
+	if err != nil {
+		return err
+	}
+
 	data := map[string]any{
 		"entity_id": entity,
 		"value":     value,
 	}
 
-	return c.CallService("number", "set_value", data)
+	return c.CallService(domain, "set_value", data)
+}
+
+// CallSelectService is a convenience method for setting select entity options.
+func (c *Connection) CallSelectService(entity, option string) error {
+	domain, err := domain(entity)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]any{
+		"entity_id": entity,
+		"option":    option,
+	}
+
+	return c.CallService(domain, "select_option", data)
 }
 
 // GetPhaseFloatStates retrieves three phase values (currents, voltages, etc.)
@@ -212,22 +307,17 @@ func (c *Connection) GetPhaseFloatStates(entities []string) (float64, float64, f
 		return 0, 0, 0, errors.New("invalid phase entities")
 	}
 
-	var l1, l2, l3 float64
-	var err error
+	var res [3]float64
 
-	if l1, err = c.GetFloatState(entities[0]); err != nil {
-		return 0, 0, 0, fmt.Errorf("phase L1: %w", err)
+	for i := range res {
+		f, err := c.GetFloatState(entities[i])
+		if err != nil {
+			return 0, 0, 0, fmt.Errorf("phase L%d: %w", i+1, err)
+		}
+		res[i] = f
 	}
 
-	if l2, err = c.GetFloatState(entities[1]); err != nil {
-		return 0, 0, 0, fmt.Errorf("phase L2: %w", err)
-	}
-
-	if l3, err = c.GetFloatState(entities[2]); err != nil {
-		return 0, 0, 0, fmt.Errorf("phase L3: %w", err)
-	}
-
-	return l1, l2, l3, nil
+	return res[0], res[1], res[2], nil
 }
 
 // ValidatePhaseEntities validates that phase entity arrays contain 1 or 3 entities
@@ -236,12 +326,13 @@ func ValidatePhaseEntities(phases []string) ([]string, error) {
 		t := strings.TrimSpace(s)
 		return t, t != ""
 	})
+
 	switch len(entities) {
 	case 0:
 		return nil, nil
 	case 3:
 		return entities, nil
 	default:
-		return nil, fmt.Errorf("must contain three-phase entities (L1, L2, L3), got %d", len(entities))
+		return nil, errors.New("invalid phase entities")
 	}
 }

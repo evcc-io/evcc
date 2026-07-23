@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<textarea :id="id" v-model="value" class="form-control" rows="3" />
+		<textarea :id="id" v-model="value" class="form-control" rows="3" :required="required" />
 		<div class="d-flex justify-content-end">
 			<button
 				type="button"
@@ -26,6 +26,7 @@ export default {
 	props: {
 		id: String,
 		modelValue: String,
+		required: Boolean,
 	},
 	emits: ["update:modelValue"],
 	computed: {

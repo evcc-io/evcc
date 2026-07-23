@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -20,23 +21,25 @@ const (
 	// per-unit registers
 	charxOffset = 1000
 
-	charxRegMeter        = 112
-	charxRegVoltages     = 232 // mV
-	charxRegCurrents     = 238 // mA
-	charxRegPower        = 244 // mW
-	charxRegEnergy       = 250 // Wh
-	charxRegSoc          = 264 // %
-	charxRegEvid         = 265 // 10
-	charxRegRfid         = 275 // 10
-	charxRegChargeTime   = 287 // s
-	charxRegChargeEnergy = 289 // Wh
-	charxRegStatus       = 299 // IEC 61851-1
-	charxRegEnable       = 300
-	charxRegMaxCurrent   = 301 // A
+	charxRegMeter          = 112
+	charxRegVoltages       = 232 // mV
+	charxRegCurrents       = 238 // mA
+	charxRegPower          = 244 // mW
+	charxRegEnergy         = 250 // Wh
+	charxRegSoc            = 264 // %
+	charxRegEvid           = 265 // 10
+	charxRegRfid           = 275 // 10
+	charxRegConnectionTime = 285 // s
+	charxRegChargeTime     = 287 // s
+	charxRegChargeEnergy   = 289 // Wh
+	charxRegStatus         = 299 // IEC 61851-1
+	charxRegEnable         = 300
+	charxRegMaxCurrent     = 301 // A
 )
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
 type PhoenixCharx struct {
+	implement.Caps
 	conn      *modbus.Connection
 	connector uint16
 	current   uint16
@@ -45,8 +48,6 @@ type PhoenixCharx struct {
 func init() {
 	registry.AddCtx("phoenix-charx", NewPhoenixCharxFromConfig)
 }
-
-//go:generate go tool decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
 func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -75,7 +76,10 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 
 	if meter > 0 && meter != 65535 {
-		return decoratePhoenixCharx(wb, wb.currentPower, wb.totalEnergy, wb.currents, wb.voltages), nil
+		implement.Has(wb, implement.Meter(wb.currentPower))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhaseCurrents(wb.currents))
+		implement.Has(wb, implement.PhaseVoltages(wb.voltages))
 	}
 
 	return wb, nil
@@ -92,6 +96,7 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixCharx{
+		Caps:      implement.New(),
 		conn:      conn,
 		connector: connector,
 		current:   6, // assume min current
@@ -199,7 +204,19 @@ func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(encoding.Uint16(b)) * time.Second, nil
+	return time.Duration(encoding.Uint32(b)) * time.Second, nil
+}
+
+var _ api.ConnectionTimer = (*PhoenixCharx)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface
+func (wb *PhoenixCharx) ConnectionDuration() (time.Duration, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegConnectionTime), 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(encoding.Uint32(b)) * time.Second, nil
 }
 
 // currentPower implements the api.Meter interface

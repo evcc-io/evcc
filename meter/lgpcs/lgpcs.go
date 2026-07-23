@@ -201,7 +201,7 @@ func (m *Com) request(f func(any) (*http.Request, error), payload map[string]str
 	}
 
 	// re-login if request returns 405-error
-	if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() != http.StatusMethodNotAllowed {
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() != http.StatusMethodNotAllowed {
 		return err
 	}
 

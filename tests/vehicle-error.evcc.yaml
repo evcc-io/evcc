@@ -50,5 +50,6 @@ vehicles:
     type: template
     template: tesla # not optimal, since real communication with tesla server is happening
     title: Broken Tesla
+    clientId: test_client_id
     accessToken: A
     refreshToken: B

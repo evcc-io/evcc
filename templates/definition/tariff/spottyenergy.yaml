@@ -13,8 +13,8 @@ params:
       en: Contract ID
       de: Vertragsnummer
     help:
-      de: "Die Vertragsnummer bekommst du im Kundenportal https://i.spottyenergie.at/"
-      en: "You can get your contract id from the customer portal https://i.spottyenergie.at/"
+      de: "Die Vertragsnummer bekommst du im Kundenportal [i.spottyenergie.at](https://i.spottyenergie.at/)"
+      en: "You can get your contract id from the customer portal [i.spottyenergie.at](https://i.spottyenergie.at/)"
   - name: pricetype
     default: CONSUMPTION
     type: choice
@@ -24,8 +24,8 @@ params:
       en: Price type
       de: Preistyp
     help:
-      de: "Preistyp, entweder Börsenpreis, Verbrauchspreis oder Einspeisevergütung (falls vereinbart), siehe https://www.spottyenergie.at/blog/energie-smart-produzieren"
-      en: "Price type, either spotmarket price, consumption price or generation compensation (if contractually agreed), more info at https://www.spottyenergie.at/blog/energie-smart-produzieren"
+      de: "Preistyp, entweder Börsenpreis, Verbrauchspreis oder Einspeisevergütung (falls vereinbart), siehe [spottyenergie.at](https://www.spottyenergie.at/blog/energie-smart-produzieren)"
+      en: "Price type, either spotmarket price, consumption price or generation compensation (if contractually agreed), more info at [spottyenergie.at](https://www.spottyenergie.at/blog/energie-smart-produzieren)"
   - preset: tariff-base
 render: |
   type: custom

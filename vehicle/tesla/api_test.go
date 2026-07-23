@@ -1,7 +1,6 @@
 package tesla
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -33,7 +32,7 @@ func TestCommandResponse(t *testing.T) {
 	defer srv.Close()
 
 	ts := oauth2.StaticTokenSource(new(oauth2.Token))
-	client, err := tesla.NewClient(context.Background(), tesla.WithTokenSource(ts))
+	client, err := tesla.NewClient(t.Context(), tesla.WithTokenSource(ts))
 	require.NoError(t, err)
 	client.SetBaseUrl(srv.URL)
 

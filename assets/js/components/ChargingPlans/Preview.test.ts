@@ -39,8 +39,8 @@ describe("basics", () => {
     result = wrapper.vm.slots;
   });
 
-  test("should return 39 slots", () => {
-    expect(result.length).eq(192);
+  test("should return 384 slots", () => {
+    expect(result.length).eq(384);
   });
 
   test("slots should be an hour apart", () => {

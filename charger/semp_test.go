@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -282,7 +281,7 @@ func TestSEMPCharger(t *testing.T) {
 		handler.requestCount = 0
 		// Reset cache to force new request
 		wb.(*SEMP).deviceG.Reset()
-		meter, ok := wb.(api.Meter)
+		meter, ok := api.Cap[api.Meter](wb)
 		require.True(t, ok)
 		power, err := meter.CurrentPower()
 		require.NoError(t, err)
@@ -340,7 +339,7 @@ func TestSEMPChargerOff(t *testing.T) {
 	})
 
 	t.Run("CurrentPowerZero", func(t *testing.T) {
-		meter, ok := wb.(api.Meter)
+		meter, ok := api.Cap[api.Meter](wb)
 		require.True(t, ok)
 		power, err := meter.CurrentPower()
 		require.NoError(t, err)
@@ -357,10 +356,8 @@ func TestSEMPChargerDeviceNotFound(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx := context.Background()
-
 	// NewSEMP now calls Enabled() which will fail if device is not found
-	_, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+	_, err := NewSEMP(t.Context(), server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "device F-12345678-ABCDEF123456-00 not found")
 }
@@ -408,7 +405,7 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check if the charger supports phase switching
-	phaseSwitcher, ok := wb.(api.PhaseSwitcher)
+	phaseSwitcher, ok := api.Cap[api.PhaseSwitcher](wb)
 	require.True(t, ok, "Expected charger to support phase switching")
 
 	t.Run("SwitchTo1Phase", func(t *testing.T) {
@@ -452,7 +449,7 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("ChargedEnergy", func(t *testing.T) {
-		chargeRater, ok := wb.(api.ChargeRater)
+		chargeRater, ok := api.Cap[api.ChargeRater](wb)
 		require.True(t, ok)
 		energy, err := chargeRater.ChargedEnergy()
 		require.NoError(t, err)
@@ -471,13 +468,11 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 		server2 := httptest.NewServer(handler2)
 		defer server2.Close()
 
-		ctx2 := context.Background()
-
-		wb2, err := NewSEMP(ctx2, server2.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+		wb2, err := NewSEMP(t.Context(), server2.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 		require.NoError(t, err)
 
 		// ChargeRater interface should NOT be available when parameters are not supported
-		_, ok := wb2.(api.ChargeRater)
+		_, ok := api.Cap[api.ChargeRater](wb2)
 		assert.False(t, ok, "ChargeRater should not be available when device doesn't support parameters")
 	})
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/zendure"
 	"github.com/evcc-io/evcc/util"
 )
@@ -15,16 +16,17 @@ func init() {
 }
 
 type Zendure struct {
+	implement.Caps
 	usage string
 	conn  *zendure.Connection
 }
-
-//go:generate go tool decorate -f decorateZendure -b *Zendure -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewZendureFromConfig creates a Zendure meter from generic config
 func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity                `mapstructure:",squash"`
+		batteryPowerLimits             `mapstructure:",squash"`
+		batterySocLimits               `mapstructure:",squash"`
 		Usage, Account, Serial, Region string
 		Timeout                        time.Duration
 	}{
@@ -41,18 +43,21 @@ func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	c := &Zendure{
+	m := &Zendure{
+		Caps:  implement.New(),
 		usage: cc.Usage,
 		conn:  conn,
 	}
 
 	// decorate battery
-	var soc func() (float64, error)
 	if cc.Usage == "battery" {
-		soc = c.soc
+		implement.Has(m, implement.Battery(m.soc))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 	}
 
-	return decorateZendure(c, soc, cc.batteryCapacity.Decorator()), nil
+	return m, nil
 }
 
 // CurrentPower implements the api.Meter interface

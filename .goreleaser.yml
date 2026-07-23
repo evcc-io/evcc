@@ -68,7 +68,8 @@ changelog:
   filters:
     exclude:
       - "^chore"
-      - "^bump"
+      - "(?i)^bump"
+      - "(?i)^ci:"
       - "^docs:"
       - "^test:"
       - "^build"
@@ -105,6 +106,7 @@ nfpms:
 
     dependencies:
       - adduser
+      - ucf
 
     contents:
       - src: ./packaging/init/evcc.service

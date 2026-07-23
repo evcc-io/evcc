@@ -45,7 +45,7 @@ func New(log *util.Logger, q url.Values) *Service {
 }
 
 func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
-	if err := urlvalues.Require(q, "id_token", "code"); err != nil {
+	if err := urlvalues.Require(q, "code"); err != nil {
 		return nil, err
 	}
 

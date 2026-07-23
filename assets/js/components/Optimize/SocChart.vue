@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5">
+	<div>
 		<div v-for="(_battery, index) in evopt.res.batteries" :key="index" class="mb-3">
 			<div class="mb-2" style="font-size: 0.875rem; font-weight: bold">
 				{{ getBatteryTitle(index) }}
@@ -189,7 +189,8 @@ export default defineComponent({
 								// Show ticks at exact hour boundaries
 								if (minute === 0) {
 									// Show labels only at hours divisible by 4
-									if (hour % 4 === 0) {
+									const step = window.innerWidth < 576 ? 6 : 4;
+									if (hour % step === 0) {
 										return hour.toString();
 									}
 									// Show tick but no label for other hours

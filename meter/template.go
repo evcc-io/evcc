@@ -8,10 +8,10 @@ import (
 )
 
 func init() {
-	registry.AddCtx("template", NewMeterFromTemplateConfig)
+	registry.AddCtx("template", NewFromTemplateConfig)
 }
 
-func NewMeterFromTemplateConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+func NewFromTemplateConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	instance, err := templates.RenderInstance(templates.Meter, other)
 	if err != nil {
 		return nil, err

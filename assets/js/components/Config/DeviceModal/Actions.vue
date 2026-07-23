@@ -1,13 +1,18 @@
 <template>
 	<div>
+		<slot name="before-test"></slot>
+
 		<TestResult
 			v-if="testState"
 			v-bind="testState"
 			:sponsor-token-required="sponsorTokenRequired"
+			:currency="currency"
 			@test="$emit('test')"
 		/>
 
-		<div class="my-4 d-flex justify-content-between">
+		<slot name="after-test"></slot>
+
+		<div class="mt-4 d-flex justify-content-between">
 			<button
 				v-if="isDeletable"
 				type="button"
@@ -51,6 +56,7 @@ import { defineComponent } from "vue";
 import type { PropType } from "vue";
 import TestResult from "../TestResult.vue";
 import { type TestState } from "../utils/test";
+import type { CURRENCY } from "@/types/evcc";
 
 export default defineComponent({
 	name: "DeviceModalActions",
@@ -67,6 +73,7 @@ export default defineComponent({
 		isSucceeded: Boolean as PropType<boolean>,
 		isNew: Boolean as PropType<boolean>,
 		sponsorTokenRequired: Boolean as PropType<boolean>,
+		currency: String as PropType<CURRENCY>,
 	},
 	emits: ["save", "remove", "test"],
 	computed: {

@@ -1,0 +1,19 @@
+interval: 0.1s
+
+site:
+  meters:
+    grid: grid
+    pv:
+      - pv
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: 0
+  - name: pv
+    type: template
+    template: demo-meter
+    usage: pv
+    power: 0
+    curtailable: true

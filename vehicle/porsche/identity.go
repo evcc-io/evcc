@@ -63,8 +63,11 @@ func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	}
 
 	token, err := v.login()
+	if err != nil {
+		return nil, fmt.Errorf("login failed: %w", err)
+	}
 
-	return oauth.RefreshTokenSource(token, v), err
+	return oauth.RefreshTokenSource(token, v.refreshToken), nil
 }
 
 func (v *Identity) login() (*oauth2.Token, error) {
@@ -165,7 +168,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	return OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
 	ts := oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token))
 

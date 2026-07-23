@@ -15,19 +15,10 @@ type API interface {
 	// Name returns the vehicle name
 	Name() string
 
-	// // GetMode returns the charge mode
-	// GetMode() api.ChargeMode
-	// // SetMode sets the charge mode
-	// SetMode(api.ChargeMode)
-	// // GetPhases returns the phases
-	// GetPhases() int
-	// // SetPhases sets the phases
-	// SetPhases(phases int) error
-
-	// // GetPriority returns the priority
-	// GetPriority() int
-	// // SetPriority sets the priority
-	// SetPriority(priority int)
+	// GetMode returns the charge mode
+	GetMode() api.ChargeMode
+	// SetMode sets the charge mode
+	SetMode(api.ChargeMode)
 
 	// GetMinSoc returns the min soc
 	GetMinSoc() int
@@ -39,21 +30,17 @@ type API interface {
 	SetLimitSoc(soc int)
 
 	// GetPlanSoc returns the charge plan soc
-	GetPlanSoc() (time.Time, time.Duration, int)
+	GetPlanSoc() (time.Time, int)
 	// SetPlanSoc sets the charge plan time and soc
-	SetPlanSoc(time.Time, time.Duration, int) error
+	SetPlanSoc(time.Time, int) error
 
 	// GetRepeatingPlans returns every repeating plan
 	GetRepeatingPlans() []api.RepeatingPlan
 	// SetRepeatingPlans stores every repeating plan
 	SetRepeatingPlans([]api.RepeatingPlan) error
 
-	// // GetMinCurrent returns the min charging current
-	// GetMinCurrent() float64
-	// // SetMinCurrent sets the min charging current
-	// SetMinCurrent(float64)
-	// // GetMaxCurrent returns the max charging current
-	// GetMaxCurrent() float64
-	// // SetMaxCurrent sets the max charging current
-	// SetMaxCurrent(float64)
+	// GetPlanStrategy returns the plan strategy
+	GetPlanStrategy() api.PlanStrategy
+	// SetPlanStrategy sets the plan strategy
+	SetPlanStrategy(api.PlanStrategy) error
 }

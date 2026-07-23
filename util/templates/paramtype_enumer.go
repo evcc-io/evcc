@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ParamTypeName = "StringBoolChoiceChargeModesDurationFloatIntList"
+const _ParamTypeName = "StringBoolChoiceChargeModesDurationFloatIntListZonesPricePerKWh"
 
-var _ParamTypeIndex = [...]uint8{0, 6, 10, 16, 27, 35, 40, 43, 47}
+var _ParamTypeIndex = [...]uint8{0, 6, 10, 16, 27, 35, 40, 43, 47, 52, 63}
 
-const _ParamTypeLowerName = "stringboolchoicechargemodesdurationfloatintlist"
+const _ParamTypeLowerName = "stringboolchoicechargemodesdurationfloatintlistzonespriceperkwh"
 
 func (i ParamType) String() string {
 	if i < 0 || i >= ParamType(len(_ParamTypeIndex)-1) {
@@ -32,9 +32,11 @@ func _ParamTypeNoOp() {
 	_ = x[TypeFloat-(5)]
 	_ = x[TypeInt-(6)]
 	_ = x[TypeList-(7)]
+	_ = x[TypeZones-(8)]
+	_ = x[TypePricePerKWh-(9)]
 }
 
-var _ParamTypeValues = []ParamType{TypeString, TypeBool, TypeChoice, TypeChargeModes, TypeDuration, TypeFloat, TypeInt, TypeList}
+var _ParamTypeValues = []ParamType{TypeString, TypeBool, TypeChoice, TypeChargeModes, TypeDuration, TypeFloat, TypeInt, TypeList, TypeZones, TypePricePerKWh}
 
 var _ParamTypeNameToValueMap = map[string]ParamType{
 	_ParamTypeName[0:6]:        TypeString,
@@ -53,6 +55,10 @@ var _ParamTypeNameToValueMap = map[string]ParamType{
 	_ParamTypeLowerName[40:43]: TypeInt,
 	_ParamTypeName[43:47]:      TypeList,
 	_ParamTypeLowerName[43:47]: TypeList,
+	_ParamTypeName[47:52]:      TypeZones,
+	_ParamTypeLowerName[47:52]: TypeZones,
+	_ParamTypeName[52:63]:      TypePricePerKWh,
+	_ParamTypeLowerName[52:63]: TypePricePerKWh,
 }
 
 var _ParamTypeNames = []string{
@@ -64,6 +70,8 @@ var _ParamTypeNames = []string{
 	_ParamTypeName[35:40],
 	_ParamTypeName[40:43],
 	_ParamTypeName[43:47],
+	_ParamTypeName[47:52],
+	_ParamTypeName[52:63],
 }
 
 // ParamTypeString retrieves an enum value from the enum constants string name.

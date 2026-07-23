@@ -49,9 +49,9 @@ func (v *Identity) Login(user, password, hcaptcha string) (oauth2.TokenSource, e
 	var tok oauth2.Token
 	if err := settings.Json(v.settingsKey(), &tok); err == nil {
 		v.log.DEBUG.Println("identity.Login - database token found")
-		tok, err := v.RefreshToken(&tok)
+		tok, err := v.refreshToken(&tok)
 		if err == nil {
-			ts := oauth2.ReuseTokenSourceWithExpiry(tok, oauth.RefreshTokenSource(tok, v), 15*time.Minute)
+			ts := oauth2.ReuseTokenSourceWithExpiry(tok, oauth.RefreshTokenSource(tok, v.refreshToken), 15*time.Minute)
 			return ts, nil
 		}
 		v.log.DEBUG.Println("identity.Login - database token invalid. Proceeding to login via user, password and captcha.")
@@ -150,7 +150,7 @@ func (v *Identity) Login(user, password, hcaptcha string) (oauth2.TokenSource, e
 		return nil, err
 	}
 
-	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
+	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v.refreshToken), 15*time.Minute)
 
 	return ts, nil
 }
@@ -179,7 +179,7 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 	return tokex, err
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"redirect_uri":  {RedirectURI},
 		"refresh_token": {token.RefreshToken},

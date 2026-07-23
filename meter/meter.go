@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/measurement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -14,46 +15,54 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
-
-// NewConfigurableFromConfig creates api.Meter from config
+// NewConfigurableFromConfig creates a new meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		measurement.Energy `mapstructure:",squash"` // energy optional
-		measurement.Phases `mapstructure:",squash"` // optional
+		measurement.Energy    `mapstructure:",squash"` // energy optional
+		measurement.Phases    `mapstructure:",squash"` // optional
+		measurement.Dimmer    `mapstructure:",squash"` // optional
+		measurement.Curtailer `mapstructure:",squash"` // optional
 
 		// pv
 		pvMaxACPower `mapstructure:",squash"`
 
 		// battery
-		batteryCapacity    `mapstructure:",squash"`
-		batterySocLimits   `mapstructure:",squash"`
-		batteryPowerLimits `mapstructure:",squash"`
-		Soc                *plugin.Config // optional
-		LimitSoc           *plugin.Config // optional
-		BatteryMode        *plugin.Config // optional
-	}{
-		batterySocLimits: batterySocLimits{
-			MinSoc: 20,
-			MaxSoc: 95,
-		},
-	}
+		batteryCapacityCtx    `mapstructure:",squash"`
+		batterySocLimitsCtx   `mapstructure:",squash"`
+		batteryPowerLimitsCtx `mapstructure:",squash"`
+		Soc                   *plugin.Config // optional
+		LimitSoc              *plugin.Config // optional
+		BatteryMode           *plugin.Config // optional
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	powerG, energyG, err := cc.Energy.Configure(ctx)
-	if err != nil {
-		return nil, err
+	// default soc limits (nil-preset avoids mapstructure coercing plugin config into the default's type)
+	if cc.batterySocLimitsCtx.MinSoc == nil {
+		cc.batterySocLimitsCtx.MinSoc = 20
+	}
+	if cc.batterySocLimitsCtx.MaxSoc == nil {
+		cc.batterySocLimitsCtx.MaxSoc = 95
 	}
 
-	currentsG, voltagesG, powersG, err := cc.Phases.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	m, _ := NewConfigurable(powerG)
+	implement.May(m, implement.MeterEnergy(energyG))
+	implement.May(m, implement.MeterReturnEnergy(returnG))
+
+	// dim/curtail
+	if err := cc.Dimmer.Implement(ctx, m); err != nil {
+		return nil, err
+	}
+	if err := cc.Curtailer.Implement(ctx, m); err != nil {
+		return nil, err
+	}
 
 	// decorate soc
 	socG, err := cc.Soc.FloatGetter(ctx)
@@ -61,40 +70,72 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		return nil, fmt.Errorf("battery soc: %w", err)
 	}
 
-	var batModeS func(api.BatteryMode) error
-
-	switch {
-	case cc.Soc != nil && cc.LimitSoc != nil:
-		limitSocS, err := cc.LimitSoc.FloatSetter(ctx, "limitSoc")
+	if socG != nil {
+		capacity, err := cc.batteryCapacityCtx.Decorator(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("battery limit soc: %w", err)
+			return nil, err
 		}
 
-		batModeS = cc.batterySocLimits.LimitController(socG, limitSocS)
-
-	case cc.BatteryMode != nil:
-		modeS, err := cc.BatteryMode.IntSetter(ctx, "batteryMode")
+		socLimiter, err := cc.batterySocLimitsCtx.Decorator(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("battery mode: %w", err)
+			return nil, err
 		}
 
-		batModeS = func(mode api.BatteryMode) error {
-			return modeS(int64(mode))
+		powerLimiter, err := cc.batteryPowerLimitsCtx.Decorator(ctx)
+		if err != nil {
+			return nil, err
 		}
+
+		implement.Has(m, implement.Battery(socG))
+		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.May(m, implement.BatterySocLimiter(socLimiter))
+		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
+
+		switch {
+		case cc.Soc != nil && cc.LimitSoc != nil:
+			limitSocS, err := cc.LimitSoc.FloatSetter(ctx, "limitSoc")
+			if err != nil {
+				return nil, fmt.Errorf("battery limit soc: %w", err)
+			}
+
+			limitController, err := cc.batterySocLimitsCtx.LimitController(ctx, socG, limitSocS)
+			if err != nil {
+				return nil, err
+			}
+
+			implement.Has(m, implement.BatteryController(limitController))
+
+		case cc.BatteryMode != nil:
+			modeS, err := cc.BatteryMode.IntSetter(ctx, "batteryMode")
+			if err != nil {
+				return nil, fmt.Errorf("battery mode: %w", err)
+			}
+
+			implement.Has(m, implement.BatteryController(func(mode api.BatteryMode) error {
+				return modeS(int64(mode))
+			}))
+		}
+
+		return m, nil
 	}
 
-	res := m.Decorate(
-		energyG, currentsG, voltagesG, powersG,
-		socG, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), batModeS,
-		cc.pvMaxACPower.Decorator(),
-	)
+	currentsG, voltagesG, powersG, err := cc.Phases.Configure(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	return res, nil
+	implement.May(m, implement.PhaseCurrents(currentsG))
+	implement.May(m, implement.PhaseVoltages(voltagesG))
+	implement.May(m, implement.PhasePowers(powersG))
+	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
+
+	return m, nil
 }
 
 // NewConfigurable creates a new meter
 func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 	m := &Meter{
+		Caps:          implement.New(),
 		currentPowerG: currentPowerG,
 	}
 	return m, nil
@@ -102,24 +143,8 @@ func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 
 // Meter is an api.Meter implementation with configurable getters and setters.
 type Meter struct {
+	implement.Caps
 	currentPowerG func() (float64, error)
-}
-
-// Decorate attaches additional capabilities to the base meter
-func (m *Meter) Decorate(
-	totalEnergy func() (float64, error),
-	currents, voltages, powers func() (float64, float64, float64, error),
-	batterySoc func() (float64, error),
-	batteryCapacity func() float64,
-	batterySocLimits, batteryPowerLimits func() (float64, float64),
-	setBatteryMode func(api.BatteryMode) error,
-	maxACPower func() float64,
-) api.Meter {
-	return decorateMeter(m,
-		totalEnergy, currents, voltages, powers,
-		batterySoc, batteryCapacity, batterySocLimits, batteryPowerLimits, setBatteryMode,
-		maxACPower,
-	)
 }
 
 // CurrentPower implements the api.Meter interface

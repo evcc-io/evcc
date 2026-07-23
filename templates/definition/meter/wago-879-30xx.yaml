@@ -5,15 +5,17 @@ products:
       generic: 879-30xx
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
   model: wago87930
+  {{- if ne .usage "pv" }}
   power: Power
   energy: Import
+  returnenergy: Export
   currents:
     - CurrentL1
     - CurrentL2
@@ -22,6 +24,19 @@ render: |
     - PowerL1
     - PowerL2
     - PowerL3
+  {{- else }}
+  power: -Power
+  energy: Export
+  returnenergy: Import
+  currents:
+    - -CurrentL1
+    - -CurrentL2
+    - -CurrentL3
+  powers:
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
+  {{- end }}
   voltages:
     - VoltageL1
     - VoltageL2

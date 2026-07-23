@@ -36,14 +36,19 @@ type Circuit struct {
 
 	current float64
 	power   float64
-	dimmed  bool
+
+	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
 }
 
-// NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) (api.Circuit, error) {
+func init() {
+	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
+}
+
+// NewConfigurableFromConfig creates a new circuit from config
+func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
@@ -56,6 +61,9 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) 
 	}{
 		Timeout: time.Minute,
 	}
+
+	// drop circuit type- all circuits are custom
+	delete(other, "type")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -73,6 +81,7 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) 
 		}
 	}
 
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("circuit"))
 	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
@@ -120,7 +129,7 @@ func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api
 
 	if maxCurrent == 0 {
 		c.log.DEBUG.Printf("validation of max phase current disabled")
-	} else if _, ok := meter.(api.PhaseCurrents); meter != nil && !ok {
+	} else if meter != nil && !api.HasCap[api.PhaseCurrents](meter) {
 		return nil, errors.New("meter does not support phase currents")
 	}
 
@@ -166,15 +175,11 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 	return nil
 }
 
-// Wrap wraps circuit with parent, keeping the original meter
-func (c *Circuit) Wrap(parent api.Circuit) error {
-	if parent == c {
-		return nil // wrap circuit with itself
-	}
-	if c.meter != nil {
-		parent.(*Circuit).meter = c.meter
-	}
-	return c.setParent(parent)
+// SetHEMS attaches the HEMS instance to the circuit. Valid on root circuit only.
+func (c *Circuit) SetHEMS(hems api.HEMS) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.hems = hems
 }
 
 // HasMeter returns the max power setting
@@ -184,7 +189,7 @@ func (c *Circuit) HasMeter() bool {
 	return c.meter != nil
 }
 
-// GetMaxPower returns the max power setting
+// GetMaxPower returns the configured max power setting.
 func (c *Circuit) GetMaxPower() float64 {
 	if c.getMaxPower != nil {
 		res, err := c.getMaxPower()
@@ -197,6 +202,28 @@ func (c *Circuit) GetMaxPower() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.maxPower
+}
+
+// effectiveMaxPower returns the configured max power clamped by the HEMS
+// consumption limit. Only the root circuit applies the HEMS clamp; non-root
+// callers walk up the parent chain via ValidatePower.
+func (c *Circuit) effectiveMaxPower() float64 {
+	maxPower := c.GetMaxPower()
+	if c.hems == nil {
+		return maxPower
+	}
+
+	hemsLimit := c.hems.MaxConsumptionPower()
+	if hemsLimit == nil || *hemsLimit <= 0 {
+		return maxPower
+	}
+
+	// unconfigured maxPower means unlimited, so the HEMS limit applies alone
+	if maxPower <= 0 {
+		return *hemsLimit
+	}
+
+	return min(*hemsLimit, maxPower)
 }
 
 // SetMaxPower sets the max power
@@ -262,7 +289,7 @@ func (c *Circuit) updateMeters() error {
 		return fmt.Errorf("circuit power: %w", err)
 	}
 
-	if phaseMeter, ok := c.meter.(api.PhaseCurrents); ok {
+	if phaseMeter, ok := api.Cap[api.PhaseCurrents](c.meter); ok {
 		var i1, i2, i3 float64
 		if err := backoff.Retry(func() error {
 			var err error
@@ -274,7 +301,7 @@ func (c *Circuit) updateMeters() error {
 		}
 
 		var p1, p2, p3 float64
-		if phaseMeter, ok := c.meter.(api.PhasePowers); ok {
+		if phaseMeter, ok := api.Cap[api.PhasePowers](c.meter); ok {
 			var err error // phases needed for signed currents
 			if p1, p2, p3, err = phaseMeter.Powers(); err != nil {
 				return fmt.Errorf("circuit powers: %w", err)
@@ -294,9 +321,9 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 
 	defer func() {
 		if maxPower != 0 && c.power > maxPower {
-			c.log.WARN.Printf("over power detected: %.5gW > %.5gW", c.power, maxPower)
+			c.log.WARN.Printf("over power detected: %.0fW > %.0fW", c.power, maxPower)
 		} else {
-			c.log.DEBUG.Printf("power: %.5gW", c.power)
+			c.log.DEBUG.Printf("power: %.0fW", c.power)
 		}
 
 		if maxCurrent != 0 && c.current > maxCurrent {
@@ -340,16 +367,16 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 
 // ValidatePower validates power request
 func (c *Circuit) ValidatePower(old, new float64) float64 {
-	if maxPower := c.GetMaxPower(); maxPower != 0 {
+	if maxPower := c.effectiveMaxPower(); maxPower != 0 {
 		delta := max(0, new-old)
 		potential := maxPower - c.power
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
+			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", c.power, old, new, maxPower, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate power: %.5gW + (%.5gW -> %.5gW) <= %.5gW ok", c.power, old, new, maxPower)
+			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW ok", c.power, old, new, maxPower)
 		}
 	}
 
@@ -380,25 +407,4 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	}
 
 	return c.parent.ValidateCurrent(old, new)
-}
-
-func (c *Circuit) Dim(dim bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.dimmed = dim
-}
-
-func (c *Circuit) Dimmed() bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if c.dimmed {
-		return true
-	}
-
-	if c.parent == nil {
-		return false
-	}
-
-	return c.parent.Dimmed()
 }

@@ -1,27 +1,194 @@
 <template>
-	<YamlModal
-		id="hemsModal"
-		:title="$t('config.hems.title')"
-		:description="$t('config.hems.description')"
-		docs="/docs/features/14a-enwg-steuve"
-		:defaultYaml="defaultYaml"
-		endpoint="/config/hems"
-		removeKey="hems"
-		data-testid="hems-modal"
-		@changed="$emit('changed')"
-	/>
+	<DeviceModalBase
+		:id="id"
+		ref="deviceModal"
+		name="hems"
+		device-type="hems"
+		:modal-title="$t('config.hems.title')"
+		:provide-template-options="provideTemplateOptions"
+		:initial-values="initialValues"
+		:is-yaml-input-type="isYamlInputType"
+		:on-template-change="handleTemplateChange"
+		:hide-template-fields="fromYaml"
+		:hide-delete="true"
+		:hide-info="true"
+		:keep-open-on-remove="true"
+		@added="onAdded"
+		@updated="onUpdated"
+		@removed="onRemoved"
+		@open="loadSessions"
+		@close="$emit('close')"
+	>
+		<template v-if="id !== undefined && !fromYaml" #template-action>
+			<button
+				type="button"
+				class="btn btn-outline-secondary border-0"
+				:aria-label="$t('config.general.change')"
+				:title="$t('config.general.change')"
+				:disabled="changing"
+				@click="handleChange"
+			>
+				<shopicon-regular-edit size="s" class="flex-shrink-0"></shopicon-regular-edit>
+			</button>
+		</template>
+		<template #description>
+			<p class="mt-0 mb-4">
+				{{ $t("config.hems.description") }}
+				<a :href="docsLink" target="_blank" rel="noopener">
+					{{ $t("config.general.docsLink") }}
+				</a>
+			</p>
+			<div v-if="configured" class="mb-4" data-testid="grid-sessions">
+				<h6 class="mb-3">{{ $t("config.hems.recordedEvents") }}</h6>
+				<div class="events-box rounded p-3">
+					<p v-if="!sessionCount" class="mb-0 text-muted">
+						{{ $t("config.hems.noEvents") }}
+					</p>
+					<template v-else>
+						<p class="mb-3">
+							{{ $t("config.hems.eventsRecorded", { count: sessionCount }) }}<br />
+							<template v-if="lastEventTimeAgo">
+								{{ $t("config.hems.lastEvent", { timeAgo: lastEventTimeAgo }) }}
+							</template>
+						</p>
+						<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
+					</template>
+				</div>
+				<hr class="mt-4 mb-0" />
+			</div>
+			<p v-if="fromYaml" class="text-muted">
+				{{ $t("config.general.fromYamlHint") }}
+			</p>
+		</template>
+	</DeviceModalBase>
 </template>
 
-<script>
-import YamlModal from "./YamlModal.vue";
-import defaultYaml from "./defaultYaml/hems.yaml?raw";
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
+import "@h2d2/shopicons/es/regular/edit";
+import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
+import { ConfigType, type YamlSource } from "@/types/evcc";
+import { type DeviceValues } from "./DeviceModal";
+import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
+import customHemsYaml from "./defaultYaml/customHems.yaml?raw";
+import api from "../../api";
+import { docsPrefix } from "@/i18n";
+import DownloadButton from "../Helper/DownloadButton.vue";
+import formatter from "../../mixins/formatter";
 
-export default {
-	name: "HemsModal",
-	components: { YamlModal },
-	emits: ["changed"],
-	data() {
-		return { defaultYaml: defaultYaml.trim() };
-	},
+const initialValues = {
+	type: ConfigType.Template,
+	icon: undefined,
+	deviceProduct: undefined,
+	yaml: undefined,
+	template: null,
 };
+
+export default defineComponent({
+	name: "HemsModal",
+	components: { DeviceModalBase, DownloadButton },
+	mixins: [formatter],
+	props: {
+		yamlSource: String as PropType<YamlSource>,
+		id: Number as PropType<number | undefined>,
+	},
+	emits: ["changed", "close"],
+	data() {
+		return {
+			initialValues,
+			sessions: [] as Array<{ created: string }>,
+			changing: false,
+		};
+	},
+	computed: {
+		fromYaml(): boolean {
+			return this.yamlSource === "file";
+		},
+		configured(): boolean {
+			return this.id !== undefined || this.fromYaml;
+		},
+		sessionCount(): number {
+			return this.sessions.length;
+		},
+		lastEvent() {
+			return this.sessions[0] ?? null;
+		},
+		lastEventTimeAgo(): string {
+			const created = this.lastEvent?.created;
+			if (!created) return "";
+			const ms = new Date(created).getTime();
+			if (!Number.isFinite(ms)) return "";
+			return (this as any).fmtTimeAgo(ms - Date.now());
+		},
+		docsLink(): string {
+			return `${docsPrefix()}/docs/external-limit`;
+		},
+	},
+	methods: {
+		downloadHref(): string {
+			const params = new URLSearchParams({ lang: this.$i18n?.locale });
+			return `./api/gridsessions?${params.toString()}`;
+		},
+		async loadSessions() {
+			try {
+				const response = await api.get("gridsessions", {
+					validateStatus: (code: number) => [200, 404].includes(code),
+				});
+				this.sessions = response.data || [];
+			} catch (e) {
+				this.sessions = [];
+				console.error(e);
+			}
+		},
+		provideTemplateOptions(products: any[]): TemplateGroup[] {
+			if (this.fromYaml) {
+				return [];
+			}
+			return [
+				{
+					label: "generic",
+					options: [customTemplateOption(this.$t("config.hems.customOption"))],
+				},
+				{
+					label: "integrations",
+					options: products,
+				},
+			];
+		},
+		isYamlInputType(type: ConfigType): boolean {
+			return type === ConfigType.Custom;
+		},
+		handleTemplateChange(value: string, values: DeviceValues) {
+			if (value === ConfigType.Custom) {
+				values.type = ConfigType.Custom;
+				values.yaml = customHemsYaml;
+			}
+		},
+		onAdded(name: string) {
+			this.$emit("changed", { action: "added", name });
+		},
+		onUpdated() {
+			this.$emit("changed", { action: "updated" });
+		},
+		onRemoved() {
+			this.$emit("changed", { action: "removed" });
+		},
+		async handleChange() {
+			if (this.id === undefined) return;
+			if (!window.confirm(this.$t("config.hems.changeConfirm"))) return;
+			this.changing = true;
+			try {
+				await (this.$refs["deviceModal"] as any).remove();
+			} finally {
+				this.changing = false;
+			}
+		},
+	},
+});
 </script>
+
+<style scoped>
+.events-box {
+	background: var(--evcc-background);
+}
+</style>

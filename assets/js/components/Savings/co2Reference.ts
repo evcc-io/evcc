@@ -1,26 +1,27 @@
-// Data source: gCO2eq/kWh
+// Data source: gCO2eq/kWh, current data is from 2024.
 const source = "https://ourworldindata.org/grapher/carbon-intensity-electricity?tab=table";
 
 // This is a manual selection of countries. If yours is missing, please add it with data from the source above.
 const regions = [
-  { name: "Australia", co2: 503 },
-  { name: "Austria", co2: 158 },
-  { name: "Canada", co2: 128 },
-  { name: "Czech Republic", co2: 415 },
-  { name: "Denmark", co2: 181 },
-  { name: "Estonia", co2: 464 },
-  { name: "Europe", co2: 278 },
-  { name: "Finland", co2: 131 },
-  { name: "France", co2: 85 },
-  { name: "Germany", co2: 385 },
-  { name: "Netherlands", co2: 356 },
-  { name: "Norway", co2: 29 },
-  { name: "Poland", co2: 635 },
-  { name: "Sweden", co2: 45 },
-  { name: "Switzerland", co2: 46 },
-  { name: "United Kingdom", co2: 257 },
-  { name: "United States", co2: 367 },
-  { name: "World", co2: 436 },
+  { name: "Australia", co2: 552 },
+  { name: "Austria", co2: 103 },
+  { name: "Belgium", co2: 118 },
+  { name: "Canada", co2: 175 },
+  { name: "Czech Republic", co2: 414 },
+  { name: "Denmark", co2: 143 },
+  { name: "Estonia", co2: 341 },
+  { name: "Europe", co2: 284 },
+  { name: "Finland", co2: 72 },
+  { name: "France", co2: 44 },
+  { name: "Germany", co2: 344 },
+  { name: "Netherlands", co2: 253 },
+  { name: "Norway", co2: 31 },
+  { name: "Poland", co2: 615 },
+  { name: "Sweden", co2: 36 },
+  { name: "Switzerland", co2: 37 },
+  { name: "United Kingdom", co2: 211 },
+  { name: "United States", co2: 384 },
+  { name: "World", co2: 473 },
 ];
 
 export default { regions, source };

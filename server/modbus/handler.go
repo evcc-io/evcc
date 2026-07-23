@@ -44,7 +44,7 @@ func (h *handler) logResult(op string, b []byte, err error) {
 func (h *handler) exceptionToUint16AndError(op string, b []byte, err error) ([]uint16, error) {
 	h.logResult(op, b, err)
 
-	if me := new(gridx.Error); errors.As(err, &me) {
+	if me, ok := errors.AsType[*gridx.Error](err); ok {
 		err = mbserver.MapExceptionCodeToError(me.ExceptionCode)
 	}
 
@@ -74,7 +74,7 @@ func coilsToBytes(b []bool) []byte {
 func (h *handler) bytesToBoolResult(op string, qty uint16, b []byte, err error) ([]bool, error) {
 	h.logResult(op, b, err)
 
-	if me := new(gridx.Error); errors.As(err, &me) {
+	if me, ok := errors.AsType[*gridx.Error](err); ok {
 		err = mbserver.MapExceptionCodeToError(me.ExceptionCode)
 	}
 

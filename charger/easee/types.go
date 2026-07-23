@@ -3,11 +3,21 @@ package easee
 // API is the Easee API endpoint
 const API = "https://api.easee.com/api"
 
+// LocalOcppAPI is the Easee local OCPP configuration API endpoint
+const LocalOcppAPI = "https://api.easee.com/local-ocpp"
+
 const (
 	ChargeStart  = "start_charging"
 	ChargeStop   = "stop_charging"
 	ChargePause  = "pause_charging"
 	ChargeResume = "resume_charging"
+)
+
+// DetectedPowerGridType values
+const (
+	PowerGridTN3Phase       = 1
+	PowerGridTN2PhasePin234 = 2
+	PowerGridTN1Phase       = 3
 )
 
 // charge mode definition

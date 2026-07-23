@@ -5,10 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
-	"net"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,8 +20,6 @@ import (
 )
 
 const (
-	sempController   = "Sunny Home Manager"
-	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
@@ -33,27 +28,27 @@ const (
 	maxAge           = 1800
 )
 
-var serverName = "EVCC SEMP Server " + util.Version
+var serverName = "evcc"
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log     *util.Logger
-	vid     string
-	did     []byte
-	uid     string
-	hostURI string
-	port    int
-	site    site.API
+	log  *util.Logger
+	vid  string
+	did  []byte
+	uid  string
+	uri  string
+	site site.API
 }
 
 type Config struct {
 	AllowControl_ bool   `json:"allowControl,omitempty"` // deprecated
 	VendorId      string `json:"vendorId"`
 	DeviceId      string `json:"deviceId"`
+	DeviceSerial  string `json:"deviceSerial"`
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
-func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) error {
+func NewFromConfig(cfg Config, hostUri string, site site.API, addr string, router *mux.Router) error {
 	vendorId := cfg.VendorId
 	if vendorId == "" {
 		vendorId = "28081973"
@@ -64,6 +59,24 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		return err
+	}
+
+	// Only if DeviceSerial is explicitly configured: validate it and patch the
+	// UUID node (last 6 bytes) to ensure the UDN and DeviceSerial are stable across restarts.
+	// Ideally we'd have used the same machine-id approach as UniqueDeviceID does, but that
+	// would break existing installations that relied on the node ID of the UUID which was set to the MAC address
+	// of the host. See https://github.com/evcc-io/evcc/issues/28126 for context.
+	if cfg.DeviceSerial != "" {
+		b, err := hex.DecodeString(cfg.DeviceSerial)
+		if err != nil {
+			return fmt.Errorf("device serial: %w", err)
+		}
+		if len(b) != 6 {
+			return fmt.Errorf("invalid device serial: %v. Must be 12 characters HEX string", cfg.DeviceSerial)
+		}
+
+		// replaces the node (last 6 bytes) of a UUID with the given bytes.
+		copy(uid[10:], b)
 	}
 
 	var did []byte
@@ -87,19 +100,8 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 		uid:  uid.String(),
 		vid:  vendorId,
 		did:  did,
+		uri:  hostUri,
 	}
-
-	// find external port
-	// TODO refactor network config
-	_, port, err := net.SplitHostPort(addr)
-	if err == nil {
-		s.port, err = strconv.Atoi(port)
-	}
-	if err != nil {
-		return err
-	}
-
-	s.hostURI = s.callbackURI()
 
 	s.handlers(router)
 
@@ -108,7 +110,7 @@ func NewFromConfig(cfg Config, site site.API, addr string, router *mux.Router) e
 }
 
 func (s *SEMP) advertise(st, usn string) (*ssdp.Advertiser, error) {
-	descriptor := s.hostURI + basePath + "/description.xml"
+	descriptor := s.uri + basePath + "/description.xml"
 	return ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 }
 
@@ -137,24 +139,6 @@ func (s *SEMP) run() {
 			}
 		}
 	}
-}
-
-func (s *SEMP) callbackURI() string {
-	if uri := os.Getenv(sempBaseURLEnv); uri != "" {
-		return strings.TrimSuffix(uri, "/")
-	}
-
-	ip := "localhost"
-	ips := util.LocalIPs()
-	if len(ips) > 0 {
-		ip = ips[0].IP.String()
-	} else {
-		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
-	}
-
-	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-
-	return uri
 }
 
 func (s *SEMP) handlers(router *mux.Router) {
@@ -198,11 +182,11 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 			FriendlyName:    "evcc",
 			Manufacturer:    "evcc.io",
 			ModelName:       serverName,
-			PresentationURL: s.hostURI,
+			PresentationURL: s.uri,
 			UDN:             uid,
 			ServiceDefinition: ServiceDefinition{
 				Xmlns:          urnSEMPService,
-				Server:         s.hostURI,
+				Server:         s.uri,
 				BasePath:       basePath,
 				Transport:      "HTTP/Pull",
 				ExchangeFormat: "XML",

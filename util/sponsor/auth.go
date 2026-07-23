@@ -1,13 +1,35 @@
 package sponsor
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
+	"github.com/evcc-io/evcc/util/machine"
+	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -15,14 +37,14 @@ import (
 var (
 	mu             sync.RWMutex
 	Subject, Token string
-	fromYaml       bool = true
 	ExpiresAt      time.Time
 )
 
-const (
-	unavailable = "sponsorship unavailable"
-	victron     = "victron"
-)
+func machineID() string {
+	return machine.ProtectedID("evcc-sponsor")
+}
+
+const unavailable = "sponsorship unavailable"
 
 func IsAuthorized() bool {
 	mu.RLock()
@@ -36,13 +58,6 @@ func IsAuthorizedForApi() bool {
 	return IsAuthorized() && Subject != unavailable && Token != ""
 }
 
-// SetFromYaml sets whether the token comes from YAML config or database
-func SetFromYaml(val bool) {
-	mu.Lock()
-	defer mu.Unlock()
-	fromYaml = val
-}
-
 // check and set sponsorship token
 func ConfigureSponsorship(token string) error {
 	mu.Lock()
@@ -54,13 +69,27 @@ func ConfigureSponsorship(token string) error {
 			return nil
 		}
 
+		if os.Getenv("HEMSPRO") != "" {
+			if sub := checkHemsPro(); sub != "" {
+				Subject = sub
+				return nil
+			}
+		}
+
 		var err error
-		if token, err = readSerial(); token == "" || err != nil {
+		if token, err = checkPulsares(); token == "" || err != nil {
 			return err
 		}
 	}
 
 	Token = token
+
+	// check expiry locally to avoid cloud roundtrip
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser().ParseUnverified(token, &claims); err == nil &&
+		claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+		return errors.New("token is expired - get a fresh one from https://sponsor.evcc.io")
+	}
 
 	conn, err := cloud.Connection()
 	if err != nil {
@@ -72,7 +101,7 @@ func ConfigureSponsorship(token string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, MachineId: machineID()})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ExpiresAt = res.ExpiresAt.AsTime()
@@ -83,7 +112,11 @@ func ConfigureSponsorship(token string) error {
 			Subject = unavailable
 			err = nil
 		} else {
-			err = fmt.Errorf("sponsortoken: %w", err)
+			if strings.Contains(err.Error(), "token is expired") {
+				err = fmt.Errorf("%w - get a fresh one from https://sponsor.evcc.io", err)
+			} else {
+				err = fmt.Errorf("sponsortoken: %w", err)
+			}
 		}
 	}
 
@@ -98,16 +131,15 @@ func redactToken(token string) string {
 	return token[:6] + "......." + token[len(token)-6:]
 }
 
-type sponsorStatus struct {
+type Status struct {
 	Name        string    `json:"name"`
 	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
 	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
 	Token       string    `json:"token,omitempty"`
-	FromYaml    bool      `json:"fromYaml"`
 }
 
-// Status returns the sponsorship status
-func Status() sponsorStatus {
+// RedactedStatus returns the sponsorship status
+func RedactedStatus() Status {
 	mu.RLock()
 	defer mu.RUnlock()
 
@@ -116,11 +148,10 @@ func Status() sponsorStatus {
 		expiresSoon = true
 	}
 
-	return sponsorStatus{
+	return Status{
 		Name:        Subject,
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,
 		Token:       redactToken(Token),
-		FromYaml:    fromYaml,
 	}
 }

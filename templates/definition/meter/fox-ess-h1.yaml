@@ -10,6 +10,7 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     id: 247
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -64,4 +65,5 @@ render: |
       type: input
       {{- end }}
       decode: int16
+  {{- include "battery-params" . }}
   {{- end }}

@@ -1,0 +1,28 @@
+template: service-demo
+group: generic
+products:
+  - description:
+      generic: Service Demo Meter
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: value
+    description:
+      generic: Important value
+    required: true
+    service: demo/single
+  - name: other-value
+    description:
+      generic: Other value
+    service: demo/single
+  - name: country
+    description:
+      generic: Country
+    service: demo/country
+  - name: city
+    description:
+      generic: City
+    service: demo/{country}/city
+
+render: |
+  type: custom

@@ -20,7 +20,7 @@ import (
 // Instance is the paho Mqtt client singleton
 var Instance *Client
 
-const parallelInflightLimit int64 = 128
+const parallelInflightLimit int64 = 32
 
 // ClientID created unique mqtt client id
 func ClientID() string {
@@ -48,6 +48,10 @@ type Client struct {
 	Qos      byte
 	listener map[string][]func(string)
 	inflight *semaphore.Weighted
+
+	connMu     sync.Mutex
+	connCtx    context.Context
+	connCancel context.CancelFunc
 }
 
 type Option func(*paho.ClientOptions)
@@ -125,22 +129,65 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	return mc, nil
 }
 
+// connContext returns a context that is cancelled on disconnect and replaced
+// on every reconnect. Pending publishes use it to bail out if the connection
+// that scheduled them has gone away.
+func (m *Client) connContext() context.Context {
+	m.connMu.Lock()
+	defer m.connMu.Unlock()
+	if m.connCtx == nil {
+		return context.Background()
+	}
+	return m.connCtx
+}
+
+func (m *Client) renewConnContext() {
+	m.connMu.Lock()
+	defer m.connMu.Unlock()
+	if m.connCancel != nil {
+		m.connCancel()
+	}
+	m.connCtx, m.connCancel = context.WithCancel(context.Background())
+}
+
+func (m *Client) cancelConnContext() {
+	m.connMu.Lock()
+	defer m.connMu.Unlock()
+	if m.connCancel != nil {
+		m.connCancel()
+	}
+}
+
 // ConnectionLostHandler logs cause of connection loss as warning
 func (m *Client) ConnectionLostHandler(client paho.Client, reason error) {
 	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
+	m.cancelConnContext()
 }
 
 // ConnectionHandler restores listeners
 func (m *Client) ConnectionHandler(client paho.Client) {
 	m.log.DEBUG.Printf("%s connected", m.broker)
+	m.renewConnContext()
 
 	m.mux.Lock()
-	defer m.mux.Unlock()
-
+	topics := make([]string, 0, len(m.listener))
 	for topic := range m.listener {
-		m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
-		go m.listen(topic)
+		topics = append(topics, topic)
 	}
+	m.mux.Unlock()
+
+	// Resubscribe sequentially to avoid bursting the broker right after reconnect.
+	go func() {
+		for _, topic := range topics {
+			m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
+			token := m.listen(topic)
+			if !token.WaitTimeout(request.Timeout) {
+				m.log.ERROR.Printf("subscribe %s: timeout", topic)
+			} else if err := token.Error(); err != nil {
+				m.log.ERROR.Printf("subscribe %s: %v", topic, err)
+			}
+		}
+	}()
 }
 
 // Cleanup recursively removes a topic
@@ -154,7 +201,11 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 		}
 
 		m.log.TRACE.Printf("delete: %s", msg.Topic())
-		m.Publish(msg.Topic(), true, "")
+		// Delete synchronously at QoS 0 so the cleanup burst self-throttles
+		// to one in-flight message at a time and avoids overwhelming the
+		// broker (see #30086).
+		token := m.client.Publish(msg.Topic(), 0, true, "")
+		token.WaitTimeout(request.Timeout)
 
 		// reset timeout
 		timer.Reset(time.Second)
@@ -173,25 +224,36 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 }
 
 // Publish asynchronously publishes payload using client qos
-func (m *Client) Publish(topic string, retained bool, payload any) {
+func (m *Client) Publish(topic string, retained bool, payload string) {
+	connCtx := m.connContext()
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(connCtx, request.Timeout)
 		defer cancel()
 		if err := m.inflight.Acquire(ctx, 1); err != nil {
-			m.log.ERROR.Printf("send %s: %v", topic, err)
+			if connCtx.Err() == nil {
+				m.log.ERROR.Printf("send %s: %v", topic, err)
+			}
 			return
 		}
 		defer m.inflight.Release(1)
 
-		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
+		// Bail out if the connection that scheduled this publish has been lost.
+		if connCtx.Err() != nil {
+			return
+		}
+
+		m.log.TRACE.Printf("send %s: '%v'", topic, request.Truncate(payload))
 		token := m.client.Publish(topic, m.Qos, retained, payload)
 
-		err := api.ErrTimeout
-		if token.WaitTimeout(request.Timeout) {
-			err = token.Error()
-		}
-		if err != nil {
-			m.log.ERROR.Printf("send: %s: %v", topic, err)
+		select {
+		case <-connCtx.Done():
+			return
+		case <-token.Done():
+			if err := token.Error(); err != nil {
+				m.log.ERROR.Printf("send: %s: %v", topic, err)
+			}
+		case <-time.After(request.Timeout):
+			m.log.ERROR.Printf("send: %s: timeout", topic)
 		}
 	}()
 }
@@ -228,7 +290,7 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 func (m *Client) listen(topic string) paho.Token {
 	token := m.client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		payload := string(msg.Payload())
-		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
+		m.log.TRACE.Printf("recv %s: '%v'", topic, request.Truncate(payload))
 		if len(payload) > 0 {
 			m.mux.Lock()
 			callbacks := m.listener[topic]

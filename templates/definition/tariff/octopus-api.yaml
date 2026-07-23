@@ -5,8 +5,8 @@ products:
       generic: API
 requirements:
   description:
-    de: "Den API-Key bekommst du im Octopus Portal https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
-    en: "You can get the API key in the Octopus portal https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+    de: "Den API-Key bekommst du im Octopus Portal: [octopus.energy](https://octopus.energy/dashboard/new/accounts/personal-details/api-access)"
+    en: "You can get the API key in the Octopus portal: [octopus.energy](https://octopus.energy/dashboard/new/accounts/personal-details/api-access)"
 countries: ["GB"]
 group: price
 params:

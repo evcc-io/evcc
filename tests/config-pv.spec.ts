@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -16,7 +16,6 @@ test.afterAll(async () => {
 test.describe("pv meter", async () => {
   test("create, edit and remove pv meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("pv")).toHaveCount(0);
 
@@ -24,13 +23,15 @@ test.describe("pv meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Add solar meter" }).click();
     await meterModal.getByLabel("Title").fill("PV North");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await meterModal.getByLabel("Power optional").fill("5000");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(meterModal.getByLabel("Minimum charge")).not.toBeVisible(); // battery usage only
     await expect(meterModal.getByLabel("Maximum AC power of the hybrid inverter")).toBeVisible(); // pv usage only
+    await meterModal.getByLabel("Power optional").fill("5000");
+    await expect(meterModal.getByLabel("Power optional")).toHaveValue("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
@@ -73,7 +74,6 @@ test.describe("pv meter", async () => {
 
   test("create broken pv meter with validation failure", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("pv")).toHaveCount(0);
 

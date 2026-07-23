@@ -210,8 +210,6 @@ func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 		}
 	}()
 
-	log.DEBUG.Printf("!! User-Agent set to %s", getUserAgent())
-
 	return t, nil
 }
 

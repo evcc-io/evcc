@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="shmModal"
+		name="shm"
 		:title="$t('config.shm.title')"
 		:description="$t('config.shm.description')"
 		docs="/docs/reference/configuration/hems"
 		endpoint="/config/shm"
 		state-key="shm"
-		data-testid="shm-modal"
 		disable-remove
 		@changed="$emit('changed')"
 	>
@@ -48,6 +47,22 @@
 						<input
 							id="shmDeviceid"
 							v-model="values.deviceId"
+							class="form-control"
+							minlength="12"
+							maxlength="12"
+							pattern="[A-Fa-f0-9]{12}"
+						/>
+					</FormRow>
+					<FormRow
+						id="shmDeviceserial"
+						:label="$t('config.shm.labelDeviceSerial')"
+						:help="$t('config.shm.descriptionDeviceSerial')"
+						example="CCCCCCCCCCCC"
+						optional
+					>
+						<input
+							id="shmDeviceserial"
+							v-model="values.deviceSerial"
 							class="form-control"
 							minlength="12"
 							maxlength="12"

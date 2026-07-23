@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 // https://v2charge.com/trydan/
 
 import (
@@ -15,36 +32,59 @@ import (
 )
 
 type RealTimeData struct {
-	ID               string  `json:"ID"`
-	ChargeState      int     `json:"ChargeState"`
-	ReadyState       int     `json:"ReadyState"`
-	ChargePower      float64 `json:"ChargePower"`
-	ChargeEnergy     float64 `json:"ChargeEnergy"`
-	SlaveError       int     `json:"SlaveError"`
-	ChargeTime       int     `json:"ChargeTime"`
-	HousePower       float64 `json:"HousePower"`
-	FVPower          float64 `json:"FVPower"`
-	BatteryPower     float64 `json:"BatteryPower"`
-	Paused           int     `json:"Paused"`
-	Locked           int     `json:"Locked"`
-	Timer            int     `json:"Timer"`
-	Intensity        int     `json:"Intensity"`
-	Dynamic          int     `json:"Dynamic"`
-	MinIntensity     int     `json:"MinIntensity"`
-	MaxIntensity     int     `json:"MaxIntensity"`
-	PauseDynamic     int     `json:"PauseDynamic"`
-	FirmwareVersion  string  `json:"FirmwareVersion"`
-	DynamicPowerMode int     `json:"DynamicPowerMode"`
-	ContractedPower  int     `json:"ContractedPower"`
+	ID                 string  `json:"ID"`
+	ChargeState        int     `json:"ChargeState"`
+	ReadyState         int     `json:"ReadyState"`
+	ChargePower        float64 `json:"ChargePower"`
+	ChargeEnergy       float64 `json:"ChargeEnergy"`
+	SlaveError         int     `json:"SlaveError"`
+	ChargeTime         int     `json:"ChargeTime"`
+	HousePower         float64 `json:"HousePower"`
+	FVPower            float64 `json:"FVPower"`
+	BatteryPower       float64 `json:"BatteryPower"`
+	Paused             int     `json:"Paused"`
+	Locked             int     `json:"Locked"`
+	Timer              int     `json:"Timer"`
+	Intensity          int     `json:"Intensity"`
+	Dynamic            int     `json:"Dynamic"`
+	MinIntensity       int     `json:"MinIntensity"`
+	MaxIntensity       int     `json:"MaxIntensity"`
+	PauseDynamic       int     `json:"PauseDynamic"`
+	FirmwareVersion    string  `json:"FirmwareVersion"`
+	DynamicPowerMode   int     `json:"DynamicPowerMode"`
+	ContractedPower    int     `json:"ContractedPower"`
+	ChargeMode         int     `json:"ChargeMode"`
+	IntensityMeasureL1 float64 `json:"IntensityMeasure_L1"`
+	IntensityMeasureL2 float64 `json:"IntensityMeasure_L2"`
+	IntensityMeasureL3 float64 `json:"IntensityMeasure_L3"`
+	VoltageMeasureL1   float64 `json:"VoltageMeasure_L1"`
+	VoltageMeasureL2   float64 `json:"VoltageMeasure_L2"`
+	VoltageMeasureL3   float64 `json:"VoltageMeasure_L3"`
 }
+
+// phaseMeasurementsUnavailable reports whether the firmware does not populate the per-phase
+// current/voltage fields (added in 2.5.0; older firmware just omits them, unmarshalling to
+// zero). A grid-connected charger always sees mains voltage, so an all-zero voltage sum can
+// only mean the fields are missing. Currents are checked additionally while power is flowing,
+// where an all-zero reading is equally impossible; zero currents while idle are legitimate.
+func (data RealTimeData) phaseMeasurementsUnavailable() bool {
+	return data.VoltageMeasureL1+data.VoltageMeasureL2+data.VoltageMeasureL3 == 0 ||
+		data.ChargePower > 0 &&
+			data.IntensityMeasureL1+data.IntensityMeasureL2+data.IntensityMeasureL3 == 0
+}
+
+// Trydan ChargeMode values
+const (
+	trydanChargeModeMono  = 0
+	trydanChargeModeThree = 1
+	trydanChargeModeMixed = 2
+)
 
 // Trydan charger implementation
 type Trydan struct {
 	*request.Helper
 	uri     string
 	statusG util.Cacheable[RealTimeData]
-	current int
-	enabled bool
 }
 
 func init() {
@@ -89,6 +129,20 @@ func NewTrydan(uri string, cache time.Duration) (api.Charger, error) {
 		return res, err
 	}, cache)
 
+	data, err := c.statusG.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	// Permanently pause the chargers internal Dynamic Power Control to let evcc take over
+	// charging power control. It is not disabled entirely since the charger would then stop
+	// returning power readings.
+	if data.Dynamic == 1 {
+		if err := c.setValue("PauseDynamic", 1); err != nil {
+			return nil, err
+		}
+	}
+
 	return c, nil
 }
 
@@ -104,6 +158,10 @@ func (t Trydan) Status() (api.ChargeStatus, error) {
 	case 1:
 		return api.StatusB, nil
 	case 2:
+		// firmware keeps ChargeState at "charging" even after Paused=1
+		if data.Paused == 1 {
+			return api.StatusB, nil
+		}
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("unknown status: %d", state)
@@ -113,7 +171,7 @@ func (t Trydan) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c Trydan) Enabled() (bool, error) {
 	data, err := c.statusG.Get()
-	return data.Paused == 0 && data.Locked == 0, err
+	return data.Paused == 0, err
 }
 
 func (c *Trydan) setValue(param string, value int) error {
@@ -132,40 +190,61 @@ func (c Trydan) Enable(enable bool) error {
 		pause = 1
 	}
 
-	if err := c.setValue("Paused", pause); err != nil {
-		return err
-	}
-	if err := c.setValue("Locked", pause); err != nil {
-		return err
-	}
-	c.enabled = enable
-
-	return nil
+	return c.setValue("Paused", pause)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c Trydan) MaxCurrent(current int64) error {
-	err := c.setValue("Intensity", int(current))
-	if err == nil {
-		c.current = int(current)
+	return c.setValue("Intensity", int(current))
+}
+
+// removed broken interfaces https://github.com/evcc-io/evcc/issues/28047
+
+// var _ api.ChargeRater = (*Trydan)(nil)
+
+// // ChargedEnergy implements the api.ChargeRater interface
+// func (c Trydan) ChargedEnergy() (float64, error) {
+// 	data, err := c.statusG.Get()
+// 	return data.ChargeEnergy, err
+// }
+
+// var _ api.ChargeTimer = (*Trydan)(nil)
+
+// // ChargeDuration implements the api.ChargeTimer interface
+// func (c Trydan) ChargeDuration() (time.Duration, error) {
+// 	data, err := c.statusG.Get()
+// 	return time.Duration(data.ChargeTime) * time.Second, err
+// }
+
+var _ api.PhaseSwitcher = (*Trydan)(nil)
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+func (c Trydan) Phases1p3p(phases int) error {
+	mode := trydanChargeModeThree
+	if phases == 1 {
+		mode = trydanChargeModeMono
 	}
-	return err
+	return c.setValue("ChargeMode", mode)
 }
 
-var _ api.ChargeRater = (*Trydan)(nil)
+var _ api.PhaseGetter = (*Trydan)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c Trydan) ChargedEnergy() (float64, error) {
+// GetPhases implements the api.PhaseGetter interface
+func (c Trydan) GetPhases() (int, error) {
 	data, err := c.statusG.Get()
-	return data.ChargeEnergy, err
-}
+	if err != nil {
+		return 0, err
+	}
 
-var _ api.ChargeTimer = (*Trydan)(nil)
-
-// ChargeDuration implements the api.ChargeTimer interface
-func (c Trydan) ChargeDuration() (time.Duration, error) {
-	data, err := c.statusG.Get()
-	return time.Duration(data.ChargeTime) * time.Second, err
+	switch data.ChargeMode {
+	case trydanChargeModeMono:
+		return 1, nil
+	case trydanChargeModeThree:
+		return 3, nil
+	default:
+		// mixed mode: phase count varies dynamically, not a fixed 1p/3p state
+		return 0, nil
+	}
 }
 
 var _ api.Meter = (*Trydan)(nil)
@@ -176,12 +255,52 @@ func (c Trydan) CurrentPower() (float64, error) {
 	return data.ChargePower, err
 }
 
+var _ api.PhaseCurrents = (*Trydan)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c Trydan) Currents() (float64, float64, float64, error) {
+	data, err := c.statusG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if data.phaseMeasurementsUnavailable() {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	return data.IntensityMeasureL1, data.IntensityMeasureL2, data.IntensityMeasureL3, nil
+}
+
+var _ api.PhaseVoltages = (*Trydan)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c Trydan) Voltages() (float64, float64, float64, error) {
+	data, err := c.statusG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if data.phaseMeasurementsUnavailable() {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+	return data.VoltageMeasureL1, data.VoltageMeasureL2, data.VoltageMeasureL3, nil
+}
+
 var _ api.Diagnosis = (*Trydan)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (c *Trydan) Diagnose() {
 	data, err := c.statusG.Get()
 	if err != nil {
-		fmt.Printf("%#v", data)
+		return
 	}
+
+	fmt.Printf("\tID:\t%s\n", data.ID)
+	fmt.Printf("\tFirmware:\t%s\n", data.FirmwareVersion)
+	fmt.Printf("\tCharge mode:\t%d\n", data.ChargeMode)
+	fmt.Printf("\tMin current:\t%dA\n", data.MinIntensity)
+	fmt.Printf("\tMax current:\t%dA\n", data.MaxIntensity)
+	fmt.Printf("\tContracted power:\t%dW\n", data.ContractedPower)
+	fmt.Printf("\tDynamic:\t%d\n", data.Dynamic)
+	fmt.Printf("\tPause dynamic:\t%d\n", data.PauseDynamic)
+	fmt.Printf("\tDynamic power mode:\t%d\n", data.DynamicPowerMode)
+	fmt.Printf("\tLocked:\t%d\n", data.Locked)
+	fmt.Printf("\tSlave error:\t%d\n", data.SlaveError)
 }

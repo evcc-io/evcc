@@ -1,0 +1,19 @@
+BEGIN;
+
+CREATE TABLE `settings` (
+    `key` text
+  , `value` text
+  , PRIMARY KEY(`key`)
+);
+
+INSERT INTO settings("key", value) VALUES('modbusproxy', '- port: 5021
+  uri: 192.0.2.2:502
+- port: 5022
+  device: /dev/ttyUSB0
+  baudrate: 9600
+  comset: "8N1"
+- port: 5023
+  uri: 192.0.2.3:502
+  rtu: true');
+
+COMMIT;

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible, finishLoadpoint } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -29,23 +29,12 @@ test.describe("onboarding", async () => {
     await expect(page.locator("body")).toContainText("Hello aboard!");
     await page.getByRole("link", { name: "Let's start configuration" }).click();
 
-    // login
-    const login = page.getByTestId("login-modal");
-    await expectModalVisible(login);
-    await login.getByLabel("Administrator Password").fill(PASSWORD);
-    await login.getByRole("button", { name: "Login" }).click();
-    await expectModalHidden(login);
-
-    // config page
+    // config page (already logged in from password creation)
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
     await expect(page.getByTestId("welcome-banner")).toBeVisible();
-    await page
-      .getByTestId("welcome-banner")
-      .getByRole("button", { name: "Enable experimental features" })
-      .click();
+    await expect(page.getByTestId("welcome-banner")).toContainText("Start with creating a");
 
     // create loadpoint with charger
-    await expect(page.getByTestId("loadpoint-required")).toBeVisible();
     await page.getByTestId("add-loadpoint").click();
     const lpModal = page.getByTestId("loadpoint-modal");
     await expectModalVisible(lpModal);
@@ -60,11 +49,11 @@ test.describe("onboarding", async () => {
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
+
+    await restart();
+
     await expect(page.getByTestId("welcome-banner")).not.toBeVisible();
-    await expect(page.getByTestId("loadpoint-required")).not.toBeVisible();
-    await expect(page.getByTestId("experimental-banner")).toBeVisible();
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
@@ -95,7 +84,7 @@ test.describe("onboarding", async () => {
     await expect(restartButton).not.toBeVisible();
 
     // navigate to main screen
-    await page.getByTestId("home-link").click();
+    await page.getByRole("link", { name: "Charge" }).click();
 
     // verify configuration
     await page.getByTestId("visualization").click();

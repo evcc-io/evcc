@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "验证码",
+    "authCodeHelp": "复制此代码并在下一步中使用。有效期为{duration}。",
+    "authorizationFailed": "授权失败",
+    "authorizationRequired": "需要授权",
+    "authorizationSuccessful": "授权成功",
+    "buttonConnect": "连接到 {provider}",
+    "buttonDisconnect": "断开连接",
+    "confirmLogout": "您确定要断开 {title} 的连接吗？",
+    "connect": "连接",
+    "disconnect": "断开连接",
+    "loggedOut": "已成功注销",
+    "logoutFailed": "注销失败",
+    "modalDescriptionLogin": "完成授权流程以建立与{provider}的连接。",
+    "modalDescriptionLogout": "这将断开您的{provider}账户连接，并取消对其数据的访问权限。",
+    "success": "{title}现已连接完毕，可立即使用。",
+    "successCloseModal": "现在您可以关闭此对话框了。",
+    "successCloseTab": "现在您可以关闭这个标签页了。",
+    "title": "授权状态"
+  },
   "batterySettings": {
     "batteryLevel": "电量",
     "bufferStart": {
@@ -40,12 +60,21 @@
       "chargers": "电动汽车充电桩",
       "generic": "通用集成",
       "heatingdevices": "加热设备",
-      "ocppHelp": "将此地址复制到您的充电桩配置中。",
+      "ocppConfirmContinue": "您的充电器尚未连接到EVCC。确定要继续吗？",
+      "ocppConnected": "连接成功！",
+      "ocppDescription": "evcc内置了OCPP服务器。请按以下步骤操作：",
+      "ocppHelp": "将此URL复制到您的充电器配置中。详细信息请查看制造商的手册。充电器将自动将其唯一标识符（站点ID）附加到URL。在极少数情况下，您可能需要手动指定标识符。示例：`{url}`",
       "ocppLabel": "OCPP 服务器 URL",
+      "ocppNextStep": "下一步",
+      "ocppStep1": "将您的充电器配置为使用evcc作为OCPP服务器。",
+      "ocppStep2": "请等待您的充电器连接到EVCC。",
+      "ocppStep3": "继续并完成配置。",
+      "ocppWaiting": "等待连接",
       "switchsockets": "可切换插座",
       "template": "制造商",
       "titleAdd": {
-        "charging": "添加充电桩"
+        "charging": "添加充电桩",
+        "heating": "添加加热器"
       },
       "titleEdit": {
         "charging": "编辑充电桩"
@@ -86,14 +115,13 @@
       "feedinPrice": "上网电价",
       "gridPrice": "电网电价",
       "heaterTempLimit": "加热器限制",
-      "hemsType": "系统",
       "identifier": "RFID 标识符",
       "no": "否",
       "odometer": "里程表读数",
       "org": "组织",
-      "phaseCurrents": "电流 L1",
-      "phasePowers": "功率 L1",
-      "phaseVoltages": "电压 L1",
+      "phaseCurrents": "电流",
+      "phasePowers": "功率",
+      "phaseVoltages": "电压",
       "phases1p3p": "相数切换",
       "power": "功率",
       "powerRange": "功率",
@@ -142,6 +170,7 @@
       "delete": "删除",
       "docsLink": "查看文档。",
       "experimental": "实验性",
+      "fromYamlHint": "evcc.yaml 中的设备不可编辑。",
       "hideAdvancedSettings": "隐藏高级设置",
       "off": "关",
       "on": "开",
@@ -277,8 +306,7 @@
       "name": "名称",
       "title": "配置",
       "unconfigured": "未配置",
-      "vehicles": "我的车辆",
-      "yaml": "evcc.yaml 中的设备不可编辑。"
+      "vehicles": "我的车辆"
     },
     "messaging": {
       "description": "接收有关您充电会话及其他事件的消息。",
@@ -422,30 +450,13 @@
       "validate": "验证"
     },
     "vehicle": {
-      "cancel": "取消",
-      "chargingSettings": "充电设置",
-      "defaultMode": "默认模式",
-      "defaultModeHelp": "连接车辆时的充电模式。",
-      "delete": "删除车辆",
       "generic": "其他集成",
-      "identifiers": "RFID 标识符",
-      "identifiersHelp": "用于识别车辆的 RFID 字符串列表。每行一个条目。当前标识符可以在概览页面上相应的充电点找到。",
-      "maximumCurrent": "最大电流",
-      "maximumCurrentHelp": "必须大于最小电流。",
-      "maximumPhases": "最大相数",
-      "maximumPhasesHelp": "此车辆可以使用多少相充电？用于计算所需的最小太阳能余电和计划时长。",
-      "minimumCurrent": "最小电流",
-      "minimumCurrentHelp": "仅在您清楚操作后果时才设置为低于 6A。",
       "online": "具有在线API的车辆",
       "primary": "通用集成",
-      "priority": "优先级",
-      "priorityHelp": "较高优先级意味着此车辆优先使用太阳能余电。",
-      "save": "保存",
       "scooter": "电动踏板车",
       "template": "制造商",
       "titleAdd": "添加车辆",
-      "titleEdit": "编辑车辆",
-      "validateSave": "验证并保存"
+      "titleEdit": "编辑车辆"
     }
   },
   "footer": {
@@ -603,26 +614,23 @@
     "chargingPlan": {
       "active": "启用",
       "addRepeatingPlan": "添加重复计划",
-      "arrivalTab": "抵达",
       "day": "日期",
-      "departureTab": "离开",
       "goal": "充电目标",
       "modalTitle": "充电计划",
       "none": "无",
       "planNumber": "计划 {number}",
-      "preconditionDescription": "出发前充电 {duration} 以进行电池预处理。",
-      "preconditionLong": "延迟充电",
-      "preconditionOptionAll": "全部",
-      "preconditionOptionNo": "否",
-      "preconditionShort": "延迟",
+      "precondition": {
+        "description": "出发前充电 {duration} 以进行电池预处理。",
+        "label": "延迟充电",
+        "optionAll": "全部",
+        "optionNo": "否"
+      },
       "remove": "移除",
       "repeating": "重复",
       "repeatingPlans": "重复计划",
       "selectAll": "全选",
       "time": "时间",
       "title": "计划",
-      "titleMinSoc": "最小充电量",
-      "titleTargetCharge": "出发时间",
       "unsavedChanges": "有未保存的更改。是否立即应用？",
       "update": "应用",
       "weekdays": "天数"
@@ -631,9 +639,9 @@
       "battery": "电池",
       "batteryCharge": "电池充电中",
       "batteryDischarge": "电池放电中",
+      "batteryDischargeHold": "电池（已锁定）",
       "batteryGridChargeActive": "电网充电已激活",
       "batteryGridChargeLimit": "电网充电条件",
-      "batteryHold": "电池（已锁定）",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecastTooltip": "预测：今日剩余太阳能发电量",
       "gridImport": "电网用电",
@@ -667,7 +675,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "使用住宅电池快速充电。",
+        "description": "使用住宅电池快速充电，直到电量降至 {limit}。",
         "label": "电池快充",
         "mode": "仅在太阳能和最小+太阳能模式下可用。",
         "once": "本次充电会话已启用快充。"
@@ -676,19 +684,11 @@
       "currents": "充电电流",
       "default": "默认",
       "disclaimerHint": "注意：",
-      "limitSoc": {
-        "description": "连接此车辆时使用的充电上限。",
-        "label": "默认上限"
-      },
       "maxCurrent": {
         "label": "最大电流"
       },
       "minCurrent": {
         "label": "最小电流"
-      },
-      "minSoc": {
-        "description": "在太阳能模式下，车辆将“快速”充电至 {0}，然后继续使用太阳能余电充电。这有助于确保即使在光照不足的日子也能达到最低续航里程。",
-        "label": "最小电量 %"
       },
       "onlyForSocBasedCharging": "这些选项仅适用于已知充电量的车辆。",
       "phasesConfigured": {
@@ -819,7 +819,6 @@
   "passwordModal": {
     "description": "设置密码以保护配置设置。主屏幕仍可在未登录情况下使用。",
     "empty": "密码不能为空",
-    "error": "错误： ",
     "labelCurrent": "当前密码",
     "labelNew": "新密码",
     "labelRepeat": "重复新密码",
@@ -939,8 +938,10 @@
       "label": "语言"
     },
     "sponsorToken": {
-      "expires": "您的赞助令牌将在 {inXDays} 后过期。{getNewToken} 并在此处更新。",
-      "getNew": "获取一个新的",
+      "expires": "您的赞助令牌将在 {inXDays} 后过期。",
+      "expiresUpdateUi": "{getNewToken} 并在此处更新。",
+      "expiresUpdateYaml": "{getNewToken} 并在你的 evcc.yaml 中更新。",
+      "getNewToken": "获取一个新的",
       "hint": "注意：我们将来会自动化此过程。"
     },
     "telemetry": {

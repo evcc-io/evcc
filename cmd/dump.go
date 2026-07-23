@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/redact"
 	"github.com/spf13/cobra"
 )
 
@@ -67,7 +68,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		var redacted string
 		if src, err := os.ReadFile(cfgFile); err == nil {
-			redacted = redact(string(src))
+			redacted = redact.String(string(src))
 		}
 
 		tmpl := template.Must(
@@ -117,6 +118,12 @@ func runDump(cmd *cobra.Command, args []string) {
 	for id, name := range site.Meters.AuxMetersRef {
 		if name != "" {
 			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(name, config.Meters()))
+		}
+	}
+
+	for id, name := range site.Meters.ConsumerMetersRef {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("consumer %d: %s", id+1, name), handle(name, config.Meters()))
 		}
 	}
 

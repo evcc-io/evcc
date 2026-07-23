@@ -38,15 +38,23 @@ func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 
 // setVehicleIdentifier updated the vehicle id as read from the charger
 func (lp *Loadpoint) setVehicleIdentifier(id string) {
-	if lp.vehicleIdentifier != id {
-		lp.vehicleIdentifier = id
-		lp.publish(keys.VehicleIdentity, id)
+	if lp.vehicleIdentifier == id {
+		return
+	}
+
+	lp.vehicleIdentifier = id
+	lp.publish(keys.VehicleIdentity, id)
+
+	if id != "" {
+		lp.updateSession(func(session *session.Session) {
+			session.Identifier = id
+		})
 	}
 }
 
 // identifyVehicle reads vehicle identification from charger
 func (lp *Loadpoint) identifyVehicle() {
-	identifier, ok := lp.charger.(api.Identifier)
+	identifier, ok := api.Cap[api.Identifier](lp.charger)
 	if !ok {
 		return
 	}
@@ -69,7 +77,11 @@ func (lp *Loadpoint) identifyVehicle() {
 
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.stopVehicleDetection()
-			lp.setActiveVehicle(vehicle)
+
+			// already active via a different detection path - avoid reapplying its mode
+			if lp.GetVehicle() != vehicle {
+				lp.setActiveVehicle(vehicle)
+			}
 		}
 	}
 }
@@ -111,6 +123,8 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.vmu.Lock()
 
+	prev := lp.vehicle
+
 	from := "unknown"
 	if lp.vehicle != nil {
 		lp.coordinator.Release(lp.vehicle)
@@ -133,16 +147,19 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
-		var estimate bool
-		if lp.Soc.Estimate == nil || *lp.Soc.Estimate {
-			estimate = true
+		if v.Capacity() > 0 && (lp.Soc.Estimate == nil || *lp.Soc.Estimate) {
+			lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v)
 		}
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
 
-		if mode, ok := v.OnIdentified().GetMode(); ok {
+		// vehicle mode overrides the yaml onIdentify action
+		mode, ok := v.OnIdentified().GetMode()
+		if m := vehicle.Settings(lp.log, v).GetMode(); m != "" {
+			mode, ok = m, true
+		}
+		if ok && mode != "" {
 			lp.SetMode(mode)
 		}
 
@@ -156,25 +173,27 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 	// re-publish vehicle settings
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
-	lp.unpublishVehicle()
+
+	// only reset published vehicle data when the active vehicle actually changes.
+	// re-assigning the same default vehicle on reconnect must keep a known soc.
+	if prev != v {
+		lp.unpublishVehicle()
+	}
 
 	// publish effective values
 	lp.PublishEffectiveValues()
 
 	lp.updateSession(func(session *session.Session) {
-		var title string
 		if v != nil {
-			title = v.GetTitle()
+			session.Vehicle = v.GetTitle()
 		}
-
-		lp.session.Vehicle = title
 	})
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
 	// wake up charger or vehicle. First wakeupAttemptsLeft will be odd.
-	charger, chargerCanWakeUp := lp.charger.(api.Resurrector)
-	vehicle, vehicleCanWakeUp := lp.GetVehicle().(api.Resurrector)
+	charger, chargerCanWakeUp := api.Cap[api.Resurrector](lp.charger)
+	vehicle, vehicleCanWakeUp := api.Cap[api.Resurrector](lp.GetVehicle())
 
 	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 {
 		if chargerCanWakeUp {
@@ -239,7 +258,7 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 	// request vehicle api refresh while waiting to identify
 	select {
 	case <-lp.vehicleDetectTicker.C:
-		lp.log.DEBUG.Println("vehicle api refresh")
+		lp.log.DEBUG.Println("vehicle api cache reset")
 		util.ResetCached()
 	default:
 	}
@@ -250,13 +269,11 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
 func (lp *Loadpoint) vehicleDefaultOrDetect() {
 	if lp.defaultVehicle != nil {
-		if lp.vehicle != lp.defaultVehicle {
-			lp.setActiveVehicle(lp.defaultVehicle)
-		} else {
-			// default vehicle is already active, update odometer anyway
-			// need to do this here since setActiveVehicle would short-circuit
-			lp.addTask(lp.vehicleOdometer)
-		}
+		// Always call setActiveVehicle even if defaultVehicle is already active.
+		// This ensures a fresh SOC estimator is created on each vehicle connect,
+		// which resets the estimator's initial values for the new charging session.
+		// setActiveVehicle is safe to call repeatedly - it only logs when vehicle actually changes.
+		lp.setActiveVehicle(lp.defaultVehicle)
 	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
 		lp.startVehicleDetection()
 	}
@@ -265,7 +282,7 @@ func (lp *Loadpoint) vehicleDefaultOrDetect() {
 // startVehicleDetection reset connection timer and starts api refresh timer
 func (lp *Loadpoint) startVehicleDetection() {
 	// flush all vehicles before detection starts
-	lp.log.DEBUG.Println("vehicle api refresh")
+	lp.log.DEBUG.Println("vehicle api cache reset")
 	util.ResetCached()
 
 	lp.vehicleDetect = lp.clock.Now()
@@ -295,14 +312,14 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 	}
 
 	// remove previous vehicle if status was not confirmed
-	if _, ok := lp.GetVehicle().(api.ChargeState); ok {
+	if api.HasCap[api.ChargeState](lp.GetVehicle()) {
 		lp.setActiveVehicle(nil)
 	}
 }
 
 // vehicleOdometer updates odometer
 func (lp *Loadpoint) vehicleOdometer() {
-	if vs, ok := lp.GetVehicle().(api.VehicleOdometer); ok {
+	if vs, ok := api.Cap[api.VehicleOdometer](lp.GetVehicle()); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
 			lp.publish(keys.VehicleOdometer, odo)
@@ -319,20 +336,21 @@ func (lp *Loadpoint) vehicleOdometer() {
 
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
-	switch {
-	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
-	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected():
-		return true
-	default:
-		return false
 	}
+
+	return (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected()
 }
 
 // vehicleSocPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) vehicleSocPollAllowed() bool {
+	if lp.vehicleHasFeature(api.Offline) {
+		return false
+	}
+
 	// always update soc when charging
-	if lp.charging() {
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
 	}
 
@@ -359,7 +377,12 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 // vehicleClimateActive checks if vehicle has active climate request
 func (lp *Loadpoint) vehicleClimateActive() bool {
-	if cl, ok := lp.GetVehicle().(api.VehicleClimater); ok && lp.vehicleClimatePollAllowed() {
+	// skip climater detection entirely if the vehicle opts out
+	if lp.vehicleHasFeature(api.ClimaterDisabled) {
+		return false
+	}
+
+	if cl, ok := api.Cap[api.VehicleClimater](lp.GetVehicle()); ok && lp.vehicleClimatePollAllowed() {
 		active, err := cl.Climater()
 		if err == nil {
 			if active {
@@ -370,7 +393,7 @@ func (lp *Loadpoint) vehicleClimateActive() bool {
 			return active
 		}
 
-		if !errors.Is(err, api.ErrNotAvailable) {
+		if !errors.Is(err, api.ErrNotAvailable) && !errors.Is(err, api.ErrAsleep) {
 			lp.log.ERROR.Printf("climater: %v", err)
 		}
 	}

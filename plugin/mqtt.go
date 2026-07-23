@@ -12,6 +12,7 @@ import (
 // Mqtt provider
 type Mqtt struct {
 	*getter
+	ctx      context.Context
 	log      *util.Logger
 	client   *mqtt.Client
 	topic    string
@@ -42,14 +43,14 @@ func NewMqttPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, err
 	}
 
-	log := contextLogger(ctx, util.NewLogger("mqtt"))
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("mqtt"))
 
 	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {
 		return nil, err
 	}
 
-	m := NewMqtt(log, client, cc.Topic, cc.Timeout).WithScale(cc.Scale).WithPayload(cc.Payload)
+	m := NewMqtt(log, client, cc.Topic, cc.Timeout).WithContext(ctx).WithScale(cc.Scale).WithPayload(cc.Payload)
 	if cc.Retained {
 		m = m.WithRetained()
 	}
@@ -65,6 +66,7 @@ func NewMqttPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 // NewMqtt creates mqtt provider for given topic
 func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
+		ctx:     context.Background(),
 		log:     log,
 		client:  client,
 		topic:   topic,
@@ -73,6 +75,12 @@ func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, timeout time.D
 
 	m.getter = defaultGetters(m, 1)
 
+	return m
+}
+
+// WithContext sets a context that can cancel the blocking first-read wait
+func (m *Mqtt) WithContext(ctx context.Context) *Mqtt {
+	m.ctx = ctx
 	return m
 }
 
@@ -103,12 +111,23 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 // newReceiver creates a msgHandler and subscribes it to the topic.
 func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	h := &msgHandler{
+		ctx:      m.ctx,
 		topic:    m.topic,
 		pipeline: m.pipeline,
 		val:      util.NewMonitor[string](m.timeout),
 	}
 
 	err := m.client.Listen(m.topic, h.receive)
+
+	// without timeout, wait briefly for a retained message- it arrives right after suback
+	if err == nil && m.timeout == 0 {
+		select {
+		case <-h.val.Done():
+		case <-m.ctx.Done():
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
+
 	return h, err
 }
 

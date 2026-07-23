@@ -1,5 +1,22 @@
 package sponsor
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"errors"
@@ -7,50 +24,21 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/evcc-io/evcc/api/proto/pb"
-	"github.com/evcc-io/evcc/util/cloud"
-	"github.com/evcc-io/evcc/util/request"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // checkVictron checks if the hardware is a supported victron device and returns sponsor subject
 func checkVictron() string {
 	vd, err := victronDeviceInfo()
 	if err != nil {
-		// unable to retrieve all device info
 		return ""
 	}
 
-	conn, err := cloud.Connection()
-	if err != nil {
-		// unable to connect to cloud
-		return unavailable
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-	defer cancel()
-
-	client := pb.NewVictronClient(conn)
-	res, err := client.IsValidDevice(ctx, &pb.VictronRequest{
-		ProductId: vd.ProductId,
-		VrmId:     vd.VrmId,
-		Serial:    vd.Serial,
-		Board:     vd.Board,
+	return checkHardware("victron", map[string]string{
+		"board":     vd.Board,
+		"productId": vd.ProductId,
+		"vrmId":     vd.VrmId,
+		"serial":    vd.Serial,
 	})
-
-	if err == nil && res.Authorized {
-		// cloud check successful
-		return victron
-	}
-
-	if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-		// technical error during validation
-		return unavailable
-	}
-
-	return ""
 }
 
 type victronDevice struct {

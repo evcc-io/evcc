@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/templates"
@@ -17,6 +18,7 @@ import (
 )
 
 type E3dc struct {
+	implement.Caps
 	mu             sync.Mutex
 	dischargeLimit uint32
 	externalPower  bool            // whether to include power of external sources
@@ -29,20 +31,20 @@ func init() {
 	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
 
-//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
-
 func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity `mapstructure:",squash"`
-		pvMaxACPower    `mapstructure:",squash"`
-		Usage           templates.Usage
-		Uri             string
-		User            string
-		Password        string
-		Key             string
-		ExternalPower   bool
-		DischargeLimit  uint32
-		Timeout         time.Duration
+		batteryCapacity    `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
+		pvMaxACPower       `mapstructure:",squash"`
+		Usage              templates.Usage
+		Uri                string
+		User               string
+		Password           string
+		Key                string
+		ExternalPower      bool
+		DischargeLimit     uint32
+		Timeout            time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -69,12 +71,12 @@ func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator())
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.ExternalPower, cc.batteryCapacity.Decorator(), cc.pvMaxACPower.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, externalPower bool, capacity, maxacpower func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -87,6 +89,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 	}
 
 	m := &E3dc{
+		Caps:           implement.New(),
 		usage:          usage,
 		conn:           conn,
 		externalPower:  externalPower,
@@ -99,20 +102,17 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 		return err
 	}
 
-	// decorate battery
-	var (
-		batteryCapacity func() float64
-		batterySoc      func() (float64, error)
-		batteryMode     func(api.BatteryMode) error
-	)
+	implement.May(m, implement.BatterySocLimiter(batterySocLimits))
+	implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
+	implement.May(m, implement.MaxACPowerGetter(maxacpower))
 
 	if usage == templates.UsageBattery {
-		batteryCapacity = capacity
-		batterySoc = m.batterySoc
-		batteryMode = m.setBatteryMode
+		implement.May(m, implement.BatteryCapacity(capacity))
+		implement.Has(m, implement.Battery(m.batterySoc))
+		implement.Has(m, implement.BatteryController(m.setBatteryMode))
 	}
 
-	return decorateE3dc(m, batterySoc, batteryCapacity, batteryMode, maxacpower), nil
+	return m, nil
 }
 
 // retryMessage executes a single message request with retry
@@ -224,6 +224,11 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 		messages = []rscp.Message{
 			e3dcDischargeBatteryLimit(false, 0),
 			e3dcBatteryCharge(50000), // max. 50kWh
+		}
+	case api.BatteryHoldCharge:
+		messages = []rscp.Message{
+			e3dcDischargeBatteryLimit(false, 0),
+			e3dcBatteryCharge(0),
 		}
 	default:
 		return api.ErrNotAvailable

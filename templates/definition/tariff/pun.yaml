@@ -4,12 +4,22 @@ products:
 requirements:
   evcc: ["skiptest"]
   description:
-    de: "Preisdaten von https://www.mercatoelettrico.org/it/. Wird oft zur Einspeisung ins Netz verwendet."
-    en: "Price data from https://www.mercatoelettrico.org/it/. Often used for feeding into the grid."
+    de: "Preisdaten von [mercatoelettrico.org](https://www.mercatoelettrico.org/it/). Wird oft zur Einspeisung ins Netz verwendet."
+    en: "Price data from [mercatoelettrico.org](https://www.mercatoelettrico.org/it/). Often used for feeding into the grid."
 group: price
 countries: ["IT"]
 params:
   - preset: tariff-base
+  - name: zone
+    type: choice
+    choice: ["NORD", "CNOR", "CSUD", "SUD", "CALA", "SICI", "SARD"]
+    description:
+      de: Marktzone
+      en: Market zone
+    help:
+      de: Italienische Strommarktzone. Wenn keine Zone angegeben wird, wird der nationale Einheitspreis (PUN) verwendet.
+      en: Italian electricity market zone. If no zone is specified, the national unit price (PUN) is used.
 render: |
   type: pun
   {{ include "tariff-base" . }}
+  zone: {{ .zone }}

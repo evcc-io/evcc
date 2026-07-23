@@ -24,12 +24,14 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // DaheimLaden charger implementation
 type DaheimLaden struct {
+	implement.Caps
 	log    *util.Logger
 	conn   *modbus.Connection
 	curr   uint16
@@ -45,6 +47,7 @@ const (
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	dlRegStationId       = 38  // Chr[16] RO UTF16
+	dlRegCardId          = 54  // Chr[16] RO UTF16
 	dlRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	dlRegChargingTime    = 78  // Uint32 RO 1s
 	dlRegSafeCurrent     = 87  // Uint16 WR 0.1A
@@ -63,8 +66,6 @@ const (
 func init() {
 	registry.AddCtx("daheimladen", NewDaheimLadenFromConfig)
 }
-
-//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLaden -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
 func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -91,10 +92,19 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		return nil, err
 	}
 
+	c, err := conn.ReadHoldingRegisters(dlRegStationId, 16)
+	if s, _ := utf16BEBytesAsString(c); err != nil || s == "" || s == "heidelbridge" {
+		if s == "heidelbridge" {
+			return nil, fmt.Errorf("heidelbridge detected: %w", api.ErrSponsorRequired)
+		}
+		return nil, api.ErrSponsorRequired
+	}
+
 	log := util.NewLogger("daheimladen")
 	conn.Logger(log.TRACE)
 
 	wb := &DaheimLaden{
+		Caps:   implement.New(),
 		log:    log,
 		conn:   conn,
 		curr:   60, // assume min current
@@ -106,7 +116,7 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	if err != nil {
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
-	if curr > 0 {
+	if curr >= 60 {
 		wb.curr = curr
 	}
 
@@ -119,14 +129,12 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
-	var phases1p3p func(int) error
-	var phasesG func() (int, error)
 	if phases {
-		phases1p3p = wb.phases1p3p
-		phasesG = wb.getPhases
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
-	return decorateDaheimLaden(wb, phases1p3p, phasesG), nil
+	return wb, nil
 }
 
 func (wb *DaheimLaden) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -187,6 +195,8 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 6: // Session Terminated by EVSE
 		return api.StatusB, nil
+	case 9: // Firmware Update
+		return api.StatusA, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
@@ -195,13 +205,26 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
+	if err != nil {
+		return false, err
+	}
 
-	return curr > 0, err
+	// a charger restart resets the current limit to 0A which triggers
+	// unauthorised autostart. restore the safe disabled value.
+	if curr == 0 {
+		if err := wb.setCurrent(1); err != nil {
+			return false, err
+		}
+		curr = 1
+	}
+
+	return curr >= 60, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *DaheimLaden) Enable(enable bool) error {
-	var current uint16
+	// must be > 0 to disable unauthorised autostart
+	current := uint16(1)
 	if enable {
 		current = wb.curr
 	}
@@ -289,6 +312,17 @@ func (wb *DaheimLaden) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
 }
 
+var _ api.Identifier = (*DaheimLaden)(nil)
+
+// Identify implements the api.Identifier interface. Only usable with PRO
+func (wb *DaheimLaden) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16)
+	if err != nil {
+		return "", err
+	}
+	return utf16BEBytesAsString(b)
+}
+
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *DaheimLaden) phases1p3p(phases int) error {
 	b := make([]byte, 2)
@@ -316,6 +350,8 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 		}
 
 		wb.phases = binary.BigEndian.Uint16(b)
+	} else {
+		wb.log.DEBUG.Println("phase switch in progress")
 	}
 
 	return int(wb.phases), nil
@@ -340,6 +376,10 @@ func (wb *DaheimLaden) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
 		s, _ := utf16BEBytesAsString(b)
 		fmt.Printf("\tStation ID:\t%s\n", s)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("\tCard ID:\t%s\n", s)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))

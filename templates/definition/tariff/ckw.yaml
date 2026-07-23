@@ -1,0 +1,37 @@
+template: ckw
+products:
+  - brand: CKW
+    description:
+      de: Netz Home/Business dynamic
+      en: Netz Home/Business dynamic
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["CH"]
+params:
+  - preset: tariff-base
+  - name: tariff
+    required: true
+    choice: ["home_dynamic", "business_dynamic"]
+    description:
+      de: Tarifname
+      en: Tariff name
+    help:
+      de: home_dynamic (unter 50 MWh/Jahr) oder business_dynamic (über 50 MWh/Jahr)
+      en: home_dynamic (below 50 MWh/year) or business_dynamic (above 50 MWh/year)
+  - name: tax
+    default: 0.081
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://e-ckw-public-data.de-c1.eu1.cloudhub.io/api/v1/netzinformationen/energie/dynamische-preise?tariff_type=integrated&tariff_name={{ .tariff }}&start_timestamp={{ `{{ (now.AddDate 0 0 -1).Format "2006-01-02T00:00:00Z" }}` }}&end_timestamp={{ `{{ (now.AddDate 0 0 3).Format "2006-01-02T00:00:00Z" }}` }}
+    jq: |
+      [.prices[] |
+        {
+          start: (.start_timestamp | sub("Z$"; ":00Z")),
+          end: (.end_timestamp | sub("Z$"; ":00Z")),
+          value: (.integrated[] | select(.unit == "CHF_kWh") | .value)
+        }
+      ] | tostring

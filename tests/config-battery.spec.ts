@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -16,7 +16,6 @@ test.afterAll(async () => {
 test.describe("battery meter", async () => {
   test("create, edit and remove battery meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
 
@@ -69,7 +68,6 @@ test.describe("battery meter", async () => {
 
   test("advanced fields", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 

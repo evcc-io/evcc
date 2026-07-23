@@ -1,14 +1,24 @@
 <template>
-	<GenericModal ref="modal" :size="size" :title="title" @open="open" @close="close">
+	<GenericModal
+		:id="`${name}Modal`"
+		ref="modal"
+		:size="size"
+		:title="title"
+		:data-testid="`${name}-modal`"
+		:config-modal-name="name"
+		@open="open"
+		@close="close"
+	>
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
+		<slot name="afterDescription" />
+		<ErrorMessage :error="error" data-testid="error" />
 		<form ref="form" class="container mx-0 px-0">
-			<div class="editor-container">
+			<div v-if="!noYamlEditor" class="editor-container">
 				<YamlEditorContainer
 					v-model="yaml"
 					:errorLine="errorLine"
@@ -17,6 +27,12 @@
 				/>
 			</div>
 			<slot name="extra" />
+
+			<AdminPasswordPrompt
+				v-if="adminPasswordRequired"
+				v-model:password="adminPassword"
+				:invalid="adminPasswordInvalid"
+			/>
 
 			<div class="mt-4 d-flex justify-content-between">
 				<button
@@ -27,6 +43,7 @@
 					{{ $t("config.general.cancel") }}
 				</button>
 				<button
+					v-if="!disableSave"
 					type="submit"
 					class="btn btn-primary"
 					:disabled="saving || nothingChanged"
@@ -47,13 +64,16 @@
 
 <script>
 import GenericModal from "../Helper/GenericModal.vue";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
+import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import YamlEditorContainer from "./YamlEditorContainer.vue";
+import { ADMIN_PASSWORD_REQUIRED } from "./DeviceModal/index";
 
 export default {
 	name: "YamlModal",
-	components: { GenericModal, YamlEditorContainer },
+	components: { GenericModal, ErrorMessage, YamlEditorContainer, AdminPasswordPrompt },
 	props: {
 		title: String,
 		description: String,
@@ -62,8 +82,11 @@ export default {
 		defaultYaml: String,
 		removeKey: String,
 		size: { type: String, default: "xl" },
+		noYamlEditor: Boolean,
+		disableSave: Boolean,
+		name: String,
 	},
-	emits: ["changed"],
+	emits: ["changed", "open"],
 	data() {
 		return {
 			saving: false,
@@ -72,6 +95,9 @@ export default {
 			yaml: "",
 			serverYaml: "",
 			modalVisible: false,
+			adminPassword: "",
+			adminPasswordRequired: false,
+			adminPasswordInvalid: false,
 		};
 	},
 	computed: {
@@ -82,6 +108,11 @@ export default {
 			return this.yaml === this.serverYaml && this.yaml !== "";
 		},
 	},
+	watch: {
+		adminPassword() {
+			this.adminPasswordInvalid = false;
+		},
+	},
 	methods: {
 		reset() {
 			this.yaml = "";
@@ -89,10 +120,14 @@ export default {
 			this.error = "";
 			this.saving = false;
 			this.errorLine = undefined;
+			// keep adminPassword across reopens (like BaseDeviceModal), cleared on reload
+			this.adminPasswordRequired = false;
+			this.adminPasswordInvalid = false;
 		},
 		async open() {
 			this.reset();
 			this.modalVisible = true;
+			this.$emit("open");
 			await this.load();
 		},
 		close() {
@@ -114,8 +149,15 @@ export default {
 			try {
 				const data = this.yaml === this.defaultYaml ? "" : this.yaml;
 				const res = await api.post(this.endpoint, data, {
-					validateStatus: (code) => [200, 400].includes(code),
+					headers: this.adminPassword ? { "X-Admin-Password": this.adminPassword } : {},
+					validateStatus: (code) => [200, 400, ADMIN_PASSWORD_REQUIRED].includes(code),
 				});
+				if (res.status === ADMIN_PASSWORD_REQUIRED) {
+					this.adminPasswordRequired = true;
+					this.adminPasswordInvalid = !!this.adminPassword;
+					this.saving = false;
+					return;
+				}
 				if (res.status === 200) {
 					this.$emit("changed");
 					this.$refs.modal.close();

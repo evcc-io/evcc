@@ -18,7 +18,9 @@ type errorResponse struct {
 }
 
 type loginResponse struct {
-	LoginUri string `json:"loginUri"`
+	LoginUri string     `json:"loginUri"`
+	Code     string     `json:"code,omitempty"`
+	Expiry   *time.Time `json:"expiry,omitempty"`
 }
 
 // jsonWrite writes a JSON response
@@ -42,8 +44,13 @@ type Handler struct {
 	log       *util.Logger
 	secret    []byte
 	providers map[string]api.AuthProvider
-	states    map[string]string
+	states    map[string]stateEntry
 	updateC   chan string
+}
+
+type stateEntry struct {
+	id       string
+	returnTo string // config modal query to restore on callback
 }
 
 // TODO get status from update channel
@@ -54,7 +61,7 @@ func (a *Handler) run(paramC chan<- util.Param) {
 		res := make(map[string]*AuthProvider)
 		for id, provider := range a.providers {
 			res[provider.DisplayName()] = &AuthProvider{
-				ID:            url.QueryEscape(id),
+				ID:            id,
 				Authenticated: provider.Authenticated(),
 			}
 		}
@@ -95,7 +102,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Generate a new state and store the provider
 	state := NewState()
 	encryptedState := state.Encrypt(a.secret)
-	a.states[encryptedState] = id
+	a.states[encryptedState] = stateEntry{id: id, returnTo: r.URL.Query().Get("return")}
 
 	// Schedule cleanup for stale state entries after state becomes invalid
 	time.AfterFunc(stateValidity, func() {
@@ -104,13 +111,27 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		delete(a.states, encryptedState)
 	})
 
-	uri, err := provider.Login(encryptedState)
+	uri, da, err := provider.Login(encryptedState)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	jsonWrite(w, loginResponse{LoginUri: uri})
+	res := loginResponse{
+		LoginUri: uri,
+	}
+
+	if da != nil {
+		res.Expiry = &da.Expiry
+		if da.VerificationURIComplete != "" {
+			res.LoginUri = da.VerificationURIComplete
+		} else {
+			res.LoginUri = da.VerificationURI
+			res.Code = da.UserCode
+		}
+	}
+
+	jsonWrite(w, res)
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -136,20 +157,23 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, "OK")
 }
 
+func (a *Handler) redirectToError(w http.ResponseWriter, r *http.Request, message string) {
+	http.Redirect(w, r, "/#/config?callbackError="+url.QueryEscape(message), http.StatusFound)
+}
+
 func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
 	if q.Has("error") {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "error: %s: %s\n", q.Get("error"), q.Get("error_description"))
+		errorMsg := q.Get("error") + ": " + q.Get("error_description")
+		a.redirectToError(w, r, errorMsg)
 		return
 	}
 
 	encryptedState := q.Get("state")
 	state, err := DecryptState(encryptedState, a.secret)
 	if err != nil || !state.Valid() {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "invalid state")
+		a.redirectToError(w, r, "invalid state")
 		return
 	}
 
@@ -157,17 +181,16 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	defer a.mu.Unlock()
 
 	// Find the corresponding provider
-	id, ok := a.states[encryptedState]
+	entry, ok := a.states[encryptedState]
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "no provider found for state")
+		a.redirectToError(w, r, "no provider found for state")
 		return
 	}
+	id := entry.id
 
 	provider, ok := a.providers[id]
 	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "internal provider state unexpected")
+		a.redirectToError(w, r, "internal provider state unexpected")
 		return
 	}
 
@@ -177,10 +200,15 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	// Handle the callback
 	if err := provider.HandleCallback(r.URL.Query()); err != nil {
 		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "callback failed")
+		a.redirectToError(w, r, err.Error())
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	// restore the config modal stack alongside the completion marker
+	query := "callbackCompleted=" + url.QueryEscape(id)
+	if entry.returnTo != "" {
+		query = entry.returnTo + "&" + query
+	}
+
+	http.Redirect(w, r, "/#/config?"+query, http.StatusFound)
 }

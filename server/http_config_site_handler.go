@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 )
 
@@ -11,19 +12,21 @@ import (
 func siteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
-			Title   string   `json:"title"`
-			Grid    string   `json:"grid"`
-			PV      []string `json:"pv"`
-			Battery []string `json:"battery"`
-			Aux     []string `json:"aux"`
-			Ext     []string `json:"ext"`
+			Title    string   `json:"title"`
+			Grid     string   `json:"grid"`
+			PV       []string `json:"pv"`
+			Battery  []string `json:"battery"`
+			Aux      []string `json:"aux"`
+			Ext      []string `json:"ext"`
+			Consumer []string `json:"consumer"`
 		}{
-			Title:   site.GetTitle(),
-			Grid:    site.GetGridMeterRef(),
-			PV:      site.GetPVMeterRefs(),
-			Battery: site.GetBatteryMeterRefs(),
-			Aux:     site.GetAuxMeterRefs(),
-			Ext:     site.GetExtMeterRefs(),
+			Title:    site.GetTitle(),
+			Grid:     site.GetGridMeterRef(),
+			PV:       site.GetPVMeterRefs(),
+			Battery:  site.GetBatteryMeterRefs(),
+			Aux:      site.GetAuxMeterRefs(),
+			Ext:      site.GetExtMeterRefs(),
+			Consumer: site.GetConsumerMeterRefs(),
 		}
 
 		jsonWrite(w, res)
@@ -44,12 +47,13 @@ func validateRefs(w http.ResponseWriter, refs []string) bool {
 func updateSiteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload struct {
-			Title   *string
-			Grid    *string
-			PV      *[]string
-			Battery *[]string
-			Aux     *[]string
-			Ext     *[]string
+			Title    *string
+			Grid     *string
+			PV       *[]string
+			Battery  *[]string
+			Aux      *[]string
+			Ext      *[]string
+			Consumer *[]string
 		}
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
@@ -104,6 +108,21 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 
 			site.SetExtMeterRefs(*payload.Ext)
 			setConfigDirty()
+		}
+
+		if payload.Consumer != nil {
+			if !validateRefs(w, *payload.Consumer) {
+				return
+			}
+
+			site.SetConsumerMeterRefs(*payload.Consumer)
+			setConfigDirty()
+		}
+
+		// persist immediately to keep meter refs consistent with device config on unclean shutdown
+		if err := settings.Persist(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 
 		status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}

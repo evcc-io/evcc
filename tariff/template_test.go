@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -23,7 +22,7 @@ func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Tariff, func(t *testing.T, values map[string]any) {
 		t.Helper()
 
-		if _, err := NewFromConfig(context.TODO(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
+		if _, err := NewFromConfig(t.Context(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)
 		}

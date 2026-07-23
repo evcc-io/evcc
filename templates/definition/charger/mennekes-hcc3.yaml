@@ -1,4 +1,5 @@
 template: mennekes-hcc3
+capabilities: ["meter", "dim"]
 covers: ["amtron", "menneckes-hcc3"]
 products:
   - brand: Mennekes
@@ -7,6 +8,7 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON Premium
+    capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship"]
 params:

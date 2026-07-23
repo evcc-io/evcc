@@ -12,6 +12,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/eclipse/paho.mqtt.golang/packets"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
@@ -70,14 +71,14 @@ func (v *MqttConnector) Unsubscribe(vin string) {
 }
 
 func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
-	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute), backoff.WithMaxElapsedTime(0))
 
 	for ctx.Err() == nil {
 		time.Sleep(bo.NextBackOff())
 
 		token, err := ts.Token()
 		if err != nil {
-			if !tokenError(err) {
+			if _, ok := errors.AsType[*api.ErrLoginRequired](err); !ok {
 				v.log.ERROR.Println(err)
 			}
 

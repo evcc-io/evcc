@@ -76,8 +76,10 @@ func (d *Config) Delete() error {
 	return db.Instance.Delete(Config{ID: d.ID}).Error
 }
 
-func Init() error {
-	return db.Instance.AutoMigrate(new(Config))
+func init() {
+	db.Register(func(db *gorm.DB) error {
+		return db.AutoMigrate(new(Config))
+	})
 }
 
 // NameForID returns a unique config name for the given id
@@ -104,6 +106,16 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	}
 
 	return res, tx.Error
+}
+
+// ConfigurationByClass returns the single configuration for class, or nil if none
+func ConfigurationByClass(class templates.Class) (*Config, error) {
+	configs, err := ConfigurationsByClass(class)
+	if err != nil || len(configs) == 0 {
+		return nil, err
+	}
+
+	return &configs[0], nil
 }
 
 // ConfigByID returns device by id from the database

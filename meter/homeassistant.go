@@ -1,21 +1,15 @@
 package meter
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)"
-
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
 )
-
-// HomeAssistant meter implementation
-type HomeAssistant struct {
-	conn  *homeassistant.Connection
-	power string
-}
 
 func init() {
 	registry.Add("homeassistant", NewHomeAssistantFromConfig)
@@ -23,14 +17,33 @@ func init() {
 
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
-	var cc struct {
-		URI      string
-		Token    string
-		Power    string
-		Energy   string
-		Currents []string
-		Voltages []string
-		Soc      string
+	cc := struct {
+		homeassistant.Config `mapstructure:",squash"`
+		Power                string
+		Energy               string
+		ReturnEnergy         string
+		Currents             []string
+		Voltages             []string
+		Powers               []string
+		Soc                  string
+
+		// pv
+		pvMaxACPower `mapstructure:",squash"`
+
+		// battery
+		batteryCapacity    `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+
+		// battery mode control - optional switch-like entities per mode
+		ModeNormal string
+		ModeHold   string
+		ModeCharge string
+	}{
+		batterySocLimits: batterySocLimits{
+			MinSoc: 20,
+			MaxSoc: 95,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -42,49 +55,103 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	log := util.NewLogger("ha-meter")
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Token)
+
+	conn, err := cc.Config.NewConnection(log)
 	if err != nil {
 		return nil, err
 	}
 
-	m := &HomeAssistant{
-		conn:  conn,
-		power: cc.Power,
-	}
+	m, _ := NewConfigurable(func() (float64, error) {
+		return conn.GetFloatState(cc.Power)
+	})
 
-	// decorators for optional interfaces
-	var energy func() (float64, error)
-	var currents, voltages func() (float64, float64, float64, error)
-	var soc func() (float64, error)
-
+	// energy
 	if cc.Energy != "" {
-		energy = func() (float64, error) { return conn.GetFloatState(cc.Energy) }
+		implement.Has(m, implement.MeterEnergy(func() (float64, error) {
+			return conn.GetFloatState(cc.Energy)
+		}))
 	}
 
-	// phase currents (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); len(phases) > 0 {
-		currents = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	} else if err != nil {
-		return nil, fmt.Errorf("currents: %w", err)
-	}
-
-	// phase voltages (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); len(phases) > 0 {
-		voltages = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	} else if err != nil {
-		return nil, fmt.Errorf("voltages: %w", err)
+	if cc.ReturnEnergy != "" {
+		implement.Has(m, implement.MeterReturnEnergy(func() (float64, error) {
+			return conn.GetFloatState(cc.ReturnEnergy)
+		}))
 	}
 
 	if cc.Soc != "" {
-		soc = func() (float64, error) { return conn.GetFloatState(cc.Soc) }
+		socG := func() (float64, error) { return conn.GetFloatState(cc.Soc) }
+
+		implement.Has(m, implement.Battery(socG))
+		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
+
+		if cc.ModeHold != "" || cc.ModeCharge != "" {
+			if cc.ModeNormal == "" {
+				return nil, errors.New("modeNormal is required when modeHold or modeCharge is configured")
+			}
+			modes := map[api.BatteryMode]string{
+				api.BatteryNormal: cc.ModeNormal,
+				api.BatteryHold:   cc.ModeHold,
+				api.BatteryCharge: cc.ModeCharge,
+			}
+			for _, entity := range modes {
+				if entity != "" && !strings.HasPrefix(entity, "script.") {
+					return nil, fmt.Errorf("battery mode entity must be a script: %s", entity)
+				}
+			}
+			implement.Has(m, implement.BatteryController(batteryModeController(conn, modes)))
+		} else if cc.ModeNormal != "" {
+			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
+		}
+
+		return m, nil
 	}
 
-	return decorateHomeAssistant(m, energy, currents, voltages, soc), nil
+	// phase currents (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); err != nil {
+		return nil, fmt.Errorf("currents: %w", err)
+	} else if len(phases) > 0 {
+		implement.Has(m, implement.PhaseCurrents(func() (float64, float64, float64, error) {
+			return conn.GetPhaseFloatStates(phases)
+		}))
+	}
+
+	// phase voltages (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); err != nil {
+		return nil, fmt.Errorf("voltages: %w", err)
+	} else if len(phases) > 0 {
+		implement.Has(m, implement.PhaseVoltages(func() (float64, float64, float64, error) {
+			return conn.GetPhaseFloatStates(phases)
+		}))
+	}
+
+	// phase powers (optional)
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Powers); err != nil {
+		return nil, fmt.Errorf("powers: %w", err)
+	} else if len(phases) > 0 {
+		implement.Has(m, implement.PhasePowers(func() (float64, float64, float64, error) {
+			return conn.GetPhaseFloatStates(phases)
+		}))
+	}
+
+	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
+
+	return m, nil
 }
 
-var _ api.Meter = (*HomeAssistant)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (m *HomeAssistant) CurrentPower() (float64, error) {
-	return m.conn.GetFloatState(m.power)
+// batteryModeController returns a BatteryController function that activates
+// the switch-like Home Assistant entity configured for the requested evcc
+// battery mode. Each mode is self-contained: evcc only triggers the matching
+// entity and never deactivates others - any mutual exclusion is the HA side's
+// responsibility. modeHold and modeCharge are optional and return
+// api.ErrNotAvailable when requested without a backing entity.
+func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
+	return func(mode api.BatteryMode) error {
+		target, ok := modes[mode]
+		if !ok || target == "" {
+			return api.ErrNotAvailable
+		}
+		return conn.CallSwitchService(target, true)
+	}
 }

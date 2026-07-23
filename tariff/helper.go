@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -30,7 +31,7 @@ func bo() backoff.BackOff {
 
 // backoffPermanentError returns a permanent error in case of HTTP 400
 func backoffPermanentError(err error) error {
-	if se := new(request.StatusError); errors.As(err, &se) {
+	if se, ok := errors.AsType[*request.StatusError](err); ok {
 		if code := se.StatusCode(); code >= 400 && code <= 599 {
 			return backoff.Permanent(se)
 		}
@@ -89,4 +90,20 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 	}
 
 	return t, nil
+}
+
+// reportError reports the first error to done via once and returns true when
+// this is the startup failure - i.e. run's first update failed and runOrError
+// is about to discard the tariff. The caller must then return so the goroutine
+// exits instead of polling the API forever in the background.
+//
+// Once a tariff has started successfully, once has already fired (with close),
+// so reportError is a no-op returning false and the caller keeps retrying
+// transient errors as before.
+func reportError(once *sync.Once, done chan<- error, err error) (startupFailed bool) {
+	once.Do(func() {
+		startupFailed = true
+		done <- err
+	})
+	return startupFailed
 }

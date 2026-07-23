@@ -13,8 +13,7 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -42,6 +41,14 @@ render: |
         type: holding
         decode: uint16
       scale: 6553.6
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 81 # "Total_GridSell_PowerWh" (low word, high word at 82)
+      type: holding
+      decode: uint32s
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -77,7 +84,7 @@ render: |
     register:
       address: 96 # "historyPV PowerWh"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -94,7 +101,15 @@ render: |
     register:
       address: 74 # "Battery cumulative discharge"
       type: holding
-      decode: uint32
+      decode: uint32s
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 72 # "Battery cumulative charge"
+      type: holding
+      decode: uint32s
     scale: 0.1
   soc:
     source: modbus
@@ -103,5 +118,5 @@ render: |
       address: 184 # "battery capacity"
       type: holding
       decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

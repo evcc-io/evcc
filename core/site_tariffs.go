@@ -1,22 +1,19 @@
 package core
 
 import (
-	"maps"
 	"math"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
-	"github.com/samber/lo"
 )
 
 type solarDetails struct {
-	Scale            *float64     `json:"scale,omitempty"`            // scale factor yield/forecasted today
+	Scale            float64      `json:"scale"`                      // scale factor yield/forecasted today, 1 if unscaled
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
@@ -32,7 +29,7 @@ type dailyDetails struct {
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumption below powerFrom will get the available green power first
 func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
-	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
+	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.battery.Power)
 	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
 
 	power := powerTo - powerFrom
@@ -87,6 +84,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageSolar)); err == nil {
 		site.publish(keys.TariffSolar, v)
 	}
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageTemperature)); err == nil {
+		site.publish(keys.TariffTemperature, v)
+	}
 	if v := site.effectivePrice(greenShareHome); v != nil {
 		site.publish(keys.TariffPriceHome, v)
 	}
@@ -101,24 +101,58 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2     api.Rates     `json:"co2,omitempty"`
-		FeedIn  api.Rates     `json:"feedin,omitempty"`
-		Grid    api.Rates     `json:"grid,omitempty"`
-		Planner api.Rates     `json:"planner,omitempty"`
-		Solar   *solarDetails `json:"solar,omitempty"`
+		Co2         api.Rates     `json:"co2,omitempty"`
+		FeedIn      api.Rates     `json:"feedin,omitempty"`
+		Grid        api.Rates     `json:"grid,omitempty"`
+		Planner     api.Rates     `json:"planner,omitempty"`
+		Solar       *solarDetails `json:"solar,omitempty"`
+		Temperature api.Rates     `json:"temperature,omitempty"`
 	}{
-		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:    tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
+		Co2:         tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
+		FeedIn:      tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
+		Planner:     tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
+		Grid:        tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
+		Temperature: tariff.Rates(site.GetTariff(api.TariffUsageTemperature)),
 	}
 
 	// calculate adjusted solar rates
 	if solar := tariff.Rates(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
-		fc.Solar = lo.ToPtr(site.solarDetails(solar))
+		fc.Solar = new(site.solarDetails(solar))
 	}
 
 	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
+
+	site.persistTariffs()
+}
+
+// persistTariffs stores tariff values once per 15min boundary. Like the meter
+// collectors it is driven by the update loop, skipping the partial boot slot.
+func (site *Site) persistTariffs() {
+	slot := time.Now().Truncate(tariff.SlotDuration)
+
+	last := site.tariffSlot
+	site.tariffSlot = slot
+
+	// skip repeat ticks within the slot and the partial boot slot
+	if last.IsZero() || !slot.After(last) {
+		return
+	}
+
+	value := func(u api.TariffUsage) *float64 {
+		if r, err := tariff.At(site.GetTariff(u), slot); err == nil {
+			return &r.Value
+		}
+		return nil
+	}
+
+	if err := metrics.PersistTariffs(slot,
+		value(api.TariffUsageGrid),
+		value(api.TariffUsageFeedIn),
+		value(api.TariffUsageCo2),
+		value(api.TariffUsageTemperature),
+	); err != nil {
+		site.log.ERROR.Printf("persist tariffs: %v", err)
+	}
 }
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
@@ -149,31 +183,65 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	// accumulate forecasted energy since last update
-	energy := solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3
-	site.log.DEBUG.Printf("solar forecast: accumulated %.3fWh from %v to %v",
-		energy, site.fcstEnergy.updated.Truncate(time.Second), time.Now().Truncate(time.Second),
-	)
-
-	site.fcstEnergy.AddEnergy(energy)
-	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
-
-	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
-		return v.AccumulatedEnergy()
-	})
-	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
-
-	if fcst := site.fcstEnergy.AccumulatedEnergy(); fcst > 0 {
-		scale := produced / fcst
-		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
-
-		const minEnergy = 0.5 // kWh
-		if produced+fcst > minEnergy {
-			res.Scale = lo.ToPtr(scale)
+	if r, err := solar.At(time.Now()); err == nil {
+		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
+			site.log.ERROR.Printf("solar forecast collector: %v", err)
 		}
 	}
 
+	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {
+		if err := site.collectors[metrics.Temperature].SetSocTemp(r.Value, true); err != nil {
+			site.log.ERROR.Printf("temperature collector soc_temp: %v", err)
+		}
+	}
+
+	res.Scale = site.solarScale()
+
 	return res
+}
+
+// effectiveSolarScale returns the solar forecast scale if forecast adjustment
+// is enabled, 1 otherwise.
+func (site *Site) effectiveSolarScale() float64 {
+	if !site.GetSolarAdjusted() {
+		return 1
+	}
+	return site.solarScale()
+}
+
+// solarScale returns the ratio of produced solar energy to forecasted solar
+// energy for the current day, queried from the metrics database. Used to
+// adjust forecasts when PV is consistently under-/over-producing relative
+// to the forecast. Returns 1.0 when not enough data is available to make
+// the ratio meaningful.
+func (site *Site) solarScale() float64 {
+	series, err := metrics.QueryEnergy(now.BeginningOfDay(), time.Now(), "day", true)
+	if err != nil {
+		site.log.ERROR.Printf("solar forecast scale: %v", err)
+		return 1
+	}
+
+	var pv, fcst float64
+	for _, s := range series {
+		if len(s.Data) == 0 {
+			continue
+		}
+		switch s.Group {
+		case metrics.PV:
+			pv = s.Data[0].Energy
+		case metrics.Forecast:
+			fcst = s.Data[0].Energy
+		}
+	}
+
+	const minEnergy = 0.5 // kWh
+	if fcst <= 0 || pv <= minEnergy {
+		return 1
+	}
+
+	scale := pv / fcst
+	site.log.DEBUG.Printf("solar forecast: produced %.3fkWh, forecasted %.3fkWh, scale %.3f", pv, fcst, scale)
+	return scale
 }
 
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {

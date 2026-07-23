@@ -1,6 +1,10 @@
 import bodyParser from "body-parser";
 import type { Connect, ViteDevServer } from "vite";
 import type { ServerResponse } from "http";
+import { OcppClient } from "./ocppClient";
+import { ocppServer } from "./ocppServer";
+
+const ocppClients = new Map<string, OcppClient>();
 
 let state = {
   site: {
@@ -10,7 +14,10 @@ let state = {
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
-  hems: { relay: false },
+  hems: { relay: false, w3: false, s1: false, s2: false, w4: false },
+  ocpp: {
+    clients: [] as { stationId: string; serverUrl: string; connected: boolean }[],
+  },
 };
 
 const loggingMiddleware = (
@@ -34,9 +41,14 @@ const stateApiMiddleware = (
     res.end();
   } else if (req.method === "POST" && req.originalUrl === "/api/shutdown") {
     console.log("[simulator] POST /api/shutdown");
+    for (const client of ocppClients.values()) {
+      client.disconnect();
+    }
+    ocppClients.clear();
     res.end();
     process.exit();
   } else if (req.originalUrl === "/api/state") {
+    updateOcppState();
     res.end(JSON.stringify(state));
   } else {
     next();
@@ -117,11 +129,95 @@ const shellyMiddleware = (
   }
 };
 
+const updateOcppState = () => {
+  state.ocpp.clients = Array.from(ocppClients.entries()).map(([stationId, client]) => ({
+    stationId,
+    serverUrl: client.getServerUrl(),
+    connected: client.isConnected(),
+  }));
+};
+
+const demoAuthMiddleware = (
+  _req: Connect.IncomingMessage,
+  _res: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  // Mock login requests are now handled by the Vue app
+  // This middleware is kept for potential future extensions
+  next();
+};
+
+const ocppMiddleware = (
+  req: Connect.IncomingMessage,
+  res: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  if (req.method === "POST" && req.originalUrl === "/api/ocpp/connect") {
+    console.log("[simulator] POST /api/ocpp/connect");
+    // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
+    const { stationId, serverUrl } = req.body;
+
+    if (!stationId || !serverUrl) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: "stationId and serverUrl required" }));
+      return;
+    }
+
+    if (ocppClients.has(stationId)) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: `Client ${stationId} already exists` }));
+      return;
+    }
+
+    const client = new OcppClient(stationId, serverUrl);
+    ocppClients.set(stationId, client);
+    // fire-and-forget: the client retries until connected and boots itself on open
+    client.connect();
+    updateOcppState();
+    console.log(`[simulator] OCPP client ${stationId} connecting to ${serverUrl}`);
+    res.end(JSON.stringify({ status: "connecting", stationId }));
+  } else if (req.method === "POST" && req.originalUrl === "/api/ocpp/server") {
+    console.log("[simulator] POST /api/ocpp/server");
+    // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
+    const { enabled, username, password } = req.body;
+    ocppServer.configure({ enabled: !!enabled, username, password });
+    res.end(JSON.stringify(ocppServer.status()));
+  } else if (req.method === "GET" && req.originalUrl === "/api/ocpp/server") {
+    res.end(JSON.stringify(ocppServer.status()));
+  } else if (req.method === "POST" && req.originalUrl === "/api/ocpp/disconnect") {
+    console.log("[simulator] POST /api/ocpp/disconnect");
+    // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
+    const { stationId } = req.body;
+
+    if (!stationId) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: "stationId required" }));
+      return;
+    }
+
+    const client = ocppClients.get(stationId);
+    if (client) {
+      client.disconnect();
+      ocppClients.delete(stationId);
+      updateOcppState();
+      res.end(JSON.stringify({ status: "disconnected", stationId }));
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ error: `Client ${stationId} not found` }));
+    }
+  } else {
+    next();
+  }
+};
+
 export default () => ({
   name: "api",
   enforce: "pre",
   configureServer(server: ViteDevServer) {
     console.log("[simulator] configured");
+    if (server.httpServer) {
+      ocppServer.attach(server.httpServer);
+    }
     return () => {
       server.middlewares.use(loggingMiddleware);
       server.middlewares.use(bodyParser.json());
@@ -129,6 +225,8 @@ export default () => ({
       server.middlewares.use(openemsMiddleware);
       server.middlewares.use(teslaloggerMiddleware);
       server.middlewares.use(shellyMiddleware);
+      server.middlewares.use(demoAuthMiddleware);
+      server.middlewares.use(ocppMiddleware);
     };
   },
 });

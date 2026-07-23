@@ -20,6 +20,16 @@ function workerPort() {
   return 11000 + index;
 }
 
+function ocppPort() {
+  const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
+  return 12000 + index;
+}
+
+export function eebusPort() {
+  const index = Number(process.env["TEST_WORKER_INDEX"] ?? 0);
+  return 13000 + index;
+}
+
 function logPrefix() {
   return `[worker:${process.env["TEST_WORKER_INDEX"]}]`;
 }
@@ -68,7 +78,11 @@ export async function stop(instance?: ChildProcess) {
   await _clean();
 }
 
-export async function restart(config?: string, flags = "--disable-auth", alreadyStopped = false) {
+export async function restart(
+  config?: string,
+  flags: string | string[] = "--disable-auth",
+  alreadyStopped = false
+) {
   if (!alreadyStopped) {
     await _stop();
   }
@@ -95,14 +109,24 @@ async function _restoreDatabase(sqlDumps: string) {
 async function _start(config?: string, flags: string | string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
+  const ocpp = ocppPort();
+  const eebus = eebusPort();
+
   log(`wait until port ${port} is available`);
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+  log(`starting evcc on ports ${port} (HTTP), ${ocpp} (OCPP) and ${eebus} (EEBus)`);
   const additionalFlags = typeof flags === "string" ? [flags] : flags;
   additionalFlags.push("--log", "debug,httpd:trace");
-  log("starting evcc", { config, port, additionalFlags });
+  log("starting evcc", { config, port, ocpp, eebus, additionalFlags });
   const instance = spawn(BINARY, [...configArgs, ...additionalFlags], {
-    env: { EVCC_NETWORK_PORT: port.toString(), EVCC_DATABASE_DSN: dbPath() },
+    env: {
+      ...process.env,
+      EVCC_NETWORK_PORT: port.toString(),
+      EVCC_OCPP_PORT: ocpp.toString(),
+      EVCC_EEBUS_PORT: eebus.toString(),
+      EVCC_DATABASE_DSN: dbPath(),
+    },
     stdio: ["pipe", "pipe", "pipe"],
   });
   const steamLog = createSteamLog();
@@ -113,7 +137,10 @@ async function _start(config?: string, flags: string | string[] = []) {
     steamLog.end();
   });
   try {
-    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 50000 });
+    // wait for apiReady so tests don't race a half-started backend
+    const jq = encodeURIComponent(".apiReady|select(.)");
+    const ready = `${baseUrl().replace(/^http/, "http-get")}/api/state?jq=${jq}`;
+    await waitOn({ resources: [ready], log: LOG_ENABLED, timeout: 90000 });
   } catch (error) {
     instance.kill("SIGKILL");
     console.error(logPrefix(), `evcc startup failed: ${error}`);
@@ -133,7 +160,7 @@ async function _stop(instance?: ChildProcess) {
   if (instance) {
     log("shutting down evcc hard", { port });
     instance.kill("SIGKILL");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
     log("evcc is down", { port });
     return;
   }
@@ -161,7 +188,7 @@ async function _stop(instance?: ChildProcess) {
     }
   }
   log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED, timeout: 5000 });
   log("evcc is down", { port });
 }
 

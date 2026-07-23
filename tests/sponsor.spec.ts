@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -18,7 +17,6 @@ test.describe("sponsor token", () => {
   test("token from YAML config", async ({ page }) => {
     await start("sponsor.evcc.yaml");
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // Check fatal error
     await expect(page.getByTestId("fatal-error")).toContainText("sponsorship");
@@ -29,7 +27,7 @@ test.describe("sponsor token", () => {
     await sponsorEntry.getByRole("button", { name: "Edit" }).click();
 
     const modal = page.getByTestId("sponsor-modal");
-    const tokenInput = modal.getByRole("textbox", { name: "Your token" });
+    const tokenInput = modal.getByRole("textbox", { name: "Sponsor Token" });
 
     await expect(tokenInput).toHaveValue(SHORT_TOKEN);
     await expect(tokenInput).toHaveClass(/is-invalid/);
@@ -40,7 +38,6 @@ test.describe("sponsor token", () => {
   test("token from database config", async ({ page }) => {
     await start(undefined, "sponsor.sql");
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // Open sponsor modal
     await page
@@ -54,14 +51,13 @@ test.describe("sponsor token", () => {
     // Click change button to reveal textarea
     await modal.getByRole("button", { name: "Change token" }).click();
 
-    await expect(modal.getByRole("textbox", { name: "Enter your token" })).toBeVisible();
+    await expect(modal.getByRole("textbox", { name: "Your Sponsor Token" })).toBeVisible();
     await expect(modal.getByRole("button", { name: "Remove" })).toBeVisible();
   });
 
   test("insert token in new installation", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // Open sponsor modal and enter token
     await page
@@ -70,11 +66,13 @@ test.describe("sponsor token", () => {
       .click();
 
     const modal = page.getByTestId("sponsor-modal");
-    const textarea = modal.getByRole("textbox", { name: "Enter your token" });
+    const textarea = modal.getByRole("textbox", { name: "Your Sponsor Token" });
 
     await textarea.fill(EXPIRED_TOKEN);
     // Try to save to trigger validation
     await modal.getByRole("button", { name: "Save" }).click();
-    await expect(modal).toContainText("token is expired");
+    await expect(modal).toContainText(
+      "token is expired - get a fresh one from https://sponsor.evcc.io"
+    );
   });
 });

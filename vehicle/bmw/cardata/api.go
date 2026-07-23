@@ -13,31 +13,27 @@ import (
 
 const ApiURL = "https://api-cardata.bmwgroup.com"
 
-var Config = oauth2.Config{
-	Scopes: []string{"authenticate_user", "openid", "cardata:streaming:read", "cardata:api:read"},
-	Endpoint: oauth2.Endpoint{
-		DeviceAuthURL: "https://customer.bmwgroup.com/gcdm/oauth/device/code",
-		TokenURL:      "https://customer.bmwgroup.com/gcdm/oauth/token",
-		AuthStyle:     oauth2.AuthStyleInParams,
-	},
-}
-
 // requiredKeys are the necessary data dictionary entities according to
 // https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
 var requiredKeys = []string{
 	"vehicle.body.chargingPort.status",
+	"vehicle.body.chargingPort.combinedStatus",
+	"vehicle.cabin.infotainment.navigation.currentLocation.latitude",
+	"vehicle.cabin.infotainment.navigation.currentLocation.longitude",
 	"vehicle.cabin.hvac.preconditioning.status.comfortState",
 	"vehicle.drivetrain.batteryManagement.header",
 	"vehicle.drivetrain.electricEngine.charging.hvStatus",
 	"vehicle.drivetrain.electricEngine.charging.status",
 	"vehicle.drivetrain.electricEngine.charging.timeRemaining",
 	"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
+	"vehicle.drivetrain.lastRemainingRange",
+	"vehicle.powertrain.electric.battery.stateOfCharge.displayed",
 	"vehicle.powertrain.electric.battery.stateOfCharge.target",
 	"vehicle.vehicle.preConditioning.activity",
 	"vehicle.vehicle.travelledDistance",
 }
 
-const requiredVersion = "v3"
+const requiredVersion = "v6"
 
 type API struct {
 	*request.Helper

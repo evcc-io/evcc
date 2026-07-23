@@ -127,6 +127,12 @@ func (lp *Loadpoint) setTitle(title string) {
 	lp.title = title
 	lp.publish(keys.Title, lp.title)
 	lp.settings.SetString(keys.Title, lp.title)
+
+	if lp.chargeEnergy != nil {
+		if err := lp.chargeEnergy.UpdateTitle(title); err != nil {
+			lp.log.ERROR.Printf("update title: %v", err)
+		}
+	}
 }
 
 // GetStatus returns the charging status
@@ -309,6 +315,34 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	}
 }
 
+// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) GetMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minSoc
+}
+
+// setMinSoc sets the loadpoint min soc (no mutex)
+func (lp *Loadpoint) setMinSoc(soc int) {
+	lp.minSoc = soc
+	lp.publish(keys.MinSoc, soc)
+	lp.settings.SetInt(keys.MinSoc, int64(soc))
+}
+
+// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) SetMinSoc(soc int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set min soc:", soc)
+
+	// apply immediately
+	if lp.minSoc != soc {
+		lp.setMinSoc(soc)
+		lp.requestUpdate()
+	}
+}
+
 // GetLimitEnergy returns the session limit energy
 func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()
@@ -343,19 +377,22 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 }
 
 // GetPlanEnergy returns plan target energy
-func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64) {
+func (lp *Loadpoint) GetPlanEnergy() (time.Time, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.getPlanEnergy()
 }
 
 // getPlanEnergy returns plan target energy
-func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64) {
-	return lp.planTime, lp.planPrecondition, lp.planEnergy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
+	return lp.planTime, lp.planEnergy
 }
 
 // setPlanEnergy sets plan target energy (no mutex)
-func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) {
+func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
+	// clear locked goal when energy plan changes
+	lp.clearPlanLock()
+
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -363,15 +400,12 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duratio
 	// remove plan
 	if energy == 0 {
 		finishAt = time.Time{}
-		precondition = 0
 	}
 
 	lp.planTime = finishAt
-	lp.planPrecondition = precondition
+	lp.planEnergyOffset = lp.getChargedEnergy() / 1e3
 	lp.publish(keys.PlanTime, finishAt)
-	lp.publish(keys.PlanPrecondition, precondition)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
-	lp.settings.SetInt(keys.PlanPrecondition, int64(precondition.Seconds()))
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -379,7 +413,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duratio
 }
 
 // SetPlanEnergy sets plan target energy
-func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) error {
+func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -390,12 +424,50 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duratio
 	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
-	if lp.planEnergy != energy || lp.planPrecondition != precondition || !lp.planTime.Equal(finishAt) {
-		lp.setPlanEnergy(finishAt, precondition, energy)
+	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
+		lp.setPlanEnergy(finishAt, energy)
 		lp.requestUpdate()
 	}
 
 	return nil
+}
+
+// setPlanStrategy sets the plan strategy (no mutex)
+func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
+	if err := lp.settings.SetJson(keys.PlanStrategy, strategy); err != nil {
+		return err
+	}
+
+	lp.planStrategy = strategy
+	lp.publish(keys.PlanStrategy, strategy)
+
+	lp.publish(keys.EffectivePlanStrategy, lp.getEffectivePlanStrategy())
+
+	lp.requestUpdate()
+
+	return nil
+}
+
+// SetPlanStrategy sets the plan strategy
+func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set plan strategy: continuous=%v, precondition=%v", strategy.Continuous, strategy.Precondition)
+
+	return lp.setPlanStrategy(strategy)
+}
+
+// getPlanStrategy returns the plan strategy (no mutex)
+func (lp *Loadpoint) getPlanStrategy() api.PlanStrategy {
+	return lp.planStrategy
+}
+
+// GetPlanStrategy returns the plan strategy
+func (lp *Loadpoint) GetPlanStrategy() api.PlanStrategy {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.getPlanStrategy()
 }
 
 // GetSoc returns the PV mode threshold settings
@@ -420,6 +492,29 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 
 	// apply immediately
 	lp.setSocConfig(soc)
+}
+
+// GetUI returns the display-only ui settings
+func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Ui
+}
+
+func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
+	lp.Ui = ui
+	lp.publish(keys.UI, ui)
+	lp.settings.SetJson(keys.UI, ui)
+}
+
+// SetUI sets the display-only ui settings. Not used in control logic.
+func (lp *Loadpoint) SetUI(ui loadpoint.UIConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set ui config: %+v", ui)
+
+	lp.setUI(ui)
 }
 
 // GetThresholds returns the PV mode threshold settings
@@ -578,6 +673,27 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	return nil
 }
 
+// GetBatteryBoostLimit returns the battery boost soc limit
+func (lp *Loadpoint) GetBatteryBoostLimit() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.batteryBoostLimit
+}
+
+// SetBatteryBoostLimit sets the battery boost soc limit
+func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set battery boost limit:", limit)
+
+	if lp.batteryBoostLimit != limit {
+		lp.batteryBoostLimit = limit
+		lp.settings.SetInt(keys.BatteryBoostLimit, int64(limit))
+		lp.publish(keys.BatteryBoostLimit, limit)
+	}
+}
+
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
@@ -595,7 +711,7 @@ func (lp *Loadpoint) GetChargePower() float64 {
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
 	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
-		lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
+		lp.planActive || lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
 
@@ -603,7 +719,11 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 		return lp.GetChargePower()
 	}
 
-	// MinPV mode
+	// MinPV mode: a charger without current control (switch socket or heatpump) cannot release power.
+	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
+		return 0
+	}
+
 	return max(0, lp.GetChargePower()-lp.EffectiveMinPower())
 }
 

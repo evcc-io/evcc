@@ -4,7 +4,11 @@
 		style="min-height: 24px"
 		data-testid="vehicle-status"
 	>
-		<div class="charger-status" data-testid="vehicle-status-charger">
+		<div
+			class="charger-status"
+			:class="chargerStatusType ? `text-${chargerStatusType}` : ''"
+			data-testid="vehicle-status-charger"
+		>
 			{{ chargerStatus }}
 		</div>
 		<div class="d-flex flex-wrap justify-content-end gap-3 flex-grow-1">
@@ -55,11 +59,20 @@ import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import "@h2d2/shopicons/es/regular/clock";
 import { DEFAULT_LOCALE } from "@/i18n.ts";
 import formatter from "@/mixins/formatter";
+import minuteTicker from "@/mixins/minuteTicker";
 import { defineComponent, type PropType } from "vue";
-import { SMART_COST_TYPE, type CURRENCY, type Timeout } from "@/types/evcc";
+import {
+	SMART_COST_TYPE,
+	type CURRENCY,
+	type LoadpointSuggestion,
+	type VehicleStatus,
+	type Timeout,
+} from "@/types/evcc";
 
 import ClimaterIcon from "../MaterialIcon/Climater.vue";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
+import OptimizerChargeIcon from "../MaterialIcon/OptimizerCharge.vue";
+import OptimizerPauseIcon from "../MaterialIcon/OptimizerPause.vue";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import PlanStartIcon from "../MaterialIcon/PlanStart.vue";
 import ReconnectIcon from "../MaterialIcon/Reconnect.vue";
@@ -67,12 +80,13 @@ import RfidWaitIcon from "../MaterialIcon/RfidWait.vue";
 import SunDownIcon from "../MaterialIcon/SunDown.vue";
 import SunUpIcon from "../MaterialIcon/SunUp.vue";
 import TempLimitIcon from "../MaterialIcon/TempLimit.vue";
+import MinTempIcon from "../MaterialIcon/MinTemp.vue";
 import VehicleLimitIcon from "../MaterialIcon/VehicleLimit.vue";
 import VehicleLimitReachedIcon from "../MaterialIcon/VehicleLimitReached.vue";
 import VehicleLimitWarningIcon from "../MaterialIcon/VehicleLimitWarning.vue";
 import VehicleMinSocIcon from "../MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "../MaterialIcon/Welcome.vue";
-import BatteryBoostIcon from "../MaterialIcon/BatteryBoost.vue";
+
 import SunPauseIcon from "../MaterialIcon/SunPause.vue";
 
 import StatusItem from "./StatusItem.vue";
@@ -85,10 +99,10 @@ export default defineComponent({
 	components: {
 		StatusItem,
 	},
-	mixins: [formatter],
+	mixins: [formatter, minuteTicker],
 	props: {
 		vehicleSoc: { type: Number, default: 0 },
-		batteryBoostActive: Boolean,
+
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
 		chargerStatusReason: String,
@@ -99,7 +113,9 @@ export default defineComponent({
 		effectivePlanTime: String,
 		enabled: Boolean,
 		heating: Boolean,
+		continuous: Boolean,
 		minSoc: { type: Number, default: 0 },
+		minSocNotReached: Boolean,
 		phaseAction: { type: String, default: "" },
 		phaseRemainingInterpolated: Number,
 		planActive: Boolean,
@@ -118,17 +134,20 @@ export default defineComponent({
 		smartFeedInPriorityDisabled: Boolean,
 		smartFeedInPriorityLimit: { type: Number, default: null },
 		smartFeedInPriorityNextStart: String,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffCo2: { type: Number, default: 0 },
 		tariffGrid: { type: Number, default: 0 },
 		tariffFeedIn: { type: Number, default: 0 },
 		vehicleClimaterActive: Boolean,
 		vehicleWelcomeActive: Boolean,
 		vehicleLimitSoc: { type: Number, default: 0 },
+		statusOverride: { type: Object as PropType<VehicleStatus>, default: undefined },
 	},
 	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
 	data() {
 		return {
-			interval: null as Timeout,
+			statusOverrideActive: false,
+			statusTimeout: null as Timeout | null,
 		};
 	},
 	computed: {
@@ -157,6 +176,9 @@ export default defineComponent({
 		vehicleLimitWarning() {
 			return this.effectivePlanSoc > this.vehicleLimitSoc;
 		},
+		showSuggestions(): boolean {
+			return this.connected && Boolean(this.suggestion?.actionable);
+		},
 		smartCostPrice() {
 			return this.smartCostType !== SMART_COST_TYPE.CO2;
 		},
@@ -184,30 +206,29 @@ export default defineComponent({
 		smartFeedInPriorityLimitFmt() {
 			return this.fmtPricePerKWh(this.smartFeedInPriorityLimit, this.currency, true);
 		},
-		chargerStatus() {
-			const t = (key: string) => {
-				if (this.heating) {
-					// check for special heating status translation
-					const name = `main.heatingStatus.${key}`;
-					if (this.$te(name, DEFAULT_LOCALE)) {
-						return this.$t(name);
-					}
-				}
-				return this.$t(`main.vehicleStatus.${key}`);
-			};
-
-			if (!this.connected) {
-				return t("disconnected");
+		chargerStatusType(): string | undefined {
+			if (this.statusOverrideActive && this.statusOverride) {
+				return this.statusOverride.type;
 			}
+			return undefined;
+		},
+		chargerStatus() {
+			if (this.statusOverrideActive && this.statusOverride) {
+				return this.statusOverride.message;
+			}
+			const t = (key: string) => this.translateStatus(key);
+
+			if (!this.connected) return t("disconnected");
 
 			if (this.enabled && !this.charging) {
-				if (this.vehicleLimitReached) {
-					return t("finished");
-				}
+				if (this.vehicleLimitReached) return t("finished");
+				if (this.chargerStatusReason === REASON_AUTH) return t("waitForAuthorization");
 				return t("waitForVehicle");
 			}
 
 			if (this.charging) {
+				// continuous devices may run without enable - show normal operation
+				if (this.continuous && !this.enabled) return t("connected");
 				return t("charging");
 			}
 
@@ -216,6 +237,9 @@ export default defineComponent({
 		statusItems() {
 			const t = (key: string, params?: Record<string, unknown>) =>
 				this.$t(`main.vehicleStatus.${key}`, params ?? {});
+
+			// ensure periodic recomputation even without data change
+			void this.everyMinute;
 
 			const items = [
 				{
@@ -238,29 +262,32 @@ export default defineComponent({
 					tabular: true,
 				},
 				{
-					id: "tempLimit",
-					visible: this.heating && this.vehicleLimitSoc > 0,
-					content: this.fmtTemperature(this.vehicleLimitSoc),
-					tooltipContent: t("vehicleLimit"),
-					iconComponent: TempLimitIcon,
-					testId: "vehicle-status-limit",
-				},
-				{
 					id: "minSoc",
-					visible:
-						!this.heating &&
-						this.connected &&
-						this.minSoc > 0 &&
-						this.vehicleSoc < this.minSoc,
-					content: this.fmtPercentage(this.minSoc),
-					tooltipContent: t("minCharge", {
-						soc: this.fmtPercentage(this.minSoc),
-					}),
-					iconComponent: VehicleMinSocIcon,
+					visible: this.connected && this.minSocNotReached,
+					content: this.heating
+						? this.fmtTemperature(this.minSoc)
+						: this.fmtPercentage(this.minSoc),
+					tooltipContent: this.heating
+						? this.$t("main.heatingStatus.minTemp", {
+								temp: this.fmtTemperature(this.minSoc),
+							})
+						: t("minCharge", {
+								soc: this.fmtPercentage(this.minSoc),
+							}),
+					iconComponent: this.heating ? MinTempIcon : VehicleMinSocIcon,
 					itemClass: "text-danger text-decoration-underline",
 					testId: "vehicle-status-minsoc",
 					clickable: true,
-					clickHandler: () => this.openMinSocSettings(),
+					clickHandler: () =>
+						this.heating ? this.openLoadpointSettings() : this.openMinSocSettings(),
+				},
+				{
+					id: "tempLimit",
+					visible: this.heating && this.vehicleLimitSoc > 0,
+					content: this.fmtTemperature(this.vehicleLimitSoc),
+					tooltipContent: this.$t("main.heatingStatus.vehicleLimit"),
+					iconComponent: TempLimitIcon,
+					testId: "vehicle-status-limit",
 				},
 				{
 					id: "vehicleLimit",
@@ -273,7 +300,7 @@ export default defineComponent({
 					tooltipContent: this.vehicleLimitReached
 						? t("vehicleLimitReached")
 						: this.vehicleLimitWarning
-							? t("targetIsAboveVehicleLimit")
+							? this.$t("main.targetCharge.targetIsAboveVehicleLimit")
 							: t("vehicleLimit"),
 					iconComponent: this.vehicleLimitReached
 						? VehicleLimitReachedIcon
@@ -343,13 +370,20 @@ export default defineComponent({
 					clickHandler: () => this.openLoadpointSettings(),
 				},
 				{
-					id: "batteryBoost",
-					visible: this.batteryBoostActive,
-					tooltipContent: t("batteryBoost"),
-					iconComponent: BatteryBoostIcon,
-					testId: "vehicle-status-batteryboost",
+					id: "suggestion",
+					visible: this.showSuggestions,
+					tooltipContent: this.translateStatus(
+						this.suggestion?.action === "charge"
+							? "suggestionStartTooltip"
+							: "suggestionStopTooltip"
+					),
+					iconComponent:
+						this.suggestion?.action === "charge"
+							? OptimizerChargeIcon
+							: OptimizerPauseIcon,
+					testId: "vehicle-status-suggestion",
 					clickable: true,
-					clickHandler: () => this.openLoadpointSettings(),
+					clickHandler: () => this.$router.push("/optimize"),
 				},
 				{
 					id: "planActive",
@@ -394,18 +428,33 @@ export default defineComponent({
 			return items.filter((item) => item.visible);
 		},
 	},
-	mounted() {
-		this.interval = setInterval(() => {
-			// Force reactivity update for time-dependent content
-			this.$forceUpdate();
-		}, 1000 * 60);
+	watch: {
+		statusOverride(val: VehicleStatus | undefined) {
+			if (val) {
+				this.statusOverrideActive = true;
+				if (this.statusTimeout) clearTimeout(this.statusTimeout);
+				this.statusTimeout = setTimeout(() => {
+					this.statusOverrideActive = false;
+				}, 2500);
+			}
+		},
 	},
-	beforeUnmount() {
-		if (this.interval) {
-			clearInterval(this.interval);
-		}
+	unmounted() {
+		if (this.statusTimeout) clearTimeout(this.statusTimeout);
 	},
 	methods: {
+		translateStatus(key: string) {
+			// priority: continuous > heating > vehicle (default)
+			if (this.continuous) {
+				const k = `main.continuousStatus.${key}`;
+				if (this.$te(k, DEFAULT_LOCALE)) return this.$t(k);
+			}
+			if (this.heating) {
+				const k = `main.heatingStatus.${key}`;
+				if (this.$te(k, DEFAULT_LOCALE)) return this.$t(k);
+			}
+			return this.$t(`main.vehicleStatus.${key}`);
+		},
 		openLoadpointSettings() {
 			this.$emit("open-loadpoint-settings");
 		},

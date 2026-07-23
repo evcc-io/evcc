@@ -4,22 +4,38 @@
 		<p>
 			{{ description }}
 		</p>
-		<div class="row mb-3">
+		<div class="row mb-3 align-items-center" style="max-width: 1000px">
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ limitLabel }}
 			</label>
-			<div class="col-sm-8 col-lg-4 pe-0">
-				<select
-					:id="formId"
-					v-model.number="selectedLimit"
-					class="form-select form-select-sm mb-1"
-					@change="changeLimit"
-				>
-					<option value="null">{{ $t("smartCost.none") }}</option>
-					<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
-						{{ name }}
-					</option>
-				</select>
+			<div class="col-sm-8 col-lg-4 pe-lg-0">
+				<div class="input-group input-group-sm mb-1 mb-lg-0">
+					<div class="input-group-text">
+						<div class="form-check form-switch m-0">
+							<input
+								:id="formId + 'Active'"
+								:checked="active"
+								class="form-check-input"
+								type="checkbox"
+								role="switch"
+								:aria-label="$t('smartCost.enable')"
+								@change="toggleActive"
+							/>
+						</div>
+					</div>
+					<select
+						:id="formId"
+						v-model.number="selectedLimit"
+						class="form-select form-select-sm"
+						:class="{ disabled: !active }"
+						:aria-label="limitLabel"
+						@change="changeLimit"
+					>
+						<option v-for="{ value, name } in limitOptions" :key="value" :value="value">
+							{{ name }}
+						</option>
+					</select>
+				</div>
 			</div>
 			<div
 				v-if="applyToAllVisible"
@@ -32,7 +48,7 @@
 			</div>
 		</div>
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
-			<div class="text-start">
+			<div class="text-start" data-testid="active-hours">
 				<div class="label">
 					{{ activeHoursLabel }}
 				</div>
@@ -58,7 +74,8 @@
 		</div>
 		<TariffChart
 			v-if="rates.length"
-			:slots="slots"
+			:slots="chartSlots"
+			:inactive="!active"
 			@slot-hovered="slotHovered"
 			@slot-selected="slotSelected"
 		/>
@@ -78,6 +95,7 @@ import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
 import { defineComponent, type PropType } from "vue";
 import { type CURRENCY, type Rate, type SelectOption, type Slot } from "@/types/evcc";
+import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
 
 type LimitDirection = "above" | "below";
 type HighlightColor = "text-primary" | "text-warning";
@@ -91,6 +109,7 @@ export default defineComponent({
 			type: [Number, null] as PropType<number | null>,
 			required: true,
 		},
+		lastLimit: { type: Number, default: 0 },
 		isCo2: Boolean,
 		currency: String as PropType<CURRENCY>,
 		applyAll: Boolean,
@@ -104,7 +123,7 @@ export default defineComponent({
 		optionsStartAtZero: Boolean,
 		activeHoursLabel: { type: String, required: true },
 		currentPriceLabel: String,
-		resetWarningText: String,
+		resetWarningKey: String,
 		limitDirection: { type: String as PropType<LimitDirection>, default: "below" },
 		highlightColor: { type: String as PropType<HighlightColor>, default: "text-primary" },
 		isSlotActive: {
@@ -118,6 +137,7 @@ export default defineComponent({
 			selectedLimit: null as number | null,
 			activeIndex: null as number | null,
 			applyToAllVisible: false,
+			active: false,
 		};
 	},
 	computed: {
@@ -136,7 +156,7 @@ export default defineComponent({
 
 			const values = [] as number[];
 			const stepSize = this.optionStepSize;
-			for (let i = 1; i <= 100; i++) {
+			for (let i = 0; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
 				if (max !== undefined && value > max + stepSize) break;
 				values.push(this.roundLimit(value) as number);
@@ -187,42 +207,10 @@ export default defineComponent({
 			return { min, max };
 		},
 		slots(): Slot[] {
-			if (!this.rates?.length) {
-				return [];
-			}
-
-			const rates = this.rates;
-			const quarterHour = 15 * 60 * 1000;
-
-			const base = new Date();
-			base.setSeconds(0, 0);
-			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
-
-			return Array.from({ length: 48 * 4 }, (_, i) => {
-				const start = new Date(base.getTime() + quarterHour * i);
-				const end = new Date(start.getTime() + quarterHour);
-				const value = this.findRateInRange(start, end, rates)?.value;
-				const active =
-					this.limitDirection === "below" &&
-					this.selectedLimit !== null &&
-					value !== undefined &&
-					value <= this.selectedLimit;
-				const warning =
-					this.limitDirection === "above" &&
-					this.selectedLimit !== null &&
-					value !== undefined &&
-					value >= this.selectedLimit;
-
-				return {
-					day: this.weekdayShort(start),
-					value,
-					start,
-					end,
-					charging: active,
-					selectable: value !== undefined,
-					warning,
-				};
-			});
+			return this.slotsForLimit(this.currentLimit);
+		},
+		chartSlots(): Slot[] {
+			return this.slotsForLimit(this.currentLimit ?? this.selectedLimit);
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -273,18 +261,32 @@ export default defineComponent({
 		limitOperator() {
 			return this.limitDirection === "below" ? "≤" : "≥";
 		},
+		resetWarningText() {
+			return this.$t(this.resetWarningKey!, {
+				limit: this.formatValue(this.currentLimit!),
+			});
+		},
 	},
 	watch: {
-		currentLimit(limit) {
-			this.selectedLimit = this.roundLimit(limit);
+		currentLimit() {
+			this.initLimit();
 		},
 	},
 	mounted() {
-		this.selectedLimit = this.roundLimit(this.currentLimit);
+		this.initLimit();
 	},
 	methods: {
 		roundLimit(limit: number | null): number | null {
 			return limit === null ? null : Math.round(limit * 1000) / 1000;
+		},
+		initLimit() {
+			if (this.currentLimit === null) {
+				this.active = false;
+				this.selectedLimit = this.lastLimit;
+			} else {
+				this.active = true;
+				this.selectedLimit = this.roundLimit(this.currentLimit);
+			}
 		},
 		formatLimit(limit: number | null): string {
 			if (limit === null) {
@@ -299,23 +301,8 @@ export default defineComponent({
 			return this.fmtPricePerKWh(value, this.currency);
 		},
 
-		findRateInRange(start: Date, end: Date, rates: Rate[]) {
-			return rates.find((r) => {
-				if (r.start.getTime() < start.getTime()) {
-					return r.end.getTime() > start.getTime();
-				}
-				return r.start.getTime() < end.getTime();
-			});
-		},
 		costRange(slots: Slot[]): { min: number | undefined; max: number | undefined } {
-			let min = undefined as number | undefined;
-			let max = undefined as number | undefined;
-			slots.forEach((slot) => {
-				if (slot.value === undefined) return;
-				min = min === undefined ? slot.value : Math.min(min, slot.value);
-				max = max === undefined ? slot.value : Math.max(max, slot.value);
-			});
-			return { min, max };
+			return calculateCostRange(slots);
 		},
 		fmtCostRange({ min, max }: { min: number | undefined; max: number | undefined }): string {
 			if (min === undefined || max === undefined) return "";
@@ -329,29 +316,52 @@ export default defineComponent({
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
+		slotsForLimit(limit: number | null): Slot[] {
+			return generateRateSlots(
+				this.rates,
+				this.weekdayShort,
+				(value) =>
+					this.limitDirection === "below" &&
+					limit !== null &&
+					value !== undefined &&
+					value <= limit,
+				(value) =>
+					this.limitDirection === "above" &&
+					limit !== null &&
+					value !== undefined &&
+					value >= limit
+			);
+		},
 		slotHovered(index: number) {
 			this.activeIndex = index;
 		},
 		slotSelected(index: number) {
-			const value = this.slots[index]?.value;
+			const value = this.chartSlots[index]?.value;
 			if (value !== undefined) {
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;
 				this.selectedLimit = valueRounded;
-				this.saveLimit(`${valueRounded}`);
+				this.saveLimit(valueRounded);
 			}
 		},
 		changeLimit($event: Event) {
-			const value = ($event.target as HTMLSelectElement).value;
-			if (value === "null") {
-				this.resetLimit();
+			const value = parseFloat(($event.target as HTMLSelectElement).value);
+			this.saveLimit(value);
+		},
+		toggleActive($event: Event) {
+			this.active = ($event.target as HTMLInputElement).checked;
+			if (this.active) {
+				this.saveLimit(this.lastLimit);
 			} else {
-				this.saveLimit(value);
+				this.resetLimit();
+			}
+			if (this.applyAll) {
+				this.applyToAllVisible = true;
 			}
 		},
-		saveLimit(limit: string) {
-			this.$emit("save-limit", limit);
-			if (this.applyAll) {
+		saveLimit(limit: number) {
+			this.$emit("save-limit", limit, this.active);
+			if (this.applyAll && this.active) {
 				this.applyToAllVisible = true;
 			}
 		},
@@ -362,7 +372,7 @@ export default defineComponent({
 			}
 		},
 		applyToAll() {
-			this.$emit("apply-to-all", this.selectedLimit);
+			this.$emit("apply-to-all", this.currentLimit);
 			this.applyToAllVisible = false;
 		},
 	},

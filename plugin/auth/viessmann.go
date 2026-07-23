@@ -28,7 +28,7 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.T
 	var cc struct {
 		ClientID    string
 		RedirectURI string
-		Gateway     string
+		Gateway     string `mapstructure:"gateway_serial"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -46,5 +46,5 @@ func NewViessmannFromConfig(ctx context.Context, other map[string]any) (oauth2.T
 		return nil, err
 	}
 
-	return NewOauth(ctx, "Viessmann", cc.Gateway, &oc)
+	return NewOAuth(ctx, "Viessmann", cc.Gateway, &oc)
 }

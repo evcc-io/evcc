@@ -125,6 +125,31 @@ func (c *gen1) TotalEnergy() (float64, error) {
 	return c.energy(energy) / 1000, nil
 }
 
+func (c *gen1) ReturnEnergy() (float64, error) {
+	var energy float64
+	res, err := c.status.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	switch {
+	case c.channel < len(res.Meters):
+		energy = res.Meters[c.channel].Total_Returned
+	case c.channel < len(res.EMeters):
+		energy = res.EMeters[c.channel].Total_Returned
+	default:
+		return 0, errors.New("invalid channel, missing power meter")
+	}
+
+	return c.energy(energy) / 1000, nil
+}
+
+// IsThreePhase reports whether the device is a three-phase energy meter.
+func (c *gen1) IsThreePhase() bool {
+	res, err := c.status.Get()
+	return err == nil && len(res.EMeters) == 3
+}
+
 // gen1Energy in kWh
 func (c *gen1) energy(energy float64) float64 {
 	// Gen 1 Shelly EM devices are providing Watt hours, Gen 1 Shelly PM devices are providing Watt minutes

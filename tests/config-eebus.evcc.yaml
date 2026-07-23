@@ -1,0 +1,27 @@
+interval: 0.1s
+
+eebus:
+  shipid: EVCC_HEMS_01
+  certificate:
+    public: |
+      -----BEGIN CERTIFICATE-----
+      MIIBuzCCAWKgAwIBAgIQatuHkiaPT4obu8RHSmfOwzAKBggqhkjOPQQDAjA+MQsw
+      CQYDVQQGEwJERTENMAsGA1UEChMERVZDQzEJMAcGA1UECxMAMRUwEwYDVQQDDAxF
+      VkNDX0hFTVNfMDEwHhcNMjYwMTMwMTAzNjUzWhcNMzYwMTI4MTAzNjUzWjA+MQsw
+      CQYDVQQGEwJERTENMAsGA1UEChMERVZDQzEJMAcGA1UECxMAMRUwEwYDVQQDDAxF
+      VkNDX0hFTVNfMDEwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQ8Z40GPe8HzV17
+      ZhbBPkGBwhu8emdvzO5OWJUPSaX1R8rrWSaNwlh6COPG3fOVvUzCYcQbgmMFXK/o
+      nhuAslXTo0IwQDAOBgNVHQ8BAf8EBAMCB4AwDwYDVR0TAQH/BAUwAwEB/zAdBgNV
+      HQ4EFgQUdQegutt1VxBfwDAlPdBpvrp7ztowCgYIKoZIzj0EAwIDRwAwRAIgS2ia
+      A+q0Tiy7NLyEjuKCV8QCVPjxt2OnfbSb9ZlDT3YCIDkwJoLc4+lsfvidDimUB+/I
+      ZvF1asyp3PVL7BDSFHil
+      -----END CERTIFICATE-----
+    private: |
+      -----BEGIN EC PRIVATE KEY-----
+      MHcCAQEEIIVZ2cLeTiENyCchgpj7eyJ5JKP5qpgj8eHUbLxn8Du1oAoGCCqGSM49
+      AwEHoUQDQgAEPGeNBj3vB81de2YWwT5BgcIbvHpnb8zuTliVD0ml9UfK61kmjcJY
+      egjjxt3zlb1MwmHEG4JjBVyv6J4bgLJV0w==
+      -----END EC PRIVATE KEY-----
+
+circuits:
+  - name: main

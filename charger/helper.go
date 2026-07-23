@@ -2,6 +2,7 @@ package charger
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,8 +11,7 @@ import (
 	"golang.org/x/text/encoding/unicode"
 )
 
-// TODO remove when used
-var _ = ensureCharger
+var ErrLoadpointNotInitialized = errors.New("loadpoint not initialized")
 
 // ensureCharger extracts ID from list of IDs returned from `list` function
 func ensureCharger(id string, list func() ([]string, error)) (string, error) {

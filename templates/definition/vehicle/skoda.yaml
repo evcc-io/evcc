@@ -1,11 +1,15 @@
 template: skoda
 covers: ["enyaq"]
 products:
-  - brand: Skoda
+  - brand: Škoda
+    description:
+      generic: MyŠkoda
 params:
   - preset: vehicle-base
+  - preset: vehicle-online
   - name: timeout
 render: |
   type: skoda
   {{ include "vehicle-base" . }}
   timeout: {{ .timeout }}
+  {{ include "vehicle-features" . }}

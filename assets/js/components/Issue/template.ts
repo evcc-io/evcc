@@ -35,6 +35,8 @@ function generateBody(issue: IssueData, additional: string): string {
     additional,
     "## Version",
     issue.version,
+    "## System",
+    `${issue.system}, ${issue.timezone}`,
   ];
 
   return toString(sections);
