@@ -1,18 +1,13 @@
 <template>
 	<!-- normal: free charge/discharge -->
 	<BatteryNormal v-if="action === 'normal'" :size="size" />
-	<!-- charge: grid charge -->
+	<!-- charge/discharge: grid interaction (import or export) -->
 	<shopicon-regular-powersupply
-		v-else-if="action === 'charge'"
+		v-else-if="action === 'charge' || action === 'discharge'"
 		:size="size"
 	></shopicon-regular-powersupply>
 	<!-- holdcharge: prevent charging -->
 	<BatteryHoldCharge v-else-if="action === 'holdcharge'" :size="size" />
-	<!-- discharge: battery-to-grid export -->
-	<shopicon-regular-powersupply
-		v-else-if="action === 'discharge'"
-		:size="size"
-	></shopicon-regular-powersupply>
 	<!-- hold: prevent discharging -->
 	<BatteryHold v-else :size="size" />
 </template>
