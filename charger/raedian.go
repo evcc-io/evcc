@@ -62,12 +62,12 @@ func NewRaedianFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	return NewRaedian(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewRaedian(ctx, cc)
 }
 
 // NewRaedian creates Raedian charger
-func NewRaedian(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Raedian, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewRaedian(ctx context.Context, settings modbus.Settings) (*Raedian, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

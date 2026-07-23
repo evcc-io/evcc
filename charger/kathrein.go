@@ -167,7 +167,7 @@ func NewKathreinFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	wb, err := NewKathrein(ctx, cc.URI, cc.ID)
+	wb, err := NewKathrein(ctx, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -176,8 +176,8 @@ func NewKathreinFromConfig(ctx context.Context, other map[string]any) (api.Charg
 }
 
 // NewKathrein creates Kathrein charger
-func NewKathrein(ctx context.Context, uri string, id uint8) (*Kathrein, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewKathrein(ctx context.Context, settings modbus.TcpSettings) (*Kathrein, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

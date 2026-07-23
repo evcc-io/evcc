@@ -27,8 +27,9 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
+    timeout: 15s
   - name: timeout
-    default: 15s
+    deprecated: true
   - name: maxacpower
     service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
   - name: curtailpercent
@@ -69,7 +70,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 37113 # Grid import/export power
@@ -82,7 +82,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37121 # Active energy imported from the grid
       type: holding
@@ -94,7 +93,6 @@ render: |
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37119 # Active energy exported to the grid
       type: holding
@@ -106,7 +104,6 @@ render: |
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37107 # Huawei phase A grid current
       type: holding
@@ -117,7 +114,6 @@ render: |
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37109 # Huawei phase B grid current
       type: holding
@@ -128,7 +124,6 @@ render: |
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37111 # Huawei phase C grid current
       type: holding
@@ -140,7 +135,6 @@ render: |
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37101 # Huawei phase A grid voltage
       type: holding
@@ -151,7 +145,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37103 # Huawei phase B grid voltage
       type: holding
@@ -162,7 +155,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37105 # Huawei phase C grid voltage
       type: holding
@@ -174,7 +166,6 @@ render: |
   powers:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37132 # Huawei phase A grid active power
       type: holding
@@ -185,7 +176,6 @@ render: |
     scale: -1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37134 # Huawei phase B grid active power
       type: holding
@@ -196,7 +186,6 @@ render: |
     scale: -1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 37136 # Huawei phase C grid active power
       type: holding
@@ -210,7 +199,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 32064 # Input power DC
@@ -219,7 +207,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 32108 # Total DC Input Energy
       type: holding
@@ -295,7 +282,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       {{- if eq .storageunit "2" }}
@@ -309,7 +295,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       {{- if eq .storageunit "2" }}
       address: 37755 # [Energy storage unit 2] Total discharge
@@ -322,7 +307,6 @@ render: |
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       {{- if eq .storageunit "2" }}
       address: 37753 # [Energy storage unit 2] Total charge
@@ -335,7 +319,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       {{- if eq .storageunit "2" }}
       address: 37738

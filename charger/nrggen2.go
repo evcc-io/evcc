@@ -84,7 +84,7 @@ func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	nrg, err := NewNRGKickGen2(ctx, cc.URI, cc.ID)
+	nrg, err := NewNRGKickGen2(ctx, cc.TcpSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +102,8 @@ func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Ch
 }
 
 // NewNRGKickGen2 creates NRGKickGen2 charger
-func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen2, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewNRGKickGen2(ctx context.Context, settings modbus.TcpSettings) (*NRGKickGen2, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

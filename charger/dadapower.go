@@ -66,12 +66,12 @@ func NewDadapowerFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewDadapower(ctx, cc.URI, cc.ID)
+	return NewDadapower(ctx, cc)
 }
 
 // NewDadapower creates a Dadapower charger
-func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewDadapower(ctx context.Context, settings modbus.TcpSettings) (*Dadapower, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +94,8 @@ func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error)
 	}
 
 	// The charging station may have multiple charging ports - use offset for register addresses for each port
-	if id > 1 {
-		wb.regOffset = (uint16(id) - 1) * 1000
+	if settings.ID > 1 {
+		wb.regOffset = (uint16(settings.ID) - 1) * 1000
 	}
 
 	go wb.heartbeat(ctx)

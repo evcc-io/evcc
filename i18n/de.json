@@ -553,18 +553,18 @@
           "titleDefault": "Fahrzeug schläft"
         },
         "connect": {
-          "messageDefault": "Auto verbunden bei {pvPower}kW PV",
-          "title": "Wenn ein Auto verbunden wird",
-          "titleDefault": "Auto verbunden"
+          "messageDefault": "Fahrzeug verbunden bei {pvPower}kW PV",
+          "title": "Wenn ein Fahrzeug verbunden wird",
+          "titleDefault": "Fahrzeug verbunden"
         },
         "disconnect": {
-          "messageDefault": "Auto getrennt nach {connectedDuration}",
-          "title": "Wenn ein Auto getrennt wird",
-          "titleDefault": "Auto getrennt"
+          "messageDefault": "Fahrzeug getrennt nach {connectedDuration}",
+          "title": "Wenn ein Fahrzeug getrennt wird",
+          "titleDefault": "Fahrzeug getrennt"
         },
         "guest": {
           "messageDefault": "Unbekanntes Fahrzeug, Gast verbunden?",
-          "title": "Wenn ein unbekanntes Auto verbunden wird",
+          "title": "Wenn ein unbekanntes Fahrzeug verbunden wird",
           "titleDefault": "Unbekanntes Fahrzeug"
         },
         "planoverrun": {
@@ -641,6 +641,8 @@
       "connectionHintTcpip": "Das Gerät ist über Netzwerk (LAN/WiFi) erreichbar.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwerk",
+      "delay": "Verzögerung",
+      "delayHint": "Optionale Wartezeit vor jedem Registerzugriff. Nur für langsame Geräte notwendig.",
       "device": "Gerätename",
       "deviceHint": "Beispiel: /dev/ttyUSB0",
       "host": "IP Adresse oder Hostname",
@@ -651,7 +653,9 @@
       "protocolHintRtu": "Verbindung über eine RS485 Schnittstelle an einem Ethernet Adapter ohne Protokollübersetzung.",
       "protocolHintTcp": "Gerät hat native LAN/Wifi Unterstützung oder ist über eine RS485 Schnittstelle an einen Ethernet Adapter mit Protokollübersetzung angeschlossen.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Zeitüberschreitung",
+      "timeoutHint": "Optionale maximale Wartezeit auf eine Antwort des Geräts."
     },
     "modbusproxy": {
       "add": "Proxy-Verbindung hinzufügen",

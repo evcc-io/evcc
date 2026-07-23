@@ -76,12 +76,12 @@ func NewAmperfiedFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewAmperfied(ctx, cc.URI, cc.ID, cc.Phases1p3p)
+	return NewAmperfied(ctx, cc.TcpSettings, cc.Phases1p3p)
 }
 
 // NewAmperfied creates Amperfied charger
-func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewAmperfied(ctx context.Context, settings modbus.TcpSettings, phases bool) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

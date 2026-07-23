@@ -98,12 +98,12 @@ func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victro
 		return nil, err
 	}
 
-	return NewVictron(ctx, cc.URI, cc.ID, regs)
+	return NewVictron(ctx, cc, regs)
 }
 
 // NewVictron creates Victron charger
-func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewVictron(ctx context.Context, settings modbus.TcpSettings, regs victronRegs) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

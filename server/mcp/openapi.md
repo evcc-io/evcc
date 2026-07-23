@@ -146,6 +146,26 @@ call setBatteryGridChargeLimit {
 }
 ```
 
+## setBatteryGridDischarge
+
+Allow the home battery to discharge to the grid (experimental).
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatteryGridDischarge {
+  "enable": "true"
+}
+```
+
 ## setBufferSoc
 
 Set battery buffer SoC.
@@ -196,13 +216,13 @@ Directly controls the mode of all controllable batteries. evcc behavior like 'pr
 
 | Name | Type | Description |
 |------|------|-------------|
-| batteryMode | string | Battery mode |
+| batteryMode | string | Battery operation mode. |
 
 **Example call:**
 
 ```json
 call setExternalBatteryMode {
-  "batteryMode": "normal"
+  "batteryMode": "unknown"
 }
 ```
 
@@ -361,26 +381,6 @@ Adjust the solar forecast to real production data of the current day.
 ```json
 call setSolarAdjusted {
   "enable": "true"
-}
-```
-
-## getState
-
-Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.
-
-**Tags:** general
-
-**Arguments:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| jq | string | Filter the state with JQ |
-
-**Example call:**
-
-```json
-call getState {
-  "jq": "example"
 }
 ```
 
@@ -1143,6 +1143,26 @@ Update vehicle, loadpoint or odometer of a charging session. Only provided field
 call updateSession {
   "id": 1,
   "requestBody": "..."
+}
+```
+
+## state
+
+Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.
+
+**Tags:** state
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| jq | string | Filter the state with JQ |
+
+**Example call:**
+
+```json
+call state {
+  "jq": "example"
 }
 ```
 

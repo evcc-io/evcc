@@ -79,12 +79,12 @@ func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return NewPhoenixEVEth(ctx, cc.URI, cc.ID, cc.MilliCurrentSupported)
+	return NewPhoenixEVEth(ctx, cc.TcpSettings, cc.MilliCurrentSupported)
 }
 
 // NewPhoenixEVEth creates a PhoenixEVEth charger
-func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8, milliCurrentSupported bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewPhoenixEVEth(ctx context.Context, settings modbus.TcpSettings, milliCurrentSupported bool) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
