@@ -86,6 +86,7 @@ type Site struct {
 	bufferStartSoc          float64  // start charging on battery above this Soc
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
+	smartFeedInDisableLimit *float64 // disable feed-in at or below tariff limit
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -112,6 +113,7 @@ type Site struct {
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
+	smartFeedInDisableActive bool                        // Smart feed-in disable active
 	loadpointSuggestions     map[int]types.Suggestion    // Optimizer suggestions by loadpoint id
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 }
@@ -168,6 +170,14 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
 			telemetry.Persist(log)
+		})
+	}
+
+	if site.smartFeedInDisableAvailable() {
+		shutdown.Register(func() {
+			if err := site.revertSmartFeedInCurtail(); err != nil {
+				site.log.ERROR.Printf("smart feed-in disable: %v", err)
+			}
 		})
 	}
 
@@ -1094,25 +1104,18 @@ func (site *Site) update(lp updater) {
 	}
 
 	if site.hems != nil {
-		var wg sync.WaitGroup
-
-		wg.Go(func() {
-			if dim := hems.Dimmed(site.hems); dim != nil {
-				if err := site.dimMeters(*dim); err != nil {
-					site.log.ERROR.Println(err)
-				}
+		if dim := hems.Dimmed(site.hems); dim != nil {
+			if err := site.dimMeters(*dim); err != nil {
+				site.log.ERROR.Println(err)
 			}
-		})
+		}
+	}
 
-		wg.Go(func() {
-			if hems.Curtailed(site.hems) != nil {
-				if err := site.curtailPV(site.hems.CurtailedPercent()); err != nil {
-					site.log.ERROR.Println(err)
-				}
-			}
-		})
-
-		wg.Wait()
+	// curtail PV to the strictest of grid-required (HEMS) and smart feed-in disable
+	curtail := site.effectiveCurtailPercent()
+	site.publish(keys.CurtailPercent, curtail)
+	if err := site.curtailPV(curtail); err != nil {
+		site.log.ERROR.Println(err)
 	}
 
 	// prioritize if possible
@@ -1169,15 +1172,7 @@ func (site *Site) update(lp updater) {
 	// smart grid charging
 	rate, err := consumption.At(time.Now())
 	if consumption != nil && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(consumption) > 0 {
-			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
-				consumption[0].Start.Local().Format(time.RFC3339),
-				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
-			)
-		}
-
-		site.log.WARN.Println("planner:", msg)
+		site.log.WARN.Printf("planner: %v", err)
 	}
 
 	// update battery after reading meters to ensure that (modbus) connection is open
@@ -1214,6 +1209,7 @@ func (site *Site) prepare() {
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
+	site.publish(keys.SmartFeedInDisableAvailable, site.smartFeedInDisableAvailable())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(api.TariffUsagePlanner); tariff != nil {
