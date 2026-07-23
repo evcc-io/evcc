@@ -118,6 +118,9 @@
       "titleEdit": "Edit Self-Regulating Consumer"
     },
     "battery": {
+      "description": "Experimental battery controls. These features are still being tested and may change or be removed in future versions.",
+      "gridDischarge": "Allow battery to discharge to the grid",
+      "title": "Battery",
       "titleAdd": "Add Battery",
       "titleEdit": "Edit Battery"
     },

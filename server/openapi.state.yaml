@@ -193,6 +193,9 @@ components:
         batteryDischargeControl:
           description: Home battery discharge is prevented during fast charging and planned charging.
           type: boolean
+        batteryGridDischarge:
+          description: Home battery is allowed to discharge to the grid (experimental).
+          type: boolean
         solarAdjusted:
           type: boolean
         batteryGridChargeLimit:

@@ -262,6 +262,8 @@ export interface State {
   bufferStartSoc?: number;
   /** Home battery discharge is prevented during fast charging and planned charging. */
   batteryDischargeControl?: boolean;
+  /** Home battery is allowed to discharge to the grid (experimental). */
+  batteryGridDischarge?: boolean;
   solarAdjusted?: boolean;
   /** Price or emission limit for charging the home battery from grid. */
   batteryGridChargeLimit?: number | null;
