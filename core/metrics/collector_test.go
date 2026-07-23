@@ -489,7 +489,7 @@ func TestCreateEntityReconcilesExtToConsumer(t *testing.T) {
 	// ext meter with a persisted history slot
 	ext, err := createEntity(Meter, "db:5", "Fridge")
 	require.NoError(t, err)
-	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil, false))
+	require.NoError(t, persist(ext, time.Unix(15*60, 0), 0.3, 0, nil, nil, false))
 
 	// reconfigured as consumer: same row relabeled, history intact
 	con, err := createEntity(Consumer, "db:5", "Fridge")
@@ -568,4 +568,38 @@ func TestCollectorLastSlotEnergy(t *testing.T) {
 	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND ts = ?", col.entity.Id, 15*60).Update("recovered", true).Error)
 	_, ok = col.LastSlotEnergy()
 	require.False(t, ok)
+}
+
+// TestCollectorEnabledFraction verifies the loadpoint enabled state is stored
+// as the time-weighted 0..1 fraction of the slot, and stays nil for entities
+// that never sample it.
+func TestCollectorEnabledFraction(t *testing.T) {
+	clk := clock.NewMock() // starts at Unix 0, a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	lp, err := NewCollector(Loadpoint, "db:1", "", WithClock(clk))
+	require.NoError(t, err)
+	grid, err := NewCollector(Grid, "db:2", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// slot 0: enabled only for the first of three 5min intervals -> 1/3
+	require.NoError(t, lp.AddEnergyEnabled(nil, nil, 1e3, true)) // t=0, seeds clock
+	require.NoError(t, grid.AddEnergy(nil, nil, 1e3))
+	for _, enabled := range []bool{true, false, false} {
+		clk.Add(5 * time.Minute)
+		require.NoError(t, lp.AddEnergyEnabled(nil, nil, 1e3, enabled))
+		require.NoError(t, grid.AddEnergy(nil, nil, 1e3))
+	}
+
+	var lpSlot meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts = 0", lp.entity.Id).First(&lpSlot).Error)
+	require.NotNil(t, lpSlot.Enabled)
+	require.InDelta(t, 1.0/3.0, *lpSlot.Enabled, 1e-9)
+
+	// grid never samples enabled -> column stays null
+	var gridSlot meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts = 0", grid.entity.Id).First(&gridSlot).Error)
+	require.Nil(t, gridSlot.Enabled)
 }
