@@ -22,16 +22,22 @@ params:
     help:
       en: Input pin for the W4 signal (Dimmer for controllable loads)
       de: Eingangspin für das W4-Signal (Dimmen der steuerbaren Verbrauchseinrichtungen)
-  - name: maxproductionpower
+  - name: productionnominalmax
     type: float
     unit: W
-    required: true
     description:
       en: Installed generator power (Wp)
       de: Installierte Generatorleistung (Wp)
     help:
       en: Rated generator/module power (Wp) of the installation.
       de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+  - name: maxproductionpower
+    type: float
+    unit: W
+    deprecated: true
+    description:
+      en: Installed generator power (Wp)
+      de: Installierte Generatorleistung (Wp)
   - name: w3pin
     type: int
     required: true
@@ -64,7 +70,7 @@ render: |
     source: gpio
     pin: {{ .w4pin }}
     function: read
-  productionnominalmax: {{ .maxproductionpower }}
+  productionnominalmax: {{ or .productionnominalmax .maxproductionpower }}
   w3:
     source: gpio
     pin: {{ .w3pin }}
