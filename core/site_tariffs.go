@@ -81,8 +81,8 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageCo2)); err == nil {
 		site.publish(keys.TariffCo2, v)
 	}
-	if v, err := tariff.Now(site.GetTariff(api.TariffUsageSolar)); err == nil {
-		site.publish(keys.TariffSolar, v)
+	if r, err := tariff.At(site.GetTariff(api.TariffUsageSolar), time.Now()); err == nil {
+		site.publish(keys.TariffSolar, solarPower(r))
 	}
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageTemperature)); err == nil {
 		site.publish(keys.TariffTemperature, v)
@@ -184,7 +184,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	}
 
 	if r, err := solar.At(time.Now()); err == nil {
-		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
+		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, solarPower(r)); err != nil {
 			site.log.ERROR.Printf("solar forecast collector: %v", err)
 		}
 	}

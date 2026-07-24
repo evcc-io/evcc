@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,76 +21,49 @@ type tsEntry struct {
 	Value     float64   `json:"val"`
 }
 
+// solarPower converts the energy of a solar rate into average power in W
+func solarPower(r api.Rate) float64 {
+	d := r.End.Sub(r.Start).Hours()
+	if d <= 0 {
+		return 0
+	}
+	return r.Value / d
+}
+
+// solarTimeseries converts solar energy rates into power at timestamp
 func solarTimeseries(rr api.Rates) []tsEntry {
 	return lo.Map(rr, func(r api.Rate, _ int) tsEntry {
-		return tsEntry{Timestamp: r.Start, Value: r.Value}
+		return tsEntry{Timestamp: r.Start, Value: solarPower(r)}
 	})
 }
 
-func search(rr api.Rates, ts time.Time) (int, bool) {
-	return slices.BinarySearchFunc(rr, ts, func(v api.Rate, ts time.Time) int {
-		return v.Start.Compare(ts)
-	})
-}
-
-// interpolate returns the interpolated value where ts is between two entries and i is the index of the rate after ts
-func interpolate(rr api.Rates, i int, ts time.Time) float64 {
-	rp := &rr[i-1]
-	r := &rr[i]
-	return rp.Value + float64(ts.Sub(rp.Start))*(r.Value-rp.Value)/float64(r.Start.Sub(rp.Start))
-}
-
-// solarEnergy calculates the energy consumption between from and to,
-// assuming the rates containing the power at given timestamp.
+// solarEnergy sums the energy of all rates overlapping [from,to), prorating partial slots.
 // Result is in Wh
 func solarEnergy(rr api.Rates, from, to time.Time) float64 {
-	var energy float64
-
 	if from.After(to) {
 		panic("from cannot be after to")
 	}
 
-	// no rates- nothing to integrate
-	if len(rr) == 0 {
-		return 0
-	}
+	var energy float64
 
-	idx, ok := search(rr, from)
-	if !ok {
-		switch {
-		case idx >= len(rr):
-			// from is just before or after last entry
-			return 0
-		case idx == 0:
-			// from is before first entry- we ignore anything before the first entry
-			if !rr[0].Start.Before(to) {
-				// the whole interval is before the first entry
-				return 0
-			}
-		default:
-			// from is between two entries
-			r := &rr[idx]
-			vp := interpolate(rr, idx, from)
-
-			// to is before same entry as from
-			if r.Start.After(to) {
-				return (vp + interpolate(rr, idx, to)) / 2 * to.Sub(from).Hours()
-			}
-
-			energy += (vp + r.Value) / 2 * r.Start.Sub(from).Hours()
-		}
-	}
-
-	for ; idx < len(rr)-1; idx++ {
-		r := &rr[idx]
-		rn := &rr[idx+1]
-
-		if rn.Start.After(to) {
-			energy += (r.Value + interpolate(rr, idx+1, to)) / 2 * to.Sub(r.Start).Hours()
-			break
+	for _, r := range rr {
+		d := r.End.Sub(r.Start)
+		if d <= 0 {
+			continue
 		}
 
-		energy += (r.Value + rn.Value) / 2 * rn.Start.Sub(r.Start).Hours()
+		start, end := r.Start, r.End
+		if start.Before(from) {
+			start = from
+		}
+		if end.After(to) {
+			end = to
+		}
+		if !end.After(start) {
+			continue
+		}
+
+		energy += r.Value * float64(end.Sub(start)) / float64(d)
 	}
 
 	return energy

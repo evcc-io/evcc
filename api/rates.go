@@ -6,7 +6,8 @@ import (
 	"time"
 )
 
-// Rate is a grid tariff rate
+// Rate is a grid tariff rate.
+// For solar tariffs, Value is the energy in Wh during [Start,End).
 type Rate struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`

@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/jinzhu/now"
 )
 
 type Solcast struct {
@@ -104,23 +103,19 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		data := make(api.Rates, 0, len(res.Forecasts))
 
-	NEXT:
 		for _, r := range res.Forecasts {
-			start := now.With(r.PeriodEnd).BeginningOfHour().Local()
-			rr := api.Rate{
+			// pv_estimate is the average power of the period ending at period_end
+			d := r.Period.Duration()
+			if d <= 0 {
+				continue
+			}
+
+			start := r.PeriodEnd.Add(-d).Local()
+			data = append(data, api.Rate{
 				Start: start,
-				End:   start.Add(time.Hour),
-				Value: r.PvEstimate * 1e3,
-			}
-			if r.Period.Duration() != time.Hour {
-				for i, r := range data {
-					if r.Start.Equal(rr.Start) {
-						data[i].Value = (r.Value + rr.Value) / 2
-						continue NEXT
-					}
-				}
-			}
-			data = append(data, rr)
+				End:   start.Add(d),
+				Value: r.PvEstimate * 1e3 * d.Hours(),
+			})
 		}
 
 		mergeRatesAfter(t.data, data, beginningOfDay())

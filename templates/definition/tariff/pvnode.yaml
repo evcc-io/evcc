@@ -54,11 +54,12 @@ render: |
       type: bearer
       token: {{ .apikey }}
     jq: |
+      # pv_watts is the mean power of the 15min interval
       [.values[] |
         {
           start: (.dtm | sub(" "; "T") + "Z"),
           end:   (.dtm | sub(" "; "T") + "Z" | fromdateiso8601 + 900 | todateiso8601 ),
-          value: (.pv_watts | round )
+          value: (.pv_watts / 4 | round )
         }
       ] | tostring
   interval: {{ .interval }}

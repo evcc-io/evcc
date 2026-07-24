@@ -437,13 +437,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	// allow empty solar forecast
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
 	if solarTariff != nil && len(solar) > 0 {
-		solarEnergy, err := solarRatesToEnergy(solar)
-		if err != nil {
-			return err
-		}
-
 		scale := site.effectiveSolarScale()
-		ftSlots := scaleAndPrune(solarEnergy, scale, minLen)
+		ftSlots := scaleAndPrune(solar, scale, minLen)
 
 		// decay the scale derived from measured vs forecasted energy of the last completed slot
 		if pv, fcst := site.measuredSlotEnergy(site.Meters.PVMetersRef...), site.measuredSlotEnergy(metrics.Forecast)*scale; pv > 0 && fcst > 0 {
@@ -987,25 +982,6 @@ func prorate[T constraints.Float](slots []T, firstSlotDuration time.Duration) []
 	return lo.Map(res, func(f T, _ int) float32 {
 		return float32(f)
 	})
-}
-
-func solarRatesToEnergy(rr api.Rates) (api.Rates, error) {
-	res := make(api.Rates, 0, len(rr))
-
-	for _, r := range rr {
-		energy := solarEnergy(rr, r.Start, r.End)
-		if energy < 0 {
-			return nil, fmt.Errorf("negative solar energy from %v to %v: %.3f", r.Start, r.End, energy)
-		}
-
-		res = append(res, api.Rate{
-			Start: r.Start,
-			End:   r.End,
-			Value: energy,
-		})
-	}
-
-	return res, nil
 }
 
 func currentRates(tariff api.Tariff) api.Rates {

@@ -104,7 +104,8 @@ render: |
           rates.push({
             start: time.toISOString(),
             end: new Date(time.getTime() + slotDuration).toISOString(),
-            value: Math.round(Math.max(0, solarValue))
+            // energy of the slot
+            value: Math.round(Math.max(0, solarValue) * slotMinutes / 60)
           });
         }
       }

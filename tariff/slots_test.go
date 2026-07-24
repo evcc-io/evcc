@@ -141,46 +141,59 @@ func TestDropOldRates(t *testing.T) {
 	require.Len(t, res, 0)
 }
 
-// TestSolarAndCo2Interpolation
-//
-// For solar tariffs we expect power at time of interval start (see https://github.com/evcc-io/evcc/issues/23184 for changing this).
-// When converting to 15min slots, solar interpolation needs to take care of this
-func TestSolarAndCo2Interpolation(t *testing.T) {
+// TestSolarEnergySplit verifies that splitting an hourly solar rate into 15min
+// slots preserves the slot energy while following the neighbouring slots' shape
+func TestSolarEnergySplit(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
-	// Two consecutive hourly solar rates: 0.0 in the first hour, 4.0 in the next
-	// With linear interpolation, the first hour's four 15m slots should have values 0,1,2,3
+	// two consecutive hourly solar rates: no energy in the first hour, 4Wh in the next
 	r0 := api.Rate{
 		Start: now,
-		End:   now.Add(1 * time.Hour),
+		End:   now.Add(time.Hour),
 		Value: 0.0,
 	}
 	r1 := api.Rate{
 		Start: r0.End,
-		End:   r0.End.Add(1 * time.Hour),
+		End:   r0.End.Add(time.Hour),
 		Value: 4.0,
 	}
 
-	for _, typ := range []api.TariffType{api.TariffTypeSolar} { //, api.TariffTypeCo2
-		w := &SlotWrapper{&testTariff{
-			rates: api.Rates{r0, r1},
-			typ:   typ,
-		}}
+	w := &SlotWrapper{&testTariff{
+		rates: api.Rates{r0, r1},
+		typ:   api.TariffTypeSolar,
+	}}
 
-		res, err := w.Rates()
-		require.NoError(t, err)
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 8)
 
-		// Build expected results: r0 interpolated into 4 slots (0..3), then r1 as four slots with value 4.0
-		expected := makeRates(now, SlotDuration, 4, 0)
+	for i, r := range res {
+		assert.Equal(t, now.Add(time.Duration(i)*SlotDuration), r.Start, "slot %d", i)
+		assert.Equal(t, SlotDuration, r.End.Sub(r.Start), "slot %d", i)
+	}
 
-		for j := range 4 {
-			expected = append(expected, api.Rate{
-				Start: r1.Start.Add(time.Duration(j) * SlotDuration),
-				End:   r1.Start.Add(time.Duration(j+1) * SlotDuration),
-				Value: 4.0,
-			})
+	// energy is conserved per source slot
+	var first, second float64
+	for i, r := range res {
+		if i < 4 {
+			first += r.Value
+		} else {
+			second += r.Value
 		}
+	}
+	assert.InDelta(t, r0.Value, first, 1e-9)
+	assert.InDelta(t, r1.Value, second, 1e-9)
 
-		assert.Equal(t, expected, res)
+	// ramping up from the empty hour, flat towards the missing successor
+	for _, tc := range []struct {
+		idx      int
+		expected float64
+	}{
+		{4, 4.0 / 12},
+		{5, 12.0 / 12},
+		{6, 16.0 / 12},
+		{7, 16.0 / 12},
+	} {
+		assert.InDelta(t, tc.expected, res[tc.idx].Value, 1e-9, "slot %d", tc.idx)
 	}
 }

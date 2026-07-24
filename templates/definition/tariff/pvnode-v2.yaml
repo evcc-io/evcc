@@ -50,11 +50,12 @@ render: |
       type: bearer
       token: {{ .apikey }}
     jq: |
+      # pv_power is the mean power of the 15min interval
       [.values[] |
         {
           start: (.timestamp),
           end:   (.timestamp | fromdateiso8601 + 900 | todateiso8601 ),
-          value: (.pv_power | round )
+          value: (.pv_power / 4 | round )
         }
       ] | tostring
   interval: {{ .interval }}

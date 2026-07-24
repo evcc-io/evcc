@@ -35,25 +35,6 @@ func (t *solarTestSuite) SetupSuite() {
 	t.rr = api.Rates{t.rate(0, 0), t.rate(1, 1), t.rate(2, 2), t.rate(3, 3), t.rate(4, 4)}
 }
 
-func (t *solarTestSuite) TestIndex() {
-	for i, tc := range []struct {
-		ts  float64
-		idx int
-		ok  bool
-	}{
-		{-1, 0, false},
-		{0, 0, true},
-		{0.5, 1, false},
-		{1, 1, true},
-		{99, len(t.rr), false},
-	} {
-		ts := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.ts))
-		res, ok := search(t.rr, ts)
-		t.Equal(tc.idx, res, "%d. idx %+v", i+1, tc)
-		t.Equal(tc.ok, ok, "%d. ok %+v", i+1, tc)
-	}
-}
-
 func (t *solarTestSuite) TestEnergy() {
 	for i, tc := range []struct {
 		from, to float64
@@ -62,17 +43,15 @@ func (t *solarTestSuite) TestEnergy() {
 		{-1, 0, 0},
 		{-2, -1, 0},   // whole interval before first entry
 		{-1, -0.5, 0}, // whole interval before first entry
-		{-1, 1, 0.5},
-		{-1, 90, 8},
+		{-1, 1, 0},
+		{-1, 90, 10}, // all slots
 		{0, 0, 0},
-		{0, 0.5, 0.125},
-		{0, 1, 0.5},
-		{0, 1.5, 1.125},
-		{0, 2, 2},
-		{1, 2, 1.5},
-		{0.25, 0.75, 0.25},
-		{0.5, 1, 0.375},
-		{0.5, 3.5, 6},
+		{0, 2, 1},
+		{1, 2, 1},
+		{1.5, 2, 0.5},     // half of second slot
+		{1.25, 1.75, 0.5}, // middle of second slot
+		{1.5, 2.5, 1.5},   // half of second and third slot
+		{0.5, 3.5, 4.5},
 		{80, 90, 0},
 	} {
 		from := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.from))
@@ -88,22 +67,34 @@ func (t *solarTestSuite) TestShort() {
 	rr := api.Rates{t.rate(0, 0), t.rate(1, 1)}
 
 	for i, tc := range []struct {
-		from, to, energy, value float64
+		from, to, energy float64
 	}{
-		{-1, 0, 0, 0},
-		// {-1, 0.5, 0.125, 0.5},
-		// {-1, 2, 0.5, 0},
-		{0, 0, 0, 0},
-		{0, 0.5, 0.125, 0.5},
-		{0, 1, 0.5, 1},
-		{0, 1.5, 0.5, 0},
-		{1.5, 2, 0, 0},
+		{-1, 0, 0},
+		{0, 0, 0},
+		{0, 1, 0},
+		{0, 1.5, 0.5},
+		{1.5, 2, 0.5},
+		{2, 3, 0},
 	} {
 		from := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.from))
 		to := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.to))
 
 		t.Equal(tc.energy, solarEnergy(rr, from, to), "%d. energy %+v", i+1, tc)
 	}
+}
+
+func (t *solarTestSuite) TestTimeseries() {
+	// energy per slot is converted back to average power
+	rr := api.Rates{t.rate(0, 500), {
+		Start: t.clock.Now().Add(time.Hour),
+		End:   t.clock.Now().Add(time.Hour + 15*time.Minute),
+		Value: 500,
+	}}
+
+	ts := solarTimeseries(rr)
+	t.Require().Len(ts, 2)
+	t.Equal(500.0, ts[0].Value)
+	t.Equal(2000.0, ts[1].Value)
 }
 
 func TestSolarEnergyNoRates(t *testing.T) {
