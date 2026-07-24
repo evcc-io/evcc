@@ -1,6 +1,13 @@
 .cache
+.claude
+.omc
+.playwright-mcp
 .storybook
+.venv
 .vscode
+.wolf
+playwright-report
+*.db
 *.conf
 *.Dockerfile
 *.gz
