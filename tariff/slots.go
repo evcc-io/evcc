@@ -12,10 +12,8 @@ type SlotWrapper struct {
 	api.Tariff
 }
 
-// Rates converts arbitrary slot lengths (e.g. 1h, 30m) to 15m slots.
-// Slot length must be multiple of SlotDuration.
-// For price tariffs, the value is constant over all sub-slots.
-// For solar/co2, linear interpolation is used between slot boundaries.
+// Rates converts arbitrary slot lengths (multiples of SlotDuration) to 15m slots.
+// Price sub-slots are constant, solar sub-slots interpolated around the slot center.
 func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
@@ -37,28 +35,68 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 
 		numSlots := max(int(r.End.Sub(r.Start)/SlotDuration), 1)
 
+		vals := make([]float64, numSlots)
+		for j := range vals {
+			vals[j] = r.Value
+		}
+
+		if t.Type() == api.TariffTypeSolar {
+			shapeSolar(rates, i, vals)
+		}
+
 		for j := range numSlots {
 			start := r.Start.Add(time.Duration(j) * SlotDuration)
-			end := start.Add(SlotDuration)
-			val := r.Value
-
-			switch t.Type() {
-			case api.TariffTypeSolar: //, api.TariffTypeCo2
-				if i+1 < len(rates) {
-					start0 := r.Start
-					start1 := rates[i+1].Start
-					frac := float64(start.Sub(start0)) / float64(start1.Sub(start0))
-					val = r.Value + frac*(rates[i+1].Value-r.Value)
-				}
-			}
 
 			res = append(res, api.Rate{
 				Start: start,
-				End:   end,
-				Value: val,
+				End:   start.Add(SlotDuration),
+				Value: vals[j],
 			})
 		}
 	}
 
 	return res, nil
+}
+
+// shapeSolar interpolates solar sub-slots against the neighbouring slots. The slot
+// value applies to the entire period, so sub-slots are centered and rescaled to it.
+func shapeSolar(rates api.Rates, i int, vals []float64) {
+	if len(vals) < 2 {
+		return
+	}
+
+	cur := rates[i].Value
+	prev, next := cur, cur
+	if i > 0 {
+		prev = rates[i-1].Value
+	}
+	if i+1 < len(rates) {
+		next = rates[i+1].Value
+	}
+
+	var sum float64
+	for j := range vals {
+		// sub-slot midpoint relative to the slot midpoint, [-0.5,0.5)
+		f := (float64(j)+0.5)/float64(len(vals)) - 0.5
+
+		v := cur + 2*f*(next-cur)
+		if f < 0 {
+			v = cur + 2*f*(cur-prev)
+		}
+
+		vals[j] = max(v, 0)
+		sum += vals[j]
+	}
+
+	if sum <= 0 {
+		for j := range vals {
+			vals[j] = cur
+		}
+		return
+	}
+
+	// preserve the slot average
+	for j := range vals {
+		vals[j] *= cur * float64(len(vals)) / sum
+	}
 }
