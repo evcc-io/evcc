@@ -88,7 +88,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, err
 	}
 
-	statusMap := homeassistant.NormalizeStatusMap(log, cc.Sensors.StatusMap)
+	statusMap := homeassistant.NormalizeStatusMap(cc.Sensors.StatusMap)
 
 	res := &HomeAssistant{
 		embed:     &cc.embed,

@@ -219,8 +219,8 @@ func NormalizeChargeStatus(status string) (api.ChargeStatus, error) {
 	}
 }
 
-// NormalizeStatusMap validates and normalizes a statusMap, removing invalid entries and logging warnings.
-func NormalizeStatusMap(log *util.Logger, statusMap map[string]string) map[string]string {
+// NormalizeStatusMap validates and normalizes a statusMap for runtime lookup.
+func NormalizeStatusMap(statusMap map[string]string) map[string]string {
 	if len(statusMap) == 0 {
 		return nil
 	}
@@ -228,21 +228,15 @@ func NormalizeStatusMap(log *util.Logger, statusMap map[string]string) map[strin
 	normalized := make(map[string]string, len(statusMap))
 	for key, value := range statusMap {
 		trimmedKey := strings.TrimSpace(key)
+		trimmedValue := strings.TrimSpace(value)
 		if trimmedKey == "" {
-			if log != nil {
-				log.WARN.Printf("ignoring empty status map key")
-			}
+			continue
+		}
+		if _, err := NormalizeChargeStatus(trimmedValue); err != nil {
 			continue
 		}
 
-		if _, err := NormalizeChargeStatus(value); err != nil {
-			if log != nil {
-				log.WARN.Printf("invalid status mapping for %q: %q, falling back to global mapping", trimmedKey, value)
-			}
-			continue
-		}
-
-		normalized[strings.ToLower(trimmedKey)] = strings.ToUpper(strings.TrimSpace(value))
+		normalized[strings.ToLower(trimmedKey)] = strings.ToUpper(trimmedValue)
 	}
 
 	if len(normalized) == 0 {
@@ -260,7 +254,7 @@ func (c *Connection) GetChargeStatus(entity string, statusMap map[string]string)
 	}
 
 	normalizedState := strings.ToLower(strings.TrimSpace(state.State))
-	statusMap = NormalizeStatusMap(c.log, statusMap)
+	statusMap = NormalizeStatusMap(statusMap)
 	if statusMap != nil {
 		for key, value := range statusMap {
 			if strings.EqualFold(strings.TrimSpace(key), normalizedState) {
