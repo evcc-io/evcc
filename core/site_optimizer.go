@@ -271,9 +271,11 @@ func (site *Site) publishSuggestions() {
 	}
 }
 
-// clearSuggestions removes all suggestions when the optimizer result is stale
+// clearSuggestions removes all suggestions and the battery forecast when the
+// optimizer result is stale
 func (site *Site) clearSuggestions() {
 	site.setSuggestions(nil, nil)
+	site.battery.Forecast = nil
 
 	site.publishBattery()
 	site.publishSuggestions()
