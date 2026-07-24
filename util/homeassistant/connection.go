@@ -170,30 +170,30 @@ func (c *Connection) GetTimeState(entity string) (time.Time, error) {
 // chargeStatusMap maps Home Assistant states to EVCC charge status
 var chargeStatusMap = map[string]api.ChargeStatus{
 	// Status C - Charging
-	"c":                  api.StatusC,
-	"charging":           api.StatusC,
-	"on":                 api.StatusC,
-	"true":               api.StatusC,
-	"active":             api.StatusC,
-	"1":                  api.StatusC,
-	"instant_charging":   api.StatusC, // Porsche Connect
+	"c":        		api.StatusC,
+	"charging": 		api.StatusC,
+	"on":       		api.StatusC,
+	"true":     		api.StatusC,
+	"active":   		api.StatusC,
+	"1":        		api.StatusC,
+	"instant_charging":	api.StatusC, // Porsche Connect
 
 	// Status B - Connected/Ready
-	"b":                  api.StatusB,
-	"connected":          api.StatusB,
-	"ready":              api.StatusB,
-	"plugged":            api.StatusB,
-	"charging_completed": api.StatusB,
-	"initialising":       api.StatusB,
-	"preparing":          api.StatusB,
-	"2":                  api.StatusB,
-	"no_power":           api.StatusB,
-	"complete":           api.StatusB,
-	"stopped":            api.StatusB,
-	"starting":           api.StatusB,
-	"paused":             api.StatusB,
-	"charging_stopped":   api.StatusB, // Porsche Connect
-	"charging_error":     api.StatusB, // Porsche Connect
+	"b":                  	api.StatusB,
+	"connected":          	api.StatusB,
+	"ready":              	api.StatusB,
+	"plugged":            	api.StatusB,
+	"charging_completed": 	api.StatusB,
+	"initialising":       	api.StatusB,
+	"preparing":          	api.StatusB,
+	"2":                  	api.StatusB,
+	"no_power":           	api.StatusB,
+	"complete":           	api.StatusB,
+	"stopped":            	api.StatusB,
+	"starting":           	api.StatusB,
+	"paused":             	api.StatusB,
+	"charging_stopped":		api.StatusB, // Porsche Connect
+	"charging_error":		api.StatusB, // Porsche Connect
 
 	// Status A - Disconnected
 	"a":                   api.StatusA,
