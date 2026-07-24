@@ -422,7 +422,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	gt, err := site.homeProfile(minLen)
 	if err != nil {
-		return err
+		// home profile is required for optimization; if not available, skip the optimizer run
+		// Error will be logged by the caller, but we wrap it to provide context for the failure.
+		return fmt.Errorf("aborting while getting the home profile due to %w", err)
 	}
 
 	// blend measured energy of the last metrics slot into the first slots
@@ -521,6 +523,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		b := battery[i]
 
 		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
+			site.log.DEBUG.Printf("optimizer: skipping battery %s with missing capacity or soc: %+v", b.Name, b)
 			continue
 		}
 
@@ -531,8 +534,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		// meters configured but measurements not in yet: retry instead of
 		// consuming the slot gate
 		if len(site.batteryMeters) > 0 {
+			site.log.DEBUG.Printf("optimizer: missing battery readings: %v", site.batteryMeters)
 			return errOptimizerNotReady
 		}
+		site.log.DEBUG.Printf("optimizer: no battery data skipping")
 		return nil // nothing to optimize
 	}
 
@@ -553,6 +558,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if err != nil {
 		return err
 	}
+	site.log.TRACE.Printf("optimizer: result: %+v", resp)
 
 	if resp.StatusCode() != http.StatusOK {
 		return apiError(resp)
