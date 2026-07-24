@@ -3,7 +3,7 @@ products:
   - brand: FoxESS
     description:
       generic: AC EV Charger (Modbus)
-capabilities: ["mA", "rfid", "meter", "1p3p"]
+capabilities: ["rfid", "meter", "1p3p"]
 requirements:
   evcc: ["sponsorship"]
 params:
