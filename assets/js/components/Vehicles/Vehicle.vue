@@ -99,9 +99,9 @@ import {
 	type VehicleStatus,
 	type Vehicle,
 	type LoadpointUi,
-	type PlanStrategy,
 	type LoadpointSuggestion,
 } from "@/types/evcc";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
 import type ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
 

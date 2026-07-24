@@ -9,7 +9,6 @@ import (
 
 func TestOpenAPIValidation(t *testing.T) {
 	loader := openapi3.NewLoader()
-	loader.IsExternalRefsAllowed = true
 	doc, err := loader.LoadFromFile("openapi.yaml")
 	require.NoError(t, err)
 	require.NoError(t, doc.Validate(loader.Context))

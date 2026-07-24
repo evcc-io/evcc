@@ -1,7 +1,7 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
 import escapeHtml from "@/utils/escapeHtml";
-import type { ForecastSlot } from "@/types/evcc";
+import type { ForecastSlot } from "./types";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,

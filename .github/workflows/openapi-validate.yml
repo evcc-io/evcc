@@ -8,7 +8,6 @@ on:
   pull_request:
     paths:
       - "server/openapi.yaml"
-      - "server/openapi.state.yaml"
       - ".github/workflows/openapi-validate.yml"
 
 jobs:
@@ -23,4 +22,4 @@ jobs:
         with:
           go-version: stable
       - name: Validate OpenAPI spec
-        run: go run github.com/getkin/kin-openapi/cmd/validate@v0.133.0 -ext -- server/openapi.yaml
+        run: go run github.com/getkin/kin-openapi/cmd/validate@v0.133.0 -- server/openapi.yaml

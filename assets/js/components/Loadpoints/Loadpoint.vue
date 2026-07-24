@@ -129,9 +129,9 @@ import type {
 	SMART_COST_TYPE,
 	BATTERY_MODE,
 	LoadpointUi,
-	PlanStrategy,
 	LoadpointSuggestion,
 } from "@/types/evcc";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
 	name: "Loadpoint",

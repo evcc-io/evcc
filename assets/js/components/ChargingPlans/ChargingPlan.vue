@@ -38,7 +38,9 @@ import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent, type PropType } from "vue";
-import type { CURRENCY, Forecast, PlanStrategy, Vehicle } from "@/types/evcc";
+import type { CURRENCY, Vehicle } from "@/types/evcc";
+import type { PlanStrategy } from "./types";
+import type { Forecast } from "@/types/evcc.ts";
 
 export default defineComponent({
 	name: "ChargingPlan",

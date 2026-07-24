@@ -22,7 +22,7 @@ import {
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { ForecastSlot } from "@/types/evcc";
+import type { ForecastSlot } from "./types";
 
 export type ValueChartType = "co2" | "temperature";
 

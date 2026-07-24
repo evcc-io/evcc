@@ -64,7 +64,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import formatter from "@/mixins/formatter";
-import type { PlanStrategy } from "@/types/evcc";
+import type { PlanStrategy } from "./types";
 
 export default defineComponent({
 	name: "ChargingPlanStrategy",

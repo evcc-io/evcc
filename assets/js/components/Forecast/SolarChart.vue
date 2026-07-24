@@ -19,7 +19,7 @@ import colors, { lighterColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
 import { highestSlotIndexByDay } from "@/utils/forecast";
-import type { SolarDetails, TimeseriesEntry } from "@/types/evcc";
+import type { SolarDetails, TimeseriesEntry } from "./types";
 
 export default defineComponent({
 	name: "SolarChart",

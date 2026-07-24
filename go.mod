@@ -257,6 +257,7 @@ require (
 tool (
 	github.com/dmarkham/enumer
 	github.com/evcc-io/evcc/cmd/implement
+	github.com/evcc-io/evcc/cmd/openapi
 	github.com/evcc-io/openapi-mcp/cmd/openapi-mcp
 	github.com/gokrazy/tools/cmd/gok
 	go.uber.org/mock/mockgen
