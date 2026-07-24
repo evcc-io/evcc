@@ -311,6 +311,23 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 	}
 }
 
+var _ api.StatusReasoner = (*FoxESSEVC)(nil)
+
+// StatusReason implements the api.StatusReasoner interface.
+// After the charger has finished the session (status 5) it rejects any restart
+// command until the car has been unplugged, so surface that to the user instead
+// of silently ignoring all control commands.
+func (wb *FoxESSEVC) StatusReason() (api.Reason, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	if wb.finished {
+		return api.ReasonDisconnectRequired, nil
+	}
+
+	return api.ReasonUnknown, nil
+}
+
 // Enabled implements the api.Charger interface.
 // The spec recommends reading the EVC status register to verify start/stop.
 // Statuses 2 (start), 3 (charging), 9 (auto phase switch) indicate the
