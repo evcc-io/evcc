@@ -654,15 +654,23 @@ func (wb *E3dc) GetMaxCurrent() (float64, error) {
 }
 
 // getSessionData retrieves the session data container from WB_REQ_SESSION.
-// Returns all session-related messages (energy, time, RFID, etc.).
-// If no vehicle is connected, returns only WB_INDEX with no session data.
+// Returns all session-related messages (energy, time, RFID, etc.) of this wallbox.
+// If no vehicle is connected, the container is empty.
 func (wb *E3dc) getSessionData() ([]rscp.Message, error) {
-	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil))
+	res, err := wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_SESSION, nil),
+	}))
 	if err != nil {
 		return nil, err
 	}
 
-	return rscpContainer(*res, 1)
+	wbData, err := rscpContainer(*res, 2)
+	if err != nil {
+		return nil, err
+	}
+
+	return rscpContainer(wbData[1], 0)
 }
 
 // sessionMessage finds a specific tag in the WB_SESSION response data.
