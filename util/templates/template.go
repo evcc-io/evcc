@@ -378,6 +378,16 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				res[out] = list
 			}
 
+		case map[string]string:
+			if res[out] == nil || len(typed) == 0 {
+				res[out] = typed
+			}
+
+		case map[string]any:
+			if res[out] == nil || len(typed) == 0 {
+				res[out] = typed
+			}
+
 		default:
 			if res[out] == nil || res[out].(string) == "" {
 				// prevent rendering nil interfaces as "<nil>" string

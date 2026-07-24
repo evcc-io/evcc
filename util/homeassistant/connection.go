@@ -21,6 +21,7 @@ import (
 type Connection struct {
 	*request.Helper
 	instance *proxyInstance
+	log      *util.Logger
 }
 
 // NewConnection creates a new Home Assistant connection
@@ -41,6 +42,8 @@ func NewConnection(log *util.Logger, uri, home string, insecure bool) (*Connecti
 			insecure: insecure,
 		},
 	}
+
+	c.log = log
 
 	// override the transport to accept self-signed certificates
 	if insecure {
@@ -204,14 +207,69 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"0":                   api.StatusA,
 }
 
+// NormalizeChargeStatus validates a charge status literal and returns its normalized form.
+func NormalizeChargeStatus(status string) (api.ChargeStatus, error) {
+	s := strings.ToUpper(strings.TrimSpace(status))
+
+	switch s {
+	case "A", "B", "C":
+		return api.ChargeStatus(s), nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid charge status mapping %q: must be one of A, B, C", status)
+	}
+}
+
+// NormalizeStatusMap validates and normalizes a statusMap, removing invalid entries and logging warnings.
+func NormalizeStatusMap(log *util.Logger, statusMap map[string]string) map[string]string {
+	if len(statusMap) == 0 {
+		return nil
+	}
+
+	normalized := make(map[string]string, len(statusMap))
+	for key, value := range statusMap {
+		trimmedKey := strings.TrimSpace(key)
+		if trimmedKey == "" {
+			if log != nil {
+				log.WARN.Printf("ignoring empty status map key")
+			}
+			continue
+		}
+
+		if _, err := NormalizeChargeStatus(value); err != nil {
+			if log != nil {
+				log.WARN.Printf("invalid status mapping for %q: %q, falling back to global mapping", trimmedKey, value)
+			}
+			continue
+		}
+
+		normalized[strings.ToLower(trimmedKey)] = strings.ToUpper(strings.TrimSpace(value))
+	}
+
+	if len(normalized) == 0 {
+		return nil
+	}
+
+	return normalized
+}
+
 // GetChargeStatus maps Home Assistant states to api.ChargeStatus
-func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
+func (c *Connection) GetChargeStatus(entity string, statusMap map[string]string) (api.ChargeStatus, error) {
 	state, err := c.GetState(entity)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state.State))]; ok {
+	normalizedState := strings.ToLower(strings.TrimSpace(state.State))
+	statusMap = NormalizeStatusMap(c.log, statusMap)
+	if statusMap != nil {
+		for key, value := range statusMap {
+			if strings.EqualFold(strings.TrimSpace(key), normalizedState) {
+				return api.ChargeStatus(value), nil
+			}
+		}
+	}
+
+	if status, ok := chargeStatusMap[normalizedState]; ok {
 		return status, nil
 	}
 

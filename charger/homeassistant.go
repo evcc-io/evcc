@@ -116,7 +116,7 @@ var _ api.Charger = (*HomeAssistant)(nil)
 
 // Status implements the api.ChargeState interface
 func (c *HomeAssistant) Status() (api.ChargeStatus, error) {
-	return c.conn.GetChargeStatus(c.status)
+	return c.conn.GetChargeStatus(c.status, nil)
 }
 
 // Enabled implements the api.Charger interface

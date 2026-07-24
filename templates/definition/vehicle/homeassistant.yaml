@@ -54,6 +54,19 @@ params:
     help:
       en: Entity ID for charging status (A=disconnected, B=connected, C=charging)
       de: Entitäts-ID für Ladestatus (A=getrennt, B=verbunden, C=laden)
+  - name: statusMap
+    description:
+      de: Benutzerdefinierte Statuszuordnung
+      en: Custom mapping of charging status strings to EVCC states
+    type: string
+    default: "{}"
+    example: |
+      charging_stopped: B
+      charging_error: B
+      instant_charging: C
+    help:
+      en: Optional mapping of Home Assistant status strings to EVCC charge statuses A, B, or C. Values must be A, B, or C.
+      de: Optionale Zuordnung von Home Assistant-Statuswerten zu EVCC-Ladezuständen A, B oder C. Werte müssen A, B oder C sein.
   - name: limitSoc
     description:
       de: Ziel-Ladezustand [%]
@@ -140,6 +153,10 @@ render: |
     soc: {{ .soc }}
     range: {{ .range }}
     status: {{ .status }}
+{{- if .statusMap }}
+    statusMap:
+{{ toYaml .statusMap | nindent 6 }}
+{{- end }}
     limitSoc: {{ .limitSoc }}
     odometer: {{ .odometer }}
     climater: {{ .climater }}

@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -14,8 +15,9 @@ import (
 type HomeAssistant struct {
 	*embed
 	implement.Caps
-	conn *homeassistant.Connection
-	soc  string
+	conn      *homeassistant.Connection
+	soc       string
+	statusMap map[string]string
 }
 
 // Register on startup
@@ -24,14 +26,34 @@ func init() {
 }
 
 // Constructor from YAML config
+func validateStatusMap(statusMap map[string]string) (map[string]string, error) {
+	if len(statusMap) == 0 {
+		return nil, nil
+	}
+
+	for key, value := range statusMap {
+		trimmedKey := strings.TrimSpace(key)
+		trimmedValue := strings.TrimSpace(value)
+		if trimmedKey == "" {
+			return nil, fmt.Errorf("contains an empty key")
+		}
+		if _, err := homeassistant.NormalizeChargeStatus(trimmedValue); err != nil {
+			return nil, fmt.Errorf("%q has invalid value %q: must be one of A, B, C", trimmedKey, trimmedValue)
+		}
+	}
+
+	return statusMap, nil
+}
+
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed                `mapstructure:",squash"`
 		homeassistant.Config `mapstructure:",squash"`
-		Sensors              struct {
+		Sensors struct {
 			Soc        string // required
 			Range      string // optional
 			Status     string // optional
+			StatusMap  map[string]string `mapstructure:"statusMap"` // optional
 			LimitSoc   string // optional
 			Odometer   string // optional
 			Climater   string // optional
@@ -49,6 +71,12 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, err
 	}
 
+	if cc.Sensors.StatusMap != nil {
+		if _, err := validateStatusMap(cc.Sensors.StatusMap); err != nil {
+			return nil, fmt.Errorf("sensors.statusMap: %w", err)
+		}
+	}
+
 	if cc.Sensors.Soc == "" {
 		return nil, errors.New("missing soc sensor")
 	}
@@ -60,11 +88,14 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		return nil, err
 	}
 
+	statusMap := homeassistant.NormalizeStatusMap(log, cc.Sensors.StatusMap)
+
 	res := &HomeAssistant{
-		embed: &cc.embed,
-		Caps:  implement.New(),
-		conn:  conn,
-		soc:   cc.Sensors.Soc,
+		embed:     &cc.embed,
+		Caps:      implement.New(),
+		conn:      conn,
+		soc:       cc.Sensors.Soc,
+		statusMap: statusMap,
 	}
 
 	if cc.Sensors.LimitSoc != "" {
@@ -74,7 +105,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		}))
 	}
 	if cc.Sensors.Status != "" {
-		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }))
+		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status, res.statusMap) }))
 	}
 	if cc.Sensors.Range != "" {
 		implement.Has(res, implement.VehicleRange(func() (int64, error) {

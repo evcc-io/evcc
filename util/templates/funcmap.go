@@ -44,6 +44,19 @@ func quote(value string) string {
 	return fmt.Sprintf("'%s'", quoted)
 }
 
+func toYaml(value any) string {
+	if value == nil {
+		return ""
+	}
+
+	b, err := yaml.Marshal(value)
+	if err != nil {
+		return fmt.Sprintf("%v", value)
+	}
+
+	return strings.TrimSpace(string(b))
+}
+
 func trimLines(s string) string {
 	lines := strings.Split(s, "\n")
 	for i, line := range lines {
@@ -81,6 +94,7 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		"urlEncode":       url.QueryEscape,
 		"unquote":         unquote,
 		"quote":           yamlQuote,
+		"toYaml":          toYaml,
 		"asDuration":      asDuration,
 		"durationSeconds": durationSeconds,
 	}
