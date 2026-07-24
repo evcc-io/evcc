@@ -96,7 +96,8 @@ func shapeSolar(rates api.Rates, i int, vals []float64) {
 	}
 
 	// preserve the slot average
+	scale := cur * float64(len(vals)) / sum
 	for j := range vals {
-		vals[j] *= cur * float64(len(vals)) / sum
+		vals[j] *= scale
 	}
 }
