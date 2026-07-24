@@ -680,7 +680,8 @@ type batteryForecastSlot struct {
 // The Limit flag indicates whether the SOC reached the configured SMax (for
 // the highest point) or SMin (for the lowest point) boundary - in which case
 // the battery is forecasted to become fully charged or empty.
-// Returns nil for either point when no home battery is present.
+// Returns nil for either point when no home battery is present or when the
+// battery already is at the respective limit.
 func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (*batteryForecastSlot, *batteryForecastSlot) {
 	homeIndices := lo.FilterMap(req, func(b optimizer.BatteryConfig, i int) (int, bool) {
 		return i, b.SCapacity > 0
@@ -708,6 +709,14 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 		if low == nil || (!low.limit && (soc < low.soc || emptyReached)) {
 			low = &batteryForecastSlot{slot: i, soc: soc, limit: emptyReached}
 		}
+	}
+
+	// battery is already at the limit - announcing it will become full/empty is pointless
+	if high != nil && high.limit && high.slot == 0 {
+		high = nil
+	}
+	if low != nil && low.limit && low.slot == 0 {
+		low = nil
 	}
 
 	return high, low

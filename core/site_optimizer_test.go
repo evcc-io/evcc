@@ -132,9 +132,23 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		{
 			"first slot at SMax wins for highest",
 			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[][]float32{{500, 1000, 1000}},
+			&batteryForecastSlot{slot: 1, soc: 100, limit: true},
+			&batteryForecastSlot{slot: 0, soc: 50, limit: false},
+		},
+		{
+			"already full — no highest",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
 			[][]float32{{1000, 1000, 500}},
-			&batteryForecastSlot{slot: 0, soc: 100, limit: true},
+			nil,
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
+		},
+		{
+			"already empty — no lowest",
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SMin: 100}},
+			[][]float32{{100, 100, 500}},
+			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
+			nil,
 		},
 		{
 			"near SMax is not full",
