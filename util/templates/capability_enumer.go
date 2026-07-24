@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _CapabilityName = "iso151182mArfid1p3pbattery-controlmeterdimcurtail"
+const _CapabilityName = "iso15118-2iso15118-20din70121mArfid1p3pbattery-controlmeterdimcurtail"
 
-var _CapabilityIndex = [...]uint8{0, 9, 11, 15, 19, 34, 39, 42, 49}
+var _CapabilityIndex = [...]uint8{0, 10, 21, 29, 31, 35, 39, 54, 59, 62, 69}
 
-const _CapabilityLowerName = "iso151182marfid1p3pbattery-controlmeterdimcurtail"
+const _CapabilityLowerName = "iso15118-2iso15118-20din70121marfid1p3pbattery-controlmeterdimcurtail"
 
 func (i Capability) String() string {
 	i -= 1
@@ -26,45 +26,53 @@ func (i Capability) String() string {
 func _CapabilityNoOp() {
 	var x [1]struct{}
 	_ = x[CapabilityISO151182-(1)]
-	_ = x[CapabilityMilliAmps-(2)]
-	_ = x[CapabilityRFID-(3)]
-	_ = x[Capability1p3p-(4)]
-	_ = x[CapabilityBatteryControl-(5)]
-	_ = x[CapabilityMeter-(6)]
-	_ = x[CapabilityDim-(7)]
-	_ = x[CapabilityCurtail-(8)]
+	_ = x[CapabilityISO1511820-(2)]
+	_ = x[CapabilityDIN70121-(3)]
+	_ = x[CapabilityMilliAmps-(4)]
+	_ = x[CapabilityRFID-(5)]
+	_ = x[Capability1p3p-(6)]
+	_ = x[CapabilityBatteryControl-(7)]
+	_ = x[CapabilityMeter-(8)]
+	_ = x[CapabilityDim-(9)]
+	_ = x[CapabilityCurtail-(10)]
 }
 
-var _CapabilityValues = []Capability{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter, CapabilityDim, CapabilityCurtail}
+var _CapabilityValues = []Capability{CapabilityISO151182, CapabilityISO1511820, CapabilityDIN70121, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl, CapabilityMeter, CapabilityDim, CapabilityCurtail}
 
 var _CapabilityNameToValueMap = map[string]Capability{
-	_CapabilityName[0:9]:        CapabilityISO151182,
-	_CapabilityLowerName[0:9]:   CapabilityISO151182,
-	_CapabilityName[9:11]:       CapabilityMilliAmps,
-	_CapabilityLowerName[9:11]:  CapabilityMilliAmps,
-	_CapabilityName[11:15]:      CapabilityRFID,
-	_CapabilityLowerName[11:15]: CapabilityRFID,
-	_CapabilityName[15:19]:      Capability1p3p,
-	_CapabilityLowerName[15:19]: Capability1p3p,
-	_CapabilityName[19:34]:      CapabilityBatteryControl,
-	_CapabilityLowerName[19:34]: CapabilityBatteryControl,
-	_CapabilityName[34:39]:      CapabilityMeter,
-	_CapabilityLowerName[34:39]: CapabilityMeter,
-	_CapabilityName[39:42]:      CapabilityDim,
-	_CapabilityLowerName[39:42]: CapabilityDim,
-	_CapabilityName[42:49]:      CapabilityCurtail,
-	_CapabilityLowerName[42:49]: CapabilityCurtail,
+	_CapabilityName[0:10]:       CapabilityISO151182,
+	_CapabilityLowerName[0:10]:  CapabilityISO151182,
+	_CapabilityName[10:21]:      CapabilityISO1511820,
+	_CapabilityLowerName[10:21]: CapabilityISO1511820,
+	_CapabilityName[21:29]:      CapabilityDIN70121,
+	_CapabilityLowerName[21:29]: CapabilityDIN70121,
+	_CapabilityName[29:31]:      CapabilityMilliAmps,
+	_CapabilityLowerName[29:31]: CapabilityMilliAmps,
+	_CapabilityName[31:35]:      CapabilityRFID,
+	_CapabilityLowerName[31:35]: CapabilityRFID,
+	_CapabilityName[35:39]:      Capability1p3p,
+	_CapabilityLowerName[35:39]: Capability1p3p,
+	_CapabilityName[39:54]:      CapabilityBatteryControl,
+	_CapabilityLowerName[39:54]: CapabilityBatteryControl,
+	_CapabilityName[54:59]:      CapabilityMeter,
+	_CapabilityLowerName[54:59]: CapabilityMeter,
+	_CapabilityName[59:62]:      CapabilityDim,
+	_CapabilityLowerName[59:62]: CapabilityDim,
+	_CapabilityName[62:69]:      CapabilityCurtail,
+	_CapabilityLowerName[62:69]: CapabilityCurtail,
 }
 
 var _CapabilityNames = []string{
-	_CapabilityName[0:9],
-	_CapabilityName[9:11],
-	_CapabilityName[11:15],
-	_CapabilityName[15:19],
-	_CapabilityName[19:34],
-	_CapabilityName[34:39],
-	_CapabilityName[39:42],
-	_CapabilityName[42:49],
+	_CapabilityName[0:10],
+	_CapabilityName[10:21],
+	_CapabilityName[21:29],
+	_CapabilityName[29:31],
+	_CapabilityName[31:35],
+	_CapabilityName[35:39],
+	_CapabilityName[39:54],
+	_CapabilityName[54:59],
+	_CapabilityName[59:62],
+	_CapabilityName[62:69],
 }
 
 // CapabilityString retrieves an enum value from the enum constants string name.

@@ -149,7 +149,9 @@
       "enum": [
         "1p3p",
         "battery-control",
-        "iso151182",
+        "iso15118-2",
+        "iso15118-20",
+        "din70121",
         "rfid",
         "smahems",
         "mA"

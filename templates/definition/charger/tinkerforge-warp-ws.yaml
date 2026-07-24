@@ -2,10 +2,10 @@ template: tinkerforge-warp-ws
 products:
   - brand: TinkerForge
     description: { generic: WARP4 Smart }
-    capabilities: ["iso151182", "rfid", "1p3p"]
+    capabilities: ["iso15118-2", "rfid", "1p3p"]
   - brand: TinkerForge
     description: { generic: WARP4 Pro }
-    capabilities: ["iso151182", "rfid", "1p3p", "meter"]
+    capabilities: ["iso15118-2", "rfid", "1p3p", "meter"]
   - brand: TinkerForge
     description: { generic: WARP3 Smart }
     capabilities: ["rfid", "1p3p"]

@@ -54,7 +54,9 @@ Note: The official website of the manufacturer or service provider is the refere
 
 **Possible values**:
 
-- `iso151182`: The device supports communicating via ISO 15118-2.
+- `iso15118-2`: The device supports communicating via ISO 15118-2.
+- `iso15118-20`: The device supports communicating via ISO 15118-20.
+- `din70121`: The device supports communicating via DIN 70121.
 - `mA`: The device supports granular (milliamp) current control.
 - `rfid`: The device supports RFID.
 - `1p3p`: The device supports 1P/3P phase switching.
@@ -62,6 +64,7 @@ Note: The official website of the manufacturer or service provider is the refere
 - `meter`: The device has a built-in energy meter.
 - `dim`: The device supports EnWG §14a dimming.
 - `curtail`: The device supports EEG §9 curtailment.
+- `smahems`: The device can be used as an SMA HEMS device.
 
 `capabilities` can be set at two levels:
 
