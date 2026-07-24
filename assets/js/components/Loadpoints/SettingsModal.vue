@@ -213,6 +213,9 @@ const insertSorted = (arr: number[], num: number) => {
 // TODO: add max physical current to loadpoint (config ui) and only allow user to select values in side that range (main ui, here)
 const MAX_CURRENT = 64;
 
+// sentinel for "no solar share configured" (legacy enable/disable thresholds apply)
+const SOLAR_SHARE_OFF = -1;
+
 const { AUTO, THREE_PHASES, ONE_PHASE } = PHASES;
 
 export default defineComponent({
@@ -242,8 +245,7 @@ export default defineComponent({
 			selectedMinCurrent: undefined as number | undefined,
 			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
-			// percent, -1 = off (no solar share, legacy thresholds apply)
-			selectedSolarShare: -1 as number,
+			selectedSolarShare: SOLAR_SHARE_OFF as number,
 			isModalVisible: false,
 		};
 	},
@@ -329,13 +331,16 @@ export default defineComponent({
 			return this.loadpoint?.solarShare ?? null;
 		},
 		solarShareOptions() {
-			const percent = range(100, 0, -10).sort((a, b) => a - b);
+			const values = range(100, 0, -10).reverse();
+			// ensure a configured value outside the 10% steps stays selectable
+			const current = this.solarSharePercent();
+			if (current !== SOLAR_SHARE_OFF && !values.includes(current)) {
+				values.push(current);
+				values.sort((a, b) => a - b);
+			}
 			return [
-				{ value: -1, name: this.$t("main.loadpointSettings.solarShare.off") },
-				...insertSorted(percent, Math.round((this.solarShare ?? 0) * 100))
-					.filter((value) => value >= 0)
-					.sort((a, b) => a - b)
-					.map((value) => ({ value, name: this.fmtPercentage(value) })),
+				{ value: SOLAR_SHARE_OFF, name: this.$t("main.loadpointSettings.solarShare.off") },
+				...values.map((value) => ({ value, name: this.fmtPercentage(value) })),
 			];
 		},
 	},
@@ -368,7 +373,7 @@ export default defineComponent({
 			modalRef?.open();
 		},
 		solarSharePercent() {
-			return this.solarShare === null ? -1 : Math.round(this.solarShare * 100);
+			return this.solarShare === null ? SOLAR_SHARE_OFF : Math.round(this.solarShare * 100);
 		},
 		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
@@ -392,7 +397,7 @@ export default defineComponent({
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);
 		},
 		setSolarShare() {
-			if (this.selectedSolarShare < 0) {
+			if (this.selectedSolarShare === SOLAR_SHARE_OFF) {
 				api.delete(this.apiPath("solarshare"));
 			} else {
 				api.post(this.apiPath("solarshare") + "/" + this.selectedSolarShare / 100);
