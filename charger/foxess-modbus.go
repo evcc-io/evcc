@@ -283,7 +283,7 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 		wb.mu.Unlock()
 
 		return api.StatusA, nil
-	case 1, 4: // connect, pause
+	case 1, 2, 4: // connect, pause
 		return api.StatusB, nil
 	case 5: // finish
 		// the charger will reject a restart until the car disconnects; remember this
@@ -293,7 +293,7 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 		wb.mu.Unlock()
 
 		return api.StatusB, nil
-	case 2, 3, 9: // start, charging, auto phase switch in progress
+	case 3, 9: // start, charging, auto phase switch in progress
 		return api.StatusC, nil
 	default: // fault, locked, reserved
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
