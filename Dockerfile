@@ -1,6 +1,8 @@
 # STEP 1 build ui
 FROM --platform=$BUILDPLATFORM node:26-alpine AS node
 
+RUN apk update && apk add --no-cache make
+
 WORKDIR /build
 
 # install node tools
@@ -8,14 +10,18 @@ COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 # build ui
+COPY Makefile .
 COPY *.js ./
 COPY *.ts *.mts ./
+COPY tsconfig.json .
 COPY .browserslistrc .
 COPY assets assets
 COPY i18n i18n
+# openapi generator inputs, output folder is created below
+COPY scripts scripts
+COPY server/*.yaml server/
 
-# vite build only, `npm run build` would also regenerate openapi from the go sources
-RUN npx vite build
+RUN mkdir -p server/mcp && make ui
 
 
 # STEP 2 build executable binary
