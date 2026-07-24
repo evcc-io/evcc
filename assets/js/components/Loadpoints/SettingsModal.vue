@@ -70,6 +70,33 @@
 					</small>
 				</div>
 			</div>
+			<div class="mb-3 row">
+				<label :for="formId('solarshare')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+					{{ $t("main.loadpointSettings.solarShare.label") }}
+				</label>
+				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
+					<select
+						:id="formId('solarshare')"
+						v-model.number="selectedSolarShare"
+						class="form-select form-select-sm"
+						@change="setSolarShare"
+					>
+						<option
+							v-for="{ value, name } in solarShareOptions"
+							:key="value"
+							:value="value"
+						>
+							{{ name }}
+						</option>
+					</select>
+				</div>
+				<div class="col-sm-8 offset-sm-4 mt-1">
+					<small class="text-muted">
+						{{ $t("main.loadpointSettings.solarShare.description") }}
+					</small>
+				</div>
+			</div>
+
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
 			</h6>
@@ -215,6 +242,8 @@ export default defineComponent({
 			selectedMinCurrent: undefined as number | undefined,
 			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
+			// percent, -1 = off (no solar share, legacy thresholds apply)
+			selectedSolarShare: -1 as number,
 			isModalVisible: false,
 		};
 	},
@@ -296,6 +325,19 @@ export default defineComponent({
 		batteryBoostAvailable() {
 			return this.batteryConfigured;
 		},
+		solarShare() {
+			return this.loadpoint?.solarShare ?? null;
+		},
+		solarShareOptions() {
+			const percent = range(100, 0, -10).sort((a, b) => a - b);
+			return [
+				{ value: -1, name: this.$t("main.loadpointSettings.solarShare.off") },
+				...insertSorted(percent, Math.round((this.solarShare ?? 0) * 100))
+					.filter((value) => value >= 0)
+					.sort((a, b) => a - b)
+					.map((value) => ({ value, name: this.fmtPercentage(value) })),
+			];
+		},
 	},
 	watch: {
 		maxCurrent(value) {
@@ -310,6 +352,9 @@ export default defineComponent({
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
+		solarShare() {
+			this.selectedSolarShare = this.solarSharePercent();
+		},
 	},
 	methods: {
 		open(loadpointId: string) {
@@ -318,8 +363,12 @@ export default defineComponent({
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
 			this.selectedMinTemp = this.minTemp;
+			this.selectedSolarShare = this.solarSharePercent();
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
+		},
+		solarSharePercent() {
+			return this.solarShare === null ? -1 : Math.round(this.solarShare * 100);
 		},
 		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
@@ -341,6 +390,13 @@ export default defineComponent({
 		},
 		setPhasesConfigured() {
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);
+		},
+		setSolarShare() {
+			if (this.selectedSolarShare < 0) {
+				api.delete(this.apiPath("solarshare"));
+			} else {
+				api.post(this.apiPath("solarshare") + "/" + this.selectedSolarShare / 100);
+			}
 		},
 		setBatteryBoostLimit(limit: number) {
 			api.post(this.apiPath("batteryboostlimit") + "/" + limit);

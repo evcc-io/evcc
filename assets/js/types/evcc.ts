@@ -374,6 +374,7 @@ export interface Loadpoint {
   smartFeedInPriorityActive: boolean;
   smartFeedInPriorityLimit: number | null;
   smartFeedInPriorityNextStart: string | null;
+  solarShare: number | null;
   suggestion?: LoadpointSuggestion | null;
   title: string;
   todayEnergy?: number;

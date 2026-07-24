@@ -1419,6 +1419,11 @@
       },
       "smartCostCheap": "günstige Netzladung",
       "smartCostClean": "Grünes Netzladen",
+      "solarShare": {
+        "description": "Anteil der minimalen Ladeleistung, der aus Solarstrom stammen muss. 100% startet nur bei vollem Überschuss, niedrigere Werte erlauben Netzbezug. Ersetzt die Ein-/Ausschaltschwellen, solange gesetzt.",
+        "label": "Solaranteil",
+        "off": "aus"
+      },
       "title": "Einstellungen {0}",
       "vehicle": "Fahrzeug"
     },
