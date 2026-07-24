@@ -1427,6 +1427,11 @@
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
+      "solarShare": {
+        "description": "Share of the minimum charging power that must come from solar. 100% starts on full surplus only, lower values accept grid power. Replaces the enable/disable thresholds while set.",
+        "label": "Solar share",
+        "off": "off"
+      },
       "title": "Settings {0}",
       "vehicle": "Vehicle"
     },
