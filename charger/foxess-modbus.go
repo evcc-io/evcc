@@ -1,0 +1,564 @@
+package charger
+
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+import (
+	"context"
+	"encoding/binary"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
+)
+
+// FoxESS EV Charger, Modbus TCP Protocol 1.6
+// https://github.com/evcc-io/evcc/discussions/26218
+
+// FoxESSEVC charger implementation
+type FoxESSEVC struct {
+	implement.Caps
+	log           *util.Logger
+	conn          *modbus.Connection
+	mu            sync.Mutex
+	current       uint16 // last setpoint in register units (0.1A or 0.1kW depending on pbox)
+	currentPhases int    // phase count used to derive current from the power setpoint (non-pbox only)
+	enabled       bool   // tracks enabled state for the heartbeat
+	lastEnabled   bool   // last enabled state successfully sent to the charger
+	pbox          bool   // phase-cutting box present; uses current register instead of power
+	finished      bool   // charger reported status 5 (finish); cleared only once the car disconnects
+	lp            loadpoint.API
+}
+
+const (
+	// read-only registers (0x03)
+	foxRegStatus        = 0x1003 // EVC status
+	foxRegVoltages      = 0x1008 // A/B/C phase voltage, 3 registers, 0.1V
+	foxRegCurrents      = 0x100B // A/B/C phase current, 3 registers, 0.1A
+	foxRegPower         = 0x100E // active power, 0.1kW
+	foxRegPhaseSequence = 0x1010 // current phase sequence
+	// 0x1018 is documented as total energy but resets to zero as soon as charging stops,
+	// so the cumulative meter reading at 0x1016 is used instead
+	foxRegTotalEnergy = 0x1016 // total energy, uint32, 0.1kWh; never resets
+	foxRegRFID        = 0x101C // last RFID card, uint32
+
+	// read/write registers (write with 0x10)
+	foxRegWorkMode     = 0x3000 // work mode
+	foxRegMaxCurrent   = 0x3001 // max charging current, 0.1A
+	foxRegMaxPower     = 0x3002 // max charging power, 0.1kW
+	foxRegTimeValidity = 0x3005 // command validity window, seconds
+	foxRegAutoSwitch   = 0x300A // single/three-phase automatic switching (no PBOX)
+
+	// write-only registers (write with 0x06)
+	foxRegChargingControl = 0x4001 // start/stop charging
+	foxRegPhaseSwitching  = 0x4002 // phase sequence switching (requires PBOX)
+
+	foxWorkModeControlled = 0 // external command required
+	foxChargingStart      = 1
+	foxChargingStop       = 2
+	foxTimeValidity       = 60 // maximum command validity window in seconds
+
+	// foxHeartbeatInterval is the interval at which the heartbeat runs.
+	// Must be less than foxTimeValidity so the charger never considers evcc offline.
+	foxHeartbeatInterval = 25 * time.Second
+)
+
+func init() {
+	registry.AddCtx("foxess-modbus", NewFoxESSEVCFromConfig)
+}
+
+// NewFoxESSEVCFromConfig creates a FoxESS EV charger from generic config
+func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Pbox               bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 1,
+		},
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	return NewFoxESSEVC(ctx, cc.URI, cc.ID, cc.Pbox)
+}
+
+// NewFoxESSEVC creates a FoxESS EV charger
+func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (api.Charger, error) {
+	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
+	log := util.NewLogger("foxess-modbus")
+	conn.Logger(log.TRACE)
+
+	wb := &FoxESSEVC{
+		Caps: implement.New(),
+		log:  log,
+		conn: conn,
+		pbox: pbox,
+	}
+
+	// take control of the charger and keep the command window at its maximum
+	if err := wb.ensureReg(foxRegWorkMode, foxWorkModeControlled); err != nil {
+		return nil, fmt.Errorf("work mode: %w", err)
+	}
+	if err := wb.ensureReg(foxRegTimeValidity, foxTimeValidity); err != nil {
+		return nil, fmt.Errorf("time validity: %w", err)
+	}
+
+	// the charger goes to fallback current if no setpoint is received within the
+	// time validity window, so we must re-send the setpoint periodically
+	go wb.heartbeat(ctx)
+
+	if pbox {
+		// phase switching is commanded explicitly via the phase-cutting box
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+	} else {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3pAuto))
+
+		// without a phase-cutting box the charger switches phases autonomously
+		// based on the power setpoint (spec §2.38); the register defaults to
+		// enabled, so a failed write here is not fatal
+		if err := wb.ensureReg(foxRegAutoSwitch, 1); err != nil {
+			wb.log.WARN.Printf("auto switch: %v", err)
+		}
+	}
+
+	// seed current setpoint and enabled state from the charger so the heartbeat
+	// has accurate values from the first tick, before evcc issues any commands
+	seedReg := uint16(foxRegMaxPower)
+	if pbox {
+		seedReg = foxRegMaxCurrent
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(seedReg, 1); err == nil {
+		wb.current = binary.BigEndian.Uint16(b)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1); err == nil {
+		s := binary.BigEndian.Uint16(b)
+		wb.lastEnabled = s == 2 || s == 3 || s == 9
+	}
+
+	return wb, nil
+}
+
+// writeReg writes a single read/write register (0x10)
+func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, val)
+
+	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
+
+	return err
+}
+
+// ensureReg writes a value to a read/write register only if it differs from
+// the current value, avoiding spurious write errors on registers that reject
+// redundant writes (e.g. Modbus exception 3 when value is unchanged).
+func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+	if err != nil {
+		return err
+	}
+	if binary.BigEndian.Uint16(b) == val {
+		return nil
+	}
+	return wb.writeReg(reg, val)
+}
+
+// heartbeat keeps the charger from considering evcc offline by sending a
+// message every foxHeartbeatInterval. When enabled it re-sends the last
+// setpoint to keep the validity window alive. When disabled it sends a
+// keepalive read of the status register so the charger stays online under
+// EMS control and does not fall back to the Default Current setting and
+// auto-start charging.
+func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
+	for tick := time.Tick(foxHeartbeatInterval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		wb.mu.Lock()
+		cur := wb.current
+		pbox := wb.pbox
+		enabled := wb.enabled
+		lastEnabled := wb.lastEnabled
+		wb.mu.Unlock()
+
+		var err error
+		if !enabled && lastEnabled {
+			// transition: send stop once
+			_, err = wb.conn.WriteSingleRegister(foxRegChargingControl, foxChargingStop)
+			if err == nil {
+				wb.mu.Lock()
+				wb.lastEnabled = false
+				wb.mu.Unlock()
+			}
+		} else if !enabled {
+			// keepalive read: resets the Time Validity timer so the charger stays
+			// online and does not fall back to Default Current and auto-start
+			_, err = wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
+		} else if cur != 0 {
+			// always re-send the setpoint to keep the validity window alive;
+			// setpoint registers are inert when not charging so this is safe
+			if pbox {
+				err = wb.ensureReg(foxRegMaxCurrent, cur)
+			} else {
+				err = wb.ensureReg(foxRegMaxPower, cur)
+			}
+		}
+		if err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
+}
+
+// readUint32 reads two consecutive registers as a big-endian uint32
+func (wb *FoxESSEVC) readUint32(reg uint16) (uint32, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint32(b), nil
+}
+
+// getPhaseValues returns 3 sequential register values scaled by divider
+func (wb *FoxESSEVC) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / divider
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
+// Status implements the api.Charger interface
+func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	switch s := binary.BigEndian.Uint16(b); s {
+	case 0: // idle
+		// car disconnected: the charger accepts a start command again
+		wb.mu.Lock()
+		wb.finished = false
+		wb.mu.Unlock()
+
+		return api.StatusA, nil
+	case 1, 2, 4: // connect, pause
+		return api.StatusB, nil
+	case 5: // finish
+		// the charger will reject a restart until the car disconnects; remember this
+		// so Enable(true) can refuse early instead of hitting a modbus exception
+		wb.mu.Lock()
+		wb.finished = true
+		wb.mu.Unlock()
+
+		return api.StatusB, nil
+	case 3, 9: // start, charging, auto phase switch in progress
+		return api.StatusC, nil
+	default: // fault, locked, reserved
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+	}
+}
+
+var _ api.StatusReasoner = (*FoxESSEVC)(nil)
+
+// StatusReason implements the api.StatusReasoner interface.
+// After the charger has finished the session (status 5) it rejects any restart
+// command until the car has been unplugged, so surface that to the user instead
+// of silently ignoring all control commands.
+func (wb *FoxESSEVC) StatusReason() (api.Reason, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	if wb.finished {
+		return api.ReasonDisconnectRequired, nil
+	}
+
+	return api.ReasonUnknown, nil
+}
+
+// Enabled implements the api.Charger interface.
+// The spec recommends reading the EVC status register to verify start/stop.
+// Statuses 2 (start), 3 (charging), 9 (auto phase switch) indicate the
+// charger is actively enabled; all others (idle, connected/waiting, pause,
+// finish, fault, locked) indicate it is not.
+func (wb *FoxESSEVC) Enabled() (bool, error) {
+	b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
+	if err != nil {
+		return false, err
+	}
+	s := binary.BigEndian.Uint16(b)
+	return s == 2 || s == 3 || s == 9, nil
+}
+
+// Enable implements the api.Charger interface
+func (wb *FoxESSEVC) Enable(enable bool) error {
+	wb.mu.Lock()
+	finished := wb.finished
+	wb.mu.Unlock()
+
+	// the charger refuses a restart command with a modbus exception once it has
+	// finished the session; the car must disconnect before it will accept one again
+	if enable && finished {
+		return api.ErrNotAvailable
+	}
+
+	wb.mu.Lock()
+	wb.enabled = enable
+	wb.mu.Unlock()
+
+	val := uint16(foxChargingStop)
+	if enable {
+		val = foxChargingStart
+	}
+
+	_, err := wb.conn.WriteSingleRegister(foxRegChargingControl, val)
+	if err != nil {
+		return err
+	}
+
+	wb.mu.Lock()
+	wb.lastEnabled = enable
+	cur := wb.current
+	pbox := wb.pbox
+	wb.mu.Unlock()
+
+	// Push the cached setpoint immediately after starting so the charger
+	// gets the correct limit while in charging state. The setpoint registers
+	// only take effect in charging state (spec §2.30/2.31), so this must
+	// come after the start command, not before.
+	if enable && cur != 0 {
+		reg := uint16(foxRegMaxPower)
+		if pbox {
+			reg = foxRegMaxCurrent
+		}
+		if err := wb.writeReg(reg, cur); err != nil {
+			wb.log.WARN.Printf("Enable: setpoint write failed: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *FoxESSEVC) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*FoxESSEVC)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.1f", current)
+	}
+
+	var reg, val uint16
+
+	if wb.pbox {
+		// PBOX present: use current setpoint directly
+		reg = foxRegMaxCurrent
+		val = uint16(10 * current)
+	} else {
+		// No PBOX: convert to power setpoint so the charger decides phase count.
+		// P = V * I * phases, scaled to 0.1kW units.
+		phases := 1
+		if wb.lp != nil {
+			if p := wb.lp.GetPhases(); p != 0 {
+				phases = p
+			}
+		}
+		reg = foxRegMaxPower
+		val = uint16(voltage * current * float64(phases) / 100)
+
+		// cache the phase count used for this setpoint so GetMaxCurrent can invert
+		// the power register with the same value; lp.GetPhases() may have moved on
+		// by the time GetMaxCurrent runs, which would otherwise yield a bogus result
+		wb.mu.Lock()
+		wb.currentPhases = phases
+		wb.mu.Unlock()
+	}
+
+	// Always cache the setpoint so Enable(true) and the heartbeat can push it.
+	// Only write the register when enabled: the spec states setpoint registers
+	// take effect only in charging state, so writing before Enable(true) would
+	// return exception 3 and abort the enable sequence unnecessarily.
+	wb.mu.Lock()
+	wb.current = val
+	enabled := wb.enabled
+	wb.mu.Unlock()
+
+	if !enabled {
+		return nil
+	}
+
+	return wb.writeReg(reg, val)
+}
+
+var _ api.CurrentGetter = (*FoxESSEVC)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
+	if wb.pbox {
+		b, err := wb.conn.ReadHoldingRegisters(foxRegMaxCurrent, 1)
+		if err != nil {
+			return 0, err
+		}
+		return float64(binary.BigEndian.Uint16(b)) / 10, nil
+	}
+
+	b, err := wb.conn.ReadHoldingRegisters(foxRegMaxPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	wb.mu.Lock()
+	phases := wb.currentPhases
+	wb.mu.Unlock()
+	if phases == 0 {
+		phases = 1
+	}
+
+	// invert the MaxCurrentMillis formula: val (0.1kW) -> amps. Uses the phase
+	// count cached at write time (see MaxCurrentMillis), not the loadpoint's
+	// current phase count, since the charger may not have completed its
+	// autonomous phase switch yet and lp.GetPhases() may have moved on.
+	return float64(binary.BigEndian.Uint16(b)) * 100 / (voltage * float64(phases)), nil
+}
+
+var _ api.Meter = (*FoxESSEVC)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *FoxESSEVC) CurrentPower() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(foxRegPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)) * 100, nil
+}
+
+var _ api.MeterEnergy = (*FoxESSEVC)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
+	energy, err := wb.readUint32(foxRegTotalEnergy)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(energy) / 10, nil
+}
+
+var _ api.PhaseCurrents = (*FoxESSEVC)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *FoxESSEVC) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(foxRegCurrents, 10)
+}
+
+var _ api.PhaseVoltages = (*FoxESSEVC)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *FoxESSEVC) Voltages() (float64, float64, float64, error) {
+	return wb.getPhaseValues(foxRegVoltages, 10)
+}
+
+var _ api.Identifier = (*FoxESSEVC)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *FoxESSEVC) Identify() (string, error) {
+	id, err := wb.readUint32(foxRegRFID)
+	if err != nil {
+		return "", err
+	}
+
+	if id == 0 {
+		return "", nil
+	}
+
+	return fmt.Sprintf("%08X", id), nil
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *FoxESSEVC) phases1p3p(phases int) error {
+	// 0: three-phase, 1: single-phase (L2)
+	var val uint16
+	if phases == 1 {
+		val = 1
+	}
+
+	_, err := wb.conn.WriteSingleRegister(foxRegPhaseSwitching, val)
+
+	return err
+}
+
+// phases1p3pAuto implements the api.PhaseSwitcher interface as a no-op.
+// Without a phase-cutting box the charger switches phases autonomously based
+// on the power setpoint (spec §2.38); this only updates evcc's internal phase
+// bookkeeping so pvScalePhases can compute correct 1p/3p current thresholds.
+func (wb *FoxESSEVC) phases1p3pAuto(_ int) error {
+	return nil
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *FoxESSEVC) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(foxRegPhaseSequence, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	// 0: three-phase output, 1: L2, 2: L3
+	if binary.BigEndian.Uint16(b) == 0 {
+		return 3, nil
+	}
+
+	return 1, nil
+}
+
+var _ loadpoint.Controller = (*FoxESSEVC)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *FoxESSEVC) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
+}
