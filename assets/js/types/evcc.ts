@@ -704,6 +704,11 @@ export interface Loadpoint {
    * @format date-time
    */
   smartFeedInPriorityNextStart: string | null;
+  /**
+   * Share of solar energy required to start or continue PV charging, as a factor.
+   * Replaces the enable/disable thresholds while set. Null disables it.
+   */
+  solarShare: number | null;
   /** Charging suggestion from the battery optimizer. */
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
