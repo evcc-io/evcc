@@ -725,6 +725,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
+	lp.publish(keys.SolarShare, lp.solarShare)
 	lp.publish(keys.SmartFeedInPriorityLimit, lp.smartFeedInPriorityLimit)
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
