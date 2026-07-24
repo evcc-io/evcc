@@ -84,17 +84,21 @@ func (t *solarTestSuite) TestShort() {
 }
 
 func (t *solarTestSuite) TestTimeseries() {
-	// energy per slot is converted back to average power
-	rr := api.Rates{t.rate(0, 500), {
-		Start: t.clock.Now().Add(time.Hour),
-		End:   t.clock.Now().Add(time.Hour + 15*time.Minute),
-		Value: 500,
-	}}
+	// slot energies 0/250/500Wh are average powers of 0/1000/2000W
+	var rr api.Rates
+	for i, v := range []float64{0, 250, 500} {
+		start := t.clock.Now().Add(time.Duration(i) * 15 * time.Minute)
+		rr = append(rr, api.Rate{Start: start, End: start.Add(15 * time.Minute), Value: v})
+	}
 
 	ts := solarTimeseries(rr)
-	t.Require().Len(ts, 2)
-	t.Equal(500.0, ts[0].Value)
-	t.Equal(2000.0, ts[1].Value)
+	t.Require().Len(ts, 3)
+
+	// boundary power is interpolated from the adjacent slots
+	for i, expected := range []float64{0, 500, 1500} {
+		t.Equal(rr[i].Start, ts[i].Timestamp, "%d. ts", i)
+		t.Equal(expected, ts[i].Value, "%d. value", i)
+	}
 }
 
 func TestSolarEnergyNoRates(t *testing.T) {

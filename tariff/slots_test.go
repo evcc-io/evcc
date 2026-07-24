@@ -141,6 +141,33 @@ func TestDropOldRates(t *testing.T) {
 	require.Len(t, res, 0)
 }
 
+// TestSolarShortSlots verifies that solar rates shorter than SlotDuration are
+// aggregated into full 15min slots
+func TestSolarShortSlots(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
+
+	// six 5min rates of 10Wh each
+	rates := makeRates(now, 5*time.Minute, 6, 10)
+	for i := range rates {
+		rates[i].Value = 10
+	}
+
+	w := &SlotWrapper{&testTariff{
+		rates: rates,
+		typ:   api.TariffTypeSolar,
+	}}
+
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+
+	for i, r := range res {
+		assert.Equal(t, now.Add(time.Duration(i)*SlotDuration), r.Start, "slot %d", i)
+		assert.Equal(t, SlotDuration, r.End.Sub(r.Start), "slot %d", i)
+		assert.InDelta(t, 30.0, r.Value, 1e-9, "slot %d", i)
+	}
+}
+
 // TestSolarEnergySplit verifies that splitting an hourly solar rate into 15min
 // slots preserves the slot energy while following the neighbouring slots' shape
 func TestSolarEnergySplit(t *testing.T) {

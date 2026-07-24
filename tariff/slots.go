@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -20,6 +21,10 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
 		return nil, err
+	}
+
+	if t.Type() == api.TariffTypeSolar {
+		rates = aggregateEnergy(rates)
 	}
 
 	var res api.Rates
@@ -60,6 +65,47 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 	}
 
 	return res, nil
+}
+
+// aggregateEnergy merges sorted rates shorter than SlotDuration into aligned slots.
+// Longer rates are left to splitEnergy which preserves the forecast curve.
+func aggregateEnergy(rr api.Rates) api.Rates {
+	if !slices.ContainsFunc(rr, func(r api.Rate) bool {
+		d := r.End.Sub(r.Start)
+		return d > 0 && d < SlotDuration
+	}) {
+		return rr
+	}
+
+	res := make(api.Rates, 0, len(rr))
+
+	for _, r := range rr {
+		d := r.End.Sub(r.Start)
+		if d <= 0 {
+			continue
+		}
+
+		for start := r.Start.Truncate(SlotDuration); start.Before(r.End); start = start.Add(SlotDuration) {
+			from, to := start, start.Add(SlotDuration)
+			if from.Before(r.Start) {
+				from = r.Start
+			}
+			if to.After(r.End) {
+				to = r.End
+			}
+
+			val := r.Value * float64(to.Sub(from)) / float64(d)
+
+			if n := len(res); n > 0 && res[n-1].Start.Equal(start) {
+				res[n-1].Value += val
+				continue
+			}
+
+			res = append(res, api.Rate{Start: start, End: start.Add(SlotDuration), Value: val})
+		}
+	}
+
+	return res
 }
 
 // splitEnergy distributes the energy of rate i over numSlots sub-slots, shaped by

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/samber/lo"
 )
 
 type timeseries []tsEntry
@@ -30,11 +29,21 @@ func solarPower(r api.Rate) float64 {
 	return r.Value / d
 }
 
-// solarTimeseries converts solar energy rates into power at timestamp
+// solarTimeseries converts solar energy rates into power at slot start. The average
+// power of a slot is centered, so the boundary power is interpolated from both slots.
 func solarTimeseries(rr api.Rates) []tsEntry {
-	return lo.Map(rr, func(r api.Rate, _ int) tsEntry {
-		return tsEntry{Timestamp: r.Start, Value: solarPower(r)}
-	})
+	res := make([]tsEntry, 0, len(rr))
+
+	for i, r := range rr {
+		power := solarPower(r)
+		if i > 0 {
+			power = (solarPower(rr[i-1]) + power) / 2
+		}
+
+		res = append(res, tsEntry{Timestamp: r.Start, Value: power})
+	}
+
+	return res
 }
 
 // solarEnergy sums the energy of all rates overlapping [from,to), prorating partial slots.
