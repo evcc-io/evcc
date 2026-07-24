@@ -19,8 +19,9 @@ params:
     choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
-  - name: maxacpower
   - preset: battery-params
+  - name: maxacpower
+    required: true
   - name: maxdischargepower
     default: 5000
   - name: watchdog
@@ -107,6 +108,83 @@ render: |
           type: holding
           decode: float32nans
   maxacpower: {{ .maxacpower }} # W
+  curtail:
+    source: sequence
+    set:
+      - source: switch
+        switch:
+          - case: 100
+            set:
+              source: const
+              value: 0 # Disabled
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 57344 # Export Control Mode
+                  type: writesingle
+                  encoding: uint16
+        default:
+          source: const
+          value: 1 # Export Control using Import/Export Meter
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 57344 # Export Control Mode
+              type: writesingle
+              encoding: uint16
+      - source: const
+        value: 0 # Total
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57345 # Export Control Limit Mode
+            type: writesingle
+            encoding: uint16
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 57346 # Export Control Site Limit
+          type: writemultiple
+          encoding: float32s
+        scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+
+  curtailed:
+    source: go
+    in:
+      - name: mode
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57344 # Export Control Mode
+            type: holding
+            decode: uint16
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57346 # Export Control Site Limit
+            type: holding
+            decode: float32s
+    script: |
+      percent := 100.0
+      if mode&1 != 0 {
+        percent = limit * 100 / {{ maxf .maxacpower 1 }}
+      }
+      p := int(percent + 0.5)
+      if p < 0 {
+        p = 0
+      }
+      if p > 100 {
+        p = 100
+      }
+      p
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

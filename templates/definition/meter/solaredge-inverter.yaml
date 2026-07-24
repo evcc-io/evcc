@@ -4,6 +4,9 @@ products:
     description:
       de: Wechselrichter
       en: Inverter
+capabilities:
+  - battery-control
+  - curtail
 requirements:
   description:
     de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
@@ -111,4 +114,40 @@ render: |
       value:
         - 101:AphC
         - 103:AphC
+  curtail:
+    source: sequence
+    set:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 61441 # Active Power Limit (%)
+          type: writesingle
+          encoding: uint16
+      - source: const
+        value: 1
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 61696 # Commit Power Control Settings
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 61441 # Active Power Limit (%)
+            type: holding
+            decode: uint16
+    script: |
+      percent := int(limit)
+      if percent > 100 {
+        percent = 100
+      }
+      percent
   {{- end }}
