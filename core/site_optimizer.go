@@ -42,6 +42,8 @@ var (
 // entry is the default and preserves the previous hard-coded behavior.
 var optimizerChargingStrategies = []string{
 	string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateDemandPeaks),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateFeedinPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyNone),
 }

@@ -123,6 +123,8 @@ import "@h2d2/shopicons/es/regular/info";
 // themselves come from backend state to avoid drift if the enum changes
 const STRATEGY_LABELS: Record<string, string> = {
 	charge_before_export: "fill battery first",
+	attenuate_demand_peaks: "reduce grid import peaks",
+	attenuate_feedin_peaks: "reduce grid feed-in peaks",
 	attenuate_grid_peaks: "reduce grid peaks",
 	none: "no preference",
 };

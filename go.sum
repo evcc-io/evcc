@@ -154,6 +154,8 @@ github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4 h1:aGM3NwDsK
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
 github.com/evcc-io/optimizer v0.0.0-20260719151136-b6c835a178a3 h1:QXk6AKYrYWQ+PxXhJS/LcHnegKFCCClUQ/BlCuqbs9Y=
 github.com/evcc-io/optimizer v0.0.0-20260719151136-b6c835a178a3/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
+github.com/evcc-io/optimizer v0.0.0-20260724075549-cce0c41d9489 h1:iM7XzdAI07Ff9uJtu7MS8wg2q0hH/84JtrQNbgGn1oo=
+github.com/evcc-io/optimizer v0.0.0-20260724075549-cce0c41d9489/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
 github.com/evcc-io/rct v0.2.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20260722070723-f3604323d820 h1:qpLoOYEJ6dgD+UBEgwzsIiQ3WLPmi3Xb7EN4wFIypQY=
