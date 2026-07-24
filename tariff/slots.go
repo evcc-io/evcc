@@ -13,10 +13,8 @@ type SlotWrapper struct {
 	api.Tariff
 }
 
-// Rates converts arbitrary slot lengths (e.g. 1h, 30m) to 15m slots.
-// Slot length must be multiple of SlotDuration.
-// For price tariffs, the value is constant over all sub-slots.
-// For solar, the slot energy is distributed over the sub-slots.
+// Rates converts arbitrary slot lengths (multiples of SlotDuration) to 15m slots.
+// Price sub-slots are constant, solar sub-slots share the energy of their slot.
 func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
@@ -42,15 +40,13 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 
 		numSlots := max(int(r.End.Sub(r.Start)/SlotDuration), 1)
 
-		var vals []float64
-		switch t.Type() {
-		case api.TariffTypeSolar:
-			vals = splitEnergy(rates, i, numSlots)
-		default:
-			vals = make([]float64, numSlots)
-			for j := range vals {
-				vals[j] = r.Value
-			}
+		vals := make([]float64, numSlots)
+		for j := range vals {
+			vals[j] = r.Value
+		}
+
+		if t.Type() == api.TariffTypeSolar {
+			splitEnergy(rates, i, vals)
 		}
 
 		for j := range numSlots {
@@ -108,13 +104,11 @@ func aggregateEnergy(rr api.Rates) api.Rates {
 	return res
 }
 
-// splitEnergy distributes the energy of rate i over numSlots sub-slots, shaped by
+// splitEnergy distributes the energy of rate i over its sub-slots, shaped by
 // linear interpolation against the neighbouring slots' average power.
-func splitEnergy(rates api.Rates, i, numSlots int) []float64 {
-	r := rates[i]
-
-	if numSlots <= 1 {
-		return []float64{r.Value}
+func splitEnergy(rates api.Rates, i int, vals []float64) {
+	if len(vals) < 2 {
+		return
 	}
 
 	power := func(k int) float64 {
@@ -134,29 +128,29 @@ func splitEnergy(rates api.Rates, i, numSlots int) []float64 {
 		next = power(i + 1)
 	}
 
-	res := make([]float64, numSlots)
-
 	var sum float64
-	for j := range res {
+	for j := range vals {
 		// sub-slot midpoint relative to the slot midpoint, [-0.5,0.5)
-		f := (float64(j)+0.5)/float64(numSlots) - 0.5
+		f := (float64(j)+0.5)/float64(len(vals)) - 0.5
 
 		v := cur + f*(next-cur)*2
 		if f < 0 {
 			v = cur + f*(cur-prev)*2
 		}
 
-		res[j] = max(v, 0)
-		sum += res[j]
+		vals[j] = max(v, 0)
+		sum += vals[j]
 	}
 
-	for j := range res {
-		if sum > 0 {
-			res[j] = r.Value * res[j] / sum
-		} else {
-			res[j] = r.Value / float64(numSlots)
+	energy := rates[i].Value
+	if sum <= 0 {
+		for j := range vals {
+			vals[j] = energy / float64(len(vals))
 		}
+		return
 	}
 
-	return res
+	for j := range vals {
+		vals[j] *= energy / sum
+	}
 }

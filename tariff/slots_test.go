@@ -146,11 +146,8 @@ func TestDropOldRates(t *testing.T) {
 func TestSolarShortSlots(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
-	// six 5min rates of 10Wh each
+	// six 5min rates of 10..15Wh
 	rates := makeRates(now, 5*time.Minute, 6, 10)
-	for i := range rates {
-		rates[i].Value = 10
-	}
 
 	w := &SlotWrapper{&testTariff{
 		rates: rates,
@@ -164,8 +161,11 @@ func TestSolarShortSlots(t *testing.T) {
 	for i, r := range res {
 		assert.Equal(t, now.Add(time.Duration(i)*SlotDuration), r.Start, "slot %d", i)
 		assert.Equal(t, SlotDuration, r.End.Sub(r.Start), "slot %d", i)
-		assert.InDelta(t, 30.0, r.Value, 1e-9, "slot %d", i)
 	}
+
+	// energy of the source rates is summed, not averaged
+	assert.InDelta(t, 33.0, res[0].Value, 1e-9)
+	assert.InDelta(t, 42.0, res[1].Value, 1e-9)
 }
 
 // TestSolarEnergySplit verifies that splitting an hourly solar rate into 15min
