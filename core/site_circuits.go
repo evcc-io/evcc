@@ -144,7 +144,6 @@ func (site *Site) curtailPV(percent *int) error {
 }
 
 func curtailGrid(site *Site, percent *int) error {
-
 	var errs error
 
 	if site.gridMeter != nil {
