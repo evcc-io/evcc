@@ -170,12 +170,19 @@ func (c *Connection) GetTimeState(entity string) (time.Time, error) {
 // chargeStatusMap maps unambiguous Home Assistant states to evcc charge status.
 // Vendor-specific states are configured per device, see NewStatusMap.
 var chargeStatusMap = map[string]api.ChargeStatus{
-	"a":            api.StatusA,
-	"disconnected": api.StatusA,
-	"b":            api.StatusB,
-	"connected":    api.StatusB,
-	"c":            api.StatusC,
-	"charging":     api.StatusC,
+	"a":                  api.StatusA,
+	"disconnected":       api.StatusA,
+	"not_plugged":        api.StatusA,
+	"b":                  api.StatusB,
+	"connected":          api.StatusB,
+	"plugged":            api.StatusB,
+	"starting":           api.StatusB,
+	"stopped":            api.StatusB,
+	"paused":             api.StatusB,
+	"complete":           api.StatusB,
+	"charging_completed": api.StatusB,
+	"c":                  api.StatusC,
+	"charging":           api.StatusC,
 }
 
 // StatusMap maps device-specific Home Assistant states to evcc charge status

@@ -36,7 +36,8 @@ func TestGetChargeStatus(t *testing.T) {
 		{"CHARGING_STOPPED", api.StatusB},
 		{"charging_error", api.StatusB},
 		{"instant_charging", api.StatusC},
-		{"paused", api.StatusNone}, // no longer built-in
+		{"paused", api.StatusB},
+		{"preparing", api.StatusNone}, // no longer built-in
 	}
 
 	for _, tc := range tests {
