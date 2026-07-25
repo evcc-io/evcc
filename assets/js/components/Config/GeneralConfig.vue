@@ -30,6 +30,14 @@
 		/>
 
 		<GeneralConfigEntry
+			v-if="experimental"
+			test-id="generalconfig-priority"
+			:label="$t('config.priority.title')"
+			:text="$t(`config.priority.strategy.${priorityStrategy}`)"
+			@edit="openModal('priority')"
+		/>
+
+		<GeneralConfigEntry
 			test-id="generalconfig-sponsoring"
 			:label="$t('config.sponsor.title')"
 			:text="sponsorStatus.title"
@@ -94,6 +102,9 @@ export default {
 		},
 		telemetryEnabled() {
 			return store.state?.telemetry === true;
+		},
+		priorityStrategy() {
+			return store.state?.priorityStrategy || "none";
 		},
 		networkStatus() {
 			return `${store.state?.network?.port ?? ""}`;
