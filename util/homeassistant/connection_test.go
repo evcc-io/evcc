@@ -55,7 +55,7 @@ func TestGetChargeStatus(t *testing.T) {
 			status, err := newStateConnection(t, tc.state).GetChargeStatus("sensor.foo", states)
 			assert.Equal(t, tc.want, status)
 			if tc.want == api.StatusNone {
-				assert.Error(t, err)
+				assert.ErrorContains(t, err, "unknown charge status '"+tc.state+"' for entity sensor.foo")
 			} else {
 				assert.NoError(t, err)
 			}
