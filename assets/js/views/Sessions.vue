@@ -215,6 +215,7 @@ import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
 import { CURRENCY, type Notification } from "@/types/evcc";
+import vehicleList from "@/utils/vehicleList";
 
 export default defineComponent({
 	name: "Sessions",
@@ -468,8 +469,7 @@ export default defineComponent({
 			});
 		},
 		vehicleList() {
-			const vehicles = store.state.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ ...vehicle, name }));
+			return vehicleList(store.state.vehicles);
 		},
 		loadpointList() {
 			const loadpoints = store.state.loadpoints || [];

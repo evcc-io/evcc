@@ -1226,25 +1226,11 @@ func (mr *MockHEMSMockRecorder) CurtailedPercent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CurtailedPercent", reflect.TypeOf((*MockHEMS)(nil).CurtailedPercent))
 }
 
-// Dimmed mocks base method.
-func (m *MockHEMS) Dimmed() *bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Dimmed")
-	ret0, _ := ret[0].(*bool)
-	return ret0
-}
-
-// Dimmed indicates an expected call of Dimmed.
-func (mr *MockHEMSMockRecorder) Dimmed() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimmed", reflect.TypeOf((*MockHEMS)(nil).Dimmed))
-}
-
 // MaxConsumptionPower mocks base method.
-func (m *MockHEMS) MaxConsumptionPower() float64 {
+func (m *MockHEMS) MaxConsumptionPower() *float64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MaxConsumptionPower")
-	ret0, _ := ret[0].(float64)
+	ret0, _ := ret[0].(*float64)
 	return ret0
 }
 

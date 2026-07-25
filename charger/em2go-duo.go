@@ -64,32 +64,30 @@ func NewEm2GoDuoFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int
 	}{
-		TcpSettings: modbus.TcpSettings{ID: 255},
-		Connector:   1,
+		TcpSettings: modbus.TcpSettings{
+			ID:    255,
+			Delay: 60 * time.Millisecond,
+		},
+		Connector: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEm2GoDuo(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewEm2GoDuo(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewEm2GoDuo creates Em2GoDuo charger
-func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) (api.Charger, error) {
+func NewEm2GoDuo(ctx context.Context, settings modbus.TcpSettings, connector int) (api.Charger, error) {
 	if connector < 1 || connector > 2 {
 		return nil, fmt.Errorf("invalid connector %d, must be 1 or 2", connector)
 	}
 
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// Add delay of 60 milliseconds between requests
-	conn.Delay(60 * time.Millisecond)
 
 	log := util.NewLogger("em2go-duo")
 	conn.Logger(log.TRACE)

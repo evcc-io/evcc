@@ -142,13 +142,6 @@ func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 	return lp.status
 }
 
-// IsEnabled returns the charger enabled state
-func (lp *Loadpoint) IsEnabled() bool {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.enabled
-}
-
 // GetMode returns loadpoint charge mode
 func (lp *Loadpoint) GetMode() api.ChargeMode {
 	lp.RLock()
@@ -322,6 +315,34 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	}
 }
 
+// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) GetMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minSoc
+}
+
+// setMinSoc sets the loadpoint min soc (no mutex)
+func (lp *Loadpoint) setMinSoc(soc int) {
+	lp.minSoc = soc
+	lp.publish(keys.MinSoc, soc)
+	lp.settings.SetInt(keys.MinSoc, int64(soc))
+}
+
+// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) SetMinSoc(soc int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set min soc:", soc)
+
+	// apply immediately
+	if lp.minSoc != soc {
+		lp.setMinSoc(soc)
+		lp.requestUpdate()
+	}
+}
+
 // GetLimitEnergy returns the session limit energy
 func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()
@@ -477,11 +498,11 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.ui
+	return lp.Ui
 }
 
 func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
-	lp.ui = ui
+	lp.Ui = ui
 	lp.publish(keys.UI, ui)
 	lp.settings.SetJson(keys.UI, ui)
 }

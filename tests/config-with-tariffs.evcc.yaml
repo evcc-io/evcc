@@ -51,3 +51,19 @@ tariffs:
   co2:
     type: fixed
     price: 300
+  temperature:
+    type: custom
+    tariff: temperature
+    forecast:
+      source: js
+      script: |
+        var now = Date.now();
+        var rates = [];
+        for (var i = 0; i < 48; i++) {
+          rates.push({
+            start: new Date(now + i * 3600000).toISOString(),
+            end: new Date(now + (i + 1) * 3600000).toISOString(),
+            value: 15.5
+          });
+        }
+        JSON.stringify(rates);

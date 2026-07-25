@@ -48,9 +48,9 @@ func TestDimming(t *testing.T) {
 			if tc.has != *tc.want {
 				dimmer.EXPECT().Dim(*tc.want).Return(nil)
 			}
-		}
 
-		require.NoError(t, s.dimMeters(tc.want))
+			require.NoError(t, s.dimMeters(*tc.want))
+		}
 
 		if !ctrl.Satisfied() {
 			ctrl.Finish()

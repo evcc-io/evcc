@@ -99,12 +99,14 @@ jobs:
           go build -trimpath -tags release \
             -ldflags "-X github.com/evcc-io/evcc/util.Version=pr-${NUM}-${SHA:0:7} -X github.com/evcc-io/evcc/util.Commit=${SHA:0:7} -s -w" \
             -o "evcc-linux-${{ matrix.arch }}" .
+          gzip -9 "evcc-linux-${{ matrix.arch }}"
 
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
           name: evcc-pr-${{ github.event.issue.number }}-linux-${{ matrix.arch }}
-          path: evcc-linux-${{ matrix.arch }}
+          path: evcc-linux-${{ matrix.arch }}.gz
+          compression-level: 0 # already gzip'd, skip redundant zip compression
           retention-days: 14
 
   docker:
@@ -181,3 +183,13 @@ jobs:
               const body = [`Test binaries for the fix in #${num} are ready to test:`, '', ...artifacts].join('\n');
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
+      - name: Resolve command comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // collapse the /build comment as resolved now that the build is done
+            await github.graphql(
+              `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
+              { id: context.payload.comment.node_id }
+            );

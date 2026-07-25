@@ -21,12 +21,14 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // DaheimLaden charger implementation
@@ -41,10 +43,13 @@ type DaheimLaden struct {
 const (
 	dlRegChargingState   = 0   // Uint16 RO ENUM
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
+	dlRegErrorCode       = 4   // Uint16 RO ENUM
 	dlRegCurrents        = 6   // 3xUint16 plus placeholder RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
+	dlRegPowers          = 16  // 3xUint32 plus placeholder RO 1W
 	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
+	dlRegEvseMinCurrent  = 34  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	dlRegStationId       = 38  // Chr[16] RO UTF16
 	dlRegCardId          = 54  // Chr[16] RO UTF16
@@ -82,12 +87,12 @@ func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewDaheimLaden(ctx, cc.URI, cc.ID, cc.Phases1p3p)
+	return NewDaheimLaden(ctx, cc.TcpSettings, cc.Phases1p3p)
 }
 
 // NewDaheimLaden creates DaheimLaden charger
-func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases bool) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +106,12 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 		conn:   conn,
 		curr:   60, // assume min current
 		phases: 3,  // assume 3p
+	}
+
+	if !sponsor.IsAuthorized() {
+		if err := wb.checkStation(); err != nil {
+			return nil, err
+		}
 	}
 
 	// get initial state from charger
@@ -197,8 +208,20 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
+	if err != nil {
+		return false, err
+	}
 
-	return curr >= 60, err
+	// a charger restart resets the current limit to 0A which triggers
+	// unauthorised autostart. restore the safe disabled value.
+	if curr == 0 {
+		if err := wb.setCurrent(1); err != nil {
+			return false, err
+		}
+		curr = 1
+	}
+
+	return curr >= 60, nil
 }
 
 // Enable implements the api.Charger interface
@@ -335,6 +358,30 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 	}
 
 	return int(wb.phases), nil
+}
+
+func (wb *DaheimLaden) checkStation() error {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
+	if err != nil {
+		return api.ErrSponsorRequired
+	}
+	// station id starts (dlRegStationId-dlRegEvseMaxCurrent) registers into the block
+	s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
+	if err != nil || s == "" {
+		return api.ErrSponsorRequired
+	}
+
+	for _, r := range s {
+		if r < 0x20 || r > 0x7e {
+			return api.ErrSponsorRequired
+		}
+	}
+
+	if strings.Contains(strings.ToLower(s), "heidelbridge") {
+		return api.ErrSponsorRequired
+	}
+
+	return nil
 }
 
 var _ api.Diagnosis = (*DaheimLaden)(nil)

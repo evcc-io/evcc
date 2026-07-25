@@ -224,7 +224,7 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 }
 
 // Publish asynchronously publishes payload using client qos
-func (m *Client) Publish(topic string, retained bool, payload any) {
+func (m *Client) Publish(topic string, retained bool, payload string) {
 	connCtx := m.connContext()
 	go func() {
 		ctx, cancel := context.WithTimeout(connCtx, request.Timeout)
@@ -242,7 +242,7 @@ func (m *Client) Publish(topic string, retained bool, payload any) {
 			return
 		}
 
-		m.log.TRACE.Printf("send %s: '%v'", topic, payload)
+		m.log.TRACE.Printf("send %s: '%v'", topic, request.Truncate(payload))
 		token := m.client.Publish(topic, m.Qos, retained, payload)
 
 		select {
@@ -290,7 +290,7 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 func (m *Client) listen(topic string) paho.Token {
 	token := m.client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		payload := string(msg.Payload())
-		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
+		m.log.TRACE.Printf("recv %s: '%v'", topic, request.Truncate(payload))
 		if len(payload) > 0 {
 			m.mux.Lock()
 			callbacks := m.listener[topic]

@@ -863,3 +863,22 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	welcomeCharge, _ = lp.updateChargerStatus()
 	assert.False(t, welcomeCharge)
 }
+
+// TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
+// boost no longer draws power from the battery, while still counting as active so
+// the site keeps prioritising the vehicle over recharging the battery (#30558).
+func TestBatteryBoostHold(t *testing.T) {
+	lp := &Loadpoint{log: util.NewLogger("foo")}
+
+	// disabled draws nothing
+	lp.batteryBoost = boostDisabled
+	assert.Equal(t, 0.0, lp.boostPower(2000), "disabled")
+
+	// hold draws nothing (stops draining the battery)...
+	lp.batteryBoost = boostHold
+	assert.Equal(t, 0.0, lp.boostPower(2000), "hold")
+
+	// ...but is still an active boost state (GetBatteryBoost != boostDisabled),
+	// which is what keeps the sitePower priority adjustment applied to the loadpoint
+	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
+}

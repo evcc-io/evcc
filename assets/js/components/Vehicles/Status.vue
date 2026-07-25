@@ -80,6 +80,7 @@ import RfidWaitIcon from "../MaterialIcon/RfidWait.vue";
 import SunDownIcon from "../MaterialIcon/SunDown.vue";
 import SunUpIcon from "../MaterialIcon/SunUp.vue";
 import TempLimitIcon from "../MaterialIcon/TempLimit.vue";
+import MinTempIcon from "../MaterialIcon/MinTemp.vue";
 import VehicleLimitIcon from "../MaterialIcon/VehicleLimit.vue";
 import VehicleLimitReachedIcon from "../MaterialIcon/VehicleLimitReached.vue";
 import VehicleLimitWarningIcon from "../MaterialIcon/VehicleLimitWarning.vue";
@@ -261,25 +262,32 @@ export default defineComponent({
 					tabular: true,
 				},
 				{
+					id: "minSoc",
+					visible: this.connected && this.minSocNotReached,
+					content: this.heating
+						? this.fmtTemperature(this.minSoc)
+						: this.fmtPercentage(this.minSoc),
+					tooltipContent: this.heating
+						? this.$t("main.heatingStatus.minTemp", {
+								temp: this.fmtTemperature(this.minSoc),
+							})
+						: t("minCharge", {
+								soc: this.fmtPercentage(this.minSoc),
+							}),
+					iconComponent: this.heating ? MinTempIcon : VehicleMinSocIcon,
+					itemClass: "text-danger text-decoration-underline",
+					testId: "vehicle-status-minsoc",
+					clickable: true,
+					clickHandler: () =>
+						this.heating ? this.openLoadpointSettings() : this.openMinSocSettings(),
+				},
+				{
 					id: "tempLimit",
 					visible: this.heating && this.vehicleLimitSoc > 0,
 					content: this.fmtTemperature(this.vehicleLimitSoc),
 					tooltipContent: this.$t("main.heatingStatus.vehicleLimit"),
 					iconComponent: TempLimitIcon,
 					testId: "vehicle-status-limit",
-				},
-				{
-					id: "minSoc",
-					visible: !this.heating && this.connected && this.minSocNotReached,
-					content: this.fmtPercentage(this.minSoc),
-					tooltipContent: t("minCharge", {
-						soc: this.fmtPercentage(this.minSoc),
-					}),
-					iconComponent: VehicleMinSocIcon,
-					itemClass: "text-danger text-decoration-underline",
-					testId: "vehicle-status-minsoc",
-					clickable: true,
-					clickHandler: () => this.openMinSocSettings(),
 				},
 				{
 					id: "vehicleLimit",

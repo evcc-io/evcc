@@ -30,6 +30,14 @@
 		/>
 
 		<GeneralConfigEntry
+			v-if="experimental && batteryControllable"
+			test-id="generalconfig-battery"
+			:label="$t('config.battery.title')"
+			:text="$t(`config.general.${batteryGridDischarge ? 'on' : 'off'}`)"
+			@edit="openModal('battery')"
+		/>
+
+		<GeneralConfigEntry
 			v-if="experimental"
 			test-id="generalconfig-priority"
 			:label="$t('config.priority.title')"
@@ -102,6 +110,12 @@ export default {
 		},
 		telemetryEnabled() {
 			return store.state?.telemetry === true;
+		},
+		batteryControllable() {
+			return (store.state?.battery ?? []).some((b) => b.controllable);
+		},
+		batteryGridDischarge() {
+			return store.state?.batteryGridDischarge === true;
 		},
 		priorityStrategy() {
 			return store.state?.priorityStrategy || "none";

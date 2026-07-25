@@ -78,7 +78,7 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       subdevice: 1 # Metering device
-      value:  203:WphA
+      value: 203:WphA
       scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}

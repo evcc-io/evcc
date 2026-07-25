@@ -2,9 +2,11 @@ package charger
 
 import (
 	"context"
+	"errors"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/charger/measurement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -23,13 +25,14 @@ type SwitchSocket struct {
 
 func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
-		embed        `mapstructure:",squash"`
-		Enabled      plugin.Config
-		Enable       plugin.Config
-		Power        plugin.Config
-		Energy       *plugin.Config
-		Soc          *plugin.Config
-		StandbyPower float64
+		embed                   `mapstructure:",squash"`
+		Enabled                 plugin.Config
+		Enable                  plugin.Config
+		Power                   *plugin.Config
+		Energy                  *plugin.Config
+		Soc                     *plugin.Config
+		measurement.Temperature `mapstructure:",squash"` // optional, for heating devices
+		StandbyPower            float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -51,6 +54,11 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
+	// standbypower < 0 ensures that power is never used by the switch socket if not present
+	if power == nil && cc.StandbyPower >= 0 {
+		return nil, errors.New("missing either power or negative standbypower")
+	}
+
 	c := &SwitchSocket{
 		Caps:         implement.New(),
 		enabled:      enabled,
@@ -68,7 +76,17 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, err
 	}
+
+	// for heating devices, the soc slot holds temperature in °C — fall back to temp getter
+	temp, limitTemp, err := cc.Temperature.Configure(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if soc == nil && temp != nil {
+		soc = temp
+	}
 	implement.May(c, implement.Battery(soc))
+	implement.May(c, implement.SocLimiter(limitTemp))
 
 	return c, nil
 }

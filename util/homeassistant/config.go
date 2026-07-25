@@ -13,5 +13,9 @@ type Config struct {
 
 // NewConnection creates a Home Assistant connection from the config
 func (c Config) NewConnection(log *util.Logger) (*Connection, error) {
+	if c.Token_ != "" {
+		log.WARN.Println("using deprecated 'token' parameter, it is no longer used for authentication - please authorize the Home Assistant instance via the web UI instead")
+	}
+
 	return NewConnection(log, c.URI, c.Home_, c.Insecure)
 }

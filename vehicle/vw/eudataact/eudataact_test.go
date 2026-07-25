@@ -218,6 +218,14 @@ func TestSocBatteryStateReportField(t *testing.T) {
 	assert.Equal(t, 36.0, soc)
 }
 
+func TestSocEnyaqField(t *testing.T) {
+	data := []point{{Key: KeyEnyaqSoc, Name: "currentSoc", Value: "60"}}
+
+	soc, err := testProvider(data).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 60.0, soc)
+}
+
 func TestSocBatteryStateReportOnlyFallbackField(t *testing.T) {
 	data := []point{
 		{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "36"},

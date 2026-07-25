@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
+import Dropdown from "bootstrap/js/dist/dropdown";
 import { createApp, defineComponent, h } from "vue";
 import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
@@ -10,6 +11,19 @@ import { applyUrlSettings } from "./urlSettings.ts";
 import { appDetection, sendToApp } from "./utils/native";
 import store from "./store";
 import type { Notification } from "./types/evcc";
+
+// keep dropdown menus out of the fixed bottom tab bar and safe-area inset
+Dropdown.Default.popperConfig = (defaultConfig) => {
+  const bottom = document.querySelector<HTMLElement>(".bottom-tab-bar")?.offsetHeight ?? 0;
+  return {
+    ...defaultConfig,
+    modifiers: [
+      ...(defaultConfig.modifiers ?? []),
+      { name: "flip", options: { padding: { bottom } } },
+      { name: "preventOverflow", options: { padding: { bottom } } },
+    ],
+  };
+};
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {

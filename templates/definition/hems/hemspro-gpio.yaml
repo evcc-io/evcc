@@ -14,16 +14,17 @@ params:
     help:
       en: Power limit applied to the root circuit while the limit is active.
       de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist.
-  - name: maxproductionpower
+  - name: productionnominalmax
     type: float
     unit: W
-    required: true
     description:
       en: Installed generator power (Wp)
       de: Installierte Generatorleistung (Wp)
     help:
       en: Rated generator/module power (Wp) of the installation.
       de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+  - name: maxproductionpower
+    deprecated: true
 render: |
   type: fnn
   maxdimpower: {{ .maxconsumptionpower }}
@@ -31,7 +32,7 @@ render: |
     source: gpio
     pin: 13
     function: read
-  maxcurtailpower: {{ .maxproductionpower }}
+  productionnominalmax: {{ or .productionnominalmax .maxproductionpower }}
   w3:
     source: gpio
     pin: 5

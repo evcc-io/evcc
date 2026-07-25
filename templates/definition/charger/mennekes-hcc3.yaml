@@ -8,6 +8,7 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON Premium
+    capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship"]
 params:

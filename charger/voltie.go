@@ -61,24 +61,20 @@ func init() {
 
 // NewVoltieFromConfig creates a Voltie charger from generic config
 func NewVoltieFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-	}{
-		TcpSettings: modbus.TcpSettings{
-			ID: 1,
-		},
+	cc := modbus.TcpSettings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewVoltie(ctx, cc.URI, cc.ID)
+	return NewVoltie(ctx, cc)
 }
 
 // NewVoltie creates a Voltie charger
-func NewVoltie(ctx context.Context, uri string, slaveID uint8) (*Voltie, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewVoltie(ctx context.Context, settings modbus.TcpSettings) (*Voltie, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

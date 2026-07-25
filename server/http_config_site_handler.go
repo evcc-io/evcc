@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 )
 
@@ -116,6 +117,12 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 
 			site.SetConsumerMeterRefs(*payload.Consumer)
 			setConfigDirty()
+		}
+
+		// persist immediately to keep meter refs consistent with device config on unclean shutdown
+		if err := settings.Persist(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 
 		status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}

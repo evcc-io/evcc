@@ -30,6 +30,7 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	TariffSolar           = "tariffSolar"
+	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
 
 	// meters
@@ -44,6 +45,7 @@ const (
 	BatteryDischargeControl = "batteryDischargeControl"
 	BatteryGridChargeLimit  = "batteryGridChargeLimit"
 	BatteryGridChargeActive = "batteryGridChargeActive"
+	BatteryGridDischarge    = "batteryGridDischarge"
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
 
@@ -51,6 +53,9 @@ const (
 	PriorityStrategy   = "priorityStrategy"   // priority strategy (none, soc, deficit)
 	PriorityBasis      = "priorityBasis"      // priority strategy basis (percent, energy)
 	PriorityHysteresis = "priorityHysteresis" // priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
+
+	// forecast settings
+	SolarAdjusted = "solarAdjusted"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

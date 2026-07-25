@@ -73,6 +73,22 @@ test.describe("experimental battery page", async () => {
     await prioritySoc.selectOption("30");
     await expect(prioritySoc).toHaveValue("30");
 
+    // values crossing the other threshold are not selectable (prioritySoc 30, bufferSoc 80)
+    await expect(prioritySoc.getByRole("option", { name: "85%", exact: true })).toHaveAttribute(
+      "disabled",
+      ""
+    );
+    await expect(bufferSoc.getByRole("option", { name: "25%", exact: true })).toHaveAttribute(
+      "disabled",
+      ""
+    );
+
+    // equal values unlock higher priorities; selecting one raises the buffer instead
+    await prioritySoc.selectOption("80");
+    await prioritySoc.selectOption("85");
+    await expect(bufferSoc).toHaveValue("85");
+    await expect(prioritySoc).toHaveValue("80");
+
     // discharge control is offered for the controllable battery and toggles on
     const discharge = page.getByRole("switch", { name: /Prevent home battery/ });
     await expect(discharge).not.toBeChecked();
