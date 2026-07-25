@@ -1,11 +1,13 @@
 package homeassistant
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/assert"
@@ -17,6 +19,47 @@ func newTestConnection(baseURL string) *Connection {
 		Helper:   request.NewHelper(util.NewLogger("test")),
 		instance: &proxyInstance{uri: baseURL},
 	}
+}
+
+func TestGetChargeStatus(t *testing.T) {
+	states, err := NewStatusMap("not_plugged", "Charging_Stopped, charging_error", "instant_charging")
+	require.NoError(t, err)
+
+	tests := []struct {
+		state string
+		want  api.ChargeStatus
+	}{
+		{"A", api.StatusA},
+		{"connected", api.StatusB},
+		{" charging ", api.StatusC},
+		{"not_plugged", api.StatusA},
+		{"CHARGING_STOPPED", api.StatusB},
+		{"charging_error", api.StatusB},
+		{"instant_charging", api.StatusC},
+		{"paused", api.StatusNone}, // no longer built-in
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.state, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintf(w, `{"entity_id":"sensor.foo","state":%q}`, tc.state)
+			}))
+			defer srv.Close()
+
+			status, err := newTestConnection(srv.URL).GetChargeStatus("sensor.foo", states)
+			assert.Equal(t, tc.want, status)
+			if tc.want == api.StatusNone {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestNewStatusMapDuplicate(t *testing.T) {
+	_, err := NewStatusMap("foo", "foo", "")
+	assert.Error(t, err)
 }
 
 // TestCallSwitchService_DomainDispatch verifies that CallSwitchService picks
