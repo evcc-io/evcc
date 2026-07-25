@@ -22,6 +22,8 @@ github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWso
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/WulfgarW/sensonet v0.0.7 h1:WkrZF7UNoQVyQIvpaUPqZfKTvHfFXTRmSF/zMQKJo+Q=
 github.com/WulfgarW/sensonet v0.0.7/go.mod h1:GNOik1nTPswwtZ4bLpIRglEn9dNgEG79iOhVUq4IKgA=
+github.com/andig/eebus-go v0.0.0-20260725155950-e735091ff165 h1:mgx3N1XD29NtCtvbm1CEMJpz8lBUgMiSdH0Ku72pDP4=
+github.com/andig/eebus-go v0.0.0-20260725155950-e735091ff165/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=
 github.com/andig/go-powerwall v0.3.0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512 h1:1y8dS4GaBB9WUu/r8rInTaxdZhHG5GuwOfllzDAZXL8=
@@ -138,8 +140,6 @@ github.com/eclipse/paho.golang v0.23.0 h1:KHgl2wz6EJo7cMBmkuhpt7C576vP+kpPv7jjvS
 github.com/eclipse/paho.golang v0.23.0/go.mod h1:nQRhTkoZv8EAiNs5UU0/WdQIx2NrnWUpL9nsGJTQN04=
 github.com/eclipse/paho.mqtt.golang v1.5.1 h1:/VSOv3oDLlpqR2Epjn1Q7b2bSTplJIeV2ISgCl2W7nE=
 github.com/eclipse/paho.mqtt.golang v1.5.1/go.mod h1:1/yJCneuyOoCOzKSsOTUc0AJfpsItBGWvYpBLimhArU=
-github.com/enbility/eebus-go v0.7.1-0.20260720111250-363db3c5c262 h1:E95yAg0mxQSQ6qfSm2GGObz0DfhZKUqiHoO5tvuHPgg=
-github.com/enbility/eebus-go v0.7.1-0.20260720111250-363db3c5c262/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a h1:foChWb8lhzqa6lWDRs6COYMdp649YlUirFP8GqoT0JQ=
 github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a/go.mod h1:H64mhYcAQUGUUnVqMdZQf93kPecH4M79xwH95Lddt3U=
 github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76 h1:gDrV6vBG3luAgsyX4sXYShITT41CDKXrtyluLeRmglE=
