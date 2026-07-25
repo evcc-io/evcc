@@ -21,6 +21,16 @@ func newTestConnection(baseURL string) *Connection {
 	}
 }
 
+// newStateConnection returns a connection serving state for any entity
+func newStateConnection(t *testing.T, state string) *Connection {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `{"entity_id":"sensor.foo","state":%q}`, state)
+	}))
+	t.Cleanup(srv.Close)
+
+	return newTestConnection(srv.URL)
+}
+
 func TestGetChargeStatus(t *testing.T) {
 	states, err := NewStatusMap("not_plugged", "Charging_Stopped, charging_error", "instant_charging")
 	require.NoError(t, err)
@@ -42,12 +52,7 @@ func TestGetChargeStatus(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.state, func(t *testing.T) {
-			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				fmt.Fprintf(w, `{"entity_id":"sensor.foo","state":%q}`, tc.state)
-			}))
-			defer srv.Close()
-
-			status, err := newTestConnection(srv.URL).GetChargeStatus("sensor.foo", states)
+			status, err := newStateConnection(t, tc.state).GetChargeStatus("sensor.foo", states)
 			assert.Equal(t, tc.want, status)
 			if tc.want == api.StatusNone {
 				assert.Error(t, err)
@@ -61,6 +66,31 @@ func TestGetChargeStatus(t *testing.T) {
 func TestNewStatusMapDuplicate(t *testing.T) {
 	_, err := NewStatusMap("foo", "foo", "")
 	assert.Error(t, err)
+}
+
+// TestStatusMapExtendsBuiltin verifies that configured states extend the
+// built-in mapping and only override the states they explicitly redefine.
+func TestStatusMapExtendsBuiltin(t *testing.T) {
+	states, err := NewStatusMap("", "charging", "instant_charging")
+	require.NoError(t, err)
+
+	tests := []struct {
+		state string
+		want  api.ChargeStatus
+	}{
+		{"charging", api.StatusB},         // redefined
+		{"paused", api.StatusB},           // built-in, untouched
+		{"c", api.StatusC},                // built-in, untouched
+		{"instant_charging", api.StatusC}, // added
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.state, func(t *testing.T) {
+			status, err := newStateConnection(t, tc.state).GetChargeStatus("sensor.foo", states)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, status)
+		})
+	}
 }
 
 // TestCallSwitchService_DomainDispatch verifies that CallSwitchService picks

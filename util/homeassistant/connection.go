@@ -188,7 +188,9 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 // StatusMap maps device-specific Home Assistant states to evcc charge status
 type StatusMap map[string]api.ChargeStatus
 
-// NewStatusMap creates a status map from comma-separated, case-insensitive lists of states
+// NewStatusMap creates a status map from comma-separated, case-insensitive lists
+// of states. It extends the built-in mapping, overriding it only for states
+// explicitly mapped to a different status.
 func NewStatusMap(a, b, c string) (StatusMap, error) {
 	res := make(StatusMap)
 
@@ -213,8 +215,8 @@ func NewStatusMap(a, b, c string) (StatusMap, error) {
 	return res, nil
 }
 
-// GetChargeStatus maps Home Assistant states to api.ChargeStatus. States from
-// the device-specific status map take precedence over the built-in mapping.
+// GetChargeStatus maps Home Assistant states to api.ChargeStatus. The
+// device-specific status map extends the built-in mapping and takes precedence.
 func (c *Connection) GetChargeStatus(entity string, states StatusMap) (api.ChargeStatus, error) {
 	state, err := c.GetState(entity)
 	if err != nil {
