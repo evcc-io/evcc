@@ -37,7 +37,7 @@ require (
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260722070723-f3604323d820
 	github.com/fatih/structs v1.1.0
-	github.com/getkin/kin-openapi v0.143.0
+	github.com/getkin/kin-openapi v0.144.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/go-telegram/bot v1.22.0
