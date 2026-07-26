@@ -66,6 +66,11 @@ func shapeSolar(rates api.Rates, i int, vals []float64) {
 	}
 
 	cur := rates[i].Value
+	if cur <= 0 {
+		// empty slot stays empty, shaping a non-positive slot would flip signs when rescaling
+		return
+	}
+
 	prev, next := cur, cur
 	if i > 0 {
 		prev = rates[i-1].Value
