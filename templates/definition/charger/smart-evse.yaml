@@ -1,6 +1,6 @@
 template: smart-evse
 products:
-  - brand: SmartEVSE (Stegen Electronics)
+  - brand: Stegen Electronics
     description:
       generic: v3.11.2 or newer
 capabilities: ["mA", "rfid", "1p3p", "dim"]
