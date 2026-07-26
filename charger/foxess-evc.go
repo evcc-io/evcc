@@ -132,12 +132,12 @@ func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewFoxESSEVC(ctx, cc.URI, cc.ID)
+	return NewFoxESSEVC(ctx, cc.TcpSettings)
 }
 
 // NewFoxESSEVC creates a FoxESS EV charger
-func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
