@@ -296,6 +296,7 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 	t.Run("corrects session when ChargedEnergy increased", func(t *testing.T) {
 		lp, me, rater := setup(t)
 
+		rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 		me.EXPECT().TotalEnergy().Return(9157.3, nil)
 		lp.createSession()
 		lp.session.Created = lp.clock.Now()
@@ -317,6 +318,7 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 	t.Run("no-op when ChargedEnergy unchanged", func(t *testing.T) {
 		lp, me, rater := setup(t)
 
+		rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 		me.EXPECT().TotalEnergy().Return(9154.4, nil)
 		lp.createSession()
 		lp.session.Created = lp.clock.Now()
@@ -331,6 +333,20 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 
 		assert.Equal(t, 15.3, lp.session.ChargedEnergy)
 		assert.Equal(t, 9164.0, *lp.session.MeterStop)
+	})
+
+	t.Run("does not carry over energy from the previous session", func(t *testing.T) {
+		lp, me, rater := setup(t)
+
+		rater.EXPECT().ChargedEnergy().Return(1.8, nil)
+		me.EXPECT().TotalEnergy().Return(9154.4, nil)
+		lp.createSession()
+		lp.session.Created = lp.clock.Now()
+
+		rater.EXPECT().ChargedEnergy().Return(1.8, nil)
+		lp.finalizeSessionEnergy()
+
+		assert.Zero(t, lp.session.ChargedEnergy)
 	})
 
 	t.Run("no-op when session nil or uncreated", func(t *testing.T) {

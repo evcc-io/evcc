@@ -140,7 +140,7 @@ type Loadpoint struct {
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
 	chargeRater      api.ChargeRater
-	chargedAtStartup float64 // session energy at startup
+	chargedAtStartup float64 // charge rater baseline for the current session
 
 	circuit        api.Circuit        // Circuit
 	chargeMeter    api.Meter          // Charger usage meter

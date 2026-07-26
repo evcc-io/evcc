@@ -39,6 +39,12 @@ func (lp *Loadpoint) createSession() {
 		return
 	}
 
+	if lp.chargeRater != nil {
+		if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
+			lp.chargedAtStartup = f
+		}
+	}
+
 	lp.session = lp.db.New(lp.chargeMeterTotal())
 
 	if v := lp.GetVehicle(); v != nil {
