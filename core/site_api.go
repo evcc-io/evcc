@@ -370,33 +370,6 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	return nil
 }
 
-func (site *Site) GetOptimizerDischargeToGrid() bool {
-	site.RLock()
-	defer site.RUnlock()
-	return site.optimizerDischargeToGrid
-}
-
-func (site *Site) SetOptimizerDischargeToGrid(val bool) error {
-	site.log.DEBUG.Println("set optimizer discharge to grid:", val)
-
-	var changed bool
-
-	site.Lock()
-	if site.optimizerDischargeToGrid != val {
-		site.optimizerDischargeToGrid = val
-		settings.SetBool(keys.OptimizerDischargeToGrid, val)
-		site.publish(keys.OptimizerDischargeToGrid, val)
-		changed = true
-	}
-	site.Unlock()
-
-	if changed {
-		site.triggerOptimizer()
-	}
-
-	return nil
-}
-
 func (site *Site) GetOptimizerManualPA() *float64 {
 	site.RLock()
 	defer site.RUnlock()
@@ -426,6 +399,33 @@ func (site *Site) SetOptimizerManualPA(val *float64) error {
 
 	if changed {
 		site.triggerOptimizer()
+	}
+
+	return nil
+}
+
+// GetBatteryGridDischarge returns whether the battery may discharge to grid (experimental)
+func (site *Site) GetBatteryGridDischarge() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischarge
+}
+
+// SetBatteryGridDischarge sets whether the battery may discharge to grid (experimental)
+func (site *Site) SetBatteryGridDischarge(val bool) error {
+	site.log.DEBUG.Println("set battery grid discharge:", val)
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryGridDischarge != val {
+		site.batteryGridDischarge = val
+		settings.SetBool(keys.BatteryGridDischarge, val)
+		site.publish(keys.BatteryGridDischarge, val)
 	}
 
 	return nil

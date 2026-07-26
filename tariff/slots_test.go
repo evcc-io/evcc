@@ -141,46 +141,98 @@ func TestDropOldRates(t *testing.T) {
 	require.Len(t, res, 0)
 }
 
-// TestSolarAndCo2Interpolation
-//
-// For solar tariffs we expect power at time of interval start (see https://github.com/evcc-io/evcc/issues/23184 for changing this).
-// When converting to 15min slots, solar interpolation needs to take care of this
-func TestSolarAndCo2Interpolation(t *testing.T) {
+// assertSourceAverages verifies that the sub-slots preserve the average of their source slot
+func assertSourceAverages(t *testing.T, rr, res api.Rates) {
+	t.Helper()
+
+	n := len(res) / len(rr)
+	for i, r := range rr {
+		var sum float64
+		for _, sub := range res[i*n : (i+1)*n] {
+			sum += sub.Value
+		}
+		assert.InDelta(t, r.Value, sum/float64(n), 1e-9, "rate %d", i)
+	}
+}
+
+// TestSolarInterpolation verifies that solar sub-slots follow the neighbouring
+// slots while preserving the average of the slot they originate from
+func TestSolarInterpolation(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
 
-	// Two consecutive hourly solar rates: 0.0 in the first hour, 4.0 in the next
-	// With linear interpolation, the first hour's four 15m slots should have values 0,1,2,3
+	// two consecutive hourly solar rates: 0.0 in the first hour, 4.0 in the next
 	r0 := api.Rate{
 		Start: now,
-		End:   now.Add(1 * time.Hour),
+		End:   now.Add(time.Hour),
 		Value: 0.0,
 	}
 	r1 := api.Rate{
 		Start: r0.End,
-		End:   r0.End.Add(1 * time.Hour),
+		End:   r0.End.Add(time.Hour),
 		Value: 4.0,
 	}
 
-	for _, typ := range []api.TariffType{api.TariffTypeSolar} { //, api.TariffTypeCo2
-		w := &SlotWrapper{&testTariff{
-			rates: api.Rates{r0, r1},
-			typ:   typ,
-		}}
+	w := &SlotWrapper{&testTariff{
+		rates: api.Rates{r0, r1},
+		typ:   api.TariffTypeSolar,
+	}}
 
-		res, err := w.Rates()
-		require.NoError(t, err)
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 8)
 
-		// Build expected results: r0 interpolated into 4 slots (0..3), then r1 as four slots with value 4.0
-		expected := makeRates(now, SlotDuration, 4, 0)
+	for i, r := range res {
+		assert.Equal(t, now.Add(time.Duration(i)*SlotDuration), r.Start, "slot %d", i)
+	}
 
-		for j := range 4 {
-			expected = append(expected, api.Rate{
-				Start: r1.Start.Add(time.Duration(j) * SlotDuration),
-				End:   r1.Start.Add(time.Duration(j+1) * SlotDuration),
-				Value: 4.0,
-			})
-		}
+	// ramping up from the empty hour, flat towards the missing successor
+	for i, expected := range []float64{0, 0, 0, 0, 20.0 / 7, 4, 32.0 / 7, 32.0 / 7} {
+		assert.InDelta(t, expected, res[i].Value, 1e-9, "slot %d", i)
+	}
 
-		assert.Equal(t, expected, res)
+	assertSourceAverages(t, api.Rates{r0, r1}, res)
+}
+
+// TestSolarInterpolationInterior verifies an interior slot with both neighbours differing
+func TestSolarInterpolationInterior(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
+
+	rr := make(api.Rates, 3)
+	for i, v := range []float64{0, 4, 8} {
+		start := now.Add(time.Duration(i) * time.Hour)
+		rr[i] = api.Rate{Start: start, End: start.Add(time.Hour), Value: v}
+	}
+
+	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 12)
+
+	// interior slot ramps linearly between the neighbouring slot centers
+	for i, expected := range []float64{2.5, 3.5, 4.5, 5.5} {
+		assert.InDelta(t, expected, res[4+i].Value, 1e-9, "slot %d", i)
+	}
+
+	assertSourceAverages(t, rr, res)
+}
+
+// TestSolarNegativeSlot verifies that a non-positive slot is not shaped
+func TestSolarNegativeSlot(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
+
+	rr := api.Rates{
+		{Start: now, End: now.Add(time.Hour), Value: -1},
+		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 4},
+	}
+
+	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 8)
+
+	for i, r := range res[:4] {
+		assert.Equal(t, -1.0, r.Value, "slot %d", i)
 	}
 }

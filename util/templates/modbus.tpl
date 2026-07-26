@@ -22,4 +22,10 @@ rtu: true
 # configuration error - should not happen
 modbusConnectionTypeNotDefined: {{ .modbus }}
 {{- end }}
+{{- if .delay }}
+delay: {{ .delay }}
+{{- end }}
+{{- if .timeout }}
+timeout: {{ .timeout }}
+{{- end }}
 {{- end }}

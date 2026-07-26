@@ -144,7 +144,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"buffersoc":                     {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":                {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol":       {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
-		"optimizerdischargetogrid":      {"POST", "/optimizerdischargetogrid/{value:[01truefalse]+}", boolHandler(site.SetOptimizerDischargeToGrid, site.GetOptimizerDischargeToGrid)},
+		"batterygriddischarge":          {"POST", "/batterygriddischarge/{value:[01truefalse]+}", boolHandler(site.SetBatteryGridDischarge, site.GetBatteryGridDischarge)},
 		"optimizermanualpa":             {"POST", "/optimizermanualpa/{value:-?[0-9.]+}", floatPtrHandler(site.SetOptimizerManualPA, site.GetOptimizerManualPA)},
 		"optimizermanualpadelete":       {"DELETE", "/optimizermanualpa", floatPtrHandler(site.SetOptimizerManualPA, site.GetOptimizerManualPA)},
 		"batterygridcharge":             {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},

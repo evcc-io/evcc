@@ -30,12 +30,12 @@ params:
       de: Verbleibende Mindestbezugsleistung (Pmin) für steuerbare Verbrauchseinrichtungen, die bei ausbleibendem Heartbeat der Steuerbox angewendet wird. Dies ist die per GZF berechnete Mindestbezugsleistung nach BK6-22-300; wird von der Steuerbox überschrieben, sobald diese eigene Failsafe-Werte überträgt. (Standard 4,2 kW nach § 14a EnWG)
   - name: productionnominalmax
     type: float
-    unit: W
+    unit: Wp
     description:
-      en: Installed generator power (Wp)
-      de: Installierte Generatorleistung (Wp)
+      en: Installed generator power
+      de: Installierte Generatorleistung
     help:
-      en: Rated generator/module power (Wp) of the installation.
+      en: Rated generator/module power of the installation (reference value according to § 9 EEG).
       de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
   - name: failsafeproductionpower
     type: float

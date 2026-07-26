@@ -102,10 +102,10 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
-	GetOptimizerDischargeToGrid() bool
-	SetOptimizerDischargeToGrid(bool) error
 	GetOptimizerManualPA() *float64
 	SetOptimizerManualPA(*float64) error
+	GetBatteryGridDischarge() bool
+	SetBatteryGridDischarge(bool) error
 
 	//
 	// battery control external

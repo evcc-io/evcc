@@ -10,11 +10,9 @@
 				:currency="currency"
 				:charging-strategies="chargingStrategies"
 				:selected-strategy="optimizerChargingStrategy"
-				:discharge-to-grid="optimizerDischargeToGrid"
 				:pending="pending"
 				@optimize="optimizeNow"
 				@change-strategy="changeChargingStrategy"
-				@change-discharge-to-grid="changeDischargeToGrid"
 			/>
 		</Card>
 		<div class="row">
@@ -169,9 +167,6 @@ export default defineComponent({
 		optimizerChargingStrategy(): string {
 			return store.state.optimizerChargingStrategy || "";
 		},
-		optimizerDischargeToGrid(): boolean {
-			return !!store.state.optimizerDischargeToGrid;
-		},
 		netCost(): number {
 			return (this.evopt?.res?.objective_value || 0) * -1;
 		},
@@ -226,9 +221,6 @@ export default defineComponent({
 		},
 		changeChargingStrategy(value: string) {
 			api.post(`optimizerchargingstrategy/${value}`);
-		},
-		changeDischargeToGrid(value: boolean) {
-			api.post(`optimizerdischargetogrid/${value}`);
 		},
 		dimColorBy25Percent(color: string): string {
 			// Convert color to 25% opacity (40 in hex = 25% of 255)
