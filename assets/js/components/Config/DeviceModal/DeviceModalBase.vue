@@ -200,6 +200,8 @@
 						<slot name="after-test" :values="values"></slot>
 					</template>
 				</DeviceModalActions>
+
+				<DeviceLog v-if="id && isModalVisible" :id="id" :device-type="deviceType" />
 			</template>
 		</form>
 	</GenericModal>
@@ -216,6 +218,7 @@ import PropertyCollapsible from "../PropertyCollapsible.vue";
 import Modbus from "./Modbus.vue";
 import ModbusAdvanced from "./ModbusAdvanced.vue";
 import DeviceModalActions from "./Actions.vue";
+import DeviceLog from "../DeviceLog.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
@@ -259,6 +262,7 @@ export default defineComponent({
 		Modbus,
 		ModbusAdvanced,
 		DeviceModalActions,
+		DeviceLog,
 		Markdown,
 		SponsorTokenRequired,
 		TemplateSelector,

@@ -39,6 +39,15 @@ func (d *Config) Named() Named {
 	return res
 }
 
+// LogArea returns the log area of the device's logger
+func (d *Config) LogArea() string {
+	res := NameForID(d.ID)
+	if t := d.Title; t != "" && t != res {
+		res += "-" + t
+	}
+	return res
+}
+
 // Typed converts device details to typed config
 func (d *Config) Typed() Typed {
 	res := Typed{

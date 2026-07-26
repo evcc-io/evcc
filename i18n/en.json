@@ -189,6 +189,11 @@
       "label": "Currency",
       "title": "Currency"
     },
+    "deviceLog": {
+      "empty": "No log entries yet.",
+      "showAll": "Show all entries",
+      "title": "Log"
+    },
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",

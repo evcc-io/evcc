@@ -323,11 +323,7 @@ func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfF
 
 // loggerForConfig creates a logger with sensible name for (custom) configurable device
 func loggerForConfig(conf *config.Config, typ string) *util.Logger {
-	res := conf.Named().Name
-	if t := conf.Title; t != "" && t != res {
-		res += "-" + t
-	}
-	log := util.NewLogger(res).With(util.ComponentKey, typ)
+	log := util.NewLogger(conf.LogArea()).With(util.ComponentKey, typ)
 	if conf.Title != "" {
 		log = log.With(util.TitleKey, conf.Title)
 	}

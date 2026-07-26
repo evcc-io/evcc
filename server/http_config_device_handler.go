@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
@@ -246,6 +247,30 @@ func deviceStatus[T comparable](name string, h config.Handler[T]) (T, error) {
 	}
 
 	return instance, nil
+}
+
+// deviceLogHandler returns the log entries of a single device
+func deviceLogHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	conf, err := config.ConfigByID(id)
+	if err != nil {
+		jsonError(w, http.StatusNotFound, err)
+		return
+	}
+
+	level := logstash.LogLevelToThreshold(r.URL.Query().Get("level"))
+
+	var count int
+	if v := r.URL.Query().Get("count"); v != "" {
+		count, _ = strconv.Atoi(v)
+	}
+
+	jsonWrite(w, logstash.All([]string{conf.LogArea()}, level, count))
 }
 
 // deviceStatusHandler returns the device test status by class

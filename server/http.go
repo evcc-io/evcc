@@ -295,6 +295,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
+			"devicelog":          {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}/log", deviceLogHandler},
 			"dirty":              {"GET", "/dirty", getHandler(ConfigDirty)},
 			"evccyaml":           {"GET", "/evcc.yaml", configYamlHandler(configFile)},
 			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler(site, auth)},
