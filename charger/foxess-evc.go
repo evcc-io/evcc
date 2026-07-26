@@ -27,7 +27,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -45,13 +44,11 @@ type FoxESSEVC struct {
 	mu         sync.Mutex
 	current    float64 // tracks phase current, 0 if unset
 	enabled    bool    // tracks enabled state
-	session    bool    // tracks session state
 	phases     int     // tracks phase count; the charger does not report it
 	minPower   uint16  // min supported power, 0 if unknown
 	maxPower   uint16  // max supported power, 0 if unknown
 	minCurrent float64 // min supported current per phase, 0 if unknown
 	maxCurrent float64 // max supported current per phase, 0 if unknown
-	lp         loadpoint.API
 }
 
 const (
@@ -97,7 +94,7 @@ const (
 	// Without a phase-cutting box the charger derives the phase count from the power setpoint
 	// (§2.38): >= 4.2kW three-phase, >= 1.4kW single-phase, below that charging is paused.
 	// Setpoints are given in 0.1kW.
-	foxMinPower3p = 42 // 1.4kW, the minimum power setpoint for a 3p charger
+	foxMinPower3p = 42 // 4.2kW, the minimum power setpoint for a 3p charger
 	foxMinPower1p = 14 // 1.4kW, the minimum power setpoint for a 1p or switchable charger
 	foxMaxPower1p = 73 // 7.3kW, the maximum power setpoint for a 1p charger
 
@@ -120,14 +117,13 @@ const (
 )
 
 func init() {
-	registry.AddCtx("foxess-modbus", NewFoxESSEVCFromConfig)
+	registry.AddCtx("foxess-evc", NewFoxESSEVCFromConfig)
 }
 
 // NewFoxESSEVCFromConfig creates a FoxESS EV charger from generic config
 func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		Pbox               bool
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
@@ -138,11 +134,11 @@ func NewFoxESSEVCFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewFoxESSEVC(ctx, cc.URI, cc.ID, cc.Pbox)
+	return NewFoxESSEVC(ctx, cc.URI, cc.ID)
 }
 
 // NewFoxESSEVC creates a FoxESS EV charger
-func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (api.Charger, error) {
+func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -152,7 +148,7 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("foxess-modbus")
+	log := util.NewLogger("foxess-evc")
 	conn.Logger(log.TRACE)
 
 	wb := &FoxESSEVC{
@@ -189,22 +185,17 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8, pbox bool) (ap
 
 	if is3pCharger && hasAutoSwEn {
 		// 3p charger with enabled auto phase-switching
+		wb.minPower = foxMinPower1p
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 
-		// keep the interal charge pause and switching protection interval as short as possible
+		// keep the internal charge pause and switching protection interval as short as possible
 		if err := wb.ensureReg(foxRegSwitchInterval, foxMinSwitchInterval); err != nil {
 			wb.log.WARN.Printf("switch interval: %v", err)
 		}
 	}
 
-	// get inital status to initialize session and enabled state
-	if _, err = wb.Status(); err != nil {
-		return nil, err
-	}
-
-	// the charger goes to fallback current if no setpoint is received within the
-	// time validity window, so we must re-send the setpoint periodically
+	// keep the charger from considering evcc offline; see heartbeat
 	go wb.heartbeat(ctx)
 
 	return wb, nil
@@ -262,15 +253,9 @@ func (wb *FoxESSEVC) calcPower(enabled bool, current float64, phases int) float6
 	return 230 * float64(phases) * min(max(current, wb.minCurrent), wb.maxCurrent)
 }
 
-// applySetpoint writes the combined enable state and charging limit during an active session.
-// Outside of a session the charger ignores the setpoint.
+// applySetpoint writes the combined enable state and charging limit
 func (wb *FoxESSEVC) applySetpoint(power float64) error {
 	var val uint16
-
-	// if !wb.session {
-	// 	return errors.New("no active session")
-	// }
-
 	if power != 0 {
 		val = min(max(uint16(math.Round(power/100.0)), wb.minPower), wb.maxPower)
 	}
@@ -287,8 +272,8 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 			return
 		}
 
-		// keepalive write, no-op
-		_, err := wb.conn.ReadHoldingRegisters(foxRegSessionControl, 0)
+		// keepalive read; any message resets the charger's time validity timer (§2.34)
+		_, err := wb.conn.ReadHoldingRegisters(foxRegSessionControl, foxSessionNoAction)
 		if err != nil {
 			wb.log.DEBUG.Printf("heartbeat: %v", err)
 		}
@@ -319,34 +304,15 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 
 	switch s := binary.BigEndian.Uint16(b); s {
 	case foxStatusIdle:
-		wb.session = false
 		return api.StatusA, nil
 
-	case foxStatusConnect, foxStatusFinish:
-		wb.session = false
-		return api.StatusB, nil
-
-	case foxStatusStart:
-		wb.session = true
-		return api.StatusB, nil
-
-	case foxStatusPause:
-		// wb.enabled = false
-		wb.session = true
-		return api.StatusB, nil
-
-	case foxStatusSwitching:
-		wb.enabled = true
-		wb.session = true
+	case foxStatusConnect, foxStatusStart, foxStatusPause, foxStatusSwitching, foxStatusFinish:
 		return api.StatusB, nil
 
 	case foxStatusCharging:
-		wb.enabled = true
-		wb.session = true
 		return api.StatusC, nil
 
 	default:
-		wb.session = false
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
 }
@@ -391,8 +357,11 @@ func (wb *FoxESSEVC) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *FoxESSEVC) Enable(enable bool) error {
-	err := wb.applySetpoint(wb.calcPower(enable, wb.current, wb.phases))
-	if err != nil {
+	wb.mu.Lock()
+	current, phases := wb.current, wb.phases
+	wb.mu.Unlock()
+
+	if err := wb.applySetpoint(wb.calcPower(enable, current, phases)); err != nil {
 		return err
 	}
 
@@ -410,14 +379,17 @@ func (wb *FoxESSEVC) MaxCurrent(current int64) error {
 
 var _ api.ChargerEx = (*FoxESSEVC)(nil)
 
-// maxCurrentMillis implements the api.ChargerEx interface
+// MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 	if current < wb.minCurrent {
 		return fmt.Errorf("invalid current: %.1fA", current)
 	}
 
-	err := wb.applySetpoint(wb.calcPower(wb.enabled, current, wb.phases))
-	if err != nil {
+	wb.mu.Lock()
+	enabled, phases := wb.enabled, wb.phases
+	wb.mu.Unlock()
+
+	if err := wb.applySetpoint(wb.calcPower(enabled, current, phases)); err != nil {
 		return err
 	}
 
