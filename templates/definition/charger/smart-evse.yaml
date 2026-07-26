@@ -7,7 +7,7 @@ capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
   description:
     de: |
-      Anbindung über die REST API der Smart Evse Firmware (FW >= 3.11.2).
+      Anbindung über die REST API mit Firmware >= 3.11.2.
       evcc setzt das Gerät in den konfigurierten Modus und steuert den Ladestrom über `override_current`.
     en: |
       Uses the REST API of the Smart Evse firmware (FW >= 3.11.2).
