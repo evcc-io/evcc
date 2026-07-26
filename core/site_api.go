@@ -370,6 +370,33 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	return nil
 }
 
+// GetBatteryGridDischarge returns whether the battery may discharge to grid (experimental)
+func (site *Site) GetBatteryGridDischarge() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischarge
+}
+
+// SetBatteryGridDischarge sets whether the battery may discharge to grid (experimental)
+func (site *Site) SetBatteryGridDischarge(val bool) error {
+	site.log.DEBUG.Println("set battery grid discharge:", val)
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryGridDischarge != val {
+		site.batteryGridDischarge = val
+		settings.SetBool(keys.BatteryGridDischarge, val)
+		site.publish(keys.BatteryGridDischarge, val)
+	}
+
+	return nil
+}
+
 // GetSolarAdjusted returns if the solar forecast is adjusted to real production data
 func (site *Site) GetSolarAdjusted() bool {
 	site.RLock()

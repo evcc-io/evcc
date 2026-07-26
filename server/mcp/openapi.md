@@ -146,6 +146,26 @@ call setBatteryGridChargeLimit {
 }
 ```
 
+## setBatteryGridDischarge
+
+Allow the home battery to discharge to the grid (experimental).
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatteryGridDischarge {
+  "enable": "true"
+}
+```
+
 ## setBufferSoc
 
 Set battery buffer SoC.

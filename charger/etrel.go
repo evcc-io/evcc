@@ -79,12 +79,12 @@ func NewEtrelFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, err
 	}
 
-	return NewEtrel(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewEtrel(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewEtrel creates a Etrel charger
-func NewEtrel(ctx context.Context, uri string, id uint8, connector int) (*Etrel, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewEtrel(ctx context.Context, settings modbus.TcpSettings, connector int) (*Etrel, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

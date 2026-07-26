@@ -76,12 +76,12 @@ func NewCompleoFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	return NewCompleo(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewCompleo(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewCompleo creates Compleo charger
-func NewCompleo(ctx context.Context, uri string, slaveID uint8, connector uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewCompleo(ctx context.Context, settings modbus.TcpSettings, connector uint16) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

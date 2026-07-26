@@ -105,6 +105,32 @@ func TestSlotAt(t *testing.T) {
 	require.True(t, SlotAt(now.Add(3*time.Hour), plan).IsZero())
 }
 
+// TestFindContinuousWindowFlatRates ensures that equal-cost windows always select the
+// latest slot. The current slot is clamped to now, hence its cost is summed from
+// different addends than the aligned slots and must not decide the comparison.
+func TestFindContinuousWindowFlatRates(t *testing.T) {
+	day := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	rr := rates(lo.RepeatBy(3*96, func(int) float64 { return 0.291 }), day, tariff.SlotDuration)
+	target := day.Add(2 * 24 * time.Hour).Add(6*time.Hour + 45*time.Minute)
+
+	for _, tc := range []struct {
+		now      time.Duration
+		duration time.Duration
+	}{
+		{16*time.Hour + 45*time.Minute + 35*time.Second, 15*time.Minute + 30*time.Second + 464868247},
+		{16*time.Hour + 45*time.Minute + 37*time.Second, 15*time.Minute + 30*time.Second + 239819456},
+		{16*time.Hour + 46*time.Minute + 2*time.Second, 26*time.Minute + 39*time.Second + 438201128},
+	} {
+		now := day.Add(tc.now)
+
+		plan := findContinuousWindow(clampRates(rr, now, target), tc.duration, target)
+		require.NotEmpty(t, plan)
+
+		latest := target.Add(-tc.duration).Truncate(tariff.SlotDuration)
+		assert.Equal(t, latest, Start(plan), "now %v, duration %v", now, tc.duration)
+	}
+}
+
 func BenchmarkFindContinuousWindow(b *testing.B) {
 	rr := rates(lo.RepeatBy(96, func(i int) float64 {
 		return float64(i)

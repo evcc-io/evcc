@@ -17,6 +17,7 @@ type HomeAssistant struct {
 	implement.Caps
 	conn       *homeassistant.Connection
 	status     string
+	states     homeassistant.StatusMap
 	enabled    string
 	enable     string
 	maxcurrent string
@@ -31,6 +32,9 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 	var cc struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Status               string   // required - sensor for charge status
+		StatusA              string   // optional - custom states mapped to status A
+		StatusB              string   // optional - custom states mapped to status B
+		StatusC              string   // optional - custom states mapped to status C
 		Enabled              string   // required - sensor for enabled state
 		Enable               string   // required - switch/input_boolean for enable/disable
 		MaxCurrent           string   // required - number entity for setting max current
@@ -58,6 +62,11 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 		return nil, errors.New("missing maxcurrent number entity")
 	}
 
+	states, err := homeassistant.NewStatusMap(cc.StatusA, cc.StatusB, cc.StatusC)
+	if err != nil {
+		return nil, err
+	}
+
 	log := util.LoggerFromContext(ctx, "ha-charger")
 
 	conn, err := cc.Config.NewConnection(log)
@@ -69,6 +78,7 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 		Caps:       implement.New(),
 		conn:       conn,
 		status:     cc.Status,
+		states:     states,
 		enabled:    cc.Enabled,
 		enable:     cc.Enable,
 		maxcurrent: cc.MaxCurrent,
@@ -117,7 +127,7 @@ var _ api.Charger = (*HomeAssistant)(nil)
 
 // Status implements the api.ChargeState interface
 func (c *HomeAssistant) Status() (api.ChargeStatus, error) {
-	return c.conn.GetChargeStatus(c.status)
+	return c.conn.GetChargeStatus(c.status, c.states)
 }
 
 // Enabled implements the api.Charger interface

@@ -65,7 +65,7 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	wb, err := NewPhoenixCharx(ctx, cc.URI, cc.ID, cc.Connector)
+	wb, err := NewPhoenixCharx(ctx, cc.TcpSettings, cc.Connector)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +86,8 @@ func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.C
 }
 
 // NewPhoenixCharx creates a Phoenix charger
-func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16) (*PhoenixCharx, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewPhoenixCharx(ctx context.Context, settings modbus.TcpSettings, connector uint16) (*PhoenixCharx, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

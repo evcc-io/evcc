@@ -97,12 +97,12 @@ func newMyPvFromConfig(ctx context.Context, name string, other map[string]any, s
 		return nil, err
 	}
 
-	return NewMyPv(ctx, name, cc.URI, cc.ID, cc.TempSource, statusC, cc.Scale)
+	return NewMyPv(ctx, name, cc.TcpSettings, cc.TempSource, statusC, cc.Scale)
 }
 
 // NewMyPv creates myPV AC Elwa 2 or Thor charger
-func NewMyPv(ctx context.Context, name, uri string, slaveID uint8, tempSource int, statusC uint16, scale float64) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewMyPv(ctx context.Context, name string, settings modbus.TcpSettings, tempSource int, statusC uint16, scale float64) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

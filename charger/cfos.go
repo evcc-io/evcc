@@ -67,14 +67,14 @@ func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api
 		return nil, err
 	}
 
-	return NewCfosPowerBrain(ctx, cc.URI, cc.ID)
+	return NewCfosPowerBrain(ctx, cc)
 }
 
 // NewCfosPowerBrain creates a cFos charger
-func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 4701)
+func NewCfosPowerBrain(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	settings.URI = util.DefaultPort(settings.URI, 4701)
 
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

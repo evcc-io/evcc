@@ -118,6 +118,16 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	}
 
 	err := m.client.Listen(m.topic, h.receive)
+
+	// without timeout, wait briefly for a retained message- it arrives right after suback
+	if err == nil && m.timeout == 0 {
+		select {
+		case <-h.val.Done():
+		case <-m.ctx.Done():
+		case <-time.After(100 * time.Millisecond):
+		}
+	}
+
 	return h, err
 }
 

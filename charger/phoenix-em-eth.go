@@ -46,7 +46,7 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	wb, err := NewPhoenixEMEth(ctx, cc.URI, cc.ID)
+	wb, err := NewPhoenixEMEth(ctx, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +63,8 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.C
 }
 
 // NewPhoenixEMEth creates a Phoenix charger
-func NewPhoenixEMEth(ctx context.Context, uri string, slaveID uint8) (*PhoenixEMEth, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewPhoenixEMEth(ctx context.Context, settings modbus.TcpSettings) (*PhoenixEMEth, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

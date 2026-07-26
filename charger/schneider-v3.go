@@ -71,12 +71,12 @@ func NewSchneiderV3FromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewSchneiderV3(ctx, cc.URI, cc.ID)
+	return NewSchneiderV3(ctx, cc)
 }
 
 // NewSchneiderV3 creates Schneider charger
-func NewSchneiderV3(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

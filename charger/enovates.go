@@ -69,14 +69,12 @@ func NewEnovatesFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	return NewEnovates(ctx, cc.URI, cc.ID)
+	return NewEnovates(ctx, cc)
 }
 
 // NewEnovates creates an Enovates charger
-func NewEnovates(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewEnovates(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
