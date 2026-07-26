@@ -95,10 +95,6 @@ const (
 	foxMinPower3p = 42 // 4.2kW, the minimum power setpoint for a 3p charger
 	foxMinPower1p = 14 // 1.4kW, the minimum power setpoint for a 1p or switchable charger
 	foxMaxPower1p = 73 // 7.3kW, the maximum power setpoint for a 1p charger
-
-	// foxHeartbeatInterval is the interval at which the heartbeat runs.
-	// Must be less than foxTimeValidity so the charger never considers evcc offline.
-	foxHeartbeatInterval = 4 * time.Second
 )
 
 // foxStatus values of the EVC status register (§2.4).
@@ -177,21 +173,20 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	}
 
 	is3pCharger := wb.maxPower > foxMaxPower1p
-	if !is3pCharger {
-		wb.phases = 1
-	}
 
 	var hasAutoSwEn bool
 	if is3pCharger {
+		wb.phases = 3
 		autoSw, err := wb.readUint16(foxRegAutoPhaseSwitch)
 		if err != nil {
 			return nil, err
 		}
 		hasAutoSwEn = autoSw > 0
+	} else {
+		wb.phases = 1
 	}
 
 	if hasAutoSwEn {
-		// 3p charger with enabled auto phase-switching
 		wb.minPower = foxMinPower1p
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
@@ -202,8 +197,16 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 		}
 	}
 
-	// keep the charger from considering evcc offline; see heartbeat
-	go wb.heartbeat(ctx)
+	// keep the charger from considering evcc offline; see heartbeat (§2.34)
+	timeValidity, err := wb.readUint16(foxRegTimeValidity)
+	if err != nil {
+		return nil, err
+	}
+	if timeValidity == 0 {
+		return nil, fmt.Errorf("invalid time validity: %d", timeValidity)
+	}
+
+	go wb.heartbeat(ctx, time.Duration(timeValidity)*time.Second/2)
 
 	return wb, nil
 }
@@ -270,9 +273,10 @@ func (wb *FoxESSEVC) applySetpoint(power float64) error {
 	return wb.ensureReg(foxRegMaxPower, val)
 }
 
-// heartbeat keeps the charger from considering evcc offline
-func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
-	for tick := time.Tick(foxHeartbeatInterval); ; {
+// heartbeat keeps the charger from considering evcc offline. The interval must
+// be shorter than the command validity window (foxRegTimeValidity).
+func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
 		case <-ctx.Done():
