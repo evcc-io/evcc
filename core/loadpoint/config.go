@@ -91,7 +91,6 @@ func (payload DynamicConfig) Apply(lp API) error {
 	if err == nil {
 		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
 	}
-
 	if err == nil {
 		err = lp.SetPhaseConfigured(payload.PhaseConfigured)
 	}

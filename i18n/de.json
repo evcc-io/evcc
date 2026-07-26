@@ -460,6 +460,9 @@
         "charging": "Ladepunkt hinzufügen",
         "heating": "Heizung hinzufügen"
       },
+      "phaseConfiguredAutomatic": "Alle",
+      "phaseConfiguredHelp": "Wähle die Netzphase, die dieses Ladegerät beim einphasigen Laden verwendet.",
+      "phaseConfiguredLabel": "Angeschlossene Phase",
       "phases1p": "1-phasig",
       "phases3p": "3-phasig",
       "phasesAutomatic": "Automatische Phasen",

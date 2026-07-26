@@ -74,7 +74,7 @@ func TestPhasePowerForLoadpoint(t *testing.T) {
 	}
 
 	lp := &Loadpoint{
-		chargeCurrents:   []float64{16, 0, 0},
+		phaseConfigured:  1,
 		phases:           1,
 		measuredPhases:   1,
 		phasesConfigured: 1,
@@ -90,7 +90,6 @@ func TestPhasePowerForLoadpoint(t *testing.T) {
 		measuredPhases:   1,
 		phasesConfigured: 1,
 	}
-
 	power, ok = site.phasePowerForLoadpoint(lp)
 	assert.True(t, ok, "phase power should use configured phase when current data is unavailable")
 	assert.Equal(t, -1717.0, power)

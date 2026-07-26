@@ -794,10 +794,7 @@ export default {
 			return this.chargerStatus?.singlePhase?.value || false;
 		},
 		showPhaseConfigured() {
-			return this.chargerIsSinglePhase || this.values.phasesConfigured === 1 || this.chargerSupports1p3p;
-		},
-		chargerPhaseConfigured() {
-			return this.values.phaseConfigured;
+			return this.values.phasesConfigured === 1;
 		},
 		chargerIsIntegratedDevice() {
 			return this.chargerStatus?.integratedDevice?.value || false;
@@ -940,7 +937,7 @@ export default {
 		async loadConfiguration() {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
-				this.values = deepClone(res.data);
+				this.values = { ...deepClone(defaultValues), ...res.data };
 				this.updateChargerPower();
 				this.updateSolarMode();
 				this.updatePhases();

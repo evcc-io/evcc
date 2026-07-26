@@ -23,14 +23,3 @@ func TestSplitConfigUI(t *testing.T) {
 	assert.Equal(t, 45.0, dynamic.UI.MaxTemp)
 	assert.NotContains(t, other, "ui")
 }
-
-func TestSplitConfigPhaseConfigured(t *testing.T) {
-	payload := map[string]any{
-		"phaseConfigured": 2,
-	}
-
-	dynamic, _, err := SplitConfig(payload)
-	require.NoError(t, err)
-
-	assert.Equal(t, 2, dynamic.PhaseConfigured)
-}

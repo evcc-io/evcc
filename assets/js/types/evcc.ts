@@ -258,9 +258,9 @@ export interface ConfigLoadpoint {
   defaultMode: string;
   priority: number;
   phasesConfigured: number;
+  phaseConfigured: number;
   minCurrent: number;
   maxCurrent: number;
-  phaseConfigured?: number;
   smartCostLimit: number | null;
   planEnergy?: number;
   planTime?: string;

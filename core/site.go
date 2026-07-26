@@ -1045,56 +1045,20 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 }
 
 func (site *Site) phasePowerForLoadpoint(lp *Loadpoint) (float64, bool) {
-	// automatically use charger phase surplus calculation when grid phase powers
-	// are available and the loadpoint has a configured phase setting
 	if len(site.gridPhasePowers) != 3 {
 		return 0, false
 	}
 
-	// require an explicit per-loadpoint configuration: either configured phases
-	// (1 or 3) or a configured single phase index
-	if lp.GetPhasesConfigured() == 0 && lp.GetPhaseConfigured() == 0 {
+	if lp.ActivePhases() != 1 {
 		return 0, false
 	}
 
-	activePhases := lp.ActivePhases()
-	if activePhases <= 0 {
+	phase := lp.GetPhaseConfigured()
+	if phase == 0 {
 		return 0, false
 	}
 
-	if activePhases == 1 {
-		if phase := lp.GetPhaseConfigured(); phase > 0 {
-			if phase-1 < len(site.gridPhasePowers) {
-				return site.gridPhasePowers[phase-1], true
-			}
-			return 0, false
-		}
-	}
-
-	if lp.chargeCurrents == nil {
-		return 0, false
-	}
-
-	var indexes []int
-	for i, current := range lp.chargeCurrents {
-		if current > minActiveCurrent {
-			indexes = append(indexes, i)
-		}
-	}
-
-	if len(indexes) != activePhases || len(indexes) == 0 {
-		return 0, false
-	}
-
-	var power float64
-	for _, idx := range indexes {
-		if idx < 0 || idx >= len(site.gridPhasePowers) {
-			return 0, false
-		}
-		power += site.gridPhasePowers[idx]
-	}
-
-	return power, true
+	return site.gridPhasePowers[phase-1], true
 }
 
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
