@@ -22,7 +22,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -41,14 +40,13 @@ type FoxESSEVC struct {
 	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
-	mu         sync.Mutex
 	current    float64 // tracks phase current, 0 if unset
 	enabled    bool    // tracks enabled state
 	phases     int     // tracks phase count; the charger does not report it
-	minPower   uint16  // min supported power, 0 if unknown
-	maxPower   uint16  // max supported power, 0 if unknown
-	minCurrent float64 // min supported current per phase, 0 if unknown
-	maxCurrent float64 // max supported current per phase, 0 if unknown
+	minPower   uint16  // min supported power
+	maxPower   uint16  // max supported power
+	minCurrent float64 // min supported current per phase
+	maxCurrent float64 // max supported current per phase
 }
 
 const (
@@ -159,18 +157,23 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8) (api.Charger, 
 	}
 
 	// device limits are model-specific and constant, so read them once (§2.20/§2.21)
-	if b, err := wb.conn.ReadHoldingRegisters(foxRegMinSupCurrent, 1); err == nil {
-		wb.minCurrent = float64(binary.BigEndian.Uint16(b)) / 10
+	minCurrent, err := wb.readUint16(foxRegMinSupCurrent)
+	if err != nil {
+		return nil, err
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(foxRegMaxSupCurrent, 1); err == nil {
-		wb.maxCurrent = float64(binary.BigEndian.Uint16(b)) / 10
-	}
+	wb.minCurrent = float64(minCurrent) / 10
 
-	if b, err := wb.conn.ReadHoldingRegisters(foxRegMinSupPower, 1); err == nil {
-		wb.minPower = binary.BigEndian.Uint16(b)
+	maxCurrent, err := wb.readUint16(foxRegMaxSupCurrent)
+	if err != nil {
+		return nil, err
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(foxRegMaxSupPower, 1); err == nil {
-		wb.maxPower = binary.BigEndian.Uint16(b)
+	wb.maxCurrent = float64(maxCurrent) / 10
+
+	if wb.minPower, err = wb.readUint16(foxRegMinSupPower); err != nil {
+		return nil, err
+	}
+	if wb.maxPower, err = wb.readUint16(foxRegMaxSupPower); err != nil {
+		return nil, err
 	}
 
 	is3pCharger := wb.maxPower > foxMaxPower1p
@@ -179,11 +182,15 @@ func NewFoxESSEVC(ctx context.Context, uri string, slaveID uint8) (api.Charger, 
 	}
 
 	var hasAutoSwEn bool
-	if b, err := wb.conn.ReadHoldingRegisters(foxRegAutoPhaseSwitch, 1); err == nil {
-		hasAutoSwEn = binary.BigEndian.Uint16(b) > 0
+	if is3pCharger {
+		autoSw, err := wb.readUint16(foxRegAutoPhaseSwitch)
+		if err != nil {
+			return nil, err
+		}
+		hasAutoSwEn = autoSw > 0
 	}
 
-	if is3pCharger && hasAutoSwEn {
+	if hasAutoSwEn {
 		// 3p charger with enabled auto phase-switching
 		wb.minPower = foxMinPower1p
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
@@ -272,8 +279,8 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context) {
 			return
 		}
 
-		// keepalive read; any message resets the charger's time validity timer (§2.34)
-		_, err := wb.conn.ReadHoldingRegisters(foxRegSessionControl, foxSessionNoAction)
+		// keepalive no-op write
+		err := wb.writeReg(foxRegSessionControl, foxSessionNoAction)
 		if err != nil {
 			wb.log.DEBUG.Printf("heartbeat: %v", err)
 		}
@@ -345,29 +352,20 @@ func (wb *FoxESSEVC) Enabled() (bool, error) {
 		return false, err
 	}
 
-	wb.mu.Lock()
 	if val == 0 {
 		wb.enabled = false
 	}
-	enabled := wb.enabled
-	wb.mu.Unlock()
 
-	return enabled, nil
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *FoxESSEVC) Enable(enable bool) error {
-	wb.mu.Lock()
-	current, phases := wb.current, wb.phases
-	wb.mu.Unlock()
-
-	if err := wb.applySetpoint(wb.calcPower(enable, current, phases)); err != nil {
+	if err := wb.applySetpoint(wb.calcPower(enable, wb.current, wb.phases)); err != nil {
 		return err
 	}
 
-	wb.mu.Lock()
 	wb.enabled = enable
-	wb.mu.Unlock()
 
 	return nil
 }
@@ -385,17 +383,11 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current: %.1fA", current)
 	}
 
-	wb.mu.Lock()
-	enabled, phases := wb.enabled, wb.phases
-	wb.mu.Unlock()
-
-	if err := wb.applySetpoint(wb.calcPower(enabled, current, phases)); err != nil {
+	if err := wb.applySetpoint(wb.calcPower(wb.enabled, current, wb.phases)); err != nil {
 		return err
 	}
 
-	wb.mu.Lock()
 	wb.current = current
-	wb.mu.Unlock()
 
 	return nil
 }
@@ -478,9 +470,7 @@ func (wb *FoxESSEVC) Identify() (string, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *FoxESSEVC) phases1p3p(phases int) error {
-	wb.mu.Lock()
 	wb.phases = phases
-	wb.mu.Unlock()
 
 	return nil
 }
@@ -492,10 +482,7 @@ func (wb *FoxESSEVC) getPhases() (int, error) {
 		return 0, err
 	}
 
-	wb.mu.Lock()
 	phases := wb.phases
-	wb.mu.Unlock()
-
 	if val >= foxMinPower3p {
 		phases = 3
 	} else if val >= foxMinPower1p {
