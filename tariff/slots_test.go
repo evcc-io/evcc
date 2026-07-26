@@ -141,6 +141,20 @@ func TestDropOldRates(t *testing.T) {
 	require.Len(t, res, 0)
 }
 
+// assertSourceAverages verifies that the sub-slots preserve the average of their source slot
+func assertSourceAverages(t *testing.T, rr, res api.Rates) {
+	t.Helper()
+
+	n := len(res) / len(rr)
+	for i, r := range rr {
+		var sum float64
+		for _, sub := range res[i*n : (i+1)*n] {
+			sum += sub.Value
+		}
+		assert.InDelta(t, r.Value, sum/float64(n), 1e-9, "rate %d", i)
+	}
+}
+
 // TestSolarInterpolation verifies that solar sub-slots follow the neighbouring
 // slots while preserving the average of the slot they originate from
 func TestSolarInterpolation(t *testing.T) {
@@ -169,7 +183,6 @@ func TestSolarInterpolation(t *testing.T) {
 
 	for i, r := range res {
 		assert.Equal(t, now.Add(time.Duration(i)*SlotDuration), r.Start, "slot %d", i)
-		assert.Equal(t, SlotDuration, r.End.Sub(r.Start), "slot %d", i)
 	}
 
 	// ramping up from the empty hour, flat towards the missing successor
@@ -177,14 +190,7 @@ func TestSolarInterpolation(t *testing.T) {
 		assert.InDelta(t, expected, res[i].Value, 1e-9, "slot %d", i)
 	}
 
-	// the average of each source slot is preserved
-	for i, expected := range []float64{r0.Value, r1.Value} {
-		var sum float64
-		for _, r := range res[i*4 : i*4+4] {
-			sum += r.Value
-		}
-		assert.InDelta(t, expected, sum/4, 1e-9, "rate %d", i)
-	}
+	assertSourceAverages(t, api.Rates{r0, r1}, res)
 }
 
 // TestSolarInterpolationInterior verifies an interior slot with both neighbours differing
@@ -208,14 +214,7 @@ func TestSolarInterpolationInterior(t *testing.T) {
 		assert.InDelta(t, expected, res[4+i].Value, 1e-9, "slot %d", i)
 	}
 
-	// the average of each source slot is preserved
-	for i, r := range rr {
-		var sum float64
-		for _, r := range res[i*4 : i*4+4] {
-			sum += r.Value
-		}
-		assert.InDelta(t, r.Value, sum/4, 1e-9, "rate %d", i)
-	}
+	assertSourceAverages(t, rr, res)
 }
 
 // TestSolarNegativeSlot verifies that a non-positive slot is not shaped

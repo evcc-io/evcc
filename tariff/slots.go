@@ -84,12 +84,12 @@ func shapeSolar(rates api.Rates, i int, vals []float64) {
 		// sub-slot midpoint relative to the slot midpoint, [-0.5,0.5)
 		f := (float64(j)+0.5)/float64(len(vals)) - 0.5
 
-		v := cur + 2*f*(next-cur)
+		delta := next - cur
 		if f < 0 {
-			v = cur + 2*f*(cur-prev)
+			delta = cur - prev
 		}
 
-		vals[j] = max(v, 0)
+		vals[j] = max(cur+2*f*delta, 0)
 		sum += vals[j]
 	}
 
