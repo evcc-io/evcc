@@ -3,8 +3,11 @@ products:
   - brand: FoxESS
     description:
       generic: AC EV Charger (Modbus)
-capabilities: ["rfid", "meter", "1p3p"]
+capabilities: ["mA", "rfid", "meter", "1p3p"]
 requirements:
+  description:
+    de: In der Fox Switch App muss der Arbeitsmodus auf "Modbus TCP" gestellt werden. evcc regelt ausschließlich die Ladeleistung, startet und beendet aber keine Ladevorgänge. Wie ein Ladevorgang beginnt, bestimmt der in der Wallbox eingestellte Betriebsmodus - entweder per App bzw. RFID-Karte oder automatisch beim Anstecken starten.
+    en: The work mode must be set to "Modbus TCP" in the Fox Switch app. evcc only controls the charging power, it does not start or stop charging sessions. How a session starts depends on the charger's own operating mode - start either via app or RFID card, or automatically on plug-in.
   evcc: ["sponsorship"]
 params:
   - name: modbus
