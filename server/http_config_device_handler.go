@@ -251,24 +251,27 @@ func deviceStatus[T comparable](name string, h config.Handler[T]) (T, error) {
 
 // deviceLogHandler returns the log entries of a single device
 func deviceLogHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	vars := mux.Vars(r)
+
+	class, err := templates.ClassString(vars["class"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	conf, err := config.ConfigByID(id)
-	if err != nil {
-		jsonError(w, http.StatusNotFound, err)
+	if err != nil || conf.Class != class {
+		jsonError(w, http.StatusNotFound, config.ErrNotFound)
 		return
 	}
 
-	level := logstash.LogLevelToThreshold(r.URL.Query().Get("level"))
-
-	var count int
-	if v := r.URL.Query().Get("count"); v != "" {
-		count, _ = strconv.Atoi(v)
-	}
+	level, count := logQuery(r)
 
 	jsonWrite(w, logstash.All([]string{conf.LogArea()}, level, count))
 }

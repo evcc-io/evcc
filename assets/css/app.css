@@ -869,3 +869,23 @@ input::-webkit-date-and-time-value {
 .sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
 }
+
+/* log entries, by level */
+.log-warn {
+	color: var(--bs-warning);
+}
+
+.log-error,
+.log-fatal {
+	color: var(--bs-danger);
+}
+
+.log-debug {
+	--opacity: 0.7;
+	opacity: var(--opacity);
+}
+
+.log-trace {
+	--opacity: 0.5;
+	opacity: var(--opacity);
+}

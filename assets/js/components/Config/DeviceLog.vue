@@ -17,7 +17,7 @@
 				class="d-block evcc-default-text textarea--tiny"
 				data-testid="device-log"
 			>
-				<div v-for="{ key, className, line } in lines" :key="key" :class="className">
+				<div v-for="({ className, line }, i) in lines" :key="i" :class="className">
 					{{ line }}
 				</div>
 			</code>
@@ -46,14 +46,15 @@ export default defineComponent({
 		return {
 			entries: [] as LogEntry[],
 			timeout: null as Timeout,
-			level: LEVEL,
 		};
 	},
 	computed: {
+		level(): string {
+			return LEVEL;
+		},
 		lines() {
-			return this.entries.map((entry, i) => ({
-				key: `${entry.time}-${i}`,
-				className: `log log-${entry.level || "none"}`,
+			return this.entries.map((entry) => ({
+				className: `log-${entry.level || "none"}`,
 				line: formatLogEntry(entry),
 			}));
 		},
@@ -99,18 +100,5 @@ export default defineComponent({
 	max-height: 12rem;
 	border-radius: 0.5rem;
 	background: var(--evcc-box);
-}
-.log-warn {
-	color: var(--bs-warning);
-}
-.log-error,
-.log-fatal {
-	color: var(--bs-danger);
-}
-.log-debug {
-	opacity: 0.7;
-}
-.log-trace {
-	opacity: 0.5;
 }
 </style>

@@ -340,30 +340,15 @@ export default defineComponent({
 		opacity: 0.3;
 	}
 	to {
-		opacity: var(--opacity);
+		opacity: var(--opacity, 1);
 	}
 }
 .log {
-	--opacity: 1;
-	opacity: var(--opacity);
+	opacity: var(--opacity, 1);
 	animation-name: fadeIn;
 	animation-duration: var(--transition-duration-fast);
 	animation-fill-mode: forwards;
 	animation-timing-function: ease-out;
 	text-indent: 1rem hanging;
-}
-
-.log-warn {
-	color: var(--bs-warning);
-}
-.log-error,
-.log-fatal {
-	color: var(--bs-danger);
-}
-.log-debug {
-	--opacity: 0.7;
-}
-.log-trace {
-	--opacity: 0.5;
 }
 </style>
