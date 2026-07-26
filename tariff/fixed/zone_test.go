@@ -81,3 +81,24 @@ func TestZonesTimeTableMarkers(t *testing.T) {
 
 	assert.Equal(t, expect, zones.TimeTableMarkers())
 }
+
+func TestZonesTimeTableMarkersUnsorted(t *testing.T) {
+	// price and charges zones are concatenated unsorted, see Fixed.Rates
+	zones := Zones{
+		{Hours: TimeRange{
+			From: HourMin{12, 0},
+			To:   HourMin{14, 0},
+		}},
+		{Hours: TimeRange{
+			From: HourMin{0, 0},
+			To:   HourMin{5, 30},
+		}},
+	}
+
+	expect := []HourMin{{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {5, 30}}
+	for hour := 6; hour < 24; hour++ {
+		expect = append(expect, HourMin{hour, 0})
+	}
+
+	assert.Equal(t, expect, zones.TimeTableMarkers())
+}
