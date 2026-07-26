@@ -315,18 +315,23 @@ func (c *Circuit) updateMeters() error {
 	return nil
 }
 
+// Exceeds reports if value exceeds a configured, i.e. non-zero limit
+func Exceeds(value, limit float64) bool {
+	return limit != 0 && value > limit
+}
+
 func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 	maxPower := c.GetMaxPower()
 	maxCurrent := c.GetMaxCurrent()
 
 	defer func() {
-		if maxPower != 0 && c.power > maxPower {
+		if Exceeds(c.power, maxPower) {
 			c.log.WARN.Printf("over power detected: %.0fW > %.0fW", c.power, maxPower)
 		} else {
 			c.log.DEBUG.Printf("power: %.0fW", c.power)
 		}
 
-		if maxCurrent != 0 && c.current > maxCurrent {
+		if Exceeds(c.current, maxCurrent) {
 			c.log.WARN.Printf("over current detected: %.3gA > %.3gA", c.current, maxCurrent)
 		} else {
 			c.log.DEBUG.Printf("current: %.3gA", c.current)

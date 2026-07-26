@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/hems/hems"
@@ -56,7 +57,7 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
 
-	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+	fromToCharge := site.chargingOrContinuing(batteryMode)
 
 	// Forced charging conflicts with load management in two distinct ways, handled differently:
 
@@ -86,6 +87,11 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 	}
 }
 
+// chargingOrContinuing reports if the given mode starts charging or continues an active charge
+func (site *Site) chargingOrContinuing(mode api.BatteryMode) bool {
+	return mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+}
+
 // circuitOverloaded checks if the root circuit's load management limits are or would be exceeded,
 // mirroring the overload detection in circuit.Update: total circuit power against
 // maxPower and the highest phase current against the per-phase maxCurrent.
@@ -93,24 +99,21 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 // against the overload before it occurs. Forced battery charging draws through the
 // grid connection point, hence only the root circuit is considered.
 func (site *Site) circuitOverloaded() bool {
-	circuit := site.circuit
-	if circuit == nil {
+	c := site.circuit
+	if c == nil {
 		return false
 	}
 
-	if maxPower := circuit.GetMaxPower(); maxPower != 0 {
-		power := circuit.GetChargePower() + site.anticipatedBatteryChargePower(circuit.HasMeter())
-		if power > maxPower {
-			site.log.DEBUG.Printf("battery mode: circuit overloaded: %.0fW > %.0fW", power, maxPower)
-			return true
-		}
+	maxPower := c.GetMaxPower()
+	if power := c.GetChargePower() + site.anticipatedBatteryChargePower(c.HasMeter()); circuit.Exceeds(power, maxPower) {
+		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.0fW > %.0fW", power, maxPower)
+		return true
 	}
 
-	if maxCurrent := circuit.GetMaxCurrent(); maxCurrent != 0 {
-		if current := circuit.GetMaxPhaseCurrent(); current > maxCurrent {
-			site.log.DEBUG.Printf("battery mode: circuit overloaded: %.3gA > %.3gA", current, maxCurrent)
-			return true
-		}
+	maxCurrent := c.GetMaxCurrent()
+	if current := c.GetMaxPhaseCurrent(); circuit.Exceeds(current, maxCurrent) {
+		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.3gA > %.3gA", current, maxCurrent)
+		return true
 	}
 
 	return false
