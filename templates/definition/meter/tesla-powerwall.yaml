@@ -7,19 +7,19 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Um die optionale Entladesteuerung der Battery zu nutzen wird ein `refresh` Token für die Kommunikation mit der Tesla API benötigt.
+      Für die optionale Batteriesteuerung wird die Tesla Fleet API verwendet.
+      Die frühere Owner API wurde von Tesla abgeschaltet, bestehende `refresh` Token funktionieren nicht mehr.
 
-      Folgende Apps ermöglichen das Erstellen des Tokens:
-      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
-      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
-      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+      Erstelle dir einen Tesla Developer Account auf [developer.tesla.com](https://developer.tesla.com/) und erhalte ein monatliches API-Guthaben von 10 €.
+      Die Anleitung von [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) erklärt den Prozess und generiert die benötigten Access- und Refresh-Token.
+      Die Token müssen die Berechtigungen `energy_device_data` und `energy_cmds` enthalten.
     en: |
-      To use the optional battery control you need to generate a `refresh` token for communicating with the Tesla API.
+      The optional battery control uses the Tesla Fleet API.
+      Tesla has retired the previous Owner API, existing `refresh` tokens will no longer work.
 
-      The following apps allow to create the token:
-      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
-      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
-      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+      Create a Tesla Developer Account at [developer.tesla.com](https://developer.tesla.com/) and receive a monthly API credit of $10.
+      The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates the required Access and Refresh Token.
+      The tokens must include the `energy_device_data` and `energy_cmds` scopes.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -29,7 +29,18 @@ params:
     help:
       en: Password of the user "customer". By default this is the last 5 characters of password stated on the Tesla Gateway.
       de: Passwort des Benutzers "Kunde". Default sind die letzten 5 Zeichen des auf dem Tesla Gateway genannten Passworts.
+  - name: clientId
+    help:
+      en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
+      de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
+  - name: accessToken
+    help:
+      en: from [myteslamate.com](https://app.myteslamate.com/).
+      de: von [myteslamate.com](https://app.myteslamate.com/).
   - name: refreshToken
+    help:
+      en: from [myteslamate.com](https://app.myteslamate.com/).
+      de: von [myteslamate.com](https://app.myteslamate.com/).
   - name: siteId
     description:
       generic: Site ID
@@ -48,7 +59,11 @@ render: |
   usage: {{ .usage }}
   user: customer
   password: {{ .password }} # for user 'customer'
-  refreshToken: {{ .refreshToken }}
+  credentials:
+    id: {{ .clientId }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
   siteId: {{ .siteId }}
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}

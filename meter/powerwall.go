@@ -11,11 +11,12 @@ import (
 	"time"
 
 	"github.com/andig/go-powerwall"
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/tesla"
+	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
@@ -25,7 +26,7 @@ type PowerWall struct {
 	usage      string
 	client     *powerwall.Client
 	meterG     func() (map[string]powerwall.MeterAggregatesData, error)
-	energySite *tesla.EnergySite
+	energySite *teslaclient.EnergySite
 }
 
 func init() {
@@ -38,7 +39,9 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI, Usage, User, Password string
 		Cache                      time.Duration
-		RefreshToken               string
+		Credentials                struct{ ID, Secret string }
+		Tokens                     struct{ Access, Refresh string }
+		RefreshToken               string // deprecated
 		SiteId                     int64
 		batterySocLimits           `mapstructure:",squash"`
 		batteryPowerLimits         `mapstructure:",squash"`
@@ -66,6 +69,11 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, errors.New("missing password")
 	}
 
+	// the owner api used by the refresh token has been retired by tesla
+	if cc.RefreshToken != "" {
+		return nil, errors.New("battery control requires tesla fleet api credentials, see https://docs.evcc.io/docs/devices/meters#tesla-powerwall")
+	}
+
 	// support default meter names
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
@@ -74,19 +82,15 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits, cc.batteryPowerLimits)
-}
-
-// NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
-	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
+	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password,
+		cc.Credentials.ID, cc.Credentials.Secret, cc.Tokens.Access, cc.Tokens.Refresh)
 
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
 		Timeout:   time.Second * 2, // Timeout after 2 seconds
 	}
 
-	client := powerwall.NewClient(uri, user, password, powerwall.WithHttpClient(httpClient))
+	client := powerwall.NewClient(cc.URI, cc.User, cc.Password, powerwall.WithHttpClient(httpClient))
 	if _, err := client.GetStatus(); err != nil {
 		return nil, err
 	}
@@ -94,48 +98,22 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	m := &PowerWall{
 		Caps:   implement.New(),
 		client: client,
-		usage:  strings.ToLower(usage),
-		meterG: util.Cached(client.GetMetersAggregates, cache),
+		usage:  strings.ToLower(cc.Usage),
+		meterG: util.Cached(client.GetMetersAggregates, cc.Cache),
 	}
 
-	var batteryControl bool
-	if refreshToken != "" || siteId != 0 {
-		if refreshToken == "" {
-			return nil, errors.New("missing refresh token")
-		}
-		batteryControl = true
-	}
+	batteryControl := cc.Credentials.ID != "" || cc.Tokens.Access != "" || cc.Tokens.Refresh != ""
 
 	if batteryControl {
-		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-
-		options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
-			RefreshToken: refreshToken,
-			Expiry:       time.Now(),
-		})}
-
-		cloudClient, err := tesla.NewClient(ctx, options...)
-		if err != nil {
-			return nil, err
+		if cc.Credentials.ID == "" {
+			return nil, errors.New("missing client id")
 		}
 
-		if siteId == 0 {
-			// auto detect energy site ID, picking first
-			products, err := cloudClient.Products()
-			if err != nil {
-				return nil, err
-			}
-
-			for _, p := range products {
-				if p.EnergySiteId != 0 {
-					siteId = p.EnergySiteId
-					break
-				}
-			}
+		if cc.Tokens.Access == "" {
+			return nil, api.ErrMissingToken
 		}
 
-		log.Redact(strconv.FormatInt(siteId, 10))
-		energySite, err := cloudClient.EnergySite(siteId)
+		energySite, err := teslaEnergySite(log, cc.Credentials.ID, cc.Credentials.Secret, cc.Tokens.Access, cc.Tokens.Refresh, cc.SiteId)
 		if err != nil {
 			return nil, err
 		}
@@ -146,10 +124,10 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
-	if usage == "battery" {
+	if m.usage == "battery" {
 		implement.Has(m, implement.Battery(m.batterySoc))
-		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
-		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 
 		res, err := m.client.GetSystemStatus()
 		if err != nil {
@@ -162,7 +140,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	if batteryControl {
-		implement.May(m, implement.BatteryController(batterySocLimits.LimitController(m.socG, func(limit float64) error {
+		implement.May(m, implement.BatteryController(cc.batterySocLimits.LimitController(m.socG, func(limit float64) error {
 			// Handle Tesla firmware 25.18.4 restrictions:
 			// Values between 81-99% are not allowed, only ≤80% or exactly 100%
 			limitUint := uint64(limit)
@@ -175,6 +153,59 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	return m, nil
+}
+
+// teslaEnergySite creates the fleet api energy site used for battery control
+func teslaEnergySite(log *util.Logger, clientID, clientSecret, accessToken, refreshToken string, siteId int64) (*teslaclient.EnergySite, error) {
+	identity, err := tesla.NewIdentity(log, tesla.OAuth2Config(clientID, clientSecret), &oauth2.Token{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		Expiry:       time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	hc := request.NewClient(log)
+	hc.Transport = &oauth2.Transport{
+		Source: identity,
+		Base:   hc.Transport,
+	}
+
+	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
+	if err != nil {
+		return nil, err
+	}
+
+	// validate base url
+	region, err := tc.UserRegion()
+	if err != nil {
+		return nil, err
+	}
+	tc.SetBaseUrl(region.FleetApiBaseUrl)
+
+	if siteId == 0 {
+		// auto detect energy site ID, picking first
+		products, err := tc.Products()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, p := range products {
+			if p.EnergySiteId != 0 {
+				siteId = p.EnergySiteId
+				break
+			}
+		}
+
+		if siteId == 0 {
+			return nil, errors.New("no energy site found")
+		}
+	}
+
+	log.Redact(strconv.FormatInt(siteId, 10))
+
+	return tc.EnergySite(siteId)
 }
 
 var _ api.Meter = (*PowerWall)(nil)
@@ -228,8 +259,7 @@ func (m *PowerWall) socG() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	// Fix for Tesla firmware 25.18.4: Remove the problematic +0.5 rounding logic
-	// that was interfering with exact 100% reserve settings. Simply return the
-	// actual current SOC rounded to nearest integer.
+	// Fix for Tesla firmware 25.18.4: no +0.5 rounding as it interferes
+	// with exact 100% reserve settings
 	return math.Round(ess.PercentageCharged), nil
 }
