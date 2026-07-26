@@ -186,7 +186,7 @@ func TestSolarInterpolation(t *testing.T) {
 	}
 
 	// ramping up from the empty hour, flat towards the missing successor
-	for i, expected := range []float64{0, 0, 0, 0, 4.0 / 3, 4, 16.0 / 3, 16.0 / 3} {
+	for i, expected := range []float64{0, 0, 0, 0, 20.0 / 7, 4, 32.0 / 7, 32.0 / 7} {
 		assert.InDelta(t, expected, res[i].Value, 1e-9, "slot %d", i)
 	}
 
@@ -209,8 +209,8 @@ func TestSolarInterpolationInterior(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 12)
 
-	// interior slot ramps linearly from prev to next
-	for i, expected := range []float64{1, 3, 5, 7} {
+	// interior slot ramps linearly between the neighbouring slot centers
+	for i, expected := range []float64{2.5, 3.5, 4.5, 5.5} {
 		assert.InDelta(t, expected, res[4+i].Value, 1e-9, "slot %d", i)
 	}
 

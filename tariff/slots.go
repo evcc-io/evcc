@@ -58,8 +58,9 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 	return res, nil
 }
 
-// shapeSolar interpolates solar sub-slots against the neighbouring slots. The slot
-// value applies to the entire period, so sub-slots are centered and rescaled to it.
+// shapeSolar interpolates solar sub-slots between the slot centers. The slot value
+// applies to the entire period, so sub-slots are centered and rescaled to it. Slot
+// edges meet the average of both neighbouring values, keeping the curve continuous.
 func shapeSolar(rates api.Rates, i int, vals []float64) {
 	if len(vals) < 2 {
 		return
@@ -89,7 +90,7 @@ func shapeSolar(rates api.Rates, i int, vals []float64) {
 			delta = cur - prev
 		}
 
-		vals[j] = max(cur+2*f*delta, 0)
+		vals[j] = max(cur+f*delta, 0)
 		sum += vals[j]
 	}
 
