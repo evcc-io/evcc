@@ -28,6 +28,7 @@ import (
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/charger/vaillant"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -81,7 +82,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
-	token, err := oc.PasswordCredentialsToken(logCtx, cc.User, cc.Password)
+	token, err := vaillant.Login(logCtx, log, oc, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

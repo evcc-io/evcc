@@ -8,6 +8,11 @@
 	></shopicon-regular-powersupply>
 	<!-- holdcharge: prevent charging -->
 	<BatteryHoldCharge v-else-if="action === 'holdcharge'" :size="size" />
+	<!-- discharge: battery-to-grid export -->
+	<shopicon-regular-powersupply
+		v-else-if="action === 'discharge'"
+		:size="size"
+	></shopicon-regular-powersupply>
 	<!-- hold: prevent discharging -->
 	<BatteryHold v-else :size="size" />
 </template>
