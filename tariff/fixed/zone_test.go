@@ -90,6 +90,14 @@ func TestZonesTimeTableMarkersUnsorted(t *testing.T) {
 			To:   HourMin{14, 0},
 		}},
 		{Hours: TimeRange{
+			From: HourMin{10, 15}, // minutes must not sort before the earlier hour's 9:45
+			To:   HourMin{11, 0},
+		}},
+		{Hours: TimeRange{
+			From: HourMin{9, 45},
+			To:   HourMin{10, 0},
+		}},
+		{Hours: TimeRange{
 			From: HourMin{0, 0},
 			To:   HourMin{5, 30},
 		}},
@@ -98,6 +106,12 @@ func TestZonesTimeTableMarkersUnsorted(t *testing.T) {
 	expect := []HourMin{{0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {5, 30}}
 	for hour := 6; hour < 24; hour++ {
 		expect = append(expect, HourMin{hour, 0})
+		switch hour {
+		case 9:
+			expect = append(expect, HourMin{9, 45})
+		case 10:
+			expect = append(expect, HourMin{10, 15})
+		}
 	}
 
 	assert.Equal(t, expect, zones.TimeTableMarkers())
