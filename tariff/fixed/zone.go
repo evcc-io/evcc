@@ -106,7 +106,8 @@ func (r Zones) TimeTableMarkers() []HourMin {
 
 	// 1hr intervals
 	for hour := range 24 {
-		if hm := (HourMin{Hour: hour}); !slices.Contains(res, hm) {
+		hm := HourMin{Hour: hour}
+		if !slices.Contains(res, hm) {
 			res = append(res, hm)
 		}
 	}
