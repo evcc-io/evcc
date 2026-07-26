@@ -61,7 +61,7 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	wb, err := NewOpenWB20(ctx, cc.URI, cc.ID, cc.Connector)
+	wb, err := NewOpenWB20(ctx, cc.TcpSettings, cc.Connector)
 	if err != nil {
 		return nil, err
 	}
@@ -78,10 +78,10 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 }
 
 // NewOpenWB20 creates OpenWB20 charger
-func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint16) (*OpenWB20, error) {
-	uri = util.DefaultPort(uri, 1502)
+func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uint16) (*OpenWB20, error) {
+	settings.URI = util.DefaultPort(settings.URI, 1502)
 
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

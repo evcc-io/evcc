@@ -1,6 +1,6 @@
 <template>
 	<div class="root">
-		<div class="mb-2 label text-truncate" :class="labelClass" :style="{ color }">
+		<div class="label text-truncate" :class="labelClass" :style="{ color }">
 			<slot name="label">{{ label }}</slot>
 		</div>
 		<slot>
@@ -54,6 +54,9 @@ export default defineComponent({
 	text-transform: uppercase;
 	color: var(--evcc-gray);
 	font-size: 14px;
+	/* focus ring clearance, keeps mb-2 spacing */
+	padding: 0.5rem;
+	margin: -0.5rem -0.5rem 0;
 }
 .value {
 	font-size: 18px;

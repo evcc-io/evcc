@@ -393,9 +393,6 @@
       "remoteDisabledSoft": "{source}: isključeno prilagodljivo solarno punjenje"
     },
     "loadpointSettings": {
-      "minSoc": {
-        "description": "Vozilo se brzo puni do {0} u solarnom načinu rada. Zatim nastavlja punjenjem viškom solarne energije. Korisno za osiguranje minimalnog dometa čak i za tmurnije dane."
-      },
       "phasesConfigured": {
         "phases_1_hint": "(od {min} do {max})",
         "phases_3_hint": "(od {min} do {max})"

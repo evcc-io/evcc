@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/evcc-io/evcc/api"
-	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 )
 
@@ -76,24 +75,6 @@ func circuitMaxPower(circuit api.Circuit) float64 {
 	}
 
 	return circuit.GetMaxPower()
-}
-
-// hemsDimmed returns the HEMS dim status, nil-safe
-func hemsDimmed(hems api.HEMS) *bool {
-	if hems == nil {
-		return nil
-	}
-
-	return hemsapi.Dimmed(hems)
-}
-
-// hemsCurtailed returns whether HEMS curtailment is active, nil-safe
-func hemsCurtailed(hems api.HEMS) *bool {
-	if hems == nil {
-		return nil
-	}
-
-	return hemsapi.Curtailed(hems)
 }
 
 // nonZeroEnergy reports a zero lifetime energy reading as api.ErrNotAvailable.

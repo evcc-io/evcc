@@ -37,6 +37,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			Climater   string // optional
 			FinishTime string // optional
 		}
+		StatusA  string // optional - custom states mapped to status A
+		StatusB  string // optional - custom states mapped to status B
+		StatusC  string // optional - custom states mapped to status C
 		Services struct {
 			Start         string `mapstructure:"start_charging"` // script.* or switch.* optional
 			Stop          string `mapstructure:"stop_charging"`  // script.* optional
@@ -74,7 +77,12 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		}))
 	}
 	if cc.Sensors.Status != "" {
-		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }))
+		states, err := homeassistant.NewStatusMap(cc.StatusA, cc.StatusB, cc.StatusC)
+		if err != nil {
+			return nil, err
+		}
+
+		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status, states) }))
 	}
 	if cc.Sensors.Range != "" {
 		implement.Has(res, implement.VehicleRange(func() (int64, error) {

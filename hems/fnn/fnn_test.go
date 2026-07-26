@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,32 +17,35 @@ type stubSite struct {
 
 func (s *stubSite) GetGridPower() float64 { return 0 }
 
-func TestFnn(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-
-	fnn, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, func() (bool, error) {
-		return true, nil
-	}, 0)
-	require.NoError(t, err)
-	require.Nil(t, fnn.CurtailedPercent())
+func boolG(v bool) func() (bool, error) {
+	return func() (bool, error) { return v, nil }
 }
 
-// TestFnnNilWhenNotConfigured verifies "nil = limiting undefined": nil unless
-// the relay input is configured, else valid right after NewFnn returns.
-func TestFnnNilWhenNotConfigured(t *testing.T) {
+// TestCurtailmentNotConfigured verifies that without W3 no curtailment
+// statement is made, while dimming via W4 remains available.
+func TestCurtailmentNotConfigured(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	unconfigured, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, nil, 0)
-	require.NoError(t, err)
-	require.Nil(t, unconfigured.MaxConsumptionPower())
-	require.Nil(t, unconfigured.MaxProductionPower())
-
-	off := func() (bool, error) { return false, nil }
-	configured, err := NewFnn(&stubSite{}, 1e3, 1e3, off, nil, nil, off, 0)
+	fnn, err := NewFnn(&stubSite{}, 1e3, 1e3, nil, nil, nil, boolG(true), 0)
 	require.NoError(t, err)
 
-	require.NotNil(t, configured.MaxConsumptionPower())
-	require.Equal(t, 0.0, *configured.MaxConsumptionPower())
-	require.NotNil(t, configured.MaxProductionPower())
-	require.Equal(t, 0.0, *configured.MaxProductionPower())
+	assert.Nil(t, fnn.CurtailedPercent())
+	assert.Nil(t, fnn.MaxProductionPower())
+	assert.Nil(t, hems.Curtailed(fnn))
+
+	assert.NotNil(t, fnn.MaxConsumptionPower())
+	assert.NotNil(t, hems.Dimmed(fnn))
+}
+
+// TestDimmingNotConfigured verifies that without W4 no dimming statement is
+// made, while curtailment via W3 remains available.
+func TestDimmingNotConfigured(t *testing.T) {
+	fnn, err := NewFnn(&stubSite{}, 0, 1e3, boolG(false), nil, nil, nil, 0)
+	require.NoError(t, err)
+
+	assert.Nil(t, fnn.MaxConsumptionPower())
+	assert.Nil(t, hems.Dimmed(fnn))
+
+	assert.NotNil(t, fnn.CurtailedPercent())
+	assert.NotNil(t, hems.Curtailed(fnn))
 }

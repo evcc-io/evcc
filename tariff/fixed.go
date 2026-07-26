@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"time"
 
@@ -77,7 +78,8 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			return nil, fmt.Errorf("no zones for weekday %d", dow)
 		}
 
-		markers := zones.TimeTableMarkers()
+		// include chargesZones boundaries so rate changes there are not swallowed by the coarser price zone markers
+		markers := append(slices.Clone(zones), t.chargesZones.ForDayAndMonth(dow, month)...).TimeTableMarkers()
 
 		for i, m := range markers {
 			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))

@@ -132,13 +132,34 @@ render: |
             address: 8027 # Register 8028 (Feed-in limitation)
             type: writesingle
             decode: uint16
-  curtailed:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 8027 # Register 8028 (Feed-in limitation, 1=on)
-      type: holding
-      decode: uint16
+  curtailed: # the limitation ratio only applies while the feed-in limitation is enabled
+    source: go
+    in:
+    - name: ena
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 8027 # Register 8028 (Feed-in limitation, 1=on)
+          type: holding
+          decode: uint16
+    - name: ratio
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 8030 # Register 8031 (Feed-in limitation ratio, 0-1000 = 0.1%)
+          type: holding
+          decode: int16
+        scale: 0.1
+    script: |
+      percent := 100
+      if ena != 0 {
+        percent = ratio
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom

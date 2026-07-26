@@ -56,6 +56,8 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
+	maxSessionEnergy = 1e3 // kWh, above this a charge rater reading is treated as garbage
+
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 
@@ -63,6 +65,7 @@ const (
 	boostDisabled = 0
 	boostStart    = 1
 	boostContinue = 2
+	boostHold     = 3 // soc limit reached: stop draining but keep vehicle priority over recharging
 )
 
 // elapsed is the time an expired timer will be set to
@@ -1523,7 +1526,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 // boostPower returns the additional power that the loadpoint should draw from the battery
 func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	boost := lp.GetBatteryBoost()
-	if boost == boostDisabled {
+	if boost == boostDisabled || boost == boostHold {
 		return 0
 	}
 
@@ -1810,8 +1813,14 @@ func (lp *Loadpoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
-		if f > lp.chargedAtStartup {
-			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
+		switch session := f - lp.chargedAtStartup; {
+		case session > maxSessionEnergy:
+			// guard against meters reporting register garbage, see
+			// https://github.com/evcc-io/evcc/issues/32159
+			lp.log.WARN.Printf("ignoring implausible session energy: %.3fkWh", session)
+
+		case session > 0:
+			added, addedGreen := lp.energyMetrics.Update(session)
 			if added > 0 {
 				lp.log.DEBUG.Printf("session energy: %.3fkWh", f)
 			}
@@ -2042,15 +2051,15 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
-	// auto-disable battery boost when SOC drops below limit
-	if lp.GetBatteryBoost() != boostDisabled {
+	// hold battery boost when SOC drops below the limit: stop draining the battery, but
+	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
+	// until the vehicle disconnects. This holds the battery at the configured level
+	// instead of the naive on/off which lets the battery recharge and oscillate (#30558).
+	if boost := lp.GetBatteryBoost(); boost != boostDisabled && boost != boostHold {
 		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
 			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
-				lp.log.DEBUG.Printf("battery boost disabled: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
-
-				if err := lp.SetBatteryBoost(false); err != nil {
-					lp.log.ERROR.Printf("set battery boost: %v", err)
-				}
+				lp.log.DEBUG.Printf("battery boost hold: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
+				lp.setBatteryBoost(boostHold)
 			}
 		}
 	}

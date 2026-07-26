@@ -36,9 +36,7 @@
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
 					@click="goTo(loadpoint.id)"
-					@open-charging-plan-modal="
-						(openArrivalTab) => openChargingPlanModal(loadpoint.id, openArrivalTab)
-					"
+					@open-charging-plan-modal="openChargingPlanModal(loadpoint.id)"
 					@open-settings-modal="openSettingsModal(loadpoint.id)"
 				/>
 			</div>
@@ -224,17 +222,10 @@ export default defineComponent({
 				}
 			}, 1000);
 		},
-		openChargingPlanModal(loadpointId: string, openArrivalTab = false) {
+		openChargingPlanModal(loadpointId: string) {
 			const modal = this.$refs["chargingPlanModal"] as
 				| InstanceType<typeof ChargingPlanModal>
 				| undefined;
-
-			if (openArrivalTab) {
-				modal?.showArrivalTab();
-			} else {
-				modal?.showDepartureTab();
-			}
-
 			modal?.open(loadpointId);
 		},
 		openSettingsModal(loadpointId: string) {

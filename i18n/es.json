@@ -988,9 +988,7 @@
     "chargingPlan": {
       "active": "Activo",
       "addRepeatingPlan": "Añadir plan recurrente",
-      "arrivalTab": "Llegadas",
       "day": "Día",
-      "departureTab": "Salidas",
       "goal": "Objetivo de la carga",
       "modalTitle": "Plan de carga",
       "none": "ninguno",
@@ -1014,8 +1012,6 @@
       "strategySettings": "Configuración de la estrategia",
       "time": "Tiempo",
       "title": "Plan",
-      "titleMinSoc": "Carga mínima",
-      "titleTargetCharge": "Partida",
       "unsavedChanges": "Hay cambios sin guardar. ¿Aplicar ahora?",
       "update": "Aplicar",
       "weekdays": "Días"
@@ -1073,19 +1069,11 @@
       "currents": "Corriente de carga",
       "default": "defecto",
       "disclaimerHint": "Nota:",
-      "limitSoc": {
-        "description": "Límite de carga que se utiliza cuando este vehículo está conectado.",
-        "label": "Límite predeterminado"
-      },
       "maxCurrent": {
         "label": "Corriente de carga máxima"
       },
       "minCurrent": {
         "label": "Corriente de carga mínima"
-      },
-      "minSoc": {
-        "description": "El vehículo se carga «rápidamente» hasta {0} en modo solar. A continuación, continúa con el excedente solar. Útil para garantizar una autonomía mínima incluso en días más oscuros.",
-        "label": "Carga de min. %"
       },
       "onlyForSocBasedCharging": "Estas opciones solo están disponibles para vehículos con un nivel de carga conocido.",
       "phasesConfigured": {
