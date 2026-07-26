@@ -657,10 +657,9 @@ func (wb *E3dc) GetMaxCurrent() (float64, error) {
 // Returns all session-related messages (energy, time, RFID, etc.).
 // If no vehicle is connected, returns only WB_INDEX with no session data.
 //
-// The unscoped request always answers for wallbox 0, so this tries to pass the
-// wallbox index as payload first and falls back to the unscoped request.
-// WB_REQ_SESSION has no entry in go-rscp's datatype table, hence the explicit
-// message (https://github.com/evcc-io/evcc/issues/32112).
+// The request carries the wallbox index as payload- an unscoped request is always
+// answered for wallbox 0. WB_REQ_SESSION has no entry in go-rscp's datatype table,
+// hence the explicit message.
 func (wb *E3dc) getSessionData() ([]rscp.Message, error) {
 	res, err := wb.retrySend(rscp.Message{
 		Tag:      rscp.WB_REQ_SESSION,
@@ -668,18 +667,16 @@ func (wb *E3dc) getSessionData() ([]rscp.Message, error) {
 		Value:    wb.id,
 	})
 	if err == nil {
-		wb.log.DEBUG.Printf("session %d indexed: %v", wb.id, *res)
 		err = rscpError(*res)
 	}
 
+	// fall back to the unscoped request if the device rejects the index
 	if err != nil {
-		wb.log.DEBUG.Printf("session %d indexed failed: %v", wb.id, err)
+		wb.log.DEBUG.Printf("indexed session request failed: %v", err)
 
 		if res, err = wb.retrySend(*rscp.NewMessage(rscp.WB_REQ_SESSION, nil)); err != nil {
 			return nil, err
 		}
-
-		wb.log.DEBUG.Printf("session %d unscoped: %v", wb.id, *res)
 	}
 
 	return rscpContainer(*res, 1)
