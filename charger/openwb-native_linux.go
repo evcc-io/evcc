@@ -59,6 +59,7 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 			Baudrate: 9600,
 			Comset:   "8N1",
 			ID:       1,
+			Delay:    200 * time.Millisecond,
 		},
 	}
 
@@ -73,14 +74,14 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, fmt.Errorf("invalid cpwait value: %v, needs to be greater than %s", cc.CpWait, minCpWaitTime)
 	}
 
-	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.Connector, cc.Chip)
+	return NewOpenWbNative(ctx, cc.Settings, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.Connector, cc.Chip)
 }
 
 // NewOpenWbNative creates OpenWbNative charger
-func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int, chip string) (api.Charger, error) {
+func NewOpenWbNative(ctx context.Context, settings modbus.Settings, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int, chip string) (api.Charger, error) {
 	log := util.NewLogger("openwb-native")
 
-	evse, err := NewEvseDIN(ctx, uri, device, comset, baudrate, proto, slaveID)
+	evse, err := NewEvseDIN(ctx, settings)
 	if err != nil {
 		return nil, err
 	}

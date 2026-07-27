@@ -42,6 +42,8 @@ var (
 // entry is the default and preserves the previous hard-coded behavior.
 var optimizerChargingStrategies = []string{
 	string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateDemandPeaks),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateFeedinPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyNone),
 }
@@ -120,6 +122,10 @@ const (
 	actionCharge = "charge"
 )
 
+// actionDischarge is the battery-to-grid discharge advisory. It has no matching
+// api.BatteryMode, so it always reads as actionable.
+const actionDischarge = "discharge"
+
 // evSuggestion notifies when the optimizer's advisory action for a device changes
 const evSuggestion = "suggestion"
 
@@ -179,6 +185,9 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 		case idle && gridExporting:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
+		case discharge > suggestionThreshold && gridExporting:
+			// discharging while exporting means battery-to-grid discharge
+			s.Action = actionDischarge
 		default:
 			s.Action = api.BatteryNormal.String()
 		}
@@ -262,9 +271,11 @@ func (site *Site) publishSuggestions() {
 	}
 }
 
-// clearSuggestions removes all suggestions when the optimizer result is stale
+// clearSuggestions removes all suggestions and the battery forecast when the
+// optimizer result is stale
 func (site *Site) clearSuggestions() {
 	site.setSuggestions(nil, nil)
+	site.battery.Forecast = nil
 
 	site.publishBattery()
 	site.publishSuggestions()
@@ -551,16 +562,18 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return apiError(resp)
 	}
 
-	if resp.JSON200.Status != optimizer.Optimal {
-		return errors.New(string(resp.JSON200.Status))
-	}
-
+	// publish before the status check so the optimizer page stays available
+	// for diagnosing non-optimal results
 	site.publish("evopt", optimizerResult{
 		Updated: time.Now(),
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
 	})
+
+	if resp.JSON200.Status != optimizer.Optimal {
+		return errors.New(string(resp.JSON200.Status))
+	}
 
 	slotHours := firstSlotDuration.Hours()
 	gridImporting := len(resp.JSON200.GridImport) > 0 && resp.JSON200.GridImport[0] > 0
@@ -667,7 +680,8 @@ type batteryForecastSlot struct {
 // The Limit flag indicates whether the SOC reached the configured SMax (for
 // the highest point) or SMin (for the lowest point) boundary - in which case
 // the battery is forecasted to become fully charged or empty.
-// Returns nil for either point when no home battery is present.
+// Returns nil for either point when no home battery is present or when the
+// battery already is at the respective limit.
 func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (*batteryForecastSlot, *batteryForecastSlot) {
 	homeIndices := lo.FilterMap(req, func(b optimizer.BatteryConfig, i int) (int, bool) {
 		return i, b.SCapacity > 0
@@ -695,6 +709,14 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 		if low == nil || (!low.limit && (soc < low.soc || emptyReached)) {
 			low = &batteryForecastSlot{slot: i, soc: soc, limit: emptyReached}
 		}
+	}
+
+	// battery is already at the limit - announcing it will become full/empty is pointless
+	if high != nil && high.limit && high.slot == 0 {
+		high = nil
+	}
+	if low != nil && low.limit && low.slot == 0 {
+		low = nil
 	}
 
 	return high, low
@@ -794,6 +816,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	controllable := api.HasCap[api.BatteryController](instance)
 	if controllable {
 		bat.ChargeFromGrid = true
+		bat.DischargeToGrid = site.GetBatteryGridDischarge()
 	}
 
 	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {

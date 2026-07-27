@@ -1030,6 +1030,29 @@
         ]
       }
     },
+    "/batterygriddischarge/{enable}": {
+      "post": {
+        "description": "Allow the home battery to discharge to the grid (experimental).",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/battery"
+        },
+        "operationId": "setBatteryGridDischarge",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/enable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BooleanResult"
+          }
+        },
+        "summary": "Control battery grid discharge",
+        "tags": [
+          "battery"
+        ]
+      }
+    },
     "/batterymode": {
       "delete": {
         "description": "Default evcc control behavior is restored",
