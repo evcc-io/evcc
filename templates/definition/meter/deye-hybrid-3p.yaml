@@ -279,7 +279,7 @@ render: |
       {{- end }}
     {{- end }}
   maxacpower: {{ .maxacpower }}
-  {{- if .maxacpower }}
+  {{- if gt (atoi (printf "%v" .maxacpower)) 0 }}
   # Feed-in curtailment via "Max Sell Power" (register 143, watts). The register is the
   # device's always-active feed-in ceiling; there is no separate limit-enable register.
   # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
