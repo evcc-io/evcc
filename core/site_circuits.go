@@ -73,20 +73,19 @@ func (site *Site) dimMeters(dim bool) error {
 			continue
 		}
 
-		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
-			if dim == dimmed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
-			}
+		// a device that cannot report its state is written unconditionally
+		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
+		if err != nil && !api.NotAvailable(err) {
+			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && dim == dimmed {
 			continue
 		}
 
 		if err := m.Dim(dim); err == nil {
 			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), dim)
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !api.NotAvailable(err) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
 		}
 	}
@@ -115,20 +114,19 @@ func (site *Site) curtailPV(percent *int) error {
 			continue
 		}
 
-		if curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff()); err == nil {
-			if curtailed == *percent {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
-			}
+		// a device that cannot report its state is written unconditionally
+		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
+		if err != nil && !api.NotAvailable(err) {
+			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && curtailed == *percent {
 			continue
 		}
 
 		if err := m.SetCurtailPercent(*percent); err == nil {
 			site.log.DEBUG.Printf("%s curtail: %d%%", deviceTitleOrName(dev), *percent)
-		} else if !errors.Is(err, api.ErrNotAvailable) {
+		} else if !api.NotAvailable(err) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
 		}
 	}

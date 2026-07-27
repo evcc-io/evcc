@@ -7,8 +7,16 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
+var errNotAvailable = errors.New("not available")
+
 // ErrNotAvailable indicates that a feature is not available
-var ErrNotAvailable = backoff.Permanent(errors.New("not available"))
+var ErrNotAvailable = backoff.Permanent(errNotAvailable)
+
+// NotAvailable reports whether err is ErrNotAvailable. It also matches the
+// unwrapped error returned by backoff for permanent errors.
+func NotAvailable(err error) bool {
+	return errors.Is(err, errNotAvailable)
+}
 
 // ErrUnsupportedPlatform indicates unsupported hardware platform
 var ErrUnsupportedPlatform error = backoff.Permanent(errors.New("unsupported platform"))
