@@ -9,9 +9,9 @@ covers: ["kostal-plenticore-hw0200", "kostal-plenticore"]
 caveats:
   - description:
       de: |
-        Nur ein System kann und darf auf den Wechselrichter zugreifen!
+        Nur ein System kann und darf auf den Wechselrichter zugreifen! Plenticore G1 erfordert mindestens Firmware UI 01.16.05025 (04.11.2020, MC >=01.44).
       en: |
-        Only a single system may access the inverter!
+        Only a single system may access the inverter! Plenticore G1 requires at least firmware UI 01.16.05025 (04.11.2020, MC >=01.44).
     link: https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore
 requirements:
   description:

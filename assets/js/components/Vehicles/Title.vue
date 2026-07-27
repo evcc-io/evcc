@@ -105,7 +105,7 @@ export default defineComponent({
 		},
 		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({
-				name: v.name ?? "",
+				name: v.name,
 				value: v.title,
 			}));
 		},

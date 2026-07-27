@@ -104,7 +104,7 @@ export default {
 			return store.state?.telemetry === true;
 		},
 		batteryControllable() {
-			return (store.state?.battery ?? []).some((b) => b.controllable);
+			return (store.state?.battery?.devices ?? []).some((b) => b.controllable);
 		},
 		batteryGridDischarge() {
 			return store.state?.batteryGridDischarge === true;

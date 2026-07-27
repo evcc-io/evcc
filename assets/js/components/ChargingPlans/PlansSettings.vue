@@ -81,18 +81,16 @@ import api from "@/api";
 import deepEqual from "@/utils/deepEqual";
 import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
+import type { Vehicle, CURRENCY, Forecast } from "@/types/evcc";
 import type {
-	CURRENCY,
-	Forecast,
+	StaticPlan,
+	RepeatingPlan,
+	PlanWrapper,
+	StaticSocPlan,
+	StaticEnergyPlan,
 	PlanResponse,
 	PlanStrategy,
-	PlanWrapper,
-	RepeatingPlan,
-	StaticEnergyPlan,
-	StaticPlan,
-	StaticSocPlan,
-	Vehicle,
-} from "@/types/evcc";
+} from "./types";
 
 export default defineComponent({
 	name: "ChargingPlansSettings",

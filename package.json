@@ -3,7 +3,7 @@
   "description": "evcc UI",
   "author": "evcc-io",
   "scripts": {
-    "build": "npm run openapi && vite build",
+    "build": "vite build",
     "test": "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vitest",
     "lint": "npm run lint:prettier && npm run lint:eslint && npm run lint:tsc && npm run lint:i18n",
     "lint:prettier": "prettier assets tests **/*.{yaml,sh} i18n/*.json --write",
@@ -11,7 +11,6 @@
     "lint:tsc": "vue-tsc --noEmit",
     "lint:i18n": "tsx i18n/check.ts",
     "dev": "vite",
-    "openapi": "tsx scripts/state-schema/index.ts",
     "playwright": "playwright test --ui",
     "playwright:ci": "cross-env CI=true playwright test",
     "simulator": "vite tests/simulator",
@@ -59,7 +58,6 @@
     "@eslint/js": "^9.39.4",
     "@jest/types": "^30.4.1",
     "@playwright/test": "^1.60.0",
-    "@redocly/openapi-core": "^2.38.0",
     "@storybook/vue3": "^10.4.4",
     "@storybook/vue3-vite": "^10.4.4",
     "@types/body-parser": "^1.19.6",
@@ -77,8 +75,6 @@
     "@vue/eslint-config-typescript": "^14.8.0",
     "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
-    "ajv": "^8.20.0",
-    "ajv-formats": "^3.0.1",
     "body-parser": "^2.2.2",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.4",
@@ -100,7 +96,6 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "^10.4.6",
     "terser": "^5.48.0",
-    "ts-json-schema-generator": "^2.9.0",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "typescript-eslint-language-service": "^5.0.5",
@@ -110,7 +105,6 @@
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.3.5",
     "wait-on": "^9.0.10",
-    "ws": "^8.21.0",
-    "yaml": "^2.9.0"
+    "ws": "^8.21.0"
   }
 }

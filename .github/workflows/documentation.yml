@@ -58,7 +58,7 @@ jobs:
       - name: Prepare OpenAPI spec
         run: |
           mkdir -p ./openapi-deploy
-          npx --yes @redocly/cli@2 bundle ./server/openapi.yaml -o ./openapi-deploy/openapi.yaml
+          cp ./server/openapi.yaml ./openapi-deploy/openapi.yaml
 
       - name: Deploy OpenAPI spec to docs repo
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4

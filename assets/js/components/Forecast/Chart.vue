@@ -42,8 +42,9 @@ import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors, { lighterColor } from "@/colors";
-import type { CURRENCY, ForecastSlot, SolarDetails, TimeseriesEntry } from "@/types/evcc";
+import type { CURRENCY } from "@/types/evcc";
 import { ForecastType, highestSlotIndexByDay } from "@/utils/forecast";
+import type { ForecastSlot, SolarDetails, TimeseriesEntry } from "./types";
 
 registerChartComponents([
 	BarController,
