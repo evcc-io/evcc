@@ -73,14 +73,13 @@ func (site *Site) dimMeters(dim bool) error {
 			continue
 		}
 
-		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
-			if dim == dimmed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
-			}
+		// unreadable state: apply unconditionally
+		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && dim == dimmed {
 			continue
 		}
 
@@ -115,14 +114,13 @@ func (site *Site) curtailPV(percent *int) error {
 			continue
 		}
 
-		if curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff()); err == nil {
-			if curtailed == *percent {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
-			}
+		// unreadable state: apply unconditionally
+		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && curtailed == *percent {
 			continue
 		}
 
