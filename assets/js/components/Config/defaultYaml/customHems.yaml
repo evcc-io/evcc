@@ -10,6 +10,18 @@ limit: # input signal, plugin
 #  uri: http://another-hems.local/api/limit?active={{ .dim }}
 #  method: POST
 
+## dynamic limits from plugins instead of a binary relay contact
+#type: custom
+#maxconsumptionpower: # total load limit (W), 0 = no limit
+#  source: http
+#  uri: http://steuerbox.local/api/limit
+#  jq: .maxPower
+#curtailedpercent: # allowed feed-in (0..100), 100 = uncurtailed
+#  source: mqtt
+#  topic: hems/curtail/percent
+#productionnominalmax: 10000 # nominal production power (W), required with curtailedpercent
+#interval: 10s
+
 ## alternative limit sources examples
 #limit:
 #  source: gpio
