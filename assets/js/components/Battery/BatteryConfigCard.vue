@@ -93,6 +93,7 @@
 				</label>
 				<PlansRepeatingSettings
 					id="battery"
+					:start-number="1"
 					:plans="batteryOptimizerSocGoals || []"
 					@updated="saveBatteryOptimizerSocGoals"
 				/>
