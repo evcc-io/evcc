@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -43,46 +44,64 @@ type FoxESSEVC struct {
 	current    float64 // tracks phase current, 0 if unset
 	enabled    bool    // tracks enabled state
 	phases     int     // tracks phase count; the charger does not report it
+	switchable bool    // charger switches 1p/3p on its own, derived from the power setpoint
+	setpoint   uint16  // last known value of foxRegMaxPower
+	status     uint16  // last known value of foxRegStatus
 	minPower   uint16  // min supported power
 	maxPower   uint16  // max supported power
 	minCurrent float64 // min supported current per phase
 	maxCurrent float64 // max supported current per phase
 }
 
+// Register map per spec §2. Read-only and read/write registers are read with 0x03.
+// Per §2 note (2) read/write registers must be written with 0x10, write-only registers with 0x06.
 const (
-	// read-only registers (0x03)
-	foxRegSwVersion     = 0x1001 // software version, byte1 major / byte0 minor
-	foxRegStopReason    = 0x1002 // reason the last charging session ended, see spec appendix 1
-	foxRegStatus        = 0x1003 // EVC status
-	foxCpStatus         = 0x1004 // CP status
-	foxCableStatus      = 0x1005 // Cable status
-	foxRegVoltages      = 0x1008 // A/B/C phase voltage, 3 registers, 0.1V
-	foxRegCurrents      = 0x100B // A/B/C phase current, 3 registers, 0.1A
-	foxRegPower         = 0x100E // active power, 0.1kW
-	foxRegPhaseSequence = 0x1010 // current phase sequence
+	// read-only registers
+	foxRegDeviceAddress = 0x1000 // device address (§2.1)
+	foxRegSwVersion     = 0x1001 // software version, byte1 major / byte0 minor (§2.2)
+	foxRegStopReason    = 0x1002 // reason the last charging session ended, see spec appendix 1 (§2.3)
+	foxRegStatus        = 0x1003 // EVC status (§2.4)
+	foxRegCpStatus      = 0x1004 // CP status (§2.5)
+	foxRegCableStatus   = 0x1005 // CC status (§2.6)
+	foxRegPortTemp      = 0x1006 // charging port temperature, 0.1°C, offset 50°C (§2.7)
+	foxRegAmbientTemp   = 0x1007 // EVC environment temperature, 0.1°C, offset 50°C (§2.8)
+	foxRegVoltages      = 0x1008 // A/B/C phase voltage, 3 registers, 0.1V (§2.9-§2.11)
+	foxRegCurrents      = 0x100B // A/B/C phase current, 3 registers, 0.1A (§2.12-§2.14)
+	foxRegPower         = 0x100E // active power, 0.1kW (§2.15)
+	foxRegLockStatus    = 0x100F // electronic lock status (§2.16)
+	foxRegPhaseSequence = 0x1010 // current phase sequence, only meaningful with a phase switch box (§2.17)
 	foxRegMaxSupPower   = 0x1011 // max supported power, 0.1kW (§2.18)
 	foxRegMinSupPower   = 0x1012 // min supported power, 0.1kW (§2.19)
 	foxRegMaxSupCurrent = 0x1013 // max supported current per phase, 0.1A (§2.20)
 	foxRegMinSupCurrent = 0x1014 // min supported current per phase, 0.1A (§2.21)
-	foxRegAlarm         = 0x1015 // system alarm, bit-coded, see spec appendix 3
-	foxRegTotalEnergy   = 0x1016 // total energy, uint32, 0.1kWh; never resets
-	foxRegSessionEnergy = 0x1018 // session energy, uint32, 0.1kWh; resets on session start
-	foxRegFault         = 0x101A // system fault, uint32, bit-coded, see spec appendix 2
-	foxRegRFID          = 0x101C // last RFID card, uint32
+	foxRegAlarm         = 0x1015 // system alarm, bit-coded, see spec appendix 3 (§2.22)
+	foxRegTotalEnergy   = 0x1016 // internal meter reading, uint32, 0.1kWh; never resets (§2.23)
+	foxRegSessionEnergy = 0x1018 // energy of the current charge, uint32, 0.1kWh (§2.24)
+	foxRegFault         = 0x101A // system fault, uint32, bit-coded, see spec appendix 2 (§2.25)
+	foxRegRFID          = 0x101C // last RFID card, uint32 (§2.26)
+	foxRegModel         = 0x101E // model code, 4 registers, ASCII (§2.27)
+	foxRegSerial        = 0x1022 // serial number, 16 registers, ASCII (§2.28)
 
 	// read/write registers (write with 0x10)
-	foxRegWorkMode        = 0x3000 // work mode
-	foxRegMaxCurrent      = 0x3001 // max charging current, 0.1A
-	foxRegMaxPower        = 0x3002 // max charging power, 0.1kW
-	foxRegTimeValidity    = 0x3005 // command validity window, seconds
-	foxRegDefaultCurrent  = 0x3006 // fallback current when the EMS connection is lost, 0.1A
-	foxRegAutoPhaseSwitch = 0x300A // single/three-phase automatic switching
-	foxRegSwitchInterval  = 0x300B // min interval between phase switches, minutes
+	foxRegWorkMode        = 0x3000 // work mode (§2.29)
+	foxRegMaxCurrent      = 0x3001 // max charging current, 0.1A (§2.30)
+	foxRegMaxPower        = 0x3002 // max charging power, 0.1kW (§2.31)
+	foxRegChargeTime      = 0x3003 // allowable charge time, minutes (§2.32)
+	foxRegChargeEnergy    = 0x3004 // allowable charge energy, kWh (§2.33)
+	foxRegTimeValidity    = 0x3005 // command validity window, seconds (§2.34)
+	foxRegDefaultCurrent  = 0x3006 // fallback current when the EMS connection is lost, 0.1A (§2.35)
+	foxRegOtaStatus       = 0x3007 // OTA status (§2.36)
+	foxRegOtaSize         = 0x3008 // OTA firmware size, uint32 (§2.37)
+	foxRegAutoPhaseSwitch = 0x300A // single/three-phase automatic switching (§2.38)
+	foxRegSwitchInterval  = 0x300B // min interval between phase switches, minutes (§2.39)
+	foxRegLockControl     = 0x4000 // electronic lock control, write-only (§2.40)
+	foxRegSessionControl  = 0x4001 // start/stop session, write-only (§2.41)
+	foxRegPhaseControl    = 0x4002 // phase sequence switching, write-only (§2.42)
+	foxRegRestart         = 0x4003 // restart, write-only (§2.43)
+)
 
-	// write-only registers (write with 0x06)
-	foxRegSessionControl = 0x4001 // start/stop session
-
-	foxSessionNoAction   = 0
+const (
+	foxSessionNoAction   = 0 // session control values (§2.41)
 	foxSessionStart      = 1
 	foxSessionStop       = 2
 	foxTimeValidity      = 60 // maximum command validity window in seconds (§2.34: 10-60s)
@@ -146,13 +165,12 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	conn.Logger(log.TRACE)
 
 	wb := &FoxESSEVC{
-		Caps:   implement.New(),
-		log:    log,
-		conn:   conn,
-		phases: 3,
+		Caps: implement.New(),
+		log:  log,
+		conn: conn,
 	}
 
-	// device limits are model-specific and constant, so read them once (§2.20/§2.21)
+	// device limits are model-specific and constant, so read them once (§2.18-§2.21)
 	minCurrent, err := wb.readUint16(foxRegMinSupCurrent)
 	if err != nil {
 		return nil, err
@@ -172,22 +190,28 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 		return nil, err
 	}
 
-	is3pCharger := wb.maxPower > foxMaxPower1p
+	if wb.minCurrent == 0 || wb.minCurrent > wb.maxCurrent {
+		return nil, fmt.Errorf("invalid current limits: %.1f/%.1fA", wb.minCurrent, wb.maxCurrent)
+	}
+	if wb.minPower == 0 || wb.minPower > wb.maxPower {
+		return nil, fmt.Errorf("invalid power limits: %d/%d", wb.minPower, wb.maxPower)
+	}
 
-	var hasAutoSwEn bool
-	if is3pCharger {
+	// derive the hardware phase count from the device limits
+	wb.phases = 1
+	if math.Round(float64(wb.maxPower)*100/(230*wb.maxCurrent)) >= 3 {
 		wb.phases = 3
+	}
+
+	if wb.phases == 3 {
 		autoSw, err := wb.readUint16(foxRegAutoPhaseSwitch)
 		if err != nil {
 			return nil, err
 		}
-		hasAutoSwEn = autoSw > 0
-	} else {
-		wb.phases = 1
+		wb.switchable = autoSw > 0
 	}
 
-	if hasAutoSwEn {
-		wb.minPower = foxMinPower1p
+	if wb.switchable {
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 
@@ -197,7 +221,27 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 		}
 	}
 
-	// keep the charger from considering evcc offline; see heartbeat (§2.34)
+	// seed the state from the charger so that restarting evcc during an active session does not
+	// look like "disabled but charging" to the loadpoint
+	if wb.status, err = wb.readUint16(foxRegStatus); err != nil {
+		return nil, err
+	}
+	setpoint, err := wb.readSetpoint()
+	if err != nil {
+		return nil, err
+	}
+	if setpoint > 0 && wb.sessionActive(wb.status) {
+		wb.enabled = true
+		wb.current = currentFromSetpoint(setpoint, wb.phases)
+	}
+
+	// keep the charger from considering evcc offline; see heartbeat (§2.34).
+	// widening the window to its maximum keeps the heartbeat rate low- firmware ranges differ,
+	// so a rejected write is not fatal.
+	if err := wb.ensureReg(foxRegTimeValidity, foxTimeValidity); err != nil {
+		wb.log.WARN.Printf("time validity: %v", err)
+	}
+
 	timeValidity, err := wb.readUint16(foxRegTimeValidity)
 	if err != nil {
 		return nil, err
@@ -231,64 +275,14 @@ func (wb *FoxESSEVC) readUint32(reg uint16) (uint32, error) {
 	return binary.BigEndian.Uint32(b), nil
 }
 
-// writeReg writes a single read/write register (0x10)
-func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, val)
-
-	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
-
-	return err
-}
-
-// ensureReg writes a value to a read/write register only if it differs from
-// the current value, avoiding spurious write errors on registers that reject
-// redundant writes (e.g. Modbus exception 3 when value is unchanged).
-func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 1)
+// readString reads consecutive registers as a zero-padded ASCII string
+func (wb *FoxESSEVC) readString(reg, words uint16) (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, words)
 	if err != nil {
-		return err
-	}
-	if binary.BigEndian.Uint16(b) == val {
-		return nil
-	}
-	return wb.writeReg(reg, val)
-}
-
-func (wb *FoxESSEVC) calcPower(enabled bool, current float64, phases int) float64 {
-	if !enabled {
-		return 0
+		return "", err
 	}
 
-	return 230 * float64(phases) * min(max(current, wb.minCurrent), wb.maxCurrent)
-}
-
-// applySetpoint writes the combined enable state and charging limit
-func (wb *FoxESSEVC) applySetpoint(power float64) error {
-	var val uint16
-	if power != 0 {
-		val = min(max(uint16(math.Round(power/100.0)), wb.minPower), wb.maxPower)
-	}
-
-	return wb.ensureReg(foxRegMaxPower, val)
-}
-
-// heartbeat keeps the charger from considering evcc offline. The interval must
-// be shorter than the command validity window (foxRegTimeValidity).
-func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
-	for tick := time.Tick(interval); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-
-		// keepalive no-op write
-		err := wb.writeReg(foxRegSessionControl, foxSessionNoAction)
-		if err != nil {
-			wb.log.DEBUG.Printf("heartbeat: %v", err)
-		}
-	}
+	return bytesAsString(bytes.TrimRight(b, "\x00")), nil
 }
 
 // getPhaseValues returns 3 sequential register values scaled by divider
@@ -306,14 +300,134 @@ func (wb *FoxESSEVC) getPhaseValues(reg uint16, divider float64) (float64, float
 	return res[0], res[1], res[2], nil
 }
 
+// writeReg writes a single read/write register (0x10)
+func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, val)
+
+	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
+
+	return err
+}
+
+// ensureReg writes a value to a read/write register only if it differs from
+// the current value, avoiding spurious write errors on registers that reject
+// redundant writes (e.g. Modbus exception 3 when value is unchanged).
+func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
+	cur, err := wb.readUint16(reg)
+	if err != nil {
+		return err
+	}
+	if cur == val {
+		return nil
+	}
+
+	return wb.writeReg(reg, val)
+}
+
+// readSetpoint reads the power setpoint register and updates the cached value
+func (wb *FoxESSEVC) readSetpoint() (uint16, error) {
+	val, err := wb.readUint16(foxRegMaxPower)
+	if err == nil {
+		wb.setpoint = val
+	}
+
+	return val, err
+}
+
+// sessionActive reports whether the given status belongs to a running charging session.
+// Only then is the power setpoint in effect (§2.31) instead of being restored to the device
+// maximum, i.e. only then does a non-zero setpoint mean the charger is enabled.
+func (wb *FoxESSEVC) sessionActive(status uint16) bool {
+	switch status {
+	case foxStatusStart, foxStatusCharging, foxStatusPause, foxStatusSwitching:
+		return true
+	default:
+		return false
+	}
+}
+
+// powerLimits returns the power setpoint bounds for the given phase count.
+// A charger doing its own 1p/3p switching picks the phase count from the setpoint alone (§2.38),
+// so the setpoint must stay inside the band belonging to the requested phase count. Otherwise the
+// charger silently switches phases behind evcc's back- and while its minimum switching interval
+// (§2.39) blocks the switch, a three-phase setpoint is delivered on a single phase.
+func (wb *FoxESSEVC) powerLimits(phases int) (uint16, uint16) {
+	lo, hi := wb.minPower, wb.maxPower
+
+	if wb.switchable {
+		if phases == 1 {
+			lo, hi = foxMinPower1p, foxMinPower3p-1
+		} else {
+			lo = foxMinPower3p
+		}
+	}
+
+	return lo, hi
+}
+
+// calcSetpoint converts the enable state and phase current into the power setpoint register value
+func (wb *FoxESSEVC) calcSetpoint(enabled bool, current float64, phases int) uint16 {
+	if !enabled {
+		return 0
+	}
+
+	lo, hi := wb.powerLimits(phases)
+	power := 230 * float64(phases) * min(max(current, wb.minCurrent), wb.maxCurrent)
+
+	return min(max(uint16(math.Round(power/100)), lo), hi)
+}
+
+// currentFromSetpoint converts a power setpoint register value back into the phase current
+func currentFromSetpoint(setpoint uint16, phases int) float64 {
+	return float64(setpoint) * 100 / (230 * float64(phases))
+}
+
+// applySetpoint writes the combined enable state and charging limit. The setpoint is only written
+// when it actually changes, since some firmwares reject redundant writes with modbus exception 3.
+func (wb *FoxESSEVC) applySetpoint(val uint16) error {
+	cur, err := wb.readSetpoint()
+	if err != nil {
+		return err
+	}
+	if cur == val {
+		return nil
+	}
+
+	if err := wb.writeReg(foxRegMaxPower, val); err != nil {
+		return err
+	}
+	wb.setpoint = val
+
+	return nil
+}
+
+// heartbeat feeds the chargers watchdog. Any message received within the
+// command validity window (foxRegTimeValidity) is sufficient (§2.34), hence a plain read.
+// The interval must be shorter than that window.
+func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		if _, err := wb.readUint16(foxRegStatus); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
+}
+
 // Status implements the api.Charger interface
 func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
+	s, err := wb.readUint16(foxRegStatus)
 	if err != nil {
 		return api.StatusNone, err
 	}
+	wb.status = s
 
-	switch s := binary.BigEndian.Uint16(b); s {
+	switch s {
 	case foxStatusIdle:
 		return api.StatusA, nil
 
@@ -332,12 +446,8 @@ var _ api.StatusReasoner = (*FoxESSEVC)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *FoxESSEVC) StatusReason() (api.Reason, error) {
-	b, err := wb.conn.ReadHoldingRegisters(foxRegStatus, 1)
-	if err != nil {
-		return api.ReasonUnknown, nil
-	}
-
-	switch s := binary.BigEndian.Uint16(b); s {
+	// uses the status cached by Status(), which the loadpoint calls immediately before
+	switch wb.status {
 	case foxStatusConnect:
 		return api.ReasonWaitingForAuthorization, nil
 
@@ -351,7 +461,7 @@ func (wb *FoxESSEVC) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *FoxESSEVC) Enabled() (bool, error) {
-	val, err := wb.readUint16(foxRegMaxPower)
+	val, err := wb.readSetpoint()
 	if err != nil {
 		return false, err
 	}
@@ -365,7 +475,7 @@ func (wb *FoxESSEVC) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *FoxESSEVC) Enable(enable bool) error {
-	if err := wb.applySetpoint(wb.calcPower(enable, wb.current, wb.phases)); err != nil {
+	if err := wb.applySetpoint(wb.calcSetpoint(enable, wb.current, wb.phases)); err != nil {
 		return err
 	}
 
@@ -387,7 +497,7 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current: %.1fA", current)
 	}
 
-	if err := wb.applySetpoint(wb.calcPower(wb.enabled, current, wb.phases)); err != nil {
+	if err := wb.applySetpoint(wb.calcSetpoint(wb.enabled, current, wb.phases)); err != nil {
 		return err
 	}
 
@@ -400,23 +510,40 @@ var _ api.CurrentLimiter = (*FoxESSEVC)(nil)
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (wb *FoxESSEVC) GetMinMaxCurrent() (float64, float64, error) {
-	if wb.minCurrent == 0 || wb.maxCurrent == 0 {
-		return 0, 0, api.ErrNotAvailable
+	lo, hi := wb.powerLimits(wb.phases)
+
+	return max(wb.minCurrent, currentFromSetpoint(lo, wb.phases)),
+		min(wb.maxCurrent, currentFromSetpoint(hi, wb.phases)), nil
+}
+
+var _ api.CurrentGetter = (*FoxESSEVC)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
+	// outside an active session the setpoint may be restored to the max supported power (§2.31),
+	// which the loadpoint would adopt as the offered current
+	if !wb.sessionActive(wb.status) {
+		return 0, api.ErrNotAvailable
 	}
 
-	return wb.minCurrent, wb.maxCurrent, nil
+	val, err := wb.readSetpoint()
+	if err != nil {
+		return 0, err
+	}
+
+	return currentFromSetpoint(val, wb.phases), nil
 }
 
 var _ api.Meter = (*FoxESSEVC)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *FoxESSEVC) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(foxRegPower, 1)
+	val, err := wb.readUint16(foxRegPower)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint16(b)) * 100, nil
+	return float64(val) * 100, nil
 }
 
 var _ api.MeterEnergy = (*FoxESSEVC)(nil)
@@ -433,6 +560,7 @@ func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 
 var _ api.ChargeRater = (*FoxESSEVC)(nil)
 
+// ChargedEnergy implements the api.ChargeRater interface
 func (wb *FoxESSEVC) ChargedEnergy() (float64, error) {
 	energy, err := wb.readUint32(foxRegSessionEnergy)
 	if err != nil {
@@ -474,6 +602,12 @@ func (wb *FoxESSEVC) Identify() (string, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *FoxESSEVC) phases1p3p(phases int) error {
+	// the setpoint band depends on the phase count, so it needs to be rewritten right away-
+	// the loadpoint does not necessarily re-issue MaxCurrent after a phase switch
+	if err := wb.applySetpoint(wb.calcSetpoint(wb.enabled, wb.current, phases)); err != nil {
+		return err
+	}
+
 	wb.phases = phases
 
 	return nil
@@ -481,17 +615,40 @@ func (wb *FoxESSEVC) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *FoxESSEVC) getPhases() (int, error) {
-	val, err := wb.readUint16(foxRegMaxPower)
-	if err != nil {
-		return 0, err
+	// The charger picks the phase count from the power setpoint (§2.38). Since the setpoint is kept
+	// inside the band of the requested phase count, this is the count the charger will settle on-
+	// its minimum switching interval (§2.39) may however delay the actual switch.
+	switch {
+	case wb.setpoint >= foxMinPower3p:
+		return 3, nil
+	case wb.setpoint >= foxMinPower1p:
+		return 1, nil
+	default:
+		return wb.phases, nil
 	}
+}
 
-	phases := wb.phases
-	if val >= foxMinPower3p {
-		phases = 3
-	} else if val >= foxMinPower1p {
-		phases = 1
+var _ api.Diagnosis = (*FoxESSEVC)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *FoxESSEVC) Diagnose() {
+	if val, err := wb.readUint16(foxRegSwVersion); err == nil {
+		fmt.Printf("\tSoftware version:\t%d.%d\n", val>>8, val&0xFF)
 	}
-
-	return phases, nil
+	if s, err := wb.readString(foxRegModel, 4); err == nil {
+		fmt.Printf("\tModel:\t%s\n", s)
+	}
+	if s, err := wb.readString(foxRegSerial, 16); err == nil {
+		fmt.Printf("\tSerial:\t%s\n", s)
+	}
+	fmt.Printf("\tMax. Phases:\t%dp\n", wb.phases)
+	fmt.Printf("\tAuto phase switching:\t%v\n", wb.switchable)
+	fmt.Printf("\tPower range:\t%.1f-%.1fkW\n", float64(wb.minPower)/10, float64(wb.maxPower)/10)
+	fmt.Printf("\tCurrent range:\t%.1f-%.1fA\n", wb.minCurrent, wb.maxCurrent)
+	if val, err := wb.readUint16(foxRegWorkMode); err == nil {
+		fmt.Printf("\tWork mode:\t%d\n", val)
+	}
+	if val, err := wb.readUint16(foxRegStopReason); err == nil {
+		fmt.Printf("\tStop reason:\t%d\n", val) // see spec appendix 1
+	}
 }
