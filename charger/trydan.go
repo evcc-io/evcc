@@ -217,6 +217,7 @@ func (c Trydan) MaxCurrent(current int64) error {
 var _ api.PhaseSwitcher = (*Trydan)(nil)
 
 // qaMethod sends a qa_method command to the Trydan
+// Example request: /qa_method/{"method":"set_threephasic","value":true}
 func (c *Trydan) qaMethod(method string, value bool) error {
 	uri := fmt.Sprintf(`%s/qa_method/%%7B%%22method%%22:%%22%s%%22,%%22value%%22:%t%%7D`, c.uri, method, value)
 	res, err := c.GetBody(uri)
@@ -234,18 +235,22 @@ func (c *Trydan) Phases1p3p(phases int) error {
 	}
 
 	if data.ChargeState == 2 {
-		if err := c.setValue("ChargeMode", trydanChargeModeMixed); err != nil {
-			return err
-		}
-		c.qaMethod("set_threephasic", phases == 3)
-		time.Sleep(1000 * time.Millisecond)
-		mode := trydanChargeModeMono
-		if phases == 3 {
-			mode = trydanChargeModeThree
-		}
-		return c.setValue("ChargeMode", mode)
+		return c.phasesWhileCharging(phases)
 	}
 
+	return c.setChargeModeForPhases(phases)
+}
+
+func (c *Trydan) phasesWhileCharging(phases int) error {
+	if err := c.setValue("ChargeMode", trydanChargeModeMixed); err != nil {
+		return err
+	}
+	c.qaMethod("set_threephasic", phases == 3)
+	time.Sleep(1000 * time.Millisecond)
+	return c.setChargeModeForPhases(phases)
+}
+
+func (c *Trydan) setChargeModeForPhases(phases int) error {
 	mode := trydanChargeModeThree
 	if phases == 1 {
 		mode = trydanChargeModeMono
