@@ -56,6 +56,8 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
+	maxSessionEnergy = 1e3 // kWh, above this a charge rater reading is treated as garbage
+
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 
@@ -1811,8 +1813,14 @@ func (lp *Loadpoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
-		if f > lp.chargedAtStartup {
-			added, addedGreen := lp.energyMetrics.Update(f - lp.chargedAtStartup)
+		switch session := f - lp.chargedAtStartup; {
+		case session > maxSessionEnergy:
+			// guard against meters reporting register garbage, see
+			// https://github.com/evcc-io/evcc/issues/32159
+			lp.log.WARN.Printf("ignoring implausible session energy: %.3fkWh", session)
+
+		case session > 0:
+			added, addedGreen := lp.energyMetrics.Update(session)
 			if added > 0 {
 				lp.log.DEBUG.Printf("session energy: %.3fkWh", f)
 			}

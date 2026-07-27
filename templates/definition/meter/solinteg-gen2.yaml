@@ -17,17 +17,16 @@ params:
   - name: modbus
     choice: ["rs485"]
     id: 247
-  - preset: battery-params
+    delay: 100ms
   - name: delay
-    default: 100ms
-    advanced: true
+    deprecated: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 11000 # Total Power on Meter
       type: holding
@@ -36,7 +35,6 @@ render: |
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
       register:
         address: 10994 # Phase A Power on Meter
         type: holding
@@ -44,7 +42,6 @@ render: |
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
       register:
         address: 10996 # Phase B Power on Meter
         type: holding
@@ -52,7 +49,6 @@ render: |
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
       register:
         address: 10998 # Phase C Power on Meter
         type: holding
@@ -61,7 +57,6 @@ render: |
   energy: # import energy (kWh)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 41104 # Grid Energy Purchased Total
       type: holding
@@ -70,7 +65,6 @@ render: |
   returnenergy: # export energy (kWh)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 41102 # Grid Energy Injected Total
       type: holding
@@ -81,7 +75,6 @@ render: |
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 11028 # PV Input Total Power
       type: holding
@@ -89,7 +82,6 @@ render: |
   energy: # energy (kWh)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 41112 # PV Input Total Energy
       type: holding
@@ -100,7 +92,6 @@ render: |
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 40258 # Battery_P
       type: holding
@@ -108,7 +99,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 43000 # State of Charge (SOC)
       type: holding
@@ -117,7 +107,6 @@ render: |
   energy: # discharge energy (kWh)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 41110 # Battery Energy Discharged Total
       type: holding
@@ -126,7 +115,6 @@ render: |
   returnenergy: # charge energy (kWh)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 41108 # Battery Energy Charged Total
       type: holding
@@ -142,7 +130,6 @@ render: |
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
-          delay: {{ .delay }}
           register:
             address: 50000
             type: writesingle
@@ -154,7 +141,6 @@ render: |
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
-          delay: {{ .delay }}
           register:
             address: 50000
             type: writesingle
@@ -166,7 +152,6 @@ render: |
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
-          delay: {{ .delay }}
           register:
             address: 50000
             type: writesingle

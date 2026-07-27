@@ -641,6 +641,8 @@
       "connectionHintTcpip": "Das Gerät ist über Netzwerk (LAN/WiFi) erreichbar.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwerk",
+      "delay": "Verzögerung",
+      "delayHint": "Optionale Wartezeit vor jedem Registerzugriff. Nur für langsame Geräte notwendig.",
       "device": "Gerätename",
       "deviceHint": "Beispiel: /dev/ttyUSB0",
       "host": "IP Adresse oder Hostname",
@@ -651,7 +653,9 @@
       "protocolHintRtu": "Verbindung über eine RS485 Schnittstelle an einem Ethernet Adapter ohne Protokollübersetzung.",
       "protocolHintTcp": "Gerät hat native LAN/Wifi Unterstützung oder ist über eine RS485 Schnittstelle an einen Ethernet Adapter mit Protokollübersetzung angeschlossen.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Zeitüberschreitung",
+      "timeoutHint": "Optionale maximale Wartezeit auf eine Antwort des Geräts."
     },
     "modbusproxy": {
       "add": "Proxy-Verbindung hinzufügen",

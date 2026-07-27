@@ -104,3 +104,65 @@ func TestFixedSplitZones(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expect, rates)
 }
+
+func TestFixedChargesZonesMarkers(t *testing.T) {
+	at, err := NewFixedFromConfig(map[string]any{
+		"price": 0.5,
+		"chargesZones": []struct {
+			Charges float64
+			Hours   string
+		}{
+			{0.1, "0-5:30"},
+		},
+	})
+	require.NoError(t, err)
+
+	tf := at.(*Fixed)
+	tf.clock = clock.NewMock()
+
+	rates, err := tf.Rates()
+	require.NoError(t, err)
+
+	dayStart := now.With(tf.clock.Now()).BeginningOfDay()
+
+	// charges zone ends mid-hour at 05:30 - the price change must take effect there, not at 06:00
+	require.GreaterOrEqual(t, len(rates), 2)
+	assert.Equal(t, dayStart.Add(5*time.Hour), rates[5].Start)
+	assert.Equal(t, dayStart.Add(5*time.Hour+30*time.Minute), rates[5].End)
+	assert.Equal(t, 0.6, rates[5].Value)
+	assert.Equal(t, dayStart.Add(5*time.Hour+30*time.Minute), rates[6].Start)
+	assert.Equal(t, 0.5, rates[6].Value)
+}
+
+func TestFixedChargesZonesOrder(t *testing.T) {
+	at, err := NewFixedFromConfig(map[string]any{
+		"price": 0.5,
+		"zones": []struct {
+			Price float64
+			Hours string
+		}{
+			{0.2, "12-14"},
+		},
+		"chargesZones": []struct {
+			Charges float64
+			Hours   string
+		}{
+			{0.1, "0-5:30"},
+		},
+	})
+	require.NoError(t, err)
+
+	tf := at.(*Fixed)
+	tf.clock = clock.NewMock()
+
+	rates, err := tf.Rates()
+	require.NoError(t, err)
+
+	// rates must stay ordered and contiguous even if charges zone markers don't align with price zones
+	for i, r := range rates {
+		require.True(t, r.End.After(r.Start), "invalid rate %d: %v", i, r)
+		if i > 0 {
+			require.Equal(t, rates[i-1].End, r.Start, "non-contiguous rate %d: %v", i, r)
+		}
+	}
+}
