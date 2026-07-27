@@ -71,14 +71,6 @@ export interface StatisticsData {
 
 export type Statistics = Record<StatisticsPeriod, StatisticsData>;
 
-// daily optimizer reserve goal: keep the battery at soc by time each day.
-// time and tz are stored together so the wall-clock time keeps its timezone.
-export interface BatteryOptimizerSocGoal {
-  soc: number; // target soc, 1..100
-  time: string; // HH:MM local wall-clock
-  tz: string; // IANA timezone
-}
-
 export interface State {
   offline: boolean;
   telemetry?: boolean;
@@ -129,7 +121,7 @@ export interface State {
   batteryGridDischarge?: boolean; // battery may discharge to grid (experimental)
   solarAdjusted?: boolean;
   batteryGridChargeLimit?: number | null;
-  batteryOptimizerSocGoal?: BatteryOptimizerSocGoal | null;
+  batteryOptimizerSocGoals?: RepeatingPlan[] | null;
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
   historyUpdated?: string; // ISO timestamp, bumped each 15min metrics persist

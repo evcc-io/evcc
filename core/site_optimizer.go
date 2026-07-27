@@ -860,7 +860,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		}
 	}
 
-	site.applyBatterySocGoal(&bat, *b.Capacity, timestamps)
+	site.applyBatterySocGoals(&bat, *b.Capacity, timestamps)
 
 	return bat, detail
 }
@@ -1179,56 +1179,68 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 }
 
-func (site *Site) applyBatterySocGoal(bat *optimizer.BatteryConfig, capacity float64, timestamps []time.Time) {
-	goal := site.GetBatteryOptimizerSocGoal()
-	if goal == nil || len(timestamps) == 0 {
+func (site *Site) applyBatterySocGoals(bat *optimizer.BatteryConfig, capacity float64, timestamps []time.Time) {
+	goals := site.GetBatteryOptimizerSocGoals()
+	if len(goals) == 0 || len(timestamps) == 0 {
 		return
-	}
-
-	targetTime, err := time.Parse("15:04", goal.Time)
-	if err != nil {
-		site.log.ERROR.Println("optimizer:", err)
-		return
-	}
-
-	// the goal time is meaningless without its zone: interpret it strictly in
-	// the configured timezone and never fall back to the server's local zone,
-	// which would misplace the reserve by the UTC offset
-	loc, err := time.LoadLocation(goal.Tz)
-	if err != nil {
-		site.log.ERROR.Println("optimizer:", err)
-		return
-	}
-
-	goalWh := float32(capacity * goal.Soc * 10)
-
-	if bat.SMin > 0 {
-		goalWh = max(goalWh, bat.SMin)
 	}
 
 	upperLimit := bat.SCapacity
 	if bat.SMax > 0 {
 		upperLimit = bat.SMax
 	}
-	if upperLimit > 0 {
-		goalWh = min(goalWh, upperLimit)
+
+	// merge all active goals into one per-slot reserve array; on overlap the
+	// higher reserve wins
+	var sgoal []float32
+	for _, g := range goals {
+		if !g.Active || len(g.Weekdays) == 0 {
+			continue
+		}
+
+		targetTime, err := time.Parse("15:04", g.Time)
+		if err != nil {
+			site.log.ERROR.Println("optimizer:", err)
+			continue
+		}
+
+		// the goal time is meaningless without its zone: interpret it strictly in
+		// the configured timezone and never fall back to the server's local zone,
+		// which would misplace the reserve by the UTC offset
+		loc, err := time.LoadLocation(g.Tz)
+		if err != nil {
+			site.log.ERROR.Println("optimizer:", err)
+			continue
+		}
+
+		goalWh := float32(capacity * float64(g.Soc) * 10)
+		if bat.SMin > 0 {
+			goalWh = max(goalWh, bat.SMin)
+		}
+		if upperLimit > 0 {
+			goalWh = min(goalWh, upperLimit)
+		}
+		if goalWh <= 0 {
+			continue
+		}
+
+		sgoal = batterySocGoalSlots(sgoal, timestamps, loc, targetTime.Hour(), targetTime.Minute(), g.Weekdays, goalWh)
 	}
 
-	if goalWh <= 0 {
-		return
-	}
-
-	if slots := batterySocGoalSlots(timestamps, loc, targetTime.Hour(), targetTime.Minute(), goalWh); slots != nil {
-		bat.SGoal = slots
+	if sgoal != nil {
+		bat.SGoal = sgoal
 		if bat.SMax == 0 {
 			bat.SMax = upperLimit
 		}
 	}
 }
 
-func batterySocGoalSlots(timestamps []time.Time, loc *time.Location, targetHour, targetMinute int, goal float32) []float32 {
+// batterySocGoalSlots marks the first slot at or after the goal's target time on
+// each selected weekday with the goal reserve, accumulating into sgoal (higher
+// reserve wins on overlap). Pass nil sgoal for the first goal.
+func batterySocGoalSlots(sgoal []float32, timestamps []time.Time, loc *time.Location, targetHour, targetMinute int, weekdays []int, goal float32) []float32 {
 	if len(timestamps) == 0 {
-		return nil
+		return sgoal
 	}
 
 	first := timestamps[0].In(loc)
@@ -1246,20 +1258,24 @@ func batterySocGoalSlots(timestamps []time.Time, loc *time.Location, targetHour,
 		target = target.AddDate(0, 0, 1)
 	}
 
-	var res []float32
 	for i, ts := range timestamps {
 		if ts.In(loc).Before(target) {
 			continue
 		}
 
-		if res == nil {
-			res = make([]float32, len(timestamps))
+		// first slot at or after this day's target time
+		if slices.Contains(weekdays, int(target.Weekday())) {
+			if sgoal == nil {
+				sgoal = make([]float32, len(timestamps))
+			}
+			if goal > sgoal[i] {
+				sgoal[i] = goal
+			}
 		}
-		res[i] = goal
 		target = target.AddDate(0, 0, 1)
 	}
 
-	return res
+	return sgoal
 }
 
 // TODO remove once smart cost limit usage becomes obsolete

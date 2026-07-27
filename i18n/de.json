@@ -93,9 +93,10 @@
     },
     "optimizerSocGoal": {
       "enable": "Tägliches Reservenziel für den Optimierer halten.",
-      "hint": "Setzt dem Optimierer zur gewählten lokalen Uhrzeit ein tägliches Hausbatterie-SoC-Ziel.",
+      "hint": "Füge ein oder mehrere wiederkehrende Hausbatterie-SoC-Reserven für den Optimierer hinzu, z. B. eine Abendreserve plus eine Morgenspitzen-Reserve. Jede gilt zu ihrer lokalen Uhrzeit an den gewählten Wochentagen.",
       "soc": "Reservenziel",
-      "time": "Uhrzeit"
+      "time": "Uhrzeit",
+      "title": "Batterie-Reserveziele"
     },
     "usageTab": "Batterienutzung"
   },
