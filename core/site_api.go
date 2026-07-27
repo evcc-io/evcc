@@ -558,34 +558,14 @@ func repeatingPlanEqual(a, b api.RepeatingPlan) bool {
 		a.Active == b.Active && slices.Equal(a.Weekdays, b.Weekdays)
 }
 
-// loadBatteryOptimizerSocGoals reads the persisted goals, migrating the legacy
-// single daily goal (soc/time/tz) into one all-weekday repeating plan. Returns
-// (nil, err) when absent or malformed so callers can simply skip it.
+// loadBatteryOptimizerSocGoals reads the persisted goals; returns (nil, err)
+// when absent or malformed so callers can simply skip it.
 func loadBatteryOptimizerSocGoals() ([]api.RepeatingPlan, error) {
 	var goals []api.RepeatingPlan
-	if err := settings.Json(keys.BatteryOptimizerSocGoals, &goals); err == nil {
-		return goals, nil
-	}
-
-	// migrate the legacy single goal into an every-day repeating plan
-	var legacy struct {
-		Soc  float64 `json:"soc"`
-		Time string  `json:"time"`
-		Tz   string  `json:"tz"`
-	}
-	if err := settings.Json(keys.BatteryOptimizerSocGoal, &legacy); err != nil {
+	if err := settings.Json(keys.BatteryOptimizerSocGoals, &goals); err != nil {
 		return nil, err
 	}
-	if legacy.Time == "" {
-		return nil, nil
-	}
-	return []api.RepeatingPlan{{
-		Weekdays: []int{0, 1, 2, 3, 4, 5, 6},
-		Time:     legacy.Time,
-		Tz:       legacy.Tz,
-		Soc:      int(legacy.Soc),
-		Active:   true,
-	}}, nil
+	return goals, nil
 }
 
 // GetOptimizerChargingStrategy returns the optimizer grid charging strategy,
