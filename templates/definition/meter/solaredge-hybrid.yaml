@@ -180,7 +180,6 @@ render: |
           type: writemultiple
           encoding: float32s
         scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
- 
   curtailed:
     source: go
     in:
