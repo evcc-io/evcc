@@ -18,7 +18,6 @@ type curtailableMeter struct {
 	getErr   error
 	setErr   error
 	gets     int
-	sets     int
 	setCalls []int
 }
 
@@ -28,7 +27,6 @@ func (m *curtailableMeter) CurtailedPercent() (int, error) {
 }
 
 func (m *curtailableMeter) SetCurtailPercent(percent int) error {
-	m.sets++
 	m.setCalls = append(m.setCalls, percent)
 	if m.setErr != nil {
 		return m.setErr
@@ -96,7 +94,7 @@ func TestCurtailPVNoStatement(t *testing.T) {
 
 // A device that cannot report its state is written once, not on every cycle.
 func TestCurtailPVNotAvailable(t *testing.T) {
-	m := &curtailableMeter{percent: 100, getErr: api.ErrNotAvailable}
+	m := &curtailableMeter{getErr: api.ErrNotAvailable}
 	site := curtailSite(m)
 
 	for range 3 {

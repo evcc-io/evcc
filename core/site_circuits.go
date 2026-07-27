@@ -73,7 +73,7 @@ func (site *Site) dimMeters(dim bool) error {
 			continue
 		}
 
-		// a device that cannot report its state is written unconditionally
+		// unreadable state: apply unconditionally
 		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
 		if err != nil && !api.NotAvailable(err) {
 			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
@@ -114,7 +114,7 @@ func (site *Site) curtailPV(percent *int) error {
 			continue
 		}
 
-		// a device that cannot report its state is written unconditionally
+		// unreadable state: apply unconditionally
 		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
 		if err != nil && !api.NotAvailable(err) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
