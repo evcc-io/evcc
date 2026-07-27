@@ -233,6 +233,8 @@ func TestFoxESSEVCStatus(t *testing.T) {
 }
 
 func TestFoxESSEVCSessionActive(t *testing.T) {
+	wb := fox22kW(true)
+
 	tc := []struct {
 		state  uint16
 		active bool
@@ -249,7 +251,7 @@ func TestFoxESSEVCSessionActive(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		assert.Equal(t, tc.active, sessionActive(tc.state), "state %d", tc.state)
+		assert.Equal(t, tc.active, wb.sessionActive(tc.state), "state %d", tc.state)
 	}
 }
 
