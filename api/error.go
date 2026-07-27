@@ -7,55 +7,42 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
+// permanentError is a sentinel error that keeps matching errors.Is after
+// backoff has stripped the backoff.Permanent wrapper.
+type permanentError struct {
+	msg string
+}
+
+func (e *permanentError) Error() string { return e.msg }
+
+// Is matches the wrapped sentinel, too
+func (e *permanentError) Is(target error) bool {
+	var t *permanentError
+	return errors.As(target, &t) && t == e
+}
+
+// permanent creates a permanent sentinel error
+func permanent(msg string) error {
+	return backoff.Permanent(&permanentError{msg})
+}
+
 // ErrNotAvailable indicates that a feature is not available
-var ErrNotAvailable = backoff.Permanent(errNotAvailable{})
-
-type errNotAvailable struct{}
-
-func (errNotAvailable) Error() string { return "not available" }
-
-// Is matches ErrNotAvailable. Backoff strips the permanent wrapper, hence the
-// unwrapped error must match the wrapped sentinel, too.
-func (errNotAvailable) Is(target error) bool { return target == ErrNotAvailable }
+var ErrNotAvailable = permanent("not available")
 
 // ErrUnsupportedPlatform indicates unsupported hardware platform
-var ErrUnsupportedPlatform = backoff.Permanent(errUnsupportedPlatform{})
-
-type errUnsupportedPlatform struct{}
-
-func (errUnsupportedPlatform) Error() string { return "unsupported platform" }
-
-// Is matches ErrUnsupportedPlatform. Backoff strips the permanent wrapper, hence
-// the unwrapped error must match the wrapped sentinel, too.
-func (errUnsupportedPlatform) Is(target error) bool { return target == ErrUnsupportedPlatform }
+var ErrUnsupportedPlatform = permanent("unsupported platform")
 
 // ErrMustRetry indicates that a rate-limited operation should be retried
 var ErrMustRetry = errors.New("must retry")
 
 // ErrSponsorRequired indicates that a sponsor token is required
-var ErrSponsorRequired = errors.New("sponsorship required, see https://docs.evcc.io/docs/sponsorship")
+var ErrSponsorRequired = permanent("sponsorship required, see https://docs.evcc.io/docs/sponsorship")
 
 // ErrMissingCredentials indicates that user/password are missing
-var ErrMissingCredentials = backoff.Permanent(errMissingCredentials{})
-
-type errMissingCredentials struct{}
-
-func (errMissingCredentials) Error() string { return "missing user/password credentials" }
-
-// Is matches ErrMissingCredentials. Backoff strips the permanent wrapper, hence
-// the unwrapped error must match the wrapped sentinel, too.
-func (errMissingCredentials) Is(target error) bool { return target == ErrMissingCredentials }
+var ErrMissingCredentials = permanent("missing user/password credentials")
 
 // ErrMissingToken indicates that access/refresh tokens are missing
-var ErrMissingToken = backoff.Permanent(errMissingToken{})
-
-type errMissingToken struct{}
-
-func (errMissingToken) Error() string { return "missing token credentials" }
-
-// Is matches ErrMissingToken. Backoff strips the permanent wrapper, hence the
-// unwrapped error must match the wrapped sentinel, too.
-func (errMissingToken) Is(target error) bool { return target == ErrMissingToken }
+var ErrMissingToken = permanent("missing token credentials")
 
 // ErrOutdated indicates that result is outdated
 var ErrOutdated = errors.New("outdated")
