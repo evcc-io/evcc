@@ -37,22 +37,6 @@
 						>
 					</CustomSelect>
 				</div>
-				<div class="field-extra form-check form-switch mt-2 mb-0">
-					<input
-						id="optimizerDischargeToGrid"
-						:checked="dischargeToGrid"
-						class="form-check-input"
-						type="checkbox"
-						role="switch"
-						@change="onDischargeChange"
-					/>
-					<label
-						class="form-check-label small text-lowercase evcc-gray"
-						for="optimizerDischargeToGrid"
-					>
-						discharge to grid
-					</label>
-				</div>
 			</div>
 
 			<!-- Result -->
@@ -139,6 +123,8 @@ import "@h2d2/shopicons/es/regular/info";
 // themselves come from backend state to avoid drift if the enum changes
 const STRATEGY_LABELS: Record<string, string> = {
 	charge_before_export: "fill battery first",
+	attenuate_demand_peaks: "reduce grid import peaks",
+	attenuate_feedin_peaks: "reduce grid feed-in peaks",
 	attenuate_grid_peaks: "reduce grid peaks",
 	none: "no preference",
 };
@@ -170,10 +156,9 @@ export default defineComponent({
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		chargingStrategies: { type: Array as PropType<string[]>, default: () => [] },
 		selectedStrategy: { type: String, default: "" },
-		dischargeToGrid: { type: Boolean, default: false },
 		pending: { type: Boolean, default: false },
 	},
-	emits: ["optimize", "change-strategy", "change-discharge-to-grid"],
+	emits: ["optimize", "change-strategy"],
 	data() {
 		return {
 			tooltips: [] as Tooltip[],
@@ -223,9 +208,6 @@ export default defineComponent({
 		onStrategyChange(e: Event) {
 			this.$emit("change-strategy", (e.target as HTMLSelectElement).value);
 		},
-		onDischargeChange(e: Event) {
-			this.$emit("change-discharge-to-grid", (e.target as HTMLInputElement).checked);
-		},
 		initTooltips() {
 			const items: [Element | undefined, string][] = [
 				[this.$refs["statusInfo"] as Element | undefined, STATUS_TOOLTIP],
@@ -271,11 +253,6 @@ export default defineComponent({
 	gap: 1rem;
 	padding: 0.75rem 0;
 	border-top: 1px solid var(--evcc-gray-25);
-}
-/* discharge toggle: always render last, on its own full-width line */
-.field-extra {
-	order: 3;
-	width: 100%;
 }
 .field:last-child {
 	border-top: none;
