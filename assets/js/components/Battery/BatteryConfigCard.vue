@@ -94,7 +94,7 @@
 				<PlansRepeatingSettings
 					id="battery"
 					:start-number="1"
-					:plans="batteryOptimizerSocGoals || []"
+					:plans="batteryOptimizerSocGoals"
 					@updated="saveBatteryOptimizerSocGoals"
 				/>
 				<small class="d-block text-muted mt-2">

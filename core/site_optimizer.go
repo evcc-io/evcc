@@ -1263,8 +1263,9 @@ func batterySocGoalSlots(sgoal []float32, timestamps []time.Time, loc *time.Loca
 			continue
 		}
 
-		// first slot at or after this day's target time
-		if slices.Contains(weekdays, int(target.Weekday())) {
+		// first slot at or after this day's target time; match on the slot's own
+		// weekday (not target's) so a data gap can't bleed the reserve onto another day
+		if slices.Contains(weekdays, int(ts.In(loc).Weekday())) {
 			if sgoal == nil {
 				sgoal = make([]float32, len(timestamps))
 			}

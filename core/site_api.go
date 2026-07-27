@@ -497,6 +497,12 @@ func (site *Site) SetBatteryOptimizerSocGoals(goals []api.RepeatingPlan) error {
 	}
 
 	for i, g := range goals {
+		// inactive or weekday-less goals are ignored by the optimizer, so don't
+		// reject them here - matches applyBatterySocGoals and the shared UI, which
+		// lets a plan be toggled off or left without weekdays
+		if !g.Active || len(g.Weekdays) == 0 {
+			continue
+		}
 		if err := validateBatteryOptimizerSocGoal(g); err != nil {
 			return fmt.Errorf("battery optimizer soc goal %d: %w", i+1, err)
 		}
