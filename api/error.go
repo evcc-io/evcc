@@ -8,10 +8,26 @@ import (
 )
 
 // ErrNotAvailable indicates that a feature is not available
-var ErrNotAvailable = backoff.Permanent(errors.New("not available"))
+var ErrNotAvailable = backoff.Permanent(errNotAvailable{})
+
+type errNotAvailable struct{}
+
+func (errNotAvailable) Error() string { return "not available" }
+
+// Is matches ErrNotAvailable. Backoff strips the permanent wrapper, hence the
+// unwrapped error must match the wrapped sentinel, too.
+func (errNotAvailable) Is(target error) bool { return target == ErrNotAvailable }
 
 // ErrUnsupportedPlatform indicates unsupported hardware platform
-var ErrUnsupportedPlatform error = backoff.Permanent(errors.New("unsupported platform"))
+var ErrUnsupportedPlatform = backoff.Permanent(errUnsupportedPlatform{})
+
+type errUnsupportedPlatform struct{}
+
+func (errUnsupportedPlatform) Error() string { return "unsupported platform" }
+
+// Is matches ErrUnsupportedPlatform. Backoff strips the permanent wrapper, hence
+// the unwrapped error must match the wrapped sentinel, too.
+func (errUnsupportedPlatform) Is(target error) bool { return target == ErrUnsupportedPlatform }
 
 // ErrMustRetry indicates that a rate-limited operation should be retried
 var ErrMustRetry = errors.New("must retry")
@@ -20,16 +36,32 @@ var ErrMustRetry = errors.New("must retry")
 var ErrSponsorRequired = errors.New("sponsorship required, see https://docs.evcc.io/docs/sponsorship")
 
 // ErrMissingCredentials indicates that user/password are missing
-var ErrMissingCredentials = backoff.Permanent(errors.New("missing user/password credentials"))
+var ErrMissingCredentials = backoff.Permanent(errMissingCredentials{})
+
+type errMissingCredentials struct{}
+
+func (errMissingCredentials) Error() string { return "missing user/password credentials" }
+
+// Is matches ErrMissingCredentials. Backoff strips the permanent wrapper, hence
+// the unwrapped error must match the wrapped sentinel, too.
+func (errMissingCredentials) Is(target error) bool { return target == ErrMissingCredentials }
 
 // ErrMissingToken indicates that access/refresh tokens are missing
-var ErrMissingToken = backoff.Permanent(errors.New("missing token credentials"))
+var ErrMissingToken = backoff.Permanent(errMissingToken{})
+
+type errMissingToken struct{}
+
+func (errMissingToken) Error() string { return "missing token credentials" }
+
+// Is matches ErrMissingToken. Backoff strips the permanent wrapper, hence the
+// unwrapped error must match the wrapped sentinel, too.
+func (errMissingToken) Is(target error) bool { return target == ErrMissingToken }
 
 // ErrOutdated indicates that result is outdated
 var ErrOutdated = errors.New("outdated")
 
 // ErrTimeout is the error returned when a timeout happened
-var ErrTimeout error = errors.New("timeout")
+var ErrTimeout = errors.New("timeout")
 
 // LoginRequiredError creates a login error for given auth provider
 func LoginRequiredError(providerAuth string) error {
