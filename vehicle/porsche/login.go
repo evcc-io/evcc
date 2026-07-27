@@ -58,6 +58,9 @@ type LoginSession struct {
 // code on success, or an *ErrCaptchaRequired if a captcha must be solved (call
 // SolveCaptcha to continue).
 func NewLoginSession(log *util.Logger, email, password string) (*LoginSession, string, error) {
+	// credentials are only known at login time, keep them out of the trace log
+	log.Redact(email, password)
+
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, "", err

@@ -23,7 +23,7 @@ func init() {
 }
 
 // NewPorscheFromConfig creates a new vehicle
-func NewPorscheFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
+func NewPorscheFromConfig(_ context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed  `mapstructure:",squash"`
 		Tokens Tokens
@@ -48,7 +48,7 @@ func NewPorscheFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 		seed = token
 	}
 
-	identity, err := porsche.NewIdentity(ctx, log, seed)
+	identity, err := porsche.NewIdentity(log, seed)
 	if err != nil {
 		return nil, err
 	}

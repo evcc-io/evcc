@@ -49,7 +49,7 @@ var (
 // NewIdentity returns the (singleton) Porsche identity, registering it with
 // evcc's provider-auth handler on first creation. A non-nil seed token (e.g.
 // from `evcc token` in the config) is used when the database has none yet.
-func NewIdentity(ctx context.Context, log *util.Logger, seed *oauth2.Token) (*Identity, error) {
+func NewIdentity(log *util.Logger, seed *oauth2.Token) (*Identity, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -57,10 +57,11 @@ func NewIdentity(ctx context.Context, log *util.Logger, seed *oauth2.Token) (*Id
 		return identity, nil
 	}
 
-	// inject X-Client-ID on all token-endpoint calls (exchange + refresh)
+	// inject X-Client-ID on all token-endpoint calls (exchange + refresh).
+	// the context outlives the caller, hence it must not be request-scoped
 	client := request.NewClient(log)
 	client.Transport = &headerRoundTripper{base: client.Transport}
-	authCtx := context.WithValue(ctx, oauth2.HTTPClient, client)
+	authCtx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
 
 	o := &Identity{
 		log: log,
