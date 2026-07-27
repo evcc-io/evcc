@@ -56,5 +56,5 @@ render: |
       type: writesingle
       decode: uint16
   curtailed:
-    source: const
-    value: -1   # not known
+    source: error
+    error: ErrNotAvailable
