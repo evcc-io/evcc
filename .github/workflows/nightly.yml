@@ -34,10 +34,90 @@ jobs:
   #     && ! contains(github.head_ref, 'refs/heads/chore/')
   #   uses: evcc-io/evcc/.github/workflows/default.yml@master
 
+  # Preflight guards the nightly build against a broken upstream sync.
+  # The docker job below builds evcc-master with our master merged in; when the
+  # fork's patches no longer merge cleanly into the latest upstream, that merge
+  # conflicts. Instead of publishing a half-merged (broken) :nightly image, we:
+  #   1. open a resolve/upstream-<date> PR the first time the conflict appears, and
+  #   2. pause the nightly build until that PR is merged (no more churn/broken images).
+  preflight:
+    name: Check upstream merge
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the resolve/upstream-* snapshot branch
+      pull-requests: write # open the resolution PR
+    outputs:
+      proceed: ${{ steps.decide.outputs.proceed }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/heads/evcc-master
+          fetch-depth: 0
+          token: ${{ secrets.EVCC_PAT }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Pause if a resolution PR is already open
+        id: guard
+        env:
+          GH_TOKEN: ${{ secrets.EVCC_PAT }}
+        run: |
+          open=$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --state open \
+            --json headRefName --jq '[.[] | select(.headRefName | startswith("resolve/upstream-"))] | length')
+          if [ "$open" -gt 0 ]; then
+            echo "::notice::An open resolve/upstream-* PR exists — nightly build paused until it is merged."
+            echo "blocked=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "blocked=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect merge conflict (master -> evcc-master)
+        id: merge
+        if: steps.guard.outputs.blocked != 'true'
+        run: |
+          if git merge origin/master --no-commit --no-ff; then
+            # clean (or already up to date): abort the in-progress merge; the
+            # docker job re-merges for the actual build
+            git merge --abort 2>/dev/null || true
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+          else
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open resolution branch + PR on conflict
+        if: steps.guard.outputs.blocked != 'true' && steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.EVCC_PAT }}
+        run: |
+          branch="resolve/upstream-$(date -u +%Y%m%d)"
+          echo "::warning::master no longer merges cleanly into evcc-master — opening ${branch} for manual resolution and skipping the build."
+          # snapshot the current evcc-master (the upstream code that won't merge)
+          git push origin "HEAD:refs/heads/${branch}" --force
+          if [ "$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --head "${branch}" --state open --json number --jq 'length')" -eq 0 ]; then
+            gh pr create --repo "$GITHUB_REPOSITORY" --base master --head "${branch}" \
+              --title "Nightly: resolve upstream merge conflict ($(date -u +%Y-%m-%d))" \
+              --body $'The nightly build could not merge `master` into `evcc-master`; the upstream sync needs manual conflict resolution.\n\nThis branch snapshots `evcc-master` (the upstream code that failed to merge). Resolve the conflicts against `master` — keep the fork patches (e.g. the `PMaxImp` hard grid-import cap and the optimizer features) — then merge this PR.\n\n**Nightly Docker builds are paused until a `resolve/upstream-*` PR is merged.**'
+          else
+            echo "resolution PR already open for ${branch}"
+          fi
+
+      - name: Decide whether to build
+        id: decide
+        run: |
+          if [ "${{ steps.guard.outputs.blocked }}" = "true" ] || [ "${{ steps.merge.outputs.conflict }}" = "true" ]; then
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   docker:
     name: Publish Docker :nightly
-    # needs:
-    #   - call-build-workflow
+    needs: preflight
+    if: needs.preflight.outputs.proceed == 'true'
     runs-on: ubuntu-latest
 
     permissions:
@@ -59,9 +139,9 @@ jobs:
 
       - name: Merge our master branch into evcc-master for building
         run: |
-          git merge origin/master --no-commit --no-ff || true
+          git merge origin/master --no-commit --no-ff
           git reset -- .github/workflows
-          git commit -m "merge from evcc/master"
+          git commit -m "merge from evcc/master" || true
 
       - name: Get dist from cache
         uses: actions/cache/restore@v6
