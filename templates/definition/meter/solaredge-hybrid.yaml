@@ -19,9 +19,9 @@ params:
     choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
-  - preset: battery-params
   - name: maxacpower
     required: true
+  - preset: battery-params
   - name: maxdischargepower
     default: 5000
   - name: watchdog
@@ -115,25 +115,53 @@ render: |
         switch:
           - case: 100
             set:
-              source: const
-              value: 0 # Disabled
-              set:
+              source: go
+              in:
+                - name: mode
+                  type: int
+                  config:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 57344 # Export Control Mode
+                      type: holding
+                      decode: uint16
+              out:
+                - name: out
+                  type: int
+                  config:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 57344 # Export Control Mode
+                      type: writesingle
+                      encoding: uint16
+              script: |
+                mode &^ 1 // clear bit 0 (export limitation), preserve other bits (e.g. indirect production limitation)
+        default:
+          source: go
+          in:
+            - name: mode
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 57344 # Export Control Mode
+                  type: holding
+                  decode: uint16
+          out:
+            - name: out
+              type: int
+              config:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 57344 # Export Control Mode
                   type: writesingle
                   encoding: uint16
-        default:
-          source: const
-          value: 1 # Export Control using Import/Export Meter
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 57344 # Export Control Mode
-              type: writesingle
-              encoding: uint16
+          script: |
+            mode | 1 // set bit 0 (export limitation via meter), preserve other bits
       - source: const
         value: 0 # Total
         set:
@@ -150,7 +178,7 @@ render: |
           type: writemultiple
           encoding: float32s
         scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
-
+ 
   curtailed:
     source: go
     in:
