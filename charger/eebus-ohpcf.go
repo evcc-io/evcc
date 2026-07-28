@@ -34,11 +34,11 @@ type EEBusOHPCF struct {
 	ctx     context.Context
 	reboost time.Duration
 
-	log        *util.Logger
-	compressor *eebus.Entity[ucapi.CemOHPCFInterface]
-	mpc        *eebus.Entity[ucapi.MaMPCInterface]
-	mdt        *eebus.Entity[ucapi.MaMDTInterface]
-	lpc        *eebus.Entity[ucapi.EgLPCInterface]
+	log   *util.Logger
+	ohpcf *eebus.Entity[ucapi.CemOHPCFInterface]
+	mpc   *eebus.Entity[ucapi.MaMPCInterface]
+	mdt   *eebus.Entity[ucapi.MaMDTInterface]
+	lpc   *eebus.Entity[ucapi.EgLPCInterface]
 
 	mu         sync.RWMutex
 	enabled    bool
@@ -86,18 +86,18 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	eg := inst.EnergyGuard()
 
 	c := &EEBusOHPCF{
-		embed:      embed,
-		log:        util.NewLogger("eebus-ohpcf"),
-		cem:        cem,
-		ma:         ma,
-		eg:         eg,
-		connector:  eebus.NewConnector(),
-		ctx:        ctx,
-		reboost:    reboost,
-		compressor: eebus.NewEntity(cem.OHPCF),
-		mpc:        eebus.NewEntity(ma.MaMPCInterface),
-		mdt:        eebus.NewEntity(ma.MaMDTInterface),
-		lpc:        eebus.NewEntity(eg.EgLPCInterface),
+		embed:     embed,
+		log:       util.NewLogger("eebus-ohpcf"),
+		cem:       cem,
+		ma:        ma,
+		eg:        eg,
+		connector: eebus.NewConnector(),
+		ctx:       ctx,
+		reboost:   reboost,
+		ohpcf:     eebus.NewEntity(cem.OHPCF),
+		mpc:       eebus.NewEntity(ma.MaMPCInterface),
+		mdt:       eebus.NewEntity(ma.MaMDTInterface),
+		lpc:       eebus.NewEntity(eg.EgLPCInterface),
 	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
@@ -128,7 +128,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 		return
 	}
 
-	c.compressor.Set(nil)
+	c.ohpcf.Set(nil)
 	c.mpc.Set(nil)
 	c.mdt.Set(nil)
 	c.lpc.Set(nil)
@@ -143,7 +143,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 	switch event {
 	case ohpcf.UseCaseSupportUpdate:
-		c.compressor.Update(entity)
+		c.ohpcf.Update(entity)
 
 	case ohpcf.DataUpdateConsumptionState:
 		// react immediately to a freshly announced schedule/resume opportunity
@@ -195,7 +195,7 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 
 // Status implements the api.Charger interface
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
-	entity, err := c.compressor.Required(eebus.OHPCFMonitor)
+	entity, err := c.ohpcf.Required(eebus.OHPCFMonitor)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -212,7 +212,7 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 // Enabled reports the commanded on/off intent; Status reflects the actual
 // compressor state.
 func (c *EEBusOHPCF) Enabled() (bool, error) {
-	if _, err := c.compressor.Required(eebus.OHPCFMonitor); err != nil {
+	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
 		return false, err
 	}
 
@@ -361,7 +361,7 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
 func (c *EEBusOHPCF) apply() error {
-	entity, err := c.compressor.Required(eebus.OHPCFMonitor)
+	entity, err := c.ohpcf.Required(eebus.OHPCFMonitor)
 	if err != nil {
 		return err
 	}
@@ -394,7 +394,7 @@ var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
 // optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
-	entity, err := c.compressor.Required(eebus.OHPCFMonitor)
+	entity, err := c.ohpcf.Required(eebus.OHPCFMonitor)
 	if err != nil {
 		return 0, 0, err
 	}

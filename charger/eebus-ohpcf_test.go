@@ -20,13 +20,13 @@ func newTestOHPCF() *EEBusOHPCF {
 	eg := new(eebus.EnergyGuard)
 
 	return &EEBusOHPCF{
-		cem:        cem,
-		ma:         ma,
-		eg:         eg,
-		compressor: eebus.NewEntity(cem.OHPCF),
-		mpc:        eebus.NewEntity(ma.MaMPCInterface),
-		mdt:        eebus.NewEntity(ma.MaMDTInterface),
-		lpc:        eebus.NewEntity(eg.EgLPCInterface),
+		cem:   cem,
+		ma:    ma,
+		eg:    eg,
+		ohpcf: eebus.NewEntity(cem.OHPCF),
+		mpc:   eebus.NewEntity(ma.MaMPCInterface),
+		mdt:   eebus.NewEntity(ma.MaMDTInterface),
+		lpc:   eebus.NewEntity(eg.EgLPCInterface),
 	}
 }
 
@@ -101,5 +101,5 @@ func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
 
-	assert.Nil(t, c.compressor.Get())
+	assert.Nil(t, c.ohpcf.Get())
 }
