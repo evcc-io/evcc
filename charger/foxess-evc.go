@@ -127,6 +127,7 @@ const (
 	foxStatusPause     = 4 // charging suspended
 	foxStatusFinish    = 5 // charging finished
 	foxStatusFault     = 6 // faulty, cannot charge
+	foxStatusReserved  = 7 // reserved
 	foxStatusLocked    = 8 // locked, no operations possible
 	foxStatusSwitching = 9 // undocumented: automatic phase switch in progress
 )
