@@ -39,18 +39,18 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	switch event {
 	// Monitoring Appliance
 	case mpc.UseCaseSupportUpdate, mgcp.UseCaseSupportUpdate:
-		c.maEntity.Update(c.mm, entity)
+		c.maEntity.Update(entity)
 
 	// Energy Guard - LPC
 	case lpc.UseCaseSupportUpdate:
-		if c.egLpcEntity.Update(c.eg.EgLPCInterface, entity) {
+		if c.egLpcEntity.Update(entity) {
 			// [LPC-913]: state the limit to the newly available CS
 			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
 		}
 
 	// Energy Guard - LPP
 	case lpp.UseCaseSupportUpdate:
-		if c.egLppEntity.Update(c.eg.EgLPPInterface, entity) {
+		if c.egLppEntity.Update(entity) {
 			// [LPP-913]: state the limit to the newly available CS
 			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
 		}

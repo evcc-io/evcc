@@ -31,9 +31,9 @@ type EEBus struct {
 	mm        measurements
 	scenarios maScenarios
 
-	maEntity    eebus.Entity
-	egLpcEntity eebus.Entity
-	egLppEntity eebus.Entity
+	maEntity    *eebus.Entity
+	egLpcEntity *eebus.Entity
+	egLppEntity *eebus.Entity
 
 	mu             sync.Mutex
 	dimmed         bool // last limits written, re-stated on reconnect
@@ -113,14 +113,19 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		scenarios = mgcpScenarios
 	}
 
+	eg := inst.EnergyGuard()
+
 	c := &EEBus{
 		ctx:            ctx,
 		log:            util.NewLogger("eebus-" + useCase),
 		ma:             ma,
-		eg:             inst.EnergyGuard(),
+		eg:             eg,
 		mm:             mm,
 		scenarios:      scenarios,
 		connector:      eebus.NewConnector(),
+		maEntity:       eebus.NewEntity(mm),
+		egLpcEntity:    eebus.NewEntity(eg.EgLPCInterface),
+		egLppEntity:    eebus.NewEntity(eg.EgLPPInterface),
 		curtailPercent: 100,
 	}
 
@@ -165,7 +170,7 @@ func (c *EEBus) lastCurtailPercent() int {
 }
 
 func (c *EEBus) readValue[T any](scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
-	return c.maEntity.Read(c.mm, scenario, update)
+	return c.maEntity.Read(scenario, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
@@ -217,7 +222,7 @@ var _ api.Dimmer = (*EEBus)(nil)
 
 // Dimmed implements the api.Dimmer interface
 func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := c.egLpcEntity.Read(c.eg.EgLPCInterface, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.egLpcEntity.Read(eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -263,7 +268,7 @@ var _ api.Curtailer = (*EEBus)(nil)
 
 // CurtailedPercent implements the api.Curtailer interface
 func (c *EEBus) CurtailedPercent() (int, error) {
-	limit, err := c.egLppEntity.Read(c.eg.EgLPPInterface, eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := c.egLppEntity.Read(eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return 0, err
 	}

@@ -30,9 +30,11 @@ func newEGMeter(t *testing.T) (*EEBus, *egmocks.EgLPCInterface, *egmocks.EgLPPIn
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBus{
-		ctx: t.Context(),
-		log: util.NewLogger("eebus-eg-test"),
-		eg:  &eebus.EnergyGuard{EgLPCInterface: lpc, EgLPPInterface: lpp},
+		ctx:         t.Context(),
+		log:         util.NewLogger("eebus-eg-test"),
+		eg:          &eebus.EnergyGuard{EgLPCInterface: lpc, EgLPPInterface: lpp},
+		egLpcEntity: eebus.NewEntity(lpc),
+		egLppEntity: eebus.NewEntity(lpp),
 	}
 	c.egLpcEntity.Set(entity)
 	c.egLppEntity.Set(entity)

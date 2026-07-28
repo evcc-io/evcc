@@ -12,14 +12,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// newTestOHPCF returns a charger without any use case implementation, so all
+// entities remain empty
+func newTestOHPCF() *EEBusOHPCF {
+	cem := new(eebus.CustomerEnergyManagement)
+	ma := new(eebus.MonitoringAppliance)
+	eg := new(eebus.EnergyGuard)
+
+	return &EEBusOHPCF{
+		cem:        cem,
+		ma:         ma,
+		eg:         eg,
+		compressor: eebus.NewEntity(cem.OHPCF),
+		mpc:        eebus.NewEntity(ma.MaMPCInterface),
+		dhw:        eebus.NewEntity(ma.MaMDTInterface),
+		lpc:        eebus.NewEntity(eg.EgLPCInterface),
+	}
+}
+
 // methods accessing the compressor entity must error when it is absent,
 // so a missing compressor is not mistaken for an idle device.
 func TestEEBusOHPCFNotConnected(t *testing.T) {
-	c := &EEBusOHPCF{
-		cem: &eebus.CustomerEnergyManagement{},
-		ma:  &eebus.MonitoringAppliance{},
-		eg:  &eebus.EnergyGuard{},
-	}
+	c := newTestOHPCF()
 
 	status, err := c.Status()
 	require.ErrorIs(t, err, eebus.ErrNotConnected)
@@ -38,7 +52,7 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 // a failed enable must not persist the intent, otherwise Enabled() reports a
 // state the compressor never accepted and the loadpoint runs out of sync (#32252).
 func TestOHPCFEnableFailureKeepsState(t *testing.T) {
-	c := &EEBusOHPCF{cem: new(eebus.CustomerEnergyManagement)}
+	c := &EEBusOHPCF{compressor: eebus.NewEntity(nil)}
 
 	require.ErrorIs(t, c.Enable(true), eebus.ErrNotConnected)
 	assert.False(t, c.lastEnabled())
@@ -91,7 +105,7 @@ func TestOHPCFControlAction(t *testing.T) {
 // acting on a stale intent, #31549). The compressor entity is recorded by the
 // use case support update, not by data events.
 func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
-	c := &EEBusOHPCF{}
+	c := newTestOHPCF()
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)

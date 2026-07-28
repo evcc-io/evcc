@@ -35,10 +35,10 @@ type EEBusOHPCF struct {
 	reboost time.Duration
 
 	log        *util.Logger
-	compressor eebus.Entity
-	mpc        eebus.Entity
-	dhw        eebus.Entity
-	egLpc      eebus.Entity
+	compressor *eebus.Entity
+	mpc        *eebus.Entity
+	dhw        *eebus.Entity
+	lpc        *eebus.Entity
 
 	mu         sync.RWMutex
 	enabled    bool
@@ -82,15 +82,23 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		return nil, err
 	}
 
+	cem := inst.CustomerEnergyManagement()
+	ma := inst.MonitoringAppliance()
+	eg := inst.EnergyGuard()
+
 	c := &EEBusOHPCF{
-		embed:     embed,
-		log:       util.NewLogger("eebus-ohpcf"),
-		cem:       inst.CustomerEnergyManagement(),
-		ma:        inst.MonitoringAppliance(),
-		eg:        inst.EnergyGuard(),
-		connector: eebus.NewConnector(),
-		ctx:       ctx,
-		reboost:   reboost,
+		embed:      embed,
+		log:        util.NewLogger("eebus-ohpcf"),
+		cem:        cem,
+		ma:         ma,
+		eg:         eg,
+		connector:  eebus.NewConnector(),
+		ctx:        ctx,
+		reboost:    reboost,
+		compressor: eebus.NewEntity(cem.OHPCF),
+		mpc:        eebus.NewEntity(ma.MaMPCInterface),
+		dhw:        eebus.NewEntity(ma.MaMDTInterface),
+		lpc:        eebus.NewEntity(eg.EgLPCInterface),
 	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
@@ -124,7 +132,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 	c.compressor.Set(nil)
 	c.mpc.Set(nil)
 	c.dhw.Set(nil)
-	c.egLpc.Set(nil)
+	c.lpc.Set(nil)
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -136,7 +144,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 	switch event {
 	case ohpcf.UseCaseSupportUpdate:
-		c.compressor.Update(c.cem.OHPCF, entity)
+		c.compressor.Update(entity)
 
 	case ohpcf.DataUpdateConsumptionState:
 		// react immediately to a freshly announced schedule/resume opportunity
@@ -149,15 +157,15 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
-		c.mpc.Update(c.ma.MaMPCInterface, entity)
+		c.mpc.Update(entity)
 
 	// Monitoring Appliance MDT provides the DHW temperature
 	case mdt.UseCaseSupportUpdate:
-		c.dhw.Update(c.ma.MaMDTInterface, entity)
+		c.dhw.Update(entity)
 
 	// Energy Guard LPC carries the §14a/LPC consumption limit
 	case lpc.UseCaseSupportUpdate:
-		if c.egLpc.Update(c.eg.EgLPCInterface, entity) {
+		if c.lpc.Update(entity) {
 			// [LPC-913]: state the limit to the newly available CS
 			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
 		}
@@ -198,7 +206,7 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 
 // Status implements the api.Charger interface
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
-	entity, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor)
+	entity, err := c.compressor.Required(eebus.OHPCFMonitor)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -215,7 +223,7 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 // Enabled reports the commanded on/off intent; Status reflects the actual
 // compressor state.
 func (c *EEBusOHPCF) Enabled() (bool, error) {
-	if _, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor); err != nil {
+	if _, err := c.compressor.Required(eebus.OHPCFMonitor); err != nil {
 		return false, err
 	}
 
@@ -342,7 +350,7 @@ var _ api.Dimmer = (*EEBusOHPCF)(nil)
 // Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
 // consumption limit is currently active on the heat pump.
 func (c *EEBusOHPCF) Dimmed() (bool, error) {
-	limit, err := c.egLpc.Read(c.eg.EgLPCInterface, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.lpc.Read(eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -355,7 +363,7 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 // Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
 func (c *EEBusOHPCF) Dim(dim bool) error {
-	entity := c.egLpc.Get()
+	entity := c.lpc.Get()
 
 	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
 		return api.ErrNotAvailable
@@ -378,7 +386,7 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
 func (c *EEBusOHPCF) apply(enable bool) error {
-	entity, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor)
+	entity, err := c.compressor.Required(eebus.OHPCFMonitor)
 	if err != nil {
 		return err
 	}
@@ -411,7 +419,7 @@ var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
 // optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
-	entity, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor)
+	entity, err := c.compressor.Required(eebus.OHPCFMonitor)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -432,7 +440,7 @@ var _ api.Meter = (*EEBusOHPCF)(nil)
 // CurrentPower implements the api.Meter interface and reports the heat pump's
 // measured power consumption via the MPC use case.
 func (c *EEBusOHPCF) CurrentPower() (float64, error) {
-	return c.mpc.Read(c.ma.MaMPCInterface, eebus.MPCPower, c.ma.MaMPCInterface.Power)
+	return c.mpc.Read(eebus.MPCPower, c.ma.MaMPCInterface.Power)
 }
 
 var _ api.Battery = (*EEBusOHPCF)(nil)
@@ -440,7 +448,7 @@ var _ api.Battery = (*EEBusOHPCF)(nil)
 // Soc implements the api.Battery interface and reports the heat pump's domestic
 // hot water temperature in °C via the MDT use case.
 func (c *EEBusOHPCF) Soc() (float64, error) {
-	return c.dhw.Read(c.ma.MaMDTInterface, eebus.MDTTemperature,
+	return c.dhw.Read(eebus.MDTTemperature,
 		func(entity spineapi.EntityRemoteInterface) (float64, error) {
 			return c.ma.MaMDTInterface.Temperature(entity, model.UnitOfMeasurementTypedegC)
 		})
