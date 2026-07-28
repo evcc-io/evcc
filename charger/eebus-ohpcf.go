@@ -204,11 +204,11 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 
 // Status implements the api.Charger interface
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
-	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
+	if _, err := c.ohpcf.Required(); err != nil {
 		return api.StatusNone, err
 	}
 
-	state, err := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.PowerConsumptionProcessState)
+	state, err := c.ohpcf.Read(ucapi.CemOHPCFInterface.PowerConsumptionProcessState)
 	if err != nil {
 		// connected but no flexibility announced yet: standby, not disconnected
 		return api.StatusB, nil
@@ -220,7 +220,7 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 // Enabled reports the commanded on/off intent; Status reflects the actual
 // compressor state.
 func (c *EEBusOHPCF) Enabled() (bool, error) {
-	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
+	if _, err := c.ohpcf.Required(); err != nil {
 		return false, err
 	}
 
@@ -347,7 +347,7 @@ var _ api.Dimmer = (*EEBusOHPCF)(nil)
 // Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
 // consumption limit is currently active on the heat pump.
 func (c *EEBusOHPCF) Dimmed() (bool, error) {
-	limit, err := c.lpc.Read(eebus.LPCLimit, ucapi.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.lpc.Read(ucapi.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -360,15 +360,15 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 // Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
 func (c *EEBusOHPCF) Dim(dim bool) error {
-	entity, err := c.lpc.Available(eebus.LPCLimit)
+	entity, err := c.lpc.Available()
 	if err != nil {
 		return err
 	}
 
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
-	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	if err := eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
-	}); err != nil {
+	})); err != nil {
 		return err
 	}
 
@@ -382,11 +382,11 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
 func (c *EEBusOHPCF) apply(enable bool) error {
-	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
+	if _, err := c.ohpcf.Required(); err != nil {
 		return err
 	}
 
-	state, err := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.PowerConsumptionProcessState)
+	state, err := c.ohpcf.Read(ucapi.CemOHPCFInterface.PowerConsumptionProcessState)
 	if err != nil {
 		// no process state announced yet, nothing to control
 		return nil
@@ -398,7 +398,7 @@ func (c *EEBusOHPCF) apply(enable bool) error {
 	}
 
 	// controlling the process is a separate scenario from monitoring it
-	entity, err := c.ohpcf.Required(eebus.OHPCFControl)
+	entity, err := c.ohpcf.Required()
 	if err != nil {
 		return err
 	}
@@ -425,15 +425,15 @@ var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
 // optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
-	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
+	if _, err := c.ohpcf.Required(); err != nil {
 		return 0, 0, err
 	}
 
-	if power, _ := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.RequestedPowerEstimate); power > 0 {
+	if power, _ := c.ohpcf.Read(ucapi.CemOHPCFInterface.RequestedPowerEstimate); power > 0 {
 		return power, power, nil
 	}
 
-	if power, _ := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.RequestedPowerMax); power > 0 {
+	if power, _ := c.ohpcf.Read(ucapi.CemOHPCFInterface.RequestedPowerMax); power > 0 {
 		return power, power, nil
 	}
 
@@ -445,7 +445,7 @@ var _ api.Meter = (*EEBusOHPCF)(nil)
 // CurrentPower implements the api.Meter interface and reports the heat pump's
 // measured power consumption via the MPC use case.
 func (c *EEBusOHPCF) CurrentPower() (float64, error) {
-	return c.mpc.Read(eebus.MPCPower, ucapi.MaMPCInterface.Power)
+	return c.mpc.Read(ucapi.MaMPCInterface.Power)
 }
 
 var _ api.Battery = (*EEBusOHPCF)(nil)
@@ -453,7 +453,7 @@ var _ api.Battery = (*EEBusOHPCF)(nil)
 // Soc implements the api.Battery interface and reports the heat pump's domestic
 // hot water temperature in °C via the MDT use case.
 func (c *EEBusOHPCF) Soc() (float64, error) {
-	return c.mdt.Read(eebus.MDTTemperature,
+	return c.mdt.Read(
 		func(uc ucapi.MaMDTInterface, entity spineapi.EntityRemoteInterface) (float64, error) {
 			return uc.Temperature(entity, model.UnitOfMeasurementTypedegC)
 		})

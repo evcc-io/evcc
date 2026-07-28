@@ -86,19 +86,7 @@ func TestEntityRequired(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 		e := NewEntity(uc)
 
-		_, err := e.Required(MPCPower)
-		assert.ErrorIs(t, err, ErrNotConnected)
-	})
-
-	t.Run("scenario not announced", func(t *testing.T) {
-		uc := ucmocks.NewMaMPCInterface(t)
-		e := NewEntity(uc)
-		entity := testEntity(t, 1)
-		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(false)
-
-		e.Set(entity)
-
-		_, err := e.Required(MPCPower)
+		_, err := e.Required()
 		assert.ErrorIs(t, err, ErrNotConnected)
 	})
 
@@ -106,11 +94,10 @@ func TestEntityRequired(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 		e := NewEntity(uc)
 		entity := testEntity(t, 1)
-		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
 		e.Set(entity)
 
-		res, err := e.Required(MPCPower)
+		res, err := e.Required()
 		require.NoError(t, err)
 		assert.Equal(t, entity, res)
 	})
@@ -121,38 +108,27 @@ func TestEntityRead(t *testing.T) {
 		return func(*ucmocks.MaMPCInterface, spineapi.EntityRemoteInterface) (float64, error) { return res, err }
 	}
 
+	// the use case rejects an absent entity itself
 	t.Run("entity missing", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 		e := NewEntity(uc)
 
-		_, err := e.Read(MPCPower, read(1, nil))
-		assert.ErrorIs(t, err, api.ErrNotAvailable)
-	})
-
-	t.Run("scenario not announced", func(t *testing.T) {
-		uc := ucmocks.NewMaMPCInterface(t)
-		e := NewEntity(uc)
-		entity := testEntity(t, 1)
-		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(false)
-
-		e.Set(entity)
-
-		_, err := e.Read(MPCPower, read(1, nil))
+		_, err := e.Read(read(0, eebusapi.ErrNoCompatibleEntity))
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
 	// data not received yet is not an error condition
-	for _, tc := range []error{eebusapi.ErrDataNotAvailable, eebusapi.ErrMetadataNotAvailable, eebusapi.ErrDataInvalid} {
+	for _, tc := range []error{
+		eebusapi.ErrDataNotAvailable, eebusapi.ErrMetadataNotAvailable,
+		eebusapi.ErrDataInvalid, eebusapi.ErrNoCompatibleEntity,
+	} {
 		t.Run(tc.Error(), func(t *testing.T) {
 			uc := ucmocks.NewMaMPCInterface(t)
 			e := NewEntity(uc)
 
-			entity := testEntity(t, 1)
-			uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
+			e.Set(testEntity(t, 1))
 
-			e.Set(entity)
-
-			_, err := e.Read(MPCPower, read(0, tc))
+			_, err := e.Read(read(0, tc))
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
 		})
 	}
@@ -160,24 +136,20 @@ func TestEntityRead(t *testing.T) {
 	t.Run("other error passes through", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 		e := NewEntity(uc)
-		entity := testEntity(t, 1)
-		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		e.Set(entity)
+		e.Set(testEntity(t, 1))
 
-		_, err := e.Read(MPCPower, read(0, errors.New("boom")))
+		_, err := e.Read(read(0, errors.New("boom")))
 		assert.EqualError(t, err, "boom")
 	})
 
 	t.Run("value", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 		e := NewEntity(uc)
-		entity := testEntity(t, 1)
-		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		e.Set(entity)
+		e.Set(testEntity(t, 1))
 
-		res, err := e.Read(MPCPower, read(4711, nil))
+		res, err := e.Read(read(4711, nil))
 		require.NoError(t, err)
 		assert.Equal(t, 4711.0, res)
 	})
