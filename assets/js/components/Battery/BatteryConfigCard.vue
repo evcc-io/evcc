@@ -88,54 +88,15 @@
 			</div>
 
 			<div class="border-top pt-3 mt-3">
-				<div class="form-check form-switch mb-3">
-					<input
-						id="batteryExpSocGoalEnabled"
-						:checked="batteryOptimizerSocGoalEnabled"
-						class="form-check-input"
-						type="checkbox"
-						role="switch"
-						@change="changeBatteryOptimizerSocGoalEnabled"
-					/>
-					<label class="form-check-label" for="batteryExpSocGoalEnabled">
-						{{ $t("batterySettings.optimizerSocGoal.enable") }}
-					</label>
-				</div>
-				<div class="row g-3 align-items-end">
-					<div class="col-sm-6">
-						<label class="form-label" for="batteryExpSocGoalTime">
-							{{ $t("batterySettings.optimizerSocGoal.time") }}
-						</label>
-						<input
-							id="batteryExpSocGoalTime"
-							v-model="selectedBatteryOptimizerSocGoalTime"
-							type="time"
-							class="form-control mx-0"
-							:disabled="!batteryOptimizerSocGoalEnabled"
-							@change="changeBatteryOptimizerSocGoalTime"
-						/>
-					</div>
-					<div class="col-sm-6">
-						<label class="form-label" for="batteryExpSocGoal">
-							{{ $t("batterySettings.optimizerSocGoal.soc") }}
-						</label>
-						<select
-							id="batteryExpSocGoal"
-							v-model="selectedBatteryOptimizerSocGoal"
-							class="form-select"
-							:disabled="!batteryOptimizerSocGoalEnabled"
-							@change="changeBatteryOptimizerSocGoal"
-						>
-							<option
-								v-for="option in batteryOptimizerSocGoalOptions"
-								:key="option.value"
-								:value="option.value"
-							>
-								{{ option.name }}
-							</option>
-						</select>
-					</div>
-				</div>
+				<label class="form-label d-block mb-2">
+					{{ $t("batterySettings.optimizerSocGoal.title") }}
+				</label>
+				<PlansRepeatingSettings
+					id="battery"
+					:start-number="1"
+					:plans="batteryOptimizerSocGoals"
+					@updated="saveBatteryOptimizerSocGoals"
+				/>
 				<small class="d-block text-muted mt-2">
 					{{ $t("batterySettings.optimizerSocGoal.hint") }}
 				</small>
@@ -191,25 +152,27 @@ import "@h2d2/shopicons/es/regular/lightning";
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import api from "@/api";
-import { CURRENCY, type Battery, type BatteryOptimizerSocGoal } from "@/types/evcc";
+import { CURRENCY, type Battery } from "@/types/evcc";
 import Card from "../Helper/Card.vue";
 import InlineSocSelect from "./InlineSocSelect.vue";
+import PlansRepeatingSettings from "../ChargingPlans/PlansRepeatingSettings.vue";
+import type { RepeatingPlan } from "../ChargingPlans/types";
 
 // Battery usage controls for the experimental page. The logic is intentionally duplicated
 // from the classic BatteryUsageSettings.vue (slated for removal) so the two can diverge
 // during the transition.
 export default defineComponent({
 	name: "BatteryConfigCard",
-	components: { Card, InlineSocSelect },
+	components: { Card, InlineSocSelect, PlansRepeatingSettings },
 	mixins: [formatter],
 	props: {
 		bufferSoc: { type: Number, default: 100 },
 		prioritySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
-		batteryOptimizerSocGoal: {
-			type: [Object, null] as PropType<BatteryOptimizerSocGoal | null>,
-			default: null,
+		batteryOptimizerSocGoals: {
+			type: Array as PropType<RepeatingPlan[]>,
+			default: () => [],
 		},
 		optimizerManualPA: { type: [Number, null] as PropType<number | null>, default: null },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
@@ -220,8 +183,6 @@ export default defineComponent({
 			selectedBufferSoc: 100,
 			selectedPrioritySoc: 0,
 			selectedBufferStartSoc: 0,
-			selectedBatteryOptimizerSocGoal: 20,
-			selectedBatteryOptimizerSocGoalTime: "21:00",
 			selectedOptimizerManualPA: "",
 			optimizerManualPAEnabled: false,
 		};
@@ -268,18 +229,6 @@ export default defineComponent({
 		selectedBufferStartName(): string {
 			return this.getBufferStartName(this.selectedBufferStartSoc);
 		},
-		batteryOptimizerSocGoalEnabled(): boolean {
-			return (
-				this.batteryOptimizerSocGoal !== null && this.batteryOptimizerSocGoal !== undefined
-			);
-		},
-		batteryOptimizerSocGoalOptions() {
-			const options = [];
-			for (let i = 100; i >= 5; i -= 5) {
-				options.push({ value: i, name: this.fmtSoc(i) });
-			}
-			return options;
-		},
 	},
 	watch: {
 		prioritySoc: {
@@ -297,13 +246,6 @@ export default defineComponent({
 		bufferStartSoc: {
 			handler(soc) {
 				this.selectedBufferStartSoc = soc;
-			},
-			immediate: true,
-		},
-		batteryOptimizerSocGoal: {
-			handler(goal: BatteryOptimizerSocGoal | null) {
-				this.selectedBatteryOptimizerSocGoal = goal?.soc ?? 20;
-				this.selectedBatteryOptimizerSocGoalTime = goal?.time || "21:00";
 			},
 			immediate: true,
 		},
@@ -379,38 +321,12 @@ export default defineComponent({
 				console.error(err);
 			}
 		},
-		async changeBatteryOptimizerSocGoalEnabled(e: Event) {
-			const enabled = (e.target as HTMLInputElement).checked;
+		async saveBatteryOptimizerSocGoals(goals: RepeatingPlan[]) {
 			try {
-				if (!enabled) {
-					await api.delete("batteryoptimizersocgoal");
-					return;
-				}
-				await this.saveBatteryOptimizerSocGoal();
+				await api.post("batteryoptimizersocgoal", goals);
 			} catch (err) {
 				console.error(err);
 			}
-		},
-		async changeBatteryOptimizerSocGoal() {
-			try {
-				await this.saveBatteryOptimizerSocGoal();
-			} catch (err) {
-				console.error(err);
-			}
-		},
-		async changeBatteryOptimizerSocGoalTime() {
-			try {
-				await this.saveBatteryOptimizerSocGoal();
-			} catch (err) {
-				console.error(err);
-			}
-		},
-		async saveBatteryOptimizerSocGoal() {
-			await api.post("batteryoptimizersocgoal", {
-				soc: this.selectedBatteryOptimizerSocGoal,
-				time: this.selectedBatteryOptimizerSocGoalTime,
-				tz: this.timezone(),
-			});
 		},
 		async changeOptimizerManualPAEnabled(e: Event) {
 			const enabled = (e.target as HTMLInputElement).checked;

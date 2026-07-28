@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -36,6 +37,7 @@ var (
 
 	mu               sync.Mutex
 	optimizerUpdated time.Time
+	optimizerPending atomic.Bool // a trigger arrived while a run held the lock; re-run afterwards
 )
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
@@ -55,19 +57,29 @@ const optimizerDecaySlots = 4
 
 // triggerOptimizer re-runs the optimizer immediately so a changed setting takes
 // effect without waiting for the next slot. It is a no-op when the optimizer is
-// not active or a run is already in progress; the running update reflects the
-// change on its next slot.
+// not active. When a run is already in progress the trigger is not lost: a
+// pending flag is set and optimizerUpdateAsync re-runs once the current run
+// finishes, so the change is never left waiting for the next scheduled cycle.
 func (site *Site) triggerOptimizer() {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
 	if !mu.TryLock() {
+		optimizerPending.Store(true) // run in progress: re-run after it (see optimizerUpdateAsync)
 		return
 	}
 	optimizerUpdated = time.Time{} // bypass the slot/debounce gate
 	mu.Unlock()
 
 	go site.optimizerUpdateAsync()
+}
+
+// rerunIfPending re-triggers the optimizer when a trigger arrived during a run.
+// Called after optimizerUpdateAsync releases the lock so the re-run can proceed.
+func (site *Site) rerunIfPending() {
+	if optimizerPending.Swap(false) {
+		site.triggerOptimizer()
+	}
 }
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
@@ -360,6 +372,9 @@ func (site *Site) optimizerUpdateAsync() {
 	if !mu.TryLock() {
 		return
 	}
+	// re-run if a trigger arrived while we held the lock (deferred LIFO, so this
+	// runs after mu.Unlock below, letting the re-run acquire the lock)
+	defer site.rerunIfPending()
 	defer mu.Unlock()
 
 	// slot/debounce gate; triggerOptimizer bypasses it by zeroing optimizerUpdated
@@ -860,7 +875,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		}
 	}
 
-	site.applyBatterySocGoal(&bat, *b.Capacity, timestamps)
+	site.applyBatterySocGoals(&bat, *b.Capacity, timestamps)
 
 	return bat, detail
 }
@@ -1179,56 +1194,68 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 }
 
-func (site *Site) applyBatterySocGoal(bat *optimizer.BatteryConfig, capacity float64, timestamps []time.Time) {
-	goal := site.GetBatteryOptimizerSocGoal()
-	if goal == nil || len(timestamps) == 0 {
+func (site *Site) applyBatterySocGoals(bat *optimizer.BatteryConfig, capacity float64, timestamps []time.Time) {
+	goals := site.GetBatteryOptimizerSocGoals()
+	if len(goals) == 0 || len(timestamps) == 0 {
 		return
-	}
-
-	targetTime, err := time.Parse("15:04", goal.Time)
-	if err != nil {
-		site.log.ERROR.Println("optimizer:", err)
-		return
-	}
-
-	// the goal time is meaningless without its zone: interpret it strictly in
-	// the configured timezone and never fall back to the server's local zone,
-	// which would misplace the reserve by the UTC offset
-	loc, err := time.LoadLocation(goal.Tz)
-	if err != nil {
-		site.log.ERROR.Println("optimizer:", err)
-		return
-	}
-
-	goalWh := float32(capacity * goal.Soc * 10)
-
-	if bat.SMin > 0 {
-		goalWh = max(goalWh, bat.SMin)
 	}
 
 	upperLimit := bat.SCapacity
 	if bat.SMax > 0 {
 		upperLimit = bat.SMax
 	}
-	if upperLimit > 0 {
-		goalWh = min(goalWh, upperLimit)
+
+	// merge all active goals into one per-slot reserve array; on overlap the
+	// higher reserve wins
+	var sgoal []float32
+	for _, g := range goals {
+		if !g.Active || len(g.Weekdays) == 0 {
+			continue
+		}
+
+		targetTime, err := time.Parse("15:04", g.Time)
+		if err != nil {
+			site.log.ERROR.Println("optimizer:", err)
+			continue
+		}
+
+		// the goal time is meaningless without its zone: interpret it strictly in
+		// the configured timezone and never fall back to the server's local zone,
+		// which would misplace the reserve by the UTC offset
+		loc, err := time.LoadLocation(g.Tz)
+		if err != nil {
+			site.log.ERROR.Println("optimizer:", err)
+			continue
+		}
+
+		goalWh := float32(capacity * float64(g.Soc) * 10)
+		if bat.SMin > 0 {
+			goalWh = max(goalWh, bat.SMin)
+		}
+		if upperLimit > 0 {
+			goalWh = min(goalWh, upperLimit)
+		}
+		if goalWh <= 0 {
+			continue
+		}
+
+		sgoal = batterySocGoalSlots(sgoal, timestamps, loc, targetTime.Hour(), targetTime.Minute(), g.Weekdays, goalWh)
 	}
 
-	if goalWh <= 0 {
-		return
-	}
-
-	if slots := batterySocGoalSlots(timestamps, loc, targetTime.Hour(), targetTime.Minute(), goalWh); slots != nil {
-		bat.SGoal = slots
+	if sgoal != nil {
+		bat.SGoal = sgoal
 		if bat.SMax == 0 {
 			bat.SMax = upperLimit
 		}
 	}
 }
 
-func batterySocGoalSlots(timestamps []time.Time, loc *time.Location, targetHour, targetMinute int, goal float32) []float32 {
+// batterySocGoalSlots marks the first slot at or after the goal's target time on
+// each selected weekday with the goal reserve, accumulating into sgoal (higher
+// reserve wins on overlap). Pass nil sgoal for the first goal.
+func batterySocGoalSlots(sgoal []float32, timestamps []time.Time, loc *time.Location, targetHour, targetMinute int, weekdays []int, goal float32) []float32 {
 	if len(timestamps) == 0 {
-		return nil
+		return sgoal
 	}
 
 	first := timestamps[0].In(loc)
@@ -1246,20 +1273,25 @@ func batterySocGoalSlots(timestamps []time.Time, loc *time.Location, targetHour,
 		target = target.AddDate(0, 0, 1)
 	}
 
-	var res []float32
 	for i, ts := range timestamps {
 		if ts.In(loc).Before(target) {
 			continue
 		}
 
-		if res == nil {
-			res = make([]float32, len(timestamps))
+		// first slot at or after this day's target time; match on the slot's own
+		// weekday (not target's) so a data gap can't bleed the reserve onto another day
+		if slices.Contains(weekdays, int(ts.In(loc).Weekday())) {
+			if sgoal == nil {
+				sgoal = make([]float32, len(timestamps))
+			}
+			if goal > sgoal[i] {
+				sgoal[i] = goal
+			}
 		}
-		res[i] = goal
 		target = target.AddDate(0, 0, 1)
 	}
 
-	return res
+	return sgoal
 }
 
 // TODO remove once smart cost limit usage becomes obsolete

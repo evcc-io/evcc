@@ -66,17 +66,17 @@ func durationSetter(set func(time.Duration) error) func(string) error {
 	return setterFunc(util.ParseDuration, set)
 }
 
-// jsonPtrSetter unmarshals a JSON payload into *T, passing nil for empty payloads
-func jsonPtrSetter[T any](set func(*T) error) func(string) error {
+// jsonSetter unmarshals the payload into T (e.g. a slice) and applies it; an
+// empty payload sets the zero value (nil for slices).
+func jsonSetter[T any](set func(T) error) func(string) error {
 	return func(payload string) error {
-		if isEmpty(payload) {
-			return set(nil)
-		}
 		var val T
-		if err := json.Unmarshal([]byte(payload), &val); err != nil {
-			return err
+		if !isEmpty(payload) {
+			if err := json.Unmarshal([]byte(payload), &val); err != nil {
+				return err
+			}
 		}
-		return set(&val)
+		return set(val)
 	}
 }
 

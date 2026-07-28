@@ -20,7 +20,7 @@
 			:priority-soc="state.prioritySoc"
 			:buffer-start-soc="state.bufferStartSoc"
 			:battery-discharge-control="state.batteryDischargeControl"
-			:battery-optimizer-soc-goal="state.batteryOptimizerSocGoal"
+			:battery-optimizer-soc-goals="state.batteryOptimizerSocGoals || []"
 			:optimizer-manual-p-a="state.optimizerManualPA"
 			:currency="state.currency"
 			:battery="state.battery"

@@ -10,14 +10,11 @@ type Publisher interface {
 	Publish(key string, val any)
 }
 
-// BatteryOptimizerSocGoal is the daily optimizer reserve goal: keep the battery
-// at Soc by Time each day. Time and Tz are stored together so the wall-clock
-// time is always interpreted in its own timezone.
-type BatteryOptimizerSocGoal struct {
-	Soc  float64 `json:"soc"`  // target soc, 1..100
-	Time string  `json:"time"` // HH:MM local wall-clock
-	Tz   string  `json:"tz"`   // IANA timezone (required)
-}
+// BatteryOptimizerSocGoals are recurring optimizer reserve goals: keep the
+// battery at each goal's Soc by its Time on the selected Weekdays. Modelled on
+// loadpoint repeating plans (api.RepeatingPlan) so several reserves can be set,
+// e.g. an evening reserve plus a morning-peak reserve. Time and Tz are stored
+// together so the wall-clock time is always interpreted in its own timezone.
 
 // API is the external site API
 type API interface {
@@ -64,8 +61,8 @@ type API interface {
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
-	GetBatteryOptimizerSocGoal() *BatteryOptimizerSocGoal
-	SetBatteryOptimizerSocGoal(*BatteryOptimizerSocGoal) error
+	GetBatteryOptimizerSocGoals() []api.RepeatingPlan
+	SetBatteryOptimizerSocGoals([]api.RepeatingPlan) error
 
 	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
 	GetOptimizerChargingStrategy() string

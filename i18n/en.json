@@ -93,10 +93,8 @@
       "value": "p_a value"
     },
     "optimizerSocGoal": {
-      "enable": "Keep a daily reserve target for the optimizer.",
-      "hint": "Applies a daily home-battery SoC goal to the optimizer at the selected local time.",
-      "soc": "Reserve target",
-      "time": "Time"
+      "hint": "Add one or more recurring home-battery SoC reserves for the optimizer, e.g. an evening reserve plus a morning-peak reserve. Each applies at its local time on the selected weekdays.",
+      "title": "Battery reserve goals"
     },
     "usageTab": "Battery usage"
   },

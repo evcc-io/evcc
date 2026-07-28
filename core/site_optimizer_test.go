@@ -5,17 +5,54 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+// TestOptimizerTriggerNotDroppedDuringRun verifies triggerOptimizer records a
+// pending re-run instead of silently dropping the trigger when a run is already
+// in progress, and that rerunIfPending consumes that flag afterwards.
+func TestOptimizerTriggerNotDroppedDuringRun(t *testing.T) {
+	// authorize sponsor + enable the optimizer so triggerOptimizer runs its body
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	settings.SetBool(keys.Experimental, true)
+	settings.SetBool(keys.Optimizer, true)
+	sponsor.Subject = "test"
+	optimizerPending.Store(false)
+	t.Cleanup(func() {
+		sponsor.Subject = ""
+		settings.SetBool(keys.Experimental, false)
+		settings.SetBool(keys.Optimizer, false)
+		optimizerPending.Store(false)
+	})
+
+	site := &Site{log: util.NewLogger("test")}
+
+	// hold the optimizer lock to simulate an in-flight run
+	require.True(t, mu.TryLock(), "optimizer lock should be free at test start")
+	defer mu.Unlock()
+
+	// a trigger during the in-flight run must be recorded, not dropped
+	site.triggerOptimizer()
+	assert.True(t, optimizerPending.Load(), "trigger during a run must set the pending flag")
+
+	// the post-run hook consumes the flag (unauthorized keeps triggerOptimizer a
+	// no-op so no real run is launched from the test)
+	sponsor.Subject = ""
+	site.rerunIfPending()
+	assert.False(t, optimizerPending.Load(), "rerunIfPending must consume the pending flag")
+}
 
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -341,6 +378,8 @@ func TestOptimizerPA(t *testing.T) {
 	})
 }
 
+var allWeekdays = []int{0, 1, 2, 3, 4, 5, 6}
+
 func TestBatterySocGoalSlots(t *testing.T) {
 	loc := time.UTC
 
@@ -353,7 +392,7 @@ func TestBatterySocGoalSlots(t *testing.T) {
 		time.Date(2025, 1, 2, 21, 0, 0, 0, loc),
 	}
 
-	assert.Equal(t, []float32{0, 0, 2000, 0, 0, 2000}, batterySocGoalSlots(timestamps, loc, 21, 0, 2000))
+	assert.Equal(t, []float32{0, 0, 2000, 0, 0, 2000}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 2000))
 }
 
 func TestBatterySocGoalSlotsRollsToNextDay(t *testing.T) {
@@ -365,7 +404,7 @@ func TestBatterySocGoalSlotsRollsToNextDay(t *testing.T) {
 		time.Date(2025, 1, 2, 21, 15, 0, 0, loc),
 	}
 
-	assert.Equal(t, []float32{0, 0, 1500}, batterySocGoalSlots(timestamps, loc, 21, 0, 1500))
+	assert.Equal(t, []float32{0, 0, 1500}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 1500))
 }
 
 func TestBatterySocGoalSlotsTimezone(t *testing.T) {
@@ -377,7 +416,48 @@ func TestBatterySocGoalSlotsTimezone(t *testing.T) {
 		time.Date(2025, 1, 2, 4, 15, 0, 0, time.UTC),
 	}
 
-	assert.Equal(t, []float32{0, 2500, 0}, batterySocGoalSlots(timestamps, loc, 21, 0, 2500))
+	assert.Equal(t, []float32{0, 2500, 0}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 2500))
+}
+
+// TestBatterySocGoalSlotsWeekdays only marks days whose weekday is selected.
+// 2025-01-01 is a Wednesday (3), 2025-01-02 a Thursday (4).
+func TestBatterySocGoalSlotsWeekdays(t *testing.T) {
+	loc := time.UTC
+
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 20, 30, 0, 0, loc),
+		time.Date(2025, 1, 1, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 0, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 15, 0, 0, loc),
+		time.Date(2025, 1, 2, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 2, 21, 0, 0, 0, loc),
+	}
+
+	// Wednesday only: Jan 2 (Thursday) is skipped
+	assert.Equal(t, []float32{0, 0, 2000, 0, 0, 0}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, []int{3}, 2000))
+}
+
+// TestBatterySocGoalSlotsMerge accumulates two goals into one reserve array; the
+// higher reserve wins where slots overlap.
+func TestBatterySocGoalSlotsMerge(t *testing.T) {
+	loc := time.UTC
+
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 20, 30, 0, 0, loc),
+		time.Date(2025, 1, 1, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 0, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 15, 0, 0, loc),
+		time.Date(2025, 1, 2, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 2, 21, 0, 0, 0, loc),
+	}
+
+	sgoal := batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 2000)
+	sgoal = batterySocGoalSlots(sgoal, timestamps, loc, 20, 45, allWeekdays, 1500)
+	assert.Equal(t, []float32{0, 1500, 2000, 0, 1500, 2000}, sgoal)
+
+	// overlap on the same 21:00 slots: the higher reserve wins
+	sgoal = batterySocGoalSlots(sgoal, timestamps, loc, 21, 0, allWeekdays, 3000)
+	assert.Equal(t, []float32{0, 1500, 3000, 0, 1500, 3000}, sgoal)
 }
 
 func batterySocGoalMeter(ctrl *gomock.Controller) api.Meter {
@@ -393,7 +473,7 @@ func TestBatteryRequestSocGoal(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	s := &Site{
-		batteryOptimizerSocGoal: &site.BatteryOptimizerSocGoal{Soc: 20, Time: "21:00", Tz: "UTC"},
+		batteryOptimizerSocGoals: []api.RepeatingPlan{{Weekdays: allWeekdays, Soc: 20, Time: "21:00", Tz: "UTC", Active: true}},
 	}
 	capacity := 10.0
 	soc := 50.0
@@ -419,7 +499,7 @@ func TestBatteryRequestSocGoalTimezone(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	s := &Site{
-		batteryOptimizerSocGoal: &site.BatteryOptimizerSocGoal{Soc: 20, Time: "21:00", Tz: "America/New_York"},
+		batteryOptimizerSocGoals: []api.RepeatingPlan{{Weekdays: allWeekdays, Soc: 20, Time: "21:00", Tz: "America/New_York", Active: true}},
 	}
 	capacity := 10.0
 	soc := 50.0
@@ -443,8 +523,8 @@ func TestBatteryRequestSocGoalInvalidTimezone(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	s := &Site{
-		log:                     util.NewLogger("foo"),
-		batteryOptimizerSocGoal: &site.BatteryOptimizerSocGoal{Soc: 20, Time: "21:00", Tz: "Not/AZone"},
+		log:                      util.NewLogger("foo"),
+		batteryOptimizerSocGoals: []api.RepeatingPlan{{Weekdays: allWeekdays, Soc: 20, Time: "21:00", Tz: "Not/AZone", Active: true}},
 	}
 	capacity := 10.0
 	soc := 50.0
