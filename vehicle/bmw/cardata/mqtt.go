@@ -70,8 +70,8 @@ func (v *MqttConnector) Unsubscribe(vin string, ch <-chan StreamingMessage) {
 	for i, sub := range subs {
 		if sub == ch {
 			v.subscriptions[vin] = append(subs[:i], subs[i+1:]...)
+			close(sub)
 			v.log.DEBUG.Printf("mqtt unsubscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
-			// do NOT close the channel to prevent race conditions on test / read
 			break
 		}
 	}
