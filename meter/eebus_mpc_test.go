@@ -25,9 +25,9 @@ func newMPCMeter(t *testing.T) (*EEBus, *mpcmocks.MaMPCInterface, spineapi.Entit
 	c := &EEBus{
 		log:       util.NewLogger("eebus-mpc-test"),
 		mm:        mm,
-		maEntity:  entity,
 		scenarios: mpcScenarios,
 	}
+	c.maEntity.Set(entity)
 
 	return c, mm, entity
 }

@@ -27,10 +27,10 @@ func newOHPCFEGCharger(t *testing.T) (*EEBusOHPCF, *egmocks.EgLPCInterface, spin
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBusOHPCF{
-		log:   util.NewLogger("eebus-ohpcf-test"),
-		eg:    &eebus.EnergyGuard{EgLPCInterface: lpc},
-		egLpc: entity,
+		log: util.NewLogger("eebus-ohpcf-test"),
+		eg:  &eebus.EnergyGuard{EgLPCInterface: lpc},
 	}
+	c.egLpc.Set(entity)
 
 	return c, lpc, entity
 }
@@ -87,7 +87,7 @@ func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
-		c.egLpc = nil
+		c.egLpc.Set(nil)
 
 		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
 	})
@@ -133,7 +133,7 @@ func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
-		c.egLpc = nil
+		c.egLpc.Set(nil)
 
 		_, err := c.Dimmed()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)

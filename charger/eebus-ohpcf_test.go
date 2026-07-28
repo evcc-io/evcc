@@ -87,8 +87,5 @@ func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
 
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	assert.Nil(t, c.compressor)
+	assert.Nil(t, c.compressor.Get())
 }
