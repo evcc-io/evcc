@@ -245,7 +245,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 	}
 
 	// without a nominal reference the limit cannot be expressed as a percent
-	nominal, err := c.eg.EgLPPInterface.ProductionNominalMax(c.egLppEntity.Get())
+	nominal, err := c.egLppEntity.Read(eebus.LPPElectricalConnection, ucapi.EgLPPInterface.ProductionNominalMax)
 	if err != nil || nominal <= 0 {
 		return 0, api.ErrNotAvailable
 	}
@@ -268,7 +268,7 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 	// (limits are negative watts); fall back to a safe 0W limit if unavailable
 	var value float64
 	if curtail {
-		if nominal, err := c.eg.EgLPPInterface.ProductionNominalMax(entity); err == nil && nominal > 0 {
+		if nominal, err := c.egLppEntity.Read(eebus.LPPElectricalConnection, ucapi.EgLPPInterface.ProductionNominalMax); err == nil && nominal > 0 {
 			value = -float64(percent) / 100 * nominal
 		}
 	}
