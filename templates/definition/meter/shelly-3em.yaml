@@ -41,29 +41,38 @@ render: |
   - source: http
     uri: {{ include "uri" . }}/emeter/0
     jq: .current
+    cache: 1s
   - source: http
     uri: {{ include "uri" . }}/emeter/1
     jq: .current
+    cache: 1s
   - source: http
     uri: {{ include "uri" . }}/emeter/2
     jq: .current
+    cache: 1s
   voltages:
   - source: http
     uri: {{ include "uri" . }}/emeter/0
     jq: .voltage
+    cache: 1s
   - source: http
     uri: {{ include "uri" . }}/emeter/1
     jq: .voltage
+    cache: 1s
   - source: http
     uri: {{ include "uri" . }}/emeter/2
     jq: .voltage
+    cache: 1s
   powers:
   - source: http
     uri: {{ include "uri" . }}/emeter/0
     jq: .power
+    cache: 1s
   - source: http
     uri: {{ include "uri" . }}/emeter/1
     jq: .power
+    cache: 1s
   - source: http
     uri: {{ include "uri" . }}/emeter/2
     jq: .power
+    cache: 1s
