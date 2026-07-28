@@ -11,11 +11,11 @@ requirements:
     de: |
       Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
 
-      Leistungs- und Temperaturwerte setzen Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Für Geräte ohne diese Datenpunkte die Option „Leistungs- und Temperaturwerte auslesen" deaktivieren.
+      Optional können Leistungs- und Temperaturwerte ausgelesen werden. Das setzt Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Für unterstützte Geräte die Option „Leistungs- und Temperaturwerte auslesen" aktivieren.
     en: |
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
 
-      Power and temperature readings require data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. For devices without these data points, disable the "Read power and temperature values" option.
+      Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. For supported devices, enable the "Read power and temperature values" option.
 params:
   - name: user
     deprecated: true
@@ -140,13 +140,13 @@ params:
   - name: measurements
     required: true
     type: bool
-    default: true
+    default: false
     description:
       de: Leistungs- und Temperaturwerte auslesen
       en: Read power and temperature values
     help:
-      de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus (Geräte der One-Base-/E3-Generation, z. B. Vitocal 25x). Deaktivieren, wenn das Gerät diese Datenpunkte nicht liefert (ältere Hardware/Firmware); die Verfügbarkeit lässt sich am Feature-Endpunkt der API ablesen.
-      en: Reads the current electrical power consumption and the domestic hot water temperature (One Base/E3 generation devices, e.g. Vitocal 25x). Disable if the device does not provide these data points (older hardware/firmware); availability can be checked via the API feature endpoint.
+      de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus. Aktivieren, wenn das Gerät diese Datenpunkte liefert (One-Base-/E3-Generation, z. B. Vitocal 25x); die Verfügbarkeit lässt sich am Feature-Endpunkt der API ablesen. Standardmäßig deaktiviert, damit sich bestehende Installationen beim Update nicht ändern.
+      en: Reads the current electrical power consumption and the domestic hot water temperature. Enable if the device provides these data points (One Base/E3 generation, e.g. Vitocal 25x); availability can be checked via the API feature endpoint. Disabled by default so existing installations are unchanged on upgrade.
   - name: uri
     advanced: true
     default: https://api.viessmann-climatesolutions.com/iot/v2
