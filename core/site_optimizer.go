@@ -74,6 +74,14 @@ func (site *Site) triggerOptimizer() {
 	go site.optimizerUpdateAsync()
 }
 
+// rerunIfPending re-triggers the optimizer when a trigger arrived during a run.
+// Called after optimizerUpdateAsync releases the lock so the re-run can proceed.
+func (site *Site) rerunIfPending() {
+	if optimizerPending.Swap(false) {
+		site.triggerOptimizer()
+	}
+}
+
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
 // This ensures publishComplex serializes it as a single JSON message instead of
 // recursively decomposing each struct field and array element into individual MQTT
@@ -366,11 +374,7 @@ func (site *Site) optimizerUpdateAsync() {
 	}
 	// re-run if a trigger arrived while we held the lock (deferred LIFO, so this
 	// runs after mu.Unlock below, letting the re-run acquire the lock)
-	defer func() {
-		if optimizerPending.Swap(false) {
-			site.triggerOptimizer()
-		}
-	}()
+	defer site.rerunIfPending()
 	defer mu.Unlock()
 
 	// slot/debounce gate; triggerOptimizer bypasses it by zeroing optimizerUpdated

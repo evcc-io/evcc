@@ -5,16 +5,54 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+// TestOptimizerTriggerNotDroppedDuringRun verifies triggerOptimizer records a
+// pending re-run instead of silently dropping the trigger when a run is already
+// in progress, and that rerunIfPending consumes that flag afterwards.
+func TestOptimizerTriggerNotDroppedDuringRun(t *testing.T) {
+	// authorize sponsor + enable the optimizer so triggerOptimizer runs its body
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	settings.SetBool(keys.Experimental, true)
+	settings.SetBool(keys.Optimizer, true)
+	sponsor.Subject = "test"
+	optimizerPending.Store(false)
+	t.Cleanup(func() {
+		sponsor.Subject = ""
+		settings.SetBool(keys.Experimental, false)
+		settings.SetBool(keys.Optimizer, false)
+		optimizerPending.Store(false)
+	})
+
+	site := &Site{log: util.NewLogger("test")}
+
+	// hold the optimizer lock to simulate an in-flight run
+	require.True(t, mu.TryLock(), "optimizer lock should be free at test start")
+	defer mu.Unlock()
+
+	// a trigger during the in-flight run must be recorded, not dropped
+	site.triggerOptimizer()
+	assert.True(t, optimizerPending.Load(), "trigger during a run must set the pending flag")
+
+	// the post-run hook consumes the flag (unauthorized keeps triggerOptimizer a
+	// no-op so no real run is launched from the test)
+	sponsor.Subject = ""
+	site.rerunIfPending()
+	assert.False(t, optimizerPending.Load(), "rerunIfPending must consume the pending flag")
+}
 
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
