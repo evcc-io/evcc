@@ -34,14 +34,14 @@ type EEBusOHPCF struct {
 	ctx     context.Context
 	reboost time.Duration
 
-	mu          sync.RWMutex
-	log         *util.Logger
-	compressor  spineapi.EntityRemoteInterface
-	mpcEntity   spineapi.EntityRemoteInterface
-	dhwEntity   spineapi.EntityRemoteInterface
-	egLpcEntity spineapi.EntityRemoteInterface
-	enabled     bool
-	reboosting  bool
+	mu         sync.RWMutex
+	log        *util.Logger
+	compressor spineapi.EntityRemoteInterface
+	mpc        spineapi.EntityRemoteInterface
+	dhw        spineapi.EntityRemoteInterface
+	egLpc      spineapi.EntityRemoteInterface
+	enabled    bool
+	reboosting bool
 
 	connector *eebus.Connector
 }
@@ -123,9 +123,9 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 	defer c.mu.Unlock()
 
 	c.compressor = nil
-	c.mpcEntity = nil
-	c.dhwEntity = nil
-	c.egLpcEntity = nil
+	c.mpc = nil
+	c.dhw = nil
+	c.egLpc = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -153,19 +153,19 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
 		c.mu.Lock()
-		c.mpcEntity = eebus.UpdateEntity(c.ma.MaMPCInterface, c.mpcEntity, entity)
+		c.mpc = eebus.UpdateEntity(c.ma.MaMPCInterface, c.mpc, entity)
 		c.mu.Unlock()
 
 	// Monitoring Appliance MDT provides the DHW temperature
 	case mdt.UseCaseSupportUpdate:
 		c.mu.Lock()
-		c.dhwEntity = eebus.UpdateEntity(c.ma.MaMDTInterface, c.dhwEntity, entity)
+		c.dhw = eebus.UpdateEntity(c.ma.MaMDTInterface, c.dhw, entity)
 		c.mu.Unlock()
 
 	// Energy Guard LPC carries the §14a/LPC consumption limit
 	case lpc.UseCaseSupportUpdate:
 		c.mu.Lock()
-		c.egLpcEntity = eebus.UpdateEntity(c.eg.EgLPCInterface, c.egLpcEntity, entity)
+		c.egLpc = eebus.UpdateEntity(c.eg.EgLPCInterface, c.egLpc, entity)
 		c.mu.Unlock()
 	}
 }
@@ -176,7 +176,31 @@ func (c *EEBusOHPCF) compressorEntity() (spineapi.EntityRemoteInterface, error) 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return eebus.RequiredEntity(c.cem.OHPCF, c.compressor, eebus.OHPCFMonitor)
+	return eebus.RequiredEntity(c.cem.OHPCF, eebus.OHPCFMonitor, c.compressor)
+}
+
+// mpcEntity returns the entity providing the measured power consumption
+func (c *EEBusOHPCF) mpcEntity() spineapi.EntityRemoteInterface {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.mpc
+}
+
+// dhwEntity returns the entity providing the domestic hot water temperature
+func (c *EEBusOHPCF) dhwEntity() spineapi.EntityRemoteInterface {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.dhw
+}
+
+// egLpcEntity returns the entity carrying the §14a/LPC consumption limit
+func (c *EEBusOHPCF) egLpcEntity() spineapi.EntityRemoteInterface {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.egLpc
 }
 
 func (c *EEBusOHPCF) setEnabled(enabled bool) {
@@ -344,11 +368,7 @@ var _ api.Dimmer = (*EEBusOHPCF)(nil)
 // Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
 // consumption limit is currently active on the heat pump.
 func (c *EEBusOHPCF) Dimmed() (bool, error) {
-	c.mu.RLock()
-	entity := c.egLpcEntity
-	c.mu.RUnlock()
-
-	limit, err := eebus.ReadValue(c.eg.EgLPCInterface, entity, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := eebus.ReadValue(c.eg.EgLPCInterface, eebus.LPCLimit, c.egLpcEntity(), c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -361,9 +381,7 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 // Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
 func (c *EEBusOHPCF) Dim(dim bool) error {
-	c.mu.RLock()
-	entity := c.egLpcEntity
-	c.mu.RUnlock()
+	entity := c.egLpcEntity()
 
 	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
 		return api.ErrNotAvailable
@@ -432,11 +450,7 @@ var _ api.Meter = (*EEBusOHPCF)(nil)
 // CurrentPower implements the api.Meter interface and reports the heat pump's
 // measured power consumption via the MPC use case.
 func (c *EEBusOHPCF) CurrentPower() (float64, error) {
-	c.mu.RLock()
-	entity := c.mpcEntity
-	c.mu.RUnlock()
-
-	return eebus.ReadValue(c.ma.MaMPCInterface, entity, eebus.MPCPower, c.ma.MaMPCInterface.Power)
+	return eebus.ReadValue(c.ma.MaMPCInterface, eebus.MPCPower, c.mpcEntity(), c.ma.MaMPCInterface.Power)
 }
 
 var _ api.Battery = (*EEBusOHPCF)(nil)
@@ -444,11 +458,7 @@ var _ api.Battery = (*EEBusOHPCF)(nil)
 // Soc implements the api.Battery interface and reports the heat pump's domestic
 // hot water temperature in °C via the MDT use case.
 func (c *EEBusOHPCF) Soc() (float64, error) {
-	c.mu.RLock()
-	entity := c.dhwEntity
-	c.mu.RUnlock()
-
-	return eebus.ReadValue(c.ma.MaMDTInterface, entity, eebus.MDTTemperature,
+	return eebus.ReadValue(c.ma.MaMDTInterface, eebus.MDTTemperature, c.dhwEntity(),
 		func(entity spineapi.EntityRemoteInterface) (float64, error) {
 			return c.ma.MaMDTInterface.Temperature(entity, model.UnitOfMeasurementTypedegC)
 		})

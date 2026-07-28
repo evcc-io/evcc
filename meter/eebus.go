@@ -147,7 +147,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 func (c *EEBus) readValue[T any](scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return eebus.ReadValue(c.mm, c.maEntity, scenario, update)
+	return eebus.ReadValue(c.mm, scenario, c.maEntity, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
@@ -202,7 +202,7 @@ func (c *EEBus) Dimmed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebus.ReadValue(c.eg.EgLPCInterface, c.egLpcEntity, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := eebus.ReadValue(c.eg.EgLPCInterface, eebus.LPCLimit, c.egLpcEntity, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -245,7 +245,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebus.ReadValue(c.eg.EgLPPInterface, c.egLppEntity, eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := eebus.ReadValue(c.eg.EgLPPInterface, eebus.LPPLimit, c.egLppEntity, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return 0, err
 	}

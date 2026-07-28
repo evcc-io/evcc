@@ -78,7 +78,7 @@ func TestRequiredEntity(t *testing.T) {
 	t.Run("entity missing", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 
-		_, err := RequiredEntity(uc, nil, MPCPower)
+		_, err := RequiredEntity(uc, MPCPower, nil)
 		assert.ErrorIs(t, err, ErrNotConnected)
 	})
 
@@ -87,7 +87,7 @@ func TestRequiredEntity(t *testing.T) {
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(false)
 
-		_, err := RequiredEntity(uc, entity, MPCPower)
+		_, err := RequiredEntity(uc, MPCPower, entity)
 		assert.ErrorIs(t, err, ErrNotConnected)
 	})
 
@@ -96,7 +96,7 @@ func TestRequiredEntity(t *testing.T) {
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		res, err := RequiredEntity(uc, entity, MPCPower)
+		res, err := RequiredEntity(uc, MPCPower, entity)
 		require.NoError(t, err)
 		assert.Equal(t, entity, res)
 	})
@@ -110,7 +110,7 @@ func TestReadValue(t *testing.T) {
 	t.Run("entity missing", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 
-		_, err := ReadValue(uc, nil, MPCPower, read(1, nil))
+		_, err := ReadValue(uc, MPCPower, nil, read(1, nil))
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
@@ -119,7 +119,7 @@ func TestReadValue(t *testing.T) {
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(false)
 
-		_, err := ReadValue(uc, entity, MPCPower, read(1, nil))
+		_, err := ReadValue(uc, MPCPower, entity, read(1, nil))
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
@@ -130,7 +130,7 @@ func TestReadValue(t *testing.T) {
 			entity := testEntity(t, 1)
 			uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-			_, err := ReadValue(uc, entity, MPCPower, read(0, tc))
+			_, err := ReadValue(uc, MPCPower, entity, read(0, tc))
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
 		})
 	}
@@ -140,7 +140,7 @@ func TestReadValue(t *testing.T) {
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		_, err := ReadValue(uc, entity, MPCPower, read(0, errors.New("boom")))
+		_, err := ReadValue(uc, MPCPower, entity, read(0, errors.New("boom")))
 		assert.EqualError(t, err, "boom")
 	})
 
@@ -149,7 +149,7 @@ func TestReadValue(t *testing.T) {
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		res, err := ReadValue(uc, entity, MPCPower, read(4711, nil))
+		res, err := ReadValue(uc, MPCPower, entity, read(4711, nil))
 		require.NoError(t, err)
 		assert.Equal(t, 4711.0, res)
 	})
