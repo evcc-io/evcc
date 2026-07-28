@@ -778,14 +778,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Lisenssiavain",
-      "activationKeyHint": "Lähetetty sähköpostitse. Löytyy osoitteesta {url}.",
       "addToken": "Anna tunnus",
       "changeToken": "Vaihda tunnus",
       "description": "Sponsorointi auttaa meitä ylläpitämään projektia ja rakentamaan kestävästi uusia ja jännittäviä ominaisuuksia. Sponsorina saat käyttöösi kaikki latureiden toteutukset.",
       "descriptionToken": "GitHub-sponsorina löydät sponsorointitunnuksesi osoitteesta {url}. Päästäksesi alkuun tarjoamme {trialToken}.",
-      "email": "Sähköposti",
-      "emailHint": "Sähköpostiosoite, jota käytit {url}:een",
       "enterYourToken": "Sponsorointitunnuksesi",
       "error": "Sponsoritunnus ei kelpaa.",
       "invalid": "epäkelpo",
@@ -1196,9 +1192,7 @@
     "chargingPlan": {
       "active": "Aktiivinen",
       "addRepeatingPlan": "Lisää toistuva suunnitelma",
-      "arrivalTab": "Saapuminen",
       "day": "Päivä",
-      "departureTab": "Lähtö",
       "goal": "Lataus tavoite",
       "modalTitle": "Lataussuunnitelma",
       "none": "ei mitään",
@@ -1222,8 +1216,6 @@
       "strategySettings": "Strategiamääritykset",
       "time": "Aika",
       "title": "Suunnitelma",
-      "titleMinSoc": "Minimi lataus",
-      "titleTargetCharge": "Lähtö",
       "unsavedChanges": "Tallentamattomia muutoksia. Asetetaanko nyt?",
       "update": "Aseta",
       "weekdays": "Päivät"
@@ -1239,10 +1231,6 @@
       "batteryChargeHold": "Akku (lataus lukittuna)",
       "batteryDischarge": "Akku purkautuu",
       "batteryDischargeHold": "Akku (lukittu)",
-      "batteryForecastEmpty": "Varaus loppuu",
-      "batteryForecastFull": "Varaus täynnä",
-      "batteryForecastNextHigh": "Korkea",
-      "batteryForecastNextLow": "Matala",
       "batteryGridChargeActive": "Ladataan verkosta",
       "batteryGridChargeLimit": "Milloin ladataan verkosta",
       "batteryTooltip": "{energy} / {total} ({soc})",
@@ -1325,19 +1313,11 @@
       "currents": "Latausvirta",
       "default": "oletus",
       "disclaimerHint": "Huomautus:",
-      "limitSoc": {
-        "description": "Latausraja mitä käytetään kun ajoneuvo yhdistetty.",
-        "label": "Oletusraja"
-      },
       "maxCurrent": {
         "label": "Maksimivirta"
       },
       "minCurrent": {
         "label": "Minimivirta"
-      },
-      "minSoc": {
-        "description": "Ajoneuvo ladataan välittömästi {0} asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä.",
-        "label": "Minimi lataustaso"
       },
       "onlyForSocBasedCharging": "Nämä vaihtoehdot ovat käytettävissä vain ajoneuvoille, joiden lataustaso on tiedossa.",
       "phasesConfigured": {

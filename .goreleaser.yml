@@ -68,7 +68,8 @@ changelog:
   filters:
     exclude:
       - "^chore"
-      - "^bump"
+      - "(?i)^bump"
+      - "(?i)^ci:"
       - "^docs:"
       - "^test:"
       - "^build"

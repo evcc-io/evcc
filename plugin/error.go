@@ -7,6 +7,7 @@ import (
 )
 
 type errorPlugin struct {
+	*getter
 	err error
 }
 
@@ -32,8 +33,17 @@ func NewErrorFromConfig(other map[string]any) (Plugin, error) {
 	o := &errorPlugin{
 		err: err,
 	}
+	o.getter = defaultGetters(o, 1)
 
 	return o, nil
+}
+
+var _ StringGetter = (*errorPlugin)(nil)
+
+func (o *errorPlugin) StringGetter() (func() (string, error), error) {
+	return func() (string, error) {
+		return "", o.err
+	}, nil
 }
 
 var _ IntSetter = (*errorPlugin)(nil)

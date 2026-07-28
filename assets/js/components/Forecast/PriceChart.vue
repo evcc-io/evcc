@@ -117,7 +117,12 @@ export default defineComponent({
 						return tooltipTable(time, rows);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
 					...this.yAxisConfig,
 					axisLabel: {

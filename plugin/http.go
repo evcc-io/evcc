@@ -27,6 +27,7 @@ type HTTP struct {
 	body        string
 	pipeline    *pipeline.Pipeline
 	mu          *sync.Mutex
+	log         *util.Logger
 }
 
 func init() {
@@ -100,6 +101,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		Helper: request.NewHelper(log),
 		url:    uri,
 		method: method,
+		log:    log,
 	}
 
 	// build the cache stack without logging so the logging tripper
@@ -115,6 +117,11 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 			Modifier: func(resp *http.Response) error {
 				dropCacheBusting(resp, "Cache-Control")
 				dropCacheBusting(resp, "Pragma")
+				// httpcache derives freshness from the response Date; stamp one
+				// for devices that omit it, else every read is treated as stale
+				if resp.Header.Get("Date") == "" {
+					resp.Header.Set("Date", time.Now().UTC().Format(http.TimeFormat))
+				}
 				return nil
 			},
 			Base: base,
@@ -214,7 +221,20 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	val, err := p.DoBody(req)
+	resp, err := p.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// warn on uncached GET polling: a repeated roundtrip means neither a configured
+	// cache nor the device's own response headers spared it. cache hits are exempt.
+	if p.method == http.MethodGet && p.mu == nil && resp.Header.Get(httpcache.XFromCache) == "" {
+		if key := stripQuery(url); repeatedGet(key, time.Now()) {
+			p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", key)
+		}
+	}
+
+	val, err := request.ReadBody(resp)
 	if err != nil {
 		if err2 := knownErrors(val); err2 != nil {
 			err = err2
@@ -222,6 +242,37 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	}
 
 	return val, err
+}
+
+type httpAccess struct {
+	last   time.Time
+	warned bool
+}
+
+var (
+	httpSeenMu sync.Mutex
+	httpSeen   = make(map[string]httpAccess)
+)
+
+// stripQuery drops the query and fragment so cache-busting params do not make
+// each poll look like a distinct url.
+func stripQuery(url string) string {
+	if i := strings.IndexAny(url, "?#"); i >= 0 {
+		return url[:i]
+	}
+	return url
+}
+
+// repeatedGet reports the first time url is fetched again within a second, a sign
+// the response should be cached. It fires once per url to avoid log spam.
+func repeatedGet(url string, now time.Time) bool {
+	httpSeenMu.Lock()
+	defer httpSeenMu.Unlock()
+
+	a, seen := httpSeen[url]
+	warn := seen && !a.warned && now.Sub(a.last) < time.Second
+	httpSeen[url] = httpAccess{last: now, warned: a.warned || warn}
+	return warn
 }
 
 var _ Getters = (*HTTP)(nil)

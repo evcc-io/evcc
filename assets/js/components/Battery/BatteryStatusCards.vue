@@ -2,7 +2,7 @@
 	<div v-if="showSplit" class="cards cards--split gap-4">
 		<BatteryStatusCard v-bind="cards[0]" :battery-mode="batteryMode" />
 		<Card data-testid="battery-optimizer-card">
-			<OptimizerInfo :suggestion="suggestion" :forecast="batteryForecast" />
+			<OptimizerInfo :suggestion="singleSuggestion" :forecast="batteryForecast" />
 		</Card>
 	</div>
 	<div v-else class="cards gap-4">
@@ -18,11 +18,17 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import { batteryColor } from "@/colors";
-import type { BATTERY_MODE, Battery, BatteryForecast, BatteryMeter } from "@/types/evcc";
+import type {
+	BATTERY_MODE,
+	Battery,
+	BatteryForecast,
+	BatteryMeter,
+	BatterySuggestion,
+} from "@/types/evcc";
 import Card from "../Helper/Card.vue";
 import BatteryStatusCard from "./BatteryStatusCard.vue";
 import OptimizerInfo from "./OptimizerInfo.vue";
-import type { BatterySuggestion, BatteryStatusCardModel } from "./types";
+import type { BatteryStatusCardModel } from "./types";
 
 // One battery + forecast splits into battery and optimizer cards; several batteries prepend a
 // combined aggregate. Stateless, derived from the battery object.
@@ -32,7 +38,6 @@ export default defineComponent({
 	props: {
 		battery: { type: Object as PropType<Battery> },
 		batteryMode: String as PropType<BATTERY_MODE>,
-		suggestion: { type: Object as PropType<BatterySuggestion | null>, default: null },
 	},
 	computed: {
 		devices(): BatteryMeter[] {
@@ -42,8 +47,11 @@ export default defineComponent({
 			const fc = this.battery?.forecast;
 			return fc?.highest || fc?.lowest ? fc : null;
 		},
+		singleSuggestion(): BatterySuggestion | null {
+			return this.deviceSuggestion(this.devices[0]);
+		},
 		showSplit(): boolean {
-			return this.devices.length === 1 && !!this.batteryForecast;
+			return this.devices.length === 1 && !!(this.batteryForecast || this.singleSuggestion);
 		},
 		cards(): BatteryStatusCardModel[] {
 			const multiple = this.devices.length > 1;
@@ -55,7 +63,8 @@ export default defineComponent({
 				capacity: d.capacity || 0,
 				color: batteryColor(i),
 				controllable: d.controllable,
-				suggestion: null, // per-battery suggestion not wired yet
+				// single battery shows the suggestion on the dedicated optimizer card
+				suggestion: multiple ? this.deviceSuggestion(d) : null,
 				forecast: null, // aggregate forecast lives on the combined / dedicated card
 			}));
 			// combined uses the site aggregate soc/power, not per-device sums; the site-wide
@@ -69,11 +78,17 @@ export default defineComponent({
 					capacity: this.devices.reduce((s, d) => s + (d.capacity || 0), 0),
 					color: batteryColor(0),
 					controllable: true,
-					suggestion: this.suggestion,
+					suggestion: null, // no aggregate; device cards show their own
 					forecast: this.batteryForecast,
 				});
 			}
 			return list;
+		},
+	},
+	methods: {
+		deviceSuggestion(d?: BatteryMeter): BatterySuggestion | null {
+			// optimizer only emits suggestions for controllable batteries
+			return d?.suggestion?.actionable ? d.suggestion : null;
 		},
 	},
 });

@@ -691,14 +691,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Chiave di licenza",
-      "activationKeyHint": "Inviata via mail. Puoi trovarla in{url}.",
       "addToken": "Inserisci il token",
       "changeToken": "Modifica il token",
       "description": "Il modello di sponsorizzazione ci aiuta a mantenere il progetto e a introdurre in modo sostenibile nuove ed entusiasmanti funzionalità. Come sponsor hai accesso a tutte le implementazioni del caricabatterie.",
       "descriptionToken": "In qualità di sponsor su GitGub, trovi il tuo token in {url}. Offriamo anche un token di prova per i test {trialToken}.",
-      "email": "Email",
-      "emailHint": "Email usata per {url}",
       "enterYourToken": "Il tuo token Sponsor",
       "error": "Il token sponsor non è valido.",
       "invalid": "non valido",
@@ -1102,9 +1098,7 @@
     "chargingPlan": {
       "active": "Attivo",
       "addRepeatingPlan": "Aggiungi piano ricorrente",
-      "arrivalTab": "Arrivo",
       "day": "Giorno",
-      "departureTab": "Partenza",
       "goal": "Obiettivo di ricarica",
       "modalTitle": "Piano di ricarica",
       "none": "nessuno",
@@ -1128,8 +1122,6 @@
       "strategySettings": "Impostazioni strategia",
       "time": "Ora",
       "title": "Piano",
-      "titleMinSoc": "Carica minima",
-      "titleTargetCharge": "Partenza",
       "unsavedChanges": "Ci sono modifiche non salvate. Vuoi salvarle adesso?",
       "update": "Applica",
       "weekdays": "Giorni"
@@ -1139,8 +1131,6 @@
       "batteryCharge": "Carica della batteria",
       "batteryDischarge": "Scarico della batteria",
       "batteryDischargeHold": "Batteria (locked)",
-      "batteryForecastEmpty": "vuoto {time}",
-      "batteryForecastFull": "full {time}",
       "batteryGridChargeActive": "Ricarica dalla rete: attiva",
       "batteryGridChargeLimit": "Ricarica dalla rete: quando",
       "batteryTooltip": "{energy} di {total} ({soc})",
@@ -1197,19 +1187,11 @@
       "currents": "Corrente di carica",
       "default": "default",
       "disclaimerHint": "Nota:",
-      "limitSoc": {
-        "description": "Limite di carica applicato quando il veicolo è connesso.",
-        "label": "Limite di default"
-      },
       "maxCurrent": {
         "label": "Corrente massima"
       },
       "minCurrent": {
         "label": "Corrente min."
-      },
-      "minSoc": {
-        "description": "Per le emergenze. Il veicolo viene caricato 'velocemente' al {0} da tutto il solare disponibile, e poi continua con solo il surplus solare.",
-        "label": "Carica min. %"
       },
       "onlyForSocBasedCharging": "Questa opzione è solo per i veicoli dei quali si sa lo stato di carica.",
       "phasesConfigured": {

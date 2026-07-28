@@ -763,14 +763,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licentiesleutel",
-      "activationKeyHint": "Verzonden via email. Deze kan hier gevonden worden: {url}.",
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
       "description": "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten.",
       "descriptionToken": "Als GitHub-sponsor vind je jouw token op {url}. Om aan de slag te kunnen, bieden we een {trialToken}.",
-      "email": "E-mail",
-      "emailHint": "Email adres dat u gebruikte voor {url}",
       "enterYourToken": "Jouw sponsortoken",
       "error": "De sponsortoken is ongeldig.",
       "invalid": "ongeldig",
@@ -1181,9 +1177,7 @@
     "chargingPlan": {
       "active": "Actief",
       "addRepeatingPlan": "Herhalend schema toevoegen",
-      "arrivalTab": "Aankomst",
       "day": "Dag",
-      "departureTab": "Vertrek",
       "goal": "Laaddoel",
       "modalTitle": "Laad Plan",
       "none": "geen",
@@ -1207,8 +1201,6 @@
       "strategySettings": "Strategie-instellingen",
       "time": "Tijd",
       "title": "Plan",
-      "titleMinSoc": "Min lading",
-      "titleTargetCharge": "Vertrek",
       "unsavedChanges": "Wijzigingen nog niet opgeslagen. Nu toepassen?",
       "update": "Toepassen",
       "weekdays": "Dagen"
@@ -1224,10 +1216,6 @@
       "batteryChargeHold": "Accu (laden vergrendeld)",
       "batteryDischarge": "Accu ontladen",
       "batteryDischargeHold": "Accu (geblokkeerd)",
-      "batteryForecastEmpty": "Leeg",
-      "batteryForecastFull": "Vol",
-      "batteryForecastNextHigh": "Hoog",
-      "batteryForecastNextLow": "Laag",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryTooltip": "{energy} van {total} ({soc})",
@@ -1310,19 +1298,11 @@
       "currents": "Laadstroom",
       "default": "standaard",
       "disclaimerHint": "Let op:",
-      "limitSoc": {
-        "description": "Standaard laadlimiet wanneer dit voertuig aangesloten wordt.",
-        "label": "Standaard limiet"
-      },
       "maxCurrent": {
         "label": "Max. Stroomsterkte"
       },
       "minCurrent": {
         "label": "Min. Stroomsterkte"
-      },
-      "minSoc": {
-        "description": "Het voertuig wordt „snel” opgeladen tot {0} in zonne-modus. Het laden gaat daarna verder met zonneoverschot. Nuttig om een bepaald rijbereik te garanderen, ook gedurende periodes met weinig of geen zonnestroom.",
-        "label": "Min. batterij %"
       },
       "onlyForSocBasedCharging": "Deze instellingen zijn alleen beschikbaar bij voertuigen waar het batterijpercentage bekend is.",
       "phasesConfigured": {

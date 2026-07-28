@@ -8,7 +8,15 @@ params:
   - name: usage
     choice: ["battery"]
   - name: host
-  - preset: battery-params
+  - preset: battery-capacity
+  - name: minsoc
+    deprecated: true
+  - name: maxsoc
+    deprecated: true
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
   - name: cache
     default: 1s
 render: |
@@ -23,4 +31,26 @@ render: |
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
     cache: {{ .cache }}
-  {{- include "battery-params" . }}
+  minsoc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.minSoc
+    scale: 0.1
+    cache: {{ .cache }}
+  maxsoc:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.socSet
+    scale: 0.1
+    cache: {{ .cache }}
+  maxchargepower:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.chargeMaxLimit
+    cache: {{ .cache }}
+  maxdischargepower:
+    source: http
+    uri: http://{{ .host }}/properties/report
+    jq: .properties.inverseMaxPower
+    cache: {{ .cache }}
+  {{- include "battery-capacity" . }}

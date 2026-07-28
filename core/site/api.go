@@ -77,11 +77,22 @@ type API interface {
 	GetTariff(api.TariffUsage) api.Tariff
 
 	//
+	// forecast
+	//
+
+	// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+	GetSolarAdjusted() bool
+	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+	SetSolarAdjusted(bool)
+
+	//
 	// battery control
 	//
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+	GetBatteryGridDischarge() bool
+	SetBatteryGridDischarge(bool) error
 
 	//
 	// battery control external

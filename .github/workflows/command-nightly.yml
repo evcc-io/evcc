@@ -1,0 +1,88 @@
+name: Nightly Command
+
+# Triggered by a maintainer commenting `/nightly` on an issue or pull request.
+# Builds the nightly packages from master (goreleaser snapshot) to check the
+# nightly pipeline is green, then replies with the result. No download artifacts.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  nightly:
+    name: Nightly Build
+    # on any issue/PR comment starting with /nightly, only from maintainers
+    if: |
+      startsWith(github.event.comment.body, '/nightly') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });
+
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/build-toolchain
+
+      - name: Patch ASN1
+        run: make patch-asn1-sudo
+
+      - name: Create nightly build
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
+        with:
+          version: "~> v2"
+          args: --snapshot -f .goreleaser-nightly.yml --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  report:
+    name: Report
+    needs: nightly
+    if: always() && needs.nightly.result != 'skipped'
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment result
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const num = context.payload.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const ok = '${{ needs.nightly.result }}' === 'success';
+            const body = ok
+              ? '✅ Nightly build from master finished.'
+              : `❌ Nightly build from master failed. See the [run logs](${runUrl}).`;
+            await github.rest.issues.createComment({ owner, repo, issue_number: num, body });
+
+      - name: Resolve command comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // collapse the /nightly comment as resolved now that the build is done
+            await github.graphql(
+              `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
+              { id: context.payload.comment.node_id }
+            );

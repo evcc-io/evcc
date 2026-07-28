@@ -42,8 +42,6 @@ export default defineComponent({
 	padding: 10px 0;
 	opacity: 1;
 	overflow: hidden;
-	/* forces own compositor layer, works around a Chrome Skia Graphite paint-invalidation bug (#31341) */
-	will-change: transform;
 }
 .label-bar-scale--hidden {
 	opacity: 0;

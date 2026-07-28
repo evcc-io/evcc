@@ -14,7 +14,13 @@ const base = {
   updated: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
   horizonHours: 47,
   currency: CURRENCY.EUR,
-  chargingStrategies: ["charge_before_export", "attenuate_grid_peaks", "none"],
+  chargingStrategies: [
+    "charge_before_export",
+    "attenuate_demand_peaks",
+    "attenuate_feedin_peaks",
+    "attenuate_grid_peaks",
+    "none",
+  ],
   selectedStrategy: "charge_before_export",
   pending: false,
 };

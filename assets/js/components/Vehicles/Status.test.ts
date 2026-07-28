@@ -23,6 +23,7 @@ const allEntries = {
   smartcost: false,
   planactive: false,
   planstart: false,
+  suggestion: false,
 };
 
 const expectEntries = (props: InstanceType<typeof Status>["$props"], entries: object) => {
@@ -77,6 +78,42 @@ describe("min charge", () => {
   });
   test("not active when minSocNotReached is not set", () => {
     expectEntries({ connected: true, minSoc: 20 }, { charger: "Connected.", minsoc: false });
+  });
+});
+
+describe("optimizer suggestion", () => {
+  test("charge suggested while not charging", () => {
+    expectEntries(
+      { connected: true, suggestion: { action: "charge", actionable: true } },
+      { charger: "Connected.", suggestion: true }
+    );
+  });
+  test("stop suggested while charging", () => {
+    expectEntries(
+      {
+        connected: true,
+        enabled: true,
+        charging: true,
+        suggestion: { action: "stop", actionable: true },
+      },
+      { charger: "Charging…", suggestion: true }
+    );
+  });
+  test("hidden when not actionable", () => {
+    expectEntries(
+      { connected: true, enabled: true, charging: true, suggestion: { action: "charge" } },
+      { charger: "Charging…", suggestion: false }
+    );
+    expectEntries(
+      { connected: true, suggestion: { action: "stop" } },
+      { charger: "Connected.", suggestion: false }
+    );
+  });
+  test("hidden when disconnected", () => {
+    expectEntries(
+      { connected: false, suggestion: { action: "charge", actionable: true } },
+      { charger: "Disconnected.", suggestion: false }
+    );
   });
 });
 

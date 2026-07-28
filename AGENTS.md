@@ -173,6 +173,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Implement accessibility features (tabindex, aria-label, keyboard handlers)
 - Use descriptive names for variables, functions, and event handlers
 - Use early returns for readability
+- Prefer named computed properties over inline template expressions, even for single use. Readability beats saving lines
 - Use configured Axios instance for HTTP communication
 
 ### State Management

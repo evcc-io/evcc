@@ -155,7 +155,23 @@ export function forecastGrid() {
   return { top: 36, right: 16, bottom: 16, left: 24, borderWidth: 0 };
 }
 
-export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: Date) => string) {
+// common x-axis label styling across time-based charts
+export function xAxisLabelStyle() {
+  return {
+    color: colors.muted || "",
+    fontSize: 14,
+    lineHeight: Math.round(14 * 1.1),
+    margin: 4,
+  };
+}
+
+export function forecastXAxes(
+  startDate: Date | number,
+  endDate: Date | number,
+  hourShort: (d: Date) => string,
+  weekdayShort: (d: Date) => string,
+  stepHours = 4
+) {
   return [
     {
       type: "time",
@@ -164,16 +180,15 @@ export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: 
       minInterval: 3600 * 1000,
       maxInterval: 3600 * 1000,
       axisLabel: {
-        color: colors.muted,
-        fontSize: 14,
-        lineHeight: Math.round(14 * 1.1),
-        margin: 4,
+        ...xAxisLabelStyle(),
+        hideOverlap: false,
         formatter: (value: number) => {
           const date = new Date(value);
           const h = date.getHours();
-          if (h % 4 !== 0) return "";
-          if (h === 0) return `${h}\n${weekdayShort(date)}`;
-          return `${h}`;
+          if (h % stepHours !== 0) return "";
+          const label = hourShort(date);
+          if (h === 0) return `${label}\n${weekdayShort(date)}`;
+          return label;
         },
       },
       splitLine: { show: false },

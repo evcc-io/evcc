@@ -7,12 +7,13 @@ import { defineComponent, markRaw, type PropType } from "vue";
 import {
 	echarts,
 	FONT_FAMILY,
+	forecastXAxes,
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
 	type TooltipRow,
 } from "../Forecast/echarts";
-import colors, { dimColor, lighterColor, batteryColor } from "@/colors";
+import colors, { dimColor, setAlpha, batteryColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { is12hFormat } from "@/units";
 import type { SocPoint, BatterySeries } from "./types";
@@ -20,8 +21,27 @@ import type { SocPoint, BatterySeries } from "./types";
 type EChartsType = ReturnType<typeof echarts.init>;
 type Point = [number, number];
 
-const GRID = { top: 10, right: 36, bottom: 26, left: 0 };
+const GRID = { top: 10, right: 36, bottom: 34, left: 0 };
 const BADGE_GAP = 24; // badge height (12px font + 2x4px padding) plus spacing
+
+// diagonal-stripe fill for forecast areas
+function hatchPattern(color: string) {
+	const size = 8;
+	const dpr = window.devicePixelRatio || 1;
+	const canvas = document.createElement("canvas");
+	canvas.width = canvas.height = size * dpr;
+	const ctx = canvas.getContext("2d")!;
+	ctx.scale(dpr, dpr);
+	ctx.strokeStyle = setAlpha(color, "66") || color;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	for (const o of [-size, 0, size]) {
+		ctx.moveTo(o, size);
+		ctx.lineTo(o + size, 0);
+	}
+	ctx.stroke();
+	return { image: canvas, repeat: "repeat" };
+}
 
 export default defineComponent({
 	name: "BatteryHistoryChart",
@@ -32,7 +52,6 @@ export default defineComponent({
 		winStart: { type: Number, required: true },
 		winEnd: { type: Number, required: true },
 		now: { type: Number, required: true },
-		hasForecast: Boolean,
 		dayOffset: { type: Number, default: 0 }, // paging position; slide animates only when it changes
 		focused: { type: Number as PropType<number | null>, default: null },
 	},
@@ -85,18 +104,9 @@ export default defineComponent({
 						z: 3,
 						data: this.socHistory(b),
 						showSymbol: false,
-						lineStyle: { color: c, width: 2 },
+						lineStyle: { color: c, width: 3 },
 						itemStyle: { color: c },
-						...(this.single
-							? {
-									areaStyle: {
-										color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-											{ offset: 0, color: lighterColor(c) || c },
-											{ offset: 1, color: (c || "#000000") + "00" },
-										]),
-									},
-								}
-							: {}),
+						...(this.single ? { areaStyle: { color: dimColor(c) } } : {}),
 						emphasis: { disabled: true },
 					});
 					series.push({
@@ -105,9 +115,9 @@ export default defineComponent({
 						z: 3,
 						data: this.socForecast(b),
 						showSymbol: false,
-						lineStyle: { color: c, width: 2, type: "dashed" },
+						lineStyle: { color: c, width: 2, type: "dotted" },
 						itemStyle: { color: c },
-						...(this.single ? { areaStyle: { color: dimColor(c) } } : {}),
+						...(this.single ? { areaStyle: { color: hatchPattern(c) } } : {}),
 						emphasis: { disabled: true },
 					});
 				});
@@ -123,9 +133,9 @@ export default defineComponent({
 						data: this.energyData(b, "hist"),
 						showSymbol: false,
 						smooth: 0.4,
-						lineStyle: { width: 0 },
+						lineStyle: { color: c, width: 3 },
 						itemStyle: { color: c },
-						areaStyle: { color: c },
+						areaStyle: { color: setAlpha(c, "60") },
 						emphasis: { disabled: true },
 					});
 					series.push({
@@ -136,46 +146,14 @@ export default defineComponent({
 						data: this.energyData(b, "fc"),
 						showSymbol: false,
 						smooth: 0.4,
-						lineStyle: { color: c, width: 1, type: "dashed" },
+						lineStyle: { color: c, width: 2, type: "dotted" },
 						itemStyle: { color: c },
-						areaStyle: { color: dimColor(c) },
+						areaStyle: { color: hatchPattern(c) },
 						emphasis: { disabled: true },
 					});
 				});
 			}
-			// now marker as a 2-point series so it slides with the axis on paging
-			if (this.nowInWindow) {
-				series.push({
-					id: "now-line",
-					type: "line",
-					data: [
-						[this.now, 0],
-						[this.now, this.yMax],
-					],
-					showSymbol: false,
-					silent: true,
-					z: 5,
-					lineStyle: { color: colors.muted || "", width: 1, type: "dashed" },
-					emphasis: { disabled: true },
-				});
-			}
-			// overlay carries the forecast-region shading
-			series.push({
-				id: "overlay",
-				type: "line",
-				data: [],
-				silent: true,
-				z: 4,
-				markArea: this.markArea,
-			});
 			return series;
-		},
-		markArea(): Record<string, unknown> {
-			const data =
-				this.hasForecast && this.nowInWindow
-					? [[{ xAxis: this.now }, { xAxis: this.winEnd }]]
-					: [];
-			return { silent: true, itemStyle: { color: colors.muted || "", opacity: 0.06 }, data };
 		},
 		chartOption(): Record<string, unknown> {
 			return {
@@ -207,51 +185,18 @@ export default defineComponent({
 			};
 		},
 		xAxes(): Record<string, unknown>[] {
-			const h12 = is12hFormat();
-			return [
-				// hours every 6h, midnight handled by the day axis below
-				{
-					type: "time",
-					min: this.winStart,
-					max: this.winEnd,
-					minInterval: 6 * 3600 * 1000,
-					axisLine: { show: false },
-					axisTick: { show: false },
-					splitLine: { show: false },
-					axisLabel: {
-						color: colors.muted || "",
-						fontSize: 11,
-						formatter: (value: number) => {
-							const d = new Date(value);
-							const h = d.getHours();
-							if (d.getMinutes() !== 0 || h === 0 || h % 6 !== 0) return "";
-							return h12 ? `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}` : String(h);
-						},
-					},
-				},
-				// day axis: a tick at every local midnight, labelled with the weekday + dashed divider
-				{
-					type: "time",
-					position: "bottom",
-					min: this.winStart,
-					max: this.winEnd,
-					minInterval: 24 * 3600 * 1000,
-					maxInterval: 24 * 3600 * 1000,
-					axisLine: { show: false },
-					axisTick: { show: false },
-					axisLabel: {
-						color: colors.muted || "",
-						fontSize: 11,
-						formatter: (value: number) => this.weekdayShort(new Date(value)),
-					},
-					splitLine: {
-						show: true,
-						showMinLine: false,
-						showMaxLine: false,
-						lineStyle: { color: colors.border || "", type: "dashed" },
-					},
-				},
-			];
+			// narrow 48h window: wider "4 PM" labels need extra spacing
+			const stepHours = is12hFormat() ? 6 : 4;
+			const [hourAxis, dayAxis] = forecastXAxes(
+				this.winStart,
+				this.winEnd,
+				this.hourShort,
+				this.weekdayShort,
+				stepHours
+			);
+			// stronger day divider
+			dayAxis.splitLine.lineStyle = { color: colors.muted || "", type: "solid" };
+			return [hourAxis, dayAxis];
 		},
 	},
 	watch: {
@@ -441,7 +386,7 @@ export default defineComponent({
 						type: "circle",
 						z: 10,
 						shape: { cx: px[0], cy: px[1], r: 4 },
-						style: { fill, stroke: colors.background || "", lineWidth: 2 },
+						style: { fill: colors.background || "", stroke: fill, lineWidth: 3 },
 					});
 					elements.push({
 						type: "text",
@@ -515,11 +460,6 @@ export default defineComponent({
 <style scoped>
 .battery-chart {
 	width: 100%;
-	height: 260px;
-}
-@media (max-width: 575.98px) {
-	.battery-chart {
-		height: 220px;
-	}
+	height: 240px;
 }
 </style>

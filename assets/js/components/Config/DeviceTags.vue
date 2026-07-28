@@ -76,7 +76,7 @@ const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
-const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates"];
+const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
 
 export default {
 	name: "DeviceTags",
@@ -100,16 +100,16 @@ export default {
 						!PHASE_TAGS.includes(name) &&
 						!FORECAST_TAGS.includes(name)
 				)
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
 		},
 		phaseEntries() {
 			return Object.entries(this.tags)
 				.filter(([name]) => PHASE_TAGS.includes(name))
 				.sort(([a], [b]) => a.localeCompare(b))
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
 		},
 		hasPhaseEntries() {
@@ -122,6 +122,7 @@ export default {
 				priceRates: "price",
 				co2Rates: "co2",
 				solarRates: "solar",
+				temperatureRates: "temperature",
 			};
 
 			// Find which forecast tag is present
@@ -182,6 +183,9 @@ export default {
 				: "text-nowrap flex-shrink-0";
 		},
 		valueClasses(entry) {
+			if (entry.asleep) {
+				return "value--muted";
+			}
 			if (entry.error) {
 				return "value--error";
 			}
@@ -195,6 +199,9 @@ export default {
 		},
 		fmtDeviceValue(entry) {
 			const { name, value } = entry;
+			if (entry.asleep) {
+				return this.$t("config.deviceValue.asleep");
+			}
 			if (value === null || value === undefined) {
 				return "";
 			}
@@ -214,6 +221,7 @@ export default {
 					return this.fmtPercentage(value, 1);
 				case "temp":
 				case "heaterTempLimit":
+				case "outdoorTemp":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
@@ -233,6 +241,11 @@ export default {
 					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
+				case "curtailed":
+					// devices report the allowed feed-in percent, the hems a plain flag
+					return typeof value === "number"
+						? this.fmtPercentage(value, 0)
+						: this.$t(`config.deviceValue.${value ? "yes" : "no"}`);
 				case "controllable":
 				case "curtailable":
 				case "phases1p3p":
@@ -241,8 +254,8 @@ export default {
 				case "configured":
 				case "connected":
 				case "dimmed":
-				case "curtailed":
 				case "loginBlocked":
+				case "remoteEnabled":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
@@ -283,6 +296,8 @@ export default {
 					return short ? this.fmtCo2Short(value) : this.fmtCo2Medium(value);
 				case "solar":
 					return this.fmtW(value);
+				case "temperature":
+					return this.fmtTemperature(value);
 				default:
 					return value;
 			}

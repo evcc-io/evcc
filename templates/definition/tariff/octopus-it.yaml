@@ -1,4 +1,5 @@
 template: octopus-it
+deprecated: true
 products:
   - brand: Octopus Energy
     description:

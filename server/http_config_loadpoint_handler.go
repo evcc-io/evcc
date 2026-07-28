@@ -189,7 +189,9 @@ func newLoadpointHandler() http.HandlerFunc {
 
 		setConfigDirty()
 
-		w.WriteHeader(http.StatusOK)
+		jsonWrite(w, struct {
+			ID int `json:"id"`
+		}{ID: conf.ID})
 	}
 }
 

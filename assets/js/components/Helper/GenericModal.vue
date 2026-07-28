@@ -91,6 +91,7 @@ export default defineComponent({
 	methods: {
 		handleShow() {
 			this.$emit("open");
+			this.isModalVisible = true;
 		},
 		handleShown() {
 			this.$emit("opened");
@@ -107,14 +108,19 @@ export default defineComponent({
 					}
 				});
 			}
-			this.isModalVisible = true;
+			// bootstrap removes the attribute on show, Vue only rewrites it on state change
+			(this.$refs["modal"] as HTMLElement)?.setAttribute("aria-hidden", "false");
 		},
 		handleHide() {
 			this.$emit("close");
+			this.isModalVisible = false;
 		},
 		handleHidden() {
+			// stale event from a previous close, modal was reopened while still fading out
+			if (this.isModalVisible) {
+				return;
+			}
 			this.$emit("closed");
-			this.isModalVisible = false;
 			if (this.configModalName) {
 				if (onModalHidden(this.configModalName)) {
 					this.$emit("dismiss");

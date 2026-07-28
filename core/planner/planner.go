@@ -160,7 +160,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	rates = clampRates(rates, now, targetTime)
 
 	// check if rate coverage is sufficient for planning
-	if len(rates) == 0 || rates[len(rates)-1].End.Sub(rates[0].Start) < requiredDuration {
+	if len(rates) == 0 || Duration(rates) < requiredDuration {
 		t.log.DEBUG.Printf("planner: rate coverage in [%v,%v] insufficient for required duration %v- falling back to simple plan",
 			now.Local(), targetTime.Local(), requiredDuration.Round(time.Second))
 		return simplePlan

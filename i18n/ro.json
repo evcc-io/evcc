@@ -1017,9 +1017,7 @@
     "chargingPlan": {
       "active": "Activ",
       "addRepeatingPlan": "Adăugați plan repetitiv",
-      "arrivalTab": "Ajungere",
       "day": "Zi",
-      "departureTab": "Plecare",
       "goal": "Scopul incarcarii",
       "modalTitle": "Plan de incarcare",
       "none": "nimic",
@@ -1043,8 +1041,6 @@
       "strategySettings": "Setări strategie",
       "time": "Timp",
       "title": "Plan",
-      "titleMinSoc": "Incarcare minima",
-      "titleTargetCharge": "Plecare",
       "unsavedChanges": "Există modificări nesalvate. Doriți să le aplicați acum?",
       "update": "Aplica",
       "weekdays": "Zile"
@@ -1054,8 +1050,6 @@
       "batteryCharge": "Incarca bateria",
       "batteryDischarge": "Descărcare baterie",
       "batteryDischargeHold": "Baterie (inchisa)",
-      "batteryForecastEmpty": "gol {time}",
-      "batteryForecastFull": "plin {time}",
       "batteryGridChargeActive": "Încărcare din rețea: activă",
       "batteryGridChargeLimit": "Încărcare din rețea: când",
       "batteryTooltip": "{energy} din {total} ({soc})",
@@ -1111,19 +1105,11 @@
       "currents": "Curent încărcare",
       "default": "default",
       "disclaimerHint": "Nota:",
-      "limitSoc": {
-        "description": "Limita de incarcare care e folosita cand e conectat a aceasta masina.",
-        "label": "Limita default"
-      },
       "maxCurrent": {
         "label": "Amperaj maxim"
       },
       "minCurrent": {
         "label": "Amperaj minim"
-      },
-      "minSoc": {
-        "description": "Vehiculul primește încărcare rapida {0} din toata energia solara disponibilă, apoi continua încărcarea cu surplusul solar.",
-        "label": "Min. încărcare %"
       },
       "onlyForSocBasedCharging": "Aceste optiuni sunt active doar pentru masini carora le cunoaste gradul de incarcare.",
       "phasesConfigured": {

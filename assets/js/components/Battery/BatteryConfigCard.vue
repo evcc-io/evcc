@@ -102,8 +102,7 @@ import InlineSocSelect from "./InlineSocSelect.vue";
 
 // Battery usage controls for the experimental page. The logic is intentionally duplicated
 // from the classic BatteryUsageSettings.vue (slated for removal) so the two can diverge
-// during the transition. Difference here: priority and buffer SoC are independent, there is
-// no priority < buffer constraint.
+// during the transition.
 export default defineComponent({
 	name: "BatteryConfigCard",
 	components: { Card, InlineSocSelect },
@@ -135,14 +134,21 @@ export default defineComponent({
 		priorityOptions() {
 			const options = [];
 			for (let i = 100; i >= 0; i -= 5) {
-				options.push({ value: i, name: this.fmtSoc(i) });
+				const disabled =
+					i > this.selectedBufferSoc &&
+					!(this.selectedBufferSoc == this.selectedPrioritySoc);
+				options.push({ value: i, name: this.fmtSoc(i), disabled });
 			}
 			return options;
 		},
 		bufferOptions() {
 			const options = [];
 			for (let i = 100; i >= 5; i -= 5) {
-				options.push({ value: i, name: this.fmtSoc(i) });
+				options.push({
+					value: i,
+					name: this.fmtSoc(i),
+					disabled: i < this.selectedPrioritySoc,
+				});
 			}
 			return options;
 		},
@@ -180,7 +186,15 @@ export default defineComponent({
 	},
 	methods: {
 		changePrioritySoc($event: Event) {
-			this.savePrioritySoc(parseInt(($event.target as HTMLInputElement).value, 10));
+			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
+			if (soc > (this.bufferSoc || 100)) {
+				this.saveBufferSoc(soc);
+				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+					this.setBufferStartSoc(soc);
+				}
+			} else {
+				this.savePrioritySoc(soc);
+			}
 		},
 		changeBufferStart($event: Event) {
 			this.setBufferStartSoc(parseInt(($event.target as HTMLInputElement).value, 10));

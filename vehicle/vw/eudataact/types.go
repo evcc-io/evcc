@@ -138,6 +138,7 @@ const (
 	FieldRangeSecondary      = "cruising_range_secondary_engine"
 	KeyRangeID3              = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 range
 	KeyBatteryStateReportSoc = "506cb83e-f99f-3af3-bbeb-0429b69a78d9" // VW ID.3 soc
+	KeyEnyaqSoc              = "0a18a053-b4b0-3db1-be44-a6c5dba629b1" // Skoda Enyaq soc
 
 	// odo
 	FieldOdometer      = "mileage"
