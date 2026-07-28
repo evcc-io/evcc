@@ -27,9 +27,6 @@ import (
 // it pauses or aborts the running process.
 type EEBusOHPCF struct {
 	*embed
-	cem *eebus.CustomerEnergyManagement
-	eg  *eebus.EnergyGuard
-
 	ctx     context.Context
 	reboost time.Duration
 
@@ -87,8 +84,6 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	c := &EEBusOHPCF{
 		embed:     embed,
 		log:       util.NewLogger("eebus-ohpcf"),
-		cem:       cem,
-		eg:        eg,
 		connector: eebus.NewConnector(),
 		ctx:       ctx,
 		reboost:   reboost,
@@ -303,17 +298,13 @@ func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable 
 
 // stop pauses the optional consumption if the compressor permits it, otherwise
 // it aborts the process.
-func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
+func (c *EEBusOHPCF) stop() error {
 	if pausable, err := c.ohpcf.Read(ucapi.CemOHPCFInterface.ConsumptionIsPausable); err == nil && pausable {
-		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-			return c.cem.OHPCF.PausePowerConsumptionProcess(entity, cb)
-		})
+		return c.ohpcf.Write(ucapi.CemOHPCFInterface.PausePowerConsumptionProcess)
 	}
 
 	if stoppable, err := c.ohpcf.Read(ucapi.CemOHPCFInterface.ConsumptionIsStoppable); err == nil && stoppable {
-		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-			return c.cem.OHPCF.AbortPowerConsumptionProcess(entity, cb)
-		})
+		return c.ohpcf.Write(ucapi.CemOHPCFInterface.AbortPowerConsumptionProcess)
 	}
 
 	return api.ErrNotAvailable
@@ -343,14 +334,9 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 // Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
 func (c *EEBusOHPCF) Dim(dim bool) error {
-	entity, err := c.lpc.Available()
-	if err != nil {
-		return err
-	}
-
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
+	return c.lpc.Write(func(uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
+		return uc.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
 	})
 }
 
@@ -372,24 +358,16 @@ func (c *EEBusOHPCF) apply() error {
 		return nil
 	}
 
-	// controlling the process is a separate scenario from monitoring it
-	entity, err := c.ohpcf.Required()
-	if err != nil {
-		return err
-	}
-
 	switch action {
 	case ohpcfSchedule:
-		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+		return c.ohpcf.Write(func(uc ucapi.CemOHPCFInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
 			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
-			return c.cem.OHPCF.SchedulePowerConsumptionProcess(entity, 0, cb)
+			return uc.SchedulePowerConsumptionProcess(entity, 0, cb)
 		})
 	case ohpcfResume:
-		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-			return c.cem.OHPCF.ResumePowerConsumptionProcess(entity, cb)
-		})
+		return c.ohpcf.Write(ucapi.CemOHPCFInterface.ResumePowerConsumptionProcess)
 	case ohpcfStop:
-		return c.stop(entity)
+		return c.stop()
 	}
 
 	return nil

@@ -20,8 +20,6 @@ func newTestOHPCF() *EEBusOHPCF {
 	eg := new(eebus.EnergyGuard)
 
 	return &EEBusOHPCF{
-		cem:   cem,
-		eg:    eg,
 		ohpcf: eebus.NewEntity(cem.OHPCF),
 		mpc:   eebus.NewEntity(ma.MaMPCInterface),
 		mdt:   eebus.NewEntity(ma.MaMDTInterface),

@@ -24,7 +24,6 @@ type EEBus struct {
 	log *util.Logger
 
 	connector *eebus.Connector
-	eg        *eebus.EnergyGuard
 
 	maEntity    *eebus.Entity[measurements]
 	egLpcEntity *eebus.Entity[ucapi.EgLPCInterface]
@@ -81,7 +80,6 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 
 	c := &EEBus{
 		log:         util.NewLogger("eebus-" + useCase),
-		eg:          eg,
 		connector:   eebus.NewConnector(),
 		maEntity:    eebus.NewEntity(mm),
 		egLpcEntity: eebus.NewEntity(eg.EgLPCInterface),
@@ -186,13 +184,8 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
-	entity, err := c.egLpcEntity.Available()
-	if err != nil {
-		return err
-	}
-
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
+	return c.egLpcEntity.Write(func(uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
+		return uc.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
 	})
 }
 
@@ -224,11 +217,6 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 func (c *EEBus) SetCurtailPercent(percent int) error {
 	curtail := percent < 100
 
-	entity, err := c.egLppEntity.Available()
-	if err != nil {
-		return err
-	}
-
 	// derive a proportional feed-in limit from the producer's nominal power
 	// (limits are negative watts); fall back to a safe 0W limit if unavailable
 	var value float64
@@ -238,7 +226,7 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		}
 	}
 
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
+	return c.egLppEntity.Write(func(uc ucapi.EgLPPInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
+		return uc.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
 	})
 }
