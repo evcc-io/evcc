@@ -189,14 +189,6 @@ func TestMGCP_SCE6_ACVoltage(t *testing.T) {
 // Availability gating: an unannounced scenario or unconnected entity yields
 // ErrNotAvailable — the MA must not invent a value for an unsupported data point.
 func TestMGCP_ScenarioGating(t *testing.T) {
-	t.Run("use_case_not_supported", func(t *testing.T) {
-		c, mm, entity := newMGCPMeter(t)
-		mm.EXPECT().Power(entity).Return(0, eebusapi.ErrNoCompatibleEntity)
-
-		_, err := c.CurrentPower()
-		assert.ErrorIs(t, err, api.ErrNotAvailable)
-	})
-
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newMGCPMeter(t)
 		c.maEntity.Set(nil) // GCP not (yet) connected

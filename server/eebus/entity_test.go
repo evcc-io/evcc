@@ -108,19 +108,17 @@ func TestEntityRead(t *testing.T) {
 		return func(*ucmocks.MaMPCInterface, spineapi.EntityRemoteInterface) (float64, error) { return res, err }
 	}
 
-	// the use case rejects an absent entity itself
 	t.Run("entity missing", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
 		e := NewEntity(uc)
 
-		_, err := e.Read(read(0, eebusapi.ErrNoCompatibleEntity))
+		_, err := e.Read(read(1, nil))
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
 	// data not received yet is not an error condition
 	for _, tc := range []error{
-		eebusapi.ErrDataNotAvailable, eebusapi.ErrMetadataNotAvailable,
-		eebusapi.ErrDataInvalid, eebusapi.ErrNoCompatibleEntity,
+		eebusapi.ErrDataNotAvailable, eebusapi.ErrMetadataNotAvailable, eebusapi.ErrDataInvalid,
 	} {
 		t.Run(tc.Error(), func(t *testing.T) {
 			uc := ucmocks.NewMaMPCInterface(t)

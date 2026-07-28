@@ -18,8 +18,7 @@ var ErrNotConnected = errors.New("not connected")
 func WrapError(err error) error {
 	if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
 		errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
-		errors.Is(err, eebusapi.ErrDataInvalid) ||
-		errors.Is(err, eebusapi.ErrNoCompatibleEntity) {
+		errors.Is(err, eebusapi.ErrDataInvalid) {
 		return api.ErrNotAvailable
 	}
 	return err
@@ -30,12 +29,11 @@ const WriteTimeout = 10 * time.Second
 
 // Await runs a control write and waits for the remote device's result, returning
 // an error if the write is rejected or no result arrives within WriteTimeout.
-// An unavailable use case is reported as ErrNotAvailable.
 func Await(write func(func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error)) error {
 	res := make(chan model.ResultDataType, 1)
 
 	if _, err := write(func(r model.ResultDataType, _ model.MsgCounterType) { res <- r }); err != nil {
-		return WrapError(err)
+		return err
 	}
 
 	select {

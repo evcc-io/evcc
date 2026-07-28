@@ -6,7 +6,6 @@ package meter
 import (
 	"testing"
 
-	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	egmocks "github.com/enbility/eebus-go/usecases/mocks"
 	spineapi "github.com/enbility/spine-go/api"
@@ -86,14 +85,6 @@ func TestLPC_Dim_WriteRejected(t *testing.T) {
 
 // Dim is gated: no LPC use case at the entity, or no connected entity → ErrNotAvailable.
 func TestLPC_Dim_Gating(t *testing.T) {
-	t.Run("use_case_not_supported", func(t *testing.T) {
-		c, lpc, _, entity := newEGMeter(t)
-		lpc.EXPECT().WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
-			Return(nil, eebusapi.ErrNoCompatibleEntity)
-
-		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
-	})
-
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _, _ := newEGMeter(t)
 		c.egLpcEntity.Set(nil)
@@ -173,15 +164,6 @@ func TestLPP_Curtail_WriteRejected(t *testing.T) {
 
 // SetCurtailPercent is gated the same way as Dim.
 func TestLPP_SetCurtailPercent_Gating(t *testing.T) {
-	t.Run("use_case_not_supported", func(t *testing.T) {
-		c, _, lpp, entity := newEGMeter(t)
-		lpp.EXPECT().ProductionNominalMax(entity).Return(0, eebusapi.ErrNoCompatibleEntity).Maybe()
-		lpp.EXPECT().WriteProductionLimit(entity, mock.Anything, mock.Anything).
-			Return(nil, eebusapi.ErrNoCompatibleEntity)
-
-		assert.ErrorIs(t, c.SetCurtailPercent(0), api.ErrNotAvailable)
-	})
-
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _, _ := newEGMeter(t)
 		c.egLppEntity.Set(nil)

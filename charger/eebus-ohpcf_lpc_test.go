@@ -77,14 +77,6 @@ func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 
 // Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
 func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
-	t.Run("use_case_not_supported", func(t *testing.T) {
-		c, lpc, entity := newOHPCFEGCharger(t)
-		lpc.EXPECT().WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
-			Return(nil, eebusapi.ErrNoCompatibleEntity)
-
-		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
-	})
-
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
 		c.lpc.Set(nil)
@@ -122,14 +114,6 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 
 // Dimmed is gated like Dim: no announced LPC scenario, or no connected entity → ErrNotAvailable.
 func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
-	t.Run("use_case_not_supported", func(t *testing.T) {
-		c, lpc, entity := newOHPCFEGCharger(t)
-		lpc.EXPECT().ConsumptionLimit(entity).Return(ucapi.LoadLimit{}, eebusapi.ErrNoCompatibleEntity)
-
-		_, err := c.Dimmed()
-		assert.ErrorIs(t, err, api.ErrNotAvailable)
-	})
-
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
 		c.lpc.Set(nil)
