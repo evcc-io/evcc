@@ -169,24 +169,21 @@ func (c *EEBus) lastCurtailPercent() int {
 	return c.curtailPercent
 }
 
-func (c *EEBus) readValue[T any](scenario uint, update func(mm measurements, entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
-	return c.maEntity.Read(scenario, update)
-}
 
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.readValue(c.scenarios.power, measurements.Power)
+	return c.maEntity.Read(c.scenarios.power, measurements.Power)
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
 
 func (c *EEBus) TotalEnergy() (float64, error) {
-	return c.readValue(c.scenarios.energy, measurements.EnergyConsumed)
+	return c.maEntity.Read(c.scenarios.energy, measurements.EnergyConsumed)
 }
 
 func (c *EEBus) readPhases(scenario uint, update func(mm measurements, entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
-	res, err := c.readValue(scenario, update)
+	res, err := c.maEntity.Read(scenario, update)
 	if err != nil {
 		return 0, 0, 0, err
 	}
