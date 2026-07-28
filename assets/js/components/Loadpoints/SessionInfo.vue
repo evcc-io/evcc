@@ -1,8 +1,9 @@
 <template>
-	<div class="sessionInfo">
+	<div v-if="!fixedKey || selectedOption" class="sessionInfo" :class="{ fixed: isFixed }">
 		<LabelAndValue class="d-block" align="end">
 			<template #label>
 				<CustomSelect
+					v-if="!isFixed"
 					inline
 					:selected="selectedKey"
 					:options="selectOptions"
@@ -16,6 +17,9 @@
 						{{ label }}
 					</div>
 				</CustomSelect>
+				<div v-else class="text-truncate-xs-only" data-testid="sessionInfoLabel">
+					{{ label }}
+				</div>
 			</template>
 			<template #value>
 				<div class="value" data-testid="sessionInfoValue" @click="nextSessionInfo">
@@ -56,6 +60,10 @@ export default defineComponent({
 		last7dEnergy: Number,
 		tariffCo2: Number,
 		tariffGrid: Number,
+		// when set, this instance statically shows this one stat (no dropdown, no cycling)
+		fixedKey: String as PropType<SessionInfoKey>,
+		// when set (and fixedKey is not), restricts the dropdown/cycling to this subset of keys
+		onlyKeys: Array as PropType<SessionInfoKey[]>,
 	},
 	data() {
 		return {
@@ -122,7 +130,13 @@ export default defineComponent({
 				},
 			];
 			// only show options that are available
-			return result.filter(({ available }) => available === undefined || available);
+			const available = result.filter(({ available }) => available === undefined || available);
+			// in interactive mode, an ancestor may restrict us to a subset of keys
+			// (e.g. "whatever isn't already shown as a fixed stat elsewhere")
+			if (!this.isFixed && this.onlyKeys) {
+				return available.filter(({ key }) => this.onlyKeys!.includes(key));
+			}
+			return available;
 		},
 		optionKeys(): SessionInfoKey[] {
 			return this.options.map((option) => option.key);
@@ -133,7 +147,13 @@ export default defineComponent({
 				value: key,
 			}));
 		},
+		isFixed() {
+			return !!this.fixedKey;
+		},
 		selectedOption() {
+			if (this.isFixed) {
+				return this.options.find((option) => option.key === this.fixedKey);
+			}
 			return (
 				this.options.find((option) => option.key === this.selectedKey) || this.options[0]
 			);
@@ -179,6 +199,7 @@ export default defineComponent({
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		nextSessionInfo() {
+			if (this.isFixed) return;
 			const index = this.selectedKey ? this.optionKeys.indexOf(this.selectedKey) : -1;
 			this.selectedKey = this.optionKeys[index + 1] || this.optionKeys[0];
 			this.presist();
@@ -203,5 +224,8 @@ export default defineComponent({
 }
 .sessionInfo .value {
 	cursor: pointer;
+}
+.sessionInfo.fixed .value {
+	cursor: default;
 }
 </style>
