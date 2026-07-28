@@ -151,14 +151,18 @@ render: |
   type: sgready
   getmode:
     source: http
-    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
-    cache: 2s # to prevent making two identical requests straight after each other for "getmode"
+    # Read the whole device feature list in ONE request. All GET readers below use
+    # this exact same URL, so evcc's shared HTTP cache serves them from a single API
+    # call per cache window. The Viessmann API has a strict daily request quota
+    # (shared with the ViCare app); per-feature polling exhausts it (HTTP 429).
+    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    cache: 120s # ~720 requests/day; raise further if you still hit 429
     auth:
       source: viessmann
       clientid: {{ .clientid }}
       redirecturi: {{ .redirecturi }}
       gateway_serial: {{ .gateway_serial }}
-    jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
+    jq: '.data[] | select(.feature == "heating.dhw.oneTimeCharge") | .properties.active.value | if . == false then 2 elif . == true then 3 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
   setmode:
@@ -200,4 +204,42 @@ render: |
         set:
           source: error
           error: ErrNotAvailable
+  power:
+    # heating.power.consumption.current reports the real electrical input power in kW.
+    # Reading it replaces evcc's fallback estimate (current * phases * voltage), which
+    # wrongly assumed a full electric-heater draw when no meter was configured.
+    # Same URL + cache as getmode -> served from the shared cached feature list.
+    source: http
+    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    cache: 120s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.power.consumption.current") | .properties.value.value * 1000' # kW -> W
+  temp:
+    # heating.dhw.sensors.temperature.dhwCylinder: domestic hot water temperature (°C).
+    # The device controls one-time DHW charging, so the hot water tank is the natural
+    # temperature to display on the loadpoint gauge.
+    source: http
+    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    cache: 120s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.dhw.sensors.temperature.dhwCylinder") | .properties.value.value'
+  limittemp:
+    # heating.dhw.temperature.main: configured DHW target temperature (°C).
+    source: http
+    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    cache: 120s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.dhw.temperature.main") | .properties.value.value'
   {{ include "heatpumpswitch" . }}
