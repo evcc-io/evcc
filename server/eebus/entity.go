@@ -5,6 +5,7 @@ import (
 
 	eebusapi "github.com/enbility/eebus-go/api"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/evcc-io/evcc/api"
 )
 
 // Entity is the remote entity a use case is available at. It guards its own
@@ -51,8 +52,27 @@ func (e *Entity) Update(uc eebusapi.UseCaseBaseInterface, entity spineapi.Entity
 	}
 }
 
+// Read reads a use case value from the remote entity. It reports ErrNotAvailable
+// while the scenario is unavailable at the entity or the value has not been
+// received yet.
+func (e *Entity) Read[T any](uc eebusapi.UseCaseBaseInterface, scenario uint, read func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+	var zero T
+
+	entity := e.Get()
+	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
+		return zero, api.ErrNotAvailable
+	}
+
+	res, err := read(entity)
+	if err != nil {
+		return zero, WrapError(err)
+	}
+
+	return res, nil
+}
+
 // Required returns the remote entity while the use case scenario is available at
-// it, ErrNotConnected otherwise. Optional data uses ReadValue.
+// it, ErrNotConnected otherwise. Optional data uses Read.
 func (e *Entity) Required(uc eebusapi.UseCaseBaseInterface, scenario uint) (spineapi.EntityRemoteInterface, error) {
 	entity := e.Get()
 

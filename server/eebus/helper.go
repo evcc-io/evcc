@@ -7,7 +7,6 @@ import (
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
-	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 )
@@ -23,24 +22,6 @@ func WrapError(err error) error {
 		return api.ErrNotAvailable
 	}
 	return err
-}
-
-// ReadValue reads a use case value from the remote entity. It reports
-// ErrNotAvailable while the scenario is unavailable at the entity or the value
-// has not been received yet.
-func ReadValue[T any](uc eebusapi.UseCaseBaseInterface, scenario uint, entity spineapi.EntityRemoteInterface, read func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
-	var zero T
-
-	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
-		return zero, api.ErrNotAvailable
-	}
-
-	res, err := read(entity)
-	if err != nil {
-		return zero, WrapError(err)
-	}
-
-	return res, nil
 }
 
 // WriteTimeout bounds how long an awaited eebus write waits for its result.
