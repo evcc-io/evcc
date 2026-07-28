@@ -2,7 +2,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
@@ -46,9 +45,6 @@ type EEBusOHPCF struct {
 
 	connector *eebus.Connector
 }
-
-// errNotConnected is returned whenever the compressor entity is not (yet) available.
-var errNotConnected = errors.New("not connected")
 
 func init() {
 	registry.AddCtx("eebus-ohpcf", NewEEBusOHPCFFromConfig)
@@ -194,11 +190,13 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	}
 }
 
-func (c *EEBusOHPCF) connectedCompressor() (spineapi.EntityRemoteInterface, bool) {
+// compressorEntity returns the compressor entity or ErrNotConnected while the
+// OHPCF use case is not (yet) available at it.
+func (c *EEBusOHPCF) compressorEntity() (spineapi.EntityRemoteInterface, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return c.compressor, c.compressor != nil
+	return eebus.RequiredEntity(c.cem.OHPCF, c.compressor, eebus.OHPCFMonitor)
 }
 
 func (c *EEBusOHPCF) setEnabled(enabled bool) {
@@ -228,9 +226,9 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 
 // Status implements the api.Charger interface
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
-	entity, ok := c.connectedCompressor()
-	if !ok {
-		return api.StatusNone, errNotConnected
+	entity, err := c.compressorEntity()
+	if err != nil {
+		return api.StatusNone, err
 	}
 
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
@@ -245,8 +243,8 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 // Enabled reports the commanded on/off intent; Status reflects the actual
 // compressor state.
 func (c *EEBusOHPCF) Enabled() (bool, error) {
-	if _, ok := c.connectedCompressor(); !ok {
-		return false, errNotConnected
+	if _, err := c.compressorEntity(); err != nil {
+		return false, err
 	}
 
 	return c.lastEnabled(), nil
@@ -370,18 +368,8 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 	entity := c.egLpcEntity
 	c.mu.RUnlock()
 
-	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
-		return false, api.ErrNotAvailable
-	}
-
-	limit, err := c.eg.EgLPCInterface.ConsumptionLimit(entity)
+	limit, err := eebus.ReadValue(c.eg.EgLPCInterface, entity, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
-		// scenario announced but no usable value yet
-		if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
-			errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
-			errors.Is(err, eebusapi.ErrDataInvalid) {
-			return false, api.ErrNotAvailable
-		}
 		return false, err
 	}
 
@@ -410,9 +398,9 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
 func (c *EEBusOHPCF) apply() error {
-	entity, ok := c.connectedCompressor()
-	if !ok {
-		return errNotConnected
+	entity, err := c.compressorEntity()
+	if err != nil {
+		return err
 	}
 
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
@@ -443,9 +431,9 @@ var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
 // optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
-	entity, ok := c.connectedCompressor()
-	if !ok {
-		return 0, 0, errNotConnected
+	entity, err := c.compressorEntity()
+	if err != nil {
+		return 0, 0, err
 	}
 
 	if power, _ := c.cem.OHPCF.RequestedPowerEstimate(entity); power > 0 {
@@ -468,16 +456,7 @@ func (c *EEBusOHPCF) CurrentPower() (float64, error) {
 	entity := c.mpcEntity
 	c.mu.RUnlock()
 
-	if entity == nil || !c.ma.MaMPCInterface.IsScenarioAvailableAtEntity(entity, eebus.MPCPower) {
-		return 0, api.ErrNotAvailable
-	}
-
-	power, err := c.ma.MaMPCInterface.Power(entity)
-	if err != nil {
-		return 0, eebus.WrapError(err)
-	}
-
-	return power, nil
+	return eebus.ReadValue(c.ma.MaMPCInterface, entity, eebus.MPCPower, c.ma.MaMPCInterface.Power)
 }
 
 var _ api.Battery = (*EEBusOHPCF)(nil)
@@ -489,14 +468,8 @@ func (c *EEBusOHPCF) Soc() (float64, error) {
 	entity := c.dhwEntity
 	c.mu.RUnlock()
 
-	if entity == nil || !c.ma.MaMDTInterface.IsScenarioAvailableAtEntity(entity, eebus.MDTTemperature) {
-		return 0, api.ErrNotAvailable
-	}
-
-	temp, err := c.ma.MaMDTInterface.Temperature(entity, model.UnitOfMeasurementTypedegC)
-	if err != nil {
-		return 0, eebus.WrapError(err)
-	}
-
-	return temp, nil
+	return eebus.ReadValue(c.ma.MaMDTInterface, entity, eebus.MDTTemperature,
+		func(entity spineapi.EntityRemoteInterface) (float64, error) {
+			return c.ma.MaMDTInterface.Temperature(entity, model.UnitOfMeasurementTypedegC)
+		})
 }

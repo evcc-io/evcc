@@ -2,7 +2,6 @@ package meter
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -145,31 +144,10 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	return c, nil
 }
 
-func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
-	var zero T
-
-	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
-		return zero, api.ErrNotAvailable
-	}
-
-	res, err := update(entity)
-	if err != nil {
-		// scenario announced but no usable value yet
-		if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
-			errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
-			errors.Is(err, eebusapi.ErrDataInvalid) {
-			err = api.ErrNotAvailable
-		}
-		return zero, err
-	}
-
-	return res, nil
-}
-
 func (c *EEBus) readValue[T any](scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return eebusReadValue(c.mm, c.maEntity, scenario, update)
+	return eebus.ReadValue(c.mm, c.maEntity, scenario, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
@@ -224,7 +202,7 @@ func (c *EEBus) Dimmed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(c.eg.EgLPCInterface, c.egLpcEntity, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := eebus.ReadValue(c.eg.EgLPCInterface, c.egLpcEntity, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -267,7 +245,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(c.eg.EgLPPInterface, c.egLppEntity, eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := eebus.ReadValue(c.eg.EgLPPInterface, c.egLppEntity, eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return 0, err
 	}

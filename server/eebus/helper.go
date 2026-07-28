@@ -12,11 +12,46 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// ErrNotConnected is returned while a remote entity required to operate the
+// device is not (yet) available.
+var ErrNotConnected = errors.New("not connected")
+
 func WrapError(err error) error {
-	if errors.Is(err, eebusapi.ErrDataNotAvailable) || errors.Is(err, eebusapi.ErrDataInvalid) {
+	if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
+		errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
+		errors.Is(err, eebusapi.ErrDataInvalid) {
 		return api.ErrNotAvailable
 	}
 	return err
+}
+
+// RequiredEntity returns the remote entity while the use case scenario is
+// available at it and ErrNotConnected otherwise. Use for entities the device
+// cannot operate without; optional data uses ReadValue.
+func RequiredEntity(uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint) (spineapi.EntityRemoteInterface, error) {
+	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
+		return nil, ErrNotConnected
+	}
+
+	return entity, nil
+}
+
+// ReadValue reads a use case value from the remote entity. It reports
+// ErrNotAvailable while the scenario is unavailable at the entity or the value
+// has not been received yet.
+func ReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint, read func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+	var zero T
+
+	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
+		return zero, api.ErrNotAvailable
+	}
+
+	res, err := read(entity)
+	if err != nil {
+		return zero, WrapError(err)
+	}
+
+	return res, nil
 }
 
 // UpdateEntity returns the remote entity to cache for a use case after a use case
