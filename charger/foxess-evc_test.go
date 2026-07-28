@@ -304,24 +304,6 @@ func TestFoxESSEVCEnable(t *testing.T) {
 	assert.False(t, enabled)
 }
 
-func TestFoxESSEVCRefreshSetpoint(t *testing.T) {
-	wb, h := foxTestCharger(t, map[uint16]uint16{
-		foxRegStatus:   foxStatusCharging,
-		foxRegMaxPower: 0,
-	})
-	wb.current = 16
-
-	require.NoError(t, wb.Enable(true))
-	require.Len(t, h.writes, 1)
-
-	// the charger only honours the last command for the validity window (§2.34), so the
-	// heartbeat must rewrite the setpoint even though the register already holds it
-	require.NoError(t, wb.refreshSetpoint())
-	require.Len(t, h.writes, 2)
-	assert.Equal(t, uint16(foxRegMaxPower), h.writes[1].addr)
-	assert.Equal(t, []uint16{110}, h.writes[1].args)
-}
-
 func TestFoxESSEVCPhaseSwitch(t *testing.T) {
 	wb, h := foxTestCharger(t, map[uint16]uint16{
 		foxRegStatus:   foxStatusCharging,

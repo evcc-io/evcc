@@ -325,17 +325,6 @@ func (wb *FoxESSEVC) readSetpoint() (uint16, error) {
 	return val, err
 }
 
-// refreshSetpoint re-asserts the cached power setpoint. The charger honours the last EMS command
-// only for the duration of the command validity window (§2.34) and reverts to its max supported
-// power once it expires, so the setpoint has to be rewritten even when it does not change- a read
-// alone does not renew it.
-func (wb *FoxESSEVC) refreshSetpoint() error {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
-	return wb.writeReg(foxRegMaxPower, wb.setpoint)
-}
-
 // sessionActive reports whether the given status belongs to a running charging session.
 // Only then is the power setpoint in effect (§2.31) instead of being restored to the device
 // maximum, i.e. only then does a non-zero setpoint mean the charger is enabled.
@@ -397,8 +386,9 @@ func (wb *FoxESSEVC) applySetpoint(val uint16) error {
 	return nil
 }
 
-// heartbeat keeps the power setpoint in effect. The interval must be shorter than the command
-// validity window (foxRegTimeValidity), otherwise the charger reverts to its max supported power.
+// heartbeat re-asserts the power setpoint. The charger honours the last EMS command only for the
+// duration of the command validity window (foxRegTimeValidity, §2.34) and reverts to its max
+// supported power once it expires, so the interval must be shorter than that window.
 func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
 		select {
@@ -407,7 +397,11 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
 			return
 		}
 
-		if err := wb.refreshSetpoint(); err != nil {
+		wb.mu.Lock()
+		err := wb.writeReg(foxRegMaxPower, wb.setpoint)
+		wb.mu.Unlock()
+
+		if err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
