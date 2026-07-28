@@ -21,7 +21,6 @@ func newTestOHPCF() *EEBusOHPCF {
 
 	return &EEBusOHPCF{
 		cem:   cem,
-		ma:    ma,
 		eg:    eg,
 		ohpcf: eebus.NewEntity(cem.OHPCF),
 		mpc:   eebus.NewEntity(ma.MaMPCInterface),

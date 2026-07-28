@@ -26,9 +26,7 @@ type EEBus struct {
 	log *util.Logger
 
 	connector *eebus.Connector
-	ma        *eebus.MonitoringAppliance
 	eg        *eebus.EnergyGuard
-	mm        measurements
 	scenarios maScenarios
 
 	maEntity    *eebus.Entity[measurements]
@@ -118,9 +116,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	c := &EEBus{
 		ctx:            ctx,
 		log:            util.NewLogger("eebus-" + useCase),
-		ma:             ma,
 		eg:             eg,
-		mm:             mm,
 		scenarios:      scenarios,
 		connector:      eebus.NewConnector(),
 		maEntity:       eebus.NewEntity(mm),
@@ -145,8 +141,8 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	}()
 
 	// monitoring appliance
-	eebus.LogEntities(c.log.DEBUG, "MA MPC", c.ma.MaMPCInterface)
-	eebus.LogEntities(c.log.DEBUG, "MA MGCP", c.ma.MaMGCPInterface)
+	eebus.LogEntities(c.log.DEBUG, "MA MPC", ma.MaMPCInterface)
+	eebus.LogEntities(c.log.DEBUG, "MA MGCP", ma.MaMGCPInterface)
 
 	// energy guard
 	eebus.LogEntities(c.log.DEBUG, "EG LPC", c.eg.EgLPCInterface)
@@ -241,10 +237,9 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
-	entity := c.egLpcEntity.Get()
-
-	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
-		return api.ErrNotAvailable
+	entity, err := c.egLpcEntity.Available(eebus.LPCLimit)
+	if err != nil {
+		return err
 	}
 
 	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
@@ -288,10 +283,9 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 func (c *EEBus) SetCurtailPercent(percent int) error {
 	curtail := percent < 100
 
-	entity := c.egLppEntity.Get()
-
-	if entity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(entity, eebus.LPPLimit) {
-		return api.ErrNotAvailable
+	entity, err := c.egLppEntity.Available(eebus.LPPLimit)
+	if err != nil {
+		return err
 	}
 
 	// derive a proportional feed-in limit from the producer's nominal power
