@@ -360,18 +360,28 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
 func (c *EEBusOHPCF) apply() error {
-	entity, err := c.ohpcf.Required(eebus.OHPCFMonitor)
-	if err != nil {
+	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
 		return err
 	}
 
-	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
+	state, err := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.PowerConsumptionProcessState)
 	if err != nil {
 		// no process state announced yet, nothing to control
 		return nil
 	}
 
-	switch ohpcfControlAction(state, c.lastEnabled()) {
+	action := ohpcfControlAction(state, c.lastEnabled())
+	if action == ohpcfNone {
+		return nil
+	}
+
+	// controlling the process is a separate scenario from monitoring it
+	entity, err := c.ohpcf.Required(eebus.OHPCFControl)
+	if err != nil {
+		return err
+	}
+
+	switch action {
 	case ohpcfSchedule:
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
