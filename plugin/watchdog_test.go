@@ -185,7 +185,7 @@ func TestWatchdogResetStopsInflightTick(t *testing.T) {
 
 		var sawReset, stale atomic.Bool
 
-		set := setter(p, func(v int) error {
+		set := p.setter(func(v int) error {
 			if v == 1 {
 				sawReset.Store(true)
 				// hold the lock so an in-flight tick queues behind the reset
