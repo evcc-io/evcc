@@ -304,13 +304,13 @@ func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable 
 // stop pauses the optional consumption if the compressor permits it, otherwise
 // it aborts the process.
 func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
-	if pausable, err := c.cem.OHPCF.ConsumptionIsPausable(entity); err == nil && pausable {
+	if pausable, err := c.ohpcf.Read(ucapi.CemOHPCFInterface.ConsumptionIsPausable); err == nil && pausable {
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.PausePowerConsumptionProcess(entity, cb)
 		})
 	}
 
-	if stoppable, err := c.cem.OHPCF.ConsumptionIsStoppable(entity); err == nil && stoppable {
+	if stoppable, err := c.ohpcf.Read(ucapi.CemOHPCFInterface.ConsumptionIsStoppable); err == nil && stoppable {
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			return c.cem.OHPCF.AbortPowerConsumptionProcess(entity, cb)
 		})

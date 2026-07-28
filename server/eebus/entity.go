@@ -22,8 +22,8 @@ func NewEntity[U eebusapi.UseCaseBaseInterface](uc U) *Entity[U] {
 	return &Entity[U]{uc: uc}
 }
 
-// Get returns the remote entity, nil if the use case has none (yet)
-func (e *Entity[U]) Get() spineapi.EntityRemoteInterface {
+// get returns the remote entity, nil if the use case has none (yet)
+func (e *Entity[U]) get() spineapi.EntityRemoteInterface {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
@@ -61,7 +61,7 @@ func (e *Entity[U]) Update(entity spineapi.EntityRemoteInterface) {
 // Available returns the remote entity, ErrNotAvailable if the use case has none.
 // Use case methods validate the entity themselves, so no scenario check is needed.
 func (e *Entity[U]) Available() (spineapi.EntityRemoteInterface, error) {
-	entity := e.Get()
+	entity := e.get()
 	if entity == nil {
 		return nil, api.ErrNotAvailable
 	}
@@ -71,7 +71,7 @@ func (e *Entity[U]) Available() (spineapi.EntityRemoteInterface, error) {
 
 // Required is Available for a use case the device cannot operate without
 func (e *Entity[U]) Required() (spineapi.EntityRemoteInterface, error) {
-	entity := e.Get()
+	entity := e.get()
 	if entity == nil {
 		return nil, ErrNotConnected
 	}
