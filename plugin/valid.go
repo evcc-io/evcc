@@ -48,8 +48,6 @@ func NewValidPlugin(ctx context.Context, valid func() (bool, error), value Confi
 	}
 }
 
-var _ StringGetter = (*validPlugin)(nil)
-
 func (o *validPlugin) validGetter[T any](valuer func(ctx context.Context) (func() (T, error), error)) (func() (T, error), error) {
 	value, err := valuer(o.ctx)
 	if err != nil {
