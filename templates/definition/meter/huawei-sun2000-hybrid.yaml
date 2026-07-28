@@ -292,6 +292,9 @@ render: |
       address: 37765 # overall power
       type: holding
       decode: int32nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: -1
   energy:
     source: modbus
@@ -300,6 +303,9 @@ render: |
       address: 37782 # overall energy discharged
       type: holding
       decode: uint32nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: 0.01
   returnenergy:
     source: modbus
@@ -308,6 +314,9 @@ render: |
       address: 37780 # overall energy charged
       type: holding
       decode: uint32nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: 0.01
   soc:
     source: modbus
@@ -316,6 +325,9 @@ render: |
       address: 37760 # overall SoC
       type: holding
       decode: uint16nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: 0.1
   dim:
     source: ifelse
