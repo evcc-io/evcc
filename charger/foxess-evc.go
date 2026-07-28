@@ -42,13 +42,13 @@ type FoxESSEVC struct {
 	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
-	mu         sync.Mutex // guards setpoint against the heartbeat goroutine
+	mu         sync.Mutex // guards the tracked state below against the heartbeat goroutine
 	current    float64    // tracks phase current, 0 if unset
 	enabled    bool       // tracks enabled state
 	phases     int        // tracks phase count; the charger does not report it
-	switchable bool       // charger switches 1p/3p on its own, derived from the power setpoint
 	setpoint   uint16     // last known value of foxRegMaxPower
 	status     uint16     // last known value of foxRegStatus
+	switchable bool       // charger switches 1p/3p on its own, derived from the power setpoint
 	minPower   uint16     // min supported power
 	maxPower   uint16     // max supported power
 	minCurrent float64    // min supported current per phase
@@ -312,11 +312,9 @@ func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
 	return err
 }
 
-// readSetpoint reads the power setpoint register and updates the cached value
+// readSetpoint reads the power setpoint register and updates the cached value.
+// Callers must hold mu.
 func (wb *FoxESSEVC) readSetpoint() (uint16, error) {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
 	val, err := wb.readUint16(foxRegMaxPower)
 	if err == nil {
 		wb.setpoint = val
@@ -385,11 +383,8 @@ func (wb *FoxESSEVC) decodeSetpoint(setpoint uint16) (float64, int) {
 	return min(float64(setpoint)*100/(230*float64(phases)), wb.maxCurrent), phases
 }
 
-// applySetpoint writes the combined enable state and charging limit
+// applySetpoint writes the combined enable state and charging limit. Callers must hold mu.
 func (wb *FoxESSEVC) applySetpoint(val uint16) error {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
 	if err := wb.writeReg(foxRegMaxPower, val); err != nil {
 		return err
 	}
@@ -421,6 +416,9 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	s, err := wb.readUint16(foxRegStatus)
 	if err != nil {
 		return api.StatusNone, err
@@ -446,6 +444,9 @@ var _ api.StatusReasoner = (*FoxESSEVC)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *FoxESSEVC) StatusReason() (api.Reason, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	// uses the status cached by Status(), which the loadpoint calls immediately before
 	switch wb.status {
 	case foxStatusConnect:
@@ -461,6 +462,9 @@ func (wb *FoxESSEVC) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *FoxESSEVC) Enabled() (bool, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	val, err := wb.readSetpoint()
 	if err != nil {
 		return false, err
@@ -475,6 +479,9 @@ func (wb *FoxESSEVC) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *FoxESSEVC) Enable(enable bool) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	if err := wb.applySetpoint(wb.calcSetpoint(enable, wb.current, wb.phases)); err != nil {
 		return err
 	}
@@ -497,6 +504,9 @@ func (wb *FoxESSEVC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current: %.1fA", current)
 	}
 
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	if err := wb.applySetpoint(wb.calcSetpoint(wb.enabled, current, wb.phases)); err != nil {
 		return err
 	}
@@ -510,6 +520,9 @@ var _ api.CurrentLimiter = (*FoxESSEVC)(nil)
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (wb *FoxESSEVC) GetMinMaxCurrent() (float64, float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	lo, hi := wb.powerLimits(wb.phases)
 
 	minCurrent, _ := wb.decodeSetpoint(lo)
@@ -522,6 +535,9 @@ var _ api.CurrentGetter = (*FoxESSEVC)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	// outside an active session the setpoint may be restored to the max supported power (§2.31),
 	// which the loadpoint would adopt as the offered current
 	if !wb.sessionActive(wb.status) {
@@ -606,6 +622,9 @@ func (wb *FoxESSEVC) Identify() (string, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *FoxESSEVC) phases1p3p(phases int) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	// the setpoint band depends on the phase count, so it needs to be rewritten right away-
 	// the loadpoint does not necessarily re-issue MaxCurrent after a phase switch
 	if err := wb.applySetpoint(wb.calcSetpoint(wb.enabled, wb.current, phases)); err != nil {
@@ -619,13 +638,12 @@ func (wb *FoxESSEVC) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *FoxESSEVC) getPhases() (int, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	// Since the setpoint is kept inside the band of the requested phase count, this is the count
 	// the charger will settle on- its minimum switching interval (§2.39) may delay the actual switch.
-	wb.mu.Lock()
-	setpoint := wb.setpoint
-	wb.mu.Unlock()
-
-	_, phases := wb.decodeSetpoint(setpoint)
+	_, phases := wb.decodeSetpoint(wb.setpoint)
 
 	return phases, nil
 }

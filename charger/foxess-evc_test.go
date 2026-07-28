@@ -24,11 +24,15 @@ type foxWrite struct {
 // foxHandler mocks the charger's holding register space
 type foxHandler struct {
 	mbserver.RequestHandler
+	mu     sync.Mutex
 	regs   map[uint16]uint16
 	writes []foxWrite
 }
 
 func (h *foxHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	if req.IsWrite {
 		h.writes = append(h.writes, foxWrite{req.WriteFuncCode, req.Addr, req.Args})
 		for i, v := range req.Args {
@@ -240,6 +244,9 @@ func TestFoxESSEVCStatus(t *testing.T) {
 			assert.NoError(t, err, "state %d", tc.state)
 		}
 		assert.Equal(t, tc.status, status, "state %d", tc.state)
+
+		// StatusReason and GetMaxCurrent rely on the cached raw status
+		assert.Equal(t, tc.state, wb.status, "state %d", tc.state)
 	}
 }
 
@@ -333,6 +340,41 @@ func TestFoxESSEVCPhaseSwitch(t *testing.T) {
 	phases, err := wb.getPhases()
 	require.NoError(t, err)
 	assert.Equal(t, 1, phases)
+}
+
+// TestFoxESSEVCConcurrent exercises the tracked state from several goroutines, as the device
+// status API does while the loadpoint and the heartbeat are running. Meaningful under -race.
+func TestFoxESSEVCConcurrent(t *testing.T) {
+	wb, _ := foxTestCharger(t, map[uint16]uint16{
+		foxRegStatus:   foxStatusCharging,
+		foxRegMaxPower: 110,
+	})
+	wb.current = 16
+	wb.enabled = true
+
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Go(func() {
+			for range 20 {
+				_, _ = wb.Status()
+				_, _ = wb.StatusReason()
+				_, _ = wb.Enabled()
+				_, _ = wb.GetMaxCurrent()
+				_, _, _ = wb.GetMinMaxCurrent()
+				_, _ = wb.getPhases()
+				_ = wb.MaxCurrentMillis(16)
+				_ = wb.phases1p3p(1)
+				_ = wb.Enable(true)
+
+				// heartbeat
+				wb.mu.Lock()
+				_ = wb.writeReg(foxRegMaxPower, wb.setpoint)
+				wb.mu.Unlock()
+			}
+		})
+	}
+
+	wg.Wait()
 }
 
 func TestFoxESSEVCGetMaxCurrent(t *testing.T) {
