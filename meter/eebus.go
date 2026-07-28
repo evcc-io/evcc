@@ -116,8 +116,8 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	eebus.LogEntities(c.log.DEBUG, "MA MGCP", ma.MaMGCPInterface)
 
 	// energy guard
-	eebus.LogEntities(c.log.DEBUG, "EG LPC", c.eg.EgLPCInterface)
-	eebus.LogEntities(c.log.DEBUG, "EG LPP", c.eg.EgLPPInterface)
+	eebus.LogEntities(c.log.DEBUG, "EG LPC", eg.EgLPCInterface)
+	eebus.LogEntities(c.log.DEBUG, "EG LPP", eg.EgLPPInterface)
 
 	return c, nil
 }
