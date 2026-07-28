@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ import (
 type MqttConnector struct {
 	mu            sync.RWMutex
 	log           *util.Logger
-	subscriptions map[string]chan StreamingMessage
+	subscriptions map[string][]chan StreamingMessage
 }
 
 var (
@@ -38,7 +39,7 @@ func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts
 
 	v := &MqttConnector{
 		log:           log,
-		subscriptions: make(map[string]chan StreamingMessage),
+		subscriptions: make(map[string][]chan StreamingMessage),
 	}
 
 	if !testing.Testing() {
@@ -55,18 +56,27 @@ func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
 	defer v.mu.Unlock()
 
 	ch := make(chan StreamingMessage, 1)
-	v.subscriptions[vin] = ch
+	v.subscriptions[vin] = append(v.subscriptions[vin], ch)
+	v.log.DEBUG.Printf("mqtt subscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
 
 	return ch
 }
 
-func (v *MqttConnector) Unsubscribe(vin string) {
+func (v *MqttConnector) Unsubscribe(vin string, ch <-chan StreamingMessage) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if ch, ok := v.subscriptions[vin]; ok {
+	subs := v.subscriptions[vin]
+	for i, sub := range subs {
+		if sub == ch {
+			v.subscriptions[vin] = append(subs[:i], subs[i+1:]...)
+			v.log.DEBUG.Printf("mqtt unsubscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
+			// do NOT close the channel to prevent race conditions on test / read
+			break
+		}
+	}
+	if len(v.subscriptions[vin]) == 0 {
 		delete(v.subscriptions, vin)
-		close(ch)
 	}
 }
 
@@ -149,7 +159,13 @@ func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 
-	if ch, ok := v.subscriptions[res.Vin]; ok {
-		ch <- res
+	if subs, ok := v.subscriptions[strings.ToUpper(res.Vin)]; ok {
+		for _, ch := range subs {
+			select {
+			case ch <- res:
+			default:
+				// ignore if buffer full to not block other subscribers
+			}
+		}
 	}
 }
