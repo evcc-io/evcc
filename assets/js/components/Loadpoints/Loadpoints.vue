@@ -1,336 +1,456 @@
 <template>
-	<div
-		class="container container--loadpoint px-0 mb-md-2 d-flex flex-column justify-content-center"
-		data-testid="loadpoints"
-	>
+	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
 		<div
-			v-if="loadpoints.length > 0"
-			ref="carousel"
-			class="carousel d-lg-flex flex-wrap"
-			:class="[`carousel--${loadpoints.length}`, { 'carousel--fullwidth': fullWidth }]"
+			class="d-block d-sm-flex justify-content-between align-items-center mb-3"
+			:class="expandLoadpointHeader ? 'd-lg-block d-xl-flex' : ''"
 		>
-			<div
-				v-for="loadpoint in loadpoints"
-				:key="loadpoint.id"
-				class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
-			>
-				<Loadpoint
-					v-bind="loadpoint"
-					data-testid="loadpoint"
-					:vehicles="vehicles"
-					:smartCostType="smartCostType"
-					:smartCostAvailable="smartCostAvailable"
-					:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
-					:tariffGrid="tariffGrid"
-					:tariffCo2="tariffCo2"
-					:tariffFeedIn="tariffFeedIn"
-					:currency="currency"
-					:multipleLoadpoints="multipleLoadpoints"
-					:fullWidth="fullWidth"
-					:gridConfigured="gridConfigured"
-					:pvConfigured="pvConfigured"
-					:batteryConfigured="batteryConfigured"
-					:batterySoc="batterySoc"
-					:batteryMode="batteryMode"
-					:forecast="forecast"
-					class="h-100"
-					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
-					@click="goTo(loadpoint.id)"
-					@open-charging-plan-modal="openChargingPlanModal(loadpoint.id)"
-					@open-settings-modal="openSettingsModal(loadpoint.id)"
+			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
+				<h3 class="me-2 mb-0 text-truncate d-flex">
+					<VehicleIcon
+						v-if="chargerIcon"
+						:name="chargerIcon"
+						class="me-2 flex-shrink-0"
+					/>
+					<div class="text-truncate">
+						{{ loadpointTitle }}
+					</div>
+				</h3>
+				<LoadpointSettingsButton
+					:class="expandLoadpointHeader ? 'd-lg-block d-xl-none' : ''"
+					class="d-block d-sm-none"
+					@click="openSettingsModal"
+				/>
+			</div>
+			<div class="mb-3 d-flex align-items-center">
+				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
+				<LoadpointSettingsButton
+					:id="id"
+					:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
+					class="d-none d-sm-block ms-2"
+					@click="openSettingsModal"
 				/>
 			</div>
 		</div>
-		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center flex-wrap">
-			<button
-				v-for="loadpoint in loadpoints"
-				:key="loadpoint.id"
-				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center evcc-default-text"
-				:class="{ 'indicator--selected': selected(loadpoint.id) }"
-				@click="goTo(loadpoint.id)"
-			>
-				<shopicon-filled-lightning
-					v-if="isCharging(loadpoint)"
-					class="indicator-icon"
-				></shopicon-filled-lightning>
-				<shopicon-filled-circle
-					v-else-if="loadpoint.connected"
-					class="indicator-icon"
-				></shopicon-filled-circle>
-				<shopicon-bold-circle v-else class="indicator-icon"></shopicon-bold-circle>
-			</button>
+
+		<div
+			v-if="remoteDisabled"
+			class="alert alert-warning my-4 py-2"
+			:class="`${remoteDisabled === 'hard' ? 'alert-danger' : 'alert-warning'}`"
+			role="alert"
+		>
+			{{
+				$t(
+					remoteDisabled === "hard"
+						? "main.loadpoint.remoteDisabledHard"
+						: "main.loadpoint.remoteDisabledSoft",
+					{ source: remoteDisabledSource }
+				)
+			}}
 		</div>
-		<div>
-			<ChargingPlanModal
-				ref="chargingPlanModal"
-				:loadpoints="loadpoints"
-				:vehicles="vehicles"
-				:smartCostType="smartCostType"
-				:currency="currency"
-				:forecast="forecast"
+
+		<div class="details d-flex align-items-start mb-2">
+			<div>
+				<div class="d-flex align-items-center">
+					<LabelAndValue
+						:label="$t('main.loadpoint.power')"
+						:value="chargePower"
+						:valueFmt="fmtPower"
+						class="mb-2 text-nowrap text-truncate-xs-only"
+						align="start"
+					/>
+					<shopicon-regular-lightning
+						class="text-evcc opacity-transiton"
+						:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
+						size="m"
+					></shopicon-regular-lightning>
+				</div>
+				<Phases
+					v-bind="phasesProps"
+					class="opacity-transiton"
+					:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
+				/>
+			</div>
+			<LabelAndValue
+				v-if="integratedDevice"
+				:label="$t('main.loadpoint.todayEnergy')"
+				:value="todayEnergy"
+				:valueFmt="fmtEnergy"
+				align="center"
 			/>
-			<SettingsModal
-				ref="settingsModal"
-				:loadpoints="loadpoints"
-				:multipleLoadpoints="multipleLoadpoints"
-				:currency="currency"
-				:tariffGrid="tariffGrid"
-				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
-				:smartCostAvailable="smartCostAvailable"
-				:smartCostType="smartCostType"
-				:battery-configured="batteryConfigured"
-				:forecast="forecast"
+			<LabelAndValue
+				v-else
+				v-show="socBasedCharging"
+				:label="$t('main.loadpoint.charged')"
+				:value="chargedEnergy"
+				:valueFmt="fmtEnergy"
+				align="center"
 			/>
+			<LoadpointSessionInfoResponsive v-bind="sessionInfoProps" />
 		</div>
+		<hr class="divider" />
+		<Vehicle
+			class="flex-grow-1 d-flex flex-column justify-content-end"
+			v-bind="vehicleProps"
+			:soc-per-kwh="socPerKwh"
+			@limit-soc-updated="setLimitSoc"
+			@limit-energy-updated="setLimitEnergy"
+			@change-vehicle="changeVehicle"
+			@remove-vehicle="removeVehicle"
+			@open-loadpoint-settings="openSettingsModal"
+			@batteryboost-updated="setBatteryBoost"
+			@open-modal="$emit('open-charging-plan-modal')"
+		/>
 	</div>
 </template>
 
 <script lang="ts">
-import "@h2d2/shopicons/es/filled/circle";
-import "@h2d2/shopicons/es/bold/circle";
-import "@h2d2/shopicons/es/filled/lightning";
-
-import Loadpoint from "./Loadpoint.vue";
+import "@h2d2/shopicons/es/regular/lightning";
+import "@h2d2/shopicons/es/regular/adjust";
+import api from "@/api";
+import Mode from "./Mode.vue";
+import VehicleComponent from "../Vehicles/Vehicle.vue";
+import Phases from "./Phases.vue";
+import LabelAndValue from "../Helper/LabelAndValue.vue";
+import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import collector from "@/mixins/collector.js";
+import SettingsButton from "./SettingsButton.vue";
+import SettingsModal from "./SettingsModal.vue";
+import VehicleIcon from "../VehicleIcon";
+import SessionInfo from "./SessionInfo.vue";
+import SessionInfoResponsive from "./SessionInfoResponsive.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
-	UiLoadpoint,
-	SMART_COST_TYPE,
+	CHARGE_MODE,
+	PHASE_ACTION,
+	PV_ACTION,
+	CHARGER_STATUS_REASON,
 	Timeout,
 	Vehicle,
-	BATTERY_MODE,
 	Forecast,
-	CURRENCY,
+	SMART_COST_TYPE,
+	BATTERY_MODE,
+	LoadpointUi,
+	LoadpointSuggestion,
 } from "@/types/evcc";
-import ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
-import SettingsModal from "../Loadpoints/SettingsModal.vue";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
-	name: "Loadpoints",
-	components: { Loadpoint, ChargingPlanModal, SettingsModal },
+	name: "Loadpoint",
+	components: {
+		Mode,
+		Vehicle: VehicleComponent,
+		Phases,
+		LabelAndValue,
+		LoadpointSettingsButton: SettingsButton,
+		LoadpointSessionInfo: SessionInfo,
+		LoadpointSessionInfoResponsive: SessionInfoResponsive,
+		VehicleIcon,
+	},
+	mixins: [formatter, collector],
 	props: {
-		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
-		vehicles: { type: Array as PropType<Vehicle[]> },
-		smartCostType: String as PropType<SMART_COST_TYPE>,
-		smartCostAvailable: Boolean,
-		smartFeedInPriorityAvailable: Boolean,
-		tariffGrid: Number,
-		tariffCo2: Number,
-		tariffFeedIn: Number,
-		currency: String as PropType<CURRENCY>,
-		selectedId: String,
-		gridConfigured: Boolean,
-		pvConfigured: Boolean,
+		id: { type: String, required: true },
+		single: Boolean,
+
+		// main
+		title: String,
+		mode: String as PropType<CHARGE_MODE>,
+		effectiveLimitSoc: Number,
+		effectiveMinSoc: Number,
+		limitEnergy: Number,
+		remoteDisabled: String,
+		remoteDisabledSource: String,
+		chargeDuration: { type: Number, default: 0 },
+		charging: Boolean,
+		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
 		batterySoc: Number,
 		batteryMode: String as PropType<BATTERY_MODE>,
+
+		// session
+		sessionEnergy: Number,
+		sessionCo2PerKWh: Number as PropType<number | null>,
+		sessionPricePerKWh: Number as PropType<number | null>,
+		sessionPrice: Number as PropType<number | null>,
+		sessionSolarPercentage: Number,
+
+		// charger
+		chargerStatusReason: String as PropType<CHARGER_STATUS_REASON | null>,
+		chargerFeatureIntegratedDevice: Boolean,
+		chargerFeatureHeating: Boolean,
+		chargerFeatureContinuous: Boolean,
+		chargerFeatureSwitchDevice: Boolean,
+		chargerIcon: String as PropType<string | null>,
+
+		// heating display range (ui-only)
+		ui: Object as PropType<LoadpointUi>,
+
+		// vehicle
+		connected: Boolean,
+		// charging: Boolean,
+		enabled: Boolean,
+		vehicleDetectionActive: Boolean,
+		vehicleRange: Number,
+		vehicleSoc: { type: Number, default: 0 },
+		minSocNotReached: Boolean,
+		vehicleName: String,
+		vehicleIcon: String,
+		vehicleLimitSoc: Number,
+		vehicles: Array as PropType<Vehicle[]>,
+		planActive: Boolean,
+		planProjectedStart: String as PropType<string | null>,
+		planProjectedEnd: String as PropType<string | null>,
+		planOverrun: { type: Number, default: 0 },
+		planEnergy: Number,
+		planTime: String as PropType<string | null>,
+		effectivePlanTime: String as PropType<string | null>,
+		effectivePlanSoc: Number,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
+		vehicleProviderLoggedIn: Boolean,
+		vehicleProviderLoginPath: String,
+		vehicleProviderLogoutPath: String,
+
+		// details
+		vehicleClimaterActive: Boolean as PropType<boolean | null>,
+		vehicleWelcomeActive: Boolean,
+		chargePower: { type: Number, default: 0 },
+		chargedEnergy: { type: Number, default: 0 },
+		todayEnergy: { type: Number, default: 0 },
+		last24hEnergy: Number,
+		last7dEnergy: Number,
+		chargeRemainingDuration: { type: Number, default: 0 },
+
+		// other information
+		phasesConfigured: Number,
+		phasesActive: Number,
+		chargerPhases1p3p: Boolean,
+		chargerSinglePhase: Boolean,
+		minCurrent: Number,
+		maxCurrent: Number,
+		offeredCurrent: Number,
+		connectedDuration: Number,
+		chargeCurrents: Array,
+		chargeRemainingEnergy: Number,
+		phaseAction: String as PropType<PHASE_ACTION>,
+		phaseRemaining: { type: Number, default: 0 },
+		pvRemaining: { type: Number, default: 0 },
+		pvAction: String as PropType<PV_ACTION>,
+		smartCostLimit: { type: Number as PropType<number | null>, default: null },
+		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
+		smartCostActive: Boolean,
+		smartCostNextStart: String as PropType<string | null>,
+		smartFeedInPriorityLimit: { type: Number as PropType<number | null>, default: null },
+		smartFeedInPriorityAvailable: Boolean,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityNextStart: String as PropType<string | null>,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
+		tariffGrid: Number,
+		tariffFeedIn: Number,
+		tariffCo2: Number,
+		currency: String,
+		multipleLoadpoints: Boolean,
+		fullWidth: Boolean,
+		gridConfigured: Boolean,
+		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
+		vehicleKnown: Boolean,
+		vehicleHasSoc: Boolean,
+		vehicleNotReachable: Boolean,
+		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
+		capacity: Number,
+		range: Number,
+		rangePerSoc: Number,
+		socPerKwh: { type: Number, required: true },
 	},
-	emits: ["id-changed"],
+	emits: ["open-charging-plan-modal", "open-settings-modal"],
 	data() {
 		return {
-			snapTimeout: null as Timeout,
-			scrollTimeout: null as Timeout,
-			highlightedIndex: 0,
-			viewportHeight: 0 as number,
+			tickerHandler: null as Timeout,
+			phaseRemainingInterpolated: this.phaseRemaining,
+			pvRemainingInterpolated: this.pvRemaining,
+			chargeDurationInterpolated: this.chargeDuration,
+			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
 		};
 	},
 	computed: {
-		selectedIndex() {
-			return this.indexById(this.selectedId);
+		expandLoadpointHeader() {
+			return this.multipleLoadpoints && !this.fullWidth;
 		},
-		multipleLoadpoints() {
-			return this.loadpoints.length > 1;
+		vehicle() {
+			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
-		fullWidth() {
+		vehicleTitle() {
+			return this.vehicle?.title;
+		},
+		loadpointTitle() {
+			return this.title || this.$t("main.loadpoint.fallbackName");
+		},
+		integratedDevice() {
+			return this.chargerFeatureIntegratedDevice;
+		},
+		heating() {
+			return this.chargerFeatureHeating;
+		},
+		continuous() {
+			return this.chargerFeatureContinuous;
+		},
+		switchDevice() {
+			return this.chargerFeatureSwitchDevice;
+		},
+		phasesProps() {
+			return this.collectProps(Phases);
+		},
+		modeProps() {
+			return this.collectProps(Mode);
+		},
+		sessionInfoProps() {
+			return this.collectProps(SessionInfoResponsive);
+		},
+		settingsModal() {
+			return this.collectProps(SettingsModal);
+		},
+		vehicleProps() {
+			return this.collectProps(VehicleComponent);
+		},
+		showChargingIndicator() {
+			return this.charging && this.chargePower > 0;
+		},
+		planTimeUnreachable() {
+			// 1 minute tolerance
+			return this.planOverrun > 60;
+		},
+		pvPossible() {
+			return this.pvConfigured || this.gridConfigured;
+		},
+		batteryBoostAvailable() {
+			return this.batteryConfigured;
+		},
+		batteryBoostActive() {
 			return (
-				// breakpoint lg, tall screen, 2 loadpoints rows
-				(this.loadpoints.length === 2 && this.viewportHeight >= 1450) ||
-				// breakpoint lg, taller screen, 3 loadpoints rows
-				(this.loadpoints.length === 3 && this.viewportHeight >= 1900)
+				this.batteryBoost &&
+				this.charging &&
+				this.mode &&
+				!["off", "now"].includes(this.mode) &&
+				(this.batterySoc ?? 0) >= this.batteryBoostLimit
 			);
+		},
+		plannerForecast() {
+			return this.forecast?.planner;
 		},
 	},
 	watch: {
-		selectedIndex(newIndex) {
-			this.scrollTo(newIndex);
+		phaseRemaining() {
+			this.phaseRemainingInterpolated = this.phaseRemaining;
+		},
+		pvRemaining() {
+			this.pvRemainingInterpolated = this.pvRemaining;
+		},
+		chargeDuration() {
+			this.chargeDurationInterpolated = this.chargeDuration;
+		},
+		chargeRemainingDuration() {
+			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
 		},
 	},
 	mounted() {
-		this.updateViewport();
-		window.addEventListener("resize", this.updateViewport);
-
-		if (this.selectedIndex > 0) {
-			this.$refs["carousel"]?.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
-		}
-		this.$refs["carousel"]?.addEventListener("scroll", this.handleCarouselScroll);
+		this.tickerHandler = setInterval(this.tick, 1000);
 	},
 	unmounted() {
-		window.removeEventListener("resize", this.updateViewport);
-		this.$refs["carousel"]?.removeEventListener("scroll", this.handleCarouselScroll);
+		if (this.tickerHandler) {
+			clearInterval(this.tickerHandler);
+		}
 	},
 	methods: {
-		indexById(id: string | undefined) {
-			return this.loadpoints.findIndex((lp) => lp.id === id) || 0;
-		},
-		idByIndex(index: number) {
-			return this.loadpoints[index]?.id;
-		},
-		handleCarouselScroll() {
-			const { scrollLeft } = this.$refs["carousel"] as HTMLElement;
-			const { offsetWidth } = this.$refs["carousel"]?.children[0] as HTMLElement;
-			this.highlightedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
-
-			// save scroll position to url if not changing for 2s
-			if (this.scrollTimeout) {
-				clearTimeout(this.scrollTimeout);
+		tick() {
+			if (this.phaseRemainingInterpolated > 0) {
+				this.phaseRemainingInterpolated--;
 			}
-			this.scrollTimeout = setTimeout(() => {
-				if (this.highlightedIndex !== this.selectedIndex) {
-					this.$emit("id-changed", this.idByIndex(this.highlightedIndex));
-				}
-			}, 2000);
-		},
-		goTo(id: string) {
-			this.$emit("id-changed", id);
-		},
-		isCharging(lp: UiLoadpoint) {
-			return lp.charging && lp.chargePower > 0;
-		},
-		selected(id: string) {
-			return this.highlightedIndex === this.indexById(id);
-		},
-		updateViewport() {
-			this.viewportHeight = window.innerHeight;
-		},
-		left(index: number) {
-			return (this.$refs["carousel"]?.children[0] as HTMLElement).offsetWidth * index;
-		},
-		scrollTo(index: number) {
-			this.highlightedIndex = index;
-			const $carousel = this.$refs["carousel"];
-			if ($carousel) {
-				$carousel.style.scrollSnapType = "none";
-				$carousel?.scrollTo({ top: 0, left: this.left(index), behavior: "smooth" });
+			if (this.pvRemainingInterpolated > 0) {
+				this.pvRemainingInterpolated--;
 			}
-
-			if (this.snapTimeout) {
-				clearTimeout(this.snapTimeout);
+			if (this.chargeDurationInterpolated > 0 && this.charging) {
+				this.chargeDurationInterpolated++;
 			}
-			this.snapTimeout = setTimeout(() => {
-				if (this.$refs["carousel"]) {
-					this.$refs["carousel"].style.scrollSnapType = "x mandatory";
-				}
-			}, 1000);
+			if (this.chargeRemainingDurationInterpolated > 0 && this.charging) {
+				this.chargeRemainingDurationInterpolated--;
+			}
 		},
-		openChargingPlanModal(loadpointId: string) {
-			const modal = this.$refs["chargingPlanModal"] as
-				| InstanceType<typeof ChargingPlanModal>
-				| undefined;
-			modal?.open(loadpointId);
+		apiPath(func: string) {
+			return "loadpoints/" + this.id + "/" + func;
 		},
-		openSettingsModal(loadpointId: string) {
-			const modal = this.$refs["settingsModal"] as
-				| InstanceType<typeof SettingsModal>
-				| undefined;
-			modal?.open(loadpointId);
+		setTargetMode(mode: CHARGE_MODE) {
+			api.post(this.apiPath("mode") + "/" + mode);
+		},
+		setLimitSoc(soc: number) {
+			api.post(this.apiPath("limitsoc") + "/" + soc);
+		},
+		setLimitEnergy(kWh: number) {
+			api.post(this.apiPath("limitenergy") + "/" + kWh);
+		},
+		changeVehicle(name: string) {
+			api.post(this.apiPath("vehicle") + `/${name}`);
+		},
+		removeVehicle() {
+			api.delete(this.apiPath("vehicle"));
+		},
+		setBatteryBoost(batteryBoost: boolean) {
+			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
+		},
+		fmtPower(value: number) {
+			return this.fmtW(value, POWER_UNIT.AUTO);
+		},
+		fmtEnergy(value: number) {
+			return this.fmtWh(value, POWER_UNIT.AUTO);
+		},
+		openSettingsModal() {
+			this.$emit("open-settings-modal");
 		},
 	},
 });
 </script>
+
 <style scoped>
 @import "../../../css/breakpoints.css";
 
-.container--loadpoint:not(:empty) {
-	min-height: 300px;
+.loadpoint {
+	border-radius: 2rem;
+	color: var(--evcc-default-text);
+	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 }
 
-@media (max-width: 991.98px) {
-	.carousel {
-		scroll-snap-type: x mandatory;
-		overflow-x: scroll;
-		display: flex;
-		flex-wrap: nowrap !important;
-		scrollbar-width: none; /* Firefox */
-		-ms-overflow-style: none; /* IE 10+ */
-	}
-	.carousel::-webkit-scrollbar {
-		display: none; /* Blink, Webkit */
-	}
-	.carousel > * {
-		scroll-snap-align: center;
-		min-width: 100%;
-	}
-	.indicator {
-		width: 32px;
-		height: 32px;
-		opacity: 0.3;
-		transition: opacity var(--evcc-transition-fast) ease-in;
-	}
-	.indicator--selected {
-		opacity: 1;
-	}
-	.indicator-icon {
-		width: 18px;
-	}
-	.loadpoint {
-		opacity: 1;
-		transform: scale(1);
-		transition-property: opacity, transform;
-		transition-duration: var(--evcc-transition-fast);
-		transition-timing-function: ease-in;
-	}
-	.loadpoint-unselected {
-		transform: scale(0.95);
-		opacity: 0.5;
-	}
+.details > div {
+	flex-grow: 1;
+	flex-shrink: 1;
+	flex-basis: 0;
+	min-width: 0;
 }
-
-/* show truncated tiles on breakpoint sm,md */
-@media (--sm-to-lg) {
-	.container--loadpoint {
-		max-width: none;
-	}
-	.carousel > *:first-child {
-		margin-left: calc((100vw - var(--slide-width)) / 2);
-	}
-	.carousel > *:last-child {
-		margin-right: calc((100vw - var(--slide-width)) / 2);
-	}
-	/* fixes safari issue with end-side padding https://webplatform.news/issues/2019-08-07 */
-	.carousel::after {
-		content: "";
-		padding-right: 0.02px;
-	}
-	.carousel > * {
-		min-width: var(--slide-width);
-	}
+.details > div:nth-child(2) {
+	text-align: center;
 }
-
+.details > div:nth-child(3) {
+	text-align: right;
+}
+.opacity-transiton {
+	transition: opacity var(--evcc-transition-slow) ease-in;
+}
+.divider {
+	border: none;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: var(--evcc-gray);
+	background: none;
+	opacity: 0.5;
+	margin: 0 -1rem;
+}
 /* breakpoint sm */
-@media (--sm-to-md) {
-	.carousel {
-		--slide-width: 540px;
-	}
-}
-
-/* breakpoint md */
-@media (--md-to-lg) {
-	.carousel {
-		--slide-width: 720px;
-	}
-}
-
-/* breakpoint lg, 2-col grid */
-@media (--lg-and-up) {
-	.carousel {
-		display: grid !important;
-		grid-gap: 2rem;
-		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-	}
-	/* breakpoint lg, full width override */
-	.carousel--fullwidth {
-		grid-gap: 4rem;
-		grid-template-columns: 1fr;
+@media (--sm-and-up) {
+	.divider {
+		margin: 0 -1.5rem;
 	}
 }
 </style>
