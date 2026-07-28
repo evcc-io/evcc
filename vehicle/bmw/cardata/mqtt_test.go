@@ -1,6 +1,7 @@
 package cardata
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -14,19 +15,19 @@ type mockMessage struct {
 	payload []byte
 }
 
-func (m mockMessage) Duplicate() bool { return false }
-func (m mockMessage) Qos() byte       { return 0 }
-func (m mockMessage) Retained() bool  { return false }
-func (m mockMessage) Topic() string   { return "test" }
+func (m mockMessage) Duplicate() bool   { return false }
+func (m mockMessage) Qos() byte         { return 0 }
+func (m mockMessage) Retained() bool    { return false }
+func (m mockMessage) Topic() string     { return "test" }
 func (m mockMessage) MessageID() uint16 { return 0 }
-func (m mockMessage) Payload() []byte { return m.payload }
-func (m mockMessage) Ack()            {}
+func (m mockMessage) Payload() []byte   { return m.payload }
+func (m mockMessage) Ack()              {}
 
 func TestMqttMultiSubscribe(t *testing.T) {
-	log := util.NewLogger("test")
+	log := util.NewLogger("foo")
 
 	// Create MqttConnector (using empty gcid)
-	mqttConn := NewMqttConnector(nil, log, "test-client-id", nil)
+	mqttConn := NewMqttConnector(context.TODO(), log, "test-client-id", nil)
 
 	// Simulate multiple vehicles (e.g. loadpoint vs config page) subscribing to the same VIN
 	ch1 := mqttConn.Subscribe("WBA12345")
