@@ -24,9 +24,9 @@ func (c *EEBus) Connect(connected bool) {
 		return
 	}
 
-	c.maEntity.Set(nil)
-	c.egLpcEntity.Set(nil)
-	c.egLppEntity.Set(nil)
+	c.ma.Set(nil)
+	c.lpc.Set(nil)
+	c.lpp.Set(nil)
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -39,18 +39,18 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	switch event {
 	// Monitoring Appliance
 	case mpc.UseCaseSupportUpdate, mgcp.UseCaseSupportUpdate:
-		c.maEntity.Update(entity)
+		c.ma.Update(entity)
 
 	// Energy Guard - LPC
 	case lpc.UseCaseSupportUpdate:
-		if c.egLpcEntity.Update(entity) {
+		if c.lpc.Update(entity) {
 			// [LPC-913]: state the limit to the newly available CS
 			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
 		}
 
 	// Energy Guard - LPP
 	case lpp.UseCaseSupportUpdate:
-		if c.egLppEntity.Update(entity) {
+		if c.lpp.Update(entity) {
 			// [LPP-913]: state the limit to the newly available CS
 			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
 		}

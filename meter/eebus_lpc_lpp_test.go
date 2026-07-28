@@ -30,13 +30,13 @@ func newEGMeter(t *testing.T) (*EEBus, *egmocks.EgLPCInterface, *egmocks.EgLPPIn
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBus{
-		ctx:         t.Context(),
-		log:         util.NewLogger("eebus-eg-test"),
-		egLpcEntity: eebus.NewEntity[ucapi.EgLPCInterface](lpc),
-		egLppEntity: eebus.NewEntity[ucapi.EgLPPInterface](lpp),
+		ctx: t.Context(),
+		log: util.NewLogger("eebus-eg-test"),
+		lpc: eebus.NewEntity[ucapi.EgLPCInterface](lpc),
+		lpp: eebus.NewEntity[ucapi.EgLPPInterface](lpp),
 	}
-	c.egLpcEntity.Set(entity)
-	c.egLppEntity.Set(entity)
+	c.lpc.Set(entity)
+	c.lpp.Set(entity)
 
 	return c, lpc, lpp, entity
 }
@@ -111,7 +111,7 @@ func TestLPC_Dim_WriteRejected(t *testing.T) {
 func TestLPC_Dim_Gating(t *testing.T) {
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _, _ := newEGMeter(t)
-		c.egLpcEntity.Set(nil)
+		c.lpc.Set(nil)
 
 		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
 	})
@@ -190,7 +190,7 @@ func TestLPP_Curtail_WriteRejected(t *testing.T) {
 func TestLPP_SetCurtailPercent_Gating(t *testing.T) {
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _, _ := newEGMeter(t)
-		c.egLppEntity.Set(nil)
+		c.lpp.Set(nil)
 
 		assert.ErrorIs(t, c.SetCurtailPercent(0), api.ErrNotAvailable)
 	})
@@ -255,7 +255,7 @@ func TestLPP_CurtailedPercent_NoNominal(t *testing.T) {
 func TestLPC_LPP_InitialLimit(t *testing.T) {
 	t.Run("consumption", func(t *testing.T) {
 		c, lpc, _, entity := newEGMeter(t)
-		c.egLpcEntity.Set(nil)
+		c.lpc.Set(nil)
 
 		written := make(chan ucapi.LoadLimit, 1)
 		lpc.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{1})
@@ -271,7 +271,7 @@ func TestLPC_LPP_InitialLimit(t *testing.T) {
 
 	t.Run("production", func(t *testing.T) {
 		c, _, lpp, entity := newEGMeter(t)
-		c.egLppEntity.Set(nil)
+		c.lpp.Set(nil)
 		c.curtailPercent = 100
 
 		written := make(chan ucapi.LoadLimit, 1)
