@@ -206,12 +206,11 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 
 // Status implements the api.Charger interface
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
-	entity, err := c.ohpcf.Required(eebus.OHPCFMonitor)
-	if err != nil {
+	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
 		return api.StatusNone, err
 	}
 
-	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
+	state, err := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.PowerConsumptionProcessState)
 	if err != nil {
 		// connected but no flexibility announced yet: standby, not disconnected
 		return api.StatusB, nil
@@ -419,16 +418,15 @@ var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
 // optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
-	entity, err := c.ohpcf.Required(eebus.OHPCFMonitor)
-	if err != nil {
+	if _, err := c.ohpcf.Required(eebus.OHPCFMonitor); err != nil {
 		return 0, 0, err
 	}
 
-	if power, _ := c.cem.OHPCF.RequestedPowerEstimate(entity); power > 0 {
+	if power, _ := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.RequestedPowerEstimate); power > 0 {
 		return power, power, nil
 	}
 
-	if power, _ := c.cem.OHPCF.RequestedPowerMax(entity); power > 0 {
+	if power, _ := c.ohpcf.Read(eebus.OHPCFMonitor, ucapi.CemOHPCFInterface.RequestedPowerMax); power > 0 {
 		return power, power, nil
 	}
 
