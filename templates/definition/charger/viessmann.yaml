@@ -10,8 +10,12 @@ requirements:
   description:
     de: |
       Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
+
+      Leistungs- und Temperaturwerte setzen Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Für Geräte ohne diese Datenpunkte die Option „Leistungs- und Temperaturwerte auslesen" deaktivieren.
     en: |
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
+
+      Power and temperature readings require data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. For devices without these data points, disable the "Read power and temperature values" option.
 params:
   - name: user
     deprecated: true
@@ -133,6 +137,16 @@ params:
       de: normalerweise `0`
       en: typically `0`
     default: 0
+  - name: measurements
+    required: true
+    type: bool
+    default: true
+    description:
+      de: Leistungs- und Temperaturwerte auslesen
+      en: Read power and temperature values
+    help:
+      de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus (Geräte der One-Base-/E3-Generation, z. B. Vitocal 25x). Deaktivieren, wenn das Gerät diese Datenpunkte nicht liefert (ältere Hardware/Firmware); die Verfügbarkeit lässt sich am Feature-Endpunkt der API ablesen.
+      en: Reads the current electrical power consumption and the domestic hot water temperature (One Base/E3 generation devices, e.g. Vitocal 25x). Disable if the device does not provide these data points (older hardware/firmware); availability can be checked via the API feature endpoint.
   - name: target_temperature
     deprecated: true
     description:
@@ -204,6 +218,7 @@ render: |
         set:
           source: error
           error: ErrNotAvailable
+  {{- if eq .measurements "true" }}
   power:
     # heating.power.consumption.current reports the real electrical input power in kW.
     # Reading it replaces evcc's fallback estimate (current * phases * voltage), which
@@ -242,4 +257,5 @@ render: |
       redirecturi: {{ .redirecturi }}
       gateway_serial: {{ .gateway_serial }}
     jq: '.data[] | select(.feature == "heating.dhw.temperature.main") | .properties.value.value'
+  {{- end }}
   {{ include "heatpumpswitch" . }}
