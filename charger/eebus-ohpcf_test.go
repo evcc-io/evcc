@@ -109,5 +109,6 @@ func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
 
-	assert.Nil(t, c.ohpcf.Get())
+	_, err := c.ohpcf.Required()
+	assert.ErrorIs(t, err, eebus.ErrNotConnected)
 }

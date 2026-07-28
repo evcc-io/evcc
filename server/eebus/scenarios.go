@@ -1,13 +1,7 @@
 package eebus
 
 // EEBUS use case scenario numbers per the respective Use Case Technical Specifications.
-//
-// Spec scenario numbers diverge between use cases (e.g. MPC scenario 1 = active power,
-// MGCP scenario 1 = power factor; MPC scenario 2 = energy, MGCP scenario 2 = active power).
-// Passing the wrong number to IsScenarioAvailableAtEntity gates reads on the wrong feature.
-//
-// Each block mirrors the scenarios registered in the corresponding eebus-go usecase, which
-// in turn matches the EEBus UC TS document.
+// Each block mirrors the scenarios registered in the corresponding eebus-go usecase.
 
 // OPEV — Overload Protection by EV Charging Current Curtailment (UC TS v1.0.1)
 const (

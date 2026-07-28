@@ -59,7 +59,7 @@ func TestEntityUpdate(t *testing.T) {
 			}[tc.want]
 
 			e.Update(entity)
-			assert.Equal(t, want, e.Get())
+			assert.Equal(t, want, e.get())
 		})
 	}
 }
@@ -78,7 +78,7 @@ func TestEntityUpdateRemovalOfOtherEntity(t *testing.T) {
 	e.Set(cached)
 
 	e.Update(removed)
-	assert.Equal(t, cached, e.Get())
+	assert.Equal(t, cached, e.get())
 }
 
 func TestEntityRequired(t *testing.T) {
