@@ -32,10 +32,7 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     timeout: 10s
-  - name: delay
-    type: duration
-    default: 50ms
-    advanced: true
+    delay: 50ms
   - name: timeout
     deprecated: true
   - name: maxacpower
