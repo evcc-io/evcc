@@ -224,8 +224,7 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 		}
 	}
 
-	// seed the state from the charger so that restarting evcc during an active session does not
-	// look like "disabled but charging" to the loadpoint
+	// seed the state from the charger
 	if wb.status, err = wb.readUint16(foxRegStatus); err != nil {
 		return nil, err
 	}
