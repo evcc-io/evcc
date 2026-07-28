@@ -213,9 +213,9 @@ func (c *EEBus) Dim(dim bool) error {
 		return err
 	}
 
-	if err := eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
-	})); err != nil {
+	}); err != nil {
 		return err
 	}
 
@@ -268,9 +268,9 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		}
 	}
 
-	if err := eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
-	})); err != nil {
+	}); err != nil {
 		return err
 	}
 
