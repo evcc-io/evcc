@@ -20,13 +20,13 @@ func newTestOHPCF() *EEBusOHPCF {
 	eg := new(eebus.EnergyGuard)
 
 	return &EEBusOHPCF{
-		cem:        cem,
-		ma:         ma,
-		eg:         eg,
-		compressor: eebus.NewEntity(cem.OHPCF),
-		mpc:        eebus.NewEntity(ma.MaMPCInterface),
-		mdt:        eebus.NewEntity(ma.MaMDTInterface),
-		lpc:        eebus.NewEntity(eg.EgLPCInterface),
+		cem:   cem,
+		ma:    ma,
+		eg:    eg,
+		ohpcf: eebus.NewEntity(cem.OHPCF),
+		mpc:   eebus.NewEntity(ma.MaMPCInterface),
+		mdt:   eebus.NewEntity(ma.MaMDTInterface),
+		lpc:   eebus.NewEntity(eg.EgLPCInterface),
 	}
 }
 
@@ -52,7 +52,7 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 // a failed enable must not persist the intent, otherwise Enabled() reports a
 // state the compressor never accepted and the loadpoint runs out of sync (#32252).
 func TestOHPCFEnableFailureKeepsState(t *testing.T) {
-	c := &EEBusOHPCF{compressor: eebus.NewEntity[ucapi.CemOHPCFInterface](nil)}
+	c := &EEBusOHPCF{ohpcf: eebus.NewEntity[ucapi.CemOHPCFInterface](nil)}
 
 	require.ErrorIs(t, c.Enable(true), eebus.ErrNotConnected)
 	assert.False(t, c.lastEnabled())
@@ -110,5 +110,5 @@ func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
 
-	assert.Nil(t, c.compressor.Get())
+	assert.Nil(t, c.ohpcf.Get())
 }

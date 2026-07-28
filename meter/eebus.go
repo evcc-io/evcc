@@ -169,7 +169,6 @@ func (c *EEBus) lastCurtailPercent() int {
 	return c.curtailPercent
 }
 
-
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
