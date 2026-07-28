@@ -42,8 +42,8 @@ func TestEntityUpdate(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			uc := ucmocks.NewMaMPCInterface(t)
+			e := NewEntity(uc)
 
-			var e Entity
 			var cached spineapi.EntityRemoteInterface
 			if tc.cachedDepth > 0 {
 				cached = testEntity(t, tc.cachedDepth)
@@ -58,7 +58,7 @@ func TestEntityUpdate(t *testing.T) {
 				"cached": cached, "entity": entity, "nil": nil,
 			}[tc.want]
 
-			e.Update(uc, entity)
+			e.Update(entity)
 			assert.Equal(t, want, e.Get())
 		})
 	}
@@ -74,43 +74,43 @@ func TestEntityUpdateRemovalOfOtherEntity(t *testing.T) {
 	removed := testEntity(t, 2)
 	uc.EXPECT().AvailableScenariosForEntity(removed).Return(nil)
 
-	var e Entity
+	e := NewEntity(uc)
 	e.Set(cached)
 
-	e.Update(uc, removed)
+	e.Update(removed)
 	assert.Equal(t, cached, e.Get())
 }
 
 func TestEntityRequired(t *testing.T) {
 	t.Run("entity missing", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
+		e := NewEntity(uc)
 
-		var e Entity
-		_, err := e.Required(uc, MPCPower)
+		_, err := e.Required(MPCPower)
 		assert.ErrorIs(t, err, ErrNotConnected)
 	})
 
 	t.Run("scenario not announced", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
+		e := NewEntity(uc)
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(false)
 
-		var e Entity
 		e.Set(entity)
 
-		_, err := e.Required(uc, MPCPower)
+		_, err := e.Required(MPCPower)
 		assert.ErrorIs(t, err, ErrNotConnected)
 	})
 
 	t.Run("available", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
+		e := NewEntity(uc)
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		var e Entity
 		e.Set(entity)
 
-		res, err := e.Required(uc, MPCPower)
+		res, err := e.Required(MPCPower)
 		require.NoError(t, err)
 		assert.Equal(t, entity, res)
 	})
@@ -123,21 +123,21 @@ func TestEntityRead(t *testing.T) {
 
 	t.Run("entity missing", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
+		e := NewEntity(uc)
 
-		var e Entity
-		_, err := e.Read(uc, MPCPower, read(1, nil))
+		_, err := e.Read(MPCPower, read(1, nil))
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
 	t.Run("scenario not announced", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
+		e := NewEntity(uc)
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(false)
 
-		var e Entity
 		e.Set(entity)
 
-		_, err := e.Read(uc, MPCPower, read(1, nil))
+		_, err := e.Read(MPCPower, read(1, nil))
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
@@ -145,38 +145,39 @@ func TestEntityRead(t *testing.T) {
 	for _, tc := range []error{eebusapi.ErrDataNotAvailable, eebusapi.ErrMetadataNotAvailable, eebusapi.ErrDataInvalid} {
 		t.Run(tc.Error(), func(t *testing.T) {
 			uc := ucmocks.NewMaMPCInterface(t)
+			e := NewEntity(uc)
+
 			entity := testEntity(t, 1)
 			uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-			var e Entity
 			e.Set(entity)
 
-			_, err := e.Read(uc, MPCPower, read(0, tc))
+			_, err := e.Read(MPCPower, read(0, tc))
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
 		})
 	}
 
 	t.Run("other error passes through", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
+		e := NewEntity(uc)
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		var e Entity
 		e.Set(entity)
 
-		_, err := e.Read(uc, MPCPower, read(0, errors.New("boom")))
+		_, err := e.Read(MPCPower, read(0, errors.New("boom")))
 		assert.EqualError(t, err, "boom")
 	})
 
 	t.Run("value", func(t *testing.T) {
 		uc := ucmocks.NewMaMPCInterface(t)
+		e := NewEntity(uc)
 		entity := testEntity(t, 1)
 		uc.EXPECT().IsScenarioAvailableAtEntity(entity, MPCPower).Return(true)
 
-		var e Entity
 		e.Set(entity)
 
-		res, err := e.Read(uc, MPCPower, read(4711, nil))
+		res, err := e.Read(MPCPower, read(4711, nil))
 		require.NoError(t, err)
 		assert.Equal(t, 4711.0, res)
 	})
