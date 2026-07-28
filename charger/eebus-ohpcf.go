@@ -164,12 +164,6 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	}
 }
 
-// compressorEntity returns the compressor entity or ErrNotConnected while the
-// OHPCF use case is not (yet) available at it.
-func (c *EEBusOHPCF) compressorEntity() (spineapi.EntityRemoteInterface, error) {
-	return c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor)
-}
-
 func (c *EEBusOHPCF) setEnabled(enabled bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -204,7 +198,7 @@ var _ api.Charger = (*EEBusOHPCF)(nil)
 
 // Status implements the api.Charger interface
 func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
-	entity, err := c.compressorEntity()
+	entity, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -221,7 +215,7 @@ func (c *EEBusOHPCF) Status() (api.ChargeStatus, error) {
 // Enabled reports the commanded on/off intent; Status reflects the actual
 // compressor state.
 func (c *EEBusOHPCF) Enabled() (bool, error) {
-	if _, err := c.compressorEntity(); err != nil {
+	if _, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor); err != nil {
 		return false, err
 	}
 
@@ -384,7 +378,7 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
 func (c *EEBusOHPCF) apply(enable bool) error {
-	entity, err := c.compressorEntity()
+	entity, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor)
 	if err != nil {
 		return err
 	}
@@ -417,7 +411,7 @@ var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
 // GetMinMaxPower implements the api.PowerLimiter interface, reporting the
 // optional consumption as expected min/max or ErrNotAvailable if none.
 func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
-	entity, err := c.compressorEntity()
+	entity, err := c.compressor.Required(c.cem.OHPCF, eebus.OHPCFMonitor)
 	if err != nil {
 		return 0, 0, err
 	}
