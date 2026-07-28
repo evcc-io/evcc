@@ -22,7 +22,48 @@ import (
 type MqttConnector struct {
 	mu            sync.RWMutex
 	log           *util.Logger
-	subscriptions map[string][]chan StreamingMessage
+	subscriptions map[string][]subscription
+}
+
+// subscription connects the handler to a single receiver through an unbounded queue
+type subscription struct {
+	in  chan StreamingMessage
+	out <-chan StreamingMessage
+}
+
+// queued forwards in to the returned channel through an unbounded fifo queue, so that
+// a busy receiver cannot block the mqtt handler. Closing in drains the queue, then closes out.
+func queued(in <-chan StreamingMessage) <-chan StreamingMessage {
+	out := make(chan StreamingMessage)
+
+	go func() {
+		defer close(out)
+
+		var queue []StreamingMessage
+
+		for in != nil || len(queue) > 0 {
+			var send chan<- StreamingMessage
+			var next StreamingMessage
+
+			if len(queue) > 0 {
+				send, next = out, queue[0]
+			}
+
+			select {
+			case msg, ok := <-in:
+				if !ok {
+					in = nil
+					continue
+				}
+				queue = append(queue, msg)
+
+			case send <- next:
+				queue = queue[1:]
+			}
+		}
+	}()
+
+	return out
 }
 
 var (
@@ -40,7 +81,7 @@ func NewMqttConnector(ctx context.Context, log *util.Logger, clientID string, ts
 
 	v := &MqttConnector{
 		log:           log,
-		subscriptions: make(map[string][]chan StreamingMessage),
+		subscriptions: make(map[string][]subscription),
 	}
 
 	if !testing.Testing() {
@@ -57,11 +98,14 @@ func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
 	defer v.mu.Unlock()
 
 	vin = strings.ToUpper(vin)
-	ch := make(chan StreamingMessage, 32)
-	v.subscriptions[vin] = append(v.subscriptions[vin], ch)
+
+	sub := subscription{in: make(chan StreamingMessage)}
+	sub.out = queued(sub.in)
+
+	v.subscriptions[vin] = append(v.subscriptions[vin], sub)
 	v.log.DEBUG.Printf("mqtt subscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
 
-	return ch
+	return sub.out
 }
 
 func (v *MqttConnector) Unsubscribe(vin string, ch <-chan StreamingMessage) {
@@ -72,12 +116,13 @@ func (v *MqttConnector) Unsubscribe(vin string, ch <-chan StreamingMessage) {
 
 	subs := v.subscriptions[vin]
 
-	i := slices.IndexFunc(subs, func(sub chan StreamingMessage) bool { return sub == ch })
+	i := slices.IndexFunc(subs, func(sub subscription) bool { return sub.out == ch })
 	if i < 0 {
 		return
 	}
 
-	close(subs[i])
+	// queued messages are delivered before out is closed
+	close(subs[i].in)
 
 	if subs = slices.Delete(subs, i, i+1); len(subs) == 0 {
 		delete(v.subscriptions, vin)
@@ -165,12 +210,7 @@ func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 
-	for _, ch := range v.subscriptions[strings.ToUpper(res.Vin)] {
-		select {
-		case ch <- res:
-		default:
-			// don't block other subscribers
-			v.log.WARN.Printf("dropped message for %s: receiver busy", res.Vin)
-		}
+	for _, sub := range v.subscriptions[strings.ToUpper(res.Vin)] {
+		sub.in <- res
 	}
 }
