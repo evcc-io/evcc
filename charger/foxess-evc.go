@@ -234,7 +234,7 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	}
 	if setpoint > 0 && wb.sessionActive(wb.status) {
 		wb.enabled = true
-		wb.current = currentFromSetpoint(setpoint, wb.phases)
+		wb.current, wb.phases = wb.decodeSetpoint(setpoint)
 	}
 
 	// keep the charger from considering evcc offline; see heartbeat (§2.34).
@@ -368,9 +368,21 @@ func (wb *FoxESSEVC) calcSetpoint(enabled bool, current float64, phases int) uin
 	return min(max(uint16(math.Round(power/100)), lo), hi)
 }
 
-// currentFromSetpoint converts a power setpoint register value back into the phase current
-func currentFromSetpoint(setpoint uint16, phases int) float64 {
-	return float64(setpoint) * 100 / (230 * float64(phases))
+// decodeSetpoint converts a power setpoint register value back into the phase current and the
+// phase count the charger derives from it
+func (wb *FoxESSEVC) decodeSetpoint(setpoint uint16) (float64, int) {
+	phases := wb.phases
+
+	if wb.switchable {
+		switch {
+		case setpoint >= foxMinPower3p:
+			phases = 3
+		case setpoint >= foxMinPower1p:
+			phases = 1
+		}
+	}
+
+	return min(float64(setpoint)*100/(230*float64(phases)), wb.maxCurrent), phases
 }
 
 // applySetpoint writes the combined enable state and charging limit
@@ -500,8 +512,10 @@ var _ api.CurrentLimiter = (*FoxESSEVC)(nil)
 func (wb *FoxESSEVC) GetMinMaxCurrent() (float64, float64, error) {
 	lo, hi := wb.powerLimits(wb.phases)
 
-	return max(wb.minCurrent, currentFromSetpoint(lo, wb.phases)),
-		min(wb.maxCurrent, currentFromSetpoint(hi, wb.phases)), nil
+	minCurrent, _ := wb.decodeSetpoint(lo)
+	maxCurrent, _ := wb.decodeSetpoint(hi)
+
+	return max(wb.minCurrent, minCurrent), maxCurrent, nil
 }
 
 var _ api.CurrentGetter = (*FoxESSEVC)(nil)
@@ -519,7 +533,9 @@ func (wb *FoxESSEVC) GetMaxCurrent() (float64, error) {
 		return 0, err
 	}
 
-	return currentFromSetpoint(val, wb.phases), nil
+	current, _ := wb.decodeSetpoint(val)
+
+	return current, nil
 }
 
 var _ api.Meter = (*FoxESSEVC)(nil)
@@ -603,21 +619,15 @@ func (wb *FoxESSEVC) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *FoxESSEVC) getPhases() (int, error) {
-	// The charger picks the phase count from the power setpoint (§2.38). Since the setpoint is kept
-	// inside the band of the requested phase count, this is the count the charger will settle on-
-	// its minimum switching interval (§2.39) may however delay the actual switch.
+	// Since the setpoint is kept inside the band of the requested phase count, this is the count
+	// the charger will settle on- its minimum switching interval (§2.39) may delay the actual switch.
 	wb.mu.Lock()
 	setpoint := wb.setpoint
 	wb.mu.Unlock()
 
-	switch {
-	case setpoint >= foxMinPower3p:
-		return 3, nil
-	case setpoint >= foxMinPower1p:
-		return 1, nil
-	default:
-		return wb.phases, nil
-	}
+	_, phases := wb.decodeSetpoint(setpoint)
+
+	return phases, nil
 }
 
 var _ api.Diagnosis = (*FoxESSEVC)(nil)

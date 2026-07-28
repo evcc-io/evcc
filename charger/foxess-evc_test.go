@@ -101,6 +101,14 @@ func fox22kW(switchable bool) *FoxESSEVC {
 	}
 }
 
+// fox11kW returns an 11kW charger, rated 16A per phase
+func fox11kW(switchable bool) *FoxESSEVC {
+	return &FoxESSEVC{
+		phases: 3, switchable: switchable,
+		minPower: foxMinPower3p, maxPower: 110, minCurrent: 6, maxCurrent: 16,
+	}
+}
+
 // fox7kW returns a single-phase 7.3kW charger
 func fox7kW() *FoxESSEVC {
 	return &FoxESSEVC{
@@ -154,6 +162,9 @@ func TestFoxESSEVCMinMaxCurrent(t *testing.T) {
 		{"1p switchable", fox22kW(true), 1, 6.087, 17.826},
 		{"3p fixed", fox22kW(false), 3, 6.087, 31.884},
 		{"1p charger", fox7kW(), 1, 6.087, 31.739},
+		{"11kW 3p", fox11kW(true), 3, 6.087, 15.942},
+		// the 4.1kW single-phase ceiling would be 17.8A, beyond the 16A the device is rated for
+		{"11kW 1p", fox11kW(true), 1, 6.087, 16},
 	}
 
 	for _, tc := range tc {
@@ -336,6 +347,13 @@ func TestFoxESSEVCGetMaxCurrent(t *testing.T) {
 
 	wb.status = foxStatusCharging
 	current, err := wb.GetMaxCurrent()
+	require.NoError(t, err)
+	assert.InDelta(t, 15.942, current, 0.001)
+
+	// the setpoint encodes the phase count, so a three-phase setpoint read back while the tracked
+	// count is 1p resolves to 3p rather than the impossible 11kW/230V = 47.8A
+	wb.phases = 1
+	current, err = wb.GetMaxCurrent()
 	require.NoError(t, err)
 	assert.InDelta(t, 15.942, current, 0.001)
 }
