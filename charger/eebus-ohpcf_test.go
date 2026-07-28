@@ -7,6 +7,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,17 +15,21 @@ import (
 // methods accessing the compressor entity must error when it is absent,
 // so a missing compressor is not mistaken for an idle device.
 func TestEEBusOHPCFNotConnected(t *testing.T) {
-	c := &EEBusOHPCF{}
+	c := &EEBusOHPCF{
+		cem: &eebus.CustomerEnergyManagement{},
+		ma:  &eebus.MonitoringAppliance{},
+		eg:  &eebus.EnergyGuard{},
+	}
 
 	status, err := c.Status()
-	require.ErrorIs(t, err, errNotConnected)
+	require.ErrorIs(t, err, eebus.ErrNotConnected)
 	assert.Equal(t, api.StatusNone, status)
 
 	_, err = c.Enabled()
-	require.ErrorIs(t, err, errNotConnected)
+	require.ErrorIs(t, err, eebus.ErrNotConnected)
 
-	require.ErrorIs(t, c.Enable(true), errNotConnected)
-	require.ErrorIs(t, c.MaxCurrent(16), errNotConnected)
+	require.ErrorIs(t, c.Enable(true), eebus.ErrNotConnected)
+	require.ErrorIs(t, c.MaxCurrent(16), eebus.ErrNotConnected)
 
 	// dimming uses EG LPC, which is unavailable without an LPC entity
 	require.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
@@ -90,7 +95,8 @@ func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
 
-	got, ok := c.connectedCompressor()
-	require.True(t, ok)
-	assert.Equal(t, entity, got)
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	assert.Equal(t, entity, c.compressor)
 }

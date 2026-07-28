@@ -29,6 +29,12 @@ const (
 	MPCFrequency       uint = 5 // S5 frequency
 )
 
+// OHPCF — Optimization of Self-Consumption by Heat Pump Compressor Flexibility (UC TS v1.0.0)
+const (
+	OHPCFMonitor uint = 1 // S1 monitor the compressor's power consumption flexibility
+	OHPCFControl uint = 2 // S2 control the compressor's power consumption flexibility
+)
+
 // MDT — Monitoring of Domestic Hot Water Temperature (UC TS v1.0.0)
 const (
 	MDTTemperature uint = 1 // S1 DHW temperature
