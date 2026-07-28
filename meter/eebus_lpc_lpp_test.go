@@ -32,7 +32,6 @@ func newEGMeter(t *testing.T) (*EEBus, *egmocks.EgLPCInterface, *egmocks.EgLPPIn
 	c := &EEBus{
 		ctx:         t.Context(),
 		log:         util.NewLogger("eebus-eg-test"),
-		eg:          &eebus.EnergyGuard{EgLPCInterface: lpc, EgLPPInterface: lpp},
 		egLpcEntity: eebus.NewEntity[ucapi.EgLPCInterface](lpc),
 		egLppEntity: eebus.NewEntity[ucapi.EgLPPInterface](lpp),
 	}

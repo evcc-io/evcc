@@ -27,12 +27,15 @@ func WrapError(err error) error {
 	return err
 }
 
+// ResultCB receives the remote device's result for a control write.
+type ResultCB = func(model.ResultDataType, model.MsgCounterType)
+
 // WriteTimeout bounds how long an awaited eebus write waits for its result.
 const WriteTimeout = 10 * time.Second
 
 // Await runs a control write and waits for the remote device's result, returning
 // an error if the write is rejected or no result arrives within WriteTimeout.
-func Await(write func(func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error)) error {
+func Await(write func(ResultCB) (*model.MsgCounterType, error)) error {
 	res := make(chan model.ResultDataType, 1)
 
 	if _, err := write(func(r model.ResultDataType, _ model.MsgCounterType) { res <- r }); err != nil {

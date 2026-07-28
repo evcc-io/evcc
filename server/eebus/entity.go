@@ -5,6 +5,7 @@ import (
 
 	eebusapi "github.com/enbility/eebus-go/api"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -100,4 +101,16 @@ func (e *Entity[U]) Read[T any](read func(uc U, entity spineapi.EntityRemoteInte
 	}
 
 	return res, nil
+}
+
+// Write runs a control write against the remote entity and waits for its result.
+func (e *Entity[U]) Write(write func(uc U, entity spineapi.EntityRemoteInterface, cb ResultCB) (*model.MsgCounterType, error)) error {
+	entity, err := e.Available()
+	if err != nil {
+		return err
+	}
+
+	return Await(func(cb ResultCB) (*model.MsgCounterType, error) {
+		return write(e.uc, entity, cb)
+	})
 }
