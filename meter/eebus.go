@@ -165,7 +165,7 @@ func (c *EEBus) lastCurtailPercent() int {
 }
 
 func (c *EEBus) readValue[T any](scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
-	return eebus.ReadValue(c.mm, scenario, c.maEntity.Get(), update)
+	return c.maEntity.Read(c.mm, scenario, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
@@ -217,7 +217,7 @@ var _ api.Dimmer = (*EEBus)(nil)
 
 // Dimmed implements the api.Dimmer interface
 func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := eebus.ReadValue(c.eg.EgLPCInterface, eebus.LPCLimit, c.egLpcEntity.Get(), c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.egLpcEntity.Read(c.eg.EgLPCInterface, eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -263,9 +263,7 @@ var _ api.Curtailer = (*EEBus)(nil)
 
 // CurtailedPercent implements the api.Curtailer interface
 func (c *EEBus) CurtailedPercent() (int, error) {
-	entity := c.egLppEntity.Get()
-
-	limit, err := eebus.ReadValue(c.eg.EgLPPInterface, eebus.LPPLimit, entity, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := c.egLppEntity.Read(c.eg.EgLPPInterface, eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return 0, err
 	}
@@ -276,7 +274,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 	}
 
 	// without a nominal reference the limit cannot be expressed as a percent
-	nominal, err := c.eg.EgLPPInterface.ProductionNominalMax(entity)
+	nominal, err := c.eg.EgLPPInterface.ProductionNominalMax(c.egLppEntity.Get())
 	if err != nil || nominal <= 0 {
 		return 0, api.ErrNotAvailable
 	}
