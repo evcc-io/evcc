@@ -28,9 +28,9 @@ func newMGCPMeter(t *testing.T) (*EEBus, *mgcpmocks.MaMGCPInterface, spineapi.En
 	c := &EEBus{
 		log:       util.NewLogger("eebus-mgcp-test"),
 		mm:        mm,
-		maEntity:  entity,
 		scenarios: mgcpScenarios,
 	}
+	c.maEntity.Set(entity)
 
 	return c, mm, entity
 }
@@ -210,7 +210,7 @@ func TestMGCP_ScenarioGating(t *testing.T) {
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newMGCPMeter(t)
-		c.maEntity = nil // GCP not (yet) connected
+		c.maEntity.Set(nil) // GCP not (yet) connected
 
 		_, err := c.CurrentPower()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)

@@ -28,17 +28,6 @@ func WrapError(err error) error {
 	return err
 }
 
-// RequiredEntity returns the remote entity while the use case scenario is
-// available at it and ErrNotConnected otherwise. Use for entities the device
-// cannot operate without; optional data uses ReadValue.
-func RequiredEntity(uc eebusapi.UseCaseBaseInterface, scenario uint, entity spineapi.EntityRemoteInterface) (spineapi.EntityRemoteInterface, error) {
-	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
-		return nil, ErrNotConnected
-	}
-
-	return entity, nil
-}
-
 // ReadValue reads a use case value from the remote entity. It reports
 // ErrNotAvailable while the scenario is unavailable at the entity or the value
 // has not been received yet.
@@ -55,27 +44,6 @@ func ReadValue[T any](uc eebusapi.UseCaseBaseInterface, scenario uint, entity sp
 	}
 
 	return res, nil
-}
-
-// UpdateEntity returns the remote entity to cache for a use case after a use case
-// support update. Removing a use case from an entity emits the same event with the
-// entity still set, so the cached entity is dropped once its scenarios are gone.
-// Of the remaining candidates the least specific (shallowest) entity wins.
-func UpdateEntity(uc eebusapi.UseCaseBaseInterface, cached, entity spineapi.EntityRemoteInterface) spineapi.EntityRemoteInterface {
-	if cached != nil && len(uc.AvailableScenariosForEntity(cached)) == 0 {
-		cached = nil
-	}
-
-	// removal, or an entity that doesn't support any scenario of the use case
-	if entity == nil || len(uc.AvailableScenariosForEntity(entity)) == 0 {
-		return cached
-	}
-
-	if cached == nil || len(entity.Address().Entity) < len(cached.Address().Entity) {
-		return entity
-	}
-
-	return cached
 }
 
 // WriteTimeout bounds how long an awaited eebus write waits for its result.

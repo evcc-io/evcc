@@ -24,12 +24,9 @@ func (c *EEBus) Connect(connected bool) {
 		return
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.maEntity = nil
-	c.egLpcEntity = nil
-	c.egLppEntity = nil
+	c.maEntity.Set(nil)
+	c.egLpcEntity.Set(nil)
+	c.egLppEntity.Set(nil)
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -42,59 +39,20 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	switch event {
 	// Monitoring Appliance
 	case mpc.UseCaseSupportUpdate, mgcp.UseCaseSupportUpdate:
-		c.maUseCaseSupportUpdate(entity)
+		c.maEntity.Update(c.mm, entity)
 
 	// Energy Guard - LPC
 	case lpc.UseCaseSupportUpdate:
-		c.egLpcUseCaseSupportUpdate(entity)
+		if c.egLpcEntity.Update(c.eg.EgLPCInterface, entity) {
+			// [LPC-913]: state the limit to the newly available CS
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
+		}
 
 	// Energy Guard - LPP
 	case lpp.UseCaseSupportUpdate:
-		c.egLppUseCaseSupportUpdate(entity)
-	}
-}
-
-//
-// Monitoring Appliance - MPC/MGPC
-//
-
-func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.maEntity = eebus.UpdateEntity(c.mm, c.maEntity, entity)
-}
-
-//
-// Energy Guard - LPC
-//
-
-func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	prev := c.egLpcEntity
-	c.egLpcEntity = eebus.UpdateEntity(c.eg.EgLPCInterface, c.egLpcEntity, entity)
-
-	if c.egLpcEntity != nil && c.egLpcEntity != prev {
-		// [LPC-913]: state the limit to the newly available CS
-		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
-	}
-}
-
-//
-// Energy Guard - LPP
-//
-
-func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	prev := c.egLppEntity
-	c.egLppEntity = eebus.UpdateEntity(c.eg.EgLPPInterface, c.egLppEntity, entity)
-
-	if c.egLppEntity != nil && c.egLppEntity != prev {
-		// [LPP-913]: state the limit to the newly available CS
-		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
+		if c.egLppEntity.Update(c.eg.EgLPPInterface, entity) {
+			// [LPP-913]: state the limit to the newly available CS
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
+		}
 	}
 }
