@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -56,7 +57,7 @@ func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
 	defer v.mu.Unlock()
 
 	vin = strings.ToUpper(vin)
-	ch := make(chan StreamingMessage, 1)
+	ch := make(chan StreamingMessage, 32)
 	v.subscriptions[vin] = append(v.subscriptions[vin], ch)
 	v.log.DEBUG.Printf("mqtt subscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
 
@@ -68,17 +69,20 @@ func (v *MqttConnector) Unsubscribe(vin string, ch <-chan StreamingMessage) {
 	defer v.mu.Unlock()
 
 	vin = strings.ToUpper(vin)
+
 	subs := v.subscriptions[vin]
-	for i, sub := range subs {
-		if sub == ch {
-			v.subscriptions[vin] = append(subs[:i], subs[i+1:]...)
-			close(sub)
-			v.log.DEBUG.Printf("mqtt unsubscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
-			break
-		}
+
+	i := slices.IndexFunc(subs, func(sub chan StreamingMessage) bool { return sub == ch })
+	if i < 0 {
+		return
 	}
-	if len(v.subscriptions[vin]) == 0 {
+
+	close(subs[i])
+
+	if subs = slices.Delete(subs, i, i+1); len(subs) == 0 {
 		delete(v.subscriptions, vin)
+	} else {
+		v.subscriptions[vin] = subs
 	}
 }
 
@@ -161,13 +165,12 @@ func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
 	v.mu.RLock()
 	defer v.mu.RUnlock()
 
-	if subs, ok := v.subscriptions[strings.ToUpper(res.Vin)]; ok {
-		for _, ch := range subs {
-			select {
-			case ch <- res:
-			default:
-				// ignore if buffer full to not block other subscribers
-			}
+	for _, ch := range v.subscriptions[strings.ToUpper(res.Vin)] {
+		select {
+		case ch <- res:
+		default:
+			// don't block other subscribers
+			v.log.WARN.Printf("dropped message for %s: receiver busy", res.Vin)
 		}
 	}
 }

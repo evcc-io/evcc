@@ -4,85 +4,45 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
-	"time"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
 
-// mockMessage implements mqtt.Message for testing
 type mockMessage struct {
+	mqtt.Message
 	payload []byte
 }
 
-func (m mockMessage) Duplicate() bool   { return false }
-func (m mockMessage) Qos() byte         { return 0 }
-func (m mockMessage) Retained() bool    { return false }
-func (m mockMessage) Topic() string     { return "test" }
-func (m mockMessage) MessageID() uint16 { return 0 }
-func (m mockMessage) Payload() []byte   { return m.payload }
-func (m mockMessage) Ack()              {}
+func (m mockMessage) Topic() string   { return "test" }
+func (m mockMessage) Payload() []byte { return m.payload }
 
 func TestMqttMultiSubscribe(t *testing.T) {
-	log := util.NewLogger("foo")
+	conn := NewMqttConnector(context.TODO(), util.NewLogger("foo"), t.Name(), nil)
 
-	// Create MqttConnector (using empty gcid)
-	mqttConn := NewMqttConnector(context.TODO(), log, "test-client-id", nil)
+	// loadpoint and config page subscribing to the same vehicle, vin entered in mixed case
+	ch1 := conn.Subscribe("wba12345")
+	ch2 := conn.Subscribe("WBA12345")
 
-	// Simulate multiple vehicles (e.g. loadpoint vs config page) subscribing to the same VIN
-	ch1 := mqttConn.Subscribe("WBA12345")
-	ch2 := mqttConn.Subscribe("WBA12345")
-
-	// Create a dummy JSON payload matching the expected format
-	msgData := StreamingMessage{
-		Vin: "WBA12345",
-		Data: map[string]StreamingData{
-			"vehicle.powertrain.electric.battery.stateOfCharge.displayed": {
-				TimeStamp: time.Now(),
-				Value:     50.0,
-			},
-		},
-	}
-	b, err := json.Marshal(msgData)
+	b, err := json.Marshal(StreamingMessage{Vin: "WBA12345"})
 	require.NoError(t, err)
 
-	// Simulate MQTT incoming message
-	mqttConn.handler(nil, mockMessage{payload: b})
+	conn.handler(nil, mockMessage{payload: b})
 
-	// Both channels should receive the message without blocking each other
-	select {
-	case res1 := <-ch1:
-		require.Equal(t, "WBA12345", res1.Vin)
-	case <-time.After(time.Second):
-		t.Fatal("ch1 did not receive message (stolen subscription bug)")
+	for _, ch := range []<-chan StreamingMessage{ch1, ch2} {
+		require.Len(t, ch, 1, "message not delivered")
+		require.Equal(t, "WBA12345", (<-ch).Vin)
 	}
 
-	select {
-	case res2 := <-ch2:
-		require.Equal(t, "WBA12345", res2.Vin)
-	case <-time.After(time.Second):
-		t.Fatal("ch2 did not receive message (stolen subscription bug)")
-	}
+	// unsubscribing one subscriber must not steal the other's channel
+	conn.Unsubscribe("WBA12345", ch1)
+	conn.handler(nil, mockMessage{payload: b})
 
-	// Test Unsubscribe removes only one channel
-	mqttConn.Unsubscribe("WBA12345", ch1)
+	_, ok := <-ch1
+	require.False(t, ok, "ch1 not closed")
+	require.Len(t, ch2, 1, "message not delivered")
 
-	// Send another message
-	mqttConn.handler(nil, mockMessage{payload: b})
-
-	// ch1 should not receive it, but ch2 should
-	select {
-	case _, ok := <-ch1:
-		if ok {
-			t.Fatal("ch1 should not receive message after unsubscribe")
-		}
-	default:
-	}
-
-	select {
-	case <-ch2:
-		// success
-	case <-time.After(time.Second):
-		t.Fatal("ch2 should still receive message")
-	}
+	conn.Unsubscribe("wba12345", ch2)
+	require.Empty(t, conn.subscriptions)
 }
