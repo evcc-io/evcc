@@ -61,10 +61,7 @@ type httpTestSuite struct {
 func (suite *httpTestSuite) SetupSuite() {
 	suite.h = new(httpHandler)
 	suite.srv = httptest.NewServer(suite.h)
-}
-
-func (suite *httpTestSuite) TearDown() {
-	suite.srv.Close()
+	suite.T().Cleanup(suite.srv.Close)
 }
 
 func (suite *httpTestSuite) TestGet() {
