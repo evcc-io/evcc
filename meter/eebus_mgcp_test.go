@@ -26,9 +26,8 @@ func newMGCPMeter(t *testing.T) (*EEBus, *mgcpmocks.MaMGCPInterface, spineapi.En
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBus{
-		log:       util.NewLogger("eebus-mgcp-test"),
-		maEntity:  eebus.NewEntity[measurements](mm),
-		scenarios: mgcpScenarios,
+		log:      util.NewLogger("eebus-mgcp-test"),
+		maEntity: eebus.NewEntity[measurements](mm),
 	}
 	c.maEntity.Set(entity)
 
@@ -56,7 +55,6 @@ func TestMGCP_SCE2_TotalActivePower(t *testing.T) {
 		} {
 			t.Run(tc.dir, func(t *testing.T) {
 				c, mm, entity := newMGCPMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPPower).Return(true)
 				mm.EXPECT().Power(entity).Return(tc.value, nil)
 
 				got, err := c.CurrentPower()
@@ -71,7 +69,6 @@ func TestMGCP_SCE2_TotalActivePower(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMGCPMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPPower).Return(true)
 				mm.EXPECT().Power(entity).Return(0, badErr)
 
 				_, err := c.CurrentPower()
@@ -86,7 +83,6 @@ func TestMGCP_SCE4_TotalConsumedEnergy(t *testing.T) {
 	// PT_001: state "normal" while consuming; positive value per MGCP-TS-010.
 	t.Run("ATC_SCE4_PT_MATotalConsumedEnergy_001", func(t *testing.T) {
 		c, mm, entity := newMGCPMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPEnergyConsumed).Return(true)
 		mm.EXPECT().EnergyConsumed(entity).Return(12345.6, nil)
 
 		got, err := c.TotalEnergy()
@@ -99,7 +95,6 @@ func TestMGCP_SCE4_TotalConsumedEnergy(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMGCPMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPEnergyConsumed).Return(true)
 				mm.EXPECT().EnergyConsumed(entity).Return(0, badErr)
 
 				_, err := c.TotalEnergy()
@@ -123,7 +118,6 @@ func TestMGCP_SCE5_ActiveACCurrent(t *testing.T) {
 		} {
 			t.Run(tc.dir, func(t *testing.T) {
 				c, mm, entity := newMGCPMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPCurrentPerPhase).Return(true)
 				mm.EXPECT().CurrentPerPhase(entity).Return([]float64{tc.a, tc.b, tc.cc}, nil)
 
 				l1, l2, l3, err := c.Currents()
@@ -138,7 +132,6 @@ func TestMGCP_SCE5_ActiveACCurrent(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMGCPMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPCurrentPerPhase).Return(true)
 				mm.EXPECT().CurrentPerPhase(entity).Return(nil, badErr)
 
 				_, _, _, err := c.Currents()
@@ -150,7 +143,6 @@ func TestMGCP_SCE5_ActiveACCurrent(t *testing.T) {
 	// MGCP-TS-006/7: only connected phases delivered; evcc pads to three phases.
 	t.Run("partial_phases_padded", func(t *testing.T) {
 		c, mm, entity := newMGCPMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPCurrentPerPhase).Return(true)
 		mm.EXPECT().CurrentPerPhase(entity).Return([]float64{7.5}, nil)
 
 		l1, l2, l3, err := c.Currents()
@@ -161,7 +153,6 @@ func TestMGCP_SCE5_ActiveACCurrent(t *testing.T) {
 	// Malformed data (>3 phases) must not be surfaced as a reading.
 	t.Run("too_many_phases_rejected", func(t *testing.T) {
 		c, mm, entity := newMGCPMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPCurrentPerPhase).Return(true)
 		mm.EXPECT().CurrentPerPhase(entity).Return([]float64{1, 2, 3, 4}, nil)
 
 		_, _, _, err := c.Currents()
@@ -174,7 +165,6 @@ func TestMGCP_SCE6_ACVoltage(t *testing.T) {
 	// PT_*: state "normal"; MGCP-TS-011 voltages independent of energy direction.
 	t.Run("ATC_SCE6_PT_MAACVoltage", func(t *testing.T) {
 		c, mm, entity := newMGCPMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPVoltagePerPhase).Return(true)
 		mm.EXPECT().VoltagePerPhase(entity).Return([]float64{230.1, 229.8, 231.0}, nil)
 
 		u1, u2, u3, err := c.Voltages()
@@ -187,7 +177,6 @@ func TestMGCP_SCE6_ACVoltage(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMGCPMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPVoltagePerPhase).Return(true)
 				mm.EXPECT().VoltagePerPhase(entity).Return(nil, badErr)
 
 				_, _, _, err := c.Voltages()
@@ -200,9 +189,9 @@ func TestMGCP_SCE6_ACVoltage(t *testing.T) {
 // Availability gating: an unannounced scenario or unconnected entity yields
 // ErrNotAvailable — the MA must not invent a value for an unsupported data point.
 func TestMGCP_ScenarioGating(t *testing.T) {
-	t.Run("scenario_not_announced", func(t *testing.T) {
+	t.Run("use_case_not_supported", func(t *testing.T) {
 		c, mm, entity := newMGCPMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPPower).Return(false)
+		mm.EXPECT().Power(entity).Return(0, eebusapi.ErrNoCompatibleEntity)
 
 		_, err := c.CurrentPower()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)

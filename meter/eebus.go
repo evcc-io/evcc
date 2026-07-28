@@ -25,37 +25,11 @@ type EEBus struct {
 
 	connector *eebus.Connector
 	eg        *eebus.EnergyGuard
-	scenarios maScenarios
 
 	maEntity    *eebus.Entity[measurements]
 	egLpcEntity *eebus.Entity[ucapi.EgLPCInterface]
 	egLppEntity *eebus.Entity[ucapi.EgLPPInterface]
 }
-
-// maScenarios holds the spec scenario numbers for the active monitoring use case.
-// MGCP and MPC use different scenario numbers for the same physical quantity, so
-// IsScenarioAvailableAtEntity must be called with the per-UC value.
-type maScenarios struct {
-	power    uint
-	energy   uint
-	currents uint
-	voltages uint
-}
-
-var (
-	mpcScenarios = maScenarios{
-		power:    eebus.MPCPower,
-		energy:   eebus.MPCEnergyConsumed,
-		currents: eebus.MPCCurrentPerPhase,
-		voltages: eebus.MPCVoltagePerPhase,
-	}
-	mgcpScenarios = maScenarios{
-		power:    eebus.MGCPPower,
-		energy:   eebus.MGCPEnergyConsumed,
-		currents: eebus.MGCPCurrentPerPhase,
-		voltages: eebus.MGCPVoltagePerPhase,
-	}
-)
 
 type measurements interface {
 	eebusapi.UseCaseBaseInterface
@@ -97,12 +71,10 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	// Use MGCP only for explicit grid usage, MPC for everything else (default)
 	useCase := "mpc"
 	mm := measurements(ma.MaMPCInterface)
-	scenarios := mpcScenarios
 
 	if usage != nil && *usage == templates.UsageGrid {
 		useCase = "mgcp"
 		mm = ma.MaMGCPInterface
-		scenarios = mgcpScenarios
 	}
 
 	eg := inst.EnergyGuard()
@@ -110,7 +82,6 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	c := &EEBus{
 		log:         util.NewLogger("eebus-" + useCase),
 		eg:          eg,
-		scenarios:   scenarios,
 		connector:   eebus.NewConnector(),
 		maEntity:    eebus.NewEntity(mm),
 		egLpcEntity: eebus.NewEntity(eg.EgLPCInterface),
@@ -146,17 +117,17 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.maEntity.Read(c.scenarios.power, measurements.Power)
+	return c.maEntity.Read(measurements.Power)
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
 
 func (c *EEBus) TotalEnergy() (float64, error) {
-	return c.maEntity.Read(c.scenarios.energy, measurements.EnergyConsumed)
+	return c.maEntity.Read(measurements.EnergyConsumed)
 }
 
-func (c *EEBus) readPhases(scenario uint, update func(mm measurements, entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
-	res, err := c.maEntity.Read(scenario, update)
+func (c *EEBus) readPhases(update func(mm measurements, entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
+	res, err := c.maEntity.Read(update)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -179,20 +150,20 @@ func (c *EEBus) readPhases(scenario uint, update func(mm measurements, entity sp
 var _ api.PhaseCurrents = (*EEBus)(nil)
 
 func (c *EEBus) Currents() (float64, float64, float64, error) {
-	return c.readPhases(c.scenarios.currents, measurements.CurrentPerPhase)
+	return c.readPhases(measurements.CurrentPerPhase)
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
 
 func (c *EEBus) Voltages() (float64, float64, float64, error) {
-	return c.readPhases(c.scenarios.voltages, measurements.VoltagePerPhase)
+	return c.readPhases(measurements.VoltagePerPhase)
 }
 
 var _ api.Dimmer = (*EEBus)(nil)
 
 // Dimmed implements the api.Dimmer interface
 func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := c.egLpcEntity.Read(eebus.LPCLimit, ucapi.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.egLpcEntity.Read(ucapi.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -215,21 +186,21 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
-	entity, err := c.egLpcEntity.Available(eebus.LPCLimit)
+	entity, err := c.egLpcEntity.Available()
 	if err != nil {
 		return err
 	}
 
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	return eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
-	})
+	}))
 }
 
 var _ api.Curtailer = (*EEBus)(nil)
 
 // CurtailedPercent implements the api.Curtailer interface
 func (c *EEBus) CurtailedPercent() (int, error) {
-	limit, err := c.egLppEntity.Read(eebus.LPPLimit, ucapi.EgLPPInterface.ProductionLimit)
+	limit, err := c.egLppEntity.Read(ucapi.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return 0, err
 	}
@@ -240,7 +211,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 	}
 
 	// without a nominal reference the limit cannot be expressed as a percent
-	nominal, err := c.egLppEntity.Read(eebus.LPPElectricalConnection, ucapi.EgLPPInterface.ProductionNominalMax)
+	nominal, err := c.egLppEntity.Read(ucapi.EgLPPInterface.ProductionNominalMax)
 	if err != nil || nominal <= 0 {
 		return 0, api.ErrNotAvailable
 	}
@@ -253,7 +224,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 func (c *EEBus) SetCurtailPercent(percent int) error {
 	curtail := percent < 100
 
-	entity, err := c.egLppEntity.Available(eebus.LPPLimit)
+	entity, err := c.egLppEntity.Available()
 	if err != nil {
 		return err
 	}
@@ -262,12 +233,12 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 	// (limits are negative watts); fall back to a safe 0W limit if unavailable
 	var value float64
 	if curtail {
-		if nominal, err := c.egLppEntity.Read(eebus.LPPElectricalConnection, ucapi.EgLPPInterface.ProductionNominalMax); err == nil && nominal > 0 {
+		if nominal, err := c.egLppEntity.Read(ucapi.EgLPPInterface.ProductionNominalMax); err == nil && nominal > 0 {
 			value = -float64(percent) / 100 * nominal
 		}
 	}
 
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	return eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
-	})
+	}))
 }

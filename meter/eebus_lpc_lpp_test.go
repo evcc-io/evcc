@@ -6,6 +6,7 @@ package meter
 import (
 	"testing"
 
+	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	egmocks "github.com/enbility/eebus-go/usecases/mocks"
 	spineapi "github.com/enbility/spine-go/api"
@@ -59,7 +60,6 @@ func TestLPC_EGMessages_ConsumptionLimit(t *testing.T) {
 	} {
 		t.Run("ATC_COM_PT_EGMessages_001_"+tc.name, func(t *testing.T) {
 			c, lpc, _, entity := newEGMeter(t)
-			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().
 				WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: tc.active}, mock.Anything).
 				Run(ackWrite).
@@ -73,7 +73,6 @@ func TestLPC_EGMessages_ConsumptionLimit(t *testing.T) {
 // A rejected write (NACK) must surface as an error, not silent success.
 func TestLPC_Dim_WriteRejected(t *testing.T) {
 	c, lpc, _, entity := newEGMeter(t)
-	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 	lpc.EXPECT().
 		WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
 		Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
@@ -85,11 +84,12 @@ func TestLPC_Dim_WriteRejected(t *testing.T) {
 	assert.Error(t, c.Dim(true))
 }
 
-// Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
+// Dim is gated: no LPC use case at the entity, or no connected entity → ErrNotAvailable.
 func TestLPC_Dim_Gating(t *testing.T) {
-	t.Run("scenario_not_announced", func(t *testing.T) {
+	t.Run("use_case_not_supported", func(t *testing.T) {
 		c, lpc, _, entity := newEGMeter(t)
-		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
+		lpc.EXPECT().WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
+			Return(nil, eebusapi.ErrNoCompatibleEntity)
 
 		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
 	})
@@ -117,7 +117,6 @@ func TestLPC_Dimmed(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, lpc, _, entity := newEGMeter(t)
-			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(tc.limit, nil)
 
 			got, err := c.Dimmed()
@@ -142,9 +141,7 @@ func TestLPP_EGMessages_ProductionLimit(t *testing.T) {
 	} {
 		t.Run("ATC_COM_PT_EGMessages_001_"+tc.name, func(t *testing.T) {
 			c, _, lpp, entity := newEGMeter(t)
-			lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 			if tc.active {
-				lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 				lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
 			}
 			lpp.EXPECT().
@@ -162,8 +159,6 @@ func TestLPP_EGMessages_ProductionLimit(t *testing.T) {
 // A rejected write (NACK) must surface as an error, not silent success.
 func TestLPP_Curtail_WriteRejected(t *testing.T) {
 	c, _, lpp, entity := newEGMeter(t)
-	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
-	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 	lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
 	lpp.EXPECT().
 		WriteProductionLimit(entity, mock.Anything, mock.Anything).
@@ -178,9 +173,11 @@ func TestLPP_Curtail_WriteRejected(t *testing.T) {
 
 // SetCurtailPercent is gated the same way as Dim.
 func TestLPP_SetCurtailPercent_Gating(t *testing.T) {
-	t.Run("scenario_not_announced", func(t *testing.T) {
+	t.Run("use_case_not_supported", func(t *testing.T) {
 		c, _, lpp, entity := newEGMeter(t)
-		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(false)
+		lpp.EXPECT().ProductionNominalMax(entity).Return(0, eebusapi.ErrNoCompatibleEntity).Maybe()
+		lpp.EXPECT().WriteProductionLimit(entity, mock.Anything, mock.Anything).
+			Return(nil, eebusapi.ErrNoCompatibleEntity)
 
 		assert.ErrorIs(t, c.SetCurtailPercent(0), api.ErrNotAvailable)
 	})
@@ -208,10 +205,8 @@ func TestLPP_CurtailedPercent(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, _, lpp, entity := newEGMeter(t)
-			lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 			lpp.EXPECT().ProductionLimit(entity).Return(tc.limit, nil)
 			if tc.want != 100 {
-				lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 				lpp.EXPECT().ProductionNominalMax(entity).Return(5000.0, nil)
 			}
 
@@ -229,10 +224,8 @@ func TestLPP_CurtailedPercent_RoundTrip(t *testing.T) {
 
 	for percent := range 101 {
 		c, _, lpp, entity := newEGMeter(t)
-		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 		lpp.EXPECT().ProductionLimit(entity).
 			Return(ucapi.LoadLimit{IsActive: true, Value: -float64(percent) / 100 * nominal}, nil)
-		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 		lpp.EXPECT().ProductionNominalMax(entity).Return(nominal, nil)
 
 		got, err := c.CurtailedPercent()
@@ -244,9 +237,7 @@ func TestLPP_CurtailedPercent_RoundTrip(t *testing.T) {
 // Without a nominal reference the watt limit cannot be expressed as a percent.
 func TestLPP_CurtailedPercent_NoNominal(t *testing.T) {
 	c, _, lpp, entity := newEGMeter(t)
-	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 	lpp.EXPECT().ProductionLimit(entity).Return(ucapi.LoadLimit{IsActive: true, Value: -2000}, nil)
-	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 	lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
 
 	_, err := c.CurtailedPercent()

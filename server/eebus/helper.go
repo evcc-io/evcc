@@ -18,7 +18,8 @@ var ErrNotConnected = errors.New("not connected")
 func WrapError(err error) error {
 	if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
 		errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
-		errors.Is(err, eebusapi.ErrDataInvalid) {
+		errors.Is(err, eebusapi.ErrDataInvalid) ||
+		errors.Is(err, eebusapi.ErrNoCompatibleEntity) {
 		return api.ErrNotAvailable
 	}
 	return err

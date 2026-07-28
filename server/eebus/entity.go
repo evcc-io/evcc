@@ -58,22 +58,21 @@ func (e *Entity[U]) Update(entity spineapi.EntityRemoteInterface) {
 	}
 }
 
-// Available returns the remote entity while the use case scenario is available
-// at it, ErrNotAvailable otherwise.
-func (e *Entity[U]) Available(scenario uint) (spineapi.EntityRemoteInterface, error) {
+// Available returns the remote entity, ErrNotAvailable if the use case has none.
+// Use case methods validate the entity themselves, so no scenario check is needed.
+func (e *Entity[U]) Available() (spineapi.EntityRemoteInterface, error) {
 	entity := e.Get()
-
-	if entity == nil || !e.uc.IsScenarioAvailableAtEntity(entity, scenario) {
+	if entity == nil {
 		return nil, api.ErrNotAvailable
 	}
 
 	return entity, nil
 }
 
-// Required is Available for a scenario the device cannot operate without
-func (e *Entity[U]) Required(scenario uint) (spineapi.EntityRemoteInterface, error) {
-	entity, err := e.Available(scenario)
-	if err != nil {
+// Required is Available for a use case the device cannot operate without
+func (e *Entity[U]) Required() (spineapi.EntityRemoteInterface, error) {
+	entity := e.Get()
+	if entity == nil {
 		return nil, ErrNotConnected
 	}
 
@@ -81,11 +80,11 @@ func (e *Entity[U]) Required(scenario uint) (spineapi.EntityRemoteInterface, err
 }
 
 // Read reads a use case value from the remote entity, reporting ErrNotAvailable
-// while the scenario is unavailable or the value has not been received yet.
-func (e *Entity[U]) Read[T any](scenario uint, read func(uc U, entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+// while the use case is unavailable or the value has not been received yet.
+func (e *Entity[U]) Read[T any](read func(uc U, entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	var zero T
 
-	entity, err := e.Available(scenario)
+	entity, err := e.Available()
 	if err != nil {
 		return zero, err
 	}
