@@ -23,6 +23,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -41,16 +42,17 @@ type FoxESSEVC struct {
 	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
-	current    float64 // tracks phase current, 0 if unset
-	enabled    bool    // tracks enabled state
-	phases     int     // tracks phase count; the charger does not report it
-	switchable bool    // charger switches 1p/3p on its own, derived from the power setpoint
-	setpoint   uint16  // last known value of foxRegMaxPower
-	status     uint16  // last known value of foxRegStatus
-	minPower   uint16  // min supported power
-	maxPower   uint16  // max supported power
-	minCurrent float64 // min supported current per phase
-	maxCurrent float64 // max supported current per phase
+	mu         sync.Mutex // guards setpoint against the heartbeat goroutine
+	current    float64    // tracks phase current, 0 if unset
+	enabled    bool       // tracks enabled state
+	phases     int        // tracks phase count; the charger does not report it
+	switchable bool       // charger switches 1p/3p on its own, derived from the power setpoint
+	setpoint   uint16     // last known value of foxRegMaxPower
+	status     uint16     // last known value of foxRegStatus
+	minPower   uint16     // min supported power
+	maxPower   uint16     // max supported power
+	minCurrent float64    // min supported current per phase
+	maxCurrent float64    // max supported current per phase
 }
 
 // Register map per spec §2. Read-only and read/write registers are read with 0x03.
@@ -216,7 +218,7 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 
 		// keep the internal charge pause and switching protection interval as short as possible
-		if err := wb.ensureReg(foxRegSwitchInterval, foxMinSwitchInterval); err != nil {
+		if err := wb.writeReg(foxRegSwitchInterval, foxMinSwitchInterval); err != nil {
 			wb.log.WARN.Printf("switch interval: %v", err)
 		}
 	}
@@ -238,7 +240,7 @@ func NewFoxESSEVC(ctx context.Context, settings modbus.TcpSettings) (api.Charger
 	// keep the charger from considering evcc offline; see heartbeat (§2.34).
 	// widening the window to its maximum keeps the heartbeat rate low- firmware ranges differ,
 	// so a rejected write is not fatal.
-	if err := wb.ensureReg(foxRegTimeValidity, foxTimeValidity); err != nil {
+	if err := wb.writeReg(foxRegTimeValidity, foxTimeValidity); err != nil {
 		wb.log.WARN.Printf("time validity: %v", err)
 	}
 
@@ -310,29 +312,28 @@ func (wb *FoxESSEVC) writeReg(reg, val uint16) error {
 	return err
 }
 
-// ensureReg writes a value to a read/write register only if it differs from
-// the current value, avoiding spurious write errors on registers that reject
-// redundant writes (e.g. Modbus exception 3 when value is unchanged).
-func (wb *FoxESSEVC) ensureReg(reg, val uint16) error {
-	cur, err := wb.readUint16(reg)
-	if err != nil {
-		return err
-	}
-	if cur == val {
-		return nil
-	}
-
-	return wb.writeReg(reg, val)
-}
-
 // readSetpoint reads the power setpoint register and updates the cached value
 func (wb *FoxESSEVC) readSetpoint() (uint16, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	val, err := wb.readUint16(foxRegMaxPower)
 	if err == nil {
 		wb.setpoint = val
 	}
 
 	return val, err
+}
+
+// refreshSetpoint re-asserts the cached power setpoint. The charger honours the last EMS command
+// only for the duration of the command validity window (§2.34) and reverts to its max supported
+// power once it expires, so the setpoint has to be rewritten even when it does not change- a read
+// alone does not renew it.
+func (wb *FoxESSEVC) refreshSetpoint() error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	return wb.writeReg(foxRegMaxPower, wb.setpoint)
 }
 
 // sessionActive reports whether the given status belongs to a running charging session.
@@ -383,16 +384,10 @@ func currentFromSetpoint(setpoint uint16, phases int) float64 {
 	return float64(setpoint) * 100 / (230 * float64(phases))
 }
 
-// applySetpoint writes the combined enable state and charging limit. The setpoint is only written
-// when it actually changes, since some firmwares reject redundant writes with modbus exception 3.
+// applySetpoint writes the combined enable state and charging limit
 func (wb *FoxESSEVC) applySetpoint(val uint16) error {
-	cur, err := wb.readSetpoint()
-	if err != nil {
-		return err
-	}
-	if cur == val {
-		return nil
-	}
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
 
 	if err := wb.writeReg(foxRegMaxPower, val); err != nil {
 		return err
@@ -402,9 +397,8 @@ func (wb *FoxESSEVC) applySetpoint(val uint16) error {
 	return nil
 }
 
-// heartbeat feeds the chargers watchdog. Any message received within the
-// command validity window (foxRegTimeValidity) is sufficient (§2.34), hence a plain read.
-// The interval must be shorter than that window.
+// heartbeat keeps the power setpoint in effect. The interval must be shorter than the command
+// validity window (foxRegTimeValidity), otherwise the charger reverts to its max supported power.
 func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
 		select {
@@ -413,7 +407,7 @@ func (wb *FoxESSEVC) heartbeat(ctx context.Context, interval time.Duration) {
 			return
 		}
 
-		if _, err := wb.readUint16(foxRegStatus); err != nil {
+		if err := wb.refreshSetpoint(); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -618,10 +612,14 @@ func (wb *FoxESSEVC) getPhases() (int, error) {
 	// The charger picks the phase count from the power setpoint (§2.38). Since the setpoint is kept
 	// inside the band of the requested phase count, this is the count the charger will settle on-
 	// its minimum switching interval (§2.39) may however delay the actual switch.
+	wb.mu.Lock()
+	setpoint := wb.setpoint
+	wb.mu.Unlock()
+
 	switch {
-	case wb.setpoint >= foxMinPower3p:
+	case setpoint >= foxMinPower3p:
 		return 3, nil
-	case wb.setpoint >= foxMinPower1p:
+	case setpoint >= foxMinPower1p:
 		return 1, nil
 	default:
 		return wb.phases, nil

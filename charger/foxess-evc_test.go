@@ -290,17 +290,36 @@ func TestFoxESSEVCEnable(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, enabled)
 
-	// redundant writes are suppressed, some firmwares reject them
+	// an unchanged limit is rewritten as well, it keeps the validity window alive (§2.34)
 	require.NoError(t, wb.MaxCurrentMillis(16))
-	assert.Len(t, h.writes, 1)
+	require.Len(t, h.writes, 2)
+	assert.Equal(t, []uint16{110}, h.writes[1].args)
 
 	require.NoError(t, wb.Enable(false))
-	require.Len(t, h.writes, 2)
-	assert.Equal(t, []uint16{0}, h.writes[1].args)
+	require.Len(t, h.writes, 3)
+	assert.Equal(t, []uint16{0}, h.writes[2].args)
 
 	enabled, err = wb.Enabled()
 	require.NoError(t, err)
 	assert.False(t, enabled)
+}
+
+func TestFoxESSEVCRefreshSetpoint(t *testing.T) {
+	wb, h := foxTestCharger(t, map[uint16]uint16{
+		foxRegStatus:   foxStatusCharging,
+		foxRegMaxPower: 0,
+	})
+	wb.current = 16
+
+	require.NoError(t, wb.Enable(true))
+	require.Len(t, h.writes, 1)
+
+	// the charger only honours the last command for the validity window (§2.34), so the
+	// heartbeat must rewrite the setpoint even though the register already holds it
+	require.NoError(t, wb.refreshSetpoint())
+	require.Len(t, h.writes, 2)
+	assert.Equal(t, uint16(foxRegMaxPower), h.writes[1].addr)
+	assert.Equal(t, []uint16{110}, h.writes[1].args)
 }
 
 func TestFoxESSEVCPhaseSwitch(t *testing.T) {
