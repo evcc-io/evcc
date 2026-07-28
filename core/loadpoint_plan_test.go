@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	site "github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -85,17 +86,19 @@ func TestMinPVRespectsBufferSoc(t *testing.T) {
 func TestBufferSocHoldActive(t *testing.T) {
 	tc := []struct {
 		name       string
+		noBattery  bool
 		bufferSoc  float64
 		batterySoc float64
 		charging   bool
 		planActive bool
 		expected   bool
 	}{
-		{"no bufferSoc configured", 0, 40, true, true, false},
-		{"battery above bufferSoc", 65, 67, true, true, false},
-		{"battery below, plan active", 65, 63, true, true, true},
-		{"battery below, not charging", 65, 63, false, true, false},
-		{"battery below, charging but no plan", 65, 63, true, false, false},
+		{"no battery configured", true, 65, 0, true, true, false},
+		{"no bufferSoc configured", false, 0, 40, true, true, false},
+		{"battery above bufferSoc", false, 65, 67, true, true, false},
+		{"battery below, plan active", false, 65, 63, true, true, true},
+		{"battery below, not charging", false, 65, 63, false, true, false},
+		{"battery below, charging but no plan", false, 65, 63, true, false, false},
 	}
 
 	for _, tc := range tc {
@@ -118,6 +121,9 @@ func TestBufferSocHoldActive(t *testing.T) {
 			site.bufferSoc = tc.bufferSoc
 			site.battery.Soc = tc.batterySoc
 			site.loadpoints = []*Loadpoint{lp}
+			if !tc.noBattery {
+				site.batteryMeters = []config.Device[api.Meter]{nil}
+			}
 
 			assert.Equal(t, tc.expected, site.bufferSocHoldActive(), tc.name)
 		})

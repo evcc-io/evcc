@@ -224,6 +224,10 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 // is fast charging (plan, mode=now, minSoc). This prevents the battery from being
 // drained during fast/plan charging beyond the configured buffer threshold.
 func (site *Site) bufferSocHoldActive() bool {
+	if !site.batteryConfigured() {
+		return false
+	}
+
 	bufferSoc := site.GetBufferSoc()
 	if bufferSoc <= 0 || site.battery.Soc >= bufferSoc {
 		return false
