@@ -55,8 +55,10 @@ func (v *MqttConnector) Subscribe(vin string) <-chan StreamingMessage {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
+	vin = strings.ToUpper(vin)
 	ch := make(chan StreamingMessage, 1)
 	v.subscriptions[vin] = append(v.subscriptions[vin], ch)
+	v.log.DEBUG.Printf("mqtt subscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
 
 	return ch
 }
@@ -65,11 +67,13 @@ func (v *MqttConnector) Unsubscribe(vin string, ch <-chan StreamingMessage) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
+	vin = strings.ToUpper(vin)
 	subs := v.subscriptions[vin]
 	for i, sub := range subs {
 		if sub == ch {
 			v.subscriptions[vin] = append(subs[:i], subs[i+1:]...)
 			close(sub)
+			v.log.DEBUG.Printf("mqtt unsubscribe: %s (%d active subscribers)", vin, len(v.subscriptions[vin]))
 			break
 		}
 	}

@@ -30,7 +30,7 @@ func TestCardataStreaming(t *testing.T) {
 	require.Equal(t, 42.0, soc)
 
 	mqtt := mqttConnections["client"]
-	dataC := mqtt.subscriptions["vin"][0]
+	dataC := mqtt.subscriptions["VIN"][0]
 	require.NotNil(t, dataC, "streaming channel")
 
 	dataC <- StreamingMessage{
