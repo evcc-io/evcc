@@ -169,6 +169,7 @@ func TestLPP_EGMessages_ProductionLimit(t *testing.T) {
 			c, _, lpp, entity := newEGMeter(t)
 			lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 			if tc.active {
+				lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 				lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
 			}
 			lpp.EXPECT().
@@ -187,6 +188,7 @@ func TestLPP_EGMessages_ProductionLimit(t *testing.T) {
 func TestLPP_Curtail_WriteRejected(t *testing.T) {
 	c, _, lpp, entity := newEGMeter(t)
 	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
+	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 	lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
 	lpp.EXPECT().
 		WriteProductionLimit(entity, mock.Anything, mock.Anything).
@@ -234,6 +236,7 @@ func TestLPP_CurtailedPercent(t *testing.T) {
 			lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 			lpp.EXPECT().ProductionLimit(entity).Return(tc.limit, nil)
 			if tc.want != 100 {
+				lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 				lpp.EXPECT().ProductionNominalMax(entity).Return(5000.0, nil)
 			}
 
@@ -254,6 +257,7 @@ func TestLPP_CurtailedPercent_RoundTrip(t *testing.T) {
 		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 		lpp.EXPECT().ProductionLimit(entity).
 			Return(ucapi.LoadLimit{IsActive: true, Value: -float64(percent) / 100 * nominal}, nil)
+		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 		lpp.EXPECT().ProductionNominalMax(entity).Return(nominal, nil)
 
 		got, err := c.CurtailedPercent()
@@ -267,6 +271,7 @@ func TestLPP_CurtailedPercent_NoNominal(t *testing.T) {
 	c, _, lpp, entity := newEGMeter(t)
 	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(true)
 	lpp.EXPECT().ProductionLimit(entity).Return(ucapi.LoadLimit{IsActive: true, Value: -2000}, nil)
+	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPElectricalConnection).Return(true)
 	lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
 
 	_, err := c.CurtailedPercent()
