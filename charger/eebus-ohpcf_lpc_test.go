@@ -29,10 +29,10 @@ func newOHPCFEGCharger(t *testing.T) (*EEBusOHPCF, *egmocks.EgLPCInterface, spin
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBusOHPCF{
-		ctx:         t.Context(),
-		log:         util.NewLogger("eebus-ohpcf-test"),
-		eg:          &eebus.EnergyGuard{EgLPCInterface: lpc},
-		egLpcEntity: entity,
+		ctx:   t.Context(),
+		log:   util.NewLogger("eebus-ohpcf-test"),
+		eg:    &eebus.EnergyGuard{EgLPCInterface: lpc},
+		egLpc: entity,
 	}
 
 	return c, lpc, entity
@@ -68,9 +68,10 @@ func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 // limit to the CS - deactivated when nothing is being limited.
 func TestOHPCF_LPC_InitialLimit(t *testing.T) {
 	c, lpc, entity := newOHPCFEGCharger(t)
-	c.egLpcEntity = nil
+	c.egLpc = nil
 
 	written := make(chan ucapi.LoadLimit, 1)
+	lpc.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{eebus.LPCLimit})
 	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 	lpc.EXPECT().
 		WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
@@ -116,7 +117,7 @@ func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
-		c.egLpcEntity = nil
+		c.egLpc = nil
 
 		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
 	})
@@ -162,7 +163,7 @@ func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
-		c.egLpcEntity = nil
+		c.egLpc = nil
 
 		_, err := c.Dimmed()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)

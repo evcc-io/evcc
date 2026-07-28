@@ -31,7 +31,7 @@ func WrapError(err error) error {
 // RequiredEntity returns the remote entity while the use case scenario is
 // available at it and ErrNotConnected otherwise. Use for entities the device
 // cannot operate without; optional data uses ReadValue.
-func RequiredEntity(uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint) (spineapi.EntityRemoteInterface, error) {
+func RequiredEntity(uc eebusapi.UseCaseBaseInterface, scenario uint, entity spineapi.EntityRemoteInterface) (spineapi.EntityRemoteInterface, error) {
 	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
 		return nil, ErrNotConnected
 	}
@@ -42,7 +42,7 @@ func RequiredEntity(uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemo
 // ReadValue reads a use case value from the remote entity. It reports
 // ErrNotAvailable while the scenario is unavailable at the entity or the value
 // has not been received yet.
-func ReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint, read func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+func ReadValue[T any](uc eebusapi.UseCaseBaseInterface, scenario uint, entity spineapi.EntityRemoteInterface, read func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	var zero T
 
 	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {

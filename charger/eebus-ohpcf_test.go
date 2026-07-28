@@ -40,7 +40,7 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 func TestOHPCFEnableFailureKeepsState(t *testing.T) {
 	c := &EEBusOHPCF{}
 
-	require.ErrorIs(t, c.Enable(true), errNotConnected)
+	require.ErrorIs(t, c.Enable(true), eebus.ErrNotConnected)
 	assert.False(t, c.lastEnabled())
 }
 
