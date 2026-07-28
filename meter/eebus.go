@@ -25,9 +25,9 @@ type EEBus struct {
 
 	connector *eebus.Connector
 
-	maEntity    *eebus.Entity[measurements]
-	egLpcEntity *eebus.Entity[ucapi.EgLPCInterface]
-	egLppEntity *eebus.Entity[ucapi.EgLPPInterface]
+	ma  *eebus.Entity[measurements]
+	lpc *eebus.Entity[ucapi.EgLPCInterface]
+	lpp *eebus.Entity[ucapi.EgLPPInterface]
 }
 
 type measurements interface {
@@ -79,11 +79,11 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	eg := inst.EnergyGuard()
 
 	c := &EEBus{
-		log:         util.NewLogger("eebus-" + useCase),
-		connector:   eebus.NewConnector(),
-		maEntity:    eebus.NewEntity(mm),
-		egLpcEntity: eebus.NewEntity(eg.EgLPCInterface),
-		egLppEntity: eebus.NewEntity(eg.EgLPPInterface),
+		log:       util.NewLogger("eebus-" + useCase),
+		connector: eebus.NewConnector(),
+		ma:        eebus.NewEntity(mm),
+		lpc:       eebus.NewEntity(eg.EgLPCInterface),
+		lpp:       eebus.NewEntity(eg.EgLPPInterface),
 	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
@@ -115,17 +115,17 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.maEntity.Read(measurements.Power)
+	return c.ma.Read(measurements.Power)
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
 
 func (c *EEBus) TotalEnergy() (float64, error) {
-	return c.maEntity.Read(measurements.EnergyConsumed)
+	return c.ma.Read(measurements.EnergyConsumed)
 }
 
 func (c *EEBus) readPhases(update func(mm measurements, entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
-	res, err := c.maEntity.Read(update)
+	res, err := c.ma.Read(update)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -161,7 +161,7 @@ var _ api.Dimmer = (*EEBus)(nil)
 
 // Dimmed implements the api.Dimmer interface
 func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := c.egLpcEntity.Read(ucapi.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.lpc.Read(ucapi.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -184,7 +184,7 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
-	return c.egLpcEntity.Write(func(uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
+	return c.lpc.Write(func(uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
 		return uc.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
 	})
 }
@@ -193,7 +193,7 @@ var _ api.Curtailer = (*EEBus)(nil)
 
 // CurtailedPercent implements the api.Curtailer interface
 func (c *EEBus) CurtailedPercent() (int, error) {
-	limit, err := c.egLppEntity.Read(ucapi.EgLPPInterface.ProductionLimit)
+	limit, err := c.lpp.Read(ucapi.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return 0, err
 	}
@@ -204,7 +204,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 	}
 
 	// without a nominal reference the limit cannot be expressed as a percent
-	nominal, err := c.egLppEntity.Read(ucapi.EgLPPInterface.ProductionNominalMax)
+	nominal, err := c.lpp.Read(ucapi.EgLPPInterface.ProductionNominalMax)
 	if err != nil || nominal <= 0 {
 		return 0, api.ErrNotAvailable
 	}
@@ -221,12 +221,12 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 	// (limits are negative watts); fall back to a safe 0W limit if unavailable
 	var value float64
 	if curtail {
-		if nominal, err := c.egLppEntity.Read(ucapi.EgLPPInterface.ProductionNominalMax); err == nil && nominal > 0 {
+		if nominal, err := c.lpp.Read(ucapi.EgLPPInterface.ProductionNominalMax); err == nil && nominal > 0 {
 			value = -float64(percent) / 100 * nominal
 		}
 	}
 
-	return c.egLppEntity.Write(func(uc ucapi.EgLPPInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
+	return c.lpp.Write(func(uc ucapi.EgLPPInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
 		return uc.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
 	})
 }

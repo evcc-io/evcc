@@ -23,10 +23,10 @@ func newMPCMeter(t *testing.T) (*EEBus, *mpcmocks.MaMPCInterface, spineapi.Entit
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBus{
-		log:      util.NewLogger("eebus-mpc-test"),
-		maEntity: eebus.NewEntity[measurements](mm),
+		log: util.NewLogger("eebus-mpc-test"),
+		ma:  eebus.NewEntity[measurements](mm),
 	}
-	c.maEntity.Set(entity)
+	c.ma.Set(entity)
 
 	return c, mm, entity
 }
