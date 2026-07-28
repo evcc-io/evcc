@@ -157,6 +157,15 @@ params:
     help:
       de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus (Geräte der One-Base-/E3-Generation, z. B. Vitocal 25x). Deaktivieren, wenn das Gerät diese Datenpunkte nicht liefert (ältere Hardware/Firmware); die Verfügbarkeit lässt sich am Feature-Endpunkt der API ablesen.
       en: Reads the current electrical power consumption and the domestic hot water temperature (One Base/E3 generation devices, e.g. Vitocal 25x). Disable if the device does not provide these data points (older hardware/firmware); availability can be checked via the API feature endpoint.
+  - name: uri
+    advanced: true
+    default: https://api.viessmann-climatesolutions.com/iot/v2
+    description:
+      de: API-Basis-URL
+      en: API base URL
+    help:
+      de: Nur ändern, falls Viessmann die API-Domain erneut umzieht oder ein Proxy verwendet wird
+      en: Only change if Viessmann moves the API domain again or a proxy is used
   - name: target_temperature
     deprecated: true
     description:
@@ -172,6 +181,7 @@ auth:
   type: viessmann
   params: [clientid, redirecturi, gateway_serial]
 render: |
+  {{- $device := printf "%s/features/installations/%s/gateways/%s/devices/%s" .uri .installation_id .gateway_serial .device_id }}
   type: sgready
   getmode:
     source: http
@@ -179,7 +189,7 @@ render: |
     # this exact same URL, so evcc's shared HTTP cache serves them from a single API
     # call per cache window. The Viessmann API has a strict daily request quota
     # (shared with the ViCare app); per-feature polling exhausts it (HTTP 429).
-    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    uri: {{ $device }}/features
     cache: 120s # ~720 requests/day; raise further if you still hit 429
     auth:
       source: viessmann
@@ -199,7 +209,7 @@ render: |
       - case: 2 # normal
         set:
           source: http
-          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
+          uri: {{ $device }}/features/heating.dhw.oneTimeCharge/commands/deactivate
           method: POST 
           headers:  
             - content-type: application/json
@@ -213,7 +223,7 @@ render: |
       - case: 3 # boost
         set:
           source: http
-          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          uri: {{ $device }}/features/heating.dhw.oneTimeCharge/commands/activate
           method: POST 
           headers:  
             - content-type: application/json
@@ -235,7 +245,7 @@ render: |
     # wrongly assumed a full electric-heater draw when no meter was configured.
     # Same URL + cache as getmode -> served from the shared cached feature list.
     source: http
-    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    uri: {{ $device }}/features
     cache: 120s
     auth:
       source: viessmann
@@ -248,7 +258,7 @@ render: |
     # The device controls one-time DHW charging, so the hot water tank is the natural
     # temperature to display on the loadpoint gauge.
     source: http
-    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    uri: {{ $device }}/features
     cache: 120s
     auth:
       source: viessmann
@@ -259,7 +269,7 @@ render: |
   limittemp:
     # heating.dhw.temperature.main: configured DHW target temperature (°C).
     source: http
-    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features
+    uri: {{ $device }}/features
     cache: 120s
     auth:
       source: viessmann
