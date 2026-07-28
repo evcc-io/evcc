@@ -52,7 +52,7 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 // a failed enable must not persist the intent, otherwise Enabled() reports a
 // state the compressor never accepted and the loadpoint runs out of sync (#32252).
 func TestOHPCFEnableFailureKeepsState(t *testing.T) {
-	c := &EEBusOHPCF{compressor: eebus.NewEntity(nil)}
+	c := &EEBusOHPCF{compressor: eebus.NewEntity[ucapi.CemOHPCFInterface](nil)}
 
 	require.ErrorIs(t, c.Enable(true), eebus.ErrNotConnected)
 	assert.False(t, c.lastEnabled())

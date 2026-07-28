@@ -31,9 +31,9 @@ type EEBus struct {
 	mm        measurements
 	scenarios maScenarios
 
-	maEntity    *eebus.Entity
-	egLpcEntity *eebus.Entity
-	egLppEntity *eebus.Entity
+	maEntity    *eebus.Entity[measurements]
+	egLpcEntity *eebus.Entity[ucapi.EgLPCInterface]
+	egLppEntity *eebus.Entity[ucapi.EgLPPInterface]
 
 	mu             sync.Mutex
 	dimmed         bool // last limits written, re-stated on reconnect
@@ -169,23 +169,23 @@ func (c *EEBus) lastCurtailPercent() int {
 	return c.curtailPercent
 }
 
-func (c *EEBus) readValue[T any](scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+func (c *EEBus) readValue[T any](scenario uint, update func(mm measurements, entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	return c.maEntity.Read(scenario, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.readValue(c.scenarios.power, c.mm.Power)
+	return c.readValue(c.scenarios.power, measurements.Power)
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
 
 func (c *EEBus) TotalEnergy() (float64, error) {
-	return c.readValue(c.scenarios.energy, c.mm.EnergyConsumed)
+	return c.readValue(c.scenarios.energy, measurements.EnergyConsumed)
 }
 
-func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
+func (c *EEBus) readPhases(scenario uint, update func(mm measurements, entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
 	res, err := c.readValue(scenario, update)
 	if err != nil {
 		return 0, 0, 0, err
@@ -209,20 +209,20 @@ func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemo
 var _ api.PhaseCurrents = (*EEBus)(nil)
 
 func (c *EEBus) Currents() (float64, float64, float64, error) {
-	return c.readPhases(c.scenarios.currents, c.mm.CurrentPerPhase)
+	return c.readPhases(c.scenarios.currents, measurements.CurrentPerPhase)
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
 
 func (c *EEBus) Voltages() (float64, float64, float64, error) {
-	return c.readPhases(c.scenarios.voltages, c.mm.VoltagePerPhase)
+	return c.readPhases(c.scenarios.voltages, measurements.VoltagePerPhase)
 }
 
 var _ api.Dimmer = (*EEBus)(nil)
 
 // Dimmed implements the api.Dimmer interface
 func (c *EEBus) Dimmed() (bool, error) {
-	limit, err := c.egLpcEntity.Read(eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.egLpcEntity.Read(eebus.LPCLimit, ucapi.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -268,7 +268,7 @@ var _ api.Curtailer = (*EEBus)(nil)
 
 // CurtailedPercent implements the api.Curtailer interface
 func (c *EEBus) CurtailedPercent() (int, error) {
-	limit, err := c.egLppEntity.Read(eebus.LPPLimit, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := c.egLppEntity.Read(eebus.LPPLimit, ucapi.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return 0, err
 	}

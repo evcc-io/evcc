@@ -10,20 +10,20 @@ import (
 
 // Entity is the remote entity a use case is available at. It knows its use case
 // and guards its own access.
-type Entity struct {
-	uc eebusapi.UseCaseBaseInterface
+type Entity[U eebusapi.UseCaseBaseInterface] struct {
+	uc U
 
 	mu     sync.RWMutex
 	entity spineapi.EntityRemoteInterface
 }
 
 // NewEntity creates the remote entity of a use case
-func NewEntity(uc eebusapi.UseCaseBaseInterface) *Entity {
-	return &Entity{uc: uc}
+func NewEntity[U eebusapi.UseCaseBaseInterface](uc U) *Entity[U] {
+	return &Entity[U]{uc: uc}
 }
 
 // Get returns the remote entity, nil if the use case has none (yet)
-func (e *Entity) Get() spineapi.EntityRemoteInterface {
+func (e *Entity[U]) Get() spineapi.EntityRemoteInterface {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
@@ -31,7 +31,7 @@ func (e *Entity) Get() spineapi.EntityRemoteInterface {
 }
 
 // Set records the remote entity, use nil to drop it e.g. on disconnect
-func (e *Entity) Set(entity spineapi.EntityRemoteInterface) {
+func (e *Entity[U]) Set(entity spineapi.EntityRemoteInterface) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -41,7 +41,7 @@ func (e *Entity) Set(entity spineapi.EntityRemoteInterface) {
 // Update records the remote entity of a use case support update. Removal emits the
 // same event with the entity set, so it is dropped once its scenarios are gone. It
 // reports whether the use case became available at a new entity.
-func (e *Entity) Update(entity spineapi.EntityRemoteInterface) bool {
+func (e *Entity[U]) Update(entity spineapi.EntityRemoteInterface) bool {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -65,7 +65,7 @@ func (e *Entity) Update(entity spineapi.EntityRemoteInterface) bool {
 
 // Read reads a use case value from the remote entity, reporting ErrNotAvailable
 // while the scenario is unavailable or the value has not been received yet.
-func (e *Entity) Read[T any](scenario uint, read func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+func (e *Entity[U]) Read[T any](scenario uint, read func(uc U, entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	var zero T
 
 	entity := e.Get()
@@ -73,7 +73,7 @@ func (e *Entity) Read[T any](scenario uint, read func(entity spineapi.EntityRemo
 		return zero, api.ErrNotAvailable
 	}
 
-	res, err := read(entity)
+	res, err := read(e.uc, entity)
 	if err != nil {
 		return zero, WrapError(err)
 	}
@@ -83,7 +83,7 @@ func (e *Entity) Read[T any](scenario uint, read func(entity spineapi.EntityRemo
 
 // Required returns the remote entity while the use case scenario is available at
 // it, ErrNotConnected otherwise. Optional data uses Read.
-func (e *Entity) Required(scenario uint) (spineapi.EntityRemoteInterface, error) {
+func (e *Entity[U]) Required(scenario uint) (spineapi.EntityRemoteInterface, error) {
 	entity := e.Get()
 
 	if entity == nil || !e.uc.IsScenarioAvailableAtEntity(entity, scenario) {
