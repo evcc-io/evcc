@@ -143,10 +143,6 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		c.mu.Unlock()
 
 	case ohpcf.DataUpdateConsumptionState:
-		c.mu.Lock()
-		c.compressor = entity
-		c.mu.Unlock()
-
 		// react immediately to a freshly announced schedule/resume opportunity
 		// instead of waiting for the next reboost tick, which may miss it (#31549)
 		if c.lastEnabled() {
@@ -154,17 +150,6 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 				c.log.DEBUG.Printf("apply: %v", err)
 			}
 		}
-
-	case ohpcf.DataUpdateRequestedPowerEstimate,
-		ohpcf.DataUpdateRequestedPowerMax,
-		ohpcf.DataUpdateConsumptionIsStoppable,
-		ohpcf.DataUpdateConsumptionIsPausable,
-		ohpcf.DataUpdateConsumptionStartTime,
-		ohpcf.DataUpdateMinimalRunDuration,
-		ohpcf.DataUpdateMinimalPauseDuration:
-		c.mu.Lock()
-		c.compressor = entity
-		c.mu.Unlock()
 
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
@@ -176,11 +161,6 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	case mdt.UseCaseSupportUpdate:
 		c.mu.Lock()
 		c.dhwEntity = eebus.UpdateEntity(c.ma.MaMDTInterface, c.dhwEntity, entity)
-		c.mu.Unlock()
-
-	case mdt.DataUpdateTemperature:
-		c.mu.Lock()
-		c.dhwEntity = entity
 		c.mu.Unlock()
 
 	// Energy Guard LPC carries the §14a/LPC consumption limit

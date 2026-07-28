@@ -87,8 +87,9 @@ func TestOHPCFControlAction(t *testing.T) {
 	}
 }
 
-// a consumption-state update always records the compressor entity; while
-// disabled it must not attempt to apply (avoids acting on a stale intent, #31549).
+// while disabled a consumption-state update must not attempt to apply (avoids
+// acting on a stale intent, #31549). The compressor entity is recorded by the
+// use case support update, not by data events.
 func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 	c := &EEBusOHPCF{}
 	entity := spinemocks.NewEntityRemoteInterface(t)
@@ -98,5 +99,5 @@ func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	assert.Equal(t, entity, c.compressor)
+	assert.Nil(t, c.compressor)
 }
