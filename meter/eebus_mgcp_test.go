@@ -27,7 +27,6 @@ func newMGCPMeter(t *testing.T) (*EEBus, *mgcpmocks.MaMGCPInterface, spineapi.En
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus-mgcp-test"),
-		mm:        mm,
 		maEntity:  eebus.NewEntity[measurements](mm),
 		scenarios: mgcpScenarios,
 	}

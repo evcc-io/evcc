@@ -28,7 +28,6 @@ import (
 type EEBusOHPCF struct {
 	*embed
 	cem *eebus.CustomerEnergyManagement
-	ma  *eebus.MonitoringAppliance
 	eg  *eebus.EnergyGuard
 
 	ctx     context.Context
@@ -89,7 +88,6 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		embed:     embed,
 		log:       util.NewLogger("eebus-ohpcf"),
 		cem:       cem,
-		ma:        ma,
 		eg:        eg,
 		connector: eebus.NewConnector(),
 		ctx:       ctx,
@@ -345,10 +343,9 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 // Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
 func (c *EEBusOHPCF) Dim(dim bool) error {
-	entity := c.lpc.Get()
-
-	if entity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(entity, eebus.LPCLimit) {
-		return api.ErrNotAvailable
+	entity, err := c.lpc.Available(eebus.LPCLimit)
+	if err != nil {
+		return err
 	}
 
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
