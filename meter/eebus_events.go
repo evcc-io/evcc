@@ -34,7 +34,7 @@ func (c *EEBus) Connect(connected bool) {
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	// deviceremoval fires support-update events with a nil entity
+	// device removal fires support-update events with a nil entity
 	if entity == nil {
 		return
 	}
@@ -62,10 +62,7 @@ func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// prefer the shallowest (device-level) entity
-	if c.maEntity == nil || len(entity.Address().Entity) < len(c.maEntity.Address().Entity) {
-		c.maEntity = entity
-	}
+	c.maEntity = eebus.UpdateEntity(c.mm, c.maEntity, entity)
 }
 
 //
@@ -76,10 +73,7 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// prefer the shallowest (device-level) entity
-	if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
-		c.egLpcEntity = entity
-	}
+	c.egLpcEntity = eebus.UpdateEntity(c.eg.EgLPCInterface, c.egLpcEntity, entity)
 }
 
 //
@@ -90,8 +84,5 @@ func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// prefer the shallowest (device-level) entity
-	if c.egLppEntity == nil || len(entity.Address().Entity) < len(c.egLppEntity.Address().Entity) {
-		c.egLppEntity = entity
-	}
+	c.egLppEntity = eebus.UpdateEntity(c.eg.EgLPPInterface, c.egLppEntity, entity)
 }

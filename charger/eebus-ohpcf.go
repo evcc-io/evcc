@@ -134,7 +134,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	// device/entity removal fires the use case update event with a nil entity
+	// device removal fires the use case update event with a nil entity
 	if entity == nil {
 		return
 	}
@@ -153,8 +153,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 			}
 		}
 
-	case ohpcf.UseCaseSupportUpdate,
-		ohpcf.DataUpdateRequestedPowerEstimate,
+	case ohpcf.DataUpdateRequestedPowerEstimate,
 		ohpcf.DataUpdateRequestedPowerMax,
 		ohpcf.DataUpdateConsumptionIsStoppable,
 		ohpcf.DataUpdateConsumptionIsPausable,
@@ -165,28 +164,32 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		c.compressor = entity
 		c.mu.Unlock()
 
+	case ohpcf.UseCaseSupportUpdate:
+		c.mu.Lock()
+		c.compressor = eebus.UpdateEntity(c.cem.OHPCF, c.compressor, entity)
+		c.mu.Unlock()
+
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
 		c.mu.Lock()
-		// use most specific selector
-		if c.mpcEntity == nil || len(entity.Address().Entity) < len(c.mpcEntity.Address().Entity) {
-			c.mpcEntity = entity
-		}
+		c.mpcEntity = eebus.UpdateEntity(c.ma.MaMPCInterface, c.mpcEntity, entity)
 		c.mu.Unlock()
 
 	// Monitoring Appliance MDT provides the DHW temperature
-	case mdt.UseCaseSupportUpdate, mdt.DataUpdateTemperature:
+	case mdt.DataUpdateTemperature:
 		c.mu.Lock()
 		c.dhwEntity = entity
+		c.mu.Unlock()
+
+	case mdt.UseCaseSupportUpdate:
+		c.mu.Lock()
+		c.dhwEntity = eebus.UpdateEntity(c.ma.MaMDTInterface, c.dhwEntity, entity)
 		c.mu.Unlock()
 
 	// Energy Guard LPC carries the §14a/LPC consumption limit
 	case lpc.UseCaseSupportUpdate:
 		c.mu.Lock()
-		// use most specific selector
-		if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
-			c.egLpcEntity = entity
-		}
+		c.egLpcEntity = eebus.UpdateEntity(c.eg.EgLPCInterface, c.egLpcEntity, entity)
 		c.mu.Unlock()
 	}
 }
