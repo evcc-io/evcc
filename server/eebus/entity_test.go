@@ -117,8 +117,8 @@ func TestEntityRequired(t *testing.T) {
 }
 
 func TestEntityRead(t *testing.T) {
-	read := func(res float64, err error) func(spineapi.EntityRemoteInterface) (float64, error) {
-		return func(spineapi.EntityRemoteInterface) (float64, error) { return res, err }
+	read := func(res float64, err error) func(*ucmocks.MaMPCInterface, spineapi.EntityRemoteInterface) (float64, error) {
+		return func(*ucmocks.MaMPCInterface, spineapi.EntityRemoteInterface) (float64, error) { return res, err }
 	}
 
 	t.Run("entity missing", func(t *testing.T) {

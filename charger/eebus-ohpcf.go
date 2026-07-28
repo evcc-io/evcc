@@ -35,10 +35,10 @@ type EEBusOHPCF struct {
 	reboost time.Duration
 
 	log        *util.Logger
-	compressor *eebus.Entity
-	mpc        *eebus.Entity
-	dhw        *eebus.Entity
-	lpc        *eebus.Entity
+	compressor *eebus.Entity[ucapi.CemOHPCFInterface]
+	mpc        *eebus.Entity[ucapi.MaMPCInterface]
+	dhw        *eebus.Entity[ucapi.MaMDTInterface]
+	lpc        *eebus.Entity[ucapi.EgLPCInterface]
 
 	mu         sync.RWMutex
 	enabled    bool
@@ -333,7 +333,7 @@ var _ api.Dimmer = (*EEBusOHPCF)(nil)
 // Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
 // consumption limit is currently active on the heat pump.
 func (c *EEBusOHPCF) Dimmed() (bool, error) {
-	limit, err := c.lpc.Read(eebus.LPCLimit, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := c.lpc.Read(eebus.LPCLimit, ucapi.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -415,7 +415,7 @@ var _ api.Meter = (*EEBusOHPCF)(nil)
 // CurrentPower implements the api.Meter interface and reports the heat pump's
 // measured power consumption via the MPC use case.
 func (c *EEBusOHPCF) CurrentPower() (float64, error) {
-	return c.mpc.Read(eebus.MPCPower, c.ma.MaMPCInterface.Power)
+	return c.mpc.Read(eebus.MPCPower, ucapi.MaMPCInterface.Power)
 }
 
 var _ api.Battery = (*EEBusOHPCF)(nil)
@@ -424,7 +424,7 @@ var _ api.Battery = (*EEBusOHPCF)(nil)
 // hot water temperature in °C via the MDT use case.
 func (c *EEBusOHPCF) Soc() (float64, error) {
 	return c.dhw.Read(eebus.MDTTemperature,
-		func(entity spineapi.EntityRemoteInterface) (float64, error) {
-			return c.ma.MaMDTInterface.Temperature(entity, model.UnitOfMeasurementTypedegC)
+		func(uc ucapi.MaMDTInterface, entity spineapi.EntityRemoteInterface) (float64, error) {
+			return uc.Temperature(entity, model.UnitOfMeasurementTypedegC)
 		})
 }
