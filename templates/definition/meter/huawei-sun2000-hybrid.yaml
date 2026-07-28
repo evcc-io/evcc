@@ -88,7 +88,6 @@ render: |
       register: 37101
       count: 37
     scale: -1
-    delay: {{ .delay }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -100,7 +99,6 @@ render: |
       register: 37101
       count: 37
     scale: 0.01
-    delay: {{ .delay }}
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -112,7 +110,6 @@ render: |
       register: 37101
       count: 37
     scale: 0.01
-    delay: {{ .delay }}
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -124,7 +121,6 @@ render: |
       register: 37101
       count: 37
     scale: -0.01
-    delay: {{ .delay }}
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -135,7 +131,6 @@ render: |
       register: 37101
       count: 37
     scale: -0.01
-    delay: {{ .delay }}
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -146,7 +141,6 @@ render: |
       register: 37101
       count: 37
     scale: -0.01
-    delay: {{ .delay }}
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -158,7 +152,6 @@ render: |
       register: 37101
       count: 37
     scale: 0.1
-    delay: {{ .delay }}
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -169,7 +162,6 @@ render: |
       register: 37101
       count: 37
     scale: 0.1
-    delay: {{ .delay }}
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -180,7 +172,6 @@ render: |
       register: 37101
       count: 37
     scale: 0.1
-    delay: {{ .delay }}
   powers:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -192,7 +183,6 @@ render: |
       register: 37101
       count: 37
     scale: -1
-    delay: {{ .delay }}
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -203,7 +193,6 @@ render: |
       register: 37101
       count: 37
     scale: -1
-    delay: {{ .delay }}
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -214,7 +203,6 @@ render: |
       register: 37101
       count: 37
     scale: -1
-    delay: {{ .delay }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -225,7 +213,6 @@ render: |
       address: 32064 # Input power DC
       type: holding
       decode: int32nan
-    delay: {{ .delay }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -234,7 +221,6 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
-    delay: {{ .delay }}
   maxacpower: {{ .maxacpower }}
   curtail:
     source: sequence
@@ -247,7 +233,6 @@ render: |
         type: writesingle
         encoding: uint16
       scale: 10
-      delay: {{ .delay }}
     # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
     - source: switch
       switch:
@@ -262,7 +247,6 @@ render: |
                 address: 47415 # Active power control mode
                 type: writesingle
                 encoding: uint16
-              delay: {{ .delay }}
       default:
         source: const
         value: 7 # Power-limited grid connection (%)
@@ -273,7 +257,6 @@ render: |
             address: 47415 # Active power control mode
             type: writesingle
             encoding: uint16
-          delay: {{ .delay }}
   curtailed:
     source: go
     in:
@@ -286,7 +269,6 @@ render: |
           address: 47415 # Active power control mode (0=no curtailment)
           type: holding
           decode: uint16
-        delay: {{ .delay }}
     - name: percent
       type: int
       config:
@@ -297,7 +279,6 @@ render: |
           type: holding
           decode: uint16
         scale: 0.1
-        delay: {{ .delay }}
     # the percentage register is only meaningful while a limit mode is active
     script: |
       limit := percent
@@ -316,7 +297,6 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-    delay: {{ .delay }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -325,7 +305,6 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
-    delay: {{ .delay }}
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -334,7 +313,6 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
-    delay: {{ .delay }}
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -343,7 +321,6 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.1
-    delay: {{ .delay }}
   dim:
     source: ifelse
     if:
@@ -359,7 +336,6 @@ render: |
             address: 47087 # Charge from grid
             type: writesingle
             encoding: uint16
-          delay: {{ .delay }}
     else:
       source: convert
       convert: bool2int
@@ -374,7 +350,6 @@ render: |
             address: 47087 # Charge from grid
             type: writesingle
             encoding: uint16
-          delay: {{ .delay }}
         {{- else }}
         source: sleep
         duration: 0s
@@ -391,7 +366,6 @@ render: |
           address: 47087 # Charge from grid (0=disabled → dimmed, 1=enabled → not dimmed)
           type: holding
           decode: uint16
-        delay: {{ .delay }}
     script: v == 0
   batterymode:
     source: sequence
@@ -418,7 +392,6 @@ render: |
                           address: 37046 # [ESS] Maximum charge power (RO)
                           type: holding
                           decode: uint32
-                        delay: {{ .delay }}
                 out:
                   - name: power
                     type: int
@@ -429,7 +402,6 @@ render: |
                         address: 47075 # Max. Charge Power
                         type: writemultiple
                         encoding: uint32
-                      delay: {{ .delay }}
                 script: |
                   limit := {{ .maxchargepower }}
                   out := rated
@@ -451,7 +423,6 @@ render: |
                           address: 37048 # [ESS] Maximum discharge power (RO)
                           type: holding
                           decode: uint32
-                        delay: {{ .delay }}
                 out:
                   - name: power
                     type: int
@@ -462,7 +433,6 @@ render: |
                         address: 47077 # Max. Discharge Power
                         type: writemultiple
                         encoding: uint32
-                      delay: {{ .delay }}
                 script: |
                   limit := {{ .maxdischargepower }}
                   out := rated
@@ -488,7 +458,6 @@ render: |
                           address: 37046 # [ESS] Maximum charge power (RO)
                           type: holding
                           decode: uint32
-                        delay: {{ .delay }}
                 out:
                   - name: power
                     type: int
@@ -499,7 +468,6 @@ render: |
                         address: 47075 # Max. Charge Power
                         type: writemultiple
                         encoding: uint32
-                      delay: {{ .delay }}
                 script: |
                   limit := {{ .maxchargepower }}
                   out := rated
@@ -514,7 +482,6 @@ render: |
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
-                  delay: {{ .delay }}
           - case: 3 # charge
             set:
               source: sequence
@@ -535,7 +502,6 @@ render: |
                           address: 37046 # [ESS] Maximum charge power (RO)
                           type: holding
                           decode: uint32
-                        delay: {{ .delay }}
                 out:
                   - name: power
                     type: int
@@ -546,7 +512,6 @@ render: |
                         address: 47075 # Max. Charge Power
                         type: writemultiple
                         encoding: uint32
-                      delay: {{ .delay }}
                 script: |
                   limit := {{ .maxchargepower }}
                   out := rated
@@ -568,7 +533,6 @@ render: |
                           address: 37046 # [ESS] Maximum charge power (RO)
                           type: holding
                           decode: uint32
-                        delay: {{ .delay }}
                 out:
                   - name: power
                     type: int
@@ -579,7 +543,6 @@ render: |
                         address: 47247 # Forcible charge power
                         type: writemultiple
                         encoding: uint32
-                      delay: {{ .delay }}
                 script: |
                   limit := {{ .maxchargepower }}
                   out := rated
@@ -594,7 +557,6 @@ render: |
                     address: 47083 # Forced charging and discharging period
                     type: writesingle
                     encoding: uint16
-                  delay: {{ .delay }}
               - source: const
                 value: 0 # duration
                 set:
@@ -604,7 +566,6 @@ render: |
                     address: 47246 # Forcible charge/discharge setting mode
                     type: writesingle
                     encoding: uint16
-                  delay: {{ .delay }}
           - case: 4 # holdcharge
             set:
               source: sequence
@@ -618,7 +579,6 @@ render: |
                     address: 47075 # Max. Charge Power
                     type: writemultiple
                     encoding: uint32
-                  delay: {{ .delay }}
               # register 47077 is range-checked: a maxdischargepower above the
               # inverter rated max (37048) is rejected, so clamp before writing
               - source: go
@@ -635,7 +595,6 @@ render: |
                           address: 37048 # [ESS] Maximum discharge power (RO)
                           type: holding
                           decode: uint32
-                        delay: {{ .delay }}
                 out:
                   - name: power
                     type: int
@@ -646,7 +605,6 @@ render: |
                         address: 47077 # Max. Discharge Power
                         type: writemultiple
                         encoding: uint32
-                      delay: {{ .delay }}
                 script: |
                   limit := {{ .maxdischargepower }}
                   out := rated
@@ -670,7 +628,6 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
-                  delay: {{ .delay }}
           default:
             source: const
             value: 0 # stop
@@ -681,6 +638,5 @@ render: |
                 address: 47100 # Forcible charge/discharge
                 type: writesingle
                 encoding: uint16
-              delay: {{ .delay }}
   {{- include "battery-params" . }}
   {{- end }}
