@@ -34,6 +34,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func TestGoEV1(t *testing.T) {
 	srv := httptest.NewServer(new(handler))
+	defer srv.Close()
 
 	sponsor.Subject = "foo"
 
@@ -57,6 +58,7 @@ func TestGoEV1(t *testing.T) {
 
 func TestGoEV2(t *testing.T) {
 	srv := httptest.NewServer(new(handler))
+	defer srv.Close()
 	srv.Config.Handler.(*handler).expect("/api/status?filter=alw")
 
 	sponsor.Subject = "foo"

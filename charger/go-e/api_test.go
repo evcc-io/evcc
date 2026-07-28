@@ -35,6 +35,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func TestLocalV1(t *testing.T) {
 	h := &handler{}
 	srv := httptest.NewServer(h)
+	defer srv.Close()
 
 	// h.expect("/api/status?filter=alw")
 	local := NewLocal(util.NewLogger("foo"), srv.URL, 0)
@@ -53,6 +54,7 @@ func TestLocalV1(t *testing.T) {
 func TestLocalV2(t *testing.T) {
 	h := &handler{}
 	srv := httptest.NewServer(h)
+	defer srv.Close()
 
 	h.expect("/api/status?filter=alw")
 	local := NewLocal(util.NewLogger("foo"), srv.URL, 0)
