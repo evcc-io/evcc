@@ -286,7 +286,6 @@
       "noFileSelected": "Keng Datei ausgewielt.",
       "off": "aus",
       "on": "un",
-      "password": "Passwuert",
       "readFromFile": "Vun der Datei liesen",
       "remove": "Ewechhuelen",
       "required": "obligatoresch",
@@ -318,7 +317,6 @@
       },
       "customOption": "Benotzerdefinéiert Integratioun",
       "description": "Kraaftbegrenzung duerch extern Systemer (z. B. §14a EnWG, §9 EEG-Schnittstell oder e méi héichgestallt Energiemanagementsystem). Arbecht zesumme mat der Laaschtmanagement-Funktioun. D'Begrenzung vun der Solarproduktioun gëtt och fir ausgewielte Geräter ënnerstëtzt. Den tatsächleche Begrenzungswäert muss an der Konfiguratioun vun all Inverter festgeluecht ginn.",
-      "downloadCsv": "CSV eroflueden",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
       "generic": "Generesch Integratiounen",
       "integrations": "Integratiounen",
@@ -379,8 +377,6 @@
       },
       "defaultModeHelpKeep": "De leschte Modus deen ausgewielt gouf gëtt bäibehal.",
       "defaultModeLabel": "Standard-Modus",
-      "defaultsHint": "De Standardmodus, d'PV-Iwwerschossverhalen an d'elektresch Detailer verwenne raisonnabel Standardwäerter.",
-      "defaultsHintLink": "Astellungen upassen",
       "delete": "Läschen",
       "electricalSubtitle": "Wann onsécher sidd, da léiwer den Elektriker froen.",
       "electricalTitle": "Elektresch",
@@ -418,7 +414,6 @@
       "priorityHelp": "Eng mei héich Prioritéit, gëtt éischter mat PV-Iwwerschoss beliwwert.",
       "priorityLabel": "Prioritéit",
       "save": "Späicheren",
-      "showAllSettings": "All d'Astellungen uweisen",
       "solarBehaviorCustomHelp": "Definéier deng eege Schwellen a Verzögerungen fir d'Aus- an Aschalten.",
       "solarBehaviorDefaultHelp": "Start no {enableDelay} genügenden Iwwerschoss. Stop wa fir {disableDelay} net genuch Iwwerschoss disponibel ass.",
       "solarBehaviorLabel": "PV-Iwwerschoss",
@@ -556,7 +551,6 @@
         "aux": "Intelligente Verbraucher derbäi fügen",
         "battery": "Hausbatterie derbäi fügen",
         "consumer": "Reguläre Verbraucher derbäisetzen",
-        "ext": "Reegelméissege Verbraucher derbäisetzen",
         "pv": "Sonnen-Zieler derbäi fügen"
       },
       "save": "Späicheren",
@@ -638,26 +632,18 @@
       "descriptionHost": "Gëtt verwennt, fir den evcc am lokalen Netzwierk unzekënnegen.",
       "descriptionInternalUrl": "Lokal Netzwierkadress vum evcc.",
       "descriptionPort": "Port fir de Web Interface an d'API. Du muss d'Browser-URL updaten, wann s du dëst änners.",
-      "descriptionSchema": "Beaflosst nëmme wéi d'URL'en generéiert ginn. Wann s du HTTPS auswiels, da gëtt d'Verschlësselung net aktivéiert.",
       "labelExternalUrl": "Extern URL",
       "labelHost": "mDNS-Hostname",
       "labelInternalUrl": "Intern URL",
       "labelPort": "Port",
-      "labelSchema": "Schema",
       "title": "Netzwierk",
       "warningUrlPath": "D'URL brauch normalerweis keen Zougankspad. Sidd Dir sécher, datt dat richteg ass?"
     },
     "ocpp": {
-      "connectedChargers": "Verbonne Wallboxen",
-      "connectionStatus": "Konfiguréiert Station-IDs",
-      "connectionStatusHelp": "Verbindungsstatus vun de konfiguréierte Wallboxen.",
-      "detectedChargers": "Erkannt Station-IDs",
-      "detectedHelp": "Dës Wallboxen hu probéiert sech mat evcc ze verbannen. Fir eng Wallbox ze benotzen, erstellt eng Wallbox mat senger Statiouns-ID.",
       "forwardingConfigured": "Weiderleedung konfiguréiert",
       "forwardingError": "Weiderleedungsfeeler",
       "forwardingOff": "Keng Weiderleedung konfiguréiert",
       "noChargers": "Keng OCPP-Wallbox erkannt.",
-      "noStations": "Keng Statioune verbonnen",
       "stations": "Statiouns-IDen",
       "stationsHelp": "Konfiguréiert an detektéiert OCPP-Wallboxen. Zousätzlech zur lokaler Kontroll kënnt Dir d'Weiderleedung vun Noriichten op en externen Server konfiguréieren (z. B. fir d'Ofrechnung).",
       "status": {
@@ -924,10 +910,6 @@
         "weekdays": "Wochendeeg"
       }
     },
-    "tariffs": {
-      "description": "Definéier d'Stroumtariffer fir d'Käschte vun den Opluedsessiounen ze berechnen.",
-      "title": "Tariffer"
-    },
     "telemetry": {
       "description": "Konfiguréier den Datenaustausch fir den evcc ze verbesseren. Deng Privatsphär ass eis wichteg an d'Participatioun ass komplett fakultativ.",
       "title": "Telemetrie"
@@ -1090,15 +1072,9 @@
   },
   "header": {
     "about": "Iwwer",
-    "authProviders": {
-      "confirmLogout": "Sécher, datt s du {title} trenne wëlls?",
-      "loggedOut": "Erfollegräich ofgemellt",
-      "title": "Autoriséirungsstatus"
-    },
     "blog": "Blog",
     "docs": "Dokumentatioun",
     "github": "GitHub",
-    "login": "Logine vun de Gefierer",
     "logout": "Ofmellen",
     "nativeSettings": "Server änneren",
     "needHelp": "Brauchs du Hëllef?",
@@ -1193,7 +1169,6 @@
   "loginModal": {
     "cancel": "Ofbriechen",
     "demoMode": "Login gëtt am Demomodus net ënnerstëtzt.",
-    "error": "Login feelgeschloen: ",
     "iframeHint": "Evcc an engem neien Tab opmaachen.",
     "iframeIssue": "D'Passwuert ass richteg, mee de Browser schéngt den Authentifikatiouns-Cookie ofgeleent ze hunn. Dëst ka geschéien wann s du evcc an engem iframe iwwer HTTP verwenns.",
     "invalid": "Passwuert ass ongültig.",
@@ -1286,7 +1261,6 @@
           "returnEnergy": "Energie (ëmgedréint)"
         }
       },
-      "downloadCsv": "CSV eroflueden",
       "empty": "Keng historesch Daten fir dësen Zäitraum.",
       "group": {
         "battery": "Batterie",
@@ -1331,14 +1305,12 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Luedstroum",
       "default": "Standard",
-      "disclaimerHint": "Notiz:",
       "maxCurrent": {
         "label": "Max. Stroum"
       },
       "minCurrent": {
         "label": "Min. Stroum"
       },
-      "onlyForSocBasedCharging": "Dës Optioune sinn nëmme fir Gefierer mat bekannte Luedstatioune verfügbar.",
       "phasesConfigured": {
         "label": "Phasen",
         "no1p3pSupport": "Wéi ass deng Luedstatioun ugeschloss?",
@@ -1543,8 +1515,6 @@
       "solarpercentage": "Sonn (%)",
       "vehicle": "Gefier"
     },
-    "csvPeriod": "{period} CSV eroflueden",
-    "csvTotal": "Gesamt CSV eroflueden",
     "date": "Ufank",
     "energy": "Opgelueden",
     "filter": {

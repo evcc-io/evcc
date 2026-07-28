@@ -245,7 +245,6 @@
       "noFileSelected": "Nessun file selezionato.",
       "off": "off",
       "on": "on",
-      "password": "Password",
       "readFromFile": "Importa da file",
       "remove": "Rimuovi",
       "required": "richiesto",
@@ -275,7 +274,6 @@
         "type": "Tipo"
       },
       "description": "Limitazione della potenza da parte di sistemi esterni (ad es. §14a EnWG, interfaccia §9 EEG o sistema di gestione dell'energia di livello superiore). Funziona in combinazione con la funzione di gestione del carico.",
-      "downloadCsv": "Scarica CSV",
       "eventsRecorded": "Registrati {count} eventi di limitazione di prelievo dalla rete.",
       "lastEvent": "Più recente {timeAgo}.",
       "title": "Limite prelievo da rete"
@@ -333,8 +331,6 @@
       },
       "defaultModeHelpKeep": "Mantiene l'ultima modalità selezionata.",
       "defaultModeLabel": "Modalità predefinita",
-      "defaultsHint": "Modalità predefinita, comportamento solare e dettagli elettrici utilizzano valori predefiniti ragionevoli.",
-      "defaultsHintLink": "Regola le impostazioni",
       "delete": "Elimina",
       "electricalSubtitle": "Se non sei sicuro, chiedi al tuo elettricista.",
       "electricalTitle": "Elettricità",
@@ -369,7 +365,6 @@
       "priorityHelp": "Le priorità più elevate ottengono l'accesso preferenziale al surplus solare.",
       "priorityLabel": "Priorità",
       "save": "Salva",
-      "showAllSettings": "Mostra tutte le impostazioni",
       "solarBehaviorCustomHelp": "Definisci soglie personalizzate di attivazione e disattivazione della ricarica.",
       "solarBehaviorDefaultHelp": "Avvia dopo {enableDelay} di surplus sufficiente. Interrompi quando il surplus non è sufficiente per {disableDelay}.",
       "solarBehaviorLabel": "Solare",
@@ -492,7 +487,6 @@
       "option": {
         "aux": "Aggiungi un consumatore autoregolato",
         "battery": "Aggiungi contatore batteria",
-        "ext": "Aggiungi consumatore abituale",
         "pv": "Aggiungi contatore fotovoltaico"
       },
       "save": "Salva",
@@ -574,23 +568,15 @@
       "descriptionHost": "Utilizzato per annunciare evcc nella rete locale.",
       "descriptionInternalUrl": "Indirizzo di rete locale di evcc.",
       "descriptionPort": "Porta per l'interfaccia web e l'API. Dovrai modificare l'URL se modifichi questo.",
-      "descriptionSchema": "Modifica solo come vengono generati gli URL. Selezionare HTTPS non abiliterà la crittografia.",
       "labelExternalUrl": "URL esterno",
       "labelHost": "Nome host mDNS",
       "labelInternalUrl": "URL interno",
       "labelPort": "Porta",
-      "labelSchema": "Tipo",
       "title": "Rete",
       "warningUrlPath": "L'URL di solito non ha bisogno di un percorso. Sei sicuro che sia corretto?"
     },
     "ocpp": {
-      "connectedChargers": "Caricabatterie collegati",
-      "connectionStatus": "ID stazione configurati",
-      "connectionStatusHelp": "Stato di connessione dei caricabatterie configurati.",
-      "detectedChargers": "ID stazioni rilevate",
-      "detectedHelp": "Questi caricatori hanno tentato di connettersi a evcc. Per utilizzare un caricatore, creare un punto di carico con il relativo ID stazione.",
       "noChargers": "Nessun caricatore OCPP rilevato.",
-      "noStations": "Nessuna stazione collegata",
       "status": {
         "configured": "Non connesso",
         "connected": "Connesso",
@@ -821,10 +807,6 @@
         "weekdays": "Giorni feriali"
       }
     },
-    "tariffs": {
-      "description": "Definisci le tue tariffe energetiche per calcolare i costi delle tue sessioni di ricarica.",
-      "title": "Tariffe"
-    },
     "telemetry": {
       "description": "Configura la condivisione dei dati per contribuire a migliorare evcc. La tua privacy è importante per noi e la partecipazione è completamente facoltativa.",
       "title": "Telemetria"
@@ -990,7 +972,6 @@
     "blog": "Blog",
     "docs": "Documentazione",
     "github": "GitHub",
-    "login": "Iscrizioni Veicolo",
     "logout": "Logout",
     "nativeSettings": "Cambia Server",
     "needHelp": "Hai bisogno di aiuto?",
@@ -1085,7 +1066,6 @@
   "loginModal": {
     "cancel": "Annulla",
     "demoMode": "Il login non è supportato in modalità demo.",
-    "error": "Login fallito: ",
     "iframeHint": "Apri evcc in una nuova scheda.",
     "iframeIssue": "La tua password è corretta, ma sembra che il cookie di autenticazione sia stato eliminato. Questo può succedere quando usi evcc su un iframe su HTTP.",
     "invalid": "Password errata.",
@@ -1186,14 +1166,12 @@
       "batteryUsage": "Batteria di casa",
       "currents": "Corrente di carica",
       "default": "default",
-      "disclaimerHint": "Nota:",
       "maxCurrent": {
         "label": "Corrente massima"
       },
       "minCurrent": {
         "label": "Corrente min."
       },
-      "onlyForSocBasedCharging": "Questa opzione è solo per i veicoli dei quali si sa lo stato di carica.",
       "phasesConfigured": {
         "label": "Fasi",
         "no1p3pSupport": "Com'è connessa la tua stazione di ricarica?",
@@ -1393,8 +1371,6 @@
       "solarpercentage": "Solare (%)",
       "vehicle": "Veicolo"
     },
-    "csvPeriod": "Scarica il CSV di {period}",
-    "csvTotal": "Scarica il CSV complessivo",
     "date": "Avvio",
     "energy": "Caricato",
     "filter": {

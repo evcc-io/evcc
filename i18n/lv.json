@@ -54,8 +54,7 @@
       "full": "pilns",
       "highest": "Augstākais ({value})",
       "lowest": "Zemākais ({value})",
-      "suggestion": "Ieteikums",
-      "title": "Optimizētājs"
+      "suggestion": "Ieteikums"
     }
   },
   "batterySettings": {
@@ -362,7 +361,6 @@
       },
       "customOption": "Lietotāja definēta integrācija",
       "description": "Jaudas ierobežošana no ārējām sistēmām (piem. §14a EnWG §9 EEG saskarne vai augstāka līmeņa enerģijas pārvaldības sistēma). Darbojas kopā ar slodzes pārvaldības funkciju. Saules ražošanas ierobežošana ir pieejama arī atlasītām ierīcēm. Faktiskais atdeves ierobežojums jāiestata katrā invertora konfigurācijā.",
-      "downloadCsv": "Lejupielādēt CSV",
       "eventsRecorded": "Saglabāti {count} tīkla ierobežošanas notikumi.",
       "generic": "Vispārīgās integrācijas",
       "integrations": "Integrācijas",
@@ -423,8 +421,6 @@
       },
       "defaultModeHelpKeep": "Saglabā pēdējo izvēlēto režīmu.",
       "defaultModeLabel": "Noklusējuma režīms",
-      "defaultsHint": "Noklusējuma režīms - saules enerģijas ražošanas uzvedība un elektrības parametri izmanto saprātīgus noklusējumus.",
-      "defaultsHintLink": "Pielāgot iestatījumus",
       "delete": "Dzēst",
       "electricalSubtitle": "Šaubu gadījumā jautājiet elektriķim.",
       "electricalTitle": "Elektrība",
@@ -599,7 +595,6 @@
         "aux": "Pievienot pašregulējošu patērētāju",
         "battery": "Pievienot akumulatora skaitītāju",
         "consumer": "Pievienot parastu patērētāju",
-        "ext": "Pievienot parastu patērētāju",
         "pv": "Pievienot saules enerģijas skaitītāju"
       },
       "save": "Saglabāt",
@@ -1310,7 +1305,6 @@
           "returnEnergy": "Enerģija (atpakaļvirzienā)"
         }
       },
-      "downloadCsv": "Lejupielādēt CSV",
       "empty": "Nav vēstures datu par šo laika periodu.",
       "group": {
         "battery": "Akumulators",
@@ -1355,14 +1349,12 @@
       "batteryUsage": "Mājas akumulators",
       "currents": "Uzlādes strāva",
       "default": "noklusējuma",
-      "disclaimerHint": "Piezīme:",
       "maxCurrent": {
         "label": "Maks. strāva"
       },
       "minCurrent": {
         "label": "Min. strāva"
       },
-      "onlyForSocBasedCharging": "Šīs iespējas ir pieejamas tikai transportlīdzekļiem ar zināmu uzlādes līmeni.",
       "phasesConfigured": {
         "label": "Fāzes",
         "no1p3pSupport": "Kā jūsu lādētājs ir pieslēgts?",
@@ -1567,8 +1559,6 @@
       "solarpercentage": "Saules enerģija (%)",
       "vehicle": "Transportlīdzeklis"
     },
-    "csvPeriod": "Lejupielādēt {period} CSV",
-    "csvTotal": "Lejupielādēt kopējo CSV",
     "date": "Sākums",
     "energy": "Uzlādēts",
     "filter": {

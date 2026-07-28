@@ -336,7 +336,6 @@
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
-      "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "required": "erforderlich",
@@ -368,7 +367,6 @@
       },
       "customOption": "Benutzerdefinierte Integration",
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
-      "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "generic": "Generische Integrationen",
       "integrations": "Integrationen",
@@ -1349,7 +1347,6 @@
           "returnEnergy": "Energie (rückwärts)"
         }
       },
-      "downloadCsv": "CSV herunterladen",
       "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
       "group": {
         "battery": "Batterie",
@@ -1628,8 +1625,6 @@
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },
-    "csvPeriod": "Download {period} CSV",
-    "csvTotal": "Gesamte CSV herunterladen",
     "date": "Anfang",
     "energy": "Geladen",
     "filter": {

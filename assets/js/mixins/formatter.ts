@@ -25,6 +25,7 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   ZAR: "R",
   TRY: "₺",
   MYR: "RM",
+  THB: "฿",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
