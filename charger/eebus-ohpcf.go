@@ -349,9 +349,9 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 	}
 
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
-	return eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
-	}))
+	})
 }
 
 // apply issues the command to align the optional consumption with the on/off

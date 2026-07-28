@@ -191,9 +191,9 @@ func (c *EEBus) Dim(dim bool) error {
 		return err
 	}
 
-	return eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
-	}))
+	})
 }
 
 var _ api.Curtailer = (*EEBus)(nil)
@@ -238,7 +238,7 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		}
 	}
 
-	return eebus.WrapError(eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
-	}))
+	})
 }
