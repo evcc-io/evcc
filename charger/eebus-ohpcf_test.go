@@ -25,7 +25,7 @@ func newTestOHPCF() *EEBusOHPCF {
 		eg:         eg,
 		compressor: eebus.NewEntity(cem.OHPCF),
 		mpc:        eebus.NewEntity(ma.MaMPCInterface),
-		dhw:        eebus.NewEntity(ma.MaMDTInterface),
+		mdt:        eebus.NewEntity(ma.MaMDTInterface),
 		lpc:        eebus.NewEntity(eg.EgLPCInterface),
 	}
 }

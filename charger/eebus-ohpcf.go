@@ -37,7 +37,7 @@ type EEBusOHPCF struct {
 	log        *util.Logger
 	compressor *eebus.Entity[ucapi.CemOHPCFInterface]
 	mpc        *eebus.Entity[ucapi.MaMPCInterface]
-	dhw        *eebus.Entity[ucapi.MaMDTInterface]
+	mdt        *eebus.Entity[ucapi.MaMDTInterface]
 	lpc        *eebus.Entity[ucapi.EgLPCInterface]
 
 	mu         sync.RWMutex
@@ -96,7 +96,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		reboost:    reboost,
 		compressor: eebus.NewEntity(cem.OHPCF),
 		mpc:        eebus.NewEntity(ma.MaMPCInterface),
-		dhw:        eebus.NewEntity(ma.MaMDTInterface),
+		mdt:        eebus.NewEntity(ma.MaMDTInterface),
 		lpc:        eebus.NewEntity(eg.EgLPCInterface),
 	}
 
@@ -130,7 +130,7 @@ func (c *EEBusOHPCF) Connect(connected bool) {
 
 	c.compressor.Set(nil)
 	c.mpc.Set(nil)
-	c.dhw.Set(nil)
+	c.mdt.Set(nil)
 	c.lpc.Set(nil)
 }
 
@@ -160,7 +160,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 	// Monitoring Appliance MDT provides the DHW temperature
 	case mdt.UseCaseSupportUpdate:
-		c.dhw.Update(entity)
+		c.mdt.Update(entity)
 
 	// Energy Guard LPC carries the §14a/LPC consumption limit
 	case lpc.UseCaseSupportUpdate:
@@ -423,7 +423,7 @@ var _ api.Battery = (*EEBusOHPCF)(nil)
 // Soc implements the api.Battery interface and reports the heat pump's domestic
 // hot water temperature in °C via the MDT use case.
 func (c *EEBusOHPCF) Soc() (float64, error) {
-	return c.dhw.Read(eebus.MDTTemperature,
+	return c.mdt.Read(eebus.MDTTemperature,
 		func(uc ucapi.MaMDTInterface, entity spineapi.EntityRemoteInterface) (float64, error) {
 			return uc.Temperature(entity, model.UnitOfMeasurementTypedegC)
 		})
