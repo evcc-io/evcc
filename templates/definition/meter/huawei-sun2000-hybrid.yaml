@@ -12,10 +12,14 @@ requirements:
       Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 oder SmartPS).
 
       Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
     en: |
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
       Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
+      Curtailment will limit the export power to the desired percentage of the maximum AC power. The inverter will automatically limit the PV power to achieve this.
 caveats:
   - description:
       de: |
@@ -40,6 +44,7 @@ params:
     usages: ["pv"]
     deprecated: true # curtailment now applies the HEMS-distributed percent directly
   - name: storageunit
+    deprecated: true
   - name: forceaccharging
     default: false
     advanced: true
@@ -284,11 +289,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     connectdelay: 1s
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37743
-      {{- else }}
-      address: 37001
-      {{- end }}
+      address: 37765 # overall power
       type: holding
       decode: int32nan
     scale: -1
@@ -296,11 +297,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37755 # [Energy storage unit 2] Total discharge
-      {{- else }}
-      address: 37068 # [Energy storage unit 1] Total discharge
-      {{- end }}
+      address: 37782 # overall energy discharged
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -308,11 +305,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37753 # [Energy storage unit 2] Total charge
-      {{- else }}
-      address: 37066 # [Energy storage unit 1] Total charge
-      {{- end }}
+      address: 37780 # overall energy charged
       type: holding
       decode: uint32nan
     scale: 0.01
@@ -320,11 +313,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37738
-      {{- else }}
-      address: 37004
-      {{- end }}
+      address: 37760 # overall SoC
       type: holding
       decode: uint16nan
     scale: 0.1
