@@ -73,11 +73,11 @@ func (v *Identity) getDeviceID() (string, error) {
 		return "", err
 	}
 
-	uuid := uuid.New().String()
+	id := uuid.New().String()
 	data := map[string]any{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
 		"pushType":  v.config.PushType,
-		"uuid":      uuid,
+		"uuid":      id,
 	}
 
 	headers := map[string]string{
