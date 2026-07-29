@@ -1220,7 +1220,7 @@ func (lp *Loadpoint) updateChargerStatus() error {
 
 // welcomeActive reports a running welcome charge
 func (lp *Loadpoint) welcomeActive() bool {
-	return lp.clock.Until(lp.welcomeUntil) > 0
+	return lp.clock.Before(lp.welcomeUntil)
 }
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
