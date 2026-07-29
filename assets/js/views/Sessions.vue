@@ -65,12 +65,7 @@
 					</IconSelectGroup>
 				</div>
 
-				<Card
-					:title="historyTitle"
-					:subtitle="historySubTitle"
-					edge-to-edge
-					class="mb-4"
-				>
+				<Card :title="historyTitle" :subtitle="historySubTitle" edge-to-edge class="mb-4">
 					<EnergyHistoryChart
 						v-if="activeType === types.SOLAR"
 						:sessions="currentSessions"
@@ -143,12 +138,7 @@
 					</div>
 				</div>
 
-				<Card
-					v-if="showTable"
-					:title="$t('sessions.overview')"
-					edge-to-edge
-					class="mb-4"
-				>
+				<Card v-if="showTable" :title="$t('sessions.overview')" edge-to-edge class="mb-4">
 					<SessionTable
 						:sessions="currentSessions"
 						:vehicleFilter="vehicleFilter"
