@@ -38,6 +38,30 @@ test.describe("HEMS", () => {
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal).not.toContainText("Configured via evcc.yaml");
 
+    // both user-defined variants prefill their own yaml
+    const editor = hemsModal.getByTestId("yaml-editor");
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
+    await expect(editor).toContainText("type: relay");
+    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await expect(editor).toContainText("type: custom");
+
+    // validate reports active limits
+    const testResult = hemsModal.getByTestId("test-result");
+    await editorClear(editor);
+    await editorPaste(
+      editor,
+      page,
+      `type: custom
+maxconsumptionpower:
+  source: const
+  value: 4200`
+    );
+    await testResult.getByRole("link", { name: "validate" }).click();
+    await expect(testResult).toContainText("Status: successful");
+    await expect(testResult).toContainText(["Consumption limit", "4.2 kW"].join(""));
+
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
   });
@@ -99,7 +123,9 @@ test.describe("HEMS", () => {
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -151,7 +177,9 @@ limit:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await editorClear(hemsEditor);
     await editorPaste(
@@ -211,7 +239,9 @@ limit:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -311,7 +341,9 @@ w4:${signalSource("w4")}`
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -376,7 +408,9 @@ w3:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);

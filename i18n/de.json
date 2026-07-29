@@ -374,7 +374,11 @@
       "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
       "recordedEvents": "Aufgezeichnete Ereignisse",
       "template": "Integration",
-      "title": "Externe Begrenzung"
+      "title": "Externe Begrenzung",
+      "type": {
+        "custom": "Benutzerdefinierte Integration",
+        "relay": "Benutzerdefinierte Integration (Relais)"
+      }
     },
     "icon": {
       "change": "ändern",
