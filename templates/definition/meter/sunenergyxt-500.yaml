@@ -43,45 +43,6 @@ params:
     default: 2400.0
   - name: maxdischargepower
     default: 800.0
-  - name: discharge_strategy
-    type: choice
-    choice: ["self_consumption", "fix"]
-    default: "fix"
-    description:
-      en: "Battery discharge strategy"
-      de: "Batterieentladungsstrategie"
-    help:
-      en: |
-        Defines how the battery is discharged in normal operation.
-
-        With `self_consumption`, the battery is controlled to maximize self-consumption and the discharge power is adjusted to the house consumption.
-        For this, an external meter (e.g., Shelly) must be connected in the manufacturer's app to measure the house connection point.
-        (This control is performed by the battery itself, not EVCC.)
-
-        With `fix`, the battery is discharged constantly with the power defined in `fix_discharge_power` as long as it is charged.
-      de: |
-        Definiert, wie die Batterie im Normalbetrieb entladen wird.
-
-        Bei `self_consumption` wird die Batterie so gesteuert, dass der Eigenverbrauch maximiert und die Entladeleistung dem Hausverbrauch angepasst wird.
-        Dafür muss in der Hersteller-App ein externer Zähler (z. B. Shelly) verbunden sein, der den Hausanschlusspunkt misst.
-        (Diese Steuerung übernimmt die Batterie selbst, nicht EVCC.)
-
-        Bei `fix` wird die Batterie konstant mit der in `fix_discharge_power` definierten Leistung entladen, solange sie geladen ist.
-    usages: ["battery"]
-  - name: fix_discharge_power
-    type: int
-    default: 200
-    description:
-      en: "Fixed discharge power of the battery."
-      de: "Feste Entladeleistung der Batterie."
-    help:
-      en: |
-        If `discharge_strategy` is set to `fix`, the battery will be discharged with this constant power (as long as it is charged).
-        The value cannot exceed `maxdischargepower`.
-      de: |
-        Wenn `discharge_strategy` auf `fix` eingestellt ist, wird die Batterie mit dieser konstanten Leistung entladen (solange sie geladen ist).
-        Der Wert kann `maxdischargepower` nicht überschreiten.
-    usages: ["battery"]
   - name: cache
     advanced: true
     default: 1s
@@ -123,11 +84,7 @@ render: |
         uri: http://{{ .host }}/write
         headers:
           - Content-Type: application/json
-        {{- if eq .discharge_strategy "self_consumption" }}
         body: '{"state":{"MM":1}}'
-        {{- else }}
-        body: '{"state":{"MM":0,"GS":{{ .fix_discharge_power }}}}'
-        {{- end }}
     - case: 2 # hold 
       set:
         source: http
