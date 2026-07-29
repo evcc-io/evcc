@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Lader",
-      "discharging": "Aflader",
+      "charging": "lader",
+      "discharging": "aflader",
       "energy": "Energi",
+      "gridCharge": "lader fra nettet",
+      "hold": "afladning låst",
+      "holdCharge": "opladning låst",
       "ofTotal": "af {total}",
       "power": "Effekt",
       "soc": "Batteriniveau"
@@ -45,10 +48,11 @@
     },
     "optimizer": {
       "action": {
-        "charge": "Opladning fra nettet",
-        "hold": "Afladning låst",
-        "holdcharge": "Opladning pauseres",
-        "normal": "I takt med soloverskud"
+        "charge": "opladning fra nettet",
+        "discharge": "Aflader til nettet",
+        "hold": "Bloker afladning",
+        "holdcharge": "Bloker opladning",
+        "normal": "Normal drift"
       },
       "empty": "tom",
       "full": "fyldt",
