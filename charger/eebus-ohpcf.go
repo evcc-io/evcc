@@ -252,13 +252,21 @@ func (c *EEBusOHPCF) Enabled() (bool, error) {
 // Enable schedules/resumes the optional consumption when on, pauses/aborts it
 // when off; while on a reboost loop reschedules newly announced consumption.
 func (c *EEBusOHPCF) Enable(enable bool) error {
+	prev := c.lastEnabled()
 	c.setEnabled(enable)
+
+	// keep the previous state on failure, otherwise Enabled() would report an
+	// intent the compressor never accepted and the loadpoint runs out of sync
+	if err := c.apply(); err != nil {
+		c.setEnabled(prev)
+		return err
+	}
 
 	if enable {
 		c.startReboost()
 	}
 
-	return c.apply()
+	return nil
 }
 
 // startReboost launches the reboost loop, unless one is already running or no
