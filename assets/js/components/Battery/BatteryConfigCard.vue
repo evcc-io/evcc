@@ -86,7 +86,7 @@
 					{{ $t("battery.config.discharge") }}
 				</label>
 			</div>
-			<div class="form-check form-switch mt-2">
+			<div v-if="experimental" class="form-check form-switch mt-2">
 				<input
 					id="batteryExpGridDischarge"
 					:checked="batteryGridDischarge"
@@ -96,7 +96,7 @@
 					@change="changeGridDischarge"
 				/>
 				<label class="form-check-label" for="batteryExpGridDischarge">
-					{{ $t("battery.config.gridDischarge") }}
+					{{ $t("battery.config.gridDischarge") }} 🧪
 				</label>
 			</div>
 		</template>
@@ -127,6 +127,7 @@ export default defineComponent({
 		batteryDischargeControl: Boolean,
 		batteryGridDischarge: Boolean,
 		battery: { type: Object as PropType<Battery> },
+		experimental: Boolean,
 	},
 	data() {
 		return {
