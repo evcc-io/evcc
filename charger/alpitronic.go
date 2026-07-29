@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -32,14 +33,14 @@ import (
 
 // AlpitronicHYC charger implementation
 type AlpitronicHYC struct {
-	log       *util.Logger
 	conn      *modbus.Connection
+	inputG    func() ([]byte, error)
 	curr      float64
 	connector uint16
 }
 
 const (
-	// Input
+	// Input, relative to the connector block
 	hycRegState              = 0
 	hycRegChargingPower      = 4
 	hycRegChargeTime         = 6
@@ -49,8 +50,27 @@ const (
 	hycRegIdTag              = 22
 	hycRegTotalChargedEnergy = 32
 
+	// the connector block is gapless- read up to the last register in use (x32..x35)
+	hycInputLength = 36
+
 	// Holding
 	hycRegMaxPowerAC = 0
+)
+
+// connector states as per register x00
+const (
+	hycStateAvailable uint16 = iota
+	hycStatePreparingTagIdReady
+	hycStatePreparingEVReady
+	hycStateCharging
+	hycStateSuspendedEV
+	hycStateSuspendedEVSE
+	hycStateFinishing
+	hycStateReserved
+	hycStateUnavailable
+	hycStateUnavailableFwUpdate
+	hycStateFaulted
+	hycStateUnavailableConnObj
 )
 
 func init() {
@@ -90,14 +110,31 @@ func NewAlpitronicHYC(ctx context.Context, settings modbus.TcpSettings, connecto
 	log := util.NewLogger("alpitronic")
 	conn.Logger(log.TRACE)
 
+	return newAlpitronicHYC(conn, connector), nil
+}
+
+// newAlpitronicHYC wires the struct without sponsor gate (also used by tests)
+func newAlpitronicHYC(conn *modbus.Connection, connector uint16) *AlpitronicHYC {
 	wb := &AlpitronicHYC{
-		log:       log,
 		conn:      conn,
 		curr:      6,
 		connector: connector,
 	}
 
-	return wb, nil
+	// share a single bulk read of the connector's input block across all decoders.
+	// the station applies a fallback when it is not polled within GridFallbackTimeout,
+	// so keeping the number of roundtrips low matters here.
+	wb.inputG = util.Cached(func() ([]byte, error) {
+		return wb.conn.ReadInputRegisters(wb.reg(hycRegState), hycInputLength)
+	}, time.Second)
+
+	return wb
+}
+
+// hycInput returns the bytes of the given register within the cached input block
+func hycInput(b []byte, reg uint16, n int) []byte {
+	off := 2 * int(reg)
+	return b[off : off+n]
 }
 
 // setCurrent writes the current limit as power
@@ -115,20 +152,42 @@ func (wb *AlpitronicHYC) reg(reg uint16) uint16 {
 	return (wb.connector * 100) + reg
 }
 
+// state returns the connector state
+func (wb *AlpitronicHYC) state() (uint16, error) {
+	b, err := wb.inputG()
+	if err != nil {
+		return 0, err
+	}
+
+	return encoding.Uint16(hycInput(b, hycRegState, 2)), nil
+}
+
 // Status implements the api.Charger interface
 func (wb *AlpitronicHYC) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegState), 1)
+	s, err := wb.state()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch s := encoding.Uint16(b); s {
-	case 0, 7, 8, 9, 10:
+	switch s {
+	case
+		hycStateAvailable,
+		hycStatePreparingTagIdReady, // authorized, waiting for the cable to be plugged in
+		hycStateReserved,
+		hycStateUnavailable,
+		hycStateUnavailableFwUpdate,
+		hycStateUnavailableConnObj:
 		return api.StatusA, nil
-	case 1, 2, 4, 5, 6:
+	case
+		hycStatePreparingEVReady, // plugged in, waiting for authorization
+		hycStateSuspendedEV,
+		hycStateSuspendedEVSE,
+		hycStateFinishing:
 		return api.StatusB, nil
-	case 3:
+	case hycStateCharging:
 		return api.StatusC, nil
+	case hycStateFaulted:
+		return api.StatusNone, errors.New("connector state: faulted")
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
@@ -162,6 +221,10 @@ func (wb *AlpitronicHYC) MaxCurrent(current int64) error {
 var _ api.ChargerEx = (*AlpitronicHYC)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
+//
+// api.CurrentLimiter is deliberately not implemented: registers x10/x36 contain
+// the connector power limit written by evcc itself, so using them as upper bound
+// would feed back into the limit. Use the loadpoint's maxcurrent instead.
 func (wb *AlpitronicHYC) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.1f", current)
@@ -179,63 +242,63 @@ var _ api.Meter = (*AlpitronicHYC)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *AlpitronicHYC) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegChargingPower), 2)
+	b, err := wb.inputG()
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32(b)), err
+	return float64(encoding.Uint32(hycInput(b, hycRegChargingPower, 4))), nil
 }
 
 var _ api.ChargeTimer = (*AlpitronicHYC)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *AlpitronicHYC) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegChargeTime), 1)
+	b, err := wb.inputG()
 	if err != nil {
 		return 0, err
 	}
 
-	return time.Duration(encoding.Uint16(b)) * time.Second, nil
+	return time.Duration(encoding.Uint16(hycInput(b, hycRegChargeTime, 2))) * time.Second, nil
 }
 
 var _ api.ChargeRater = (*AlpitronicHYC)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *AlpitronicHYC) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegChargedEnergy), 1)
+	b, err := wb.inputG()
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Uint16(b)) / 100, err
+	return float64(encoding.Uint16(hycInput(b, hycRegChargedEnergy, 2))) / 100, nil
 }
 
 var _ api.MeterEnergy = (*AlpitronicHYC)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *AlpitronicHYC) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegTotalChargedEnergy), 4)
+	b, err := wb.inputG()
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Int64(b)) / 1e3, err
+	return float64(encoding.Int64(hycInput(b, hycRegTotalChargedEnergy, 8))) / 1e3, nil
 }
 
 var _ api.StatusReasoner = (*AlpitronicHYC)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *AlpitronicHYC) StatusReason() (api.Reason, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegState), 1)
+	s, err := wb.state()
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	switch s := encoding.Uint16(b); s {
-	case 1:
+	switch s {
+	case hycStatePreparingEVReady:
 		return api.ReasonWaitingForAuthorization, nil
-	case 6:
+	case hycStateFinishing:
 		return api.ReasonDisconnectRequired, nil
 	default:
 		return api.ReasonUnknown, nil
@@ -246,22 +309,17 @@ var _ api.Identifier = (*AlpitronicHYC)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *AlpitronicHYC) Identify() (string, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegVID), 4)
+	b, err := wb.inputG()
 	if err != nil {
 		return "", err
 	}
 
-	if !allZero(b) {
-		return hex.EncodeToString(b), nil
+	if vid := hycInput(b, hycRegVID, 8); !allZero(vid) {
+		return hex.EncodeToString(vid), nil
 	}
 
-	b, err = wb.conn.ReadInputRegisters(wb.reg(hycRegIdTag), 10)
-	if err != nil {
-		return "", err
-	}
-
-	if !allZero(b) {
-		return hex.EncodeToString(b), nil
+	if idTag := hycInput(b, hycRegIdTag, 20); !allZero(idTag) {
+		return hex.EncodeToString(idTag), nil
 	}
 
 	return "", nil
@@ -271,12 +329,12 @@ var _ api.Battery = (*AlpitronicHYC)(nil)
 
 // Soc implements the api.Battery interface
 func (wb *AlpitronicHYC) Soc() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegSoC), 1)
+	b, err := wb.inputG()
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Uint16(b)) / 100, nil
+	return float64(encoding.Uint16(hycInput(b, hycRegSoC, 2))) / 100, nil
 }
 
 func allZero(s []byte) bool {
