@@ -16,7 +16,7 @@ params:
     baudrate: 9600
     id: 1
   - name: maxacpower
-    example: 12000
+    required: true
   - name: storageunit
     choice: ["1", "2"]
   - preset: battery-params
@@ -279,7 +279,6 @@ render: |
       {{- end }}
     {{- end }}
   maxacpower: {{ .maxacpower }}
-  {{- if gt (atoi (printf "%v" .maxacpower)) 0 }}
   # Feed-in curtailment via "Max Sell Power" (register 143, watts). The register is the
   # device's always-active feed-in ceiling; there is no separate limit-enable register.
   # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
@@ -335,7 +334,6 @@ render: |
         percent = (limit*100 + maxacpower/2) / maxacpower
       }
       percent
-  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
