@@ -50,7 +50,7 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 
 	go func() {
 		<-ctx.Done()
-		mqtt.Unsubscribe(vin)
+		mqtt.Unsubscribe(vin, recvC)
 	}()
 
 	go func() {

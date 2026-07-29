@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -82,7 +81,7 @@ func decodeNaN16(f func(b []byte) float64, nan ...uint16) func(b []byte) float64
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint16(b)
 		if slices.Contains(nan, u) {
-			return math.NaN()
+			return 0
 		}
 		return f(b)
 	}
@@ -92,7 +91,7 @@ func decodeNaN32(f func(b []byte) float64, nan ...uint32) func(b []byte) float64
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint32(b)
 		if slices.Contains(nan, u) {
-			return math.NaN()
+			return 0
 		}
 		return f(b)
 	}
@@ -102,7 +101,7 @@ func decodeNaN64(f func(b []byte) float64, nan ...uint64) func(b []byte) float64
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint64(b)
 		if slices.Contains(nan, u) {
-			return math.NaN()
+			return 0
 		}
 		return f(b)
 	}

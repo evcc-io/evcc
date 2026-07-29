@@ -81,7 +81,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyBatteryStateReportSoc); p != nil {
+	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyBatteryStateReportSoc, KeyEnyaqSoc); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -188,7 +188,7 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldTargetSoc); p != nil {
+	if p := lookup(data, FieldTargetSoc, FieldChargeBcamThreshold); p != nil {
 		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}
