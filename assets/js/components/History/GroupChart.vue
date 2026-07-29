@@ -350,9 +350,7 @@ export default defineComponent({
 				// top entity doesn't drop the rounding; a focused entity is solo.
 				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
-					| number
-					| null
-					| { value: number; itemStyle: { borderRadius: number[] } }
+					number | null | { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
@@ -363,9 +361,7 @@ export default defineComponent({
 					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
 				});
 				const returnEnergyData: (
-					| number
-					| null
-					| { value: number; itemStyle: { borderRadius: number[] } }
+					number | null | { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
