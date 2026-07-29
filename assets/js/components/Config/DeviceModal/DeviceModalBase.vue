@@ -34,18 +34,21 @@
 					<template v-if="$slots['template-action']" #action>
 						<slot name="template-action" />
 					</template>
+					<template v-if="productLink" #footer>
+						<div class="form-text evcc-gray">
+							{{ $t("config.general.moreInfo") }}
+							<a
+								:href="productLink"
+								class="text-gray"
+								target="_blank"
+								rel="noopener noreferrer"
+								data-testid="device-link"
+							>
+								{{ productLinkHost }}
+							</a>
+						</div>
+					</template>
 				</TemplateSelector>
-
-				<a
-					v-if="productLink"
-					:href="productLink"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="d-inline-block mb-3"
-					data-testid="device-link"
-				>
-					{{ productLinkHost }}
-				</a>
 
 				<p v-if="showDeprecatedWarning" class="text-danger">
 					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
