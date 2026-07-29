@@ -13,7 +13,7 @@ params:
   - name: vin
     required: true
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: timeout
     default: 1h
 render: |

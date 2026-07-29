@@ -48,6 +48,8 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	v2.MockVehicle.EXPECT().GetTitle().Return("v2").AnyTimes()
 	v1.MockVehicle.EXPECT().Identifiers().Return(nil).AnyTimes()
 	v2.MockVehicle.EXPECT().Identifiers().Return([]string{"it's me"}).AnyTimes()
+	v1.MockVehicle.EXPECT().Features().Return(nil).AnyTimes()
+	v2.MockVehicle.EXPECT().Features().Return(nil).AnyTimes()
 
 	var lp loadpoint.API
 	c := New(log, vehicles)

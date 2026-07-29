@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -10,6 +11,36 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
+
+// TestBatterySocRetainOnReadError guards that a failed soc read keeps the last
+// known soc instead of reporting the pack as empty (discussion #26560).
+func TestBatterySocRetainOnReadError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	meter := api.NewMockMeter(ctrl)
+	meter.EXPECT().CurrentPower().Return(0.0, nil).AnyTimes()
+
+	battery := api.NewMockBattery(ctrl)
+	battery.EXPECT().Soc().Return(0.0, errors.New("read failed")).AnyTimes()
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.Battery
+	}{
+		Meter:   meter,
+		Battery: battery,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+	}
+	site.battery.Soc = 84
+
+	site.updateBatteryMeters()
+
+	assert.Equal(t, 84.0, site.battery.Soc, "soc retained when the read fails")
+}
 
 func TestApplyBatteryMode(t *testing.T) {
 	for _, tc := range []struct {

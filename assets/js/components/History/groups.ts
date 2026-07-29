@@ -1,4 +1,10 @@
-export const GROUP_ORDER = ["pv", "battery", "grid", "loadpoint", "meter"] as const;
+export const GROUP_ORDER = ["pv", "battery", "grid", "loadpoint", "consumer", "meter"] as const;
+
+const COLOR_PICKER_GROUPS = ["loadpoint", "consumer", "meter"];
+
+export function hasColorPicker(group: string): boolean {
+  return COLOR_PICKER_GROUPS.includes(group);
+}
 
 const GROUP_COLOR_VAR: Record<string, string> = {
   pv: "--evcc-dark-green",
@@ -6,7 +12,8 @@ const GROUP_COLOR_VAR: Record<string, string> = {
   loadpoint: "--evcc-dark-green",
   grid: "--evcc-grid",
   battery: "--evcc-darker-green",
-  meter: "--evcc-price",
+  consumer: "--evcc-price",
+  meter: "--evcc-self",
 };
 
 export function groupColor(group: string): string {

@@ -27,7 +27,7 @@ func init() {
 		log:       util.NewLogger("providerauth"),
 		secret:    secret[:],
 		providers: make(map[string]api.AuthProvider),
-		states:    make(map[string]string),
+		states:    make(map[string]stateEntry),
 		updateC:   make(chan string, 1),
 	}
 }
@@ -52,7 +52,9 @@ func Register(name string, handler api.AuthProvider) (chan<- bool, error) {
 		return nil, err
 	}
 
-	onlineC := make(chan bool)
+	// buffered + non-blocking send (see OAuth.setOnline): the value is only a
+	// signal and the handler re-reads live state, so coalescing is lossless.
+	onlineC := make(chan bool, 1)
 
 	go func() {
 		for range onlineC {

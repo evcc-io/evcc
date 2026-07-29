@@ -51,7 +51,7 @@ test.describe("circuit", async () => {
 
     // add loadpoint and charger
     const lpModal = page.getByTestId("loadpoint-modal");
-    await page.getByRole("button", { name: "Add charger or heater" }).click();
+    await page.getByRole("button", { name: "Add charging point or heater" }).click();
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Add charging point" }).click();
     await lpModal.getByLabel("Title").fill("Carport");
@@ -69,6 +69,7 @@ test.describe("circuit", async () => {
     await expectModalVisible(lpModal);
 
     // no load management, no circuits
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Circuit")).not.toBeVisible();
 
     await lpModal.getByRole("button", { name: "Save" }).click();

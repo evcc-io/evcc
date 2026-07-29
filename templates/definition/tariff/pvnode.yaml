@@ -31,8 +31,11 @@ params:
     required: true
   - name: forecast_days
     description:
-      en: Forecast days (free plan = 1).
-      de: Vorhersagetage (Free Plan = 1).
+      en: Forecast days
+      de: Vorhersagetage
+    help:
+      en: The free plan of pvnode only allows 1 forecast day.
+      de: Der kostenlose Plan von pvnode erlaubt nur 1 Vorhersagetag.
     type: int
     default: 1
     advanced: true

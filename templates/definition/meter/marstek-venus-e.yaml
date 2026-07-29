@@ -1,5 +1,5 @@
 template: marstek-venus-e
-covers: ["marstek-venus"]
+covers: ["marstek-venus", "marstek-venus-e-v3"]
 products:
   - brand: Marstek
     description:
@@ -7,6 +7,9 @@ products:
   - brand: Marstek
     description:
       generic: Venus E Gen 2.0
+  - brand: Marstek
+    description:
+      generic: Venus E Gen 3.0
   - brand: Marstek
     description:
       generic: Venus C
@@ -18,6 +21,16 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 115200
     comset: 8N1
+  - name: generation
+    type: choice
+    choice: ["2", "3"]
+    required: true
+    description:
+      de: Generation
+      en: Generation
+    help:
+      de: Venus E, Venus E Gen 2.0 und Venus C sind Generation 2. Generation 3 verwendet andere Register.
+      en: Venus E, Venus E Gen 2.0 and Venus C are generation 2. Generation 3 uses different registers.
   - preset: battery-params
   - name: capacity
     default: 5.12
@@ -41,10 +54,17 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    {{- if eq .generation "3" }}
+    register:
+      address: 30006 # AC Power (W)
+      type: holding
+      decode: int16
+    {{- else }}
     register:
       address: 32202 # AC Power (W)
       type: holding
       decode: int32
+    {{- end }}
     scale: 1
   energy:
     source: modbus
@@ -57,11 +77,19 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
+    {{- if eq .generation "3" }}
+    register:
+      address: 34002 # Battery SOC (%)
+      type: holding
+      decode: uint16
+    scale: 0.1
+    {{- else }}
     register:
       address: 32104 # Battery SOC (%)
       type: holding
       decode: uint16
     scale: 1
+    {{- end }}
   batterymode:
     source: switch
     switch:
@@ -69,6 +97,16 @@ render: |
       set:
         source: sequence
         set:
+        # Restore Max Charge Power
+        - source: const
+          value: {{ .maxchargepower }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 44002 # Max Charge Power
+              type: writesingle
+              decode: uint16
         # Enable RS485 Control Mode
         - source: const
           value: 21930
@@ -159,4 +197,48 @@ render: |
               type: writesingle
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
+    - case: 4 # holdcharge -> no charging, discharging allowed
+      set:
+        source: sequence
+        set:
+        # Set Max Charge Power to 0 to prevent charging
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 44002 # Max Charge Power
+              type: writesingle
+              decode: uint16
+        # Enable RS485 Control Mode
+        - source: const
+          value: 21930
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Enabled
+              type: writesingle
+              decode: uint16
+        # Set User Work Mode
+        - source: const
+          value: {{ .work_mode_normal }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43000 # User Work Mode
+              type: writesingle
+              decode: uint16
+        # Disable RS485 Control Mode
+        - source: const
+          value: 21947
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 42000 # RS485 Control Mode = Disabled
+              type: writesingle
+              decode: uint16
   {{- include "battery-params" . }}

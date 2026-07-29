@@ -25,6 +25,7 @@ export const LOCALES = {
   ja: ["Japanese", "日本語"],
   lb: ["Luxembourgish", "Lëtzebuergesch"],
   lt: ["Lithuanian", "Lietuvių"],
+  lv: ["Latvian", "Latviešu"],
   nl: ["Dutch", "Nederlands"],
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],

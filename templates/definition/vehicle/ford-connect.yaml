@@ -6,27 +6,23 @@ products:
       generic: FordConnect (Legacy)
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: clientid
     description:
       generic: FordConnect API Client ID
     help:
       de: Einrichtung unter [developer.ford.com](https://developer.ford.com)
       en: Setup at [developer.ford.com](https://developer.ford.com)
-    required: true
   - name: clientsecret
     description:
       generic: FordConnect API Client Secret
     help:
       de: Einrichtung unter [developer.ford.com](https://developer.ford.com)
       en: Setup at [developer.ford.com](https://developer.ford.com)
-    required: true
   - name: accessToken
     required: true
-    mask: true
   - name: refreshToken
     required: true
-    mask: true
   - name: vin
     example: WF0FXX...
   - name: cache

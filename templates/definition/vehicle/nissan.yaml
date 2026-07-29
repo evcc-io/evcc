@@ -5,7 +5,7 @@ products:
       generic: Leaf
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
 render: |
   type: nissan
   {{ include "vehicle-base" . }}

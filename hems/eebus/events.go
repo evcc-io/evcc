@@ -2,9 +2,11 @@ package eebus
 
 import (
 	eebusapi "github.com/enbility/eebus-go/api"
+	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	"github.com/enbility/eebus-go/usecases/cs/lpp"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/server/eebus"
 )
 
@@ -27,8 +29,16 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	// and invoke `ApproveOrDenyConsumptionLimit` for each
 	//
 	// Use Case LPC, Scenario 1
-	case lpc.WriteApprovalRequired:
+	case lpc.LimitWriteApprovalRequired:
 		c.consumptionWriteApprovalRequired()
+
+	// An incoming device configuration write (e.g. failsafe values) needs to be
+	// approved or denied. eebus-go <= v0.7.0 applied these automatically, so we
+	// keep that behaviour by approving all pending configuration writes.
+	//
+	// Use Case LPC, Scenario 2
+	case lpc.ConfigurationWriteApprovalRequired:
+		c.approveDeviceConfigurations(c.cs.CsLPCInterface.PendingDeviceConfigurations(), c.cs.CsLPCInterface.ApproveOrDenyDeviceConfiguration)
 
 	// Failsafe limit for the consumed active (real) power of the
 	// Controllable System data update received
@@ -69,8 +79,16 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	// and invoke `ApproveOrDenyProductionLimit` for each
 	//
 	// Use Case LPP, Scenario 1
-	case lpp.WriteApprovalRequired:
+	case lpp.LimitWriteApprovalRequired:
 		c.productionWriteApprovalRequired()
+
+	// An incoming device configuration write (e.g. failsafe values) needs to be
+	// approved or denied. eebus-go <= v0.7.0 applied these automatically, so we
+	// keep that behaviour by approving all pending configuration writes.
+	//
+	// Use Case LPP, Scenario 2
+	case lpp.ConfigurationWriteApprovalRequired:
+		c.approveDeviceConfigurations(c.cs.CsLPPInterface.PendingDeviceConfigurations(), c.cs.CsLPPInterface.ApproveOrDenyDeviceConfiguration)
 
 	// Failsafe limit for the produced active (real) power of the
 	// Controllable System data update received
@@ -153,6 +171,18 @@ func (c *EEBus) productionWriteApprovalRequired() {
 		c.mux.Lock()
 		c.productionLimit = limit
 		c.mux.Unlock()
+	}
+}
+
+// approveDeviceConfigurations approves all pending device configuration writes,
+// preserving the automatic behaviour of eebus-go <= v0.7.0
+func (c *EEBus) approveDeviceConfigurations(
+	pending map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration,
+	approve func(msgCounter model.MsgCounterType, approve bool, reason string),
+) {
+	for msg, configs := range pending {
+		c.log.DEBUG.Println("approving device configuration write:", msg, configs)
+		approve(msg, true, "")
 	}
 }
 

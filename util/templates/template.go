@@ -22,7 +22,7 @@ type Template struct {
 	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string       `json:",omitempty"` // list of covered outdated template names
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
-	Capabilities []Capability   `json:",omitempty"`
+	Capabilities []Capability   `json:"-"`
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations

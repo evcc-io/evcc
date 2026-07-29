@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import colors, { dimColor, lighterColor, fullColor, resolveColors, deviceColorMap } from "./colors";
+import colors, {
+  dimColor,
+  lighterColor,
+  fullColor,
+  darken,
+  resolveColors,
+  deviceColorMap,
+} from "./colors";
 import type { DeviceColors } from "./types/evcc";
 
 describe("setAlpha helpers", () => {
@@ -23,6 +30,19 @@ describe("setAlpha helpers", () => {
 
   it("returns input unchanged for unexpected length", () => {
     expect(dimColor("rgb(1,2,3)")).toBe("rgb(1,2,3)");
+  });
+});
+
+describe("darken", () => {
+  it("scales rgb toward black by factor, staying opaque", () => {
+    expect(darken("#ffffff", 0.5)).toBe("#808080");
+    expect(darken("#0fde41", 1)).toBe("#0fde41");
+    expect(darken("#0fde41", 0)).toBe("#000000");
+  });
+
+  it("clamps factor and ignores non-6-digit hex", () => {
+    expect(darken("#abcdef", 2)).toBe("#abcdef");
+    expect(darken("rgb(1,2,3)", 0.5)).toBe("rgb(1,2,3)");
   });
 });
 

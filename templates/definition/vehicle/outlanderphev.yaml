@@ -9,7 +9,7 @@ requirements:
     de: Unterstützung für Mitsubishi Outlander PHEV über [github.com/buxtronix/phev2mqtt](https://github.com/buxtronix/phev2mqtt). MQTT-Broker erforderlich.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: timeout
     default: 600s
     advanced: true

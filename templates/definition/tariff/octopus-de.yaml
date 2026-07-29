@@ -22,11 +22,7 @@ params:
   - name: password
     type: string
     required: true
-    mask: true
     example: "secret"
-    description:
-      en: Password
-      de: Passwort
     help:
       de: "Das Passwort Ihres Octopus Energy Kontos."
       en: "The password of your Octopus Energy account."

@@ -29,7 +29,7 @@ func NewStats() *Stats {
 
 // Update publishes stats based on charging sessions
 func (s *Stats) Update(p publisher) {
-	if time.Since(s.updated) < time.Hour {
+	if time.Since(s.updated) < 15*time.Minute {
 		return
 	}
 

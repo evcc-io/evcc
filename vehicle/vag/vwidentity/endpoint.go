@@ -194,11 +194,11 @@ func (v *Service) loginLegacy(vars FormVars, user, password string) (url.Values,
 	return parseAuthLocation(parsed)
 }
 
-// marketingConsentCallback returns the OIDC callback url embedded in an
+// MarketingConsentCallback returns the OIDC callback url embedded in an
 // optional VW/Audi marketing consent page. VW periodically interjects this
 // page (path .../consent/marketing/...) after an otherwise successful login.
 // It returns a nil url if u is not a marketing consent page.
-func marketingConsentCallback(u *url.URL) (*url.URL, error) {
+func MarketingConsentCallback(u *url.URL) (*url.URL, error) {
 	if u == nil || !strings.Contains(u.Path, "/consent/marketing/") {
 		return nil, nil
 	}
@@ -227,7 +227,7 @@ func (v *Service) skipMarketingConsent(resp *http.Response) (*url.URL, bool, err
 		return nil, false, nil
 	}
 
-	cb, err := marketingConsentCallback(resp.Request.URL)
+	cb, err := MarketingConsentCallback(resp.Request.URL)
 	if err != nil {
 		return nil, true, err
 	}

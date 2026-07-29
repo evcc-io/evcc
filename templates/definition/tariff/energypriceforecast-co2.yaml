@@ -26,6 +26,7 @@ params:
     required: true
 render: |
   type: custom
+  features: ["cacheable"]
   tariff: co2
   forecast:
     source: http

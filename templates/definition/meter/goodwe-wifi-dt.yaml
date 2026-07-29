@@ -14,13 +14,13 @@ render: |
   power:
     source: aa55udp
     host: {{ .host }}
-    register: 30127
-    count: 2
-    decode: int32be
+    register:
+      address: 30127
+      decode: int32
   energy:
     source: aa55udp
     host: {{ .host }}
-    register: 30145
-    count: 2
-    decode: uint32be
+    register:
+      address: 30145
+      decode: uint32
     scale: 0.1

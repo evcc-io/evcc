@@ -38,7 +38,8 @@ export default defineComponent({
 				: null;
 		},
 		feedInLimit(): string | null {
-			return this.status?.curtailed && this.status.maxProductionPower !== undefined
+			return (this.status?.curtailed ?? 100) < 100 &&
+				this.status?.maxProductionPower !== undefined
 				? this.fmtW(this.status.maxProductionPower, POWER_UNIT.KW)
 				: null;
 		},

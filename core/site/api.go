@@ -33,6 +33,8 @@ type API interface {
 	SetAuxMeterRefs([]string)
 	GetExtMeterRefs() []string
 	SetExtMeterRefs([]string)
+	GetConsumerMeterRefs() []string
+	SetConsumerMeterRefs([]string)
 
 	// circuits
 	GetCircuit() api.Circuit
@@ -54,6 +56,11 @@ type API interface {
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
 
+	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
+	GetOptimizerChargingStrategy() string
+	// SetOptimizerChargingStrategy sets the optimizer grid charging strategy
+	SetOptimizerChargingStrategy(strategy string) error
+
 	//
 	// power and energy
 	//
@@ -70,11 +77,22 @@ type API interface {
 	GetTariff(api.TariffUsage) api.Tariff
 
 	//
+	// forecast
+	//
+
+	// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+	GetSolarAdjusted() bool
+	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+	SetSolarAdjusted(bool)
+
+	//
 	// battery control
 	//
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+	GetBatteryGridDischarge() bool
+	SetBatteryGridDischarge(bool) error
 
 	//
 	// battery control external

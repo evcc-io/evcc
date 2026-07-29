@@ -8,7 +8,7 @@ products:
       generic: Micra
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: expiry
     description:
       de: Ablauf

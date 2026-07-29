@@ -51,7 +51,6 @@ params:
       de: 'Manche Nutzer, z.B. mit Starlink-Internet, sehen gelegentlich in den Logs den "error code 8513". Das passiert, wenn die API Region nicht korrekt erkannt wird. Um das zu beheben, kann man die API Region manuell setzen. Mögliche Werte: auto (Standard), europe oder america.'
   - name: cache
     default: 30s
-    advanced: true
   - preset: battery-params
 render: |
   type: ecoflow

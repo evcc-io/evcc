@@ -5,7 +5,6 @@ products:
       de: E-Mail
 params:
   - name: host
-    required: true
     example: smtp.example.com
   - name: port
     required: true

@@ -12,6 +12,7 @@ power: # charge power reading in W
 standbypower: 20 # in W, below values will be treaded as inactive
 
 features:
+  - switchdevice # on/off only, no current control
   - heating # treat as a heating device
   - integrateddevice # no charging sessions, no connected vehicles
 

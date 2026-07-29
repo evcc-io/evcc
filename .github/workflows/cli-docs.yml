@@ -1,0 +1,45 @@
+name: Deploy CLI docs
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Target branch in the docs repository
+        default: main
+
+jobs:
+  clidocs:
+    name: Deploy CLI docs
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Generate CLI docs
+        run: mkdir dist && touch dist/empty && go run main.go gendoc ./cli-docs
+
+      - name: Format
+        run: npx prettier@3.9.4 --no-config --write "./cli-docs/**/*.md"
+
+      - name: Deploy CLI docs to docs repo
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
+        with:
+          personal_token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
+          publish_dir: ./cli-docs
+          external_repository: evcc-io/docs
+          publish_branch: ${{ github.event.inputs.target_branch || 'main' }}
+          destination_dir: src/content/docs/en/reference/cli
+          allow_empty_commit: false
+          commit_message: CLI docs update
+        if: success()

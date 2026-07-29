@@ -273,7 +273,6 @@
       "noFileSelected": "Geen bestand geselecteerd.",
       "off": "uit",
       "on": "aan",
-      "password": "Wachtwoord",
       "readFromFile": "Uit bestand lezen",
       "remove": "Verwijderen",
       "required": "vereist",
@@ -303,7 +302,6 @@
         "type": "Type"
       },
       "description": "Vermogensbeperking door externe systemen (bijv. §14a EnWG, §9 EEG-interface of hoger niveau energiebeheersysteem). Werkt samen met de functie voor Load Balancing.",
-      "downloadCsv": "Download CSV",
       "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "lastEvent": "Meest recent {timeAgo}.",
       "title": "Externe limiet"
@@ -361,8 +359,6 @@
       },
       "defaultModeHelpKeep": "Behoud de laatst-geselecteerde modus.",
       "defaultModeLabel": "Standaard modus",
-      "defaultsHint": "Standaardmodus, zonne-energiegedrag en elektrische details maken gebruik van verstandige standaardwaarden.",
-      "defaultsHintLink": "Instellingen aanpassen",
       "delete": "Wissen",
       "electricalSubtitle": "Bij twijfel, raadpleeg een elektricien.",
       "electricalTitle": "Elektrisch",
@@ -397,7 +393,6 @@
       "priorityHelp": "Hogere prioriteit krijgt voorrang bij toegang tot zonne-energie overschotten.",
       "priorityLabel": "Prioriteit",
       "save": "Opslaan",
-      "showAllSettings": "Alle instellingen tonen",
       "solarBehaviorCustomHelp": "Definieer uw eigen in- en uitschakeldrempels en vertragingen.",
       "solarBehaviorDefaultHelp": "Begin na {enableDelay} van overschot. Stop als er niet genoeg overschot is voor {disableDelay}.",
       "solarBehaviorLabel": "Zonne-energie",
@@ -527,7 +522,6 @@
       "option": {
         "aux": "Zelfregulerende consument toevoegen",
         "battery": "Batterijmeter toevoegen",
-        "ext": "Standaard verbruiker toevoegen",
         "pv": "Zonne-energie meter toevoegen"
       },
       "save": "Opslaan",
@@ -609,26 +603,18 @@
       "descriptionHost": "Gebruikt om evcc in je lokale netwerk aan te kondigen.",
       "descriptionInternalUrl": "Lokaal netwerk adres van evcc.",
       "descriptionPort": "Poort voor de web interface en API. Update de browser url wanneer u dit aanpast.",
-      "descriptionSchema": "Beïnvloedt enkel hoe URLs gegenereerd worden. HTTPS selecteren activeert geen encryptie.",
       "labelExternalUrl": "Externe URL",
       "labelHost": "mDNS-hostnaam",
       "labelInternalUrl": "Interne URL",
       "labelPort": "Poort",
-      "labelSchema": "Schema",
       "title": "Netwerk",
       "warningUrlPath": "De URL bevat doorgaans geen path. Weet u zeker dat dit juist is?"
     },
     "ocpp": {
-      "connectedChargers": "Verbonden laders",
-      "connectionStatus": "Geconfigureerde station ID's",
-      "connectionStatusHelp": "Verbindingsstatus van geconfigureerde laders.",
-      "detectedChargers": "Gedetecteerde station ID's",
-      "detectedHelp": "Deze laders hebben geprobeerd verbinding te maken met evcc. Om een lader te gebruiken, moet u een laadpunt aanmaken met de bijbehorende station ID.",
       "forwardingConfigured": "Doorsturen geconfigureerd",
       "forwardingError": "Fout bij doorsturen",
       "forwardingOff": "Doorsturen niet geconfigureerd",
       "noChargers": "Geen OCPP-laders gedetecteerd.",
-      "noStations": "Geen stations verbonden",
       "stations": "Laadstation IDs",
       "stationsHelp": "Geconfigureerde en gedeteceerde OCPP laders. Naast lokale controle, kunnen berichten ook worden doorgestuurd naar een externe server (bijv. voor facturatie).",
       "status": {
@@ -763,14 +749,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licentiesleutel",
-      "activationKeyHint": "Verzonden via email. Deze kan hier gevonden worden: {url}.",
       "addToken": "Token invoeren",
       "changeToken": "Token bewerken",
       "description": "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten.",
       "descriptionToken": "Als GitHub-sponsor vind je jouw token op {url}. Om aan de slag te kunnen, bieden we een {trialToken}.",
-      "email": "E-mail",
-      "emailHint": "Email adres dat u gebruikte voor {url}",
       "enterYourToken": "Jouw sponsortoken",
       "error": "De sponsortoken is ongeldig.",
       "invalid": "ongeldig",
@@ -897,10 +879,6 @@
         "timeTo": "Tot",
         "weekdays": "Weekdagen"
       }
-    },
-    "tariffs": {
-      "description": "Voer jouw energietarief in om de kosten van het laden te berekenen.",
-      "title": "Tarieven"
     },
     "telemetry": {
       "description": "Het delen van je data helpt om evcc te verbeteren. Uw privacy is belangrijk voor ons en deelname is geheel optioneel.",
@@ -1064,16 +1042,9 @@
   },
   "header": {
     "about": "Over",
-    "authProviders": {
-      "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
-      "loggedOut": "Succesvol uitgelogd",
-      "success": "Succesvolle authorisatie met {title}. Dit tabblad kan nu gesloten worden.",
-      "title": "Authorisatie Status"
-    },
     "blog": "Blog",
     "docs": "Documentatie",
     "github": "GitHub",
-    "login": "Logingegevens van voertuigen",
     "logout": "Uitloggen",
     "nativeSettings": "Andere server",
     "needHelp": "Hulp nodig?",
@@ -1168,7 +1139,6 @@
   "loginModal": {
     "cancel": "Annuleren",
     "demoMode": "Login niet ondersteund in demo mode.",
-    "error": "Login mislukt: ",
     "iframeHint": "Open evcc in een nieuw tabblad.",
     "iframeIssue": "Uw wachtwoord is correct, maar het lijkt erop dat uw browser de authenticatiecookie heeft verwijderd. Dit kan gebeuren als u evcc via HTTP in een iframe uitvoert.",
     "invalid": "Wachtwoord onjuist.",
@@ -1181,9 +1151,7 @@
     "chargingPlan": {
       "active": "Actief",
       "addRepeatingPlan": "Herhalend schema toevoegen",
-      "arrivalTab": "Aankomst",
       "day": "Dag",
-      "departureTab": "Vertrek",
       "goal": "Laaddoel",
       "modalTitle": "Laad Plan",
       "none": "geen",
@@ -1207,8 +1175,6 @@
       "strategySettings": "Strategie-instellingen",
       "time": "Tijd",
       "title": "Plan",
-      "titleMinSoc": "Min lading",
-      "titleTargetCharge": "Vertrek",
       "unsavedChanges": "Wijzigingen nog niet opgeslagen. Nu toepassen?",
       "update": "Toepassen",
       "weekdays": "Dagen"
@@ -1224,10 +1190,6 @@
       "batteryChargeHold": "Accu (laden vergrendeld)",
       "batteryDischarge": "Accu ontladen",
       "batteryDischargeHold": "Accu (geblokkeerd)",
-      "batteryForecastEmpty": "Leeg",
-      "batteryForecastFull": "Vol",
-      "batteryForecastNextHigh": "Hoog",
-      "batteryForecastNextLow": "Laag",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryTooltip": "{energy} van {total} ({soc})",
@@ -1265,7 +1227,6 @@
           "returnEnergy": "geexporteerd"
         }
       },
-      "downloadCsv": "Download CSV",
       "empty": "Er is voor deze tijdspanne geen data beschikbaar.",
       "group": {
         "battery": "Batterij",
@@ -1309,22 +1270,12 @@
       "batteryUsage": "Thuisbatterij",
       "currents": "Laadstroom",
       "default": "standaard",
-      "disclaimerHint": "Let op:",
-      "limitSoc": {
-        "description": "Standaard laadlimiet wanneer dit voertuig aangesloten wordt.",
-        "label": "Standaard limiet"
-      },
       "maxCurrent": {
         "label": "Max. Stroomsterkte"
       },
       "minCurrent": {
         "label": "Min. Stroomsterkte"
       },
-      "minSoc": {
-        "description": "Het voertuig wordt „snel” opgeladen tot {0} in zonne-modus. Het laden gaat daarna verder met zonneoverschot. Nuttig om een bepaald rijbereik te garanderen, ook gedurende periodes met weinig of geen zonnestroom.",
-        "label": "Min. batterij %"
-      },
-      "onlyForSocBasedCharging": "Deze instellingen zijn alleen beschikbaar bij voertuigen waar het batterijpercentage bekend is.",
       "phasesConfigured": {
         "label": "Fasen",
         "no1p3pSupport": "Hoe is je lader aangesloten?",
@@ -1529,8 +1480,6 @@
       "solarpercentage": "Zonne-energie (%)",
       "vehicle": "Voertuig"
     },
-    "csvPeriod": "Download CSV van {period}",
-    "csvTotal": "Download totale CSV",
     "date": "Start",
     "energy": "Geladen",
     "filter": {

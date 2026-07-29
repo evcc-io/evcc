@@ -5,21 +5,19 @@ products:
       generic: FordConnect Query
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: clientid
     description:
       generic: FordConnect Query Client ID
     help:
       de: Einrichtung unter [developer.ford.com](https://developer.ford.com/developer-eu)
       en: Setup at [developer.ford.com](https://developer.ford.com/developer-eu)
-    required: true
   - name: clientsecret
     description:
       generic: FordConnect Query Client Secret
     help:
       de: Einrichtung unter [developer.ford.com](https://developer.ford.com/developer-eu)
       en: Setup at [developer.ford.com](https://developer.ford.com/developer-eu)
-    required: true
   - name: redirecturi
     description:
       generic: FordConnect Query Redirect URL
@@ -27,7 +25,6 @@ params:
       de: Einrichtung unter [developer.ford.com](https://developer.ford.com/developer-eu)
       en: Setup at [developer.ford.com](https://developer.ford.com/developer-eu)
     service: auth/redirecturi
-    required: true
   - name: vin
     example: WF0FXX...
   - name: cache

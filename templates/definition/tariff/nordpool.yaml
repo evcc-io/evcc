@@ -41,17 +41,13 @@ params:
         "SYS",
       ]
   - name: currency
-    default: EUR
-    type: choice
-    description:
-      en: Currency
-      de: Währung
     choice: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
-    required: true
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: custom
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
   forecast:
     source: go
     script: |

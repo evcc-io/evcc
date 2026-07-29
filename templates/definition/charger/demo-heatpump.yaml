@@ -50,10 +50,7 @@ params:
     description:
       de: Maximale Stromstärke
       en: Maximum amperage
-    unit: A
     help:
-    example: 16
-    type: int
     advanced: true
 
 render: |
