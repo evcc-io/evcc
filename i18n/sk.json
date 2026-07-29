@@ -57,8 +57,7 @@
       "full": "plné",
       "highest": "Najvyššia ({value})",
       "lowest": "Najnižšia ({value})",
-      "suggestion": "Návrh",
-      "title": "Optimalizátor"
+      "suggestion": "Návrh"
     }
   },
   "batterySettings": {
@@ -365,7 +364,6 @@
       },
       "customOption": "Užívateľom-definovaná integrácia",
       "description": "Obmedzenie výkonu externými systémami (napr. §14a EnWG, §9 rozhranie EEG alebo systém riadenia energie nadradenej úrovne). Funguje spoločne s funkciou riadenia záťaže. Pre vybrané zariadenia je podporované aj obmedzenie výroby solárnej energie. Skutočný limit obmedzenia musí byť nastavený v každej konfigurácii meniča.",
-      "downloadCsv": "Stiahnuť CSV",
       "eventsRecorded": "Zaznamenané {count} sieťové obmedzenia udalostí.",
       "generic": "Všeobecné integrácie",
       "integrations": "Integrácie",
@@ -426,8 +424,6 @@
       },
       "defaultModeHelpKeep": "Zachová posledný vybraný režim.",
       "defaultModeLabel": "Predvolený režim",
-      "defaultsHint": "Predvolený režim, správanie solárnej energie a elektrické detaily používajú rozumné predvolené hodnoty.",
-      "defaultsHintLink": "Upraviť nastavenia",
       "delete": "Zmazať",
       "electricalSubtitle": "V prípade pochybností sa obráťte na svojho elektrikára.",
       "electricalTitle": "Elektrika",
@@ -1232,9 +1228,7 @@
     "chargingPlan": {
       "active": "Aktívny",
       "addRepeatingPlan": "Pridať opakujúci sa plán",
-      "arrivalTab": "Príchod",
       "day": "Deň",
-      "departureTab": "Odchod",
       "goal": "Cieľ nabíjania",
       "modalTitle": "Nabíjací plán",
       "none": "žiadny",
@@ -1258,8 +1252,6 @@
       "strategySettings": "Nastavenie stratégie",
       "time": "Čas",
       "title": "Plán",
-      "titleMinSoc": "Minimálne nabitie",
-      "titleTargetCharge": "Odchod",
       "unsavedChanges": "Existujú neuložené zmeny. Uložiť teraz?",
       "update": "Použiť",
       "weekdays": "Dni"
@@ -1275,10 +1267,6 @@
       "batteryChargeHold": "Batéria (nabíjanie uzamknuté)",
       "batteryDischarge": "Vybíjanie batérie",
       "batteryDischargeHold": "Batéria (vybíjanie uzamknuté)",
-      "batteryForecastEmpty": "Prázdne",
-      "batteryForecastFull": "Plné",
-      "batteryForecastNextHigh": "Vysoký",
-      "batteryForecastNextLow": "Nízky",
       "batteryGridChargeActive": "Sieťové nabíjanie: aktívne",
       "batteryGridChargeLimit": "Sieťové nabíjanie: keď",
       "batteryTooltip": "{energy} z {total} ({soc})",
@@ -1320,7 +1308,6 @@
           "returnEnergy": "Energia (spätná)"
         }
       },
-      "downloadCsv": "Stiahnuť CSV",
       "empty": "Pre toto časové obdobie nie sú k dispozícii žiadne historické údaje.",
       "group": {
         "battery": "Batéria",
@@ -1365,22 +1352,12 @@
       "batteryUsage": "Domáca batéria",
       "currents": "Nabíjací prúd",
       "default": "predvolené",
-      "disclaimerHint": "Poznámka:",
-      "limitSoc": {
-        "description": "Limit nabíjania, ktorý sa používa, keď je toto vozidlo pripojené.",
-        "label": "Predvolený limit"
-      },
       "maxCurrent": {
         "label": "Max. prúd"
       },
       "minCurrent": {
         "label": "Min. prúd"
       },
-      "minSoc": {
-        "description": "Vozidlo sa v solárnom režime „rýchlo“ nabije na {0}. Potom pokračuje s prebytočnou solárnou energiou. Užitočné na zabezpečenie minimálneho dojazdu aj počas zamračených dní.",
-        "label": "Min. nabitie %"
-      },
-      "onlyForSocBasedCharging": "Tieto možnosti sú dostupné iba pre vozidlá so známou úrovňou nabitia.",
       "phasesConfigured": {
         "label": "Fázy",
         "no1p3pSupport": "Ako je pripojená vaša nabíjačka?",
@@ -1585,8 +1562,6 @@
       "solarpercentage": "Solár (%)",
       "vehicle": "Vozidlo"
     },
-    "csvPeriod": "Stiahnuť súbor {period} CSV",
-    "csvTotal": "Stiahnuť celkový súbor CSV",
     "date": "Začiatok",
     "energy": "Nabité",
     "filter": {

@@ -4,6 +4,8 @@ products:
     description:
       de: Wechselrichter
       en: Inverter
+capabilities:
+  - curtail
 requirements:
   description:
     de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
@@ -16,78 +18,67 @@ params:
     id: 1
     port: 1502
   - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     subdevice: 1 # Metering device
     value: 203:W # sunspec 3-phase meter power reading
     scale: -1
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     subdevice: 1 # Metering device
     value: 203:TotWhImp
     scale: 0.001
   returnenergy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     subdevice: 1 # Metering device
     value: 203:TotWhExp
     scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphC
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:PhVphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:PhVphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:PhVphC
   powers:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value:  203:WphA
       scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:WphB
       scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:WphC
       scale: -1
@@ -96,14 +87,12 @@ render: |
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     value:
       - 101:W
       - 103:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     value:
       - 101:WH
       - 103:WH
@@ -111,20 +100,53 @@ render: |
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       value:
         - 101:AphA
         - 103:AphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       value:
         - 101:AphB
         - 103:AphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       value:
         - 101:AphC
         - 103:AphC
+  curtail:
+    source: sequence
+    set:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 61441 # Active Power Limit (%)
+          type: writesingle
+          encoding: uint16
+      - source: const
+        value: 1
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 61696 # Commit Power Control Settings
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 61441 # Active Power Limit (%)
+            type: holding
+            decode: uint16
+    script: |
+      percent := int(limit)
+      if percent > 100 {
+        percent = 100
+      }
+      percent
   {{- end }}

@@ -34,18 +34,21 @@
 					<template v-if="$slots['template-action']" #action>
 						<slot name="template-action" />
 					</template>
+					<template v-if="productLink" #footer>
+						<div class="form-text evcc-gray">
+							{{ $t("config.general.moreInfo") }}
+							<a
+								:href="productLink"
+								class="text-gray"
+								target="_blank"
+								rel="noopener noreferrer"
+								data-testid="device-link"
+							>
+								{{ productLinkHost }}
+							</a>
+						</div>
+					</template>
 				</TemplateSelector>
-
-				<a
-					v-if="productLink"
-					:href="productLink"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="d-inline-block mb-3"
-					data-testid="device-link"
-				>
-					{{ productLinkHost }}
-				</a>
 
 				<p v-if="showDeprecatedWarning" class="text-danger">
 					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
@@ -162,7 +165,13 @@
 							/>
 
 							<PropertyCollapsible>
-								<template v-if="advancedParams.length" #advanced>
+								<template v-if="advancedParams.length || modbus" #advanced>
+									<ModbusAdvanced
+										v-if="modbus"
+										v-model:delay="values['delay']"
+										v-model:timeout="values['timeout']"
+										component-id="device"
+									/>
 									<PropertyEntry
 										v-for="param in advancedParams"
 										:id="`${deviceType}Param${param.Name}`"
@@ -219,6 +228,7 @@ import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
 import Modbus from "./Modbus.vue";
+import ModbusAdvanced from "./ModbusAdvanced.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
@@ -261,6 +271,7 @@ export default defineComponent({
 		PropertyEntry,
 		PropertyCollapsible,
 		Modbus,
+		ModbusAdvanced,
 		DeviceModalActions,
 		Markdown,
 		SponsorTokenRequired,

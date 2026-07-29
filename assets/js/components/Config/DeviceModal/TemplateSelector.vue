@@ -28,6 +28,7 @@
 			/>
 			<slot name="action" />
 		</div>
+		<slot name="footer" />
 	</FormRow>
 </template>
 

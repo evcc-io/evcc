@@ -44,6 +44,31 @@ Either `brand` or `description` needs to be set. Examples by device class:
 
 Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
 
+## `link`
+
+`link` is an optional URL pointing to the integration provider. It is shown during configuration and in the documentation.
+
+Guidelines:
+
+- The URL must start with `https://`.
+- Only add a link if it is useful for configuring the device, e.g. the cloud portal where credentials or tokens are managed, the page of the connected service, or the project page of a generic integration.
+- Link the page that describes the actual service being integrated, e.g. the dynamic tariff product page or the dataset page, not the company homepage. The homepage is fine when the whole site is that single service.
+- Write for end users: the page should describe the service and ideally offer a signup or account/token call to action. Do not link API documentation or developer portals.
+- Do not link general product detail or marketing pages, e.g. the manufacturer page of a charger.
+- Use canonical, stable URLs in the provider's default language and without tracking parameters. Verify that the URL is live.
+- `link` can be set at the template level (applies to all products) and overridden per product via a `link` entry under `products`.
+
+**Example** (template-level link, overridden by a rebranded product):
+
+```yaml
+template: smartcharge
+link: https://portal.smartcharge.example.com
+products:
+  - ...
+  - brand: PowerCloud
+    link: https://portal.powercloud.example.com
+```
+
 ## `group`
 
 `group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
