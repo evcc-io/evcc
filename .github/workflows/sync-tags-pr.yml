@@ -1,0 +1,81 @@
+name: Sync taggs Finalize Tagging
+
+on:
+  pull_request:
+    types:
+      - closed
+  workflow_dispatch: # Allows manual trigger of the workflow
+
+# Least privilege: tag pushes authenticate with EVCC_PAT (set via checkout),
+# so the default GITHUB_TOKEN only needs read access.
+permissions:
+  contents: read
+
+jobs:
+  finalize:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all branches and tags
+          token: ${{ secrets.EVCC_PAT }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Get merged branch name
+        id: get-branch
+        # Pass the ref through env to avoid shell injection from branch names.
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: echo "BRANCH=$BASE_REF" >> "$GITHUB_ENV"
+
+      - name: Validate branch name
+        id: validate-branch
+        run: |
+          # Extract the tag name from the branch name
+          TAG_NAME=$(echo "$BRANCH" | sed 's/tag-//')
+
+          # Check if the tag name matches the expected pattern
+          if [[ ! "$TAG_NAME" =~ ^0\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Branch name does not match the expected pattern. Skipping tag creation."
+            exit 1
+          else
+            echo "Valid branch name: $TAG_NAME Saving for next step"
+            echo "BRANCH=$TAG_NAME" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Tag the merged branch
+        if: success() && steps.validate-branch.outcome == 'success'
+        run: |
+          # Checkout the branch that was merged
+          git checkout "$BRANCH"
+
+          # Base version derived from the tag branch, e.g. 0.311.0
+          BASE="${{ steps.validate-branch.outputs.BRANCH }}"
+
+          # Pick the next free point-release suffix: BASE.0, BASE.1, BASE.2, ...
+          # Re-merges to the same tag branch auto-increment instead of colliding
+          # with an existing tag (which previously failed the job).
+          git fetch --tags --force
+          MAX=-1
+          for t in $(git tag -l "${BASE}.*"); do
+            N="${t##*.}"
+            if [[ "$N" =~ ^[0-9]+$ ]] && [ "$N" -gt "$MAX" ]; then
+              MAX="$N"
+            fi
+          done
+          NEW_TAG="${BASE}.$((MAX + 1))"
+          echo "Creating tag ${NEW_TAG}"
+
+          # Tag the branch and push
+          git tag "${NEW_TAG}"
+          git push origin "${NEW_TAG}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -87,6 +87,16 @@
     "legendTopSublineDisabledState": "disabled",
     "modalTitle": "Home Battery",
     "noBattery": "No batteries configured.",
+    "optimizerDischargeToGrid": "Allow optimizer to discharge to grid.",
+    "optimizerPA": {
+      "enable": "Use a manual p_a value for the optimizer.",
+      "hint": "When disabled, p_a is calculated automatically. When enabled, the value below is used instead.",
+      "value": "p_a value"
+    },
+    "optimizerSocGoal": {
+      "hint": "Add one or more recurring home-battery SoC reserves for the optimizer, e.g. an evening reserve plus a morning-peak reserve. Each applies at its local time on the selected weekdays.",
+      "title": "Battery reserve goals"
+    },
     "usageTab": "Battery usage"
   },
   "colors": {

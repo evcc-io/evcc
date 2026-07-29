@@ -15,7 +15,7 @@ on:
 jobs:
   update-changelog:
     name: Update Hassio Changelog
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read # gh api calls to evcc repo; push to hassio-addon uses HASSIO_DEPLOY_TOKEN PAT

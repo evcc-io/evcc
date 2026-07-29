@@ -9,7 +9,11 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
-	"github.com/evcc-io/evcc/tariff"
+)
+
+const (
+	smallSlotDuration    = 4 * time.Minute  // small planner slot duration we might ignore
+	restartGuardDuration = 30 * time.Second // avoid immediate stop/start flapping around plan transitions
 )
 
 // TODO planActive is not guarded by mutex
@@ -118,8 +122,30 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
 }
 
-// plannerActive checks if the charging plan has a currently active slot
-func (lp *Loadpoint) plannerActive() (active bool) {
+// plannerRateGap reports whether the planner tariff is defined but has no rate
+// slot covering t - e.g. a demand window intentionally left undefined. Planner
+// rates are forward-pruned (slots before the current period are dropped), so a
+// t before the first published slot means the current period itself is
+// undefined - a leading demand-window gap - and counts as a gap. Only t beyond
+// the last published slot is excluded (the not-yet-published horizon), so
+// static/no-tariff setups and the region past the horizon keep the default
+// overrun behavior.
+func plannerRateGap(rates api.Rates, t time.Time) bool {
+	if len(rates) == 0 {
+		return false
+	}
+	// beyond the published horizon we have no data - keep the overrun behavior
+	if !t.Before(rates[len(rates)-1].End) {
+		return false
+	}
+	_, err := rates.At(t)
+	return err != nil
+}
+
+// plannerActive checks if the charging plan has a currently active slot.
+// rates are the planner tariff rates, used to detect overrun into an
+// undefined-tariff (demand) window.
+func (lp *Loadpoint) plannerActive(rates api.Rates) (active bool) {
 	defer func() {
 		lp.setPlanActive(active)
 	}()
@@ -201,7 +227,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, plan) {
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
@@ -216,20 +242,26 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
+		case lp.clock.Now().After(planTime) && !planTime.IsZero() && plannerRateGap(rates, lp.clock.Now()):
+			// overrun into a window with no defined planner tariff rate (e.g. a demand
+			// window intentionally left undefined) - abort instead of charging through it
+			lp.log.DEBUG.Println("plan: overrun into undefined tariff window- aborting plan")
+			lp.finishPlan()
+			return false
 		case lp.clock.Now().After(planTime) && !planTime.IsZero():
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
 			lp.log.DEBUG.Println("plan: continuing after target time")
 			return true
-		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero() && requiredDuration > strategy.Precondition:
-			// don't stop an already running slot if goal was not met
-			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
-			return true
-		case requiredDuration < tariff.SlotDuration && requiredDuration > strategy.Precondition:
+		// case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero() && requiredDuration > strategy.Precondition:
+		// don't stop an already running slot if goal was not met
+		// lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
+		// return active
+		case requiredDuration < smallSlotDuration && requiredDuration > strategy.Precondition:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
-		case lp.clock.Until(planStart) < tariff.SlotDuration-time.Minute:
-			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(planStart).Round(time.Second))
+		case !planStart.IsZero() && lp.clock.Until(planStart) < restartGuardDuration:
+			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", restartGuardDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
 		case strategy.Continuous && requiredDuration > strategy.Precondition:
 			lp.log.DEBUG.Printf("plan: ignoring restart at %s for continuous charging", planStart.Round(time.Second).Local())

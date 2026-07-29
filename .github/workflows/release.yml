@@ -11,18 +11,34 @@ on:
 jobs:
   call-build-workflow:
     if: startsWith(github.ref, 'refs/tags')
-    uses: evcc-io/evcc/.github/workflows/default.yml@master
+    uses: jeffborg/evcc/.github/workflows/default.yml@master
     permissions:
       contents: read
       actions: write
+
+  release:
+    name: Create GitHub Release
+    needs:
+      - docker
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
 
   docker:
     name: Publish Docker :release
     needs:
       - call-build-workflow
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v7
@@ -33,8 +49,9 @@ jobs:
       - name: Login
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
         with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASS }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
@@ -44,7 +61,7 @@ jobs:
         uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
         with:
           images: |
-            evcc/evcc
+            ghcr.io/jeffborg/evcc
 
       - name: Publish
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
@@ -55,118 +72,3 @@ jobs:
           build-args: |
             RELEASE=1
           tags: ${{ steps.meta.outputs.tags }}
-
-  apt:
-    name: Github & APT
-    needs:
-      - call-build-workflow
-    runs-on: depot-ubuntu-24.04-arm
-
-    permissions:
-      contents: write
-      actions: read
-
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-        id: go
-
-      - name: Patch ASN1
-        run: make patch-asn1-sudo
-
-      - name: Get dist from cache
-        uses: actions/cache/restore@v6
-        id: cache-dist
-        with:
-          path: dist
-          key: ${{ runner.os }}-${{ github.sha }}-dist
-
-      # gokrazy image
-      # - name: Prepare Image
-      #   run: |
-      #     make prepare-image
-      #     sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
-      #     mkdir /home/runner/.config/gokrazy
-      #     echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
-
-      # - name: Build Image
-      #   run: make image
-
-      # - name: Build Root Filesystem
-      #   run: make image-rootfs
-
-      - name: Create Github Release
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
-        with:
-          version: '~> v2'
-          args: release --clean
-        env:
-          # use RELEASE_DEPLOY_TOKEN for access to evcc-io/homebrew-tap
-          GITHUB_TOKEN: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: 3.12
-
-      - name: Install Cloudsmith CLI
-        run: pip install cloudsmith-cli==1.16.0
-
-      - name: Publish .deb to Cloudsmith
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: make apt-release
-
-  demo:
-    name: Demo
-    needs:
-      - docker
-    runs-on: depot-ubuntu-24.04-arm
-
-    permissions:
-      contents: read
-
-    env:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # master
-      - run: flyctl deploy --local-only --config packaging/fly.toml
-
-  hassio:
-    name: Hassio Addon
-    needs:
-      - docker
-    runs-on: depot-ubuntu-24.04-arm
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          repository: evcc-io/hassio-addon
-          token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
-          path: ./hassio
-
-      - name: Update version
-        run: |
-          sed -i -e s#version.*#version\:\ $(echo ${{ github.ref }} | sed -e s#refs/tags/##)# ./hassio/evcc/config.yaml
-
-      - name: Push
-        run: |
-          cd ./hassio
-          git add .
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -am "Mirror evcc release"
-          git push

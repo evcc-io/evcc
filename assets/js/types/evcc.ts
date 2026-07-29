@@ -117,9 +117,11 @@ export interface State {
   prioritySoc?: number;
   bufferStartSoc?: number;
   batteryDischargeControl?: boolean;
+  optimizerManualPA?: number | null;
   batteryGridDischarge?: boolean; // battery may discharge to grid (experimental)
   solarAdjusted?: boolean;
   batteryGridChargeLimit?: number | null;
+  batteryOptimizerSocGoals?: RepeatingPlan[] | null;
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
   historyUpdated?: string; // ISO timestamp, bumped each 15min metrics persist
@@ -870,6 +872,7 @@ export interface BatteryDetail {
 export interface OptimizationDetails {
   timestamp: string[]; // Array of ISO timestamp strings
   batteryDetails: BatteryDetail[]; // Array of battery detail objects
+  gridForecastMissing?: boolean[]; // Per-slot flag: grid price filled with fallback rate
 }
 
 // Error response

@@ -10,7 +10,7 @@ on:
 jobs:
   brandupdate:
     name: Deploy data to website
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read

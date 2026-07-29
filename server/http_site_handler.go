@@ -184,6 +184,26 @@ func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64))
 	}
 }
 
+func batteryOptimizerSocGoalHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// each goal's soc/time/tz/weekdays are stored and applied atomically so
+		// time and timezone can never desync
+		var goals []api.RepeatingPlan
+		if err := jsonDecoder(r.Body).Decode(&goals); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// the setter validates each goal's soc, time, timezone and weekdays
+		if err := site.SetBatteryOptimizerSocGoals(goals); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, site.GetBatteryOptimizerSocGoals())
+	}
+}
+
 // updateBatteryMode sets the external battery mode
 func updateBatteryMode(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

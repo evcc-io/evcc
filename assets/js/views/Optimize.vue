@@ -25,7 +25,9 @@
 							:timestamp="evopt.details.timestamp[0]"
 							:currency="currency"
 							:battery-colors="batteryColors"
+							:active-index="activeTooltipIndex"
 							:device-colors="deviceColors"
+							@hover-index="setActiveTooltipIndex"
 						/>
 					</Card>
 
@@ -36,6 +38,8 @@
 							:timestamp="evopt.details.timestamp[0]"
 							:currency="currency"
 							:battery-colors="batteryColors"
+							:active-index="activeTooltipIndex"
+							@hover-index="setActiveTooltipIndex"
 						/>
 					</Card>
 
@@ -43,7 +47,10 @@
 						<PriceChart
 							:evopt="evopt"
 							:timestamp="evopt.details.timestamp[0]"
+							:grid-forecast-missing="evopt.details.gridForecastMissing"
 							:currency="currency"
+							:active-index="activeTooltipIndex"
+							@hover-index="setActiveTooltipIndex"
 						/>
 					</Card>
 
@@ -135,8 +142,10 @@ export default defineComponent({
 		CopyButton,
 	},
 	mixins: [formatter],
-	data() {
+	data(): { optimizeCooldown: boolean; activeTooltipIndex: number | null; pending: boolean } {
 		return {
+			optimizeCooldown: false,
+			activeTooltipIndex: null as number | null,
 			pending: false,
 		};
 	},
@@ -194,6 +203,10 @@ export default defineComponent({
 		},
 	},
 	watch: {
+		evopt() {
+			this.optimizeCooldown = false;
+			this.activeTooltipIndex = null;
+		},
 		"evopt.updated"() {
 			// re-enable the refresh action once a fresh optimizer run lands
 			this.pending = false;
@@ -210,6 +223,9 @@ export default defineComponent({
 		dimColorBy25Percent(color: string): string {
 			// Convert color to 25% opacity (40 in hex = 25% of 255)
 			return color?.toLowerCase().replace(/ff$/, "40") || color;
+		},
+		setActiveTooltipIndex(index: number | null) {
+			this.activeTooltipIndex = index;
 		},
 	},
 });

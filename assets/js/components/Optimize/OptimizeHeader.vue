@@ -247,14 +247,14 @@ export default defineComponent({
 /* small: each field a full-width row (Bootstrap col-12), label left, value right */
 .field {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	align-items: center;
 	gap: 1rem;
 	padding: 0.75rem 0;
 	border-top: 1px solid var(--evcc-gray-25);
 }
-/* card provides the outer boundary */
-.field:first-child {
+.field:last-child {
 	border-top: none;
 }
 .field-head {
@@ -294,6 +294,7 @@ export default defineComponent({
 @media (min-width: 768px) {
 	.field {
 		flex-direction: column;
+		flex-wrap: nowrap;
 		justify-content: flex-start;
 		align-items: flex-start;
 		gap: 0;
