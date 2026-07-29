@@ -39,22 +39,51 @@ type AlpitronicHYC struct {
 	connector uint16
 }
 
+// input registers of the charging station (connector 0)
+//
+//nolint:unused // complete register map as documented by the vendor
 const (
-	// Input, relative to the connector block
-	hycRegState              = 0
-	hycRegChargingPower      = 4
-	hycRegChargeTime         = 6
-	hycRegChargedEnergy      = 7
-	hycRegSoC                = 8
-	hycRegVID                = 18
-	hycRegIdTag              = 22
-	hycRegTotalChargedEnergy = 32
+	hycRegStationTime           = 0  // UINT32, s
+	hycRegStationNumConnectors  = 2  // UINT16
+	hycRegStationState          = 3  // UINT16, 0-Available, 8-Unavailable, 10-Faulted
+	hycRegStationPowerDrained   = 4  // UINT32, W
+	hycRegStationSerial         = 6  // 24 byte string
+	hycRegStationLoadManagement = 18 // UINT16, bool
+	hycRegStationChargepointId  = 30 // 32 byte string
+	hycRegStationVersionMajor   = 46 // UINT16
+	hycRegStationVersionMinor   = 47 // UINT16
+	hycRegStationVersionPatch   = 48 // UINT16
+	hycRegStationVarInductive   = 49 // UINT32, var
+	hycRegStationVarCapacitive  = 51 // UINT32, var
+)
+
+// input registers, relative to the connector block (1xx..4xx)
+const (
+	hycRegState              = 0  // UINT16
+	hycRegChargingVoltage    = 1  // UINT32, cV
+	hycRegChargingCurrent    = 3  // UINT16, cA
+	hycRegChargingPower      = 4  // UINT32, W
+	hycRegChargeTime         = 6  // UINT16, s
+	hycRegChargedEnergy      = 7  // UINT16, kWh/100
+	hycRegSoC                = 8  // UINT16, %/100
+	hycRegConnectorType      = 9  // UINT16, 0-ChargePoint, 1-CCS2, 2-CCS1, 3-CHAdeMO, 4-CCS_AC, 5-GBT, 6-MCS, 7-NACS
+	hycRegMaxChargingPowerDC = 10 // UINT32, W- includes the limit written by us
+	hycRegMinChargingPowerDC = 12 // UINT32, W
+	hycRegVarInductive       = 14 // UINT32, var- deprecated, use hycRegStationVarInductive
+	hycRegVarCapacitive      = 16 // UINT32, var- deprecated, use hycRegStationVarCapacitive
+	hycRegVID                = 18 // 8 bytes
+	hycRegIdTag              = 22 // 20 bytes
+	hycRegTotalChargedEnergy = 32 // INT64, Wh
+	hycRegMaxChargingPowerAC = 36 // UINT32, W- includes the limit written by us
 
 	// the connector block is gapless- read up to the last register in use (x32..x35)
 	hycInputLength = 36
+)
 
-	// Holding
-	hycRegMaxPowerAC = 0
+// holding registers, relative to the connector block (0xx is the station)
+const (
+	hycRegMaxPowerAC       = 0 // UINT32, W per connector, VA for the station
+	hycRegSetReactivePower = 2 // INT32, var
 )
 
 // connector states as per register x00
