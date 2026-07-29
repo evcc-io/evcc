@@ -71,10 +71,14 @@ import { ConfigType, type YamlSource } from "@/types/evcc";
 import { type DeviceValues } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import customHemsYaml from "./defaultYaml/customHems.yaml?raw";
+import relayHemsYaml from "./defaultYaml/relayHems.yaml?raw";
 import api from "../../api";
 import { docsPrefix } from "@/i18n";
 import DownloadButton from "../Helper/DownloadButton.vue";
 import formatter from "../../mixins/formatter";
+
+// selector value for the relay variant; both variants save as type custom
+const RELAY_OPTION = "relay";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -147,7 +151,10 @@ export default defineComponent({
 			return [
 				{
 					label: "generic",
-					options: [customTemplateOption(this.$t("config.hems.customOption"))],
+					options: [
+						customTemplateOption(this.$t("config.hems.type.custom")),
+						customTemplateOption(this.$t("config.hems.type.relay"), RELAY_OPTION),
+					],
 				},
 				{
 					label: "integrations",
@@ -156,12 +163,12 @@ export default defineComponent({
 			];
 		},
 		isYamlInputType(type: ConfigType): boolean {
-			return type === ConfigType.Custom;
+			return type === ConfigType.Custom || (type as string) === RELAY_OPTION;
 		},
 		handleTemplateChange(value: string, values: DeviceValues) {
-			if (value === ConfigType.Custom) {
+			if (this.isYamlInputType(value as ConfigType)) {
 				values.type = ConfigType.Custom;
-				values.yaml = customHemsYaml;
+				values.yaml = value === RELAY_OPTION ? relayHemsYaml : customHemsYaml;
 			}
 		},
 		onAdded(name: string) {

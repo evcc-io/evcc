@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Lader",
-      "discharging": "Aflader",
+      "charging": "lader",
+      "discharging": "aflader",
       "energy": "Energi",
+      "gridCharge": "lader fra nettet",
+      "hold": "afladning låst",
+      "holdCharge": "opladning låst",
       "ofTotal": "af {total}",
       "power": "Effekt",
       "soc": "Batteriniveau"
@@ -45,17 +48,17 @@
     },
     "optimizer": {
       "action": {
-        "charge": "Opladning fra nettet",
-        "hold": "Afladning låst",
-        "holdcharge": "Opladning pauseres",
-        "normal": "I takt med soloverskud"
+        "charge": "opladning fra nettet",
+        "discharge": "Aflader til nettet",
+        "hold": "Bloker afladning",
+        "holdcharge": "Bloker opladning",
+        "normal": "Normal drift"
       },
       "empty": "tom",
       "full": "fyldt",
       "highest": "Højeste ({value})",
       "lowest": "Laveste ({value})",
-      "suggestion": "Forslag",
-      "title": "Optimizer"
+      "suggestion": "Forslag"
     }
   },
   "batterySettings": {
@@ -331,7 +334,6 @@
       "noFileSelected": "Ingen fil valgt.",
       "off": "slukket",
       "on": "tændt",
-      "password": "Adgangskode",
       "readFromFile": "Læs fra fil",
       "remove": "Fjern",
       "required": "påkrævet",
@@ -363,7 +365,6 @@
       },
       "customOption": "Brugerdefineret integration",
       "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen. Begrænsning af solproduktionen understøttes også for udvalgte enheder. Den faktiske begrænsningsgrænse skal konfigureres for hver enkelt inverter.",
-      "downloadCsv": "Download CSV",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
       "generic": "Generelle integrationer",
       "integrations": "Integrationer",
@@ -424,8 +425,6 @@
       },
       "defaultModeHelpKeep": "Gemmer den senest valgte tilstand.",
       "defaultModeLabel": "Standardtilstand",
-      "defaultsHint": "Standardtilstand, soladfærd og elektriske detaljer bruger fornuftige standardværdier.",
-      "defaultsHintLink": "Juster indstillinger",
       "delete": "Slet",
       "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
       "electricalTitle": "Elektrisk",
@@ -463,7 +462,6 @@
       "priorityHelp": "Højere prioriterede får fortrin til solenergioverskud.",
       "priorityLabel": "Prioritet",
       "save": "Gem",
-      "showAllSettings": "Vis alle indstillinger",
       "solarBehaviorCustomHelp": "Definer dine egne aktiverings- og deaktiveringstærskler samt forsinkelser.",
       "solarBehaviorDefaultHelp": "Start efter {enableDelay} af tilstrækkeligt overskud. Stop, når der ikke er nok overskud i {disableDelay}.",
       "solarBehaviorLabel": "Solar",
@@ -601,7 +599,6 @@
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
         "consumer": "Tilføj standardforbrugsenhed",
-        "ext": "Tilføj almindelig forbrugsenhed",
         "pv": "Tilføj en solenergimåler"
       },
       "save": "Gem",
@@ -683,26 +680,18 @@
       "descriptionHost": "Anvendes til at gøre evcc synlig i det lokale netværk.",
       "descriptionInternalUrl": "Lokal netværksadresse for evcc.",
       "descriptionPort": "Port til webgrænsefladen og API. Du skal opdatere din browser-URL, hvis du ændrer dette.",
-      "descriptionSchema": "Påvirker kun, hvordan URL'er genereres. Valg af HTTPS vil ikke aktivere kryptering.",
       "labelExternalUrl": "Ekstern webadresse",
       "labelHost": "mDNS-værtsnavn",
       "labelInternalUrl": "Intern webadresse",
       "labelPort": "port",
-      "labelSchema": "Skema",
       "title": "Netværk",
       "warningUrlPath": "URL’en kræver som regel ikke en sti. Er du sikker på, at det er rigtigt?"
     },
     "ocpp": {
-      "connectedChargers": "Tilsluttede ladere",
-      "connectionStatus": "Konfigurerede stations-ID’er",
-      "connectionStatusHelp": "Forbindelsesstatus for konfigurerede ladere.",
-      "detectedChargers": "Registrerede stations-ID’er",
-      "detectedHelp": "Disse ladere har forsøgt at forbinde til evcc. For at bruge en lader skal du oprette et loadpoint med dens stations-ID.",
       "forwardingConfigured": "Videresendelse af OCPP data er konfigureret",
       "forwardingError": "Fejl ved videresendelse",
       "forwardingOff": "Videresendelse er ikke konfigureret",
       "noChargers": "Ingen OCPP-ladere fundet.",
-      "noStations": "Ingen stationer tilsluttet",
       "stations": "Station ID'er",
       "stationsHelp": "Konfigurerede og fundne OCPP ladere. Udover lokal kontrol kan du videresende beskeder til en ekstern server (f.eks. til regninger).",
       "status": {
@@ -865,7 +854,6 @@
           "title": "Sikkerhedskopier"
         },
         "cancel": "Afbryd",
-        "confirmWithPassword": "Bekræft handling",
         "description": "Sikkerhedskopier, gendan og nulstil dine data. Nyttig, hvis du vil flytte dine data til et andet system.",
         "note": "Bemærk: Alle ovenstående handlinger påvirker kun dine databasedata. Konfigurationsfilen evcc.yaml forbliver uændret.",
         "reset": {
@@ -969,10 +957,6 @@
         "timeTo": "Til",
         "weekdays": "Ugedage"
       }
-    },
-    "tariffs": {
-      "description": "Definer dine energitakster for at beregne omkostningerne ved dine opladningssessioner.",
-      "title": "Tariffer"
     },
     "telemetry": {
       "description": "Konfigurér datadeling for at hjælpe med at forbedre evcc. Din privatlivsbeskyttelse er vigtig for os, og deltagelse er helt frivillig.",
@@ -1136,16 +1120,9 @@
   },
   "header": {
     "about": "Om",
-    "authProviders": {
-      "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
-      "loggedOut": "Du er nu logget ud",
-      "success": "Godkendelse med {title} lykkedes. Du kan nu lukke fanen.",
-      "title": "Autorisation status"
-    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",
-    "login": "Login til køretøjer",
     "logout": "Log ud",
     "nativeSettings": "Skift server",
     "needHelp": "Brug for hjælp?",
@@ -1240,7 +1217,6 @@
   "loginModal": {
     "cancel": "Afbryd",
     "demoMode": "Login er ikke mulig i demo mode.",
-    "error": "Login mislykkedes: ",
     "iframeHint": "Åbn evcc i en ny fane.",
     "iframeIssue": "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP.",
     "invalid": "Ugyldig adgangskode.",
@@ -1333,7 +1309,6 @@
           "returnEnergy": "Energi (eksport)"
         }
       },
-      "downloadCsv": "Download CSV",
       "empty": "Ingen historik i dette tidsinterval.",
       "group": {
         "battery": "Batteri",
@@ -1378,14 +1353,12 @@
       "batteryUsage": "Husbatteri",
       "currents": "Ladestrøm",
       "default": "standard",
-      "disclaimerHint": "Bemærk:",
       "maxCurrent": {
         "label": "Max. Nuværende"
       },
       "minCurrent": {
         "label": "Min. Nuværende"
       },
-      "onlyForSocBasedCharging": "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau.",
       "phasesConfigured": {
         "label": "Faser",
         "no1p3pSupport": "Hvordan er din oplader forbundet?",
@@ -1590,8 +1563,6 @@
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
-    "csvPeriod": "Download {period} CSV",
-    "csvTotal": "Download total CSV",
     "date": "Start",
     "energy": "Opladet",
     "filter": {

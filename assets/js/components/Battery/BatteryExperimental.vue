@@ -20,10 +20,12 @@
 			:priority-soc="state.prioritySoc"
 			:buffer-start-soc="state.bufferStartSoc"
 			:battery-discharge-control="state.batteryDischargeControl"
+			:battery-grid-discharge="state.batteryGridDischarge"
 			:battery-optimizer-soc-goals="state.batteryOptimizerSocGoals || []"
 			:optimizer-manual-p-a="state.optimizerManualPA"
 			:currency="state.currency"
 			:battery="state.battery"
+			:experimental="state.experimental"
 		/>
 
 		<Card

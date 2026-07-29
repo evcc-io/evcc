@@ -281,7 +281,6 @@
       "noFileSelected": "Ei valittua tiedostoa.",
       "off": "pois",
       "on": "päällä",
-      "password": "Salasana",
       "readFromFile": "Lue tiedostosta",
       "remove": "Poista",
       "required": "vaadittu",
@@ -311,7 +310,6 @@
         "type": "Tyyppi"
       },
       "description": "Ulkoisten järjestelmien (esim. saksalaisen energialainsäädännön §14a EnWG, §9 EEG-rajapinta tai ylemmän tason energianhallintajärjestelmä) suorittama tehonrajoitus. Toimii yhdessä kuormituksenhallintaominaisuuden kanssa.",
-      "downloadCsv": "Lataa CSV-taulukko",
       "eventsRecorded": "Tallennettu {count} verkon rajoitustapahtumaa.",
       "lastEvent": "Viimeisin {timeAgo}.",
       "title": "Ulkoinen raja"
@@ -369,8 +367,6 @@
       },
       "defaultModeHelpKeep": "Säilyttää viimeksi valitun lataus/käyttötilan.",
       "defaultModeLabel": "Oletustila",
-      "defaultsHint": "Vakiotila, aurinkovoiman käyttö ja sähköjärjestelmän yksityiskohdat käyttävät järkeviä vakioasetuksia.",
-      "defaultsHintLink": "Säädä asetuksia",
       "delete": "Poista",
       "electricalSubtitle": "Jos olet epävarma, kysy sähköasentajaltasi.",
       "electricalTitle": "Sähköinen",
@@ -405,7 +401,6 @@
       "priorityHelp": "Korkeamman prioriteetin laitteet saavat ensisijaisen pääsyn aurinkoenergian ylijäämään.",
       "priorityLabel": "Prioriteetti",
       "save": "Tallenna",
-      "showAllSettings": "Näytä kaikki asetukset",
       "solarBehaviorCustomHelp": "Määritä omat päälle- ja poiskytkentä sekä viiveet.",
       "solarBehaviorDefaultHelp": "Aloita aurinkoylijäämän {enableDelay} jälkeen. Lopeta, kun ylijäämää ei ole tarpeeksi {disableDelay}:lle.",
       "solarBehaviorLabel": "Aurinkoenergia",
@@ -541,7 +536,6 @@
       "option": {
         "aux": "Lisää kulutustaan itsesäätelevä laite",
         "battery": "Lisää akun tilan mittari",
-        "ext": "Lisää tavanomainen virrankäyttäjä",
         "pv": "Lisää aurinkovoimalan mittari"
       },
       "save": "Tallenna",
@@ -623,26 +617,18 @@
       "descriptionHost": "Käytetään ilmoittamaan evcc:sta lähiverkkoosi.",
       "descriptionInternalUrl": "evcc:n lähiverkko-osoite.",
       "descriptionPort": "Portti verkkokäyttöliittymälle ja API:lle. Sinun on päivitettävä selaimesi URL-osoite, jos muutat tätä.",
-      "descriptionSchema": "Vaikuttaa vain URL-osoitteiden luomiseen. HTTPS:n valitseminen ei ota salausta käyttöön.",
       "labelExternalUrl": "Ulkoinen URL",
       "labelHost": "mDNS-isäntänimi",
       "labelInternalUrl": "Sisäinen URL",
       "labelPort": "Portti",
-      "labelSchema": "Kaavio",
       "title": "Verkko",
       "warningUrlPath": "URL ei yleensä sisällä polkua. Oletko varma, että asetus on oikein?"
     },
     "ocpp": {
-      "connectedChargers": "Yhdistetyt laturit",
-      "connectionStatus": "Määritettyjen asemien ID:t",
-      "connectionStatusHelp": "Määritettyjen laturien yhteyden tila.",
-      "detectedChargers": "Havaittujen asemien ID:t",
-      "detectedHelp": "Nämä laturit ovat yrittäneet yhdistää itseään evcc:hen. Käyttääksesi tätä laturia, luo latausasema sen asematunnuksella (ID).",
       "forwardingConfigured": "Välitys määritetty",
       "forwardingError": "Välitysvirhe",
       "forwardingOff": "Välitystä ei ole määritelty",
       "noChargers": "Ei havaittu OCPP-latureita.",
-      "noStations": "Asemia ei yhdistetty",
       "stations": "Asemien tunnisteet",
       "stationsHelp": "Määritetyt ja tunnistetut OCPP-laturit. Paikallisen ohjauksen lisäksi voit välittää viestit ulkoiselle palvelimelle (esim. laskutuksen vuoksi).",
       "status": {
@@ -909,10 +895,6 @@
         "weekdays": "Viikonpäivät"
       }
     },
-    "tariffs": {
-      "description": "Määrittele energiatariffisi, jotta latausistuntojesi kustannukset lasketaan.",
-      "title": "Tariffit"
-    },
     "telemetry": {
       "description": "Määritä tiedon jakamisesta ja auta parantamaan evcc:tä. Yksityisyytesi on meille tärkeää ja osallistuminen on vapaaehtoista.",
       "title": "Telemetria"
@@ -1075,16 +1057,9 @@
   },
   "header": {
     "about": "Tietoa",
-    "authProviders": {
-      "confirmLogout": "Oletko varma, että haluat poistaa yhteyden {title}?",
-      "loggedOut": "Kirjauduttu ulos onnistuneesti",
-      "success": "{title}-tunnistautuminen onnistui. Voit sulkea tämän välilehden.",
-      "title": "Autentikointivaltuutuksen tila"
-    },
     "blog": "Blogi",
     "docs": "Dokumentaatio",
     "github": "GitHub",
-    "login": "Ajoneuvon kirjautumiset",
     "logout": "Kirjaudu ulos",
     "nativeSettings": "Vaihda palvelin",
     "needHelp": "Tarvitsetko apua?",
@@ -1179,7 +1154,6 @@
   "loginModal": {
     "cancel": "Peruuta",
     "demoMode": "Sisäänkirjautumista demo-tilassa ei tueta.",
-    "error": "Kirjautuminen epäonnistui: ",
     "iframeHint": "Avaa evcc uudessa välilehdessä.",
     "iframeIssue": "Salasanasi on oikea, mutta selaimesi näyttää pudonneen todennusevästeen. Näin voi käydä, jos suoritat evcc:n iframe-kehyksessä HTTP:n kautta.",
     "invalid": "Salasana ei kelpaa.",
@@ -1268,7 +1242,6 @@
           "returnEnergy": "syötetty verkkoon"
         }
       },
-      "downloadCsv": "Lataa CSV",
       "empty": "Tälle ajanjaksolle ei ole saatavilla historiadataa.",
       "group": {
         "battery": "Akku",
@@ -1312,14 +1285,12 @@
       "batteryUsage": "Kodin akku",
       "currents": "Latausvirta",
       "default": "oletus",
-      "disclaimerHint": "Huomautus:",
       "maxCurrent": {
         "label": "Maksimivirta"
       },
       "minCurrent": {
         "label": "Minimivirta"
       },
-      "onlyForSocBasedCharging": "Nämä vaihtoehdot ovat käytettävissä vain ajoneuvoille, joiden lataustaso on tiedossa.",
       "phasesConfigured": {
         "label": "Vaihetila",
         "no1p3pSupport": "Kuinka laturisi on kytketty?",
@@ -1524,8 +1495,6 @@
       "solarpercentage": "Aurinkoenergia (%)",
       "vehicle": "Ajoneuvo"
     },
-    "csvPeriod": "Lataa {period} CSV",
-    "csvTotal": "Lataa kaikki CSV",
     "date": "Aloitettu",
     "energy": "Ladattu",
     "filter": {

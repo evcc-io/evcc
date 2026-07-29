@@ -56,6 +56,16 @@ describe("fmtW", () => {
   });
 });
 
+describe("getPowerUnit", () => {
+  test("should pick unit based on largest value", () => {
+    expect(fmt.getPowerUnit(0)).eq(POWER_UNIT.W);
+    expect(fmt.getPowerUnit(999)).eq(POWER_UNIT.W);
+    expect(fmt.getPowerUnit(1000)).eq(POWER_UNIT.KW);
+    expect(fmt.getPowerUnit(9_999_999)).eq(POWER_UNIT.KW);
+    expect(fmt.getPowerUnit(10_000_000)).eq(POWER_UNIT.MW);
+  });
+});
+
 describe("fmtWh", () => {
   test("should format with units", () => {
     expect(fmt.fmtWh(0, POWER_UNIT.AUTO)).eq("0,0 kWh");
