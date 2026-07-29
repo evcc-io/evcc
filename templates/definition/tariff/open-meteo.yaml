@@ -1,4 +1,5 @@
 template: open-meteo
+link: https://open-meteo.com
 products:
   - brand: Open-Meteo
 requirements:

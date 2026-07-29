@@ -1,4 +1,5 @@
 template: energy-charts-api
+link: https://energy-charts.info/charts/price_spot_market/chart.htm
 products:
   - brand: Energy-Charts
     description:
