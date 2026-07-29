@@ -31,7 +31,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
-    timeout: 10s
+    timeout: 7s
     delay: 50ms
   - name: timeout
     deprecated: true
