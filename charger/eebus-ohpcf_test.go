@@ -26,6 +26,9 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 	require.ErrorIs(t, c.Enable(true), errNotConnected)
 	require.ErrorIs(t, c.MaxCurrent(16), errNotConnected)
 
+	// a failed enable must not leave the charger reporting enabled
+	assert.False(t, c.lastEnabled())
+
 	// dimming uses EG LPC, which is unavailable without an LPC entity
 	require.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
 }
