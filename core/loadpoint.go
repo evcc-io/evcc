@@ -1222,7 +1222,7 @@ func (lp *Loadpoint) updateChargerStatus() error {
 // time after connecting, irrespective of mode and limits, for vehicles that would
 // otherwise fault while unpowered (#32274).
 func (lp *Loadpoint) welcomeActive() bool {
-	return !lp.welcomeUntil.IsZero() && lp.clock.Now().Before(lp.welcomeUntil)
+	return lp.clock.Until(lp.welcomeUntil) > 0
 }
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
