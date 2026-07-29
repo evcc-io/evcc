@@ -237,6 +237,17 @@ func TestSocBatteryStateReportOnlyFallbackField(t *testing.T) {
 	assert.Equal(t, 40.0, soc)
 }
 
+// TestGetLimitSocBcamThreshold reproduces issue #32241: the Audi Q4 e-tron
+// reports its battery care mode SoC limit only under the battery care mode
+// field, not under the generic target soc field.
+func TestGetLimitSocBcamThreshold(t *testing.T) {
+	data := []point{{Name: FieldChargeBcamThreshold, Value: "80"}}
+
+	limit, err := testProvider(data).GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, int64(80), limit)
+}
+
 // TestPoints guards that a data point with a generic field name ("value") is
 // stored once yet found by both its unique key and its name.
 func TestPoints(t *testing.T) {

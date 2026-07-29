@@ -130,7 +130,8 @@ const (
 	FieldHvBatteryLevelValue = "battery_level_HV.value"
 
 	// target soc
-	FieldTargetSoc = "settings.target_soc"
+	FieldTargetSoc           = "settings.target_soc"
+	FieldChargeBcamThreshold = "battery_care_mode.charge_bcam_threshold" // Audi Q4 e-tron battery care mode target soc
 
 	// range
 	FieldRangeCombined       = "cruising_range_combined"
