@@ -103,6 +103,13 @@ func (e *Entity[U]) Read[T any](read func(uc U, entity spineapi.EntityRemoteInte
 	return res, nil
 }
 
+// ReadArg is Read for a use case reader taking an additional argument.
+func (e *Entity[U]) ReadArg[T, A any](read func(uc U, entity spineapi.EntityRemoteInterface, arg A) (T, error), arg A) (T, error) {
+	return e.Read(func(uc U, entity spineapi.EntityRemoteInterface) (T, error) {
+		return read(uc, entity, arg)
+	})
+}
+
 // Write runs a control write against the remote entity and waits for its result.
 func (e *Entity[U]) Write(write func(uc U, entity spineapi.EntityRemoteInterface, cb ResultCB) (*model.MsgCounterType, error)) error {
 	entity, err := e.Available()
@@ -112,5 +119,12 @@ func (e *Entity[U]) Write(write func(uc U, entity spineapi.EntityRemoteInterface
 
 	return Await(func(cb ResultCB) (*model.MsgCounterType, error) {
 		return write(e.uc, entity, cb)
+	})
+}
+
+// WriteArg is Write for a control write taking an additional argument.
+func (e *Entity[U]) WriteArg[A any](write func(uc U, entity spineapi.EntityRemoteInterface, arg A, cb ResultCB) (*model.MsgCounterType, error), arg A) error {
+	return e.Write(func(uc U, entity spineapi.EntityRemoteInterface, cb ResultCB) (*model.MsgCounterType, error) {
+		return write(uc, entity, arg, cb)
 	})
 }
