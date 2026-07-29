@@ -31,7 +31,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
-    timeout: 15s
+    timeout: 5s
   - name: timeout
     deprecated: true
   - name: maxacpower
@@ -557,7 +557,7 @@ render: |
                   if limit < rated { out = limit }
                   out
               - source: const
-                value: 1 # Minute
+                value: 2 # Minutes (watchdog*2 for redundancy reasons)
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -620,7 +620,7 @@ render: |
                   out
       # single watchdog wraps the ENTIRE 47100 lifecycle, not just case 3
       - source: watchdog
-        timeout: 30s
+        timeout: 60s # re-write every timeout/2
         reset: [1, 2, 4]
         set:
           source: switch
