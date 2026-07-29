@@ -19,6 +19,43 @@
     "successCloseTab": "Puoi ora chiudere questa scheda.",
     "title": "Stato dell'autorizzazione"
   },
+  "battery": {
+    "card": {
+      "charging": "Ricarica",
+      "discharging": "Scarica",
+      "energy": "Energia",
+      "gridCharge": "Carica da rete",
+      "holdCharge": "Ricarica chiusa",
+      "ofTotal": "di {total}",
+      "power": "Potenza batteria",
+      "soc": "% batteria"
+    },
+    "config": {
+      "buffer": "L'energia accumulata nella batteria domestica al di sopra del valore {soc} può essere utilizzata per alimentare i punti di ricarica e ritardare lo spegnimento in modalità solare. Avvia automaticamente la ricarica solare {start}.",
+      "bufferNone": "L'energia della batteria domestica non viene utilizzata per i punti di ricarica. Impostare un valore inferiore a {soc} per abilitare il supporto.",
+      "bufferStart": {
+        "above": "Quando la % della batteria è maggiore del {soc}",
+        "full": "quando la batteria è carica",
+        "never": "solo con un surplus sufficiente"
+      },
+      "bufferTitle": "Batteria come tampone di carica",
+      "discharge": "Prevenire la scarica della batteria domestica in modalità rapida e durante la ricarica programmata.",
+      "priority": "La batteria domestica ha la priorità finché il suo livello di carica è inferiore a {soc}. Successivamente, le colonnine di ricarica ricevono l'energia in eccesso.",
+      "priorityNone": "L'energia solare in eccesso viene inviata direttamente ai punti di ricarica. Imposta un valore superiore a {soc} per dare priorità alla batteria domestica.",
+      "priorityTitle": "Dove va a finire prima il surplus?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Carica dalla rete",
+        "discharge": "Scarico in rete",
+        "hold": "Previeni scarica batteria",
+        "normal": "Funzionamento normale"
+      },
+      "empty": "Vuoto",
+      "full": "pieno",
+      "highest": "Più alto ({value})"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Livello batteria",
     "bufferStart": {
