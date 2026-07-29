@@ -88,8 +88,7 @@ export default defineComponent({
 	methods: {
 		getChart(batteryIndex: number) {
 			const chartRefs = this.$refs[`chartRef${batteryIndex}`] as
-				| Array<{ chart?: ChartJS } | undefined>
-				| undefined;
+				Array<{ chart?: ChartJS } | undefined> | undefined;
 			return chartRefs?.[0]?.chart;
 		},
 		emitHoverIndex(index: number | null) {
