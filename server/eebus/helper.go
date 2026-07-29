@@ -12,7 +12,7 @@ import (
 )
 
 func WrapError(err error) error {
-	if errors.Is(err, eebusapi.ErrDataNotAvailable) {
+	if errors.Is(err, eebusapi.ErrDataNotAvailable) || errors.Is(err, eebusapi.ErrDataInvalid) {
 		return api.ErrNotAvailable
 	}
 	return err

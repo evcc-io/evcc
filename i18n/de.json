@@ -336,7 +336,6 @@
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
-      "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "required": "erforderlich",
@@ -368,7 +367,6 @@
       },
       "customOption": "Benutzerdefinierte Integration",
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
-      "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "generic": "Generische Integrationen",
       "integrations": "Integrationen",
@@ -376,7 +374,11 @@
       "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
       "recordedEvents": "Aufgezeichnete Ereignisse",
       "template": "Integration",
-      "title": "Externe Begrenzung"
+      "title": "Externe Begrenzung",
+      "type": {
+        "custom": "Benutzerdefinierte Integration",
+        "relay": "Benutzerdefinierte Integration (Relais)"
+      }
     },
     "icon": {
       "change": "ändern",
@@ -553,18 +555,18 @@
           "titleDefault": "Fahrzeug schläft"
         },
         "connect": {
-          "messageDefault": "Auto verbunden bei {pvPower}kW PV",
-          "title": "Wenn ein Auto verbunden wird",
-          "titleDefault": "Auto verbunden"
+          "messageDefault": "Fahrzeug verbunden bei {pvPower}kW PV",
+          "title": "Wenn ein Fahrzeug verbunden wird",
+          "titleDefault": "Fahrzeug verbunden"
         },
         "disconnect": {
-          "messageDefault": "Auto getrennt nach {connectedDuration}",
-          "title": "Wenn ein Auto getrennt wird",
-          "titleDefault": "Auto getrennt"
+          "messageDefault": "Fahrzeug getrennt nach {connectedDuration}",
+          "title": "Wenn ein Fahrzeug getrennt wird",
+          "titleDefault": "Fahrzeug getrennt"
         },
         "guest": {
           "messageDefault": "Unbekanntes Fahrzeug, Gast verbunden?",
-          "title": "Wenn ein unbekanntes Auto verbunden wird",
+          "title": "Wenn ein unbekanntes Fahrzeug verbunden wird",
           "titleDefault": "Unbekanntes Fahrzeug"
         },
         "planoverrun": {
@@ -641,6 +643,8 @@
       "connectionHintTcpip": "Das Gerät ist über Netzwerk (LAN/WiFi) erreichbar.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwerk",
+      "delay": "Verzögerung",
+      "delayHint": "Optionale Wartezeit vor jedem Registerzugriff. Nur für langsame Geräte notwendig.",
       "device": "Gerätename",
       "deviceHint": "Beispiel: /dev/ttyUSB0",
       "host": "IP Adresse oder Hostname",
@@ -651,7 +655,9 @@
       "protocolHintRtu": "Verbindung über eine RS485 Schnittstelle an einem Ethernet Adapter ohne Protokollübersetzung.",
       "protocolHintTcp": "Gerät hat native LAN/Wifi Unterstützung oder ist über eine RS485 Schnittstelle an einen Ethernet Adapter mit Protokollübersetzung angeschlossen.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Zeitüberschreitung",
+      "timeoutHint": "Optionale maximale Wartezeit auf eine Antwort des Geräts."
     },
     "modbusproxy": {
       "add": "Proxy-Verbindung hinzufügen",
@@ -1345,7 +1351,6 @@
           "returnEnergy": "Energie (rückwärts)"
         }
       },
-      "downloadCsv": "CSV herunterladen",
       "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
       "group": {
         "battery": "Batterie",
@@ -1624,8 +1629,6 @@
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },
-    "csvPeriod": "Download {period} CSV",
-    "csvTotal": "Gesamte CSV herunterladen",
     "date": "Anfang",
     "energy": "Geladen",
     "filter": {

@@ -73,8 +73,7 @@
 				<pre
 					id="apiKeyExample"
 					class="form-control border font-monospace small mb-2 api-key-example"
-					>{{ curlExample }}</pre
-				>
+					>{{ curlExample }}</pre>
 				<CopyLink :text="curlExample" />
 			</FormRow>
 

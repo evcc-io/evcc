@@ -105,6 +105,9 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 		{"active_positive", ucapi.LoadLimit{IsActive: true, Value: 4000}, true},
 		{"active_zero", ucapi.LoadLimit{IsActive: true, Value: 0}, true},
 		{"inactive", ucapi.LoadLimit{IsActive: false, Value: 4000}, false},
+		// a heat pump that is not being limited reports the limit as inactive without
+		// stating a value (#32125); that is a valid answer, not missing data
+		{"inactive_without_value", ucapi.LoadLimit{IsActive: false, IsChangeable: true}, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, lpc, entity := newOHPCFEGCharger(t)
