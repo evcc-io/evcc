@@ -62,6 +62,8 @@ func TestOHPCFControlAction(t *testing.T) {
 		{ucapi.CompressorPowerConsumptionStatePaused, true, ohpcfResume},
 		{ucapi.CompressorPowerConsumptionStateScheduled, true, ohpcfNone},
 		{ucapi.CompressorPowerConsumptionStateRunning, true, ohpcfNone},
+		{ucapi.CompressorPowerConsumptionStateCompleted, true, ohpcfUnavailable},
+		{ucapi.CompressorPowerConsumptionStateStopped, true, ohpcfUnavailable},
 		{ucapi.CompressorPowerConsumptionStateRunning, false, ohpcfStop},
 		{ucapi.CompressorPowerConsumptionStateScheduled, false, ohpcfStop},
 		{ucapi.CompressorPowerConsumptionStateAvailable, false, ohpcfNone},

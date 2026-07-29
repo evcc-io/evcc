@@ -310,6 +310,7 @@ const (
 	ohpcfSchedule
 	ohpcfResume
 	ohpcfStop
+	ohpcfUnavailable
 )
 
 // ohpcfControlAction returns the command needed to reach the desired on/off
@@ -321,8 +322,12 @@ func ohpcfControlAction(state ucapi.CompressorPowerConsumptionStateType, enable 
 			return ohpcfSchedule
 		case ucapi.CompressorPowerConsumptionStatePaused:
 			return ohpcfResume
+		case ucapi.CompressorPowerConsumptionStateRunning,
+			ucapi.CompressorPowerConsumptionStateScheduled:
+			return ohpcfNone
 		}
-		return ohpcfNone
+		// completed or stopped: the compressor offers nothing to schedule
+		return ohpcfUnavailable
 	}
 
 	switch state {
@@ -415,6 +420,9 @@ func (c *EEBusOHPCF) apply() error {
 	state, err := c.cem.OHPCF.PowerConsumptionProcessState(entity)
 	if err != nil {
 		// no process state announced yet, nothing to control
+		if c.lastEnabled() {
+			return api.ErrNotAvailable
+		}
 		return nil
 	}
 
@@ -430,6 +438,9 @@ func (c *EEBusOHPCF) apply() error {
 		})
 	case ohpcfStop:
 		return c.stop(entity)
+	case ohpcfUnavailable:
+		// enabling cannot be carried out - don't report success (#32245)
+		return api.ErrNotAvailable
 	}
 
 	return nil
