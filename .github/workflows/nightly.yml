@@ -63,7 +63,7 @@ jobs:
       - name: Pause if a resolution PR is already open
         id: guard
         env:
-          GH_TOKEN: ${{ secrets.EVCC_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # PR create/list needs the workflow token's pull-requests:write (EVCC_PAT can push but not open PRs)
         run: |
           open=$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --state open \
             --json headRefName --jq '[.[] | select(.headRefName | startswith("resolve/upstream-"))] | length')
@@ -91,7 +91,7 @@ jobs:
       - name: Open resolution branch + PR on conflict
         if: steps.guard.outputs.blocked != 'true' && steps.merge.outputs.conflict == 'true'
         env:
-          GH_TOKEN: ${{ secrets.EVCC_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # PR create/list needs the workflow token's pull-requests:write (EVCC_PAT can push but not open PRs)
         run: |
           branch="resolve/upstream-$(date -u +%Y%m%d)"
           echo "::warning::master no longer merges cleanly into evcc-master — opening ${branch} for manual resolution and skipping the build."
