@@ -1,5 +1,5 @@
 template: energinet-co2
-link: https://www.energidataservice.dk
+link: https://www.energidataservice.dk/tso-electricity/CO2EmisProg
 products:
   - brand: Energinet
     description:

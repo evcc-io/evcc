@@ -1,5 +1,5 @@
 template: electricitymaps
-link: https://www.electricitymaps.com
+link: https://www.electricitymaps.com/platform/api
 products:
   - brand: Electricity Maps
     description:
