@@ -49,7 +49,7 @@ render: |
     jq: .A_Minus
     scale: 0.001
     cache: 5s
-  {{- end }}  
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
