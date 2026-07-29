@@ -97,7 +97,7 @@ func (site *Site) dimMeters(dim bool) error {
 	return errs
 }
 
-// curtailPV applies the HEMS curtailment percent to all curtailable pv meters.
+// curtailPV applies the HEMS curtailment percent to all curtailable pv or grid meters.
 // Devices are only queried when the percent changes or after a failed attempt.
 func (site *Site) curtailPV(percent *int) error {
 	if percent == nil || site.curtailPercent != nil && *site.curtailPercent == *percent {
@@ -107,8 +107,13 @@ func (site *Site) curtailPV(percent *int) error {
 	// invalidate until successfully applied
 	site.curtailPercent = nil
 
+	meters := slices.Clone(site.pvMeters)
+	if site.gridMeter != nil {
+		meters = append(meters, site.gridMeter)
+	}
+
 	var errs error
-	for _, dev := range site.pvMeters {
+	for _, dev := range meters {
 		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
