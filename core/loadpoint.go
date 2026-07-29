@@ -1218,9 +1218,7 @@ func (lp *Loadpoint) updateChargerStatus() error {
 	return nil
 }
 
-// welcomeActive reports a running welcome charge. Charging is enabled for a short
-// time after connecting, irrespective of mode and limits, for vehicles that would
-// otherwise fault while unpowered (#32274).
+// welcomeActive reports a running welcome charge
 func (lp *Loadpoint) welcomeActive() bool {
 	return lp.clock.Until(lp.welcomeUntil) > 0
 }
