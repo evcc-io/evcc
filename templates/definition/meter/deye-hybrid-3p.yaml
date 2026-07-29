@@ -7,7 +7,7 @@ products:
   - brand: Sunsynk
     description:
       generic: 3p hybrid inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -16,6 +16,7 @@ params:
     baudrate: 9600
     id: 1
   - name: maxacpower
+    required: true
   - name: storageunit
     choice: ["1", "2"]
   - preset: battery-params
@@ -278,6 +279,61 @@ render: |
       {{- end }}
     {{- end }}
   maxacpower: {{ .maxacpower }}
+  # Feed-in curtailment via "Max Sell Power" (register 143, watts). The register is the
+  # device's always-active feed-in ceiling; there is no separate limit-enable register.
+  # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
+  # HV models use 10 W units for register 143 (LV: 1 W).
+  curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
+    source: go
+    in:
+      - name: maxacpower
+        type: int
+        config:
+          source: const
+          value: {{ .maxacpower }}
+    script: |
+      powerlimit := ( maxacpower * curtail ) / 100
+      powerlimit
+    out:
+      - name: powerlimit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 143 # Max Sell Power (W)
+            type: writemultiple
+            decode: uint16
+          {{- if eq .batterytype "hv" }}
+          scale: 0.1
+          {{- end }}
+  curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 143 # Max Sell Power (W)
+            type: holding
+            decode: uint16
+          {{- if eq .batterytype "hv" }}
+          scale: 10
+          {{- end }}
+      - name: maxacpower
+        type: int
+        config:
+          source: const
+          value: {{ .maxacpower }}
+    script: |
+      percent := 100
+      if maxacpower > 0 && limit < maxacpower {
+        // round, the watt conversion does not reproduce the written percent exactly
+        percent = (limit*100 + maxacpower/2) / maxacpower
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
