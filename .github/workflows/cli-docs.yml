@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version: 1.27.0-rc.2 # TODO go-version-file: go.mod once 1.27 is released
 
       - name: Generate CLI docs
         run: mkdir dist && touch dist/empty && go run main.go gendoc ./cli-docs
