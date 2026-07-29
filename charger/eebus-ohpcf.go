@@ -335,9 +335,7 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
 func (c *EEBusOHPCF) Dim(dim bool) error {
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
-	return c.lpc.Write(func(uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
-		return uc.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
-	})
+	return c.lpc.WriteArg(ucapi.EgLPCInterface.WriteConsumptionLimit, ucapi.LoadLimit{Value: 0, IsActive: dim})
 }
 
 // apply issues the command to align the optional consumption with the on/off
@@ -360,10 +358,8 @@ func (c *EEBusOHPCF) apply() error {
 
 	switch action {
 	case ohpcfSchedule:
-		return c.ohpcf.Write(func(uc ucapi.CemOHPCFInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
-			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
-			return uc.SchedulePowerConsumptionProcess(entity, 0, cb)
-		})
+		// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
+		return c.ohpcf.WriteArg(ucapi.CemOHPCFInterface.SchedulePowerConsumptionProcess, 0)
 	case ohpcfResume:
 		return c.ohpcf.Write(ucapi.CemOHPCFInterface.ResumePowerConsumptionProcess)
 	case ohpcfStop:
@@ -406,8 +402,5 @@ var _ api.Battery = (*EEBusOHPCF)(nil)
 // Soc implements the api.Battery interface and reports the heat pump's domestic
 // hot water temperature in °C via the MDT use case.
 func (c *EEBusOHPCF) Soc() (float64, error) {
-	return c.mdt.Read(
-		func(uc ucapi.MaMDTInterface, entity spineapi.EntityRemoteInterface) (float64, error) {
-			return uc.Temperature(entity, model.UnitOfMeasurementTypedegC)
-		})
+	return c.mdt.ReadArg(ucapi.MaMDTInterface.Temperature, model.UnitOfMeasurementTypedegC)
 }

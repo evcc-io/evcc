@@ -9,7 +9,6 @@ import (
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	spineapi "github.com/enbility/spine-go/api"
-	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -184,9 +183,7 @@ func (c *EEBus) Dim(dim bool) error {
 		value = limit
 	}
 
-	return c.lpc.Write(func(uc ucapi.EgLPCInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
-		return uc.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
-	})
+	return c.lpc.WriteArg(ucapi.EgLPCInterface.WriteConsumptionLimit, ucapi.LoadLimit{Value: value, IsActive: dim})
 }
 
 var _ api.Curtailer = (*EEBus)(nil)
@@ -226,7 +223,5 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		}
 	}
 
-	return c.lpp.Write(func(uc ucapi.EgLPPInterface, entity spineapi.EntityRemoteInterface, cb eebus.ResultCB) (*model.MsgCounterType, error) {
-		return uc.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
-	})
+	return c.lpp.WriteArg(ucapi.EgLPPInterface.WriteProductionLimit, ucapi.LoadLimit{Value: value, IsActive: curtail})
 }
