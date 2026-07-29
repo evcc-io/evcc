@@ -19,7 +19,6 @@ params:
       de: Id im Falle mehrerer PowerOpti
 render: |
   type: custom
-  {{- if eq .usage "grid" }}
   power:
     source: http
     uri: https://backend.powerfox.energy/api/2.0/my/{{ .id }}/current
@@ -29,6 +28,10 @@ render: |
       password: {{ .password }}
     jq: .Watt
     cache: 5s
+  {{- if eq .usage "pv" }}
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "grid" }}  
   energy:
     source: http
     uri: https://backend.powerfox.energy/api/2.0/my/{{ .id }}/current
@@ -49,15 +52,4 @@ render: |
     jq: .A_Minus
     scale: 0.001
     cache: 5s
-  {{- end }}
-  {{- if eq .usage "pv" }}
-  power:
-    source: http
-    uri: https://backend.powerfox.energy/api/2.0/my/{{ .id }}/current
-    auth:
-      type: basic
-      user: {{ .user }}
-      password: {{ .password }}
-    jq: .Watt
-    scale: -1
   {{- end }}
