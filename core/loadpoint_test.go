@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -811,7 +812,7 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 	assert.NotEqual(t, connectedTime, lp.connectedTime)
 }
 
-func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
+func TestWelcomeChargeExpires(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	ch := api.NewMockCharger(ctrl)
@@ -848,20 +849,94 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	lp.enabled = true
 	lp.status = api.StatusA
 
-	// No welcome charge when not connected
+	// no welcome charge when not connected
 	ch.EXPECT().Status().Return(api.StatusA, nil)
-	welcomeCharge, _ := lp.updateChargerStatus()
-	assert.False(t, welcomeCharge)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.False(t, lp.welcomeActive())
 
-	// Welcome charge when connected
+	// welcome charge when connected
 	ch.EXPECT().Status().Return(api.StatusC, nil)
-	welcomeCharge, _ = lp.updateChargerStatus()
-	assert.True(t, welcomeCharge)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.True(t, lp.welcomeActive())
 
-	// No welcome charge when still connected
+	// welcome charge remains active for its duration, covering strategies that
+	// would otherwise disable charging in the connect cycle (#32274)
+	clock.Add(welcomeChargeDuration - time.Second)
 	ch.EXPECT().Status().Return(api.StatusB, nil)
-	welcomeCharge, _ = lp.updateChargerStatus()
-	assert.False(t, welcomeCharge)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.True(t, lp.welcomeActive())
+
+	// welcome charge expires
+	clock.Add(time.Second)
+	assert.False(t, lp.welcomeActive())
+
+	// disconnecting clears the deadline
+	ch.EXPECT().Status().Return(api.StatusC, nil)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.False(t, lp.welcomeActive(), "welcome charge requires a connect event")
+
+	ch.EXPECT().Status().Return(api.StatusA, nil)
+	require.NoError(t, lp.updateChargerStatus())
+	assert.True(t, lp.welcomeUntil.IsZero())
+}
+
+// TestWelcomeChargeWithLimitReached verifies the welcome charge is applied on connect
+// even though the soc limit would otherwise disable charging right away (#32274).
+func TestWelcomeChargeWithLimitReached(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	ch := api.NewMockCharger(ctrl)
+	fd := api.NewMockFeatureDescriber(ctrl)
+
+	charger := struct {
+		api.Charger
+		api.FeatureDescriber
+	}{
+		ch, fd,
+	}
+
+	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{
+		api.WelcomeCharge,
+	})
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		minCurrent:  minA,
+		maxCurrent:  maxA,
+		chargeMeter: &Null{},            // silence nil panics
+		chargeRater: &Null{},            // silence nil panics
+		chargeTimer: &Null{},            // silence nil panics
+		progress:    NewProgress(0, 10), // silence nil panics
+		wakeUpTimer: NewTimer(),         // silence nil panics
+		mode:        api.ModePV,
+		limitSoc:    85,
+	}
+
+	// initial charger state read by Prepare
+	ch.EXPECT().Enabled().Return(false, nil)
+	attachListeners(t, lp)
+
+	lp.status = api.StatusA
+	lp.vehicleSoc = 95
+
+	t.Log("connect with limit soc reached - welcome charge enables charging")
+	ch.EXPECT().Status().Return(api.StatusB, nil)
+	ch.EXPECT().Enabled().Return(false, nil)
+	ch.EXPECT().MaxCurrent(int64(minA)).Return(nil)
+	ch.EXPECT().Enable(true).Return(nil)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	ctrl.Finish()
+
+	t.Log("welcome charge expired - limit soc disables charging")
+	clock.Add(welcomeChargeDuration)
+	ch.EXPECT().Status().Return(api.StatusB, nil)
+	ch.EXPECT().Enabled().Return(true, nil)
+	ch.EXPECT().Enable(false).Return(nil)
+	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+	ctrl.Finish()
 }
 
 // TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
