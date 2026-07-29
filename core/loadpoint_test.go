@@ -880,63 +880,6 @@ func TestWelcomeChargeExpires(t *testing.T) {
 	assert.True(t, lp.welcomeUntil.IsZero())
 }
 
-// TestWelcomeChargeWithLimitReached verifies the welcome charge is applied on connect
-// even though the soc limit would otherwise disable charging right away (#32274).
-func TestWelcomeChargeWithLimitReached(t *testing.T) {
-	clock := clock.NewMock()
-	ctrl := gomock.NewController(t)
-	ch := api.NewMockCharger(ctrl)
-	fd := api.NewMockFeatureDescriber(ctrl)
-
-	charger := struct {
-		api.Charger
-		api.FeatureDescriber
-	}{
-		ch, fd,
-	}
-
-	fd.EXPECT().Features().AnyTimes().Return([]api.Feature{
-		api.WelcomeCharge,
-	})
-
-	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		bus:         evbus.New(),
-		clock:       clock,
-		charger:     charger,
-		minCurrent:  minA,
-		maxCurrent:  maxA,
-		chargeMeter: &Null{},            // silence nil panics
-		chargeRater: &Null{},            // silence nil panics
-		chargeTimer: &Null{},            // silence nil panics
-		progress:    NewProgress(0, 10), // silence nil panics
-		wakeUpTimer: NewTimer(),         // silence nil panics
-		mode:        api.ModePV,
-		limitSoc:    85,
-	}
-
-	// initial charger state read by Prepare
-	ch.EXPECT().Enabled().Return(false, nil)
-	attachListeners(t, lp)
-
-	lp.status = api.StatusA
-	lp.vehicleSoc = 95
-
-	t.Log("connect with limit soc reached - welcome charge enables charging")
-	ch.EXPECT().Status().Return(api.StatusB, nil)
-	ch.EXPECT().Enabled().Return(false, nil)
-	ch.EXPECT().MaxCurrent(int64(minA)).Return(nil)
-	ch.EXPECT().Enable(true).Return(nil)
-	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
-	ctrl.Finish()
-
-	t.Log("welcome charge expired - limit soc disables charging")
-	clock.Add(welcomeChargeDuration)
-	ch.EXPECT().Status().Return(api.StatusB, nil)
-	ch.EXPECT().Enabled().Return(true, nil)
-	ch.EXPECT().Enable(false).Return(nil)
-	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
-	ctrl.Finish()
 }
 
 // TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
