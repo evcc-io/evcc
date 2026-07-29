@@ -379,7 +379,11 @@
       "noEvents": "No events recorded yet.",
       "recordedEvents": "Recorded events",
       "template": "Integration",
-      "title": "External Limit"
+      "title": "External Limit",
+      "type": {
+        "custom": "User-defined integration",
+        "relay": "User-defined integration (relay)"
+      }
     },
     "icon": {
       "change": "change",
