@@ -20,6 +20,7 @@
 			:priority-soc="state.prioritySoc"
 			:buffer-start-soc="state.bufferStartSoc"
 			:battery-discharge-control="state.batteryDischargeControl"
+			:battery-grid-discharge="state.batteryGridDischarge"
 			:battery="state.battery"
 		/>
 

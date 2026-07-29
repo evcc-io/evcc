@@ -481,7 +481,6 @@
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
-				<BatteryModal :grid-discharge="batteryGridDischarge" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
@@ -560,7 +559,6 @@ import TariffCard from "../components/Config/TariffCard.vue";
 import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
-import BatteryModal from "../components/Config/BatteryModal.vue";
 import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
@@ -650,7 +648,6 @@ export default defineComponent({
 		TariffModal,
 		TelemetryModal,
 		ExperimentalModal,
-		BatteryModal,
 		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,
@@ -924,9 +921,6 @@ export default defineComponent({
 		},
 		experimental() {
 			return store.state?.experimental;
-		},
-		batteryGridDischarge() {
-			return store.state?.batteryGridDischarge === true;
 		},
 		eebus() {
 			return store.state?.eebus;
