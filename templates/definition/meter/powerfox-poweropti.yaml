@@ -30,3 +30,21 @@ render: |
   {{- if eq .usage "pv" }}
     scale: -1
   {{- end }}
+  energy:
+    source: http
+    uri: https://backend.powerfox.energy/api/2.0/my/{{ .id }}/current
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    jq: .A_Plus
+    scale: 0.001
+  returnenergy:
+    source: http
+    uri: https://backend.powerfox.energy/api/2.0/my/{{ .id }}/current
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    jq: .A_Minus
+    scale: 0.001
