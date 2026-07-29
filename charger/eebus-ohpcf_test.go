@@ -30,6 +30,15 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 	require.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
 }
 
+// a failed enable must not persist the intent, otherwise Enabled() reports a
+// state the compressor never accepted and the loadpoint runs out of sync (#32252).
+func TestOHPCFEnableFailureKeepsState(t *testing.T) {
+	c := &EEBusOHPCF{}
+
+	require.ErrorIs(t, c.Enable(true), errNotConnected)
+	assert.False(t, c.lastEnabled())
+}
+
 // status mapping: running is C, every other connected state (incl. completed
 // and stopped after a boost) is standby B, never disconnected.
 func TestOHPCFStatus(t *testing.T) {
