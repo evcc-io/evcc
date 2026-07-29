@@ -7,24 +7,40 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// newTestOHPCF returns a charger without any use case implementation, so all
+// entities remain empty
+func newTestOHPCF() *EEBusOHPCF {
+	cem := new(eebus.CustomerEnergyManagement)
+	ma := new(eebus.MonitoringAppliance)
+	eg := new(eebus.EnergyGuard)
+
+	return &EEBusOHPCF{
+		ohpcf: eebus.NewEntity(cem.OHPCF),
+		mpc:   eebus.NewEntity(ma.MaMPCInterface),
+		mdt:   eebus.NewEntity(ma.MaMDTInterface),
+		lpc:   eebus.NewEntity(eg.EgLPCInterface),
+	}
+}
+
 // methods accessing the compressor entity must error when it is absent,
 // so a missing compressor is not mistaken for an idle device.
 func TestEEBusOHPCFNotConnected(t *testing.T) {
-	c := &EEBusOHPCF{}
+	c := newTestOHPCF()
 
 	status, err := c.Status()
-	require.ErrorIs(t, err, errNotConnected)
+	require.ErrorIs(t, err, eebus.ErrNotConnected)
 	assert.Equal(t, api.StatusNone, status)
 
 	_, err = c.Enabled()
-	require.ErrorIs(t, err, errNotConnected)
+	require.ErrorIs(t, err, eebus.ErrNotConnected)
 
-	require.ErrorIs(t, c.Enable(true), errNotConnected)
-	require.ErrorIs(t, c.MaxCurrent(16), errNotConnected)
+	require.ErrorIs(t, c.Enable(true), eebus.ErrNotConnected)
+	require.ErrorIs(t, c.MaxCurrent(16), eebus.ErrNotConnected)
 
 	// dimming uses EG LPC, which is unavailable without an LPC entity
 	require.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
@@ -73,15 +89,15 @@ func TestOHPCFControlAction(t *testing.T) {
 	}
 }
 
-// a consumption-state update always records the compressor entity; while
-// disabled it must not attempt to apply (avoids acting on a stale intent, #31549).
+// while disabled a consumption-state update must not attempt to apply (avoids
+// acting on a stale intent, #31549). The compressor entity is recorded by the
+// use case support update, not by data events.
 func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
-	c := &EEBusOHPCF{}
+	c := newTestOHPCF()
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
 
-	got, ok := c.connectedCompressor()
-	require.True(t, ok)
-	assert.Equal(t, entity, got)
+	_, err := c.ohpcf.Required()
+	assert.ErrorIs(t, err, eebus.ErrNotConnected)
 }
