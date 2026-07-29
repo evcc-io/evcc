@@ -148,7 +148,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		// react immediately to a freshly announced schedule/resume opportunity
 		// instead of waiting for the next reboost tick, which may miss it (#31549)
 		if c.lastEnabled() {
-			if err := c.apply(); err != nil {
+			if err := c.apply(true); err != nil {
 				c.log.DEBUG.Printf("apply: %v", err)
 			}
 		}
@@ -252,15 +252,13 @@ func (c *EEBusOHPCF) Enabled() (bool, error) {
 // Enable schedules/resumes the optional consumption when on, pauses/aborts it
 // when off; while on a reboost loop reschedules newly announced consumption.
 func (c *EEBusOHPCF) Enable(enable bool) error {
-	prev := c.lastEnabled()
-	c.setEnabled(enable)
-
-	// keep the previous state on failure, otherwise Enabled() would report an
-	// intent the compressor never accepted and the loadpoint runs out of sync
-	if err := c.apply(); err != nil {
-		c.setEnabled(prev)
+	// record the intent only once accepted, otherwise Enabled() would report a
+	// state the compressor never reached and the loadpoint runs out of sync
+	if err := c.apply(enable); err != nil {
 		return err
 	}
+
+	c.setEnabled(enable)
 
 	if enable {
 		c.startReboost()
@@ -304,7 +302,7 @@ func (c *EEBusOHPCF) reboostLoop() {
 			if !c.lastEnabled() {
 				return
 			}
-			if err := c.apply(); err != nil {
+			if err := c.apply(true); err != nil {
 				c.log.DEBUG.Printf("reboost: %v", err)
 			}
 		}
@@ -363,7 +361,7 @@ func (c *EEBusOHPCF) stop(entity spineapi.EntityRemoteInterface) error {
 // MaxCurrent implements the api.Charger interface. OHPCF is on/off and cannot
 // be modulated, so the offered current is ignored.
 func (c *EEBusOHPCF) MaxCurrent(int64) error {
-	return c.apply()
+	return c.apply(c.lastEnabled())
 }
 
 var _ api.Dimmer = (*EEBusOHPCF)(nil)
@@ -414,7 +412,7 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 
 // apply issues the command to align the optional consumption with the on/off
 // intent. It is idempotent: ohpcfControlAction only acts on a state transition.
-func (c *EEBusOHPCF) apply() error {
+func (c *EEBusOHPCF) apply(enable bool) error {
 	entity, ok := c.connectedCompressor()
 	if !ok {
 		return errNotConnected
@@ -426,7 +424,7 @@ func (c *EEBusOHPCF) apply() error {
 		return nil
 	}
 
-	switch ohpcfControlAction(state, c.lastEnabled()) {
+	switch ohpcfControlAction(state, enable) {
 	case ohpcfSchedule:
 		return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 			// 0 = start immediately (relative schedule, see SchedulePowerConsumptionProcess)
