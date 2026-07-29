@@ -880,8 +880,6 @@ func TestWelcomeChargeExpires(t *testing.T) {
 	assert.True(t, lp.welcomeUntil.IsZero())
 }
 
-}
-
 // TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
 // boost no longer draws power from the battery, while still counting as active so
 // the site keeps prioritising the vehicle over recharging the battery (#30558).
