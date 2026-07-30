@@ -4,7 +4,7 @@
 
 ### Development environment
 
-Developing evcc requires [Go][1] and [Node][2]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
+Developing evcc requires [Go][1] [Node][2] and [Vite+][3]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
 
 Alternatively, if you use VS Code and [devcontainers](https://code.visualstudio.com/docs/devcontainers/containers), you can use the "Dev containers: Clone repository in container volume" action. This will create a devcontainer with the required toolchain and install the prerequisites as explained below. Wait until the startup log says "Done. Press any key to close the terminal." and check for any errors.
 
@@ -185,6 +185,7 @@ Note: To ensure the build succeeds after creating new translations, make sure to
 
 [1]: https://go.dev
 [2]: https://nodejs.org/
+[3]: https://viteplus.dev/guide/#install-vp
 
 ## Documentation, Website and iOS/Android App
 
