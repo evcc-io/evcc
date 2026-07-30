@@ -769,6 +769,20 @@ func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFastChargingActive", reflect.TypeOf((*MockAPI)(nil).IsFastChargingActive))
 }
 
+// IsHeating mocks base method.
+func (m *MockAPI) IsHeating() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsHeating")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsHeating indicates an expected call of IsHeating.
+func (mr *MockAPIMockRecorder) IsHeating() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsHeating", reflect.TypeOf((*MockAPI)(nil).IsHeating))
+}
+
 // PublishEffectiveValues mocks base method.
 func (m *MockAPI) PublishEffectiveValues() {
 	m.ctrl.T.Helper()

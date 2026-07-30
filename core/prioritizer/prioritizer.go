@@ -93,7 +93,8 @@ func (p *Prioritizer) candidates(lp loadpoint.API) []loadpoint.API {
 // are not comparable, so the whole comparison set must use a single basis. When any
 // participating loadpoint has no known vehicle capacity (its energy score would
 // silently fall back to a percentage), the entire set is ranked by percent so
-// configured and unconfigured vehicles are never mixed across scales.
+// configured and unconfigured vehicles are never mixed across scales. Heating
+// loadpoints receive no sub-ordering score and are hence exempt from this veto.
 func (p *Prioritizer) effectiveBasis(lp loadpoint.API) api.PriorityBasis {
 	basis := p.settings.GetPriorityBasis()
 	if basis != api.PriorityBasisEnergy {
@@ -101,6 +102,9 @@ func (p *Prioritizer) effectiveBasis(lp loadpoint.API) api.PriorityBasis {
 	}
 
 	for _, other := range p.candidates(lp) {
+		if other.IsHeating() {
+			continue
+		}
 		if v := other.GetVehicle(); v == nil || v.Capacity() <= 0 {
 			return api.PriorityBasisPercent
 		}

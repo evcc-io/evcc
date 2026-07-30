@@ -133,12 +133,14 @@ func TestPrioritizerEnergyBasisMixedCapacity(t *testing.T) {
 	// known capacity, lower soc -> percent score 0.80 (energy 0.40)
 	known := loadpoint.NewMockAPI(ctrl)
 	known.EXPECT().GetTitle().AnyTimes()
+	known.EXPECT().IsHeating().Return(false).AnyTimes()
 	known.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
 	known.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisPercent).Return(0.80).AnyTimes()
 
 	// unknown capacity, higher soc -> percent score 0.50
 	unknown := loadpoint.NewMockAPI(ctrl)
 	unknown.EXPECT().GetTitle().AnyTimes()
+	unknown.EXPECT().IsHeating().Return(false).AnyTimes()
 	unknown.EXPECT().GetVehicle().Return(nil).AnyTimes()
 	unknown.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisPercent).Return(0.50).AnyTimes()
 
@@ -166,12 +168,14 @@ func TestPrioritizerEnergyBasisAllKnown(t *testing.T) {
 	// big gap in kWh -> energy score 0.40
 	big := loadpoint.NewMockAPI(ctrl)
 	big.EXPECT().GetTitle().AnyTimes()
+	big.EXPECT().IsHeating().Return(false).AnyTimes()
 	big.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
 	big.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.40).AnyTimes()
 
 	// small gap in kWh -> energy score 0.15
 	small := loadpoint.NewMockAPI(ctrl)
 	small.EXPECT().GetTitle().AnyTimes()
+	small.EXPECT().IsHeating().Return(false).AnyTimes()
 	small.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
 	small.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.15).AnyTimes()
 
@@ -180,4 +184,35 @@ func TestPrioritizerEnergyBasisAllKnown(t *testing.T) {
 
 	// larger energy deficit outranks the smaller one on the energy scale
 	assert.Equal(t, 600.0, p.GetChargePowerFlexibility(big))
+}
+
+// TestPrioritizerEnergyBasisHeaterExempt verifies that a heating loadpoint without
+// vehicle capacity does not veto the energy basis for the remaining vehicles.
+func TestPrioritizerEnergyBasisHeaterExempt(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	p := New(nil, &testSettings{strategy: api.PrioritySoc, basis: api.PriorityBasisEnergy})
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
+
+	// heater: no vehicle, no sub-ordering score
+	heater := loadpoint.NewMockAPI(ctrl)
+	heater.EXPECT().GetTitle().AnyTimes()
+	heater.EXPECT().IsHeating().Return(true).AnyTimes()
+	heater.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.0).AnyTimes()
+
+	// car with known capacity -> energy score 0.40
+	car := loadpoint.NewMockAPI(ctrl)
+	car.EXPECT().GetTitle().AnyTimes()
+	car.EXPECT().IsHeating().Return(false).AnyTimes()
+	car.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
+	car.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.40).AnyTimes()
+
+	// heater participates but is scored on the energy basis (fraction 0), no percent fallback
+	heater.EXPECT().GetChargePowerFlexibility(nil).Return(800.0)
+	p.UpdateChargePowerFlexibility(heater, nil)
+
+	// car keeps the energy basis and outranks the score-less heater within the tier
+	assert.Equal(t, 800.0, p.GetChargePowerFlexibility(car))
 }

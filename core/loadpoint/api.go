@@ -217,6 +217,8 @@ type API interface {
 
 	// IsFastChargingActive indicates if fast charging with maximum power is active
 	IsFastChargingActive() bool
+	// IsHeating indicates a heating loadpoint (charger has the heating feature)
+	IsHeating() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in kWh

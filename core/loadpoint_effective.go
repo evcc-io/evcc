@@ -48,6 +48,11 @@ func (lp *Loadpoint) EffectivePriority() int {
 func (lp *Loadpoint) EffectivePriorityScore(strategy api.PriorityStrategy, basis api.PriorityBasis) float64 {
 	score := float64(lp.EffectivePriority())
 
+	// heating: soc holds a temperature, not a charge level, hence no sub-ordering
+	if lp.IsHeating() {
+		return score
+	}
+
 	soc := lp.GetSoc()
 	if soc <= 0 {
 		return score

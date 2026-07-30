@@ -79,6 +79,29 @@ func TestEffectivePriorityScore(t *testing.T) {
 	}
 }
 
+// heating loadpoints alias temperature as soc, which is no charge level: they get
+// the plain tier score without strategy sub-ordering
+func TestEffectivePriorityScoreHeating(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	describer := api.NewMockFeatureDescriber(ctrl)
+	describer.EXPECT().Features().Return([]api.Feature{api.Heating}).AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.priority = 1
+	lp.vehicleSoc = 55 // temperature
+	lp.charger = struct {
+		api.Charger
+		api.FeatureDescriber
+	}{
+		Charger:          api.NewMockCharger(ctrl),
+		FeatureDescriber: describer,
+	}
+
+	assert.Equal(t, 1.0, lp.EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisPercent))
+	assert.Equal(t, 1.0, lp.EffectivePriorityScore(api.PriorityDeficit, api.PriorityBasisPercent))
+}
+
 func TestEffectiveMinSoc(t *testing.T) {
 	config.Reset()
 	t.Cleanup(config.Reset)
