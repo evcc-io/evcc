@@ -77,7 +77,7 @@ export default defineComponent({
 		chartOption(): Record<string, unknown> {
 			const color = this.color;
 
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line @typescript-eslint/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,
@@ -95,12 +95,7 @@ export default defineComponent({
 						return tooltipTable(time, [{ values: [vThis.fmtLong(p.value[1])] }]);
 					},
 				},
-				xAxis: forecastXAxes(
-					this.startDate,
-					this.endDate,
-					this.hourShort,
-					this.weekdayShort
-				),
+				xAxis: forecastXAxes(this.startDate, this.endDate, this.hourShort, this.weekdayShort),
 				yAxis: forecastYAxis({
 					min: this.yMin,
 					splitNumber: 2,

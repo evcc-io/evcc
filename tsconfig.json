@@ -11,9 +11,8 @@
     "noUnusedParameters": true,
     "composite": true,
     "allowJs": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["assets/js/*"]
+      "@/*": ["./assets/js/*"]
     },
     "plugins": [
       {
