@@ -11,7 +11,7 @@
     "lint:tsc": "vue-tsc --noEmit",
     "lint:i18n": "tsx i18n/check.ts",
     "dev": "vp dev",
-    "playwright": "playwright test --ui",
+    "playwright": "playwright install && playwright test --ui",
     "playwright:ci": "cross-env CI=true playwright test",
     "simulator": "vp dev tests/simulator",
     "storybook": "storybook dev -p 6006",
