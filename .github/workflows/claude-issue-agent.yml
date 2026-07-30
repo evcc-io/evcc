@@ -54,7 +54,7 @@ jobs:
           show_full_output: true
           # PRs may come from forks without write access; the token is scoped to
           # labels only. PR title/body/diff are treated as untrusted data.
-          allowed_non_write_users: "*"
+          allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
           claude_args: '--allowed-tools "Read,Grep,Glob,Bash(gh label list),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*)" --disallowed-tools "Task"'

@@ -78,7 +78,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: '24'
+          node-version: "26"
           cache: true
 
       - run: mkdir dist && touch dist/empty
@@ -170,7 +170,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: '24'
+          node-version: "26"
           cache: true
 
       - name: Install
@@ -232,7 +232,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: '24'
+          node-version: "26"
           cache: true
 
       - name: Build UI
