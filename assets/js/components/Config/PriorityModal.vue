@@ -13,59 +13,51 @@
 			<FormRow
 				id="priorityStrategy"
 				:label="$t('config.priority.labelStrategy')"
-				:help="$t('config.priority.descriptionStrategy')"
+				:help="strategyDescription"
 			>
-				<select
-					id="priorityStrategy"
-					v-model="values.priorityStrategy"
-					class="form-select input-width"
-				>
+				<select id="priorityStrategy" v-model="values.priorityStrategy" class="form-select">
 					<option v-for="s in strategies" :key="s" :value="s">
 						{{ $t(`config.priority.strategy.${s}`) }}
 					</option>
 				</select>
 			</FormRow>
 
-			<FormRow
-				v-if="strategyActive"
-				id="priorityBasis"
-				:label="$t('config.priority.labelBasis')"
-				:help="$t('config.priority.descriptionBasis')"
-			>
-				<select
+			<div v-show="strategyActive" class="ms-3">
+				<FormRow
 					id="priorityBasis"
-					v-model="values.priorityBasis"
-					class="form-select input-width"
+					:label="$t('config.priority.labelBasis')"
+					:help="basisDescription"
 				>
-					<option v-for="b in bases" :key="b" :value="b">
-						{{ $t(`config.priority.basis.${b}`) }}
-					</option>
-				</select>
-			</FormRow>
+					<select id="priorityBasis" v-model="values.priorityBasis" class="form-select">
+						<option v-for="b in bases" :key="b" :value="b">
+							{{ $t(`config.priority.basis.${b}`) }}
+						</option>
+					</select>
+				</FormRow>
 
-			<FormRow
-				v-if="strategyActive"
-				id="priorityHysteresis"
-				:label="$t('config.priority.labelHysteresis')"
-				:help="$t('config.priority.descriptionHysteresis')"
-			>
-				<div class="input-group input-width">
-					<input
-						id="priorityHysteresis"
-						v-model="values.priorityHysteresis"
-						type="number"
-						step="1"
-						min="0"
-						max="99"
-						required
-						aria-describedby="priorityHysteresisUnit"
-						class="form-control text-end"
-					/>
-					<span id="priorityHysteresisUnit" class="input-group-text">{{
-						hysteresisUnit
-					}}</span>
-				</div>
-			</FormRow>
+				<FormRow
+					id="priorityHysteresis"
+					:label="$t('config.priority.labelHysteresis')"
+					:help="$t('config.priority.descriptionHysteresis')"
+				>
+					<div class="input-group input-width">
+						<input
+							id="priorityHysteresis"
+							v-model="values.priorityHysteresis"
+							type="number"
+							step="1"
+							min="0"
+							max="99"
+							required
+							aria-describedby="priorityHysteresisUnit"
+							class="form-control text-end"
+						/>
+						<span id="priorityHysteresisUnit" class="input-group-text">{{
+							hysteresisUnit
+						}}</span>
+					</div>
+				</FormRow>
+			</div>
 
 			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
 				<button
@@ -138,6 +130,14 @@ export default defineComponent({
 		},
 		nothingChanged(): boolean {
 			return this.changed.length === 0;
+		},
+		strategyDescription(): string {
+			const strategy = this.values.priorityStrategy || PRIORITY_STRATEGY.NONE;
+			return this.$t(`config.priority.strategyDescription.${strategy}`);
+		},
+		basisDescription(): string {
+			const basis = this.values.priorityBasis || PRIORITY_BASIS.PERCENT;
+			return this.$t(`config.priority.basisDescription.${basis}`);
 		},
 		strategyActive(): boolean {
 			// basis and hysteresis only affect soc/deficit sub-ordering, not the none strategy

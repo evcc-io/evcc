@@ -23,7 +23,19 @@
 				/>
 
 				<WelcomeBanner v-if="setupRequired" />
-				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
+				<h2 class="my-4 d-flex align-items-center gap-2">
+					{{ $t("config.section.loadpoints") }}
+					<button
+						v-if="experimental"
+						type="button"
+						class="btn btn-sm btn-outline-secondary border-0 p-2"
+						:title="$t('config.priority.title')"
+						data-testid="loadpoint-priority-button"
+						@click="openModal('priority')"
+					>
+						<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
+					</button>
+				</h2>
 				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
@@ -505,6 +517,7 @@
 </template>
 
 <script lang="ts">
+import "@h2d2/shopicons/es/regular/adjust";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
