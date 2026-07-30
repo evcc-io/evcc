@@ -98,8 +98,8 @@ You can adjust the referred configuration as needed to e.g. use your live config
 For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the live reloading development server. It pulls its data from port 7070 (see above).
 
 ```sh
-npm install
-npm run dev
+vp install
+vp run dev
 ```
 
 ### Storybook
@@ -107,7 +107,7 @@ npm run dev
 We're using storybook to develop and visualize UI components in different states. Running the command below will open your browser at http://127.0.0.1:6006/.
 
 ```sh
-npm run storybook
+vp run storybook
 ```
 
 ### Integration testing
@@ -116,7 +116,7 @@ We use Playwright for end-to-end integration tests. They start a local evcc inst
 
 ```sh
 make ui build
-npm run playwright
+vp run playwright
 ```
 
 ### Simulating device state
@@ -124,7 +124,7 @@ npm run playwright
 Since we don't want to run tests against real devices or cloud services, we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
 
 ```
-npm run simulator
+vp run simulator
 ```
 
 Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to speed up testing.

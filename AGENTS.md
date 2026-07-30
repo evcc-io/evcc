@@ -14,13 +14,13 @@ This file provides guidance to AI coding agents when working with code in this r
 - `make build` - build Go binary only
 - `make ui` - build UI assets only
 - `make install` - install Go tools and dependencies
-- `make install-ui` - install Node.js dependencies (`npm ci`)
+- `make install-ui` - install Node.js dependencies (`vp install`)
 - `make test` - run Go tests
 - `make test-ui` - run frontend tests
 - `make lint` - run Go linting (golangci-lint)
 - `make lint-ui` - run frontend linting
-- `npm run dev` - start Vue dev server (http://127.0.0.1:7071)
-- `npm run playwright` - run integration tests
+- `vp run dev` - start Vue dev server (http://127.0.0.1:7071)
+- `vp run playwright` - run integration tests
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation
 
@@ -236,9 +236,9 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ### Essential Commands
 
 - Must build before testing executing playwright `make ui build` since it uses the binary. For manual testing assets are build and reloaded automatically (vite dev).
-- Run tests: `npm run playwright` or `npx playwright test`
-- Debug: `npx playwright test --debug`
-- Specific test: `npx playwright test tests/config-loadpoint.spec.ts`
+- Run tests: `vp run playwright` or `vpx playwright test`
+- Debug: `vpx playwright test --debug`
+- Specific test: `vpx playwright test tests/config-loadpoint.spec.ts`
 
 ### Selector Strategy
 

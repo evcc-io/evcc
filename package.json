@@ -5,9 +5,9 @@
   "scripts": {
     "build": "vp build",
     "test": "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vp test",
-    "lint": "npm run lint:prettier && npm run lint:eslint && npm run lint:tsc && npm run lint:i18n",
-    "lint:prettier": "vp fmt assets tests **/*.{yaml,sh} i18n/*.json",
-    "lint:eslint": "vp lint --fix --max-warnings=0",
+    "lint": "npm run lint:format && npm run lint:lint && npm run lint:tsc && npm run lint:i18n",
+    "lint:format": "vp fmt assets tests **/*.{yaml,sh} i18n/*.json",
+    "lint:lint": "vp lint --fix --max-warnings=0",
     "lint:tsc": "vue-tsc --noEmit",
     "lint:i18n": "tsx i18n/check.ts",
     "dev": "vp dev",
