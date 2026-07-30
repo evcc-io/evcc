@@ -20,8 +20,10 @@ package charger
 // https://v2charge.com/trydan/
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -219,12 +221,40 @@ var _ api.PhaseSwitcher = (*Trydan)(nil)
 // qaMethod sends a qa_method command to the Trydan
 // Example request: /qa_method/{"method":"set_threephasic","value":true}
 func (c *Trydan) qaMethod(method string, value bool) error {
-	uri := fmt.Sprintf(`%s/qa_method/%%7B%%22method%%22:%%22%s%%22,%%22value%%22:%t%%7D`, c.uri, method, value)
-	res, err := c.GetBody(uri)
-	if str := string(res); err == nil && str != `{"description":"Method Executed OK"}` {
-		err = fmt.Errorf("qa_method failed: %s", res)
+	type qaPayload struct {
+		Method string `json:"method"`
+		Value  bool   `json:"value"`
 	}
-	return err
+	type qaResponse struct {
+		Description string `json:"description"`
+	}
+
+	payload := qaPayload{Method: method, Value: value}
+	buf, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	// Escape JSON but keep :, in unescaped form (Trydan expects partial escaping)
+	escaped := url.PathEscape(string(buf))
+	escaped = strings.NewReplacer("%3A", ":", "%2C", ",").Replace(escaped)
+
+	uri := fmt.Sprintf("%s/qa_method/%s", c.uri, escaped)
+	res, err := c.GetBody(uri)
+	if err != nil {
+		return err
+	}
+
+	var rsp qaResponse
+	if err := json.Unmarshal(res, &rsp); err != nil {
+		return fmt.Errorf("qa_method: invalid response: %w", err)
+	}
+
+	if !strings.Contains(rsp.Description, "OK") {
+		return fmt.Errorf("qa_method failed: %s", rsp.Description)
+	}
+
+	return nil
 }
 
 // Phases1p3p implements the api.PhaseSwitcher interface
@@ -245,9 +275,14 @@ func (c *Trydan) phasesWhileCharging(phases int) error {
 	if err := c.setValue("ChargeMode", trydanChargeModeMixed); err != nil {
 		return err
 	}
-	c.qaMethod("set_threephasic", phases == 3)
+	qaErr := c.qaMethod("set_threephasic", phases == 3)
 	time.Sleep(1000 * time.Millisecond)
-	return c.setChargeModeForPhases(phases)
+	// Attempt phase change as fallback even if qaMethod fails
+	modeErr := c.setChargeModeForPhases(phases)
+	if qaErr != nil {
+		return qaErr
+	}
+	return modeErr
 }
 
 func (c *Trydan) setChargeModeForPhases(phases int) error {
