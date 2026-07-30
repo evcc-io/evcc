@@ -87,6 +87,8 @@ params:
     description:
       de: "Bitmask für SG4 im Dimm-Betrieb"
       en: "Bitmask for SG4 in dim mode"
+  - name: cache
+    default: 1s
 render: |
   type: sgready
   power:
@@ -98,7 +100,7 @@ render: |
     {{- end}}
   getmode:
     source: cached
-    cache: 5s
+    cache: {{ .cache }}
     value:
       source: go
       script: |
