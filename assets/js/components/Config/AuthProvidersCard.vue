@@ -30,9 +30,7 @@
 						@click="handleProviderAction(provider)"
 					>
 						{{
-							provider.authenticated
-								? $t("authProviders.disconnect")
-								: $t("authProviders.connect")
+							provider.authenticated ? $t("authProviders.disconnect") : $t("authProviders.connect")
 						}}
 					</button>
 				</div>

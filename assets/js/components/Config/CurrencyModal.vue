@@ -12,22 +12,14 @@
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="save">
 			<FormRow id="currency" :label="$t('config.currency.label')" :example="exampleText">
 				<select id="currency" v-model="selectedCurrency" class="form-select" required>
-					<option
-						v-for="currency in currencies"
-						:key="currency.code"
-						:value="currency.code"
-					>
+					<option v-for="currency in currencies" :key="currency.code" :value="currency.code">
 						{{ currency.code }} - {{ currency.name }}
 					</option>
 				</select>
 			</FormRow>
 
 			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
-				<button
-					type="button"
-					class="btn btn-link text-muted btn-cancel"
-					data-bs-dismiss="modal"
-				>
+				<button type="button" class="btn btn-link text-muted btn-cancel" data-bs-dismiss="modal">
 					{{ $t("config.general.cancel") }}
 				</button>
 

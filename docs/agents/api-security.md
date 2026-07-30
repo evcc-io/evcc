@@ -12,11 +12,11 @@ controls are intentionally unauthenticated.
 
 ## Auth Modes
 
-| Mode       | Trigger               | Behavior                                          |
-|------------|-----------------------|---------------------------------------------------|
-| `Enabled`  | default               | password required; JWT or API key accepted        |
-| `Disabled` | `--disable-auth` flag | all auth checks skipped                           |
-| `Locked`   | demo mode             | mutating endpoints return 403; reads still work   |
+| Mode       | Trigger               | Behavior                                        |
+| ---------- | --------------------- | ----------------------------------------------- |
+| `Enabled`  | default               | password required; JWT or API key accepted      |
+| `Disabled` | `--disable-auth` flag | all auth checks skipped                         |
+| `Locked`   | demo mode             | mutating endpoints return 403; reads still work |
 
 Mode is fixed at startup. The frontend mirrors the mode so admin actions can
 be greyed out and a banner shown.
@@ -83,16 +83,16 @@ achieves the same effect (the previous key stops working immediately).
 
 ## Endpoint Matrix
 
-| Endpoint category                            | Tier      | Additional Requirements            |
-|----------------------------------------------|-----------|------------------------------------|
-| State / read-only / basic charging control   | Public    |                                    |
-| Set or update admin password                 | Public    | admin password                     |
-| Configuration                                | Secure    |                                    |
-| Configuration embedding a script plugin       | Critical  | api key or admin password          |
-| System: logs, cache, shutdown                | Secure    |                                    |
-| API key status                               | Secure    |                                    |
-| System: backup / restore / reset             | Critical  | api key or admin password          |
-| API key regenerate                           | Critical  | admin password                     |
+| Endpoint category                          | Tier     | Additional Requirements   |
+| ------------------------------------------ | -------- | ------------------------- |
+| State / read-only / basic charging control | Public   |                           |
+| Set or update admin password               | Public   | admin password            |
+| Configuration                              | Secure   |                           |
+| Configuration embedding a script plugin    | Critical | api key or admin password |
+| System: logs, cache, shutdown              | Secure   |                           |
+| API key status                             | Secure   |                           |
+| System: backup / restore / reset           | Critical | api key or admin password |
+| API key regenerate                         | Critical | admin password            |
 
 Device test, create, and update (`/api/config/test/{class}` and `/api/config/devices/{class}`)
 instantiate a config immediately, so a `script` plugin in the payload runs a shell command on the

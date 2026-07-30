@@ -48,17 +48,11 @@
 						<button
 							type="button"
 							class="btn"
-							:class="
-								helpType === 'discussion'
-									? 'btn-outline-success'
-									: 'btn-outline-danger'
-							"
+							:class="helpType === 'discussion' ? 'btn-outline-success' : 'btn-outline-danger'"
 							:disabled="copying"
 							@click="copy"
 						>
-							{{
-								copied ? $t("issue.summary.copied") : $t("issue.summary.copyButton")
-							}}
+							{{ copied ? $t("issue.summary.copied") : $t("issue.summary.copyButton") }}
 						</button>
 					</template>
 				</CopyButton>

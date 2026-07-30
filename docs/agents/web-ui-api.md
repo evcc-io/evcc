@@ -11,12 +11,14 @@
 ## REST API (base `/api/`)
 
 ### Site-level
+
 - `POST /buffersoc/{value}`, `/prioritysoc/{value}`, `/residualpower/{value}` etc.
 - `GET /tariff/{tariff}` — tariff rates
 - `GET /sessions` — charging history
 - `GET /state` — complete system state (supports jq filtering)
 
 ### Per-loadpoint (`/loadpoints/{id}/...`)
+
 - `POST mode/{value}` — off/now/minpv/pv
 - `POST limitsoc/{value}`, `limitenergy/{value}` — charge limits
 - `POST mincurrent/{value}`, `maxcurrent/{value}` — current limits
@@ -27,19 +29,23 @@
 - `POST smartcostlimit/{value}` — smart cost threshold
 
 ### Configuration (`/config/...`, auth required)
+
 - CRUD for devices (chargers, meters, vehicles, tariffs)
 - Template browsing and testing
 - Site, loadpoint, circuit, HEMS, messaging config
 - `GET /config/evcc.yaml` — YAML export
 
 ### System (`/system/...`, auth required)
+
 - Log viewing (`/log`, `/log/areas`), cache clear, shutdown
 
 ### Database (`/db/...`, auth + second factor required)
+
 - Backup download, restore from file, selective reset
 - Second factor: admin password in request body, or API key via Bearer token (bypasses password check)
 
 ### Handler Pattern
+
 Generic `handler[T]` with type conversion, setter, getter.
 Specialized: `floatHandler`, `intHandler`, `boolHandler`, `durationHandler`.
 
@@ -51,7 +57,7 @@ Specialized: `floatHandler`, `intHandler`, `boolHandler`, `durationHandler`.
 - Welcome message with full state snapshot
 - Incremental updates as JSON key-value pairs with dot-notation keys:
   ```json
-  {"loadpoints.1.mode": "solar", "site.gridPower": 1234}
+  { "loadpoints.1.mode": "solar", "site.gridPower": 1234 }
   ```
 - Write timeout: 10s, compression (disabled for Safari)
 

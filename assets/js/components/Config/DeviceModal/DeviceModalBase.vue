@@ -506,8 +506,7 @@ export default defineComponent({
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
-				this.templateName =
-					this.isNew && this.defaultTemplate ? this.defaultTemplate : null;
+				this.templateName = this.isNew && this.defaultTemplate ? this.defaultTemplate : null;
 				this.reset();
 				this.test = initialTestState();
 				this.succeeded = false;
@@ -681,10 +680,7 @@ export default defineComponent({
 			if (!this.templateName || this.showYamlInput) return;
 			this.loadingTemplate = true;
 			try {
-				this.template = await this.device.loadTemplate(
-					this.templateName,
-					this.$i18n?.locale
-				);
+				this.template = await this.device.loadTemplate(this.templateName, this.$i18n?.locale);
 				this.applyDefaults();
 				this.checkAuthStatus();
 			} catch (e) {
@@ -777,8 +773,7 @@ export default defineComponent({
 		// reveal the admin password field when required, flag it invalid if a password was already sent
 		applyAdminPasswordState(status: number) {
 			this.adminPasswordRequired = status === ADMIN_PASSWORD_REQUIRED;
-			this.adminPasswordInvalid =
-				status === ADMIN_PASSWORD_REQUIRED && !!this.adminPasswordValue;
+			this.adminPasswordInvalid = status === ADMIN_PASSWORD_REQUIRED && !!this.adminPasswordValue;
 		},
 		async update(force = false) {
 			if (this.test.isUnknown && !force) {

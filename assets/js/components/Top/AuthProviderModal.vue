@@ -33,11 +33,7 @@
 				<!-- Auth code display (device flow) -->
 				<div v-if="auth.code">
 					<hr class="my-4" />
-					<AuthCodeDisplay
-						id="authProviderCode"
-						:code="auth.code"
-						:expiry="auth.expiry"
-					/>
+					<AuthCodeDisplay id="authProviderCode" :code="auth.code" :expiry="auth.expiry" />
 				</div>
 
 				<!-- Error display -->

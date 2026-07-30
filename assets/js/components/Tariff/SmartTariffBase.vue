@@ -253,9 +253,7 @@ export default defineComponent({
 		},
 		activeHoursText() {
 			const active =
-				this.limitDirection === "below"
-					? this.activeSlots.length
-					: this.warningSlots.length;
+				this.limitDirection === "below" ? this.activeSlots.length : this.warningSlots.length;
 			return this.fmtDurationLong(active * 15 * 60, "short");
 		},
 		limitOperator() {
@@ -326,10 +324,7 @@ export default defineComponent({
 					value !== undefined &&
 					value <= limit,
 				(value) =>
-					this.limitDirection === "above" &&
-					limit !== null &&
-					value !== undefined &&
-					value >= limit
+					this.limitDirection === "above" && limit !== null && value !== undefined && value >= limit
 			);
 		},
 		slotHovered(index: number) {

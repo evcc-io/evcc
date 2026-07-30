@@ -27,11 +27,7 @@
 				autocomplete="username"
 				value="admin"
 			/>
-			<FormRow
-				v-if="updateMode"
-				:id="formId('Current')"
-				:label="$t('passwordModal.labelCurrent')"
-			>
+			<FormRow v-if="updateMode" :id="formId('Current')" :label="$t('passwordModal.labelCurrent')">
 				<input
 					:id="formId('Current')"
 					v-model="passwordCurrent"
@@ -68,11 +64,7 @@
 			</FormRow>
 
 			<div class="d-flex justify-content-end">
-				<button
-					type="submit"
-					class="btn btn-primary justify-self-right"
-					:disabled="loading"
-				>
+				<button type="submit" class="btn btn-primary justify-self-right" :disabled="loading">
 					<span
 						v-if="loading"
 						class="spinner-border spinner-border-sm"

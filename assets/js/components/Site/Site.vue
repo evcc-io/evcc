@@ -31,10 +31,7 @@
 						{{ $t("main.welcome") }}
 					</h1>
 					<WelcomeIcons class="welcome-icons" />
-					<router-link
-						class="btn btn-lg btn-outline-primary configure-button"
-						to="/config"
-					>
+					<router-link class="btn btn-lg btn-outline-primary configure-button" to="/config">
 						{{ $t("main.startConfiguration") }}
 					</router-link>
 				</div>

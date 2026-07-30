@@ -12,9 +12,7 @@
 			Login Successfully
 		</button>
 
-		<button type="button" class="btn btn-danger w-100 mb-3" @click="mockDeny()">
-			Deny Access
-		</button>
+		<button type="button" class="btn btn-danger w-100 mb-3" @click="mockDeny()">Deny Access</button>
 	</div>
 
 	<!-- Regular Simulator View -->
@@ -94,19 +92,12 @@
 		>
 			<div class="d-flex justify-content-between my-2">
 				<h5>Loadpoint #{{ index }}</h5>
-				<a
-					v-if="index > 0"
-					class="link-danger"
-					href="#"
-					@click.prevent="removeLoadpoint(index)"
-				>
+				<a v-if="index > 0" class="link-danger" href="#" @click.prevent="removeLoadpoint(index)">
 					delete
 				</a>
 			</div>
 			<div class="row">
-				<label :for="`loadpointPower${index}`" class="col-sm-6 col-form-label">
-					Power
-				</label>
+				<label :for="`loadpointPower${index}`" class="col-sm-6 col-form-label"> Power </label>
 				<div class="col-sm-6">
 					<div class="input-group mb-3">
 						<input
@@ -120,9 +111,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<label :for="`loadpointEnergy${index}`" class="col-sm-6 col-form-label">
-					Energy
-				</label>
+				<label :for="`loadpointEnergy${index}`" class="col-sm-6 col-form-label"> Energy </label>
 				<div class="col-sm-6">
 					<div class="input-group mb-3">
 						<input
@@ -136,9 +125,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<label :for="`loadpointStatus${index}`" class="col-sm-6 col-form-label">
-					Status
-				</label>
+				<label :for="`loadpointStatus${index}`" class="col-sm-6 col-form-label"> Status </label>
 				<div class="col-sm-6 mb-3">
 					<div class="form-check">
 						<input
@@ -172,16 +159,12 @@
 							type="radio"
 							value="C"
 						/>
-						<label :for="`loadpointStatus${index}3`" class="form-check-label">
-							C (charging)
-						</label>
+						<label :for="`loadpointStatus${index}3`" class="form-check-label"> C (charging) </label>
 					</div>
 				</div>
 			</div>
 			<div class="row">
-				<label :for="`loadpointEnabled${index}`" class="col-sm-6 col-form-label">
-					Enabled
-				</label>
+				<label :for="`loadpointEnabled${index}`" class="col-sm-6 col-form-label"> Enabled </label>
 				<div class="col-sm-6 mb-3">
 					<div class="form-check form-switch">
 						<input
@@ -211,12 +194,7 @@
 		>
 			<div class="d-flex justify-content-between my-2">
 				<h5>Vehicle #{{ index }}</h5>
-				<a
-					v-if="index > 0"
-					class="link-danger"
-					href="#"
-					@click.prevent="removeVehicle(index)"
-				>
+				<a v-if="index > 0" class="link-danger" href="#" @click.prevent="removeVehicle(index)">
 					delete
 				</a>
 			</div>
@@ -308,12 +286,7 @@
 					<label for="ocppServerUrl" class="col-sm-6 col-form-label">Server URL</label>
 					<div class="col-sm-6">
 						<div class="input-group mb-3">
-							<input
-								id="ocppServerUrl"
-								v-model="ocppServerUrl"
-								type="text"
-								class="form-control"
-							/>
+							<input id="ocppServerUrl" v-model="ocppServerUrl" type="text" class="form-control" />
 						</div>
 					</div>
 				</div>
@@ -321,12 +294,7 @@
 					<label for="ocppStationId" class="col-sm-6 col-form-label">Station ID</label>
 					<div class="col-sm-6">
 						<div class="input-group mb-3">
-							<input
-								id="ocppStationId"
-								v-model="ocppStationId"
-								type="text"
-								class="form-control"
-							/>
+							<input id="ocppStationId" v-model="ocppStationId" type="text" class="form-control" />
 						</div>
 					</div>
 				</div>

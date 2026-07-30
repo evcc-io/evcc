@@ -62,10 +62,7 @@
 			</div>
 			<div v-else>
 				<div v-for="(m, index) in messengers" :key="index" class="my-4">
-					<DeviceRefBox
-						:data-testid="`messenger-box-${index}`"
-						@edit="openMessenger(m.id)"
-					>
+					<DeviceRefBox :data-testid="`messenger-box-${index}`" @edit="openMessenger(m.id)">
 						<small class="text-muted">#{{ index + 1 }}</small>
 						<span class="fw-semibold mx-3">{{ messengerType(m) }}</span>
 					</DeviceRefBox>
@@ -141,8 +138,7 @@ export default {
 			await openModal("messenger", { id });
 		},
 		messengerType(m: ConfigMessenger) {
-			const type =
-				m.type === "custom" ? this.$t("config.messenger.custom") : m.config.template;
+			const type = m.type === "custom" ? this.$t("config.messenger.custom") : m.config.template;
 			return capitalize(type ?? "");
 		},
 		async switchToTab(

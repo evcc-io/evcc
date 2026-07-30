@@ -43,8 +43,7 @@ export default defineComponent({
 		},
 		average(): string {
 			if (this.upcomingSlots.length === 0) return "";
-			const avg =
-				this.upcomingSlots.reduce((a, s) => a + s.value, 0) / this.upcomingSlots.length;
+			const avg = this.upcomingSlots.reduce((a, s) => a + s.value, 0) / this.upcomingSlots.length;
 			return this.fmtValue(avg);
 		},
 		range(): string {

@@ -42,16 +42,9 @@
 			<FormRow
 				id="loadpointParamTitle"
 				:label="$t('config.loadpoint.titleLabel')"
-				:example="
-					loadpointType ? $t(`config.loadpoint.titleExample.${loadpointType}`) : undefined
-				"
+				:example="loadpointType ? $t(`config.loadpoint.titleExample.${loadpointType}`) : undefined"
 			>
-				<PropertyField
-					id="loadpointParamTitle"
-					v-model="values.title"
-					type="String"
-					required
-				/>
+				<PropertyField id="loadpointParamTitle" v-model="values.title" type="String" required />
 			</FormRow>
 			<FormRow
 				v-if="charger || !isNew"
@@ -133,16 +126,8 @@
 							:help="
 								solarMode === 'default'
 									? $t('config.loadpoint.solarBehaviorDefaultHelp', {
-											enableDelay: fmtDurationNs(
-												values.thresholds.enable.delay,
-												true,
-												'm'
-											),
-											disableDelay: fmtDurationNs(
-												values.thresholds.disable.delay,
-												true,
-												'm'
-											),
+											enableDelay: fmtDurationNs(values.thresholds.enable.delay, true, 'm'),
+											disableDelay: fmtDurationNs(values.thresholds.disable.delay, true, 'm'),
 										})
 									: $t('config.loadpoint.solarBehaviorCustomHelp')
 							"
@@ -202,29 +187,13 @@
 									{{
 										values.thresholds.enable.threshold === 0
 											? $t("config.loadpoint.thresholdEnableHelpZero", {
-													delay: fmtDurationNs(
-														values.thresholds.enable.delay,
-														true,
-														"m"
-													),
+													delay: fmtDurationNs(values.thresholds.enable.delay, true, "m"),
 												})
 											: values.thresholds.enable.threshold < 0
-												? $t(
-														"config.loadpoint.thresholdEnableHelpNegative",
-														{
-															surplus: fmtW(
-																-1 *
-																	values.thresholds.enable
-																		.threshold,
-																powerUnit.AUTO
-															),
-															delay: fmtDurationNs(
-																values.thresholds.enable.delay,
-																true,
-																"m"
-															),
-														}
-													)
+												? $t("config.loadpoint.thresholdEnableHelpNegative", {
+														surplus: fmtW(-1 * values.thresholds.enable.threshold, powerUnit.AUTO),
+														delay: fmtDurationNs(values.thresholds.enable.delay, true, "m"),
+													})
 												: $t("config.loadpoint.thresholdEnableHelpInvalid")
 									}}
 								</div>
@@ -265,27 +234,13 @@
 									{{
 										values.thresholds.disable.threshold === 0
 											? $t("config.loadpoint.thresholdDisableHelpZero", {
-													delay: fmtDurationNs(
-														values.thresholds.disable.delay,
-														true,
-														"m"
-													),
+													delay: fmtDurationNs(values.thresholds.disable.delay, true, "m"),
 												})
 											: values.thresholds.disable.threshold > 0
-												? $t(
-														"config.loadpoint.thresholdDisableHelpPositive",
-														{
-															power: fmtW(
-																values.thresholds.disable.threshold,
-																powerUnit.AUTO
-															),
-															delay: fmtDurationNs(
-																values.thresholds.disable.delay,
-																true,
-																"m"
-															),
-														}
-													)
+												? $t("config.loadpoint.thresholdDisableHelpPositive", {
+														power: fmtW(values.thresholds.disable.threshold, powerUnit.AUTO),
+														delay: fmtDurationNs(values.thresholds.disable.delay, true, "m"),
+													})
 												: $t("config.loadpoint.thresholdDisableHelpInvalid")
 									}}
 								</div>
@@ -311,9 +266,7 @@
 
 						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
-							<small class="text-muted">{{
-								$t("config.loadpoint.electricalSubtitle")
-							}}</small>
+							<small class="text-muted">{{ $t("config.loadpoint.electricalSubtitle") }}</small>
 						</h6>
 
 						<FormRow
@@ -350,19 +303,12 @@
 							/>
 						</FormRow>
 
-						<div
-							v-if="!chargerIsSwitchDevice && chargerPower === 'other'"
-							class="row ms-3 mb-5"
-						>
+						<div v-if="!chargerIsSwitchDevice && chargerPower === 'other'" class="row ms-3 mb-5">
 							<FormRow
 								id="loadpointMinCurrent"
 								:label="$t('config.loadpoint.minCurrentLabel')"
 								class="col-sm-6 mb-sm-0"
-								:help="
-									values.minCurrent < 6
-										? $t('config.loadpoint.minCurrentHelp')
-										: undefined
-								"
+								:help="values.minCurrent < 6 ? $t('config.loadpoint.minCurrentHelp') : undefined"
 							>
 								<PropertyField
 									id="loadpointMinCurrent"
@@ -534,10 +480,7 @@
 											class="form-check-input"
 											type="checkbox"
 										/>
-										<label
-											class="form-check-label ms-2"
-											for="loadpointEstimate"
-										>
+										<label class="form-check-label ms-2" for="loadpointEstimate">
 											{{ $t("config.loadpoint.estimateLabel") }}
 										</label>
 									</div>
@@ -790,9 +733,7 @@ export default {
 			if (!name) return "";
 			const meter = this.meters.find((m) => m.name === name);
 			const title =
-				meter?.deviceProduct ||
-				meter?.config?.template ||
-				this.$t("config.general.customOption");
+				meter?.deviceProduct || meter?.config?.template || this.$t("config.general.customOption");
 			return title;
 		},
 		isDeletable() {

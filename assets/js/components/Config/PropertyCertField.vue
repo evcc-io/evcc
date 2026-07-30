@@ -2,11 +2,7 @@
 	<div>
 		<textarea :id="id" v-model="value" class="form-control" rows="3" :required="required" />
 		<div class="d-flex justify-content-end">
-			<button
-				type="button"
-				class="btn btn-link btn-sm text-muted pe-0"
-				@click="openFilePicker"
-			>
+			<button type="button" class="btn btn-link btn-sm text-muted pe-0" @click="openFilePicker">
 				{{ $t("config.general.readFromFile") }}
 			</button>
 			<input

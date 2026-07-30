@@ -9,11 +9,7 @@
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
-			<FormRow
-				id="mqttBroker"
-				:label="$t('config.mqtt.labelBroker')"
-				example="localhost:1883"
-			>
+			<FormRow id="mqttBroker" :label="$t('config.mqtt.labelBroker')" example="localhost:1883">
 				<input id="mqttBroker" v-model="values.broker" class="form-control" required />
 			</FormRow>
 
@@ -67,11 +63,7 @@
 					<FormRow id="mqttCaCert" :label="$t('config.mqtt.labelCaCert')" optional>
 						<PropertyCertField id="mqttCaCert" v-model="values.caCert" />
 					</FormRow>
-					<FormRow
-						id="mqttClientCert"
-						:label="$t('config.mqtt.labelClientCert')"
-						optional
-					>
+					<FormRow id="mqttClientCert" :label="$t('config.mqtt.labelClientCert')" optional>
 						<PropertyCertField id="mqttClientCert" v-model="values.clientCert" />
 					</FormRow>
 					<FormRow id="mqttClientKey" :label="$t('config.mqtt.labelClientKey')" optional>

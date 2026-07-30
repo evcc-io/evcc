@@ -140,8 +140,7 @@ export default defineComponent({
 					return {
 						label,
 						color: null,
-						value:
-							value === null ? "- %" : this.fmtPercentage((value as number) || 0, 1),
+						value: value === null ? "- %" : this.fmtPercentage((value as number) || 0, 1),
 					};
 				});
 			}

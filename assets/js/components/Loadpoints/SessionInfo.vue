@@ -135,9 +135,7 @@ export default defineComponent({
 			}));
 		},
 		selectedOption() {
-			return (
-				this.options.find((option) => option.key === this.selectedKey) || this.options[0]
-			);
+			return this.options.find((option) => option.key === this.selectedKey) || this.options[0];
 		},
 		label() {
 			return this.$t(`main.loadpoint.${this.selectedOption?.key || ""}`);

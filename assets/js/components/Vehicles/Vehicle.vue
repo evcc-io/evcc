@@ -199,7 +199,8 @@ export default defineComponent({
 			displayLimitSoc: this.effectiveLimitSoc,
 			statusOverride: undefined as VehicleStatus | undefined,
 			chargingPlanModal: this.$refs["chargingPlanModal"] as
-				InstanceType<typeof ChargingPlanModal> | undefined,
+				| InstanceType<typeof ChargingPlanModal>
+				| undefined,
 		};
 	},
 	computed: {

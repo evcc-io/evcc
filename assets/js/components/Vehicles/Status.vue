@@ -39,9 +39,7 @@
 					<div>
 						<span v-if="smartFeedInPriorityActive">{{ feedInNow }}</span>
 						≥
-						<span class="text-decoration-underline">{{
-							smartFeedInPriorityLimitFmt
-						}}</span>
+						<span class="text-decoration-underline">{{ smartFeedInPriorityLimitFmt }}</span>
 						<span v-if="smartFeedInPriorityNextStart">
 							({{ fmtAbsoluteDate(new Date(smartFeedInPriorityNextStart)) }})
 						</span>
@@ -378,9 +376,7 @@ export default defineComponent({
 							: "suggestionStopTooltip"
 					),
 					iconComponent:
-						this.suggestion?.action === "charge"
-							? OptimizerChargeIcon
-							: OptimizerPauseIcon,
+						this.suggestion?.action === "charge" ? OptimizerChargeIcon : OptimizerPauseIcon,
 					testId: "vehicle-status-suggestion",
 					clickable: true,
 					clickHandler: () => this.$router.push("/optimize"),
@@ -408,8 +404,7 @@ export default defineComponent({
 				},
 				{
 					id: "planStart",
-					visible:
-						this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled,
+					visible: this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled,
 					content: this.planProjectedStart
 						? this.fmtAbsoluteDate(new Date(this.planProjectedStart))
 						: "",

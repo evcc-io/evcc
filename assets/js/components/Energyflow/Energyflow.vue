@@ -47,9 +47,7 @@
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap align-items-center text-truncate">
 						<span class="me-2 legend-self"
-							><shopicon-filled-square
-								class="color-pv legend-pv"
-							></shopicon-filled-square>
+							><shopicon-filled-square class="color-pv legend-pv"></shopicon-filled-square>
 							<shopicon-filled-square
 								v-if="selfBattery > 0"
 								:class="`color-battery legend-battery legend-battery--${selfPv > 0 ? 'mixed' : 'only'}`"
@@ -59,10 +57,7 @@
 							{{ $t("main.energyflow.selfConsumption") }}
 						</span>
 					</div>
-					<div
-						v-if="gridImport > 0"
-						class="d-flex flex-nowrap align-items-center text-truncate"
-					>
+					<div v-if="gridImport > 0" class="d-flex flex-nowrap align-items-center text-truncate">
 						<span class="text-nowrap text-truncate">
 							{{ $t("main.energyflow.gridImport") }}
 						</span>
@@ -231,11 +226,7 @@
 										icon="vehicle"
 										:iconProps="{ names: [lp.icon] }"
 										:details="lp.vehicleSoc || undefined"
-										:detailsFmt="
-											lp.chargerFeatureHeating
-												? fmtLoadpointTemp
-												: fmtLoadpointSoc
-										"
+										:detailsFmt="lp.chargerFeatureHeating ? fmtLoadpointTemp : fmtLoadpointSoc"
 									/>
 								</template>
 							</EnergyflowEntry>
@@ -421,14 +412,10 @@ export default defineComponent({
 			return this.chargePower(this.batteryPower);
 		},
 		batteryChargeLabel() {
-			return this.$t(
-				`main.energyflow.battery${this.batteryChargeHold ? "ChargeHold" : "Charge"}`
-			);
+			return this.$t(`main.energyflow.battery${this.batteryChargeHold ? "ChargeHold" : "Charge"}`);
 		},
 		batteryDischargeLabel() {
-			return this.$t(
-				`main.energyflow.battery${this.batteryHold ? "DischargeHold" : "Discharge"}`
-			);
+			return this.$t(`main.energyflow.battery${this.batteryHold ? "DischargeHold" : "Discharge"}`);
 		},
 		batteryHold() {
 			return this.batteryMode === "hold";
@@ -507,9 +494,7 @@ export default defineComponent({
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 		},
 		batteryGridChargeLimitSet() {
-			return (
-				this.batteryGridChargeLimit !== null && this.batteryGridChargeLimit !== undefined
-			);
+			return this.batteryGridChargeLimit !== null && this.batteryGridChargeLimit !== undefined;
 		},
 		batteryGridChargeLimitFmt() {
 			if (!this.batteryGridChargeLimitSet) {

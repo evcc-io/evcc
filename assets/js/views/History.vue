@@ -29,8 +29,8 @@
 				</PeriodHeader>
 
 				<p class="text-muted small history-disclaimer mb-4">
-					Work in progress. Visualizations will change. The current focus is verifying
-					that the data is correct. Please report anything implausible.
+					Work in progress. Visualizations will change. The current focus is verifying that the data
+					is correct. Please report anything implausible.
 				</p>
 
 				<div v-if="loading && !visibleGroups.length" class="skeleton-stack">
@@ -61,11 +61,7 @@
 						:group="group"
 						:color="groupColor(group)"
 						:series="displaySeries(group)"
-						:overlay="
-							group === 'pv' && displayPeriod === 'day'
-								? seriesByGroup['forecast']
-								: []
-						"
+						:overlay="group === 'pv' && displayPeriod === 'day' ? seriesByGroup['forecast'] : []"
 						:overlayColor="groupColor('forecast')"
 						:overlayLabel="$t('main.history.group.forecast')"
 						:showOverlay="
@@ -265,9 +261,7 @@ export default defineComponent({
 				if (group !== "consumer") return this.seriesByGroup[group] || [];
 				const consumers = this.seriesByGroup["consumer"] || [];
 				const home = (this.seriesByGroup["home"] || [])[0];
-				const active = consumers
-					.map((s, i) => ({ ...s, paletteIndex: i }))
-					.filter(hasEnergy);
+				const active = consumers.map((s, i) => ({ ...s, paletteIndex: i })).filter(hasEnergy);
 				if (!home) return active;
 				const totals = new Map<string, number>();
 				// Net per slot is computed from all consumers (incl. inactive ones), so
@@ -297,9 +291,7 @@ export default defineComponent({
 		hasForecast(): boolean {
 			const list = this.seriesByGroup["forecast"];
 			if (!list?.length) return false;
-			return list.some((s) =>
-				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
-			);
+			return list.some((s) => s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0));
 		},
 		forecastTotalLabel(): string {
 			const list = this.seriesByGroup["forecast"] || [];
@@ -440,9 +432,7 @@ export default defineComponent({
 			// Consumption total comes from `home` (overall consumption),
 			// not the sum of explicit meter entities.
 			const list =
-				group === "consumer"
-					? this.seriesByGroup["home"] || []
-					: this.seriesByGroup[group] || [];
+				group === "consumer" ? this.seriesByGroup["home"] || [] : this.seriesByGroup[group] || [];
 			let sumEnergy = 0;
 			let sumReturnEnergy = 0;
 			for (const s of list) {
@@ -457,8 +447,7 @@ export default defineComponent({
 			const returnEnergyKey = `${directionKey}.returnEnergy`;
 			const energyLabel = this.$t(energyKey);
 			const returnEnergyLabel = this.$t(returnEnergyKey);
-			const hasDirectionLabels =
-				energyLabel !== energyKey && returnEnergyLabel !== returnEnergyKey;
+			const hasDirectionLabels = energyLabel !== energyKey && returnEnergyLabel !== returnEnergyKey;
 			if (sumEnergy > 0 && sumReturnEnergy > 0 && hasDirectionLabels) {
 				return `${fmt(sumEnergy)} ${energyLabel} · ${fmt(sumReturnEnergy)} ${returnEnergyLabel}`;
 			}

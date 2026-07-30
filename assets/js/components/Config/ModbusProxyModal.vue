@@ -88,9 +88,7 @@
 								<ModbusProxyConnection
 									:connection="c"
 									:index="index"
-									@update:connection="
-										(connection) => (values[index] = connection)
-									"
+									@update:connection="(connection) => (values[index] = connection)"
 								/>
 							</div>
 						</div>
@@ -102,10 +100,7 @@
 						tabindex="0"
 						@click="values.splice(index, 1)"
 					>
-						<shopicon-regular-trash
-							size="s"
-							class="flex-shrink-0"
-						></shopicon-regular-trash>
+						<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 						{{ $t("config.general.remove") }}
 					</button>
 				</div>
@@ -114,9 +109,7 @@
 					type="button"
 					class="d-flex btn btn-sm align-items-center gap-2 mb-5"
 					:class="
-						values.length === 0
-							? 'btn-secondary'
-							: 'btn-outline-secondary border-0 evcc-gray'
+						values.length === 0 ? 'btn-secondary' : 'btn-outline-secondary border-0 evcc-gray'
 					"
 					data-testid="networkconnection-add"
 					tabindex="0"

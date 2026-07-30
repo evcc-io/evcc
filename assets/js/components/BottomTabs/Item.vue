@@ -6,14 +6,8 @@
 		:class="{ active: !to && active }"
 		:data-testid="label ? `tab-${label.toLowerCase()}` : undefined"
 	>
-		<span
-			class="tab-content d-flex flex-column flex-md-row align-items-center position-relative"
-		>
-			<span
-				v-if="badge"
-				class="tab-badge circle-badge position-absolute"
-				:class="badge"
-			></span>
+		<span class="tab-content d-flex flex-column flex-md-row align-items-center position-relative">
+			<span v-if="badge" class="tab-badge circle-badge position-absolute" :class="badge"></span>
 			<slot />
 			<span
 				v-if="label"

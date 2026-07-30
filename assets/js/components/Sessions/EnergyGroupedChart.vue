@@ -70,9 +70,7 @@ export default defineComponent({
 			);
 			const data = sortedEntries.map(([, value]) => value);
 			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
-			const backgroundColor = sortedEntries.map(
-				([label]) => this.colorMappings[colorGroup][label]
-			);
+			const backgroundColor = sortedEntries.map(([label]) => this.colorMappings[colorGroup][label]);
 
 			return {
 				labels: labels,
@@ -84,8 +82,7 @@ export default defineComponent({
 			const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
 			const maxEnergy = Math.max(...dataset.data);
 			// sync energy units for label grid view
-			const unit =
-				maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e4 ? POWER_UNIT.MW : POWER_UNIT.KW;
+			const unit = maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e4 ? POWER_UNIT.MW : POWER_UNIT.KW;
 			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
 			const fmtValue = (value: number) => this.fmtWh(value * 1e3, unit);
 			const pickable = this.groupBy !== GROUPS.NONE;

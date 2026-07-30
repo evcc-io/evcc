@@ -64,9 +64,7 @@ export default defineComponent({
 		},
 		gridChargePossible() {
 			const devices = this.state.battery?.devices ?? [];
-			return (
-				devices.some(({ controllable }) => controllable) && this.state.smartCostAvailable
-			);
+			return devices.some(({ controllable }) => controllable) && this.state.smartCostAvailable;
 		},
 		gridChargeLimit() {
 			return this.state.batteryGridChargeLimit ?? null;

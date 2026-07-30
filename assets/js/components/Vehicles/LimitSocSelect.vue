@@ -52,9 +52,7 @@ export default defineComponent({
 			return this.heating ? 1 : 5;
 		},
 		title() {
-			return this.heating
-				? this.$t("main.vehicle.tempLimit")
-				: this.$t("main.vehicle.targetSoc");
+			return this.heating ? this.$t("main.vehicle.tempLimit") : this.$t("main.vehicle.targetSoc");
 		},
 		estimatedTargetRange() {
 			return this.estimatedRange(this.limitSoc);
@@ -62,10 +60,7 @@ export default defineComponent({
 	},
 	methods: {
 		change(e: Event) {
-			return this.$emit(
-				"limit-soc-updated",
-				parseInt((e.target as HTMLSelectElement).value, 10)
-			);
+			return this.$emit("limit-soc-updated", parseInt((e.target as HTMLSelectElement).value, 10));
 		},
 		estimatedRange(soc: number) {
 			if (this.rangePerSoc) {

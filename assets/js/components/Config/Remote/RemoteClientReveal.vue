@@ -4,15 +4,10 @@
 			<li>
 				<i18n-t keypath="config.remote.qrInstall" scope="global">
 					<template #ios>
-						<a href="https://apps.apple.com/app/evcc-io/id6478510176" target="_blank">
-							iOS
-						</a>
+						<a href="https://apps.apple.com/app/evcc-io/id6478510176" target="_blank"> iOS </a>
 					</template>
 					<template #android>
-						<a
-							href="https://play.google.com/store/apps/details?id=io.evcc.android"
-							target="_blank"
-						>
+						<a href="https://play.google.com/store/apps/details?id=io.evcc.android" target="_blank">
 							Android
 						</a>
 					</template>

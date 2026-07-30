@@ -53,12 +53,7 @@
 			></textarea>
 
 			<div class="d-flex justify-content-end mt-3">
-				<button
-					v-if="hasChanges"
-					type="button"
-					class="btn btn-primary"
-					@click="applyAndClose"
-				>
+				<button v-if="hasChanges" type="button" class="btn btn-primary" @click="applyAndClose">
 					{{ $t("config.general.applyAndClose") }}
 				</button>
 				<button v-else type="button" class="btn btn-secondary" @click="closeModal">

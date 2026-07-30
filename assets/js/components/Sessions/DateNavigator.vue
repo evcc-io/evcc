@@ -87,10 +87,7 @@
 				:selected="month"
 				@change="emitMonthYear($event.target.value)"
 			>
-				<button
-					class="btn btn-sm border-0 h-100 text-truncate"
-					data-testid="navigate-month-year"
-				>
+				<button class="btn btn-sm border-0 h-100 text-truncate" data-testid="navigate-month-year">
 					{{ monthYearName }}
 				</button>
 			</CustomSelect>
@@ -120,11 +117,7 @@
 				:selected="year"
 				@change="emitYear($event.target.value)"
 			>
-				<button
-					class="btn btn-sm border-0 h-100"
-					style="width: 4em"
-					data-testid="navigate-year"
-				>
+				<button class="btn btn-sm border-0 h-100" style="width: 4em" data-testid="navigate-year">
 					{{ year }}
 				</button>
 			</CustomSelect>
@@ -190,10 +183,7 @@ export default defineComponent({
 			return dateOnly(next).getTime() <= dateOnly(new Date()).getTime();
 		},
 		hasPrevMonth() {
-			return (
-				this.year > this.startDate.getFullYear() ||
-				this.month > this.startDate.getMonth() + 1
-			);
+			return this.year > this.startDate.getFullYear() || this.month > this.startDate.getMonth() + 1;
 		},
 		hasNextMonth() {
 			const now = new Date();

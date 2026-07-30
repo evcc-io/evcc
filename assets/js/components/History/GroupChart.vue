@@ -299,15 +299,13 @@ export default defineComponent({
 			this.series.forEach((s, i) => {
 				const energyValues: (number | null)[] = new Array(cats.length).fill(null);
 				const returnEnergyValues: (number | null)[] = new Array(cats.length).fill(null);
-				const hidden =
-					this.focusedEntity !== null && this.focusedEntity !== (s.paletteIndex ?? i);
+				const hidden = this.focusedEntity !== null && this.focusedEntity !== (s.paletteIndex ?? i);
 				if (!hidden) {
 					for (const slot of s.data) {
 						const idx = index.get(slotKey(slot.start));
 						if (idx === undefined) continue;
 						if (slot.energy > 0) energyValues[idx] = slot.energy * factor;
-						if (slot.returnEnergy > 0)
-							returnEnergyValues[idx] = -slot.returnEnergy * factor;
+						if (slot.returnEnergy > 0) returnEnergyValues[idx] = -slot.returnEnergy * factor;
 					}
 				}
 				energyByEntity.push(energyValues);
@@ -350,18 +348,20 @@ export default defineComponent({
 				// top entity doesn't drop the rounding; a focused entity is solo.
 				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
-					number | null | { value: number; itemStyle: { borderRadius: number[] } }
+					| number
+					| null
+					| { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
-						!this.stackEntities ||
-						topEnergyPerSlot[idx] === i ||
-						this.focusedEntity === stableIdx;
+						!this.stackEntities || topEnergyPerSlot[idx] === i || this.focusedEntity === stableIdx;
 					if (!isTop) return v;
 					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
 				});
 				const returnEnergyData: (
-					number | null | { value: number; itemStyle: { borderRadius: number[] } }
+					| number
+					| null
+					| { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
@@ -481,12 +481,11 @@ export default defineComponent({
 						let sum = 0;
 						let hasBar = false;
 						for (const p of arr) {
-							if (!/^entity-\d+-(energy|returnEnergy)$/.test(p.seriesId || ""))
-								continue;
+							if (!/^entity-\d+-(energy|returnEnergy)$/.test(p.seriesId || "")) continue;
 							if (p.value == null) continue;
 							hasBar = true;
 							if (typeof p.value === "number" && p.value > 0) {
-								if (/-energy$/.test(p.seriesId)) sum += p.value;
+								if (p.seriesId.endsWith('-energy')) sum += p.value;
 							}
 						}
 						let x = point[0] - w / 2;
@@ -545,30 +544,22 @@ export default defineComponent({
 							this.focusedEntity !== null
 								? [this.focusedEntity]
 								: this.series.map((s, i) => s.paletteIndex ?? i);
-						const nameByIdx = new Map(
-							this.series.map((s, i) => [s.paletteIndex ?? i, s.title])
-						);
+						const nameByIdx = new Map(this.series.map((s, i) => [s.paletteIndex ?? i, s.title]));
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
 						// one unit for all rows, based on the largest individual value (not the total)
-						const rowValues = indices.map(
-							(i) => totals.get(i) ?? { energy: 0, returnEnergy: 0 }
-						);
+						const rowValues = indices.map((i) => totals.get(i) ?? { energy: 0, returnEnergy: 0 });
 						const unit = this.getPowerUnit(
 							Math.max(
 								0,
 								...rowValues.flatMap((t) =>
-									this.isBidirectional
-										? [t.energy, t.returnEnergy]
-										: [t.energy + t.returnEnergy]
+									this.isBidirectional ? [t.energy, t.returnEnergy] : [t.energy + t.returnEnergy]
 								)
 							) * 1000
 						);
 						const formatValue = (v: number) => {
 							const watts = Math.abs(v) * 1000;
-							return this.period === PERIODS.DAY
-								? this.fmtW(watts, unit)
-								: this.fmtWh(watts, unit);
+							return this.period === PERIODS.DAY ? this.fmtW(watts, unit) : this.fmtWh(watts, unit);
 						};
 
 						const rows: TooltipRow[] = indices.map((i, idx) => {
@@ -611,8 +602,7 @@ export default defineComponent({
 						...xAxisLabelStyle(),
 						hideOverlap: !(this.period === PERIODS.YEAR && this.isMobile),
 						interval:
-							this.period === PERIODS.DAY ||
-							(this.period === PERIODS.YEAR && this.isMobile)
+							this.period === PERIODS.DAY || (this.period === PERIODS.YEAR && this.isMobile)
 								? 0
 								: "auto",
 						formatter: (_value: string, index: number) => formatLabel(cats[index] ?? 0),

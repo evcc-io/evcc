@@ -9,11 +9,7 @@
 					<th scope="col" class="align-top ps-0">
 						{{ $t("sessions.date") }}
 					</th>
-					<th
-						scope="col"
-						class="align-top d-none d-md-table-cell"
-						data-testid="loadpoint"
-					>
+					<th scope="col" class="align-top d-none d-md-table-cell" data-testid="loadpoint">
 						{{ $t("sessions.loadpoint") }}
 						<CustomSelect
 							:selected="loadpointFilter"
@@ -21,9 +17,7 @@
 							data-testid="filter-loadpoint"
 							@change="changeLoadpointFilter"
 						>
-							<span
-								class="fw-normal text-decoration-underline text-nowrap text-gray pe-none"
-							>
+							<span class="fw-normal text-decoration-underline text-nowrap text-gray pe-none">
 								{{ loadpointFilter || $t("sessions.filter.filter") }}
 							</span>
 						</CustomSelect>
@@ -36,9 +30,7 @@
 							data-testid="filter-vehicle"
 							@change="changeVehicleFilter"
 						>
-							<span
-								class="fw-normal text-decoration-underline text-nowrap text-gray pe-none"
-							>
+							<span class="fw-normal text-decoration-underline text-nowrap text-gray pe-none">
 								{{ vehicleFilter || $t("sessions.filter.filter") }}
 							</span>
 						</CustomSelect>
@@ -145,11 +137,7 @@
 						<div>{{ session.loadpoint }}</div>
 						<div>{{ session.vehicle }}</div>
 					</td>
-					<td
-						v-for="column in columnsPerBreakpoint"
-						:key="column.name"
-						class="text-end tabular"
-					>
+					<td v-for="column in columnsPerBreakpoint" :key="column.name" class="text-end tabular">
 						<span v-if="column.value(session) === null" class="text-gray"> - </span>
 						<span v-else>{{ column.format(column.value(session) || 0) }}</span>
 					</td>
@@ -277,8 +265,7 @@ export default defineComponent({
 						}
 						return null;
 					},
-					format: (value) =>
-						value ? this.fmtW(value * 1e3, POWER_UNIT.KW, false, 1) : undefined,
+					format: (value) => (value ? this.fmtW(value * 1e3, POWER_UNIT.KW, false, 1) : undefined),
 				},
 			];
 			// only columns with values are shown
@@ -351,9 +338,7 @@ export default defineComponent({
 			return this.filteredSessions.reduce((total, s) => total + s.chargedEnergy, 0);
 		},
 		chargedSoc() {
-			const sessions = this.filteredSessions.filter(
-				(s) => s.socStart != null && s.socEnd != null
-			);
+			const sessions = this.filteredSessions.filter((s) => s.socStart != null && s.socEnd != null);
 			if (!sessions.length) return null;
 			return sessions.reduce(
 				(total, s) => total + Math.max(0, (s.socEnd || 0) - (s.socStart || 0)),

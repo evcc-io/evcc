@@ -16,11 +16,7 @@
 				<RestartButton restarting @restart="restart" />
 				{{ $t("offline.restarting") }}
 			</div>
-			<div
-				v-else-if="restartNeeded"
-				class="d-flex align-items-center"
-				data-testid="restart-needed"
-			>
+			<div v-else-if="restartNeeded" class="d-flex align-items-center" data-testid="restart-needed">
 				<RestartButton @restart="restart" />
 				{{ $t("offline.restartNeeded") }}
 			</div>
@@ -53,22 +49,14 @@
 							</strong>
 						</div>
 						<div class="d-flex flex-column gap-1">
-							<div
-								v-for="fatalText in fatalTexts"
-								:key="fatalText"
-								class="text-break"
-							>
+							<div v-for="fatalText in fatalTexts" :key="fatalText" class="text-break">
 								{{ fatalText }}
 							</div>
 						</div>
 					</div>
 				</div>
 				<div class="ms-auto d-flex align-items-center gap-3">
-					<button
-						type="button"
-						class="btn btn-link btn-sm text-reset p-0"
-						@click="dismiss"
-					>
+					<button type="button" class="btn btn-link btn-sm text-reset p-0" @click="dismiss">
 						{{ $t("config.general.dismiss") }}
 					</button>
 					<RestartButton error @restart="restart" />
@@ -116,11 +104,7 @@ export default defineComponent({
 		},
 		visible() {
 			return (
-				this.starting ||
-				this.offline ||
-				this.restartNeeded ||
-				this.restarting ||
-				this.showError
+				this.starting || this.offline || this.restartNeeded || this.restarting || this.showError
 			);
 		},
 		showError() {

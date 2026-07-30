@@ -1,13 +1,7 @@
 <template>
 	<div>
 		<div class="chart-container my-3">
-			<Chart
-				ref="chartRef"
-				type="bar"
-				:data="chartData"
-				:options="chartOptions"
-				:height="300"
-			/>
+			<Chart ref="chartRef" type="bar" :data="chartData" :options="chartOptions" :height="300" />
 		</div>
 		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
@@ -205,9 +199,7 @@ export default defineComponent({
 									cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
 								}
 
-								const currentTime = new Date(
-									startTime.getTime() + cumulativeSeconds * 1000
-								);
+								const currentTime = new Date(startTime.getTime() + cumulativeSeconds * 1000);
 								const hour = currentTime.getHours();
 								const minute = currentTime.getMinutes();
 

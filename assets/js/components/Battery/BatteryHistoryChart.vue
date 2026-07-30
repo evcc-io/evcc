@@ -212,8 +212,7 @@ export default defineComponent({
 
 				// animate only on real paging (dayOffset change); forecast arrival and clock
 				// advance also shift the window but must not trigger the slide
-				const paging =
-					this.hasRendered && !modeChanged && this.dayOffset !== this.prevDayOffset;
+				const paging = this.hasRendered && !modeChanged && this.dayOffset !== this.prevDayOffset;
 				const fromStart = this.prevWinStart;
 				const fromEnd = this.prevWinEnd;
 
@@ -342,9 +341,7 @@ export default defineComponent({
 					return [t, soc == null ? 0 : soc * factor] as Point;
 				});
 		},
-		tooltipFormatter(
-			params: { axisValue: number; seriesId?: string; value?: Point }[]
-		): string {
+		tooltipFormatter(params: { axisValue: number; seriesId?: string; value?: Point }[]): string {
 			const arr = Array.isArray(params) ? params : [params];
 			if (!arr.length) return "";
 			const t = new Date(arr[0]!.axisValue);
@@ -357,13 +354,10 @@ export default defineComponent({
 			const rows: TooltipRow[] = [];
 			this.batteries.forEach((b) => {
 				// past points come from the hist series, future ones from the fc series
-				const v =
-					byId.get(this.seriesId(b.id, "hist")) ?? byId.get(this.seriesId(b.id, "fc"));
+				const v = byId.get(this.seriesId(b.id, "hist")) ?? byId.get(this.seriesId(b.id, "fc"));
 				if (v == null) return;
 				const val =
-					this.mode === "soc"
-						? this.fmtPercentage(v)
-						: this.fmtWh(v * 1e3, POWER_UNIT.KW, true, 1);
+					this.mode === "soc" ? this.fmtPercentage(v) : this.fmtWh(v * 1e3, POWER_UNIT.KW, true, 1);
 				rows.push({ name: this.batteries.length > 1 ? b.title : undefined, values: [val] });
 			});
 			if (!rows.length) return "";
@@ -429,9 +423,7 @@ export default defineComponent({
 					// batteries near empty push the stack past the grid, shift it back up
 					const bottom = this.chart.getHeight() - GRID.bottom - BADGE_GAP / 2;
 					const overflow = Math.max(0, (ys.at(-1) ?? 0) - bottom);
-					badges.forEach((b, i) =>
-						badge(b.px, b.text, b.fill, "#fff", ys[i]! - overflow)
-					);
+					badges.forEach((b, i) => badge(b.px, b.text, b.fill, "#fff", ys[i]! - overflow));
 				} else {
 					// focused: that battery's energy (its band is the only one shown); else the total
 					const f = this.focused;

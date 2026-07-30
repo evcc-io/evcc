@@ -51,11 +51,7 @@
 						class="form-select form-select-sm"
 						@change="setMinTemp"
 					>
-						<option
-							v-for="{ value, name } in minTempOptions"
-							:key="value"
-							:value="value"
-						>
+						<option v-for="{ value, name } in minTempOptions" :key="value" :value="value">
 							{{ name }}
 						</option>
 					</select>
@@ -74,17 +70,12 @@
 				{{ $t("main.loadpointSettings.currents") }}
 			</h6>
 			<div v-if="phasesOptions.length" class="mb-3 row">
-				<label
-					:for="formId(`phases_${phasesOptions[0]}`)"
-					class="col-sm-4 col-form-label pt-0"
-				>
+				<label :for="formId(`phases_${phasesOptions[0]}`)" class="col-sm-4 col-form-label pt-0">
 					{{ $t("main.loadpointSettings.phasesConfigured.label") }}
 				</label>
 				<div class="col-sm-8 pe-0">
 					<p v-if="!loadpoint?.chargerPhases1p3p" class="mt-0 mb-2">
-						<small>
-							{{ $t("main.loadpointSettings.phasesConfigured.no1p3pSupport") }}</small
-						>
+						<small> {{ $t("main.loadpointSettings.phasesConfigured.no1p3pSupport") }}</small>
 					</p>
 					<div v-for="phases in phasesOptions" :key="phases" class="form-check">
 						<input
@@ -100,13 +91,10 @@
 							{{ $t(`main.loadpointSettings.phasesConfigured.phases_${phases}`) }}
 							<small v-if="phases > 0">
 								{{
-									$t(
-										`main.loadpointSettings.phasesConfigured.phases_${phases}_hint`,
-										{
-											min: fmtPhasePower(minCurrent, phases),
-											max: fmtPhasePower(maxCurrent, phases),
-										}
-									)
+									$t(`main.loadpointSettings.phasesConfigured.phases_${phases}_hint`, {
+										min: fmtPhasePower(minCurrent, phases),
+										max: fmtPhasePower(maxCurrent, phases),
+									})
 								}}
 							</small>
 						</label>
@@ -125,11 +113,7 @@
 						class="form-select form-select-sm"
 						@change="setMaxCurrent"
 					>
-						<option
-							v-for="{ value, name } in maxCurrentOptions"
-							:key="value"
-							:value="value"
-						>
+						<option v-for="{ value, name } in maxCurrentOptions" :key="value" :value="value">
 							{{ name }}
 						</option>
 					</select>
@@ -147,11 +131,7 @@
 						class="form-select form-select-sm"
 						@change="setMinCurrent"
 					>
-						<option
-							v-for="{ value, name } in minCurrentOptions"
-							:key="value"
-							:value="value"
-						>
+						<option v-for="{ value, name } in minCurrentOptions" :key="value" :value="value">
 							{{ name }}
 						</option>
 					</select>

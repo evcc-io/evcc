@@ -58,10 +58,7 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				class="site-progress-bar unknown-power"
-				:style="{ width: widthTotal(unknownPower) }"
-			>
+			<div class="site-progress-bar unknown-power" :style="{ width: widthTotal(unknownPower) }">
 				<AnimatedNumber
 					v-if="unknownPower && visualizationReady"
 					class="power"

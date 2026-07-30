@@ -36,10 +36,7 @@
 				</p>
 
 				<form @submit.prevent="openBackupRestoreConfirmModal('restore')">
-					<FormRow
-						id="restoreFile"
-						:label="$t('config.system.backupRestore.restore.labelFile')"
-					>
+					<FormRow id="restoreFile" :label="$t('config.system.backupRestore.restore.labelFile')">
 						<PropertyFileField
 							id="restoreFile"
 							ref="fileInput"
@@ -73,9 +70,7 @@
 								<span>{{ $t("config.system.backupRestore.reset.sessions") }}</span>
 								<br />
 								<small>
-									{{
-										$t("config.system.backupRestore.reset.sessionsDescription")
-									}}
+									{{ $t("config.system.backupRestore.reset.sessionsDescription") }}
 								</small>
 							</label>
 						</div>
@@ -91,9 +86,7 @@
 								<span>{{ $t("config.system.backupRestore.reset.settings") }}</span>
 								<br />
 								<small>
-									{{
-										$t("config.system.backupRestore.reset.settingsDescription")
-									}}
+									{{ $t("config.system.backupRestore.reset.settingsDescription") }}
 								</small>
 							</label>
 						</div>
@@ -123,9 +116,7 @@
 		>
 			<form @submit.prevent="submit">
 				<p>
-					<span>{{
-						$t(`config.system.backupRestore.${confirmType}.confirmationText`)
-					}}</span>
+					<span>{{ $t(`config.system.backupRestore.${confirmType}.confirmationText`) }}</span>
 				</p>
 
 				<PasswordInput
@@ -232,9 +223,7 @@ export default defineComponent({
 			this.file = null;
 			this.navigateHomeAfterRestart = false;
 			this.hideBackupRestoreModal = false;
-			(
-				this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined
-			)?.reset();
+			(this.$refs["fileInput"] as InstanceType<typeof PropertyFileField> | undefined)?.reset();
 		},
 		reset() {
 			this.resetBackupRestoreConfirmModal();
@@ -315,9 +304,7 @@ export default defineComponent({
 			const formData = new FormData();
 			formData.append("file", this.file!);
 
-			const res = await this.call(
-				api.post("/db/restore", formData, { headers, validateStatus })
-			);
+			const res = await this.call(api.post("/db/restore", formData, { headers, validateStatus }));
 
 			if (res) {
 				this.hideBackupRestoreModal = true;

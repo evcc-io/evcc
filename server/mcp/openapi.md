@@ -14,8 +14,8 @@ Changes the admin password.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name        | Type   | Description            |
+| ----------- | ------ | ---------------------- |
 | requestBody | object | The JSON request body. |
 
 **Example call:**
@@ -31,7 +31,6 @@ call changePassword {
 Reports whether an API key has been generated. The key itself is
 only returned once at creation time (POST), never on subsequent
 reads.
-
 
 **Tags:** auth
 
@@ -49,8 +48,8 @@ Administrator login. Returns authorization cookie required for all protected end
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name        | Type   | Description            |
+| ----------- | ------ | ---------------------- |
 | requestBody | object | The JSON request body. |
 
 **Example call:**
@@ -77,13 +76,12 @@ admin password must be supplied in the request body to prevent a
 leaked key from rotating itself. The password check is skipped
 when the server is started with `--disable-auth`.
 
-
 **Tags:** auth
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name        | Type   | Description            |
+| ----------- | ------ | ---------------------- |
 | requestBody | object | The JSON request body. |
 
 **Example call:**
@@ -114,8 +112,8 @@ Prevent home battery discharge during vehicle fast charging.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name   | Type   | Description    |
+| ------ | ------ | -------------- |
 | enable | string | Charging mode. |
 
 **Example call:**
@@ -134,8 +132,8 @@ Charge home battery from grid when price or emissions are below the threshold. U
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description                                                           |
+| ---- | ------ | --------------------------------------------------------------------- |
 | cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
 
 **Example call:**
@@ -154,8 +152,8 @@ Allow the home battery to discharge to the grid (experimental).
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name   | Type   | Description    |
+| ------ | ------ | -------------- |
 | enable | string | Charging mode. |
 
 **Example call:**
@@ -174,9 +172,9 @@ Set battery buffer SoC.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| soc | number | SOC in % |
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
+| soc  | number | SOC in %    |
 
 **Example call:**
 
@@ -194,9 +192,9 @@ Set battery buffer start SoC.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| soc | number | SOC in % |
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
+| soc  | number | SOC in %    |
 
 **Example call:**
 
@@ -214,8 +212,8 @@ Directly controls the mode of all controllable batteries. evcc behavior like 'pr
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name        | Type   | Description  |
+| ----------- | ------ | ------------ |
 | batteryMode | string | Battery mode |
 
 **Example call:**
@@ -234,9 +232,9 @@ Set battery priority SoC.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| soc | number | SOC in % |
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
+| soc  | number | SOC in %    |
 
 **Example call:**
 
@@ -254,9 +252,9 @@ Set grid connection operating point.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| power | number | Power in W |
+| Name  | Type   | Description |
+| ----- | ------ | ----------- |
+| power | number | Power in W  |
 
 **Example call:**
 
@@ -274,8 +272,8 @@ Downloads the SQLite database as a backup file. Session users must supply the ad
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name             | Type   | Description                                                        |
+| ---------------- | ------ | ------------------------------------------------------------------ |
 | X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
 
 **Example call:**
@@ -294,10 +292,10 @@ Selectively deletes sessions and/or settings from the database. Session users mu
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name             | Type   | Description                                                        |
+| ---------------- | ------ | ------------------------------------------------------------------ |
 | X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
-| requestBody | object | The JSON request body. |
+| requestBody      | object | The JSON request body.                                             |
 
 **Example call:**
 
@@ -316,8 +314,8 @@ Restores the database from a previously downloaded backup file. Session users mu
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name             | Type   | Description                                                        |
+| ---------------- | ------ | ------------------------------------------------------------------ |
 | X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
 
 **Example call:**
@@ -336,17 +334,17 @@ Returns aggregated energy history data. Aggregate granularity defaults to 15 min
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| aggregate | string | Aggregation interval. Examples: 15m, 1h, day, month |
-| format | string | Response format |
-| from | string | Start time (RFC3339) |
-| group | string | Filter by entity group |
-| grouped | boolean | Group results by loadpoint |
-| lang | string | Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header. |
-| name | string | Filter by entity name |
-| title | string | Filter by entity title |
-| to | string | End time (RFC3339) |
+| Name      | Type    | Description                                                                                |
+| --------- | ------- | ------------------------------------------------------------------------------------------ |
+| aggregate | string  | Aggregation interval. Examples: 15m, 1h, day, month                                        |
+| format    | string  | Response format                                                                            |
+| from      | string  | Start time (RFC3339)                                                                       |
+| group     | string  | Filter by entity group                                                                     |
+| grouped   | boolean | Group results by loadpoint                                                                 |
+| lang      | string  | Language for CSV column headers (BCP 47, e.g. de, en). Defaults to Accept-Language header. |
+| name      | string  | Filter by entity name                                                                      |
+| title     | string  | Filter by entity title                                                                     |
+| to        | string  | End time (RFC3339)                                                                         |
 
 **Example call:**
 
@@ -372,8 +370,8 @@ Adjust the solar forecast to real production data of the current day.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name   | Type   | Description    |
+| ------ | ------ | -------------- |
 | enable | string | Charging mode. |
 
 **Example call:**
@@ -392,9 +390,9 @@ Returns the complete state of the system. This structure is used by the UI. It c
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| jq | string | Filter the state with JQ |
+| Name | Type   | Description              |
+| ---- | ------ | ------------------------ |
+| jq   | string | Filter the state with JQ |
 
 **Example call:**
 
@@ -424,8 +422,8 @@ Convenience method to set smart charging cost limit for all loadpoints at once. 
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description                                                           |
+| ---- | ------ | --------------------------------------------------------------------- |
 | cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
 
 **Example call:**
@@ -444,8 +442,8 @@ Convenience method to set smart feed-in priority limit for all loadpoints at onc
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description                                                           |
+| ---- | ------ | --------------------------------------------------------------------- |
 | cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
 
 **Example call:**
@@ -464,10 +462,10 @@ Assigns vehicle to loadpoint.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| name | string | Vehicle name |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
+| name | string  | Vehicle name                  |
 
 **Example call:**
 
@@ -486,9 +484,9 @@ Delete charging plan. Only available when a vehicle without SoC is connected.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -506,9 +504,9 @@ Delete cost or emission limit for fast-charging with grid energy.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -526,9 +524,9 @@ Delete limit for feed-in priority optimization.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -546,9 +544,9 @@ Returns the current charging plan for this loadpoint.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -566,11 +564,11 @@ Simulate charging plan based on energy goal. Does not alter the actual charging 
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| energy | number | Energy in kWh |
-| id | integer | Loadpoint index starting at 1 |
-| timestamp | string | Timestamp in RFC3339 format |
+| Name      | Type    | Description                   |
+| --------- | ------- | ----------------------------- |
+| energy    | number  | Energy in kWh                 |
+| id        | integer | Loadpoint index starting at 1 |
+| timestamp | string  | Timestamp in RFC3339 format   |
 
 **Example call:**
 
@@ -590,13 +588,13 @@ Simulate repeating charging plan and return the result. Does not alter the actua
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| hourMinuteTime | string | Time in `HOURS:MINUTES` format |
-| id | integer | Loadpoint index starting at 1 |
-| soc | number | SOC in % |
-| timezone | string | Timezone in IANA format |
-| weekdays | array | The Weekdays |
+| Name           | Type    | Description                    |
+| -------------- | ------- | ------------------------------ |
+| hourMinuteTime | string  | Time in `HOURS:MINUTES` format |
+| id             | integer | Loadpoint index starting at 1  |
+| soc            | number  | SOC in %                       |
+| timezone       | string  | Timezone in IANA format        |
+| weekdays       | array   | The Weekdays                   |
 
 **Example call:**
 
@@ -622,11 +620,11 @@ Simulate charging plan based on SoC goal. Does not alter the actual charging pla
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| soc | number | SOC in % |
-| timestamp | string | Timestamp in RFC3339 format |
+| Name      | Type    | Description                   |
+| --------- | ------- | ----------------------------- |
+| id        | integer | Loadpoint index starting at 1 |
+| soc       | number  | SOC in %                      |
+| timestamp | string  | Timestamp in RFC3339 format   |
 
 **Example call:**
 
@@ -646,9 +644,9 @@ Remove vehicle from loadpoint. Connected vehicle is treated as guest vehicle.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -666,10 +664,10 @@ Enable or disable battery boost. When active, the maximum available home battery
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| enable | string | Charging mode. |
-| id | integer | Loadpoint index starting at 1 |
+| Name   | Type    | Description                   |
+| ------ | ------- | ----------------------------- |
+| enable | string  | Charging mode.                |
+| id     | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -688,10 +686,10 @@ Set the SoC limit for battery boost. Home battery will be used to support chargi
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| soc | number | SOC in % |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
+| soc  | number  | SOC in %                      |
 
 **Example call:**
 
@@ -710,10 +708,10 @@ Delay before charging stops in solar mode.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| delay | integer | Duration in seconds. |
-| id | integer | Loadpoint index starting at 1 |
+| Name  | Type    | Description                   |
+| ----- | ------- | ----------------------------- |
+| delay | integer | Duration in seconds.          |
+| id    | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -732,10 +730,10 @@ Specifies the grid draw power to stop charging in solar mode.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| threshold | number | Power in W |
+| Name      | Type    | Description                   |
+| --------- | ------- | ----------------------------- |
+| id        | integer | Loadpoint index starting at 1 |
+| threshold | number  | Power in W                    |
 
 **Example call:**
 
@@ -754,10 +752,10 @@ Delay before charging starts in solar mode.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| delay | integer | Duration in seconds. |
-| id | integer | Loadpoint index starting at 1 |
+| Name  | Type    | Description                   |
+| ----- | ------- | ----------------------------- |
+| delay | integer | Duration in seconds.          |
+| id    | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -776,10 +774,10 @@ Specifies the available surplus power to start charging in solar mode.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| threshold | number | Power in W |
+| Name      | Type    | Description                   |
+| --------- | ------- | ----------------------------- |
+| id        | integer | Loadpoint index starting at 1 |
+| threshold | number  | Power in W                    |
 
 **Example call:**
 
@@ -798,10 +796,10 @@ Updates the energy limit of the loadpoint. Only available for guest vehicles and
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| energy | number | Energy in kWh |
-| id | integer | Loadpoint index starting at 1 |
+| Name   | Type    | Description                   |
+| ------ | ------- | ----------------------------- |
+| energy | number  | Energy in kWh                 |
+| id     | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -820,11 +818,11 @@ Create charging plan with fixed time and energy target. Only available when a ve
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| energy | number | Energy in kWh |
-| id | integer | Loadpoint index starting at 1 |
-| timestamp | string | Timestamp in RFC3339 format |
+| Name      | Type    | Description                   |
+| --------- | ------- | ----------------------------- |
+| energy    | number  | Energy in kWh                 |
+| id        | integer | Loadpoint index starting at 1 |
+| timestamp | string  | Timestamp in RFC3339 format   |
 
 **Example call:**
 
@@ -844,10 +842,10 @@ Updates the maximum current of the loadpoint.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| current | number | Electric current in A |
-| id | integer | Loadpoint index starting at 1 |
+| Name    | Type    | Description                   |
+| ------- | ------- | ----------------------------- |
+| current | number  | Electric current in A         |
+| id      | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -866,10 +864,10 @@ Updates the minimum current of the loadpoint.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| current | number | Electric current in A |
-| id | integer | Loadpoint index starting at 1 |
+| Name    | Type    | Description                   |
+| ------- | ------- | ----------------------------- |
+| current | number  | Electric current in A         |
+| id      | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -888,10 +886,10 @@ Sets the minimum temperature for heating devices. The device is heated as fast a
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| temp | number | Temperature in °C |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
+| temp | number  | Temperature in °C             |
 
 **Example call:**
 
@@ -910,10 +908,10 @@ Changes the charging behavior of the loadpoint.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| mode | string | Charging mode. |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
+| mode | string  | Charging mode.                |
 
 **Example call:**
 
@@ -932,10 +930,10 @@ Updates the allowed phases of the loadpoint. Selects the desired phase mode for 
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| phases | string | Number of phases. (0: auto, 1: 1-phase, 3: 3-phase) |
+| Name   | Type    | Description                                         |
+| ------ | ------- | --------------------------------------------------- |
+| id     | integer | Loadpoint index starting at 1                       |
+| phases | string  | Number of phases. (0: auto, 1: 1-phase, 3: 3-phase) |
 
 **Example call:**
 
@@ -954,10 +952,10 @@ Updates the charging plan strategy for the loadpoint.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| requestBody | object | The JSON request body. |
+| Name        | Type    | Description                   |
+| ----------- | ------- | ----------------------------- |
+| id          | integer | Loadpoint index starting at 1 |
+| requestBody | object  | The JSON request body.        |
 
 **Example call:**
 
@@ -976,9 +974,9 @@ Set loadpoint priority.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name     | Type    | Description                          |
+| -------- | ------- | ------------------------------------ |
+| id       | integer | Loadpoint index starting at 1        |
 | priority | integer | Higher number means higher priority. |
 
 **Example call:**
@@ -998,10 +996,10 @@ Set cost or emission limit for fast-charging with grid energy.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                                                           |
+| ---- | ------- | --------------------------------------------------------------------- |
+| cost | number  | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+| id   | integer | Loadpoint index starting at 1                                         |
 
 **Example call:**
 
@@ -1020,10 +1018,10 @@ Set limit for feed-in priority optimization.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                                                           |
+| ---- | ------- | --------------------------------------------------------------------- |
+| cost | number  | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+| id   | integer | Loadpoint index starting at 1                                         |
 
 **Example call:**
 
@@ -1042,10 +1040,10 @@ Sets the session SoC limit. Cleared on disconnect. Takes precedence over the veh
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| soc | number | SOC in % |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
+| soc  | number  | SOC in %                      |
 
 **Example call:**
 
@@ -1064,9 +1062,9 @@ Starts the automatic vehicle detection process.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -1084,9 +1082,9 @@ Delete charging session.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| id   | integer | Loadpoint index starting at 1 |
 
 **Example call:**
 
@@ -1104,10 +1102,10 @@ Returns a list of HEMS grid limitation events.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| format | string | Response format (default json) |
-| lang | string | Language (defaults to accept header) |
+| Name   | Type   | Description                          |
+| ------ | ------ | ------------------------------------ |
+| format | string | Response format (default json)       |
+| lang   | string | Language (defaults to accept header) |
 
 **Example call:**
 
@@ -1126,12 +1124,12 @@ Returns a list of charging sessions.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| format | string | Response format (default json) |
-| lang | string | Language (defaults to accept header) |
-| month | integer | Month filter |
-| year | integer | Year filter |
+| Name   | Type    | Description                          |
+| ------ | ------- | ------------------------------------ |
+| format | string  | Response format (default json)       |
+| lang   | string  | Language (defaults to accept header) |
+| month  | integer | Month filter                         |
+| year   | integer | Year filter                          |
 
 **Example call:**
 
@@ -1152,10 +1150,10 @@ Update vehicle, loadpoint or odometer of a charging session. Only provided field
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| id | integer | Loadpoint index starting at 1 |
-| requestBody | object | The JSON request body. |
+| Name        | Type    | Description                   |
+| ----------- | ------- | ----------------------------- |
+| id          | integer | Loadpoint index starting at 1 |
+| requestBody | object  | The JSON request body.        |
 
 **Example call:**
 
@@ -1186,12 +1184,12 @@ Returns the latest log lines.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| areas | array | Comma-separated list of log areas |
-| count | integer | Number of log lines to return |
-| format | string | File type |
-| level | string | Log level |
+| Name   | Type    | Description                       |
+| ------ | ------- | --------------------------------- |
+| areas  | array   | Comma-separated list of log areas |
+| count  | integer | Number of log lines to return     |
+| format | string  | File type                         |
+| level  | string  | Log level                         |
 
 **Example call:**
 
@@ -1216,8 +1214,8 @@ Enable or disable telemetry. Note: Telemetry requires sponsorship.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name   | Type   | Description    |
+| ------ | ------ | -------------- |
 | enable | string | Charging mode. |
 
 **Example call:**
@@ -1242,8 +1240,8 @@ Returns the prices or emission values for the upcoming hours
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description |
+| ---- | ------ | ----------- |
 | type | string | Tariff type |
 
 **Example call:**
@@ -1262,8 +1260,8 @@ Resets the vehicle charge mode to keep the last selected mode.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
 | name | string | Vehicle name |
 
 **Example call:**
@@ -1282,8 +1280,8 @@ Delete the charging plan
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
 | name | string | Vehicle name |
 
 **Example call:**
@@ -1302,10 +1300,10 @@ Vehicle will be fast-charged until this SoC is reached.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
 | name | string | Vehicle name |
-| soc | number | SOC in % |
+| soc  | number | SOC in %     |
 
 **Example call:**
 
@@ -1324,10 +1322,10 @@ Sets the charge mode applied when this vehicle becomes active on a loadpoint.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description    |
+| ---- | ------ | -------------- |
 | mode | string | Charging mode. |
-| name | string | Vehicle name |
+| name | string | Vehicle name   |
 
 **Example call:**
 
@@ -1346,9 +1344,9 @@ Updates the charging plan strategy for the vehicle.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| name | string | Vehicle name |
+| Name        | Type   | Description            |
+| ----------- | ------ | ---------------------- |
+| name        | string | Vehicle name           |
 | requestBody | object | The JSON request body. |
 
 **Example call:**
@@ -1368,10 +1366,10 @@ Charging will stop when this SoC is reached.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
 | name | string | Vehicle name |
-| soc | number | SOC in % |
+| soc  | number | SOC in %     |
 
 **Example call:**
 
@@ -1390,10 +1388,10 @@ Create charging plan with fixed time and SoC target.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| name | string | Vehicle name |
-| soc | number | SOC in % |
+| Name      | Type   | Description                 |
+| --------- | ------ | --------------------------- |
+| name      | string | Vehicle name                |
+| soc       | number | SOC in %                    |
 | timestamp | string | Timestamp in RFC3339 format |
 
 **Example call:**
@@ -1414,10 +1412,10 @@ Updates the repeating charging plan.
 
 **Arguments:**
 
-| Name | Type | Description |
-|------|------|-------------|
-| name | string | Vehicle name |
-| requestBody | array | The JSON request body. |
+| Name        | Type   | Description            |
+| ----------- | ------ | ---------------------- |
+| name        | string | Vehicle name           |
+| requestBody | array  | The JSON request body. |
 
 **Example call:**
 
@@ -1427,4 +1425,3 @@ call updateVehicleRepeatingPlans {
   "requestBody": "..."
 }
 ```
-

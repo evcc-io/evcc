@@ -18,15 +18,10 @@
       },
       "oneOf": [
         {
-          "required": [
-            "generic"
-          ]
+          "required": ["generic"]
         },
         {
-          "required": [
-            "de",
-            "en"
-          ]
+          "required": ["de", "en"]
         }
       ],
       "title": "LanguageText"
@@ -39,11 +34,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": [
-              "sponsorship",
-              "eebus",
-              "mqtt"
-            ]
+            "enum": ["sponsorship", "eebus", "mqtt"]
           }
         },
         "description": {
@@ -56,14 +47,10 @@
       },
       "anyOf": [
         {
-          "required": [
-            "evcc"
-          ]
+          "required": ["evcc"]
         },
         {
-          "required": [
-            "description"
-          ]
+          "required": ["description"]
         }
       ],
       "title": "Requirements"
@@ -82,9 +69,7 @@
             "format": "uri"
           }
         },
-        "required": [
-          "description"
-        ]
+        "required": ["description"]
       },
       "title": "Caveats"
     },
@@ -113,22 +98,14 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": [
-              "charge",
-              "grid",
-              "pv",
-              "battery"
-            ]
+            "enum": ["charge", "grid", "pv", "battery"]
           }
         },
         "allinone": {
           "type": "boolean"
         }
       },
-      "required": [
-        "name",
-        "choice"
-      ],
+      "required": ["name", "choice"],
       "title": "ParamUsage"
     },
     "ParamModbus": {
@@ -143,10 +120,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": [
-              "tcpip",
-              "rs485"
-            ]
+            "enum": ["tcpip", "rs485"]
           }
         },
         "id": {
@@ -157,28 +131,16 @@
         },
         "baudrate": {
           "type": "integer",
-          "enum": [
-            9600,
-            19200,
-            38400,
-            57600,
-            115200
-          ]
+          "enum": [9600, 19200, 38400, 57600, 115200]
         },
         "comset": {
-          "enum": [
-            8E1,
-            "8N1"
-          ]
+          "enum": [8e1, "8N1"]
         },
         "help": {
           "$ref": "#/definitions/LanguageText"
         }
       },
-      "required": [
-        "name",
-        "choice"
-      ],
+      "required": ["name", "choice"],
       "title": "ParamModbus"
     },
     "ParamTemplate": {
@@ -216,15 +178,7 @@
         },
         "type": {
           "type": "string",
-          "enum": [
-            "string",
-            "bool",
-            "float",
-            "int",
-            "list",
-            "chargemodes",
-            "duration"
-          ]
+          "enum": ["string", "bool", "float", "int", "list", "chargemodes", "duration"]
         },
         "choice": {
           "type": "array",
@@ -250,14 +204,10 @@
       },
       "oneOf": [
         {
-          "required": [
-            "name"
-          ]
+          "required": ["name"]
         },
         {
-          "required": [
-            "preset"
-          ]
+          "required": ["preset"]
         }
       ],
       "title": "ParamTemplate"
@@ -303,15 +253,7 @@
         },
         "type": {
           "type": "string",
-          "enum": [
-            "string",
-            "bool",
-            "int",
-            "float",
-            "list",
-            "chargemodes",
-            "duration"
-          ]
+          "enum": ["string", "bool", "int", "float", "list", "chargemodes", "duration"]
         },
         "validvalues": {
           "type": "array",
@@ -335,9 +277,7 @@
           "$ref": "#/definitions/Requirements"
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "title": "ParamDefaults"
     },
     "ParamDependency": {
@@ -350,20 +290,13 @@
         },
         "check": {
           "type": "string",
-          "enum": [
-            "empty",
-            "notempty",
-            "equal"
-          ]
+          "enum": ["empty", "notempty", "equal"]
         },
         "value": {
           "minLength": 1
         }
       },
-      "required": [
-        "name",
-        "check"
-      ],
+      "required": ["name", "check"],
       "anyOf": [
         {
           "properties": {
@@ -371,14 +304,10 @@
               "value": "equal"
             }
           },
-          "required": [
-            "value"
-          ]
+          "required": ["value"]
         },
         {
-          "required": [
-            "check"
-          ]
+          "required": ["check"]
         }
       ],
       "title": "ParamDependency"

@@ -38,9 +38,7 @@
 			</div>
 			<div class="row mb-5">
 				<div class="col-md-2 col-form-label">
-					<label :for="formId('message')">{{
-						$t("config.messaging.eventMessage")
-					}}</label>
+					<label :for="formId('message')">{{ $t("config.messaging.eventMessage") }}</label>
 				</div>
 				<div class="col-md-10">
 					<PropertyField

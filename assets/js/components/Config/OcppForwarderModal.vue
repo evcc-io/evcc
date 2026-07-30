@@ -116,10 +116,7 @@
 							</label>
 						</div>
 					</FormRow>
-					<FormRow
-						id="ocppforwarderInsecure"
-						:label="$t('config.ocppforwarder.labelInsecure')"
-					>
+					<FormRow id="ocppforwarderInsecure" :label="$t('config.ocppforwarder.labelInsecure')">
 						<div class="d-flex">
 							<input
 								id="ocppforwarderInsecure"
@@ -146,11 +143,7 @@
 				<div
 					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
 				>
-					<button
-						type="button"
-						class="btn btn-link text-muted btn-cancel"
-						data-bs-dismiss="modal"
-					>
+					<button type="button" class="btn btn-link text-muted btn-cancel" data-bs-dismiss="modal">
 						{{ $t("config.general.cancel") }}
 					</button>
 					<button
@@ -215,9 +208,7 @@ export default defineComponent({
 			return this.rules.some((r) => r.stationId === this.targetStationId);
 		},
 		session(): OcppForwarderSession | undefined {
-			return store.state?.ocppforwarder?.status?.find(
-				(s) => s.chargerId === this.targetStationId
-			);
+			return store.state?.ocppforwarder?.status?.find((s) => s.chargerId === this.targetStationId);
 		},
 		sessionError(): string | undefined {
 			return this.session?.error;
@@ -227,9 +218,7 @@ export default defineComponent({
 		},
 		connectionLabel(): string {
 			return this.$t(
-				this.connectionConnected
-					? "config.ocpp.status.connected"
-					: "config.ocpp.status.configured"
+				this.connectionConnected ? "config.ocpp.status.connected" : "config.ocpp.status.configured"
 			);
 		},
 	},

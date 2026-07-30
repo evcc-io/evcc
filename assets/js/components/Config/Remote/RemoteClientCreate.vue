@@ -27,16 +27,8 @@
 				</div>
 				<div class="col-md-6">
 					<FormRow id="newClientExpiration" :label="$t('config.remote.expiration')">
-						<select
-							id="newClientExpiration"
-							v-model="expiresIn"
-							class="form-select border"
-						>
-							<option
-								v-for="opt in expirationOptions"
-								:key="opt.value"
-								:value="opt.value"
-							>
+						<select id="newClientExpiration" v-model="expiresIn" class="form-select border">
+							<option v-for="opt in expirationOptions" :key="opt.value" :value="opt.value">
 								{{ opt.name }}
 							</option>
 						</select>

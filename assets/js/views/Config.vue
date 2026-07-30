@@ -1,11 +1,7 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container px-4">
-			<TopHeader
-				ref="header"
-				:title="$t('config.main.title')"
-				:notifications="notifications"
-			/>
+			<TopHeader ref="header" :title="$t('config.main.title')" :notifications="notifications" />
 			<div class="wrapper mb-3">
 				<AuthSuccessBanner
 					v-if="callbackCompleted || callbackError"
@@ -240,9 +236,7 @@
 						tariff-type="temperature"
 						:has-error="hasDeviceError('tariff', temperatureTariff.name)"
 						:tags="deviceTags('tariff', temperatureTariff.name)"
-						@edit="
-							openModal('tariff', { type: 'temperature', id: temperatureTariff.id })
-						"
+						@edit="openModal('tariff', { type: 'temperature', id: temperatureTariff.id })"
 					/>
 					<TariffCard
 						v-if="plannerTariff"
@@ -313,18 +307,13 @@
 						editable
 						:error="hasClassError('circuit')"
 						:unconfigured="!circuitsRoot"
-						:banner="
-							hemsDimmed && circuitsRoot ? $t('config.deviceValue.dimmed') : undefined
-						"
+						:banner="hemsDimmed && circuitsRoot ? $t('config.deviceValue.dimmed') : undefined"
 						data-testid="circuits"
 						@edit="openModal('circuits')"
 					>
 						<template #icon><CircuitsIcon /></template>
 						<template #tags>
-							<DeviceTags
-								v-if="!circuitsRoot"
-								:tags="{ configured: { value: false } }"
-							/>
+							<DeviceTags v-if="!circuitsRoot" :tags="{ configured: { value: false } }" />
 							<CircuitTags v-else :nodes="[circuitsRoot]" />
 						</template>
 					</DeviceCard>
@@ -426,10 +415,7 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div
-					data-testid="config-system"
-					class="round-box box-pull-out p-4 d-flex gap-4 flex-wrap"
-				>
+				<div data-testid="config-system" class="round-box box-pull-out p-4 d-flex gap-4 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
@@ -466,11 +452,7 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal
-					:id="hemsDevices[0]?.id"
-					:yamlSource="hems?.yamlSource"
-					@changed="hemsChanged"
-				/>
+				<HemsModal :id="hemsDevices[0]?.id" :yamlSource="hems?.yamlSource" @changed="hemsChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
@@ -485,11 +467,7 @@
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
-				<EebusModal
-					:status="eebus?.status"
-					:yamlSource="eebus?.yamlSource"
-					@changed="loadDirty"
-				/>
+				<EebusModal :status="eebus?.status" :yamlSource="eebus?.yamlSource" @changed="loadDirty" />
 				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
 				<OcppForwarderModal @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
@@ -788,8 +766,7 @@ export default defineComponent({
 			return types;
 		},
 		tariffTags(): DeviceTags {
-			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar, tariffTemperature } =
-				store.state;
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar, tariffTemperature } = store.state;
 			if (
 				tariffGrid === undefined &&
 				tariffFeedIn === undefined &&

@@ -8,10 +8,7 @@
 			:disabled="disabled"
 		>
 			<template v-for="group in groups" :key="group.label">
-				<optgroup
-					v-if="group.options?.length"
-					:label="$t(`config.${deviceType}.${group.label}`)"
-				>
+				<optgroup v-if="group.options?.length" :label="$t(`config.${deviceType}.${group.label}`)">
 					<option v-for="option in group.options" :key="option.name" :value="option">
 						{{ option.name }}
 					</option>

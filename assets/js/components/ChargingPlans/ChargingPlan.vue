@@ -15,10 +15,7 @@
 				>
 					<strong v-if="enabled">
 						<span class="targetTimeLabel"> {{ targetTimeLabel }}</span>
-						<div
-							class="extraValue text-nowrap"
-							:class="{ 'text-warning': planTimeUnreachable }"
-						>
+						<div class="extraValue text-nowrap" :class="{ 'text-warning': planTimeUnreachable }">
 							{{ targetSocLabel }}
 						</div>
 					</strong>

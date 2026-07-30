@@ -5,9 +5,7 @@
 			<!-- Primary goal -->
 			<div class="field col-12 col-md-6 col-lg-3">
 				<div class="field-head">
-					<div class="field-label small text-uppercase fw-bold evcc-gray">
-						Primary goal
-					</div>
+					<div class="field-label small text-uppercase fw-bold evcc-gray">Primary goal</div>
 					<div class="field-caption small evcc-gray mt-1">always, fixed</div>
 				</div>
 				<div class="field-value gap-2">
@@ -19,9 +17,7 @@
 			<!-- Secondary goal (only interactive setting) -->
 			<div class="field col-12 col-md-6 col-lg-3">
 				<div class="field-head">
-					<div class="field-label small text-uppercase fw-bold evcc-gray">
-						Secondary goal
-					</div>
+					<div class="field-label small text-uppercase fw-bold evcc-gray">Secondary goal</div>
 					<div class="field-caption small evcc-gray mt-1">only on a tie</div>
 				</div>
 				<div class="field-value gap-2">
@@ -31,10 +27,9 @@
 						:selected="selectedStrategy"
 						@change="onStrategyChange"
 					>
-						<span
-							class="large fw-bold text-lowercase evcc-default-text secondary-goal"
-							>{{ secondaryGoalLabel }}</span
-						>
+						<span class="large fw-bold text-lowercase evcc-default-text secondary-goal">{{
+							secondaryGoalLabel
+						}}</span>
 					</CustomSelect>
 				</div>
 			</div>
@@ -45,9 +40,7 @@
 					<div class="field-label small text-uppercase fw-bold evcc-gray">Result</div>
 					<div class="field-caption small evcc-gray mt-1">
 						<span v-if="relativeTime" class="tabular">{{ relativeTime }}, </span>
-						<span v-if="pending" class="updating fw-bold text-decoration-underline"
-							>updating…</span
-						>
+						<span v-if="pending" class="updating fw-bold text-decoration-underline">updating…</span>
 						<button
 							v-else
 							type="button"
@@ -60,9 +53,7 @@
 				</div>
 				<div class="field-value gap-2">
 					<StatusIndicator :variant="statusVariant">
-						<span class="large fw-bold text-lowercase evcc-default-text">{{
-							status
-						}}</span>
+						<span class="large fw-bold text-lowercase evcc-default-text">{{ status }}</span>
 					</StatusIndicator>
 					<span
 						ref="statusInfo"
@@ -79,9 +70,7 @@
 			<!-- Net grid cost -->
 			<div class="field col-12 col-md-6 col-lg-3">
 				<div class="field-head">
-					<div class="field-label small text-uppercase fw-bold evcc-gray">
-						Net grid cost
-					</div>
+					<div class="field-label small text-uppercase fw-bold evcc-gray">Net grid cost</div>
 					<div class="field-caption small evcc-gray mt-1">
 						over the next {{ horizonHours }} hours
 					</div>

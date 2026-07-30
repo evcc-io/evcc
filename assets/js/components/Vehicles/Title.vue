@@ -10,11 +10,7 @@
 			>
 				<Sync />
 			</div>
-			<VehicleIcon
-				v-else-if="iconType === 'vehicle'"
-				:name="icon"
-				class="me-2 flex-shrink-0"
-			/>
+			<VehicleIcon v-else-if="iconType === 'vehicle'" :name="icon" class="me-2 flex-shrink-0" />
 			<shopicon-regular-cablecharge
 				v-else
 				class="me-2 flex-shrink-0"
@@ -147,9 +143,7 @@ export default defineComponent({
 			});
 		},
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById("helpModal") as HTMLElement
-			);
+			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal") as HTMLElement);
 			modal.show();
 			this.initTooltip();
 		},

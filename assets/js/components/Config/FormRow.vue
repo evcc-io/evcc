@@ -4,12 +4,8 @@
 		<label :for="id">
 			<div class="form-label">
 				{{ label }}
-				<small v-if="deprecated" class="evcc-gray">{{
-					$t("config.form.deprecated")
-				}}</small>
-				<small v-else-if="optional" class="evcc-gray">{{
-					$t("config.form.optional")
-				}}</small>
+				<small v-if="deprecated" class="evcc-gray">{{ $t("config.form.deprecated") }}</small>
+				<small v-else-if="optional" class="evcc-gray">{{ $t("config.form.optional") }}</small>
 			</div>
 		</label>
 		<div class="w-100">
@@ -20,9 +16,7 @@
 			{{ warning }}
 		</div>
 		<div class="form-text evcc-gray">
-			<div v-if="example" class="hyphenate">
-				{{ $t("config.form.example") }}: {{ example }}
-			</div>
+			<div v-if="example" class="hyphenate">{{ $t("config.form.example") }}: {{ example }}</div>
 			<div v-if="help">
 				<Markdown :markdown="help" class="text-gray hyphenate" />
 				<a v-if="link" class="text-gray" :href="link" target="_blank">

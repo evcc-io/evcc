@@ -37,7 +37,10 @@ query CarTelematicsV2($vins: [String!]!) {
 			engineCoolantLevelWarning
 			oilLevelWarning
 			serviceWarning
-			timestamp { seconds nanos }
+			timestamp {
+				seconds
+				nanos
+			}
 		}
 		battery {
 			vin
@@ -45,12 +48,18 @@ query CarTelematicsV2($vins: [String!]!) {
 			chargingStatus
 			estimatedChargingTimeToFullMinutes
 			estimatedDistanceToEmptyKm
-			timestamp { seconds nanos }
+			timestamp {
+				seconds
+				nanos
+			}
 		}
 		odometer {
 			vin
 			odometerMeters
-			timestamp { seconds nanos }
+			timestamp {
+				seconds
+				nanos
+			}
 		}
 	}
 }

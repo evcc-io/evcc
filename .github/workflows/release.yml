@@ -105,7 +105,7 @@ jobs:
       - name: Create Github Release
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
         with:
-          version: '~> v2'
+          version: "~> v2"
           args: release --clean
         env:
           # use RELEASE_DEPLOY_TOKEN for access to evcc-io/homebrew-tap

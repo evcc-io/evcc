@@ -55,11 +55,7 @@
 					required
 				/>
 			</FormRow>
-			<FormRow
-				v-if="hasDeviceIcon"
-				id="meterParamDeviceIcon"
-				:label="$t('config.icon.label')"
-			>
+			<FormRow v-if="hasDeviceIcon" id="meterParamDeviceIcon" :label="$t('config.icon.label')">
 				<PropertyField
 					id="meterParamDeviceIcon"
 					v-model="values.deviceIcon"
@@ -243,9 +239,7 @@ export default defineComponent({
 			const filtered = params.filter(
 				(p) =>
 					!CUSTOM_FIELDS.includes(p.Name) &&
-					(p.Usages && this.templateUsage
-						? p.Usages.includes(this.templateUsage as any)
-						: true)
+					(p.Usages && this.templateUsage ? p.Usages.includes(this.templateUsage as any) : true)
 			);
 
 			// Make capacity non-advanced for battery meters

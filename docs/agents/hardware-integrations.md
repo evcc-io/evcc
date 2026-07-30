@@ -16,6 +16,7 @@ func NewFromConfig(ctx context.Context, other map[string]interface{}) (api.Charg
 ```
 
 Optional interfaces are added via the decorator pattern:
+
 ```go
 //go:generate decorate -f decorateXxx -b *Xxx -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 ```
@@ -24,15 +25,15 @@ Optional interfaces are added via the decorator pattern:
 
 ### By Protocol
 
-| Protocol | Examples |
-|----------|---------|
-| HTTP/REST | Easee (REST+SignalR), Wallbox, go-e, OpenWB, Shelly |
-| Modbus RTU/TCP | KEBA, Wallbe, CFOS, Bender, Delta, Mennekes |
-| OCPP 1.6 | Generic charge point server |
-| EEBus/ISO 15118 | EEBus SPINE protocol |
-| UDP/Custom | KEBA UDP, OpenEVSE, Wattpilot, NRGKick |
-| MQTT | OpenWB, Tasmota, Shelly |
-| Smart Socket | Shelly, Tapo, TP-Link, FritzDECT |
+| Protocol        | Examples                                            |
+| --------------- | --------------------------------------------------- |
+| HTTP/REST       | Easee (REST+SignalR), Wallbox, go-e, OpenWB, Shelly |
+| Modbus RTU/TCP  | KEBA, Wallbe, CFOS, Bender, Delta, Mennekes         |
+| OCPP 1.6        | Generic charge point server                         |
+| EEBus/ISO 15118 | EEBus SPINE protocol                                |
+| UDP/Custom      | KEBA UDP, OpenEVSE, Wattpilot, NRGKick              |
+| MQTT            | OpenWB, Tasmota, Shelly                             |
+| Smart Socket    | Shelly, Tapo, TP-Link, FritzDECT                    |
 
 ### Required Charger Interface
 
@@ -79,12 +80,12 @@ Where `ChargeState` provides `Status() (ChargeStatus, error)` (A/B/C) and
 
 ### By Category
 
-| Category | Examples |
-|----------|---------|
-| Modbus/SunSpec | SDM630, SMA, Fronius, Victron |
-| HTTP/REST | Homewizard, Shelly Gen3, E3DC |
-| Smart Home | HomeAssistant entities, Homematic |
-| Battery/Storage | Tesla Powerwall, LG ESS, Zendure |
+| Category        | Examples                          |
+| --------------- | --------------------------------- |
+| Modbus/SunSpec  | SDM630, SMA, Fronius, Victron     |
+| HTTP/REST       | Homewizard, Shelly Gen3, E3DC     |
+| Smart Home      | HomeAssistant entities, Homematic |
+| Battery/Storage | Tesla Powerwall, LG ESS, Zendure  |
 
 ### Required Meter Interface
 
@@ -97,24 +98,25 @@ type Meter interface {
 ### Optional: `MeterEnergy`, `PhaseCurrents/Voltages/Powers`, `Battery`, `BatteryCapacity`
 
 ### Key Implementations
+
 - **mbmd** (`meter/mbmd.go`) — RS485 device library with auto-detection
 - **SunSpec** (`plugin/sunspec.go`) — Modbus model-based point queries
 - **Generic** — plugin-driven (HTTP, Modbus, MQTT sources)
 
 ## Vehicle Integrations
 
-| Manufacturer | API Type |
-|-------------|----------|
-| Tesla | Fleet API + vehicle-command proxy |
-| VW Group | WeConnect (VW, Audi, Skoda, Seat, Cupra) |
-| Hyundai/Kia | BlueLink (regional variants) |
-| BMW/Mini | ConnectedDrive v2 |
-| Mercedes | Official API |
-| Renault/Nissan | Renault API + Carwings |
-| Ford | FordConnect (US/EU) |
-| Porsche | Porsche Connect |
-| PSA Group | Peugeot, Citroen, DS, Opel |
-| Generic | OVMS, Tronity |
+| Manufacturer   | API Type                                 |
+| -------------- | ---------------------------------------- |
+| Tesla          | Fleet API + vehicle-command proxy        |
+| VW Group       | WeConnect (VW, Audi, Skoda, Seat, Cupra) |
+| Hyundai/Kia    | BlueLink (regional variants)             |
+| BMW/Mini       | ConnectedDrive v2                        |
+| Mercedes       | Official API                             |
+| Renault/Nissan | Renault API + Carwings                   |
+| Ford           | FordConnect (US/EU)                      |
+| Porsche        | Porsche Connect                          |
+| PSA Group      | Peugeot, Citroen, DS, Opel               |
+| Generic        | OVMS, Tronity                            |
 
 ### Required Vehicle Interface
 

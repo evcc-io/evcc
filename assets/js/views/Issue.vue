@@ -69,9 +69,7 @@
 						<!-- Left Column: Form Fields -->
 						<div class="col-12 col-lg-6">
 							<div class="mb-4">
-								<label for="issueTitle" class="form-label">
-									{{ $t("issue.issueTitle") }} *
-								</label>
+								<label for="issueTitle" class="form-label"> {{ $t("issue.issueTitle") }} * </label>
 								<input
 									id="issueTitle"
 									v-model="issue.title"
@@ -220,8 +218,7 @@
 											class="btn btn-link btn-sm p-0 text-decoration-underline small"
 											@click="openModal"
 										>
-											{{ logLevel }}, {{ logCount }} lines,
-											{{ logAreasLabel }}</button
+											{{ logLevel }}, {{ logCount }} lines, {{ logAreasLabel }}</button
 										><br />
 										{{ $t("issue.additional.source") }}:
 										<router-link to="/log">{{ $t("log.title") }}</router-link>
@@ -230,16 +227,8 @@
 								<template #controls>
 									<div class="d-flex gap-3 mb-3">
 										<div class="flex-shrink-0">
-											<select
-												id="logLevel"
-												v-model="logLevel"
-												class="form-select"
-											>
-												<option
-													v-for="level in logLevels"
-													:key="level"
-													:value="level"
-												>
+											<select id="logLevel" v-model="logLevel" class="form-select">
+												<option v-for="level in logLevels" :key="level" :value="level">
 													{{ level.toUpperCase() }}
 												</option>
 											</select>

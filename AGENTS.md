@@ -28,15 +28,15 @@ This file provides guidance to AI coding agents when working with code in this r
 
 Deep documentation on specific subsystems is available in `docs/agents/`. Load what you need based on the task:
 
-| File | When to load |
-|------|-------------|
-| [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
-| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
-| [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
-| [OCPP Forwarder](docs/agents/ocpp-forwarder.md) | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
-| [Plugin System](docs/agents/plugin-system.md) | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS) |
-| [Web UI & API](docs/agents/web-ui-api.md) | REST API, WebSocket, Vue frontend, authentication |
-| [API Security](docs/agents/api-security.md) | Auth modes, JWT/API key/session, two-tier checks, credential storage |
+| File                                                          | When to load                                                                 |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [Core Domain](docs/agents/core-domain.md)                     | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
+| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices                    |
+| [Easee Architecture](docs/agents/easee-architecture.md)       | Easee charger (REST+SignalR, async correlation, concurrency)                 |
+| [OCPP Forwarder](docs/agents/ocpp-forwarder.md)               | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
+| [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
+| [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
+| [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
 
 ### Loading guide by task type
 
@@ -98,7 +98,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 ## Comment Style
 
-- Prefer self-documenting code over comments; comment the *why*, not the *what*
+- Prefer self-documenting code over comments; comment the _why_, not the _what_
 - Default to no comment. Only add one for a non-obvious constraint, invariant, workaround, or surprising behavior. Keep it to one line, two if necessary
 - Skip refs to the current task, PR, issue, or caller ("added for X flow", "see #1234"). Git history covers that
 - Exception: Go exported identifiers follow godoc convention. Short `// FuncName does X` summary starting with the identifier name
@@ -122,7 +122,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - `_enumer.go` - generated enum code
 - `*_decorators.go` - generated decorator pattern implementations
 - Validate interface implementations: `var _ Interface = (*Type)(nil)`
-- Capabilities: register via `implement.Has`/`May` only when a capability is *conditional* (runtime/config detection, e.g. `if cp.PhaseSwitching { implement.Has(...) }`). For capabilities present on every code path, declare a plain exported method plus `var _ api.Interface = (*Type)(nil)` instead. `api.Cap` resolves static methods via direct type assertion, so unconditional `implement.Has` is redundant. A type with no conditional capabilities needs neither the `implement.Caps` embed nor `implement.New()`
+- Capabilities: register via `implement.Has`/`May` only when a capability is _conditional_ (runtime/config detection, e.g. `if cp.PhaseSwitching { implement.Has(...) }`). For capabilities present on every code path, declare a plain exported method plus `var _ api.Interface = (*Type)(nil)` instead. `api.Cap` resolves static methods via direct type assertion, so unconditional `implement.Has` is redundant. A type with no conditional capabilities needs neither the `implement.Caps` embed nor `implement.New()`
 
 ### Error Handling
 
@@ -270,7 +270,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Device types: chargers, meters, vehicles, tariffs
 - Plugin protocols: Modbus, HTTP, MQTT, JavaScript, Go
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
-- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a *different* value. Restating the same value is redundant duplication: reference the param by `name` alone.
+- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a _different_ value. Restating the same value is redundant duplication: reference the param by `name` alone.
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
 - When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details

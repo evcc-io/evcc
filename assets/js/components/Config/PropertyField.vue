@@ -56,12 +56,7 @@
 	>
 		<option v-if="!required || !modelValue" value="" :disabled="disabled">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
-			<option
-				v-if="key !== null && name !== null"
-				:key="key"
-				:value="key"
-				:disabled="disabled"
-			>
+			<option v-if="key !== null && name !== null" :key="key" :value="key" :disabled="disabled">
 				{{ name }}
 			</option>
 			<option v-else :key="idx" disabled>─────</option>
@@ -100,9 +95,7 @@
 				:title="patternTitle"
 				:aria-describedby="unitValue ? id + '_unit' : null"
 				:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${showClearButton ? 'has-clear-button' : ''} ${invalid ? 'is-invalid' : ''} ${endAlign ? 'text-end' : ''}`"
-				:style="
-					unitValue ? 'border-top-right-radius: 0; border-bottom-right-radius: 0' : null
-				"
+				:style="unitValue ? 'border-top-right-radius: 0; border-bottom-right-radius: 0' : null"
 				:autocomplete="masked || datalistId ? 'off' : null"
 				:disabled="disabled"
 				@change="onFieldChange"

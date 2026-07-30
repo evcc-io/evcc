@@ -1,17 +1,12 @@
 <template>
 	<Card :title="$t('batterySettings.usageTab')" :subtitle="chargeSubtitle">
 		<div class="d-flex gap-3 mb-4" data-testid="battery-priority">
-			<shopicon-regular-sun
-				size="s"
-				class="text-primary flex-shrink-0 mt-1"
-			></shopicon-regular-sun>
+			<shopicon-regular-sun size="s" class="text-primary flex-shrink-0 mt-1"></shopicon-regular-sun>
 			<div>
 				<div class="fw-bold mb-1">{{ $t("battery.config.priorityTitle") }}</div>
 				<i18n-t
 					:keypath="
-						selectedPrioritySoc > 0
-							? 'battery.config.priority'
-							: 'battery.config.priorityNone'
+						selectedPrioritySoc > 0 ? 'battery.config.priority' : 'battery.config.priorityNone'
 					"
 					tag="p"
 					class="mb-0"
@@ -39,11 +34,7 @@
 			<div>
 				<div class="fw-bold mb-1">{{ $t("battery.config.bufferTitle") }}</div>
 				<i18n-t
-					:keypath="
-						selectedBufferSoc < 100
-							? 'battery.config.buffer'
-							: 'battery.config.bufferNone'
-					"
+					:keypath="selectedBufferSoc < 100 ? 'battery.config.buffer' : 'battery.config.bufferNone'"
 					tag="p"
 					class="mb-0"
 					scope="global"
@@ -150,8 +141,7 @@ export default defineComponent({
 			const options = [];
 			for (let i = 100; i >= 0; i -= 5) {
 				const disabled =
-					i > this.selectedBufferSoc &&
-					!(this.selectedBufferSoc == this.selectedPrioritySoc);
+					i > this.selectedBufferSoc && !(this.selectedBufferSoc == this.selectedPrioritySoc);
 				options.push({ value: i, name: this.fmtSoc(i), disabled });
 			}
 			return options;

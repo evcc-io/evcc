@@ -48,11 +48,7 @@
 								v-for="group in Object.values(groups)"
 								:key="group + largeScreen"
 								:active="selectedGroup === group"
-								:label="
-									largeScreen
-										? $t(`sessions.groupBy.${group.toLowerCase()}`)
-										: undefined
-								"
+								:label="largeScreen ? $t(`sessions.groupBy.${group.toLowerCase()}`) : undefined"
 								:class="{
 									'd-none d-lg-block': largeScreen,
 									'd-block d-lg-none': !largeScreen,
@@ -446,9 +442,7 @@ export default defineComponent({
 				const date = new Date(session.created);
 				switch (this.period) {
 					case PERIODS.MONTH:
-						return (
-							date.getFullYear() === this.year && date.getMonth() + 1 === this.month
-						);
+						return date.getFullYear() === this.year && date.getMonth() + 1 === this.month;
 					case PERIODS.YEAR:
 						return date.getFullYear() === this.year;
 					case PERIODS.TOTAL:
@@ -568,9 +562,7 @@ export default defineComponent({
 			if (this.selectedGroup === GROUPS.NONE || !this.currentSessions.length) return false;
 			return (
 				new Set(
-					this.currentSessions.map(
-						(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
-					)
+					this.currentSessions.map((s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>])
 				).size > 1
 			);
 		},
@@ -580,9 +572,7 @@ export default defineComponent({
 		showExtraCharts() {
 			const hasMultipleEntries =
 				new Set(
-					this.currentTypeSessions.map(
-						(s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>]
-					)
+					this.currentTypeSessions.map((s) => s[this.selectedGroup as Exclude<GROUPS, GROUPS.NONE>])
 				).size > 1;
 			const isGrouped = [GROUPS.LOADPOINT, GROUPS.VEHICLE].includes(this.selectedGroup);
 			const isSolar = this.activeType === TYPES.SOLAR;
@@ -603,9 +593,7 @@ export default defineComponent({
 			return this.percentile(co2, 98) ?? 0;
 		},
 		suggestedMaxAvgCost() {
-			return this.activeType === TYPES.PRICE
-				? this.suggestedMaxAvgPrice
-				: this.suggestedMaxAvgCo2;
+			return this.activeType === TYPES.PRICE ? this.suggestedMaxAvgPrice : this.suggestedMaxAvgCo2;
 		},
 	},
 	watch: {
