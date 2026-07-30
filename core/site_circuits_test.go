@@ -15,19 +15,18 @@ import (
 type curtailableMeter struct {
 	api.Meter
 	percent  int
+	getErr   error
 	setErr   error
 	gets     int
-	sets     int
 	setCalls []int
 }
 
 func (m *curtailableMeter) CurtailedPercent() (int, error) {
 	m.gets++
-	return m.percent, nil
+	return m.percent, m.getErr
 }
 
 func (m *curtailableMeter) SetCurtailPercent(percent int) error {
-	m.sets++
 	m.setCalls = append(m.setCalls, percent)
 	if m.setErr != nil {
 		return m.setErr
@@ -93,10 +92,26 @@ func TestCurtailPVNoStatement(t *testing.T) {
 	assert.Equal(t, []int{60}, m.setCalls)
 }
 
+// A device that cannot report its state is written once, not on every cycle.
+func TestCurtailPVNotAvailable(t *testing.T) {
+	m := &curtailableMeter{getErr: api.ErrNotAvailable}
+	site := curtailSite(m)
+
+	for range 3 {
+		require.NoError(t, site.curtailPV(new(60)))
+	}
+	assert.Equal(t, []int{60}, m.setCalls)
+
+	// changed: applied again
+	require.NoError(t, site.curtailPV(new(30)))
+	assert.Equal(t, []int{60, 30}, m.setCalls)
+}
+
 // dimmableMeter counts device interactions to verify caching.
 type dimmableMeter struct {
 	api.Meter
 	dimmed   bool
+	getErr   error
 	dimErr   error
 	gets     int
 	dimCalls []bool
@@ -104,7 +119,7 @@ type dimmableMeter struct {
 
 func (m *dimmableMeter) Dimmed() (bool, error) {
 	m.gets++
-	return m.dimmed, nil
+	return m.dimmed, m.getErr
 }
 
 func (m *dimmableMeter) Dim(dim bool) error {
@@ -116,12 +131,16 @@ func (m *dimmableMeter) Dim(dim bool) error {
 	return nil
 }
 
+func dimSite(m api.Meter) *Site {
+	return &Site{
+		log:       util.NewLogger("foo"),
+		auxMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, m)},
+	}
+}
+
 func TestDimMetersCache(t *testing.T) {
 	m := &dimmableMeter{}
-	site := &Site{
-		log:       util.NewLogger("foo"),
-		auxMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, api.Meter(m))},
-	}
+	site := dimSite(m)
 
 	require.NoError(t, site.dimMeters(true))
 	assert.Equal(t, []bool{true}, m.dimCalls)
@@ -141,4 +160,18 @@ func TestDimMetersCache(t *testing.T) {
 	require.Error(t, site.dimMeters(true))
 	require.Error(t, site.dimMeters(true))
 	assert.Equal(t, []bool{true, false, true, true}, m.dimCalls)
+}
+
+// A device that cannot report its state is written once, not on every cycle.
+func TestDimMetersNotAvailable(t *testing.T) {
+	m := &dimmableMeter{getErr: api.ErrNotAvailable}
+	site := dimSite(m)
+
+	for range 3 {
+		require.NoError(t, site.dimMeters(true))
+	}
+	assert.Equal(t, []bool{true}, m.dimCalls)
+
+	require.NoError(t, site.dimMeters(false))
+	assert.Equal(t, []bool{true, false}, m.dimCalls)
 }

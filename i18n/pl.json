@@ -255,7 +255,6 @@
       "noFileSelected": "Nie wybrano pliku.",
       "off": "wyłączony",
       "on": "włączony",
-      "password": "Hasło",
       "readFromFile": "Wczytaj z pliku",
       "remove": "Wymaż",
       "required": "wymagane",
@@ -285,7 +284,6 @@
         "type": "Typ"
       },
       "description": "Ograniczenie mocy przez systemy zewnętrzne (np. §14a EnWG, interfejs §9 EEG lub wyższy poziom systemu zarządzania energią). Współpracuje z funkcją zarządzania obciążeniem.",
-      "downloadCsv": "Pobierz CSV",
       "eventsRecorded": "Zarejestrowano {count} zdarzeń związanych z ograniczeniami sieci.",
       "lastEvent": "Najnowsze {timeAgo}.",
       "title": "Limit zewnętrzny"
@@ -343,8 +341,6 @@
       },
       "defaultModeHelpKeep": "Zachowuje ostatnio wybrany tryb.",
       "defaultModeLabel": "Tryb domyślny",
-      "defaultsHint": "Tryb domyślny, zachowanie energii słonecznej i szczegóły elektryczne korzystają z rozsądnych wartości domyślnych.",
-      "defaultsHintLink": "Dostosuj ustawienia",
       "delete": "Usuń",
       "electricalSubtitle": "W razie wątpliwości skonsultuj się z elektrykiem.",
       "electricalTitle": "Elektryczny",
@@ -379,7 +375,6 @@
       "priorityHelp": "Wyższy priorytet zapewnia preferowany dostęp do nadwyżek energii słonecznej.",
       "priorityLabel": "Priorytet",
       "save": "Zapisz",
-      "showAllSettings": "Pokaż wszystkie ustawienia",
       "solarBehaviorCustomHelp": "Zdefiniuj własne progi włączania i wyłączania oraz opóźnienia.",
       "solarBehaviorDefaultHelp": "Rozpocznij po {enableDelay} wystarczającej nadwyżki. Zatrzymaj, gdy nadwyżka nie będzie wystarczająca dla {disableDelay}.",
       "solarBehaviorLabel": "Słońce",
@@ -505,7 +500,6 @@
       "option": {
         "aux": "Dodaj samoregulujące się urządzenie konsumujące",
         "battery": "Dodaj licznik magazynu energii",
-        "ext": "Dodaj zwykłego konsumenta",
         "pv": "Dodaj licznik energii słonecznej"
       },
       "save": "Zapisz",
@@ -587,7 +581,6 @@
       "descriptionHost": "Służy do ogłaszania evcc w sieci lokalnej.",
       "descriptionInternalUrl": "Lokalny adres sieciowy evcc.",
       "descriptionPort": "Port dla interfejsu internetowego i API. Jeśli zmienisz tę wartość, musisz zaktualizować adres URL przeglądarki.",
-      "descriptionSchema": "Wpływa tylko na sposób generowania adresów URL. Wybranie protokołu HTTPS nie spowoduje włączenia szyfrowania.",
       "labelExternalUrl": "Zewnętrzny adres URL",
       "labelHost": "Nazwa hosta mDNS",
       "labelInternalUrl": "Wewnętrzny adres URL",
@@ -596,13 +589,7 @@
       "warningUrlPath": "Adres URL zazwyczaj nie wymaga ścieżki. Czy napewno jest to poprawne?"
     },
     "ocpp": {
-      "connectedChargers": "Podłączone ładowarki",
-      "connectionStatus": "Skonfigurowane identyfikatory stacji",
-      "connectionStatusHelp": "Stan połączenia skonfigurowanych ładowarek.",
-      "detectedChargers": "Wykryte identyfikatory stacji",
-      "detectedHelp": "Te ładowarki próbowały połączyć się z evcc. Aby skorzystać z ładowarki, utwórz punkt ładowania z jej identyfikatorem stacji.",
       "noChargers": "Nie wykryto żadnych ładowarek OCPP.",
-      "noStations": "Brak podłączonych stacji",
       "status": {
         "configured": "Nie podłączony",
         "connected": "Połączony",
@@ -796,10 +783,6 @@
         "weekdays": "Dni powszednie"
       }
     },
-    "tariffs": {
-      "description": "Określ swoje taryfy energetyczne, aby obliczyć koszty sesji ładowania.",
-      "title": "Taryfy"
-    },
     "telemetry": {
       "description": "Skonfiguruj udostępnianie danych, aby pomóc ulepszyć evcc. Twoja prywatność jest dla nas ważna, a udział w programie jest całkowicie dobrowolny.",
       "title": "Telemetria"
@@ -934,7 +917,6 @@
     "blog": "Blog",
     "docs": "Dokumentacja",
     "github": "GitHub",
-    "login": "Dane logowania pojazdu",
     "logout": "Wylogowanie",
     "nativeSettings": "Zmień serwer",
     "needHelp": "Potrzebuję Pomocy?",
@@ -1111,7 +1093,6 @@
           "returnEnergy": "wyeksportowane"
         }
       },
-      "downloadCsv": "Pobierz CSV",
       "empty": "Brak dostępnych danych historycznych dla tego przedziału czasu.",
       "group": {
         "battery": "Magazyn energii",
@@ -1155,14 +1136,12 @@
       "batteryUsage": "Domowy magazyn energii",
       "currents": "Prąd ładowania",
       "default": "domyślny",
-      "disclaimerHint": "Uwaga:",
       "maxCurrent": {
         "label": "Maks. prąd"
       },
       "minCurrent": {
         "label": "Min. Prąd"
       },
-      "onlyForSocBasedCharging": "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania.",
       "phasesConfigured": {
         "label": "Fazy",
         "no1p3pSupport": "Jak podłączone jest urządzenie?",
@@ -1365,8 +1344,6 @@
       "solarpercentage": "Słońce (%)",
       "vehicle": "Pojazd"
     },
-    "csvPeriod": "Pobierz plik {period} CSV",
-    "csvTotal": "Pobierz plik CSV",
     "date": "Rozpoczęcie",
     "energy": "Zużycie",
     "filter": {

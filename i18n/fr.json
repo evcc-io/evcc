@@ -54,8 +54,7 @@
       "full": "pleine",
       "highest": "Au plus haut ({value})",
       "lowest": "Au plus bas ({value})",
-      "suggestion": "Suggestion",
-      "title": "Optimiseur"
+      "suggestion": "Suggestion"
     }
   },
   "batterySettings": {
@@ -331,7 +330,6 @@
       "noFileSelected": "Aucun fichier sélectionné.",
       "off": "désactivé",
       "on": "activé",
-      "password": "Mot de passe",
       "readFromFile": "Lu depuis le fichier",
       "remove": "Supprimer",
       "required": "obligatoire",
@@ -363,7 +361,6 @@
       },
       "customOption": "Intégration personnalisée",
       "description": "Limitation de puissance par des systèmes externes (par exemple, §14a de l'EnWG, §9 de l'EEG ou un système de gestion de l'énergie de niveau supérieur). Fonctionne conjointement avec la fonctionnalité de gestion de la charge. La limitation de la production solaire est également prise en charge pour certains appareils. La limite de limitation effective doit être définie lors de la configuration de chaque onduleur.",
-      "downloadCsv": "Télécharger CSV",
       "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
       "generic": "Intégrations génériques",
       "integrations": "Intégrations",
@@ -424,8 +421,6 @@
       },
       "defaultModeHelpKeep": "Conserver le dernier mode sélectionné.",
       "defaultModeLabel": "Mode par défaut",
-      "defaultsHint": "Mode par défaut, comportement solaire et détails électriques utilisent des valeurs par défaut raisonnables.",
-      "defaultsHintLink": "Régler les paramètres",
       "delete": "Supprimer",
       "electricalSubtitle": "En cas de doute, demandez à votre électricien.",
       "electricalTitle": "Électrique",
@@ -463,7 +458,6 @@
       "priorityHelp": "Une priorité plus élevée permet d'obtenir un accès privilégié au surplus solaire.",
       "priorityLabel": "Priorité",
       "save": "Enregistrer",
-      "showAllSettings": "Voir tous les paramètres",
       "solarBehaviorCustomHelp": "Définir vos propres seuils et délais d’activation.",
       "solarBehaviorDefaultHelp": "Démarrer après {enableDelay} de surplus suffisant. S'arrête lorsque le surplus n'est pas suffisant pour {disableDelay}.",
       "solarBehaviorLabel": "Solaire",
@@ -601,7 +595,6 @@
         "aux": "Ajouter un consommateur auto-regulé",
         "battery": "Ajouter un compteur de batterie",
         "consumer": "Ajouter un consommateur régulier",
-        "ext": "Ajouter un consommateur régulier",
         "pv": "Ajouter un compteur solaire"
       },
       "save": "Enregistrer",
@@ -683,26 +676,18 @@
       "descriptionHost": "Utilisé pour annoncer evcc sur votre réseau local.",
       "descriptionInternalUrl": "Adresse réseau local de evcc.",
       "descriptionPort": "Port pour l'interface web et l'API. Vous devrez mettre à jour l'URL de votre navigateur si vous modifiez cela.",
-      "descriptionSchema": "Cela n'affecte que la façon dont les URL sont générées. La sélection de HTTPS n'activera pas le cryptage.",
       "labelExternalUrl": "URL externe",
       "labelHost": "Nom d'hôte mDNS",
       "labelInternalUrl": "URL interne",
       "labelPort": "Port",
-      "labelSchema": "Schéma",
       "title": "Réseau",
       "warningUrlPath": "L'URL n'a généralement pas besoin de chemin d'accès. Êtes-vous sûr que c'est correct ?"
     },
     "ocpp": {
-      "connectedChargers": "Chargeurs connectés",
-      "connectionStatus": "Identifiants de stations configurées",
-      "connectionStatusHelp": "État de connexion des chargeurs configurés.",
-      "detectedChargers": "Identifiants de stations détectées",
-      "detectedHelp": "Ces chargeurs ont tenté de se connecter à evcc. Pour utiliser un chargeur, créez un point de charge avec son identifiant de station.",
       "forwardingConfigured": "Redirection configurée",
       "forwardingError": "Erreur de redirection",
       "forwardingOff": "Aucune redirection configurée",
       "noChargers": "Aucun chargeur OCPP détecté.",
-      "noStations": "Aucune station connectée",
       "stations": "IDs des stations",
       "stationsHelp": "Chargeurs OCPP détectés et configurés. En plus du contrôle local, vous pouvez rediriger les messages vers un serveur externe (ex. pour la facturation).",
       "status": {
@@ -715,19 +700,11 @@
       "urlHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur devrait ajouter automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier manuellement l'identifiant. Exemple : `{url}`"
     },
     "ocppforwarder": {
-      "add": "Ajouter une règle",
-      "charger": "Chargeur",
-      "connectionStatus": "État de connexion",
       "description": "Transmet les appels OCPP à un serveur externe (plateforme de facturation, DSO, etc.) en plus d'evcc. Utilisez \"*\" comme identifiant de station pour correspondre à tous les chargeurs.",
       "editTitle": "Redirection OCPP",
       "labelCaCert": "Certificat serveur (CA)",
       "labelCheckInsecure": "Autoriser les certificats auto-signés",
       "labelInsecure": "Validation du certificat",
-      "noConnections": "Aucune connexion de chargeur active.",
-      "option": {
-        "false": "non",
-        "true": "oui"
-      },
       "password": "Mot de passe en amont",
       "passwordHelp": "Mot de passe optionnel pour l'authentification HTTP Basic vers le serveur en amont. L'identifiant de station en amont est utilisé comme nom d'utilisateur.",
       "readOnly": {
@@ -738,18 +715,7 @@
         },
         "label": "Lecture seule"
       },
-      "rule": "Règle {number}",
-      "stationId": "Identifiant de station",
-      "stationIdHelp": "Identifiant de station du chargeur, ou \"*\" pour correspondre à tous les chargeurs sans règle spécifique.",
       "status": "Status",
-      "title": "Transmetteur OCPP",
-      "upstream": "En amont",
-      "upstreamConnected": "Connecté",
-      "upstreamConnectedHelp": "Un chargeur est connecté et la liaison en amont est active.",
-      "upstreamDisconnected": "Déconnecté",
-      "upstreamDisconnectedHelp": "Un chargeur est connecté mais la connexion en amont a échoué.",
-      "upstreamIdle": "Aucun chargeur",
-      "upstreamIdleHelp": "Le transmetteur est actif mais aucun chargeur ne s'est encore connecté via cette règle.",
       "upstreamStationId": "Identifiant de station en amont",
       "upstreamStationIdHelp": "Remplace l'identifiant de station envoyé au serveur en amont. Laisser vide pour utiliser l'identifiant du chargeur.",
       "upstreamUrl": "URL du serveur en amont",
@@ -988,10 +954,6 @@
         "weekdays": "Jours de la semaine"
       }
     },
-    "tariffs": {
-      "description": "Définissez vos tarifs d'énergie pour calculer les coûts de vos sessions de charge.",
-      "title": "Tarifs"
-    },
     "telemetry": {
       "description": "Configurer le partage de données pour aider à améliorer evcc. Votre vie privée est importante pour nous et la participation est totalement optionnelle.",
       "title": "Télémétrie"
@@ -1154,16 +1116,9 @@
   },
   "header": {
     "about": "À propos",
-    "authProviders": {
-      "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
-      "loggedOut": "Déconnexion réussie",
-      "success": "L’autorisation avec {title} a fonctionné. Vous pouvez fermer cet onglet.",
-      "title": "Statut de l'autorisation"
-    },
     "blog": "Blog",
     "docs": "Documentation",
     "github": "GitHub",
-    "login": "Connexions véhicule",
     "logout": "Se déconnecter",
     "nativeSettings": "Changer de serveur",
     "needHelp": "Besoin d'aide ?",
@@ -1258,7 +1213,6 @@
   "loginModal": {
     "cancel": "Annuler",
     "demoMode": "La connexion n'est pas prise en charge en mode démo.",
-    "error": "Connection échouée : ",
     "iframeHint": "Ouvrir evcc dans un nouvel onglet.",
     "iframeIssue": "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.",
     "invalid": "Mot de passe incorrect.",
@@ -1351,7 +1305,6 @@
           "returnEnergy": "Énergie (inversée)"
         }
       },
-      "downloadCsv": "Télécharger en CSV",
       "empty": "Pas de données historiques pour cette intervalle de temps.",
       "group": {
         "battery": "Batterie",
@@ -1396,14 +1349,12 @@
       "batteryUsage": "Batterie domestique",
       "currents": "Courant de charge",
       "default": "défaut",
-      "disclaimerHint": "Remarque :",
       "maxCurrent": {
         "label": "Courant max."
       },
       "minCurrent": {
         "label": "Courant min."
       },
-      "onlyForSocBasedCharging": "Ces options sont disponibles uniquement pour les véhicules avec un niveau de charge connu.",
       "phasesConfigured": {
         "label": "Phases",
         "no1p3pSupport": "Comment est connecté votre chargeur ?",
@@ -1608,8 +1559,6 @@
       "solarpercentage": "Solaire (%)",
       "vehicle": "Véhicule"
     },
-    "csvPeriod": "Télécharger CSV {period}",
-    "csvTotal": "Télécharger CSV total",
     "date": "Début",
     "energy": "Chargé",
     "filter": {

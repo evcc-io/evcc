@@ -34,36 +34,6 @@ func (v *Provider) Range() (int64, error) {
 	return int64(res.EvInfo.Battery.DistanceToEmpty.Value), err
 }
 
-var _ api.VehicleOdometer = (*Provider)(nil)
-
-// Odometer implements the api.VehicleOdometer interface
-func (v *Provider) Odometer() (float64, error) {
-	res, err := v.dataG()
-	return float64(res.VehicleInfo.Odometer.Value), err
-}
-
-var _ api.SocLimiter = (*Provider)(nil)
-
-// GetLimitSoc implements the api.SocLimiter interface
-func (v *Provider) GetLimitSoc() (int64, error) {
-	res, err := v.dataG()
-	return int64(res.EvInfo.Battery.SocLimit), err
-}
-
-var _ api.ChargeState = (*Provider)(nil)
-
-// Status implements the api.ChargeState interface
-func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
-	res, err := v.dataG()
-	if err == nil {
-		status = MapChargeStatus(res.EvInfo.Battery.ChargingStatus)
-	}
-
-	return status, err
-}
-
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
@@ -96,32 +66,4 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		res = res.Add(24 * time.Hour)
 	}
 	return res, nil
-}
-
-// Charging Status
-// 0=CHARGING
-// 1=CHARGING_ENDS
-// 2=CHARGE_BREAK
-// 3=UNPLUGGED
-// 4=FAILURE
-// 5=SLOW
-// 6=FAST
-// 7=DISCHARGING
-// 8=NO_CHARGING
-// 9=SLOW_CHARGING_AFTER_REACHING_TRIP_TARGET
-// 10=CHARGING_AFTER_REACHING_TRIP_TARGET
-// 11=FAST_CHARGING_AFTER_REACHING_TRIP_TARGET
-// 12=COMMUNICATION_WITH_EVSE_ACTIVE_NO_ENERGY_FLOW
-// 13=AC_CHARGING_ACTIVE
-// 14=DC_CHARGING_ACTIVE
-// 15=SOH_BATTERY_CALIBRATION_ACTIVE
-// 16=UNKNOWN_STATUS
-func MapChargeStatus(lookup int) api.ChargeStatus {
-	switch lookup {
-	case 0, 5, 6, 9, 10, 11, 13, 14:
-		return api.StatusC
-	case 1, 2, 4, 7, 8, 12, 15:
-		return api.StatusB
-	}
-	return api.StatusA
 }

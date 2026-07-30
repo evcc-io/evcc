@@ -73,14 +73,13 @@ func (site *Site) dimMeters(dim bool) error {
 			continue
 		}
 
-		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
-			if dim == dimmed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
-			}
+		// unreadable state: apply unconditionally
+		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && dim == dimmed {
 			continue
 		}
 
@@ -98,7 +97,7 @@ func (site *Site) dimMeters(dim bool) error {
 	return errs
 }
 
-// curtailPV applies the HEMS curtailment percent to all curtailable pv meters.
+// curtailPV applies the HEMS curtailment percent to all curtailable pv or grid meters.
 // Devices are only queried when the percent changes or after a failed attempt.
 func (site *Site) curtailPV(percent *int) error {
 	if percent == nil || site.curtailPercent != nil && *site.curtailPercent == *percent {
@@ -108,21 +107,25 @@ func (site *Site) curtailPV(percent *int) error {
 	// invalidate until successfully applied
 	site.curtailPercent = nil
 
+	meters := slices.Clone(site.pvMeters)
+	if site.gridMeter != nil {
+		meters = append(meters, site.gridMeter)
+	}
+
 	var errs error
-	for _, dev := range site.pvMeters {
+	for _, dev := range meters {
 		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
 		}
 
-		if curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff()); err == nil {
-			if curtailed == *percent {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
-			}
+		// unreadable state: apply unconditionally
+		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && curtailed == *percent {
 			continue
 		}
 
