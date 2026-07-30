@@ -37,7 +37,10 @@
 					</div>
 					<div class="modal-body">
 						<div v-for="(msg, index) in notifications" :key="index">
-							<small class="d-flex justify-content-end mt-3" :title="fmtAbsoluteDate(msg.time)">
+							<small
+								class="d-flex justify-content-end mt-3"
+								:title="fmtAbsoluteDate(msg.time)"
+							>
 								{{ fmtTimeAgo(msg.time.getTime() - new Date().getTime()) }}
 							</small>
 							<p class="d-flex align-items-baseline">
@@ -49,7 +52,11 @@
 									class="flex-grow-0 flex-shrink-0 d-block"
 								></shopicon-regular-exclamationtriangle>
 								<span class="flex-grow-1 px-2 py-1 text-break">
-									<span v-for="(line, idx) in message(msg)" :key="idx" class="d-block">
+									<span
+										v-for="(line, idx) in message(msg)"
+										:key="idx"
+										class="d-block"
+									>
 										{{ line }}
 									</span>
 								</span>
@@ -102,7 +109,9 @@ export default defineComponent({
 			return this.notifications.length > 0;
 		},
 		iconClass() {
-			return this.notifications.find((m) => m.level === "error") ? "text-danger" : "text-warning";
+			return this.notifications.find((m) => m.level === "error")
+				? "text-danger"
+				: "text-warning";
 		},
 	},
 	created() {

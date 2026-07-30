@@ -3,7 +3,10 @@
 		<component
 			:is="icon"
 			size="s"
-			:class="[iconClass, { 'nudge-prev': highlight && prev, 'nudge-next': highlight && next }]"
+			:class="[
+				iconClass,
+				{ 'nudge-prev': highlight && prev, 'nudge-next': highlight && next },
+			]"
 		></component>
 	</button>
 </template>

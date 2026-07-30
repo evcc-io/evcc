@@ -45,7 +45,11 @@
 								@remove-vehicle="removeVehicle"
 							>
 								<span class="flex-grow-1 text-truncate vehicle-name">
-									{{ session.vehicle ? session.vehicle : $t("main.vehicle.unknown") }}
+									{{
+										session.vehicle
+											? session.vehicle
+											: $t("main.vehicle.unknown")
+									}}
 								</span>
 							</VehicleOptions>
 						</td>
@@ -69,7 +73,12 @@
 							{{ $t("sessions.energy") }}
 						</th>
 						<td>
-							{{ fmtWh(chargedEnergy, chargedEnergy >= 1e3 ? POWER_UNIT.KW : POWER_UNIT.AUTO) }}
+							{{
+								fmtWh(
+									chargedEnergy,
+									chargedEnergy >= 1e3 ? POWER_UNIT.KW : POWER_UNIT.AUTO
+								)
+							}}
 							<div v-if="session.chargeDuration">
 								{{ fmtDurationNs(session.chargeDuration) }}
 								(~{{ fmtW(avgPower) }})
@@ -147,7 +156,11 @@
 									:aria-label="$t('session.odometer')"
 									@click="startEditOdometer"
 								>
-									{{ session.odometer ? formatKm(session.odometer) : $t("session.addOdometer") }}
+									{{
+										session.odometer
+											? formatKm(session.odometer)
+											: $t("session.addOdometer")
+									}}
 								</button>
 							</div>
 						</td>
@@ -184,7 +197,11 @@
 		data-testid="session-details-confirm"
 	>
 		<div v-if="session" class="d-flex justify-content-between">
-			<button type="button" class="btn btn-outline-secondary" @click="openSessionDetailsModal">
+			<button
+				type="button"
+				class="btn btn-outline-secondary"
+				@click="openSessionDetailsModal"
+			>
 				{{ $t("session.cancel") }}
 			</button>
 			<button type="button" class="btn btn-danger" @click="removeSession">
@@ -304,7 +321,9 @@ export default defineComponent({
 		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });
 		},
-		async updateSession(data: Partial<Session> | { vehicle: null } | { odometer: number | null }) {
+		async updateSession(
+			data: Partial<Session> | { vehicle: null } | { odometer: number | null }
+		) {
 			try {
 				await api.put("session/" + this.session.id, data);
 				this.$emit("session-changed");

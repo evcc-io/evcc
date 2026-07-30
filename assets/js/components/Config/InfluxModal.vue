@@ -9,8 +9,18 @@
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
-			<FormRow id="influxUrl" :label="$t('config.influx.labelUrl')" example="http://localhost:8086">
-				<input id="influxUrl" v-model="values.url" type="url" class="form-control" required />
+			<FormRow
+				id="influxUrl"
+				:label="$t('config.influx.labelUrl')"
+				example="http://localhost:8086"
+			>
+				<input
+					id="influxUrl"
+					v-model="values.url"
+					type="url"
+					class="form-control"
+					required
+				/>
 			</FormRow>
 			<FormRow
 				v-if="!showV1(values)"
@@ -25,7 +35,12 @@
 				:label="$t(`config.influx.label${showV1(values) ? 'Database' : 'Bucket'}`)"
 				example="evcc"
 			>
-				<input id="influxDatabase" v-model="values.database" class="form-control" required />
+				<input
+					id="influxDatabase"
+					v-model="values.database"
+					class="form-control"
+					required
+				/>
 			</FormRow>
 			<FormRow
 				v-if="!showV1(values)"

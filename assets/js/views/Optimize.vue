@@ -75,9 +75,10 @@
 						<div class="mb-4">
 							<p class="mb-2">Request:</p>
 							<div class="position-relative">
-								<pre class="p-3 overflow-auto" style="background-color: var(--evcc-gray-10)">{{
-									formattedRequest
-								}}</pre>
+								<pre
+									class="p-3 overflow-auto"
+									style="background-color: var(--evcc-gray-10)"
+									>{{ formattedRequest }}</pre>
 								<CopyButton :content="formattedRequest" />
 							</div>
 						</div>
@@ -85,9 +86,10 @@
 						<div>
 							<p class="mb-2">Response:</p>
 							<div class="position-relative">
-								<pre class="p-3 overflow-auto" style="background-color: var(--evcc-gray-10)">{{
-									formattedResponse
-								}}</pre>
+								<pre
+									class="p-3 overflow-auto"
+									style="background-color: var(--evcc-gray-10)"
+									>{{ formattedResponse }}</pre>
 								<CopyButton :content="formattedResponse" />
 							</div>
 						</div>

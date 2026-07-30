@@ -36,7 +36,9 @@
 						<a href="https://sponsor.evcc.io" target="_blank">sponsor.evcc.io</a>
 					</template>
 					<template #trialToken>
-						<a :href="trialTokenLink" target="_blank">{{ $t("config.sponsor.trialToken") }}</a>
+						<a :href="trialTokenLink" target="_blank">{{
+							$t("config.sponsor.trialToken")
+						}}</a>
 					</template>
 				</i18n-t>
 				<div v-if="hasUiToken" class="d-flex justify-content-end mt-3">
@@ -53,7 +55,9 @@
 				</div>
 			</div>
 			<div v-else-if="token">
-				<label for="existingToken" class="fw-bold my-2">{{ $t("config.sponsor.yourToken") }}</label>
+				<label for="existingToken" class="fw-bold my-2">{{
+					$t("config.sponsor.yourToken")
+				}}</label>
 				<div class="text-muted">
 					<input
 						id="existingToken"

@@ -152,7 +152,8 @@ export default defineComponent({
 								active &&
 								(this.selectedIndex !== null
 									? this.selectedIndex === index
-									: this.solarHighlights.find(({ index: i }) => i === index)?.energy),
+									: this.solarHighlights.find(({ index: i }) => i === index)
+											?.energy),
 						};
 					}),
 					yAxisID: "yForecast",
@@ -325,7 +326,12 @@ export default defineComponent({
 							if (value.highlight) {
 								switch (context.dataset.label) {
 									case ForecastType.Price:
-										return vThis.fmtPricePerKWh(value.y, vThis.currency, true, true);
+										return vThis.fmtPricePerKWh(
+											value.y,
+											vThis.currency,
+											true,
+											true
+										);
 									case ForecastType.Co2:
 										return vThis.fmtGrams(value.y);
 									case ForecastType.Solar:
@@ -453,12 +459,14 @@ export default defineComponent({
 			}
 
 			return slots.filter(
-				(slot) => new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
+				(slot) =>
+					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
 			);
 		},
 		filterEntries(entries: TimeseriesEntry[] = []) {
 			return entries.filter(
-				(entry) => new Date(entry.ts) >= this.startDate && new Date(entry.ts) <= this.endDate
+				(entry) =>
+					new Date(entry.ts) >= this.startDate && new Date(entry.ts) <= this.endDate
 			);
 		},
 		onMouseLeave() {

@@ -48,9 +48,15 @@
 							<div v-if="entry.title" class="fw-bold fs-6 text-truncate">
 								{{ entry.title }}
 							</div>
-							<code class="text-muted" :class="entry.title ? 'small' : 'fs-6'">{{ entry.id }}</code>
+							<code class="text-muted" :class="entry.title ? 'small' : 'fs-6'">{{
+								entry.id
+							}}</code>
 						</div>
-						<OcppForwarderButton :station-id="entry.id" :rule="entry.rule" :error="entry.error" />
+						<OcppForwarderButton
+							:station-id="entry.id"
+							:rule="entry.rule"
+							:error="entry.error"
+						/>
 					</li>
 				</ul>
 			</div>

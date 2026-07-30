@@ -12,7 +12,6 @@ Commands are sent via REST; their acknowledgement and state changes are delivere
 ### Flow
 
 Authentication uses username/password credentials against:
-
 ```
 POST https://api.easee.com/api/accounts/login
 ```
@@ -22,11 +21,9 @@ Returns a `Token` struct with `accessToken` (short-lived JWT), `refreshToken`, `
 ### Token Lifecycle
 
 Wrapped in `oauth2.TokenSource` via `oauth.RefreshTokenSource`. Near expiry, automatically calls:
-
 ```
 POST https://api.easee.com/api/accounts/refresh_token
 ```
-
 Falls back to full re-login if refresh fails.
 
 ### Token Caching
@@ -55,18 +52,15 @@ Falls back to full re-login if refresh fails.
 ### Server -> Client Methods
 
 #### `ProductUpdate(json.RawMessage)`
-
 Primary state channel. Carries a single `Observation` with `ID` (ObservationID), `Value`, `DataType`, and `Timestamp`.
 
 - **Timestamp deduplication**: older timestamps for the same ID are silently dropped.
 - **Non-blocking fan-out**: observation sent on `obsC` via non-blocking select.
 
 #### `CommandResponse(json.RawMessage)`
-
 Async acknowledgement for REST commands. Contains `Ticks` (correlation key), `WasAccepted`, `ResultCode`, and `ID` (ObservationID).
 
 Routes through three maps in order:
-
 1. `pendingTicks[res.Ticks]` — primary correlation for async (HTTP 202) commands
 2. `pendingByID[ObservationID(res.ID)]` — fallback when Ticks mismatch
 3. `expectedOrphans[ObservationID(res.ID)]` — counter for sync (HTTP 200) endpoints that still produce a CommandResponse
@@ -74,7 +68,6 @@ Routes through three maps in order:
 Unmatched responses are logged as WARN (rogue response from external system).
 
 #### `ChargerUpdate` / `SubscribeToMyProduct`
-
 Logged at TRACE, not processed further.
 
 ## Command Flow and Async Correlation
@@ -89,11 +82,11 @@ POST /api/sites/{siteID}/circuits/{circuitID}/settings  (dynamic circuit current
 
 ### Response Handling
 
-| HTTP Status | Meaning                       | Behavior                           |
-| ----------- | ----------------------------- | ---------------------------------- |
-| `200`       | Synchronous / already applied | Returns immediately                |
-| `202`       | Asynchronous, Ticks provided  | Waits for matching CommandResponse |
-| other       | Error                         | Returns error                      |
+| HTTP Status | Meaning | Behavior |
+|-------------|---------|----------|
+| `200` | Synchronous / already applied | Returns immediately |
+| `202` | Asynchronous, Ticks provided | Waits for matching CommandResponse |
+| other | Error | Returns error |
 
 ### Ticks Correlation
 
@@ -106,7 +99,6 @@ Each in-flight command creates a **buffered channel** (capacity 1), registered i
 Some endpoints return HTTP `200` but still fire a `CommandResponse` via SignalR. The observed case is circuit settings (`POST /api/sites/{siteID}/circuits/{circuitID}/settings`) which returns `200` but generates `CommandResponse` with `ID=22` (`CIRCUIT_MAX_CURRENT_P1`).
 
 Handled via the **expected-orphan counter**:
-
 ```go
 expectedOrphans map[easee.ObservationID]int  // protected by cmdMu
 ```
@@ -117,22 +109,22 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 
 ### Internal State Fields (all protected by `sync.RWMutex`)
 
-| Field                      | Observation                                      | Notes                                    |
-| -------------------------- | ------------------------------------------------ | ---------------------------------------- |
-| `opMode`                   | `CHARGER_OP_MODE` (109)                          | Central state machine                    |
-| `chargerEnabled`           | `IS_ENABLED` (31)                                | Hardware enable state                    |
-| `smartCharging`            | `SMART_CHARGING` (102)                           | LED color mode                           |
-| `currentPower`             | `TOTAL_POWER` (120)                              | Watts (API sends kW, multiplied by 1000) |
-| `sessionEnergy`            | `SESSION_ENERGY` (121)                           | kWh, special zero-handling               |
-| `totalEnergy`              | `LIFETIME_ENERGY` (124)                          | kWh, updated ~hourly                     |
-| `currentL1/L2/L3`          | `IN_CURRENT_T3/T4/T5` (183/184/185)              | Phase currents in A                      |
-| `phaseMode`                | `PHASE_MODE` (38)                                | 1=single, 2=auto, 3=locked 3-phase       |
-| `dynamicCircuitCurrent[3]` | `DYNAMIC_CIRCUIT_CURRENT_P1/P2/P3` (111/112/113) | Per-phase circuit limit                  |
-| `maxChargerCurrent`        | `MAX_CHARGER_CURRENT` (47)                       | Hardware max (non-volatile)              |
-| `dynamicChargerCurrent`    | `DYNAMIC_CHARGER_CURRENT` (48)                   | Volatile current limit                   |
-| `reasonForNoCurrent`       | `REASON_FOR_NO_CURRENT` (96)                     | Debug enum                               |
-| `pilotMode`                | `PILOT_MODE` (100)                               | CP signal state A-F                      |
-| `rfid`                     | `USER_IDTOKEN` (128)                             | Last scanned RFID token                  |
+| Field | Observation | Notes |
+|-------|------------|-------|
+| `opMode` | `CHARGER_OP_MODE` (109) | Central state machine |
+| `chargerEnabled` | `IS_ENABLED` (31) | Hardware enable state |
+| `smartCharging` | `SMART_CHARGING` (102) | LED color mode |
+| `currentPower` | `TOTAL_POWER` (120) | Watts (API sends kW, multiplied by 1000) |
+| `sessionEnergy` | `SESSION_ENERGY` (121) | kWh, special zero-handling |
+| `totalEnergy` | `LIFETIME_ENERGY` (124) | kWh, updated ~hourly |
+| `currentL1/L2/L3` | `IN_CURRENT_T3/T4/T5` (183/184/185) | Phase currents in A |
+| `phaseMode` | `PHASE_MODE` (38) | 1=single, 2=auto, 3=locked 3-phase |
+| `dynamicCircuitCurrent[3]` | `DYNAMIC_CIRCUIT_CURRENT_P1/P2/P3` (111/112/113) | Per-phase circuit limit |
+| `maxChargerCurrent` | `MAX_CHARGER_CURRENT` (47) | Hardware max (non-volatile) |
+| `dynamicChargerCurrent` | `DYNAMIC_CHARGER_CURRENT` (48) | Volatile current limit |
+| `reasonForNoCurrent` | `REASON_FOR_NO_CURRENT` (96) | Debug enum |
+| `pilotMode` | `PILOT_MODE` (100) | CP signal state A-F |
+| `rfid` | `USER_IDTOKEN` (128) | Last scanned RFID token |
 
 ### Session Energy Zero-value Protection
 
@@ -154,12 +146,12 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 
 ### Mapping to evcc Status
 
-| opMode           | evcc Status |
-| ---------------- | ----------- |
-| 1 (Disconnected) | A           |
-| 2, 4, 6, 7, 8    | B           |
-| 3 (Charging)     | C           |
-| 0, 5 and others  | error       |
+| opMode | evcc Status |
+|--------|------------|
+| 1 (Disconnected) | A |
+| 2, 4, 6, 7, 8 | B |
+| 3 (Charging) | C |
+| 0, 5 and others | error |
 
 ## Enable/Disable Flow
 
@@ -184,7 +176,6 @@ Before a POST to a known 200-returning endpoint, increment the counter. When `Co
 ### State Waiting Pattern
 
 Both `waitForChargerEnabledState` and `waitForDynamicChargerCurrent` use:
-
 1. Short-circuit check: if already in target state, return immediately.
 2. Open a timer.
 3. Loop on `obsC` channel.
@@ -197,7 +188,6 @@ The final check handles the race where the state update arrived between the last
 ### Circuit-Level (preferred, when circuit is known)
 
 Phase switching by zeroing dynamic circuit current on unused phases:
-
 ```
 POST /api/sites/{siteID}/circuits/{circuitID}/settings
 ```
@@ -223,10 +213,10 @@ Setting `authorize: true` also prevents the charger from auto-starting at 32A on
 
 ### Mutexes
 
-| Mutex           | Type           | Protects                                                                           |
-| --------------- | -------------- | ---------------------------------------------------------------------------------- |
-| `c.mux`         | `sync.RWMutex` | All charger state fields                                                           |
-| `dispatcher.mu` | `sync.Mutex`   | `pendingTicks`, `pendingByID`, `expectedOrphans` maps (inside `CommandDispatcher`) |
+| Mutex | Type | Protects |
+|-------|------|----------|
+| `c.mux` | `sync.RWMutex` | All charger state fields |
+| `dispatcher.mu` | `sync.Mutex` | `pendingTicks`, `pendingByID`, `expectedOrphans` maps (inside `CommandDispatcher`) |
 
 Command dispatch was extracted into `charger/easee/dispatcher.go` (`CommandDispatcher` struct). The two mutexes are intentionally separate to prevent the SignalR receive loop from blocking on command dispatch operations.
 
@@ -246,33 +236,33 @@ Command dispatch was extracted into `charger/easee/dispatcher.go` (`CommandDispa
 
 ## API Endpoints Summary
 
-| Method | Endpoint                                        | Used For                                       |
-| ------ | ----------------------------------------------- | ---------------------------------------------- |
-| `POST` | `/accounts/login`                               | Initial authentication                         |
-| `POST` | `/accounts/refresh_token`                       | Token refresh                                  |
-| `GET`  | `/chargers`                                     | Auto-discover charger ID                       |
-| `GET`  | `/chargers/{id}/site`                           | Discover site and circuit                      |
-| `POST` | `/chargers/{id}/settings`                       | Enable/disable, DCC, PhaseMode, SmartCharging  |
-| `POST` | `/chargers/{id}/commands/{action}`              | start/stop/pause/resume charging               |
-| `GET`  | `/sites/{siteId}/circuits/{circuitId}/settings` | Read max circuit currents                      |
+| Method | Endpoint | Used For |
+|--------|----------|----------|
+| `POST` | `/accounts/login` | Initial authentication |
+| `POST` | `/accounts/refresh_token` | Token refresh |
+| `GET` | `/chargers` | Auto-discover charger ID |
+| `GET` | `/chargers/{id}/site` | Discover site and circuit |
+| `POST` | `/chargers/{id}/settings` | Enable/disable, DCC, PhaseMode, SmartCharging |
+| `POST` | `/chargers/{id}/commands/{action}` | start/stop/pause/resume charging |
+| `GET` | `/sites/{siteId}/circuits/{circuitId}/settings` | Read max circuit currents |
 | `POST` | `/sites/{siteId}/circuits/{circuitId}/settings` | Set dynamic circuit currents (phase switching) |
 
 ### SignalR Hub
 
-| Endpoint         | `https://streams.easee.com/hubs/chargers`                                   |
-| ---------------- | --------------------------------------------------------------------------- |
-| Client -> Server | `SubscribeWithCurrentState(chargerID, true)`                                |
+| Endpoint | `https://streams.easee.com/hubs/chargers` |
+|----------|------------------------------------------|
+| Client -> Server | `SubscribeWithCurrentState(chargerID, true)` |
 | Server -> Client | `ProductUpdate`, `ChargerUpdate`, `SubscribeToMyProduct`, `CommandResponse` |
 
 ## Configuration
 
-| Parameter   | Required | Default | Notes                                                      |
-| ----------- | -------- | ------- | ---------------------------------------------------------- |
-| `user`      | yes      |         | Easee account email                                        |
-| `password`  | yes      |         | Easee account password                                     |
-| `charger`   | no       |         | Charger serial; auto-detected if exactly one on account    |
-| `timeout`   | no       | `20s`   | HTTP timeout for all API calls and command waits           |
-| `authorize` | no       | `false` | If true, evcc sends `start_charging` to authorize sessions |
+| Parameter | Required | Default | Notes |
+|-----------|----------|---------|-------|
+| `user` | yes | | Easee account email |
+| `password` | yes | | Easee account password |
+| `charger` | no | | Charger serial; auto-detected if exactly one on account |
+| `timeout` | no | `20s` | HTTP timeout for all API calls and command waits |
+| `authorize` | no | `false` | If true, evcc sends `start_charging` to authorize sessions |
 
 Supported products: Easee Home, Easee Charge, Easee Charge Lite, Easee Charge Core.
 Declared capabilities: `1p3p` (phase switching), `rfid` (RFID identification).

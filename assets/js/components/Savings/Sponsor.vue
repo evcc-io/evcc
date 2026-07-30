@@ -46,7 +46,11 @@
 		<div
 			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
 		>
-			<a target="_blank" :href="sponsorLink" class="btn btn-outline-primary mb-3 become-sponsor">
+			<a
+				target="_blank"
+				:href="sponsorLink"
+				class="btn btn-outline-primary mb-3 become-sponsor"
+			>
 				<shopicon-regular-heart class="me-1 d-inline-block"></shopicon-regular-heart>
 				{{ $t("footer.sponsor.becomeSponsor") }}
 			</a>

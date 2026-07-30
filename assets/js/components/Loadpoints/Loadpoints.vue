@@ -238,7 +238,9 @@ export default defineComponent({
 			modal?.open(loadpointId);
 		},
 		openSettingsModal(loadpointId: string) {
-			const modal = this.$refs["settingsModal"] as InstanceType<typeof SettingsModal> | undefined;
+			const modal = this.$refs["settingsModal"] as
+				| InstanceType<typeof SettingsModal>
+				| undefined;
 			modal?.open(loadpointId);
 		},
 	},

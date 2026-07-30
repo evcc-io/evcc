@@ -93,7 +93,13 @@ const planProjectedEnd = getFutureTime(5, 43);
 			<Status connected enabled :vehicleSoc="70" :vehicleLimitSoc="70" />
 		</Variant>
 		<Variant title="vehicle: limit unreachable">
-			<Status connected enabled :vehicleSoc="40" :vehicleLimitSoc="70" :effectivePlanSoc="80" />
+			<Status
+				connected
+				enabled
+				:vehicleSoc="40"
+				:vehicleLimitSoc="70"
+				:effectivePlanSoc="80"
+			/>
 		</Variant>
 		<Variant title="smart cost: clean energy set">
 			<Status

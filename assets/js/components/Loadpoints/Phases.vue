@@ -34,7 +34,10 @@ export default defineComponent({
 	},
 	methods: {
 		targetWidth() {
-			const current = Math.min(Math.max(this.minCurrent, this.offeredCurrent), this.maxCurrent);
+			const current = Math.min(
+				Math.max(this.minCurrent, this.offeredCurrent),
+				this.maxCurrent
+			);
 			return (100 / this.maxCurrent) * current;
 		},
 		realWidth(num: number) {

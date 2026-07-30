@@ -6,7 +6,11 @@
 		>
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
-					<VehicleIcon v-if="chargerIcon" :name="chargerIcon" class="me-2 flex-shrink-0" />
+					<VehicleIcon
+						v-if="chargerIcon"
+						:name="chargerIcon"
+						class="me-2 flex-shrink-0"
+					/>
 					<div class="text-truncate">
 						{{ loadpointTitle }}
 					</div>

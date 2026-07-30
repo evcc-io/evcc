@@ -39,7 +39,8 @@ export default {
 		meterType: {
 			type: String,
 			required: true,
-			validator: (value) => ["grid", "pv", "battery", "aux", "ext", "consumer"].includes(value),
+			validator: (value) =>
+				["grid", "pv", "battery", "aux", "ext", "consumer"].includes(value),
 		},
 		hasError: {
 			type: Boolean,

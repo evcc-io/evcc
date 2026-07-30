@@ -6,7 +6,9 @@
 			:on-click="() => $emit('prev')"
 			data-testid="battery-chart-prev"
 		/>
-		<span class="text-center text-truncate evcc-default-text" style="width: 6em">{{ label }}</span>
+		<span class="text-center text-truncate evcc-default-text" style="width: 6em">{{
+			label
+		}}</span>
 		<DateNavigatorButton
 			next
 			:disabled="nextDisabled"

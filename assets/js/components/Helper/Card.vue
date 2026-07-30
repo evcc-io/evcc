@@ -1,6 +1,9 @@
 <template>
 	<section class="evcc-card round-box p-3 p-sm-4" :class="{ 'evcc-card--edge': edgeToEdge }">
-		<div v-if="hasHeader" class="evcc-card-header d-flex align-items-center gap-3 flex-wrap mb-3">
+		<div
+			v-if="hasHeader"
+			class="evcc-card-header d-flex align-items-center gap-3 flex-wrap mb-3"
+		>
 			<h3
 				v-if="hasTitle || hasSubtitle"
 				class="evcc-card-title fw-normal m-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
@@ -42,7 +45,12 @@ export default defineComponent({
 			return !!this.subtitle || !!this.$slots["subtitle"];
 		},
 		hasHeader(): boolean {
-			return this.hasTitle || this.hasSubtitle || !!this.$slots["nav"] || !!this.$slots["actions"];
+			return (
+				this.hasTitle ||
+				this.hasSubtitle ||
+				!!this.$slots["nav"] ||
+				!!this.$slots["actions"]
+			);
 		},
 	},
 });

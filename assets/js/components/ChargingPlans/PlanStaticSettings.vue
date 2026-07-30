@@ -226,7 +226,8 @@ export default defineComponent({
 		},
 		dataChanged() {
 			const dateChanged =
-				this.originalData.day != this.selectedDay || this.originalData.time != this.selectedTime;
+				this.originalData.day != this.selectedDay ||
+				this.originalData.time != this.selectedTime;
 			const goalChanged = this.socBasedPlanning
 				? this.originalData.soc != this.selectedSoc
 				: this.originalData.energy != this.selectedEnergy;
@@ -296,7 +297,10 @@ export default defineComponent({
 		dayOptions() {
 			const options = [];
 			const date = new Date();
-			const labels = [this.$t("main.targetCharge.today"), this.$t("main.targetCharge.tomorrow")];
+			const labels = [
+				this.$t("main.targetCharge.today"),
+				this.$t("main.targetCharge.tomorrow"),
+			];
 			for (let i = 0; i < 7; i++) {
 				const dayNumber = date.toLocaleDateString(this.$i18n?.locale, {
 					day: "numeric",

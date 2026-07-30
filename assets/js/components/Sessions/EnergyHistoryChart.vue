@@ -78,7 +78,11 @@ export default defineComponent({
 					xTo = 12;
 				} else {
 					xFrom = 1;
-					xTo = new Date(this.lastDay.getFullYear(), this.lastDay.getMonth() + 1, 0).getDate();
+					xTo = new Date(
+						this.lastDay.getFullYear(),
+						this.lastDay.getMonth() + 1,
+						0
+					).getDate();
 				}
 
 				// initialize result with empty arrays
@@ -110,7 +114,8 @@ export default defineComponent({
 					} else {
 						const groupKey = session[this.groupBy];
 						groups.add(groupKey);
-						result[index]![groupKey] = (result[index]![groupKey] || 0) + session.chargedEnergy;
+						result[index]![groupKey] =
+							(result[index]![groupKey] || 0) + session.chargedEnergy;
 					}
 				});
 			}
@@ -118,7 +123,8 @@ export default defineComponent({
 			const datasets = Array.from(groups).map((group) => {
 				const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
 				const backgroundColor = this.colorMappings[colorGroup][group];
-				const label = this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
+				const label =
+					this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
 
 				return {
 					backgroundColor,
@@ -148,7 +154,10 @@ export default defineComponent({
 			return this.chartData.datasets.map((dataset) => ({
 				label: dataset.label || "",
 				color: dataset.backgroundColor,
-				value: this.fmtWh(dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3, POWER_UNIT.AUTO),
+				value: this.fmtWh(
+					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
+					POWER_UNIT.AUTO
+				),
 				id: pickable ? dataset.label || undefined : undefined,
 			}));
 		},
@@ -195,7 +204,9 @@ export default defineComponent({
 							},
 							label: (tooltipItem: TooltipItem<"bar">) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
-								const value = (tooltipItem.dataset.data[tooltipItem.dataIndex] as number) || 0;
+								const value =
+									(tooltipItem.dataset.data[tooltipItem.dataIndex] as number) ||
+									0;
 								return value
 									? `${datasetLabel}: ${this.fmtWh(value * 1e3, POWER_UNIT.AUTO)}`
 									: null;
@@ -236,7 +247,8 @@ export default defineComponent({
 							color: colors.muted,
 						},
 						ticks: {
-							callback: (value: number) => this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0),
+							callback: (value: number) =>
+								this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0),
 							color: colors.muted,
 							maxTicksLimit: 6,
 						},

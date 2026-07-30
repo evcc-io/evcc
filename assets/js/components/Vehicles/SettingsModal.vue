@@ -29,7 +29,8 @@
 					<Badge v-if="connectedLoadpoint(vehicle)" class="flex-shrink-0">
 						{{
 							$t("main.vehicleSettings.connectedTo", [
-								connectedLoadpoint(vehicle)?.title || $t("main.loadpoint.fallbackName"),
+								connectedLoadpoint(vehicle)?.title ||
+									$t("main.loadpoint.fallbackName"),
 							])
 						}}
 					</Badge>
@@ -37,7 +38,10 @@
 						{{ $t("main.vehicleSettings.notConnected") }}
 					</Badge>
 				</div>
-				<SettingsFormRow :id="fieldId(vehicle, 'mode')" :label="$t('main.vehicleSettings.mode')">
+				<SettingsFormRow
+					:id="fieldId(vehicle, 'mode')"
+					:label="$t('main.vehicleSettings.mode')"
+				>
 					<select
 						:id="fieldId(vehicle, 'mode')"
 						class="form-select form-select-sm"
@@ -60,7 +64,11 @@
 							:value="vehicle.limitSoc ?? 0"
 							@change="changeLimitSoc(vehicle, $event)"
 						>
-							<option v-for="opt in socOptions(vehicle)" :key="opt.value" :value="opt.value">
+							<option
+								v-for="opt in socOptions(vehicle)"
+								:key="opt.value"
+								:value="opt.value"
+							>
 								{{ opt.name }}
 							</option>
 						</select>
@@ -76,7 +84,11 @@
 							:value="vehicle.minSoc ?? 0"
 							@change="changeMinSoc(vehicle, $event)"
 						>
-							<option v-for="opt in socOptions(vehicle)" :key="opt.value" :value="opt.value">
+							<option
+								v-for="opt in socOptions(vehicle)"
+								:key="opt.value"
+								:value="opt.value"
+							>
 								{{ opt.name }}
 							</option>
 						</select>

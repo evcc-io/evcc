@@ -199,7 +199,9 @@ export default defineComponent({
 							ConfigType.SgReady,
 							ConfigType.Heatpump,
 							ConfigType.SwitchSocket,
-						].map((type) => customTemplateOption(this.$t(customChargerName(type, true)), type)),
+						].map((type) =>
+							customTemplateOption(this.$t(customChargerName(type, true)), type)
+						),
 					],
 				});
 				result.push({
@@ -239,7 +241,9 @@ export default defineComponent({
 			});
 
 			return filtered.filter(
-				(p) => !CUSTOM_FIELDS.includes(p.Name) && (p.Usages ? p.Usages.includes("charger") : true)
+				(p) =>
+					!CUSTOM_FIELDS.includes(p.Name) &&
+					(p.Usages ? p.Usages.includes("charger") : true)
 			);
 		},
 		transformApiData(data: ApiData): ApiData {

@@ -1,6 +1,10 @@
 <template>
 	<div class="app">
-		<router-view v-if="showRoutes" :notifications="notifications" :offline="offline"></router-view>
+		<router-view
+			v-if="showRoutes"
+			:notifications="notifications"
+			:offline="offline"
+		></router-view>
 
 		<BottomTabBar v-bind="bottomTabBarProps" />
 

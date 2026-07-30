@@ -110,7 +110,9 @@ export default defineComponent({
 			if (value === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
 			}
-			return this.isCo2 ? this.fmtCo2Medium(value) : this.fmtPricePerKWh(value, this.currency);
+			return this.isCo2
+				? this.fmtCo2Medium(value)
+				: this.fmtPricePerKWh(value, this.currency);
 		},
 		activeSlot(): Slot | null {
 			return this.activeIndex !== null ? (this.slots[this.activeIndex] ?? null) : null;

@@ -5,7 +5,12 @@
 				<thead>
 					<tr>
 						<th scope="col" class="text-nowrap">Data Series</th>
-						<th v-for="(_, index) in timeSlots" :key="index" scope="col" :class="['text-end']">
+						<th
+							v-for="(_, index) in timeSlots"
+							:key="index"
+							scope="col"
+							:class="['text-end']"
+						>
 							{{ formatHour(index) }}
 						</th>
 					</tr>
@@ -13,7 +18,9 @@
 				<tbody>
 					<!-- Request Data -->
 					<tr class="table-secondary">
-						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">Request Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Request Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Solar Forecast (kW)</td>
@@ -72,7 +79,9 @@
 
 					<!-- Response Data -->
 					<tr class="table-secondary">
-						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">Response Data</td>
+						<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
+							Response Data
+						</td>
 					</tr>
 					<tr>
 						<td class="fw-medium text-nowrap text-start">Grid Export (kW)</td>
@@ -108,7 +117,10 @@
 					</tr>
 
 					<!-- Battery Response Data -->
-					<template v-for="(battery, batteryIndex) in evopt.res.batteries" :key="batteryIndex">
+					<template
+						v-for="(battery, batteryIndex) in evopt.res.batteries"
+						:key="batteryIndex"
+					>
 						<tr>
 							<td :colspan="timeSlots.length + 1" class="fw-bold text-start">
 								<div class="d-flex align-items-center">

@@ -1,6 +1,12 @@
 <template>
 	<Teleport to="body">
-		<div id="helpModal" class="modal fade text-dark" tabindex="-1" role="dialog" aria-hidden="true">
+		<div
+			id="helpModal"
+			class="modal fade text-dark"
+			tabindex="-1"
+			role="dialog"
+			aria-hidden="true"
+		>
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -16,7 +22,9 @@
 						<p>
 							{{ $t("help.primaryActions") }}
 						</p>
-						<div class="d-block d-sm-flex justify-content-between align-items-stretch mb-4">
+						<div
+							class="d-block d-sm-flex justify-content-between align-items-stretch mb-4"
+						>
 							<a
 								:href="docsUrl"
 								target="_blank"
@@ -38,7 +46,9 @@
 						<p>
 							{{ $t("help.secondaryActions") }}
 						</p>
-						<div class="d-block d-sm-flex justify-content-between align-items-baseline mb-3">
+						<div
+							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
+						>
 							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.logsDescription") }}
 							</p>
@@ -46,7 +56,9 @@
 								{{ $t("help.logsButton") }}
 							</router-link>
 						</div>
-						<div class="d-block d-sm-flex justify-content-between align-items-baseline mb-3">
+						<div
+							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
+						>
 							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.issueDescription") }}
 							</p>
@@ -55,7 +67,9 @@
 							</router-link>
 						</div>
 
-						<div class="d-block d-sm-flex justify-content-between align-items-baseline mb-3">
+						<div
+							class="d-block d-sm-flex justify-content-between align-items-baseline mb-3"
+						>
 							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.restartDescription") }}
 							</p>
@@ -135,7 +149,9 @@ export default defineComponent({
 	},
 	methods: {
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal") as HTMLElement);
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openConfirmRestartModal() {

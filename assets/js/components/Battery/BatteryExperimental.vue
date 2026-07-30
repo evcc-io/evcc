@@ -106,7 +106,8 @@ export default defineComponent({
 		},
 		gridChargePossible(): boolean {
 			return (
-				this.devices.some(({ controllable }) => controllable) && !!this.state.smartCostAvailable
+				this.devices.some(({ controllable }) => controllable) &&
+				!!this.state.smartCostAvailable
 			);
 		},
 		gridChargeLimit(): number | null {

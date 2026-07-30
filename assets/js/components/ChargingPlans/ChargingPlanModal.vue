@@ -114,7 +114,11 @@ export default defineComponent({
 			return `loadpoints/${this.id}/`;
 		},
 		repeatingPlans(): RepeatingPlan[] {
-			if (this.vehicle && this.vehicle.repeatingPlans && this.vehicle.repeatingPlans.length > 0) {
+			if (
+				this.vehicle &&
+				this.vehicle.repeatingPlans &&
+				this.vehicle.repeatingPlans.length > 0
+			) {
 				return this.vehicle.repeatingPlans || [];
 			}
 			return [];

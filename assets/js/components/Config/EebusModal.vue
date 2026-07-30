@@ -63,7 +63,10 @@
 						<div class="flex-grow-1 fw-semibold text-truncate">
 							{{ pairing.shipID || pairing.ski }}
 						</div>
-						<small v-if="pairing.shipID && pairing.ski" class="text-muted ms-2 me-2 text-truncate">
+						<small
+							v-if="pairing.shipID && pairing.ski"
+							class="text-muted ms-2 me-2 text-truncate"
+						>
 							{{ pairing.ski }}
 						</small>
 						<button
@@ -72,7 +75,10 @@
 							:aria-label="$t('config.eebus.removePairing')"
 							@click="removePairing(pairing)"
 						>
-							<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
+							<shopicon-regular-trash
+								size="s"
+								class="flex-shrink-0"
+							></shopicon-regular-trash>
 						</button>
 					</div>
 				</div>
@@ -110,7 +116,12 @@
 						:label="$t('config.eebus.shipid')"
 						:help="$t('config.eebus.shipidHelp')"
 					>
-						<PropertyField :id="formId('shipid')" v-model="values.shipid" type="String" required />
+						<PropertyField
+							:id="formId('shipid')"
+							v-model="values.shipid"
+							type="String"
+							required
+						/>
 					</FormRow>
 					<FormRow
 						:id="formId('port')"
@@ -118,7 +129,12 @@
 						:help="$t('config.eebus.portHelp')"
 						optional
 					>
-						<PropertyField :id="formId('port')" v-model="values.port" property="port" type="Int" />
+						<PropertyField
+							:id="formId('port')"
+							v-model="values.port"
+							property="port"
+							type="Int"
+						/>
 					</FormRow>
 					<FormRow
 						:id="formId('interfaces')"
@@ -127,7 +143,11 @@
 						optional
 						example="eth0"
 					>
-						<PropertyField :id="formId('interfaces')" v-model="values.interfaces" type="List" />
+						<PropertyField
+							:id="formId('interfaces')"
+							v-model="values.interfaces"
+							type="List"
+						/>
 					</FormRow>
 					<h6>{{ $t("config.eebus.certificate.title") }}</h6>
 					<FormRow
@@ -138,7 +158,9 @@
 							:id="formId('certificate-public')"
 							:model-value="values.certificate?.public"
 							required
-							@update:model-value="values.certificate ? (values.certificate.public = $event) : ''"
+							@update:model-value="
+								values.certificate ? (values.certificate.public = $event) : ''
+							"
 						/>
 					</FormRow>
 					<FormRow
@@ -149,7 +171,9 @@
 							:id="formId('certificate-private')"
 							:model-value="values.certificate?.private"
 							required
-							@update:model-value="values.certificate ? (values.certificate.private = $event) : ''"
+							@update:model-value="
+								values.certificate ? (values.certificate.private = $event) : ''
+							"
 						/>
 					</FormRow>
 				</template>

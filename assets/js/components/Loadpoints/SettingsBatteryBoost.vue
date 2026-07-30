@@ -73,7 +73,9 @@ export default defineComponent({
 			return opts.map((value) => ({
 				value,
 				name:
-					value === 100 ? this.$t("main.loadpointSettings.batteryBoost.disabled") : `${value} %`,
+					value === 100
+						? this.$t("main.loadpointSettings.batteryBoost.disabled")
+						: `${value} %`,
 			}));
 		},
 	},

@@ -6,15 +6,15 @@ into charger, meter, or vehicle implementations via configuration.
 
 ## Plugin Types
 
-| Plugin    | Protocol        | Key Config                                             |
-| --------- | --------------- | ------------------------------------------------------ |
-| `http`    | HTTP/REST       | `uri`, `method`, `headers`, `auth`, `cache`, `timeout` |
-| `mqtt`    | MQTT            | `topic`, `retained`, `payload` template, `timeout`     |
-| `modbus`  | Modbus TCP/RTU  | `uri`, `register`, `scale`, `baudrate`, `rtu`          |
-| `sunspec` | SunSpec/Modbus  | Model-based point queries via device tree              |
-| `js`      | JavaScript/WASM | Inline script evaluation                               |
-| `go`      | Go runtime      | Dynamic Go code                                        |
-| `gpio`    | Linux GPIO      | Digital I/O for relays                                 |
+| Plugin | Protocol | Key Config |
+|--------|----------|------------|
+| `http` | HTTP/REST | `uri`, `method`, `headers`, `auth`, `cache`, `timeout` |
+| `mqtt` | MQTT | `topic`, `retained`, `payload` template, `timeout` |
+| `modbus` | Modbus TCP/RTU | `uri`, `register`, `scale`, `baudrate`, `rtu` |
+| `sunspec` | SunSpec/Modbus | Model-based point queries via device tree |
+| `js` | JavaScript/WASM | Inline script evaluation |
+| `go` | Go runtime | Dynamic Go code |
+| `gpio` | Linux GPIO | Digital I/O for relays |
 
 ## Getter/Setter Interfaces
 

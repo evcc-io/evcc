@@ -35,7 +35,11 @@
 			/>
 
 			<div class="mt-4 d-flex justify-content-between">
-				<button type="button" class="btn btn-link text-muted btn-cancel" data-bs-dismiss="modal">
+				<button
+					type="button"
+					class="btn btn-link text-muted btn-cancel"
+					data-bs-dismiss="modal"
+				>
 					{{ $t("config.general.cancel") }}
 				</button>
 				<button

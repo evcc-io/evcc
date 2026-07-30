@@ -9,7 +9,11 @@
 		data-testid="battery-boost-button"
 		@click="toggle"
 	>
-		<div v-if="active" class="progress position-absolute" :style="{ height: `${adjustedSoc}%` }">
+		<div
+			v-if="active"
+			class="progress position-absolute"
+			:style="{ height: `${adjustedSoc}%` }"
+		>
 			<div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"></div>
 		</div>
 		<div class="icon-wrapper" :style="iconStyle">
@@ -55,7 +59,10 @@ export default defineComponent({
 		adjustedSoc(): number {
 			const range = 100 - this.batteryBoostLimit;
 			if (range <= 0) return 0;
-			return Math.max(0, Math.min(100, ((this.batterySoc - this.batteryBoostLimit) / range) * 100));
+			return Math.max(
+				0,
+				Math.min(100, ((this.batterySoc - this.batteryBoostLimit) / range) * 100)
+			);
 		},
 		belowLimit(): boolean {
 			return this.batterySoc < this.batteryBoostLimit;

@@ -1,6 +1,11 @@
 <template>
 	<div class="zones-field">
-		<div v-for="(zone, index) in modelValue" :key="index" data-testid="property-zone" class="mb-2">
+		<div
+			v-for="(zone, index) in modelValue"
+			:key="index"
+			data-testid="property-zone"
+			class="mb-2"
+		>
 			<!-- Summary View (read-only) -->
 			<PropertyZoneForm
 				v-if="editIndex === index"

@@ -18,19 +18,16 @@ Site (orchestrator — core/site.go)
 ## Key Interfaces (api/api.go)
 
 ### Meter
-
 - `Meter` — `CurrentPower() (float64, error)` — watts
 - `MeterEnergy` — `TotalEnergy() (float64, error)` — kWh
 - `PhaseCurrents` / `PhaseVoltages` / `PhasePowers` — per-phase readings
 
 ### Battery
-
 - `Battery` — `Soc() (float64, error)` — 0-100%
 - `BatteryCapacity` — kWh
 - `BatteryController` — set charge/discharge/hold mode
 
 ### Charger
-
 - `Charger` — `Status()`, `Enabled()`, `Enable(bool)`, `MaxCurrent(int64)`
 - `ChargerEx` — milliamp-precision current via `MaxCurrentMillis(float64)`
 - `PhaseSwitcher` — `Phases1p3p(int) error`
@@ -38,7 +35,6 @@ Site (orchestrator — core/site.go)
 - `ChargeTimer` — `ChargeDuration() (time.Duration, error)`
 
 ### Vehicle
-
 - `Vehicle` — `Soc()`, `Capacity()`, `Identifiers()`, `Phases()`, `OnIdentified()`
 - `VehicleRange`, `VehicleOdometer`, `VehicleClimater`, `VehicleFinishTimer`, `VehiclePosition`
 - `ChargeController` — remote start/stop on vehicle
@@ -47,12 +43,12 @@ Site (orchestrator — core/site.go)
 
 ## Charge Modes
 
-| Mode    | Behavior                                          |
-| ------- | ------------------------------------------------- |
-| `OFF`   | Disabled (unless welcome charge)                  |
-| `NOW`   | Max current immediately                           |
+| Mode | Behavior |
+|------|----------|
+| `OFF` | Disabled (unless welcome charge) |
+| `NOW` | Max current immediately |
 | `MINPV` | Min current when PV surplus; fast if cheap tariff |
-| `PV`    | Ramp current proportional to available solar      |
+| `PV` | Ramp current proportional to available solar |
 
 ## Charge States (IEC 61851)
 
@@ -100,10 +96,10 @@ optimal current, sends single command. Resilient to restarts and missed updates.
 
 ## Battery Priority Rules
 
-| Setting          | Effect                                              |
-| ---------------- | --------------------------------------------------- |
-| `prioritySoc`    | Below this: battery charges first, EV gets 0        |
-| `bufferSoc`      | Above this: EV can draw from battery reserves       |
+| Setting | Effect |
+|---------|--------|
+| `prioritySoc` | Below this: battery charges first, EV gets 0 |
+| `bufferSoc` | Above this: EV can draw from battery reserves |
 | `bufferStartSoc` | Above this: EV charging can begin even if importing |
 
 ## Effective Price Calculation
@@ -122,18 +118,17 @@ effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
 
 ### Channels
 
-| Channel        | Scope     | Buffer                               | Purpose                             |
-| -------------- | --------- | ------------------------------------ | ----------------------------------- |
-| `valueChan`    | Site      | Unbounded (`chanx.NewUnboundedChan`) | State changes -> DB + UI (ordering) |
-| `lpUpdateChan` | Site      | 1                                    | Early loadpoint update requests     |
-| `pushChan`     | Loadpoint | Buffered                             | User notifications                  |
+| Channel | Scope | Buffer | Purpose |
+|---------|-------|--------|---------|
+| `valueChan` | Site | Unbounded (`chanx.NewUnboundedChan`) | State changes -> DB + UI (ordering) |
+| `lpUpdateChan` | Site | 1 | Early loadpoint update requests |
+| `pushChan` | Loadpoint | Buffered | User notifications |
 
 ## Tariff Integration
 
 Types: `TariffUsageGrid`, `TariffUsageFeedIn`, `TariffUsageCo2`, `TariffUsagePlanner`, `TariffUsageSolar`
 
 ### Smart Features
-
 - **Cheap-tariff override** — rate below threshold -> fast charge
 - **Smart feed-in** — feed-in rate above threshold -> prioritize export
 - **Planner** (`core/planner/planner.go`) — finds cheapest time slots for target SOC/energy by deadline

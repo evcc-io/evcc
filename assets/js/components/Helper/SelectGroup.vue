@@ -38,7 +38,10 @@ export default defineComponent({
 	emits: ["update:modelValue"],
 	methods: {
 		optionSelected(option: SelectOption<string | number>) {
-			return option.value === this.modelValue || (this.modelValue === null && option.value === "");
+			return (
+				option.value === this.modelValue ||
+				(this.modelValue === null && option.value === "")
+			);
 		},
 		optionLabel(option: SelectOption<string | number>) {
 			return this.ariaLabel ? `${this.ariaLabel}: ${option.name}` : option.name;

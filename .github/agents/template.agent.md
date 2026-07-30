@@ -1,6 +1,6 @@
 ---
-description: "Tidy templates"
-tools: ["read", "edit", "search", "shell"]
+description: 'Tidy templates'
+tools: ["read", "edit", "search","shell"]
 ---
 
 ## Cleanse parameter defaults

@@ -230,13 +230,17 @@ export default defineComponent({
 			if (this.connection === MODBUS_CONNECTION.SERIAL) {
 				return MODBUS_TYPE.RS485_SERIAL;
 			}
-			return this.protocol === MODBUS_PROTOCOL.RTU ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
+			return this.protocol === MODBUS_PROTOCOL.RTU
+				? MODBUS_TYPE.RS485_TCPIP
+				: MODBUS_TYPE.TCPIP;
 		},
 		showConnectionOptions() {
 			return this.capabilities.includes("rs485");
 		},
 		showProtocolOptions() {
-			return this.connection === MODBUS_CONNECTION.TCPIP && this.capabilities.includes("rs485");
+			return (
+				this.connection === MODBUS_CONNECTION.TCPIP && this.capabilities.includes("rs485")
+			);
 		},
 		comsetOptions() {
 			return Object.values(MODBUS_COMSET).map((v) => {
@@ -295,7 +299,9 @@ export default defineComponent({
 	},
 	methods: {
 		setProtocolByCapabilities(capabilities: ModbusCapability[]) {
-			this.protocol = capabilities.includes("tcpip") ? MODBUS_PROTOCOL.TCP : MODBUS_PROTOCOL.RTU;
+			this.protocol = capabilities.includes("tcpip")
+				? MODBUS_PROTOCOL.TCP
+				: MODBUS_PROTOCOL.RTU;
 		},
 		setConnectionAndProtocolByModbus(newModbus?: MODBUS_TYPE, oldModbus?: MODBUS_TYPE) {
 			switch (newModbus) {

@@ -23,7 +23,12 @@
           "$ref": "#/definitions/Devicegroups"
         }
       },
-      "required": ["devicegroups", "modbus", "params", "presets"],
+      "required": [
+        "devicegroups",
+        "modbus",
+        "params",
+        "presets"
+      ],
       "title": "Defaults"
     },
     "Devicegroups": {
@@ -43,7 +48,13 @@
           "$ref": "#/definitions/Generic"
         }
       },
-      "required": ["generic", "heating", "sockets", "switchsockets", "scooter"],
+      "required": [
+        "generic",
+        "heating",
+        "sockets",
+        "switchsockets",
+        "scooter"
+      ],
       "title": "Devicegroups"
     },
     "Generic": {
@@ -57,7 +68,10 @@
           "type": "string"
         }
       },
-      "required": ["de", "en"],
+      "required": [
+        "de",
+        "en"
+      ],
       "title": "Generic"
     },
     "Modbus": {
@@ -71,7 +85,10 @@
           "$ref": "#/definitions/Types"
         }
       },
-      "required": ["interfaces", "types"],
+      "required": [
+        "interfaces",
+        "types"
+      ],
       "title": "Modbus"
     },
     "Interfaces": {

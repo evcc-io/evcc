@@ -160,7 +160,9 @@ export default defineComponent({
 			const { duration, plan, power, planTime } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
-			return rates ? { duration, plan, power, rates, targetTime, currency, smartCostType } : null;
+			return rates
+				? { duration, plan, power, rates, targetTime, currency, smartCostType }
+				: null;
 		},
 		alreadyReached(): boolean {
 			return this.plan.duration === 0;

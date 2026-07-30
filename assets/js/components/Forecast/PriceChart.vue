@@ -40,7 +40,9 @@ export default defineComponent({
 			return filterForecastSlots(this.grid, this.startDate, this.endDate);
 		},
 		feedinSlots(): ForecastSlot[] {
-			return this.feedin ? filterForecastSlots(this.feedin, this.startDate, this.endDate) : [];
+			return this.feedin
+				? filterForecastSlots(this.feedin, this.startDate, this.endDate)
+				: [];
 		},
 		markPoints(): { coord: [string, number]; value: string }[] {
 			const slots = this.slots;
@@ -63,7 +65,10 @@ export default defineComponent({
 			return points;
 		},
 		yAxisConfig(): Record<string, unknown> {
-			const values = [...this.slots.map((s) => s.value), ...this.feedinSlots.map((s) => s.value)];
+			const values = [
+				...this.slots.map((s) => s.value),
+				...this.feedinSlots.map((s) => s.value),
+			];
 			const dataMin = Math.min(...values);
 			const dataMax = Math.max(...values);
 			const rangeMin = this.zoom ? dataMin : Math.min(0, dataMin);
@@ -112,14 +117,21 @@ export default defineComponent({
 						return tooltipTable(time, rows);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.hourShort, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
 					...this.yAxisConfig,
 					axisLabel: {
 						color: colors.muted,
 						formatter: (value: number) => {
 							const v =
-								this.currency && this.energyPriceSubunit(this.currency) ? value * 100 : value;
+								this.currency && this.energyPriceSubunit(this.currency)
+									? value * 100
+									: value;
 							return `${Math.round(v)}`;
 						},
 					},

@@ -6,7 +6,9 @@
 				<br />
 				<div class="d-flex flex-column flex-md-row column-gap-3 text-price fw-bold">
 					<span class="text-nowrap">{{ gridSummary!.avg }}</span>
-					<span v-if="gridSummary!.range" class="text-nowrap">{{ gridSummary!.range }}</span>
+					<span v-if="gridSummary!.range" class="text-nowrap">{{
+						gridSummary!.range
+					}}</span>
 				</div>
 			</small>
 		</div>
@@ -17,7 +19,9 @@
 					class="d-flex flex-column flex-md-row column-gap-3 justify-content-end text-export fw-bold"
 				>
 					<span class="text-nowrap">{{ feedinSummary!.avg }}</span>
-					<span v-if="feedinSummary!.range" class="text-nowrap">{{ feedinSummary!.range }}</span>
+					<span v-if="feedinSummary!.range" class="text-nowrap">{{
+						feedinSummary!.range
+					}}</span>
 				</div>
 				<a href="#" class="text-gray" @click.prevent="toggleFeedin">{{
 					showFeedin ? $t("forecast.hideLine") : $t("forecast.showLine")
@@ -94,7 +98,9 @@ export default defineComponent({
 		upcomingSlots(slots?: ForecastSlot[]): ForecastSlot[] {
 			if (!Array.isArray(slots)) return [];
 			const now = new Date();
-			return slots.filter((slot) => new Date(slot.end) > now).slice(0, MAX_HOURS * SLOTS_PER_HOUR);
+			return slots
+				.filter((slot) => new Date(slot.end) > now)
+				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
 		},
 	},
 });

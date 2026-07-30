@@ -16,7 +16,11 @@
 			/>
 		</FormRow>
 		<FormRow id="settingsLanguage" :label="$t('settings.language.label')">
-			<select id="settingsLanguage" v-model="language" class="form-select form-select-sm w-75">
+			<select
+				id="settingsLanguage"
+				v-model="language"
+				class="form-select form-select-sm w-75"
+			>
 				<option value="">{{ $t("settings.language.auto") }}</option>
 				<option v-for="option in languageOptions" :key="option.value" :value="option.value">
 					{{ option.name }}
@@ -122,7 +126,8 @@ export default defineComponent({
 		fullscreenAvailable: () => {
 			const isSupported = document.fullscreenEnabled;
 			const isPwa =
-				(navigator as any).standalone || window.matchMedia("(display-mode: standalone)").matches;
+				(navigator as any).standalone ||
+				window.matchMedia("(display-mode: standalone)").matches;
 			return isSupported && !isPwa && !isApp();
 		},
 	},

@@ -80,7 +80,8 @@
 				<div
 					class="bufferStartIndicator pe-none"
 					:class="{
-						'bufferStartIndicator--hidden': !selectedBufferStartSoc || selectedBufferSoc === 100,
+						'bufferStartIndicator--hidden':
+							!selectedBufferStartSoc || selectedBufferSoc === 100,
 					}"
 					:style="{ top: `${bufferStartTop}%` }"
 				>
@@ -239,7 +240,8 @@ export default defineComponent({
 			const options = [];
 			for (let i = 100; i >= 0; i -= 5) {
 				const disabled =
-					i > this.selectedBufferSoc && !(this.selectedBufferSoc == this.selectedPrioritySoc);
+					i > this.selectedBufferSoc &&
+					!(this.selectedBufferSoc == this.selectedPrioritySoc);
 				options.push({ value: i, name: this.fmtSoc(i), disabled });
 			}
 			return options;

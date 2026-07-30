@@ -1,7 +1,12 @@
 <template>
 	<div>
 		<h6 class="mb-3">{{ $t("config.remote.clients") }}</h6>
-		<div v-for="client in clients" :key="client.username" data-testid="remote-client" class="mb-2">
+		<div
+			v-for="client in clients"
+			:key="client.username"
+			data-testid="remote-client"
+			class="mb-2"
+		>
 			<div
 				class="d-flex align-items-center justify-content-between py-2 ps-3 pe-2 border rounded"
 				:class="{ 'opacity-50': isExpired(client) }"
@@ -14,7 +19,10 @@
 					<Badge v-if="isActive(client)" class="ms-2 me-2">
 						{{ $t("config.remote.active") }}
 					</Badge>
-					<small v-else-if="activityLabel(client)" class="text-muted ms-2 me-2 text-end d-block">
+					<small
+						v-else-if="activityLabel(client)"
+						class="text-muted ms-2 me-2 text-end d-block"
+					>
 						{{ activityLabel(client) }}
 					</small>
 				</div>

@@ -99,7 +99,11 @@ export default defineComponent({
 					xTo = 12;
 				} else {
 					xFrom = 1;
-					xTo = new Date(this.lastDay.getFullYear(), this.lastDay.getMonth() + 1, 0).getDate();
+					xTo = new Date(
+						this.lastDay.getFullYear(),
+						this.lastDay.getMonth() + 1,
+						0
+					).getDate();
 				}
 
 				// initialize result with empty arrays
@@ -119,7 +123,8 @@ export default defineComponent({
 						index = date.getFullYear();
 					}
 
-					const groupKey = this.groupBy === GROUPS.NONE ? this.costType : session[this.groupBy];
+					const groupKey =
+						this.groupBy === GROUPS.NONE ? this.costType : session[this.groupBy];
 					groups.add(groupKey);
 
 					const value =
@@ -139,7 +144,8 @@ export default defineComponent({
 			const datasets = Array.from(groups).map((group) => {
 				const colorGroup = this.groupBy === GROUPS.NONE ? "cost" : this.groupBy;
 				const backgroundColor = this.colorMappings[colorGroup][group];
-				const label = this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
+				const label =
+					this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
 
 				return {
 					type: "bar" as const,
@@ -168,8 +174,12 @@ export default defineComponent({
 			datasets.push({
 				type: "line" as const,
 				label:
-					this.costType === TYPES.PRICE ? this.$t("sessions.avgPrice") : this.$t("sessions.co2"),
-				data: Object.values(result).map((index) => (index.totalKWh > 0 ? index.avgCost : null)),
+					this.costType === TYPES.PRICE
+						? this.$t("sessions.avgPrice")
+						: this.$t("sessions.co2"),
+				data: Object.values(result).map((index) =>
+					index.totalKWh > 0 ? index.avgCost : null
+				),
 				yAxisID: "y1",
 				tension: 0.25,
 				pointRadius: 0,
@@ -223,7 +233,9 @@ export default defineComponent({
 		},
 		maxBarCost() {
 			if (this.costType !== TYPES.PRICE) return 0;
-			const barDatasets = this.chartData.datasets.filter((d: any) => (d as any).type === "bar");
+			const barDatasets = this.chartData.datasets.filter(
+				(d: any) => (d as any).type === "bar"
+			);
 			const labelCount = this.chartData.labels?.length || 0;
 			let max = 0;
 			for (let i = 0; i < labelCount; i++) {

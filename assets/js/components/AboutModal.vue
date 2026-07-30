@@ -25,18 +25,29 @@
 						<td v-else>
 							<div class="d-flex flex-wrap column-gap-2 align-items-baseline">
 								<span class="text-nowrap">
-									<a :href="releaseNotesUrl(installed)" target="_blank" rel="noopener noreferrer">
+									<a
+										:href="releaseNotesUrl(installed)"
+										target="_blank"
+										rel="noopener noreferrer"
+									>
 										v{{ installed }}
 									</a>
 									<template v-if="nightly">
-										(<a :href="githubCommitUrl" target="_blank" rel="noopener noreferrer"
-											><span class="font-monospace">{{ shortCommit }}</span></a
+										(<a
+											:href="githubCommitUrl"
+											target="_blank"
+											rel="noopener noreferrer"
+											><span class="font-monospace">{{
+												shortCommit
+											}}</span></a
 										>)
 									</template>
 								</span>
-								<span v-if="!nightly && !newVersionAvailable" class="text-muted text-nowrap">{{
-									$t("footer.version.latestVersion")
-								}}</span>
+								<span
+									v-if="!nightly && !newVersionAvailable"
+									class="text-muted text-nowrap"
+									>{{ $t("footer.version.latestVersion") }}</span
+								>
 								<span v-if="newVersionAvailable" class="text-nowrap">{{
 									$t("footer.version.availableLong")
 								}}</span>
@@ -93,9 +104,13 @@
 			<hr />
 			<p class="mb-0 small d-flex flex-wrap column-gap-1">
 				<i18n-t keypath="footer.version.madeByCommunity" tag="span">
-					<a :href="githubRepoUrl" target="_blank" rel="noopener noreferrer" class="text-nowrap">{{
-						$t("footer.version.community")
-					}}</a>
+					<a
+						:href="githubRepoUrl"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-nowrap"
+						>{{ $t("footer.version.community") }}</a
+					>
 				</i18n-t>
 				<i18n-t keypath="footer.version.poweredByOpenSource" tag="span" class="d-inline">
 					<a

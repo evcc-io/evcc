@@ -95,7 +95,12 @@ export default defineComponent({
 						return tooltipTable(time, [{ values: [vThis.fmtLong(p.value[1])] }]);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.hourShort, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
 					min: this.yMin,
 					splitNumber: 2,

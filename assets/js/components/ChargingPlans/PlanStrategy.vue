@@ -45,7 +45,11 @@
 								<option :value="0">
 									{{ $t("main.chargingPlan.precondition.optionNo") }}
 								</option>
-								<option v-for="opt in preconditionOptions" :key="opt.value" :value="opt.value">
+								<option
+									v-for="opt in preconditionOptions"
+									:key="opt.value"
+									:value="opt.value"
+								>
 									{{ opt.name }}
 								</option>
 							</select>

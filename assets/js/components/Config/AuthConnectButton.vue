@@ -1,7 +1,12 @@
 <template>
 	<!-- Connect to provider button (when URL is available) -->
 	<div v-if="providerUrl" class="d-flex flex-column align-items-end gap-2">
-		<a :href="providerUrl" target="_blank" class="btn btn-primary" @click="$emit('external-click')">
+		<a
+			:href="providerUrl"
+			target="_blank"
+			class="btn btn-primary"
+			@click="$emit('external-click')"
+		>
 			{{
 				$t("authProviders.buttonConnect", {
 					provider: providerDomain,

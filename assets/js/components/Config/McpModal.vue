@@ -23,9 +23,10 @@
 			<CopyLink :text="mcpUrl" />
 		</FormRow>
 		<FormRow id="mcpModalExample" :label="$t('config.mcp.exampleLabel')">
-			<pre id="mcpModalExample" class="form-control border font-monospace small mb-2 mcp-example">{{
-				claudeExample
-			}}</pre>
+			<pre
+				id="mcpModalExample"
+				class="form-control border font-monospace small mb-2 mcp-example"
+				>{{ claudeExample }}</pre>
 			<CopyLink :text="claudeExample" />
 		</FormRow>
 	</GenericModal>

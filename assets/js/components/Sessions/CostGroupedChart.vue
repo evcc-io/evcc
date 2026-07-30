@@ -57,7 +57,8 @@ export default defineComponent({
 				if (this.costType === TYPES.PRICE) {
 					aggregatedData[groupKey] += session.price || 0;
 				} else if (this.costType === TYPES.CO2) {
-					aggregatedData[groupKey] += (session.co2PerKWh || 0) * (session.chargedEnergy || 0);
+					aggregatedData[groupKey] +=
+						(session.co2PerKWh || 0) * (session.chargedEnergy || 0);
 				}
 			});
 
@@ -105,7 +106,9 @@ export default defineComponent({
 						position: "center",
 						callbacks: {
 							label: (tooltipItem: TooltipItem<"doughnut">) =>
-								this.formatValue(tooltipItem.dataset.data[tooltipItem.dataIndex] || 0),
+								this.formatValue(
+									tooltipItem.dataset.data[tooltipItem.dataIndex] || 0
+								),
 							labelColor: tooltipLabelColor(false),
 						},
 					},

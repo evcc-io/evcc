@@ -82,12 +82,22 @@
 										unit="%"
 										:sub1="
 											$t('footer.savings.percentSelf', {
-												self: fmtW(solarCharged * 1000, POWER_UNIT.KW, false, 0),
+												self: fmtW(
+													solarCharged * 1000,
+													POWER_UNIT.KW,
+													false,
+													0
+												),
 											})
 										"
 										:sub2="
 											$t('footer.savings.percentGrid', {
-												grid: fmtW(gridCharged * 1000, POWER_UNIT.KW, false, 0),
+												grid: fmtW(
+													gridCharged * 1000,
+													POWER_UNIT.KW,
+													false,
+													0
+												),
 											})
 										"
 									/>
@@ -138,7 +148,9 @@
 													data-testid="savings-period-select"
 													@change="selectPeriod($event.target.value)"
 												>
-													<span class="text-decoration-underline evcc-gray">
+													<span
+														class="text-decoration-underline evcc-gray"
+													>
 														{{ $t(`footer.savings.period.${period}`) }}
 													</span>
 												</CustomSelect>
@@ -155,11 +167,15 @@
 													data-testid="savings-indicator-select"
 													@change="selectIndicator($event.target.value)"
 												>
-													<span class="text-decoration-underline evcc-gray">
+													<span
+														class="text-decoration-underline evcc-gray"
+													>
 														{{
 															indicatorValue
 																? `${indicatorValue} ${$t(`footer.savings.indicator.${indicator}`)}`
-																: $t(`footer.savings.indicator.${indicator}`)
+																: $t(
+																		`footer.savings.indicator.${indicator}`
+																	)
 														}}
 													</span>
 												</CustomSelect>
@@ -173,7 +189,12 @@
 												<div>
 													<span v-if="isDynamicPrice">⌀ </span
 													>{{
-														priceConfigured ? fmtPricePerKWh(referenceGrid, currency) : "___"
+														priceConfigured
+															? fmtPricePerKWh(
+																	referenceGrid,
+																	currency
+																)
+															: "___"
 													}}
 													(<a
 														href="#"
@@ -183,7 +204,9 @@
 													>)
 												</div>
 												<div class="d-flex">
-													<span class="me-1">⌀ {{ fmtCo2Medium(region.co2) }}</span>
+													<span class="me-1"
+														>⌀ {{ fmtCo2Medium(region.co2) }}</span
+													>
 													<CustomSelect
 														class="evcc-gray"
 														:selected="region.name"
@@ -191,7 +214,9 @@
 														data-testid="savings-region-select"
 														@change="selectRegion($event.target.value)"
 													>
-														(<span class="text-decoration-underline">{{ region.name }}</span
+														(<span class="text-decoration-underline">{{
+															region.name
+														}}</span
 														>)
 													</CustomSelect>
 												</div>
@@ -200,7 +225,11 @@
 									</tbody>
 								</table>
 								<div v-if="!priceConfigured || !co2Configured">
-									<a href="#" class="evcc-gray" @click.prevent="navigateToTariffs">
+									<a
+										href="#"
+										class="evcc-gray"
+										@click.prevent="navigateToTariffs"
+									>
 										{{ $t("footer.savings.configurePriceCo2") }}
 									</a>
 								</div>
@@ -210,7 +239,10 @@
 							</div>
 							<div v-else class="my-4">
 								<LiveCommunity />
-								<TelemetrySettings :sponsorActive="sponsorActive" :telemetry="telemetry" />
+								<TelemetrySettings
+									:sponsorActive="sponsorActive"
+									:telemetry="telemetry"
+								/>
 							</div>
 							<Sponsor v-bind="sponsor" />
 						</div>
@@ -354,7 +386,10 @@ export default defineComponent({
 			return Math.max(0, ((this.referenceGrid ?? 0) - this.avgPrice) * this.totalCharged);
 		},
 		co2Saved(): number {
-			return Math.max(0, (((this.region?.co2 ?? 0) - this.avgCo2) * this.totalCharged) / 1000);
+			return Math.max(
+				0,
+				(((this.region?.co2 ?? 0) - this.avgCo2) * this.totalCharged) / 1000
+			);
 		},
 		indicator(): StatisticsIndicator {
 			return (settings.savingsIndicator as StatisticsIndicator) || "solar";

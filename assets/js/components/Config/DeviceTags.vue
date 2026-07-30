@@ -256,7 +256,9 @@ export default {
 				case "dimmed":
 				case "loginBlocked":
 				case "remoteEnabled":
-					return value ? this.$t("config.deviceValue.yes") : this.$t("config.deviceValue.no");
+					return value
+						? this.$t("config.deviceValue.yes")
+						: this.$t("config.deviceValue.no");
 			}
 			return value;
 		},

@@ -40,7 +40,10 @@
 						:tabindex="detailsClickable ? 0 : undefined"
 						@click="detailsClicked"
 					>
-						<ForecastIcon v-if="detailsIcon === 'forecast'" class="ms-2 me-1 d-inline-block" />
+						<ForecastIcon
+							v-if="detailsIcon === 'forecast'"
+							class="ms-2 me-1 d-inline-block"
+						/>
 						<AnimatedNumber
 							v-if="details !== undefined && !isNaN(details)"
 							:to="details"

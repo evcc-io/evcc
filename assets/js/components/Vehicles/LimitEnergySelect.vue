@@ -69,7 +69,10 @@ export default defineComponent({
 	},
 	methods: {
 		change(e: Event) {
-			return this.$emit("limit-energy-updated", parseFloat((e.target as HTMLSelectElement).value));
+			return this.$emit(
+				"limit-energy-updated",
+				parseFloat((e.target as HTMLSelectElement).value)
+			);
 		},
 		fmtEnergy(value: number) {
 			return fmtEnergy(value, this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"));

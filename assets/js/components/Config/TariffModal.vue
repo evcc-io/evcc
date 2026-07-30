@@ -130,7 +130,9 @@ export default defineComponent({
 	methods: {
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			// Use different custom option text for tariffs vs forecasts
-			const isForecast = ["co2", "planner", "solar", "temperature"].includes(this.tariffType || "");
+			const isForecast = ["co2", "planner", "solar", "temperature"].includes(
+				this.tariffType || ""
+			);
 			const customLabel = isForecast
 				? this.$t("config.tariff.customForecast")
 				: this.$t("config.tariff.customTariff");
@@ -175,7 +177,11 @@ export default defineComponent({
 				return [
 					{
 						label: "generic",
-						options: [...priceGeneric, ...co2Generic, customTemplateOption(customLabel)],
+						options: [
+							...priceGeneric,
+							...co2Generic,
+							customTemplateOption(customLabel),
+						],
 					},
 					{
 						label: "services",

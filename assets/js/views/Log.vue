@@ -30,7 +30,10 @@
 								download
 								@click="handleDownloadClick($event, downloadUrl)"
 							>
-								<shopicon-regular-download size="s" class="icon"></shopicon-regular-download>
+								<shopicon-regular-download
+									size="s"
+									class="icon"
+								></shopicon-regular-download>
 							</a>
 						</div>
 					</div>
@@ -90,7 +93,11 @@
 						data-testid="log-content"
 						@copy="onCopy"
 					>
-						<div v-for="{ line, className, key } in lineEntries" :key="key" :class="className">
+						<div
+							v-for="{ line, className, key } in lineEntries"
+							:key="key"
+							:class="className"
+						>
 							{{ line }}
 						</div>
 					</code>
@@ -146,7 +153,8 @@ export default defineComponent({
 	computed: {
 		filteredLines() {
 			return this.lines.filter(
-				(line) => !this.search || line.toLowerCase().includes(this.search.toLocaleLowerCase())
+				(line) =>
+					!this.search || line.toLowerCase().includes(this.search.toLocaleLowerCase())
 			);
 		},
 		lineEntries() {

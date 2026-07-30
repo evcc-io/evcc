@@ -6,7 +6,7 @@
     "build": "vp build",
     "test": "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vp test",
     "lint": "vp run lint:format && vp run lint:lint && vp run lint:tsc && vp run lint:i18n",
-    "lint:format": "vp fmt assets tests **/*.{yaml,sh} i18n/*.json",
+    "lint:format": "vp fmt assets tests **/*.{yaml,sh} i18n/*.json --write",
     "lint:lint": "vp lint --fix --max-warnings=0",
     "lint:tsc": "vue-tsc --noEmit",
     "lint:i18n": "tsx i18n/check.ts",
@@ -50,13 +50,6 @@
   "engines": {
     "npm": ">=10.0.0",
     "node": ">=26.0.0"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "npm",
-      "version": "12.0.2",
-      "onFail": "download"
-    }
   },
   "license": "MIT",
   "repository": "github:evcc-io/evcc",

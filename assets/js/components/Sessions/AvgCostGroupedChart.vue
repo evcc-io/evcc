@@ -58,7 +58,9 @@ export default defineComponent({
 				}
 			});
 
-			const sortedEntries = Object.entries(aggregatedData).sort((a, b) => b[1].cost - a[1].cost);
+			const sortedEntries = Object.entries(aggregatedData).sort(
+				(a, b) => b[1].cost - a[1].cost
+			);
 			const labels = sortedEntries.map(([label]) => label);
 			const data = sortedEntries.map(([, value]) => value.cost / value.energy);
 

@@ -6,7 +6,11 @@
 		<button type="button" class="dropdown-item" @click="openHelpModal">
 			{{ $t("header.needHelp") }}
 		</button>
-		<button type="button" class="dropdown-item d-flex align-items-center" @click="openAboutModal">
+		<button
+			type="button"
+			class="dropdown-item d-flex align-items-center"
+			@click="openAboutModal"
+		>
 			<span v-if="showVersionBadge" class="circle-badge me-1 bg-darker-green"></span>
 			<span>evcc</span>
 			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
@@ -40,7 +44,9 @@
 				class="dropdown-item"
 				@click="handleAuthRequired"
 			>
-				<span class="d-inline-block p-1 rounded-circle border border-light bg-warning"></span>
+				<span
+					class="d-inline-block p-1 rounded-circle border border-light bg-warning"
+				></span>
 				{{ provider.title }}
 			</button>
 		</template>
@@ -186,11 +192,15 @@ export default defineComponent({
 			modal.show();
 		},
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal") as HTMLElement);
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openAboutModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("aboutModal") as HTMLElement);
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("aboutModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openVehicleSettingsModal() {
