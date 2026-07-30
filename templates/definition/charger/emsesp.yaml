@@ -97,9 +97,6 @@ render: |
     scale: 1000
     {{- end}}
   getmode:
-    # evcc reads the mode via Status(), Enabled() and Dimmed() within a single update
-    # cycle; cache the result to avoid firing duplicate SG1/SG4 requests each cycle,
-    # which triggered 429 (Too Many Requests) on some EMS-ESP builds (#32290)
     source: cached
     cache: 5s
     value:
