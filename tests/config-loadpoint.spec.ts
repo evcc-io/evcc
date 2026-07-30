@@ -642,6 +642,25 @@ test.describe("heating loadpoint", async () => {
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
+    // set min temperature on main screen (stored in loadpoint device config)
+    await page.goto("/");
+    const settingsModal = page.getByTestId("loadpoint-settings-modal").first();
+    await page.getByTestId("loadpoint-settings-button").last().click();
+    await expectModalVisible(settingsModal);
+    await settingsModal.getByLabel("Min. temperature").selectOption("50.0°C");
+    await settingsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(settingsModal);
+
+    // min temperature survives restart
+    await restart();
+    await page.reload();
+    await page.getByTestId("loadpoint-settings-button").last().click();
+    await expectModalVisible(settingsModal);
+    await expect(settingsModal.getByLabel("Min. temperature")).toHaveValue("50");
+    await settingsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(settingsModal);
+    await page.goto("/#/config");
+
     // delete
     await lpEntry.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);

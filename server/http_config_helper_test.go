@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util/config"
@@ -64,6 +65,24 @@ func TestInstanceParallelProbes(t *testing.T) {
 	res := testInstance(ctx, slowPowerMeter{done: done})
 	require.Contains(t, res, "energy", "fast getter must return despite a blocking sibling")
 	require.NotContains(t, res, "power", "blocking getter must be abandoned")
+}
+
+// asleepVehicle returns api.ErrAsleep from its getters.
+type asleepVehicle struct{}
+
+func (v asleepVehicle) Soc() (float64, error) {
+	return 0, api.ErrAsleep
+}
+
+func (v asleepVehicle) Range() (int64, error) {
+	return 0, api.ErrAsleep
+}
+
+// TestInstanceAsleep ensures asleep is flagged as state, not as error.
+func TestInstanceAsleep(t *testing.T) {
+	res := testInstance(context.Background(), asleepVehicle{})
+	assert.Equal(t, testResult{Value: 0.0, Asleep: true}, res["soc"])
+	assert.Equal(t, testResult{Value: int64(0), Asleep: true}, res["range"])
 }
 
 func TestConfigReqUnmarshal(t *testing.T) {

@@ -82,6 +82,7 @@ const EVENT_PARAMS: Record<MESSAGING_EVENTS, Record<string, string>> = {
 	start: { mode: "${mode}" },
 	stop: { chargedEnergy: "${chargedEnergy:%.1fk}", chargeDuration: "${chargeDuration}" },
 	planoverrun: { vehicleTitle: "{{ if .vehicleTitle }} {{ .vehicleTitle }} {{end}}" },
+	suggestion: { suggestionTitle: "${suggestionTitle}", suggestionAction: "${suggestionAction}" },
 	guest: {},
 };
 

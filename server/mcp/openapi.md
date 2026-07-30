@@ -146,6 +146,26 @@ call setBatteryGridChargeLimit {
 }
 ```
 
+## setBatteryGridDischarge
+
+Allow the home battery to discharge to the grid (experimental).
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setBatteryGridDischarge {
+  "enable": "true"
+}
+```
+
 ## setBufferSoc
 
 Set battery buffer SoC.
@@ -341,6 +361,26 @@ call getEnergyHistory {
   "name": "db:8",
   "title": "Battery",
   "to": "2026-07-02T00:00:00Z"
+}
+```
+
+## setSolarAdjusted
+
+Adjust the solar forecast to real production data of the current day.
+
+**Tags:** experimental
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| enable | string | Charging mode. |
+
+**Example call:**
+
+```json
+call setSolarAdjusted {
+  "enable": "true"
 }
 ```
 

@@ -232,7 +232,10 @@ func (c *gen2) TotalEnergy() (float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Aenergy.Total / 1000, err
+		// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
+		// NOTE: ret_aenergy - the active energy added to this container is also added to aenergy container.
+		// All the consumed energy is collected in aenergy regardless of the direction(consumed or returned) of the active energy.
+		return max(0, res.Aenergy.Total-res.Ret_Aenergy.Total) / 1000, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)

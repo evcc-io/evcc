@@ -14,6 +14,7 @@ import {
 	tooltipStyle,
 	tooltipTable,
 	xAxisLabelStyle,
+	type TooltipRow,
 } from "../Forecast/echarts";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
@@ -349,9 +350,7 @@ export default defineComponent({
 				// top entity doesn't drop the rounding; a focused entity is solo.
 				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
-					| number
-					| null
-					| { value: number; itemStyle: { borderRadius: number[] } }
+					number | null | { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
@@ -362,9 +361,7 @@ export default defineComponent({
 					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
 				});
 				const returnEnergyData: (
-					| number
-					| null
-					| { value: number; itemStyle: { borderRadius: number[] } }
+					number | null | { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
@@ -528,12 +525,6 @@ export default defineComponent({
 						if (!first) return "";
 						const ts = cats[first.dataIndex];
 						const head = ts != null ? tooltipDate(ts) : "";
-						const formatValue = (v: number) => {
-							const watts = Math.abs(v) * 1000;
-							return this.period === PERIODS.DAY
-								? this.fmtW(watts, POWER_UNIT.AUTO)
-								: this.fmtWh(watts, POWER_UNIT.AUTO);
-						};
 
 						// Collect energy/returnEnergy values per entity from this slot's params.
 						const totals = new Map<number, { energy: number; returnEnergy: number }>();
@@ -559,8 +550,29 @@ export default defineComponent({
 						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
-						const rows = indices.map((i) => {
-							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+						// one unit for all rows, based on the largest individual value (not the total)
+						const rowValues = indices.map(
+							(i) => totals.get(i) ?? { energy: 0, returnEnergy: 0 }
+						);
+						const unit = this.getPowerUnit(
+							Math.max(
+								0,
+								...rowValues.flatMap((t) =>
+									this.isBidirectional
+										? [t.energy, t.returnEnergy]
+										: [t.energy + t.returnEnergy]
+								)
+							) * 1000
+						);
+						const formatValue = (v: number) => {
+							const watts = Math.abs(v) * 1000;
+							return this.period === PERIODS.DAY
+								? this.fmtW(watts, unit)
+								: this.fmtWh(watts, unit);
+						};
+
+						const rows: TooltipRow[] = indices.map((i, idx) => {
+							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
 							const values = this.isBidirectional
 								? [formatValue(t.energy), formatValue(t.returnEnergy)]
 								: [formatValue(t.energy + t.returnEnergy)];
@@ -569,6 +581,17 @@ export default defineComponent({
 								values,
 							};
 						});
+						if (showName) {
+							const sum = (key: "energy" | "returnEnergy") =>
+								rowValues.reduce((acc, t) => acc + t[key], 0);
+							rows.push({
+								name: this.$t("sessions.total"),
+								values: this.isBidirectional
+									? [formatValue(sum("energy")), formatValue(sum("returnEnergy"))]
+									: [formatValue(sum("energy") + sum("returnEnergy"))],
+								total: true,
+							});
+						}
 						return tooltipTable(head, rows, this.directionHeaders ?? undefined);
 					},
 				},

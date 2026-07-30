@@ -65,12 +65,7 @@
 					</IconSelectGroup>
 				</div>
 
-				<Card
-					:title="historyTitle"
-					:subtitle="historySubTitle"
-					edge-to-edge
-					class="box-pull-out mb-4"
-				>
+				<Card :title="historyTitle" :subtitle="historySubTitle" edge-to-edge class="mb-4">
 					<EnergyHistoryChart
 						v-if="activeType === types.SOLAR"
 						:sessions="currentSessions"
@@ -90,7 +85,7 @@
 						:period="period"
 					/>
 				</Card>
-				<div v-if="showExtraCharts" class="box-pull-out">
+				<div v-if="showExtraCharts">
 					<div class="row align-items-start">
 						<div class="col-12 col-lg-6 mb-4">
 							<Card :title="firstExtraTitle" edge-to-edge>
@@ -143,12 +138,7 @@
 					</div>
 				</div>
 
-				<Card
-					v-if="showTable"
-					:title="$t('sessions.overview')"
-					edge-to-edge
-					class="box-pull-out mb-4"
-				>
+				<Card v-if="showTable" :title="$t('sessions.overview')" edge-to-edge class="mb-4">
 					<SessionTable
 						:sessions="currentSessions"
 						:vehicleFilter="vehicleFilter"
@@ -215,6 +205,7 @@ import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
 import { CURRENCY, type Notification } from "@/types/evcc";
+import vehicleList from "@/utils/vehicleList";
 
 export default defineComponent({
 	name: "Sessions",
@@ -468,8 +459,7 @@ export default defineComponent({
 			});
 		},
 		vehicleList() {
-			const vehicles = store.state.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ ...vehicle, name }));
+			return vehicleList(store.state.vehicles);
 		},
 		loadpointList() {
 			const loadpoints = store.state.loadpoints || [];

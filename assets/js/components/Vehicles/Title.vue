@@ -1,6 +1,6 @@
 <template>
 	<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="vehicle-title">
-		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
+		<h4 class="d-flex align-items-center flex-grow-1 overflow-hidden ring-space">
 			<div
 				v-if="iconType === 'refresh'"
 				ref="refresh"
@@ -158,6 +158,11 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* overflow-hidden would clip the vehicle select focus ring */
+.ring-space {
+	padding: 0.5rem;
+	margin: -0.5rem;
+}
 .vehicle-name {
 	text-decoration-color: var(--evcc-gray);
 }

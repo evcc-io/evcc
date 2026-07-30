@@ -26,8 +26,7 @@
 			<pre
 				id="mcpModalExample"
 				class="form-control border font-monospace small mb-2 mcp-example"
-				>{{ claudeExample }}</pre
-			>
+				>{{ claudeExample }}</pre>
 			<CopyLink :text="claudeExample" />
 		</FormRow>
 	</GenericModal>

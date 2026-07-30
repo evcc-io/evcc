@@ -25,7 +25,15 @@ requirements:
       Data is provided on the portal roughly every 15 minutes.
 params:
   - preset: vehicle-base
-  - preset: vehicle-features
+  - name: coarsecurrent
+    advanced: true
+    deprecated: true
+  - name: welcomecharge
+    advanced: true
+    deprecated: true
+  - name: streaming
+    deprecated: true
+  - preset: vehicle-online
 render: |
   type: drivesomethinggreater
   brand: Seat

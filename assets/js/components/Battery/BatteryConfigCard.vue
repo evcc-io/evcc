@@ -86,6 +86,19 @@
 					{{ $t("battery.config.discharge") }}
 				</label>
 			</div>
+			<div v-if="experimental" class="form-check form-switch mt-2">
+				<input
+					id="batteryExpGridDischarge"
+					:checked="batteryGridDischarge"
+					class="form-check-input"
+					type="checkbox"
+					role="switch"
+					@change="changeGridDischarge"
+				/>
+				<label class="form-check-label" for="batteryExpGridDischarge">
+					{{ $t("battery.config.gridDischarge") }} 🧪
+				</label>
+			</div>
 		</template>
 	</Card>
 </template>
@@ -102,8 +115,7 @@ import InlineSocSelect from "./InlineSocSelect.vue";
 
 // Battery usage controls for the experimental page. The logic is intentionally duplicated
 // from the classic BatteryUsageSettings.vue (slated for removal) so the two can diverge
-// during the transition. Difference here: priority and buffer SoC are independent, there is
-// no priority < buffer constraint.
+// during the transition.
 export default defineComponent({
 	name: "BatteryConfigCard",
 	components: { Card, InlineSocSelect },
@@ -113,7 +125,9 @@ export default defineComponent({
 		prioritySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
+		batteryGridDischarge: Boolean,
 		battery: { type: Object as PropType<Battery> },
+		experimental: Boolean,
 	},
 	data() {
 		return {
@@ -135,14 +149,21 @@ export default defineComponent({
 		priorityOptions() {
 			const options = [];
 			for (let i = 100; i >= 0; i -= 5) {
-				options.push({ value: i, name: this.fmtSoc(i) });
+				const disabled =
+					i > this.selectedBufferSoc &&
+					!(this.selectedBufferSoc == this.selectedPrioritySoc);
+				options.push({ value: i, name: this.fmtSoc(i), disabled });
 			}
 			return options;
 		},
 		bufferOptions() {
 			const options = [];
 			for (let i = 100; i >= 5; i -= 5) {
-				options.push({ value: i, name: this.fmtSoc(i) });
+				options.push({
+					value: i,
+					name: this.fmtSoc(i),
+					disabled: i < this.selectedPrioritySoc,
+				});
 			}
 			return options;
 		},
@@ -180,7 +201,15 @@ export default defineComponent({
 	},
 	methods: {
 		changePrioritySoc($event: Event) {
-			this.savePrioritySoc(parseInt(($event.target as HTMLInputElement).value, 10));
+			const soc = parseInt(($event.target as HTMLInputElement).value, 10);
+			if (soc > (this.bufferSoc || 100)) {
+				this.saveBufferSoc(soc);
+				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+					this.setBufferStartSoc(soc);
+				}
+			} else {
+				this.savePrioritySoc(soc);
+			}
 		},
 		changeBufferStart($event: Event) {
 			this.setBufferStartSoc(parseInt(($event.target as HTMLInputElement).value, 10));
@@ -227,6 +256,15 @@ export default defineComponent({
 					`batterydischargecontrol/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
 				);
 			} catch (err) {
+				console.error(err);
+			}
+		},
+		async changeGridDischarge(e: Event) {
+			const target = e.target as HTMLInputElement;
+			try {
+				await api.post(`batterygriddischarge/${target.checked}`);
+			} catch (err) {
+				target.checked = this.batteryGridDischarge; // revert to stay in sync with state
 				console.error(err);
 			}
 		},

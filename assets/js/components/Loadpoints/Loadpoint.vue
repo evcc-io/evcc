@@ -71,6 +71,14 @@
 				/>
 			</div>
 			<LabelAndValue
+				v-if="integratedDevice"
+				:label="$t('main.loadpoint.todayEnergy')"
+				:value="todayEnergy"
+				:valueFmt="fmtEnergy"
+				align="center"
+			/>
+			<LabelAndValue
+				v-else
 				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
 				:value="chargedEnergy"
@@ -90,7 +98,7 @@
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
 			@batteryboost-updated="setBatteryBoost"
-			@open-modal="(openArrivalTab) => $emit('open-charging-plan-modal', openArrivalTab)"
+			@open-modal="$emit('open-charging-plan-modal')"
 		/>
 	</div>
 </template>
@@ -205,6 +213,9 @@ export default defineComponent({
 		vehicleWelcomeActive: Boolean,
 		chargePower: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
+		todayEnergy: { type: Number, default: 0 },
+		last24hEnergy: Number,
+		last7dEnergy: Number,
 		chargeRemainingDuration: { type: Number, default: 0 },
 
 		// other information

@@ -11,6 +11,7 @@
 		<template #menu>
 			<MoreMenu
 				:open="open"
+				:vehicles="vehicles"
 				:auth-providers="authProviders"
 				:sponsor="sponsor"
 				:fatal="fatal"
@@ -34,13 +35,14 @@ import MoreMenu from "./MoreMenu.vue";
 import { isUserConfigError } from "@/utils/fatal";
 import { isNewVersionAvailable, isNewVersionUnacknowledged } from "@/utils/version";
 import settings from "@/settings";
-import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
+import type { FatalError, Sponsor, EvOpt, AuthProviders, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "MoreItem",
 	components: { Item, MoreIcon, MoreMenu },
 	props: {
 		active: Boolean,
+		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },

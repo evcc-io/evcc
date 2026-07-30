@@ -55,6 +55,9 @@ type Zaptec struct {
 	priority   bool
 	passive    bool
 	lastStatus int
+
+	session      string    // last seen SessionIdentifier
+	sessionStart time.Time // start of the current session
 }
 
 func init() {
@@ -241,13 +244,16 @@ func (c *Zaptec) Enable(enable bool) error {
 		Code int
 	}
 
+	err := c.DoJSON(req, &res)
+
 	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
-	if err := c.DoJSON(req, &res); err == nil || res.Code == 528 {
+	if err == nil || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
+		return nil
 	}
 
-	return nil
+	return err
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
@@ -320,6 +326,33 @@ func (c *Zaptec) ChargedEnergy() (float64, error) {
 	}
 
 	return res.ObservationByID(zaptec.TotalChargePowerSession).Float64()
+}
+
+var _ api.ConnectionTimer = (*Zaptec)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface.
+// Derived from SessionIdentifier: a session change drops the duration, so the loadpoint detects a cable swap as reconnect.
+func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
+	res, err := c.statusG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	var session string
+	if o := res.ObservationByID(zaptec.SessionIdentifier); o != nil {
+		session = o.ValueAsString
+	}
+
+	if session != c.session {
+		c.session = session
+		c.sessionStart = time.Now()
+	}
+
+	if session == "" {
+		return 0, nil
+	}
+
+	return time.Since(c.sessionStart), nil
 }
 
 var _ api.PhaseCurrents = (*Zaptec)(nil)

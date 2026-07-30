@@ -214,16 +214,16 @@ func (c *Circuit) effectiveMaxPower() float64 {
 	}
 
 	hemsLimit := c.hems.MaxConsumptionPower()
-	if hemsLimit <= 0 {
+	if hemsLimit == nil || *hemsLimit <= 0 {
 		return maxPower
 	}
 
 	// unconfigured maxPower means unlimited, so the HEMS limit applies alone
 	if maxPower <= 0 {
-		return hemsLimit
+		return *hemsLimit
 	}
 
-	return min(hemsLimit, maxPower)
+	return min(*hemsLimit, maxPower)
 }
 
 // SetMaxPower sets the max power
