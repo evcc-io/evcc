@@ -9,7 +9,6 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "composite": true,
     "allowJs": true,
     "paths": {
       "@/*": ["./assets/js/*"]
