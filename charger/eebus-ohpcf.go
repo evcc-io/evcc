@@ -15,6 +15,7 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
@@ -28,6 +29,8 @@ import (
 // it pauses or aborts the running process.
 type EEBusOHPCF struct {
 	*embed
+	implement.Caps
+
 	cem *eebus.CustomerEnergyManagement
 	ma  *eebus.MonitoringAppliance
 	eg  *eebus.EnergyGuard
@@ -57,10 +60,11 @@ func init() {
 // NewEEBusOHPCFFromConfig creates an EEBus OHPCF charger from generic config
 func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed   `mapstructure:",squash"`
-		Ski     string
-		Ip      string
-		Reboost time.Duration
+		embed       `mapstructure:",squash"`
+		Ski         string
+		Ip          string
+		Flexibility bool
+		Reboost     time.Duration
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -73,12 +77,12 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		return nil, err
 	}
 
-	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip, cc.Reboost)
+	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip, cc.Flexibility, cc.Reboost)
 }
 
 // NewEEBusOHPCF creates an EEBus OHPCF charger, registers it with the EEBus
 // instance and waits for the connection.
-func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost time.Duration) (api.Charger, error) {
+func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, flexibility bool, reboost time.Duration) (api.Charger, error) {
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
@@ -86,6 +90,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 
 	c := &EEBusOHPCF{
 		embed:     embed,
+		Caps:      implement.New(),
 		log:       util.NewLogger("eebus-ohpcf"),
 		cem:       inst.CustomerEnergyManagement(),
 		ma:        inst.MonitoringAppliance(),
@@ -102,6 +107,10 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	if err := c.connector.Wait(ctx); err != nil {
 		inst.UnregisterDevice(ski, c)
 		return nil, err
+	}
+
+	if flexibility {
+		implement.Has(c, implement.PowerLimiter(c.getMinMaxPower))
 	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
@@ -435,11 +444,9 @@ func (c *EEBusOHPCF) apply() error {
 	return nil
 }
 
-var _ api.PowerLimiter = (*EEBusOHPCF)(nil)
-
-// GetMinMaxPower implements the api.PowerLimiter interface, reporting the
+// getMinMaxPower implements the api.PowerLimiter interface, reporting the
 // optional consumption as expected min/max or ErrNotAvailable if none.
-func (c *EEBusOHPCF) GetMinMaxPower() (float64, float64, error) {
+func (c *EEBusOHPCF) getMinMaxPower() (float64, float64, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
 		return 0, 0, errNotConnected

@@ -81,6 +81,7 @@ func generate(out io.Writer) error {
 		reflect.TypeFor[api.PhasePowers](),
 		reflect.TypeFor[api.PhaseSwitcher](),
 		reflect.TypeFor[api.PhaseVoltages](),
+		reflect.TypeFor[api.PowerLimiter](),
 		reflect.TypeFor[api.Resurrector](),
 		reflect.TypeFor[api.SocLimiter](),
 		reflect.TypeFor[api.StatusReasoner](),
