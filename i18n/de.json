@@ -788,11 +788,19 @@
         "energy": "Fahrzeuge werden nach der Energie verglichen, die sie noch benötigen, basierend auf ihrer Batteriekapazität.",
         "percent": "Fahrzeuge werden nach ihrem Ladestand in Prozent verglichen."
       },
-      "description": "Bestimmt, wer den Solarüberschuss zuerst bekommt, wenn mehrere Ladepunkte die gleiche Priorität haben.",
+      "description": "Lege fest, welche Ladepunkte und Heizungen den PV-Überschuss zuerst bekommen. Höhere Stufen werden vor niedrigeren bedient.",
       "descriptionHysteresis": "Die Priorität ändert sich erst, wenn der Unterschied diesen Wert überschreitet. Verhindert ständiges Hin- und Herwechseln.",
+      "descriptionStrategy": "Innerhalb einer Stufe entscheidet die Strategie.",
       "labelBasis": "Basis",
       "labelHysteresis": "Hysterese",
       "labelStrategy": "Strategie",
+      "order": {
+        "addTier": "Stufe hinzufügen",
+        "description": "Ziehe einen Eintrag, um seine Priorität zu ändern.",
+        "high": "Hoch",
+        "low": "Niedrig. 0 ist Standard",
+        "tier": "Stufe {tier}"
+      },
       "strategy": {
         "deficit": "Größter Bedarf zuerst",
         "none": "Wer zuerst kommt",

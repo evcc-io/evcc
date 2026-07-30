@@ -797,11 +797,19 @@
         "energy": "Vehicles are compared by the energy they still need, based on their battery capacity.",
         "percent": "Vehicles are compared by their charge level in percent."
       },
-      "description": "Decides who gets solar surplus first when multiple charging points have the same priority.",
+      "description": "Define which charging points and heaters get solar surplus first. Higher tiers are served before lower ones.",
       "descriptionHysteresis": "Priority only changes when the difference exceeds this value. Avoids constant switching.",
+      "descriptionStrategy": "Within one tier the strategy decides.",
       "labelBasis": "Basis",
       "labelHysteresis": "Hysteresis",
       "labelStrategy": "Strategy",
+      "order": {
+        "addTier": "Add tier",
+        "description": "Drag an entry to change its priority.",
+        "high": "High",
+        "low": "Low. 0 is default",
+        "tier": "Tier {tier}"
+      },
       "strategy": {
         "deficit": "Biggest need first",
         "none": "First wins",

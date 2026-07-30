@@ -493,7 +493,7 @@
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
-				<PriorityModal @changed="loadDirty" />
+				<PriorityModal />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />

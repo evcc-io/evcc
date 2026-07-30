@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="drag-drop-item d-flex align-items-center p-2 mb-2 border rounded"
+		class="drag-drop-item mw-100 d-flex align-items-center p-2 mb-2 border rounded"
 		:class="{
 			'drag-drop-item--hidden': !visible,
 		}"
@@ -11,7 +11,7 @@
 		<div class="drag-handle me-2" aria-hidden="true">
 			<shopicon-regular-menu></shopicon-regular-menu>
 		</div>
-		<div class="flex-grow-1">
+		<div class="flex-grow-1 text-truncate">
 			<slot>
 				{{ title }}
 			</slot>
