@@ -254,11 +254,11 @@ jobs:
 
       - name: Install Playwright (browsers + deps)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: vpx playwright install --with-deps chromium
         timeout-minutes: 5
 
       - name: Run tests
-        run: npx playwright test
+        run: vpx playwright test
         timeout-minutes: 20
         env:
           TZ: Europe/Berlin
