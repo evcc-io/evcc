@@ -12,6 +12,8 @@ params:
     id: 247
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    required: true
   - name: capacity
     advanced: true
   - name: minsoc
