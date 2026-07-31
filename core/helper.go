@@ -33,6 +33,23 @@ func currentToPower(current float64, phases int) float64 {
 	return current * float64(phases) * Voltage
 }
 
+// currentToDutyCycle converts a commanded charge current to the IEC 61851-1
+// control pilot PWM duty cycle percentage that encodes it.
+// Valid for 6-51A (duty% = current/0.6) and 51-80A (duty% = current/2.5 + 64).
+// Currents below 6A have no standard representation (charger-specific "X1" state).
+func currentToDutyCycle(current float64) float64 {
+	switch {
+	case current <= 0:
+		return 0
+	case current <= 51:
+		return current / 0.6
+	case current <= 80:
+		return current/2.5 + 64
+	default:
+		return 96 // reserved / out of standard range
+	}
+}
+
 // printPtr returns a string representation of a pointer value
 func printPtr[T any](format string, v *T) string {
 	if v == nil {
