@@ -86,9 +86,9 @@
 					/>
 				</Card>
 				<div v-if="showExtraCharts">
-					<div class="row align-items-start">
+					<div class="row">
 						<div class="col-12 col-lg-6 mb-4">
-							<Card :title="firstExtraTitle" edge-to-edge>
+							<Card :title="firstExtraTitle" edge-to-edge class="h-100">
 								<div v-if="activeType === types.SOLAR">
 									<SolarYearChart
 										v-if="showSolarYearChart"
@@ -116,7 +116,7 @@
 							</Card>
 						</div>
 						<div class="col-12 col-lg-6 mb-4">
-							<Card :title="secondExtraTitle" edge-to-edge>
+							<Card :title="secondExtraTitle" edge-to-edge class="h-100">
 								<EnergyGroupedChart
 									v-if="activeType === types.SOLAR"
 									:sessions="currentSessions"
