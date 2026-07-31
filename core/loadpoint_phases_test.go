@@ -761,7 +761,7 @@ func TestPvScalePhases_CircuitLimit(t *testing.T) {
 	// target1pCurrent = 5520W / 230V = 24A
 	// The loadpoint maxCurrent is 32A. But the circuit limit is 20A.
 	// Since 24 > 20, it should scale up to 3 phases!
-	
+
 	// We want to verify `pvScalePhases` returns 3.
 	scaledTo := lp.pvScalePhases(-5520.0, 6, 32.0)
 	require.Equal(t, 3, scaledTo, "should scale up because available power exceeds circuit limit")
@@ -824,7 +824,7 @@ func TestPvScalePhases_CircuitPowerLimit(t *testing.T) {
 	// Current limit is 16A, so target1pCurrent (24A) > scaleMaxCurrent (16A), which makes it want to scale up.
 	// BUT circuit max power is 4000W, which is less than 3p min power (4140W).
 	// So it should NOT scale up.
-	
+
 	scaledTo := lp.pvScalePhases(-5520.0, 6, 32.0)
 	require.Equal(t, 0, scaledTo, "should not scale up because circuit power limit restricts 3p min current")
 }
