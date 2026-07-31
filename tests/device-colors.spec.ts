@@ -33,6 +33,10 @@ function chartSection(page: Page, heading: string): Locator {
 }
 
 test("device colors: autoassign, override, persistence", async ({ page }) => {
+  // fixture sessions are dated 2026-05. Sessions.vue ranks loadpoints by energy
+  // over the last three months relative to now, so pin the clock to keep them in range
+  await page.clock.setFixedTime(new Date("2026-05-15T12:00:00Z"));
+
   // ---------- Step 1 — Sessions, by-vehicle view ----------
   await page.goto("/#/sessions?year=2026&month=5");
   await expect(page.getByRole("heading", { name: "Charging Sessions" })).toBeVisible();
