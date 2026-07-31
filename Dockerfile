@@ -1,7 +1,7 @@
 # STEP 1 build ui
 FROM --platform=$BUILDPLATFORM node:26-alpine AS node
 
-RUN apk update && apk add --no-cache make
+RUN apk update && apk add --no-cache make && curl -fsSL https://vite.plus | bash
 
 WORKDIR /build
 

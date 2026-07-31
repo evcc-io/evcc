@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, lazyPlugins } from "vite-plus";
 import vuePlugin from "@vitejs/plugin-vue";
 import legacy from "@vitejs/plugin-legacy";
 import { browserslistToTargets } from "lightningcss";
@@ -7,6 +7,52 @@ import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 
 export default defineConfig({
+  staged: {
+    "*": "vp check --fix",
+  },
+  lint: {
+    plugins: ["oxc", "typescript", "unicorn", "react"],
+    categories: {
+      correctness: "warn",
+    },
+    env: {
+      builtin: true,
+    },
+    overrides: [
+      {
+        files: ["assets/**/*.{ts,js,vue}", "tests/**/*.ts"],
+        rules: {
+          "no-param-reassign": "error",
+          "vue/require-default-prop": "off",
+          "vue/no-reserved-component-names": "off",
+          "typescript/no-explicit-any": "off",
+        },
+        plugins: ["vue"],
+        env: {
+          es2026: true,
+          browser: true,
+          node: true,
+        },
+      },
+    ],
+    options: {},
+    jsPlugins: [
+      {
+        name: "vite-plus",
+        specifier: "vite-plus/oxlint-plugin",
+      },
+    ],
+    rules: {
+      "vite-plus/prefer-vite-plus-imports": "error",
+    },
+  },
+  fmt: {
+    printWidth: 100,
+    trailingComma: "es5",
+    sortPackageJson: false,
+    ignorePatterns: ["tests/custom-css.css"],
+    overrides: [{ files: ["**/*.vue"], options: { tabWidth: 4 } }],
+  },
   root: "./assets",
   publicDir: "public",
   base: "./",
@@ -41,7 +87,7 @@ export default defineConfig({
       },
     };
   })(),
-  plugins: [
+  plugins: lazyPlugins(() => [
     legacy({
       modernPolyfills: ["es.promise.all-settled"],
     }),
@@ -53,5 +99,5 @@ export default defineConfig({
       },
     }),
     visualizer({ filename: "asset-stats.html" }),
-  ],
+  ]),
 });

@@ -89,7 +89,7 @@ export default defineComponent({
 			const priceColor = colors.price || "";
 			const exportColor = colors.export || "";
 
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line @typescript-eslint/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,
