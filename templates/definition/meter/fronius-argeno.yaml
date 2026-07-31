@@ -18,8 +18,8 @@ params:
   - name: maxacpower
 render: |
   type: custom
-  # Fronius Argeno: AC output via SunSpec inverter model 113 (float) on unit 1
-  # (103 int+sf listed for firmware variants). Unlike GEN24, PV must NOT be
+  # Fronius Argeno: AC output via SunSpec inverter model 113 (float, primary)
+  # on unit 1; 103 (int+sf) as fallback for potential firmware variants. Unlike GEN24, PV must NOT be
   # read from model 160 DC channels: the Argeno's modular power stages report
   # only a fraction of plant output there (verified on-site: 160-based read
   # showed 6.5 kW while actual AC output was 31.7 kW).
@@ -28,14 +28,14 @@ render: |
     uri: {{ joinHostPort .host .port }}
     id: 1
     value:
-      - 103:W
       - 113:W
+      - 103:W
   energy:
     source: sunspec
     uri: {{ joinHostPort .host .port }}
     id: 1
     value:
-      - 103:WH
       - 113:WH
+      - 103:WH
     scale: 0.001
   maxacpower: {{ .maxacpower }} # W
