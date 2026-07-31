@@ -229,8 +229,8 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	// warn on uncached GET polling: a repeated roundtrip means neither a configured
 	// cache nor the device's own response headers spared it. cache hits are exempt.
 	if p.method == http.MethodGet && p.mu == nil && resp.Header.Get(httpcache.XFromCache) == "" {
-		if key := stripQuery(url); repeatedGet(key, time.Now()) {
-			p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", key)
+		if repeatedGet(url, time.Now()) {
+			p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", url)
 		}
 	}
 
@@ -253,15 +253,6 @@ var (
 	httpSeenMu sync.Mutex
 	httpSeen   = make(map[string]httpAccess)
 )
-
-// stripQuery drops the query and fragment so cache-busting params do not make
-// each poll look like a distinct url.
-func stripQuery(url string) string {
-	if i := strings.IndexAny(url, "?#"); i >= 0 {
-		return url[:i]
-	}
-	return url
-}
 
 // repeatedGet reports the first time url is fetched again within a second, a sign
 // the response should be cached. It fires once per url to avoid log spam.
